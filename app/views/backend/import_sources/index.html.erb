@@ -32,6 +32,10 @@
             <%= button_to "Easyticket jetzt importieren",
                           run_easyticket_backend_import_source_path(source),
                           method: :post %>
+          <% elsif source.eventim? %>
+            <%= button_to "Eventim jetzt importieren",
+                          run_eventim_backend_import_source_path(source),
+                          method: :post %>
           <% end %>
         </td>
       </tr>
@@ -39,6 +43,6 @@
   </tbody>
 </table>
 
-<h2>Letzte Easyticket-Importlaeufe</h2>
-<%= turbo_stream_from [ :backend, :easyticket_import_runs ] %>
+<h2>Letzte Importlaeufe</h2>
+<%= turbo_stream_from [ :backend, :import_runs ] %>
 <%= render "recent_runs_table", recent_runs: @recent_runs %>

@@ -5,6 +5,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
   setup do
     @source = import_sources(:one)
+    @eventim_source = import_sources(:two)
   end
 
   test "should get index" do
@@ -21,7 +22,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert payload["runs"].any?
     assert payload["runs"].first.key?("fetched_count")
     assert payload["runs"].first.key?("upserted_count")
+    assert payload["runs"].first.key?("source_type")
     assert payload["runs"].first.key?("status_label")
+    assert payload["runs"].map { |run| run["source_type"] }.include?("eventim")
   end
 
   test "should get edit" do
@@ -110,11 +113,51 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_import_sources_url
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "canceled", run.status
+    assert run.finished_at.present?
   end
 
   test "should not request stop when no running run exists" do
     post stop_easyticket_run_backend_import_source_url(@source), params: { run_id: 999_999 }
 
     assert_redirected_to backend_import_sources_url
+  end
+
+  test "should enqueue eventim run" do
+    assert_enqueued_jobs 1 do
+      post run_eventim_backend_import_source_url(@eventim_source)
+    end
+
+    assert_redirected_to backend_import_sources_url
+  end
+
+  test "should not enqueue when eventim run is already active" do
+    @eventim_source.import_runs.create!(
+      status: "running",
+      source_type: "eventim",
+      started_at: 10.minutes.ago
+    )
+
+    assert_no_enqueued_jobs do
+      post run_eventim_backend_import_source_url(@eventim_source)
+    end
+
+    assert_redirected_to backend_import_sources_url
+  end
+
+  test "should request stop for a running eventim run" do
+    run = @eventim_source.import_runs.create!(
+      status: "running",
+      source_type: "eventim",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_eventim_run_backend_import_source_url(@eventim_source), params: { run_id: run.id }
+
+    assert_redirected_to backend_import_sources_url
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "canceled", run.status
+    assert run.finished_at.present?
   end
 end

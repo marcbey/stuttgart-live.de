@@ -8,4 +8,4 @@
 #     MovieGenre.find_or_create_by!(name: genre_name)
 #   end
 
-ImportSource.ensure_easyticket_source!
+ImportSource.ensure_supported_sources!

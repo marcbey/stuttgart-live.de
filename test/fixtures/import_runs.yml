@@ -17,9 +17,9 @@ one:
 two:
   import_source: two
   source_type: eventim
-  status: running
+  status: succeeded
   started_at: 2026-03-02 11:11:26
-  finished_at:
+  finished_at: 2026-03-02 11:11:27
   fetched_count: 1
   filtered_count: 0
   imported_count: 0

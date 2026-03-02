@@ -1,22 +1,14 @@
-require "digest"
-
 module Importing
-  module Easyticket
+  module Eventim
     class Importer
       RUN_STALE_AFTER = 1.hour
       RUN_HEARTBEAT_STALE_AFTER = 2.minutes
-      PROGRESS_FLUSH_EVERY_N_CHANGES = 25
+      PROGRESS_FLUSH_EVERY_N_CHANGES = 1000
       PROGRESS_FLUSH_AFTER_SECONDS = 2
 
-      def initialize(
-        import_source:,
-        dump_fetcher: DumpFetcher.new,
-        detail_fetcher: DetailFetcher.new,
-        logger: Rails.logger
-      )
+      def initialize(import_source:, feed_fetcher: FeedFetcher.new, logger: Rails.logger)
         @import_source = import_source
-        @dump_fetcher = dump_fetcher
-        @detail_fetcher = detail_fetcher
+        @feed_fetcher = feed_fetcher
         @logger = logger
       end
 
@@ -26,7 +18,7 @@ module Importing
           fail_stale_runs!
           active_run = active_running_run
           if active_run.present?
-            logger.info("[EasyticketImporter] skipped because run_id=#{active_run.id} is already running")
+            logger.info("[EventimImporter] skipped because run_id=#{active_run.id} is already running")
             return active_run
           end
 
@@ -48,10 +40,6 @@ module Importing
 
         location_whitelist = import_source.configured_location_whitelist
         matcher = LocationMatcher.new(location_whitelist)
-        events = dump_fetcher.fetch_events
-        fetched_count = events.size
-        return run.reload if run_canceled?(run)
-
         persist_progress!(
           run,
           fetched_count: fetched_count,
@@ -64,62 +52,51 @@ module Importing
         changed_since_flush = 0
         last_flush_at = Time.current
 
-        events.each do |dump_payload|
-          if run_canceled?(run)
+        process_feed_payload = lambda do |feed_payload|
+          if run_canceled?(run) || stop_requested?(run)
             canceled = true
-            break
-          end
-
-          if stop_requested?(run)
-            canceled = true
-            break
+            throw :stop_import
           end
 
           progress_changed = false
-          event_id = dump_payload["event_id"].to_s.strip
-          next if event_id.blank?
-          next unless matcher.match?(dump_payload)
+
+          fetched_count += 1
+          progress_changed = true
+
+          unless matcher.match?(feed_payload)
+            next
+          end
 
           filtered_count += 1
-          progress_changed = true
-          source_payload_hash = build_source_payload_hash(dump_payload)
-          existing_record = find_existing_import_event(event_id, dump_payload)
-          if unchanged_dump_payload?(existing_record, source_payload_hash)
+
+          attributes = PayloadProjection.new(feed_payload: feed_payload).to_attributes
+          if attributes.nil?
+            failed_count += 1
+            next
+          end
+
+          existing_record = find_existing_import_event(attributes)
+          if unchanged_feed_payload?(existing_record, attributes[:source_payload_hash])
             mark_existing_event_as_seen!(
               record: existing_record,
-              dump_payload: dump_payload,
+              feed_payload: feed_payload,
               seen_at: run_started_at
             )
             imported_count += 1
             next
           end
 
-          detail_payload = detail_fetcher.fetch(event_id)
-
-          projection = PayloadProjection.new(
-            dump_payload: dump_payload,
-            detail_payload: detail_payload
-          )
-          attributes = projection.to_attributes
-          if attributes.nil?
-            failed_count += 1
-            progress_changed = true
-            next
-          end
-
           upsert_import_event!(
             attributes: attributes,
-            dump_payload: dump_payload,
-            detail_payload: detail_payload,
+            feed_payload: feed_payload,
             seen_at: run_started_at
           )
           imported_count += 1
           upserted_count += 1
-          progress_changed = true
         rescue StandardError => e
           failed_count += 1
           progress_changed = true
-          logger.error("[EasyticketImporter] event_id=#{event_id} failed: #{e.class}: #{e.message}")
+          logger.error("[EventimImporter] failed: #{e.class}: #{e.message}")
         ensure
           next unless progress_changed
 
@@ -136,6 +113,20 @@ module Importing
           )
           changed_since_flush = 0
           last_flush_at = Time.current
+        end
+
+        catch(:stop_import) do
+          streamed_rows = false
+          returned_rows = feed_fetcher.fetch_events do |feed_payload|
+            streamed_rows = true
+            process_feed_payload.call(feed_payload)
+          end
+
+          next if streamed_rows
+
+          Array(returned_rows).each do |feed_payload|
+            process_feed_payload.call(feed_payload)
+          end
         end
 
         persist_progress!(
@@ -160,7 +151,6 @@ module Importing
             metadata: normalized_metadata(run.metadata).merge("location_whitelist" => location_whitelist)
           )
           broadcast_runs_update!
-
           return run
         end
 
@@ -200,10 +190,10 @@ module Importing
 
       private
 
-      attr_reader :import_source, :dump_fetcher, :detail_fetcher, :logger
+      attr_reader :import_source, :feed_fetcher, :logger
 
-      def upsert_import_event!(attributes:, dump_payload:, detail_payload:, seen_at:)
-        record = EasyticketImportEvent.find_or_initialize_by(
+      def upsert_import_event!(attributes:, feed_payload:, seen_at:)
+        record = EventimImportEvent.find_or_initialize_by(
           import_source_id: import_source.id,
           external_event_id: attributes[:external_event_id],
           concert_date: attributes[:concert_date]
@@ -211,8 +201,8 @@ module Importing
 
         record.assign_attributes(
           attributes.merge(
-            dump_payload: dump_payload,
-            detail_payload: detail_payload,
+            dump_payload: feed_payload,
+            detail_payload: {},
             is_active: true,
             first_seen_at: record.first_seen_at || seen_at,
             last_seen_at: seen_at
@@ -223,20 +213,20 @@ module Importing
 
       def deactivate_stale_events!(seen_at:)
         import_source
-          .easyticket_import_events
+          .eventim_import_events
           .where("last_seen_at < ? OR last_seen_at IS NULL", seen_at)
           .update_all(is_active: false)
       end
 
       def active_running_run
-        import_source.import_runs.where(status: "running").order(started_at: :desc).first
+        import_source.import_runs.where(source_type: "eventim", status: "running").order(started_at: :desc).first
       end
 
       def fail_stale_runs!
         stale_runs =
           import_source
             .import_runs
-            .where(status: "running")
+            .where(source_type: "eventim", status: "running")
             .where("started_at < ? OR updated_at < ?", RUN_STALE_AFTER.ago, RUN_HEARTBEAT_STALE_AFTER.ago)
             .to_a
 
@@ -253,13 +243,20 @@ module Importing
             next
           end
 
-          next unless stale_run_stop_requested?(stale_run)
-
-          stale_run.update_columns(
-            status: "canceled",
-            finished_at: Time.current,
-            updated_at: Time.current
-          )
+          if stale_run_stop_requested?(stale_run)
+            stale_run.update_columns(
+              status: "canceled",
+              finished_at: Time.current,
+              updated_at: Time.current
+            )
+          else
+            stale_run.update_columns(
+              status: "failed",
+              finished_at: Time.current,
+              error_message: "Run automatically marked failed after heartbeat timeout (#{RUN_HEARTBEAT_STALE_AFTER.inspect})",
+              updated_at: Time.current
+            )
+          end
         end
         broadcast_runs_update!
       end
@@ -309,39 +306,23 @@ module Importing
       def broadcast_runs_update!
         Backend::ImportRunsBroadcaster.broadcast!
       rescue StandardError => e
-        logger.error("[EasyticketImporter] failed to broadcast run update: #{e.class}: #{e.message}")
+        logger.error("[EventimImporter] failed to broadcast run update: #{e.class}: #{e.message}")
       end
 
-      def find_existing_import_event(event_id, dump_payload)
-        concert_date = parse_concert_date_from_dump(dump_payload)
-        return nil if concert_date.nil?
-
-        import_source.easyticket_import_events.find_by(
-          external_event_id: event_id,
-          concert_date: concert_date
+      def find_existing_import_event(attributes)
+        import_source.eventim_import_events.find_by(
+          external_event_id: attributes[:external_event_id],
+          concert_date: attributes[:concert_date]
         )
       end
 
-      def parse_concert_date_from_dump(dump_payload)
-        raw_date = dump_payload["date"].to_s.strip
-        return nil if raw_date.blank?
-
-        Date.parse(raw_date)
-      rescue ArgumentError
-        nil
-      end
-
-      def build_source_payload_hash(dump_payload)
-        Digest::SHA256.hexdigest(dump_payload.to_json)
-      end
-
-      def unchanged_dump_payload?(existing_record, source_payload_hash)
+      def unchanged_feed_payload?(existing_record, source_payload_hash)
         existing_record.present? && existing_record.source_payload_hash == source_payload_hash
       end
 
-      def mark_existing_event_as_seen!(record:, dump_payload:, seen_at:)
+      def mark_existing_event_as_seen!(record:, feed_payload:, seen_at:)
         record.update_columns(
-          dump_payload: dump_payload,
+          dump_payload: feed_payload,
           is_active: true,
           last_seen_at: seen_at,
           updated_at: Time.current

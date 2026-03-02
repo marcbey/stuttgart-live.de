@@ -3,6 +3,8 @@ Rails.application.routes.draw do
     resources :import_sources, only: [ :index, :edit, :update ] do
       post :run_easyticket, on: :member
       post :stop_easyticket_run, on: :member
+      post :run_eventim, on: :member
+      post :stop_eventim_run, on: :member
     end
   end
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
