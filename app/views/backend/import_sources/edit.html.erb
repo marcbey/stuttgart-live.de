@@ -1,0 +1,36 @@
+<h1>Importer Bearbeiten: <%= @import_source.name %></h1>
+
+<% if notice.present? %>
+  <p style="color: green;"><%= notice %></p>
+<% end %>
+<% if alert.present? %>
+  <p style="color: red;"><%= alert %></p>
+<% end %>
+
+<%= form_with model: @import_source, url: backend_import_source_path(@import_source), method: :patch do |form| %>
+  <div>
+    <%= form.label :name, "Name" %><br>
+    <%= form.text_field :name %>
+  </div>
+
+  <div>
+    <%= form.label :active, "Aktiv" %>
+    <%= form.check_box :active %>
+  </div>
+
+  <div>
+    <%= form.label :location_whitelist_text, "Ortsliste (eine Zeile pro Ort oder komma-separiert)" %><br>
+    <%= form.text_area :location_whitelist_text,
+                       value: @import_source.configured_location_whitelist.join("\n"),
+                       rows: 8,
+                       cols: 80 %>
+  </div>
+
+  <div>
+    <%= form.submit "Speichern" %>
+  </div>
+<% end %>
+
+<p>
+  <%= link_to "Zurueck", backend_import_sources_path %>
+</p>

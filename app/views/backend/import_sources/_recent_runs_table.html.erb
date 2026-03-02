@@ -1,0 +1,40 @@
+<div id="easyticket-import-runs-table">
+  <table>
+    <thead>
+      <tr>
+        <th>Gestartet</th>
+        <th>Status</th>
+        <th>Fetched</th>
+        <th>Filtered</th>
+        <th>Imported</th>
+        <th>Upserts</th>
+        <th>Failed</th>
+        <th>Aktionen</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% recent_runs.each do |run| %>
+        <tr data-run-id="<%= run.id %>">
+          <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+          <td><%= import_run_status_label(run) %></td>
+          <td><%= run.fetched_count %></td>
+          <td><%= run.filtered_count %></td>
+          <td><%= run.imported_count %></td>
+          <td><%= run.upserted_count %></td>
+          <td><%= run.failed_count %></td>
+          <td>
+            <% if import_run_can_stop?(run) %>
+              <%= button_to "Stoppen",
+                            stop_easyticket_run_backend_import_source_path(run.import_source_id, run_id: run.id),
+                            method: :post %>
+            <% elsif run.status == "running" %>
+              Stop angefordert
+            <% else %>
+              -
+            <% end %>
+          </td>
+        </tr>
+      <% end %>
+    </tbody>
+  </table>
+</div>

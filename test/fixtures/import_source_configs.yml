@@ -1,0 +1,14 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  import_source: one
+  settings:
+    location_whitelist:
+      - Stuttgart
+      - Esslingen am Neckar
+
+two:
+  import_source: two
+  settings:
+    location_whitelist:
+      - Stuttgart

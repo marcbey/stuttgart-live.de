@@ -1,0 +1,29 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  import_source: one
+  source_type: easyticket
+  status: succeeded
+  started_at: 2026-03-02 11:11:26
+  finished_at: 2026-03-02 11:11:26
+  fetched_count: 1
+  filtered_count: 1
+  imported_count: 1
+  upserted_count: 1
+  failed_count: 0
+  metadata: {}
+  error_message:
+
+two:
+  import_source: two
+  source_type: eventim
+  status: running
+  started_at: 2026-03-02 11:11:26
+  finished_at:
+  fetched_count: 1
+  filtered_count: 0
+  imported_count: 0
+  upserted_count: 0
+  failed_count: 0
+  metadata: {}
+  error_message:
