@@ -1,3 +1,6 @@
+<% next_event_enabled = local_assigns.fetch(:next_event_enabled, true) %>
+<% filter_status = local_assigns[:filter_status] %>
+
 <div class="editor-panel" id="event_editor">
   <header class="editor-header">
     <div>
@@ -16,63 +19,62 @@
   <%= form_with model: event,
                 url: backend_event_path(event),
                 method: :patch,
-                data: { controller: "autosave", autosave_delay_value: 900, action: "turbo:submit-end->next-event#handleSubmitEnd" },
                 class: "editor-form",
                 html: { id: dom_id(event, :editor_form) } do |form| %>
+    <%= hidden_field_tag :next_event_enabled, (next_event_enabled ? "1" : "0"), data: { next_event_target: "preference" } %>
+    <%= hidden_field_tag :inbox_status, filter_status if filter_status.present? %>
     <div class="editor-grid">
       <div>
         <%= form.label :artist_name, "Artist", class: "form-label" %>
-        <%= form.text_field :artist_name, class: "form-input", data: { action: "input->autosave#queue" } %>
+        <%= form.text_field :artist_name, class: "form-input" %>
       </div>
       <div>
         <%= form.label :title, "Titel", class: "form-label" %>
-        <%= form.text_field :title, class: "form-input", data: { action: "input->autosave#queue" } %>
+        <%= form.text_field :title, class: "form-input" %>
       </div>
       <div>
         <%= form.label :start_at, "Start", class: "form-label" %>
         <%= form.datetime_local_field :start_at,
                                       value: event.start_at&.strftime("%Y-%m-%dT%H:%M"),
-                                      class: "form-input",
-                                      data: { action: "change->autosave#queue" } %>
+                                      class: "form-input" %>
       </div>
       <div>
         <%= form.label :status, "Status", class: "form-label" %>
         <%= form.select :status,
                         Event::STATUSES.map { |status| [event_status_label(status), status] },
                         {},
-                        class: "form-input",
-                        data: { action: "change->autosave#queue" } %>
+                        class: "form-input" %>
       </div>
       <div>
         <%= form.label :city, "Stadt", class: "form-label" %>
-        <%= form.text_field :city, class: "form-input", data: { action: "input->autosave#queue" } %>
+        <%= form.text_field :city, class: "form-input" %>
       </div>
       <div>
         <%= form.label :venue, "Venue", class: "form-label" %>
-        <%= form.text_field :venue, class: "form-input", data: { action: "input->autosave#queue" } %>
+        <%= form.text_field :venue, class: "form-input" %>
       </div>
       <div>
         <%= form.label :badge_text, "Banderole", class: "form-label" %>
-        <%= form.text_field :badge_text, class: "form-input", data: { action: "input->autosave#queue" } %>
+        <%= form.text_field :badge_text, class: "form-input" %>
       </div>
       <div>
         <%= form.label :image_url, "Bild-URL", class: "form-label" %>
-        <%= form.url_field :image_url, class: "form-input", data: { action: "change->autosave#queue" } %>
+        <%= form.url_field :image_url, class: "form-input" %>
       </div>
       <div>
         <%= form.label :youtube_url, "YouTube URL", class: "form-label" %>
-        <%= form.url_field :youtube_url, class: "form-input", data: { action: "change->autosave#queue" } %>
+        <%= form.url_field :youtube_url, class: "form-input" %>
       </div>
     </div>
 
     <div>
       <%= form.label :event_info, "Beschreibung", class: "form-label" %>
-      <%= form.text_area :event_info, rows: 5, class: "form-textarea", data: { action: "input->autosave#queue" } %>
+      <%= form.text_area :event_info, rows: 5, class: "form-textarea" %>
     </div>
 
     <div>
       <%= form.label :editor_notes, "Redaktionsnotiz", class: "form-label" %>
-      <%= form.text_area :editor_notes, rows: 3, class: "form-textarea", data: { action: "input->autosave#queue" } %>
+      <%= form.text_area :editor_notes, rows: 3, class: "form-textarea" %>
     </div>
 
     <div class="editor-footer">
@@ -108,13 +110,13 @@
   </section>
 
   <div class="editor-actions-row">
-    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button" data-action="click->next-event#markManualSubmit">Speichern</button>
+    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button">Speichern</button>
     <% unless event.published? %>
-      <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button" data-action="click->next-event#markManualSubmit">Speichern & Publizieren</button>
+      <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button">Speichern & Publizieren</button>
     <% end %>
     <%= button_to "Depublizieren", unpublish_backend_event_path(event), method: :patch, class: "button button-secondary" %>
     <label class="check-inline">
-      <input type="checkbox" data-next-event-target="toggle" data-action="change->next-event#toggleChanged">
+      <%= check_box_tag "next_event_toggle", "1", next_event_enabled, data: { next_event_target: "toggle", action: "change->next-event#toggleChanged" } %>
       <span>nächsten Event anzeigen</span>
     </label>
   </div>

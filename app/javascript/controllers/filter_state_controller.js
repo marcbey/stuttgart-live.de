@@ -59,6 +59,16 @@ export default class extends Controller {
       window.localStorage.removeItem(this.keyValue)
     }
 
-    this.element.requestSubmit()
+    const statusInput = this.element.querySelector("input[name='status']")
+    const params = new URLSearchParams()
+    const statusValue = statusInput?.value?.toString().trim()
+    if (statusValue) params.set("status", statusValue)
+
+    const targetUrl = params.size > 0 ? `${this.element.action}?${params.toString()}` : this.element.action
+    if (window.Turbo?.visit) {
+      window.Turbo.visit(targetUrl)
+    } else {
+      window.location.assign(targetUrl)
+    }
   }
 }

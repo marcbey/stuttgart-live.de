@@ -43,3 +43,27 @@ needs_review_one:
   auto_published: false
   editor_notes:
   source_snapshot: {}
+
+needs_review_two:
+  slug: needs-review-event-two
+  source_fingerprint: seed::review::2
+  title: Review Event Two
+  artist_name: Review Artist Two
+  start_at: 2026-07-12 20:00:00
+  venue: Im Wizemann
+  city: Stuttgart
+  event_info:
+  badge_text:
+  image_url:
+  youtube_url:
+  status: needs_review
+  published_at:
+  published_by:
+  completeness_score: 40
+  completeness_flags:
+    - missing_image
+    - missing_ticket_url
+  primary_source: eventim
+  auto_published: false
+  editor_notes:
+  source_snapshot: {}

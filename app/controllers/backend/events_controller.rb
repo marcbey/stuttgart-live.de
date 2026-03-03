@@ -1,18 +1,38 @@
 module Backend
   class EventsController < BaseController
+    SESSION_FILTERS_KEY = "backend_events_inbox_filters".freeze
+    SESSION_NEXT_EVENT_KEY = "backend_events_next_event_enabled".freeze
+
     before_action :set_event, only: [ :show, :update, :publish, :unpublish ]
+    before_action :set_next_event_enabled, only: [ :index, :show, :update ]
 
     def index
-      @filters = filter_params.to_h.symbolize_keys
-      @filters[:status] = "needs_review" if @filters[:status].blank?
-      @events = Editorial::EventsInboxQuery.new(params: @filters).call
+      @filters = session_filters_for_index.merge(status: current_status)
+      @events = filtered_events_for_status(@filters[:status])
       @status_counts = Event.group(:status).count
       @all_genres = Genre.order(:name)
       @selected_event = selected_event_from(@events)
     end
 
+    def apply_filters
+      persist_session_filters!(
+        clear: clear_filters_requested?,
+        query: params[:query],
+        starts_after: params[:starts_after],
+        starts_before: params[:starts_before]
+      )
+
+      redirect_to backend_events_path(status: current_status)
+    end
+
+    def next_event_preference
+      persist_next_event_preference!(params[:enabled])
+      head :ok
+    end
+
     def show
       @all_genres = Genre.order(:name)
+      @filter_status = inbox_status_for_navigation
     end
 
     def new
@@ -45,6 +65,9 @@ module Backend
 
     def update
       @all_genres = Genre.order(:name)
+      persist_next_event_preference!(params[:next_event_enabled]) if params.key?(:next_event_enabled)
+      navigation_status = inbox_status_for_navigation
+      next_event = @next_event_enabled ? next_filtered_event_after(@event.id, status: navigation_status) : nil
 
       @event.assign_attributes(event_params)
       @event.status = "published" if save_and_publish_requested?
@@ -59,16 +82,30 @@ module Backend
           changed_fields: @event.saved_changes
         )
 
+        target_event = next_event || @event
+        target_status = navigation_status || @event.status
+        sidebar_events = filtered_events_for_status(target_status)
+
         respond_to do |format|
-          format.html { redirect_to backend_events_path(status: @event.status, event_id: @event.id), notice: update_success_message }
+          format.html { redirect_to backend_events_path(status: target_status, event_id: target_event.id), notice: update_success_message }
           format.turbo_stream do
             flash.now[:notice] = update_success_message
             render turbo_stream: [
               turbo_stream.replace("flash-messages", partial: "layouts/flash_messages"),
               turbo_stream.replace(
+                "events_list",
+                partial: "backend/events/events_list",
+                locals: { events: sidebar_events, selected_event: target_event, status: target_status }
+              ),
+              turbo_stream.replace(
                 "event_editor",
                 partial: "backend/events/editor_panel",
-                locals: { event: @event, all_genres: @all_genres }
+                locals: {
+                  event: target_event,
+                  all_genres: @all_genres,
+                  next_event_enabled: @next_event_enabled,
+                  filter_status: target_status
+                }
               )
             ]
           end
@@ -83,7 +120,12 @@ module Backend
               turbo_stream.replace(
                 "event_editor",
                 partial: "backend/events/editor_panel",
-                locals: { event: @event, all_genres: @all_genres }
+                locals: {
+                  event: @event,
+                  all_genres: @all_genres,
+                  next_event_enabled: @next_event_enabled,
+                  filter_status: navigation_status
+                }
               )
             ], status: :unprocessable_entity
           end
@@ -108,7 +150,7 @@ module Backend
       action = params[:bulk_action].to_s
 
       if event_ids.blank?
-        redirect_to backend_events_path(filter_params), alert: "Bitte mindestens ein Event auswählen."
+        redirect_to backend_events_path(status: current_status), alert: "Bitte mindestens ein Event auswählen."
         return
       end
 
@@ -139,12 +181,12 @@ module Backend
         end
       end
 
-      redirect_to backend_events_path(filter_params), notice: "Bulk-Aktion abgeschlossen (#{processed} Events)."
+      redirect_to backend_events_path(status: current_status), notice: "Bulk-Aktion abgeschlossen (#{processed} Events)."
     end
 
     def sync_imported_events
       Merging::SyncImportedEventsJob.perform_later
-      redirect_to backend_events_path(status: filter_params[:status]), notice: "Merge-Sync wurde gestartet."
+      redirect_to backend_events_path(status: current_status), notice: "Merge-Sync wurde gestartet."
     end
 
     private
@@ -153,14 +195,85 @@ module Backend
       @event = Event.find(params[:id])
     end
 
-    def filter_params
-      params.permit(:status, :query, :starts_after, :starts_before)
+    def set_next_event_enabled
+      @next_event_enabled = next_event_enabled_preference
+    end
+
+    def current_status
+      value = params[:status].to_s
+      return value if Event::STATUSES.include?(value)
+
+      "needs_review"
+    end
+
+    def clear_filters_requested?
+      ActiveModel::Type::Boolean.new.cast(params[:clear_filters])
+    end
+
+    def session_filters_for_index
+      stored = session[SESSION_FILTERS_KEY]
+      normalized = stored.is_a?(Hash) ? stored.stringify_keys : {}
+
+      {
+        query: normalized["query"].to_s.strip.presence,
+        starts_after: normalized["starts_after"].to_s.strip.presence,
+        starts_before: normalized["starts_before"].to_s.strip.presence
+      }
+    end
+
+    def persist_session_filters!(clear:, query:, starts_after:, starts_before:)
+      if clear
+        session.delete(SESSION_FILTERS_KEY)
+        return
+      end
+
+      session[SESSION_FILTERS_KEY] = {
+        "query" => query.to_s.strip.presence,
+        "starts_after" => starts_after.to_s.strip.presence,
+        "starts_before" => starts_before.to_s.strip.presence
+      }
+    end
+
+    def next_event_enabled_preference
+      value = session[SESSION_NEXT_EVENT_KEY]
+      return true if value.nil?
+
+      ActiveModel::Type::Boolean.new.cast(value)
+    end
+
+    def persist_next_event_preference!(value)
+      normalized = ActiveModel::Type::Boolean.new.cast(value)
+      session[SESSION_NEXT_EVENT_KEY] = normalized
+      @next_event_enabled = normalized
     end
 
     def selected_event_from(events)
       return Event.find_by(id: params[:event_id]) if params[:event_id].present?
 
       events.first
+    end
+
+    def inbox_status_for_navigation
+      value = params[:inbox_status].to_s
+      return value if Event::STATUSES.include?(value)
+
+      nil
+    end
+
+    def next_filtered_event_after(event_id, status:)
+      return nil if status.blank?
+
+      events = filtered_events_for_status(status).to_a
+      index = events.index { |candidate| candidate.id == event_id }
+      return nil if index.nil? || events.empty?
+      return events.first if index >= events.length - 1
+
+      events[index + 1]
+    end
+
+    def filtered_events_for_status(status)
+      filters = session_filters_for_index.merge(status: status)
+      Editorial::EventsInboxQuery.new(params: filters).call
     end
 
     def event_params

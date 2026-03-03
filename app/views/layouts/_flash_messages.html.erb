@@ -1,5 +1,5 @@
 <% if notice.present? || alert.present? %>
-  <div class="flash-wrap">
+  <div class="flash-wrap" data-controller="flash" data-flash-duration-value="2400">
     <% if notice.present? %>
       <p class="flash flash-notice"><%= notice %></p>
     <% end %>

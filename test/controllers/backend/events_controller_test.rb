@@ -3,6 +3,7 @@ require "test_helper"
 class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @event = events(:needs_review_one)
+    @next_event = events(:needs_review_two)
     @published_event = events(:published_one)
     @user = users(:one)
   end
@@ -24,6 +25,60 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "nächsten Event anzeigen"
     assert_includes response.body, "name=\"status\""
     assert_includes response.body, "value=\"needs_review\""
+  end
+
+  test "apply filters stores values in session and redirects to clean url" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      query: "Review Artist",
+      starts_after: "2026-07-01",
+      starts_before: "2026-07-31"
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review")
+    follow_redirect!
+    assert_select "input[name='query'][value='Review Artist']"
+    assert_select "input[name='starts_after'][value='2026-07-01']"
+    assert_select "input[name='starts_before'][value='2026-07-31']"
+  end
+
+  test "next event preference endpoint stores value in session" do
+    sign_in_as(@user)
+
+    post next_event_preference_backend_events_url, params: { enabled: "0" }
+
+    assert_response :success
+
+    get backend_events_url
+    assert_response :success
+    assert_includes response.body, "data-next-event-enabled-value=\"false\""
+  end
+
+  test "clear filters removes session filter values" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      query: "Review Artist",
+      starts_after: "2026-07-01",
+      starts_before: "2026-07-31"
+    }
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      clear_filters: "1"
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review")
+    follow_redirect!
+    assert_select "input[name='query']"
+    assert_select "input[name='starts_after']"
+    assert_select "input[name='starts_before']"
+    assert_select "input#query[value='Review Artist']", count: 0
+    assert_select "input#starts_after[value='2026-07-01']", count: 0
+    assert_select "input#starts_before[value='2026-07-31']", count: 0
   end
 
   test "updates event" do
@@ -86,6 +141,79 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes flash[:notice], "gespeichert und publiziert"
   end
 
+  test "update stores next event preference from editor form param" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: "Neu betitelt",
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review"
+      },
+      next_event_enabled: "0"
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+
+    get backend_events_url
+    assert_response :success
+    assert_includes response.body, "data-next-event-enabled-value=\"false\""
+  end
+
+  test "turbo update renders next filtered event when next event preference is enabled" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      query: "Review Event"
+    }
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: "Review Event Updated",
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review"
+      },
+      inbox_status: "needs_review",
+      next_event_enabled: "1"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, "target=\"events_list\""
+    assert_includes response.body, "editor_form_event_#{@next_event.id}"
+  end
+
+  test "turbo update wraps to first filtered event when current event is last" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      query: "Review Event"
+    }
+
+    patch backend_event_url(@next_event), params: {
+      event: {
+        title: "Review Event Two Updated",
+        artist_name: @next_event.artist_name,
+        start_at: @next_event.start_at,
+        venue: @next_event.venue,
+        city: @next_event.city,
+        status: "needs_review"
+      },
+      inbox_status: "needs_review",
+      next_event_enabled: "1"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, "editor_form_event_#{@event.id}"
+  end
+
   test "update does not clear existing genres when genre_ids are absent" do
     sign_in_as(@user)
 
@@ -121,7 +249,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       event_ids: [ @event.id ]
     }
 
-    assert_redirected_to backend_events_url
+    assert_redirected_to backend_events_url(status: "needs_review")
     assert_equal "published", @event.reload.status
     assert @event.published_at.present?
   end

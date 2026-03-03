@@ -18,6 +18,8 @@ Rails.application.routes.draw do
       patch :publish, on: :member
       patch :unpublish, on: :member
       patch :bulk, on: :collection
+      post :apply_filters, on: :collection
+      post :next_event_preference, on: :collection
       post :sync_imported_events, on: :collection
     end
   end

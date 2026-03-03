@@ -1,3 +1,3 @@
 <%= turbo_frame_tag "event_editor" do %>
-  <%= render "editor_panel", event: @event, all_genres: @all_genres %>
+  <%= render "editor_panel", event: @event, all_genres: @all_genres, next_event_enabled: @next_event_enabled, filter_status: @filter_status %>
 <% end %>

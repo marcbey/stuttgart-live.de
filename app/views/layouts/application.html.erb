@@ -45,9 +45,11 @@
       </div>
     </nav>
 
-    <div id="flash-messages">
-      <%= render "layouts/flash_messages" %>
-    </div>
+    <% unless controller_path == "backend/events" && action_name == "index" %>
+      <div id="flash-messages">
+        <%= render "layouts/flash_messages" %>
+      </div>
+    <% end %>
 
     <%= yield %>
   </body>

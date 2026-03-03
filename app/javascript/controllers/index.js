@@ -4,11 +4,17 @@
 
 import { application } from "./application"
 
+import BulkSelectController from "./bulk_select_controller"
+application.register("bulk-select", BulkSelectController)
+
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
 import FilterStateController from "./filter_state_controller"
 application.register("filter-state", FilterStateController)
+
+import FlashController from "./flash_controller"
+application.register("flash", FlashController)
 
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)

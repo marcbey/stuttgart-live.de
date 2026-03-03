@@ -1,57 +1,103 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["toggle"]
-  static values = { key: { type: String, default: "backend-events-next-event-enabled" } }
+  static targets = ["toggle", "preference"]
+  static values = { enabled: { type: Boolean, default: true }, preferenceUrl: String }
 
   connect() {
-    this.pendingManualSubmit = false
-    this.ensureDefaultSetting()
     this.applyToggleState()
-  }
-
-  markManualSubmit() {
-    this.pendingManualSubmit = true
+    this.syncActiveFromEditor()
   }
 
   toggleChanged() {
     if (!this.hasToggleTarget) return
 
-    window.localStorage.setItem(this.keyValue, this.toggleTarget.checked ? "1" : "0")
-  }
-
-  handleSubmitEnd(event) {
-    if (!this.pendingManualSubmit) return
-
-    this.pendingManualSubmit = false
-    if (!event.detail.success || !this.nextEventEnabled()) return
-
-    const links = Array.from(document.querySelectorAll(".event-link"))
-    if (links.length === 0) return
-
-    const activeLink = document.querySelector(".event-list-item-active .event-link")
-    if (!activeLink) return
-
-    const currentIndex = links.indexOf(activeLink)
-    if (currentIndex < 0 || currentIndex >= links.length - 1) return
-
-    const nextLink = links[currentIndex + 1]
-    if (nextLink) nextLink.click()
-  }
-
-  ensureDefaultSetting() {
-    if (window.localStorage.getItem(this.keyValue) !== null) return
-
-    window.localStorage.setItem(this.keyValue, "1")
+    this.enabledValue = this.toggleTarget.checked
+    this.syncPreferenceField()
+    this.persistPreference()
   }
 
   applyToggleState() {
-    if (!this.hasToggleTarget) return
+    if (this.hasToggleTarget) {
+      this.toggleTarget.checked = this.enabledValue
+    }
 
-    this.toggleTarget.checked = this.nextEventEnabled()
+    this.syncPreferenceField()
   }
 
   nextEventEnabled() {
-    return window.localStorage.getItem(this.keyValue) !== "0"
+    if (this.hasToggleTarget) return this.toggleTarget.checked
+
+    return this.enabledValue
+  }
+
+  syncPreferenceField() {
+    if (!this.hasPreferenceTarget) return
+
+    this.preferenceTarget.value = this.nextEventEnabled() ? "1" : "0"
+  }
+
+  persistPreference() {
+    if (!this.hasPreferenceUrlValue) return
+
+    const token = document.querySelector("meta[name='csrf-token']")?.content
+    if (!token) return
+
+    const body = new URLSearchParams({ enabled: this.nextEventEnabled() ? "1" : "0" })
+    fetch(this.preferenceUrlValue, {
+      method: "POST",
+      headers: {
+        "X-CSRF-Token": token,
+        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+      },
+      credentials: "same-origin",
+      body
+    })
+  }
+
+  eventLinkClicked(event) {
+    const eventId = Number.parseInt(event.currentTarget?.dataset?.nextEventEventId, 10)
+    if (Number.isNaN(eventId)) return
+
+    this.highlightEventById(eventId)
+  }
+
+  syncActiveFromEditor(event) {
+    const frame = event?.target
+    if (frame && frame.id !== "event_editor") return
+
+    const form = document.querySelector("turbo-frame#event_editor form.editor-form")
+    if (!(form instanceof HTMLFormElement)) return
+
+    const eventId = this.eventIdFromEditorForm(form)
+    if (eventId === null) return
+
+    this.highlightEventById(eventId)
+  }
+
+  syncActiveAfterSubmit(event) {
+    if (!event?.detail?.success) return
+
+    const target = event.target
+    if (!(target instanceof HTMLFormElement)) return
+    if (!target.id.endsWith("_editor_form")) return
+
+    window.requestAnimationFrame(() => this.syncActiveFromEditor())
+  }
+
+  highlightEventById(eventId) {
+    const items = Array.from(document.querySelectorAll(".event-list-item"))
+    items.forEach((item) => item.classList.remove("event-list-item-active"))
+
+    const activeLink = document.querySelector(`.event-link[data-next-event-event-id='${eventId}']`)
+    const activeItem = activeLink?.closest(".event-list-item")
+    if (activeItem) activeItem.classList.add("event-list-item-active")
+  }
+
+  eventIdFromEditorForm(form) {
+    const match = form.id.match(/editor_form_event_(\d+)$/)
+    if (!match) return null
+
+    return Number.parseInt(match[1], 10)
   }
 }
