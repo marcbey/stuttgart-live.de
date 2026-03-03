@@ -16,12 +16,12 @@ module Backend
       end
 
       unless allowed_filtered_city?(city)
-        redirect_to backend_import_run_path(@import_run), alert: "Diese Stadt ist fuer den Run nicht als aussortiert erfasst."
+        redirect_to backend_import_run_path(@import_run), alert: "Diese Stadt ist für den Run nicht als aussortiert erfasst."
         return
       end
 
       move_filtered_city_to_whitelist!(city)
-      notice = "'#{city}' wurde zur Ortsliste hinzugefuegt."
+      notice = "'#{city}' wurde zur Ortsliste hinzugefügt."
 
       redirect_to backend_import_run_path(@import_run), notice: notice
     end

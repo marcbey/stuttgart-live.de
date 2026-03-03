@@ -95,7 +95,7 @@ module Backend
     def publish
       @event.update!(status: "published", published_at: Time.current, published_by: current_user, auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "published", user: current_user)
-      redirect_to backend_events_path(status: "published", event_id: @event.id), notice: "Event wurde veroeffentlicht."
+      redirect_to backend_events_path(status: "published", event_id: @event.id), notice: "Event wurde veröffentlicht."
     end
 
     def unpublish
@@ -110,7 +110,7 @@ module Backend
       genre_id = params[:genre_id].presence
 
       if event_ids.blank?
-        redirect_to backend_events_path(filter_params), alert: "Bitte mindestens ein Event auswaehlen."
+        redirect_to backend_events_path(filter_params), alert: "Bitte mindestens ein Event auswählen."
         return
       end
 

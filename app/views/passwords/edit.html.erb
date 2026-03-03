@@ -1,4 +1,4 @@
-<% content_for :title, "Passwort aendern" %>
+<% content_for :title, "Passwort ändern" %>
 
 <section class="backend-shell">
   <div class="editor-panel" style="max-width: 520px; margin: 2rem auto;">
@@ -19,7 +19,7 @@
       </div>
 
       <div>
-        <%= form.label :password_confirmation, "Passwort bestaetigen", class: "form-label" %>
+        <%= form.label :password_confirmation, "Passwort bestätigen", class: "form-label" %>
         <%= form.password_field :password_confirmation,
                                 required: true,
                                 autocomplete: "new-password",

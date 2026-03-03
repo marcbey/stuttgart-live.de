@@ -90,7 +90,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "evt-123"
     assert_includes response.body, "timeout"
     assert_includes response.body, "2 / 3"
-    assert_includes response.body, "Aussortierte Staedte"
+    assert_includes response.body, "Aussortierte Städte"
     assert_includes response.body, "Berlin"
     assert_includes response.body, "Hamburg"
   end

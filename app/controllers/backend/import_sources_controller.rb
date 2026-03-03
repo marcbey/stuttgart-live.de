@@ -153,7 +153,7 @@ module Backend
     def trigger_import!(source_type:, label:, run_job_class:)
       running_run = @import_source.import_runs.where(source_type: source_type, status: "running").order(started_at: :desc).first
       if running_run.present? && !release_stale_running_run!(running_run)
-        return { alert: "Ein #{label}-Import laeuft bereits (Run ##{running_run.id})." }
+        return { alert: "Ein #{label}-Import läuft bereits (Run ##{running_run.id})." }
       end
 
       run_job_class.perform_later(@import_source.id)
@@ -178,7 +178,7 @@ module Backend
       )
       Backend::ImportRunsBroadcaster.broadcast!
 
-      { notice: "Stop fuer #{label}-Import (Run ##{run.id}) wurde angefordert." }
+      { notice: "Stop für #{label}-Import (Run ##{run.id}) wurde angefordert." }
     end
 
     def recent_runs_for_list

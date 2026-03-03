@@ -11,7 +11,7 @@
       </p>
     </div>
     <div class="backend-topbar-actions">
-      <%= link_to "Zurueck", backend_import_sources_path, class: "button button-secondary" %>
+      <%= link_to "Zurück", backend_import_sources_path, class: "button button-secondary" %>
     </div>
   </header>
 
@@ -97,13 +97,13 @@
           <% end %>
         </p>
       <% else %>
-        <p>Keine Staedte in der Ortsliste konfiguriert.</p>
+        <p>Keine Städte in der Ortsliste konfiguriert.</p>
       <% end %>
     </section>
 
     <% filtered_out_cities = import_run_filtered_out_cities(@import_run) %>
     <section>
-      <h2>Aussortierte Staedte (<%= filtered_out_cities.size %>)</h2>
+      <h2>Aussortierte Städte (<%= filtered_out_cities.size %>)</h2>
       <% if filtered_out_cities.any? %>
         <p>
           <% filtered_out_cities.each_with_index do |city, index| %>
@@ -114,7 +114,7 @@
           <% end %>
         </p>
       <% else %>
-        <p>Keine aussortierten Staedte erfasst.</p>
+        <p>Keine aussortierten Städte erfasst.</p>
       <% end %>
     </section>
   <% end %>

@@ -1,7 +1,7 @@
 class PasswordsController < ApplicationController
   allow_unauthenticated_access
   before_action :set_user_by_token, only: %i[ edit update ]
-  rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_password_path, alert: "Bitte spaeter erneut versuchen." }
+  rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_password_path, alert: "Bitte später erneut versuchen." }
 
   def new
   end
@@ -22,7 +22,7 @@ class PasswordsController < ApplicationController
       @user.sessions.destroy_all
       redirect_to new_session_path, notice: "Passwort wurde aktualisiert."
     else
-      redirect_to edit_password_path(params[:token]), alert: "Passwoerter stimmen nicht ueberein."
+      redirect_to edit_password_path(params[:token]), alert: "Passwörter stimmen nicht überein."
     end
   end
 
@@ -30,6 +30,6 @@ class PasswordsController < ApplicationController
     def set_user_by_token
       @user = User.find_by_password_reset_token!(params[:token])
     rescue ActiveSupport::MessageVerifier::InvalidSignature
-      redirect_to new_password_path, alert: "Reset-Link ist ungueltig oder abgelaufen."
+      redirect_to new_password_path, alert: "Reset-Link ist ungültig oder abgelaufen."
     end
 end
