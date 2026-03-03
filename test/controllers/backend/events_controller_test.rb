@@ -104,6 +104,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Rock" ], @published_event.reload.genres.order(:name).pluck(:name)
   end
 
+  test "published event editor does not show save and publish button" do
+    sign_in_as(@user)
+
+    get backend_event_url(@published_event)
+
+    assert_response :success
+    assert_not_includes response.body, "Speichern & Publizieren"
+  end
+
   test "bulk publish updates selected events" do
     sign_in_as(@user)
 

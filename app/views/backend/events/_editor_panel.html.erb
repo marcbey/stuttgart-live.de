@@ -109,7 +109,9 @@
 
   <div class="editor-actions-row">
     <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button" data-action="click->next-event#markManualSubmit">Speichern</button>
-    <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button" data-action="click->next-event#markManualSubmit">Speichern & Publizieren</button>
+    <% unless event.published? %>
+      <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button" data-action="click->next-event#markManualSubmit">Speichern & Publizieren</button>
+    <% end %>
     <%= button_to "Depublizieren", unpublish_backend_event_path(event), method: :patch, class: "button button-secondary" %>
     <label class="check-inline">
       <input type="checkbox" data-next-event-target="toggle" data-action="change->next-event#toggleChanged">
