@@ -1,5 +1,6 @@
 <% next_event_enabled = local_assigns.fetch(:next_event_enabled, true) %>
 <% filter_status = local_assigns[:filter_status] %>
+<% payload_sources = event_source_payloads(event) %>
 
 <div class="editor-panel" id="event_editor">
   <header class="editor-header">
@@ -106,6 +107,36 @@
       </ul>
     <% else %>
       <p>Keine Angebote vorhanden.</p>
+    <% end %>
+  </section>
+
+  <section class="offer-section payload-section">
+    <h3>Payload-Daten</h3>
+    <% if payload_sources.any? %>
+      <div class="payload-list">
+        <% payload_sources.each do |payload_source| %>
+          <details class="payload-entry">
+            <summary>
+              <strong><%= payload_source[:source] %></strong>
+              <% if payload_source[:external_event_id].present? %>
+                <span>· ID <%= payload_source[:external_event_id] %></span>
+              <% end %>
+            </summary>
+
+            <details class="payload-block">
+              <summary>dump_payload</summary>
+              <pre class="payload-json"><%= pretty_json_payload(payload_source[:dump_payload]) %></pre>
+            </details>
+
+            <details class="payload-block">
+              <summary>detail_payload</summary>
+              <pre class="payload-json"><%= pretty_json_payload(payload_source[:detail_payload]) %></pre>
+            </details>
+          </details>
+        <% end %>
+      </div>
+    <% else %>
+      <p>Keine Payload-Daten vorhanden.</p>
     <% end %>
   </section>
 

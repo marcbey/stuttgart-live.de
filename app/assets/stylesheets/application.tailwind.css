@@ -683,6 +683,48 @@ a {
   padding-top: 0.65rem;
 }
 
+.payload-list {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.payload-entry {
+  border: 1px solid #ececec;
+  background: #fafafa;
+  padding: 0.4rem 0.55rem;
+  overflow: hidden;
+}
+
+.payload-entry > summary,
+.payload-block > summary {
+  cursor: pointer;
+  user-select: none;
+}
+
+.payload-entry > summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.payload-block {
+  margin-top: 0.35rem;
+}
+
+.payload-json {
+  margin: 0.35rem 0 0;
+  max-height: 16rem;
+  overflow: hidden;
+  overflow-y: auto;
+  background: #fff;
+  border: 1px solid #dedede;
+  padding: 0.45rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.76rem;
+  line-height: 1.35;
+  white-space: pre;
+}
+
 .editor-actions-row {
   display: flex;
   gap: 0.5rem;
