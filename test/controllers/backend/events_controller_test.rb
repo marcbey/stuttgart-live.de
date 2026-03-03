@@ -42,6 +42,27 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neu betitelt", @event.reload.title
   end
 
+  test "updates event via turbo stream and renders flash message" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: "Neu per Turbo",
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "Event wurde gespeichert."
+    assert_equal "Neu per Turbo", @event.reload.title
+  end
+
   test "bulk publish updates selected events" do
     sign_in_as(@user)
 

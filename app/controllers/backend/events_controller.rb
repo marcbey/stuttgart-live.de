@@ -62,11 +62,15 @@ module Backend
         respond_to do |format|
           format.html { redirect_to backend_events_path(status: @event.status, event_id: @event.id), notice: "Event wurde gespeichert." }
           format.turbo_stream do
-            render turbo_stream: turbo_stream.replace(
-              "event_editor",
-              partial: "backend/events/editor_panel",
-              locals: { event: @event, all_genres: @all_genres }
-            )
+            flash.now[:notice] = "Event wurde gespeichert."
+            render turbo_stream: [
+              turbo_stream.replace("flash-messages", partial: "layouts/flash_messages"),
+              turbo_stream.replace(
+                "event_editor",
+                partial: "backend/events/editor_panel",
+                locals: { event: @event, all_genres: @all_genres }
+              )
+            ]
           end
         end
       else
@@ -74,11 +78,14 @@ module Backend
         respond_to do |format|
           format.html { render :show, status: :unprocessable_entity }
           format.turbo_stream do
-            render turbo_stream: turbo_stream.replace(
-              "event_editor",
-              partial: "backend/events/editor_panel",
-              locals: { event: @event, all_genres: @all_genres }
-            ), status: :unprocessable_entity
+            render turbo_stream: [
+              turbo_stream.replace("flash-messages", partial: "layouts/flash_messages"),
+              turbo_stream.replace(
+                "event_editor",
+                partial: "backend/events/editor_panel",
+                locals: { event: @event, all_genres: @all_genres }
+              )
+            ], status: :unprocessable_entity
           end
         end
       end
