@@ -16,7 +16,7 @@
   <%= form_with model: event,
                 url: backend_event_path(event),
                 method: :patch,
-                data: { controller: "autosave", autosave_delay_value: 900 },
+                data: { controller: "autosave", autosave_delay_value: 900, action: "turbo:submit-end->next-event#handleSubmitEnd" },
                 class: "editor-form",
                 html: { id: dom_id(event, :editor_form) } do |form| %>
     <div class="editor-grid">
@@ -119,8 +119,12 @@
   </section>
 
   <div class="editor-actions-row">
-    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button">Speichern</button>
-    <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button">Speichern & Publizieren</button>
+    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button" data-action="click->next-event#markManualSubmit">Speichern</button>
+    <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button" data-action="click->next-event#markManualSubmit">Speichern & Publizieren</button>
     <%= button_to "Depublizieren", unpublish_backend_event_path(event), method: :patch, class: "button button-secondary" %>
+    <label class="check-inline">
+      <input type="checkbox" data-next-event-target="toggle" data-action="change->next-event#toggleChanged">
+      <span>nächsten Event anzeigen</span>
+    </label>
   </div>
 </div>
