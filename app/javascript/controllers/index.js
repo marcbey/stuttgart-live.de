@@ -4,5 +4,17 @@
 
 import { application } from "./application"
 
+import AutosaveController from "./autosave_controller"
+application.register("autosave", AutosaveController)
+
+import FilterStateController from "./filter_state_controller"
+application.register("filter-state", FilterStateController)
+
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
+
+import InfiniteScrollController from "./infinite_scroll_controller"
+application.register("infinite-scroll", InfiniteScrollController)
+
+import KeyboardShortcutsController from "./keyboard_shortcuts_controller"
+application.register("keyboard-shortcuts", KeyboardShortcutsController)

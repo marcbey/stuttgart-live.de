@@ -4,6 +4,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
 
   setup do
+    sign_in_as(users(:one))
     @source = import_sources(:one)
     @eventim_source = import_sources(:two)
   end

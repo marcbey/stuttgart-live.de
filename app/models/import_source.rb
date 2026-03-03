@@ -1,5 +1,5 @@
 class ImportSource < ApplicationRecord
-  SOURCE_TYPES = %w[easyticket eventim reservix].freeze
+  SOURCE_TYPES = %w[easyticket eventim].freeze
   DEFAULT_EASYTICKET_LOCATION_WHITELIST = [
     "Stuttgart",
     "Stuttgart - Bad Cannstatt",

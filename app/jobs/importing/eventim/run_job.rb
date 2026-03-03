@@ -11,7 +11,8 @@ module Importing
             ImportSource.ensure_eventim_source!
           end
 
-        Importing::Eventim::Importer.new(import_source: source).call
+        run = Importing::Eventim::Importer.new(import_source: source).call
+        Merging::SyncImportedEventsJob.perform_later if run.status == "succeeded"
       end
     end
   end

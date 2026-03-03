@@ -1,48 +1,51 @@
-<h1>Importer Backend</h1>
+<% content_for :title, "Importer" %>
 
-<% if notice.present? %>
-  <p style="color: green;"><%= notice %></p>
-<% end %>
-<% if alert.present? %>
-  <p style="color: red;"><%= alert %></p>
-<% end %>
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <p class="eyebrow">stuttgart live</p>
+      <h1>Importer-Konfiguration</h1>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zur Redaktion", backend_events_path, class: "button button-secondary" %>
+    </div>
+  </header>
 
-<table>
-  <thead>
-    <tr>
-      <th>Name</th>
-      <th>Typ</th>
-      <th>Aktiv</th>
-      <th>Ortsliste</th>
-      <th>Aktionen</th>
-    </tr>
-  </thead>
-  <tbody>
-    <% @import_sources.each do |source| %>
-      <tr>
-        <td><%= source.name %></td>
-        <td><code><%= source.source_type %></code></td>
-        <td><%= source.active ? "Ja" : "Nein" %></td>
-        <td>
-          <%= source.configured_location_whitelist.join(", ") %>
-        </td>
-        <td>
-          <%= link_to "Bearbeiten", edit_backend_import_source_path(source) %>
-          <% if source.easyticket? %>
-            <%= button_to "Easyticket jetzt importieren",
-                          run_easyticket_backend_import_source_path(source),
-                          method: :post %>
-          <% elsif source.eventim? %>
-            <%= button_to "Eventim jetzt importieren",
-                          run_eventim_backend_import_source_path(source),
-                          method: :post %>
-          <% end %>
-        </td>
-      </tr>
-    <% end %>
-  </tbody>
-</table>
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Typ</th>
+          <th>Aktiv</th>
+          <th>Ortsliste</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @import_sources.each do |source| %>
+          <tr>
+            <td><strong><%= source.name %></strong></td>
+            <td><code><%= source.source_type %></code></td>
+            <td><%= source.active ? "Ja" : "Nein" %></td>
+            <td><%= source.configured_location_whitelist.join(", ") %></td>
+            <td class="action-cell">
+              <%= link_to "Bearbeiten", edit_backend_import_source_path(source), class: "button button-ghost" %>
+              <% if source.easyticket? %>
+                <%= button_to "Easyticket starten", run_easyticket_backend_import_source_path(source), method: :post, class: "button" %>
+              <% elsif source.eventim? %>
+                <%= button_to "Eventim starten", run_eventim_backend_import_source_path(source), method: :post, class: "button" %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
 
-<h2>Letzte Importlaeufe</h2>
-<%= turbo_stream_from [ :backend, :import_runs ] %>
-<%= render "recent_runs_table", recent_runs: @recent_runs %>
+  <section>
+    <h2>Letzte Importlaeufe</h2>
+    <%= turbo_stream_from [ :backend, :import_runs ] %>
+    <%= render "recent_runs_table", recent_runs: @recent_runs %>
+  </section>
+</section>

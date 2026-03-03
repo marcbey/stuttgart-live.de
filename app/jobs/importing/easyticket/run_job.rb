@@ -11,7 +11,8 @@ module Importing
             ImportSource.ensure_easyticket_source!
           end
 
-        Importing::Easyticket::Importer.new(import_source: source).call
+        run = Importing::Easyticket::Importer.new(import_source: source).call
+        Merging::SyncImportedEventsJob.perform_later if run.status == "succeeded"
       end
     end
   end

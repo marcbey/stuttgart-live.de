@@ -1,36 +1,40 @@
-<h1>Importer Bearbeiten: <%= @import_source.name %></h1>
+<% content_for :title, "Importer bearbeiten" %>
 
-<% if notice.present? %>
-  <p style="color: green;"><%= notice %></p>
-<% end %>
-<% if alert.present? %>
-  <p style="color: red;"><%= alert %></p>
-<% end %>
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <p class="eyebrow">stuttgart live</p>
+      <h1>Importer bearbeiten: <%= @import_source.name %></h1>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zurueck", backend_import_sources_path, class: "button button-secondary" %>
+    </div>
+  </header>
 
-<%= form_with model: @import_source, url: backend_import_source_path(@import_source), method: :patch do |form| %>
-  <div>
-    <%= form.label :name, "Name" %><br>
-    <%= form.text_field :name %>
+  <div class="editor-panel">
+    <%= form_with model: @import_source, url: backend_import_source_path(@import_source), method: :patch, class: "editor-form" do |form| %>
+      <div class="editor-grid">
+        <div>
+          <%= form.label :name, "Name", class: "form-label" %>
+          <%= form.text_field :name, class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :active, "Aktiv", class: "form-label" %>
+          <div class="check-inline"><%= form.check_box :active %> <span>Importer aktiv</span></div>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :location_whitelist_text, "Ortsliste (eine Zeile pro Ort oder komma-separiert)", class: "form-label" %>
+        <%= form.text_area :location_whitelist_text,
+                           value: @import_source.configured_location_whitelist.join("\n"),
+                           rows: 8,
+                           class: "form-textarea" %>
+      </div>
+
+      <div class="editor-footer">
+        <%= form.submit "Speichern", class: "button" %>
+      </div>
+    <% end %>
   </div>
-
-  <div>
-    <%= form.label :active, "Aktiv" %>
-    <%= form.check_box :active %>
-  </div>
-
-  <div>
-    <%= form.label :location_whitelist_text, "Ortsliste (eine Zeile pro Ort oder komma-separiert)" %><br>
-    <%= form.text_area :location_whitelist_text,
-                       value: @import_source.configured_location_whitelist.join("\n"),
-                       rows: 8,
-                       cols: 80 %>
-  </div>
-
-  <div>
-    <%= form.submit "Speichern" %>
-  </div>
-<% end %>
-
-<p>
-  <%= link_to "Zurueck", backend_import_sources_path %>
-</p>
+</section>

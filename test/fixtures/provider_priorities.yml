@@ -1,0 +1,9 @@
+eventim:
+  source_type: eventim
+  priority_rank: 20
+  active: true
+
+easyticket:
+  source_type: easyticket
+  priority_rank: 30
+  active: true

@@ -1,0 +1,86 @@
+<% content_for :title, "Neues Event" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <p class="eyebrow">stuttgart live</p>
+      <h1>Manuelles Event anlegen</h1>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zur Inbox", backend_events_path, class: "button button-secondary" %>
+    </div>
+  </header>
+
+  <div class="editor-panel">
+    <%= form_with model: @event, url: backend_events_path, method: :post, class: "editor-form" do |form| %>
+      <div class="editor-grid">
+        <div>
+          <%= form.label :artist_name, "Artist", class: "form-label" %>
+          <%= form.text_field :artist_name, class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :title, "Titel", class: "form-label" %>
+          <%= form.text_field :title, class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :start_at, "Start", class: "form-label" %>
+          <%= form.datetime_local_field :start_at,
+                                        value: @event.start_at&.strftime("%Y-%m-%dT%H:%M"),
+                                        class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :status, "Status", class: "form-label" %>
+          <%= form.select :status,
+                          Event::STATUSES.map { |status| [event_status_label(status), status] },
+                          {},
+                          class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :city, "Stadt", class: "form-label" %>
+          <%= form.text_field :city, class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :venue, "Venue", class: "form-label" %>
+          <%= form.text_field :venue, class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :badge_text, "Banderole", class: "form-label" %>
+          <%= form.text_field :badge_text, class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :image_url, "Bild-URL", class: "form-label" %>
+          <%= form.url_field :image_url, class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :youtube_url, "YouTube URL", class: "form-label" %>
+          <%= form.url_field :youtube_url, class: "form-input" %>
+        </div>
+        <div>
+          <%= form.label :genre_ids, "Genres", class: "form-label" %>
+          <div class="genre-checks">
+            <% @all_genres.each do |genre| %>
+              <label>
+                <%= check_box_tag "event[genre_ids][]", genre.id, false %>
+                <span><%= genre.name %></span>
+              </label>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <%= form.label :event_info, "Beschreibung", class: "form-label" %>
+        <%= form.text_area :event_info, rows: 6, class: "form-textarea" %>
+      </div>
+
+      <div>
+        <%= form.label :editor_notes, "Redaktionsnotiz", class: "form-label" %>
+        <%= form.text_area :editor_notes, rows: 4, class: "form-textarea" %>
+      </div>
+
+      <div class="editor-footer">
+        <%= form.submit "Event erstellen", class: "button" %>
+      </div>
+    <% end %>
+  </div>
+</section>

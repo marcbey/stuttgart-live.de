@@ -1,0 +1,125 @@
+<div class="editor-panel" id="event_editor">
+  <header class="editor-header">
+    <div>
+      <p class="eyebrow">Event #<%= event.id %></p>
+      <h2><%= event.artist_name.presence || "Unbenannt" %></h2>
+      <p><%= event.title %></p>
+    </div>
+    <div class="editor-header-badges">
+      <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
+      <% if event.primary_source.present? %>
+        <span class="status-badge status-badge-default"><%= event.primary_source %></span>
+      <% end %>
+    </div>
+  </header>
+
+  <%= form_with model: event,
+                url: backend_event_path(event),
+                method: :patch,
+                data: { controller: "autosave", autosave_delay_value: 900 },
+                class: "editor-form" do |form| %>
+    <div class="editor-grid">
+      <div>
+        <%= form.label :artist_name, "Artist", class: "form-label" %>
+        <%= form.text_field :artist_name, class: "form-input", data: { action: "input->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :title, "Titel", class: "form-label" %>
+        <%= form.text_field :title, class: "form-input", data: { action: "input->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :start_at, "Start", class: "form-label" %>
+        <%= form.datetime_local_field :start_at,
+                                      value: event.start_at&.strftime("%Y-%m-%dT%H:%M"),
+                                      class: "form-input",
+                                      data: { action: "change->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :status, "Status", class: "form-label" %>
+        <%= form.select :status,
+                        Event::STATUSES.map { |status| [event_status_label(status), status] },
+                        {},
+                        class: "form-input",
+                        data: { action: "change->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :city, "Stadt", class: "form-label" %>
+        <%= form.text_field :city, class: "form-input", data: { action: "input->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :venue, "Venue", class: "form-label" %>
+        <%= form.text_field :venue, class: "form-input", data: { action: "input->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :badge_text, "Banderole", class: "form-label" %>
+        <%= form.text_field :badge_text, class: "form-input", data: { action: "input->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :image_url, "Bild-URL", class: "form-label" %>
+        <%= form.url_field :image_url, class: "form-input", data: { action: "change->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :youtube_url, "YouTube URL", class: "form-label" %>
+        <%= form.url_field :youtube_url, class: "form-input", data: { action: "change->autosave#queue" } %>
+      </div>
+      <div>
+        <%= form.label :genre_ids, "Genres", class: "form-label" %>
+        <div class="genre-checks">
+          <% all_genres.each do |genre| %>
+            <label>
+              <%= check_box_tag "event[genre_ids][]", genre.id, event.genre_ids.include?(genre.id), data: { action: "change->autosave#queue" } %>
+              <span><%= genre.name %></span>
+            </label>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <%= form.label :event_info, "Beschreibung", class: "form-label" %>
+      <%= form.text_area :event_info, rows: 5, class: "form-textarea", data: { action: "input->autosave#queue" } %>
+    </div>
+
+    <div>
+      <%= form.label :editor_notes, "Redaktionsnotiz", class: "form-label" %>
+      <%= form.text_area :editor_notes, rows: 3, class: "form-textarea", data: { action: "input->autosave#queue" } %>
+    </div>
+
+    <div class="editor-footer">
+      <div class="completeness-bar">
+        <strong><%= event.completeness_score %>%</strong>
+        <% if event.completeness_flags.any? %>
+          <span><%= event.completeness_flags.join(", ") %></span>
+        <% else %>
+          <span>vollstaendig</span>
+        <% end %>
+      </div>
+      <%= form.submit "Speichern", class: "button" %>
+    </div>
+  <% end %>
+
+  <section class="offer-section">
+    <h3>Ticket-Angebote</h3>
+    <% if event.event_offers.any? %>
+      <ul>
+        <% event.event_offers.ordered.each do |offer| %>
+          <li>
+            <span><%= offer.source %></span>
+            <% if offer.ticket_url.present? %>
+              <%= link_to "Ticket", offer.ticket_url, target: "_blank", rel: "noopener" %>
+            <% else %>
+              <span>kein Link</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>Keine Angebote vorhanden.</p>
+    <% end %>
+  </section>
+
+  <div class="editor-actions-row">
+    <%= button_to "Jetzt publizieren", publish_backend_event_path(event), method: :patch, class: "button" %>
+    <%= button_to "Depublizieren", unpublish_backend_event_path(event), method: :patch, class: "button button-secondary" %>
+  </div>
+</div>

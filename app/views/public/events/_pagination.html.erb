@@ -1,0 +1,11 @@
+<div id="events-pagination">
+  <% if next_page.present? %>
+    <div class="pagination-sentinel"
+         data-controller="infinite-scroll"
+         data-infinite-scroll-url-value="<%= events_path(page: next_page, format: :turbo_stream) %>">
+      <span>lade mehr events...</span>
+    </div>
+  <% else %>
+    <div class="pagination-end">keine weiteren veranstaltungen</div>
+  <% end %>
+</div>

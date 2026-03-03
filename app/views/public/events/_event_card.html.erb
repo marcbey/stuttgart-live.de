@@ -1,0 +1,26 @@
+<article class="event-card">
+  <%= link_to event_path(event.slug), class: "event-card-link" do %>
+    <div class="event-card-image-wrap">
+      <% if event.image_url.present? %>
+        <%= image_tag event.image_url, alt: "#{event.artist_name} - #{event.title}", loading: "lazy", class: "event-card-image" %>
+      <% else %>
+        <div class="event-card-image event-card-placeholder"></div>
+      <% end %>
+      <div class="event-card-overlay"></div>
+      <% if event.badge_text.present? %>
+        <span class="event-card-badge"><%= event.badge_text %></span>
+      <% end %>
+      <div class="event-card-copy">
+        <h2><%= event.artist_name %></h2>
+        <p class="event-card-title"><%= event.title %></p>
+        <p class="event-card-meta">
+          <span><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+          <span><%= event.venue %></span>
+        </p>
+        <% if event.primary_genre.present? %>
+          <p class="event-card-genre"><%= event.primary_genre.name %></p>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</article>

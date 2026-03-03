@@ -9,3 +9,32 @@
 #   end
 
 ImportSource.ensure_supported_sources!
+
+{
+  "eventim" => 20,
+  "easyticket" => 30
+}.each do |source_type, priority_rank|
+  ProviderPriority.find_or_initialize_by(source_type: source_type).tap do |priority|
+    priority.priority_rank = priority_rank
+    priority.active = true
+    priority.save!
+  end
+end
+
+%w[Rock Pop Hip-Hop Metal Jazz Klassik Indie Electro].each do |name|
+  Genre.find_or_create_by!(name: name) do |genre|
+    genre.slug = name.parameterize
+  end
+end
+
+default_admin_email = ENV.fetch("DEFAULT_ADMIN_EMAIL", "admin@stuttgart-live.de")
+default_admin_password = ENV.fetch("DEFAULT_ADMIN_PASSWORD", "please-change-me")
+
+admin = User.find_or_initialize_by(email_address: default_admin_email)
+admin.name = admin.name.presence || "Admin"
+admin.role = "admin"
+if admin.new_record? || default_admin_password != "please-change-me"
+  admin.password = default_admin_password
+  admin.password_confirmation = default_admin_password
+end
+admin.save!

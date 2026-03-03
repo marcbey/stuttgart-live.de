@@ -1,24 +1,24 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= content_for(:title) || "Stuttgart Live De" %></title>
+    <title><%= content_for(:title) || "Stuttgart Live" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Stuttgart Live De">
+    <meta name="application-name" content="Stuttgart Live">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <%= yield :head %>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;700&family=Bebas+Neue&display=swap" rel="stylesheet">
 
-    <%# Enable PWA manifest for installable apps (make sure to enable in config/routes.rb too!) %>
-    <%#= tag.link rel: "manifest", href: pwa_manifest_path(format: :json) %>
+    <%= yield :head %>
 
     <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <%# Includes all stylesheet files in app/assets/stylesheets %>
     <% if compiled_asset_exists?("application.css") %>
       <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <% end %>
@@ -28,6 +28,34 @@
   </head>
 
   <body>
+    <nav class="app-nav">
+      <%= link_to root_path, class: "app-brand" do %>
+        <span class="app-brand-logo">SL</span>
+        <span class="app-brand-text">stuttgart-live.de</span>
+      <% end %>
+
+      <div class="app-nav-links">
+        <%= link_to "Events", events_path, class: "button button-ghost" %>
+        <% if authenticated? %>
+          <%= link_to "Backend", backend_events_path, class: "button button-secondary" %>
+          <%= button_to "Logout", session_path, method: :delete, class: "button" %>
+        <% else %>
+          <%= link_to "Login", new_session_path, class: "button" %>
+        <% end %>
+      </div>
+    </nav>
+
+    <% if notice.present? || alert.present? %>
+      <div class="flash-wrap">
+        <% if notice.present? %>
+          <p class="flash flash-notice"><%= notice %></p>
+        <% end %>
+        <% if alert.present? %>
+          <p class="flash flash-alert"><%= alert %></p>
+        <% end %>
+      </div>
+    <% end %>
+
     <%= yield %>
   </body>
 </html>

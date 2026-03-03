@@ -1,0 +1,84 @@
+<% content_for :title, "#{@event.artist_name} - #{@event.title} | Stuttgart Live" %>
+<% content_for :head do %>
+  <%= tag.meta property: "og:title", content: "#{@event.artist_name} - #{@event.title}" %>
+  <%= tag.meta property: "og:description", content: @event.event_info.to_s.truncate(160) %>
+  <%= tag.meta property: "og:type", content: "website" %>
+  <%= tag.meta property: "og:image", content: @event.image_url if @event.image_url.present? %>
+  <%= tag.meta name: "twitter:card", content: "summary_large_image" %>
+  <%= tag.meta name: "twitter:title", content: "#{@event.artist_name} - #{@event.title}" %>
+  <%= tag.meta name: "twitter:description", content: @event.event_info.to_s.truncate(160) %>
+  <%= tag.link rel: "canonical", href: event_url(@event.slug) %>
+<% end %>
+
+<article class="event-detail">
+  <p class="event-detail-back"><%= link_to "← alle events", events_path %></p>
+
+  <header class="event-detail-header">
+    <div>
+      <p class="eyebrow">stuttgart live</p>
+      <h1><%= @event.artist_name %></h1>
+      <p class="event-detail-title"><%= @event.title %></p>
+      <p class="event-detail-meta"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %> · <%= @event.venue %>, <%= @event.city %></p>
+      <% if @event.primary_genre.present? %>
+        <p class="event-detail-genre"><%= @event.primary_genre.name %></p>
+      <% end %>
+      <% if @event.badge_text.present? %>
+        <p class="event-card-badge"><%= @event.badge_text %></p>
+      <% end %>
+    </div>
+
+    <% if @event.image_url.present? %>
+      <div class="event-detail-image-wrap">
+        <%= image_tag @event.image_url, alt: "#{@event.artist_name} - #{@event.title}", class: "event-detail-image" %>
+      </div>
+    <% end %>
+  </header>
+
+  <% if @event.event_info.present? %>
+    <section class="event-detail-copy">
+      <h2>Infos</h2>
+      <%= simple_format(@event.event_info) %>
+    </section>
+  <% end %>
+
+  <% if @primary_offer.present? %>
+    <section class="event-detail-cta">
+      <%= link_to "Tickets sichern", @primary_offer.ticket_url, target: "_blank", rel: "noopener", class: "button" %>
+      <p>Ticketshop: <%= event_source_label(@primary_offer.source) %></p>
+    </section>
+  <% end %>
+
+  <% if @event.youtube_embed_url.present? %>
+    <section class="event-detail-video">
+      <h2>Video</h2>
+      <div class="video-frame">
+        <iframe
+          src="<%= @event.youtube_embed_url %>"
+          title="YouTube video player"
+          loading="lazy"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @event.event_offers.ordered.any? %>
+    <section class="event-detail-offers">
+      <h2>Weitere Angebote</h2>
+      <ul>
+        <% @event.event_offers.ordered.each do |offer| %>
+          <li>
+            <span><%= event_source_label(offer.source) %></span>
+            <% if offer.ticket_url.present? %>
+              <%= link_to "Zum Shop", offer.ticket_url, target: "_blank", rel: "noopener" %>
+            <% else %>
+              <span>kein Link</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+</article>

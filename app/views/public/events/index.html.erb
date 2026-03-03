@@ -1,0 +1,15 @@
+<% content_for :title, "Stuttgart Live - Konzerte" %>
+
+<section class="public-shell">
+  <header class="hero-header">
+    <div class="hero-mark">stuttgart live</div>
+    <h1>Konzerte in Stuttgart</h1>
+    <p>Chronologisch kuratiert, direkt mit Ticket-CTA.</p>
+  </header>
+
+  <div id="event-grid" class="flyer-grid">
+    <%= render partial: "event_card", collection: @events, as: :event %>
+  </div>
+
+  <%= render "pagination", next_page: @next_page %>
+</section>

@@ -1,0 +1,9 @@
+published_one_offer:
+  event: published_one
+  source: easyticket
+  source_event_id: ext-published-1
+  ticket_url: https://example.com/tickets/published
+  ticket_price_text: 45 EUR
+  sold_out: false
+  priority_rank: 30
+  metadata: {}

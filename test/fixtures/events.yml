@@ -1,0 +1,45 @@
+published_one:
+  slug: published-event
+  source_fingerprint: seed::published::1
+  title: Published Event
+  artist_name: Published Artist
+  start_at: 2026-06-01 20:00:00
+  venue: LKA Longhorn
+  city: Stuttgart
+  event_info: Infos
+  badge_text: Highlight
+  image_url: https://example.com/published.jpg
+  youtube_url:
+  status: published
+  published_at: 2026-03-01 10:00:00
+  published_by: one
+  completeness_score: 100
+  completeness_flags: []
+  primary_source: easyticket
+  auto_published: false
+  editor_notes:
+  source_snapshot: {}
+
+needs_review_one:
+  slug: needs-review-event
+  source_fingerprint: seed::review::1
+  title: Review Event
+  artist_name: Review Artist
+  start_at: 2026-07-10 20:00:00
+  venue: Im Wizemann
+  city: Stuttgart
+  event_info:
+  badge_text:
+  image_url:
+  youtube_url:
+  status: needs_review
+  published_at:
+  published_by:
+  completeness_score: 40
+  completeness_flags:
+    - missing_image
+    - missing_ticket_url
+  primary_source: eventim
+  auto_published: false
+  editor_notes:
+  source_snapshot: {}

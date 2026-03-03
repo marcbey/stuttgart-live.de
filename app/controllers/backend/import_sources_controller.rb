@@ -1,5 +1,5 @@
 module Backend
-  class ImportSourcesController < ApplicationController
+  class ImportSourcesController < BaseController
     before_action :ensure_supported_sources
     before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run ]
 

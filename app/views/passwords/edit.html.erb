@@ -1,0 +1,36 @@
+<% content_for :title, "Passwort aendern" %>
+
+<section class="backend-shell">
+  <div class="editor-panel" style="max-width: 520px; margin: 2rem auto;">
+    <header>
+      <p class="eyebrow">stuttgart live</p>
+      <h1 style="margin: 0.4rem 0 0; text-transform: uppercase;">Neues Passwort</h1>
+    </header>
+
+    <%= form_with url: password_path(params[:token]), method: :put, class: "editor-form" do |form| %>
+      <div>
+        <%= form.label :password, "Passwort", class: "form-label" %>
+        <%= form.password_field :password,
+                                required: true,
+                                autocomplete: "new-password",
+                                placeholder: "Neues Passwort",
+                                maxlength: 72,
+                                class: "form-input" %>
+      </div>
+
+      <div>
+        <%= form.label :password_confirmation, "Passwort bestaetigen", class: "form-label" %>
+        <%= form.password_field :password_confirmation,
+                                required: true,
+                                autocomplete: "new-password",
+                                placeholder: "Passwort wiederholen",
+                                maxlength: 72,
+                                class: "form-input" %>
+      </div>
+
+      <div class="editor-footer">
+        <%= form.submit "Speichern", class: "button" %>
+      </div>
+    <% end %>
+  </div>
+</section>

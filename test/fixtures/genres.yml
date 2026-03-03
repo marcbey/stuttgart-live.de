@@ -1,0 +1,7 @@
+rock:
+  name: Rock
+  slug: rock
+
+pop:
+  name: Pop
+  slug: pop

@@ -1,0 +1,97 @@
+<% content_for :title, "Redaktion" %>
+
+<section class="backend-shell" data-controller="keyboard-shortcuts">
+  <header class="backend-topbar">
+    <div>
+      <p class="eyebrow">stuttgart live</p>
+      <h1>Event-Inbox</h1>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Neues Event", new_backend_event_path, class: "button button-secondary" %>
+      <%= button_to "Import-Merge synchronisieren", sync_imported_events_backend_events_path(status: @filters[:status]), method: :post, class: "button" %>
+      <%= link_to "Importer", backend_import_sources_path, class: "button button-ghost" %>
+    </div>
+  </header>
+
+  <div class="backend-status-row">
+    <% Event::STATUSES.each do |status| %>
+      <%= link_to backend_events_path(@filters.merge(status: status)), class: "status-chip #{'status-chip-active' if @filters[:status] == status}" do %>
+        <span><%= event_status_label(status) %></span>
+        <strong><%= @status_counts.fetch(status, 0) %></strong>
+      <% end %>
+    <% end %>
+  </div>
+
+  <div class="backend-split">
+    <aside class="backend-list-column">
+      <%= form_with url: backend_events_path, method: :get, class: "filter-form", data: { controller: "filter-state", filter_state_key_value: "backend-events-filters" } do |form| %>
+        <%= form.hidden_field :status, value: @filters[:status] %>
+        <div class="filter-grid">
+          <div>
+            <%= form.label :query, "Suche", class: "form-label" %>
+            <%= form.text_field :query, value: @filters[:query], placeholder: "Band, Venue, Stadt", class: "form-input", data: { filter_state_target: "persist" } %>
+          </div>
+          <div>
+            <%= form.label :starts_after, "Ab", class: "form-label" %>
+            <%= form.date_field :starts_after, value: @filters[:starts_after], class: "form-input", data: { filter_state_target: "persist" } %>
+          </div>
+          <div>
+            <%= form.label :starts_before, "Bis", class: "form-label" %>
+            <%= form.date_field :starts_before, value: @filters[:starts_before], class: "form-input", data: { filter_state_target: "persist" } %>
+          </div>
+        </div>
+        <div>
+          <%= form.submit "Filtern", class: "button button-secondary" %>
+        </div>
+      <% end %>
+
+      <%= form_with url: bulk_backend_events_path(@filters), method: :patch, class: "bulk-form" do |form| %>
+        <div class="bulk-actions">
+          <%= form.select :bulk_action,
+                          options_for_select([
+                            ["Auswaehlen...", ""],
+                            ["Publizieren", "publish"],
+                            ["Depublizieren", "unpublish"],
+                            ["Als vollstaendig markieren", "mark_complete"],
+                            ["Als unvollstaendig markieren", "mark_incomplete"],
+                            ["Ablehnen", "reject"],
+                            ["Genre setzen", "set_genre"]
+                          ]),
+                          {},
+                          class: "form-input" %>
+          <%= form.select :genre_id,
+                          options_from_collection_for_select(@all_genres, :id, :name),
+                          { include_blank: "Genre" },
+                          class: "form-input" %>
+          <%= form.submit "Bulk anwenden", class: "button" %>
+        </div>
+
+        <ul class="event-list">
+          <% @events.each do |event| %>
+            <li class="event-list-item #{'event-list-item-active' if @selected_event&.id == event.id}">
+              <%= check_box_tag "event_ids[]", event.id, false, class: "event-checkbox" %>
+              <%= link_to backend_event_path(event), data: { turbo_frame: "event_editor" }, class: "event-link" do %>
+                <div class="event-list-main">
+                  <strong><%= event.artist_name %></strong>
+                  <span><%= event.title %></span>
+                  <small><%= l(event.start_at.to_date, format: "%d.%m.%Y") %> · <%= event.venue %></small>
+                </div>
+                <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    </aside>
+
+    <section class="backend-editor-column">
+      <%= turbo_frame_tag "event_editor" do %>
+        <% if @selected_event.present? %>
+          <%= render "editor_panel", event: @selected_event, all_genres: @all_genres %>
+        <% else %>
+          <div class="empty-state">Keine Events zur aktuellen Filterung.</div>
+        <% end %>
+      <% end %>
+    </section>
+  </div>
+</section>
