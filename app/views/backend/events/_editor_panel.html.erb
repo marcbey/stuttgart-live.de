@@ -63,17 +63,6 @@
         <%= form.label :youtube_url, "YouTube URL", class: "form-label" %>
         <%= form.url_field :youtube_url, class: "form-input", data: { action: "change->autosave#queue" } %>
       </div>
-      <div>
-        <%= form.label :genre_ids, "Genres", class: "form-label" %>
-        <div class="genre-checks">
-          <% all_genres.each do |genre| %>
-            <label>
-              <%= check_box_tag "event[genre_ids][]", genre.id, event.genre_ids.include?(genre.id), data: { action: "change->autosave#queue" } %>
-              <span><%= genre.name %></span>
-            </label>
-          <% end %>
-        </div>
-      </div>
     </div>
 
     <div>

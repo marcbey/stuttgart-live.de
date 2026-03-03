@@ -51,7 +51,6 @@ module Backend
       set_publishing_fields!(@event)
 
       if @event.save
-        assign_genres!(@event)
         refresh_completeness!(@event)
         Editorial::EventChangeLogger.log!(
           event: @event,

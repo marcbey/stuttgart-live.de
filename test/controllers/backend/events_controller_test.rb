@@ -3,6 +3,7 @@ require "test_helper"
 class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @event = events(:needs_review_one)
+    @published_event = events(:published_one)
     @user = users(:one)
   end
 
@@ -83,6 +84,24 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "published", @event.reload.status
     assert @event.published_at.present?
     assert_includes flash[:notice], "gespeichert und publiziert"
+  end
+
+  test "update does not clear existing genres when genre_ids are absent" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@published_event), params: {
+      event: {
+        title: "Published Event Updated",
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published"
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+    assert_equal [ "Rock" ], @published_event.reload.genres.order(:name).pluck(:name)
   end
 
   test "bulk publish updates selected events" do
