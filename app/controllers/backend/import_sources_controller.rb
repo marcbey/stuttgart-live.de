@@ -23,7 +23,6 @@ module Backend
 
     def update
       @import_source.assign_attributes(
-        name: import_source_params[:name],
         active: import_source_params[:active] == "1"
       )
 
@@ -104,7 +103,7 @@ module Backend
     end
 
     def import_source_params
-      params.require(:import_source).permit(:name, :active, :location_whitelist_text)
+      params.require(:import_source).permit(:active, :location_whitelist_text)
     end
 
     def serialize_run(run)

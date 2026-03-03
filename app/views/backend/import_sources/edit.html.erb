@@ -15,10 +15,6 @@
     <%= form_with model: @import_source, url: backend_import_source_path(@import_source), method: :patch, class: "editor-form" do |form| %>
       <div class="editor-grid">
         <div>
-          <%= form.label :name, "Name", class: "form-label" %>
-          <%= form.text_field :name, class: "form-input" %>
-        </div>
-        <div>
           <%= form.label :active, "Aktiv", class: "form-label" %>
           <div class="check-inline"><%= form.check_box :active %> <span>Importer aktiv</span></div>
         </div>

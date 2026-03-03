@@ -1,4 +1,5 @@
 require "digest"
+require "set"
 
 module Importing
   module Easyticket
@@ -7,6 +8,7 @@ module Importing
       RUN_HEARTBEAT_STALE_AFTER = 2.minutes
       PROGRESS_FLUSH_EVERY_N_CHANGES = 25
       PROGRESS_FLUSH_AFTER_SECONDS = 2
+      FILTERED_OUT_CITIES_LIMIT = 500
 
       def initialize(
         import_source:,
@@ -48,6 +50,7 @@ module Importing
         upserted_count = 0
         failed_count = 0
         canceled = false
+        filtered_out_cities = Set.new
 
         location_whitelist = import_source.configured_location_whitelist
         matcher = LocationMatcher.new(location_whitelist)
@@ -81,7 +84,11 @@ module Importing
           progress_changed = false
           event_id = dump_payload["event_id"].to_s.strip
           next if event_id.blank?
-          next unless matcher.match?(dump_payload)
+
+          unless matcher.match?(dump_payload)
+            add_filtered_out_city!(filtered_out_cities, dump_payload["loc_city"])
+            next
+          end
 
           filtered_count += 1
           progress_changed = true
@@ -166,7 +173,11 @@ module Importing
             imported_count: imported_count,
             upserted_count: upserted_count,
             failed_count: failed_count,
-            metadata: normalized_metadata(run.metadata).merge("location_whitelist" => location_whitelist)
+            metadata: run_completion_metadata(
+              run: run,
+              location_whitelist: location_whitelist,
+              filtered_out_cities: filtered_out_cities
+            )
           )
           broadcast_runs_update!
 
@@ -185,7 +196,11 @@ module Importing
           imported_count: imported_count,
           upserted_count: upserted_count,
           failed_count: failed_count,
-          metadata: normalized_metadata(run.metadata).merge("location_whitelist" => location_whitelist)
+          metadata: run_completion_metadata(
+            run: run,
+            location_whitelist: location_whitelist,
+            filtered_out_cities: filtered_out_cities
+          )
         )
         broadcast_runs_update!
 
@@ -201,7 +216,12 @@ module Importing
           imported_count: imported_count || 0,
           upserted_count: upserted_count || 0,
           failed_count: failed_count || 0,
-          error_message: e.message
+          error_message: e.message,
+          metadata: run_completion_metadata(
+            run: run,
+            location_whitelist: location_whitelist,
+            filtered_out_cities: filtered_out_cities
+          )
         )
         create_import_run_error!(
           run: run,
@@ -374,6 +394,22 @@ module Importing
         )
       rescue StandardError => create_error
         logger.error("[EasyticketImporter] failed to persist import run error: #{create_error.class}: #{create_error.message}")
+      end
+
+      def add_filtered_out_city!(cities_set, city_value)
+        return if cities_set.size >= FILTERED_OUT_CITIES_LIMIT
+
+        city = city_value.to_s.strip
+        return if city.blank?
+
+        cities_set << city
+      end
+
+      def run_completion_metadata(run:, location_whitelist:, filtered_out_cities:)
+        normalized_metadata(run.metadata).merge(
+          "location_whitelist" => Array(location_whitelist),
+          "filtered_out_cities" => filtered_out_cities.to_a.sort
+        )
       end
     end
   end

@@ -56,6 +56,7 @@ module Importing
         assert_equal 1, run.imported_count
         assert_equal 1, run.upserted_count
         assert_equal 0, run.failed_count
+        assert_includes run.metadata.fetch("filtered_out_cities", []), "Berlin"
 
         assert_equal "Band Eventim", imported.artist_name
         assert_equal "17.6.2026", imported.concert_date_label

@@ -69,7 +69,11 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       started_at: 2.minutes.ago,
       finished_at: 1.minute.ago,
       error_message: "Run failed",
-      metadata: { "job_retries_used" => 2, "max_retries" => 3 }
+      metadata: {
+        "job_retries_used" => 2,
+        "max_retries" => 3,
+        "filtered_out_cities" => [ "Berlin", "Hamburg" ]
+      }
     )
     run.import_run_errors.create!(
       source_type: "easyticket",
@@ -86,6 +90,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "evt-123"
     assert_includes response.body, "timeout"
     assert_includes response.body, "2 / 3"
+    assert_includes response.body, "Aussortierte Staedte"
+    assert_includes response.body, "Berlin"
+    assert_includes response.body, "Hamburg"
   end
 
   test "should limit recent runs json to configured size" do
@@ -110,14 +117,16 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should update source" do
+    original_name = @source.name
+
     patch backend_import_source_url(@source), params: {
       import_source: {
-        name: "Easyticket Neu",
         active: "1",
         location_whitelist_text: "Stuttgart\nEsslingen am Neckar"
       }
     }
     assert_redirected_to backend_import_sources_url
+    assert_equal original_name, @source.reload.name
   end
 
   test "should enqueue easyticket run" do

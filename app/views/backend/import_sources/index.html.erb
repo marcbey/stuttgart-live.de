@@ -15,7 +15,6 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>Name</th>
           <th>Typ</th>
           <th>Aktiv</th>
           <th>Ortsliste</th>
@@ -25,7 +24,6 @@
       <tbody>
         <% @import_sources.each do |source| %>
           <tr>
-            <td><strong><%= source.name %></strong></td>
             <td><code><%= source.source_type %></code></td>
             <td><%= source.active ? "Ja" : "Nein" %></td>
             <td><%= source.configured_location_whitelist.join(", ") %></td>

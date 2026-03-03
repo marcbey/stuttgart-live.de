@@ -1,3 +1,5 @@
+require "set"
+
 module Importing
   module Eventim
     class Importer
@@ -5,6 +7,7 @@ module Importing
       RUN_HEARTBEAT_STALE_AFTER = 2.minutes
       PROGRESS_FLUSH_EVERY_N_CHANGES = 1000
       PROGRESS_FLUSH_AFTER_SECONDS = 2
+      FILTERED_OUT_CITIES_LIMIT = 500
 
       def initialize(import_source:, feed_fetcher: FeedFetcher.new, run_metadata: {}, logger: Rails.logger)
         @import_source = import_source
@@ -39,6 +42,7 @@ module Importing
         upserted_count = 0
         failed_count = 0
         canceled = false
+        filtered_out_cities = Set.new
 
         location_whitelist = import_source.configured_location_whitelist
         matcher = LocationMatcher.new(location_whitelist)
@@ -66,6 +70,7 @@ module Importing
           progress_changed = true
 
           unless matcher.match?(feed_payload)
+            add_filtered_out_city!(filtered_out_cities, filtered_out_city_from_feed(feed_payload))
             next
           end
 
@@ -156,7 +161,11 @@ module Importing
             imported_count: imported_count,
             upserted_count: upserted_count,
             failed_count: failed_count,
-            metadata: normalized_metadata(run.metadata).merge("location_whitelist" => location_whitelist)
+            metadata: run_completion_metadata(
+              run: run,
+              location_whitelist: location_whitelist,
+              filtered_out_cities: filtered_out_cities
+            )
           )
           broadcast_runs_update!
           return run
@@ -174,7 +183,11 @@ module Importing
           imported_count: imported_count,
           upserted_count: upserted_count,
           failed_count: failed_count,
-          metadata: normalized_metadata(run.metadata).merge("location_whitelist" => location_whitelist)
+          metadata: run_completion_metadata(
+            run: run,
+            location_whitelist: location_whitelist,
+            filtered_out_cities: filtered_out_cities
+          )
         )
         broadcast_runs_update!
 
@@ -190,7 +203,12 @@ module Importing
           imported_count: imported_count || 0,
           upserted_count: upserted_count || 0,
           failed_count: failed_count || 0,
-          error_message: e.message
+          error_message: e.message,
+          metadata: run_completion_metadata(
+            run: run,
+            location_whitelist: location_whitelist,
+            filtered_out_cities: filtered_out_cities
+          )
         )
         create_import_run_error!(
           run: run,
@@ -364,6 +382,34 @@ module Importing
         )
       rescue StandardError => create_error
         logger.error("[EventimImporter] failed to persist import run error: #{create_error.class}: #{create_error.message}")
+      end
+
+      def add_filtered_out_city!(cities_set, city_value)
+        return if cities_set.size >= FILTERED_OUT_CITIES_LIMIT
+
+        city = city_value.to_s.strip
+        return if city.blank?
+
+        cities_set << city
+      end
+
+      def filtered_out_city_from_feed(feed_payload)
+        hash = feed_payload.is_a?(Hash) ? feed_payload.deep_stringify_keys : {}
+        keys = Importing::Eventim::LocationMatcher::CITY_KEYS
+
+        keys.each do |key|
+          value = hash[key].to_s.strip
+          return value if value.present?
+        end
+
+        ""
+      end
+
+      def run_completion_metadata(run:, location_whitelist:, filtered_out_cities:)
+        normalized_metadata(run.metadata).merge(
+          "location_whitelist" => Array(location_whitelist),
+          "filtered_out_cities" => filtered_out_cities.to_a.sort
+        )
       end
     end
   end

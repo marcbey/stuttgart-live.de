@@ -49,6 +49,31 @@ module Backend::ImportSourcesHelper
     "#{retries_used} / #{max_retries}"
   end
 
+  def import_run_filtered_out_cities(run)
+    configured_cities = import_source_configured_cities(run.import_source)
+    Array(import_run_metadata(run)["filtered_out_cities"])
+      .map { |city| city.to_s.strip }
+      .reject(&:blank?)
+      .reject { |city| configured_cities.any? { |configured| configured.casecmp?(city) } }
+      .uniq
+      .sort
+  end
+
+  def import_source_includes_city?(source, city)
+    import_source_configured_cities(source).any? do |entry|
+      entry.to_s.strip.casecmp?(city.to_s.strip)
+    end
+  end
+
+  def import_source_configured_cities(source)
+    source
+      .configured_location_whitelist
+      .map { |city| city.to_s.strip }
+      .reject(&:blank?)
+      .uniq
+      .sort
+  end
+
   private
 
   def import_run_metadata(run)
