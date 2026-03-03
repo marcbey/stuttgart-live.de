@@ -106,7 +106,6 @@ module Backend
     def bulk
       event_ids = Array(params[:event_ids]).map(&:to_i).uniq
       action = params[:bulk_action].to_s
-      genre_id = params[:genre_id].presence
 
       if event_ids.blank?
         redirect_to backend_events_path(filter_params), alert: "Bitte mindestens ein Event auswählen."
@@ -129,21 +128,12 @@ module Backend
             event.update!(status: "needs_review", auto_published: false)
           when "reject"
             event.update!(status: "rejected", auto_published: false)
-          when "set_genre"
-            next unless genre_id
-
-            genre = Genre.find_by(id: genre_id)
-            next unless genre
-
-            event.genres = [ genre ]
-            refresh_completeness!(event)
           end
 
           Editorial::EventChangeLogger.log!(
             event: event,
             action: "bulk_#{action}",
-            user: current_user,
-            metadata: { genre_id: genre_id }
+            user: current_user
           )
           processed += 1
         end
