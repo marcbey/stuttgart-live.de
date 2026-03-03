@@ -4,6 +4,7 @@ module Backend
 
     def index
       @filters = filter_params.to_h.symbolize_keys
+      @filters[:status] = "needs_review" if @filters[:status].blank?
       @events = Editorial::EventsInboxQuery.new(params: @filters).call
       @status_counts = Event.group(:status).count
       @all_genres = Genre.order(:name)
