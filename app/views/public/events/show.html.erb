@@ -43,7 +43,7 @@
 
   <% if @primary_offer.present? %>
     <section class="event-detail-cta">
-      <%= link_to "Tickets sichern", @primary_offer.ticket_url, target: "_blank", rel: "noopener", class: "button" %>
+      <%= link_to "Tickets sichern", @primary_offer.resolved_ticket_url, target: "_blank", rel: "noopener", class: "button" %>
       <p>Ticketshop: <%= event_source_label(@primary_offer.source) %></p>
     </section>
   <% end %>
@@ -64,21 +64,4 @@
     </section>
   <% end %>
 
-  <% if @event.event_offers.ordered.any? %>
-    <section class="event-detail-offers">
-      <h2>Weitere Angebote</h2>
-      <ul>
-        <% @event.event_offers.ordered.each do |offer| %>
-          <li>
-            <span><%= event_source_label(offer.source) %></span>
-            <% if offer.ticket_url.present? %>
-              <%= link_to "Zum Shop", offer.ticket_url, target: "_blank", rel: "noopener" %>
-            <% else %>
-              <span>kein Link</span>
-            <% end %>
-          </li>
-        <% end %>
-      </ul>
-    </section>
-  <% end %>
 </article>

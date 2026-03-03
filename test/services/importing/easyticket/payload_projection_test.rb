@@ -38,6 +38,42 @@ module Importing
         assert_equal "https://img.example/large.jpg", attributes[:image_url]
         assert_equal "https://tickets.example/42", attributes[:ticket_url]
       end
+
+      test "replaces curly event_id placeholder in ticket base url" do
+        projection = PayloadProjection.new(
+          dump_payload: {
+            "event_id" => "99",
+            "date" => "2026-06-20",
+            "loc_city" => "Stuttgart",
+            "loc_name" => "LKA",
+            "title" => "Another Band"
+          },
+          detail_payload: {},
+          ticket_base_url: "https://tickets.example/event/{event_id}"
+        )
+
+        attributes = projection.to_attributes
+
+        assert_equal "https://tickets.example/event/99", attributes[:ticket_url]
+      end
+
+      test "does not append event_id twice when base already ends with id" do
+        projection = PayloadProjection.new(
+          dump_payload: {
+            "event_id" => "104364",
+            "date" => "2026-06-20",
+            "loc_city" => "Stuttgart",
+            "loc_name" => "LKA",
+            "title" => "Another Band"
+          },
+          detail_payload: {},
+          ticket_base_url: "https://partnershop.easyticket.de/shop/event/104364"
+        )
+
+        attributes = projection.to_attributes
+
+        assert_equal "https://partnershop.easyticket.de/shop/event/104364", attributes[:ticket_url]
+      end
     end
   end
 end

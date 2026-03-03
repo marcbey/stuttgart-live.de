@@ -6,7 +6,7 @@ module Backend
     def index
       release_stale_running_runs!
       @import_sources = ImportSource.includes(:import_source_config).order(:source_type)
-      @recent_runs = ImportRun.where(source_type: Backend::ImportRunsBroadcaster::SUPPORTED_SOURCE_TYPES).recent.limit(20)
+      @recent_runs = recent_runs_for_list
 
       respond_to do |format|
         format.html
@@ -43,46 +43,52 @@ module Backend
 
     def run_easyticket
       unless @import_source.easyticket?
-        redirect_to backend_import_sources_path, alert: "Nur Easyticket kann hier gestartet werden."
+        respond_with_importer_feedback(alert: "Nur Easyticket kann hier gestartet werden.")
         return
       end
 
-      trigger_import!(
+      feedback = trigger_import!(
         source_type: "easyticket",
         label: "Easyticket",
         run_job_class: Importing::Easyticket::RunJob
       )
+
+      respond_with_importer_feedback(**feedback)
     end
 
     def run_eventim
       unless @import_source.eventim?
-        redirect_to backend_import_sources_path, alert: "Nur Eventim kann hier gestartet werden."
+        respond_with_importer_feedback(alert: "Nur Eventim kann hier gestartet werden.")
         return
       end
 
-      trigger_import!(
+      feedback = trigger_import!(
         source_type: "eventim",
         label: "Eventim",
         run_job_class: Importing::Eventim::RunJob
       )
+
+      respond_with_importer_feedback(**feedback)
     end
 
     def stop_easyticket_run
       unless @import_source.easyticket?
-        redirect_to backend_import_sources_path, alert: "Nur Easyticket kann hier gestoppt werden."
+        respond_with_importer_feedback(alert: "Nur Easyticket kann hier gestoppt werden.")
         return
       end
 
-      request_stop_for_running_import!(source_type: "easyticket", label: "Easyticket")
+      feedback = request_stop_for_running_import!(source_type: "easyticket", label: "Easyticket")
+      respond_with_importer_feedback(**feedback)
     end
 
     def stop_eventim_run
       unless @import_source.eventim?
-        redirect_to backend_import_sources_path, alert: "Nur Eventim kann hier gestoppt werden."
+        respond_with_importer_feedback(alert: "Nur Eventim kann hier gestoppt werden.")
         return
       end
 
-      request_stop_for_running_import!(source_type: "eventim", label: "Eventim")
+      feedback = request_stop_for_running_import!(source_type: "eventim", label: "Eventim")
+      respond_with_importer_feedback(**feedback)
     end
 
     private
@@ -145,19 +151,17 @@ module Backend
     def trigger_import!(source_type:, label:, run_job_class:)
       running_run = @import_source.import_runs.where(source_type: source_type, status: "running").order(started_at: :desc).first
       if running_run.present? && !release_stale_running_run!(running_run)
-        redirect_to backend_import_sources_path, alert: "Ein #{label}-Import laeuft bereits (Run ##{running_run.id})."
-        return
+        return { alert: "Ein #{label}-Import laeuft bereits (Run ##{running_run.id})." }
       end
 
       run_job_class.perform_later(@import_source.id)
-      redirect_to backend_import_sources_path, notice: "#{label}-Import wurde gestartet."
+      {}
     end
 
     def request_stop_for_running_import!(source_type:, label:)
       run = find_running_run_for_stop(source_type)
       unless run
-        redirect_to backend_import_sources_path, alert: "Kein laufender #{label}-Import gefunden."
-        return
+        return { alert: "Kein laufender #{label}-Import gefunden." }
       end
 
       metadata = normalized_metadata(run.metadata)
@@ -172,7 +176,42 @@ module Backend
       )
       Backend::ImportRunsBroadcaster.broadcast!
 
-      redirect_to backend_import_sources_path, notice: "Stop fuer #{label}-Import (Run ##{run.id}) wurde angefordert."
+      { notice: "Stop fuer #{label}-Import (Run ##{run.id}) wurde angefordert." }
+    end
+
+    def recent_runs_for_list
+      ImportRun
+        .where(source_type: Backend::ImportRunsBroadcaster::SUPPORTED_SOURCE_TYPES)
+        .recent
+        .limit(Backend::ImportRunsBroadcaster::RECENT_RUNS_LIMIT)
+    end
+
+    def respond_with_importer_feedback(notice: nil, alert: nil)
+      respond_to do |format|
+        format.html do
+          if alert.present?
+            redirect_to backend_import_sources_path, alert: alert
+          elsif notice.present?
+            redirect_to backend_import_sources_path, notice: notice
+          else
+            redirect_to backend_import_sources_path
+          end
+        end
+
+        format.turbo_stream do
+          flash.now[:notice] = notice if notice.present?
+          flash.now[:alert] = alert if alert.present?
+
+          render turbo_stream: [
+            turbo_stream.replace("flash-messages", partial: "layouts/flash_messages"),
+            turbo_stream.replace(
+              "import-runs-table",
+              partial: "backend/import_sources/recent_runs_table",
+              locals: { recent_runs: recent_runs_for_list }
+            )
+          ]
+        end
+      end
     end
 
     def release_stale_running_run!(run)

@@ -28,6 +28,22 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert payload["runs"].map { |run| run["source_type"] }.include?("eventim")
   end
 
+  test "should limit recent runs json to configured size" do
+    15.times do |index|
+      @source.import_runs.create!(
+        status: "succeeded",
+        source_type: "easyticket",
+        started_at: (index + 1).minutes.ago
+      )
+    end
+
+    get backend_import_sources_url(format: :json)
+    assert_response :success
+
+    payload = JSON.parse(response.body)
+    assert_equal Backend::ImportRunsBroadcaster::RECENT_RUNS_LIMIT, payload["runs"].size
+  end
+
   test "should get edit" do
     get edit_backend_import_source_url(@source)
     assert_response :success
@@ -49,6 +65,19 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       post run_easyticket_backend_import_source_url(@source)
     end
     assert_redirected_to backend_import_sources_url
+    follow_redirect!
+    assert_not_includes response.body, "Easyticket-Import wurde gestartet."
+  end
+
+  test "should respond with turbo stream when enqueueing easyticket run" do
+    assert_enqueued_jobs 1 do
+      post run_easyticket_backend_import_source_url(@source), as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_includes response.media_type, "turbo-stream"
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "target=\"import-runs-table\""
   end
 
   test "should not enqueue when easyticket run is already active" do
@@ -130,6 +159,8 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to backend_import_sources_url
+    follow_redirect!
+    assert_not_includes response.body, "Eventim-Import wurde gestartet."
   end
 
   test "should not enqueue when eventim run is already active" do

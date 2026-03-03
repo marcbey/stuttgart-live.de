@@ -119,8 +119,13 @@ module Importing
 
         if @ticket_base_url.include?("%{event_id}")
           format(@ticket_base_url, event_id: external_event_id)
+        elsif @ticket_base_url.include?("{event_id}")
+          @ticket_base_url.gsub("{event_id}", external_event_id)
         else
-          "#{@ticket_base_url.chomp('/')}/#{external_event_id}"
+          normalized_base_url = @ticket_base_url.chomp("/")
+          return normalized_base_url if normalized_base_url.end_with?("/#{external_event_id}")
+
+          "#{normalized_base_url}/#{external_event_id}"
         end
       end
 

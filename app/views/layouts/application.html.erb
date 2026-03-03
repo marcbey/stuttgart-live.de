@@ -45,16 +45,9 @@
       </div>
     </nav>
 
-    <% if notice.present? || alert.present? %>
-      <div class="flash-wrap">
-        <% if notice.present? %>
-          <p class="flash flash-notice"><%= notice %></p>
-        <% end %>
-        <% if alert.present? %>
-          <p class="flash flash-alert"><%= alert %></p>
-        <% end %>
-      </div>
-    <% end %>
+    <div id="flash-messages">
+      <%= render "layouts/flash_messages" %>
+    </div>
 
     <%= yield %>
   </body>

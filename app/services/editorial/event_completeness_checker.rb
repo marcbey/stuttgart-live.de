@@ -45,10 +45,29 @@ module Editorial
 
     def ticket_url_present?
       offers.any? do |offer|
-        ticket_url = offer.respond_to?(:ticket_url) ? offer.ticket_url : offer[:ticket_url]
-        sold_out = offer.respond_to?(:sold_out?) ? offer.sold_out? : ActiveModel::Type::Boolean.new.cast(offer[:sold_out])
+        ticket_url =
+          if offer.respond_to?(:resolved_ticket_url)
+            offer.resolved_ticket_url
+          else
+            EventOffer.resolve_ticket_url(
+              extract_offer_value(offer, :ticket_url),
+              extract_offer_value(offer, :source_event_id)
+            )
+          end
+        sold_out =
+          if offer.respond_to?(:sold_out?)
+            offer.sold_out?
+          else
+            ActiveModel::Type::Boolean.new.cast(extract_offer_value(offer, :sold_out))
+          end
         ticket_url.present? && !sold_out
       end
+    end
+
+    def extract_offer_value(offer, key)
+      return offer.public_send(key) if offer.respond_to?(key)
+
+      offer[key] || offer[key.to_s]
     end
   end
 end
