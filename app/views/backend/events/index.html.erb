@@ -59,10 +59,6 @@
                           ]),
                           {},
                           class: "form-input" %>
-          <%= form.select :genre_id,
-                          options_from_collection_for_select(@all_genres, :id, :name),
-                          { include_blank: "Genre" },
-                          class: "form-input" %>
           <%= form.submit "Bulk anwenden", class: "button" %>
         </div>
 
