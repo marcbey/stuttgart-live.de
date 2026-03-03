@@ -48,6 +48,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     result = Merging::SyncFromImports.new.call
 
     assert result.groups_count.positive?
+    assert result.import_records_count.positive?
 
     event = Event.find_by(artist_name: "Band A", start_at: Time.zone.local(2026, 11, 10, 20, 0, 0))
     assert event.present?
@@ -55,5 +56,10 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal "published", event.status
     assert_equal true, event.auto_published
     assert_equal 2, event.event_offers.count
+
+    second_result = Merging::SyncFromImports.new.call
+    assert_equal 0, second_result.events_created_count
+    assert_equal 0, second_result.events_updated_count
+    assert_equal 0, second_result.offers_upserted_count
   end
 end

@@ -28,6 +28,39 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert payload["runs"].map { |run| run["source_type"] }.include?("eventim")
   end
 
+  test "should include merge runs as non-stoppable jobs" do
+    merge_run = @source.import_runs.create!(
+      status: "running",
+      source_type: "merge",
+      started_at: 1.minute.ago
+    )
+
+    get backend_import_sources_url(format: :json)
+    assert_response :success
+
+    payload = JSON.parse(response.body)
+    run_payload = payload.fetch("runs").find { |run| run["id"] == merge_run.id }
+
+    assert run_payload.present?
+    assert_equal "merge", run_payload["source_type"]
+    assert_equal false, run_payload["can_stop"]
+    assert_nil run_payload["stop_url"]
+  end
+
+  test "should render no stop-request label for running merge jobs" do
+    merge_run = @source.import_runs.create!(
+      status: "running",
+      source_type: "merge",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child", text: "-"
+  end
+
   test "should limit recent runs json to configured size" do
     15.times do |index|
       @source.import_runs.create!(

@@ -5,6 +5,8 @@ module Backend::ImportSourcesHelper
       "Easyticket"
     when "eventim"
       "Eventim"
+    when "merge"
+      "Merge"
     else
       run.source_type.to_s
     end
@@ -21,7 +23,7 @@ module Backend::ImportSourcesHelper
   end
 
   def import_run_can_stop?(run)
-    run.status == "running" && !import_run_stop_requested?(run)
+    run.status == "running" && !import_run_stop_requested?(run) && import_run_stop_path(run).present?
   end
 
   def import_run_stop_path(run)
@@ -31,6 +33,12 @@ module Backend::ImportSourcesHelper
     when "eventim"
       stop_eventim_run_backend_import_source_path(run.import_source_id, run_id: run.id)
     end
+  end
+
+  def import_run_filtered_label(run)
+    return "-" if run.source_type == "merge"
+
+    run.filtered_count
   end
 
   private

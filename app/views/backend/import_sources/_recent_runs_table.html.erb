@@ -19,13 +19,13 @@
           <td><%= import_run_type_label(run) %></td>
           <td><%= import_run_status_label(run) %></td>
           <td><%= run.fetched_count %></td>
-          <td><%= run.filtered_count %></td>
+          <td><%= import_run_filtered_label(run) %></td>
           <td><%= run.upserted_count %></td>
           <td><%= run.failed_count %></td>
           <td>
             <% if import_run_can_stop?(run) %>
               <%= button_to "Stoppen", import_run_stop_path(run), method: :post, class: "button button-secondary" %>
-            <% elsif run.status == "running" %>
+            <% elsif run.status == "running" && import_run_stop_requested?(run) %>
               Stop angefordert
             <% else %>
               -

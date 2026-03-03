@@ -1,5 +1,7 @@
 module Backend
   class ImportSourcesController < BaseController
+    IMPORTER_SOURCE_TYPES = %w[easyticket eventim].freeze
+
     before_action :ensure_supported_sources
     before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run ]
 
@@ -107,7 +109,8 @@ module Backend
 
     def serialize_run(run)
       stop_requested = run_stop_requested?(run)
-      can_stop = run.status == "running" && !stop_requested
+      stop_url = stop_url_for(run, can_stop: true)
+      can_stop = run.status == "running" && !stop_requested && stop_url.present?
       {
         id: run.id,
         import_source_id: run.import_source_id,
@@ -121,7 +124,7 @@ module Backend
         upserted_count: run.upserted_count,
         failed_count: run.failed_count,
         can_stop: can_stop,
-        stop_url: stop_url_for(run, can_stop: can_stop)
+        stop_url: can_stop ? stop_url : nil
       }
     end
 
@@ -181,7 +184,7 @@ module Backend
 
     def recent_runs_for_list
       ImportRun
-        .where(source_type: Backend::ImportRunsBroadcaster::SUPPORTED_SOURCE_TYPES)
+        .where(source_type: Backend::ImportRunsBroadcaster::LISTED_SOURCE_TYPES)
         .recent
         .limit(Backend::ImportRunsBroadcaster::RECENT_RUNS_LIMIT)
     end
@@ -238,7 +241,7 @@ module Backend
 
     def release_stale_running_runs!
       ImportRun
-        .where(source_type: Backend::ImportRunsBroadcaster::SUPPORTED_SOURCE_TYPES, status: "running")
+        .where(source_type: IMPORTER_SOURCE_TYPES, status: "running")
         .find_each do |run|
         release_stale_running_run!(run)
       end

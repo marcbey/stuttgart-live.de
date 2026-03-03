@@ -2,11 +2,11 @@ module Backend
   class ImportRunsBroadcaster
     STREAM = [ :backend, :import_runs ].freeze
     TARGET = "import-runs-table".freeze
-    SUPPORTED_SOURCE_TYPES = %w[easyticket eventim].freeze
+    LISTED_SOURCE_TYPES = %w[easyticket eventim merge].freeze
     RECENT_RUNS_LIMIT = 10
 
     def self.broadcast!
-      recent_runs = ImportRun.where(source_type: SUPPORTED_SOURCE_TYPES).recent.limit(RECENT_RUNS_LIMIT)
+      recent_runs = ImportRun.where(source_type: LISTED_SOURCE_TYPES).recent.limit(RECENT_RUNS_LIMIT)
 
       Turbo::StreamsChannel.broadcast_replace_to(
         STREAM,

@@ -1,6 +1,12 @@
 module Merging
   class SyncFromImports
-    Result = Data.define(:groups_count, :events_created_count, :events_updated_count, :offers_upserted_count)
+    Result = Data.define(
+      :import_records_count,
+      :groups_count,
+      :events_created_count,
+      :events_updated_count,
+      :offers_upserted_count
+    )
 
     ImportRecord = Data.define(
       :source,
@@ -21,7 +27,8 @@ module Merging
     end
 
     def call
-      groups = import_records.group_by { |record| fingerprint_for(record) }
+      records = import_records
+      groups = records.group_by { |record| fingerprint_for(record) }
 
       created = 0
       updated = 0
@@ -29,16 +36,18 @@ module Merging
 
       ActiveRecord::Base.transaction do
         groups.each_value do |records|
-          event, created_now, offers_count = upsert_event_for(records)
+          ordered_records = ordered_records_for_group(records)
+          event, created_now, updated_now, offers_count = upsert_event_for(ordered_records)
           created += 1 if created_now
-          updated += 1 unless created_now
+          updated += 1 if updated_now
           offers_upserted += offers_count
 
-          logger.info("[Merging::SyncFromImports] synced event ##{event.id} with #{records.size} source records")
+          logger.info("[Merging::SyncFromImports] synced event ##{event.id} with #{ordered_records.size} source records")
         end
       end
 
       Result.new(
+        import_records_count: records.size,
         groups_count: groups.count,
         events_created_count: created,
         events_updated_count: updated,
@@ -103,7 +112,7 @@ module Merging
     end
 
     def upsert_event_for(records)
-      primary = records.min_by { |record| [ priority_for(record.source), record.external_event_id ] }
+      primary = records.first
       fingerprint = fingerprint_for(primary)
 
       event = Event.find_or_initialize_by(source_fingerprint: fingerprint)
@@ -117,6 +126,7 @@ module Merging
       event.start_at = start_at_for(primary.concert_date)
       event.primary_source = primary.source
       event.source_snapshot = build_source_snapshot(records)
+      updated_now = event.changed?
 
       offers = build_offer_attributes(records)
       completeness = Editorial::EventCompletenessChecker.new(event: event, offers: offers).call
@@ -124,7 +134,8 @@ module Merging
       event.completeness_flags = completeness.flags
 
       apply_status_rules(event, completeness)
-      event.save!
+      updated_now ||= event.changed?
+      event.save! if created_now || updated_now
 
       offers_upserted = sync_offers!(event, offers)
 
@@ -138,7 +149,7 @@ module Merging
         }
       )
 
-      [ event, created_now, offers_upserted ]
+      [ event, created_now, updated_now && !created_now, offers_upserted ]
     end
 
     def apply_status_rules(event, completeness)
@@ -164,6 +175,8 @@ module Merging
         key = [ attrs[:source], attrs[:source_event_id] ]
         offer = existing.delete(key) || event.event_offers.new
         offer.assign_attributes(attrs)
+        next unless offer.new_record? || offer.changed?
+
         offer.save!
         upserted += 1
       end
@@ -187,6 +200,16 @@ module Merging
 
     def start_at_for(concert_date)
       Time.zone.local(concert_date.year, concert_date.month, concert_date.day, 20, 0, 0)
+    end
+
+    def ordered_records_for_group(records)
+      records.sort_by do |record|
+        [
+          priority_for(record.source),
+          record.source.to_s,
+          record.external_event_id.to_s
+        ]
+      end
     end
 
     def fingerprint_for(record)
