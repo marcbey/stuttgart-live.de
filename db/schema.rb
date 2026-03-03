@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_02_174600) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_03_193000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -24,7 +24,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_174600) do
     t.jsonb "dump_payload", default: {}, null: false
     t.string "external_event_id", null: false
     t.datetime "first_seen_at", null: false
-    t.string "image_url"
     t.bigint "import_source_id", null: false
     t.boolean "is_active", default: true, null: false
     t.datetime "last_seen_at", null: false
@@ -90,7 +89,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_174600) do
     t.jsonb "dump_payload", default: {}, null: false
     t.string "external_event_id", null: false
     t.datetime "first_seen_at", null: false
-    t.string "image_url"
     t.bigint "import_source_id", null: false
     t.boolean "is_active", default: true, null: false
     t.datetime "last_seen_at", null: false
@@ -116,7 +114,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_174600) do
     t.datetime "created_at", null: false
     t.text "editor_notes"
     t.text "event_info"
-    t.string "image_url"
     t.string "primary_source"
     t.datetime "published_at"
     t.bigint "published_by_id"
@@ -143,6 +140,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_02_174600) do
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_genres_on_name", unique: true
     t.index ["slug"], name: "index_genres_on_slug", unique: true
+  end
+
+  create_table "import_event_images", force: :cascade do |t|
+    t.string "aspect_hint", default: "unknown", null: false
+    t.datetime "created_at", null: false
+    t.string "image_type", null: false
+    t.text "image_url", null: false
+    t.string "import_class", null: false
+    t.bigint "import_event_id", null: false
+    t.integer "position", default: 0, null: false
+    t.string "role", default: "gallery", null: false
+    t.string "source", null: false
+    t.datetime "updated_at", null: false
+    t.index ["import_class", "import_event_id", "source", "image_type", "image_url"], name: "index_import_event_images_on_unique_image_per_owner", unique: true
+    t.index ["import_class", "import_event_id"], name: "index_import_event_images_on_class_and_event"
   end
 
   create_table "import_run_errors", force: :cascade do |t|

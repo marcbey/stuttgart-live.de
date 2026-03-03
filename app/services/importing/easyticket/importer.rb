@@ -95,6 +95,15 @@ module Importing
           source_payload_hash = build_source_payload_hash(dump_payload)
           existing_record = find_existing_import_event(event_id, dump_payload)
           if unchanged_dump_payload?(existing_record, source_payload_hash)
+            projection = PayloadProjection.new(
+              dump_payload: dump_payload,
+              detail_payload: existing_record.detail_payload
+            )
+            sync_import_event_images!(
+              record: existing_record,
+              source: "easyticket",
+              candidates: projection.image_candidates
+            )
             mark_existing_event_as_seen!(
               record: existing_record,
               dump_payload: dump_payload,
@@ -121,6 +130,7 @@ module Importing
             attributes: attributes,
             dump_payload: dump_payload,
             detail_payload: detail_payload,
+            image_candidates: projection.image_candidates,
             seen_at: run_started_at
           )
           imported_count += 1
@@ -236,7 +246,7 @@ module Importing
 
       attr_reader :import_source, :dump_fetcher, :detail_fetcher, :run_metadata, :logger
 
-      def upsert_import_event!(attributes:, dump_payload:, detail_payload:, seen_at:)
+      def upsert_import_event!(attributes:, dump_payload:, detail_payload:, image_candidates:, seen_at:)
         record = EasyticketImportEvent.find_or_initialize_by(
           import_source_id: import_source.id,
           external_event_id: attributes[:external_event_id],
@@ -253,6 +263,11 @@ module Importing
           )
         )
         record.save!
+        sync_import_event_images!(
+          record: record,
+          source: "easyticket",
+          candidates: image_candidates
+        )
       end
 
       def deactivate_stale_events!(seen_at:)
@@ -380,6 +395,65 @@ module Importing
           last_seen_at: seen_at,
           updated_at: Time.current
         )
+      end
+
+      def sync_import_event_images!(record:, source:, candidates:)
+        normalized_candidates = normalize_image_candidates(candidates, source: source)
+        existing_by_key = record.import_event_images.index_by do |image|
+          image_key(source: image.source, image_type: image.image_type, image_url: image.image_url)
+        end
+
+        normalized_candidates.each_with_index do |candidate, index|
+          key = image_key(
+            source: candidate[:source],
+            image_type: candidate[:image_type],
+            image_url: candidate[:image_url]
+          )
+          image = existing_by_key.delete(key) || record.import_event_images.new
+          image.assign_attributes(
+            source: candidate[:source],
+            image_type: candidate[:image_type],
+            image_url: candidate[:image_url],
+            role: candidate[:role],
+            aspect_hint: candidate[:aspect_hint],
+            position: index
+          )
+          image.save! if image.new_record? || image.changed?
+        end
+
+        existing_by_key.each_value(&:destroy!)
+      end
+
+      def normalize_image_candidates(candidates, source:)
+        seen = Set.new
+
+        Array(candidates).filter_map do |candidate|
+          row = candidate.respond_to?(:to_h) ? candidate.to_h : {}
+          image_url = ImportEventImage.normalize_image_url(row[:image_url] || row["image_url"])
+          next if image_url.blank?
+
+          image_type = (row[:image_type] || row["image_type"]).to_s.strip.presence || "image"
+          normalized_source = source.to_s
+          key = image_key(source: normalized_source, image_type: image_type, image_url: image_url)
+          next if seen.include?(key)
+
+          seen << key
+          {
+            source: normalized_source,
+            image_type: image_type,
+            image_url: image_url,
+            role: (row[:role] || row["role"]).to_s.strip.presence || ImportEventImage.derive_role(source: normalized_source, image_type: image_type),
+            aspect_hint: (row[:aspect_hint] || row["aspect_hint"]).to_s.strip.presence || ImportEventImage.derive_aspect_hint(url: image_url, image_type: image_type)
+          }
+        end
+      end
+
+      def image_key(source:, image_type:, image_url:)
+        [
+          source.to_s.strip.downcase,
+          image_type.to_s.strip,
+          image_url.to_s.strip.downcase
+        ]
       end
 
       def create_import_run_error!(run:, error:, external_event_id: nil, payload: {})

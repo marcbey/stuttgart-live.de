@@ -1,11 +1,13 @@
 require "date"
 require "digest"
+require "set"
 require "uri"
 
 module Importing
   module Easyticket
     class PayloadProjection
       URL_PATTERN = URI::DEFAULT_PARSER.make_regexp(%w[http https]).freeze
+      URL_EXTRACT_PATTERN = %r{https?://[^\s"'<>]+}i.freeze
 
       def initialize(dump_payload:, detail_payload:, ticket_base_url: ENV["TICKET_LINK_EVENT_BASE_URL"])
         @dump_payload = dump_payload || {}
@@ -57,9 +59,59 @@ module Importing
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
           ticket_url: build_ticket_url(external_event_id),
-          image_url: extract_image_url,
           source_payload_hash: Digest::SHA256.hexdigest(@dump_payload.to_json)
         }
+      end
+
+      def image_candidates
+        candidates = []
+
+        urls_from_dump_images.each do |url|
+          candidates << { image_type: "images", image_url: url, position: candidates.length }
+        end
+
+        detail_roots.each do |root|
+          images = root["images"]
+          next unless images.is_a?(Array)
+
+          images.each do |image|
+            next unless image.is_a?(Hash)
+
+            paths = image["paths"]
+            next unless paths.is_a?(Array)
+
+            paths.each do |path|
+              next unless path.is_a?(Hash)
+
+              url = ImportEventImage.normalize_image_url(path["url"])
+              next if url.blank?
+
+              type = path["type"].to_s.strip.presence || "detail_path"
+              candidates << {
+                image_type: type,
+                image_url: url,
+                position: candidates.length
+              }
+            end
+          end
+        end
+
+        [
+          [ "image_url", detail_value("image_url") ],
+          [ "event_image_url", detail_value("event", "image_url") ],
+          [ "event_image", detail_value("event", "image") ]
+        ].each do |image_type, value|
+          normalized = ImportEventImage.normalize_image_url(value)
+          next if normalized.blank?
+
+          candidates << {
+            image_type: image_type,
+            image_url: normalized,
+            position: candidates.length
+          }
+        end
+
+        deduplicate_candidates(candidates)
       end
 
       private
@@ -129,20 +181,6 @@ module Importing
         end
       end
 
-      def extract_image_url
-        from_dump = dump_value("images")
-        return Regexp.last_match(0) if from_dump.match(URL_PATTERN)
-
-        from_details = extract_image_url_from_detail_payload
-        return from_details if from_details.present?
-
-        first_present(
-          detail_value("image_url"),
-          detail_value("event", "image_url"),
-          detail_value("event", "image")
-        )
-      end
-
       def detail_roots
         @detail_roots ||=
           begin
@@ -153,33 +191,23 @@ module Importing
           end
       end
 
-      def extract_image_url_from_detail_payload
-        detail_roots.each do |root|
-          images = root["images"]
-          next unless images.is_a?(Array)
-
-          fallback = nil
-          images.each do |image|
-            next unless image.is_a?(Hash)
-
-            paths = image["paths"]
-            next unless paths.is_a?(Array)
-
-            paths.each do |path|
-              next unless path.is_a?(Hash)
-
-              url = path["url"].to_s.strip
-              next if url.blank?
-
-              type = path["type"].to_s.strip.downcase
-              return url if type == "large"
-              fallback ||= url
-            end
-          end
-          return fallback if fallback.present?
+      def urls_from_dump_images
+        dump_value("images").scan(URL_EXTRACT_PATTERN).filter_map do |value|
+          ImportEventImage.normalize_image_url(value)
         end
+      end
 
-        ""
+      def deduplicate_candidates(candidates)
+        seen = Set.new
+
+        candidates.filter_map do |candidate|
+          image_url = candidate[:image_url].to_s
+          dedupe_key = image_url.downcase
+          next if seen.include?(dedupe_key)
+
+          seen << dedupe_key
+          candidate
+        end
       end
     end
   end

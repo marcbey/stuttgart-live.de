@@ -1,6 +1,13 @@
 class EasyticketImportEvent < ApplicationRecord
   belongs_to :import_source
 
+  has_many :import_event_images,
+    as: :import_event,
+    foreign_key: :import_event_id,
+    foreign_type: :import_class,
+    dependent: :delete_all,
+    inverse_of: :import_event
+
   validates :external_event_id, :concert_date, :city, :venue_name, :title,
     :artist_name, :concert_date_label, :venue_label, :source_payload_hash,
     :first_seen_at, :last_seen_at, presence: true

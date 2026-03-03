@@ -1,9 +1,13 @@
+<% og_image_url = @event.image_url_for(slot: :social_card, breakpoint: :desktop) %>
+<% hero_desktop_image_url = @event.image_url_for(slot: :detail_hero, breakpoint: :desktop) %>
+<% hero_mobile_image_url = @event.image_url_for(slot: :grid_default, breakpoint: :mobile) || hero_desktop_image_url %>
+
 <% content_for :title, "#{@event.artist_name} - #{@event.title} | Stuttgart Live" %>
 <% content_for :head do %>
   <%= tag.meta property: "og:title", content: "#{@event.artist_name} - #{@event.title}" %>
   <%= tag.meta property: "og:description", content: @event.event_info.to_s.truncate(160) %>
   <%= tag.meta property: "og:type", content: "website" %>
-  <%= tag.meta property: "og:image", content: @event.image_url if @event.image_url.present? %>
+  <%= tag.meta property: "og:image", content: og_image_url if og_image_url.present? %>
   <%= tag.meta name: "twitter:card", content: "summary_large_image" %>
   <%= tag.meta name: "twitter:title", content: "#{@event.artist_name} - #{@event.title}" %>
   <%= tag.meta name: "twitter:description", content: @event.event_info.to_s.truncate(160) %>
@@ -27,9 +31,14 @@
       <% end %>
     </div>
 
-    <% if @event.image_url.present? %>
+    <% if hero_desktop_image_url.present? %>
       <div class="event-detail-image-wrap">
-        <%= image_tag @event.image_url, alt: "#{@event.artist_name} - #{@event.title}", class: "event-detail-image" %>
+        <picture>
+          <% if hero_mobile_image_url.present? %>
+            <source media="(max-width: 699px)" srcset="<%= hero_mobile_image_url %>">
+          <% end %>
+          <%= image_tag hero_desktop_image_url, alt: "#{@event.artist_name} - #{@event.title}", class: "event-detail-image" %>
+        </picture>
       </div>
     <% end %>
   </header>

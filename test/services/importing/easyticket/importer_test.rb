@@ -49,7 +49,18 @@ module Importing
         ]
 
         detail_payloads = {
-          "999" => { "data" => { "event" => { "artist" => "Band A" } } }
+          "999" => {
+            "data" => {
+              "event" => { "artist" => "Band A" },
+              "images" => [
+                {
+                  "paths" => [
+                    { "type" => "large", "url" => "https://img.example/999-large.jpg" }
+                  ]
+                }
+              ]
+            }
+          }
         }
 
         run = Importer.new(
@@ -77,6 +88,7 @@ module Importing
         assert_equal "Stuttgart, Im Wizemann", imported.venue_label
         assert_equal "Band A", imported.detail_payload.dig("data", "event", "artist")
         assert imported.is_active
+        assert_equal [ "https://img.example/999-large.jpg" ], imported.import_event_images.ordered.pluck(:image_url)
       end
 
       test "deactivates stale events not seen in current run" do
@@ -260,6 +272,64 @@ module Importing
         assert_equal 0, run.upserted_count
         assert_equal 0, run.failed_count
         assert existing_event.reload.is_active
+        assert_empty existing_event.import_event_images
+      end
+
+      test "syncs images from stored detail payload when dump payload is unchanged" do
+        dump_payload = {
+          "event_id" => "same-2",
+          "date" => "2026-09-11",
+          "title" => "Same Event Two",
+          "sub1" => "Same Artist Two",
+          "loc_city" => "Stuttgart",
+          "loc_name" => "Im Wizemann"
+        }
+        payload_hash = Digest::SHA256.hexdigest(dump_payload.to_json)
+
+        existing_event = EasyticketImportEvent.create!(
+          import_source: @source,
+          external_event_id: "same-2",
+          concert_date: Date.new(2026, 9, 11),
+          city: "Stuttgart",
+          venue_name: "Im Wizemann",
+          title: "Same Event Two",
+          artist_name: "Same Artist Two",
+          concert_date_label: "11.9.2026",
+          venue_label: "Stuttgart, Im Wizemann",
+          dump_payload: dump_payload,
+          detail_payload: {
+            "data" => {
+              "images" => [
+                {
+                  "paths" => [
+                    { "type" => "large", "url" => "https://img.example/same-2-large.jpg" }
+                  ]
+                }
+              ]
+            }
+          },
+          is_active: true,
+          first_seen_at: 2.days.ago,
+          last_seen_at: 2.days.ago,
+          source_payload_hash: payload_hash
+        )
+
+        detail_fetcher =
+          Class.new do
+            def fetch(_event_id)
+              raise "detail api must not be called for unchanged dump payload"
+            end
+          end.new
+
+        run = Importer.new(
+          import_source: @source,
+          dump_fetcher: StubDumpFetcher.new([ dump_payload ]),
+          detail_fetcher: detail_fetcher
+        ).call
+
+        assert_equal "succeeded", run.status
+        assert_equal 0, run.upserted_count
+        assert_equal [ "https://img.example/same-2-large.jpg" ], existing_event.reload.import_event_images.ordered.pluck(:image_url)
       end
 
       test "stores import_run_error when event processing fails" do

@@ -7,7 +7,7 @@ module Public
     def index
       @page = [ params[:page].to_i, 1 ].max
 
-      relation = Event.published_live.includes(:genres, :event_offers)
+      relation = Event.published_live.includes(:genres, :event_offers, :import_event_images)
       @events = relation.limit(PER_PAGE).offset((@page - 1) * PER_PAGE)
       @next_page = @page + 1 if relation.offset(@page * PER_PAGE).limit(1).exists?
 
@@ -18,7 +18,7 @@ module Public
     end
 
     def show
-      @event = Event.published_live.includes(:genres, :event_offers).find_by!(slug: params[:slug])
+      @event = Event.published_live.includes(:genres, :event_offers, :import_event_images).find_by!(slug: params[:slug])
       @primary_offer = @event.primary_offer
     end
   end

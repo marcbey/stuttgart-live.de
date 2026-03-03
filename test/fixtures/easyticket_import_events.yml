@@ -13,7 +13,6 @@ one:
   dump_payload: {}
   detail_payload: {}
   ticket_url: https://example.com/tickets/123
-  image_url: https://example.com/image/123.jpg
   is_active: true
   first_seen_at: 2026-03-02 11:11:40
   last_seen_at: 2026-03-02 11:11:40
@@ -32,7 +31,6 @@ two:
   dump_payload: {}
   detail_payload: {}
   ticket_url: https://example.com/tickets/456
-  image_url: https://example.com/image/456.jpg
   is_active: true
   first_seen_at: 2026-03-02 11:11:40
   last_seen_at: 2026-03-02 11:11:40

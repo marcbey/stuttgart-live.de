@@ -1,5 +1,6 @@
 require "date"
 require "digest"
+require "set"
 require "uri"
 
 module Importing
@@ -14,7 +15,19 @@ module Importing
       TITLE_KEYS = %w[title name eventtitle event_name eventname showtitle].freeze
       ARTIST_KEYS = %w[artist artists performer performers band headliner subheadline sideartistnames].freeze
       TICKET_URL_KEYS = %w[ticket_url ticketurl deeplink bookingurl eventurl url link eventlink].freeze
-      IMAGE_URL_KEYS = %w[image image_url imageurl picture poster image_large image_medium].freeze
+      IMAGE_CANDIDATE_KEYS = %w[
+        espicture_big
+        espicture
+        espicture_small
+        artistImage
+        image
+        image_url
+        imageurl
+        picture
+        poster
+        image_large
+        image_medium
+      ].freeze
 
       def initialize(feed_payload:)
         @feed_payload = (feed_payload || {}).deep_stringify_keys
@@ -32,8 +45,6 @@ module Importing
         title = first_value_for_keys(TITLE_KEYS).presence || "Unbekanntes Event"
         artist_name = first_value_for_keys(ARTIST_KEYS).presence || title
         ticket_url = first_url_for_keys(TICKET_URL_KEYS)
-        image_url = first_url_for_keys(IMAGE_URL_KEYS)
-
         {
           external_event_id: external_event_id,
           concert_date: concert_date,
@@ -44,9 +55,33 @@ module Importing
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
           ticket_url: ticket_url,
-          image_url: image_url,
           source_payload_hash: Digest::SHA256.hexdigest(@feed_payload.to_json)
         }
+      end
+
+      def image_candidates
+        candidates = []
+        seen = Set.new
+
+        IMAGE_CANDIDATE_KEYS.each do |key|
+          values_for_keys([ key ]).each do |url|
+            normalized_url = ImportEventImage.normalize_image_url(url)
+            next if normalized_url.blank?
+
+            image_type = key.to_s
+            dedupe_key = normalized_url.downcase
+            next if seen.include?(dedupe_key)
+
+            seen << dedupe_key
+            candidates << {
+              image_type: image_type,
+              image_url: normalized_url,
+              position: candidates.length
+            }
+          end
+        end
+
+        candidates
       end
 
       private

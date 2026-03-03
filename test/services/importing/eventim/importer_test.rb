@@ -26,7 +26,9 @@ module Importing
             "eventvenue" => "Im Wizemann",
             "eventname" => "Band Eventim",
             "sideArtistNames" => "Band Eventim",
-            "eventlink" => "https://tickets.example/evt-900"
+            "eventlink" => "https://tickets.example/evt-900",
+            "espicture_big" => "https://img.example/evt-900-big.jpg",
+            "artistImage" => "https://img.example/evt-900-artist.jpg"
           },
           {
             "eventid" => "evt-901",
@@ -62,6 +64,9 @@ module Importing
         assert_equal "17.6.2026", imported.concert_date_label
         assert_equal "Stuttgart, Im Wizemann", imported.venue_label
         assert imported.is_active
+        assert_equal 2, imported.import_event_images.count
+        assert_equal [ "https://img.example/evt-900-big.jpg", "https://img.example/evt-900-artist.jpg" ],
+          imported.import_event_images.ordered.pluck(:image_url)
       end
 
       test "does not start a second run while one is already active" do
@@ -112,7 +117,8 @@ module Importing
           "eventvenue" => "Im Wizemann",
           "eventname" => "Same Eventim Event",
           "sideArtistNames" => "Same Eventim Artist",
-          "eventlink" => "https://tickets.example/evt-same"
+          "eventlink" => "https://tickets.example/evt-same",
+          "espicture_big" => "https://img.example/evt-same.jpg"
         }
         attributes = PayloadProjection.new(feed_payload: feed_payload).to_attributes
 
@@ -144,6 +150,7 @@ module Importing
         assert_equal 1, run.imported_count
         assert_equal 0, run.upserted_count
         assert existing_event.reload.is_active
+        assert_equal [ "https://img.example/evt-same.jpg" ], existing_event.import_event_images.ordered.pluck(:image_url)
       end
 
       test "stores import_run_error when event processing fails" do

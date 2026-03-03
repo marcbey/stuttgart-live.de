@@ -285,7 +285,6 @@ module Backend
         :city,
         :event_info,
         :badge_text,
-        :image_url,
         :youtube_url,
         :status,
         :editor_notes

@@ -1,0 +1,9 @@
+published_cover:
+  import_class: Event
+  import_event_id: <%= ActiveRecord::FixtureSet.identify(:published_one) %>
+  source: easyticket
+  image_type: large
+  role: cover
+  aspect_hint: landscape
+  position: 0
+  image_url: https://example.com/published.jpg

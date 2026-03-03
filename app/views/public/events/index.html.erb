@@ -8,7 +8,10 @@
   </header>
 
   <div id="event-grid" class="flyer-grid">
-    <%= render partial: "event_card", collection: @events, as: :event %>
+    <% @events.each_with_index do |event, index| %>
+      <% card_slot = (index % 5).zero? ? :grid_tall : :grid_default %>
+      <%= render "event_card", event: event, card_slot: card_slot %>
+    <% end %>
   </div>
 
   <%= render "pagination", next_page: @next_page %>

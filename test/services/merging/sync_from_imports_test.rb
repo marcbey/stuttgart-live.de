@@ -7,7 +7,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
 
     date = Date.new(2026, 11, 10)
 
-    source_easyticket.easyticket_import_events.create!(
+    easy_record = source_easyticket.easyticket_import_events.create!(
       external_event_id: "merge-easy-1",
       concert_date: date,
       city: "Stuttgart",
@@ -19,14 +19,22 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       dump_payload: {},
       detail_payload: {},
       ticket_url: "https://example.com/easy",
-      image_url: "https://example.com/easy.jpg",
       is_active: true,
       first_seen_at: Time.current,
       last_seen_at: Time.current,
       source_payload_hash: "hash-easy-1"
     )
 
-    source_eventim.eventim_import_events.create!(
+    easy_record.import_event_images.create!(
+      source: "easyticket",
+      image_type: "large",
+      image_url: "https://example.com/easy.jpg",
+      role: "cover",
+      aspect_hint: "landscape",
+      position: 0
+    )
+
+    eventim_record = source_eventim.eventim_import_events.create!(
       external_event_id: "merge-eventim-1",
       concert_date: date,
       city: "Stuttgart",
@@ -38,11 +46,19 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       dump_payload: {},
       detail_payload: {},
       ticket_url: "https://example.com/eventim",
-      image_url: "https://example.com/eventim.jpg",
       is_active: true,
       first_seen_at: Time.current,
       last_seen_at: Time.current,
       source_payload_hash: "hash-eventim-1"
+    )
+
+    eventim_record.import_event_images.create!(
+      source: "eventim",
+      image_type: "espicture_big",
+      image_url: "https://example.com/eventim.jpg",
+      role: "cover",
+      aspect_hint: "landscape",
+      position: 0
     )
 
     result = Merging::SyncFromImports.new.call
@@ -56,6 +72,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal "published", event.status
     assert_equal true, event.auto_published
     assert_equal 2, event.event_offers.count
+    assert_equal 2, event.import_event_images.count
 
     second_result = Merging::SyncFromImports.new.call
     assert_equal 0, second_result.events_created_count

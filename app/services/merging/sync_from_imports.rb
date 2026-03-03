@@ -1,3 +1,5 @@
+require "set"
+
 module Merging
   class SyncFromImports
     Result = Data.define(
@@ -17,8 +19,17 @@ module Merging
       :title,
       :artist_name,
       :ticket_url,
-      :image_url,
+      :images,
       :raw_payload
+    )
+
+    ImportImage = Data.define(
+      :source,
+      :image_type,
+      :image_url,
+      :role,
+      :aspect_hint,
+      :position
     )
 
     def initialize(logger: Rails.logger)
@@ -66,9 +77,12 @@ module Merging
     def easyticket_records
       EasyticketImportEvent
         .active
+        .includes(:import_event_images)
         .joins(:import_source)
         .where(import_sources: { active: true, source_type: "easyticket" })
         .map do |record|
+          ensure_import_record_images!(record, source: "easyticket")
+
           ImportRecord.new(
             source: "easyticket",
             external_event_id: record.external_event_id,
@@ -78,7 +92,7 @@ module Merging
             title: record.title,
             artist_name: record.artist_name,
             ticket_url: record.ticket_url,
-            image_url: record.image_url,
+            images: images_for_import_record(record, fallback_source: "easyticket"),
             raw_payload: {
               dump_payload: record.dump_payload,
               detail_payload: record.detail_payload
@@ -90,9 +104,12 @@ module Merging
     def eventim_records
       EventimImportEvent
         .active
+        .includes(:import_event_images)
         .joins(:import_source)
         .where(import_sources: { active: true, source_type: "eventim" })
         .map do |record|
+          ensure_import_record_images!(record, source: "eventim")
+
           ImportRecord.new(
             source: "eventim",
             external_event_id: record.external_event_id,
@@ -102,7 +119,7 @@ module Merging
             title: record.title,
             artist_name: record.artist_name,
             ticket_url: record.ticket_url,
-            image_url: record.image_url,
+            images: images_for_import_record(record, fallback_source: "eventim"),
             raw_payload: {
               dump_payload: record.dump_payload,
               detail_payload: record.detail_payload
@@ -122,14 +139,14 @@ module Merging
       event.artist_name = first_present(records, &:artist_name)
       event.city = first_present(records, &:city)
       event.venue = first_present(records, &:venue_name)
-      event.image_url = first_present(records, &:image_url)
       event.start_at = start_at_for(primary.concert_date)
       event.primary_source = primary.source
       event.source_snapshot = build_source_snapshot(records)
       updated_now = event.changed?
 
+      merged_images = merged_image_candidates(records)
       offers = build_offer_attributes(records)
-      completeness = Editorial::EventCompletenessChecker.new(event: event, offers: offers).call
+      completeness = Editorial::EventCompletenessChecker.new(event: event, offers: offers, images_present: merged_images.any?).call
       event.completeness_score = completeness.score
       event.completeness_flags = completeness.flags
 
@@ -138,6 +155,7 @@ module Merging
       event.save! if created_now || updated_now
 
       offers_upserted = sync_offers!(event, offers)
+      images_changed = sync_event_images!(event, merged_images)
 
       Editorial::EventChangeLogger.log!(
         event: event,
@@ -149,7 +167,8 @@ module Merging
         }
       )
 
-      [ event, created_now, updated_now && !created_now, offers_upserted ]
+      effective_updated = (updated_now || images_changed) && !created_now
+      [ event, created_now, effective_updated, offers_upserted ]
     end
 
     def apply_status_rules(event, completeness)
@@ -198,6 +217,158 @@ module Merging
       end
     end
 
+    def ensure_import_record_images!(record, source:)
+      association = record.import_event_images
+      return if association.loaded? ? association.any? : association.exists?
+
+      candidates =
+        case source
+        when "easyticket"
+          Importing::Easyticket::PayloadProjection.new(
+            dump_payload: record.dump_payload,
+            detail_payload: record.detail_payload
+          ).image_candidates
+        when "eventim"
+          Importing::Eventim::PayloadProjection.new(
+            feed_payload: record.dump_payload
+          ).image_candidates
+        else
+          []
+        end
+
+      sync_import_owner_images!(owner: record, source: source, candidates: candidates)
+      association.reset
+    end
+
+    def images_for_import_record(record, fallback_source:)
+      record.import_event_images.ordered.map do |image|
+        source = image.source.to_s.strip.presence || fallback_source
+        image_type = image.image_type.to_s.strip.presence || "image"
+        image_url = ImportEventImage.normalize_image_url(image.image_url)
+        next if image_url.blank?
+
+        ImportImage.new(
+          source: source,
+          image_type: image_type,
+          image_url: image_url,
+          role: image.role.to_s.strip.presence || ImportEventImage.derive_role(source: source, image_type: image_type),
+          aspect_hint: image.aspect_hint.to_s.strip.presence || ImportEventImage.derive_aspect_hint(url: image_url, image_type: image_type),
+          position: image.position.to_i
+        )
+      end.compact
+    end
+
+    def merged_image_candidates(records)
+      candidates = []
+      seen = Set.new
+
+      records
+        .flat_map(&:images)
+        .sort_by { |image| [ priority_for(image.source), image.position.to_i, image.image_type.to_s ] }
+        .each do |image|
+          key = image_key(source: image.source, image_type: image.image_type, image_url: image.image_url)
+          next if seen.include?(key)
+
+          seen << key
+          candidates << {
+            source: image.source,
+            image_type: image.image_type,
+            image_url: image.image_url,
+            role: image.role,
+            aspect_hint: image.aspect_hint,
+            position: candidates.length
+          }
+        end
+
+      candidates
+    end
+
+    def sync_event_images!(event, candidates)
+      existing_by_key = event.import_event_images.index_by do |image|
+        image_key(source: image.source, image_type: image.image_type, image_url: image.image_url)
+      end
+      changed = false
+
+      Array(candidates).each_with_index do |candidate, index|
+        key = image_key(
+          source: candidate[:source],
+          image_type: candidate[:image_type],
+          image_url: candidate[:image_url]
+        )
+        image = existing_by_key.delete(key) || event.import_event_images.new
+        image.assign_attributes(
+          source: candidate[:source],
+          image_type: candidate[:image_type],
+          image_url: candidate[:image_url],
+          role: candidate[:role],
+          aspect_hint: candidate[:aspect_hint],
+          position: index
+        )
+        next unless image.new_record? || image.changed?
+
+        image.save!
+        changed = true
+      end
+
+      unless existing_by_key.empty?
+        existing_by_key.each_value(&:destroy!)
+        changed = true
+      end
+
+      changed
+    end
+
+    def sync_import_owner_images!(owner:, source:, candidates:)
+      normalized_candidates = normalize_image_candidates(candidates, source: source)
+      existing_by_key = owner.import_event_images.index_by do |image|
+        image_key(source: image.source, image_type: image.image_type, image_url: image.image_url)
+      end
+
+      normalized_candidates.each_with_index do |candidate, index|
+        key = image_key(
+          source: candidate[:source],
+          image_type: candidate[:image_type],
+          image_url: candidate[:image_url]
+        )
+        image = existing_by_key.delete(key) || owner.import_event_images.new
+        image.assign_attributes(
+          source: candidate[:source],
+          image_type: candidate[:image_type],
+          image_url: candidate[:image_url],
+          role: candidate[:role],
+          aspect_hint: candidate[:aspect_hint],
+          position: index
+        )
+        image.save! if image.new_record? || image.changed?
+      end
+
+      existing_by_key.each_value(&:destroy!)
+    end
+
+    def normalize_image_candidates(candidates, source:)
+      seen = Set.new
+
+      Array(candidates).filter_map do |candidate|
+        row = candidate.respond_to?(:to_h) ? candidate.to_h : {}
+        image_url = ImportEventImage.normalize_image_url(row[:image_url] || row["image_url"])
+        next if image_url.blank?
+
+        image_type = (row[:image_type] || row["image_type"]).to_s.strip.presence || "image"
+        normalized_source = source.to_s
+        key = image_key(source: normalized_source, image_type: image_type, image_url: image_url)
+        next if seen.include?(key)
+
+        seen << key
+        {
+          source: normalized_source,
+          image_type: image_type,
+          image_url: image_url,
+          role: (row[:role] || row["role"]).to_s.strip.presence || ImportEventImage.derive_role(source: normalized_source, image_type: image_type),
+          aspect_hint: (row[:aspect_hint] || row["aspect_hint"]).to_s.strip.presence || ImportEventImage.derive_aspect_hint(url: image_url, image_type: image_type)
+        }
+      end
+    end
+
     def start_at_for(concert_date)
       Time.zone.local(concert_date.year, concert_date.month, concert_date.day, 20, 0, 0)
     end
@@ -237,7 +408,17 @@ module Merging
               "title" => record.title,
               "artist_name" => record.artist_name,
               "ticket_url" => record.ticket_url,
-              "image_url" => record.image_url,
+              "images" =>
+                record.images.map do |image|
+                  {
+                    "source" => image.source,
+                    "image_type" => image.image_type,
+                    "image_url" => image.image_url,
+                    "role" => image.role,
+                    "aspect_hint" => image.aspect_hint,
+                    "position" => image.position
+                  }
+                end,
               "raw_payload" => record.raw_payload
             }
           end
@@ -255,6 +436,14 @@ module Merging
 
     def priority_for(source)
       priority_map.fetch(source, 999)
+    end
+
+    def image_key(source:, image_type:, image_url:)
+      [
+        source.to_s.strip.downcase,
+        image_type.to_s.strip,
+        image_url.to_s.strip.downcase
+      ]
     end
   end
 end

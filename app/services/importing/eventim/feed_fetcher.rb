@@ -5,7 +5,7 @@ require "zlib"
 module Importing
   module Eventim
     class FeedFetcher
-      EVENT_NODE_KEYS = %w[event performance show item].freeze
+      EVENT_NODE_KEYS = %w[event eventserie performance show item].freeze
 
       def initialize(http_client: HttpClient.new, feed_url: ENV["FEED_URL"])
         @http_client = http_client
@@ -70,15 +70,17 @@ module Importing
 
             node_name = node.name.to_s.downcase
             next unless EVENT_NODE_KEYS.include?(node_name)
+            next if node_name == "event" && node.depth > 1
 
             payload = fast_xml_node_to_hash(node.outer_xml)
             next unless payload.is_a?(Hash) && payload.present?
 
-            normalized_payload = payload.deep_stringify_keys
-            if block_given?
-              yield normalized_payload
-            else
-              rows << normalized_payload
+            expand_payload_rows(node_name, payload.deep_stringify_keys).each do |normalized_payload|
+              if block_given?
+                yield normalized_payload
+              else
+                rows << normalized_payload
+              end
             end
           end
         end
@@ -91,6 +93,9 @@ module Importing
         return {} if root.nil?
 
         payload = {}
+        extract_attributes(root).each do |key, value|
+          merge_value!(payload, key, value)
+        end
         root.element_children.each do |child|
           merge_value!(payload, child.name, node_value(child))
         end
@@ -113,19 +118,41 @@ module Importing
       end
 
       def node_value(node)
+        attributes = extract_attributes(node)
         children = node.element_children
-        return blank_to_nil(node.text) if children.empty?
+        text_value = blank_to_nil(node.text)
 
-        value = {}
+        if children.empty?
+          return text_value if attributes.empty?
+          return attributes if text_value.blank?
+
+          return attributes.merge("value" => text_value)
+        end
+
+        value = attributes
         children.each do |child|
           merge_value!(value, child.name, node_value(child))
         end
         value
       end
 
+      def extract_attributes(node)
+        node.attribute_nodes.each_with_object({}) do |attr, result|
+          attr_value = blank_to_nil(attr.value)
+          next if attr_value.blank?
+
+          result[attr.name] = attr_value
+        end
+      end
+
       def merge_value!(target, key, value)
         if target.key?(key)
-          target[key] = Array(target[key]) << value
+          target[key] =
+            if target[key].is_a?(Array)
+              target[key] << value
+            else
+              [ target[key], value ]
+            end
         else
           target[key] = value
         end
@@ -163,6 +190,34 @@ module Importing
         message = "Eventim feed returned status code #{code}" if message.blank?
 
         "#{message} (code #{code})"
+      end
+
+      def expand_payload_rows(node_name, payload)
+        return [ payload ] unless node_name == "eventserie"
+
+        events = payload["event"]
+        event_rows = events.is_a?(Array) ? events : [ events ]
+        event_rows.filter_map do |event_payload|
+          event_hash = event_payload.is_a?(Hash) ? event_payload.deep_stringify_keys : {}
+          next if event_hash.blank?
+
+          deep_merge_hash(payload.except("event"), event_hash)
+        end
+      end
+
+      def deep_merge_hash(base, override)
+        merged = base.deep_dup
+
+        override.each do |key, value|
+          merged[key] =
+            if merged[key].is_a?(Hash) && value.is_a?(Hash)
+              deep_merge_hash(merged[key], value)
+            else
+              value
+            end
+        end
+
+        merged
       end
 
       def normalize_key(value)

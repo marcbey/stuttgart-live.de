@@ -25,7 +25,11 @@ module Importing
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "Band C", attributes[:artist_name]
         assert_equal "https://tickets.example/evt-77", attributes[:ticket_url]
-        assert_equal "https://img.example/evt-77.jpg", attributes[:image_url]
+
+        image_candidates = projection.image_candidates
+        assert_equal 1, image_candidates.size
+        assert_equal "image_url", image_candidates.first[:image_type]
+        assert_equal "https://img.example/evt-77.jpg", image_candidates.first[:image_url]
       end
 
       test "maps attributes from eventim feed keys" do

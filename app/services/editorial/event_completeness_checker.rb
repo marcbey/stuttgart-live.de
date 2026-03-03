@@ -2,9 +2,10 @@ module Editorial
   class EventCompletenessChecker
     Result = Data.define(:score, :flags, :ready_for_publish?)
 
-    def initialize(event:, offers: nil)
+    def initialize(event:, offers: nil, images_present: nil)
       @event = event
       @offers = Array(offers || event.event_offers)
+      @images_present = images_present
     end
 
     def call
@@ -14,7 +15,7 @@ module Editorial
       flags << "missing_start_at" if event.start_at.blank?
       flags << "missing_venue" if event.venue.blank?
       flags << "missing_city" if event.city.blank?
-      flags << "missing_image" if event.image_url.blank?
+      flags << "missing_image" unless image_present?
       flags << "missing_ticket_url" unless ticket_url_present?
       flags << "missing_genre" unless genre_present?
 
@@ -37,10 +38,18 @@ module Editorial
       missing_ticket_url
     ].freeze
 
-    attr_reader :event, :offers
+    attr_reader :event, :offers, :images_present
 
     def genre_present?
       event.genre_ids.any?
+    end
+
+    def image_present?
+      return ActiveModel::Type::Boolean.new.cast(images_present) unless images_present.nil?
+      return false unless event.respond_to?(:import_event_images)
+
+      association = event.import_event_images
+      association.loaded? ? association.any? : association.exists?
     end
 
     def ticket_url_present?

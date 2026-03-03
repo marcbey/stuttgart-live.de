@@ -1,5 +1,32 @@
 class Event < ApplicationRecord
   STATUSES = %w[imported needs_review ready_for_publish published rejected].freeze
+  IMAGE_SLOT_PREFERENCES = {
+    [ :grid_default, :desktop ] => [
+      [ "cover", %w[landscape square portrait unknown] ],
+      [ "gallery", %w[landscape square portrait unknown] ],
+      [ "thumb", %w[square landscape portrait unknown] ]
+    ],
+    [ :grid_tall, :desktop ] => [
+      [ "cover", %w[portrait square landscape unknown] ],
+      [ "gallery", %w[portrait square landscape unknown] ],
+      [ "thumb", %w[portrait square landscape unknown] ]
+    ],
+    [ :grid_default, :mobile ] => [
+      [ "cover", %w[square landscape portrait unknown] ],
+      [ "gallery", %w[square landscape portrait unknown] ],
+      [ "thumb", %w[square landscape portrait unknown] ]
+    ],
+    [ :detail_hero, :desktop ] => [
+      [ "cover", %w[landscape portrait square unknown] ],
+      [ "gallery", %w[landscape portrait square unknown] ],
+      [ "thumb", %w[landscape square portrait unknown] ]
+    ],
+    [ :social_card, :desktop ] => [
+      [ "cover", %w[landscape square portrait unknown] ],
+      [ "gallery", %w[landscape square portrait unknown] ],
+      [ "thumb", %w[square landscape portrait unknown] ]
+    ]
+  }.freeze
 
   belongs_to :published_by, class_name: "User", optional: true
 
@@ -7,6 +34,12 @@ class Event < ApplicationRecord
   has_many :event_genres, dependent: :destroy
   has_many :genres, through: :event_genres
   has_many :event_change_logs, dependent: :destroy
+  has_many :import_event_images,
+    as: :import_event,
+    foreign_key: :import_event_id,
+    foreign_type: :import_class,
+    dependent: :delete_all,
+    inverse_of: :import_event
 
   validates :slug, :title, :artist_name, :start_at, :venue, :city, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
@@ -47,6 +80,31 @@ class Event < ApplicationRecord
     "https://www.youtube.com/embed/#{id}"
   end
 
+  def image_for(slot: :grid_default, breakpoint: :desktop)
+    images = import_event_images.ordered.to_a
+    return nil if images.empty?
+
+    preferences = IMAGE_SLOT_PREFERENCES.fetch([ slot.to_sym, breakpoint.to_sym ], IMAGE_SLOT_PREFERENCES[[ :grid_default, :desktop ]])
+
+    preferences.each do |role, aspect_hints|
+      image = images.find do |candidate|
+        candidate.role == role && aspect_hints.include?(candidate.aspect_hint)
+      end
+      return image if image.present?
+    end
+
+    images.first
+  end
+
+  def image_url_for(slot: :grid_default, breakpoint: :desktop)
+    image_for(slot: slot, breakpoint: breakpoint)&.image_url
+  end
+
+  def has_import_images?
+    association = import_event_images
+    association.loaded? ? association.any? : association.exists?
+  end
+
   private
 
   def normalize_attributes
@@ -55,7 +113,6 @@ class Event < ApplicationRecord
     self.venue = venue.to_s.strip
     self.city = city.to_s.strip
     self.badge_text = badge_text.to_s.strip.presence
-    self.image_url = image_url.to_s.strip.presence
     self.youtube_url = youtube_url.to_s.strip.presence
     self.primary_source = primary_source.to_s.strip.presence
     self.source_snapshot = {} unless source_snapshot.is_a?(Hash)

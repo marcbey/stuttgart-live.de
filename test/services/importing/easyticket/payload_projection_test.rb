@@ -35,8 +35,11 @@ module Importing
         assert_equal "17.6.2026", attributes[:concert_date_label]
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "The Band", attributes[:artist_name]
-        assert_equal "https://img.example/large.jpg", attributes[:image_url]
         assert_equal "https://tickets.example/42", attributes[:ticket_url]
+
+        image_candidates = projection.image_candidates
+        assert_equal [ "https://img.example/small.jpg", "https://img.example/large.jpg" ],
+          image_candidates.map { |candidate| candidate[:image_url] }
       end
 
       test "replaces curly event_id placeholder in ticket base url" do

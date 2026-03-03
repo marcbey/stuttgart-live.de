@@ -36,7 +36,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_password_path
 
     follow_redirect!
-    assert_notice "ungueltig oder abgelaufen"
+    assert_notice "ungültig oder abgelaufen"
   end
 
   test "update" do
@@ -57,7 +57,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     end
 
     follow_redirect!
-    assert_notice "stimmen nicht ueberein"
+    assert_notice "stimmen nicht überein"
   end
 
   private

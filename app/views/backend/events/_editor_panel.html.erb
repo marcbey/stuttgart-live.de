@@ -59,10 +59,6 @@
         <%= form.text_field :badge_text, class: "form-input" %>
       </div>
       <div>
-        <%= form.label :image_url, "Bild-URL", class: "form-label" %>
-        <%= form.url_field :image_url, class: "form-input" %>
-      </div>
-      <div>
         <%= form.label :youtube_url, "YouTube URL", class: "form-label" %>
         <%= form.url_field :youtube_url, class: "form-input" %>
       </div>
@@ -107,6 +103,25 @@
       </ul>
     <% else %>
       <p>Keine Angebote vorhanden.</p>
+    <% end %>
+  </section>
+
+  <section class="offer-section">
+    <h3>Bilder</h3>
+    <% if event.import_event_images.any? %>
+      <ul>
+        <% event.import_event_images.ordered.each do |image| %>
+          <li>
+            <span><%= [ image.source, image.image_type, image.role, image.aspect_hint ].reject(&:blank?).join(" · ") %></span>
+            <span class="action-cell">
+              <%= image_tag image.image_url, alt: "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
+              <%= link_to "Öffnen", image.image_url, target: "_blank", rel: "noopener" %>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>Keine Bilder für dieses Event vorhanden.</p>
     <% end %>
   </section>
 
