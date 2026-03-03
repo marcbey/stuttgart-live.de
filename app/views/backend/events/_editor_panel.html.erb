@@ -17,7 +17,8 @@
                 url: backend_event_path(event),
                 method: :patch,
                 data: { controller: "autosave", autosave_delay_value: 900 },
-                class: "editor-form" do |form| %>
+                class: "editor-form",
+                html: { id: dom_id(event, :editor_form) } do |form| %>
     <div class="editor-grid">
       <div>
         <%= form.label :artist_name, "Artist", class: "form-label" %>
@@ -94,7 +95,6 @@
           <span>vollstaendig</span>
         <% end %>
       </div>
-      <%= form.submit "Speichern", class: "button" %>
     </div>
   <% end %>
 
@@ -119,6 +119,7 @@
   </section>
 
   <div class="editor-actions-row">
+    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button">Speichern</button>
     <%= button_to "Jetzt publizieren", publish_backend_event_path(event), method: :patch, class: "button" %>
     <%= button_to "Depublizieren", unpublish_backend_event_path(event), method: :patch, class: "button button-secondary" %>
   </div>
