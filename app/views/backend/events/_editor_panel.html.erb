@@ -120,7 +120,7 @@
 
   <div class="editor-actions-row">
     <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button">Speichern</button>
-    <%= button_to "Jetzt publizieren", publish_backend_event_path(event), method: :patch, class: "button" %>
+    <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button">Speichern & Publizieren</button>
     <%= button_to "Depublizieren", unpublish_backend_event_path(event), method: :patch, class: "button button-secondary" %>
   </div>
 </div>

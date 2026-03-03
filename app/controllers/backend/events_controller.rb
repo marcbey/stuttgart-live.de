@@ -47,6 +47,7 @@ module Backend
       @all_genres = Genre.order(:name)
 
       @event.assign_attributes(event_params)
+      @event.status = "published" if save_and_publish_requested?
       set_publishing_fields!(@event)
 
       if @event.save
@@ -60,9 +61,9 @@ module Backend
         )
 
         respond_to do |format|
-          format.html { redirect_to backend_events_path(status: @event.status, event_id: @event.id), notice: "Event wurde gespeichert." }
+          format.html { redirect_to backend_events_path(status: @event.status, event_id: @event.id), notice: update_success_message }
           format.turbo_stream do
-            flash.now[:notice] = "Event wurde gespeichert."
+            flash.now[:notice] = update_success_message
             render turbo_stream: [
               turbo_stream.replace("flash-messages", partial: "layouts/flash_messages"),
               turbo_stream.replace(
@@ -223,6 +224,14 @@ module Backend
         event.published_at = nil
         event.published_by = nil
       end
+    end
+
+    def save_and_publish_requested?
+      ActiveModel::Type::Boolean.new.cast(params[:save_and_publish])
+    end
+
+    def update_success_message
+      save_and_publish_requested? ? "Event wurde gespeichert und publiziert." : "Event wurde gespeichert."
     end
   end
 end

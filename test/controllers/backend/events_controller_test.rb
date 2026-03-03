@@ -63,6 +63,27 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neu per Turbo", @event.reload.title
   end
 
+  test "save and publish updates event and publishes it" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: "Neu und publiziert",
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review"
+      },
+      save_and_publish: "1"
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @event.id)
+    assert_equal "published", @event.reload.status
+    assert @event.published_at.present?
+    assert_includes flash[:notice], "gespeichert und publiziert"
+  end
+
   test "bulk publish updates selected events" do
     sign_in_as(@user)
 
