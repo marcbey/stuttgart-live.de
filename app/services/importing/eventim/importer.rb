@@ -97,6 +97,12 @@ module Importing
           failed_count += 1
           progress_changed = true
           logger.error("[EventimImporter] failed: #{e.class}: #{e.message}")
+          create_import_run_error!(
+            run: run,
+            error: e,
+            external_event_id: external_event_id_from_feed(feed_payload),
+            payload: feed_payload
+          )
         ensure
           next unless progress_changed
 
@@ -183,6 +189,11 @@ module Importing
           upserted_count: upserted_count || 0,
           failed_count: failed_count || 0,
           error_message: e.message
+        )
+        create_import_run_error!(
+          run: run,
+          error: e,
+          payload: {}
         )
         broadcast_runs_update!
         raise
@@ -327,6 +338,30 @@ module Importing
           last_seen_at: seen_at,
           updated_at: Time.current
         )
+      end
+
+      def external_event_id_from_feed(feed_payload)
+        hash = feed_payload.is_a?(Hash) ? feed_payload.deep_stringify_keys : {}
+        PayloadProjection::EVENT_ID_KEYS.each do |key|
+          value = hash[key].to_s.strip
+          return value if value.present?
+        end
+
+        nil
+      end
+
+      def create_import_run_error!(run:, error:, external_event_id: nil, payload: {})
+        return unless run&.persisted?
+
+        run.import_run_errors.create!(
+          source_type: run.source_type,
+          external_event_id: external_event_id,
+          error_class: error.class.to_s,
+          message: error.message.to_s.presence || error.class.to_s,
+          payload: payload.is_a?(Hash) ? payload : {}
+        )
+      rescue StandardError => create_error
+        logger.error("[EventimImporter] failed to persist import run error: #{create_error.class}: #{create_error.message}")
       end
     end
   end

@@ -4,8 +4,8 @@ require "uri"
 module Importing
   module Easyticket
     class HttpClient
-      OPEN_TIMEOUT_SECONDS = 10
-      READ_TIMEOUT_SECONDS = 30
+      OPEN_TIMEOUT_SECONDS = 30
+      READ_TIMEOUT_SECONDS = 60
 
       def get(url, accept: nil)
         uri = URI.parse(url)

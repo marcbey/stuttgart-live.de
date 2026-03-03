@@ -1,5 +1,5 @@
 module Importing
   module Easyticket
-    class Error < StandardError; end
+    class ParsingError < Error; end
   end
 end

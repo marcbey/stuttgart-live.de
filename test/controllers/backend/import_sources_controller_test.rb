@@ -47,7 +47,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_nil run_payload["stop_url"]
   end
 
-  test "should render no stop-request label for running merge jobs" do
+  test "should render details action and no stop-request label for running merge jobs" do
     merge_run = @source.import_runs.create!(
       status: "running",
       source_type: "merge",
@@ -58,7 +58,32 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
     assert_response :success
 
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child", text: "-"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child a", text: "Details"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child", text: /Stop angefordert/, count: 0
+  end
+
+  test "should show import run detail page with errors" do
+    run = @source.import_runs.create!(
+      status: "failed",
+      source_type: "easyticket",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago,
+      error_message: "Run failed"
+    )
+    run.import_run_errors.create!(
+      source_type: "easyticket",
+      external_event_id: "evt-123",
+      error_class: "Net::ReadTimeout",
+      message: "timeout",
+      payload: { "event_id" => "evt-123" }
+    )
+
+    get backend_import_run_url(run)
+    assert_response :success
+    assert_includes response.body, "Importer Job ##{run.id}"
+    assert_includes response.body, "Net::ReadTimeout"
+    assert_includes response.body, "evt-123"
+    assert_includes response.body, "timeout"
   end
 
   test "should limit recent runs json to configured size" do

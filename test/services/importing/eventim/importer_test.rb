@@ -144,6 +144,67 @@ module Importing
         assert_equal 0, run.upserted_count
         assert existing_event.reload.is_active
       end
+
+      test "stores import_run_error when event processing fails" do
+        feed_payload = {
+          "eventid" => "evt-error-1",
+          "eventdate" => "2026-11-11",
+          "eventplace" => "Stuttgart",
+          "eventvenue" => "Im Wizemann",
+          "eventname" => "Broken Eventim Event",
+          "sideArtistNames" => "Broken Artist",
+          "eventlink" => "https://tickets.example/evt-error-1"
+        }
+
+        failing_importer_class =
+          Class.new(Importer) do
+            private
+
+            def upsert_import_event!(**)
+              raise RuntimeError, "cannot persist feed row"
+            end
+          end
+
+        run = failing_importer_class.new(
+          import_source: @source,
+          feed_fetcher: StubFeedFetcher.new([ feed_payload ])
+        ).call
+
+        assert_equal "succeeded", run.status
+        assert_equal 1, run.failed_count
+        assert_equal 1, run.import_run_errors.count
+
+        error = run.import_run_errors.order(:created_at).last
+        assert_equal "eventim", error.source_type
+        assert_equal "evt-error-1", error.external_event_id
+        assert_equal "RuntimeError", error.error_class
+        assert_includes error.message, "cannot persist feed row"
+        assert_equal "evt-error-1", error.payload["eventid"]
+      end
+
+      test "stores import_run_error when run fails" do
+        failing_feed_fetcher =
+          Class.new do
+            def fetch_events
+              raise "feed download failed"
+            end
+          end.new
+
+        assert_raises RuntimeError do
+          Importer.new(
+            import_source: @source,
+            feed_fetcher: failing_feed_fetcher
+          ).call
+        end
+
+        run = @source.import_runs.where(source_type: "eventim").order(:created_at).last
+        assert_equal "failed", run.status
+        assert_equal 1, run.import_run_errors.count
+
+        error = run.import_run_errors.order(:created_at).last
+        assert_equal "RuntimeError", error.error_class
+        assert_includes error.message, "feed download failed"
+      end
     end
   end
 end

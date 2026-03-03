@@ -1,5 +1,5 @@
 module Importing
   module Easyticket
-    class Error < StandardError; end
+    class RunAlreadyActiveError < Error; end
   end
 end

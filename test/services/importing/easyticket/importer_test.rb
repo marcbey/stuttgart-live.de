@@ -260,6 +260,68 @@ module Importing
         assert_equal 0, run.failed_count
         assert existing_event.reload.is_active
       end
+
+      test "stores import_run_error when event processing fails" do
+        dump_events = [
+          {
+            "event_id" => "err-1",
+            "date" => "2026-10-10",
+            "title" => "Broken Event",
+            "sub1" => "Broken Artist",
+            "loc_city" => "Stuttgart",
+            "loc_name" => "Im Wizemann"
+          }
+        ]
+
+        detail_fetcher =
+          Class.new do
+            def fetch(_event_id)
+              raise Net::ReadTimeout, "detail timeout"
+            end
+          end.new
+
+        run = Importer.new(
+          import_source: @source,
+          dump_fetcher: StubDumpFetcher.new(dump_events),
+          detail_fetcher: detail_fetcher
+        ).call
+
+        assert_equal "succeeded", run.status
+        assert_equal 1, run.failed_count
+        assert_equal 1, run.import_run_errors.count
+
+        error = run.import_run_errors.order(:created_at).last
+        assert_equal "easyticket", error.source_type
+        assert_equal "err-1", error.external_event_id
+        assert_equal "Net::ReadTimeout", error.error_class
+        assert_includes error.message, "detail timeout"
+        assert_equal "err-1", error.payload["event_id"]
+      end
+
+      test "stores import_run_error when run fails" do
+        failing_dump_fetcher =
+          Class.new do
+            def fetch_events
+              raise "dump download failed"
+            end
+          end.new
+
+        assert_raises RuntimeError do
+          Importer.new(
+            import_source: @source,
+            dump_fetcher: failing_dump_fetcher,
+            detail_fetcher: StubDetailFetcher.new({})
+          ).call
+        end
+
+        run = @source.import_runs.where(source_type: "easyticket").order(:created_at).last
+        assert_equal "failed", run.status
+        assert_equal 1, run.import_run_errors.count
+
+        error = run.import_run_errors.order(:created_at).last
+        assert_equal "RuntimeError", error.error_class
+        assert_includes error.message, "dump download failed"
+      end
     end
   end
 end

@@ -9,6 +9,7 @@ Rails.application.routes.draw do
       post :run_eventim, on: :member
       post :stop_eventim_run, on: :member
     end
+    resources :import_runs, only: [ :show ]
 
     resources :events, only: [ :index, :show, :new, :create, :update ] do
       patch :publish, on: :member
