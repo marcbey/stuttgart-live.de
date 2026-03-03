@@ -40,8 +40,9 @@
             <%= form.date_field :starts_before, value: @filters[:starts_before], class: "form-input", data: { filter_state_target: "persist" } %>
           </div>
         </div>
-        <div>
+        <div class="editor-actions-row">
           <%= form.submit "Filtern", class: "button button-secondary" %>
+          <button type="button" class="button button-ghost" data-action="click->filter-state#clear">Filter entfernen</button>
         </div>
       <% end %>
 

@@ -47,4 +47,18 @@ export default class extends Controller {
 
     window.localStorage.setItem(this.keyValue, JSON.stringify(payload))
   }
+
+  clear(event) {
+    event.preventDefault()
+
+    this.persistTargets.forEach((input) => {
+      input.value = ""
+    })
+
+    if (this.hasKeyValue) {
+      window.localStorage.removeItem(this.keyValue)
+    }
+
+    this.element.requestSubmit()
+  }
 }

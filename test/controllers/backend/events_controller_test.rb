@@ -19,6 +19,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Event-Inbox"
+    assert_includes response.body, "Filter entfernen"
   end
 
   test "updates event" do
