@@ -241,13 +241,38 @@ a {
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.33) 46%, transparent 80%);
 }
 
+.event-card-admin-overlay {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 12;
+}
+
+.event-card-admin-link {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  background: rgba(17, 17, 17, 0.42);
+  color: #f7f7f7;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  line-height: 1;
+  text-decoration: none;
+  padding: 0.24rem 0.34rem;
+}
+
+.event-card-admin-link:hover {
+  background: rgba(17, 17, 17, 0.6);
+}
+
 .event-card-status-overlay {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
   z-index: 12;
   border: 1px solid rgba(17, 17, 17, 0.45);
-  background: rgba(248, 248, 248, 0.94);
+  background: rgba(248, 248, 248, 0.42);
   backdrop-filter: blur(4px);
   padding: 0.2rem;
 }
@@ -257,8 +282,10 @@ a {
 }
 
 .event-card-status-select {
+  appearance: none;
+  -webkit-appearance: none;
   border: 1px solid #171717;
-  background: #fff;
+  background: rgba(255, 255, 255, 0.52);
   color: #111;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   text-transform: uppercase;
@@ -324,6 +351,10 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   padding: 0.2rem 0.4rem;
+}
+
+.event-card-badge-with-admin-link {
+  top: 2.05rem;
 }
 
 .event-card:hover {

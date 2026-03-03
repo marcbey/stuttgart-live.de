@@ -36,6 +36,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "event-card-status-select"
     assert_includes response.body, status_event_path(@published_event.slug)
+    assert_includes response.body, "/backend/events?event_id=#{@published_event.id}&amp;status=#{@published_event.status}"
   end
 
   test "status update requires authentication" do

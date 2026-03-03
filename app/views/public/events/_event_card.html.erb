@@ -17,7 +17,7 @@
       <% end %>
       <div class="event-card-overlay"></div>
       <% if event.badge_text.present? %>
-        <span class="event-card-badge"><%= event.badge_text %></span>
+        <span class="event-card-badge <%= "event-card-badge-with-admin-link" if authenticated? %>"><%= event.badge_text %></span>
       <% end %>
       <div class="event-card-copy">
         <h2><%= event.artist_name %></h2>
@@ -33,6 +33,13 @@
     <% end %>
 
     <% if authenticated? %>
+      <div class="event-card-admin-overlay">
+        <%= link_to "Backend",
+                    backend_events_path(status: event.status, event_id: event.id),
+                    class: "event-card-admin-link",
+                    data: { turbo: false } %>
+      </div>
+
       <div class="event-card-status-overlay">
         <%= form_with url: status_event_path(event.slug),
                       method: :patch,
