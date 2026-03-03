@@ -41,11 +41,26 @@ module Backend::ImportSourcesHelper
     run.filtered_count
   end
 
+  def import_run_retries_label(run)
+    retries_used = import_run_retry_metadata_integer(run, "job_retries_used")
+    max_retries = import_run_retry_metadata_integer(run, "max_retries")
+    return "-" if retries_used.nil? || max_retries.nil?
+
+    "#{retries_used} / #{max_retries}"
+  end
+
   private
 
   def import_run_metadata(run)
     return {} unless run.metadata.is_a?(Hash)
 
     run.metadata.deep_stringify_keys
+  end
+
+  def import_run_retry_metadata_integer(run, key)
+    raw_value = import_run_metadata(run)[key]
+    return nil if raw_value.nil?
+
+    Integer(raw_value, exception: false)
   end
 end

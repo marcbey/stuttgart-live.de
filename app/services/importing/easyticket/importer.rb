@@ -12,11 +12,13 @@ module Importing
         import_source:,
         dump_fetcher: DumpFetcher.new,
         detail_fetcher: DetailFetcher.new,
+        run_metadata: {},
         logger: Rails.logger
       )
         @import_source = import_source
         @dump_fetcher = dump_fetcher
         @detail_fetcher = detail_fetcher
+        @run_metadata = run_metadata
         @logger = logger
       end
 
@@ -33,7 +35,8 @@ module Importing
           run = import_source.import_runs.create!(
             status: "running",
             source_type: import_source.source_type,
-            started_at: Time.current
+            started_at: Time.current,
+            metadata: normalized_metadata(run_metadata)
           )
           broadcast_runs_update!
         end
@@ -182,7 +185,7 @@ module Importing
           imported_count: imported_count,
           upserted_count: upserted_count,
           failed_count: failed_count,
-          metadata: { "location_whitelist" => location_whitelist }
+          metadata: normalized_metadata(run.metadata).merge("location_whitelist" => location_whitelist)
         )
         broadcast_runs_update!
 
@@ -211,7 +214,7 @@ module Importing
 
       private
 
-      attr_reader :import_source, :dump_fetcher, :detail_fetcher, :logger
+      attr_reader :import_source, :dump_fetcher, :detail_fetcher, :run_metadata, :logger
 
       def upsert_import_event!(attributes:, dump_payload:, detail_payload:, seen_at:)
         record = EasyticketImportEvent.find_or_initialize_by(

@@ -68,7 +68,8 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       source_type: "easyticket",
       started_at: 2.minutes.ago,
       finished_at: 1.minute.ago,
-      error_message: "Run failed"
+      error_message: "Run failed",
+      metadata: { "job_retries_used" => 2, "max_retries" => 3 }
     )
     run.import_run_errors.create!(
       source_type: "easyticket",
@@ -84,6 +85,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Net::ReadTimeout"
     assert_includes response.body, "evt-123"
     assert_includes response.body, "timeout"
+    assert_includes response.body, "2 / 3"
   end
 
   test "should limit recent runs json to configured size" do

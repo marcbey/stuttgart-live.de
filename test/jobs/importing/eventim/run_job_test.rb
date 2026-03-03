@@ -43,14 +43,33 @@ class Importing::Eventim::RunJobTest < ActiveJob::TestCase
     assert_equal 0, enqueued_jobs.size
   end
 
+  test "passes retry metadata to importer run" do
+    captured_metadata = nil
+    fake_run = Struct.new(:status).new("failed")
+
+    with_stubbed_constructor(Importing::Eventim::Importer, nil) do |singleton|
+      singleton.define_method(:new) do |*args, **kwargs|
+        captured_metadata = kwargs[:run_metadata]
+        Struct.new(:call).new(fake_run)
+      end
+
+      Importing::Eventim::RunJob.perform_now(@source.id)
+    end
+
+    assert_equal 1, captured_metadata["job_attempt"]
+    assert_equal 0, captured_metadata["job_retries_used"]
+    assert_equal 3, captured_metadata["max_retries"]
+    assert captured_metadata["job_id"].present?
+  end
+
   private
 
-  def with_stubbed_constructor(klass, instance)
+  def with_stubbed_constructor(klass, instance = nil)
     singleton = klass.singleton_class
     singleton.alias_method :__original_new_for_test, :new
-    singleton.define_method(:new) { |*| instance }
+    singleton.define_method(:new) { |*| instance } if instance
 
-    yield
+    yield singleton
   ensure
     singleton.alias_method :new, :__original_new_for_test
     singleton.remove_method :__original_new_for_test
