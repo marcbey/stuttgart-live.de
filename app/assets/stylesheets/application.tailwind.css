@@ -201,6 +201,7 @@ a {
 }
 
 .event-card {
+  position: relative;
   border: 1px solid rgba(0, 0, 0, 0.2);
   background: #fdfdfd;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -209,6 +210,7 @@ a {
 }
 
 .event-card-link {
+  display: block;
   text-decoration: none;
 }
 
@@ -237,6 +239,44 @@ a {
   position: absolute;
   inset: 0;
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.33) 46%, transparent 80%);
+}
+
+.event-card-status-overlay {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 12;
+  border: 1px solid rgba(17, 17, 17, 0.45);
+  background: rgba(248, 248, 248, 0.94);
+  backdrop-filter: blur(4px);
+  padding: 0.2rem;
+}
+
+.event-card-status-form {
+  margin: 0;
+}
+
+.event-card-status-select {
+  border: 1px solid #171717;
+  background: #fff;
+  color: #111;
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.74rem;
+  min-width: 8.6rem;
+  padding: 0.2rem 0.25rem;
+}
+
+.event-card-status-submit {
+  margin-left: 0.25rem;
+  border: 1px solid #171717;
+  background: #171717;
+  color: #fff;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.18rem 0.32rem;
 }
 
 .event-card-copy {

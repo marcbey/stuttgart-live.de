@@ -24,7 +24,9 @@ Rails.application.routes.draw do
     end
   end
 
-  resources :events, only: [ :index, :show ], module: :public, param: :slug
+  resources :events, only: [ :index, :show ], module: :public, param: :slug do
+    patch :status, on: :member
+  end
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

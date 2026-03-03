@@ -2,9 +2,9 @@
 <% desktop_image_url = event.image_url_for(slot: card_slot, breakpoint: :desktop) %>
 <% mobile_image_url = event.image_url_for(slot: :grid_default, breakpoint: :mobile) || desktop_image_url %>
 
-<article class="event-card">
-  <%= link_to event_path(event.slug), class: "event-card-link" do %>
-    <div class="event-card-image-wrap">
+<article id="<%= dom_id(event, :card) %>" class="event-card">
+  <div class="event-card-image-wrap">
+    <%= link_to event_path(event.slug), class: "event-card-link" do %>
       <% if desktop_image_url.present? %>
         <picture>
           <% if mobile_image_url.present? %>
@@ -30,6 +30,25 @@
           <p class="event-card-genre"><%= event.primary_genre.name %></p>
         <% end %>
       </div>
-    </div>
-  <% end %>
+    <% end %>
+
+    <% if authenticated? %>
+      <div class="event-card-status-overlay">
+        <%= form_with url: status_event_path(event.slug),
+                      method: :patch,
+                      class: "event-card-status-form" do |form| %>
+          <%= hidden_field_tag :card_slot, card_slot %>
+          <%= hidden_field_tag :page, params[:page].presence || 1 %>
+          <%= form.select :status,
+                          options_for_select(public_event_status_options, event.status),
+                          {},
+                          class: "event-card-status-select",
+                          onchange: "this.form.requestSubmit();" %>
+          <noscript>
+            <%= form.submit "Ok", class: "event-card-status-submit" %>
+          </noscript>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 </article>
