@@ -7,7 +7,5 @@
       data-infinite-scroll-url-value="<%= events_path(page: next_page, filter: public_filter, event_date: public_event_date, format: :turbo_stream) %>">
       <span>lade mehr events...</span>
     </div>
-  <% else %>
-    <div class="pagination-end">keine weiteren veranstaltungen</div>
   <% end %>
 </div>

@@ -29,22 +29,24 @@
 
   <body>
     <nav class="app-nav">
-      <%= link_to root_path, class: "app-brand" do %>
-        <%= brand_logo_tag(class_name: "brand-logo brand-logo-nav", loading: "eager") %>
-      <% end %>
-
-      <div class="app-nav-links">
-        <%= link_to "Events", events_path, class: "button button-ghost" %>
-        <% if authenticated? %>
-          <%= link_to "Backend", backend_events_path, class: "button button-secondary" %>
-          <%= button_to "Logout", session_path, method: :delete, class: "button" %>
-        <% else %>
-          <%= link_to "Login", new_session_path, class: "button" %>
+      <div class="app-nav-inner">
+        <%= link_to root_path, class: "app-brand" do %>
+          <%= brand_logo_tag(class_name: "brand-logo brand-logo-nav", loading: "eager") %>
         <% end %>
+
+        <div class="app-nav-links">
+          <%= link_to "Events", events_path, class: "button button-ghost" %>
+          <% if authenticated? %>
+            <%= link_to "Backend", backend_events_path, class: "button button-secondary" %>
+            <%= button_to "Logout", session_path, method: :delete, class: "button" %>
+          <% else %>
+            <%= link_to "Login", new_session_path, class: "button" %>
+          <% end %>
+        </div>
       </div>
     </nav>
 
-    <% unless controller_path == "backend/events" && action_name == "index" %>
+    <% unless controller_path.start_with?("public/") || (controller_path == "backend/events" && action_name == "index") %>
       <div id="flash-messages">
         <%= render "layouts/flash_messages" %>
       </div>

@@ -36,11 +36,11 @@ module Public
       desired_status = params[:status].to_s
 
       unless Event::STATUSES.include?(desired_status)
-        redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param), alert: "Ungültiger Status."
+        redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param)
         return
       end
 
-      changed = apply_status!(@event, desired_status)
+      apply_status!(@event, desired_status)
       Editorial::EventChangeLogger.log!(
         event: @event,
         action: "public_status_update",
@@ -48,20 +48,12 @@ module Public
         changed_fields: @event.saved_changes
       )
 
-      message =
-        if changed
-          "Status für \"#{@event.artist_name}\" wurde auf #{helpers.public_event_status_label(@event.status)} gesetzt."
-        else
-          "Status für \"#{@event.artist_name}\" ist bereits #{helpers.public_event_status_label(@event.status)}."
-        end
-
       respond_to do |format|
         format.html do
-          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param), notice: message
+          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param)
         end
         format.turbo_stream do
-          flash.now[:notice] = message
-          streams = [ turbo_stream.replace("flash-messages", partial: "layouts/flash_messages") ]
+          streams = []
           card_id = helpers.dom_id(@event, :card)
 
           if @event.published? && @event.published_at.present? && @event.published_at <= Time.current
