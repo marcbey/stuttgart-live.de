@@ -24,9 +24,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Filter entfernen"
     assert_includes response.body, "nächsten Event anzeigen"
     assert_includes response.body, "name=\"status\""
-    assert_includes response.body, "value=\"needs_review\""
+    assert_includes response.body, "value=\"published\""
     assert_includes response.body, "Veranstalter"
     assert_includes response.body, "Promoter-ID"
+    assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
   end
 
   test "apply filters stores values in session and redirects to clean url" do
@@ -60,6 +61,18 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "data-next-event-enabled-value=\"false\""
   end
 
+  test "status filter is persisted in session" do
+    sign_in_as(@user)
+
+    get backend_events_url(status: "needs_review")
+    assert_response :success
+    assert_includes response.body, "value=\"needs_review\""
+
+    get backend_events_url
+    assert_response :success
+    assert_includes response.body, "value=\"needs_review\""
+  end
+
   test "clear filters removes session filter values" do
     sign_in_as(@user)
 
@@ -85,6 +98,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#query[value='Review Artist']", count: 0
     assert_select "input#organizer[value='Music Circus']", count: 0
     assert_select "input#starts_after[value='2026-07-01']", count: 0
+    assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
     assert_select "input#starts_before[value='2026-07-31']", count: 0
   end
 
@@ -286,7 +300,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       event_ids: [ @event.id ]
     }
 
-    assert_redirected_to backend_events_url(status: "needs_review")
+    assert_redirected_to backend_events_url(status: "published")
     assert_equal "published", @event.reload.status
     assert @event.published_at.present?
   end

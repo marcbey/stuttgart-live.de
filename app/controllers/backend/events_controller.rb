@@ -1,6 +1,7 @@
 module Backend
   class EventsController < BaseController
     SESSION_FILTERS_KEY = "backend_events_inbox_filters".freeze
+    SESSION_STATUS_KEY = "backend_events_inbox_status".freeze
     SESSION_NEXT_EVENT_KEY = "backend_events_next_event_enabled".freeze
 
     before_action :set_event, only: [ :show, :update, :publish, :unpublish ]
@@ -202,9 +203,15 @@ module Backend
 
     def current_status
       value = params[:status].to_s
-      return value if Event::STATUSES.include?(value)
+      if Event::STATUSES.include?(value)
+        persist_session_status!(value)
+        return value
+      end
 
-      "needs_review"
+      stored = session[SESSION_STATUS_KEY].to_s
+      return stored if Event::STATUSES.include?(stored)
+
+      "published"
     end
 
     def clear_filters_requested?
@@ -218,7 +225,7 @@ module Backend
       {
         query: normalized["query"].to_s.strip.presence,
         organizer: normalized["organizer"].to_s.strip.presence,
-        starts_after: normalized["starts_after"].to_s.strip.presence,
+        starts_after: normalized["starts_after"].to_s.strip.presence || Date.current.iso8601,
         starts_before: normalized["starts_before"].to_s.strip.presence
       }
     end
@@ -235,6 +242,10 @@ module Backend
         "starts_after" => starts_after.to_s.strip.presence,
         "starts_before" => starts_before.to_s.strip.presence
       }
+    end
+
+    def persist_session_status!(status)
+      session[SESSION_STATUS_KEY] = status
     end
 
     def next_event_enabled_preference
