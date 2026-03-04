@@ -3,8 +3,6 @@ module Backend
     SESSION_FILTERS_KEY = "backend_events_inbox_filters".freeze
     SESSION_STATUS_KEY = "backend_events_inbox_status".freeze
     SESSION_NEXT_EVENT_KEY = "backend_events_next_event_enabled".freeze
-    RECENT_UPSERTS_STATUS = "recent_upserts".freeze
-    MERGE_ACTIONS = %w[merged_create merged_update].freeze
 
     before_action :set_event, only: [ :show, :update, :publish, :unpublish ]
     before_action :set_next_event_enabled, only: [ :index, :show, :update ]
@@ -14,7 +12,6 @@ module Backend
       @events = filtered_events_for_status(@filters[:status])
       @status_filters = status_filters
       @status_counts = Event.group(:status).count
-      @recent_upserts_count = recent_upsert_events_count
       @all_genres = Genre.order(:name)
       @selected_event = selected_event_from(@events)
     end
@@ -296,36 +293,12 @@ module Backend
     end
 
     def filtered_events_for_status(status)
-      filters = session_filters_for_index.merge(
-        status: normalized_status_filter(status),
-        upserted_since: upserted_since_filter(status)
-      )
+      filters = session_filters_for_index.merge(status: status)
       Editorial::EventsInboxQuery.new(params: filters).call
     end
 
     def status_filters
-      @status_filters ||= Event::STATUSES.reject { |status| status == "imported" } + [ RECENT_UPSERTS_STATUS ]
-    end
-
-    def normalized_status_filter(status)
-      return nil if status == RECENT_UPSERTS_STATUS
-
-      status
-    end
-
-    def upserted_since_filter(status)
-      return nil unless status == RECENT_UPSERTS_STATUS
-
-      6.hours.ago
-    end
-
-    def recent_upsert_events_count
-      Event
-        .joins(:event_change_logs)
-        .where(event_change_logs: { action: MERGE_ACTIONS })
-        .where("event_change_logs.created_at >= ?", 6.hours.ago)
-        .distinct
-        .count
+      @status_filters ||= Event::STATUSES.reject { |status| status == "imported" }
     end
 
     def event_params

@@ -26,9 +26,7 @@
       <div class="backend-status-row">
         <% @status_filters.each do |status| %>
           <% label, count =
-             if status == Backend::EventsController::RECENT_UPSERTS_STATUS
-               [ "Upserts", @recent_upserts_count ]
-             elsif status == "ready_for_publish"
+             if status == "ready_for_publish"
                [ "Depubliziert", @status_counts.fetch(status, 0) ]
              else
                [ event_status_label(status), @status_counts.fetch(status, 0) ]

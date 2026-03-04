@@ -25,8 +25,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "nächsten Event anzeigen"
     assert_includes response.body, "name=\"status\""
     assert_includes response.body, "value=\"published\""
-    assert_includes response.body, backend_events_path(status: "recent_upserts")
-    assert_includes response.body, "Upserts"
     assert_includes response.body, "Veranstalter"
     assert_includes response.body, "Promoter-ID"
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
@@ -73,42 +71,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url
     assert_response :success
     assert_includes response.body, "value=\"needs_review\""
-  end
-
-  test "recent upserts status filter is persisted in session" do
-    sign_in_as(@user)
-
-    get backend_events_url(status: "recent_upserts")
-    assert_response :success
-    assert_includes response.body, "value=\"recent_upserts\""
-
-    get backend_events_url
-    assert_response :success
-    assert_includes response.body, "value=\"recent_upserts\""
-  end
-
-  test "recent upserts filter shows only merged events from last 6 hours" do
-    sign_in_as(@user)
-
-    EventChangeLog.create!(
-      event: @event,
-      action: "merged_update",
-      created_at: 2.hours.ago,
-      updated_at: 2.hours.ago
-    )
-
-    EventChangeLog.create!(
-      event: @next_event,
-      action: "merged_update",
-      created_at: 7.hours.ago,
-      updated_at: 7.hours.ago
-    )
-
-    get backend_events_url(status: "recent_upserts")
-
-    assert_response :success
-    assert_includes response.body, "editor_form_event_#{@event.id}"
-    assert_not_includes response.body, "editor_form_event_#{@next_event.id}"
   end
 
   test "clear filters removes session filter values" do
