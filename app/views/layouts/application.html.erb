@@ -30,8 +30,7 @@
   <body>
     <nav class="app-nav">
       <%= link_to root_path, class: "app-brand" do %>
-        <span class="app-brand-logo">SL</span>
-        <span class="app-brand-text">stuttgart-live.de</span>
+        <%= brand_logo_tag(class_name: "brand-logo brand-logo-nav", loading: "eager") %>
       <% end %>
 
       <div class="app-nav-links">

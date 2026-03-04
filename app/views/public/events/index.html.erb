@@ -2,25 +2,46 @@
 
 <section class="public-shell">
   <header class="hero-header">
-    <div class="hero-mark">stuttgart live</div>
     <h1>Konzerte in Stuttgart</h1>
     <p>Chronologisch kuratiert, direkt mit Ticket-CTA.</p>
-    <div class="public-filter-toggle">
-      <%= link_to "Alle Events",
-                  events_path(filter: "all"),
-                  class: "status-chip #{'status-chip-active' if @public_filter == 'all'}" %>
-      <%= link_to "Nur SKS",
-                  events_path(filter: "sks"),
-                  class: "status-chip #{'status-chip-active' if @public_filter == 'sks'}" %>
+    <div class="public-filter-row">
+      <div class="public-filter-toggle">
+        <%= link_to "Alle Events",
+                    events_path(filter: "all", event_date: @public_event_date&.iso8601),
+                    class: "status-chip #{'status-chip-active' if @public_filter == 'all'}" %>
+        <%= link_to "Nur SKS",
+                    events_path(filter: "sks", event_date: @public_event_date&.iso8601),
+                    class: "status-chip #{'status-chip-active' if @public_filter == 'sks'}" %>
+      </div>
+
+      <%= form_with url: events_path, method: :get, local: true, class: "public-date-filter" do %>
+        <%= hidden_field_tag :filter, @public_filter %>
+        <div class="public-date-input-wrap">
+          <%= date_field_tag :event_date,
+                             @public_event_date&.iso8601,
+                             class: "form-input public-date-input",
+                             aria: { label: "Tag auswählen" },
+                             onchange: "this.form.requestSubmit();" %>
+          <%= button_tag "×",
+                         type: "button",
+                         class: "public-date-clear #{'public-date-clear-visible' if @public_event_date.present?}",
+                         aria: { label: "Datumsfilter zurücksetzen" },
+                         onclick: "this.form.querySelector('[name=event_date]').value=''; this.form.requestSubmit();" %>
+        </div>
+      <% end %>
     </div>
   </header>
 
   <div id="event-grid" class="flyer-grid">
     <% @events.each_with_index do |event, index| %>
       <% card_slot = (index % 5).zero? ? :grid_tall : :grid_default %>
-      <%= render "event_card", event: event, card_slot: card_slot, public_filter: @public_filter %>
+      <%= render "event_card",
+                 event: event,
+                 card_slot: card_slot,
+                 public_filter: @public_filter,
+                 public_event_date: @public_event_date&.iso8601 %>
     <% end %>
   </div>
 
-  <%= render "pagination", next_page: @next_page, public_filter: @public_filter %>
+  <%= render "pagination", next_page: @next_page, public_filter: @public_filter, public_event_date: @public_event_date&.iso8601 %>
 </section>

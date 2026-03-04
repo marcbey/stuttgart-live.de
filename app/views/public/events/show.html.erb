@@ -15,11 +15,11 @@
 <% end %>
 
 <article class="event-detail">
-  <p class="event-detail-back"><%= link_to "← alle events", events_path(filter: @public_filter) %></p>
+  <p class="event-detail-back"><%= link_to "← alle events", events_path(filter: @public_filter, event_date: @public_event_date&.iso8601) %></p>
 
   <header class="event-detail-header">
     <div>
-      <p class="eyebrow">stuttgart live</p>
+      <p class="eyebrow eyebrow-logo"><%= brand_logo_tag(class_name: "brand-logo brand-logo-eyebrow") %></p>
       <h1><%= @event.artist_name %></h1>
       <p class="event-detail-title"><%= @event.title %></p>
       <p class="event-detail-meta"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %> · <%= @event.venue %>, <%= @event.city %></p>
