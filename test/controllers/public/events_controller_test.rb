@@ -163,6 +163,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Published Artist"
   end
 
+  test "show includes backend badge for authenticated users" do
+    sign_in_as(@user)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
+    assert_includes response.body, expected_link
+  end
+
   test "show returns not found for unpublished events" do
     get event_url(events(:needs_review_one).slug)
 

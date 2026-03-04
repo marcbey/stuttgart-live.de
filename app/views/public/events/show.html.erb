@@ -23,6 +23,14 @@
       <h1><%= @event.artist_name %></h1>
       <p class="event-detail-title"><%= @event.title %></p>
       <p class="event-detail-meta"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %> · <%= @event.venue %>, <%= @event.city %></p>
+      <% if authenticated? %>
+        <p class="event-detail-admin-link">
+          <%= link_to "Backend",
+                      backend_events_path(status: @event.status, event_id: @event.id),
+                      class: "status-badge status-badge-default status-badge-link",
+                      data: { turbo: false } %>
+        </p>
+      <% end %>
       <% if @event.primary_genre.present? %>
         <p class="event-detail-genre"><%= @event.primary_genre.name %></p>
       <% end %>

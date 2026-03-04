@@ -290,6 +290,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_not_includes response.body, "Speichern & Publizieren"
+    assert_includes response.body, event_path(@published_event.slug)
   end
 
   test "bulk publish updates selected events" do
