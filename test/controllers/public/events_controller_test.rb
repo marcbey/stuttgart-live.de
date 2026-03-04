@@ -179,10 +179,51 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "show returns not found for published past events" do
+  test "show renders unpublished events for authenticated users with status badge" do
+    sign_in_as(@user)
+
+    event = events(:needs_review_one)
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Review"
+  end
+
+  test "show renders rejected events for authenticated users with abgelehnt badge" do
+    sign_in_as(@user)
+
+    rejected_event = Event.create!(
+      slug: "rejected-public-detail",
+      source_fingerprint: "test::public::rejected::detail",
+      title: "Rejected Public Detail",
+      artist_name: "Rejected Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "rejected",
+      source_snapshot: {}
+    )
+
+    get event_url(rejected_event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Abgelehnt"
+  end
+
+  test "show renders published past events by slug" do
     get event_url(@past_published_event.slug)
 
-    assert_response :not_found
+    assert_response :success
+    assert_includes response.body, "Past Artist"
+  end
+
+  test "show renders past events for authenticated users with vergangen badge" do
+    sign_in_as(@user)
+
+    get event_url(@past_published_event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Vergangen"
   end
 
   test "index shows status overlay for authenticated users" do

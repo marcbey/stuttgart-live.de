@@ -24,12 +24,16 @@
       <p class="event-detail-title"><%= @event.title %></p>
       <p class="event-detail-meta"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %> · <%= @event.venue %>, <%= @event.city %></p>
       <% if authenticated? %>
-        <p class="event-detail-admin-link">
+        <% visibility_badges = public_event_visibility_badges(@event) %>
+        <div class="event-detail-badges-row">
           <%= link_to "Backend",
                       backend_events_path(status: @event.status, event_id: @event.id),
                       class: "status-badge status-badge-default status-badge-link",
                       data: { turbo: false } %>
-        </p>
+          <% visibility_badges.each do |badge| %>
+            <span class="status-badge <%= badge[:css_class] %>"><%= badge[:label] %></span>
+          <% end %>
+        </div>
       <% end %>
       <% if @event.primary_genre.present? %>
         <p class="event-detail-genre"><%= @event.primary_genre.name %></p>

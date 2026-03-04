@@ -27,7 +27,7 @@ module Public
     def show
       @public_filter = current_public_filter
       @public_event_date = current_public_event_date
-      @event = published_future_events_relation.find_by!(slug: params[:slug])
+      @event = show_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.primary_offer
     end
 
@@ -120,9 +120,20 @@ module Public
     end
 
     def published_future_events_relation
+      published_events_relation
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+    end
+
+    def published_events_relation
       Event
         .published_live
-        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+        .includes(:genres, :event_offers, :import_event_images)
+    end
+
+    def show_events_relation
+      return published_events_relation unless authenticated?
+
+      Event
         .includes(:genres, :event_offers, :import_event_images)
     end
 

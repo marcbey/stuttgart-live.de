@@ -522,8 +522,14 @@ a {
   font-size: 1.22rem;
 }
 
-.event-detail-admin-link {
+.event-detail-badges-row {
   margin: 0.4rem 0 0;
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: nowrap;
+  align-items: center;
+  overflow-x: auto;
+  max-width: 100%;
 }
 
 .event-detail-meta,
