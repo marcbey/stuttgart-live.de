@@ -12,8 +12,9 @@ module Public
     def index
       @page = [ params[:page].to_i, 1 ].max
       @public_filter = current_public_filter
+      @public_event_date = current_public_event_date
 
-      relation = visible_events_relation(filter: @public_filter)
+      relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date)
       @events = relation.limit(PER_PAGE).offset((@page - 1) * PER_PAGE)
       @next_page = @page + 1 if relation.offset(@page * PER_PAGE).limit(1).exists?
 
@@ -25,6 +26,7 @@ module Public
 
     def show
       @public_filter = current_public_filter
+      @public_event_date = current_public_event_date
       @event = published_future_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.primary_offer
     end
@@ -34,7 +36,7 @@ module Public
       desired_status = params[:status].to_s
 
       unless Event::STATUSES.include?(desired_status)
-        redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter), alert: "Ungültiger Status."
+        redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param), alert: "Ungültiger Status."
         return
       end
 
@@ -55,7 +57,7 @@ module Public
 
       respond_to do |format|
         format.html do
-          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter), notice: message
+          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param), notice: message
         end
         format.turbo_stream do
           flash.now[:notice] = message
@@ -69,7 +71,8 @@ module Public
               locals: {
                 event: @event,
                 card_slot: params[:card_slot].presence || :grid_default,
-                public_filter: current_public_filter
+                public_filter: current_public_filter,
+                public_event_date: current_public_event_date_param
               }
             )
           else
@@ -83,8 +86,9 @@ module Public
 
     private
 
-    def visible_events_relation(filter: FILTER_ALL)
+    def visible_events_relation(filter: FILTER_ALL, event_date: nil)
       relation = published_future_events_relation
+      relation = relation.where(start_at: event_date.beginning_of_day..event_date.end_of_day) if event_date.present?
 
       return relation unless filter == FILTER_SKS
 
@@ -96,10 +100,31 @@ module Public
     end
 
     def current_public_filter
-      value = params[:filter].to_s
-      return value if FILTER_VALUES.include?(value)
+      return @current_public_filter if defined?(@current_public_filter)
 
-      FILTER_SKS
+      value = params[:filter].to_s
+      @current_public_filter =
+        if FILTER_VALUES.include?(value)
+          value
+        else
+          FILTER_SKS
+        end
+    end
+
+    def current_public_event_date
+      return @current_public_event_date if defined?(@current_public_event_date)
+
+      value = params[:event_date].to_s.strip
+      @current_public_event_date =
+        begin
+          value.present? ? Date.iso8601(value) : nil
+        rescue ArgumentError
+          nil
+        end
+    end
+
+    def current_public_event_date_param
+      current_public_event_date&.iso8601
     end
 
     def published_future_events_relation

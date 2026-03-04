@@ -114,6 +114,48 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "filter=sks"
   end
 
+  test "index can be filtered to a specific day" do
+    selected_date = 12.days.from_now.to_date
+    selected_start = selected_date.to_time.in_time_zone.change(hour: 20, min: 0, sec: 0)
+
+    matching_event = Event.create!(
+      slug: "day-filter-match",
+      source_fingerprint: "test::day::match",
+      title: "Day Filter Match",
+      artist_name: "Day Match Artist",
+      start_at: selected_start,
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      organizer_name: "SKS E. Russ GmbH",
+      promoter_id: nil,
+      source_snapshot: {}
+    )
+
+    other_day_event = Event.create!(
+      slug: "day-filter-other",
+      source_fingerprint: "test::day::other",
+      title: "Day Filter Other",
+      artist_name: "Other Day Artist",
+      start_at: selected_start + 1.day,
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      organizer_name: "SKS E. Russ GmbH",
+      promoter_id: nil,
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "sks", event_date: selected_date.iso8601)
+
+    assert_response :success
+    assert_includes response.body, matching_event.artist_name
+    assert_not_includes response.body, other_day_event.artist_name
+    assert_includes response.body, "event_date=#{selected_date.iso8601}"
+  end
+
   test "show renders published event by slug" do
     get event_url(@published_event.slug)
 
@@ -153,9 +195,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   test "authenticated user can update event status from public cards" do
     sign_in_as(@user)
 
-    patch status_event_url(@published_event.slug), params: { status: "needs_review", page: "1", filter: "all" }
+    patch status_event_url(@published_event.slug), params: { status: "needs_review", page: "1", filter: "all", event_date: "2026-06-01" }
 
-    assert_redirected_to events_url(page: "1", filter: "all")
+    assert_redirected_to events_url(page: "1", filter: "all", event_date: "2026-06-01")
     assert_equal "needs_review", @published_event.reload.status
     assert_nil @published_event.published_at
     assert_nil @published_event.published_by_id
