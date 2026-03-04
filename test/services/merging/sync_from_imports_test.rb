@@ -84,4 +84,37 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal 0, second_result.events_updated_count
     assert_equal 0, second_result.offers_upserted_count
   end
+
+  test "sets needs_review when import event has no image" do
+    source_easyticket = import_sources(:one)
+    date = Date.new(2026, 12, 1)
+
+    source_easyticket.easyticket_import_events.create!(
+      external_event_id: "merge-easy-no-image",
+      concert_date: date,
+      city: "Stuttgart",
+      venue_name: "LKA Longhorn",
+      title: "No Image Night",
+      artist_name: "Band Without Image",
+      organizer_name: "SKS Michael Russ GmbH",
+      organizer_id: "382",
+      concert_date_label: "01.12.2026",
+      venue_label: "Stuttgart, LKA Longhorn",
+      dump_payload: {},
+      detail_payload: {},
+      ticket_url: "https://example.com/easy-no-image",
+      is_active: true,
+      first_seen_at: Time.current,
+      last_seen_at: Time.current,
+      source_payload_hash: "hash-easy-no-image"
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by(artist_name: "Band Without Image", start_at: Time.zone.local(2026, 12, 1, 20, 0, 0))
+    assert event.present?
+    assert_equal "needs_review", event.status
+    assert_equal false, event.auto_published
+    assert_includes event.completeness_flags, "missing_image"
+  end
 end

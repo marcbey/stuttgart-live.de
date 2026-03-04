@@ -154,11 +154,12 @@ module Merging
 
       merged_images = merged_image_candidates(records)
       offers = build_offer_attributes(records)
-      completeness = Editorial::EventCompletenessChecker.new(event: event, offers: offers, images_present: merged_images.any?).call
+      images_present = merged_images.any?
+      completeness = Editorial::EventCompletenessChecker.new(event: event, offers: offers, images_present: images_present).call
       event.completeness_score = completeness.score
       event.completeness_flags = completeness.flags
 
-      apply_status_rules(event, completeness)
+      apply_status_rules(event, completeness, images_present: images_present)
       updated_now ||= event.changed?
       event.save! if created_now || updated_now
 
@@ -179,11 +180,11 @@ module Merging
       [ event, created_now, effective_updated, offers_upserted ]
     end
 
-    def apply_status_rules(event, completeness)
+    def apply_status_rules(event, completeness, images_present:)
       return if event.status == "rejected"
       return if event.published? && !event.auto_published?
 
-      if completeness.ready_for_publish?
+      if completeness.ready_for_publish? && images_present
         event.status = "published"
         event.auto_published = true
         event.published_at ||= Time.current
