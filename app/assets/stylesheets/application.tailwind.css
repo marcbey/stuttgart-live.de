@@ -194,6 +194,12 @@ a {
   font-size: clamp(1rem, 2.2vw, 1.25rem);
 }
 
+.public-filter-toggle {
+  margin-top: 0.75rem;
+  display: inline-flex;
+  gap: 0.45rem;
+}
+
 .flyer-grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));

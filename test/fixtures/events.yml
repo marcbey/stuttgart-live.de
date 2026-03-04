@@ -19,6 +19,27 @@ published_one:
   editor_notes:
   source_snapshot: {}
 
+published_past_one:
+  slug: published-past-event
+  source_fingerprint: seed::published::past
+  title: Past Published Event
+  artist_name: Past Artist
+  start_at: 2026-01-10 20:00:00
+  venue: LKA Longhorn
+  city: Stuttgart
+  event_info: Infos
+  badge_text:
+  youtube_url:
+  status: published
+  published_at: 2026-01-01 10:00:00
+  published_by: one
+  completeness_score: 100
+  completeness_flags: []
+  primary_source: eventim
+  auto_published: false
+  editor_notes:
+  source_snapshot: {}
+
 needs_review_one:
   slug: needs-review-event
   source_fingerprint: seed::review::1

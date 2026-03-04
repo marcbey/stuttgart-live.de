@@ -3,11 +3,17 @@ module Public
     allow_unauthenticated_access only: [ :index, :show ]
 
     PER_PAGE = 12
+    FILTER_ALL = "all".freeze
+    FILTER_SKS = "sks".freeze
+    FILTER_VALUES = [ FILTER_ALL, FILTER_SKS ].freeze
+    SKS_ORGANIZER_NAMES = [ "SKS E. Russ GmbH", "SKS Michael Russ GmbH" ].freeze
+    SKS_PROMOTER_ID = "10135".freeze
 
     def index
       @page = [ params[:page].to_i, 1 ].max
+      @public_filter = current_public_filter
 
-      relation = Event.published_live.includes(:genres, :event_offers, :import_event_images)
+      relation = visible_events_relation(filter: @public_filter)
       @events = relation.limit(PER_PAGE).offset((@page - 1) * PER_PAGE)
       @next_page = @page + 1 if relation.offset(@page * PER_PAGE).limit(1).exists?
 
@@ -18,7 +24,8 @@ module Public
     end
 
     def show
-      @event = Event.published_live.includes(:genres, :event_offers, :import_event_images).find_by!(slug: params[:slug])
+      @public_filter = current_public_filter
+      @event = published_future_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.primary_offer
     end
 
@@ -27,7 +34,7 @@ module Public
       desired_status = params[:status].to_s
 
       unless Event::STATUSES.include?(desired_status)
-        redirect_back fallback_location: events_path(page: params[:page]), alert: "Ungültiger Status."
+        redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter), alert: "Ungültiger Status."
         return
       end
 
@@ -48,7 +55,7 @@ module Public
 
       respond_to do |format|
         format.html do
-          redirect_back fallback_location: events_path(page: params[:page]), notice: message
+          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter), notice: message
         end
         format.turbo_stream do
           flash.now[:notice] = message
@@ -59,7 +66,11 @@ module Public
             streams << turbo_stream.replace(
               card_id,
               partial: "public/events/event_card",
-              locals: { event: @event, card_slot: params[:card_slot].presence || :grid_default }
+              locals: {
+                event: @event,
+                card_slot: params[:card_slot].presence || :grid_default,
+                public_filter: current_public_filter
+              }
             )
           else
             streams << turbo_stream.remove(card_id)
@@ -71,6 +82,32 @@ module Public
     end
 
     private
+
+    def visible_events_relation(filter: FILTER_ALL)
+      relation = published_future_events_relation
+
+      return relation unless filter == FILTER_SKS
+
+      relation.where(
+        "promoter_id = :promoter_id OR organizer_name IN (:organizer_names)",
+        promoter_id: SKS_PROMOTER_ID,
+        organizer_names: SKS_ORGANIZER_NAMES
+      )
+    end
+
+    def current_public_filter
+      value = params[:filter].to_s
+      return value if FILTER_VALUES.include?(value)
+
+      FILTER_SKS
+    end
+
+    def published_future_events_relation
+      Event
+        .published_live
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+        .includes(:genres, :event_offers, :import_event_images)
+    end
 
     def apply_status!(event, status)
       before_values = event.attributes.slice("status", "published_at", "published_by_id", "auto_published")

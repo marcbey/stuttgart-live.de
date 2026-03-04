@@ -1,7 +1,7 @@
 <%= turbo_stream.append "event-grid" do %>
-  <%= render partial: "event_card", collection: @events, as: :event %>
+  <%= render partial: "event_card", collection: @events, as: :event, locals: { public_filter: @public_filter } %>
 <% end %>
 
 <%= turbo_stream.replace "events-pagination" do %>
-  <%= render "pagination", next_page: @next_page %>
+  <%= render "pagination", next_page: @next_page, public_filter: @public_filter %>
 <% end %>

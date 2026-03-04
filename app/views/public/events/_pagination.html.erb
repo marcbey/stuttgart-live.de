@@ -2,7 +2,7 @@
   <% if next_page.present? %>
     <div class="pagination-sentinel"
          data-controller="infinite-scroll"
-         data-infinite-scroll-url-value="<%= events_path(page: next_page, format: :turbo_stream) %>">
+         data-infinite-scroll-url-value="<%= events_path(page: next_page, filter: local_assigns.fetch(:public_filter, 'sks'), format: :turbo_stream) %>">
       <span>lade mehr events...</span>
     </div>
   <% else %>

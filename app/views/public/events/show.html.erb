@@ -15,7 +15,7 @@
 <% end %>
 
 <article class="event-detail">
-  <p class="event-detail-back"><%= link_to "← alle events", events_path %></p>
+  <p class="event-detail-back"><%= link_to "← alle events", events_path(filter: @public_filter) %></p>
 
   <header class="event-detail-header">
     <div>

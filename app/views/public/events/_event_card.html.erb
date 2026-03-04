@@ -1,10 +1,11 @@
 <% card_slot = local_assigns.fetch(:card_slot, :grid_default) %>
+<% public_filter = local_assigns.fetch(:public_filter, params[:filter].to_s.presence || "sks") %>
 <% desktop_image_url = event.image_url_for(slot: card_slot, breakpoint: :desktop) %>
 <% mobile_image_url = event.image_url_for(slot: :grid_default, breakpoint: :mobile) || desktop_image_url %>
 
 <article id="<%= dom_id(event, :card) %>" class="event-card">
   <div class="event-card-image-wrap">
-    <%= link_to event_path(event.slug), class: "event-card-link" do %>
+    <%= link_to event_path(event.slug, filter: public_filter), class: "event-card-link" do %>
       <% if desktop_image_url.present? %>
         <picture>
           <% if mobile_image_url.present? %>
@@ -46,6 +47,7 @@
                       class: "event-card-status-form" do |form| %>
           <%= hidden_field_tag :card_slot, card_slot %>
           <%= hidden_field_tag :page, params[:page].presence || 1 %>
+          <%= hidden_field_tag :filter, public_filter %>
           <%= form.select :status,
                           options_for_select(public_event_status_options, event.status),
                           {},
