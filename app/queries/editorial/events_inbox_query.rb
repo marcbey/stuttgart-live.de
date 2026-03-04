@@ -1,6 +1,7 @@
 module Editorial
   class EventsInboxQuery
     DEFAULT_LIMIT = 120
+    MERGE_ACTIONS = %w[merged_create merged_update].freeze
 
     def initialize(scope: Event.all, params: {})
       @scope = scope
@@ -10,6 +11,7 @@ module Editorial
     def call
       relation = scope.includes(:genres, :event_offers)
       relation = relation.where(status: status_filter) if status_filter.present?
+      relation = relation.joins(:event_change_logs).where(event_change_logs: { action: MERGE_ACTIONS }).where("event_change_logs.created_at >= ?", upserted_since).distinct if upserted_since.present?
       relation = relation.where("start_at >= ?", starts_after.beginning_of_day) if starts_after.present?
       relation = relation.where("start_at <= ?", starts_before.end_of_day) if starts_before.present?
       if organizer.present?
@@ -54,6 +56,16 @@ module Editorial
 
     def organizer
       params[:organizer].to_s.strip.presence
+    end
+
+    def upserted_since
+      value = params[:upserted_since]
+      return value if value.is_a?(Time) || value.is_a?(ActiveSupport::TimeWithZone)
+      return nil if value.blank?
+
+      Time.zone.parse(value.to_s)
+    rescue ArgumentError
+      nil
     end
 
     def limit

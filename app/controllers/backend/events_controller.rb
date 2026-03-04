@@ -3,6 +3,8 @@ module Backend
     SESSION_FILTERS_KEY = "backend_events_inbox_filters".freeze
     SESSION_STATUS_KEY = "backend_events_inbox_status".freeze
     SESSION_NEXT_EVENT_KEY = "backend_events_next_event_enabled".freeze
+    RECENT_UPSERTS_STATUS = "recent_upserts".freeze
+    MERGE_ACTIONS = %w[merged_create merged_update].freeze
 
     before_action :set_event, only: [ :show, :update, :publish, :unpublish ]
     before_action :set_next_event_enabled, only: [ :index, :show, :update ]
@@ -10,7 +12,9 @@ module Backend
     def index
       @filters = session_filters_for_index.merge(status: current_status)
       @events = filtered_events_for_status(@filters[:status])
+      @status_filters = status_filters
       @status_counts = Event.group(:status).count
+      @recent_upserts_count = recent_upsert_events_count
       @all_genres = Genre.order(:name)
       @selected_event = selected_event_from(@events)
     end
@@ -203,13 +207,13 @@ module Backend
 
     def current_status
       value = params[:status].to_s
-      if Event::STATUSES.include?(value)
+      if status_filters.include?(value)
         persist_session_status!(value)
         return value
       end
 
       stored = session[SESSION_STATUS_KEY].to_s
-      return stored if Event::STATUSES.include?(stored)
+      return stored if status_filters.include?(stored)
 
       "published"
     end
@@ -221,11 +225,17 @@ module Backend
     def session_filters_for_index
       stored = session[SESSION_FILTERS_KEY]
       normalized = stored.is_a?(Hash) ? stored.stringify_keys : {}
+      starts_after_value =
+        if normalized.key?("starts_after")
+          normalized["starts_after"].to_s.strip.presence
+        else
+          Date.current.iso8601
+        end
 
       {
         query: normalized["query"].to_s.strip.presence,
         organizer: normalized["organizer"].to_s.strip.presence,
-        starts_after: normalized["starts_after"].to_s.strip.presence || Date.current.iso8601,
+        starts_after: starts_after_value,
         starts_before: normalized["starts_before"].to_s.strip.presence
       }
     end
@@ -269,7 +279,7 @@ module Backend
 
     def inbox_status_for_navigation
       value = params[:inbox_status].to_s
-      return value if Event::STATUSES.include?(value)
+      return value if status_filters.include?(value)
 
       nil
     end
@@ -286,8 +296,36 @@ module Backend
     end
 
     def filtered_events_for_status(status)
-      filters = session_filters_for_index.merge(status: status)
+      filters = session_filters_for_index.merge(
+        status: normalized_status_filter(status),
+        upserted_since: upserted_since_filter(status)
+      )
       Editorial::EventsInboxQuery.new(params: filters).call
+    end
+
+    def status_filters
+      @status_filters ||= Event::STATUSES.reject { |status| status == "imported" } + [ RECENT_UPSERTS_STATUS ]
+    end
+
+    def normalized_status_filter(status)
+      return nil if status == RECENT_UPSERTS_STATUS
+
+      status
+    end
+
+    def upserted_since_filter(status)
+      return nil unless status == RECENT_UPSERTS_STATUS
+
+      6.hours.ago
+    end
+
+    def recent_upsert_events_count
+      Event
+        .joins(:event_change_logs)
+        .where(event_change_logs: { action: MERGE_ACTIONS })
+        .where("event_change_logs.created_at >= ?", 6.hours.ago)
+        .distinct
+        .count
     end
 
     def event_params

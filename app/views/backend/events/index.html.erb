@@ -24,10 +24,16 @@
   <div class="backend-split">
     <aside class="backend-list-column">
       <div class="backend-status-row">
-        <% Event::STATUSES.reject { |status| status == "imported" }.each do |status| %>
+        <% @status_filters.each do |status| %>
+          <% label, count =
+             if status == Backend::EventsController::RECENT_UPSERTS_STATUS
+               [ "Upserts", @recent_upserts_count ]
+             else
+               [ event_status_label(status), @status_counts.fetch(status, 0) ]
+             end %>
           <%= link_to backend_events_path(status: status), class: "status-chip #{'status-chip-active' if @filters[:status] == status}" do %>
-            <span><%= event_status_label(status) %></span>
-            <strong><%= @status_counts.fetch(status, 0) %></strong>
+            <span><%= label %></span>
+            <strong><%= count %></strong>
           <% end %>
         <% end %>
       </div>
@@ -40,21 +46,39 @@
             <%= form.text_field :query, value: @filters[:query], placeholder: "Band, Venue, Stadt", class: "form-input" %>
           </div>
           <div>
-            <%= form.label :organizer, "Veranstalter / Promoter-ID", class: "form-label" %>
+            <%= form.label :organizer, "Organizer", class: "form-label" %>
             <%= form.text_field :organizer, value: @filters[:organizer], placeholder: "z.B. Music Circus oder 36", class: "form-input" %>
           </div>
-          <div>
-            <%= form.label :starts_after, "Ab", class: "form-label" %>
-            <%= form.date_field :starts_after, value: @filters[:starts_after], class: "form-input" %>
+          <div class="filter-date-row">
+            <div class="filter-date-field">
+              <%= form.label :starts_after, "Ab", class: "form-label" %>
+              <div class="filter-date-wrap">
+                <%= form.date_field :starts_after, value: @filters[:starts_after], class: "form-input filter-date-input" %>
+                <%= button_tag "×",
+                               type: "button",
+                               class: "filter-date-clear #{'filter-date-clear-visible' if @filters[:starts_after].present?}",
+                               aria: { label: "Ab-Datum löschen" },
+                               onclick: "this.previousElementSibling.value=''; this.form.requestSubmit();" %>
+              </div>
+            </div>
+
+            <div class="filter-date-field">
+              <%= form.label :starts_before, "Bis", class: "form-label" %>
+              <div class="filter-date-wrap">
+                <%= form.date_field :starts_before, value: @filters[:starts_before], class: "form-input filter-date-input" %>
+                <%= button_tag "×",
+                               type: "button",
+                               class: "filter-date-clear #{'filter-date-clear-visible' if @filters[:starts_before].present?}",
+                               aria: { label: "Bis-Datum löschen" },
+                               onclick: "this.previousElementSibling.value=''; this.form.requestSubmit();" %>
+              </div>
+            </div>
+
+            <div class="filter-date-actions">
+              <%= form.submit "Filtern", class: "button button-secondary" %>
+              <%= link_to "Filter entfernen", apply_filters_backend_events_path(status: @filters[:status], clear_filters: "1"), data: { turbo_method: :post }, class: "button button-ghost" %>
+            </div>
           </div>
-          <div>
-            <%= form.label :starts_before, "Bis", class: "form-label" %>
-            <%= form.date_field :starts_before, value: @filters[:starts_before], class: "form-input" %>
-          </div>
-        </div>
-        <div class="editor-actions-row">
-          <%= form.submit "Filtern", class: "button button-secondary" %>
-          <%= link_to "Filter entfernen", apply_filters_backend_events_path(status: @filters[:status], clear_filters: "1"), data: { turbo_method: :post }, class: "button button-ghost" %>
         </div>
       <% end %>
 

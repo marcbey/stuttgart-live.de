@@ -693,6 +693,74 @@ a {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
+.filter-date-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+}
+
+.filter-date-row {
+  --filter-control-height: 2.45rem;
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  align-items: end;
+  gap: 0.55rem;
+}
+
+.filter-date-field {
+  min-width: 0;
+}
+
+.filter-date-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  white-space: nowrap;
+}
+
+.filter-date-actions .button {
+  min-height: var(--filter-control-height);
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+.filter-date-input {
+  padding-right: 3rem;
+  height: var(--filter-control-height);
+}
+
+.filter-date-clear {
+  position: absolute;
+  right: 1.9rem;
+  top: 50%;
+  transform: translateY(-50%);
+  border: 0;
+  background: rgba(255, 255, 255, 0.9);
+  color: #666;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  cursor: pointer;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.filter-date-clear-visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.filter-date-clear:hover {
+  color: #111;
+}
+
 .bulk-actions {
   display: grid;
   grid-template-columns: 1fr;
