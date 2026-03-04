@@ -28,8 +28,10 @@
   </head>
 
   <body>
+    <% nav_inner_classes = [ "app-nav-inner" ] %>
+    <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
     <nav class="app-nav">
-      <div class="app-nav-inner">
+      <div class="<%= nav_inner_classes.join(" ") %>">
         <%= link_to root_path, class: "app-brand" do %>
           <%= brand_logo_tag(class_name: "brand-logo brand-logo-nav", loading: "eager") %>
         <% end %>

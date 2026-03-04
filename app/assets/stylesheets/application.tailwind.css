@@ -55,6 +55,10 @@ a {
   align-items: center;
 }
 
+.app-nav-inner-backend {
+  max-width: 1400px;
+}
+
 .app-brand {
   display: inline-flex;
   align-items: center;
