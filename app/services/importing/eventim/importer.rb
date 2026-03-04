@@ -93,6 +93,7 @@ module Importing
             mark_existing_event_as_seen!(
               record: existing_record,
               feed_payload: feed_payload,
+              attributes: attributes,
               seen_at: run_started_at
             )
             imported_count += 1
@@ -363,9 +364,14 @@ module Importing
         existing_record.present? && existing_record.source_payload_hash == source_payload_hash
       end
 
-      def mark_existing_event_as_seen!(record:, feed_payload:, seen_at:)
+      def mark_existing_event_as_seen!(record:, feed_payload:, attributes:, seen_at:)
+        promoter_id = attributes[:promoter_id].to_s.strip.presence || record.promoter_id
+        organizer_name = attributes[:organizer_name].to_s.strip.presence || record.organizer_name
+
         record.update_columns(
           dump_payload: feed_payload,
+          promoter_id: promoter_id,
+          organizer_name: organizer_name,
           is_active: true,
           last_seen_at: seen_at,
           updated_at: Time.current

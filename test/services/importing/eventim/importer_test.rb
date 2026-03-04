@@ -26,6 +26,8 @@ module Importing
             "eventvenue" => "Im Wizemann",
             "eventname" => "Band Eventim",
             "sideArtistNames" => "Band Eventim",
+            "promoterid" => "36",
+            "organizername" => "Music Circus GmbH & Co. KG",
             "eventlink" => "https://tickets.example/evt-900",
             "espicture_big" => "https://img.example/evt-900-big.jpg",
             "artistImage" => "https://img.example/evt-900-artist.jpg"
@@ -61,6 +63,8 @@ module Importing
         assert_includes run.metadata.fetch("filtered_out_cities", []), "Berlin"
 
         assert_equal "Band Eventim", imported.artist_name
+        assert_equal "36", imported.promoter_id
+        assert_equal "Music Circus GmbH & Co. KG", imported.organizer_name
         assert_equal "17.6.2026", imported.concert_date_label
         assert_equal "Stuttgart, Im Wizemann", imported.venue_label
         assert imported.is_active

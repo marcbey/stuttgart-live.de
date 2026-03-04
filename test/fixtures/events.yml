@@ -30,6 +30,8 @@ needs_review_one:
   event_info:
   badge_text:
   youtube_url:
+  organizer_name: SKS Michael Russ GmbH
+  promoter_id: "10135"
   status: needs_review
   published_at:
   published_by:
@@ -53,6 +55,8 @@ needs_review_two:
   event_info:
   badge_text:
   youtube_url:
+  organizer_name: Music Circus GmbH & Co. KG
+  promoter_id: "36"
   status: needs_review
   published_at:
   published_by:

@@ -40,6 +40,10 @@
             <%= form.text_field :query, value: @filters[:query], placeholder: "Band, Venue, Stadt", class: "form-input" %>
           </div>
           <div>
+            <%= form.label :organizer, "Veranstalter / Promoter-ID", class: "form-label" %>
+            <%= form.text_field :organizer, value: @filters[:organizer], placeholder: "z.B. Music Circus oder 36", class: "form-input" %>
+          </div>
+          <div>
             <%= form.label :starts_after, "Ab", class: "form-label" %>
             <%= form.date_field :starts_after, value: @filters[:starts_after], class: "form-input" %>
           </div>

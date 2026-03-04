@@ -1,6 +1,8 @@
 <% next_event_enabled = local_assigns.fetch(:next_event_enabled, true) %>
 <% filter_status = local_assigns[:filter_status] %>
 <% payload_sources = event_source_payloads(event) %>
+<% display_organizer_name = event_display_organizer_name(event) %>
+<% display_promoter_id = event_display_promoter_id(event) %>
 
 <div class="editor-panel" id="event_editor">
   <header class="editor-header">
@@ -53,6 +55,22 @@
       <div>
         <%= form.label :venue, "Venue", class: "form-label" %>
         <%= form.text_field :venue, class: "form-input" %>
+      </div>
+      <div>
+        <label class="form-label" for="<%= dom_id(event, :organizer_name_display) %>">Veranstalter</label>
+        <input id="<%= dom_id(event, :organizer_name_display) %>"
+               class="form-input"
+               type="text"
+               value="<%= display_organizer_name.presence || "-" %>"
+               readonly>
+      </div>
+      <div>
+        <label class="form-label" for="<%= dom_id(event, :promoter_id_display) %>">Promoter-ID</label>
+        <input id="<%= dom_id(event, :promoter_id_display) %>"
+               class="form-input"
+               type="text"
+               value="<%= display_promoter_id.presence || "-" %>"
+               readonly>
       </div>
       <div>
         <%= form.label :badge_text, "Banderole", class: "form-label" %>

@@ -44,6 +44,16 @@ module Importing
           title
         )
         artist_name = title if artist_name.blank? || artist_name.match?(/\A\d+\z/)
+        organizer_name = first_present(
+          dump_value("organizer_name"),
+          detail_value("organizer_name"),
+          detail_value("event", "organizer_name")
+        )
+        organizer_id = first_present(
+          dump_value("organizer_id"),
+          detail_value("organizer_id"),
+          detail_value("event", "organizer_id")
+        )
 
         city = city.presence || "Unbekannt"
         venue_name = venue_name.presence || "Unbekannte Venue"
@@ -56,6 +66,8 @@ module Importing
           venue_name: venue_name,
           title: title,
           artist_name: artist_name,
+          organizer_name: organizer_name.presence,
+          organizer_id: organizer_id.presence,
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
           ticket_url: build_ticket_url(external_event_id),

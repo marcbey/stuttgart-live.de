@@ -15,6 +15,8 @@ module Importing
           },
           detail_payload: {
             "data" => {
+              "organizer_name" => "Music Circus GmbH & Co. KG",
+              "organizer_id" => "141",
               "images" => [
                 {
                   "paths" => [
@@ -35,6 +37,8 @@ module Importing
         assert_equal "17.6.2026", attributes[:concert_date_label]
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "The Band", attributes[:artist_name]
+        assert_equal "Music Circus GmbH & Co. KG", attributes[:organizer_name]
+        assert_equal "141", attributes[:organizer_id]
         assert_equal "https://tickets.example/42", attributes[:ticket_url]
 
         image_candidates = projection.image_candidates

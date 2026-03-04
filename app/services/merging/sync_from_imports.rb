@@ -18,6 +18,8 @@ module Merging
       :venue_name,
       :title,
       :artist_name,
+      :organizer_name,
+      :promoter_id,
       :ticket_url,
       :images,
       :raw_payload
@@ -91,6 +93,8 @@ module Merging
             venue_name: record.venue_name,
             title: record.title,
             artist_name: record.artist_name,
+            organizer_name: organizer_name_for_easyticket(record),
+            promoter_id: nil,
             ticket_url: record.ticket_url,
             images: images_for_import_record(record, fallback_source: "easyticket"),
             raw_payload: {
@@ -118,6 +122,8 @@ module Merging
             venue_name: record.venue_name,
             title: record.title,
             artist_name: record.artist_name,
+            organizer_name: organizer_name_for_eventim(record),
+            promoter_id: promoter_id_for_eventim(record),
             ticket_url: record.ticket_url,
             images: images_for_import_record(record, fallback_source: "eventim"),
             raw_payload: {
@@ -139,6 +145,8 @@ module Merging
       event.artist_name = first_present(records, &:artist_name)
       event.city = first_present(records, &:city)
       event.venue = first_present(records, &:venue_name)
+      event.organizer_name = first_present(records, &:organizer_name).presence
+      event.promoter_id = first_present(records, &:promoter_id).presence
       event.start_at = start_at_for(primary.concert_date)
       event.primary_source = primary.source
       event.source_snapshot = build_source_snapshot(records)
@@ -369,6 +377,31 @@ module Merging
       end
     end
 
+    def organizer_name_for_easyticket(record)
+      return record.organizer_name.to_s.strip if record.organizer_name.to_s.strip.present?
+
+      projection =
+        Importing::Easyticket::PayloadProjection.new(
+          dump_payload: record.dump_payload,
+          detail_payload: record.detail_payload
+        )
+      projection.to_attributes&.dig(:organizer_name).to_s.strip
+    end
+
+    def promoter_id_for_eventim(record)
+      return record.promoter_id.to_s.strip if record.promoter_id.to_s.strip.present?
+
+      projection = Importing::Eventim::PayloadProjection.new(feed_payload: record.dump_payload)
+      projection.to_attributes&.dig(:promoter_id).to_s.strip
+    end
+
+    def organizer_name_for_eventim(record)
+      return record.organizer_name.to_s.strip if record.organizer_name.to_s.strip.present?
+
+      projection = Importing::Eventim::PayloadProjection.new(feed_payload: record.dump_payload)
+      projection.to_attributes&.dig(:organizer_name).to_s.strip
+    end
+
     def start_at_for(concert_date)
       Time.zone.local(concert_date.year, concert_date.month, concert_date.day, 20, 0, 0)
     end
@@ -407,6 +440,8 @@ module Merging
               "venue_name" => record.venue_name,
               "title" => record.title,
               "artist_name" => record.artist_name,
+              "organizer_name" => record.organizer_name,
+              "promoter_id" => record.promoter_id,
               "ticket_url" => record.ticket_url,
               "images" =>
                 record.images.map do |image|

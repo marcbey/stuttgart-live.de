@@ -14,6 +14,17 @@ module Importing
       VENUE_KEYS = %w[venue venuename location hall place veranstaltungsort eventvenue].freeze
       TITLE_KEYS = %w[title name eventtitle event_name eventname showtitle].freeze
       ARTIST_KEYS = %w[artist artists performer performers band headliner subheadline sideartistnames].freeze
+      PROMOTER_ID_KEYS = %w[promoterid promoter_id organizerid organizer_id].freeze
+      ORGANIZER_NAME_KEYS = %w[
+        organizer
+        organizer_name
+        organizername
+        promoter
+        promoter_name
+        promotername
+        veranstalter
+        veranstaltername
+      ].freeze
       TICKET_URL_KEYS = %w[ticket_url ticketurl deeplink bookingurl eventurl url link eventlink].freeze
       IMAGE_CANDIDATE_KEYS = %w[
         espicture_big
@@ -44,6 +55,8 @@ module Importing
         venue_name = first_value_for_keys(VENUE_KEYS).presence || "Unbekannte Venue"
         title = first_value_for_keys(TITLE_KEYS).presence || "Unbekanntes Event"
         artist_name = first_value_for_keys(ARTIST_KEYS).presence || title
+        promoter_id = first_value_for_keys(PROMOTER_ID_KEYS).presence
+        organizer_name = first_value_for_keys(ORGANIZER_NAME_KEYS).presence
         ticket_url = first_url_for_keys(TICKET_URL_KEYS)
         {
           external_event_id: external_event_id,
@@ -52,6 +65,8 @@ module Importing
           venue_name: venue_name,
           title: title,
           artist_name: artist_name,
+          promoter_id: promoter_id,
+          organizer_name: organizer_name,
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
           ticket_url: ticket_url,

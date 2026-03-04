@@ -52,6 +52,8 @@ module Importing
           "999" => {
             "data" => {
               "event" => { "artist" => "Band A" },
+              "organizer_name" => "SKS Michael Russ GmbH",
+              "organizer_id" => "382",
               "images" => [
                 {
                   "paths" => [
@@ -84,6 +86,8 @@ module Importing
         assert_includes run.metadata.fetch("filtered_out_cities", []), "Berlin"
 
         assert_equal "Band A", imported.artist_name
+        assert_equal "SKS Michael Russ GmbH", imported.organizer_name
+        assert_equal "382", imported.organizer_id
         assert_equal "17.6.2026", imported.concert_date_label
         assert_equal "Stuttgart, Im Wizemann", imported.venue_label
         assert_equal "Band A", imported.detail_payload.dig("data", "event", "artist")

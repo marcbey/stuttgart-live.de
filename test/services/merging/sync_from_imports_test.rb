@@ -14,6 +14,8 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       venue_name: "Im Wizemann",
       title: "Metal Night",
       artist_name: "Band A",
+      organizer_name: "SKS Michael Russ GmbH",
+      organizer_id: "382",
       concert_date_label: "10.11.2026",
       venue_label: "Stuttgart, Im Wizemann",
       dump_payload: {},
@@ -41,6 +43,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       venue_name: "Im Wizemann",
       title: "Metal Night",
       artist_name: "Band A",
+      promoter_id: "10135",
       concert_date_label: "10.11.2026",
       venue_label: "Stuttgart, Im Wizemann",
       dump_payload: {},
@@ -69,6 +72,8 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     event = Event.find_by(artist_name: "Band A", start_at: Time.zone.local(2026, 11, 10, 20, 0, 0))
     assert event.present?
     assert_equal "eventim", event.primary_source
+    assert_equal "SKS Michael Russ GmbH", event.organizer_name
+    assert_equal "10135", event.promoter_id
     assert_equal "published", event.status
     assert_equal true, event.auto_published
     assert_equal 2, event.event_offers.count

@@ -25,6 +25,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "nächsten Event anzeigen"
     assert_includes response.body, "name=\"status\""
     assert_includes response.body, "value=\"needs_review\""
+    assert_includes response.body, "Veranstalter"
+    assert_includes response.body, "Promoter-ID"
   end
 
   test "apply filters stores values in session and redirects to clean url" do
@@ -33,6 +35,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     post apply_filters_backend_events_url, params: {
       status: "needs_review",
       query: "Review Artist",
+      organizer: "Music Circus",
       starts_after: "2026-07-01",
       starts_before: "2026-07-31"
     }
@@ -40,6 +43,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_events_url(status: "needs_review")
     follow_redirect!
     assert_select "input[name='query'][value='Review Artist']"
+    assert_select "input[name='organizer'][value='Music Circus']"
     assert_select "input[name='starts_after'][value='2026-07-01']"
     assert_select "input[name='starts_before'][value='2026-07-31']"
   end
@@ -62,6 +66,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     post apply_filters_backend_events_url, params: {
       status: "needs_review",
       query: "Review Artist",
+      organizer: "Music Circus",
       starts_after: "2026-07-01",
       starts_before: "2026-07-31"
     }
@@ -74,11 +79,43 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_events_url(status: "needs_review")
     follow_redirect!
     assert_select "input[name='query']"
+    assert_select "input[name='organizer']"
     assert_select "input[name='starts_after']"
     assert_select "input[name='starts_before']"
     assert_select "input#query[value='Review Artist']", count: 0
+    assert_select "input#organizer[value='Music Circus']", count: 0
     assert_select "input#starts_after[value='2026-07-01']", count: 0
     assert_select "input#starts_before[value='2026-07-31']", count: 0
+  end
+
+  test "organizer filter matches organizer_name" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      organizer: "music circus"
+    }
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_includes response.body, "editor_form_event_#{@next_event.id}"
+    assert_not_includes response.body, "editor_form_event_#{@event.id}"
+  end
+
+  test "organizer filter matches promoter_id" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      organizer: "10135"
+    }
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_includes response.body, "editor_form_event_#{@event.id}"
+    assert_not_includes response.body, "editor_form_event_#{@next_event.id}"
   end
 
   test "updates event" do

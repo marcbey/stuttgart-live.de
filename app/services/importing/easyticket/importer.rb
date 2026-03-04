@@ -94,11 +94,18 @@ module Importing
           progress_changed = true
           source_payload_hash = build_source_payload_hash(dump_payload)
           existing_record = find_existing_import_event(event_id, dump_payload)
+          projection = PayloadProjection.new(
+            dump_payload: dump_payload,
+            detail_payload: existing_record&.detail_payload || {}
+          )
+          attributes = projection.to_attributes
+          if attributes.nil?
+            failed_count += 1
+            progress_changed = true
+            next
+          end
+
           if unchanged_dump_payload?(existing_record, source_payload_hash)
-            projection = PayloadProjection.new(
-              dump_payload: dump_payload,
-              detail_payload: existing_record.detail_payload
-            )
             sync_import_event_images!(
               record: existing_record,
               source: "easyticket",
@@ -107,6 +114,7 @@ module Importing
             mark_existing_event_as_seen!(
               record: existing_record,
               dump_payload: dump_payload,
+              attributes: attributes,
               seen_at: run_started_at
             )
             imported_count += 1
@@ -388,9 +396,14 @@ module Importing
         existing_record.present? && existing_record.source_payload_hash == source_payload_hash
       end
 
-      def mark_existing_event_as_seen!(record:, dump_payload:, seen_at:)
+      def mark_existing_event_as_seen!(record:, dump_payload:, attributes:, seen_at:)
+        organizer_name = attributes[:organizer_name].to_s.strip.presence || record.organizer_name
+        organizer_id = attributes[:organizer_id].to_s.strip.presence || record.organizer_id
+
         record.update_columns(
           dump_payload: dump_payload,
+          organizer_name: organizer_name,
+          organizer_id: organizer_id,
           is_active: true,
           last_seen_at: seen_at,
           updated_at: Time.current

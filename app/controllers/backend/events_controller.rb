@@ -18,6 +18,7 @@ module Backend
       persist_session_filters!(
         clear: clear_filters_requested?,
         query: params[:query],
+        organizer: params[:organizer],
         starts_after: params[:starts_after],
         starts_before: params[:starts_before]
       )
@@ -216,12 +217,13 @@ module Backend
 
       {
         query: normalized["query"].to_s.strip.presence,
+        organizer: normalized["organizer"].to_s.strip.presence,
         starts_after: normalized["starts_after"].to_s.strip.presence,
         starts_before: normalized["starts_before"].to_s.strip.presence
       }
     end
 
-    def persist_session_filters!(clear:, query:, starts_after:, starts_before:)
+    def persist_session_filters!(clear:, query:, organizer:, starts_after:, starts_before:)
       if clear
         session.delete(SESSION_FILTERS_KEY)
         return
@@ -229,6 +231,7 @@ module Backend
 
       session[SESSION_FILTERS_KEY] = {
         "query" => query.to_s.strip.presence,
+        "organizer" => organizer.to_s.strip.presence,
         "starts_after" => starts_after.to_s.strip.presence,
         "starts_before" => starts_before.to_s.strip.presence
       }

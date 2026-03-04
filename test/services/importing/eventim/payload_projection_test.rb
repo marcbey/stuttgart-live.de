@@ -12,6 +12,8 @@ module Importing
             "venueName" => "Im Wizemann",
             "eventTitle" => "Band C Live",
             "performer" => "Band C",
+            "promoterId" => "36",
+            "organizerName" => "Music Circus GmbH & Co. KG",
             "ticketUrl" => "https://tickets.example/evt-77",
             "imageUrl" => "https://img.example/evt-77.jpg"
           }
@@ -24,6 +26,8 @@ module Importing
         assert_equal "3.11.2026", attributes[:concert_date_label]
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "Band C", attributes[:artist_name]
+        assert_equal "36", attributes[:promoter_id]
+        assert_equal "Music Circus GmbH & Co. KG", attributes[:organizer_name]
         assert_equal "https://tickets.example/evt-77", attributes[:ticket_url]
 
         image_candidates = projection.image_candidates
@@ -41,6 +45,7 @@ module Importing
             "eventvenue" => "Im Wizemann",
             "eventname" => "Das Phantom der Oper",
             "sideArtistNames" => "Original Cast",
+            "promoterid" => "10135",
             "eventlink" => "https://www.eventim.de/noapp/event/20259466/"
           }
         )
@@ -54,6 +59,7 @@ module Importing
         assert_equal "Im Wizemann", attributes[:venue_name]
         assert_equal "Das Phantom der Oper", attributes[:title]
         assert_equal "Original Cast", attributes[:artist_name]
+        assert_equal "10135", attributes[:promoter_id]
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "https://www.eventim.de/noapp/event/20259466/", attributes[:ticket_url]
       end

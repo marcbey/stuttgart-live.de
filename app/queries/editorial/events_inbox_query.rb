@@ -12,6 +12,13 @@ module Editorial
       relation = relation.where(status: status_filter) if status_filter.present?
       relation = relation.where("start_at >= ?", starts_after.beginning_of_day) if starts_after.present?
       relation = relation.where("start_at <= ?", starts_before.end_of_day) if starts_before.present?
+      if organizer.present?
+        token = "%#{organizer.downcase}%"
+        relation = relation.where(
+          "LOWER(COALESCE(organizer_name, '')) LIKE :q OR LOWER(COALESCE(promoter_id, '')) LIKE :q",
+          q: token
+        )
+      end
 
       if query.present?
         token = "%#{query.downcase}%"
@@ -43,6 +50,10 @@ module Editorial
 
     def query
       params[:query].to_s.strip.presence
+    end
+
+    def organizer
+      params[:organizer].to_s.strip.presence
     end
 
     def limit

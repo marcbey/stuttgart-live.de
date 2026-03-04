@@ -114,6 +114,8 @@ class Event < ApplicationRecord
     self.city = city.to_s.strip
     self.badge_text = badge_text.to_s.strip.presence
     self.youtube_url = youtube_url.to_s.strip.presence
+    self.organizer_name = organizer_name.to_s.strip.presence
+    self.promoter_id = promoter_id.to_s.strip.presence
     self.primary_source = primary_source.to_s.strip.presence
     self.source_snapshot = {} unless source_snapshot.is_a?(Hash)
     self.completeness_flags = Array(completeness_flags).map(&:to_s)
