@@ -3,6 +3,8 @@
 <% public_event_date = local_assigns.fetch(:public_event_date, params[:event_date].to_s.presence) %>
 <% desktop_image_url = event.image_url_for(slot: card_slot, breakpoint: :desktop) %>
 <% mobile_image_url = event.image_url_for(slot: :grid_default, breakpoint: :mobile) || desktop_image_url %>
+<% source_label = event_source_label(event.primary_source.presence || event.primary_offer&.source).presence %>
+<% has_top_overlay = source_label.present? || authenticated? %>
 
 <article id="<%= dom_id(event, :card) %>" class="event-card">
   <div class="event-card-image-wrap">
@@ -19,7 +21,7 @@
       <% end %>
       <div class="event-card-overlay"></div>
       <% if event.badge_text.present? %>
-        <span class="event-card-badge <%= "event-card-badge-with-admin-link" if authenticated? %>"><%= event.badge_text %></span>
+        <span class="event-card-badge <%= "event-card-badge-with-top-overlay" if has_top_overlay %>"><%= event.badge_text %></span>
       <% end %>
       <div class="event-card-copy">
         <h2><%= event.artist_name %></h2>
@@ -34,14 +36,22 @@
       </div>
     <% end %>
 
-    <% if authenticated? %>
-      <div class="event-card-admin-overlay">
-        <%= link_to "Backend",
-                    backend_events_path(status: event.status, event_id: event.id),
-                    class: "event-card-admin-link",
-                    data: { turbo: false } %>
-      </div>
+    <% if has_top_overlay %>
+      <div class="event-card-top-left-overlay">
+        <% if source_label.present? %>
+          <span class="event-card-source-chip"><%= source_label %></span>
+        <% end %>
 
+        <% if authenticated? %>
+          <%= link_to "Backend",
+                      backend_events_path(status: event.status, event_id: event.id),
+                      class: "event-card-admin-link",
+                      data: { turbo: false } %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <% if authenticated? %>
       <div class="event-card-status-overlay">
         <%= form_with url: status_event_path(event.slug),
                       method: :patch,

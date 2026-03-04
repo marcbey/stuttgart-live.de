@@ -335,29 +335,41 @@ a {
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.33) 46%, transparent 80%);
 }
 
-.event-card-admin-overlay {
+.event-card-top-left-overlay {
   position: absolute;
   top: 0.5rem;
   left: 0.5rem;
   z-index: 12;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
+.event-card-source-chip,
 .event-card-admin-link {
   display: inline-flex;
   align-items: center;
-  border: 1px solid rgba(255, 255, 255, 0.85);
-  background: rgba(17, 17, 17, 0.42);
+  border: 1px solid rgba(255, 255, 255, 0.34);
+  background: rgba(17, 17, 17, 0.1);
+  backdrop-filter: blur(1px);
   color: #f7f7f7;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.7rem;
   line-height: 1;
-  text-decoration: none;
   padding: 0.24rem 0.34rem;
 }
 
+.event-card-source-chip {
+  cursor: default;
+}
+
+.event-card-admin-link {
+  text-decoration: none;
+}
+
 .event-card-admin-link:hover {
-  background: rgba(17, 17, 17, 0.6);
+  background: rgba(17, 17, 17, 0.16);
 }
 
 .event-card-status-overlay {
@@ -365,9 +377,9 @@ a {
   top: 0.5rem;
   right: 0.5rem;
   z-index: 12;
-  border: 1px solid rgba(17, 17, 17, 0.45);
-  background: rgba(248, 248, 248, 0.42);
-  backdrop-filter: blur(4px);
+  border: 1px solid rgba(17, 17, 17, 0.24);
+  background: rgba(248, 248, 248, 0.14);
+  backdrop-filter: blur(2px);
   padding: 0.2rem;
 }
 
@@ -378,8 +390,8 @@ a {
 .event-card-status-select {
   appearance: none;
   -webkit-appearance: none;
-  border: 1px solid #171717;
-  background: rgba(255, 255, 255, 0.52);
+  border: 1px solid rgba(23, 23, 23, 0.44);
+  background: rgba(255, 255, 255, 0.2);
   color: #111;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   text-transform: uppercase;
@@ -447,7 +459,8 @@ a {
   padding: 0.2rem 0.4rem;
 }
 
-.event-card-badge-with-admin-link {
+.event-card-badge-with-admin-link,
+.event-card-badge-with-top-overlay {
   top: 2.05rem;
 }
 
