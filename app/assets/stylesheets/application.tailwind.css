@@ -774,7 +774,7 @@ a {
   list-style: none;
   display: grid;
   gap: 0.45rem;
-  max-height: 63vh;
+  max-height: 100vh;
   overflow-y: auto;
 }
 
