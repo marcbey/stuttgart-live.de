@@ -650,8 +650,9 @@ a {
 
 .backend-status-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  overflow-x: auto;
+  overflow-x: visible;
   padding-bottom: 0.4rem;
   margin-bottom: 0.9rem;
 }
@@ -1105,6 +1106,6 @@ a {
   }
 
   .backend-split {
-    grid-template-columns: minmax(320px, 0.86fr) minmax(0, 1.44fr);
+    grid-template-columns: minmax(560px, 1.05fr) minmax(0, 1.25fr);
   }
 }

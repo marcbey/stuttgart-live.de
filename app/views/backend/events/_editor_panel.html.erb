@@ -49,7 +49,7 @@
       <div>
         <%= form.label :status, "Status", class: "form-label" %>
         <%= form.select :status,
-                        Event::STATUSES.map { |status| [event_status_label(status), status] },
+                        Event::STATUSES.reject { |status| status == "imported" }.map { |status| [event_status_select_label(status), status] },
                         {},
                         class: "form-input" %>
       </div>

@@ -331,6 +331,18 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, event_path(@published_event.slug)
   end
 
+  test "unpublish moves published event to ready_for_publish" do
+    sign_in_as(@user)
+
+    patch unpublish_backend_event_url(@published_event)
+
+    assert_redirected_to backend_events_url(status: "ready_for_publish", event_id: @published_event.id)
+    @published_event.reload
+    assert_equal "ready_for_publish", @published_event.status
+    assert_nil @published_event.published_at
+    assert_nil @published_event.published_by_id
+  end
+
   test "bulk publish updates selected events" do
     sign_in_as(@user)
 

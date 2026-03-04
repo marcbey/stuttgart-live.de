@@ -146,9 +146,9 @@ module Backend
     end
 
     def unpublish
-      @event.update!(status: "needs_review", published_at: nil, published_by: nil, auto_published: false)
+      @event.update!(status: "ready_for_publish", published_at: nil, published_by: nil, auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "unpublished", user: current_user)
-      redirect_to backend_events_path(status: "needs_review", event_id: @event.id), notice: "Event wurde depublisht."
+      redirect_to backend_events_path(status: "ready_for_publish", event_id: @event.id), notice: "Event wurde depublisht."
     end
 
     def bulk

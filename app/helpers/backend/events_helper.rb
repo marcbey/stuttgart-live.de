@@ -79,6 +79,11 @@ module Backend::EventsHelper
     end
   end
 
+  def event_status_select_label(status)
+    label = status.to_s == "ready_for_publish" ? "depubliziert" : event_status_label(status)
+    label.upcase
+  end
+
   def event_status_badge_class(status)
     case status.to_s
     when "published"
