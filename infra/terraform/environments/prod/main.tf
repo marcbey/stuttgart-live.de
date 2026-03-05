@@ -87,14 +87,16 @@ resource "aws_iam_policy" "app_s3_access" {
 module "app_server" {
   source = "../../modules/app_server"
 
-  name                   = local.name
-  ami_id                 = var.ec2_ami_id
-  instance_type          = var.ec2_instance_type
-  subnet_id              = module.network.public_subnet_ids[0]
-  security_group_id      = module.security.app_security_group_id
-  key_pair_name          = var.key_pair_name
-  additional_policy_arns = [aws_iam_policy.app_s3_access.arn]
-  tags                   = local.tags
+  name              = local.name
+  ami_id            = var.ec2_ami_id
+  instance_type     = var.ec2_instance_type
+  subnet_id         = module.network.public_subnet_ids[0]
+  security_group_id = module.security.app_security_group_id
+  key_pair_name     = var.key_pair_name
+  additional_policy_arns = {
+    s3_access = aws_iam_policy.app_s3_access.arn
+  }
+  tags = local.tags
 }
 
 resource "aws_eip" "app" {

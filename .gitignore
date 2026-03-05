@@ -60,3 +60,7 @@ crash.*.log
 *.auto.tfvars
 *.auto.tfvars.json
 terraform.tfvars
+backend.hcl
+
+# Kamal environment-specific secrets
+/.kamal/secrets.production

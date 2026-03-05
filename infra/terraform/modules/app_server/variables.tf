@@ -31,8 +31,8 @@ variable "key_pair_name" {
 
 variable "additional_policy_arns" {
   description = "Extra IAM policy ARNs attached to the EC2 role."
-  type        = list(string)
-  default     = []
+  type        = map(string)
+  default     = {}
 }
 
 variable "tags" {
