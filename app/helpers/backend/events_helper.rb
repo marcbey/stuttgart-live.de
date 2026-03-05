@@ -98,4 +98,44 @@ module Backend::EventsHelper
       "status-badge status-badge-default"
     end
   end
+
+  def event_import_change_badge(event, merge_run_id:)
+    merge_run_id_value = merge_run_id.to_i
+    return nil if merge_run_id_value <= 0
+
+    actions = import_change_actions_for(event, merge_run_id_value)
+    return nil if actions.empty?
+
+    if actions.include?("merged_create")
+      { label: "Neu (Import)", css_class: "status-badge status-badge-import-new" }
+    else
+      { label: "Aktualisiert (Import)", css_class: "status-badge status-badge-import-updated" }
+    end
+  end
+
+  private
+
+  def import_change_actions_for(event, merge_run_id)
+    association = event.event_change_logs
+
+    if association.loaded?
+      association.filter_map do |change_log|
+        next unless [ "merged_create", "merged_update" ].include?(change_log.action.to_s)
+        next unless change_log_merge_run_id(change_log) == merge_run_id
+
+        change_log.action.to_s
+      end.uniq
+    else
+      association
+        .where(action: [ "merged_create", "merged_update" ])
+        .where("metadata ->> 'merge_run_id' = ?", merge_run_id.to_s)
+        .pluck(:action)
+        .uniq
+    end
+  end
+
+  def change_log_merge_run_id(change_log)
+    metadata = change_log.metadata.is_a?(Hash) ? change_log.metadata.deep_stringify_keys : {}
+    Integer(metadata["merge_run_id"], exception: false)
+  end
 end

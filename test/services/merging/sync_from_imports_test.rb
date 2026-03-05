@@ -78,11 +78,15 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal true, event.auto_published
     assert_equal 2, event.event_offers.count
     assert_equal 2, event.import_event_images.count
+    assert_equal 1, event.event_change_logs.where(action: "merged_create").count
+    assert_equal 0, event.event_change_logs.where(action: "merged_update").count
 
     second_result = Merging::SyncFromImports.new.call
     assert_equal 0, second_result.events_created_count
     assert_equal 0, second_result.events_updated_count
     assert_equal 0, second_result.offers_upserted_count
+    assert_equal 1, event.reload.event_change_logs.where(action: "merged_create").count
+    assert_equal 0, event.event_change_logs.where(action: "merged_update").count
   end
 
   test "sets needs_review when import event has no image" do

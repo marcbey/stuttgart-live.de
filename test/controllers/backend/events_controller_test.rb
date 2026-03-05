@@ -30,6 +30,34 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
   end
 
+  test "index renders status chips without counts and shows filtered event count" do
+    sign_in_as(@user)
+
+    get backend_events_url
+
+    assert_response :success
+    assert_select ".status-chip strong", count: 0
+    assert_select ".filter-merge-row .filter-merge-field", count: 2
+    assert_select ".event-list-count", text: /gefilterte Events/
+    assert_select "select[name='merge_change_type'][disabled]"
+  end
+
+  test "change type filter is enabled when merge scope is last merge" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      merge_scope: "last_merge",
+      merge_change_type: "updated"
+    }
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_select "select[name='merge_scope'] option[selected][value='last_merge']"
+    assert_select "select[name='merge_change_type']:not([disabled])"
+  end
+
   test "index highlights import merge button when merge sync is needed" do
     sign_in_as(@user)
 
@@ -73,6 +101,44 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='organizer'][value='Music Circus']"
     assert_select "input[name='starts_after'][value='2026-07-01']"
     assert_select "input[name='starts_before'][value='2026-07-31']"
+  end
+
+  test "applies merge filters and shows import change badge for created events in latest merge" do
+    sign_in_as(@user)
+
+    merge_run = ImportRun.create!(
+      import_source: import_sources(:one),
+      source_type: "merge",
+      status: "succeeded",
+      started_at: Time.zone.parse("2026-03-06 10:00:00"),
+      finished_at: Time.zone.parse("2026-03-06 10:05:00")
+    )
+    @event.event_change_logs.create!(
+      action: "merged_create",
+      user: nil,
+      changed_fields: {},
+      metadata: { "merge_run_id" => merge_run.id }
+    )
+    @next_event.event_change_logs.create!(
+      action: "merged_update",
+      user: nil,
+      changed_fields: {},
+      metadata: { "merge_run_id" => merge_run.id }
+    )
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      merge_scope: "last_merge",
+      merge_change_type: "created"
+    }
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_includes response.body, "Neu (Import)"
+    assert_not_includes response.body, "Aktualisiert (Import)"
+    assert_includes response.body, "Review Artist"
+    assert_not_includes response.body, "Review Artist Two"
   end
 
   test "next event preference endpoint stores value in session" do

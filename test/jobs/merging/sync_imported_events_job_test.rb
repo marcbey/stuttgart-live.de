@@ -49,4 +49,31 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     sync_class.alias_method :new, :__original_new_for_test
     sync_class.remove_method :__original_new_for_test
   end
+
+  test "passes merge run id to sync service" do
+    captured_merge_run_id = nil
+    fake_result = Merging::SyncFromImports::Result.new(
+      import_records_count: 0,
+      groups_count: 0,
+      events_created_count: 0,
+      events_updated_count: 0,
+      offers_upserted_count: 0
+    )
+    fake_service = Struct.new(:call).new(fake_result)
+
+    sync_class = Merging::SyncFromImports.singleton_class
+    sync_class.alias_method :__original_new_for_test, :new
+    sync_class.define_method(:new) do |*args, **kwargs|
+      captured_merge_run_id = kwargs[:merge_run_id]
+      fake_service
+    end
+
+    Merging::SyncImportedEventsJob.perform_now
+
+    run = ImportRun.where(source_type: "merge").order(:created_at).last
+    assert_equal run.id, captured_merge_run_id
+  ensure
+    sync_class.alias_method :new, :__original_new_for_test
+    sync_class.remove_method :__original_new_for_test
+  end
 end

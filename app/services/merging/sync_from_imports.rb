@@ -34,7 +34,8 @@ module Merging
       :position
     )
 
-    def initialize(logger: Rails.logger)
+    def initialize(merge_run_id: nil, logger: Rails.logger)
+      @merge_run_id = merge_run_id
       @logger = logger
       @priority_map = ProviderPriorityMap.call
     end
@@ -70,7 +71,7 @@ module Merging
 
     private
 
-    attr_reader :logger, :priority_map
+    attr_reader :merge_run_id, :logger, :priority_map
 
     def import_records
       easyticket_records + eventim_records
@@ -166,17 +167,17 @@ module Merging
       offers_upserted = sync_offers!(event, offers)
       images_changed = sync_event_images!(event, merged_images)
 
-      Editorial::EventChangeLogger.log!(
-        event: event,
-        action: created_now ? "merged_create" : "merged_update",
-        user: nil,
-        metadata: {
-          source_types: records.map(&:source).uniq,
-          external_event_ids: records.map(&:external_event_id)
-        }
-      )
-
       effective_updated = (updated_now || images_changed) && !created_now
+
+      if created_now || effective_updated
+        Editorial::EventChangeLogger.log!(
+          event: event,
+          action: created_now ? "merged_create" : "merged_update",
+          user: nil,
+          metadata: merge_change_metadata(records)
+        )
+      end
+
       [ event, created_now, effective_updated, offers_upserted ]
     end
 
@@ -480,6 +481,14 @@ module Merging
         image_type.to_s.strip,
         image_url.to_s.strip.downcase
       ]
+    end
+
+    def merge_change_metadata(records)
+      {
+        source_types: records.map(&:source).uniq,
+        external_event_ids: records.map(&:external_event_id),
+        merge_run_id: merge_run_id
+      }.compact
     end
   end
 end

@@ -1,6 +1,8 @@
 module Editorial
   class EventsInboxQuery
     DEFAULT_LIMIT = 120
+    MERGE_SCOPES = %w[all last_merge].freeze
+    MERGE_CHANGE_TYPES = %w[all created updated].freeze
 
     def initialize(scope: Event.all, params: {})
       @scope = scope
@@ -8,10 +10,11 @@ module Editorial
     end
 
     def call
-      relation = scope.includes(:genres, :event_offers)
+      relation = scope.includes(:genres, :event_offers, :event_change_logs)
       relation = relation.where(status: status_filter) if status_filter.present?
       relation = relation.where("start_at >= ?", starts_after.beginning_of_day) if starts_after.present?
       relation = relation.where("start_at <= ?", starts_before.end_of_day) if starts_before.present?
+      relation = apply_merge_change_filter(relation)
       if organizer.present?
         token = "%#{organizer.downcase}%"
         relation = relation.where(
@@ -54,6 +57,47 @@ module Editorial
 
     def organizer
       params[:organizer].to_s.strip.presence
+    end
+
+    def apply_merge_change_filter(relation)
+      return relation unless merge_scope == "last_merge"
+      return relation.none if merge_run_id.blank?
+
+      relation.where(
+        id: EventChangeLog.where(
+          action: merge_actions,
+          event_id: relation.select(:id)
+        ).where("metadata ->> 'merge_run_id' = ?", merge_run_id.to_s).select(:event_id)
+      )
+    end
+
+    def merge_scope
+      raw_value = params[:merge_scope].to_s.strip
+      return raw_value if MERGE_SCOPES.include?(raw_value)
+
+      "all"
+    end
+
+    def merge_change_type
+      raw_value = params[:merge_change_type].to_s.strip
+      return raw_value if MERGE_CHANGE_TYPES.include?(raw_value)
+
+      "all"
+    end
+
+    def merge_actions
+      case merge_change_type
+      when "created"
+        [ "merged_create" ]
+      when "updated"
+        [ "merged_update" ]
+      else
+        [ "merged_create", "merged_update" ]
+      end
+    end
+
+    def merge_run_id
+      Integer(params[:merge_run_id], exception: false)
     end
 
     def limit

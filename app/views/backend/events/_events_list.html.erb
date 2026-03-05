@@ -1,5 +1,8 @@
 <div id="events_list">
+  <% merge_run_id = local_assigns[:merge_run_id] %>
+  <% filtered_events_count = local_assigns.fetch(:filtered_events_count, events.except(:limit).count) %>
   <%= form_with url: bulk_backend_events_path(status: status), method: :patch, class: "bulk-form", data: { controller: "bulk-select" } do |form| %>
+    <p class="event-list-count"><strong><%= filtered_events_count %></strong> gefilterte Events</p>
     <div class="bulk-actions">
       <%= form.select :bulk_action,
                       options_for_select([
@@ -23,6 +26,7 @@
 
     <ul class="event-list">
       <% events.each do |event| %>
+        <% import_change_badge = event_import_change_badge(event, merge_run_id: merge_run_id) %>
         <li class="event-list-item <%= 'event-list-item-active' if selected_event&.id == event.id %>">
           <%= check_box_tag "event_ids[]",
                             event.id,
@@ -41,7 +45,12 @@
               <span><%= event.title %></span>
               <small><%= l(event.start_at.to_date, format: "%d.%m.%Y") %> · <%= event.venue %></small>
             </div>
-            <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
+            <span class="event-list-badges">
+              <% if import_change_badge.present? %>
+                <span class="<%= import_change_badge[:css_class] %>"><%= import_change_badge[:label] %></span>
+              <% end %>
+              <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
+            </span>
           <% end %>
         </li>
       <% end %>

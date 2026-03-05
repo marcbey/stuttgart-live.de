@@ -27,3 +27,6 @@ application.register("keyboard-shortcuts", KeyboardShortcutsController)
 
 import NextEventController from "./next_event_controller"
 application.register("next-event", NextEventController)
+
+import MergeChangeFilterController from "./merge_change_filter_controller"
+application.register("merge-change-filter", MergeChangeFilterController)

@@ -20,7 +20,7 @@
           <td><%= import_run_status_label(run) %></td>
           <td><%= run.fetched_count %></td>
           <td><%= import_run_filtered_label(run) %></td>
-          <td><%= run.upserted_count %></td>
+          <td><%= import_run_upserts_label(run) %></td>
           <td><%= run.failed_count %></td>
           <td class="action-cell">
             <%= link_to "Details", backend_import_run_path(run), class: "button button-ghost" %>

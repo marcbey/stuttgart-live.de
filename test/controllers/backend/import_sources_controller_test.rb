@@ -62,6 +62,27 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child", text: /Stop angefordert/, count: 0
   end
 
+  test "should show merge upserts as created plus updated events in recent runs table" do
+    merge_run = @source.import_runs.create!(
+      status: "succeeded",
+      source_type: "merge",
+      started_at: 1.minute.ago,
+      finished_at: Time.current,
+      imported_count: 3,
+      upserted_count: 999,
+      metadata: {
+        "events_created_count" => 1,
+        "events_updated_count" => 2,
+        "offers_upserted_count" => 999
+      }
+    )
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(6)", text: "3"
+  end
+
   test "should show import run detail page with errors" do
     run = @source.import_runs.create!(
       status: "failed",

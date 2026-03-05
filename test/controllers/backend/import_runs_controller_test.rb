@@ -89,4 +89,24 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Ortsliste konfiguriert"
     assert_not_includes response.body, "Aussortierte Staedte"
   end
+
+  test "shows merge upserts as created plus updated events on detail page" do
+    merge_run = @source.import_runs.create!(
+      status: "succeeded",
+      source_type: "merge",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago,
+      imported_count: 5,
+      upserted_count: 961,
+      metadata: {
+        "events_created_count" => 1,
+        "events_updated_count" => 4,
+        "offers_upserted_count" => 961
+      }
+    )
+
+    get backend_import_run_url(merge_run)
+    assert_response :success
+    assert_select "table.data-table tbody tr td:nth-child(6)", text: "5"
+  end
 end

@@ -7,7 +7,7 @@ module Merging
       run = start_run!
       broadcast_runs_update!
 
-      result = Merging::SyncFromImports.new.call
+      result = Merging::SyncFromImports.new(merge_run_id: run.id).call
 
       run.update!(
         status: "succeeded",

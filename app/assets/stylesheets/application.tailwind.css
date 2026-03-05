@@ -27,8 +27,7 @@ h3,
 .eyebrow,
 .event-card h2,
 .event-detail h1,
-.button,
-.status-chip strong {
+.button {
   font-family: "Bebas Neue", "Impact", sans-serif;
   letter-spacing: 0.04em;
 }
@@ -711,6 +710,32 @@ a {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
 
+.filter-search-field {
+  grid-column: 1 / -1;
+}
+
+.filter-merge-row {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.55rem;
+}
+
+.filter-merge-field {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.event-list-count {
+  margin: 0 0 0.5rem;
+  font-size: 0.88rem;
+  color: var(--ink-soft);
+}
+
+.event-list-count strong {
+  color: var(--ink);
+}
+
 .filter-date-wrap {
   position: relative;
   display: inline-flex;
@@ -822,6 +847,13 @@ a {
   text-decoration: none;
 }
 
+.event-list-badges {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.28rem;
+}
+
 .event-list-main {
   display: grid;
 }
@@ -855,6 +887,8 @@ a {
 .status-badge-ready { background: #e5f2ff; border-color: #82a8d4; }
 .status-badge-published { background: #deffe9; border-color: #77c097; }
 .status-badge-rejected { background: #ffe5ea; border-color: #cd7f8e; }
+.status-badge-import-new { background: #ffeccf; border-color: #d39a3a; }
+.status-badge-import-updated { background: #e8f0ff; border-color: #8ea6d8; }
 
 .status-badge-link {
   text-decoration: none;
@@ -1108,6 +1142,10 @@ a {
 
   .filter-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .filter-search-field {
+    grid-column: span 2;
   }
 
   .bulk-actions {

@@ -3,16 +3,20 @@ module Backend
     SESSION_FILTERS_KEY = "backend_events_inbox_filters".freeze
     SESSION_STATUS_KEY = "backend_events_inbox_status".freeze
     SESSION_NEXT_EVENT_KEY = "backend_events_next_event_enabled".freeze
+    MERGE_SCOPES = %w[all last_merge].freeze
+    MERGE_CHANGE_TYPES = %w[all created updated].freeze
 
     before_action :set_event, only: [ :show, :update, :publish, :unpublish ]
     before_action :set_next_event_enabled, only: [ :index, :show, :update ]
 
     def index
+      @latest_successful_merge_run = latest_successful_merge_run
       @filters = session_filters_for_index.merge(status: current_status)
+      @selected_merge_run_id = selected_merge_run_id_for_filters(@filters)
       @events = filtered_events_for_status(@filters[:status])
+      @filtered_events_count = filtered_events_count(@events)
       @merge_sync_needed = merge_sync_needed?
       @status_filters = status_filters
-      @status_counts = Event.group(:status).count
       @all_genres = Genre.order(:name)
       @selected_event = selected_event_from(@events)
     end
@@ -23,7 +27,9 @@ module Backend
         query: params[:query],
         organizer: params[:organizer],
         starts_after: params[:starts_after],
-        starts_before: params[:starts_before]
+        starts_before: params[:starts_before],
+        merge_scope: params[:merge_scope],
+        merge_change_type: params[:merge_change_type]
       )
 
       redirect_to backend_events_path(status: current_status)
@@ -89,6 +95,7 @@ module Backend
         target_event = next_event || @event
         target_status = navigation_status || @event.status
         sidebar_events = filtered_events_for_status(target_status)
+        sidebar_events_count = filtered_events_count(sidebar_events)
 
         respond_to do |format|
           format.html { redirect_to backend_events_path(status: target_status, event_id: target_event.id), notice: update_success_message }
@@ -99,7 +106,13 @@ module Backend
               turbo_stream.replace(
                 "events_list",
                 partial: "backend/events/events_list",
-                locals: { events: sidebar_events, selected_event: target_event, status: target_status }
+                locals: {
+                  events: sidebar_events,
+                  selected_event: target_event,
+                  status: target_status,
+                  merge_run_id: selected_merge_run_id_for_filters,
+                  filtered_events_count: sidebar_events_count
+                }
               ),
               turbo_stream.replace(
                 "event_editor",
@@ -234,11 +247,13 @@ module Backend
         query: normalized["query"].to_s.strip.presence,
         organizer: normalized["organizer"].to_s.strip.presence,
         starts_after: starts_after_value,
-        starts_before: normalized["starts_before"].to_s.strip.presence
+        starts_before: normalized["starts_before"].to_s.strip.presence,
+        merge_scope: normalize_merge_scope(normalized["merge_scope"]),
+        merge_change_type: normalize_merge_change_type(normalized["merge_change_type"])
       }
     end
 
-    def persist_session_filters!(clear:, query:, organizer:, starts_after:, starts_before:)
+    def persist_session_filters!(clear:, query:, organizer:, starts_after:, starts_before:, merge_scope:, merge_change_type:)
       if clear
         session.delete(SESSION_FILTERS_KEY)
         return
@@ -248,7 +263,9 @@ module Backend
         "query" => query.to_s.strip.presence,
         "organizer" => organizer.to_s.strip.presence,
         "starts_after" => starts_after.to_s.strip.presence,
-        "starts_before" => starts_before.to_s.strip.presence
+        "starts_before" => starts_before.to_s.strip.presence,
+        "merge_scope" => normalize_merge_scope(merge_scope),
+        "merge_change_type" => normalize_merge_change_type(merge_change_type)
       }
     end
 
@@ -295,7 +312,12 @@ module Backend
 
     def filtered_events_for_status(status)
       filters = session_filters_for_index.merge(status: status)
+      filters[:merge_run_id] = selected_merge_run_id_for_filters(filters) if filters[:merge_scope] == "last_merge"
       Editorial::EventsInboxQuery.new(params: filters).call
+    end
+
+    def filtered_events_count(relation)
+      relation.except(:limit).count
     end
 
     def status_filters
@@ -312,6 +334,31 @@ module Backend
 
     def latest_successful_run_finished_at_for(source_types:)
       ImportRun.where(source_type: source_types, status: "succeeded").maximum(:finished_at)
+    end
+
+    def latest_successful_merge_run
+      ImportRun.where(source_type: "merge", status: "succeeded").order(finished_at: :desc, id: :desc).first
+    end
+
+    def selected_merge_run_id_for_filters(filters = session_filters_for_index)
+      return nil unless filters[:merge_scope] == "last_merge"
+
+      @latest_successful_merge_run ||= latest_successful_merge_run
+      @latest_successful_merge_run&.id
+    end
+
+    def normalize_merge_scope(value)
+      normalized = value.to_s.strip
+      return normalized if MERGE_SCOPES.include?(normalized)
+
+      "all"
+    end
+
+    def normalize_merge_change_type(value)
+      normalized = value.to_s.strip
+      return normalized if MERGE_CHANGE_TYPES.include?(normalized)
+
+      "all"
     end
 
     def event_params

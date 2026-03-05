@@ -41,6 +41,20 @@ module Backend::ImportSourcesHelper
     run.filtered_count
   end
 
+  def import_run_upserts_label(run)
+    return run.upserted_count unless run.source_type == "merge"
+
+    metadata = import_run_metadata(run)
+    events_created_count = Integer(metadata["events_created_count"], exception: false)
+    events_updated_count = Integer(metadata["events_updated_count"], exception: false)
+
+    if events_created_count && events_updated_count
+      events_created_count + events_updated_count
+    else
+      run.imported_count
+    end
+  end
+
   def import_run_retries_label(run)
     retries_used = import_run_retry_metadata_integer(run, "job_retries_used")
     max_retries = import_run_retry_metadata_integer(run, "max_retries")

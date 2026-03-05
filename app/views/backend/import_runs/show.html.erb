@@ -37,7 +37,7 @@
             <td><%= import_run_status_label(@import_run) %></td>
             <td><%= @import_run.fetched_count %></td>
             <td><%= import_run_filtered_label(@import_run) %></td>
-            <td><%= @import_run.upserted_count %></td>
+            <td><%= import_run_upserts_label(@import_run) %></td>
             <td><%= @import_run.failed_count %></td>
           </tr>
         </tbody>

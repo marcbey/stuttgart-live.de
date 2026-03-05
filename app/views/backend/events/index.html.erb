@@ -29,29 +29,55 @@
     <aside class="backend-list-column">
       <div class="backend-status-row">
         <% @status_filters.each do |status| %>
-          <% label, count =
-             if status == "ready_for_publish"
-               [ "Depubliziert", @status_counts.fetch(status, 0) ]
-             else
-               [ event_status_label(status), @status_counts.fetch(status, 0) ]
-             end %>
+          <% label = status == "ready_for_publish" ? "Depubliziert" : event_status_label(status) %>
           <%= link_to backend_events_path(status: status), class: "status-chip #{'status-chip-active' if @filters[:status] == status}" do %>
             <span><%= label %></span>
-            <strong><%= count %></strong>
           <% end %>
         <% end %>
       </div>
 
-      <%= form_with url: apply_filters_backend_events_path, method: :post, class: "filter-form" do |form| %>
+      <%= form_with url: apply_filters_backend_events_path,
+                    method: :post,
+                    class: "filter-form",
+                    data: { controller: "merge-change-filter" } do |form| %>
         <%= form.hidden_field :status, value: @filters[:status] %>
         <div class="filter-grid">
-          <div>
+          <div class="filter-search-field">
             <%= form.label :query, "Suche", class: "form-label" %>
             <%= form.text_field :query, value: @filters[:query], placeholder: "Band, Venue, Stadt", class: "form-input" %>
           </div>
           <div>
             <%= form.label :organizer, "Organizer", class: "form-label" %>
             <%= form.text_field :organizer, value: @filters[:organizer], placeholder: "zB SKS", class: "form-input" %>
+          </div>
+          <div class="filter-merge-row">
+            <div class="filter-merge-field">
+              <%= form.label :merge_scope, "Import-Änderungen", class: "form-label" %>
+              <%= form.select :merge_scope,
+                              options_for_select([
+                                ["Alle", "all"],
+                                ["Letzter Merge", "last_merge"]
+                              ], @filters[:merge_scope]),
+                              {},
+                              class: "form-input",
+                              data: {
+                                merge_change_filter_target: "scope",
+                                action: "change->merge-change-filter#sync"
+                              } %>
+            </div>
+            <div class="filter-merge-field">
+              <%= form.label :merge_change_type, "Änderungstyp", class: "form-label" %>
+              <%= form.select :merge_change_type,
+                              options_for_select([
+                                ["Alle", "all"],
+                                ["Neu", "created"],
+                                ["Aktualisiert", "updated"]
+                              ], @filters[:merge_change_type]),
+                              {},
+                              class: "form-input",
+                              disabled: @filters[:merge_scope] != "last_merge",
+                              data: { merge_change_filter_target: "changeType" } %>
+            </div>
           </div>
           <div class="filter-date-row">
             <div class="filter-date-field">
@@ -86,7 +112,12 @@
         </div>
       <% end %>
 
-      <%= render "events_list", events: @events, selected_event: @selected_event, status: @filters[:status] %>
+      <%= render "events_list",
+                 events: @events,
+                 selected_event: @selected_event,
+                 status: @filters[:status],
+                 merge_run_id: @selected_merge_run_id,
+                 filtered_events_count: @filtered_events_count %>
     </aside>
 
     <section class="backend-editor-column">
