@@ -19,7 +19,7 @@ This document specifies how importers and the merge pipeline work in `stuttgart-
    - `eventim_import_events`
 4. Images are synced into `import_event_images` (polymorphic owner = import record).
 5. Import run counters are continuously persisted in `import_runs`.
-6. On successful source run, `Merging::SyncImportedEventsJob` is enqueued.
+6. Merge is started manually from backend (`/backend/events` -> "Import-Merge synchronisieren").
 7. Merge creates its own `import_runs` record (`source_type=merge`) and syncs canonical:
    - `events`
    - `event_offers`

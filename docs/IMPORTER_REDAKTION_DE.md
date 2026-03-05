@@ -3,7 +3,8 @@
 ## Worum geht es?
 
 Unsere Eventdaten kommen automatisch von Ticket-Anbietern (z. B. Easyticket, Eventim).
-Ein automatischer Prozess führt diese Daten zu einem gemeinsamen Event zusammen.
+Die Zusammenführung in die finale Eventliste wird im Backend manuell über den Button
+"Import-Merge synchronisieren" gestartet.
 
 Das hilft uns, doppelte Events zu vermeiden und Ticketlinks aktuell zu halten.
 

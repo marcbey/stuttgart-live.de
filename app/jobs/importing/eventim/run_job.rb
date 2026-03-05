@@ -22,7 +22,7 @@ module Importing
           import_source: source,
           run_metadata: run_metadata_for_execution
         ).call
-        Merging::SyncImportedEventsJob.perform_later if run.status == "succeeded"
+        run
       end
 
       private

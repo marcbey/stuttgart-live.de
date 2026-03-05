@@ -10,6 +10,7 @@ module Backend
     def index
       @filters = session_filters_for_index.merge(status: current_status)
       @events = filtered_events_for_status(@filters[:status])
+      @merge_sync_needed = merge_sync_needed?
       @status_filters = status_filters
       @status_counts = Event.group(:status).count
       @all_genres = Genre.order(:name)
@@ -299,6 +300,18 @@ module Backend
 
     def status_filters
       @status_filters ||= Event::STATUSES.reject { |status| status == "imported" }
+    end
+
+    def merge_sync_needed?
+      latest_import_success_at = latest_successful_run_finished_at_for(source_types: %w[easyticket eventim])
+      return false if latest_import_success_at.blank?
+
+      latest_merge_success_at = latest_successful_run_finished_at_for(source_types: [ "merge" ])
+      latest_merge_success_at.blank? || latest_import_success_at > latest_merge_success_at
+    end
+
+    def latest_successful_run_finished_at_for(source_types:)
+      ImportRun.where(source_type: source_types, status: "succeeded").maximum(:finished_at)
     end
 
     def event_params

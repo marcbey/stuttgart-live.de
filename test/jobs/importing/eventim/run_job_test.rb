@@ -62,6 +62,16 @@ class Importing::Eventim::RunJobTest < ActiveJob::TestCase
     assert captured_metadata["job_id"].present?
   end
 
+  test "does not enqueue merge job automatically after successful import" do
+    successful_run = Struct.new(:status).new("succeeded")
+
+    with_stubbed_constructor(Importing::Eventim::Importer, Struct.new(:call).new(successful_run)) do
+      assert_no_enqueued_jobs do
+        Importing::Eventim::RunJob.perform_now(@source.id)
+      end
+    end
+  end
+
   private
 
   def with_stubbed_constructor(klass, instance = nil)

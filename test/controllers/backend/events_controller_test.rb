@@ -30,6 +30,32 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
   end
 
+  test "index highlights import merge button when merge sync is needed" do
+    sign_in_as(@user)
+
+    get backend_events_url
+
+    assert_response :success
+    assert_includes response.body, "button-attention"
+  end
+
+  test "index does not highlight import merge button when latest merge is newer than imports" do
+    sign_in_as(@user)
+
+    ImportRun.create!(
+      import_source: import_sources(:one),
+      source_type: "merge",
+      status: "succeeded",
+      started_at: Time.zone.parse("2026-03-03 12:00:00"),
+      finished_at: Time.zone.parse("2026-03-03 12:05:00")
+    )
+
+    get backend_events_url
+
+    assert_response :success
+    assert_not_includes response.body, "button-attention"
+  end
+
   test "apply filters stores values in session and redirects to clean url" do
     sign_in_as(@user)
 

@@ -160,6 +160,17 @@ a {
   background: #ffffff;
 }
 
+.button-attention {
+  border-color: #b94a00;
+  background: linear-gradient(180deg, #ffb347 0%, #ff8f1f 100%);
+  color: #1b1206;
+  box-shadow: 0 0 0 2px rgba(255, 143, 31, 0.25);
+}
+
+.button-attention:hover {
+  background: linear-gradient(180deg, #ffc067 0%, #ff9c34 100%);
+}
+
 .eyebrow {
   margin: 0;
   color: #6c6c6c;
