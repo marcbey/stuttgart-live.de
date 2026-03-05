@@ -3,6 +3,7 @@
 <% payload_sources = event_source_payloads(event) %>
 <% display_organizer_name = event_display_organizer_name(event) %>
 <% display_promoter_id = event_display_promoter_id(event) %>
+<% editor_status = filter_status.presence || event.status %>
 
 <div class="editor-panel" id="event_editor">
   <header class="editor-header">
@@ -151,7 +152,92 @@
   </section>
 
   <section class="offer-section">
-    <h3>Bilder</h3>
+    <h3>Redaktionsbilder</h3>
+    <div class="event-image-upload-grid">
+      <%= form_with url: backend_event_event_images_path(event),
+                    method: :post,
+                    class: "event-image-upload-form",
+                    html: { multipart: true },
+                    data: { turbo: false } do %>
+        <%= hidden_field_tag :status, editor_status %>
+        <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_SLIDER %>
+        <h4>Slider-Bilder</h4>
+        <p>Unbegrenzt, Reihenfolge ohne Bedeutung.</p>
+        <%= file_field_tag "event_image[files][]", multiple: true, accept: "image/*", required: true, class: "form-input" %>
+        <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
+        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text unter dem Bild (optional)", class: "form-input" %>
+        <%= button_tag "Slider-Bilder hochladen", type: :submit, class: "button button-secondary" %>
+      <% end %>
+
+      <%= form_with url: backend_event_event_images_path(event),
+                    method: :post,
+                    class: "event-image-upload-form",
+                    html: { multipart: true },
+                    data: { turbo: false } do %>
+        <%= hidden_field_tag :status, editor_status %>
+        <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
+        <h4>Detail-Header</h4>
+        <p>Überschreibt XML-Hero, immer genau ein Bild.</p>
+        <%= file_field_tag "event_image[files][]", accept: "image/*", required: true, class: "form-input" %>
+        <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
+        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text (optional)", class: "form-input" %>
+        <%= button_tag "Header-Bild hochladen", type: :submit, class: "button button-secondary" %>
+      <% end %>
+
+      <%= form_with url: backend_event_event_images_path(event),
+                    method: :post,
+                    class: "event-image-upload-form",
+                    html: { multipart: true },
+                    data: { turbo: false } do %>
+        <%= hidden_field_tag :status, editor_status %>
+        <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_GRID_TILE %>
+        <h4>Events-Grid Kachel</h4>
+        <p>Feste Zuordnung je Variante (1x1, 2x1, 1x2, 2x2).</p>
+        <%= select_tag "event_image[grid_variant]",
+                       options_for_select(EventImage::GRID_VARIANTS),
+                       class: "form-input" %>
+        <%= file_field_tag "event_image[files][]", accept: "image/*", required: true, class: "form-input" %>
+        <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
+        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text (optional)", class: "form-input" %>
+        <%= button_tag "Grid-Bild hochladen", type: :submit, class: "button button-secondary" %>
+      <% end %>
+    </div>
+
+    <% if event.event_images.any? %>
+      <ul>
+        <% event.event_images.ordered.each do |image| %>
+          <li>
+            <span><%= image.label %></span>
+            <div class="action-cell">
+              <%= image_tag image.file, alt: image.alt_text.presence || "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
+              <%= link_to "Öffnen", url_for(image.file), target: "_blank", rel: "noopener" %>
+            </div>
+
+            <%= form_with model: [ :backend, event, image ],
+                          method: :patch,
+                          class: "event-image-meta-form",
+                          data: { turbo: false } do |form| %>
+              <%= hidden_field_tag :status, editor_status %>
+              <%= form.text_field :alt_text, placeholder: "Alt-Text (optional)", class: "form-input" %>
+              <%= form.text_field :sub_text, placeholder: "Sub-Text (optional)", class: "form-input" %>
+              <%= form.submit "Meta speichern", class: "button button-ghost" %>
+            <% end %>
+
+            <%= button_to "Bild löschen",
+                          backend_event_event_image_path(event, image, status: editor_status),
+                          method: :delete,
+                          class: "button button-ghost",
+                          data: { turbo: false } %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>Keine Redaktionsbilder vorhanden.</p>
+    <% end %>
+  </section>
+
+  <section class="offer-section">
+    <h3>Import-Bilder (XML)</h3>
     <% if event.import_event_images.any? %>
       <ul>
         <% event.import_event_images.ordered.each do |image| %>

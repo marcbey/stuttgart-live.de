@@ -1,6 +1,11 @@
-<% og_image_url = @event.image_url_for(slot: :social_card, breakpoint: :desktop) %>
-<% hero_desktop_image_url = @event.image_url_for(slot: :detail_hero, breakpoint: :desktop) %>
-<% hero_mobile_image_url = @event.image_url_for(slot: :grid_default, breakpoint: :mobile) || hero_desktop_image_url %>
+<% og_image = @event.image_for(slot: :social_card, breakpoint: :desktop) %>
+<% hero_desktop_image = @event.image_for(slot: :detail_hero, breakpoint: :desktop) %>
+<% hero_mobile_image = @event.image_for(slot: :grid_default, breakpoint: :mobile) || hero_desktop_image %>
+<% slider_images = @event.slider_images.to_a %>
+<% og_image_url = og_image.is_a?(EventImage) ? polymorphic_url(og_image.file) : og_image&.image_url %>
+<% hero_desktop_image_source = event_image_source(hero_desktop_image) %>
+<% hero_mobile_image_source = event_image_source(hero_mobile_image) %>
+<% hero_alt_text = event_image_alt(hero_desktop_image, @event) %>
 
 <% content_for :title, "#{@event.artist_name} - #{@event.title} | Stuttgart Live" %>
 <% content_for :head do %>
@@ -45,17 +50,35 @@
       <% end %>
     </div>
 
-    <% if hero_desktop_image_url.present? %>
+    <% if hero_desktop_image_source.present? %>
       <div class="event-detail-image-wrap">
         <picture>
-          <% if hero_mobile_image_url.present? %>
-            <source media="(max-width: 699px)" srcset="<%= hero_mobile_image_url %>">
+          <% if hero_mobile_image_source.present? %>
+            <source media="(max-width: 699px)" srcset="<%= hero_mobile_image_source %>">
           <% end %>
-          <%= image_tag hero_desktop_image_url, alt: "#{@event.artist_name} - #{@event.title}", class: "event-detail-image" %>
+          <%= image_tag hero_desktop_image_source, alt: hero_alt_text, class: "event-detail-image" %>
         </picture>
       </div>
     <% end %>
   </header>
+
+  <% if slider_images.any? %>
+    <section class="event-detail-slider">
+      <h2>Bilder</h2>
+      <div class="event-slider-track">
+        <% slider_images.each do |image| %>
+          <% image_source = event_image_source(image) %>
+          <% next if image_source.blank? %>
+          <figure class="event-slider-item">
+            <%= image_tag image_source, alt: event_image_alt(image, @event), loading: "lazy", class: "event-slider-image" %>
+            <% if image.sub_text.present? %>
+              <figcaption class="event-slider-sub"><%= image.sub_text %></figcaption>
+            <% end %>
+          </figure>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 
   <% if @event.event_info.present? %>
     <section class="event-detail-copy">

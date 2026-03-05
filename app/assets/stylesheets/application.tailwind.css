@@ -329,6 +329,22 @@ a {
   border: 5px solid rgba(255, 255, 255, 0.9);
 }
 
+.event-card-grid-1-1 .event-card-image-wrap {
+  aspect-ratio: 1 / 1.16;
+}
+
+.event-card-grid-1-2 .event-card-image-wrap {
+  aspect-ratio: 1 / 2.05;
+}
+
+.event-card-grid-2-1 .event-card-image-wrap {
+  aspect-ratio: 2 / 1.08;
+}
+
+.event-card-grid-2-2 .event-card-image-wrap {
+  aspect-ratio: 1 / 1.04;
+}
+
 .event-card-image,
 .event-card-placeholder {
   width: 100%;
@@ -571,10 +587,51 @@ a {
   padding: 0.9rem 1rem;
 }
 
+.event-detail-slider {
+  margin-top: 1rem;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 0.9rem 1rem;
+}
+
+.event-slider-track {
+  display: grid;
+  gap: 0.75rem;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(14rem, 1fr);
+  overflow-x: auto;
+  padding-bottom: 0.3rem;
+  scroll-snap-type: x mandatory;
+}
+
+.event-slider-item {
+  margin: 0;
+  scroll-snap-align: start;
+}
+
+.event-slider-image {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  object-fit: cover;
+  border: 1px solid var(--line);
+}
+
+.event-slider-sub {
+  margin-top: 0.35rem;
+  font-size: 0.84rem;
+  color: #5d5d5d;
+}
+
 .event-detail-copy h2,
 .event-detail-video h2,
 .event-detail-offers h2 {
   margin: 0;
+  font-size: 1.7rem;
+  text-transform: uppercase;
+}
+
+.event-detail-slider h2 {
+  margin: 0 0 0.75rem;
   font-size: 1.7rem;
   text-transform: uppercase;
 }
@@ -1097,6 +1154,37 @@ a {
   flex-wrap: wrap;
 }
 
+.event-image-upload-grid {
+  display: grid;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.event-image-upload-form {
+  border: 1px solid var(--line);
+  padding: 0.75rem;
+  background: #fff;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.event-image-upload-form h4 {
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.event-image-upload-form p {
+  margin: 0;
+  color: #646464;
+  font-size: 0.82rem;
+}
+
+.event-image-meta-form {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0.5rem 0;
+}
+
 .check-inline {
   display: inline-flex;
   align-items: center;
@@ -1144,8 +1232,14 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .flyer-grid .event-card:nth-child(5n + 1) {
+  .event-card-grid-1-2,
+  .event-card-grid-2-2 {
     grid-row: span 2;
+  }
+
+  .event-card-grid-2-1,
+  .event-card-grid-2-2 {
+    grid-column: span 2;
   }
 
   .event-detail-header {
@@ -1167,11 +1261,20 @@ a {
   .editor-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  .event-image-upload-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 @media (min-width: 1100px) {
   .flyer-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .event-card-grid-2-1,
+  .event-card-grid-2-2 {
+    grid-column: span 2;
   }
 
   .backend-split {

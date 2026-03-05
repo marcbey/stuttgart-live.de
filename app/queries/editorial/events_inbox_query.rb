@@ -10,7 +10,12 @@ module Editorial
     end
 
     def call
-      relation = scope.includes(:genres, :event_offers, :event_change_logs)
+      relation = scope.includes(
+        :genres,
+        :event_offers,
+        :event_change_logs,
+        event_images: [ file_attachment: :blob ]
+      )
       relation = relation.where(status: status_filter) if status_filter.present?
       relation = relation.where("start_at >= ?", starts_after.beginning_of_day) if starts_after.present?
       relation = relation.where("start_at <= ?", starts_before.end_of_day) if starts_before.present?

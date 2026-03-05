@@ -127,14 +127,24 @@ module Public
     def published_events_relation
       Event
         .published_live
-        .includes(:genres, :event_offers, :import_event_images)
+        .includes(
+          :genres,
+          :event_offers,
+          :import_event_images,
+          event_images: [ file_attachment: :blob ]
+        )
     end
 
     def show_events_relation
       return published_events_relation unless authenticated?
 
       Event
-        .includes(:genres, :event_offers, :import_event_images)
+        .includes(
+          :genres,
+          :event_offers,
+          :import_event_images,
+          event_images: [ file_attachment: :blob ]
+        )
     end
 
     def apply_status!(event, status)

@@ -315,4 +315,72 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "action=\"remove\""
     assert_includes response.body, "target=\"card_event_#{@published_event.id}\""
   end
+
+  test "show prefers editorial hero and renders slider images with sub text" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
+      alt_text: "Hero Alt"
+    )
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_GRID_TILE,
+      grid_variant: EventImage::GRID_VARIANT_1X1,
+      alt_text: "Grid Alt"
+    )
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_SLIDER,
+      alt_text: "Slider Alt",
+      sub_text: "Slider Subline"
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Hero Alt"
+    assert_includes response.body, "Slider Subline"
+    assert_includes response.body, "rails/active_storage"
+  end
+
+  test "index uses editorial image for grid variant slot" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_GRID_TILE,
+      grid_variant: EventImage::GRID_VARIANT_2X2,
+      alt_text: "Grid 2x2 Alt"
+    )
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_GRID_TILE,
+      grid_variant: EventImage::GRID_VARIANT_1X1,
+      alt_text: "Grid 1x1 Alt"
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_includes response.body, "event-card-grid-2-2"
+    assert_includes response.body, "Grid 2x2 Alt"
+    assert_includes response.body, "rails/active_storage"
+  end
+
+  private
+
+  def create_event_image(event:, purpose:, grid_variant: nil, alt_text: nil, sub_text: nil)
+    image = event.event_images.new(
+      purpose: purpose,
+      grid_variant: grid_variant,
+      alt_text: alt_text,
+      sub_text: sub_text
+    )
+    binary = File.binread(Rails.root.join("test/fixtures/files/test_image.png"))
+    image.file.attach(
+      io: StringIO.new(binary),
+      filename: "test_image.png",
+      content_type: "image/png"
+    )
+    image.save!
+    image
+  end
 end

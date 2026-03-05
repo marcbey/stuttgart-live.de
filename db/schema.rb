@@ -10,9 +10,37 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_05_102611) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_05_150725) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.string "name", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.bigint "byte_size", null: false
+    t.string "checksum"
+    t.string "content_type"
+    t.datetime "created_at", null: false
+    t.string "filename", null: false
+    t.string "key", null: false
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "easyticket_import_events", force: :cascade do |t|
     t.string "artist_name", null: false
@@ -64,6 +92,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_102611) do
     t.index ["event_id", "genre_id"], name: "index_event_genres_on_event_id_and_genre_id", unique: true
     t.index ["event_id"], name: "index_event_genres_on_event_id"
     t.index ["genre_id"], name: "index_event_genres_on_genre_id"
+  end
+
+  create_table "event_images", force: :cascade do |t|
+    t.string "alt_text"
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.string "grid_variant"
+    t.string "purpose", null: false
+    t.text "sub_text"
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "grid_variant"], name: "index_event_images_on_unique_grid_variant_per_event", unique: true, where: "((purpose)::text = 'grid_tile'::text)"
+    t.index ["event_id", "purpose"], name: "index_event_images_on_event_id_and_purpose"
+    t.index ["event_id", "purpose"], name: "index_event_images_on_unique_detail_hero_per_event", unique: true, where: "((purpose)::text = 'detail_hero'::text)"
+    t.index ["event_id"], name: "index_event_images_on_event_id"
   end
 
   create_table "event_offers", force: :cascade do |t|
@@ -250,11 +292,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_102611) do
     t.index ["role"], name: "index_users_on_role"
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "easyticket_import_events", "import_sources"
   add_foreign_key "event_change_logs", "events"
   add_foreign_key "event_change_logs", "users"
   add_foreign_key "event_genres", "events"
   add_foreign_key "event_genres", "genres"
+  add_foreign_key "event_images", "events"
   add_foreign_key "event_offers", "events"
   add_foreign_key "eventim_import_events", "import_sources"
   add_foreign_key "events", "users", column: "published_by_id"

@@ -27,6 +27,12 @@ class Event < ApplicationRecord
       [ "thumb", %w[square landscape portrait unknown] ]
     ]
   }.freeze
+  GRID_VARIANT_BY_SLOT = {
+    grid_default: EventImage::GRID_VARIANT_1X1,
+    grid_tall: EventImage::GRID_VARIANT_1X2,
+    grid_wide: EventImage::GRID_VARIANT_2X1,
+    grid_large: EventImage::GRID_VARIANT_2X2
+  }.freeze
 
   belongs_to :published_by, class_name: "User", optional: true
 
@@ -34,6 +40,7 @@ class Event < ApplicationRecord
   has_many :event_genres, dependent: :destroy
   has_many :genres, through: :event_genres
   has_many :event_change_logs, dependent: :destroy
+  has_many :event_images, dependent: :destroy
   has_many :import_event_images,
     as: :import_event,
     foreign_key: :import_event_id,
@@ -81,6 +88,9 @@ class Event < ApplicationRecord
   end
 
   def image_for(slot: :grid_default, breakpoint: :desktop)
+    editorial = editorial_image_for(slot: slot, breakpoint: breakpoint)
+    return editorial if editorial.present?
+
     images = import_event_images.ordered.to_a
     return nil if images.empty?
 
@@ -97,7 +107,12 @@ class Event < ApplicationRecord
   end
 
   def image_url_for(slot: :grid_default, breakpoint: :desktop)
-    image_for(slot: slot, breakpoint: breakpoint)&.image_url
+    image = image_for(slot: slot, breakpoint: breakpoint)
+    return nil if image.blank?
+    return image.image_url unless image.is_a?(EventImage)
+    return nil unless image.file.attached?
+
+    Rails.application.routes.url_helpers.rails_storage_proxy_path(image.file, only_path: true)
   end
 
   def has_import_images?
@@ -105,7 +120,35 @@ class Event < ApplicationRecord
     association.loaded? ? association.any? : association.exists?
   end
 
+  def slider_images
+    event_images.slider.ordered
+  end
+
   private
+
+  def editorial_image_for(slot:, breakpoint:)
+    normalized_slot = slot.to_sym
+    normalized_breakpoint = breakpoint.to_sym
+
+    if normalized_slot == :detail_hero
+      return event_images.detail_hero.ordered.first
+    end
+
+    if normalized_slot == :social_card
+      detail_hero = event_images.detail_hero.ordered.first
+      return detail_hero if detail_hero.present?
+    end
+
+    if normalized_breakpoint == :mobile
+      grid_default = event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).ordered.first
+      return grid_default if grid_default.present?
+    end
+
+    grid_variant = GRID_VARIANT_BY_SLOT[normalized_slot]
+    return nil if grid_variant.blank?
+
+    event_images.grid_tile.where(grid_variant: grid_variant).ordered.first
+  end
 
   def normalize_attributes
     self.title = title.to_s.strip

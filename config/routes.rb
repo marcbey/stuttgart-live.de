@@ -21,6 +21,7 @@ Rails.application.routes.draw do
       post :apply_filters, on: :collection
       post :next_event_preference, on: :collection
       post :sync_imported_events, on: :collection
+      resources :event_images, only: [ :create, :update, :destroy ]
     end
   end
 

@@ -46,9 +46,16 @@ module Editorial
 
     def image_present?
       return ActiveModel::Type::Boolean.new.cast(images_present) unless images_present.nil?
-      return false unless event.respond_to?(:import_event_images)
+      has_import_images = image_association_present?(event, :import_event_images)
+      has_editorial_images = image_association_present?(event, :event_images)
 
-      association = event.import_event_images
+      has_import_images || has_editorial_images
+    end
+
+    def image_association_present?(record, association_name)
+      return false unless record.respond_to?(association_name)
+
+      association = record.public_send(association_name)
       association.loaded? ? association.any? : association.exists?
     end
 
