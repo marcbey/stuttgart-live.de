@@ -29,6 +29,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Promoter-ID"
     assert_includes response.body, "Beginn"
     assert_includes response.body, "Einlass löschen"
+    assert_includes response.body, "Preis: 45 EUR"
     assert_includes response.body, "editor-datetime-clear"
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"

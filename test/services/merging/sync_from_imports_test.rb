@@ -18,7 +18,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       organizer_id: "382",
       concert_date_label: "10.11.2026",
       venue_label: "Stuttgart, Im Wizemann",
-      dump_payload: {},
+      dump_payload: { "price_text" => "59,45 - 86,70 EUR" },
       detail_payload: {},
       ticket_url: "https://example.com/easy",
       is_active: true,
@@ -46,7 +46,13 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       promoter_id: "10135",
       concert_date_label: "10.11.2026",
       venue_label: "Stuttgart, Im Wizemann",
-      dump_payload: {},
+      dump_payload: {
+        "pricecategory" => [
+          { "price" => "58,84", "currency" => "EUR" },
+          { "price" => "47,84", "currency" => "EUR" },
+          { "price" => "36,84", "currency" => "EUR" }
+        ]
+      },
       detail_payload: {},
       ticket_url: "https://example.com/eventim",
       is_active: true,
@@ -77,6 +83,8 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal "published", event.status
     assert_equal true, event.auto_published
     assert_equal 2, event.event_offers.count
+    assert_equal "59,45 - 86,70 EUR", event.event_offers.find_by(source: "easyticket")&.ticket_price_text
+    assert_equal "36,84 - 58,84 EUR", event.event_offers.find_by(source: "eventim")&.ticket_price_text
     assert_equal 2, event.import_event_images.count
     assert_equal 1, event.event_change_logs.where(action: "merged_create").count
     assert_equal 0, event.event_change_logs.where(action: "merged_update").count
@@ -181,5 +189,39 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     event = Event.find_by(artist_name: "Band Begin Eventim")
     assert event.present?
     assert_equal Time.zone.local(2026, 12, 3, 18, 45, 0), event.start_at
+  end
+
+  test "uses eventim pricecategory object for ticket price text" do
+    source_eventim = import_sources(:two)
+    date = Date.new(2026, 12, 4)
+
+    source_eventim.eventim_import_events.create!(
+      external_event_id: "merge-eventim-price-object",
+      concert_date: date,
+      city: "Stuttgart",
+      venue_name: "Porsche Arena",
+      title: "Price Object Show",
+      artist_name: "Band Price Object",
+      promoter_id: "10135",
+      concert_date_label: "04.12.2026",
+      venue_label: "Stuttgart, Porsche Arena",
+      dump_payload: {
+        "eventtime" => "19:15",
+        "pricecategory" => { "price" => "72,50", "currency" => "EUR" }
+      },
+      detail_payload: {},
+      ticket_url: "https://example.com/eventim-price-object",
+      is_active: true,
+      first_seen_at: Time.current,
+      last_seen_at: Time.current,
+      source_payload_hash: "hash-eventim-price-object"
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by(artist_name: "Band Price Object")
+    assert event.present?
+    offer = event.event_offers.find_by(source: "eventim")
+    assert_equal "72,50 EUR", offer&.ticket_price_text
   end
 end

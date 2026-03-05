@@ -1,3 +1,4 @@
+require "bigdecimal"
 require "set"
 
 module Merging
@@ -22,6 +23,7 @@ module Merging
       :organizer_name,
       :promoter_id,
       :ticket_url,
+      :ticket_price_text,
       :images,
       :raw_payload
     )
@@ -99,6 +101,7 @@ module Merging
             organizer_name: organizer_name_for_easyticket(record),
             promoter_id: nil,
             ticket_url: record.ticket_url,
+            ticket_price_text: ticket_price_text_for_easyticket(record),
             images: images_for_import_record(record, fallback_source: "easyticket"),
             raw_payload: {
               dump_payload: record.dump_payload,
@@ -129,6 +132,7 @@ module Merging
             organizer_name: organizer_name_for_eventim(record),
             promoter_id: promoter_id_for_eventim(record),
             ticket_url: record.ticket_url,
+            ticket_price_text: ticket_price_text_for_eventim(record),
             images: images_for_import_record(record, fallback_source: "eventim"),
             raw_payload: {
               dump_payload: record.dump_payload,
@@ -223,6 +227,7 @@ module Merging
           source: record.source,
           source_event_id: record.external_event_id,
           ticket_url: record.ticket_url,
+          ticket_price_text: record.ticket_price_text,
           sold_out: false,
           priority_rank: priority_for(record.source),
           metadata: {}
@@ -408,13 +413,83 @@ module Merging
     end
 
     def begin_time_for_easyticket(record)
-      raw_payload = record.dump_payload.is_a?(Hash) ? record.dump_payload : {}
+      raw_payload = raw_dump_payload_for(record)
       raw_payload["time"].to_s.strip
     end
 
     def begin_time_for_eventim(record)
-      raw_payload = record.dump_payload.is_a?(Hash) ? record.dump_payload : {}
+      raw_payload = raw_dump_payload_for(record)
       raw_payload["eventtime"].to_s.strip
+    end
+
+    def ticket_price_text_for_easyticket(record)
+      raw_payload = raw_dump_payload_for(record)
+      raw_payload["price_text"].to_s.strip.presence
+    end
+
+    def ticket_price_text_for_eventim(record)
+      categories = eventim_price_categories_for(record)
+      prices = categories.filter_map do |entry|
+        parse_price_decimal(entry["price"] || entry[:price])
+      end
+      return nil if prices.empty?
+
+      currency =
+        categories
+          .filter_map { |entry| (entry["currency"] || entry[:currency]).to_s.strip.presence }
+          .first || "EUR"
+
+      min_price = prices.min
+      max_price = prices.max
+
+      if min_price == max_price
+        "#{format_price_decimal(min_price)} #{currency}"
+      else
+        "#{format_price_decimal(min_price)} - #{format_price_decimal(max_price)} #{currency}"
+      end
+    end
+
+    def eventim_price_categories_for(record)
+      raw_payload = raw_dump_payload_for(record)
+      value = raw_payload["pricecategory"] || raw_payload["priceCategory"] || raw_payload["price_category"]
+      case value
+      when Array
+        value.filter_map { |entry| entry.is_a?(Hash) ? entry : nil }
+      when Hash
+        [ value ]
+      else
+        []
+      end
+    end
+
+    def parse_price_decimal(value)
+      raw = value.to_s.strip
+      return nil if raw.blank?
+
+      normalized = raw.gsub(/[^0-9,.\-]/, "")
+      return nil if normalized.blank?
+
+      if normalized.include?(",") && normalized.include?(".")
+        if normalized.rindex(",") > normalized.rindex(".")
+          normalized = normalized.delete(".").tr(",", ".")
+        else
+          normalized = normalized.delete(",")
+        end
+      elsif normalized.include?(",")
+        normalized = normalized.tr(",", ".")
+      end
+
+      BigDecimal(normalized)
+    rescue ArgumentError
+      nil
+    end
+
+    def format_price_decimal(decimal_value)
+      format("%.2f", decimal_value).tr(".", ",")
+    end
+
+    def raw_dump_payload_for(record)
+      record.dump_payload.is_a?(Hash) ? record.dump_payload : {}
     end
 
     def start_at_for(concert_date, begin_time)
@@ -474,6 +549,7 @@ module Merging
               "organizer_name" => record.organizer_name,
               "promoter_id" => record.promoter_id,
               "ticket_url" => record.ticket_url,
+              "ticket_price_text" => record.ticket_price_text,
               "images" =>
                 record.images.map do |image|
                   {

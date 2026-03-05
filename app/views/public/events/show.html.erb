@@ -68,6 +68,9 @@
     <section class="event-detail-cta">
       <%= link_to "Tickets sichern", @primary_offer.resolved_ticket_url, target: "_blank", rel: "noopener", class: "button" %>
       <p>Ticketshop: <%= event_source_label(@primary_offer.source) %></p>
+      <% if @primary_offer.ticket_price_text.present? %>
+        <p>Preis: <%= @primary_offer.ticket_price_text %></p>
+      <% end %>
     </section>
   <% end %>
 
