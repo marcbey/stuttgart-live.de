@@ -187,6 +187,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Einlass:\s*\d{2}:\d{2}\s*Uhr/, response.body)
   end
 
+  test "show renders redaktionsnotiz section when editor notes are present" do
+    event = Event.create!(
+      slug: "published-event-with-editor-notes",
+      source_fingerprint: "test::public::published::editor-notes",
+      title: "Published Event With Editor Notes",
+      artist_name: "Published Artist With Notes",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      event_info: "Öffentliche Beschreibung",
+      editor_notes: "Interner Hinweis\nZweite Zeile",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Redaktionsnotiz"
+    assert_includes response.body, "Interner Hinweis"
+  end
+
   test "show includes backend badge for authenticated users" do
     sign_in_as(@user)
 

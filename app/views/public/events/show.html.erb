@@ -64,6 +64,13 @@
     </section>
   <% end %>
 
+  <% if @event.editor_notes.present? %>
+    <section class="event-detail-copy">
+      <h2>Redaktionsnotiz</h2>
+      <%= simple_format(@event.editor_notes) %>
+    </section>
+  <% end %>
+
   <% if @primary_offer.present? %>
     <section class="event-detail-cta">
       <%= link_to "Tickets sichern", @primary_offer.resolved_ticket_url, target: "_blank", rel: "noopener", class: "button" %>
