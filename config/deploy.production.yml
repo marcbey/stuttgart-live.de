@@ -21,6 +21,18 @@ env:
   secret:
     - RAILS_MASTER_KEY
     - DB_PASSWORD
+    - XMP_DUMP_URL
+    - EVENT_DETAIL_API
+    - API_KEY
+    - PARTNER_SHOP_ID
+    - TICKET_LINK_EVENT_BASE_URL
+    - EASYTICKET_USER
+    - EASYTICKET_PASS
+    - FEED_URL
+    - FEED_USER
+    - FEED_PASS
+    - EVENTIM_USER
+    - EVENTIM_PASS
   clear:
     SOLID_QUEUE_IN_PUMA: true
     DB_HOST: <%= ENV.fetch("DB_HOST") %>
