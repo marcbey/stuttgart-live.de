@@ -30,3 +30,6 @@ application.register("next-event", NextEventController)
 
 import MergeChangeFilterController from "./merge_change_filter_controller"
 application.register("merge-change-filter", MergeChangeFilterController)
+
+import PublicCardStatusController from "./public_card_status_controller"
+application.register("public-card-status", PublicCardStatusController)

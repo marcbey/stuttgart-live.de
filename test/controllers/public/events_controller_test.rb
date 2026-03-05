@@ -234,6 +234,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "event-card-status-select"
     assert_includes response.body, status_event_path(@published_event.slug)
+    assert_includes response.body, "data-controller=\"public-card-status\""
+    assert_includes response.body, "change-&gt;public-card-status#change"
     assert_includes response.body, "/backend/events?event_id=#{@published_event.id}&amp;status=#{@published_event.status}"
   end
 

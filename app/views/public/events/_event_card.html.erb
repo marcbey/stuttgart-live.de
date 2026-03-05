@@ -55,7 +55,8 @@
       <div class="event-card-status-overlay">
         <%= form_with url: status_event_path(event.slug),
                       method: :patch,
-                      class: "event-card-status-form" do |form| %>
+                      class: "event-card-status-form",
+                      data: { controller: "public-card-status" } do |form| %>
           <%= hidden_field_tag :card_slot, card_slot %>
           <%= hidden_field_tag :page, params[:page].presence || 1 %>
           <%= hidden_field_tag :filter, public_filter %>
@@ -64,7 +65,10 @@
                           options_for_select(public_event_status_options, event.status),
                           {},
                           class: "event-card-status-select",
-                          onchange: "this.form.requestSubmit();" %>
+                          data: {
+                            public_card_status_target: "select",
+                            action: "change->public-card-status#change"
+                          } %>
           <noscript>
             <%= form.submit "Ok", class: "event-card-status-submit" %>
           </noscript>

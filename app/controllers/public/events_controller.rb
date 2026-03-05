@@ -49,9 +49,6 @@ module Public
       )
 
       respond_to do |format|
-        format.html do
-          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param)
-        end
         format.turbo_stream do
           streams = []
           card_id = helpers.dom_id(@event, :card)
@@ -72,6 +69,9 @@ module Public
           end
 
           render turbo_stream: streams
+        end
+        format.html do
+          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param)
         end
       end
     end
