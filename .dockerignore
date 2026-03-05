@@ -45,6 +45,16 @@
 
 # Ignore development files
 /.devcontainer
+/.ruby-lsp
+/.vscode
+
+# Ignore infrastructure and legacy assets not needed in runtime image.
+/infra
+/legacy
+/design
+/docs
+/specs
+/test
 
 # Ignore Docker-related files
 /.dockerignore
