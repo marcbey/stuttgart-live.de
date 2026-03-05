@@ -1,3 +1,4 @@
+require "cgi"
 require "bigdecimal"
 require "set"
 
@@ -22,6 +23,7 @@ module Merging
       :artist_name,
       :organizer_name,
       :promoter_id,
+      :description_text,
       :ticket_url,
       :ticket_price_text,
       :images,
@@ -100,6 +102,7 @@ module Merging
             artist_name: record.artist_name,
             organizer_name: organizer_name_for_easyticket(record),
             promoter_id: nil,
+            description_text: description_text_for_easyticket(record),
             ticket_url: record.ticket_url,
             ticket_price_text: ticket_price_text_for_easyticket(record),
             images: images_for_import_record(record, fallback_source: "easyticket"),
@@ -131,6 +134,7 @@ module Merging
             artist_name: record.artist_name,
             organizer_name: organizer_name_for_eventim(record),
             promoter_id: promoter_id_for_eventim(record),
+            description_text: description_text_for_eventim(record),
             ticket_url: record.ticket_url,
             ticket_price_text: ticket_price_text_for_eventim(record),
             images: images_for_import_record(record, fallback_source: "eventim"),
@@ -155,6 +159,8 @@ module Merging
       event.venue = first_present(records, &:venue_name)
       event.organizer_name = first_present(records, &:organizer_name).presence
       event.promoter_id = first_present(records, &:promoter_id).presence
+      imported_description_text = first_present_or_nil(records, &:description_text)
+      event.event_info = imported_description_text if imported_description_text.present?
       event.start_at = start_at_for(primary.concert_date, primary.begin_time)
       event.primary_source = primary.source
       event.source_snapshot = build_source_snapshot(records)
@@ -427,6 +433,11 @@ module Merging
       raw_payload["price_text"].to_s.strip.presence
     end
 
+    def description_text_for_easyticket(record)
+      raw_payload = raw_dump_payload_for(record)
+      normalize_import_description(raw_payload["text"])
+    end
+
     def ticket_price_text_for_eventim(record)
       categories = eventim_price_categories_for(record)
       prices = categories.filter_map do |entry|
@@ -447,6 +458,16 @@ module Merging
       else
         "#{format_price_decimal(min_price)} - #{format_price_decimal(max_price)} #{currency}"
       end
+    end
+
+    def description_text_for_eventim(record)
+      raw_payload = raw_dump_payload_for(record)
+      raw_description =
+        raw_payload["estext"].to_s.strip.presence ||
+        raw_payload["esinfo"].to_s.strip.presence ||
+        raw_payload["text"].to_s.strip.presence
+
+      normalize_import_description(raw_description)
     end
 
     def eventim_price_categories_for(record)
@@ -486,6 +507,23 @@ module Merging
 
     def format_price_decimal(decimal_value)
       format("%.2f", decimal_value).tr(".", ",")
+    end
+
+    def normalize_import_description(value)
+      text = value.to_s
+      return nil if text.strip.blank?
+
+      normalized =
+        CGI.unescapeHTML(text)
+          .gsub(/<\s*br\s*\/?>/i, "\n")
+          .gsub(/<\/p\s*>/i, "\n\n")
+          .gsub(/<[^>]+>/, "")
+          .gsub(/\r\n?/, "\n")
+          .gsub(/[ \t]+\n/, "\n")
+          .gsub(/\n{3,}/, "\n\n")
+          .strip
+
+      normalized.presence
     end
 
     def raw_dump_payload_for(record)
@@ -548,6 +586,7 @@ module Merging
               "artist_name" => record.artist_name,
               "organizer_name" => record.organizer_name,
               "promoter_id" => record.promoter_id,
+              "description_text" => record.description_text,
               "ticket_url" => record.ticket_url,
               "ticket_price_text" => record.ticket_price_text,
               "images" =>
@@ -574,6 +613,15 @@ module Merging
       end
 
       ""
+    end
+
+    def first_present_or_nil(records)
+      records.each do |record|
+        value = yield(record).to_s.strip
+        return value if value.present?
+      end
+
+      nil
     end
 
     def priority_for(source)

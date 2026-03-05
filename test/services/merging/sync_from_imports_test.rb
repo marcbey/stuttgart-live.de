@@ -18,7 +18,10 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       organizer_id: "382",
       concert_date_label: "10.11.2026",
       venue_label: "Stuttgart, Im Wizemann",
-      dump_payload: { "price_text" => "59,45 - 86,70 EUR" },
+      dump_payload: {
+        "price_text" => "59,45 - 86,70 EUR",
+        "text" => "<p>Easy Headline<br />Easy Line</p>"
+      },
       detail_payload: {},
       ticket_url: "https://example.com/easy",
       is_active: true,
@@ -51,7 +54,8 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
           { "price" => "58,84", "currency" => "EUR" },
           { "price" => "47,84", "currency" => "EUR" },
           { "price" => "36,84", "currency" => "EUR" }
-        ]
+        ],
+        "estext" => "Eventim fallback text"
       },
       detail_payload: {},
       ticket_url: "https://example.com/eventim",
@@ -85,6 +89,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal 2, event.event_offers.count
     assert_equal "59,45 - 86,70 EUR", event.event_offers.find_by(source: "easyticket")&.ticket_price_text
     assert_equal "36,84 - 58,84 EUR", event.event_offers.find_by(source: "eventim")&.ticket_price_text
+    assert_equal "Easy Headline\nEasy Line", event.event_info
     assert_equal 2, event.import_event_images.count
     assert_equal 1, event.event_change_logs.where(action: "merged_create").count
     assert_equal 0, event.event_change_logs.where(action: "merged_update").count
@@ -223,5 +228,38 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert event.present?
     offer = event.event_offers.find_by(source: "eventim")
     assert_equal "72,50 EUR", offer&.ticket_price_text
+  end
+
+  test "uses eventim estext as event description when easyticket text is missing" do
+    source_eventim = import_sources(:two)
+    date = Date.new(2026, 12, 5)
+
+    source_eventim.eventim_import_events.create!(
+      external_event_id: "merge-eventim-description",
+      concert_date: date,
+      city: "Stuttgart",
+      venue_name: "Porsche Arena",
+      title: "Description Show",
+      artist_name: "Band Description Eventim",
+      promoter_id: "10135",
+      concert_date_label: "05.12.2026",
+      venue_label: "Stuttgart, Porsche Arena",
+      dump_payload: {
+        "eventtime" => "20:00",
+        "estext" => "Eventim Description<br>Line 2"
+      },
+      detail_payload: {},
+      ticket_url: "https://example.com/eventim-description",
+      is_active: true,
+      first_seen_at: Time.current,
+      last_seen_at: Time.current,
+      source_payload_hash: "hash-eventim-description"
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by(artist_name: "Band Description Eventim")
+    assert event.present?
+    assert_equal "Eventim Description\nLine 2", event.event_info
   end
 end
