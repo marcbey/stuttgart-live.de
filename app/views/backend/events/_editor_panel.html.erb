@@ -41,7 +41,7 @@
         <%= form.text_field :title, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
       </div>
       <div>
-        <%= form.label :start_at, "Start", class: "form-label" %>
+        <%= form.label :start_at, "Beginn", class: "form-label" %>
         <%= form.datetime_local_field :start_at,
                                       value: event.start_at&.strftime("%Y-%m-%dT%H:%M"),
                                       class: "form-input",

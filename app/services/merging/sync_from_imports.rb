@@ -14,6 +14,7 @@ module Merging
       :source,
       :external_event_id,
       :concert_date,
+      :begin_time,
       :city,
       :venue_name,
       :title,
@@ -90,6 +91,7 @@ module Merging
             source: "easyticket",
             external_event_id: record.external_event_id,
             concert_date: record.concert_date,
+            begin_time: begin_time_for_easyticket(record),
             city: record.city,
             venue_name: record.venue_name,
             title: record.title,
@@ -119,6 +121,7 @@ module Merging
             source: "eventim",
             external_event_id: record.external_event_id,
             concert_date: record.concert_date,
+            begin_time: begin_time_for_eventim(record),
             city: record.city,
             venue_name: record.venue_name,
             title: record.title,
@@ -148,7 +151,7 @@ module Merging
       event.venue = first_present(records, &:venue_name)
       event.organizer_name = first_present(records, &:organizer_name).presence
       event.promoter_id = first_present(records, &:promoter_id).presence
-      event.start_at = start_at_for(primary.concert_date)
+      event.start_at = start_at_for(primary.concert_date, primary.begin_time)
       event.primary_source = primary.source
       event.source_snapshot = build_source_snapshot(records)
       updated_now = event.changed?
@@ -404,8 +407,33 @@ module Merging
       projection.to_attributes&.dig(:organizer_name).to_s.strip
     end
 
-    def start_at_for(concert_date)
-      Time.zone.local(concert_date.year, concert_date.month, concert_date.day, 20, 0, 0)
+    def begin_time_for_easyticket(record)
+      raw_payload = record.dump_payload.is_a?(Hash) ? record.dump_payload : {}
+      raw_payload["time"].to_s.strip
+    end
+
+    def begin_time_for_eventim(record)
+      raw_payload = record.dump_payload.is_a?(Hash) ? record.dump_payload : {}
+      raw_payload["eventtime"].to_s.strip
+    end
+
+    def start_at_for(concert_date, begin_time)
+      hour, min = parse_time_components(begin_time)
+      Time.zone.local(concert_date.year, concert_date.month, concert_date.day, hour, min, 0)
+    end
+
+    def parse_time_components(value)
+      raw = value.to_s.strip
+      match = raw.match(/(?<!\d)(\d{1,2})[:.](\d{2})(?!\d)/)
+      if match.present?
+        hour = match[1].to_i
+        min = match[2].to_i
+        return [ hour, min ] if hour.between?(0, 23) && min.between?(0, 59)
+      end
+
+      fallback_hour = 20
+      fallback_min = 0
+      [ fallback_hour, fallback_min ]
     end
 
     def ordered_records_for_group(records)
@@ -438,6 +466,7 @@ module Merging
               "source" => record.source,
               "external_event_id" => record.external_event_id,
               "concert_date" => record.concert_date.iso8601,
+              "begin_time" => record.begin_time,
               "city" => record.city,
               "venue_name" => record.venue_name,
               "title" => record.title,

@@ -121,4 +121,65 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal false, event.auto_published
     assert_includes event.completeness_flags, "missing_image"
   end
+
+  test "uses easyticket dump_payload time as event begin time" do
+    source_easyticket = import_sources(:one)
+    date = Date.new(2026, 12, 2)
+
+    source_easyticket.easyticket_import_events.create!(
+      external_event_id: "merge-easy-begin-time",
+      concert_date: date,
+      city: "Stuttgart",
+      venue_name: "LKA Longhorn",
+      title: "Begin Time Night",
+      artist_name: "Band Begin Easy",
+      organizer_name: "SKS Michael Russ GmbH",
+      organizer_id: "382",
+      concert_date_label: "02.12.2026",
+      venue_label: "Stuttgart, LKA Longhorn",
+      dump_payload: { "time" => "19:30" },
+      detail_payload: {},
+      ticket_url: "https://example.com/easy-begin-time",
+      is_active: true,
+      first_seen_at: Time.current,
+      last_seen_at: Time.current,
+      source_payload_hash: "hash-easy-begin-time"
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by(artist_name: "Band Begin Easy")
+    assert event.present?
+    assert_equal Time.zone.local(2026, 12, 2, 19, 30, 0), event.start_at
+  end
+
+  test "uses eventim dump_payload eventtime as event begin time" do
+    source_eventim = import_sources(:two)
+    date = Date.new(2026, 12, 3)
+
+    source_eventim.eventim_import_events.create!(
+      external_event_id: "merge-eventim-begin-time",
+      concert_date: date,
+      city: "Stuttgart",
+      venue_name: "Porsche Arena",
+      title: "Begin Time Gala",
+      artist_name: "Band Begin Eventim",
+      promoter_id: "10135",
+      concert_date_label: "03.12.2026",
+      venue_label: "Stuttgart, Porsche Arena",
+      dump_payload: { "eventtime" => "18:45" },
+      detail_payload: {},
+      ticket_url: "https://example.com/eventim-begin-time",
+      is_active: true,
+      first_seen_at: Time.current,
+      last_seen_at: Time.current,
+      source_payload_hash: "hash-eventim-begin-time"
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by(artist_name: "Band Begin Eventim")
+    assert event.present?
+    assert_equal Time.zone.local(2026, 12, 3, 18, 45, 0), event.start_at
+  end
 end

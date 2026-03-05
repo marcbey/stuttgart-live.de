@@ -161,6 +161,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Published Artist"
+    assert_match(/Beginn:\s*\d{2}:\d{2}\s*Uhr/, response.body)
   end
 
   test "show includes backend badge for authenticated users" do

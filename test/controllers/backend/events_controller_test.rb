@@ -27,6 +27,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "value=\"published\""
     assert_includes response.body, "Veranstalter"
     assert_includes response.body, "Promoter-ID"
+    assert_includes response.body, "Beginn"
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
   end
 
