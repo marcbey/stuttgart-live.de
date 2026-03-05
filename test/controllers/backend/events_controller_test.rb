@@ -28,6 +28,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Veranstalter"
     assert_includes response.body, "Promoter-ID"
     assert_includes response.body, "Beginn"
+    assert_includes response.body, "Einlass löschen"
+    assert_includes response.body, "editor-datetime-clear"
+    assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
   end
 
@@ -227,12 +230,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "updates event" do
     sign_in_as(@user)
+    doors_at = Time.zone.parse("2026-07-10 18:30:00")
 
     patch backend_event_url(@event), params: {
       event: {
         title: "Neu betitelt",
         artist_name: @event.artist_name,
         start_at: @event.start_at,
+        doors_at: doors_at,
         venue: @event.venue,
         city: @event.city,
         status: "needs_review"
@@ -240,7 +245,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
-    assert_equal "Neu betitelt", @event.reload.title
+    @event.reload
+    assert_equal "Neu betitelt", @event.title
+    assert_equal doors_at.to_i, @event.doors_at.to_i
   end
 
   test "updates event via turbo stream and renders flash message" do

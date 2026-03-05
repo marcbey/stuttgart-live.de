@@ -162,6 +162,28 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Published Artist"
     assert_match(/Beginn:\s*\d{2}:\d{2}\s*Uhr/, response.body)
+    assert_not_includes response.body, "Einlass:"
+  end
+
+  test "show renders einlass when present" do
+    event = Event.create!(
+      slug: "published-event-with-einlass",
+      source_fingerprint: "test::public::published::einlass",
+      title: "Published Event With Einlass",
+      artist_name: "Published Artist With Einlass",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      doors_at: 10.days.from_now.change(hour: 18, min: 30, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_match(/Einlass:\s*\d{2}:\d{2}\s*Uhr/, response.body)
   end
 
   test "show includes backend badge for authenticated users" do

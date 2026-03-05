@@ -366,6 +366,7 @@ module Backend
         :title,
         :artist_name,
         :start_at,
+        :doors_at,
         :venue,
         :city,
         :event_info,

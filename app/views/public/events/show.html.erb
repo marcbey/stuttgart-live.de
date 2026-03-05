@@ -22,7 +22,9 @@
       <h1><%= @event.artist_name %></h1>
       <p class="event-detail-title"><%= @event.title %></p>
       <p class="event-detail-meta"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %> · <%= @event.venue %>, <%= @event.city %></p>
-      <p class="event-detail-meta">Beginn: <%= l(@event.start_at, format: "%H:%M") %> Uhr</p>
+      <p class="event-detail-meta">
+        Beginn: <%= l(@event.start_at, format: "%H:%M") %> Uhr<% if @event.doors_at.present? %> · Einlass: <%= l(@event.doors_at, format: "%H:%M") %> Uhr<% end %>
+      </p>
       <% if authenticated? %>
         <% visibility_badges = public_event_visibility_badges(@event) %>
         <div class="event-detail-badges-row">

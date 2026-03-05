@@ -973,6 +973,18 @@ a {
   cursor: not-allowed;
 }
 
+.editor-datetime-input-with-clear {
+  padding-right: 3.8rem;
+}
+
+.editor-datetime-input-with-clear::-webkit-calendar-picker-indicator {
+  margin-right: 0.05rem;
+}
+
+.filter-date-wrap .editor-datetime-clear {
+  right: 2.7rem;
+}
+
 .genre-checks {
   display: flex;
   flex-wrap: wrap;
