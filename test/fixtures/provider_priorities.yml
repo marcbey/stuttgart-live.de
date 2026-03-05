@@ -5,5 +5,5 @@ eventim:
 
 easyticket:
   source_type: easyticket
-  priority_rank: 30
+  priority_rank: 10
   active: true

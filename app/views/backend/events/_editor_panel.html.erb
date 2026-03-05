@@ -34,17 +34,19 @@
     <div class="editor-grid">
       <div>
         <%= form.label :artist_name, "Artist", class: "form-label" %>
-        <%= form.text_field :artist_name, class: "form-input" %>
+        <%= form.text_field :artist_name, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
       </div>
       <div>
         <%= form.label :title, "Titel", class: "form-label" %>
-        <%= form.text_field :title, class: "form-input" %>
+        <%= form.text_field :title, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
       </div>
       <div>
         <%= form.label :start_at, "Start", class: "form-label" %>
         <%= form.datetime_local_field :start_at,
                                       value: event.start_at&.strftime("%Y-%m-%dT%H:%M"),
-                                      class: "form-input" %>
+                                      class: "form-input",
+                                      readonly: true,
+                                      title: "Wird beim Merge aus dem Import aktualisiert." %>
       </div>
       <div>
         <%= form.label :status, "Status", class: "form-label" %>
@@ -55,11 +57,11 @@
       </div>
       <div>
         <%= form.label :city, "Stadt", class: "form-label" %>
-        <%= form.text_field :city, class: "form-input" %>
+        <%= form.text_field :city, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
       </div>
       <div>
         <%= form.label :venue, "Venue", class: "form-label" %>
-        <%= form.text_field :venue, class: "form-input" %>
+        <%= form.text_field :venue, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
       </div>
       <div>
         <label class="form-label" for="<%= dom_id(event, :organizer_name_display) %>">Veranstalter</label>
