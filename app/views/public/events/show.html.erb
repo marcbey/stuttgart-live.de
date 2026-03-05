@@ -19,7 +19,6 @@
 
   <header class="event-detail-header">
     <div>
-      <p class="eyebrow eyebrow-logo"><%= brand_logo_tag(class_name: "brand-logo brand-logo-eyebrow") %></p>
       <h1><%= @event.artist_name %></h1>
       <p class="event-detail-title"><%= @event.title %></p>
       <p class="event-detail-meta"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %> · <%= @event.venue %>, <%= @event.city %></p>
