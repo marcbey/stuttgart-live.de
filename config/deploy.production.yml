@@ -1,0 +1,39 @@
+# AWS production target for Kamal.
+# Usage: bin/kamal deploy -d production
+
+image: <%= ENV.fetch("KAMAL_IMAGE", "stgt-live-prod") %>
+
+servers:
+  web:
+    - <%= ENV.fetch("KAMAL_WEB_HOST") %>
+
+proxy:
+  ssl: true
+  host: <%= ENV.fetch("APP_HOST") %>
+
+registry:
+  server: <%= ENV.fetch("KAMAL_REGISTRY_SERVER") %>
+  username: AWS
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - DB_PASSWORD
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    DB_HOST: <%= ENV.fetch("DB_HOST") %>
+    DB_PORT: <%= ENV.fetch("DB_PORT", "5432") %>
+    DB_NAME: <%= ENV.fetch("DB_NAME", "stuttgart_live_de_production") %>
+    DB_USER: <%= ENV.fetch("DB_USER", "stuttgart_live_de") %>
+    AWS_REGION: <%= ENV.fetch("AWS_REGION") %>
+    AWS_S3_BUCKET: <%= ENV.fetch("AWS_S3_BUCKET") %>
+
+ssh:
+  user: ubuntu
+  keys:
+    - <%= ENV.fetch("KAMAL_SSH_KEY_PATH", File.expand_path("~/.ssh/stgt-live-prod.pem")) %>
+
+builder:
+  arch: amd64

@@ -96,18 +96,20 @@ test:
 production:
   primary: &primary_production
     <<: *default
-    database: stuttgart_live_de_production
-    username: stuttgart_live_de
-    password: <%= ENV["STUTTGART_LIVE_DE_DATABASE_PASSWORD"] %>
+    database: <%= ENV.fetch("DB_NAME", "stuttgart_live_de_production") %>
+    username: <%= ENV.fetch("DB_USER", "stuttgart_live_de") %>
+    password: <%= ENV["DB_PASSWORD"] || ENV["STUTTGART_LIVE_DE_DATABASE_PASSWORD"] %>
+    host: <%= ENV.fetch("DB_HOST", "127.0.0.1") %>
+    port: <%= ENV.fetch("DB_PORT", 5432) %>
   cache:
     <<: *primary_production
-    database: stuttgart_live_de_production_cache
+    database: <%= ENV.fetch("CACHE_DB_NAME", "stuttgart_live_de_production_cache") %>
     migrations_paths: db/cache_migrate
   queue:
     <<: *primary_production
-    database: stuttgart_live_de_production_queue
+    database: <%= ENV.fetch("QUEUE_DB_NAME", "stuttgart_live_de_production_queue") %>
     migrations_paths: db/queue_migrate
   cable:
     <<: *primary_production
-    database: stuttgart_live_de_production_cable
+    database: <%= ENV.fetch("CABLE_DB_NAME", "stuttgart_live_de_production_cable") %>
     migrations_paths: db/cable_migrate
