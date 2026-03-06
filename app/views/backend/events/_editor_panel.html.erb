@@ -34,19 +34,17 @@
     <div class="editor-grid">
       <div>
         <%= form.label :artist_name, "Artist", class: "form-label" %>
-        <%= form.text_field :artist_name, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
+        <%= form.text_field :artist_name, class: "form-input" %>
       </div>
       <div>
         <%= form.label :title, "Titel", class: "form-label" %>
-        <%= form.text_field :title, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
+        <%= form.text_field :title, class: "form-input" %>
       </div>
       <div>
         <%= form.label :start_at, "Beginn", class: "form-label" %>
         <%= form.datetime_local_field :start_at,
                                       value: event.start_at&.strftime("%Y-%m-%dT%H:%M"),
-                                      class: "form-input",
-                                      readonly: true,
-                                      title: "Wird beim Merge aus dem Import aktualisiert." %>
+                                      class: "form-input" %>
       </div>
       <div>
         <%= form.label :doors_at, "Einlass", class: "form-label" %>
@@ -71,11 +69,11 @@
       </div>
       <div>
         <%= form.label :city, "Stadt", class: "form-label" %>
-        <%= form.text_field :city, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
+        <%= form.text_field :city, class: "form-input" %>
       </div>
       <div>
         <%= form.label :venue, "Venue", class: "form-label" %>
-        <%= form.text_field :venue, class: "form-input", readonly: true, title: "Wird beim Merge aus dem Import aktualisiert." %>
+        <%= form.text_field :venue, class: "form-input" %>
       </div>
       <div>
         <label class="form-label" for="<%= dom_id(event, :promoter_id_display) %>">Promoter-ID</label>
@@ -277,10 +275,47 @@
         <% event.import_event_images.ordered.each do |image| %>
           <li>
             <span><%= [ image.source, image.image_type, image.role, image.aspect_hint ].reject(&:blank?).join(" · ") %></span>
-            <span class="action-cell">
+            <div class="action-cell">
               <%= image_tag image.image_url, alt: "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
               <%= link_to "Öffnen", image.image_url, target: "_blank", rel: "noopener" %>
-            </span>
+              <%= button_to "Als Grid-Kachel",
+                            create_from_import_backend_event_event_images_path(event),
+                            method: :post,
+                            class: "button button-ghost",
+                            params: {
+                              status: editor_status,
+                              event_image: {
+                                import_event_image_id: image.id,
+                                purpose: EventImage::PURPOSE_GRID_TILE,
+                                grid_variant: EventImage::GRID_VARIANT_1X1
+                              }
+                            },
+                            data: { turbo: false } %>
+              <%= button_to "Als Header",
+                            create_from_import_backend_event_event_images_path(event),
+                            method: :post,
+                            class: "button button-ghost",
+                            params: {
+                              status: editor_status,
+                              event_image: {
+                                import_event_image_id: image.id,
+                                purpose: EventImage::PURPOSE_DETAIL_HERO
+                              }
+                            },
+                            data: { turbo: false } %>
+              <%= button_to "Als Slider",
+                            create_from_import_backend_event_event_images_path(event),
+                            method: :post,
+                            class: "button button-ghost",
+                            params: {
+                              status: editor_status,
+                              event_image: {
+                                import_event_image_id: image.id,
+                                purpose: EventImage::PURPOSE_SLIDER
+                              }
+                            },
+                            data: { turbo: false } %>
+            </div>
           </li>
         <% end %>
       </ul>

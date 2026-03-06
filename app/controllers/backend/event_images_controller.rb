@@ -63,6 +63,28 @@ module Backend
       end
     end
 
+    def create_from_import
+      import_image = @event.import_event_images.find(import_image_params[:import_event_image_id])
+      purpose = import_image_params[:purpose].to_s
+      grid_variant = import_image_params[:grid_variant]
+
+      EventImage.transaction do
+        replace_unique_images!(purpose: purpose, grid_variant: grid_variant)
+        Backend::ImportEventImageImporter.call(
+          event: @event,
+          import_event_image: import_image,
+          purpose: purpose,
+          grid_variant: grid_variant
+        )
+      end
+
+      redirect_to editor_redirect_path, notice: "Import-Bild wurde in die Redaktion übernommen."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to editor_redirect_path, alert: e.record.errors.full_messages.to_sentence
+    rescue StandardError => e
+      redirect_to editor_redirect_path, alert: e.message
+    end
+
     def destroy
       @event_image.destroy!
       redirect_to editor_redirect_path, notice: "Bild wurde gelöscht."
@@ -84,6 +106,10 @@ module Backend
 
     def update_params
       params.require(:event_image).permit(:alt_text, :sub_text, :card_focus_x, :card_focus_y, :card_zoom)
+    end
+
+    def import_image_params
+      params.require(:event_image).permit(:import_event_image_id, :purpose, :grid_variant)
     end
 
     def replace_unique_images!(purpose:, grid_variant:)

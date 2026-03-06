@@ -111,6 +111,35 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 145.0, image.card_zoom_value
   end
 
+  test "creates editorial grid image from import image" do
+    sign_in_as(@user)
+    import_image = create_import_event_image
+
+    response = fake_image_response
+
+    count_before = EventImage.where(event: @event, purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1).count
+    http_singleton = Net::HTTP.singleton_class
+    original_get_response = Net::HTTP.method(:get_response)
+
+    http_singleton.define_method(:get_response, ->(_uri) { response })
+    begin
+      post create_from_import_backend_event_event_images_url(@event), params: {
+        status: "needs_review",
+        event_image: {
+          import_event_image_id: import_image.id,
+          purpose: EventImage::PURPOSE_GRID_TILE,
+          grid_variant: EventImage::GRID_VARIANT_1X1
+        }
+      }
+    ensure
+      http_singleton.define_method(:get_response, original_get_response)
+    end
+
+    count_after = EventImage.where(event: @event, purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1).count
+    assert_equal count_before + 1, count_after, flash[:alert].presence || "expected imported image to be created"
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+  end
+
   test "deletes event image" do
     sign_in_as(@user)
     image = create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
@@ -141,5 +170,36 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     image.file.attach(uploaded_image)
     image.save!
     image
+  end
+
+  def create_import_event_image
+    @event.import_event_images.create!(
+      source: "eventim",
+      image_type: "large",
+      image_url: "https://img.example/event-large.jpg",
+      role: "cover",
+      aspect_hint: "landscape",
+      position: 0
+    )
+  end
+
+  def fake_image_response
+    Class.new do
+      attr_reader :body, :content_type, :code
+
+      def initialize(body:, content_type:, code:)
+        @body = body
+        @content_type = content_type
+        @code = code
+      end
+
+      def is_a?(klass)
+        klass == Net::HTTPSuccess || super
+      end
+    end.new(
+      body: File.binread(Rails.root.join("test/fixtures/files/test_image.png")),
+      content_type: "image/png",
+      code: "200"
+    )
   end
 end

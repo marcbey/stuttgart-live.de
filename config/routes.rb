@@ -26,7 +26,10 @@ Rails.application.routes.draw do
       patch :bulk, on: :collection
       post :apply_filters, on: :collection
       post :next_event_preference, on: :collection
-      resources :event_images, only: [ :create, :update, :destroy ]
+      post :sync_imported_events, on: :collection
+      resources :event_images, only: [ :create, :update, :destroy ] do
+        post :create_from_import, on: :collection
+      end
     end
   end
 
