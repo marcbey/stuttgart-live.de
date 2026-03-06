@@ -65,6 +65,32 @@ a {
   text-decoration: none;
 }
 
+.brand-wordmark {
+  display: inline-flex;
+  align-items: baseline;
+  color: #000;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: clamp(1.55rem, 3.4vw, 2.3rem);
+  line-height: 1;
+  white-space: nowrap;
+  transition: transform 160ms ease, opacity 160ms ease;
+}
+
+.brand-wordmark-city {
+  font-weight: 200;
+  letter-spacing: 0.08em;
+}
+
+.brand-wordmark-live {
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.app-brand:hover .brand-wordmark {
+  transform: translateY(-1px);
+  opacity: 0.88;
+}
+
 .brand-logo {
   display: block;
   height: auto;
