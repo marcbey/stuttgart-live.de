@@ -211,6 +211,49 @@
               <%= hidden_field_tag :status, editor_status %>
               <%= form.text_field :alt_text, placeholder: "Alt-Text (optional)", class: "form-input" %>
               <%= form.text_field :sub_text, placeholder: "Sub-Text (optional)", class: "form-input" %>
+              <% if image.grid_tile? %>
+                <div class="event-image-crop-editor" data-controller="event-image-crop-preview">
+                  <div class="event-image-crop-preview">
+                    <div class="event-image-crop-frame">
+                      <%= image_tag image.file,
+                                    alt: image.alt_text.presence || "#{event.artist_name} - #{event.title}",
+                                    class: "event-image-crop-preview-image",
+                                    style: event_card_image_style(image),
+                                    data: { event_image_crop_preview_target: "previewImage" } %>
+                    </div>
+                    <p>Kartenausschnitt-Vorschau (gleiches Format wie die Event-Karten).</p>
+                  </div>
+
+                  <div class="event-image-crop-controls">
+                    <label class="form-label" for="<%= dom_id(image, :card_focus_x) %>">Ausschnitt horizontal <span data-event-image-crop-preview-target="focusXOutput"><%= image.card_focus_x_value.round %>%</span></label>
+                    <%= form.range_field :card_focus_x,
+                                         min: 0,
+                                         max: 100,
+                                         step: 1,
+                                         id: dom_id(image, :card_focus_x),
+                                         class: "form-range",
+                                         data: { event_image_crop_preview_target: "focusX", action: "input->event-image-crop-preview#update" } %>
+
+                    <label class="form-label" for="<%= dom_id(image, :card_focus_y) %>">Ausschnitt vertikal <span data-event-image-crop-preview-target="focusYOutput"><%= image.card_focus_y_value.round %>%</span></label>
+                    <%= form.range_field :card_focus_y,
+                                         min: 0,
+                                         max: 100,
+                                         step: 1,
+                                         id: dom_id(image, :card_focus_y),
+                                         class: "form-range",
+                                         data: { event_image_crop_preview_target: "focusY", action: "input->event-image-crop-preview#update" } %>
+
+                    <label class="form-label" for="<%= dom_id(image, :card_zoom) %>">Zoom <span data-event-image-crop-preview-target="zoomOutput"><%= image.card_zoom_value.round %>%</span></label>
+                    <%= form.range_field :card_zoom,
+                                         min: 100,
+                                         max: 300,
+                                         step: 5,
+                                         id: dom_id(image, :card_zoom),
+                                         class: "form-range",
+                                         data: { event_image_crop_preview_target: "zoom", action: "input->event-image-crop-preview#update" } %>
+                  </div>
+                </div>
+              <% end %>
               <%= form.submit "Meta speichern", class: "button button-ghost" %>
             <% end %>
 

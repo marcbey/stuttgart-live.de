@@ -91,6 +91,26 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neue Subline", image.sub_text
   end
 
+  test "updates card crop settings for grid images" do
+    sign_in_as(@user)
+    image = create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    patch backend_event_event_image_url(@event, image), params: {
+      status: "needs_review",
+      event_image: {
+        card_focus_x: "18",
+        card_focus_y: "72",
+        card_zoom: "145"
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+    image.reload
+    assert_equal 18.0, image.card_focus_x_value
+    assert_equal 72.0, image.card_focus_y_value
+    assert_equal 145.0, image.card_zoom_value
+  end
+
   test "deletes event image" do
     sign_in_as(@user)
     image = create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)

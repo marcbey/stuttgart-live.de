@@ -1,4 +1,7 @@
 class EventImage < ApplicationRecord
+  DEFAULT_CARD_FOCUS_X = 50.0
+  DEFAULT_CARD_FOCUS_Y = 50.0
+  DEFAULT_CARD_ZOOM = 100.0
   PURPOSE_SLIDER = "slider".freeze
   PURPOSE_DETAIL_HERO = "detail_hero".freeze
   PURPOSE_GRID_TILE = "grid_tile".freeze
@@ -31,6 +34,9 @@ class EventImage < ApplicationRecord
   validates :grid_variant, inclusion: { in: GRID_VARIANTS }, allow_nil: true
   validates :alt_text, length: { maximum: 240 }, allow_blank: true
   validates :sub_text, length: { maximum: 500 }, allow_blank: true
+  validates :card_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :card_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :card_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
   validate :grid_variant_presence_for_grid_tile
   validate :grid_variant_absence_for_non_grid_tile
   validate :single_detail_hero_per_event, if: :detail_hero?
@@ -60,6 +66,19 @@ class EventImage < ApplicationRecord
     purpose.to_s
   end
 
+  def card_focus_x_value
+    card_focus_x.nil? ? DEFAULT_CARD_FOCUS_X : card_focus_x.to_f
+  end
+
+  def card_focus_y_value
+    card_focus_y.nil? ? DEFAULT_CARD_FOCUS_Y : card_focus_y.to_f
+  end
+
+  def card_zoom_value
+    zoom = card_zoom.to_f
+    zoom.positive? ? zoom : DEFAULT_CARD_ZOOM
+  end
+
   private
 
   def normalize_text_fields
@@ -67,6 +86,15 @@ class EventImage < ApplicationRecord
     self.grid_variant = grid_variant.to_s.strip.presence
     self.alt_text = alt_text.to_s.strip.presence
     self.sub_text = sub_text.to_s.strip.presence
+    self.card_focus_x = normalize_percentage(card_focus_x, fallback: DEFAULT_CARD_FOCUS_X)
+    self.card_focus_y = normalize_percentage(card_focus_y, fallback: DEFAULT_CARD_FOCUS_Y)
+    self.card_zoom = normalize_percentage(card_zoom, fallback: DEFAULT_CARD_ZOOM)
+  end
+
+  def normalize_percentage(value, fallback:)
+    return fallback if value.blank?
+
+    value.to_f.round(2)
   end
 
   def grid_variant_presence_for_grid_tile

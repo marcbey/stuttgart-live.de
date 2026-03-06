@@ -96,6 +96,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150000) do
 
   create_table "event_images", force: :cascade do |t|
     t.string "alt_text"
+    t.decimal "card_focus_x", precision: 5, scale: 2, default: "50.0", null: false
+    t.decimal "card_focus_y", precision: 5, scale: 2, default: "50.0", null: false
+    t.decimal "card_zoom", precision: 5, scale: 2, default: "100.0", null: false
     t.datetime "created_at", null: false
     t.bigint "event_id", null: false
     t.string "grid_variant"

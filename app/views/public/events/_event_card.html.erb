@@ -9,6 +9,7 @@
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% source_label = event_source_label(event.primary_source.presence || event.primary_offer&.source).presence %>
 <% has_top_overlay = source_label.present? || authenticated? %>
+<% image_style = event_card_image_style(desktop_image) %>
 
 <article id="<%= dom_id(event, :card) %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
   <div class="event-card-image-wrap">
@@ -18,7 +19,7 @@
           <% if mobile_image_source.present? %>
             <source media="(max-width: 699px)" srcset="<%= mobile_image_source %>">
           <% end %>
-          <%= image_tag desktop_image_source, alt: image_alt_text, loading: "lazy", class: "event-card-image" %>
+          <%= image_tag desktop_image_source, alt: image_alt_text, loading: "lazy", class: "event-card-image", style: image_style %>
         </picture>
       <% else %>
         <div class="event-card-image event-card-placeholder"></div>

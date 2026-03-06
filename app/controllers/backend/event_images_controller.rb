@@ -83,7 +83,7 @@ module Backend
     end
 
     def update_params
-      params.require(:event_image).permit(:alt_text, :sub_text)
+      params.require(:event_image).permit(:alt_text, :sub_text, :card_focus_x, :card_focus_y, :card_zoom)
     end
 
     def replace_unique_images!(purpose:, grid_variant:)

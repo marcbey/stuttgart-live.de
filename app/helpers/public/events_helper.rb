@@ -1,13 +1,4 @@
 module Public::EventsHelper
-  GRID_TILE_PATTERN = [
-    EventImage::GRID_VARIANT_2X2,
-    EventImage::GRID_VARIANT_1X1,
-    EventImage::GRID_VARIANT_1X2,
-    EventImage::GRID_VARIANT_1X1,
-    EventImage::GRID_VARIANT_2X1,
-    EventImage::GRID_VARIANT_1X1
-  ].freeze
-
   def public_event_visibility_badges(event)
     badges = []
 
@@ -59,20 +50,6 @@ module Public::EventsHelper
     when "needs_review" then "status-badge-review"
     when "rejected" then "status-badge-rejected"
     else "status-badge-default"
-    end
-  end
-
-  def public_grid_variant_for(index)
-    GRID_TILE_PATTERN[index % GRID_TILE_PATTERN.length]
-  end
-
-  def card_slot_for_grid_variant(grid_variant)
-    case grid_variant.to_s
-    when EventImage::GRID_VARIANT_1X1 then :grid_default
-    when EventImage::GRID_VARIANT_1X2 then :grid_tall
-    when EventImage::GRID_VARIANT_2X1 then :grid_wide
-    when EventImage::GRID_VARIANT_2X2 then :grid_large
-    else :grid_default
     end
   end
 
