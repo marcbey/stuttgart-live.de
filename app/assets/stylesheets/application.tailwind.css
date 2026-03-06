@@ -346,12 +346,16 @@ a {
 
 .event-card-link {
   display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
   text-decoration: none;
 }
 
 .event-card-link picture {
   display: block;
   width: 100%;
+  height: 100%;
 }
 
 .event-card-image-wrap {

@@ -3,7 +3,7 @@
 <% public_filter = local_assigns.fetch(:public_filter, params[:filter].to_s.presence || "sks") %>
 <% public_event_date = local_assigns.fetch(:public_event_date, params[:event_date].to_s.presence) %>
 <% desktop_image = event.image_for(slot: card_slot, breakpoint: :desktop) %>
-<% mobile_image = event.image_for(slot: :grid_default, breakpoint: :mobile) || desktop_image %>
+<% mobile_image = desktop_image.is_a?(EventImage) ? desktop_image : (event.image_for(slot: :grid_default, breakpoint: :mobile) || desktop_image) %>
 <% desktop_image_source = event_image_source(desktop_image) %>
 <% mobile_image_source = event_image_source(mobile_image) %>
 <% image_alt_text = event_image_alt(desktop_image, event) %>
