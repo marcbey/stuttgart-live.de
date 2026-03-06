@@ -1,9 +1,12 @@
 <%= turbo_stream.append "event-grid" do %>
   <% @events.each_with_index do |event, index| %>
+    <% absolute_index = ((@page - 1) * Public::EventsController::PER_PAGE) + index %>
+    <% tile_variant = effective_public_grid_variant_for(event, absolute_index) %>
+    <% card_slot = card_slot_for_grid_variant(tile_variant) %>
     <%= render "event_card",
                event: event,
-               tile_variant: EventImage::GRID_VARIANT_1X1,
-               card_slot: :grid_default,
+               tile_variant: tile_variant,
+               card_slot: card_slot,
                public_filter: @public_filter,
                public_event_date: @public_event_date&.iso8601 %>
   <% end %>

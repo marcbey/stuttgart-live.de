@@ -373,6 +373,42 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "rails/active_storage"
   end
 
+  test "index uses the only available editorial grid variant even outside the default pattern slot" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_GRID_TILE,
+      grid_variant: EventImage::GRID_VARIANT_1X2,
+      alt_text: "Grid 1x2 Alt"
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_includes response.body, "event-card-grid-1-2"
+    assert_includes response.body, "Grid 1x2 Alt"
+  end
+
+  test "index prefers a single non-default editorial grid variant over 1x1" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_GRID_TILE,
+      grid_variant: EventImage::GRID_VARIANT_1X1,
+      alt_text: "Grid 1x1 Alt"
+    )
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_GRID_TILE,
+      grid_variant: EventImage::GRID_VARIANT_1X2,
+      alt_text: "Grid 1x2 Preferred Alt"
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_includes response.body, "event-card-grid-1-2"
+    assert_includes response.body, "Grid 1x2 Preferred Alt"
+  end
+
   private
 
   def create_event_image(event:, purpose:, grid_variant: nil, alt_text: nil, sub_text: nil)

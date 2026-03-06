@@ -349,6 +349,11 @@ a {
   text-decoration: none;
 }
 
+.event-card-link picture {
+  display: block;
+  width: 100%;
+}
+
 .event-card-image-wrap {
   position: relative;
   aspect-ratio: 1 / 1.16;
@@ -356,8 +361,25 @@ a {
   border: 5px solid rgba(255, 255, 255, 0.9);
 }
 
+.event-card-grid-1-1 .event-card-image-wrap {
+  aspect-ratio: 1 / 1.16;
+}
+
+.event-card-grid-1-2 .event-card-image-wrap {
+  aspect-ratio: 1 / 2.05;
+}
+
+.event-card-grid-2-1 .event-card-image-wrap {
+  aspect-ratio: 2 / 1.08;
+}
+
+.event-card-grid-2-2 .event-card-image-wrap {
+  aspect-ratio: 1 / 1.04;
+}
+
 .event-card-image,
 .event-card-placeholder {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
@@ -1287,6 +1309,29 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .event-card-grid-1-2,
+  .event-card-grid-2-2 {
+    grid-row: span 2;
+  }
+
+  .event-card-grid-2-1,
+  .event-card-grid-2-2 {
+    grid-column: span 2;
+  }
+
+  .event-card-grid-1-2 .event-card-image-wrap,
+  .event-card-grid-2-2 .event-card-image-wrap {
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .event-card-grid-1-2 .event-card-link,
+  .event-card-grid-2-2 .event-card-link,
+  .event-card-grid-1-2 .event-card-link picture,
+  .event-card-grid-2-2 .event-card-link picture {
+    height: 100%;
+  }
+
   .event-detail-header {
     grid-template-columns: 1.05fr 0.95fr;
   }
@@ -1315,6 +1360,16 @@ a {
 @media (min-width: 1100px) {
   .flyer-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .event-card-grid-1-2,
+  .event-card-grid-2-2 {
+    grid-row: span 2;
+  }
+
+  .event-card-grid-2-1,
+  .event-card-grid-2-2 {
+    grid-column: span 2;
   }
 
   .backend-split {

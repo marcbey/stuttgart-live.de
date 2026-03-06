@@ -1,4 +1,13 @@
 module Public::EventsHelper
+  GRID_TILE_PATTERN = [
+    EventImage::GRID_VARIANT_2X2,
+    EventImage::GRID_VARIANT_1X1,
+    EventImage::GRID_VARIANT_1X2,
+    EventImage::GRID_VARIANT_1X1,
+    EventImage::GRID_VARIANT_2X1,
+    EventImage::GRID_VARIANT_1X1
+  ].freeze
+
   def public_event_visibility_badges(event)
     badges = []
 
@@ -53,6 +62,33 @@ module Public::EventsHelper
     end
   end
 
+  def public_grid_variant_for(index)
+    GRID_TILE_PATTERN[index % GRID_TILE_PATTERN.length]
+  end
+
+  def effective_public_grid_variant_for(event, index)
+    requested_variant = public_grid_variant_for(index)
+    available_variants = editorial_grid_variants_for(event)
+    return EventImage::GRID_VARIANT_1X1 if available_variants.empty?
+
+    non_default_variants = available_variants - [ EventImage::GRID_VARIANT_1X1 ]
+    return non_default_variants.first if non_default_variants.one?
+    return requested_variant if available_variants.include?(requested_variant)
+    return EventImage::GRID_VARIANT_1X1 if available_variants.include?(EventImage::GRID_VARIANT_1X1)
+
+    EventImage::GRID_VARIANT_1X1
+  end
+
+  def card_slot_for_grid_variant(grid_variant)
+    case grid_variant.to_s
+    when EventImage::GRID_VARIANT_1X1 then :grid_default
+    when EventImage::GRID_VARIANT_1X2 then :grid_tall
+    when EventImage::GRID_VARIANT_2X1 then :grid_wide
+    when EventImage::GRID_VARIANT_2X2 then :grid_large
+    else :grid_default
+    end
+  end
+
   def event_image_source(image)
     return nil if image.blank?
     return url_for(image.file) if image.is_a?(EventImage)
@@ -65,5 +101,19 @@ module Public::EventsHelper
     return default_alt unless image.is_a?(EventImage)
 
     image.alt_text.presence || default_alt
+  end
+
+  private
+
+  def editorial_grid_variants_for(event)
+    images = event.event_images
+
+    if images.loaded?
+      images.filter_map do |image|
+        image.grid_variant if image.is_a?(EventImage) && image.grid_tile?
+      end.uniq
+    else
+      images.grid_tile.distinct.pluck(:grid_variant)
+    end
   end
 end
