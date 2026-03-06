@@ -1,6 +1,7 @@
 <% next_event_enabled = local_assigns.fetch(:next_event_enabled, true) %>
 <% filter_status = local_assigns[:filter_status] %>
 <% payload_sources = event_source_payloads(event) %>
+<% display_organizer_name = event_display_organizer_name(event) %>
 <% display_promoter_id = event_display_promoter_id(event) %>
 <% editor_status = filter_status.presence || event.status %>
 
@@ -74,6 +75,13 @@
       <div>
         <%= form.label :venue, "Venue", class: "form-label" %>
         <%= form.text_field :venue, class: "form-input" %>
+      </div>
+      <div>
+        <%= form.label :organizer_name, "Veranstalter", class: "form-label" %>
+        <%= form.select :organizer_name,
+                        options_for_select(stuttgart_organizer_options(display_organizer_name), event.organizer_name.presence || display_organizer_name),
+                        { include_blank: "Veranstalter auswählen" },
+                        class: "form-input" %>
       </div>
       <div>
         <label class="form-label" for="<%= dom_id(event, :promoter_id_display) %>">Promoter-ID</label>

@@ -25,6 +25,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "nächsten Event anzeigen"
     assert_includes response.body, "name=\"status\""
     assert_includes response.body, "value=\"published\""
+    assert_includes response.body, "Veranstalter"
+    assert_includes response.body, "Veranstalter auswählen"
+    assert_includes response.body, "Music Circus GmbH &amp; Co. KG"
     assert_includes response.body, "Promoter-ID"
     assert_includes response.body, "Beginn"
     assert_includes response.body, "Einlass löschen"
@@ -223,6 +226,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         doors_at: doors_at,
         venue: @event.venue,
         city: @event.city,
+        organizer_name: "SKS Michael Russ GmbH",
         status: "needs_review"
       }
     }
@@ -231,6 +235,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     @event.reload
     assert_equal "Neu betitelt", @event.title
     assert_equal doors_at.to_i, @event.doors_at.to_i
+    assert_equal "SKS Michael Russ GmbH", @event.organizer_name
   end
 
   test "updates event via turbo stream and renders flash message" do

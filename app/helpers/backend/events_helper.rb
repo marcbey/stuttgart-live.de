@@ -1,4 +1,35 @@
 module Backend::EventsHelper
+  def stuttgart_organizer_options(selected_value = nil)
+    organizers = organizer_names_from_doc.dup
+    selected = selected_value.to_s.strip
+    organizers.unshift(selected) if selected.present? && !organizers.include?(selected)
+
+    organizers.uniq.map { |name| [ name, name ] }
+  end
+
+  def event_display_organizer_name(event)
+    organizer_name = event.organizer_name.to_s.strip
+    return organizer_name if organizer_name.present?
+
+    event_source_payloads(event).each do |source|
+      case source[:source]
+      when "easyticket"
+        attributes =
+          Importing::Easyticket::PayloadProjection.new(
+            dump_payload: source[:dump_payload],
+            detail_payload: source[:detail_payload]
+          ).to_attributes
+        candidate = attributes&.dig(:organizer_name).to_s.strip
+        return candidate if candidate.present?
+      when "eventim"
+        attributes = Importing::Eventim::PayloadProjection.new(feed_payload: source[:dump_payload]).to_attributes
+        candidate = attributes&.dig(:organizer_name).to_s.strip
+        return candidate if candidate.present?
+      end
+    end
+
+    nil
+  end
   def event_display_promoter_id(event)
     promoter_id = event.promoter_id.to_s.strip
     return promoter_id if promoter_id.present?
@@ -90,6 +121,21 @@ module Backend::EventsHelper
   end
 
   private
+
+  def organizer_names_from_doc
+    @organizer_names_from_doc ||=
+      begin
+        lines = Rails.root.join("app/docs/organizers.md").read.lines.map(&:strip)
+        start_index = lines.index("# Easyticket organizer_name")
+        end_index = lines.index("# High-Confidence Mapping promoterid -> organizer_name:")
+        return [] if start_index.nil? || end_index.nil?
+
+        lines[(start_index + 1)...end_index]
+          .map(&:strip)
+          .reject(&:blank?)
+          .uniq
+      end
+  end
 
   def import_change_actions_for(event, merge_run_id)
     association = event.event_change_logs

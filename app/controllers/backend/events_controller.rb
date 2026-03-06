@@ -353,6 +353,7 @@ module Backend
         :doors_at,
         :venue,
         :city,
+        :organizer_name,
         :event_info,
         :badge_text,
         :youtube_url,
