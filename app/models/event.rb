@@ -154,6 +154,7 @@ class Event < ApplicationRecord
   def normalize_attributes
     self.title = title.to_s.strip
     self.artist_name = artist_name.to_s.strip
+    split_artist_and_tour_from_title!
     self.venue = venue.to_s.strip
     self.city = city.to_s.strip
     self.badge_text = badge_text.to_s.strip.presence
@@ -165,6 +166,26 @@ class Event < ApplicationRecord
 
     self.min_price = nil if min_price.blank?
     self.max_price = nil if max_price.blank?
+  end
+
+  def split_artist_and_tour_from_title!
+    return if title.blank?
+
+    match = title.match(/\A(.+?)\s*[-–—]\s+(.+)\z/)
+    return unless match
+
+    extracted_artist = match[1].to_s.strip
+    extracted_title = match[2].to_s.strip
+    return if extracted_artist.blank? || extracted_title.blank?
+
+    normalized_artist = normalize_comparison_token(artist_name)
+    normalized_title = normalize_comparison_token(title)
+    normalized_extracted_artist = normalize_comparison_token(extracted_artist)
+
+    if artist_name.blank? || normalized_artist == normalized_title || normalized_artist == normalized_extracted_artist
+      self.artist_name = extracted_artist
+      self.title = extracted_title
+    end
   end
 
   def slug_needed?
@@ -183,6 +204,10 @@ class Event < ApplicationRecord
     end
 
     self.slug = candidate
+  end
+
+  def normalize_comparison_token(value)
+    value.to_s.downcase.gsub(/[^[:alnum:]]+/, "")
   end
 
   def extract_youtube_id(url)
