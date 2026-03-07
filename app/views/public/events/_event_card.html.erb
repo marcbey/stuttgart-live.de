@@ -7,8 +7,6 @@
 <% desktop_image_source = event_image_source(desktop_image) %>
 <% mobile_image_source = event_image_source(mobile_image) %>
 <% image_alt_text = event_image_alt(desktop_image, event) %>
-<% source_label = event_source_label(event.primary_source.presence || event.primary_offer&.source).presence %>
-<% has_top_overlay = source_label.present? || authenticated? %>
 <% image_style = event_card_image_style(desktop_image) %>
 
 <article id="<%= dom_id(event, :card) %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
@@ -26,7 +24,7 @@
       <% end %>
       <div class="event-card-overlay"></div>
       <% if event.badge_text.present? %>
-        <span class="event-card-badge <%= "event-card-badge-with-top-overlay" if has_top_overlay %>"><%= event.badge_text %></span>
+        <span class="event-card-badge"><%= event.badge_text %></span>
       <% end %>
       <div class="event-card-copy">
         <h2><%= event.artist_name %></h2>
@@ -41,23 +39,8 @@
       </div>
     <% end %>
 
-    <% if has_top_overlay %>
-      <div class="event-card-top-left-overlay">
-        <% if source_label.present? %>
-          <span class="event-card-source-chip"><%= source_label %></span>
-        <% end %>
-
-        <% if authenticated? %>
-          <%= link_to "Backend",
-                      backend_events_path(status: event.status, event_id: event.id),
-                      class: "event-card-admin-link",
-                      data: { turbo: false } %>
-        <% end %>
-      </div>
-    <% end %>
-
     <% if authenticated? %>
-      <div class="event-card-status-overlay">
+      <div class="event-card-admin-controls">
         <%= form_with url: status_event_path(event.slug),
                       method: :patch,
                       class: "event-card-status-form",
@@ -78,6 +61,11 @@
             <%= form.submit "Ok", class: "event-card-status-submit" %>
           </noscript>
         <% end %>
+
+        <%= link_to "Bearbeiten",
+                    backend_events_path(status: event.status, event_id: event.id),
+                    class: "event-card-admin-link event-card-admin-link-attention",
+                    data: { turbo: false } %>
       </div>
     <% end %>
   </div>

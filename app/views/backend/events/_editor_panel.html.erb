@@ -346,30 +346,6 @@
             <div class="action-cell">
               <%= image_tag image.image_url, alt: "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
               <%= link_to "Öffnen", image.image_url, target: "_blank", rel: "noopener" %>
-              <%= button_to "Als Eventbild",
-                            create_from_import_backend_event_event_images_path(event),
-                            method: :post,
-                            class: "button button-ghost",
-                            params: {
-                              status: editor_status,
-                              event_image: {
-                                import_event_image_id: image.id,
-                                purpose: Backend::EventImagesController::EDITORIAL_MAIN_PURPOSE
-                              }
-                            },
-                            data: { turbo: false } %>
-              <%= button_to "Als Slider",
-                            create_from_import_backend_event_event_images_path(event),
-                            method: :post,
-                            class: "button button-ghost",
-                            params: {
-                              status: editor_status,
-                              event_image: {
-                                import_event_image_id: image.id,
-                                purpose: EventImage::PURPOSE_SLIDER
-                              }
-                            },
-                            data: { turbo: false } %>
             </div>
           </li>
         <% end %>
