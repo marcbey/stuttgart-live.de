@@ -634,6 +634,7 @@ a {
   position: relative;
   border: 6px solid #efefef;
   min-height: 320px;
+  max-height: 400px;
   overflow: hidden;
 }
 
@@ -641,6 +642,7 @@ a {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center center;
 }
 
 .event-detail-copy,

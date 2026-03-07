@@ -351,6 +351,21 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "rails/active_storage"
   end
 
+  test "show falls back to editorial grid image when no detail hero exists" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_GRID_TILE,
+      grid_variant: EventImage::GRID_VARIANT_2X1,
+      alt_text: "Grid Hero Fallback Alt"
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Grid Hero Fallback Alt"
+    assert_includes response.body, "rails/active_storage"
+  end
+
   test "index uses editorial image for grid variant slot" do
     create_event_image(
       event: @published_event,

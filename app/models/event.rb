@@ -132,7 +132,13 @@ class Event < ApplicationRecord
     normalized_breakpoint = breakpoint.to_sym
 
     if normalized_slot == :detail_hero
-      return event_images.detail_hero.ordered.first
+      detail_hero = event_images.detail_hero.ordered.first
+      return detail_hero if detail_hero.present?
+
+      grid_default = event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).ordered.first
+      return grid_default if grid_default.present?
+
+      return event_images.grid_tile.ordered.first
     end
 
     if normalized_slot == :social_card
