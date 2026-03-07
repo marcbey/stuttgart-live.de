@@ -7,7 +7,7 @@
 <% grid_images = event.event_images.grid_tile.ordered.to_a %>
 <% slider_images = event.event_images.slider.ordered.to_a %>
 <% detail_hero_image = event.event_images.detail_hero.ordered.first %>
-<% event_image_preview = grid_images.find { |image| image.grid_variant == EventImage::GRID_VARIANT_1X1 } || detail_hero_image %>
+<% event_image_preview = grid_images.find { |image| image.grid_variant == EventImage::GRID_VARIANT_1X1 } || grid_images.first || detail_hero_image %>
 
 <div class="editor-panel" id="event_editor">
   <header class="editor-header">

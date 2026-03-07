@@ -1271,8 +1271,7 @@ a {
 }
 
 .event-image-main-head {
-  display: flex;
-  align-items: center;
+  display: grid;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
 }
@@ -1289,7 +1288,14 @@ a {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
+}
+
+@media (min-width: 700px) {
+  .event-image-main-head {
+    grid-template-columns: 96px minmax(0, 1fr);
+    align-items: center;
+  }
 }
 
 .event-image-inline-upload {
