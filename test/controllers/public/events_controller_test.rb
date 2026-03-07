@@ -164,6 +164,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "event_date=#{selected_date.iso8601}"
   end
 
+  test "index can render list view" do
+    get events_url(filter: "all", view: "list")
+
+    assert_response :success
+    assert_includes response.body, "<table"
+    assert_includes response.body, "Artist / Titel"
+    assert_includes response.body, @published_event.artist_name
+    assert_includes response.body, "view=list"
+  end
+
   test "show renders published event by slug" do
     get event_url(@published_event.slug)
 

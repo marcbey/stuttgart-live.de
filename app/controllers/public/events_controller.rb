@@ -7,10 +7,14 @@ module Public
     FILTER_SKS = "sks".freeze
     FILTER_VALUES = [ FILTER_ALL, FILTER_SKS ].freeze
     SKS_PROMOTER_IDS = %w[10135 382].freeze
+    VIEW_GRID = "grid".freeze
+    VIEW_LIST = "list".freeze
+    VIEW_VALUES = [ VIEW_GRID, VIEW_LIST ].freeze
 
     def index
       @page = [ params[:page].to_i, 1 ].max
       @public_filter = current_public_filter
+      @public_view = current_public_view
       @public_event_date = current_public_event_date
 
       relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date)
@@ -25,6 +29,7 @@ module Public
 
     def show
       @public_filter = current_public_filter
+      @public_view = current_public_view
       @public_event_date = current_public_event_date
       @event = show_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.primary_offer
@@ -70,7 +75,7 @@ module Public
           render turbo_stream: streams
         end
         format.html do
-          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param)
+          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, view: current_public_view_param, event_date: current_public_event_date_param)
         end
       end
     end
@@ -112,6 +117,22 @@ module Public
 
     def current_public_event_date_param
       current_public_event_date&.iso8601
+    end
+
+    def current_public_view_param
+      current_public_view == VIEW_LIST ? VIEW_LIST : nil
+    end
+
+    def current_public_view
+      return @current_public_view if defined?(@current_public_view)
+
+      value = params[:view].to_s
+      @current_public_view =
+        if VIEW_VALUES.include?(value)
+          value
+        else
+          VIEW_GRID
+        end
     end
 
     def published_future_events_relation

@@ -7,15 +7,25 @@
     <div class="public-filter-row">
       <div class="public-filter-toggle">
         <%= link_to "Alle Events",
-                    events_path(filter: "all", event_date: @public_event_date&.iso8601),
+                    events_path(filter: "all", view: (@public_view == "list" ? @public_view : nil), event_date: @public_event_date&.iso8601),
                     class: "status-chip #{'status-chip-active' if @public_filter == 'all'}" %>
         <%= link_to "Nur SKS",
-                    events_path(filter: "sks", event_date: @public_event_date&.iso8601),
+                    events_path(filter: "sks", view: (@public_view == "list" ? @public_view : nil), event_date: @public_event_date&.iso8601),
                     class: "status-chip #{'status-chip-active' if @public_filter == 'sks'}" %>
+      </div>
+
+      <div class="public-filter-toggle">
+        <%= link_to "Grid",
+                    events_path(filter: @public_filter, view: "grid", event_date: @public_event_date&.iso8601),
+                    class: "status-chip #{'status-chip-active' if @public_view == 'grid'}" %>
+        <%= link_to "Liste",
+                    events_path(filter: @public_filter, view: "list", event_date: @public_event_date&.iso8601),
+                    class: "status-chip #{'status-chip-active' if @public_view == 'list'}" %>
       </div>
 
       <%= form_with url: events_path, method: :get, local: true, class: "public-date-filter" do %>
         <%= hidden_field_tag :filter, @public_filter %>
+        <%= hidden_field_tag :view, (@public_view == "list" ? @public_view : nil) %>
         <div class="public-date-input-wrap">
           <%= date_field_tag :event_date,
                              @public_event_date&.iso8601,
@@ -32,19 +42,42 @@
     </div>
   </header>
 
-  <div id="event-grid" class="flyer-grid">
-    <% @events.each_with_index do |event, index| %>
-      <% absolute_index = ((@page - 1) * Public::EventsController::PER_PAGE) + index %>
-      <% tile_variant = effective_public_grid_variant_for(event, absolute_index) %>
-      <% card_slot = card_slot_for_grid_variant(tile_variant) %>
-      <%= render "event_card",
-                 event: event,
-                 tile_variant: tile_variant,
-                 card_slot: card_slot,
-                 public_filter: @public_filter,
-                 public_event_date: @public_event_date&.iso8601 %>
-    <% end %>
-  </div>
+  <% if @public_view == "list" %>
+    <div class="event-listing-table-wrap">
+      <table class="event-listing-table">
+        <thead>
+          <tr>
+            <th>Datum</th>
+            <th>Artist / Titel</th>
+            <th>Location</th>
+          </tr>
+        </thead>
+        <tbody id="event-list-body">
+          <% @events.each do |event| %>
+            <%= render "event_list_row",
+                       event: event,
+                       public_filter: @public_filter,
+                       public_view: @public_view,
+                       public_event_date: @public_event_date&.iso8601 %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div id="event-grid" class="flyer-grid">
+      <% @events.each_with_index do |event, index| %>
+        <% absolute_index = ((@page - 1) * Public::EventsController::PER_PAGE) + index %>
+        <% tile_variant = effective_public_grid_variant_for(event, absolute_index) %>
+        <% card_slot = card_slot_for_grid_variant(tile_variant) %>
+        <%= render "event_card",
+                   event: event,
+                   tile_variant: tile_variant,
+                   card_slot: card_slot,
+                   public_filter: @public_filter,
+                   public_event_date: @public_event_date&.iso8601 %>
+      <% end %>
+    </div>
+  <% end %>
 
-  <%= render "pagination", next_page: @next_page, public_filter: @public_filter, public_event_date: @public_event_date&.iso8601 %>
+  <%= render "pagination", next_page: @next_page, public_filter: @public_filter, public_view: @public_view, public_event_date: @public_event_date&.iso8601 %>
 </section>
