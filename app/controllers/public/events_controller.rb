@@ -16,8 +16,9 @@ module Public
       @public_filter = current_public_filter
       @public_view = current_public_view
       @public_event_date = current_public_event_date
+      @public_query = current_public_query
 
-      relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date)
+      relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date, query: @public_query)
       @events = relation.limit(PER_PAGE).offset((@page - 1) * PER_PAGE)
       @next_page = @page + 1 if relation.offset(@page * PER_PAGE).limit(1).exists?
 
@@ -31,6 +32,7 @@ module Public
       @public_filter = current_public_filter
       @public_view = current_public_view
       @public_event_date = current_public_event_date
+      @public_query = current_public_query
       @event = show_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.primary_offer
     end
@@ -82,9 +84,10 @@ module Public
 
     private
 
-    def visible_events_relation(filter: FILTER_ALL, event_date: nil)
+    def visible_events_relation(filter: FILTER_ALL, event_date: nil, query: nil)
       relation = published_future_events_relation
       relation = relation.where(start_at: event_date.beginning_of_day..event_date.end_of_day) if event_date.present?
+      relation = apply_public_query(relation, query) if query.present?
 
       return relation unless filter == FILTER_SKS
 
@@ -119,6 +122,12 @@ module Public
       current_public_event_date&.iso8601
     end
 
+    def current_public_query
+      return @current_public_query if defined?(@current_public_query)
+
+      @current_public_query = params[:q].to_s.strip.presence
+    end
+
     def current_public_view_param
       current_public_view == VIEW_LIST ? VIEW_LIST : nil
     end
@@ -138,6 +147,15 @@ module Public
     def published_future_events_relation
       published_events_relation
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
+    end
+
+    def apply_public_query(relation, query)
+      token = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
+
+      relation.where(
+        "events.artist_name ILIKE :token OR events.title ILIKE :token OR events.venue ILIKE :token OR events.city ILIKE :token",
+        token: token
+      )
     end
 
     def published_events_relation

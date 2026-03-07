@@ -5,6 +5,7 @@
                  event: event,
                  public_filter: @public_filter,
                  public_view: @public_view,
+                 public_query: @public_query,
                  public_event_date: @public_event_date&.iso8601 %>
     <% end %>
   <% else %>
@@ -17,11 +18,12 @@
                  tile_variant: tile_variant,
                  card_slot: card_slot,
                  public_filter: @public_filter,
+                 public_query: @public_query,
                  public_event_date: @public_event_date&.iso8601 %>
     <% end %>
   <% end %>
 <% end %>
 
 <%= turbo_stream.replace "events-pagination" do %>
-  <%= render "pagination", next_page: @next_page, public_filter: @public_filter, public_view: @public_view, public_event_date: @public_event_date&.iso8601 %>
+  <%= render "pagination", next_page: @next_page, public_filter: @public_filter, public_view: @public_view, public_query: @public_query, public_event_date: @public_event_date&.iso8601 %>
 <% end %>

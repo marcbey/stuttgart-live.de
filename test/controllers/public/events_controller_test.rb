@@ -174,6 +174,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "view=list"
   end
 
+  test "index can be searched" do
+    get events_url(filter: "all", q: @published_event.artist_name)
+
+    assert_response :success
+    assert_includes response.body, @published_event.artist_name
+    assert_includes response.body, "q=#{CGI.escape(@published_event.artist_name)}"
+  end
+
   test "show renders published event by slug" do
     get event_url(@published_event.slug)
 

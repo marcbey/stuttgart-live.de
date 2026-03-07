@@ -273,7 +273,7 @@ a {
   margin-top: 0.75rem;
   display: flex;
   flex-wrap: wrap;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 0.6rem 0.8rem;
 }
@@ -282,10 +282,64 @@ a {
   margin-top: 0;
 }
 
+.public-filter-row-main {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.8rem;
+}
+
+.public-view-toggle {
+  gap: 0.35rem;
+}
+
+.public-view-chip {
+  justify-content: center;
+  min-width: 2.7rem;
+  min-height: 2.4rem;
+  padding: 0.35rem;
+}
+
+.public-view-icon {
+  display: inline-grid;
+  color: currentColor;
+}
+
+.public-view-icon-grid {
+  grid-template-columns: repeat(2, 0.42rem);
+  gap: 0.18rem;
+}
+
+.public-view-icon-grid span {
+  width: 0.42rem;
+  height: 0.42rem;
+  background: currentColor;
+}
+
+.public-view-icon-list {
+  gap: 0.22rem;
+}
+
+.public-view-icon-list span {
+  width: 1rem;
+  height: 0.16rem;
+  background: currentColor;
+}
+
 .public-date-filter {
   display: inline-flex;
   align-items: center;
   gap: 0;
+}
+
+.public-search-filter {
+  display: inline-flex;
+  align-items: center;
+}
+
+.public-search-input {
+  width: min(22rem, 42vw);
+  min-width: 11rem;
 }
 
 .public-date-input-wrap {
