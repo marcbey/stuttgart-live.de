@@ -356,6 +356,9 @@ module Backend
         :organizer_name,
         :event_info,
         :badge_text,
+        :homepage_url,
+        :instagram_url,
+        :facebook_url,
         :youtube_url,
         :status,
         :editor_notes

@@ -100,6 +100,19 @@
     <section class="event-detail-copy">
       <h2>Infos</h2>
       <%= simple_format(@event.event_info) %>
+      <% if @event.homepage_url.present? || @event.instagram_url.present? || @event.facebook_url.present? %>
+        <div class="event-detail-links">
+          <% if @event.homepage_url.present? %>
+            <%= link_to "Homepage", @event.homepage_url, target: "_blank", rel: "noopener", title: @event.homepage_url %>
+          <% end %>
+          <% if @event.instagram_url.present? %>
+            <%= link_to "Instagram", @event.instagram_url, target: "_blank", rel: "noopener", title: @event.instagram_url %>
+          <% end %>
+          <% if @event.facebook_url.present? %>
+            <%= link_to "Facebook", @event.facebook_url, target: "_blank", rel: "noopener", title: @event.facebook_url %>
+          <% end %>
+        </div>
+      <% end %>
     </section>
   <% end %>
 

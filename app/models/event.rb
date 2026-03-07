@@ -164,6 +164,9 @@ class Event < ApplicationRecord
     self.venue = normalize_venue_name(venue)
     self.city = city.to_s.strip
     self.badge_text = badge_text.to_s.strip.presence
+    self.homepage_url = homepage_url.to_s.strip.presence
+    self.instagram_url = instagram_url.to_s.strip.presence
+    self.facebook_url = facebook_url.to_s.strip.presence
     self.youtube_url = youtube_url.to_s.strip.presence
     self.promoter_id = promoter_id.to_s.strip.presence
     self.primary_source = primary_source.to_s.strip.presence

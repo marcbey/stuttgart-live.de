@@ -227,6 +227,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         venue: @event.venue,
         city: @event.city,
         organizer_name: "SKS Michael Russ GmbH",
+        homepage_url: "https://example.com",
+        instagram_url: "https://instagram.com/example",
+        facebook_url: "https://facebook.com/example",
         status: "needs_review"
       }
     }
@@ -236,6 +239,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neu betitelt", @event.title
     assert_equal doors_at.to_i, @event.doors_at.to_i
     assert_equal "SKS Michael Russ GmbH", @event.organizer_name
+    assert_equal "https://example.com", @event.homepage_url
+    assert_equal "https://instagram.com/example", @event.instagram_url
+    assert_equal "https://facebook.com/example", @event.facebook_url
   end
 
   test "updates event via turbo stream and renders flash message" do
