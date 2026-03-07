@@ -113,6 +113,15 @@
           <% end %>
         </div>
       <% end %>
+
+      <% if @event.organizer_notes.present? %>
+        <details class="event-detail-notes">
+          <summary>Veranstalterhinweise</summary>
+          <div class="event-detail-notes-body">
+            <%= simple_format(@event.organizer_notes) %>
+          </div>
+        </details>
+      <% end %>
     </section>
   <% end %>
 

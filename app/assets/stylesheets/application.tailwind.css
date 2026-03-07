@@ -741,6 +741,51 @@ a {
   color: #fff;
 }
 
+.event-detail-notes {
+  margin-top: 1rem;
+  border-top: 1px solid #111;
+  padding-top: 0.85rem;
+}
+
+.event-detail-notes summary {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  list-style: none;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 1rem;
+}
+
+.event-detail-notes summary::-webkit-details-marker {
+  display: none;
+}
+
+.event-detail-notes summary::before {
+  content: ">";
+  display: inline-block;
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1.1rem;
+  line-height: 1;
+  transform: translateY(-1px);
+  transition: transform 160ms ease;
+}
+
+.event-detail-notes[open] summary::before {
+  transform: rotate(90deg) translateX(1px);
+}
+
+.event-detail-notes-body {
+  margin-top: 0.85rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.event-detail-notes-body p {
+  margin: 0;
+}
+
 .event-detail-slider h2 {
   margin: 0 0 0.75rem;
   font-size: 1.7rem;

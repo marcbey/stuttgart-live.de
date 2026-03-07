@@ -124,6 +124,11 @@
     </div>
 
     <div>
+      <%= form.label :organizer_notes, "Veranstalterhinweise", class: "form-label" %>
+      <%= form.text_area :organizer_notes, rows: 12, class: "form-textarea" %>
+    </div>
+
+    <div>
       <%= form.label :editor_notes, "Redaktionsnotiz", class: "form-label" %>
       <%= form.text_area :editor_notes, rows: 3, class: "form-textarea" %>
     </div>

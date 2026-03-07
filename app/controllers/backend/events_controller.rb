@@ -355,6 +355,7 @@ module Backend
         :city,
         :organizer_name,
         :event_info,
+        :organizer_notes,
         :badge_text,
         :homepage_url,
         :instagram_url,
