@@ -194,6 +194,16 @@ a {
   background: linear-gradient(180deg, #ffc067 0%, #ff9c34 100%);
 }
 
+.button-save-primary {
+  border-color: #c71824;
+  background: #e31b2e;
+  color: #fff;
+}
+
+.button-save-primary:hover {
+  background: #bf1424;
+}
+
 .eyebrow {
   margin: 0;
   color: #6c6c6c;
