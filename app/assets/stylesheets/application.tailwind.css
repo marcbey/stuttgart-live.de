@@ -621,6 +621,10 @@ a {
   align-items: baseline;
 }
 
+.event-detail-meta-primary {
+  margin-top: 1.9rem;
+}
+
 .event-detail-meta-strong {
   font-size: 1.18rem;
   color: #111;

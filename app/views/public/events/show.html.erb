@@ -28,7 +28,7 @@
     <div>
       <h1><%= @event.artist_name %></h1>
       <p class="event-detail-title"><%= @event.title %></p>
-      <p class="event-detail-meta">
+      <p class="event-detail-meta event-detail-meta-primary">
         <span class="event-detail-meta-strong"><%= weekday_labels[@event.start_at.wday] %></span>
         <span class="event-detail-meta-strong"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %></span>
         <span class="event-detail-meta-strong"><%= @event.venue %>, <%= @event.city %></span>
