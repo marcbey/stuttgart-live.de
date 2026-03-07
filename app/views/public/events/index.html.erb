@@ -37,7 +37,6 @@
         <%= form_with url: events_path, method: :get, local: true, class: "public-search-filter" do %>
           <%= hidden_field_tag :filter, @public_filter %>
           <%= hidden_field_tag :view, (@public_view == "list" ? @public_view : nil) %>
-          <%= hidden_field_tag :event_date, @public_event_date&.iso8601 %>
           <%= text_field_tag :q,
                              @public_query,
                              class: "form-input public-search-input",
@@ -45,24 +44,6 @@
                              aria: { label: "Events durchsuchen" } %>
         <% end %>
       </div>
-
-      <%= form_with url: events_path, method: :get, local: true, class: "public-date-filter" do %>
-        <%= hidden_field_tag :filter, @public_filter %>
-        <%= hidden_field_tag :view, (@public_view == "list" ? @public_view : nil) %>
-        <%= hidden_field_tag :q, @public_query %>
-        <div class="public-date-input-wrap">
-          <%= date_field_tag :event_date,
-                             @public_event_date&.iso8601,
-                             class: "form-input public-date-input",
-                             aria: { label: "Tag auswählen" },
-                             onchange: "this.form.requestSubmit();" %>
-          <%= button_tag "×",
-                         type: "button",
-                         class: "public-date-clear #{'public-date-clear-visible' if @public_event_date.present?}",
-                         aria: { label: "Datumsfilter zurücksetzen" },
-                         onclick: "this.form.querySelector('[name=event_date]').value=''; this.form.requestSubmit();" %>
-        </div>
-      <% end %>
     </div>
   </header>
 

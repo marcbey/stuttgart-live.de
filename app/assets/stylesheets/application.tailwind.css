@@ -326,12 +326,6 @@ a {
   background: currentColor;
 }
 
-.public-date-filter {
-  display: inline-flex;
-  align-items: center;
-  gap: 0;
-}
-
 .public-search-filter {
   display: inline-flex;
   align-items: center;
@@ -340,53 +334,6 @@ a {
 .public-search-input {
   width: min(22rem, 42vw);
   min-width: 11rem;
-}
-
-.public-date-input-wrap {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-}
-
-.public-date-input {
-  width: 8.8rem;
-  min-width: 8.8rem;
-  max-width: 8.8rem;
-  padding-right: 3.35rem;
-  line-height: 1.2;
-}
-
-.public-date-input::-webkit-calendar-picker-indicator {
-  margin-right: 0.05rem;
-}
-
-.public-date-clear {
-  position: absolute;
-  right: 2.05rem;
-  top: 50%;
-  transform: translateY(-50%);
-  border: 0;
-  background: rgba(255, 255, 255, 0.9);
-  color: #666;
-  font-size: 1.04rem;
-  line-height: 1;
-  padding: 0;
-  width: 1.12rem;
-  height: 1.12rem;
-  border-radius: 5px;
-  cursor: pointer;
-  z-index: 2;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.public-date-clear-visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.public-date-clear:hover {
-  color: #111;
 }
 
 .flyer-grid {
