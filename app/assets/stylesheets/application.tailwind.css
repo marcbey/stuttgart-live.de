@@ -371,7 +371,6 @@ a {
 }
 
 .event-card-image-wrap::after,
-.event-detail-image-wrap::after,
 .event-slider-image-wrap::after {
   content: "";
   position: absolute;

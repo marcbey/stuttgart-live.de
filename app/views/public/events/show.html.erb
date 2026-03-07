@@ -98,7 +98,7 @@
 
   <% if @event.event_info.present? %>
     <section class="event-detail-copy">
-      <h2>Infos</h2>
+      <h2>Beschreibung</h2>
       <%= simple_format(@event.event_info) %>
       <% if @event.homepage_url.present? || @event.instagram_url.present? || @event.facebook_url.present? %>
         <div class="event-detail-links">
