@@ -6,6 +6,8 @@
 <% hero_desktop_image_source = event_image_source(hero_desktop_image) %>
 <% hero_mobile_image_source = event_image_source(hero_mobile_image) %>
 <% hero_alt_text = event_image_alt(hero_desktop_image, @event) %>
+<% detail_doors_at = @event.doors_at || (@event.start_at - 1.hour if @event.start_at.present?) %>
+<% weekday_labels = [ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag" ] %>
 
 <% content_for :title, "#{@event.artist_name} - #{@event.title} | Stuttgart Live" %>
 <% content_for :head do %>
@@ -26,9 +28,13 @@
     <div>
       <h1><%= @event.artist_name %></h1>
       <p class="event-detail-title"><%= @event.title %></p>
-      <p class="event-detail-meta"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %> · <%= @event.venue %>, <%= @event.city %></p>
       <p class="event-detail-meta">
-        Beginn: <%= l(@event.start_at, format: "%H:%M") %> Uhr<% if @event.doors_at.present? %> · Einlass: <%= l(@event.doors_at, format: "%H:%M") %> Uhr<% end %>
+        <span class="event-detail-meta-strong"><%= weekday_labels[@event.start_at.wday] %></span>
+        <span class="event-detail-meta-strong"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %></span>
+        <span class="event-detail-meta-strong"><%= @event.venue %>, <%= @event.city %></span>
+      </p>
+      <p class="event-detail-meta">
+        Beginn: <%= l(@event.start_at, format: "%H:%M") %> Uhr · Einlass: <%= l(detail_doors_at, format: "%H:%M") %> Uhr
       </p>
       <% if @primary_offer.present? %>
         <section class="event-detail-cta event-detail-cta-inline">

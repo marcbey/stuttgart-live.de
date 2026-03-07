@@ -614,6 +614,18 @@ a {
   font-size: 0.95rem;
 }
 
+.event-detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  align-items: baseline;
+}
+
+.event-detail-meta-strong {
+  font-size: 1.18rem;
+  color: #111;
+}
+
 .event-detail-image-wrap {
   position: relative;
   border: 6px solid #efefef;

@@ -170,8 +170,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Published Artist"
     assert_match(/Beginn:\s*\d{2}:\d{2}\s*Uhr/, response.body)
+    assert_match(/Einlass:\s*\d{2}:\d{2}\s*Uhr/, response.body)
     assert_includes response.body, "Preis: 45 EUR"
-    assert_not_includes response.body, "Einlass:"
   end
 
   test "show renders einlass when present" do
