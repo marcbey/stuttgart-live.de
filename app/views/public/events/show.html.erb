@@ -30,6 +30,17 @@
       <p class="event-detail-meta">
         Beginn: <%= l(@event.start_at, format: "%H:%M") %> Uhr<% if @event.doors_at.present? %> · Einlass: <%= l(@event.doors_at, format: "%H:%M") %> Uhr<% end %>
       </p>
+      <% if @primary_offer.present? %>
+        <section class="event-detail-cta event-detail-cta-inline">
+          <% if @event.badge_text.present? %>
+            <p class="event-detail-badge-inline"><%= @event.badge_text %></p>
+          <% end %>
+          <%= link_to "Tickets sichern", @primary_offer.resolved_ticket_url, target: "_blank", rel: "noopener", class: "button" %>
+          <% if @primary_offer.ticket_price_text.present? %>
+            <p>Preis: <%= @primary_offer.ticket_price_text %></p>
+          <% end %>
+        </section>
+      <% end %>
       <% if authenticated? %>
         <% visibility_badges = public_event_visibility_badges(@event) %>
         <div class="event-detail-badges-row">
@@ -44,9 +55,6 @@
       <% end %>
       <% if @event.primary_genre.present? %>
         <p class="event-detail-genre"><%= @event.primary_genre.name %></p>
-      <% end %>
-      <% if @event.badge_text.present? %>
-        <p class="event-card-badge"><%= @event.badge_text %></p>
       <% end %>
     </div>
 
@@ -91,16 +99,6 @@
     <section class="event-detail-copy">
       <h2>Redaktionsnotiz</h2>
       <%= simple_format(@event.editor_notes) %>
-    </section>
-  <% end %>
-
-  <% if @primary_offer.present? %>
-    <section class="event-detail-cta">
-      <%= link_to "Tickets sichern", @primary_offer.resolved_ticket_url, target: "_blank", rel: "noopener", class: "button" %>
-      <p>Ticketshop: <%= event_source_label(@primary_offer.source) %></p>
-      <% if @primary_offer.ticket_price_text.present? %>
-        <p>Preis: <%= @primary_offer.ticket_price_text %></p>
-      <% end %>
     </section>
   <% end %>
 
