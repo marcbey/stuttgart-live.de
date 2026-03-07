@@ -365,6 +365,17 @@ a {
   border: 5px solid rgba(255, 255, 255, 0.9);
 }
 
+.event-card-image-wrap::after,
+.event-detail-image-wrap::after,
+.event-slider-image-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  pointer-events: none;
+  z-index: 2;
+}
+
 .event-card-grid-1-1 .event-card-image-wrap {
   aspect-ratio: 1 / 1.16;
 }
@@ -404,8 +415,8 @@ a {
 
 .event-card-top-left-overlay {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
+  top: calc(20px + 0.5rem);
+  left: calc(20px + 0.5rem);
   z-index: 12;
   display: inline-flex;
   align-items: center;
@@ -441,8 +452,8 @@ a {
 
 .event-card-status-overlay {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: calc(20px + 0.5rem);
+  right: calc(20px + 0.5rem);
   z-index: 12;
   border: 1px solid rgba(17, 17, 17, 0.24);
   background: rgba(248, 248, 248, 0.14);
@@ -482,7 +493,7 @@ a {
 .event-card-copy {
   position: absolute;
   inset: auto 0 0;
-  padding: 0.68rem;
+  padding: 0.68rem calc(20px + 0.68rem) calc(20px + 0.68rem);
   color: #f4f4f4;
 }
 
@@ -514,8 +525,8 @@ a {
 
 .event-card-badge {
   position: absolute;
-  top: 0.55rem;
-  left: 0.55rem;
+  top: calc(20px + 0.55rem);
+  left: calc(20px + 0.55rem);
   display: inline-block;
   border: 1px solid #fff;
   background: var(--accent);
@@ -528,7 +539,7 @@ a {
 
 .event-card-badge-with-admin-link,
 .event-card-badge-with-top-overlay {
-  top: 2.05rem;
+  top: calc(20px + 2.05rem);
 }
 
 .event-card:hover {
@@ -604,8 +615,10 @@ a {
 }
 
 .event-detail-image-wrap {
+  position: relative;
   border: 6px solid #efefef;
   min-height: 320px;
+  overflow: hidden;
 }
 
 .event-detail-image {
@@ -669,6 +682,11 @@ a {
 .event-slider-item {
   margin: 0;
   scroll-snap-align: start;
+}
+
+.event-slider-image-wrap {
+  position: relative;
+  overflow: hidden;
 }
 
 .event-slider-image {

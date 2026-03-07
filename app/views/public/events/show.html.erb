@@ -78,7 +78,9 @@
           <% image_source = event_image_source(image) %>
           <% next if image_source.blank? %>
           <figure class="event-slider-item">
-            <%= image_tag image_source, alt: event_image_alt(image, @event), loading: "lazy", class: "event-slider-image" %>
+            <div class="event-slider-image-wrap">
+              <%= image_tag image_source, alt: event_image_alt(image, @event), loading: "lazy", class: "event-slider-image" %>
+            </div>
             <% if image.sub_text.present? %>
               <figcaption class="event-slider-sub"><%= image.sub_text %></figcaption>
             <% end %>
