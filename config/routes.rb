@@ -29,6 +29,7 @@ Rails.application.routes.draw do
       post :sync_imported_events, on: :collection
       resources :event_images, only: [ :create, :update, :destroy ] do
         post :create_from_import, on: :collection
+        delete :destroy_editorial_main, on: :collection
       end
     end
   end

@@ -73,6 +73,42 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_not EventImage.exists?(existing.id)
   end
 
+  test "creates shared editorial main image for header and grid" do
+    sign_in_as(@user)
+
+    assert_difference -> { @event.event_images.detail_hero.count }, 1 do
+      assert_difference -> { @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).count }, 1 do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: Backend::EventImagesController::EDITORIAL_MAIN_PURPOSE,
+            alt_text: "Eventbild Alt",
+            sub_text: "Eventbild Sub",
+            files: [ uploaded_image ]
+          }
+        }
+      end
+    end
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+    assert_equal "Eventbild Alt", @event.event_images.detail_hero.ordered.last.alt_text
+    assert_equal "Eventbild Alt", @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).ordered.last.alt_text
+  end
+
+  test "deletes shared editorial main image for header and grid" do
+    sign_in_as(@user)
+    create_event_image(purpose: EventImage::PURPOSE_DETAIL_HERO)
+    create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    assert_difference -> { @event.event_images.detail_hero.count }, -1 do
+      assert_difference -> { @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).count }, -1 do
+        delete destroy_editorial_main_backend_event_event_images_url(@event), params: { status: "needs_review" }
+      end
+    end
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+  end
+
   test "updates alt and sub text" do
     sign_in_as(@user)
     image = create_event_image(purpose: EventImage::PURPOSE_SLIDER, alt_text: nil, sub_text: nil)
@@ -109,6 +145,21 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 18.0, image.card_focus_x_value
     assert_equal 72.0, image.card_focus_y_value
     assert_equal 145.0, image.card_zoom_value
+  end
+
+  test "updates grid variant for grid images" do
+    sign_in_as(@user)
+    image = create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    patch backend_event_event_image_url(@event, image), params: {
+      status: "needs_review",
+      event_image: {
+        grid_variant: EventImage::GRID_VARIANT_1X2
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+    assert_equal EventImage::GRID_VARIANT_1X2, image.reload.grid_variant
   end
 
   test "creates editorial grid image from import image" do

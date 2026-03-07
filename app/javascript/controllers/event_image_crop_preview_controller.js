@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "previewImage", "focusX", "focusY", "zoom", "focusXOutput", "focusYOutput", "zoomOutput" ]
+  static targets = [ "previewFrame", "previewImage", "focusX", "focusY", "zoom", "gridVariant", "focusXOutput", "focusYOutput", "zoomOutput" ]
 
   connect() {
     this.update()
@@ -11,6 +11,9 @@ export default class extends Controller {
     const focusX = this.readValue("focusX", 50)
     const focusY = this.readValue("focusY", 50)
     const zoom = this.readValue("zoom", 100)
+    const gridVariant = this.hasGridVariantTarget ? this.gridVariantTarget.value : "1x1"
+
+    this.updateFrameVariant(gridVariant)
 
     if (this.hasPreviewImageTarget) {
       this.previewImageTarget.style.objectPosition = `${focusX}% ${focusY}%`
@@ -27,5 +30,11 @@ export default class extends Controller {
     const target = this[`${targetName}Target`]
     const value = Number.parseFloat(target?.value || "")
     return Number.isFinite(value) ? value : fallback
+  }
+
+  updateFrameVariant(gridVariant) {
+    if (!this.hasPreviewFrameTarget) return
+
+    this.previewFrameTarget.dataset.gridVariant = gridVariant
   }
 }

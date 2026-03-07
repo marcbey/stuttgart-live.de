@@ -1,5 +1,7 @@
 module Backend
   class EventImagesController < BaseController
+    EDITORIAL_MAIN_PURPOSE = "editorial_main".freeze
+
     before_action :set_event
     before_action :set_event_image, only: [ :update, :destroy ]
 
@@ -21,6 +23,18 @@ module Backend
       errors = []
 
       EventImage.transaction do
+        if purpose == EDITORIAL_MAIN_PURPOSE
+          replace_unique_images!(purpose: purpose, grid_variant: create_params[:grid_variant])
+          create_editorial_main_images!(
+            uploaded_file: files.first,
+            alt_text: create_params[:alt_text],
+            sub_text: create_params[:sub_text]
+          )
+          created = 2
+          raise ActiveRecord::Rollback if errors.any?
+          next
+        end
+
         replace_unique_images!(purpose: purpose, grid_variant: create_params[:grid_variant])
 
         files.each do |uploaded_file|
@@ -70,12 +84,27 @@ module Backend
 
       EventImage.transaction do
         replace_unique_images!(purpose: purpose, grid_variant: grid_variant)
-        Backend::ImportEventImageImporter.call(
-          event: @event,
-          import_event_image: import_image,
-          purpose: purpose,
-          grid_variant: grid_variant
-        )
+
+        if purpose == EDITORIAL_MAIN_PURPOSE
+          Backend::ImportEventImageImporter.call(
+            event: @event,
+            import_event_image: import_image,
+            purpose: EventImage::PURPOSE_DETAIL_HERO
+          )
+          Backend::ImportEventImageImporter.call(
+            event: @event,
+            import_event_image: import_image,
+            purpose: EventImage::PURPOSE_GRID_TILE,
+            grid_variant: EventImage::GRID_VARIANT_1X1
+          )
+        else
+          Backend::ImportEventImageImporter.call(
+            event: @event,
+            import_event_image: import_image,
+            purpose: purpose,
+            grid_variant: grid_variant
+          )
+        end
       end
 
       redirect_to editor_redirect_path, notice: "Import-Bild wurde in die Redaktion übernommen."
@@ -88,6 +117,15 @@ module Backend
     def destroy
       @event_image.destroy!
       redirect_to editor_redirect_path, notice: "Bild wurde gelöscht."
+    end
+
+    def destroy_editorial_main
+      EventImage.transaction do
+        @event.event_images.detail_hero.find_each(&:destroy!)
+        @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).find_each(&:destroy!)
+      end
+
+      redirect_to editor_redirect_path, notice: "Eventbild wurde gelöscht."
     end
 
     private
@@ -105,7 +143,7 @@ module Backend
     end
 
     def update_params
-      params.require(:event_image).permit(:alt_text, :sub_text, :card_focus_x, :card_focus_y, :card_zoom)
+      params.require(:event_image).permit(:alt_text, :sub_text, :grid_variant, :card_focus_x, :card_focus_y, :card_zoom)
     end
 
     def import_image_params
@@ -114,6 +152,9 @@ module Backend
 
     def replace_unique_images!(purpose:, grid_variant:)
       case purpose.to_s
+      when EDITORIAL_MAIN_PURPOSE
+        @event.event_images.detail_hero.find_each(&:destroy!)
+        @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).find_each(&:destroy!)
       when EventImage::PURPOSE_DETAIL_HERO
         @event.event_images.detail_hero.find_each(&:destroy!)
       when EventImage::PURPOSE_GRID_TILE
@@ -122,6 +163,34 @@ module Backend
 
         @event.event_images.grid_tile.where(grid_variant: variant).find_each(&:destroy!)
       end
+    end
+
+    def create_editorial_main_images!(uploaded_file:, alt_text:, sub_text:)
+      blob = build_blob_from_upload(uploaded_file)
+
+      @event.event_images.create!(
+        purpose: EventImage::PURPOSE_DETAIL_HERO,
+        alt_text: alt_text,
+        sub_text: sub_text,
+        file: blob
+      )
+      @event.event_images.create!(
+        purpose: EventImage::PURPOSE_GRID_TILE,
+        grid_variant: EventImage::GRID_VARIANT_1X1,
+        alt_text: alt_text,
+        sub_text: sub_text,
+        file: blob
+      )
+    end
+
+    def build_blob_from_upload(uploaded_file)
+      uploaded_file.rewind if uploaded_file.respond_to?(:rewind)
+
+      ActiveStorage::Blob.create_and_upload!(
+        io: uploaded_file,
+        filename: uploaded_file.original_filename,
+        content_type: uploaded_file.content_type
+      )
     end
 
     def uploaded_files
