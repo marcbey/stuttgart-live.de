@@ -3,7 +3,7 @@
 :root {
   --ink: #111111;
   --ink-soft: #2a2a2a;
-  --paper: #ececec;
+  --paper: #ffffff;
   --paper-dark: #d9d9d9;
   --accent: #e31b2e;
   --accent-dark: #b91122;
@@ -13,10 +13,7 @@
 body {
   margin: 0;
   color: var(--ink);
-  background:
-    radial-gradient(circle at 8% -20%, rgba(227, 27, 46, 0.22), transparent 44%),
-    radial-gradient(circle at 100% 0%, rgba(0, 0, 0, 0.08), transparent 52%),
-    var(--paper);
+  background: var(--paper);
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
 }
 
@@ -224,7 +221,6 @@ a {
 }
 
 .hero-header {
-  border: 1px solid var(--line);
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(235, 235, 235, 0.96)),
     repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.03) 2px, transparent 2px, transparent 10px);
@@ -337,8 +333,8 @@ a {
 
 .event-card {
   position: relative;
-  border: 1px solid rgba(0, 0, 0, 0.2);
-  background: #fdfdfd;
+  align-self: start;
+  background: transparent;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transform-origin: center;
   animation: reveal-up 420ms ease both;
@@ -362,7 +358,6 @@ a {
   position: relative;
   aspect-ratio: 1 / 1.16;
   overflow: hidden;
-  border: 5px solid rgba(255, 255, 255, 0.9);
 }
 
 .event-card-image-wrap::after,
@@ -579,8 +574,7 @@ a {
 .event-detail-header {
   display: grid;
   gap: 1rem;
-  border: 1px solid var(--line);
-  background: #fff;
+  background: transparent;
   padding: 1rem;
 }
 
@@ -632,7 +626,6 @@ a {
 
 .event-detail-image-wrap {
   position: relative;
-  border: 6px solid #efefef;
   min-height: 320px;
   max-height: 400px;
   overflow: hidden;
@@ -650,7 +643,6 @@ a {
 .event-detail-video,
 .event-detail-offers {
   margin-top: 1rem;
-  border: 1px solid var(--line);
   background: #fff;
   padding: 0.9rem 1rem;
 }
@@ -682,7 +674,6 @@ a {
 
 .event-detail-slider {
   margin-top: 1rem;
-  border: 1px solid var(--line);
   background: #fff;
   padding: 0.9rem 1rem;
 }
@@ -711,7 +702,6 @@ a {
   width: 100%;
   aspect-ratio: 16 / 10;
   object-fit: cover;
-  border: 1px solid var(--line);
 }
 
 .event-slider-sub {
@@ -738,7 +728,6 @@ a {
   margin-top: 0.6rem;
   position: relative;
   padding-top: 56.25%;
-  border: 1px solid var(--line);
 }
 
 .video-frame iframe {
