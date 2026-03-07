@@ -1,5 +1,5 @@
 class ImportSource < ApplicationRecord
-  SOURCE_TYPES = %w[easyticket eventim].freeze
+  SOURCE_TYPES = %w[easyticket eventim reservix].freeze
   DEFAULT_EASYTICKET_LOCATION_WHITELIST = [
     "Stuttgart",
     "Stuttgart - Bad Cannstatt",
@@ -11,6 +11,7 @@ class ImportSource < ApplicationRecord
   has_many :import_runs, dependent: :destroy
   has_many :easyticket_import_events, dependent: :destroy
   has_many :eventim_import_events, dependent: :destroy
+  has_many :reservix_import_events, dependent: :destroy
 
   validates :name, presence: true
   validates :source_type, presence: true, inclusion: { in: SOURCE_TYPES }, uniqueness: true
@@ -26,9 +27,14 @@ class ImportSource < ApplicationRecord
     ensure_source_with_defaults!(source_type: "eventim", name: "Eventim")
   end
 
+  def self.ensure_reservix_source!
+    ensure_source_with_defaults!(source_type: "reservix", name: "Reservix")
+  end
+
   def self.ensure_supported_sources!
     ensure_easyticket_source!
     ensure_eventim_source!
+    ensure_reservix_source!
   end
 
   def easyticket?
@@ -37,6 +43,10 @@ class ImportSource < ApplicationRecord
 
   def eventim?
     source_type == "eventim"
+  end
+
+  def reservix?
+    source_type == "reservix"
   end
 
   def configured_location_whitelist
@@ -56,14 +66,25 @@ class ImportSource < ApplicationRecord
     source.save! if source.new_record? || source.changed?
 
     config = source.import_source_config || source.build_import_source_config
-    if config.location_whitelist.blank?
-      config.location_whitelist = DEFAULT_EASYTICKET_LOCATION_WHITELIST
+    default_location_whitelist = default_location_whitelist_for(source_type)
+
+    if config.location_whitelist.blank? && default_location_whitelist.present?
+      config.location_whitelist = default_location_whitelist
       config.save!
     elsif config.new_record?
       config.save!
     end
 
     source
+  end
+
+  def self.default_location_whitelist_for(source_type)
+    case source_type
+    when "easyticket", "eventim", "reservix"
+      DEFAULT_EASYTICKET_LOCATION_WHITELIST
+    else
+      []
+    end
   end
 
   def apply_defaults

@@ -32,6 +32,8 @@
                 <%= button_to "Easyticket starten", run_easyticket_backend_import_source_path(source), method: :post, class: "button" %>
               <% elsif source.eventim? %>
                 <%= button_to "Eventim starten", run_eventim_backend_import_source_path(source), method: :post, class: "button" %>
+              <% elsif source.reservix? %>
+                <%= button_to "Reservix starten", run_reservix_backend_import_source_path(source), method: :post, class: "button" %>
               <% end %>
             </td>
           </tr>

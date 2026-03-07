@@ -9,7 +9,7 @@ module Importing
       URL_PATTERN = URI::DEFAULT_PARSER.make_regexp(%w[http https]).freeze
       URL_EXTRACT_PATTERN = %r{https?://[^\s"'<>]+}i.freeze
 
-      def initialize(dump_payload:, detail_payload:, ticket_base_url: ENV["TICKET_LINK_EVENT_BASE_URL"])
+      def initialize(dump_payload:, detail_payload:, ticket_base_url: ENV["EASYTICKET_TICKET_LINK_EVENT_BASE_URL"])
         @dump_payload = dump_payload || {}
         @detail_payload = detail_payload || {}
         @ticket_base_url = ticket_base_url.to_s

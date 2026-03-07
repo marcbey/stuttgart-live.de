@@ -5,6 +5,8 @@ module Backend::ImportSourcesHelper
       "Easyticket"
     when "eventim"
       "Eventim"
+    when "reservix"
+      "Reservix"
     when "merge"
       "Merge"
     else
@@ -32,6 +34,8 @@ module Backend::ImportSourcesHelper
       stop_easyticket_run_backend_import_source_path(run.import_source_id, run_id: run.id)
     when "eventim"
       stop_eventim_run_backend_import_source_path(run.import_source_id, run_id: run.id)
+    when "reservix"
+      stop_reservix_run_backend_import_source_path(run.import_source_id, run_id: run.id)
     end
   end
 

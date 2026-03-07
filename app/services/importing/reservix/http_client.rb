@@ -3,18 +3,19 @@ require "timeout"
 require "uri"
 
 module Importing
-  module Eventim
+  module Reservix
     class HttpClient
       OPEN_TIMEOUT_SECONDS = 10
       READ_TIMEOUT_SECONDS = 30
       REQUEST_TIMEOUT_SECONDS = 90
 
-      def get(url, accept: nil)
+      def get(url, accept: "application/json", language: "de")
         uri = URI.parse(url)
         request = Net::HTTP::Get.new(uri)
         request["Accept"] = accept if accept.present?
-
-        apply_basic_auth!(request)
+        request["x-api-key"] = api_key
+        request["x-api-output-format"] = accept
+        request["x-language"] = language if language.present?
 
         response = Timeout.timeout(REQUEST_TIMEOUT_SECONDS) do
           Net::HTTP.start(
@@ -39,12 +40,11 @@ module Importing
 
       private
 
-      def apply_basic_auth!(request)
-        user = ENV["EVENTIM_USER"].to_s
-        pass = ENV["EVENTIM_PASS"].to_s
-        raise RequestError, "EVENTIM_USER or EVENTIM_PASS is missing" if user.blank? || pass.blank?
+      def api_key
+        value = ENV["RESERVIX_API_KEY"].to_s.strip
+        raise RequestError, "RESERVIX_API_KEY is missing" if value.blank?
 
-        request.basic_auth(user, pass)
+        value
       end
     end
   end

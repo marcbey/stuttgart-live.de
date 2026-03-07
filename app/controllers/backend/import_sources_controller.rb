@@ -1,9 +1,9 @@
 module Backend
   class ImportSourcesController < BaseController
-    IMPORTER_SOURCE_TYPES = %w[easyticket eventim].freeze
+    IMPORTER_SOURCE_TYPES = %w[easyticket eventim reservix].freeze
 
     before_action :ensure_supported_sources
-    before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run ]
+    before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
 
     def index
       release_stale_running_runs!
@@ -89,6 +89,31 @@ module Backend
       end
 
       feedback = request_stop_for_running_import!(source_type: "eventim", label: "Eventim")
+      respond_with_importer_feedback(**feedback)
+    end
+
+    def run_reservix
+      unless @import_source.reservix?
+        respond_with_importer_feedback(alert: "Nur Reservix kann hier gestartet werden.")
+        return
+      end
+
+      feedback = trigger_import!(
+        source_type: "reservix",
+        label: "Reservix",
+        run_job_class: Importing::Reservix::RunJob
+      )
+
+      respond_with_importer_feedback(**feedback)
+    end
+
+    def stop_reservix_run
+      unless @import_source.reservix?
+        respond_with_importer_feedback(alert: "Nur Reservix kann hier gestoppt werden.")
+        return
+      end
+
+      feedback = request_stop_for_running_import!(source_type: "reservix", label: "Reservix")
       respond_with_importer_feedback(**feedback)
     end
 
@@ -284,6 +309,8 @@ module Backend
         stop_easyticket_run_backend_import_source_path(run.import_source_id, run_id: run.id)
       when "eventim"
         stop_eventim_run_backend_import_source_path(run.import_source_id, run_id: run.id)
+      when "reservix"
+        stop_reservix_run_backend_import_source_path(run.import_source_id, run_id: run.id)
       end
     end
 
@@ -291,6 +318,8 @@ module Backend
       case source_type
       when "eventim"
         Importing::Eventim::Importer
+      when "reservix"
+        Importing::Reservix::Importer
       else
         Importing::Easyticket::Importer
       end

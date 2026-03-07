@@ -7,13 +7,13 @@ module Importing
     class FeedFetcher
       EVENT_NODE_KEYS = %w[event eventserie performance show item].freeze
 
-      def initialize(http_client: HttpClient.new, feed_url: ENV["FEED_URL"])
+      def initialize(http_client: HttpClient.new, feed_url: ENV["EVENTIM_FEED_URL"])
         @http_client = http_client
         @feed_url = feed_url.to_s.strip
       end
 
       def fetch_events
-        raise Error, "FEED_URL is not configured" if @feed_url.blank?
+        raise Error, "EVENTIM_FEED_URL is not configured" if @feed_url.blank?
 
         body = @http_client.get(@feed_url, accept: "application/xml,text/xml")
         with_xml_file(body) do |xml_path|

@@ -8,6 +8,8 @@ Rails.application.routes.draw do
       post :stop_easyticket_run, on: :member
       post :run_eventim, on: :member
       post :stop_eventim_run, on: :member
+      post :run_reservix, on: :member
+      post :stop_reservix_run, on: :member
     end
     resources :import_runs, only: [ :show ] do
       post :add_filtered_city, on: :member

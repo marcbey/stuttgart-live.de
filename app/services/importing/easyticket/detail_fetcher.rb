@@ -6,9 +6,9 @@ module Importing
     class DetailFetcher
       def initialize(
         http_client: HttpClient.new,
-        event_detail_api: ENV["EVENT_DETAIL_API"],
-        api_key: ENV["API_KEY"],
-        partner_shop_id: ENV["PARTNER_SHOP_ID"]
+        event_detail_api: ENV["EASYTICKET_EVENT_DETAIL_API"],
+        api_key: ENV["EASYTICKET_API_KEY"],
+        partner_shop_id: ENV["EASYTICKET_PARTNER_SHOP_ID"]
       )
         @http_client = http_client
         @event_detail_api = event_detail_api.to_s
@@ -27,7 +27,7 @@ module Importing
       private
 
       def build_detail_url(event_id)
-        raise Error, "EVENT_DETAIL_API is not configured" if @event_detail_api.blank?
+        raise Error, "EASYTICKET_EVENT_DETAIL_API is not configured" if @event_detail_api.blank?
 
         escaped_event_id = CGI.escape(event_id.to_s)
         escaped_api_key = CGI.escape(@api_key)
@@ -63,7 +63,7 @@ module Importing
         end
 
         if rendered.match?(/%\{[^}]+\}|\{[a-z_]+\}/i)
-          raise Error, "EVENT_DETAIL_API uses unsupported placeholder"
+          raise Error, "EASYTICKET_EVENT_DETAIL_API uses unsupported placeholder"
         end
 
         rendered

@@ -53,6 +53,7 @@ class Event < ApplicationRecord
   validates :slug, uniqueness: true
   validates :source_fingerprint, uniqueness: true, allow_nil: true
   validates :completeness_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100, only_integer: true }
+  validates :min_price, :max_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
@@ -162,6 +163,9 @@ class Event < ApplicationRecord
     self.primary_source = primary_source.to_s.strip.presence
     self.source_snapshot = {} unless source_snapshot.is_a?(Hash)
     self.completeness_flags = Array(completeness_flags).map(&:to_s)
+
+    self.min_price = nil if min_price.blank?
+    self.max_price = nil if max_price.blank?
   end
 
   def slug_needed?

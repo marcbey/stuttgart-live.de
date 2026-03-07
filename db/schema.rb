@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_05_150725) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_07_114500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -165,6 +165,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_150725) do
     t.datetime "doors_at"
     t.text "editor_notes"
     t.text "event_info"
+    t.decimal "max_price", precision: 10, scale: 2
+    t.decimal "min_price", precision: 10, scale: 2
     t.string "organizer_name"
     t.string "primary_source"
     t.string "promoter_id"
@@ -272,6 +274,33 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_150725) do
     t.index ["source_type"], name: "index_provider_priorities_on_source_type", unique: true
   end
 
+  create_table "reservix_import_events", force: :cascade do |t|
+    t.string "artist_name", null: false
+    t.string "city", null: false
+    t.date "concert_date", null: false
+    t.string "concert_date_label", null: false
+    t.datetime "created_at", null: false
+    t.jsonb "detail_payload", default: {}, null: false
+    t.jsonb "dump_payload", default: {}, null: false
+    t.string "external_event_id", null: false
+    t.datetime "first_seen_at", null: false
+    t.bigint "import_source_id", null: false
+    t.boolean "is_active", default: true, null: false
+    t.datetime "last_seen_at", null: false
+    t.decimal "max_price", precision: 10, scale: 2
+    t.decimal "min_price", precision: 10, scale: 2
+    t.string "organizer_name"
+    t.string "source_payload_hash", null: false
+    t.string "ticket_url"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.string "venue_label", null: false
+    t.string "venue_name", null: false
+    t.index ["import_source_id", "external_event_id"], name: "index_reservix_import_events_on_source_and_external_id", unique: true
+    t.index ["import_source_id"], name: "index_reservix_import_events_on_import_source_id"
+    t.index ["is_active"], name: "index_reservix_import_events_on_is_active"
+  end
+
   create_table "sessions", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "ip_address"
@@ -306,5 +335,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_05_150725) do
   add_foreign_key "import_run_errors", "import_runs"
   add_foreign_key "import_runs", "import_sources"
   add_foreign_key "import_source_configs", "import_sources"
+  add_foreign_key "reservix_import_events", "import_sources"
   add_foreign_key "sessions", "users"
 end

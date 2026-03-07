@@ -26,6 +26,8 @@ module Merging
       :description_text,
       :ticket_url,
       :ticket_price_text,
+      :min_price,
+      :max_price,
       :images,
       :raw_payload
     )
@@ -79,7 +81,7 @@ module Merging
     attr_reader :merge_run_id, :logger, :priority_map
 
     def import_records
-      easyticket_records + eventim_records
+      easyticket_records + eventim_records + reservix_records
     end
 
     def easyticket_records
@@ -105,6 +107,8 @@ module Merging
             description_text: description_text_for_easyticket(record),
             ticket_url: record.ticket_url,
             ticket_price_text: ticket_price_text_for_easyticket(record),
+            min_price: nil,
+            max_price: nil,
             images: images_for_import_record(record, fallback_source: "easyticket"),
             raw_payload: {
               dump_payload: record.dump_payload,
@@ -137,7 +141,43 @@ module Merging
             description_text: description_text_for_eventim(record),
             ticket_url: record.ticket_url,
             ticket_price_text: ticket_price_text_for_eventim(record),
+            min_price: nil,
+            max_price: nil,
             images: images_for_import_record(record, fallback_source: "eventim"),
+            raw_payload: {
+              dump_payload: record.dump_payload,
+              detail_payload: record.detail_payload
+            }
+          )
+        end
+    end
+
+    def reservix_records
+      ReservixImportEvent
+        .active
+        .includes(:import_event_images)
+        .joins(:import_source)
+        .where(import_sources: { active: true, source_type: "reservix" })
+        .map do |record|
+          ensure_import_record_images!(record, source: "reservix")
+
+          ImportRecord.new(
+            source: "reservix",
+            external_event_id: record.external_event_id,
+            concert_date: record.concert_date,
+            begin_time: begin_time_for_reservix(record),
+            city: record.city,
+            venue_name: record.venue_name,
+            title: record.title,
+            artist_name: record.artist_name,
+            organizer_name: record.organizer_name,
+            promoter_id: nil,
+            description_text: description_text_for_reservix(record),
+            ticket_url: record.ticket_url,
+            ticket_price_text: ticket_price_text_for_reservix(record),
+            min_price: record.min_price,
+            max_price: record.max_price,
+            images: images_for_import_record(record, fallback_source: "reservix"),
             raw_payload: {
               dump_payload: record.dump_payload,
               detail_payload: record.detail_payload
@@ -159,6 +199,8 @@ module Merging
       event.venue = first_present(records, &:venue_name)
       event.organizer_name = first_present(records, &:organizer_name).presence
       event.promoter_id = first_present(records, &:promoter_id).presence
+      event.min_price = first_present_decimal(records, &:min_price)
+      event.max_price = first_present_decimal(records, &:max_price)
       imported_description_text = first_present_or_nil(records, &:description_text)
       event.event_info = imported_description_text if imported_description_text.present?
       event.start_at = start_at_for(primary.concert_date, primary.begin_time)
@@ -236,7 +278,7 @@ module Merging
           ticket_price_text: record.ticket_price_text,
           sold_out: false,
           priority_rank: priority_for(record.source),
-          metadata: {}
+          metadata: build_offer_metadata(record)
         }
       end
     end
@@ -255,6 +297,10 @@ module Merging
         when "eventim"
           Importing::Eventim::PayloadProjection.new(
             feed_payload: record.dump_payload
+          ).image_candidates
+        when "reservix"
+          Importing::Reservix::PayloadProjection.new(
+            event_payload: record.dump_payload
           ).image_candidates
         else
           []
@@ -460,6 +506,20 @@ module Merging
       end
     end
 
+    def begin_time_for_reservix(record)
+      raw_payload = raw_dump_payload_for(record)
+      raw_payload["starttime"].to_s.strip
+    end
+
+    def ticket_price_text_for_reservix(record)
+      format_price_range(record.min_price, record.max_price)
+    end
+
+    def description_text_for_reservix(record)
+      raw_payload = raw_dump_payload_for(record)
+      normalize_import_description(raw_payload["description"])
+    end
+
     def description_text_for_eventim(record)
       raw_payload = raw_dump_payload_for(record)
       raw_description =
@@ -507,6 +567,27 @@ module Merging
 
     def format_price_decimal(decimal_value)
       format("%.2f", decimal_value).tr(".", ",")
+    end
+
+    def format_price_range(min_price, max_price, currency: "EUR")
+      min_decimal = normalize_decimal(min_price)
+      max_decimal = normalize_decimal(max_price)
+      return nil if min_decimal.nil? && max_decimal.nil?
+
+      min_decimal ||= max_decimal
+      max_decimal ||= min_decimal
+
+      if min_decimal == max_decimal
+        "#{format_price_decimal(min_decimal)} #{currency}"
+      else
+        "#{format_price_decimal(min_decimal)} - #{format_price_decimal(max_decimal)} #{currency}"
+      end
+    end
+
+    def normalize_decimal(value)
+      return value if value.is_a?(BigDecimal)
+
+      parse_price_decimal(value)
     end
 
     def normalize_import_description(value)
@@ -589,6 +670,8 @@ module Merging
               "description_text" => record.description_text,
               "ticket_url" => record.ticket_url,
               "ticket_price_text" => record.ticket_price_text,
+              "min_price" => decimal_as_json(record.min_price),
+              "max_price" => decimal_as_json(record.max_price),
               "images" =>
                 record.images.map do |image|
                   {
@@ -624,8 +707,36 @@ module Merging
       nil
     end
 
+    def first_present_decimal(records)
+      records.each do |record|
+        value = yield(record)
+        decimal = normalize_decimal(value)
+        return decimal if decimal.present?
+      end
+
+      nil
+    end
+
     def priority_for(source)
       priority_map.fetch(source, 999)
+    end
+
+    def build_offer_metadata(record)
+      metadata = {}
+
+      min_price = decimal_as_json(record.min_price)
+      max_price = decimal_as_json(record.max_price)
+      metadata["min_price"] = min_price if min_price.present?
+      metadata["max_price"] = max_price if max_price.present?
+
+      metadata
+    end
+
+    def decimal_as_json(value)
+      decimal = normalize_decimal(value)
+      return nil if decimal.nil?
+
+      decimal.to_s("F")
     end
 
     def image_key(source:, image_type:, image_url:)
