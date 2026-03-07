@@ -198,6 +198,7 @@
           <li class="event-image-editor-item">
             <%= form_with model: [ :backend, event, image ],
                           method: :patch,
+                          html: { id: dom_id(image, :edit) },
                           class: "event-image-meta-form",
                           data: { turbo: false } do |form| %>
               <%= hidden_field_tag :status, editor_status %>
@@ -210,7 +211,6 @@
                                   {},
                                   class: "form-input",
                                   data: { event_image_crop_preview_target: "gridVariant", action: "change->event-image-crop-preview#update" } %>
-                  <%= form.submit "Variante übernehmen", class: "button button-secondary" %>
                 </div>
                 <div class="event-image-crop-preview">
                   <div class="event-image-crop-frame"
@@ -252,9 +252,10 @@
                                        id: dom_id(image, :card_zoom),
                                        class: "form-range",
                                        data: { event_image_crop_preview_target: "zoom", action: "input->event-image-crop-preview#update" } %>
+
+                  <%= form.submit "Bild speichern", class: "button" %>
                 </div>
               </div>
-              <%= form.submit "Bild speichern", class: "button button-ghost" %>
             <% end %>
           </li>
         <% end %>
