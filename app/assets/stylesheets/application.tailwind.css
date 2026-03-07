@@ -1111,6 +1111,17 @@ a {
   padding-top: 0.65rem;
 }
 
+.event-image-section {
+  border-top: 2px solid #111;
+  padding-top: 0.9rem;
+}
+
+.event-image-section h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+}
+
 .payload-list {
   display: grid;
   gap: 0.45rem;
