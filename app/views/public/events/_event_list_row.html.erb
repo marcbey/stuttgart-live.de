@@ -2,6 +2,7 @@
 <% public_view = local_assigns.fetch(:public_view, params[:view].to_s.presence || "grid") %>
 <% public_event_date = local_assigns.fetch(:public_event_date, params[:event_date].to_s.presence) %>
 <% public_query = local_assigns.fetch(:public_query, params[:q].to_s.presence) %>
+<% primary_offer = event.primary_offer %>
 
 <tr class="event-listing-row">
   <td class="event-listing-date">
@@ -15,5 +16,14 @@
   </td>
   <td class="event-listing-location">
     <%= [event.venue, event.city].compact.join(", ") %>
+  </td>
+  <td class="event-listing-ticket">
+    <% if primary_offer.present? %>
+      <%= link_to "Tickets",
+                  primary_offer.resolved_ticket_url,
+                  target: "_blank",
+                  rel: "noopener",
+                  class: "button event-listing-ticket-button" %>
+    <% end %>
   </td>
 </tr>

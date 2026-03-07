@@ -602,6 +602,17 @@ a {
   white-space: nowrap;
 }
 
+.event-listing-ticket {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+}
+
+.event-listing-ticket-button {
+  min-width: 7.2rem;
+  justify-content: center;
+}
+
 .pagination-sentinel {
   margin: 1rem auto 0;
   max-width: 360px;
