@@ -45,4 +45,18 @@ class EventTest < ActiveSupport::TestCase
     assert_equal "WILHELMINE", event.artist_name
     assert_equal "Special Guest Night - magisch Tour 2026", event.title
   end
+
+  test "normalizes kulturquartier venue name without proton" do
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue: "Kulturquartier - PROTON",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal "Kulturquartier", event.venue
+  end
 end

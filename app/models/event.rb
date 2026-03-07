@@ -161,7 +161,7 @@ class Event < ApplicationRecord
     self.title = title.to_s.strip
     self.artist_name = artist_name.to_s.strip
     split_artist_and_tour_from_title!
-    self.venue = venue.to_s.strip
+    self.venue = normalize_venue_name(venue)
     self.city = city.to_s.strip
     self.badge_text = badge_text.to_s.strip.presence
     self.youtube_url = youtube_url.to_s.strip.presence
@@ -214,6 +214,13 @@ class Event < ApplicationRecord
 
   def normalize_comparison_token(value)
     value.to_s.downcase.gsub(/[^[:alnum:]]+/, "")
+  end
+
+  def normalize_venue_name(value)
+    normalized = value.to_s.strip
+    return normalized unless normalized.match?(/kulturquartier/i)
+
+    normalized.gsub(/\s*[-,]?\s*proton\b/i, "").strip
   end
 
   def extract_youtube_id(url)
