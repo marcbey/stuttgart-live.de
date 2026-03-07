@@ -71,6 +71,13 @@ class Event < ApplicationRecord
     event_offers.active_ticket.ordered.first
   end
 
+  def preferred_ticket_offer
+    event_offers
+      .active_ticket
+      .order(Arel.sql("CASE WHEN LOWER(source) = 'easyticket' THEN 0 ELSE 1 END"), :priority_rank, :id)
+      .first
+  end
+
   def primary_genre
     genres.order(:name).first
   end

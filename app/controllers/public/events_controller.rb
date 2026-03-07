@@ -34,7 +34,7 @@ module Public
       @public_event_date = current_public_event_date
       @public_query = current_public_query
       @event = show_events_relation.find_by!(slug: params[:slug])
-      @primary_offer = @event.primary_offer
+      @primary_offer = @event.preferred_ticket_offer
     end
 
     def status

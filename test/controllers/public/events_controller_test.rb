@@ -182,6 +182,84 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "q=#{CGI.escape(@published_event.artist_name)}"
   end
 
+  test "preferred ticket offer prefers easyticket in list view" do
+    event = Event.create!(
+      slug: "list-view-ticket-priority",
+      source_fingerprint: "test::public::list::ticket-priority",
+      title: "List Ticket Priority",
+      artist_name: "List Ticket Artist",
+      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "eventim-123",
+      ticket_url: "https://eventim.example/tickets",
+      sold_out: false,
+      priority_rank: 1,
+      metadata: {}
+    )
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-123",
+      ticket_url: "https://easyticket.example/tickets",
+      sold_out: false,
+      priority_rank: 50,
+      metadata: {}
+    )
+
+    get events_url(filter: "all", view: "list")
+
+    assert_response :success
+    assert_includes response.body, "https://easyticket.example/tickets"
+    assert_not_includes response.body, "https://eventim.example/tickets"
+  end
+
+  test "show prefers easyticket offer for primary ticket cta" do
+    event = Event.create!(
+      slug: "show-ticket-priority",
+      source_fingerprint: "test::public::show::ticket-priority",
+      title: "Show Ticket Priority",
+      artist_name: "Show Ticket Artist",
+      start_at: 15.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "eventim-show-123",
+      ticket_url: "https://eventim.example/show-tickets",
+      sold_out: false,
+      priority_rank: 1,
+      metadata: {}
+    )
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-show-123",
+      ticket_url: "https://easyticket.example/show-tickets",
+      sold_out: false,
+      priority_rank: 50,
+      metadata: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "https://easyticket.example/show-tickets"
+    assert_not_includes response.body, "https://eventim.example/show-tickets"
+  end
+
   test "show renders published event by slug" do
     get event_url(@published_event.slug)
 

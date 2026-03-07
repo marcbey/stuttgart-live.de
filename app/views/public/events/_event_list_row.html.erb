@@ -2,7 +2,7 @@
 <% public_view = local_assigns.fetch(:public_view, params[:view].to_s.presence || "grid") %>
 <% public_event_date = local_assigns.fetch(:public_event_date, params[:event_date].to_s.presence) %>
 <% public_query = local_assigns.fetch(:public_query, params[:q].to_s.presence) %>
-<% primary_offer = event.primary_offer %>
+<% primary_offer = event.preferred_ticket_offer %>
 
 <tr class="event-listing-row">
   <td class="event-listing-date">
