@@ -103,7 +103,7 @@ module Merging
             title: record.title,
             artist_name: record.artist_name,
             organizer_name: organizer_name_for_easyticket(record),
-            promoter_id: nil,
+            promoter_id: promoter_id_for_easyticket(record),
             description_text: description_text_for_easyticket(record),
             ticket_url: record.ticket_url,
             ticket_price_text: ticket_price_text_for_easyticket(record),
@@ -450,6 +450,20 @@ module Merging
       projection.to_attributes&.dig(:organizer_name).to_s.strip
     end
 
+    def promoter_id_for_easyticket(record)
+      detail_payload = record.detail_payload.is_a?(Hash) ? record.detail_payload.deep_stringify_keys : {}
+
+      first_non_blank(
+        detail_payload.dig("data", "organizer_id"),
+        detail_payload.dig("data", "event", "organizer_id"),
+        record.organizer_id,
+        Importing::Easyticket::PayloadProjection.new(
+          dump_payload: record.dump_payload,
+          detail_payload: record.detail_payload
+        ).to_attributes&.dig(:organizer_id)
+      ).to_s.strip
+    end
+
     def promoter_id_for_eventim(record)
       return record.promoter_id.to_s.strip if record.promoter_id.to_s.strip.present?
 
@@ -466,7 +480,7 @@ module Merging
 
     def begin_time_for_easyticket(record)
       raw_payload = raw_dump_payload_for(record)
-      raw_payload["time"].to_s.strip
+      raw_payload["time"].to_s.strip.presence || parse_time_from_datetime(raw_payload["date_time"])
     end
 
     def begin_time_for_eventim(record)
@@ -476,12 +490,12 @@ module Merging
 
     def ticket_price_text_for_easyticket(record)
       raw_payload = raw_dump_payload_for(record)
-      raw_payload["price_text"].to_s.strip.presence
+      raw_payload["price_text"].to_s.strip.presence || format_easyticket_price_range(raw_payload)
     end
 
     def description_text_for_easyticket(record)
       raw_payload = raw_dump_payload_for(record)
-      normalize_import_description(raw_payload["text"])
+      normalize_import_description(raw_payload["text"].presence || raw_payload["description"])
     end
 
     def ticket_price_text_for_eventim(record)
@@ -563,6 +577,34 @@ module Merging
       BigDecimal(normalized)
     rescue ArgumentError
       nil
+    end
+
+    def parse_time_from_datetime(value)
+      raw = value.to_s.strip
+      return nil if raw.blank?
+
+      Time.zone.parse(raw)&.strftime("%H:%M")
+    rescue ArgumentError, TypeError
+      nil
+    end
+
+    def format_easyticket_price_range(raw_payload)
+      min_price = parse_price_decimal(raw_payload["price_start"])
+      max_price = parse_price_decimal(raw_payload["price_end"])
+      return nil unless min_price || max_price
+
+      lower = min_price || max_price
+      upper = max_price || min_price
+
+      if lower == upper
+        "#{format_price_decimal(lower)} EUR"
+      else
+        "#{format_price_decimal(lower)} - #{format_price_decimal(upper)} EUR"
+      end
+    end
+
+    def first_non_blank(*values)
+      values.map { |value| value.to_s.strip }.find(&:present?).to_s
     end
 
     def format_price_decimal(decimal_value)

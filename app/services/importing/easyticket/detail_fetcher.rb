@@ -7,12 +7,10 @@ module Importing
       def initialize(
         http_client: HttpClient.new,
         event_detail_api: ENV["EASYTICKET_EVENT_DETAIL_API"],
-        api_key: ENV["EASYTICKET_API_KEY"],
         partner_shop_id: ENV["EASYTICKET_PARTNER_SHOP_ID"]
       )
         @http_client = http_client
         @event_detail_api = event_detail_api.to_s
-        @api_key = api_key.to_s
         @partner_shop_id = partner_shop_id.to_s
       end
 
@@ -30,28 +28,16 @@ module Importing
         raise Error, "EASYTICKET_EVENT_DETAIL_API is not configured" if @event_detail_api.blank?
 
         escaped_event_id = CGI.escape(event_id.to_s)
-        escaped_api_key = CGI.escape(@api_key)
         escaped_partner_shop_id = CGI.escape(@partner_shop_id)
 
         url = interpolate_template(
           @event_detail_api,
           event_id: escaped_event_id,
-          api_key: escaped_api_key,
           partner_shop_id: escaped_partner_shop_id
         )
-        if url == @event_detail_api
-          url = "#{@event_detail_api.chomp('/')}/#{escaped_event_id}"
-        end
+        return "#{@event_detail_api.chomp('/')}/#{escaped_event_id}" if url == @event_detail_api
 
-        append_api_key(url)
-      end
-
-      def append_api_key(url)
-        return url if @api_key.blank?
-        return url if url.include?("api_key=")
-
-        delimiter = url.include?("?") ? "&" : "?"
-        "#{url}#{delimiter}api_key=#{CGI.escape(@api_key)}"
+        url
       end
 
       def interpolate_template(template, values)

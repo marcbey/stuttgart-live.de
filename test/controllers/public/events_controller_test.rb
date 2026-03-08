@@ -90,6 +90,21 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
+    sks_easyticket_promoter_event = Event.create!(
+      slug: "sks-easyticket-promoter-event",
+      source_fingerprint: "test::sks::easyticket::promoter",
+      title: "SKS Easyticket Promoter Event",
+      artist_name: "SKS Easyticket Promoter Artist",
+      start_at: future_start + 90.minutes,
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      organizer_name: "Other Organizer GmbH",
+      promoter_id: "382",
+      source_snapshot: {}
+    )
+
     non_sks_event = Event.create!(
       slug: "non-sks-event",
       source_fingerprint: "test::non::sks",
@@ -110,6 +125,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, sks_easy_event.artist_name
     assert_includes response.body, sks_eventim_event.artist_name
+    assert_includes response.body, sks_easyticket_promoter_event.artist_name
     assert_not_includes response.body, non_sks_event.artist_name
     assert_includes response.body, "filter=sks"
   end

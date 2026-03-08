@@ -7,7 +7,7 @@ module Public
     FILTER_SKS = "sks".freeze
     FILTER_VALUES = [ FILTER_ALL, FILTER_SKS ].freeze
     SKS_ORGANIZER_NAMES = [ "SKS E. Russ GmbH", "SKS Michael Russ GmbH" ].freeze
-    SKS_PROMOTER_ID = "10135".freeze
+    SKS_PROMOTER_IDS = %w[10135 382].freeze
 
     def index
       @page = [ params[:page].to_i, 1 ].max
@@ -85,8 +85,8 @@ module Public
       return relation unless filter == FILTER_SKS
 
       relation.where(
-        "promoter_id = :promoter_id OR organizer_name IN (:organizer_names)",
-        promoter_id: SKS_PROMOTER_ID,
+        "promoter_id IN (:promoter_ids) OR organizer_name IN (:organizer_names)",
+        promoter_ids: SKS_PROMOTER_IDS,
         organizer_names: SKS_ORGANIZER_NAMES
       )
     end

@@ -1,4 +1,5 @@
 require "digest"
+require "json"
 require "set"
 
 module Importing
@@ -86,7 +87,7 @@ module Importing
           next if event_id.blank?
 
           unless matcher.match?(dump_payload)
-            add_filtered_out_city!(filtered_out_cities, dump_payload["loc_city"])
+            add_filtered_out_city!(filtered_out_cities, filtered_out_location_label(dump_payload))
             next
           end
 
@@ -105,23 +106,7 @@ module Importing
             next
           end
 
-          if unchanged_dump_payload?(existing_record, source_payload_hash)
-            sync_import_event_images!(
-              record: existing_record,
-              source: "easyticket",
-              candidates: projection.image_candidates
-            )
-            mark_existing_event_as_seen!(
-              record: existing_record,
-              dump_payload: dump_payload,
-              attributes: attributes,
-              seen_at: run_started_at
-            )
-            imported_count += 1
-            next
-          end
-
-          detail_payload = detail_fetcher.fetch(event_id)
+          detail_payload = build_detail_payload(event_id, dump_payload)
 
           projection = PayloadProjection.new(
             dump_payload: dump_payload,
@@ -131,6 +116,23 @@ module Importing
           if attributes.nil?
             failed_count += 1
             progress_changed = true
+            next
+          end
+
+          if unchanged_payloads?(existing_record, source_payload_hash, detail_payload)
+            sync_import_event_images!(
+              record: existing_record,
+              source: "easyticket",
+              candidates: projection.image_candidates
+            )
+            mark_existing_event_as_seen!(
+              record: existing_record,
+              dump_payload: dump_payload,
+              detail_payload: detail_payload,
+              attributes: attributes,
+              seen_at: run_started_at
+            )
+            imported_count += 1
             next
           end
 
@@ -286,14 +288,14 @@ module Importing
       end
 
       def active_running_run
-        import_source.import_runs.where(status: "running").order(started_at: :desc).first
+        import_source.import_runs.where(source_type: "easyticket", status: "running").order(started_at: :desc).first
       end
 
       def fail_stale_runs!
         stale_runs =
           import_source
             .import_runs
-            .where(status: "running")
+            .where(source_type: "easyticket", status: "running")
             .where("started_at < ? OR updated_at < ?", RUN_STALE_AFTER.ago, RUN_HEARTBEAT_STALE_AFTER.ago)
             .to_a
 
@@ -381,6 +383,7 @@ module Importing
 
       def parse_concert_date_from_dump(dump_payload)
         raw_date = dump_payload["date"].to_s.strip
+        raw_date = dump_payload["date_time"].to_s.strip if raw_date.blank?
         return nil if raw_date.blank?
 
         Date.parse(raw_date)
@@ -392,22 +395,104 @@ module Importing
         Digest::SHA256.hexdigest(dump_payload.to_json)
       end
 
-      def unchanged_dump_payload?(existing_record, source_payload_hash)
-        existing_record.present? && existing_record.source_payload_hash == source_payload_hash
+      def unchanged_payloads?(existing_record, source_payload_hash, detail_payload)
+        existing_record.present? &&
+          existing_record.source_payload_hash == source_payload_hash &&
+          normalized_payload_hash(existing_record.detail_payload) == normalized_payload_hash(detail_payload)
       end
 
-      def mark_existing_event_as_seen!(record:, dump_payload:, attributes:, seen_at:)
+      def mark_existing_event_as_seen!(record:, dump_payload:, detail_payload:, attributes:, seen_at:)
         organizer_name = attributes[:organizer_name].to_s.strip.presence || record.organizer_name
         organizer_id = attributes[:organizer_id].to_s.strip.presence || record.organizer_id
 
         record.update_columns(
           dump_payload: dump_payload,
+          detail_payload: detail_payload,
           organizer_name: organizer_name,
           organizer_id: organizer_id,
           is_active: true,
           last_seen_at: seen_at,
           updated_at: Time.current
         )
+      end
+
+      def normalized_payload_hash(payload)
+        value = payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
+        Digest::SHA256.hexdigest(JSON.generate(deep_sort_payload(value)))
+      end
+
+      def deep_sort_payload(value)
+        case value
+        when Hash
+          value.keys.sort.each_with_object({}) do |key, result|
+            result[key] = deep_sort_payload(value[key])
+          end
+        when Array
+          value.map { |entry| deep_sort_payload(entry) }
+        else
+          value
+        end
+      end
+
+      def filtered_out_location_label(dump_payload)
+        dump_payload["loc_city"].to_s.strip.presence ||
+          dump_payload.dig("data", "location", "city").to_s.strip.presence ||
+          dump_payload["location_name"].to_s.strip.presence ||
+          dump_payload["loc_name"].to_s.strip
+      end
+
+      def build_detail_payload(event_id, dump_payload)
+        detail_payload = fetch_detail_payload(event_id)
+        merge_dump_payload_into_detail_payload(detail_payload, dump_payload)
+      end
+
+      def fetch_detail_payload(event_id)
+        detail_fetcher.fetch(event_id)
+      rescue RequestError => e
+        raise unless detail_request_not_found?(e)
+
+        logger.warn("[EasyticketImporter] detail payload missing for event_id=#{event_id}: #{e.message}")
+        {}
+      end
+
+      def detail_request_not_found?(error)
+        error.message.to_s.include?("status 404")
+      end
+
+      def merge_dump_payload_into_detail_payload(detail_payload, dump_payload)
+        payload = detail_payload.is_a?(Hash) ? detail_payload.deep_stringify_keys : {}
+        dump_data = dump_payload["data"].is_a?(Hash) ? dump_payload["data"].deep_stringify_keys : {}
+        event_date = dump_payload.except("data").deep_stringify_keys
+
+        return payload if dump_data.empty? && event_date.empty?
+
+        data = dump_data
+        if payload["data"].is_a?(Hash)
+          data = data.merge(payload["data"].deep_stringify_keys)
+        end
+        data["event"] ||= synthesized_event_payload(dump_payload)
+        data["location"] ||= synthesized_location_payload(dump_payload)
+        data["event_date"] = event_date if event_date.present? && !data.key?("event_date")
+
+        payload.merge("data" => data)
+      end
+
+      def synthesized_event_payload(dump_payload)
+        {
+          "title_1" => dump_payload["title_1"],
+          "title_2" => dump_payload["title_2"],
+          "description" => dump_payload["description"],
+          "info" => dump_payload["booking_info"],
+          "additional_info" => dump_payload["additional_info"],
+          "organizer_id" => dump_payload["organizer_id"]
+        }.transform_values { |value| value.to_s.strip }.reject { |_, value| value.blank? }
+      end
+
+      def synthesized_location_payload(dump_payload)
+        {
+          "name" => dump_payload["loc_name"].to_s.strip.presence || dump_payload["location_name"].to_s.strip,
+          "city" => dump_payload["loc_city"].to_s.strip
+        }.reject { |_, value| value.blank? }
       end
 
       def sync_import_event_images!(record:, source:, candidates:)

@@ -19,8 +19,10 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       concert_date_label: "10.11.2026",
       venue_label: "Stuttgart, Im Wizemann",
       dump_payload: {
-        "price_text" => "59,45 - 86,70 EUR",
-        "text" => "<p>Easy Headline<br />Easy Line</p>"
+        "date_time" => "2026-11-10 20:00:00",
+        "price_start" => 59.45,
+        "price_end" => 86.70,
+        "description" => "<p>Easy Headline<br />Easy Line</p>"
       },
       detail_payload: {},
       ticket_url: "https://example.com/easy",
@@ -83,7 +85,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert event.present?
     assert_equal "easyticket", event.primary_source
     assert_equal "SKS Michael Russ GmbH", event.organizer_name
-    assert_equal "10135", event.promoter_id
+    assert_equal "382", event.promoter_id
     assert_equal "published", event.status
     assert_equal true, event.auto_published
     assert_equal 2, event.event_offers.count
@@ -135,7 +137,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_includes event.completeness_flags, "missing_image"
   end
 
-  test "uses easyticket dump_payload time as event begin time" do
+  test "uses easyticket dump_payload date_time as event begin time" do
     source_easyticket = import_sources(:one)
     date = Date.new(2026, 12, 2)
 
@@ -150,7 +152,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       organizer_id: "382",
       concert_date_label: "02.12.2026",
       venue_label: "Stuttgart, LKA Longhorn",
-      dump_payload: { "time" => "19:30" },
+      dump_payload: { "date_time" => "2026-12-02 19:30:00" },
       detail_payload: {},
       ticket_url: "https://example.com/easy-begin-time",
       is_active: true,

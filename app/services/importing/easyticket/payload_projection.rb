@@ -22,22 +22,30 @@ module Importing
 
         city = first_present(
           dump_value("loc_city"),
+          dump_data_value("location", "city"),
           detail_value("city"),
+          detail_value("location", "city"),
           detail_value("event", "city")
         )
         venue_name = first_present(
           dump_value("loc_name"),
+          dump_data_value("location", "name"),
+          dump_value("location_name"),
           detail_value("venue", "name"),
+          detail_value("location", "name"),
           detail_value("event", "venue")
         )
         title = first_present(
           dump_value("title"),
+          dump_value("title_1"),
+          dump_data_value("event", "title_1"),
           detail_value("title"),
           detail_value("event", "title")
         )
         artist_name = first_present(
           dump_value("sub1"),
           dump_value("artist"),
+          artist_name_from_dump_titles,
           detail_value("artist_name"),
           detail_value("artist"),
           detail_value("event", "artist"),
@@ -47,10 +55,12 @@ module Importing
         organizer_name = first_present(
           dump_value("organizer_name"),
           detail_value("organizer_name"),
+          dump_data_value("event", "organizer_name"),
           detail_value("event", "organizer_name")
         )
         organizer_id = first_present(
           dump_value("organizer_id"),
+          dump_data_value("event", "organizer_id"),
           detail_value("organizer_id"),
           detail_value("event", "organizer_id")
         )
@@ -77,6 +87,10 @@ module Importing
 
       def image_candidates
         candidates = []
+
+        dump_image_candidates.each do |candidate|
+          candidates << candidate.merge(position: candidates.length)
+        end
 
         urls_from_dump_images.each do |url|
           candidates << { image_type: "images", image_url: url, position: candidates.length }
@@ -132,6 +146,13 @@ module Importing
         @dump_payload[key].to_s.strip
       end
 
+      def dump_data_value(*path)
+        value = path.reduce(@dump_payload["data"]) do |memo, key|
+          memo.respond_to?(:[]) ? memo[key] : nil
+        end
+        value.to_s.strip
+      end
+
       def detail_value(*path)
         detail_roots.each do |root|
           value = path.reduce(root) do |memo, key|
@@ -151,6 +172,7 @@ module Importing
       def parse_concert_date
         raw = first_present(
           dump_value("date"),
+          dump_value("date_time"),
           detail_value("start_date"),
           detail_value("event", "start_date"),
           detail_value("date"),
@@ -175,6 +197,7 @@ module Importing
         dump_link = first_present(
           dump_value("ticket_url"),
           dump_value("ticket_link"),
+          dump_data_value("event", "link"),
           detail_value("ticket_url"),
           detail_value("event", "ticket_url")
         )
@@ -207,6 +230,72 @@ module Importing
         dump_value("images").scan(URL_EXTRACT_PATTERN).filter_map do |value|
           ImportEventImage.normalize_image_url(value)
         end
+      end
+
+      def dump_image_candidates
+        extract_dump_image_candidates(dump_images_for_event)
+      end
+
+      def dump_images_for_event
+        event_id = dump_value("event_id")
+        return nil if event_id.blank?
+
+        images = @dump_payload.dig("data", "images")
+        images ||= @dump_payload.dig("data", "Images")
+        return nil unless images.is_a?(Hash)
+
+        images[event_id] || images[event_id.to_i]
+      end
+
+      def extract_dump_image_candidates(value, image_type: "dump_image")
+        case value
+        when Array
+          value.flat_map { |nested_value| extract_dump_image_candidates(nested_value, image_type: image_type) }
+        when Hash
+          candidates = []
+          direct_type = value["type"].to_s.strip.presence || image_type
+
+          %w[url src href image image_url].each do |key|
+            next unless value[key].present?
+
+            normalized_urls(value[key]).each do |url|
+              candidates << { image_type: direct_type, image_url: url }
+            end
+          end
+
+          value.each do |key, nested_value|
+            next if %w[type url src href image image_url].include?(key.to_s)
+
+            candidates.concat(extract_dump_image_candidates(nested_value, image_type: key.to_s))
+          end
+
+          candidates
+        else
+          normalized_urls(value).map do |url|
+            { image_type: image_type, image_url: url }
+          end
+        end
+      end
+
+      def normalized_urls(value)
+        value.to_s.scan(URL_EXTRACT_PATTERN).filter_map do |raw_url|
+          ImportEventImage.normalize_image_url(raw_url)
+        end
+      end
+
+      def artist_name_from_dump_titles
+        primary_title = first_present(
+          dump_value("title"),
+          dump_value("title_1"),
+          dump_data_value("event", "title_1")
+        )
+        secondary_title = first_present(
+          dump_value("title_2"),
+          dump_data_value("event", "title_2")
+        )
+        return "" if primary_title.blank? || secondary_title.blank?
+
+        primary_title.downcase.include?(secondary_title.downcase) ? secondary_title : ""
       end
 
       def deduplicate_candidates(candidates)

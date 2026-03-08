@@ -32,19 +32,19 @@ module Importing
         dump_events = [
           {
             "event_id" => "999",
-            "date" => "2026-06-17",
-            "title" => "Band A Live",
-            "sub1" => "Band A",
-            "loc_city" => "Stuttgart",
-            "loc_name" => "Im Wizemann"
+            "date_time" => "2026-06-17 20:00:00",
+            "location_name" => "Im Wizemann Stuttgart",
+            "title_1" => "Band A Live",
+            "title_2" => "Band A",
+            "organizer_id" => "382",
+            "showsoft_location_id" => "7"
           },
           {
             "event_id" => "1000",
-            "date" => "2026-06-18",
-            "title" => "Should Be Filtered",
-            "sub1" => "Filtered",
-            "loc_city" => "Berlin",
-            "loc_name" => "Tempodrom"
+            "date_time" => "2026-06-18 21:00:00",
+            "location_name" => "Tempodrom Berlin",
+            "title_1" => "Should Be Filtered",
+            "title_2" => "Filtered"
           }
         ]
 
@@ -53,14 +53,19 @@ module Importing
             "data" => {
               "event" => { "artist" => "Band A" },
               "organizer_name" => "SKS Michael Russ GmbH",
-              "organizer_id" => "382",
-              "images" => [
-                {
-                  "paths" => [
-                    { "type" => "large", "url" => "https://img.example/999-large.jpg" }
-                  ]
-                }
-              ]
+              "organizer_id" => "382"
+            }
+          }
+        }
+
+        dump_events.first["data"] = {
+          "location" => {
+            "name" => "Im Wizemann",
+            "city" => "Stuttgart"
+          },
+          "images" => {
+            "999" => {
+              "large" => "https://img.example/999-large.jpg"
             }
           }
         }
@@ -83,7 +88,7 @@ module Importing
         assert_equal 1, run.imported_count
         assert_equal 1, run.upserted_count
         assert_equal 0, run.failed_count
-        assert_includes run.metadata.fetch("filtered_out_cities", []), "Berlin"
+        assert_includes run.metadata.fetch("filtered_out_cities", []), "Tempodrom Berlin"
 
         assert_equal "Band A", imported.artist_name
         assert_equal "SKS Michael Russ GmbH", imported.organizer_name
@@ -228,7 +233,7 @@ module Importing
         assert_equal 1, run.upserted_count
       end
 
-      test "does not fetch detail payload when dump payload is unchanged" do
+      test "fetches detail payload when dump payload is unchanged" do
         dump_payload = {
           "event_id" => "same-1",
           "date" => "2026-09-10",
@@ -250,7 +255,16 @@ module Importing
           concert_date_label: "10.9.2026",
           venue_label: "Stuttgart, Im Wizemann",
           dump_payload: dump_payload,
-          detail_payload: { "data" => { "event" => { "title" => "Same Event" } } },
+          detail_payload: {
+            "data" => {
+              "event" => { "title" => "Same Event" },
+              "location" => {
+                "name" => "Im Wizemann",
+                "city" => "Stuttgart"
+              },
+              "event_date" => dump_payload
+            }
+          },
           is_active: false,
           first_seen_at: 2.days.ago,
           last_seen_at: 2.days.ago,
@@ -259,8 +273,15 @@ module Importing
 
         detail_fetcher =
           Class.new do
+            attr_reader :calls
+
+            def initialize
+              @calls = []
+            end
+
             def fetch(_event_id)
-              raise "detail api must not be called for unchanged dump payload"
+              @calls << _event_id
+              { "data" => { "event" => { "title" => "Same Event" } } }
             end
           end.new
 
@@ -276,17 +297,25 @@ module Importing
         assert_equal 0, run.upserted_count
         assert_equal 0, run.failed_count
         assert existing_event.reload.is_active
+        assert_equal [ "same-1" ], detail_fetcher.calls
         assert_empty existing_event.import_event_images
       end
 
-      test "syncs images from stored detail payload when dump payload is unchanged" do
+      test "syncs images from stored dump payload when dump payload is unchanged" do
         dump_payload = {
           "event_id" => "same-2",
           "date" => "2026-09-11",
           "title" => "Same Event Two",
           "sub1" => "Same Artist Two",
           "loc_city" => "Stuttgart",
-          "loc_name" => "Im Wizemann"
+          "loc_name" => "Im Wizemann",
+          "data" => {
+            "images" => {
+              "same-2" => {
+                "large" => "https://img.example/same-2-large.jpg"
+              }
+            }
+          }
         }
         payload_hash = Digest::SHA256.hexdigest(dump_payload.to_json)
 
@@ -303,13 +332,13 @@ module Importing
           dump_payload: dump_payload,
           detail_payload: {
             "data" => {
-              "images" => [
-                {
-                  "paths" => [
-                    { "type" => "large", "url" => "https://img.example/same-2-large.jpg" }
-                  ]
-                }
-              ]
+              "event" => {},
+              "location" => {
+                "name" => "Im Wizemann",
+                "city" => "Stuttgart"
+              },
+              "images" => dump_payload.fetch("data").fetch("images"),
+              "event_date" => dump_payload.except("data")
             }
           },
           is_active: true,
@@ -320,8 +349,15 @@ module Importing
 
         detail_fetcher =
           Class.new do
-            def fetch(_event_id)
-              raise "detail api must not be called for unchanged dump payload"
+            attr_reader :calls
+
+            def initialize
+              @calls = []
+            end
+
+            def fetch(event_id)
+              @calls << event_id
+              {}
             end
           end.new
 
@@ -333,6 +369,7 @@ module Importing
 
         assert_equal "succeeded", run.status
         assert_equal 0, run.upserted_count
+        assert_equal [ "same-2" ], detail_fetcher.calls
         assert_equal [ "https://img.example/same-2-large.jpg" ], existing_event.reload.import_event_images.ordered.pluck(:image_url)
       end
 
@@ -371,6 +408,60 @@ module Importing
         assert_equal "Net::ReadTimeout", error.error_class
         assert_includes error.message, "detail timeout"
         assert_equal "err-1", error.payload["event_id"]
+      end
+
+      test "continues import when detail payload returns 404" do
+        dump_events = [
+          {
+            "event_id" => "404-1",
+            "date_time" => "2026-10-10 20:00:00",
+            "location_name" => "Im Wizemann Stuttgart",
+            "title_1" => "Detailless Event",
+            "title_2" => "Detailless Event",
+            "data" => {
+              "location" => {
+                "name" => "Im Wizemann",
+                "city" => "Stuttgart"
+              },
+              "images" => {
+                "404-1" => {
+                  "large" => "https://img.example/404-1-large.jpg"
+                }
+              }
+            }
+          }
+        ]
+
+        detail_fetcher =
+          Class.new do
+            def fetch(_event_id)
+              raise Importing::Easyticket::RequestError,
+                "Request failed for https://partnershop.easyticket.de/api/partnershop/events/404-1 with status 404"
+            end
+          end.new
+
+        run = Importer.new(
+          import_source: @source,
+          dump_fetcher: StubDumpFetcher.new(dump_events),
+          detail_fetcher: detail_fetcher
+        ).call
+
+        imported = EasyticketImportEvent.find_by!(
+          import_source: @source,
+          external_event_id: "404-1",
+          concert_date: Date.new(2026, 10, 10)
+        )
+
+        assert_equal "succeeded", run.status
+        assert_equal 1, run.filtered_count
+        assert_equal 1, run.imported_count
+        assert_equal 1, run.upserted_count
+        assert_equal 0, run.failed_count
+        assert_equal "Detailless Event", imported.detail_payload.dig("data", "event", "title_1")
+        assert_equal "404-1", imported.detail_payload.dig("data", "event_date", "event_id")
+        assert_equal "https://img.example/404-1-large.jpg",
+          imported.detail_payload.dig("data", "images", "404-1", "large")
+        assert_equal [ "https://img.example/404-1-large.jpg" ], imported.import_event_images.ordered.pluck(:image_url)
       end
 
       test "stores import_run_error when run fails" do
