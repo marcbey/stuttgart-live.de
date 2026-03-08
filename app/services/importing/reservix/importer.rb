@@ -379,7 +379,6 @@ module Importing
           venue_label: attributes[:venue_label],
           title: attributes[:title],
           artist_name: attributes[:artist_name],
-          organizer_name: attributes[:organizer_name],
           min_price: attributes[:min_price],
           max_price: attributes[:max_price],
           ticket_url: attributes[:ticket_url],

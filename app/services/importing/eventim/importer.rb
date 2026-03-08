@@ -366,12 +366,10 @@ module Importing
 
       def mark_existing_event_as_seen!(record:, feed_payload:, attributes:, seen_at:)
         promoter_id = attributes[:promoter_id].to_s.strip.presence || record.promoter_id
-        organizer_name = attributes[:organizer_name].to_s.strip.presence || record.organizer_name
 
         record.update_columns(
           dump_payload: feed_payload,
           promoter_id: promoter_id,
-          organizer_name: organizer_name,
           is_active: true,
           last_seen_at: seen_at,
           updated_at: Time.current

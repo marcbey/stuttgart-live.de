@@ -13,7 +13,6 @@ module Importing
             "eventTitle" => "Band C Live",
             "performer" => "Band C",
             "promoterId" => "36",
-            "organizerName" => "Music Circus GmbH & Co. KG",
             "ticketUrl" => "https://tickets.example/evt-77",
             "imageUrl" => "https://img.example/evt-77.jpg"
           }
@@ -27,7 +26,6 @@ module Importing
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "Band C", attributes[:artist_name]
         assert_equal "36", attributes[:promoter_id]
-        assert_equal "Music Circus GmbH & Co. KG", attributes[:organizer_name]
         assert_equal "https://tickets.example/evt-77", attributes[:ticket_url]
 
         image_candidates = projection.image_candidates

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_08_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_08_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -56,7 +56,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150000) do
     t.boolean "is_active", default: true, null: false
     t.datetime "last_seen_at", null: false
     t.string "organizer_id"
-    t.string "organizer_name"
     t.string "source_payload_hash", null: false
     t.string "ticket_url"
     t.string "title", null: false
@@ -67,7 +66,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150000) do
     t.index ["import_source_id", "is_active", "concert_date"], name: "idx_easyticket_import_events_active_by_date"
     t.index ["import_source_id"], name: "index_easyticket_import_events_on_import_source_id"
     t.index ["organizer_id"], name: "index_easyticket_import_events_on_organizer_id"
-    t.index ["organizer_name"], name: "index_easyticket_import_events_on_organizer_name"
     t.index ["source_payload_hash"], name: "index_easyticket_import_events_on_source_payload_hash"
   end
 
@@ -141,7 +139,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150000) do
     t.bigint "import_source_id", null: false
     t.boolean "is_active", default: true, null: false
     t.datetime "last_seen_at", null: false
-    t.string "organizer_name"
     t.string "promoter_id"
     t.string "source_payload_hash", null: false
     t.string "ticket_url"
@@ -152,7 +149,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150000) do
     t.index ["import_source_id", "external_event_id", "concert_date"], name: "idx_eventim_import_events_unique_event", unique: true
     t.index ["import_source_id", "is_active", "concert_date"], name: "idx_eventim_import_events_active_by_date"
     t.index ["import_source_id"], name: "index_eventim_import_events_on_import_source_id"
-    t.index ["organizer_name"], name: "index_eventim_import_events_on_organizer_name"
     t.index ["promoter_id"], name: "index_eventim_import_events_on_promoter_id"
     t.index ["source_payload_hash"], name: "index_eventim_import_events_on_source_payload_hash"
   end
@@ -295,7 +291,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150000) do
     t.datetime "last_seen_at", null: false
     t.decimal "max_price", precision: 10, scale: 2
     t.decimal "min_price", precision: 10, scale: 2
-    t.string "organizer_name"
     t.string "source_payload_hash", null: false
     t.string "ticket_url"
     t.string "title", null: false

@@ -402,13 +402,11 @@ module Importing
       end
 
       def mark_existing_event_as_seen!(record:, dump_payload:, detail_payload:, attributes:, seen_at:)
-        organizer_name = attributes[:organizer_name].to_s.strip.presence || record.organizer_name
         organizer_id = attributes[:organizer_id].to_s.strip.presence || record.organizer_id
 
         record.update_columns(
           dump_payload: dump_payload,
           detail_payload: detail_payload,
-          organizer_name: organizer_name,
           organizer_id: organizer_id,
           is_active: true,
           last_seen_at: seen_at,

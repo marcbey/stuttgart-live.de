@@ -20,7 +20,6 @@ module Importing
         artist_name = @event_payload["artist"].to_s.strip.presence || title
         city = venue_reference["city"].to_s.strip.presence || location_city_fallback || "Unbekannt"
         venue_name = extract_venue_name.presence || "Unbekannte Venue"
-        organizer_name = organizer_reference["name"].to_s.strip.presence || @event_payload["publicOrganizerName"].to_s.strip.presence
 
         min_price = parse_decimal(@event_payload["minPrice"])
         max_price = parse_decimal(@event_payload["maxPrice"])
@@ -34,7 +33,6 @@ module Importing
           venue_name: venue_name,
           title: title,
           artist_name: artist_name,
-          organizer_name: organizer_name,
           min_price: min_price,
           max_price: max_price,
           concert_date_label: format_concert_date(concert_date),
@@ -159,10 +157,6 @@ module Importing
 
       def venue_reference
         @venue_reference ||= event_reference("venue")
-      end
-
-      def organizer_reference
-        @organizer_reference ||= event_reference("organizer")
       end
 
       def format_concert_date(date)

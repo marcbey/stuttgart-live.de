@@ -35,7 +35,18 @@ module Importing
           detail_value("location", "name"),
           detail_value("event", "venue")
         )
+        artist_title_fallback = first_present(
+          dump_value("title"),
+          dump_value("title_1"),
+          dump_data_value("event", "title_1"),
+          detail_value("title"),
+          detail_value("event", "title")
+        )
         title = first_present(
+          dump_value("title_2"),
+          dump_data_value("event", "title_2"),
+          detail_value("title_2"),
+          detail_value("event", "title_2"),
           dump_value("title"),
           dump_value("title_1"),
           dump_data_value("event", "title_1"),
@@ -49,15 +60,10 @@ module Importing
           detail_value("artist_name"),
           detail_value("artist"),
           detail_value("event", "artist"),
+          artist_title_fallback,
           title
         )
-        artist_name = title if artist_name.blank? || artist_name.match?(/\A\d+\z/)
-        organizer_name = first_present(
-          dump_value("organizer_name"),
-          detail_value("organizer_name"),
-          dump_data_value("event", "organizer_name"),
-          detail_value("event", "organizer_name")
-        )
+        artist_name = artist_title_fallback.presence || title if artist_name.blank? || artist_name.match?(/\A\d+\z/)
         organizer_id = first_present(
           dump_value("organizer_id"),
           dump_data_value("event", "organizer_id"),
@@ -76,7 +82,6 @@ module Importing
           venue_name: venue_name,
           title: title,
           artist_name: artist_name,
-          organizer_name: organizer_name.presence,
           organizer_id: organizer_id.presence,
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
