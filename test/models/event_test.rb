@@ -59,4 +59,18 @@ class EventTest < ActiveSupport::TestCase
     assert event.valid?
     assert_equal "Kulturquartier", event.venue
   end
+
+  test "allows blank city and normalizes it to nil" do
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "   ",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_nil event.city
+  end
 end

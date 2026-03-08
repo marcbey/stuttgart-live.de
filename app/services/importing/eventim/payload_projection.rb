@@ -41,7 +41,7 @@ module Importing
         concert_date = parse_concert_date
         return nil if external_event_id.blank? || concert_date.nil?
 
-        city = first_value_for_keys(CITY_KEYS).presence || "Unbekannt"
+        city = first_value_for_keys(CITY_KEYS).presence
         venue_name = first_value_for_keys(VENUE_KEYS).presence || "Unbekannte Venue"
         title = first_value_for_keys(TITLE_KEYS).presence || "Unbekanntes Event"
         artist_name = first_value_for_keys(ARTIST_KEYS).presence || title

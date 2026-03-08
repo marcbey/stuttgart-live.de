@@ -255,6 +255,24 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://facebook.com/example", @event.facebook_url
   end
 
+  test "updates event with blank city" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: @event.title,
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: "",
+        status: "needs_review"
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+    assert_nil @event.reload.city
+  end
+
   test "updates event via turbo stream and renders flash message" do
     sign_in_as(@user)
 

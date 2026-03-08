@@ -115,6 +115,22 @@ module Importing
 
         assert_equal "https://partnershop.easyticket.de/shop/event/104364", attributes[:ticket_url]
       end
+
+      test "keeps city blank when payload does not provide one" do
+        projection = PayloadProjection.new(
+          dump_payload: {
+            "event_id" => "104364",
+            "date_time" => "2026-06-20 19:30:00",
+            "location_name" => "LKA Stuttgart",
+            "title_1" => "Another Band"
+          },
+          detail_payload: {}
+        )
+
+        attributes = projection.to_attributes
+
+        assert_nil attributes[:city]
+      end
     end
   end
 end

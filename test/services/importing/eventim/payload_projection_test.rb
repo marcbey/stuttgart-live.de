@@ -61,6 +61,21 @@ module Importing
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "https://www.eventim.de/noapp/event/20259466/", attributes[:ticket_url]
       end
+
+      test "keeps city blank when no city key is present" do
+        projection = PayloadProjection.new(
+          feed_payload: {
+            "eventid" => "20259466",
+            "eventdate" => "2026-03-04",
+            "eventvenue" => "Im Wizemann",
+            "eventname" => "Das Phantom der Oper"
+          }
+        )
+
+        attributes = projection.to_attributes
+
+        assert_nil attributes[:city]
+      end
     end
   end
 end

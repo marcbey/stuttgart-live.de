@@ -276,6 +276,17 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-genre", text: "Jazz · Pop · Rock"
   end
 
+  test "show does not render dangling comma when city is blank" do
+    @published_event.update!(city: nil)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_includes response.body, @published_event.venue
+    assert_not_includes response.body, "#{@published_event.venue}, </span>"
+    assert_no_match(/#{Regexp.escape(@published_event.venue)}\s*,\s*<\/span>/, response.body)
+  end
+
   test "show renders einlass when present" do
     event = Event.create!(
       slug: "published-event-with-einlass",

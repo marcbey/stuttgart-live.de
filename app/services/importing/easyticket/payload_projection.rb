@@ -71,7 +71,7 @@ module Importing
           detail_value("event", "organizer_id")
         )
 
-        city = city.presence || "Unbekannt"
+        city = city.presence
         venue_name = venue_name.presence || "Unbekannte Venue"
         title = title.presence || "Unbekanntes Event"
 

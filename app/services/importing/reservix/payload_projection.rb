@@ -18,7 +18,7 @@ module Importing
 
         title = @event_payload["name"].to_s.strip.presence || "Unbekanntes Event"
         artist_name = @event_payload["artist"].to_s.strip.presence || title
-        city = venue_reference["city"].to_s.strip.presence || location_city_fallback || "Unbekannt"
+        city = venue_reference["city"].to_s.strip.presence || location_city_fallback
         venue_name = extract_venue_name.presence || "Unbekannte Venue"
 
         min_price = parse_decimal(@event_payload["minPrice"])
