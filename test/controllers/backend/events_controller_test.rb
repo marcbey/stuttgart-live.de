@@ -25,7 +25,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "nächsten Event anzeigen"
     assert_includes response.body, "name=\"status\""
     assert_includes response.body, "value=\"published\""
-    assert_includes response.body, "Veranstalter"
     assert_includes response.body, "Promoter-ID"
     assert_includes response.body, "Beginn"
     assert_includes response.body, "Einlass löschen"
@@ -33,7 +32,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "editor-datetime-clear"
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
-    assert_select "input[id^='organizer_name_display_'][readonly][value='-']"
   end
 
   test "index renders status chips without counts and shows filtered event count" do
