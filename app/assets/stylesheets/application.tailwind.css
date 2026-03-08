@@ -1255,8 +1255,10 @@ a {
   border-color: #666;
 }
 
-.editor-panel .form-input[readonly],
-.editor-panel .form-input:read-only {
+.editor-panel input.form-input[readonly],
+.editor-panel input.form-input:read-only,
+.editor-panel textarea.form-textarea[readonly],
+.editor-panel textarea.form-textarea:read-only {
   background: #f1f3f5;
   border-color: #b8c0c8;
   color: #4f5d6a;
