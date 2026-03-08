@@ -756,6 +756,14 @@ a {
   justify-content: space-between;
 }
 
+.event-detail-topbar-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
 .event-detail-back {
   margin: 0;
 }

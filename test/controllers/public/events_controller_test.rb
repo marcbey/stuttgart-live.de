@@ -388,6 +388,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
+    assert_select ".event-detail-topbar-actions .status-badge", text: "easyticket"
     assert_includes response.body, expected_link
     assert_includes response.body, "Bearbeiten"
   end
