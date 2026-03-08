@@ -1,4 +1,15 @@
 Rails.application.routes.draw do
+  internal_framework_path = lambda do |request|
+    framework_prefixes = [
+      "/rails/",
+      "/recede_historical_location",
+      "/resume_historical_location",
+      "/refresh_historical_location"
+    ]
+
+    framework_prefixes.none? { |prefix| request.path.start_with?(prefix) }
+  end
+
   match "/400", to: "errors#show", via: :all, defaults: { code: 400 }
   match "/404", to: "errors#show", via: :all, defaults: { code: 404 }
   match "/422", to: "errors#show", via: :all, defaults: { code: 422 }
@@ -58,5 +69,5 @@ Rails.application.routes.draw do
 
   root "public/events#index"
 
-  match "*unmatched", to: "errors#show", via: :all, defaults: { code: 404 }
+  match "*unmatched", to: "errors#show", via: :all, defaults: { code: 404 }, constraints: internal_framework_path
 end

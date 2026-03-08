@@ -16,4 +16,12 @@ class ErrorsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Beim Laden ist etwas schiefgelaufen."
     assert_includes response.body, "Zur Startseite"
   end
+
+  test "renders 404 page for unknown jpeg routes using html template" do
+    get "/missing-image.jpeg"
+
+    assert_response :not_found
+    assert_includes response.body, "Diese Seite gibt es nicht."
+    assert_equal "text/html; charset=utf-8", response.headers["Content-Type"]
+  end
 end

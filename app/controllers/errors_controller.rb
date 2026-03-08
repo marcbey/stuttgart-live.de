@@ -30,7 +30,7 @@ class ErrorsController < ActionController::Base
   def show
     @status_code = requested_status_code
     @error_copy = ERROR_COPY.fetch(@status_code, ERROR_COPY[500])
-    render :show, status: @status_code
+    render :show, formats: [ :html ], status: @status_code
   end
 
   private

@@ -282,6 +282,17 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "action=\"remove\""
   end
 
+  test "active storage blob route remains reachable for slider images" do
+    image = create_event_image(purpose: EventImage::PURPOSE_SLIDER)
+
+    get rails_blob_path(image.file, only_path: true)
+
+    assert_response :redirect
+    follow_redirect!
+    assert_response :success
+    assert_equal "image/png", response.media_type
+  end
+
   private
 
   def uploaded_image
