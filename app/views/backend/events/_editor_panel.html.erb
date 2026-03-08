@@ -28,6 +28,8 @@
     </div>
   </header>
 
+  <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled %>
+
   <%= form_with model: event,
                 url: backend_event_path(event),
                 method: :patch,
@@ -398,21 +400,5 @@
     <% end %>
   </section>
 
-  <div class="editor-actions-row">
-    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button button-save-primary">Speichern</button>
-    <% unless event.published? %>
-      <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button">Publizieren</button>
-    <% end %>
-    <% if event.published? %>
-      <%= button_to "Depublizieren",
-                    unpublish_backend_event_path(event),
-                    method: :patch,
-                    class: "button button-secondary",
-                    form: { data: { turbo_stream: true } } %>
-    <% end %>
-    <label class="check-inline">
-      <%= check_box_tag "next_event_toggle", "1", next_event_enabled, data: { next_event_target: "toggle", action: "change->next-event#toggleChanged" } %>
-      <span>nächsten Event anzeigen</span>
-    </label>
-  </div>
+  <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled %>
 </div>
