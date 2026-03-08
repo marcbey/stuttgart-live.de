@@ -1,4 +1,19 @@
 module ApplicationHelper
+  def app_nav_link_class(active: false, accent: false)
+    classes = [ "app-nav-link" ]
+    classes << "app-nav-link-active" if active
+    classes << "app-nav-link-accent" if accent
+    classes.join(" ")
+  end
+
+  def frontend_nav_active?
+    controller_path == "public/events"
+  end
+
+  def backend_nav_active?
+    controller_path == "backend/events"
+  end
+
   def brand_logo_tag(class_name:, alt: "Stuttgart Live", loading: "lazy")
     image_tag(
       "stuttgart-live-logo-modern.svg",

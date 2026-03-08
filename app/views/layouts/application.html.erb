@@ -44,18 +44,22 @@
 
         <div class="app-nav-meta">
           <div class="app-nav-links">
-            <%= link_to "Frontend", events_path, class: "button button-ghost" %>
+            <%= link_to "Frontend", events_path, class: app_nav_link_class(active: frontend_nav_active?) %>
             <% if authenticated? %>
               <% if current_user.backend_access? %>
-                <%= link_to "Backend", backend_events_path, class: "button button-secondary" %>
+                <%= link_to "Backend", backend_events_path, class: app_nav_link_class(active: backend_nav_active?) %>
               <% end %>
               <% if current_user.admin? %>
-                <%= link_to "Benutzer", backend_users_path, class: "button button-secondary" %>
+                <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users") %>
               <% end %>
-              <%= link_to "Passwort", edit_backend_account_password_path, class: "button button-ghost" %>
-              <%= button_to "Logout", session_path, method: :delete, class: "button" %>
+              <%= link_to "Passwort", edit_backend_account_password_path, class: app_nav_link_class(active: controller_path == "backend/account_passwords") %>
+              <%= button_to "Logout",
+                            session_path,
+                            method: :delete,
+                            class: app_nav_link_class(accent: true),
+                            form: { class: "app-nav-link-form" } %>
             <% else %>
-              <%= link_to "Login", new_session_path, class: "button" %>
+              <%= link_to "Login", new_session_path, class: app_nav_link_class(accent: true, active: controller_path == "sessions") %>
             <% end %>
           </div>
         </div>

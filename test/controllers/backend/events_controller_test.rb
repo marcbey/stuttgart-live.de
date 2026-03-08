@@ -20,6 +20,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url
 
     assert_response :success
+    assert_select ".app-nav-links .app-nav-link-active", text: "Backend"
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "Filter entfernen"
     assert_includes response.body, "Auto-Weiter"
