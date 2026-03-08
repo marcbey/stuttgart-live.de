@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_07_114500) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_08_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -167,7 +167,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_114500) do
     t.text "event_info"
     t.decimal "max_price", precision: 10, scale: 2
     t.decimal "min_price", precision: 10, scale: 2
-    t.string "organizer_name"
     t.string "primary_source"
     t.string "promoter_id"
     t.datetime "published_at"
@@ -181,7 +180,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_07_114500) do
     t.datetime "updated_at", null: false
     t.string "venue", null: false
     t.string "youtube_url"
-    t.index ["organizer_name"], name: "index_events_on_organizer_name"
     t.index ["promoter_id"], name: "index_events_on_promoter_id"
     t.index ["published_at", "start_at"], name: "index_events_on_published_at_and_start_at"
     t.index ["published_by_id"], name: "index_events_on_published_by_id"

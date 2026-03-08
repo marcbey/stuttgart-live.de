@@ -25,7 +25,7 @@ module Backend
       persist_session_filters!(
         clear: clear_filters_requested?,
         query: params[:query],
-        organizer: params[:organizer],
+        promoter_id: params[:promoter_id],
         starts_after: params[:starts_after],
         starts_before: params[:starts_before],
         merge_scope: params[:merge_scope],
@@ -245,7 +245,7 @@ module Backend
 
       {
         query: normalized["query"].to_s.strip.presence,
-        organizer: normalized["organizer"].to_s.strip.presence,
+        promoter_id: normalized["promoter_id"].to_s.strip.presence,
         starts_after: starts_after_value,
         starts_before: normalized["starts_before"].to_s.strip.presence,
         merge_scope: normalize_merge_scope(normalized["merge_scope"]),
@@ -253,7 +253,7 @@ module Backend
       }
     end
 
-    def persist_session_filters!(clear:, query:, organizer:, starts_after:, starts_before:, merge_scope:, merge_change_type:)
+    def persist_session_filters!(clear:, query:, promoter_id:, starts_after:, starts_before:, merge_scope:, merge_change_type:)
       if clear
         session.delete(SESSION_FILTERS_KEY)
         return
@@ -261,7 +261,7 @@ module Backend
 
       session[SESSION_FILTERS_KEY] = {
         "query" => query.to_s.strip.presence,
-        "organizer" => organizer.to_s.strip.presence,
+        "promoter_id" => promoter_id.to_s.strip.presence,
         "starts_after" => starts_after.to_s.strip.presence,
         "starts_before" => starts_before.to_s.strip.presence,
         "merge_scope" => normalize_merge_scope(merge_scope),

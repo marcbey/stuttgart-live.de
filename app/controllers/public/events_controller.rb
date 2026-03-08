@@ -6,7 +6,6 @@ module Public
     FILTER_ALL = "all".freeze
     FILTER_SKS = "sks".freeze
     FILTER_VALUES = [ FILTER_ALL, FILTER_SKS ].freeze
-    SKS_ORGANIZER_NAMES = [ "SKS E. Russ GmbH", "SKS Michael Russ GmbH" ].freeze
     SKS_PROMOTER_IDS = %w[10135 382].freeze
 
     def index
@@ -84,11 +83,7 @@ module Public
 
       return relation unless filter == FILTER_SKS
 
-      relation.where(
-        "promoter_id IN (:promoter_ids) OR organizer_name IN (:organizer_names)",
-        promoter_ids: SKS_PROMOTER_IDS,
-        organizer_names: SKS_ORGANIZER_NAMES
-      )
+      relation.where(promoter_id: SKS_PROMOTER_IDS)
     end
 
     def current_public_filter

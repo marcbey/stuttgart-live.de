@@ -21,7 +21,6 @@ module Merging
       :venue_name,
       :title,
       :artist_name,
-      :organizer_name,
       :promoter_id,
       :description_text,
       :ticket_url,
@@ -102,7 +101,6 @@ module Merging
             venue_name: record.venue_name,
             title: record.title,
             artist_name: record.artist_name,
-            organizer_name: organizer_name_for_easyticket(record),
             promoter_id: promoter_id_for_easyticket(record),
             description_text: description_text_for_easyticket(record),
             ticket_url: record.ticket_url,
@@ -136,7 +134,6 @@ module Merging
             venue_name: record.venue_name,
             title: record.title,
             artist_name: record.artist_name,
-            organizer_name: organizer_name_for_eventim(record),
             promoter_id: promoter_id_for_eventim(record),
             description_text: description_text_for_eventim(record),
             ticket_url: record.ticket_url,
@@ -170,7 +167,6 @@ module Merging
             venue_name: record.venue_name,
             title: record.title,
             artist_name: record.artist_name,
-            organizer_name: record.organizer_name,
             promoter_id: nil,
             description_text: description_text_for_reservix(record),
             ticket_url: record.ticket_url,
@@ -197,7 +193,6 @@ module Merging
       event.artist_name = first_present(records, &:artist_name)
       event.city = first_present(records, &:city)
       event.venue = first_present(records, &:venue_name)
-      event.organizer_name = first_present(records, &:organizer_name).presence
       event.promoter_id = first_present(records, &:promoter_id).presence
       event.min_price = first_present_decimal(records, &:min_price)
       event.max_price = first_present_decimal(records, &:max_price)
@@ -439,17 +434,6 @@ module Merging
       end
     end
 
-    def organizer_name_for_easyticket(record)
-      return record.organizer_name.to_s.strip if record.organizer_name.to_s.strip.present?
-
-      projection =
-        Importing::Easyticket::PayloadProjection.new(
-          dump_payload: record.dump_payload,
-          detail_payload: record.detail_payload
-        )
-      projection.to_attributes&.dig(:organizer_name).to_s.strip
-    end
-
     def promoter_id_for_easyticket(record)
       detail_payload = record.detail_payload.is_a?(Hash) ? record.detail_payload.deep_stringify_keys : {}
 
@@ -469,13 +453,6 @@ module Merging
 
       projection = Importing::Eventim::PayloadProjection.new(feed_payload: record.dump_payload)
       projection.to_attributes&.dig(:promoter_id).to_s.strip
-    end
-
-    def organizer_name_for_eventim(record)
-      return record.organizer_name.to_s.strip if record.organizer_name.to_s.strip.present?
-
-      projection = Importing::Eventim::PayloadProjection.new(feed_payload: record.dump_payload)
-      projection.to_attributes&.dig(:organizer_name).to_s.strip
     end
 
     def begin_time_for_easyticket(record)
@@ -707,7 +684,6 @@ module Merging
               "venue_name" => record.venue_name,
               "title" => record.title,
               "artist_name" => record.artist_name,
-              "organizer_name" => record.organizer_name,
               "promoter_id" => record.promoter_id,
               "description_text" => record.description_text,
               "ticket_url" => record.ticket_url,

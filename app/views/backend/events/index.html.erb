@@ -47,8 +47,8 @@
             <%= form.text_field :query, value: @filters[:query], placeholder: "Band, Venue, Stadt", class: "form-input" %>
           </div>
           <div>
-            <%= form.label :organizer, "Organizer", class: "form-label" %>
-            <%= form.text_field :organizer, value: @filters[:organizer], placeholder: "zB SKS", class: "form-input" %>
+            <%= form.label :promoter_id, "Promoter-ID", class: "form-label" %>
+            <%= form.text_field :promoter_id, value: @filters[:promoter_id], placeholder: "zB 10135", class: "form-input" %>
           </div>
           <div class="filter-merge-row">
             <div class="filter-merge-field">

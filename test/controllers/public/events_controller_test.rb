@@ -30,8 +30,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      organizer_name: "SKS E. Russ GmbH",
-      promoter_id: nil,
+      promoter_id: "382",
       source_snapshot: {}
     )
 
@@ -45,7 +44,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      organizer_name: "Other Organizer GmbH",
       promoter_id: "99999",
       source_snapshot: {}
     )
@@ -70,8 +68,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      organizer_name: "SKS Michael Russ GmbH",
-      promoter_id: nil,
+      promoter_id: "382",
       source_snapshot: {}
     )
 
@@ -85,7 +82,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      organizer_name: nil,
       promoter_id: "10135",
       source_snapshot: {}
     )
@@ -100,7 +96,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      organizer_name: "Other Organizer GmbH",
       promoter_id: "382",
       source_snapshot: {}
     )
@@ -115,7 +110,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      organizer_name: "Other Organizer GmbH",
       promoter_id: "99999",
       source_snapshot: {}
     )
@@ -144,8 +138,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      organizer_name: "SKS E. Russ GmbH",
-      promoter_id: nil,
+      promoter_id: "10135",
       source_snapshot: {}
     )
 
@@ -159,8 +152,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      organizer_name: "SKS E. Russ GmbH",
-      promoter_id: nil,
+      promoter_id: "10135",
       source_snapshot: {}
     )
 

@@ -1,28 +1,4 @@
 module Backend::EventsHelper
-  def event_display_organizer_name(event)
-    organizer_name = event.organizer_name.to_s.strip
-    return organizer_name if organizer_name.present?
-
-    event_source_payloads(event).each do |source|
-      case source[:source]
-      when "easyticket"
-        attributes =
-          Importing::Easyticket::PayloadProjection.new(
-            dump_payload: source[:dump_payload],
-            detail_payload: source[:detail_payload]
-          ).to_attributes
-        candidate = attributes&.dig(:organizer_name).to_s.strip
-        return candidate if candidate.present?
-      when "eventim"
-        attributes = Importing::Eventim::PayloadProjection.new(feed_payload: source[:dump_payload]).to_attributes
-        candidate = attributes&.dig(:organizer_name).to_s.strip
-        return candidate if candidate.present?
-      end
-    end
-
-    nil
-  end
-
   def event_display_promoter_id(event)
     promoter_id = event.promoter_id.to_s.strip
     return promoter_id if promoter_id.present?

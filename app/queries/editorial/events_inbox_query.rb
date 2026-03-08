@@ -20,12 +20,9 @@ module Editorial
       relation = relation.where("start_at >= ?", starts_after.beginning_of_day) if starts_after.present?
       relation = relation.where("start_at <= ?", starts_before.end_of_day) if starts_before.present?
       relation = apply_merge_change_filter(relation)
-      if organizer.present?
-        token = "%#{organizer.downcase}%"
-        relation = relation.where(
-          "LOWER(COALESCE(organizer_name, '')) LIKE :q OR LOWER(COALESCE(promoter_id, '')) LIKE :q",
-          q: token
-        )
+      if promoter_id.present?
+        token = "%#{promoter_id.downcase}%"
+        relation = relation.where("LOWER(COALESCE(promoter_id, '')) LIKE :q", q: token)
       end
 
       if query.present?
@@ -60,8 +57,8 @@ module Editorial
       params[:query].to_s.strip.presence
     end
 
-    def organizer
-      params[:organizer].to_s.strip.presence
+    def promoter_id
+      params[:promoter_id].to_s.strip.presence
     end
 
     def apply_merge_change_filter(relation)
