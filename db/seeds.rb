@@ -11,7 +11,8 @@
 ImportSource.ensure_supported_sources!
 
 {
-  "easyticket" => 10,
+  "easyticket" => 0,
+  "reservix" => 10,
   "eventim" => 20
 }.each do |source_type, priority_rank|
   ProviderPriority.find_or_initialize_by(source_type: source_type).tap do |priority|

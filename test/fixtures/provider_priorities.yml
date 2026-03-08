@@ -1,9 +1,14 @@
+easyticket:
+  source_type: easyticket
+  priority_rank: 0
+  active: true
+
+reservix:
+  source_type: reservix
+  priority_rank: 10
+  active: true
+
 eventim:
   source_type: eventim
   priority_rank: 20
-  active: true
-
-easyticket:
-  source_type: easyticket
-  priority_rank: 10
   active: true

@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     resources :users, only: [ :index, :new, :create, :edit, :update ]
 
     resources :import_sources, only: [ :index, :edit, :update ] do
+      post :sync_imported_events, on: :collection
       post :run_easyticket, on: :member
       post :stop_easyticket_run, on: :member
       post :run_eventim, on: :member
@@ -25,7 +26,6 @@ Rails.application.routes.draw do
       patch :bulk, on: :collection
       post :apply_filters, on: :collection
       post :next_event_preference, on: :collection
-      post :sync_imported_events, on: :collection
       resources :event_images, only: [ :create, :update, :destroy ]
     end
   end

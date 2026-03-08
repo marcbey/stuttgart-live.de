@@ -15,7 +15,6 @@ module Backend
       @selected_merge_run_id = selected_merge_run_id_for_filters(@filters)
       @events = filtered_events_for_status(@filters[:status])
       @filtered_events_count = filtered_events_count(@events)
-      @merge_sync_needed = merge_sync_needed?
       @status_filters = status_filters
       @all_genres = Genre.order(:name)
       @selected_event = selected_event_from(@events)
@@ -201,11 +200,6 @@ module Backend
       redirect_to backend_events_path(status: current_status), notice: "Bulk-Aktion abgeschlossen (#{processed} Events)."
     end
 
-    def sync_imported_events
-      Merging::SyncImportedEventsJob.perform_later
-      redirect_to backend_events_path(status: current_status), notice: "Merge-Sync wurde gestartet."
-    end
-
     private
 
     def set_event
@@ -324,18 +318,6 @@ module Backend
 
     def status_filters
       @status_filters ||= Event::STATUSES.reject { |status| status == "imported" }
-    end
-
-    def merge_sync_needed?
-      latest_import_success_at = latest_successful_run_finished_at_for(source_types: %w[easyticket eventim])
-      return false if latest_import_success_at.blank?
-
-      latest_merge_success_at = latest_successful_run_finished_at_for(source_types: [ "merge" ])
-      latest_merge_success_at.blank? || latest_import_success_at > latest_merge_success_at
-    end
-
-    def latest_successful_run_finished_at_for(source_types:)
-      ImportRun.where(source_type: source_types, status: "succeeded").maximum(:finished_at)
     end
 
     def latest_successful_merge_run

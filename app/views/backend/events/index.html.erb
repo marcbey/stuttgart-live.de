@@ -12,11 +12,6 @@
     <div class="backend-topbar-actions-wrap">
       <div class="backend-topbar-actions">
         <%= link_to "Neues Event", new_backend_event_path, class: "button button-secondary" %>
-        <%= button_to "Import-Merge synchronisieren",
-                      sync_imported_events_backend_events_path(status: @filters[:status]),
-                      method: :post,
-                      class: [ "button", (@merge_sync_needed ? "button-attention" : nil) ].compact.join(" "),
-                      title: (@merge_sync_needed ? "Seit dem letzten Merge wurden neue Importdaten gefunden." : nil) %>
         <%= link_to "Importer", backend_import_sources_path, class: "button button-ghost" %>
       </div>
       <div id="flash-messages" class="backend-inline-flash">

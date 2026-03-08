@@ -14,6 +14,30 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "index highlights import merge button when merge sync is needed" do
+    get backend_import_sources_url
+
+    assert_response :success
+    assert_includes response.body, "Import-Merge synchronisieren"
+    assert_includes response.body, "button-attention"
+  end
+
+  test "index does not highlight import merge button when latest merge is newer than imports" do
+    ImportRun.create!(
+      import_source: @source,
+      source_type: "merge",
+      status: "succeeded",
+      started_at: Time.zone.parse("2026-03-03 12:00:00"),
+      finished_at: Time.zone.parse("2026-03-03 12:05:00")
+    )
+
+    get backend_import_sources_url
+
+    assert_response :success
+    assert_includes response.body, "Import-Merge synchronisieren"
+    assert_not_includes response.body, "button-attention"
+  end
+
   test "should get index as json with recent runs" do
     get backend_import_sources_url(format: :json)
     assert_response :success
@@ -148,6 +172,16 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     }
     assert_redirected_to backend_import_sources_url
     assert_equal original_name, @source.reload.name
+  end
+
+  test "should enqueue merge sync from import sources page" do
+    assert_enqueued_jobs 1, only: Merging::SyncImportedEventsJob do
+      post sync_imported_events_backend_import_sources_url
+    end
+
+    assert_redirected_to backend_import_sources_url
+    follow_redirect!
+    assert_includes response.body, "Merge-Sync wurde gestartet."
   end
 
   test "should enqueue easyticket run" do

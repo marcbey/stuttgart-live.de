@@ -9,6 +9,7 @@ module Backend
       release_stale_running_runs!
       @import_sources = ImportSource.includes(:import_source_config).order(:source_type)
       @recent_runs = recent_runs_for_list
+      @merge_sync_needed = merge_sync_needed?
 
       respond_to do |format|
         format.html
@@ -19,6 +20,11 @@ module Backend
     end
 
     def edit
+    end
+
+    def sync_imported_events
+      Merging::SyncImportedEventsJob.perform_later
+      redirect_to backend_import_sources_path, notice: "Merge-Sync wurde gestartet."
     end
 
     def update
@@ -211,6 +217,18 @@ module Backend
         .where(source_type: Backend::ImportRunsBroadcaster::LISTED_SOURCE_TYPES)
         .recent
         .limit(Backend::ImportRunsBroadcaster::RECENT_RUNS_LIMIT)
+    end
+
+    def merge_sync_needed?
+      latest_import_success_at = latest_successful_run_finished_at_for(source_types: %w[easyticket reservix eventim])
+      return false if latest_import_success_at.blank?
+
+      latest_merge_success_at = latest_successful_run_finished_at_for(source_types: [ "merge" ])
+      latest_merge_success_at.blank? || latest_import_success_at > latest_merge_success_at
+    end
+
+    def latest_successful_run_finished_at_for(source_types:)
+      ImportRun.where(source_type: source_types, status: "succeeded").maximum(:finished_at)
     end
 
     def respond_with_importer_feedback(notice: nil, alert: nil)

@@ -6,6 +6,11 @@
       <h1>Importer-Konfiguration</h1>
     </div>
     <div class="backend-topbar-actions">
+      <%= button_to "Import-Merge synchronisieren",
+                    sync_imported_events_backend_import_sources_path,
+                    method: :post,
+                    class: [ "button", (@merge_sync_needed ? "button-attention" : nil) ].compact.join(" "),
+                    title: (@merge_sync_needed ? "Seit dem letzten Merge wurden neue Importdaten gefunden." : nil) %>
       <%= link_to "Zur Redaktion", backend_events_path, class: "button button-secondary" %>
     </div>
   </header>
