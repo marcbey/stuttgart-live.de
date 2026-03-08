@@ -220,6 +220,12 @@ a {
   letter-spacing: 0.06em;
 }
 
+.button-mini {
+  padding: 0.26rem 0.48rem;
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+}
+
 .button-attention {
   border-color: #b94a00;
   background: linear-gradient(180deg, #ffb347 0%, #ff8f1f 100%);
@@ -423,15 +429,15 @@ a {
 }
 
 .event-card-grid-1-2 .event-card-image-wrap {
-  aspect-ratio: 1 / 2.05;
+  aspect-ratio: 1 / 2.366;
 }
 
 .event-card-grid-2-1 .event-card-image-wrap {
-  aspect-ratio: 2 / 1.08;
+  aspect-ratio: 2 / 1.139;
 }
 
 .event-card-grid-2-2 .event-card-image-wrap {
-  aspect-ratio: 1 / 1.04;
+  aspect-ratio: 1 / 1.16;
 }
 
 .event-card-image,
@@ -1448,7 +1454,7 @@ a {
 .event-image-main-head {
   display: grid;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.9rem;
 }
 
 .event-image-main-thumb {
@@ -1466,10 +1472,35 @@ a {
   align-items: flex-start;
 }
 
+.event-image-main-side {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+}
+
+.event-image-main-card {
+  border: 1px solid #ededed;
+  background: #fbfbfb;
+  padding: 0.9rem;
+}
+
+.event-image-main-body {
+  display: grid;
+  gap: 1rem;
+}
+
+.event-image-meta-inline-form {
+  width: min(100%, 17rem);
+}
+
+.event-image-crop-shell {
+  min-width: 0;
+}
+
 @media (min-width: 700px) {
   .event-image-main-head {
     grid-template-columns: 96px minmax(0, 1fr);
-    align-items: center;
+    align-items: start;
   }
 }
 
@@ -1618,15 +1649,15 @@ a {
 }
 
 .event-image-crop-frame[data-grid-variant="1x2"] {
-  aspect-ratio: 1 / 2.05;
+  aspect-ratio: 1 / 2.366;
 }
 
 .event-image-crop-frame[data-grid-variant="2x1"] {
-  aspect-ratio: 2 / 1.08;
+  aspect-ratio: 2 / 1.139;
 }
 
 .event-image-crop-frame[data-grid-variant="2x2"] {
-  aspect-ratio: 1 / 1.04;
+  aspect-ratio: 1 / 1.16;
 }
 
 .event-image-crop-preview-image {
@@ -1638,6 +1669,10 @@ a {
 .event-image-crop-controls {
   display: grid;
   gap: 0.45rem;
+}
+
+.event-image-crop-controls .button {
+  justify-self: start;
 }
 
 @media (min-width: 900px) {
@@ -1715,19 +1750,6 @@ a {
   .event-card-grid-2-1,
   .event-card-grid-2-2 {
     grid-column: span 2;
-  }
-
-  .event-card-grid-1-2 .event-card-image-wrap,
-  .event-card-grid-2-2 .event-card-image-wrap {
-    height: 100%;
-    aspect-ratio: auto;
-  }
-
-  .event-card-grid-1-2 .event-card-link,
-  .event-card-grid-2-2 .event-card-link,
-  .event-card-grid-1-2 .event-card-link picture,
-  .event-card-grid-2-2 .event-card-link picture {
-    height: 100%;
   }
 
   .event-detail-header {

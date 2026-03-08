@@ -1,7 +1,5 @@
 module Backend
   class EventImagesController < BaseController
-    EDITORIAL_MAIN_PURPOSE = "editorial_main".freeze
-
     before_action :set_event
     before_action :set_event_image, only: [ :update, :destroy ]
 
@@ -23,18 +21,6 @@ module Backend
       errors = []
 
       EventImage.transaction do
-        if purpose == EDITORIAL_MAIN_PURPOSE
-          replace_unique_images!(purpose: purpose, grid_variant: create_params[:grid_variant])
-          create_editorial_main_images!(
-            uploaded_file: files.first,
-            alt_text: create_params[:alt_text],
-            sub_text: create_params[:sub_text]
-          )
-          created = 2
-          raise ActiveRecord::Rollback if errors.any?
-          next
-        end
-
         replace_unique_images!(purpose: purpose, grid_variant: create_params[:grid_variant])
 
         files.each do |uploaded_file|
@@ -42,7 +28,10 @@ module Backend
             purpose: purpose,
             grid_variant: create_params[:grid_variant],
             alt_text: create_params[:alt_text],
-            sub_text: create_params[:sub_text]
+            sub_text: create_params[:sub_text],
+            card_focus_x: create_params[:card_focus_x],
+            card_focus_y: create_params[:card_focus_y],
+            card_zoom: create_params[:card_zoom]
           )
           image.file.attach(uploaded_file)
 
@@ -73,10 +62,10 @@ module Backend
       if @event_image.update(update_params)
         respond_to do |format|
           format.turbo_stream do
-            flash.now[:notice] = "Bild-Metadaten wurden gespeichert."
-            render_slider_image_update_turbo_stream
+            flash.now[:notice] = event_image_update_notice
+            render_event_image_update_turbo_stream
           end
-          format.html { redirect_to editor_redirect_path, notice: "Bild-Metadaten wurden gespeichert." }
+          format.html { redirect_to editor_redirect_path, notice: event_image_update_notice }
         end
       else
         respond_to do |format|
@@ -98,26 +87,12 @@ module Backend
       EventImage.transaction do
         replace_unique_images!(purpose: purpose, grid_variant: grid_variant)
 
-        if purpose == EDITORIAL_MAIN_PURPOSE
-          Backend::ImportEventImageImporter.call(
-            event: @event,
-            import_event_image: import_image,
-            purpose: EventImage::PURPOSE_DETAIL_HERO
-          )
-          Backend::ImportEventImageImporter.call(
-            event: @event,
-            import_event_image: import_image,
-            purpose: EventImage::PURPOSE_GRID_TILE,
-            grid_variant: EventImage::GRID_VARIANT_1X1
-          )
-        else
-          Backend::ImportEventImageImporter.call(
-            event: @event,
-            import_event_image: import_image,
-            purpose: purpose,
-            grid_variant: grid_variant
-          )
-        end
+        Backend::ImportEventImageImporter.call(
+          event: @event,
+          import_event_image: import_image,
+          purpose: purpose,
+          grid_variant: grid_variant
+        )
       end
 
       redirect_to editor_redirect_path, notice: "Import-Bild wurde in die Redaktion übernommen."
@@ -140,12 +115,15 @@ module Backend
     end
 
     def destroy_editorial_main
-      EventImage.transaction do
-        @event.event_images.detail_hero.find_each(&:destroy!)
-        @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).find_each(&:destroy!)
-      end
+      @event.event_images.detail_hero.find_each(&:destroy!)
 
-      redirect_to editor_redirect_path, notice: "Eventbild wurde gelöscht."
+      respond_to do |format|
+        format.turbo_stream do
+          flash.now[:notice] = "Eventbild wurde gelöscht."
+          render_event_image_section_turbo_stream
+        end
+        format.html { redirect_to editor_redirect_path, notice: "Eventbild wurde gelöscht." }
+      end
     end
 
     private
@@ -159,7 +137,16 @@ module Backend
     end
 
     def create_params
-      params.require(:event_image).permit(:purpose, :grid_variant, :alt_text, :sub_text, files: [])
+      params.require(:event_image).permit(
+        :purpose,
+        :grid_variant,
+        :alt_text,
+        :sub_text,
+        :card_focus_x,
+        :card_focus_y,
+        :card_zoom,
+        files: []
+      )
     end
 
     def update_params
@@ -170,47 +157,11 @@ module Backend
       params.require(:event_image).permit(:import_event_image_id, :purpose, :grid_variant)
     end
 
-    def replace_unique_images!(purpose:, grid_variant:)
+    def replace_unique_images!(purpose:, grid_variant: nil)
       case purpose.to_s
-      when EDITORIAL_MAIN_PURPOSE
-        @event.event_images.detail_hero.find_each(&:destroy!)
-        @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).find_each(&:destroy!)
       when EventImage::PURPOSE_DETAIL_HERO
         @event.event_images.detail_hero.find_each(&:destroy!)
-      when EventImage::PURPOSE_GRID_TILE
-        variant = grid_variant.to_s.strip
-        return if variant.blank?
-
-        @event.event_images.grid_tile.where(grid_variant: variant).find_each(&:destroy!)
       end
-    end
-
-    def create_editorial_main_images!(uploaded_file:, alt_text:, sub_text:)
-      blob = build_blob_from_upload(uploaded_file)
-
-      @event.event_images.create!(
-        purpose: EventImage::PURPOSE_DETAIL_HERO,
-        alt_text: alt_text,
-        sub_text: sub_text,
-        file: blob
-      )
-      @event.event_images.create!(
-        purpose: EventImage::PURPOSE_GRID_TILE,
-        grid_variant: EventImage::GRID_VARIANT_1X1,
-        alt_text: alt_text,
-        sub_text: sub_text,
-        file: blob
-      )
-    end
-
-    def build_blob_from_upload(uploaded_file)
-      uploaded_file.rewind if uploaded_file.respond_to?(:rewind)
-
-      ActiveStorage::Blob.create_and_upload!(
-        io: uploaded_file,
-        filename: uploaded_file.original_filename,
-        content_type: uploaded_file.content_type
-      )
     end
 
     def uploaded_files
@@ -228,20 +179,20 @@ module Backend
       backend_events_path(status: status, event_id: @event.id)
     end
 
-    def render_slider_image_update_turbo_stream
-      unless @event_image.slider?
-        render turbo_stream: turbo_stream.update("flash-messages", partial: "layouts/flash_messages")
+    def render_event_image_update_turbo_stream
+      if @event_image.slider?
+        render turbo_stream: [
+          turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+          turbo_stream.replace(
+            view_context.dom_id(@event_image, :slider_card),
+            partial: "backend/events/slider_image_editor_card",
+            locals: { event: @event, image: @event_image, editor_status: current_editor_status }
+          )
+        ]
         return
       end
 
-      render turbo_stream: [
-        turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
-        turbo_stream.replace(
-          view_context.dom_id(@event_image, :slider_card),
-          partial: "backend/events/slider_image_editor_card",
-          locals: { event: @event, image: @event_image, editor_status: current_editor_status }
-        )
-      ]
+      render_event_image_section_turbo_stream
     end
 
     def render_slider_image_destroy_turbo_stream
@@ -256,8 +207,23 @@ module Backend
       ]
     end
 
+    def render_event_image_section_turbo_stream
+      render turbo_stream: [
+        turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+        turbo_stream.replace(
+          view_context.dom_id(@event, :event_image_section),
+          partial: "backend/events/event_image_section",
+          locals: { event: @event, editor_status: current_editor_status }
+        )
+      ]
+    end
+
     def current_editor_status
       params[:status].presence || @event.status
+    end
+
+    def event_image_update_notice
+      @event_image.detail_hero? ? "Eventbild wurde gespeichert." : "Bild-Metadaten wurden gespeichert."
     end
   end
 end

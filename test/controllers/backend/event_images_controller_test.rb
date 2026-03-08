@@ -73,37 +73,41 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_not EventImage.exists?(existing.id)
   end
 
-  test "creates shared editorial main image for header and grid" do
+  test "creates event image with optional grid settings" do
     sign_in_as(@user)
 
     assert_difference -> { @event.event_images.detail_hero.count }, 1 do
-      assert_difference -> { @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).count }, 1 do
-        post backend_event_event_images_url(@event), params: {
-          status: "needs_review",
-          event_image: {
-            purpose: Backend::EventImagesController::EDITORIAL_MAIN_PURPOSE,
-            alt_text: "Eventbild Alt",
-            sub_text: "Eventbild Sub",
-            files: [ uploaded_image ]
-          }
+      post backend_event_event_images_url(@event), params: {
+        status: "needs_review",
+        event_image: {
+          purpose: EventImage::PURPOSE_DETAIL_HERO,
+          alt_text: "Eventbild Alt",
+          sub_text: "Eventbild Sub",
+          grid_variant: EventImage::GRID_VARIANT_2X1,
+          card_focus_x: "18",
+          card_focus_y: "72",
+          card_zoom: "145",
+          files: [ uploaded_image ]
         }
-      end
+      }
     end
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
-    assert_equal "Eventbild Alt", @event.event_images.detail_hero.ordered.last.alt_text
-    assert_equal "Eventbild Alt", @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).ordered.last.alt_text
+    created = @event.event_images.detail_hero.ordered.last
+    assert_equal "Eventbild Alt", created.alt_text
+    assert_equal "Eventbild Sub", created.sub_text
+    assert_equal EventImage::GRID_VARIANT_2X1, created.grid_variant
+    assert_equal 18.0, created.card_focus_x_value
+    assert_equal 72.0, created.card_focus_y_value
+    assert_equal 145.0, created.card_zoom_value
   end
 
-  test "deletes shared editorial main image for header and grid" do
+  test "deletes event image" do
     sign_in_as(@user)
     create_event_image(purpose: EventImage::PURPOSE_DETAIL_HERO)
-    create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
 
     assert_difference -> { @event.event_images.detail_hero.count }, -1 do
-      assert_difference -> { @event.event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).count }, -1 do
-        delete destroy_editorial_main_backend_event_event_images_url(@event), params: { status: "needs_review" }
-      end
+      delete destroy_editorial_main_backend_event_event_images_url(@event), params: { status: "needs_review" }
     end
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
@@ -150,9 +154,9 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neue Subline", image.sub_text
   end
 
-  test "updates card crop settings for grid images" do
+  test "updates card crop settings for event image" do
     sign_in_as(@user)
-    image = create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
+    image = create_event_image(purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
 
     patch backend_event_event_image_url(@event, image), params: {
       status: "needs_review",
@@ -170,9 +174,9 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 145.0, image.card_zoom_value
   end
 
-  test "updates grid variant for grid images" do
+  test "updates grid variant for event image" do
     sign_in_as(@user)
-    image = create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
+    image = create_event_image(purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
 
     patch backend_event_event_image_url(@event, image), params: {
       status: "needs_review",
@@ -185,13 +189,13 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal EventImage::GRID_VARIANT_1X2, image.reload.grid_variant
   end
 
-  test "creates editorial grid image from import image" do
+  test "creates event image from import image" do
     sign_in_as(@user)
     import_image = create_import_event_image
 
     response = fake_image_response
 
-    count_before = EventImage.where(event: @event, purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1).count
+    count_before = EventImage.where(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO).count
     http_singleton = Net::HTTP.singleton_class
     original_get_response = Net::HTTP.method(:get_response)
 
@@ -199,30 +203,66 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     begin
       post create_from_import_backend_event_event_images_url(@event), params: {
         status: "needs_review",
-        event_image: {
-          import_event_image_id: import_image.id,
-          purpose: EventImage::PURPOSE_GRID_TILE,
-          grid_variant: EventImage::GRID_VARIANT_1X1
+          event_image: {
+            import_event_image_id: import_image.id,
+            purpose: EventImage::PURPOSE_DETAIL_HERO,
+            grid_variant: EventImage::GRID_VARIANT_1X1
+          }
         }
-      }
     ensure
       http_singleton.define_method(:get_response, original_get_response)
     end
 
-    count_after = EventImage.where(event: @event, purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1).count
+    count_after = EventImage.where(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO).count
     assert_equal count_before + 1, count_after, flash[:alert].presence || "expected imported image to be created"
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
   end
 
-  test "deletes event image" do
+  test "deletes arbitrary event image by member route" do
     sign_in_as(@user)
-    image = create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
+    image = create_event_image(purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
 
     assert_difference -> { @event.event_images.count }, -1 do
       delete backend_event_event_image_url(@event, image), params: { status: "needs_review" }
     end
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+  end
+
+  test "updates event image via turbo stream without redirect" do
+    sign_in_as(@user)
+    image = create_event_image(purpose: EventImage::PURPOSE_DETAIL_HERO, alt_text: nil, sub_text: nil)
+
+    patch backend_event_event_image_url(@event, image), params: {
+      status: "needs_review",
+      event_image: {
+        alt_text: "Neuer Eventbild Alt",
+        sub_text: "Neue Eventbild Subline"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "Eventbild wurde gespeichert."
+    assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(@event, :event_image_section)}\""
+    assert_includes response.body, "action=\"replace\""
+  end
+
+  test "deletes event image via turbo stream and replaces section" do
+    sign_in_as(@user)
+    create_event_image(purpose: EventImage::PURPOSE_DETAIL_HERO)
+
+    assert_difference -> { @event.event_images.detail_hero.count }, -1 do
+      delete destroy_editorial_main_backend_event_event_images_url(@event), params: { status: "needs_review" }, as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "Eventbild wurde gelöscht."
+    assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(@event, :event_image_section)}\""
+    assert_includes response.body, "action=\"replace\""
   end
 
   test "deletes slider image via turbo stream and removes its card" do

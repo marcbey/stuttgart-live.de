@@ -132,36 +132,17 @@ class Event < ApplicationRecord
     event_images.slider.ordered
   end
 
+  def event_image
+    event_images.detail_hero.ordered.first
+  end
+
   private
 
   def editorial_image_for(slot:, breakpoint:)
-    normalized_slot = slot.to_sym
-    normalized_breakpoint = breakpoint.to_sym
+    detail_hero = event_image
+    return detail_hero if detail_hero.present?
 
-    if normalized_slot == :detail_hero
-      detail_hero = event_images.detail_hero.ordered.first
-      return detail_hero if detail_hero.present?
-
-      grid_default = event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).ordered.first
-      return grid_default if grid_default.present?
-
-      return event_images.grid_tile.ordered.first
-    end
-
-    if normalized_slot == :social_card
-      detail_hero = event_images.detail_hero.ordered.first
-      return detail_hero if detail_hero.present?
-    end
-
-    if normalized_breakpoint == :mobile
-      grid_default = event_images.grid_tile.where(grid_variant: EventImage::GRID_VARIANT_1X1).ordered.first
-      return grid_default if grid_default.present?
-    end
-
-    grid_variant = GRID_VARIANT_BY_SLOT[normalized_slot]
-    return nil if grid_variant.blank?
-
-    event_images.grid_tile.where(grid_variant: grid_variant).ordered.first
+    nil
   end
 
   def normalize_attributes

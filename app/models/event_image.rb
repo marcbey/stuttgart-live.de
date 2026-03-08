@@ -4,11 +4,9 @@ class EventImage < ApplicationRecord
   DEFAULT_CARD_ZOOM = 100.0
   PURPOSE_SLIDER = "slider".freeze
   PURPOSE_DETAIL_HERO = "detail_hero".freeze
-  PURPOSE_GRID_TILE = "grid_tile".freeze
   PURPOSES = [
     PURPOSE_SLIDER,
-    PURPOSE_DETAIL_HERO,
-    PURPOSE_GRID_TILE
+    PURPOSE_DETAIL_HERO
   ].freeze
 
   GRID_VARIANT_1X1 = "1x1".freeze
@@ -28,7 +26,6 @@ class EventImage < ApplicationRecord
   scope :ordered, -> { order(created_at: :asc, id: :asc) }
   scope :slider, -> { where(purpose: PURPOSE_SLIDER) }
   scope :detail_hero, -> { where(purpose: PURPOSE_DETAIL_HERO) }
-  scope :grid_tile, -> { where(purpose: PURPOSE_GRID_TILE) }
 
   validates :purpose, presence: true, inclusion: { in: PURPOSES }
   validates :grid_variant, inclusion: { in: GRID_VARIANTS }, allow_nil: true
@@ -37,10 +34,8 @@ class EventImage < ApplicationRecord
   validates :card_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :card_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :card_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
-  validate :grid_variant_presence_for_grid_tile
-  validate :grid_variant_absence_for_non_grid_tile
+  validate :grid_variant_absence_for_slider
   validate :single_detail_hero_per_event, if: :detail_hero?
-  validate :single_grid_variant_per_event, if: :grid_tile?
   validate :file_attached
   validate :file_is_image
 
@@ -54,14 +49,9 @@ class EventImage < ApplicationRecord
     purpose == PURPOSE_DETAIL_HERO
   end
 
-  def grid_tile?
-    purpose == PURPOSE_GRID_TILE
-  end
-
   def label
     return "slider" if slider?
-    return "detail hero" if detail_hero?
-    return "grid #{grid_variant}" if grid_tile?
+    return "event image" if detail_hero?
 
     purpose.to_s
   end
@@ -97,18 +87,11 @@ class EventImage < ApplicationRecord
     value.to_f.round(2)
   end
 
-  def grid_variant_presence_for_grid_tile
-    return unless grid_tile?
-    return if grid_variant.present?
-
-    errors.add(:grid_variant, "muss für Grid-Bilder gesetzt sein")
-  end
-
-  def grid_variant_absence_for_non_grid_tile
-    return if grid_tile?
+  def grid_variant_absence_for_slider
+    return unless slider?
     return if grid_variant.blank?
 
-    errors.add(:grid_variant, "ist nur für Grid-Bilder erlaubt")
+    errors.add(:grid_variant, "ist nur für das Eventbild erlaubt")
   end
 
   def single_detail_hero_per_event
@@ -119,20 +102,6 @@ class EventImage < ApplicationRecord
     return unless relation.exists?
 
     errors.add(:purpose, "darf nur einmal pro Event als Detail-Hero vorkommen")
-  end
-
-  def single_grid_variant_per_event
-    return if event_id.blank? || grid_variant.blank?
-
-    relation = self.class.where(
-      event_id: event_id,
-      purpose: PURPOSE_GRID_TILE,
-      grid_variant: grid_variant
-    )
-    relation = relation.where.not(id: id) if persisted?
-    return unless relation.exists?
-
-    errors.add(:grid_variant, "ist für dieses Event bereits belegt")
   end
 
   def file_attached

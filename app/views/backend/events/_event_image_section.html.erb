@@ -1,0 +1,145 @@
+<% event_image = event.event_images.detail_hero.ordered.first %>
+
+<section id="<%= dom_id(event, :event_image_section) %>" class="offer-section event-image-section">
+  <h3>Eventbild</h3>
+
+  <% if event_image.present? %>
+    <% meta_form_id = dom_id(event_image, :meta) %>
+    <% crop_form_id = dom_id(event_image, :crop) %>
+
+    <div class="event-image-main-card">
+      <div class="event-image-main-head">
+        <%= image_tag event_image.file,
+                      alt: event_image.alt_text.presence || "#{event.artist_name} - #{event.title}",
+                      class: "event-image-main-thumb" %>
+        <div class="event-image-main-side">
+          <div class="slider-image-editor-meta">
+            <%= form_with model: [ :backend, event, event_image ],
+                          id: meta_form_id,
+                          method: :patch,
+                          class: "slider-image-meta-form event-image-meta-inline-form" do |form| %>
+              <%= hidden_field_tag :status, editor_status %>
+              <%= form.text_field :alt_text, placeholder: "Alt-Text (optional)", class: "form-input" %>
+              <%= form.text_field :sub_text, placeholder: "Sub-Text (optional)", class: "form-input" %>
+            <% end %>
+
+            <div class="slider-image-meta-actions">
+              <%= form_with url: backend_event_event_images_path(event),
+                            method: :post,
+                            class: "event-image-inline-upload",
+                            html: { multipart: true },
+                            data: { turbo: false } do %>
+                <%= hidden_field_tag :status, editor_status %>
+                <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
+                <%= hidden_field_tag "event_image[alt_text]", event_image.alt_text %>
+                <%= hidden_field_tag "event_image[sub_text]", event_image.sub_text %>
+                <%= hidden_field_tag "event_image[grid_variant]", event_image.grid_variant %>
+                <%= hidden_field_tag "event_image[card_focus_x]", event_image.card_focus_x_value %>
+                <%= hidden_field_tag "event_image[card_focus_y]", event_image.card_focus_y_value %>
+                <%= hidden_field_tag "event_image[card_zoom]", event_image.card_zoom_value %>
+                <%= file_field_tag "event_image[files][]",
+                                   accept: "image/*",
+                                   required: true,
+                                   class: "event-image-inline-file-input",
+                                   id: dom_id(event, :event_image_upload),
+                                   onchange: "this.form.requestSubmit();" %>
+                <button type="button"
+                        class="button button-secondary button-compact"
+                        onclick="document.getElementById('<%= dom_id(event, :event_image_upload) %>')?.click();">Bild ändern</button>
+              <% end %>
+              <%= button_tag "Meta speichern",
+                             type: :submit,
+                             form: meta_form_id,
+                             class: "button button-ghost button-compact" %>
+              <%= button_to "Bild löschen",
+                            destroy_editorial_main_backend_event_event_images_path(event, status: editor_status),
+                            method: :delete,
+                            class: "button button-ghost button-compact",
+                            form: { data: { turbo_stream: true } } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="event-image-main-body">
+        <%= form_with model: [ :backend, event, event_image ],
+                      id: crop_form_id,
+                      method: :patch,
+                      class: "event-image-crop-shell" do |form| %>
+          <%= hidden_field_tag :status, editor_status %>
+          <div class="event-image-crop-editor" data-controller="event-image-crop-preview">
+            <div class="action-cell">
+              <%= form.select :grid_variant,
+                              options_for_select([ [ "Kein Crop", "" ] ] + EventImage::GRID_VARIANTS.map { |variant| [ variant, variant ] }, event_image.grid_variant),
+                              {},
+                              class: "form-input",
+                              data: { event_image_crop_preview_target: "gridVariant", action: "change->event-image-crop-preview#update" } %>
+            </div>
+            <div class="event-image-crop-preview">
+              <div class="event-image-crop-frame"
+                   data-event-image-crop-preview-target="previewFrame"
+                   data-grid-variant="<%= event_image.grid_variant %>">
+                <%= image_tag event_image.file,
+                              alt: event_image.alt_text.presence || "#{event.artist_name} - #{event.title}",
+                              class: "event-image-crop-preview-image",
+                              style: event_card_image_style(event_image),
+                              data: { event_image_crop_preview_target: "previewImage" } %>
+              </div>
+              <p>Kartenausschnitt-Vorschau fuer die Event-Kacheln unter /events.</p>
+            </div>
+
+            <div class="event-image-crop-controls">
+              <label class="form-label" for="<%= dom_id(event_image, :card_focus_x) %>">Ausschnitt horizontal <span data-event-image-crop-preview-target="focusXOutput"><%= event_image.card_focus_x_value.round %>%</span></label>
+              <%= form.range_field :card_focus_x,
+                                   min: 0,
+                                   max: 100,
+                                   step: 1,
+                                   id: dom_id(event_image, :card_focus_x),
+                                   class: "form-range",
+                                   data: { event_image_crop_preview_target: "focusX", action: "input->event-image-crop-preview#update" } %>
+
+              <label class="form-label" for="<%= dom_id(event_image, :card_focus_y) %>">Ausschnitt vertikal <span data-event-image-crop-preview-target="focusYOutput"><%= event_image.card_focus_y_value.round %>%</span></label>
+              <%= form.range_field :card_focus_y,
+                                   min: 0,
+                                   max: 100,
+                                   step: 1,
+                                   id: dom_id(event_image, :card_focus_y),
+                                   class: "form-range",
+                                   data: { event_image_crop_preview_target: "focusY", action: "input->event-image-crop-preview#update" } %>
+
+              <label class="form-label" for="<%= dom_id(event_image, :card_zoom) %>">Zoom <span data-event-image-crop-preview-target="zoomOutput"><%= event_image.card_zoom_value.round %>%</span></label>
+              <%= form.range_field :card_zoom,
+                                   min: 100,
+                                   max: 300,
+                                   step: 5,
+                                   id: dom_id(event_image, :card_zoom),
+                                   class: "form-range",
+                                   data: { event_image_crop_preview_target: "zoom", action: "input->event-image-crop-preview#update" } %>
+
+              <%= form.submit "Crop speichern", class: "button button-ghost button-compact" %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <p>Noch kein Eventbild vorhanden.</p>
+
+    <div class="event-image-upload-grid">
+      <%= form_with url: backend_event_event_images_path(event),
+                    method: :post,
+                    class: "event-image-upload-form",
+                    html: { multipart: true },
+                    data: { turbo: false } do %>
+        <%= hidden_field_tag :status, editor_status %>
+        <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
+        <h4>Eventbild hochladen</h4>
+        <p>Wird auf der Detailseite und als Standardbild unter /events verwendet.</p>
+        <%= file_field_tag "event_image[files][]", accept: "image/*", required: true, class: "form-input" %>
+        <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
+        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text (optional)", class: "form-input" %>
+        <%= button_tag "Eventbild hochladen", type: :submit, class: "button button-secondary button-compact" %>
+      <% end %>
+    </div>
+  <% end %>
+</section>

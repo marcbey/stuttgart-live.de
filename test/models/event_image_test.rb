@@ -27,29 +27,23 @@ class EventImageTest < ActiveSupport::TestCase
     assert_includes duplicate.errors[:purpose], "darf nur einmal pro Event als Detail-Hero vorkommen"
   end
 
-  test "grid tile requires grid variant" do
+  test "detail hero allows grid variant" do
     image = build_image(
-      purpose: EventImage::PURPOSE_GRID_TILE,
-      grid_variant: nil
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
+      grid_variant: EventImage::GRID_VARIANT_1X2
+    )
+
+    assert image.valid?
+  end
+
+  test "slider rejects grid variant" do
+    image = build_image(
+      purpose: EventImage::PURPOSE_SLIDER,
+      grid_variant: EventImage::GRID_VARIANT_1X2
     )
 
     assert_not image.valid?
-    assert_includes image.errors[:grid_variant], "muss für Grid-Bilder gesetzt sein"
-  end
-
-  test "grid variant must be unique per event" do
-    build_image(
-      purpose: EventImage::PURPOSE_GRID_TILE,
-      grid_variant: EventImage::GRID_VARIANT_1X2
-    ).save!
-
-    duplicate = build_image(
-      purpose: EventImage::PURPOSE_GRID_TILE,
-      grid_variant: EventImage::GRID_VARIANT_1X2
-    )
-
-    assert_not duplicate.valid?
-    assert_includes duplicate.errors[:grid_variant], "ist für dieses Event bereits belegt"
+    assert_includes image.errors[:grid_variant], "ist nur für das Eventbild erlaubt"
   end
 
   test "non image uploads are rejected" do

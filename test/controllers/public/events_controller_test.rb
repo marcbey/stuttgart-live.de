@@ -472,13 +472,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     create_event_image(
       event: @published_event,
       purpose: EventImage::PURPOSE_DETAIL_HERO,
-      alt_text: "Hero Alt"
-    )
-    create_event_image(
-      event: @published_event,
-      purpose: EventImage::PURPOSE_GRID_TILE,
-      grid_variant: EventImage::GRID_VARIANT_1X1,
-      alt_text: "Grid Alt"
+      alt_text: "Hero Alt",
+      grid_variant: EventImage::GRID_VARIANT_1X1
     )
     create_event_image(
       event: @published_event,
@@ -495,33 +490,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "rails/active_storage"
   end
 
-  test "show falls back to editorial grid image when no detail hero exists" do
-    create_event_image(
-      event: @published_event,
-      purpose: EventImage::PURPOSE_GRID_TILE,
-      grid_variant: EventImage::GRID_VARIANT_2X1,
-      alt_text: "Grid Hero Fallback Alt"
-    )
-
+  test "show falls back to import image when no event image exists" do
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_includes response.body, "Grid Hero Fallback Alt"
-    assert_includes response.body, "rails/active_storage"
+    assert_includes response.body, "https://example.com/published.jpg"
   end
 
-  test "index uses editorial image for grid variant slot" do
+  test "index uses event image crop variant for grid tile size" do
     create_event_image(
       event: @published_event,
-      purpose: EventImage::PURPOSE_GRID_TILE,
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
       grid_variant: EventImage::GRID_VARIANT_2X2,
       alt_text: "Grid 2x2 Alt"
-    )
-    create_event_image(
-      event: @published_event,
-      purpose: EventImage::PURPOSE_GRID_TILE,
-      grid_variant: EventImage::GRID_VARIANT_1X1,
-      alt_text: "Grid 1x1 Alt"
     )
 
     get events_url(filter: "all")
@@ -532,10 +513,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "rails/active_storage"
   end
 
-  test "index uses the only available editorial grid variant even outside the default pattern slot" do
+  test "index uses event image crop variant outside the old pattern slot" do
     create_event_image(
       event: @published_event,
-      purpose: EventImage::PURPOSE_GRID_TILE,
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
       grid_variant: EventImage::GRID_VARIANT_1X2,
       alt_text: "Grid 1x2 Alt"
     )
@@ -547,25 +528,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Grid 1x2 Alt"
   end
 
-  test "index prefers a single non-default editorial grid variant over 1x1" do
+  test "index defaults to 1x1 when event image has no crop variant" do
     create_event_image(
       event: @published_event,
-      purpose: EventImage::PURPOSE_GRID_TILE,
-      grid_variant: EventImage::GRID_VARIANT_1X1,
-      alt_text: "Grid 1x1 Alt"
-    )
-    create_event_image(
-      event: @published_event,
-      purpose: EventImage::PURPOSE_GRID_TILE,
-      grid_variant: EventImage::GRID_VARIANT_1X2,
-      alt_text: "Grid 1x2 Preferred Alt"
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
+      alt_text: "Eventbild Default Alt"
     )
 
     get events_url(filter: "all")
 
     assert_response :success
-    assert_includes response.body, "event-card-grid-1-2"
-    assert_includes response.body, "Grid 1x2 Preferred Alt"
+    assert_includes response.body, "event-card-grid-1-1"
+    assert_includes response.body, "Eventbild Default Alt"
   end
 
   private
