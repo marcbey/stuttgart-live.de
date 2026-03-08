@@ -1,5 +1,5 @@
 class User < ApplicationRecord
-  ROLES = %w[editor admin].freeze
+  ROLES = %w[admin editor blogger].freeze
 
   has_secure_password
   has_many :sessions, dependent: :destroy
@@ -11,6 +11,7 @@ class User < ApplicationRecord
   validates :email_address, presence: true, uniqueness: true
   validates :role, inclusion: { in: ROLES }
   validates :name, length: { maximum: 120 }, allow_blank: true
+  validate :must_keep_an_admin_account, if: :admin_role_removed?
 
   def admin?
     role == "admin"
@@ -19,4 +20,23 @@ class User < ApplicationRecord
   def editor?
     role == "editor"
   end
+
+  def blogger?
+    role == "blogger"
+  end
+
+  def backend_access?
+    admin? || editor?
+  end
+
+  private
+    def admin_role_removed?
+      persisted? && role_in_database == "admin" && role != "admin"
+    end
+
+    def must_keep_an_admin_account
+      return if self.class.where(role: "admin").where.not(id: id).exists?
+
+      errors.add(:role, "muss mindestens einen Admin behalten")
+    end
 end

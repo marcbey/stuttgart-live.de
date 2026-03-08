@@ -1,0 +1,6 @@
+<p>Mit diesem Magic-Link meldest du dich direkt bei Stuttgart Live an:</p>
+
+<p><%= link_to "Jetzt anmelden", password_url(@user.password_reset_token) %></p>
+
+<p>Der Link ist <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %> gueltig.</p>
+<p>Danach kannst du dein Passwort in deinem Konto neu setzen.</p>

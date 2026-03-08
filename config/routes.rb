@@ -1,8 +1,11 @@
 Rails.application.routes.draw do
   resource :session, only: [ :new, :create, :destroy ]
-  resources :passwords, param: :token, only: [ :new, :create, :edit, :update ]
+  resources :passwords, param: :token, only: [ :show, :new, :create, :edit, :update ]
 
   namespace :backend do
+    resource :account_password, only: [ :edit, :update ]
+    resources :users, only: [ :index, :new, :create, :edit, :update ]
+
     resources :import_sources, only: [ :index, :edit, :update ] do
       post :run_easyticket, on: :member
       post :stop_easyticket_run, on: :member

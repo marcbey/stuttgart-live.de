@@ -1,7 +1,7 @@
 require "test_helper"
 
 class PasswordsControllerTest < ActionDispatch::IntegrationTest
-  setup { @user = User.take }
+  setup { @user = users(:two) }
 
   test "new" do
     get new_password_path
@@ -10,11 +10,11 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "create" do
     post passwords_path, params: { email_address: @user.email_address }
-    assert_enqueued_email_with PasswordsMailer, :reset, args: [ @user ]
+    assert_enqueued_email_with PasswordsMailer, :magic_link, args: [ @user ]
     assert_redirected_to new_session_path
 
     follow_redirect!
-    assert_notice "Reset-Link verschickt"
+    assert_notice "Magic-Link verschickt"
   end
 
   test "create for an unknown user redirects but sends no mail" do
@@ -23,7 +23,17 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
 
     follow_redirect!
-    assert_notice "Reset-Link verschickt"
+    assert_notice "Magic-Link verschickt"
+  end
+
+  test "show signs the user in via magic link" do
+    get password_path(@user.password_reset_token)
+
+    assert_redirected_to edit_backend_account_password_path
+    assert cookies[:session_id]
+
+    follow_redirect!
+    assert_notice "Magic-Link bestaetigt"
   end
 
   test "edit" do
@@ -33,6 +43,14 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
 
   test "edit with invalid password reset token" do
     get edit_password_path("invalid token")
+    assert_redirected_to new_password_path
+
+    follow_redirect!
+    assert_notice "ungültig oder abgelaufen"
+  end
+
+  test "show with invalid magic link" do
+    get password_path("invalid token")
     assert_redirected_to new_password_path
 
     follow_redirect!

@@ -1,0 +1,41 @@
+<% content_for :title, "Eigenes Passwort" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Eigenes Passwort ändern</h1>
+      <p><%= current_user.email_address %></p>
+    </div>
+    <div class="backend-topbar-actions">
+      <% if current_user.backend_access? %>
+        <%= link_to "Zum Backend", backend_root_path, class: "button button-secondary" %>
+      <% end %>
+    </div>
+  </header>
+
+  <div class="editor-panel" style="max-width: 620px;">
+    <%= form_with model: current_user, url: backend_account_password_path, method: :patch, class: "editor-form" do |form| %>
+      <div>
+        <%= form.label :password, "Neues Passwort", class: "form-label" %>
+        <%= form.password_field :password,
+                                required: true,
+                                autocomplete: "new-password",
+                                maxlength: 72,
+                                class: "form-input" %>
+      </div>
+
+      <div>
+        <%= form.label :password_confirmation, "Passwort bestätigen", class: "form-label" %>
+        <%= form.password_field :password_confirmation,
+                                required: true,
+                                autocomplete: "new-password",
+                                maxlength: 72,
+                                class: "form-input" %>
+      </div>
+
+      <div class="editor-footer">
+        <%= form.submit "Passwort speichern", class: "button" %>
+      </div>
+    <% end %>
+  </div>
+</section>

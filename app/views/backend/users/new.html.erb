@@ -1,0 +1,14 @@
+<% content_for :title, "Benutzer anlegen" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Benutzer anlegen</h1>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zur Benutzerliste", backend_users_path, class: "button button-secondary" %>
+    </div>
+  </header>
+
+  <%= render "form", user: @user, submit_label: "Benutzer anlegen" %>
+</section>

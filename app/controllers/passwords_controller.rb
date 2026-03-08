@@ -1,6 +1,6 @@
 class PasswordsController < ApplicationController
   allow_unauthenticated_access
-  before_action :set_user_by_token, only: %i[ edit update ]
+  before_action :set_user_by_token, only: %i[ show edit update ]
   rate_limit to: 10, within: 3.minutes, only: :create, with: -> { redirect_to new_password_path, alert: "Bitte später erneut versuchen." }
 
   def new
@@ -8,10 +8,17 @@ class PasswordsController < ApplicationController
 
   def create
     if user = User.find_by(email_address: params[:email_address])
-      PasswordsMailer.reset(user).deliver_later
+      PasswordsMailer.magic_link(user).deliver_later
     end
 
-    redirect_to new_session_path, notice: "Falls die E-Mail bekannt ist, wurde ein Reset-Link verschickt."
+    redirect_to new_session_path, notice: "Falls die E-Mail bekannt ist, wurde ein Magic-Link verschickt."
+  end
+
+  def show
+    terminate_session if authenticated?
+    start_new_session_for(@user)
+
+    redirect_to edit_backend_account_password_path, notice: "Magic-Link bestaetigt. Bitte setze jetzt ein neues Passwort."
   end
 
   def edit
@@ -30,6 +37,6 @@ class PasswordsController < ApplicationController
     def set_user_by_token
       @user = User.find_by_password_reset_token!(params[:token])
     rescue ActiveSupport::MessageVerifier::InvalidSignature
-      redirect_to new_password_path, alert: "Reset-Link ist ungültig oder abgelaufen."
+      redirect_to new_password_path, alert: "Magic-Link ist ungültig oder abgelaufen."
     end
 end

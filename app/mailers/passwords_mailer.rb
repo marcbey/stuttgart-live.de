@@ -1,6 +1,6 @@
 class PasswordsMailer < ApplicationMailer
-  def reset(user)
+  def magic_link(user)
     @user = user
-    mail subject: "Reset your password", to: user.email_address
+    mail subject: "Dein Magic-Link fuer Stuttgart Live", to: user.email_address
   end
 end

@@ -39,7 +39,7 @@ module Authentication
     end
 
     def after_authentication_url
-      session.delete(:return_to_after_authenticating) || backend_root_url
+      session.delete(:return_to_after_authenticating) || default_authenticated_url
     end
 
     def start_new_session_for(user)
@@ -52,5 +52,9 @@ module Authentication
     def terminate_session
       Current.session.destroy
       cookies.delete(:session_id)
+    end
+
+    def default_authenticated_url
+      current_user&.backend_access? ? backend_root_url : root_url
     end
 end

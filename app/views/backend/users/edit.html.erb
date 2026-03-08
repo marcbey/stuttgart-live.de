@@ -1,0 +1,15 @@
+<% content_for :title, "Benutzer bearbeiten" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Benutzer bearbeiten</h1>
+      <p><%= @user.email_address %></p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zur Benutzerliste", backend_users_path, class: "button button-secondary" %>
+    </div>
+  </header>
+
+  <%= render "form", user: @user, submit_label: "Benutzer speichern" %>
+</section>

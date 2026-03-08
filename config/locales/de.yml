@@ -2,6 +2,15 @@ de:
   date:
     formats:
       default: "%d.%m.%Y"
+    distance_in_words:
+      x_minutes:
+        one: "1 Minute"
+        other: "%{count} Minuten"
   time:
     formats:
       default: "%d.%m.%Y %H:%M"
+  datetime:
+    distance_in_words:
+      x_minutes:
+        one: "1 Minute"
+        other: "%{count} Minuten"

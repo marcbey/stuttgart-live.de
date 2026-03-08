@@ -39,7 +39,13 @@
         <div class="app-nav-links">
           <%= link_to "Events", events_path, class: "button button-ghost" %>
           <% if authenticated? %>
-            <%= link_to "Backend", backend_events_path, class: "button button-secondary" %>
+            <% if current_user.backend_access? %>
+              <%= link_to "Backend", backend_events_path, class: "button button-secondary" %>
+            <% end %>
+            <% if current_user.admin? %>
+              <%= link_to "Benutzer", backend_users_path, class: "button button-secondary" %>
+            <% end %>
+            <%= link_to "Passwort", edit_backend_account_password_path, class: "button button-ghost" %>
             <%= button_to "Logout", session_path, method: :delete, class: "button" %>
           <% else %>
             <%= link_to "Login", new_session_path, class: "button" %>

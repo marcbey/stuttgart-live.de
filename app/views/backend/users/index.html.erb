@@ -1,0 +1,39 @@
+<% content_for :title, "Benutzer" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Benutzerverwaltung</h1>
+      <p>Nur Admins koennen Benutzer anlegen sowie Rollen und Passwoerter aendern.</p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Eigenes Passwort", edit_backend_account_password_path, class: "button button-secondary" %>
+      <%= link_to "Benutzer anlegen", new_backend_user_path, class: "button" %>
+    </div>
+  </header>
+
+  <div class="table-wrap">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>E-Mail</th>
+          <th>Rolle</th>
+          <th>Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr>
+            <td><%= user.name.presence || "-" %></td>
+            <td><%= user.email_address %></td>
+            <td><%= user.role %></td>
+            <td class="action-cell">
+              <%= link_to "Bearbeiten", edit_backend_user_path(user), class: "button button-ghost" %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</section>
