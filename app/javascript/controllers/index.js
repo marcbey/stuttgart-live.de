@@ -28,6 +28,9 @@ application.register("infinite-scroll", InfiniteScrollController)
 import KeyboardShortcutsController from "./keyboard_shortcuts_controller"
 application.register("keyboard-shortcuts", KeyboardShortcutsController)
 
+import LightboxController from "./lightbox_controller"
+application.register("lightbox", LightboxController)
+
 import NextEventController from "./next_event_controller"
 application.register("next-event", NextEventController)
 

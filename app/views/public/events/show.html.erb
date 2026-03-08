@@ -71,7 +71,7 @@
       <% end %>
       <% detail_genres = @event.genres.order(:name).pluck(:name) %>
       <% if detail_genres.any? %>
-        <p class="event-detail-genre"><%= detail_genres.join(" · ") %></p>
+        <p class="event-detail-genre">Genre: <%= detail_genres.join(" · ") %></p>
       <% end %>
     </div>
 
@@ -86,26 +86,6 @@
       </div>
     <% end %>
   </header>
-
-  <% if slider_images.any? %>
-    <section class="event-detail-slider">
-      <h2>Bilder</h2>
-      <div class="event-slider-track">
-        <% slider_images.each do |image| %>
-          <% image_source = event_image_source(image) %>
-          <% next if image_source.blank? %>
-          <figure class="event-slider-item">
-            <div class="event-slider-image-wrap">
-              <%= image_tag image_source, alt: event_image_alt(image, @event), loading: "lazy", class: "event-slider-image" %>
-            </div>
-            <% if image.sub_text.present? %>
-              <figcaption class="event-slider-sub"><%= image.sub_text %></figcaption>
-            <% end %>
-          </figure>
-        <% end %>
-      </div>
-    </section>
-  <% end %>
 
   <% if @event.event_info.present? %>
     <section class="event-detail-copy">
@@ -155,6 +135,41 @@
           referrerpolicy="strict-origin-when-cross-origin"
           allowfullscreen>
         </iframe>
+      </div>
+    </section>
+  <% end %>
+
+  <% if slider_images.any? %>
+    <section class="event-detail-slider" data-controller="lightbox">
+      <h2>Bilder</h2>
+      <div class="event-slider-track">
+        <% slider_images.each do |image| %>
+          <% image_source = event_image_source(image) %>
+          <% next if image_source.blank? %>
+          <figure class="event-slider-item">
+            <button type="button"
+                    class="event-slider-image-wrap"
+                    data-lightbox-target="item"
+                    data-action="click->lightbox#open"
+                    data-lightbox-src-value="<%= image_source %>"
+                    data-lightbox-alt-value="<%= event_image_alt(image, @event) %>"
+                    data-lightbox-caption-value="<%= image.sub_text.to_s %>">
+              <%= image_tag image_source, alt: event_image_alt(image, @event), loading: "lazy", class: "event-slider-image" %>
+            </button>
+            <% if image.sub_text.present? %>
+              <figcaption class="event-slider-sub"><%= image.sub_text %></figcaption>
+            <% end %>
+          </figure>
+        <% end %>
+      </div>
+      <div class="event-lightbox" data-lightbox-target="dialog" data-action="click->lightbox#backdropClose" hidden>
+        <button type="button" class="event-lightbox-nav event-lightbox-nav-prev" data-lightbox-target="previousButton" data-action="click->lightbox#previous" aria-label="Vorheriges Bild">‹</button>
+        <button type="button" class="event-lightbox-nav event-lightbox-nav-next" data-lightbox-target="nextButton" data-action="click->lightbox#next" aria-label="Nächstes Bild">›</button>
+        <button type="button" class="event-lightbox-close" data-action="click->lightbox#close" aria-label="Lightbox schließen">×</button>
+        <div class="event-lightbox-inner">
+          <img src="" alt="" class="event-lightbox-image" data-lightbox-target="image">
+          <p class="event-lightbox-caption" data-lightbox-target="caption" hidden></p>
+        </div>
       </div>
     </section>
   <% end %>

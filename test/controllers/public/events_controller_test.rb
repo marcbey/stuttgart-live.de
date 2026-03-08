@@ -275,7 +275,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Beginn:\s*\d{2}:\d{2}\s*Uhr/, response.body)
     assert_match(/Einlass:\s*\d{2}:\d{2}\s*Uhr/, response.body)
     assert_includes response.body, "Preis: 45 EUR"
-    assert_select ".event-detail-genre", text: "Jazz · Pop · Rock"
+    assert_select ".event-detail-genre", text: "Genre: Jazz · Pop · Rock"
   end
 
   test "show does not render dangling comma when city is blank" do
