@@ -49,6 +49,7 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  position: relative;
 }
 
 .app-nav-inner-backend {
@@ -111,6 +112,36 @@ a {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+}
+
+.app-nav-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.35rem;
+}
+
+.app-nav-flash {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  min-height: 0;
+  width: min(28rem, calc(100% - 16rem));
+  pointer-events: none;
+  z-index: 5;
+}
+
+.app-nav-flash .flash-wrap {
+  padding: 0;
+  justify-items: center;
+}
+
+.app-nav-flash .flash {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  pointer-events: auto;
+  text-align: center;
 }
 
 .flash-wrap {
@@ -929,25 +960,6 @@ a {
   flex-wrap: wrap;
 }
 
-.backend-topbar-actions-wrap {
-  display: grid;
-  justify-items: end;
-}
-
-.backend-inline-flash {
-  min-height: 0;
-}
-
-.backend-inline-flash .flash-wrap {
-  padding: 0.35rem 0 0;
-  justify-items: end;
-}
-
-.backend-inline-flash .flash {
-  min-width: 17rem;
-  max-width: 28rem;
-}
-
 .backend-status-row {
   display: flex;
   flex-wrap: wrap;
@@ -1587,6 +1599,10 @@ a {
 
   .app-nav-links {
     gap: 0.35rem;
+  }
+
+  .app-nav-flash {
+    width: min(22rem, calc(100% - 8rem));
   }
 
   .button {

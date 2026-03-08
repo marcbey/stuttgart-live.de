@@ -32,6 +32,7 @@
                 url: backend_event_path(event),
                 method: :patch,
                 class: "editor-form",
+                data: { turbo_stream: true },
                 html: { id: dom_id(event, :editor_form) } do |form| %>
     <%= hidden_field_tag :next_event_enabled, (next_event_enabled ? "1" : "0"), data: { next_event_target: "preference" } %>
     <%= hidden_field_tag :inbox_status, filter_status if filter_status.present? %>
@@ -400,9 +401,15 @@
   <div class="editor-actions-row">
     <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button button-save-primary">Speichern</button>
     <% unless event.published? %>
-      <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button">Speichern & Publizieren</button>
+      <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button">Publizieren</button>
     <% end %>
-    <%= button_to "Depublizieren", unpublish_backend_event_path(event), method: :patch, class: "button button-secondary" %>
+    <% if event.published? %>
+      <%= button_to "Depublizieren",
+                    unpublish_backend_event_path(event),
+                    method: :patch,
+                    class: "button button-secondary",
+                    form: { data: { turbo_stream: true } } %>
+    <% end %>
     <label class="check-inline">
       <%= check_box_tag "next_event_toggle", "1", next_event_enabled, data: { next_event_target: "toggle", action: "change->next-event#toggleChanged" } %>
       <span>nächsten Event anzeigen</span>

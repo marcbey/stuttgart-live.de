@@ -7,7 +7,7 @@ module Backend
     MERGE_CHANGE_TYPES = %w[all created updated].freeze
 
     before_action :set_event, only: [ :show, :update, :publish, :unpublish ]
-    before_action :set_next_event_enabled, only: [ :index, :show, :update ]
+    before_action :set_next_event_enabled, only: [ :index, :show, :update, :publish, :unpublish ]
 
     def index
       @latest_successful_merge_run = latest_successful_merge_run
@@ -101,7 +101,7 @@ module Backend
           format.turbo_stream do
             flash.now[:notice] = update_success_message
             render turbo_stream: [
-              turbo_stream.replace("flash-messages", partial: "layouts/flash_messages"),
+              turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
               turbo_stream.replace(
                 "events_list",
                 partial: "backend/events/events_list",
@@ -132,7 +132,7 @@ module Backend
           format.html { render :show, status: :unprocessable_entity }
           format.turbo_stream do
             render turbo_stream: [
-              turbo_stream.replace("flash-messages", partial: "layouts/flash_messages"),
+              turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
               turbo_stream.replace(
                 "event_editor",
                 partial: "backend/events/editor_panel",
@@ -158,7 +158,15 @@ module Backend
     def unpublish
       @event.update!(status: "ready_for_publish", published_at: nil, published_by: nil, auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "unpublished", user: current_user)
-      redirect_to backend_events_path(status: "ready_for_publish", event_id: @event.id), notice: "Event wurde depublisht."
+      @all_genres = Genre.order(:name)
+
+      respond_to do |format|
+        format.html { redirect_to backend_events_path(status: "ready_for_publish", event_id: @event.id), notice: "Event wurde depublisht." }
+        format.turbo_stream do
+          flash.now[:notice] = "Event wurde depublisht."
+          render_editor_state_turbo_stream(target_event: @event, target_status: "ready_for_publish")
+        end
+      end
     end
 
     def bulk
@@ -408,6 +416,36 @@ module Backend
 
     def update_success_message
       save_and_publish_requested? ? "Event wurde gespeichert und publiziert." : "Event wurde gespeichert."
+    end
+
+    def render_editor_state_turbo_stream(target_event:, target_status:)
+      sidebar_events = filtered_events_for_status(target_status)
+      sidebar_events_count = filtered_events_count(sidebar_events)
+
+      render turbo_stream: [
+        turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+        turbo_stream.replace(
+          "events_list",
+          partial: "backend/events/events_list",
+          locals: {
+            events: sidebar_events,
+            selected_event: target_event,
+            status: target_status,
+            merge_run_id: selected_merge_run_id_for_filters,
+            filtered_events_count: sidebar_events_count
+          }
+        ),
+        turbo_stream.replace(
+          "event_editor",
+          partial: "backend/events/editor_panel",
+          locals: {
+            event: target_event,
+            all_genres: @all_genres,
+            next_event_enabled: @next_event_enabled,
+            filter_status: target_status
+          }
+        )
+      ]
     end
   end
 end

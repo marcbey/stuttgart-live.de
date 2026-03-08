@@ -9,14 +9,9 @@
     <div>
       <h1>Event-Inbox</h1>
     </div>
-    <div class="backend-topbar-actions-wrap">
-      <div class="backend-topbar-actions">
-        <%= link_to "Neues Event", new_backend_event_path, class: "button button-secondary" %>
-        <%= link_to "Zum Importer", backend_import_sources_path, class: "button button-ghost" %>
-      </div>
-      <div id="flash-messages" class="backend-inline-flash">
-        <%= render "layouts/flash_messages" %>
-      </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Neues Event", new_backend_event_path, class: "button button-secondary" %>
+      <%= link_to "Zum Importer", backend_import_sources_path, class: "button button-ghost" %>
     </div>
   </header>
 

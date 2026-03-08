@@ -285,6 +285,29 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes flash[:notice], "gespeichert und publiziert"
   end
 
+  test "save and publish via turbo stream updates nav flash" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: "Neu und publiziert",
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review"
+      },
+      save_and_publish: "1"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "action=\"update\""
+    assert_includes response.body, "Event wurde gespeichert und publiziert."
+    assert_equal "published", @event.reload.status
+  end
+
   test "update stores next event preference from editor form param" do
     sign_in_as(@user)
 
@@ -376,14 +399,24 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Rock" ], @published_event.reload.genres.order(:name).pluck(:name)
   end
 
-  test "published event editor does not show save and publish button" do
+  test "published event editor does not show publish button" do
     sign_in_as(@user)
 
     get backend_event_url(@published_event)
 
     assert_response :success
-    assert_not_includes response.body, "Speichern & Publizieren"
+    assert_not_includes response.body, "Publizieren"
     assert_includes response.body, event_path(@published_event.slug)
+  end
+
+  test "ready_for_publish event editor does not show unpublish button" do
+    sign_in_as(@user)
+
+    patch unpublish_backend_event_url(@published_event)
+    get backend_event_url(@published_event)
+
+    assert_response :success
+    assert_not_includes response.body, "Depublizieren"
   end
 
   test "unpublish moves published event to ready_for_publish" do
@@ -396,6 +429,19 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "ready_for_publish", @published_event.status
     assert_nil @published_event.published_at
     assert_nil @published_event.published_by_id
+  end
+
+  test "unpublish via turbo stream updates nav flash" do
+    sign_in_as(@user)
+
+    patch unpublish_backend_event_url(@published_event), as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "action=\"update\""
+    assert_includes response.body, "Event wurde depublisht."
+    assert_equal "ready_for_publish", @published_event.reload.status
   end
 
   test "bulk publish updates selected events" do
