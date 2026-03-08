@@ -131,16 +131,6 @@
       <%= form.text_area :editor_notes, rows: 3, class: "form-textarea" %>
     </div>
 
-    <div class="editor-footer">
-      <div class="completeness-bar">
-        <strong><%= event.completeness_score %>%</strong>
-        <% if event.completeness_flags.any? %>
-          <span><%= event.completeness_flags.join(", ") %></span>
-        <% else %>
-          <span>vollständig</span>
-        <% end %>
-      </div>
-    </div>
   <% end %>
 
   <section class="offer-section">
@@ -399,6 +389,15 @@
       <p>Keine Payload-Daten vorhanden.</p>
     <% end %>
   </section>
+
+  <div class="completeness-bar">
+    <strong><%= event.completeness_score %>%</strong>
+    <% if event.completeness_flags.any? %>
+      <span><%= event.completeness_flags.join(", ") %></span>
+    <% else %>
+      <span>vollständig</span>
+    <% end %>
+  </div>
 
   <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled %>
 </div>

@@ -17,7 +17,6 @@ module Editorial
       flags << "missing_city" if event.city.blank?
       flags << "missing_image" unless image_present?
       flags << "missing_ticket_url" unless ticket_url_present?
-      flags << "missing_genre" unless genre_present?
 
       score = ((REQUIRED_FIELDS_COUNT - flags.count).to_f / REQUIRED_FIELDS_COUNT * 100).round
       ready = (flags & BLOCKING_FLAGS).empty?
@@ -27,7 +26,7 @@ module Editorial
 
     private
 
-    REQUIRED_FIELDS_COUNT = 8
+    REQUIRED_FIELDS_COUNT = 7
     BLOCKING_FLAGS = %w[
       missing_title
       missing_artist
@@ -39,10 +38,6 @@ module Editorial
     ].freeze
 
     attr_reader :event, :offers, :images_present
-
-    def genre_present?
-      event.genre_ids.any?
-    end
 
     def image_present?
       return ActiveModel::Type::Boolean.new.cast(images_present) unless images_present.nil?
