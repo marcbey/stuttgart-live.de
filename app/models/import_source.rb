@@ -1,10 +1,7 @@
 class ImportSource < ApplicationRecord
   SOURCE_TYPES = %w[easyticket eventim reservix].freeze
   DEFAULT_EASYTICKET_LOCATION_WHITELIST = [
-    "Stuttgart",
-    "Stuttgart - Bad Cannstatt",
-    "Stuttgart Bad-Cannstatt",
-    "Esslingen am Neckar"
+    "Stuttgart"
   ].freeze
 
   has_one :import_source_config, dependent: :destroy

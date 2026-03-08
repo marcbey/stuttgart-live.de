@@ -20,4 +20,14 @@ class ImportSourceTest < ActiveSupport::TestCase
     assert_equal "eventim", source.source_type
     assert_equal ImportSource::DEFAULT_EASYTICKET_LOCATION_WHITELIST, source.configured_location_whitelist
   end
+
+  test "ensure_reservix_source creates source with location whitelist" do
+    existing_source = ImportSource.find_by(source_type: "reservix")
+    existing_source&.destroy!
+
+    source = ImportSource.ensure_reservix_source!
+
+    assert_equal "reservix", source.source_type
+    assert_equal [ "Stuttgart" ], source.configured_location_whitelist
+  end
 end
