@@ -8,28 +8,14 @@ module Backend::EventsHelper
   end
 
   def event_display_organizer_name(event)
-    organizer_name = event.organizer_name.to_s.strip
-    return organizer_name if organizer_name.present?
-
     event_source_payloads(event).each do |source|
-      case source[:source]
-      when "easyticket"
-        attributes =
-          Importing::Easyticket::PayloadProjection.new(
-            dump_payload: source[:dump_payload],
-            detail_payload: source[:detail_payload]
-          ).to_attributes
-        candidate = attributes&.dig(:organizer_name).to_s.strip
-        return candidate if candidate.present?
-      when "eventim"
-        attributes = Importing::Eventim::PayloadProjection.new(feed_payload: source[:dump_payload]).to_attributes
-        candidate = attributes&.dig(:organizer_name).to_s.strip
-        return candidate if candidate.present?
-      end
+      candidate = organizer_name_from_source(source)
+      return candidate if candidate.present?
     end
 
     nil
   end
+
   def event_display_promoter_id(event)
     promoter_id = event.promoter_id.to_s.strip
     return promoter_id if promoter_id.present?
@@ -121,6 +107,23 @@ module Backend::EventsHelper
   end
 
   private
+
+  def organizer_name_from_source(source)
+    attributes =
+      case source[:source]
+      when "easyticket"
+        Importing::Easyticket::PayloadProjection.new(
+          dump_payload: source[:dump_payload],
+          detail_payload: source[:detail_payload]
+        ).to_attributes
+      when "eventim"
+        Importing::Eventim::PayloadProjection.new(feed_payload: source[:dump_payload]).to_attributes
+      when "reservix"
+        Importing::Reservix::PayloadProjection.new(event_payload: source[:dump_payload]).to_attributes
+      end
+
+    attributes&.dig(:organizer_name).to_s.strip.presence
+  end
 
   def organizer_names_from_doc
     @organizer_names_from_doc ||=

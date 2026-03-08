@@ -26,8 +26,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "name=\"status\""
     assert_includes response.body, "value=\"published\""
     assert_includes response.body, "Veranstalter"
-    assert_includes response.body, "Veranstalter auswählen"
-    assert_includes response.body, "Music Circus GmbH &amp; Co. KG"
     assert_includes response.body, "Promoter-ID"
     assert_includes response.body, "Beginn"
     assert_includes response.body, "Einlass löschen"
@@ -35,6 +33,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "editor-datetime-clear"
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
+    assert_select "input[id^='organizer_name_display_'][readonly][value='-']"
   end
 
   test "index renders status chips without counts and shows filtered event count" do
@@ -226,7 +225,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         doors_at: doors_at,
         venue: @event.venue,
         city: @event.city,
-        organizer_name: "SKS Michael Russ GmbH",
         organizer_notes: "Eigene Hinweise\nZweite Zeile",
         show_organizer_notes: "1",
         homepage_url: "https://example.com",
@@ -240,7 +238,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     @event.reload
     assert_equal "Neu betitelt", @event.title
     assert_equal doors_at.to_i, @event.doors_at.to_i
-    assert_equal "SKS Michael Russ GmbH", @event.organizer_name
     assert_equal "Eigene Hinweise\nZweite Zeile", @event.organizer_notes
     assert_predicate @event, :show_organizer_notes?
     assert_equal "https://example.com", @event.homepage_url

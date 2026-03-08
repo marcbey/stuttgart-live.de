@@ -353,7 +353,6 @@ module Backend
         :doors_at,
         :venue,
         :city,
-        :organizer_name,
         :event_info,
         :organizer_notes,
         :show_organizer_notes,
