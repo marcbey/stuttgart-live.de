@@ -1,4 +1,10 @@
 Rails.application.routes.draw do
+  match "/400", to: "errors#show", via: :all, defaults: { code: 400 }
+  match "/404", to: "errors#show", via: :all, defaults: { code: 404 }
+  match "/422", to: "errors#show", via: :all, defaults: { code: 422 }
+  match "/500", to: "errors#show", via: :all, defaults: { code: 500 }
+  match "/errors/:code", to: "errors#show", via: :all
+
   resource :session, only: [ :new, :create, :destroy ]
   resources :passwords, param: :token, only: [ :show, :new, :create, :edit, :update ]
 
@@ -51,4 +57,6 @@ Rails.application.routes.draw do
   get "backend", to: "backend/events#index", as: :backend_root
 
   root "public/events#index"
+
+  match "*unmatched", to: "errors#show", via: :all, defaults: { code: 404 }
 end

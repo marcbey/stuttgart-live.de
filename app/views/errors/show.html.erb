@@ -1,0 +1,19 @@
+<% content_for :title, "#{@status_code} | Stuttgart Live" %>
+
+<article class="app-error-page">
+  <div class="event-detail-topbar">
+    <p class="event-detail-back"><%= link_to "← zurück", request.referer.presence || root_path %></p>
+  </div>
+
+  <section class="app-error-shell">
+    <p class="app-error-code"><%= @status_code %></p>
+    <div class="app-error-copy">
+      <p class="eyebrow"><%= @error_copy[:eyebrow] %></p>
+      <h1><%= @error_copy[:title] %></h1>
+      <p><%= @error_copy[:message] %></p>
+    </div>
+    <div class="app-error-actions">
+      <%= link_to "Zur Startseite", root_path, class: "button" %>
+    </div>
+  </section>
+</article>

@@ -397,6 +397,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(events(:needs_review_one).slug)
 
     assert_response :not_found
+    assert_includes response.body, "Dieses Event ist nicht mehr da."
+    assert_includes response.body, "Zur Startseite"
   end
 
   test "show renders unpublished events for authenticated users with status badge" do

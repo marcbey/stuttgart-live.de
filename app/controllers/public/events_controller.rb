@@ -1,6 +1,7 @@
 module Public
   class EventsController < ApplicationController
     allow_unauthenticated_access only: [ :index, :show ]
+    rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
     FILTER_ALL = "all".freeze
@@ -198,6 +199,19 @@ module Public
       event.save!
       after_values = event.attributes.slice("status", "published_at", "published_by_id", "auto_published")
       before_values != after_values
+    end
+
+    def render_not_found
+      respond_to do |format|
+        format.html do
+          @public_filter = current_public_filter
+          @public_view = current_public_view
+          @public_event_date = current_public_event_date
+          @public_query = current_public_query
+          render "public/events/not_found", status: :not_found
+        end
+        format.any { head :not_found }
+      end
     end
   end
 end

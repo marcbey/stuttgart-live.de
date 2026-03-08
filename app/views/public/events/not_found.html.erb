@@ -1,0 +1,22 @@
+<% content_for :title, "Event nicht gefunden | Stuttgart Live" %>
+
+<article class="event-not-found">
+  <div class="event-detail-topbar">
+    <p class="event-detail-back"><%= link_to "← alle events", events_path(filter: @public_filter, view: (@public_view == "list" ? @public_view : nil), event_date: @public_event_date&.iso8601, q: @public_query) %></p>
+  </div>
+
+  <section class="event-not-found-shell">
+    <p class="event-not-found-code">404</p>
+    <div class="event-not-found-copy">
+      <p class="eyebrow">Nicht gefunden</p>
+      <h1>Dieses Event ist nicht mehr da.</h1>
+      <p>
+        Der Link zeigt auf ein Event, das nicht veröffentlicht ist oder nicht existiert.
+        Geh zurück zur Übersicht und such dir den nächsten Abend aus.
+      </p>
+    </div>
+    <div class="event-not-found-actions">
+      <%= link_to "Zur Startseite", root_path, class: "button button-ghost" %>
+    </div>
+  </section>
+</article>
