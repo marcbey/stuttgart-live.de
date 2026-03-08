@@ -1553,6 +1553,13 @@ a {
   gap: 0.7rem;
 }
 
+.auth-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .completeness-bar {
   display: grid;
   font-size: 0.9rem;
@@ -1628,6 +1635,14 @@ a {
   overflow-x: auto;
   border: 1px solid var(--line);
   background: #fff;
+}
+
+.import-sources-runs-section {
+  margin-top: 1.75rem;
+}
+
+.import-sources-runs-section h2 {
+  margin: 0 0 0.75rem;
 }
 
 .data-table {

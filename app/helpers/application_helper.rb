@@ -14,16 +14,6 @@ module ApplicationHelper
     controller_path == "backend/events"
   end
 
-  def brand_logo_tag(class_name:, alt: "Stuttgart Live", loading: "lazy")
-    image_tag(
-      "stuttgart-live-logo-modern.svg",
-      alt: alt,
-      class: class_name,
-      loading: loading,
-      decoding: "async"
-    )
-  end
-
   def compiled_asset_exists?(logical_path)
     manifest_assets =
       if Rails.application.respond_to?(:assets_manifest)

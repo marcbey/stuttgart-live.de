@@ -47,7 +47,7 @@
     </table>
   </div>
 
-  <section>
+  <section class="import-sources-runs-section">
     <h2>Importer Jobs</h2>
     <%= turbo_stream_from [ :backend, :import_runs ] %>
     <%= render "recent_runs_table", recent_runs: @recent_runs %>

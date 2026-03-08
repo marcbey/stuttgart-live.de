@@ -12,7 +12,8 @@ module Backend
     end
 
     def create
-      @user = User.new(user_create_params)
+      @user = User.new(user_attributes)
+      assign_requested_role(@user)
 
       if @user.save
         redirect_to backend_users_path, notice: "Benutzer wurde angelegt."
@@ -26,10 +27,13 @@ module Backend
     end
 
     def update
-      attributes = user_update_attributes
+      attributes = user_attributes.to_h.symbolize_keys
+      attributes.except!(:password, :password_confirmation) if attributes[:password].blank?
       password_changed = attributes.key?(:password)
+      @user.assign_attributes(attributes)
+      assign_requested_role(@user) unless @user == current_user
 
-      if @user.update(attributes)
+      if @user.save
         expire_sessions_for(@user) if password_changed
         redirect_to backend_users_path, notice: "Benutzer wurde aktualisiert."
       else
@@ -43,15 +47,18 @@ module Backend
         @user = User.find(params[:id])
       end
 
-      def user_create_params
-        params.require(:user).permit(:name, :email_address, :role, :password, :password_confirmation)
+      def user_attributes
+        params.require(:user).permit(:name, :email_address, :password, :password_confirmation)
       end
 
-      def user_update_attributes
-        attributes = params.require(:user).permit(:name, :email_address, :role, :password, :password_confirmation).to_h.symbolize_keys
-        attributes.except!(:password, :password_confirmation) if attributes[:password].blank?
-        attributes.except!(:role) if @user == current_user
-        attributes
+      def requested_role
+        params.dig(:user, :role).to_s.strip.presence
+      end
+
+      def assign_requested_role(user)
+        return if requested_role.blank?
+
+        user.role = requested_role
       end
 
       def expire_sessions_for(user)

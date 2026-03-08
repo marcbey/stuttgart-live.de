@@ -3,8 +3,7 @@
 <section class="backend-shell">
   <div class="editor-panel" style="max-width: 520px; margin: 2rem auto;">
     <header>
-      <p class="eyebrow eyebrow-logo"><%= brand_logo_tag(class_name: "brand-logo brand-logo-eyebrow") %></p>
-      <h1 style="margin: 0.4rem 0 0; text-transform: uppercase;">Login Redaktion</h1>
+      <h1 style="margin: 0; text-transform: uppercase;">Login Redaktion</h1>
     </header>
 
     <%= form_with url: session_path, class: "editor-form" do |form| %>
@@ -29,7 +28,7 @@
                                 class: "form-input" %>
       </div>
 
-      <div class="editor-footer">
+      <div class="auth-actions">
         <%= form.submit "Einloggen", class: "button" %>
         <%= link_to "Passwort vergessen", new_password_path, class: "button button-secondary" %>
       </div>
