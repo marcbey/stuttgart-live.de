@@ -10,7 +10,7 @@ module Importing
         attempts: Importing::RetryPolicy::RETRY_ATTEMPTS
       )
 
-      def perform(import_source_id = nil)
+      def perform(import_source_id = nil, import_run_id = nil)
         source =
           if import_source_id.present?
             ImportSource.find(import_source_id)
@@ -20,6 +20,7 @@ module Importing
 
         run = Importing::Eventim::Importer.new(
           import_source: source,
+          preexisting_run_id: import_run_id,
           run_metadata: run_metadata_for_execution
         ).call
         run

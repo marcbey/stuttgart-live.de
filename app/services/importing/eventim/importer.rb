@@ -9,9 +9,10 @@ module Importing
       PROGRESS_FLUSH_AFTER_SECONDS = 2
       FILTERED_OUT_CITIES_LIMIT = 500
 
-      def initialize(import_source:, feed_fetcher: FeedFetcher.new, run_metadata: {}, logger: Rails.logger)
+      def initialize(import_source:, feed_fetcher: FeedFetcher.new, preexisting_run_id: nil, run_metadata: {}, logger: Rails.logger)
         @import_source = import_source
         @feed_fetcher = feed_fetcher
+        @preexisting_run_id = preexisting_run_id
         @run_metadata = run_metadata
         @logger = logger
       end
@@ -20,19 +21,22 @@ module Importing
         run = nil
         import_source.with_lock do
           fail_stale_runs!
-          active_run = active_running_run
+          run = claim_preexisting_run!
+          active_run = active_running_run if run.nil?
           if active_run.present?
             logger.info("[EventimImporter] skipped because run_id=#{active_run.id} is already running")
             return active_run
           end
 
-          run = import_source.import_runs.create!(
-            status: "running",
-            source_type: import_source.source_type,
-            started_at: Time.current,
-            metadata: normalized_metadata(run_metadata)
-          )
-          broadcast_runs_update!
+          if run.nil?
+            run = import_source.import_runs.create!(
+              status: "running",
+              source_type: import_source.source_type,
+              started_at: Time.current,
+              metadata: normalized_metadata(run_metadata)
+            )
+            broadcast_runs_update!
+          end
         end
 
         run_started_at = run.started_at
@@ -264,6 +268,22 @@ module Importing
 
       def active_running_run
         import_source.import_runs.where(source_type: "eventim", status: "running").order(started_at: :desc).first
+      end
+
+      def claim_preexisting_run!
+        return nil if @preexisting_run_id.blank?
+
+        run = import_source.import_runs.lock.find_by(id: @preexisting_run_id, source_type: "eventim")
+        return nil unless run.present?
+        return run if run.status == "running"
+        return nil unless run.status == "queued"
+
+        run.update!(
+          status: "running",
+          metadata: normalized_metadata(run.metadata).merge(normalized_metadata(run_metadata))
+        )
+        broadcast_runs_update!
+        run
       end
 
       def fail_stale_runs!

@@ -1,5 +1,5 @@
 class ImportRun < ApplicationRecord
-  STATUSES = %w[running succeeded failed canceled].freeze
+  STATUSES = %w[queued running succeeded failed canceled].freeze
 
   belongs_to :import_source
   has_many :import_run_errors, dependent: :destroy

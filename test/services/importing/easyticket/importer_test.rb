@@ -463,6 +463,123 @@ module Importing
         assert_equal [ "https://img.example/404-1-large.jpg" ], imported.import_event_images.ordered.pluck(:image_url)
       end
 
+      test "fetches detail payload via dump id when present" do
+        dump_events = [
+          {
+            "event_id" => "61918",
+            "id" => "105036",
+            "title_3" => "105036",
+            "date_time" => "2028-05-05 20:00:00",
+            "location_name" => "KKL Beethoven-Saal Stuttgart",
+            "title_1" => "Olaf Schubert und seine Freunde",
+            "title_2" => "Jetzt oder now!",
+            "organizer_id" => "053"
+          }
+        ]
+
+        detail_fetcher =
+          Class.new do
+            attr_reader :calls
+
+            def initialize
+              @calls = []
+            end
+
+            def fetch(event_id)
+              @calls << event_id
+              {
+                "data" => {
+                  "location" => {
+                    "city" => "Stuttgart",
+                    "name" => "KKL Beethoven-Saal"
+                  },
+                  "event" => {
+                    "artist" => "Olaf Schubert und seine Freunde"
+                  }
+                }
+              }
+            end
+          end.new
+
+        run = Importer.new(
+          import_source: @source,
+          dump_fetcher: StubDumpFetcher.new(dump_events),
+          detail_fetcher: detail_fetcher
+        ).call
+
+        imported = EasyticketImportEvent.find_by!(
+          import_source: @source,
+          external_event_id: "61918",
+          concert_date: Date.new(2028, 5, 5)
+        )
+
+        assert_equal "succeeded", run.status
+        assert_equal 1, run.imported_count
+        assert_equal 1, run.upserted_count
+        assert_equal 0, run.failed_count
+        assert_equal [ "105036" ], detail_fetcher.calls
+        assert_equal "Stuttgart", imported.city
+        assert_equal "Stuttgart, KKL Beethoven-Saal Stuttgart", imported.venue_label
+      end
+
+      test "prefers dump id over title_3 for detail payload fetch" do
+        dump_events = [
+          {
+            "event_id" => "56127",
+            "id" => "102320",
+            "title_3" => "99100",
+            "date_time" => "2026-10-25 20:00:00",
+            "location_name" => "Schleyer-Halle Stuttgart",
+            "title_1" => "Ayliva",
+            "title_2" => "Die Ayliva Tour 2026",
+            "organizer_id" => "053"
+          }
+        ]
+
+        detail_fetcher =
+          Class.new do
+            attr_reader :calls
+
+            def initialize
+              @calls = []
+            end
+
+            def fetch(event_id)
+              @calls << event_id
+              {
+                "data" => {
+                  "location" => {
+                    "city" => "Stuttgart",
+                    "name" => "Schleyer-Halle"
+                  },
+                  "event" => {
+                    "artist" => "Ayliva"
+                  }
+                }
+              }
+            end
+          end.new
+
+        run = Importer.new(
+          import_source: @source,
+          dump_fetcher: StubDumpFetcher.new(dump_events),
+          detail_fetcher: detail_fetcher
+        ).call
+
+        imported = EasyticketImportEvent.find_by!(
+          import_source: @source,
+          external_event_id: "56127",
+          concert_date: Date.new(2026, 10, 25)
+        )
+
+        assert_equal "succeeded", run.status
+        assert_equal 1, run.imported_count
+        assert_equal 1, run.upserted_count
+        assert_equal 0, run.failed_count
+        assert_equal [ "102320" ], detail_fetcher.calls
+        assert_equal "Stuttgart", imported.city
+      end
+
       test "stores import_run_error when run fails" do
         failing_dump_fetcher =
           Class.new do

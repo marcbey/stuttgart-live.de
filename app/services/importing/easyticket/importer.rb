@@ -15,12 +15,14 @@ module Importing
         import_source:,
         dump_fetcher: DumpFetcher.new,
         detail_fetcher: DetailFetcher.new,
+        preexisting_run_id: nil,
         run_metadata: {},
         logger: Rails.logger
       )
         @import_source = import_source
         @dump_fetcher = dump_fetcher
         @detail_fetcher = detail_fetcher
+        @preexisting_run_id = preexisting_run_id
         @run_metadata = run_metadata
         @logger = logger
       end
@@ -29,19 +31,22 @@ module Importing
         run = nil
         import_source.with_lock do
           fail_stale_runs!
-          active_run = active_running_run
+          run = claim_preexisting_run!
+          active_run = active_running_run if run.nil?
           if active_run.present?
             logger.info("[EasyticketImporter] skipped because run_id=#{active_run.id} is already running")
             return active_run
           end
 
-          run = import_source.import_runs.create!(
-            status: "running",
-            source_type: import_source.source_type,
-            started_at: Time.current,
-            metadata: normalized_metadata(run_metadata)
-          )
-          broadcast_runs_update!
+          if run.nil?
+            run = import_source.import_runs.create!(
+              status: "running",
+              source_type: import_source.source_type,
+              started_at: Time.current,
+              metadata: normalized_metadata(run_metadata)
+            )
+            broadcast_runs_update!
+          end
         end
 
         run_started_at = run.started_at
@@ -291,6 +296,22 @@ module Importing
         import_source.import_runs.where(source_type: "easyticket", status: "running").order(started_at: :desc).first
       end
 
+      def claim_preexisting_run!
+        return nil if @preexisting_run_id.blank?
+
+        run = import_source.import_runs.lock.find_by(id: @preexisting_run_id, source_type: "easyticket")
+        return nil unless run.present?
+        return run if run.status == "running"
+        return nil unless run.status == "queued"
+
+        run.update!(
+          status: "running",
+          metadata: normalized_metadata(run.metadata).merge(normalized_metadata(run_metadata))
+        )
+        broadcast_runs_update!
+        run
+      end
+
       def fail_stale_runs!
         stale_runs =
           import_source
@@ -440,17 +461,23 @@ module Importing
       end
 
       def build_detail_payload(event_id, dump_payload)
-        detail_payload = fetch_detail_payload(event_id)
+        detail_payload = fetch_detail_payload(detail_event_id(event_id, dump_payload), event_id: event_id)
         merge_dump_payload_into_detail_payload(detail_payload, dump_payload)
       end
 
-      def fetch_detail_payload(event_id)
-        detail_fetcher.fetch(event_id)
+      def fetch_detail_payload(detail_event_id, event_id:)
+        detail_fetcher.fetch(detail_event_id)
       rescue RequestError => e
         raise unless detail_request_not_found?(e)
 
-        logger.warn("[EasyticketImporter] detail payload missing for event_id=#{event_id}: #{e.message}")
+        logger.warn("[EasyticketImporter] detail payload missing for event_id=#{event_id} detail_event_id=#{detail_event_id}: #{e.message}")
         {}
+      end
+
+      def detail_event_id(event_id, dump_payload)
+        dump_payload["id"].to_s.strip.presence ||
+          dump_payload["title_3"].to_s.strip.presence ||
+          event_id
       end
 
       def detail_request_not_found?(error)

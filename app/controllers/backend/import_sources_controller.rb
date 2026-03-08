@@ -182,12 +182,38 @@ module Backend
     end
 
     def trigger_import!(source_type:, label:, run_job_class:)
-      running_run = @import_source.import_runs.where(source_type: source_type, status: "running").order(started_at: :desc).first
-      if running_run.present? && !release_stale_running_run!(running_run)
-        return { alert: "Ein #{label}-Import läuft bereits (Run ##{running_run.id})." }
+      active_run = @import_source.import_runs.where(source_type: source_type, status: %w[queued running]).order(started_at: :desc).first
+      if active_run&.status == "running" && release_stale_running_run!(active_run)
+        active_run = nil
       end
 
-      run_job_class.perform_later(@import_source.id)
+      if active_run.present?
+        message =
+          if active_run.status == "queued"
+            "Ein #{label}-Import ist bereits eingeplant (Run ##{active_run.id})."
+          else
+            "Ein #{label}-Import läuft bereits (Run ##{active_run.id})."
+          end
+        return { alert: message }
+      end
+
+      queued_run = @import_source.import_runs.create!(
+        status: "queued",
+        source_type: source_type,
+        started_at: Time.current,
+        metadata: { "queued_at" => Time.current.iso8601 }
+      )
+      job = run_job_class.perform_later(@import_source.id, queued_run.id)
+      queued_run.update!(
+        metadata: normalized_metadata(queued_run.metadata).merge(
+          "job_id" => job.job_id,
+          "provider_job_id" => job.provider_job_id,
+          "job_attempt" => 1,
+          "job_retries_used" => 0,
+          "max_retries" => Importing::RetryPolicy::RETRY_DELAYS.size
+        )
+      )
+      Backend::ImportRunsBroadcaster.broadcast!
       {}
     end
 

@@ -7,6 +7,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(users(:one))
     @source = import_sources(:one)
     @eventim_source = import_sources(:two)
+    @reservix_source = ImportSource.ensure_reservix_source!
   end
 
   test "should get index" do
@@ -191,6 +192,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_import_sources_url
     follow_redirect!
     assert_not_includes response.body, "Easyticket-Import wurde gestartet."
+    assert_equal "queued", @source.import_runs.order(:created_at).last.status
   end
 
   test "should respond with turbo stream when enqueueing easyticket run" do
@@ -285,6 +287,27 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_import_sources_url
     follow_redirect!
     assert_not_includes response.body, "Eventim-Import wurde gestartet."
+    assert_equal "queued", @eventim_source.import_runs.order(:created_at).last.status
+  end
+
+  test "should list queued runs from different importers at the same time" do
+    assert_enqueued_jobs 1 do
+      post run_reservix_backend_import_source_url(@reservix_source)
+    end
+    assert_enqueued_jobs 1 do
+      post run_eventim_backend_import_source_url(@eventim_source)
+    end
+
+    get backend_import_sources_url(format: :json)
+    assert_response :success
+
+    payload = JSON.parse(response.body)
+    source_types = payload.fetch("runs").map { |run| run["source_type"] }
+
+    assert_includes source_types, "reservix"
+    assert_includes source_types, "eventim"
+    assert_equal "queued", @reservix_source.import_runs.order(:created_at).last.status
+    assert_equal "queued", @eventim_source.import_runs.order(:created_at).last.status
   end
 
   test "should not enqueue when eventim run is already active" do
