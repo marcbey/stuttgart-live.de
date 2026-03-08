@@ -11,7 +11,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select ".app-nav-links .app-nav-link-active", text: "Frontend"
+    assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_includes response.body, "Published Artist"
     assert_not_includes response.body, "Past Artist"
     assert_not_includes response.body, "Review Artist"
@@ -270,7 +270,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".app-nav-links .app-nav-link-active", text: "Frontend"
+    assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_includes response.body, "Published Artist"
     assert_match(/Beginn:\s*\d{2}:\d{2}\s*Uhr/, response.body)
     assert_match(/Einlass:\s*\d{2}:\d{2}\s*Uhr/, response.body)
