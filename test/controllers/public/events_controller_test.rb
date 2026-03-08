@@ -368,7 +368,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Sichtbare Veranstalterhinweise"
   end
 
-  test "show includes backend badge for authenticated users" do
+  test "show includes edit link for authenticated users" do
     sign_in_as(@user)
 
     get event_url(@published_event.slug)
@@ -376,6 +376,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
     assert_includes response.body, expected_link
+    assert_includes response.body, "Bearbeiten"
   end
 
   test "show returns not found for unpublished events" do
