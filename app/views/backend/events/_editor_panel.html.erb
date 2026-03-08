@@ -292,31 +292,9 @@
   <section class="offer-section">
     <h3>Slider-Bilder</h3>
     <% if slider_images.any? %>
-      <ul>
+      <ul class="slider-image-editor-grid">
         <% slider_images.each do |image| %>
-          <li>
-            <span><%= image.label %></span>
-            <div class="action-cell">
-              <%= image_tag image.file, alt: image.alt_text.presence || "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
-              <%= link_to "Öffnen", url_for(image.file), target: "_blank", rel: "noopener" %>
-            </div>
-
-            <%= form_with model: [ :backend, event, image ],
-                          method: :patch,
-                          class: "event-image-meta-form",
-                          data: { turbo: false } do |form| %>
-              <%= hidden_field_tag :status, editor_status %>
-              <%= form.text_field :alt_text, placeholder: "Alt-Text (optional)", class: "form-input" %>
-              <%= form.text_field :sub_text, placeholder: "Sub-Text (optional)", class: "form-input" %>
-              <%= form.submit "Meta speichern", class: "button button-ghost" %>
-            <% end %>
-
-            <%= button_to "Bild löschen",
-                          backend_event_event_image_path(event, image, status: editor_status),
-                          method: :delete,
-                          class: "button button-ghost",
-                          data: { turbo: false } %>
-          </li>
+          <%= render "backend/events/slider_image_editor_card", event: event, image: image, editor_status: editor_status %>
         <% end %>
       </ul>
     <% else %>

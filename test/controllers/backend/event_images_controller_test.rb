@@ -127,6 +127,29 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neue Subline", image.sub_text
   end
 
+  test "updates slider image metadata via turbo stream without redirect" do
+    sign_in_as(@user)
+    image = create_event_image(purpose: EventImage::PURPOSE_SLIDER, alt_text: nil, sub_text: nil)
+
+    patch backend_event_event_image_url(@event, image), params: {
+      status: "needs_review",
+      event_image: {
+        alt_text: "Neuer Alt",
+        sub_text: "Neue Subline"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "Bild-Metadaten wurden gespeichert."
+    assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(image, :slider_card)}\""
+    assert_includes response.body, "action=\"replace\""
+    image.reload
+    assert_equal "Neuer Alt", image.alt_text
+    assert_equal "Neue Subline", image.sub_text
+  end
+
   test "updates card crop settings for grid images" do
     sign_in_as(@user)
     image = create_event_image(purpose: EventImage::PURPOSE_GRID_TILE, grid_variant: EventImage::GRID_VARIANT_1X1)
@@ -200,6 +223,23 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+  end
+
+  test "deletes slider image via turbo stream and removes its card" do
+    sign_in_as(@user)
+    image = create_event_image(purpose: EventImage::PURPOSE_SLIDER)
+    card_id = ActionView::RecordIdentifier.dom_id(image, :slider_card)
+
+    assert_difference -> { @event.event_images.count }, -1 do
+      delete backend_event_event_image_url(@event, image), params: { status: "needs_review" }, as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "Bild wurde gelöscht."
+    assert_includes response.body, "target=\"#{card_id}\""
+    assert_includes response.body, "action=\"remove\""
   end
 
   private

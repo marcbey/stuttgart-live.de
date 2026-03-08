@@ -22,7 +22,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "Filter entfernen"
-    assert_includes response.body, "nächsten Event anzeigen"
+    assert_includes response.body, "Auto-Weiter"
     assert_includes response.body, "name=\"status\""
     assert_includes response.body, "value=\"published\""
     assert_includes response.body, "Promoter-ID"
@@ -32,6 +32,18 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "editor-datetime-clear"
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
+  end
+
+  test "slider image meta actions use separate forms for save and delete" do
+    sign_in_as(@user)
+    image = create_event_image(event: @event, purpose: EventImage::PURPOSE_SLIDER)
+
+    get backend_events_url(status: "needs_review", event_id: @event.id)
+
+    assert_response :success
+    assert_select "form##{ActionView::RecordIdentifier.dom_id(image, :meta)}"
+    assert_select "button[form='#{ActionView::RecordIdentifier.dom_id(image, :meta)}']", text: "Meta speichern"
+    assert_select "form##{ActionView::RecordIdentifier.dom_id(image, :meta)} form", count: 0
   end
 
   test "index renders status chips without counts and shows filtered event count" do
@@ -455,5 +467,27 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_events_url(status: "published")
     assert_equal "published", @event.reload.status
     assert @event.published_at.present?
+  end
+
+  private
+
+  def create_event_image(event:, purpose:, grid_variant: nil, alt_text: "Alt", sub_text: "Sub")
+    image = event.event_images.new(
+      purpose: purpose,
+      grid_variant: grid_variant,
+      alt_text: alt_text,
+      sub_text: sub_text
+    )
+
+    File.open(Rails.root.join("test/fixtures/files/test_image.png")) do |file|
+      image.file.attach(
+        io: file,
+        filename: "test_image.png",
+        content_type: "image/png"
+      )
+      image.save!
+    end
+
+    image
   end
 end

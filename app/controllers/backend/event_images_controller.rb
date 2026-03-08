@@ -71,9 +71,22 @@ module Backend
 
     def update
       if @event_image.update(update_params)
-        redirect_to editor_redirect_path, notice: "Bild-Metadaten wurden gespeichert."
+        respond_to do |format|
+          format.turbo_stream do
+            flash.now[:notice] = "Bild-Metadaten wurden gespeichert."
+            render_slider_image_update_turbo_stream
+          end
+          format.html { redirect_to editor_redirect_path, notice: "Bild-Metadaten wurden gespeichert." }
+        end
       else
-        redirect_to editor_redirect_path, alert: @event_image.errors.full_messages.to_sentence
+        respond_to do |format|
+          format.turbo_stream do
+            flash.now[:alert] = @event_image.errors.full_messages.to_sentence
+            render turbo_stream: turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+                   status: :unprocessable_entity
+          end
+          format.html { redirect_to editor_redirect_path, alert: @event_image.errors.full_messages.to_sentence }
+        end
       end
     end
 
@@ -116,7 +129,14 @@ module Backend
 
     def destroy
       @event_image.destroy!
-      redirect_to editor_redirect_path, notice: "Bild wurde gelöscht."
+
+      respond_to do |format|
+        format.turbo_stream do
+          flash.now[:notice] = "Bild wurde gelöscht."
+          render_slider_image_destroy_turbo_stream
+        end
+        format.html { redirect_to editor_redirect_path, notice: "Bild wurde gelöscht." }
+      end
     end
 
     def destroy_editorial_main
@@ -206,6 +226,38 @@ module Backend
       status = params[:status].to_s
       status = @event.status if status.blank?
       backend_events_path(status: status, event_id: @event.id)
+    end
+
+    def render_slider_image_update_turbo_stream
+      unless @event_image.slider?
+        render turbo_stream: turbo_stream.update("flash-messages", partial: "layouts/flash_messages")
+        return
+      end
+
+      render turbo_stream: [
+        turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+        turbo_stream.replace(
+          view_context.dom_id(@event_image, :slider_card),
+          partial: "backend/events/slider_image_editor_card",
+          locals: { event: @event, image: @event_image, editor_status: current_editor_status }
+        )
+      ]
+    end
+
+    def render_slider_image_destroy_turbo_stream
+      unless @event_image.slider?
+        render turbo_stream: turbo_stream.update("flash-messages", partial: "layouts/flash_messages")
+        return
+      end
+
+      render turbo_stream: [
+        turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+        turbo_stream.remove(view_context.dom_id(@event_image, :slider_card))
+      ]
+    end
+
+    def current_editor_status
+      params[:status].presence || @event.status
     end
   end
 end

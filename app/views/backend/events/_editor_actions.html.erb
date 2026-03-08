@@ -1,7 +1,7 @@
 <div class="editor-actions-row">
   <label class="check-inline">
     <%= check_box_tag "next_event_toggle", "1", next_event_enabled, data: { next_event_target: "toggle", action: "change->next-event#toggleChanged" } %>
-    <span>nächsten Event anzeigen</span>
+    <span>Auto-Weiter</span>
   </label>
   <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button button-save-primary">Speichern</button>
   <% unless event.published? %>
