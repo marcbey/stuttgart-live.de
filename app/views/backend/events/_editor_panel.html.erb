@@ -124,6 +124,10 @@
 
     <div>
       <%= form.label :organizer_notes, "Veranstalterhinweise", class: "form-label" %>
+      <label class="form-checkbox">
+        <%= form.check_box :show_organizer_notes %>
+        <span>Auf der Detailseite anzeigen</span>
+      </label>
       <%= form.text_area :organizer_notes, rows: 12, class: "form-textarea" %>
     </div>
 

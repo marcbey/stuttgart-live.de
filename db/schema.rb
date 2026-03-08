@@ -179,6 +179,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_08_150000) do
     t.string "promoter_id"
     t.datetime "published_at"
     t.bigint "published_by_id"
+    t.boolean "show_organizer_notes", default: false, null: false
     t.string "slug", null: false
     t.string "source_fingerprint"
     t.jsonb "source_snapshot", default: {}, null: false

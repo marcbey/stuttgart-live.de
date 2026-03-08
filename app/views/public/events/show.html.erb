@@ -114,7 +114,7 @@
         </div>
       <% end %>
 
-      <% if @event.organizer_notes.present? %>
+      <% if @event.show_organizer_notes? && @event.organizer_notes.present? %>
         <details class="event-detail-notes">
           <summary>Veranstalterhinweise</summary>
           <div class="event-detail-notes-body">

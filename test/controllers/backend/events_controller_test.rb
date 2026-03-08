@@ -228,6 +228,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         city: @event.city,
         organizer_name: "SKS Michael Russ GmbH",
         organizer_notes: "Eigene Hinweise\nZweite Zeile",
+        show_organizer_notes: "1",
         homepage_url: "https://example.com",
         instagram_url: "https://instagram.com/example",
         facebook_url: "https://facebook.com/example",
@@ -241,6 +242,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal doors_at.to_i, @event.doors_at.to_i
     assert_equal "SKS Michael Russ GmbH", @event.organizer_name
     assert_equal "Eigene Hinweise\nZweite Zeile", @event.organizer_notes
+    assert_predicate @event, :show_organizer_notes?
     assert_equal "https://example.com", @event.homepage_url
     assert_equal "https://instagram.com/example", @event.instagram_url
     assert_equal "https://facebook.com/example", @event.facebook_url

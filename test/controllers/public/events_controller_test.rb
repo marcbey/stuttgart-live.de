@@ -314,6 +314,54 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Interner Hinweis"
   end
 
+  test "show hides organizer notes unless explicitly enabled" do
+    event = Event.create!(
+      slug: "published-event-with-hidden-organizer-notes",
+      source_fingerprint: "test::public::published::hidden-organizer-notes",
+      title: "Published Event With Hidden Organizer Notes",
+      artist_name: "Published Artist Hidden Notes",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      event_info: "Öffentliche Beschreibung",
+      organizer_notes: "Interne Veranstalterhinweise",
+      show_organizer_notes: false,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_not_includes response.body, "Veranstalterhinweise"
+    assert_not_includes response.body, "Interne Veranstalterhinweise"
+  end
+
+  test "show renders organizer notes when explicitly enabled" do
+    event = Event.create!(
+      slug: "published-event-with-visible-organizer-notes",
+      source_fingerprint: "test::public::published::visible-organizer-notes",
+      title: "Published Event With Visible Organizer Notes",
+      artist_name: "Published Artist Visible Notes",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      event_info: "Öffentliche Beschreibung",
+      organizer_notes: "Sichtbare Veranstalterhinweise",
+      show_organizer_notes: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Veranstalterhinweise"
+    assert_includes response.body, "Sichtbare Veranstalterhinweise"
+  end
+
   test "show includes backend badge for authenticated users" do
     sign_in_as(@user)
 
