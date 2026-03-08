@@ -59,8 +59,9 @@
           <% end %>
         </div>
       <% end %>
-      <% if @event.primary_genre.present? %>
-        <p class="event-detail-genre"><%= @event.primary_genre.name %></p>
+      <% detail_genres = @event.genres.order(:name).pluck(:name) %>
+      <% if detail_genres.any? %>
+        <p class="event-detail-genre"><%= detail_genres.join(" · ") %></p>
       <% end %>
     </div>
 

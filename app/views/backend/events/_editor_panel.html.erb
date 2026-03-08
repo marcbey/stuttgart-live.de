@@ -4,6 +4,7 @@
 <% display_promoter_id = event_display_promoter_id(event) %>
 <% editor_status = filter_status.presence || event.status %>
 <% slider_images = event.event_images.slider.ordered.to_a %>
+<% selected_genre_ids = event.genre_ids %>
 
 <div class="editor-panel" id="event_editor">
   <header class="editor-header">
@@ -126,6 +127,19 @@
     <div>
       <%= form.label :editor_notes, "Redaktionsnotiz", class: "form-label" %>
       <%= form.text_area :editor_notes, rows: 3, class: "form-textarea" %>
+    </div>
+
+    <div>
+      <%= form.label :genre_ids, "Genres", class: "form-label" %>
+      <%= hidden_field_tag "event[genre_ids][]", "" %>
+      <div class="genre-checks">
+        <% all_genres.each do |genre| %>
+          <label>
+            <%= check_box_tag "event[genre_ids][]", genre.id, selected_genre_ids.include?(genre.id) %>
+            <span><%= genre.name %></span>
+          </label>
+        <% end %>
+      </div>
     </div>
 
   <% end %>

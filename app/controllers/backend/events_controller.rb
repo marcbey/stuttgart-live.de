@@ -83,6 +83,7 @@ module Backend
       set_publishing_fields!(@event)
 
       if @event.save
+        assign_genres!(@event) if params[:event].respond_to?(:key?) && params[:event].key?(:genre_ids)
         refresh_completeness!(@event)
         Editorial::EventChangeLogger.log!(
           event: @event,

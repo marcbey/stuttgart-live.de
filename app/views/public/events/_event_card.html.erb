@@ -34,9 +34,6 @@
           <span><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
           <span><%= event.venue %></span>
         </p>
-        <% if event.primary_genre.present? %>
-          <p class="event-card-genre"><%= event.primary_genre.name %></p>
-        <% end %>
       </div>
     <% end %>
 

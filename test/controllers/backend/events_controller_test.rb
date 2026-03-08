@@ -411,6 +411,36 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Rock" ], @published_event.reload.genres.order(:name).pluck(:name)
   end
 
+  test "editor renders genre checkboxes with selected genres" do
+    sign_in_as(@user)
+
+    get backend_event_url(@published_event)
+
+    assert_response :success
+    assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
+    assert_select "input[type='checkbox'][name='event[genre_ids][]'][value='#{genres(:rock).id}'][checked='checked']"
+    assert_select "input[type='checkbox'][name='event[genre_ids][]'][value='#{genres(:pop).id}']", count: 1
+  end
+
+  test "update stores selected genres from editor checkboxes" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@published_event), params: {
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        genre_ids: [ genres(:pop).id.to_s ]
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+    assert_equal [ "Pop" ], @published_event.reload.genres.order(:name).pluck(:name)
+  end
+
   test "published event editor does not show publish button" do
     sign_in_as(@user)
 

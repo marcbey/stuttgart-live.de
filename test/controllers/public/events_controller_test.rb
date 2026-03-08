@@ -15,6 +15,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Past Artist"
     assert_not_includes response.body, "Review Artist"
     assert_not_includes response.body, "event-card-status-select"
+    assert_select ".event-card-genre", count: 0
   end
 
   test "index defaults to SKS filter" do
@@ -261,6 +262,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show renders published event by slug" do
+    extra_genre = Genre.create!(name: "Jazz", slug: "jazz")
+    @published_event.genres << genres(:pop)
+    @published_event.genres << extra_genre
+
     get event_url(@published_event.slug)
 
     assert_response :success
@@ -268,6 +273,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/Beginn:\s*\d{2}:\d{2}\s*Uhr/, response.body)
     assert_match(/Einlass:\s*\d{2}:\d{2}\s*Uhr/, response.body)
     assert_includes response.body, "Preis: 45 EUR"
+    assert_select ".event-detail-genre", text: "Jazz · Pop · Rock"
   end
 
   test "show renders einlass when present" do
