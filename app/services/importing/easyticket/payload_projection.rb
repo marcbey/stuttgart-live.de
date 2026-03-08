@@ -70,6 +70,7 @@ module Importing
           detail_value("organizer_id"),
           detail_value("event", "organizer_id")
         )
+        ticket_event_id = dump_value("title_3").presence || external_event_id
 
         city = city.presence
         venue_name = venue_name.presence || "Unbekannte Venue"
@@ -85,7 +86,7 @@ module Importing
           organizer_id: organizer_id.presence,
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
-          ticket_url: build_ticket_url(external_event_id),
+          ticket_url: build_ticket_url(ticket_event_id),
           source_payload_hash: Digest::SHA256.hexdigest(@dump_payload.to_json)
         }
       end
@@ -198,7 +199,7 @@ module Importing
         [ city, venue_name ].reject(&:blank?).join(", ")
       end
 
-      def build_ticket_url(external_event_id)
+      def build_ticket_url(ticket_event_id)
         dump_link = first_present(
           dump_value("ticket_url"),
           dump_value("ticket_link"),
@@ -210,14 +211,14 @@ module Importing
         return "" if @ticket_base_url.blank?
 
         if @ticket_base_url.include?("%{event_id}")
-          format(@ticket_base_url, event_id: external_event_id)
+          format(@ticket_base_url, event_id: ticket_event_id)
         elsif @ticket_base_url.include?("{event_id}")
-          @ticket_base_url.gsub("{event_id}", external_event_id)
+          @ticket_base_url.gsub("{event_id}", ticket_event_id)
         else
           normalized_base_url = @ticket_base_url.chomp("/")
-          return normalized_base_url if normalized_base_url.end_with?("/#{external_event_id}")
+          return normalized_base_url if normalized_base_url.end_with?("/#{ticket_event_id}")
 
-          "#{normalized_base_url}/#{external_event_id}"
+          "#{normalized_base_url}/#{ticket_event_id}"
         end
       end
 

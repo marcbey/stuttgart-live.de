@@ -7,6 +7,7 @@ module Importing
         projection = PayloadProjection.new(
           dump_payload: {
             "event_id" => "42",
+            "title_3" => "4200",
             "date_time" => "2026-06-17 20:00:00",
             "location_name" => "Im Wizemann Stuttgart",
             "title_1" => "The Band",
@@ -48,7 +49,7 @@ module Importing
         assert_equal "Live", attributes[:title]
         assert_equal "The Band", attributes[:artist_name]
         assert_equal "141", attributes[:organizer_id]
-        assert_equal "https://tickets.example/42", attributes[:ticket_url]
+        assert_equal "https://tickets.example/4200", attributes[:ticket_url]
 
         image_candidates = projection.image_candidates
         assert_equal [ "https://img.example/small.jpg", "https://img.example/large.jpg" ],
@@ -86,6 +87,7 @@ module Importing
         projection = PayloadProjection.new(
           dump_payload: {
             "event_id" => "99",
+            "title_3" => "9900",
             "date_time" => "2026-06-20 19:30:00",
             "location_name" => "LKA Stuttgart",
             "title_1" => "Another Band"
@@ -96,10 +98,28 @@ module Importing
 
         attributes = projection.to_attributes
 
-        assert_equal "https://tickets.example/event/99", attributes[:ticket_url]
+        assert_equal "https://tickets.example/event/9900", attributes[:ticket_url]
       end
 
       test "does not append event_id twice when base already ends with id" do
+        projection = PayloadProjection.new(
+          dump_payload: {
+            "event_id" => "104364",
+            "title_3" => "559977",
+            "date_time" => "2026-06-20 19:30:00",
+            "location_name" => "LKA Stuttgart",
+            "title_1" => "Another Band"
+          },
+          detail_payload: {},
+          ticket_base_url: "https://partnershop.easyticket.de/shop/event/559977"
+        )
+
+        attributes = projection.to_attributes
+
+        assert_equal "https://partnershop.easyticket.de/shop/event/559977", attributes[:ticket_url]
+      end
+
+      test "falls back to external event id when title_3 is missing" do
         projection = PayloadProjection.new(
           dump_payload: {
             "event_id" => "104364",
@@ -108,12 +128,12 @@ module Importing
             "title_1" => "Another Band"
           },
           detail_payload: {},
-          ticket_base_url: "https://partnershop.easyticket.de/shop/event/104364"
+          ticket_base_url: "https://tickets.example/event/{event_id}"
         )
 
         attributes = projection.to_attributes
 
-        assert_equal "https://partnershop.easyticket.de/shop/event/104364", attributes[:ticket_url]
+        assert_equal "https://tickets.example/event/104364", attributes[:ticket_url]
       end
 
       test "keeps city blank when payload does not provide one" do
