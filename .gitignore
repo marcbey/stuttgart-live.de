@@ -67,3 +67,5 @@ backend.hcl
 
 # Kamal environment-specific secrets
 /.kamal/secrets.production
+skills-lock.json
+.agents
