@@ -398,6 +398,7 @@
   </section>
 
   <div class="editor-actions-row">
+    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button button-save-primary">Speichern</button>
     <% unless event.published? %>
       <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button">Speichern & Publizieren</button>
     <% end %>

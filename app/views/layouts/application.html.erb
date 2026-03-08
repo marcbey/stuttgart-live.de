@@ -30,17 +30,6 @@
   <body>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
-    <% nav_save_target =
-         if controller_path == "backend/events"
-           target_event =
-             if action_name == "index"
-               @selected_event
-             elsif defined?(@event)
-               @event
-             end
-
-           target_event if target_event&.persisted?
-         end %>
     <nav class="app-nav">
       <div class="<%= nav_inner_classes.join(" ") %>">
         <%= link_to root_path, class: "app-brand" do %>
@@ -54,9 +43,6 @@
           <% if authenticated? %>
             <% if current_user.backend_access? %>
               <%= link_to "Backend", backend_events_path, class: "button button-secondary" %>
-              <% if nav_save_target.present? %>
-                <button type="submit" form="<%= dom_id(nav_save_target, :editor_form) %>" class="button button-save-primary">Speichern</button>
-              <% end %>
             <% end %>
             <% if current_user.admin? %>
               <%= link_to "Benutzer", backend_users_path, class: "button button-secondary" %>
