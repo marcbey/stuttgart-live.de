@@ -6,6 +6,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Stuttgart Live">
     <meta name="mobile-web-app-capable" content="yes">
+    <% if controller_path.start_with?("backend/") %>
+      <meta name="turbo-cache-control" content="no-cache">
+    <% end %>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 

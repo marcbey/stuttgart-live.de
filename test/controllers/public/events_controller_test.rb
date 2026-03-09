@@ -54,7 +54,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, sks_event.artist_name
-    assert_not_includes response.body, non_sks_event.artist_name
+    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_event.artist_name)}/
+    assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
   end
 
   test "index can be filtered to SKS events" do
@@ -122,7 +123,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, sks_easy_event.artist_name
     assert_includes response.body, sks_eventim_event.artist_name
     assert_includes response.body, sks_easyticket_promoter_event.artist_name
-    assert_not_includes response.body, non_sks_event.artist_name
+    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easy_event.artist_name)}/
+    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_eventim_event.artist_name)}/
+    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easyticket_promoter_event.artist_name)}/
+    assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
     assert_includes response.body, "filter=sks"
   end
 

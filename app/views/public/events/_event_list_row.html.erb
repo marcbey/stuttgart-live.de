@@ -13,6 +13,8 @@
     <% end %>
   <% end %>
 
+  <p class="event-listing-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></p>
+
   <div class="event-listing-body">
     <%= link_to event_path(event.slug, filter: public_filter, view: (public_view == "list" ? public_view : nil), event_date: public_event_date, q: public_query), class: "event-listing-link" do %>
       <strong><%= event.artist_name %></strong>
@@ -21,13 +23,9 @@
       <% end %>
     <% end %>
 
-    <p class="event-listing-meta">
-      <span class="event-listing-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
-      <% if event.venue.present? %>
-        <span class="event-listing-meta-separator">·</span>
-        <span class="event-listing-location"><%= event.venue %></span>
-      <% end %>
-    </p>
+    <% if event.venue.present? %>
+      <p class="event-listing-location"><%= event.venue %></p>
+    <% end %>
 
     <% if primary_offer.present? %>
       <div class="event-listing-ticket">

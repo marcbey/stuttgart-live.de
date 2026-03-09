@@ -99,6 +99,11 @@ module Public
     def current_public_filter
       return @current_public_filter if defined?(@current_public_filter)
 
+      if current_public_view == VIEW_LIST
+        @current_public_filter = FILTER_ALL
+        return @current_public_filter
+      end
+
       value = params[:filter].to_s
       @current_public_filter =
         if FILTER_VALUES.include?(value)
@@ -153,10 +158,11 @@ module Public
 
     def assign_homepage_sections(current_relation)
       scoped_highlights = visible_events_relation(filter: FILTER_SKS, event_date: @public_event_date, query: @public_query)
+      scoped_all = visible_events_relation(filter: FILTER_ALL, event_date: @public_event_date, query: @public_query)
 
       @home_featured_events = scoped_highlights.to_a
       @home_featured_events = current_relation.limit(PER_PAGE).to_a if @home_featured_events.empty?
-      @home_highlight_events = scoped_highlights.limit(10).to_a
+      @home_highlight_events = scoped_all.limit(10).to_a
       @home_tagestipp_events = current_relation.offset(6).limit(10).to_a
       @home_tagestipp_events = current_relation.limit(10).to_a if @home_tagestipp_events.empty?
     end
