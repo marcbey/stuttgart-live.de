@@ -46,7 +46,8 @@ a {
   top: 0;
   z-index: 30;
   border-bottom: 1px solid var(--line);
-  background: rgba(236, 236, 236, 0.94);
+  background:
+    linear-gradient(135deg, rgba(247, 220, 214, 0.94), rgba(244, 214, 220, 0.93) 46%, rgba(237, 224, 236, 0.92) 100%);
   backdrop-filter: blur(8px);
 }
 
@@ -1409,6 +1410,7 @@ trix-editor.blog-rich-text:focus {
   justify-content: center;
   min-height: 5rem;
   padding: 0.4rem 0.5rem;
+  border-radius: 0.9rem;
   color: #111;
   text-align: center;
   text-decoration: none;
@@ -1446,6 +1448,26 @@ trix-editor.blog-rich-text:focus {
 .partner-strip-logo-russlive,
 .partner-strip-logo-russklassik {
   padding-inline: 0.4rem;
+}
+
+.partner-strip-logo-russlive {
+  background: transparent;
+}
+
+.partner-strip-logo-russklassik {
+  background: transparent;
+}
+
+.partner-strip-logo-easyticket {
+  background: transparent;
+}
+
+.partner-strip-logo-eventim {
+  background: transparent;
+}
+
+.partner-strip-logo-reservix {
+  background: transparent;
 }
 
 .newsletter-signup-section {
