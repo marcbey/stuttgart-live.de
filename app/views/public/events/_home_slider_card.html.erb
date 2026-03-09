@@ -23,15 +23,15 @@
     <% end %>
       <div class="home-slider-card-copy">
         <span class="home-slider-card-name"><%= event.artist_name %></span>
+        <% if event.title.present? %>
+          <span class="home-slider-card-title"><%= event.title %></span>
+        <% end %>
         <p class="home-slider-card-meta">
           <span><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
           <% if event.venue.present? %>
             <span><%= event.venue %></span>
           <% end %>
         </p>
-        <% if primary_offer.present? %>
-          <span class="button home-slider-card-ticket">Tickets</span>
-        <% end %>
       </div>
   <% end %>
 </article>
