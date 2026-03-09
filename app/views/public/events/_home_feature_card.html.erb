@@ -1,0 +1,8 @@
+<%= render "event_card",
+           event: event,
+           tile_variant: local_assigns.fetch(:tile_variant),
+           card_slot: local_assigns.fetch(:card_slot),
+           public_filter: local_assigns.fetch(:public_filter),
+           public_query: local_assigns.fetch(:public_query),
+           public_event_date: local_assigns.fetch(:public_event_date),
+           card_dom_id: dom_id(event, :home_card) %>

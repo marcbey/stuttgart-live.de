@@ -22,6 +22,7 @@ module Public
       relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date, query: @public_query)
       @events = relation.limit(PER_PAGE).offset((@page - 1) * PER_PAGE)
       @next_page = @page + 1 if relation.offset(@page * PER_PAGE).limit(1).exists?
+      assign_homepage_sections(relation) if @page == 1 && @public_view == VIEW_GRID
 
       respond_to do |format|
         format.html
@@ -148,6 +149,16 @@ module Public
     def published_future_events_relation
       published_events_relation
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
+    end
+
+    def assign_homepage_sections(current_relation)
+      scoped_highlights = visible_events_relation(filter: FILTER_SKS, event_date: @public_event_date, query: @public_query)
+
+      @home_featured_events = scoped_highlights.to_a
+      @home_featured_events = current_relation.limit(PER_PAGE).to_a if @home_featured_events.empty?
+      @home_highlight_events = scoped_highlights.limit(10).to_a
+      @home_tagestipp_events = current_relation.offset(6).limit(10).to_a
+      @home_tagestipp_events = current_relation.limit(10).to_a if @home_tagestipp_events.empty?
     end
 
     def apply_public_query(relation, query)

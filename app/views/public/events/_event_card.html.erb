@@ -9,8 +9,9 @@
 <% mobile_image_source = event_image_source(mobile_image) %>
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
+<% card_dom_id = local_assigns.fetch(:card_dom_id, dom_id(event, :card)) %>
 
-<article id="<%= dom_id(event, :card) %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
+<article id="<%= card_dom_id %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
   <div class="event-card-image-wrap">
     <%= link_to event_path(event.slug, filter: public_filter, event_date: public_event_date, q: public_query), class: "event-card-link" do %>
       <% if desktop_image_source.present? %>
