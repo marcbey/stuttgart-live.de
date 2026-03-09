@@ -1336,6 +1336,8 @@ a {
   flex-wrap: wrap;
   gap: 0.5rem;
   overflow-x: visible;
+  margin-right: 0;
+  padding-right: 0;
   padding-bottom: 0.4rem;
   margin-bottom: 0.9rem;
 }
@@ -1420,7 +1422,7 @@ a {
   --filter-control-height: 2.45rem;
   grid-column: 1 / -1;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: end;
   gap: 0.55rem;
 }
@@ -1429,23 +1431,13 @@ a {
   min-width: 0;
 }
 
-.filter-date-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: flex-end;
-  white-space: nowrap;
-}
-
-.filter-date-actions .button {
-  min-height: var(--filter-control-height);
-  padding-top: 0;
-  padding-bottom: 0;
-}
-
 .filter-date-input {
   padding-right: 3rem;
   height: var(--filter-control-height);
+}
+
+.filter-input-with-clear {
+  padding-right: 2.2rem;
 }
 
 .filter-date-clear {
@@ -1475,6 +1467,11 @@ a {
 
 .filter-date-clear:hover {
   color: #111;
+}
+
+.filter-input-clear {
+  right: 0.8rem;
+  background: transparent;
 }
 
 .bulk-actions {
@@ -2186,6 +2183,6 @@ a {
   }
 
   .backend-split {
-    grid-template-columns: minmax(560px, 1.05fr) minmax(0, 1.25fr);
+    grid-template-columns: minmax(344px, 0.64fr) minmax(0, 1.66fr);
   }
 }

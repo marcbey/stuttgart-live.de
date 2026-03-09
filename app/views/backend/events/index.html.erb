@@ -48,11 +48,33 @@
         <div class="filter-grid">
           <div class="filter-search-field">
             <%= form.label :query, "Suche", class: "form-label" %>
-            <%= form.text_field :query, value: @filters[:query], placeholder: "Band, Venue, Stadt", class: "form-input" %>
+            <div class="filter-date-wrap">
+              <%= form.text_field :query,
+                                  value: @filters[:query],
+                                  placeholder: "Band, Venue, Stadt",
+                                  class: "form-input filter-input-with-clear",
+                                  oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
+              <%= button_tag "×",
+                             type: "button",
+                             class: "filter-date-clear filter-input-clear #{'filter-date-clear-visible' if @filters[:query].present?}",
+                             aria: { label: "Suche löschen" },
+                             onclick: "this.previousElementSibling.value=''; this.classList.remove('filter-date-clear-visible'); this.form.requestSubmit();" %>
+            </div>
           </div>
           <div>
             <%= form.label :promoter_id, "Promoter-ID", class: "form-label" %>
-            <%= form.text_field :promoter_id, value: @filters[:promoter_id], placeholder: "zB 10135", class: "form-input" %>
+            <div class="filter-date-wrap">
+              <%= form.text_field :promoter_id,
+                                  value: @filters[:promoter_id],
+                                  placeholder: "zB 10135",
+                                  class: "form-input filter-input-with-clear",
+                                  oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
+              <%= button_tag "×",
+                             type: "button",
+                             class: "filter-date-clear filter-input-clear #{'filter-date-clear-visible' if @filters[:promoter_id].present?}",
+                             aria: { label: "Promoter-ID löschen" },
+                             onclick: "this.previousElementSibling.value=''; this.classList.remove('filter-date-clear-visible'); this.form.requestSubmit();" %>
+            </div>
           </div>
           <div class="filter-merge-row">
             <div class="filter-merge-field">
@@ -66,7 +88,7 @@
                               class: "form-input",
                               data: {
                                 merge_change_filter_target: "scope",
-                                action: "change->merge-change-filter#sync"
+                                action: "change->merge-change-filter#submit"
                               } %>
             </div>
             <div class="filter-merge-field">
@@ -80,7 +102,10 @@
                               {},
                               class: "form-input",
                               disabled: @filters[:merge_scope] != "last_merge",
-                              data: { merge_change_filter_target: "changeType" } %>
+                              data: {
+                                merge_change_filter_target: "changeType",
+                                action: "change->merge-change-filter#submit"
+                              } %>
             </div>
           </div>
           <div class="filter-date-row">
@@ -106,11 +131,6 @@
                                aria: { label: "Bis-Datum löschen" },
                                onclick: "this.previousElementSibling.value=''; this.form.requestSubmit();" %>
               </div>
-            </div>
-
-            <div class="filter-date-actions">
-              <%= form.submit "Filtern", class: "button button-secondary" %>
-              <%= link_to "Filter entfernen", apply_filters_backend_events_path(status: @filters[:status], clear_filters: "1"), data: { turbo_method: :post }, class: "button button-ghost" %>
             </div>
           </div>
         </div>

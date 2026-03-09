@@ -15,4 +15,9 @@ export default class extends Controller {
       this.changeTypeTarget.value = "all"
     }
   }
+
+  submit() {
+    this.sync()
+    this.element.requestSubmit()
+  }
 }
