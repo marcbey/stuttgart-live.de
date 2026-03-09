@@ -2109,11 +2109,6 @@ trix-editor.blog-rich-text:focus {
   font-size: 1.22rem;
 }
 
-.event-detail-title-full,
-.event-detail-header-with-image > h1 {
-  grid-column: 1 / -1;
-}
-
 .event-detail-header-copy {
   min-width: 0;
 }
