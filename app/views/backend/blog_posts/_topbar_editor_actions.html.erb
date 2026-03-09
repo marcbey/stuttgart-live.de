@@ -1,0 +1,7 @@
+<div id="blog_topbar_editor_actions"
+     class="backend-topbar-editor-actions"
+     data-editor-inbox-target="headerActions">
+  <% if blog_post.present? %>
+    <%= render "backend/blog_posts/editor_actions", blog_post: blog_post, form_id: dom_id(blog_post, :editor_form) %>
+  <% end %>
+</div>

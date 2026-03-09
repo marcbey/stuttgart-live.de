@@ -26,6 +26,18 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog_posts_list"
   end
 
+  test "index search is case insensitive" do
+    sign_in_as(@blogger)
+    matching_post = create_blog_post(author: @blogger, status: "draft", title: "Irish Folk Night")
+    create_blog_post(author: @blogger, status: "draft", title: "Jazz Session")
+
+    get backend_blog_posts_url, params: { query: "IRISH" }
+
+    assert_response :success
+    assert_includes response.body, matching_post.title
+    assert_not_includes response.body, "Jazz Session"
+  end
+
   test "blogger can create and publish a blog post" do
     sign_in_as(@blogger)
 
@@ -69,6 +81,28 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_nil blog_post.published_by
   end
 
+  test "turbo publish updates topbar controls" do
+    sign_in_as(@editor)
+    blog_post = create_blog_post(author: @editor, status: "draft")
+
+    patch backend_blog_post_url(blog_post), params: {
+      blog_post: {
+        title: blog_post.title,
+        teaser: blog_post.teaser,
+        slug: blog_post.slug,
+        body: "<div>Jetzt publiziert.</div>"
+      },
+      publication_action: "publish"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "published", blog_post.reload.status
+    assert_includes response.body, 'target="blog_topbar_editor_actions"'
+    assert_includes response.body, "Depublizieren"
+    assert_includes response.body, 'target="blog_topbar_context"'
+    assert_includes response.body, "Publiziert"
+  end
+
   test "turbo frame edit renders editor panel" do
     sign_in_as(@editor)
     blog_post = create_blog_post(author: @editor)
@@ -95,9 +129,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
-    def create_blog_post(author:, status: "draft", published_at: nil, published_by: nil)
+    def create_blog_post(author:, status: "draft", published_at: nil, published_by: nil, title: nil)
       BlogPost.create!(
-        title: "Blogpost #{SecureRandom.hex(4)}",
+        title: title || "Blogpost #{SecureRandom.hex(4)}",
         teaser: "Ein kurzer Teaser für den Beitrag.",
         body: "<div>Ein Inhalt mit Substanz.</div>",
         author: author,

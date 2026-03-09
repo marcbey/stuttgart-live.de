@@ -83,7 +83,7 @@ export default class extends Controller {
 
     const target = event.target
     if (!(target instanceof HTMLFormElement)) return
-    if (!target.id.endsWith("_editor_form")) return
+    if (!target.id.startsWith("editor_form_")) return
 
     window.requestAnimationFrame(() => this.syncActiveFromEditor())
   }

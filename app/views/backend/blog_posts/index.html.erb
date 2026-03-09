@@ -1,11 +1,4 @@
 <% content_for :title, "Blog" %>
-<% selected_context = if @selected_blog_post.present?
-                        [
-                          (@selected_blog_post.title.presence || (@selected_blog_post.persisted? ? "Unbenannter Beitrag" : "Neuen Beitrag anlegen")),
-                          (@selected_blog_post.persisted? ? @selected_blog_post.display_status : nil),
-                          (@selected_blog_post.published_at.present? ? l(@selected_blog_post.published_at, format: "%d.%m.%Y %H:%M") : nil)
-                        ].compact.join(" · ")
-                      end %>
 
 <section class="backend-shell"
          data-controller="editor-inbox"
@@ -13,15 +6,13 @@
   <header class="backend-topbar backend-topbar-sticky">
     <div class="backend-topbar-title">
       <h1>Blog-Inbox</h1>
-      <span class="backend-topbar-context" data-editor-inbox-target="selectedContext"><%= selected_context %></span>
+      <span id="blog_topbar_context"
+            class="backend-topbar-context"
+            data-editor-inbox-target="selectedContext"><%= render "topbar_context", blog_post: @selected_blog_post if @selected_blog_post.present? %></span>
     </div>
 
     <div class="backend-topbar-controls">
-      <div class="backend-topbar-editor-actions" data-editor-inbox-target="headerActions">
-        <% if @selected_blog_post.present? %>
-          <%= render "editor_actions", blog_post: @selected_blog_post, form_id: dom_id(@selected_blog_post, :editor_form) %>
-        <% end %>
-      </div>
+      <%= render "topbar_editor_actions", blog_post: @selected_blog_post %>
 
       <div class="backend-topbar-actions">
         <%= link_to "Neuer Beitrag",
