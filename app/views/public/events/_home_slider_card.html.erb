@@ -21,17 +21,18 @@
     <% else %>
       <div class="home-slider-card-image event-card-placeholder"></div>
     <% end %>
-      <div class="home-slider-card-copy">
-        <span class="home-slider-card-name"><%= event.artist_name %></span>
-        <% if event.title.present? %>
-          <span class="home-slider-card-title"><%= event.title %></span>
-        <% end %>
-        <p class="home-slider-card-meta">
-          <span><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
-          <% if event.venue.present? %>
-            <span><%= event.venue %></span>
-          <% end %>
-        </p>
-      </div>
   <% end %>
+
+  <div class="home-slider-card-copy">
+    <%= link_to event.artist_name, event_path(event.slug, filter: public_filter, event_date: public_event_date, q: public_query), class: "home-slider-card-name" %>
+    <% if event.title.present? %>
+      <p class="home-slider-card-title"><%= event.title %></p>
+    <% end %>
+    <p class="home-slider-card-meta">
+      <span><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+      <% if event.venue.present? %>
+        <span><%= event.venue %></span>
+      <% end %>
+    </p>
+  </div>
 </article>
