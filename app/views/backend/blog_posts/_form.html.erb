@@ -2,8 +2,11 @@
   <aside class="blog-editor-aside">
     <div class="blog-editor-note">
       <span class="blog-post-status blog-post-status-<%= blog_post.status %>"><%= blog_post.display_status %></span>
-      <p>Autor: <strong><%= blog_post.author&.name.presence || current_user.name.presence || current_user.email_address %></strong></p>
+      <p>Autor: <strong><%= blog_post.display_author_name.presence || current_user.name.presence || current_user.email_address %></strong></p>
       <p>Slug: <code><%= blog_post.slug.presence || "wird automatisch erzeugt" %></code></p>
+      <% if blog_post.source_url.present? %>
+        <p>Quelle: <a href="<%= blog_post.source_url %>" target="_blank" rel="noreferrer"><%= blog_post.source_url %></a></p>
+      <% end %>
       <% if blog_post.published_at.present? %>
         <p>Veröffentlichung: <strong><%= l(blog_post.published_at, format: "%d.%m.%Y %H:%M") %></strong></p>
       <% else %>
@@ -13,7 +16,7 @@
 
     <% if blog_post.cover_image.attached? %>
       <div class="blog-editor-cover-card">
-        <%= image_tag blog_post.cover_image.variant(resize_to_fill: [ 720, 480 ]), alt: blog_post.title, class: "blog-editor-cover-preview" %>
+        <%= image_tag blog_post.cover_image, alt: blog_post.title, class: "blog-editor-cover-preview" %>
       </div>
     <% end %>
   </aside>
@@ -41,6 +44,11 @@
           <%= form.label :slug, "Slug", class: "form-label" %>
           <%= form.text_field :slug, class: "form-input", placeholder: "wird-aus-dem-titel-abgeleitet" %>
         </div>
+      </div>
+
+      <div>
+        <%= form.label :author_name, "Autor / Byline", class: "form-label" %>
+        <%= form.text_field :author_name, class: "form-input", placeholder: current_user.name.presence || current_user.email_address %>
       </div>
 
       <div>
@@ -75,16 +83,16 @@
       </div>
 
       <div class="blog-editor-actions">
-        <%= form.button "Speichern", name: "publication_action", value: "save", class: "button button-secondary" %>
-        <%= form.button "Speichern & veröffentlichen", name: "publication_action", value: "publish", class: "button" %>
+        <%= form.button "Speichern", name: "publication_action", value: "save", class: "button button-save-primary button-compact" %>
+        <%= form.button "Speichern & veröffentlichen", name: "publication_action", value: "publish", class: "button button-compact" %>
         <% if blog_post.persisted? && blog_post.published? %>
-          <%= form.button "Depublizieren", name: "publication_action", value: "depublish", class: "button button-secondary" %>
+          <%= form.button "Depublizieren", name: "publication_action", value: "depublish", class: "button button-secondary button-compact" %>
         <% end %>
         <% if blog_post.persisted? %>
           <%= link_to "Löschen",
                       backend_blog_post_path(blog_post),
                       data: { turbo_method: :delete, turbo_confirm: "Beitrag wirklich löschen?" },
-                      class: "button button-danger" %>
+                      class: "button button-ghost button-compact" %>
         <% end %>
       </div>
     <% end %>

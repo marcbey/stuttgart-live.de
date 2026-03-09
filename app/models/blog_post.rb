@@ -10,6 +10,7 @@ class BlogPost < ApplicationRecord
   validates :title, presence: true, length: { maximum: 180 }
   validates :teaser, presence: true, length: { maximum: 320 }
   validates :slug, presence: true, uniqueness: true
+  validates :source_identifier, uniqueness: true, allow_nil: true
   validates :status, inclusion: { in: STATUSES }
   validates :published_at, presence: true, if: :published?
   validate :body_must_be_present
@@ -40,11 +41,19 @@ class BlogPost < ApplicationRecord
     "Veröffentlicht"
   end
 
+  def display_author_name
+    author_name.to_s.strip.presence || author&.name.presence || author&.email_address.to_s
+  end
+
   private
     def normalize_attributes
       self.title = title.to_s.strip
       self.teaser = teaser.to_s.strip
       self.slug = slug.to_s.strip.parameterize.presence || slug
+      self.author_name = author_name.to_s.strip.presence
+      self.source_identifier = source_identifier.to_s.strip.presence
+      self.source_url = source_url.to_s.strip.presence
+      self.youtube_video_urls = Array(youtube_video_urls).filter_map { |value| normalize_youtube_url(value) }.uniq
     end
 
     def slug_needed?
@@ -77,5 +86,29 @@ class BlogPost < ApplicationRecord
       return if cover_image.content_type.to_s.start_with?("image/")
 
       errors.add(:cover_image, "muss ein Bild sein")
+    end
+
+    def normalize_youtube_url(value)
+      url = value.to_s.strip
+      return if url.blank?
+
+      uri = URI.parse(url)
+      host = uri.host.to_s.downcase
+
+      if host.include?("youtu.be")
+        video_id = uri.path.delete_prefix("/").split("/").first
+      elsif host.include?("youtube.com") || host.include?("youtube-nocookie.com")
+        if uri.path.include?("/embed/")
+          video_id = uri.path.split("/embed/").last.to_s.split("/").first
+        else
+          video_id = CGI.parse(uri.query.to_s)["v"]&.first
+        end
+      end
+
+      return if video_id.blank?
+
+      "https://www.youtube.com/embed/#{video_id}"
+    rescue URI::InvalidURIError
+      nil
     end
 end

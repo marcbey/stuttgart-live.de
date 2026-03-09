@@ -432,16 +432,9 @@ a {
   gap: 0.7rem;
   flex-wrap: wrap;
   margin-top: 1.2rem;
-}
-
-.button-danger {
-  border-color: #8f1624;
-  background: #b2172b;
-  color: #fff;
-}
-
-.button-danger:hover {
-  background: #8f1624;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background: rgba(255, 255, 255, 0.98);
 }
 
 trix-toolbar {
@@ -531,7 +524,7 @@ trix-editor.blog-rich-text:focus {
 .news-list-item {
   display: grid;
   gap: 1rem;
-  align-items: stretch;
+  align-items: start;
   background: #fff;
   padding: 0.9rem 1rem;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
@@ -540,7 +533,8 @@ trix-editor.blog-rich-text:focus {
 .news-list-item-media {
   display: block;
   overflow: hidden;
-  min-height: 14rem;
+  aspect-ratio: 16 / 9;
+  max-height: 13rem;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(235, 235, 235, 0.96)),
     repeating-linear-gradient(45deg, rgba(0, 0, 0, 0.03), rgba(0, 0, 0, 0.03) 2px, transparent 2px, transparent 10px);
@@ -557,6 +551,10 @@ trix-editor.blog-rich-text:focus {
   display: grid;
   align-content: start;
   gap: 0.75rem;
+}
+
+.news-list-item-copy .button {
+  justify-self: start;
 }
 
 .news-list-item-title {
@@ -584,6 +582,44 @@ trix-editor.blog-rich-text:focus {
 .news-detail-copy .trix-content h2,
 .news-detail-copy .trix-content h3 {
   text-transform: uppercase;
+}
+
+.news-video-stack {
+  display: grid;
+  gap: 1rem;
+}
+
+.news-detail-header {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.news-detail-heading {
+  grid-column: 1 / -1;
+}
+
+.news-detail-header-copy {
+  display: grid;
+  align-content: start;
+}
+
+@media (min-width: 860px) {
+  .news-list-item {
+    grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
+    gap: 1.1rem;
+  }
+
+  .news-list-item-no-image {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .news-list-item-media {
+    aspect-ratio: 4 / 3;
+    max-height: 15rem;
+  }
+
+  .news-detail-header-with-image {
+    grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  }
 }
 
 .app-nav-flash {

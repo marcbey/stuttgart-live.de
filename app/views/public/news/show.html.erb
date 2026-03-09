@@ -13,20 +13,21 @@
     <% end %>
   </div>
 
-  <header class="event-detail-header">
-    <div>
-      <h1><%= @blog_post.title %></h1>
+  <header class="event-detail-header news-detail-header <%= 'news-detail-header-with-image' if @blog_post.cover_image.attached? %>">
+    <h1 class="news-detail-heading"><%= @blog_post.title %></h1>
+
+    <div class="news-detail-header-copy">
       <p class="event-detail-title"><%= @blog_post.teaser %></p>
       <p class="event-detail-meta event-detail-meta-primary">
         <span class="event-detail-meta-strong">News</span>
         <span class="event-detail-meta-strong"><%= l(@blog_post.published_at.to_date, format: "%d.%m.%Y") %></span>
-        <span class="event-detail-meta-strong"><%= @blog_post.author.name.presence || @blog_post.author.email_address %></span>
+        <span class="event-detail-meta-strong"><%= @blog_post.display_author_name %></span>
       </p>
     </div>
 
     <% if @blog_post.cover_image.attached? %>
       <div class="event-detail-image-wrap">
-        <%= image_tag @blog_post.cover_image.variant(resize_to_limit: [ 1200, 900 ]), alt: @blog_post.title, class: "event-detail-image" %>
+        <%= image_tag @blog_post.cover_image, alt: @blog_post.title, class: "event-detail-image" %>
       </div>
     <% end %>
   </header>
@@ -34,4 +35,23 @@
   <section class="event-detail-copy news-detail-copy">
     <%= @blog_post.body %>
   </section>
+
+  <% if @blog_post.youtube_video_urls.any? %>
+    <section class="event-detail-video">
+      <div class="news-video-stack">
+        <% @blog_post.youtube_video_urls.each do |youtube_url| %>
+          <div class="video-frame">
+            <iframe
+              src="<%= youtube_url %>"
+              title="YouTube video player"
+              loading="lazy"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+              referrerpolicy="strict-origin-when-cross-origin"
+              allowfullscreen>
+            </iframe>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 </article>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_09_101500) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_09_113000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -54,17 +54,22 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_101500) do
 
   create_table "blog_posts", force: :cascade do |t|
     t.bigint "author_id", null: false
+    t.string "author_name"
     t.datetime "created_at", null: false
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.string "slug", null: false
+    t.string "source_identifier"
+    t.string "source_url"
     t.string "status", default: "draft", null: false
     t.text "teaser", null: false
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.jsonb "youtube_video_urls", default: [], null: false
     t.index ["author_id"], name: "index_blog_posts_on_author_id"
     t.index ["published_by_id"], name: "index_blog_posts_on_published_by_id"
     t.index ["slug"], name: "index_blog_posts_on_slug", unique: true
+    t.index ["source_identifier"], name: "index_blog_posts_on_source_identifier", unique: true
     t.index ["status", "published_at"], name: "index_blog_posts_on_status_and_published_at"
   end
 

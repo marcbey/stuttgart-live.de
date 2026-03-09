@@ -65,7 +65,7 @@ module Backend
       end
 
       def blog_post_params
-        params.require(:blog_post).permit(:title, :teaser, :slug, :body, :cover_image, :published_at)
+        params.require(:blog_post).permit(:title, :teaser, :slug, :body, :cover_image, :published_at, :author_name)
       end
 
       def publication_action

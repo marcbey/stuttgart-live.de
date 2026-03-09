@@ -24,7 +24,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, @live_post.title
     assert_includes response.body, @live_post.teaser
-    assert_includes response.body, "Zurück zu News"
+    assert_includes response.body, "alle news"
   end
 
   test "show returns not found for drafts" do

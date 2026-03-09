@@ -26,7 +26,7 @@
       <article class="blog-post-card">
         <%= link_to edit_backend_blog_post_path(blog_post), class: "blog-post-card-cover" do %>
           <% if blog_post.cover_image.attached? %>
-            <%= image_tag blog_post.cover_image.variant(resize_to_fill: [ 720, 460 ]), alt: blog_post.title %>
+            <%= image_tag blog_post.cover_image, alt: blog_post.title %>
           <% else %>
             <span class="blog-post-card-cover-placeholder">NEWS</span>
           <% end %>
@@ -42,7 +42,7 @@
           <p><%= blog_post.teaser %></p>
 
           <div class="blog-post-card-footer">
-            <span>Autor: <%= blog_post.author.name.presence || blog_post.author.email_address %></span>
+            <span>Autor: <%= blog_post.display_author_name %></span>
             <%= link_to "Bearbeiten", edit_backend_blog_post_path(blog_post), class: "button button-secondary button-compact" %>
           </div>
         </div>
