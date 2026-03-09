@@ -1618,7 +1618,9 @@ trix-editor.blog-rich-text:focus {
 .newsletter-signup-section {
   margin-top: 2.2rem;
   border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
   padding-top: 1.4rem;
+  padding-bottom: 1.4rem;
   display: grid;
   gap: 1rem;
 }
