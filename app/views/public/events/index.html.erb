@@ -7,12 +7,12 @@
     <div class="public-filter-row">
       <div class="public-filter-row-main">
         <div class="public-filter-toggle">
+          <%= link_to "Highlights",
+                      events_path(filter: "sks", view: (@public_view == "list" ? @public_view : nil), event_date: @public_event_date&.iso8601, q: @public_query),
+                      class: "status-chip #{'status-chip-active' if @public_filter == 'sks'}" %>
           <%= link_to "Alle Events",
                       events_path(filter: "all", view: (@public_view == "list" ? @public_view : nil), event_date: @public_event_date&.iso8601, q: @public_query),
                       class: "status-chip #{'status-chip-active' if @public_filter == 'all'}" %>
-          <%= link_to "Nur SKS",
-                      events_path(filter: "sks", view: (@public_view == "list" ? @public_view : nil), event_date: @public_event_date&.iso8601, q: @public_query),
-                      class: "status-chip #{'status-chip-active' if @public_filter == 'sks'}" %>
         </div>
 
         <div class="public-filter-toggle public-view-toggle" aria-label="Darstellung umschalten">
