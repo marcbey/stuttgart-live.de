@@ -85,9 +85,9 @@ module Backend
 
         return scope if query.blank?
 
-        pattern = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
+        pattern = "%#{ActiveRecord::Base.sanitize_sql_like(query.downcase)}%"
         scope.where(
-          "blog_posts.title LIKE :pattern OR blog_posts.teaser LIKE :pattern OR blog_posts.slug LIKE :pattern OR blog_posts.author_name LIKE :pattern",
+          "LOWER(blog_posts.title) LIKE :pattern OR LOWER(blog_posts.teaser) LIKE :pattern OR LOWER(blog_posts.slug) LIKE :pattern OR LOWER(COALESCE(blog_posts.author_name, '')) LIKE :pattern",
           pattern: pattern
         )
       end
@@ -212,6 +212,16 @@ module Backend
 
         render turbo_stream: [
           turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+          turbo_stream.replace(
+            "blog_topbar_context",
+            partial: "backend/blog_posts/topbar_context",
+            locals: { blog_post: target_blog_post }
+          ),
+          turbo_stream.replace(
+            "blog_topbar_editor_actions",
+            partial: "backend/blog_posts/topbar_editor_actions",
+            locals: { blog_post: target_blog_post }
+          ),
           turbo_stream.replace(
             "blog_posts_list",
             partial: "backend/blog_posts/blog_posts_list",
