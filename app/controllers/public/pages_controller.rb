@@ -1,11 +1,13 @@
 module Public
   class PagesController < ApplicationController
-    allow_unauthenticated_access only: %i[contact imprint]
+    allow_unauthenticated_access only: %i[privacy imprint terms contact]
 
-    def contact
-    end
+    def privacy; end
 
-    def imprint
-    end
+    def imprint; end
+
+    def terms; end
+
+    def contact; end
   end
 end

@@ -82,5 +82,18 @@
     </nav>
 
     <%= yield %>
+
+    <% unless controller_path.start_with?("backend/") %>
+      <footer class="site-footer">
+        <div class="site-footer-shell">
+          <nav class="site-footer-nav" aria-label="Footer">
+            <%= link_to "Datenschutz", datenschutz_path %>
+            <%= link_to "Impressum", impressum_path %>
+            <%= link_to "AGB", agb_path %>
+            <%= link_to "Kontakt", kontakt_path %>
+          </nav>
+        </div>
+      </footer>
+    <% end %>
   </body>
 </html>

@@ -60,6 +60,8 @@ Rails.application.routes.draw do
   get "impressum", to: "public/pages#imprint", as: :imprint
   get "blog/:slug", to: "public/legacy_blog_redirects#show", as: :legacy_blog_redirect
   resources :news, only: [ :index, :show ], module: :public, param: :slug
+  get "datenschutz", to: "public/pages#privacy", as: :datenschutz
+  get "agb", to: "public/pages#terms", as: :agb
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
