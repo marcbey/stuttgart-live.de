@@ -17,6 +17,13 @@ class UserTest < ActiveSupport::TestCase
     assert user.valid?
   end
 
+  test "blogger has blog access but no event backend access" do
+    blogger = users(:blogger)
+
+    assert blogger.blog_access?
+    assert_not blogger.backend_access?
+  end
+
   test "does not allow removing the last admin role" do
     admin = users(:two)
 

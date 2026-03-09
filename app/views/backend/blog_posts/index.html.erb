@@ -1,0 +1,56 @@
+<% content_for :title, "Blog" %>
+
+<section class="blog-admin-shell">
+  <header class="blog-admin-hero">
+    <div>
+      <p class="blog-admin-kicker">Backend / Blog</p>
+      <h1>News-Redaktion</h1>
+      <p class="blog-admin-copy">Kuratiere Beiträge, plane Veröffentlichungen und pflege Titelbild plus Rich-Text-Inhalt an einer Stelle.</p>
+    </div>
+    <div class="blog-admin-hero-actions">
+      <%= link_to "Neuer Beitrag", new_backend_blog_post_path, class: "button" %>
+    </div>
+  </header>
+
+  <div class="blog-admin-filter-row">
+    <% Backend::BlogPostsController::FILTERS.each do |filter| %>
+      <% label = { "all" => "Alle", "draft" => "Entwürfe", "published" => "Veröffentlicht" }.fetch(filter) %>
+      <%= link_to label,
+                  backend_blog_posts_path(status: (filter == "all" ? nil : filter)),
+                  class: "status-chip #{'status-chip-active' if @status_filter == filter}" %>
+    <% end %>
+  </div>
+
+  <div class="blog-post-grid">
+    <% @blog_posts.each do |blog_post| %>
+      <article class="blog-post-card">
+        <%= link_to edit_backend_blog_post_path(blog_post), class: "blog-post-card-cover" do %>
+          <% if blog_post.cover_image.attached? %>
+            <%= image_tag blog_post.cover_image.variant(resize_to_fill: [ 720, 460 ]), alt: blog_post.title %>
+          <% else %>
+            <span class="blog-post-card-cover-placeholder">NEWS</span>
+          <% end %>
+        <% end %>
+
+        <div class="blog-post-card-body">
+          <div class="blog-post-card-meta">
+            <span class="blog-post-status blog-post-status-<%= blog_post.status %>"><%= blog_post.display_status %></span>
+            <span><%= l((blog_post.published_at || blog_post.updated_at).to_date, format: "%d.%m.%Y") %></span>
+          </div>
+
+          <h2><%= link_to blog_post.title, edit_backend_blog_post_path(blog_post) %></h2>
+          <p><%= blog_post.teaser %></p>
+
+          <div class="blog-post-card-footer">
+            <span>Autor: <%= blog_post.author.name.presence || blog_post.author.email_address %></span>
+            <%= link_to "Bearbeiten", edit_backend_blog_post_path(blog_post), class: "button button-secondary button-compact" %>
+          </div>
+        </div>
+      </article>
+    <% end %>
+  </div>
+
+  <% if @blog_posts.empty? %>
+    <div class="empty-state">Noch keine Beiträge für diesen Filter.</div>
+  <% end %>
+</section>

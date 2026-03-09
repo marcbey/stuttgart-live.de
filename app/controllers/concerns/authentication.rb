@@ -55,6 +55,9 @@ module Authentication
     end
 
     def default_authenticated_url
-      current_user&.backend_access? ? backend_root_url : root_url
+      return backend_root_url if current_user&.backend_access?
+      return backend_blog_posts_url if current_user&.blog_access?
+
+      root_url
     end
 end

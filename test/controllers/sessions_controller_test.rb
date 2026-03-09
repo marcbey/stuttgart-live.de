@@ -19,10 +19,10 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert cookies[:session_id]
   end
 
-  test "create with blogger credentials redirects to the public root" do
+  test "create with blogger credentials redirects to the blog backend" do
     post session_path, params: { email_address: @blogger.email_address, password: "password" }
 
-    assert_redirected_to root_path
+    assert_redirected_to backend_blog_posts_path
     assert cookies[:session_id]
   end
 

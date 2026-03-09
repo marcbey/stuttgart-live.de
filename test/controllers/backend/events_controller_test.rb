@@ -14,6 +14,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_url
   end
 
+  test "blogger cannot access the event backend" do
+    sign_in_as(users(:blogger))
+
+    get backend_events_url
+
+    assert_redirected_to root_url
+  end
+
   test "index is available for signed in users" do
     sign_in_as(@user)
 

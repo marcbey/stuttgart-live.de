@@ -5,6 +5,8 @@ class User < ApplicationRecord
   has_many :sessions, dependent: :destroy
   has_many :published_events, class_name: "Event", foreign_key: :published_by_id, dependent: :nullify
   has_many :event_change_logs, dependent: :nullify
+  has_many :authored_blog_posts, class_name: "BlogPost", foreign_key: :author_id, dependent: :restrict_with_exception
+  has_many :published_blog_posts, class_name: "BlogPost", foreign_key: :published_by_id, dependent: :nullify
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
@@ -27,6 +29,10 @@ class User < ApplicationRecord
 
   def backend_access?
     admin? || editor?
+  end
+
+  def blog_access?
+    admin? || editor? || blogger?
   end
 
   private

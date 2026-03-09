@@ -1,0 +1,18 @@
+<% content_for :title, @blog_post.title %>
+
+<section class="blog-editor-shell">
+  <header class="blog-editor-header">
+    <div>
+      <p class="blog-admin-kicker">Backend / Blog</p>
+      <h1><%= @blog_post.title %></h1>
+    </div>
+    <div class="blog-editor-header-actions">
+      <% if @blog_post.live? %>
+        <%= link_to "Öffnen", news_path(@blog_post.slug), class: "button button-secondary", target: "_blank", rel: "noreferrer" %>
+      <% end %>
+      <%= link_to "Zur Übersicht", backend_blog_posts_path, class: "button button-secondary" %>
+    </div>
+  </header>
+
+  <%= render "form", blog_post: @blog_post %>
+</section>

@@ -21,6 +21,7 @@ Rails.application.routes.draw do
 
   namespace :backend do
     resource :account_password, only: [ :edit, :update ]
+    resources :blog_posts, path: "blog", except: [ :show ]
     resources :users, only: [ :index, :new, :create, :edit, :update ]
 
     resources :import_sources, only: [ :index, :edit, :update ] do
@@ -54,6 +55,7 @@ Rails.application.routes.draw do
   resources :events, only: [ :index, :show ], module: :public, param: :slug do
     patch :status, on: :member
   end
+  resources :news, only: [ :index, :show ], module: :public, param: :slug
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

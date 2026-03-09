@@ -1,0 +1,13 @@
+<% content_for :title, "Neuer Blog-Beitrag" %>
+
+<section class="blog-editor-shell">
+  <header class="blog-editor-header">
+    <div>
+      <p class="blog-admin-kicker">Backend / Blog</p>
+      <h1>Neuen Beitrag anlegen</h1>
+    </div>
+    <%= link_to "Zur Übersicht", backend_blog_posts_path, class: "button button-secondary" %>
+  </header>
+
+  <%= render "form", blog_post: @blog_post %>
+</section>

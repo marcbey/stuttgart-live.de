@@ -1,0 +1,37 @@
+<% content_for :title, "#{@blog_post.title} | Stuttgart Live" %>
+
+<article class="event-detail news-detail">
+  <div class="event-detail-topbar">
+    <p class="event-detail-back"><%= link_to "← alle news", news_index_path %></p>
+    <% if authenticated? && current_user.blog_access? %>
+      <div class="event-detail-topbar-actions">
+        <%= link_to "Bearbeiten",
+                    edit_backend_blog_post_path(@blog_post),
+                    class: "status-badge status-badge-default status-badge-link event-detail-edit-link",
+                    data: { turbo: false } %>
+      </div>
+    <% end %>
+  </div>
+
+  <header class="event-detail-header">
+    <div>
+      <h1><%= @blog_post.title %></h1>
+      <p class="event-detail-title"><%= @blog_post.teaser %></p>
+      <p class="event-detail-meta event-detail-meta-primary">
+        <span class="event-detail-meta-strong">News</span>
+        <span class="event-detail-meta-strong"><%= l(@blog_post.published_at.to_date, format: "%d.%m.%Y") %></span>
+        <span class="event-detail-meta-strong"><%= @blog_post.author.name.presence || @blog_post.author.email_address %></span>
+      </p>
+    </div>
+
+    <% if @blog_post.cover_image.attached? %>
+      <div class="event-detail-image-wrap">
+        <%= image_tag @blog_post.cover_image.variant(resize_to_limit: [ 1200, 900 ]), alt: @blog_post.title, class: "event-detail-image" %>
+      </div>
+    <% end %>
+  </header>
+
+  <section class="event-detail-copy news-detail-copy">
+    <%= @blog_post.body %>
+  </section>
+</article>

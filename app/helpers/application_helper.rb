@@ -6,12 +6,20 @@ module ApplicationHelper
     classes.join(" ")
   end
 
-  def frontend_nav_active?
+  def events_nav_active?
     controller_path == "public/events"
+  end
+
+  def news_nav_active?
+    controller_path == "public/news"
   end
 
   def backend_nav_active?
     controller_path == "backend/events"
+  end
+
+  def blog_nav_active?
+    controller_path == "backend/blog_posts"
   end
 
   def importer_nav_active?

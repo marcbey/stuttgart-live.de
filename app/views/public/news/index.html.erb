@@ -1,0 +1,34 @@
+<% content_for :title, "Stuttgart Live - News" %>
+
+<section class="public-shell">
+  <header class="hero-header">
+    <h1>News</h1>
+    <p>Stories, Updates und redaktionelle Highlights aus dem Live-Kosmos.</p>
+  </header>
+
+  <% if @blog_posts.any? %>
+    <div class="news-list">
+      <% @blog_posts.each do |blog_post| %>
+        <article class="news-list-item">
+          <% if blog_post.cover_image.attached? %>
+            <%= link_to news_path(blog_post.slug), class: "news-list-item-media" do %>
+              <%= image_tag blog_post.cover_image.variant(resize_to_fill: [ 960, 640 ]), alt: blog_post.title, class: "news-list-item-image" %>
+            <% end %>
+          <% end %>
+
+          <div class="news-list-item-copy">
+            <p class="event-detail-meta">
+              <span class="event-detail-meta-strong">News</span>
+              <span><%= l(blog_post.published_at.to_date, format: "%d.%m.%Y") %></span>
+            </p>
+            <h2 class="news-list-item-title"><%= link_to blog_post.title, news_path(blog_post.slug) %></h2>
+            <p class="news-list-item-teaser"><%= blog_post.teaser %></p>
+            <%= link_to "Beitrag lesen", news_path(blog_post.slug), class: "button button-secondary button-compact" %>
+          </div>
+        </article>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="empty-state">Noch keine veröffentlichten News.</div>
+  <% end %>
+</section>
