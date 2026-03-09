@@ -39,10 +39,10 @@ class BlogPost < ApplicationRecord
   end
 
   def display_status
-    return "Entwurf" unless published?
+    return "Draft" unless published?
     return "Geplant" if scheduled?
 
-    "Publiziert"
+    "Published"
   end
 
   def display_author_name

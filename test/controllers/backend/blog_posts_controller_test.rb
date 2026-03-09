@@ -98,9 +98,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "published", blog_post.reload.status
     assert_includes response.body, 'target="blog_topbar_editor_actions"'
-    assert_includes response.body, "Depublizieren"
+    assert_includes response.body, "Unpublish"
     assert_includes response.body, 'target="blog_topbar_context"'
-    assert_includes response.body, "Publiziert"
+    assert_includes response.body, "Published"
   end
 
   test "turbo publish keeps active draft filter and refreshes inbox" do
