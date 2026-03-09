@@ -55,6 +55,8 @@ Rails.application.routes.draw do
   resources :events, only: [ :index, :show ], module: :public, param: :slug do
     patch :status, on: :member
   end
+  get "kontakt", to: "public/pages#contact", as: :contact
+  get "impressum", to: "public/pages#imprint", as: :imprint
   get "blog/:slug", to: "public/legacy_blog_redirects#show", as: :legacy_blog_redirect
   resources :news, only: [ :index, :show ], module: :public, param: :slug
 

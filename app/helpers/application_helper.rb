@@ -14,6 +14,14 @@ module ApplicationHelper
     controller_path == "public/news"
   end
 
+  def contact_nav_active?
+    controller_path == "public/pages" && action_name == "contact"
+  end
+
+  def imprint_nav_active?
+    controller_path == "public/pages" && action_name == "imprint"
+  end
+
   def backend_nav_active?
     controller_path == "backend/events"
   end
