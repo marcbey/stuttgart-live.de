@@ -25,6 +25,9 @@ application.register("flash", FlashController)
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
 
+import HighlightsSliderController from "./highlights_slider_controller"
+application.register("highlights-slider", HighlightsSliderController)
+
 import InfiniteScrollController from "./infinite_scroll_controller"
 application.register("infinite-scroll", InfiniteScrollController)
 

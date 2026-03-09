@@ -170,8 +170,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all", view: "list")
 
     assert_response :success
-    assert_includes response.body, "<table"
-    assert_includes response.body, "Artist / Titel"
+    assert_includes response.body, "event-listing-grid"
+    assert_includes response.body, "event-listing-card"
     assert_includes response.body, @published_event.artist_name
     assert_includes response.body, "view=list"
   end

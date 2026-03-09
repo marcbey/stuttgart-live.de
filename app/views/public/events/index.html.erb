@@ -48,28 +48,25 @@
   </header>
 
   <% if @public_view == "list" %>
-    <div class="event-listing-table-wrap">
-      <table class="event-listing-table">
-        <thead>
-          <tr>
-            <th>Datum</th>
-            <th>Artist / Titel</th>
-            <th>Location</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody id="event-list-body">
-          <% @events.each do |event| %>
-            <%= render "event_list_row",
-                       event: event,
-                       public_filter: @public_filter,
-                       public_view: @public_view,
-                       public_query: @public_query,
-                       public_event_date: @public_event_date&.iso8601 %>
-          <% end %>
-        </tbody>
-      </table>
-    </div>
+    <section class="highlights-slider-section" data-controller="highlights-slider">
+      <div class="highlights-slider-header">
+        <h2>Highlights</h2>
+        <div class="highlights-slider-nav">
+          <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
+          <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
+        </div>
+      </div>
+      <div class="event-listing-grid" id="event-list-body" data-highlights-slider-target="track">
+        <% @events.each do |event| %>
+          <%= render "event_list_row",
+                     event: event,
+                     public_filter: @public_filter,
+                     public_view: @public_view,
+                     public_query: @public_query,
+                     public_event_date: @public_event_date&.iso8601 %>
+        <% end %>
+      </div>
+    </section>
   <% else %>
     <div id="event-grid" class="flyer-grid">
       <% @events.each_with_index do |event, index| %>
