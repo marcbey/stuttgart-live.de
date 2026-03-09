@@ -1374,6 +1374,11 @@ a {
   padding: 0.75rem;
 }
 
+.backend-list-column {
+  display: flex;
+  flex-direction: column;
+}
+
 .filter-form {
   border: 1px solid #ececec;
   padding: 0.6rem;
@@ -1482,13 +1487,23 @@ a {
   margin-bottom: 0.65rem;
 }
 
+#events_list,
+.bulk-form {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
 .event-list {
   margin: 0;
   padding: 0;
   list-style: none;
   display: grid;
   gap: 0.45rem;
-  max-height: 100vh;
+  flex: 1 1 auto;
+  min-height: calc(100vh - var(--app-nav-height, 0px) - 24rem);
+  max-height: 260vh;
   overflow-y: auto;
 }
 
