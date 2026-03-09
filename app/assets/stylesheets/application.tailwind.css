@@ -2734,6 +2734,6 @@ trix-editor.blog-rich-text:focus {
   }
 
   .backend-split {
-    grid-template-columns: minmax(334px, 0.615fr) minmax(0, 1.685fr);
+    grid-template-columns: minmax(334px, 0.626fr) minmax(0, 1.690fr);
   }
 }
