@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_09_113000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_09_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -296,6 +296,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_09_113000) do
     t.string "source_type", null: false
     t.datetime "updated_at", null: false
     t.index ["source_type"], name: "index_import_sources_on_source_type", unique: true
+  end
+
+  create_table "newsletter_subscribers", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email", null: false
+    t.string "source", default: "homepage", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((email)::text)", name: "index_newsletter_subscribers_on_lower_email", unique: true
   end
 
   create_table "provider_priorities", force: :cascade do |t|

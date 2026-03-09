@@ -1164,6 +1164,42 @@ trix-editor.blog-rich-text:focus {
   margin-top: 1.5rem;
 }
 
+.newsletter-signup-section {
+  margin-top: 2.2rem;
+  border-top: 1px solid var(--line);
+  padding-top: 1.4rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.newsletter-signup-copy h2 {
+  margin: 0.1rem 0 0;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.newsletter-signup-copy p:last-child {
+  margin: 0.35rem 0 0;
+  font-size: 1rem;
+}
+
+.newsletter-signup-form {
+  display: grid;
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.newsletter-signup-input {
+  min-height: 3rem;
+  font-size: 1rem;
+}
+
+.newsletter-signup-button {
+  width: fit-content;
+  min-width: 0;
+}
+
 .event-card {
   position: relative;
   align-self: start;
@@ -3004,6 +3040,16 @@ trix-editor.blog-rich-text:focus {
 
   .home-slider-track {
     grid-auto-columns: minmax(10.2rem, 10.2rem);
+  }
+
+  .newsletter-signup-section {
+    grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
+    align-items: end;
+    gap: 1.2rem;
+  }
+
+  .newsletter-signup-form {
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .flyer-grid {
