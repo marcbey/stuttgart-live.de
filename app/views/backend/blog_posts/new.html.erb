@@ -1,13 +1,16 @@
 <% content_for :title, "Neuer Blog-Beitrag" %>
+<% form_id = dom_id(@blog_post, :editor_form) %>
 
-<section class="blog-editor-shell">
-  <header class="blog-editor-header">
-    <div>
-      <p class="blog-admin-kicker">Backend / Blog</p>
-      <h1>Neuen Beitrag anlegen</h1>
+<section class="backend-shell">
+  <header class="backend-topbar backend-topbar-sticky">
+    <div class="backend-topbar-title">
+      <h1>Blog</h1>
+      <span class="backend-topbar-context">Neuen Beitrag anlegen</span>
     </div>
-    <%= link_to "Zur Übersicht", backend_blog_posts_path, class: "button button-secondary button-compact" %>
+    <div class="backend-topbar-controls">
+      <%= render "editor_actions", blog_post: @blog_post, form_id: form_id %>
+    </div>
   </header>
 
-  <%= render "form", blog_post: @blog_post %>
+  <%= render "form", blog_post: @blog_post, form_id: form_id %>
 </section>

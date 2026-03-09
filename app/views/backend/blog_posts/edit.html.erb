@@ -1,18 +1,18 @@
 <% content_for :title, @blog_post.title %>
+<% form_id = dom_id(@blog_post, :editor_form) %>
 
-<section class="blog-editor-shell">
-  <header class="blog-editor-header">
-    <div>
-      <p class="blog-admin-kicker">Backend / Blog</p>
-      <h1><%= @blog_post.title %></h1>
+<section class="backend-shell">
+  <header class="backend-topbar backend-topbar-sticky">
+    <div class="backend-topbar-title">
+      <h1>Blog</h1>
+      <span class="backend-topbar-context">
+        <%= [ @blog_post.title, @blog_post.display_status, (@blog_post.published_at.present? ? l(@blog_post.published_at, format: "%d.%m.%Y %H:%M") : nil) ].compact.join(" · ") %>
+      </span>
     </div>
-    <div class="blog-editor-header-actions">
-      <% if @blog_post.live? %>
-        <%= link_to "Öffnen", news_path(@blog_post.slug), class: "button button-secondary button-compact", target: "_blank", rel: "noreferrer" %>
-      <% end %>
-      <%= link_to "Zur Übersicht", backend_blog_posts_path, class: "button button-secondary button-compact" %>
+    <div class="backend-topbar-controls">
+      <%= render "editor_actions", blog_post: @blog_post, form_id: form_id %>
     </div>
   </header>
 
-  <%= render "form", blog_post: @blog_post %>
+  <%= render "form", blog_post: @blog_post, form_id: form_id %>
 </section>

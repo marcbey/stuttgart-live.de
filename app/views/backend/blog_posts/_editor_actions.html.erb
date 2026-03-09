@@ -1,0 +1,42 @@
+<div class="backend-topbar-actions">
+  <button type="submit"
+          form="<%= form_id %>"
+          name="publication_action"
+          value="save"
+          class="button button-save-primary button-compact">
+    Speichern
+  </button>
+
+  <% if blog_post.published? %>
+    <button type="submit"
+            form="<%= form_id %>"
+            name="publication_action"
+            value="depublish"
+            class="button button-secondary button-compact">
+      Depublizieren
+    </button>
+  <% else %>
+    <button type="submit"
+            form="<%= form_id %>"
+            name="publication_action"
+            value="publish"
+            class="button button-compact">
+      Publizieren
+    </button>
+  <% end %>
+
+  <% if blog_post.persisted? %>
+    <%= link_to "Löschen",
+                backend_blog_post_path(blog_post),
+                data: { turbo_method: :delete, turbo_confirm: "Beitrag wirklich löschen?" },
+                class: "button button-ghost button-compact" %>
+  <% end %>
+
+  <% if blog_post.live? %>
+    <%= link_to "Öffnen",
+                news_path(blog_post.slug),
+                class: "button button-secondary button-compact",
+                target: "_blank",
+                rel: "noreferrer" %>
+  <% end %>
+</div>

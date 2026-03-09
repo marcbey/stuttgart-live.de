@@ -33,7 +33,7 @@
       </div>
     <% end %>
 
-    <%= form_with model: [ :backend, blog_post ], class: "editor-form" do |form| %>
+    <%= form_with model: [ :backend, blog_post ], class: "editor-form", id: form_id do |form| %>
       <div class="editor-grid">
         <div>
           <%= form.label :title, "Titel", class: "form-label" %>
@@ -80,20 +80,6 @@
         <%= form.label :body, "Inhalt", class: "form-label" %>
         <p class="blog-editor-hint">Bilder können direkt über die Toolbar in den Text eingefügt werden.</p>
         <%= form.rich_textarea :body, class: "blog-rich-text" %>
-      </div>
-
-      <div class="blog-editor-actions">
-        <%= form.button "Speichern", name: "publication_action", value: "save", class: "button button-save-primary button-compact" %>
-        <%= form.button "Speichern & veröffentlichen", name: "publication_action", value: "publish", class: "button button-compact" %>
-        <% if blog_post.persisted? && blog_post.published? %>
-          <%= form.button "Depublizieren", name: "publication_action", value: "depublish", class: "button button-secondary button-compact" %>
-        <% end %>
-        <% if blog_post.persisted? %>
-          <%= link_to "Löschen",
-                      backend_blog_post_path(blog_post),
-                      data: { turbo_method: :delete, turbo_confirm: "Beitrag wirklich löschen?" },
-                      class: "button button-ghost button-compact" %>
-        <% end %>
       </div>
     <% end %>
   </div>
