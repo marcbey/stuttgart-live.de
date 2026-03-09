@@ -22,6 +22,10 @@ class BlogPost < ApplicationRecord
   scope :ordered_for_backend, -> { includes(:author, :published_by).with_attached_cover_image.order(updated_at: :desc, id: :desc) }
   scope :published_live, -> { where(status: "published").where("published_at <= ?", Time.current).order(published_at: :desc, id: :desc) }
 
+  def self.find_live_by_source_path!(source_path)
+    published_live.find_by!(source_url: source_url_candidates_for(source_path))
+  end
+
   def published?
     status == "published"
   end
@@ -43,6 +47,43 @@ class BlogPost < ApplicationRecord
 
   def display_author_name
     author_name.to_s.strip.presence || author&.name.presence || author&.email_address.to_s
+  end
+
+  def self.source_url_candidates_for(source_path)
+    normalized_path = normalize_source_path(source_path)
+    return [] if normalized_path.blank?
+
+    base_hosts = [
+      "https://stuttgart-live.de",
+      "https://www.stuttgart-live.de",
+      "http://stuttgart-live.de",
+      "http://www.stuttgart-live.de"
+    ]
+
+    [ normalized_path, "#{normalized_path}/" ] +
+      base_hosts.flat_map do |host|
+        [
+          "#{host}#{normalized_path}",
+          "#{host}#{normalized_path}/"
+        ]
+      end
+  end
+
+  def self.normalize_source_path(source_path)
+    value = source_path.to_s.strip
+    return if value.blank?
+
+    path =
+      if value.start_with?("http://", "https://")
+        URI.parse(value).path
+      else
+        value
+      end
+
+    path = "/#{path}" unless path.start_with?("/")
+    path.delete_suffix("/").presence || "/"
+  rescue URI::InvalidURIError
+    nil
   end
 
   private

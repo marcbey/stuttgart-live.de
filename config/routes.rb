@@ -55,6 +55,7 @@ Rails.application.routes.draw do
   resources :events, only: [ :index, :show ], module: :public, param: :slug do
     patch :status, on: :member
   end
+  get "blog/:slug", to: "public/legacy_blog_redirects#show", as: :legacy_blog_redirect
   resources :news, only: [ :index, :show ], module: :public, param: :slug
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
