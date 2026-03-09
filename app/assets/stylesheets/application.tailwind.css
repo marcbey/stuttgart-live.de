@@ -1024,14 +1024,15 @@ trix-editor.blog-rich-text:focus {
 .event-card-admin-link {
   display: inline-flex;
   align-items: center;
-  border: 1px solid #111;
-  background: #111;
-  color: #f7f7f7;
+  border: 1px solid rgba(17, 17, 17, 0.24);
+  background: rgba(248, 248, 248, 0.14);
+  backdrop-filter: blur(2px);
+  color: #111;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.7rem;
   line-height: 1;
-  padding: 0.24rem 0.34rem;
+  padding: 0.35rem 0.42rem;
 }
 
 .event-card-admin-link {
@@ -1040,7 +1041,8 @@ trix-editor.blog-rich-text:focus {
 
 .event-card-admin-link-attention:hover,
 .event-card-admin-link:hover {
-  background: #252525;
+  background: rgba(255, 255, 255, 0.28);
+  border-color: rgba(17, 17, 17, 0.38);
 }
 
 .event-card-admin-controls {
@@ -1049,7 +1051,7 @@ trix-editor.blog-rich-text:focus {
   right: calc(20px + 0.5rem);
   z-index: 13;
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.35rem;
   flex-wrap: wrap;
 }
