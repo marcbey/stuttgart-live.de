@@ -114,7 +114,11 @@
             <div class="filter-date-field">
               <%= form.label :starts_after, "Ab", class: "form-label" %>
               <div class="filter-date-wrap">
-                <%= form.date_field :starts_after, value: @filters[:starts_after], class: "form-input filter-date-input" %>
+                <%= form.date_field :starts_after,
+                                    value: @filters[:starts_after],
+                                    class: "form-input filter-date-input",
+                                    data: { action: "change->merge-change-filter#submit" },
+                                    oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
                 <%= button_tag "×",
                                type: "button",
                                class: "filter-date-clear #{'filter-date-clear-visible' if @filters[:starts_after].present?}",
@@ -126,7 +130,11 @@
             <div class="filter-date-field">
               <%= form.label :starts_before, "Bis", class: "form-label" %>
               <div class="filter-date-wrap">
-                <%= form.date_field :starts_before, value: @filters[:starts_before], class: "form-input filter-date-input" %>
+                <%= form.date_field :starts_before,
+                                    value: @filters[:starts_before],
+                                    class: "form-input filter-date-input",
+                                    data: { action: "change->merge-change-filter#submit" },
+                                    oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
                 <%= button_tag "×",
                                type: "button",
                                class: "filter-date-clear #{'filter-date-clear-visible' if @filters[:starts_before].present?}",
