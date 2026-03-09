@@ -179,26 +179,6 @@
     <%= render "pagination", next_page: @next_page, public_filter: @public_filter, public_view: @public_view, public_query: @public_query, public_event_date: @public_event_date&.iso8601 %>
   <% end %>
 
-  <section class="partner-strip-section" aria-label="Partner">
-    <div class="partner-strip">
-      <a href="https://www.russ-live.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-russlive" aria-label="Russ Live">
-        <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "partner-strip-image partner-strip-image-russlive" %>
-      </a>
-      <a href="https://www.russ-klassik.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-russklassik" aria-label="Russ Klassik">
-        <%= image_tag "russ-klassik-logo.svg", alt: "Russ Klassik", class: "partner-strip-image partner-strip-image-russklassik" %>
-      </a>
-      <a href="https://www.easyticket.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-easyticket" aria-label="Easy Ticket">
-        <%= image_tag "easyticket-logo.svg", alt: "Easy Ticket", class: "partner-strip-image partner-strip-image-easyticket" %>
-      </a>
-      <a href="https://www.eventim.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-eventim" aria-label="eventim">
-        <%= image_tag "eventim-logo.svg", alt: "eventim", class: "partner-strip-image partner-strip-image-eventim" %>
-      </a>
-      <a href="https://www.reservix.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-reservix" aria-label="Reservix">
-        <%= image_tag "reservix-logo.svg", alt: "Reservix", class: "partner-strip-image partner-strip-image-reservix" %>
-      </a>
-    </div>
-  </section>
-
   <section class="newsletter-signup-section">
     <div class="newsletter-signup-copy">
       <p class="eyebrow">Newsletter</p>
@@ -217,5 +197,25 @@
                            autocomplete: "email" %>
       <%= form.submit "Newsletter abonnieren", class: "button newsletter-signup-button" %>
     <% end %>
+  </section>
+
+  <section class="partner-strip-section" aria-label="Partner">
+    <div class="partner-strip">
+      <a href="https://www.russ-live.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-russlive" aria-label="Russ Live">
+        <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "partner-strip-image partner-strip-image-russlive" %>
+      </a>
+      <a href="https://www.russ-klassik.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-russklassik" aria-label="Russ Klassik">
+        <%= image_tag "russ-klassik-logo.svg", alt: "Russ Klassik", class: "partner-strip-image partner-strip-image-russklassik" %>
+      </a>
+      <a href="https://www.easyticket.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-easyticket" aria-label="Easy Ticket">
+        <%= image_tag "easyticket-logo.svg", alt: "Easy Ticket", class: "partner-strip-image partner-strip-image-easyticket" %>
+      </a>
+      <a href="https://www.eventim.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-eventim" aria-label="eventim">
+        <%= image_tag "eventim-logo.svg", alt: "eventim", class: "partner-strip-image partner-strip-image-eventim" %>
+      </a>
+      <a href="https://www.reservix.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-reservix" aria-label="Reservix">
+        <%= image_tag "reservix-logo.svg", alt: "Reservix", class: "partner-strip-image partner-strip-image-reservix" %>
+      </a>
+    </div>
   </section>
 </section>
