@@ -20,4 +20,9 @@ export default class extends Controller {
     this.sync()
     this.element.requestSubmit()
   }
+
+  submitOnEnter(event) {
+    event.preventDefault()
+    this.submit()
+  }
 }

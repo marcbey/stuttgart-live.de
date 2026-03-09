@@ -53,6 +53,7 @@
                                   value: @filters[:query],
                                   placeholder: "Band, Venue, Stadt",
                                   class: "form-input filter-input-with-clear",
+                                  data: { action: "keydown.enter->merge-change-filter#submitOnEnter" },
                                   oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
               <%= button_tag "×",
                              type: "button",
@@ -68,6 +69,7 @@
                                   value: @filters[:promoter_id],
                                   placeholder: "zB 10135",
                                   class: "form-input filter-input-with-clear",
+                                  data: { action: "keydown.enter->merge-change-filter#submitOnEnter" },
                                   oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
               <%= button_tag "×",
                              type: "button",
