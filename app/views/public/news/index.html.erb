@@ -4,17 +4,7 @@
   <header class="news-hero news-index-hero">
     <p class="news-kicker">Redaktion</p>
     <h1>Freshly Squeezed News</h1>
-    <p>Stories, Updates und redaktionelle Highlights aus dem Live-Kosmos.</p>
   </header>
-
-  <%= form_with url: news_index_path, method: :get, local: true, class: "news-index-search" do %>
-    <%= text_field_tag :q,
-                       @news_query,
-                       class: "form-input news-index-search-input",
-                       placeholder: "Search Article Title or Tags",
-                       aria: { label: "News durchsuchen" } %>
-    <%= button_tag "⌕", type: "submit", class: "news-index-search-button", aria: { label: "News durchsuchen" } %>
-  <% end %>
 
   <% if @blog_posts.any? %>
     <div class="news-grid news-index-grid">

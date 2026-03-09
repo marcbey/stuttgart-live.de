@@ -19,17 +19,6 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, @scheduled_post.title
   end
 
-  test "index filters by query" do
-    matching_post = create_blog_post(title: "Festival Update", status: "published", published_at: 1.hour.ago)
-    other_post = create_blog_post(title: "Venue Update", status: "published", published_at: 1.hour.ago)
-
-    get news_index_url(q: "Festival")
-
-    assert_response :success
-    assert_includes response.body, matching_post.title
-    assert_not_includes response.body, other_post.title
-  end
-
   test "show renders a published post" do
     get news_url(@live_post.slug)
 
