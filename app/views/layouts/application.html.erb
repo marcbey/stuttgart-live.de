@@ -50,8 +50,30 @@
             <div class="app-nav-links-group">
               <%= link_to "Events", events_path, class: app_nav_link_class(active: events_nav_active?) %>
               <%= link_to "News", news_index_path, class: app_nav_link_class(active: news_nav_active?) %>
-              <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?) %>
-              <%= link_to "Impressum", imprint_path, class: app_nav_link_class(active: imprint_nav_active?) %>
+              <div class="app-nav-socials" aria-label="Social Media">
+                <%= link_to "https://www.instagram.com/stuttgartlive/",
+                            class: "app-nav-social-link",
+                            target: "_blank",
+                            rel: "noopener",
+                            title: "Instagram",
+                            aria: { label: "Instagram" } do %>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect>
+                    <circle cx="12" cy="12" r="4"></circle>
+                    <circle cx="17.4" cy="6.7" r="1.2" class="app-nav-social-fill"></circle>
+                  </svg>
+                <% end %>
+                <%= link_to "https://www.facebook.com/stuttgartlive",
+                            class: "app-nav-social-link",
+                            target: "_blank",
+                            rel: "noopener",
+                            title: "Facebook",
+                            aria: { label: "Facebook" } do %>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M13.4 20.5v-7h2.3l.35-2.75H13.4V9c0-.8.22-1.35 1.37-1.35h1.46V5.2c-.25-.03-1.1-.1-2.1-.1-2.08 0-3.5 1.27-3.5 3.62v2.03H8.3v2.75h2.37v7h2.73Z" class="app-nav-social-fill"></path>
+                  </svg>
+                <% end %>
+              </div>
             </div>
 
             <div class="app-nav-links-group app-nav-links-group-separated">
