@@ -1,0 +1,6 @@
+<%= turbo_frame_tag "blog_editor" do %>
+  <%= render "backend/blog_posts/editor_panel",
+             blog_post: blog_post,
+             status_filter: status_filter,
+             query_filter: query_filter %>
+<% end %>

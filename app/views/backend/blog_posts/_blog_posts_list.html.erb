@@ -1,0 +1,36 @@
+<div id="blog_posts_list">
+  <p class="event-list-count"><strong><%= blog_posts.count %></strong> gefilterte Beiträge</p>
+
+  <% if blog_posts.any? %>
+    <ul class="event-list blog-list">
+      <% blog_posts.each do |blog_post| %>
+        <li class="event-list-item blog-list-item <%= 'event-list-item-active' if selected_blog_post&.id == blog_post.id %>">
+          <%= link_to edit_backend_blog_post_path(blog_post, status: status_filter, query: query_filter.presence),
+                      data: {
+                        turbo_frame: "blog_editor",
+                        action: "click->editor-inbox#itemLinkClicked",
+                        editor_inbox_item_id: blog_post.id
+                      },
+                      class: "event-link blog-link" do %>
+            <div class="blog-list-main">
+              <strong><%= blog_post.title %></strong>
+              <span><%= truncate(blog_post.teaser, length: 105) %></span>
+              <small>
+                <%= l((blog_post.published_at || blog_post.updated_at).to_date, format: "%d.%m.%Y") %>
+                <% if blog_post.display_author_name.present? %>
+                  · <%= blog_post.display_author_name %>
+                <% end %>
+              </small>
+            </div>
+
+            <span class="event-list-badges blog-list-badges">
+              <span class="blog-post-status blog-post-status-<%= blog_post.status %>"><%= blog_post.display_status %></span>
+            </span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="empty-state">Keine Beiträge zur aktuellen Filterung.</div>
+  <% end %>
+</div>

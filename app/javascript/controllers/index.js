@@ -10,6 +10,9 @@ application.register("bulk-select", BulkSelectController)
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
+import EditorInboxController from "./editor_inbox_controller"
+application.register("editor-inbox", EditorInboxController)
+
 import EventImageCropPreviewController from "./event_image_crop_preview_controller"
 application.register("event-image-crop-preview", EventImageCropPreviewController)
 

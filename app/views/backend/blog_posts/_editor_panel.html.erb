@@ -1,0 +1,47 @@
+<% form_id = dom_id(blog_post, :editor_form) %>
+<% selected_context = [
+     (blog_post.title.presence || (blog_post.persisted? ? "Unbenannter Beitrag" : "Neuen Beitrag anlegen")),
+     (blog_post.persisted? ? blog_post.display_status : nil),
+     (blog_post.published_at.present? ? l(blog_post.published_at, format: "%d.%m.%Y %H:%M") : nil)
+   ].compact.join(" · ") %>
+
+<div class="editor-panel blog-editor-panel"
+     id="blog_editor_panel"
+     data-selected-context="<%= selected_context %>"
+     data-selected-item-id="<%= blog_post.id if blog_post.persisted? %>">
+  <template class="editor-actions-template">
+    <%= render "backend/blog_posts/editor_actions", blog_post: blog_post, form_id: form_id %>
+  </template>
+
+  <header class="editor-header">
+    <div>
+      <p class="eyebrow"><%= blog_post.persisted? ? "Beitrag ##{blog_post.id}" : "Neuer Beitrag" %></p>
+      <h2><%= blog_post.title.presence || "Unbenannter Beitrag" %></h2>
+      <p><%= blog_post.display_author_name.presence || current_user.name.presence || current_user.email_address %></p>
+    </div>
+
+    <div class="editor-header-badges">
+      <span class="blog-post-status blog-post-status-<%= blog_post.status %>"><%= blog_post.display_status %></span>
+      <% if blog_post.source_url.present? %>
+        <%= link_to "Quelle",
+                    blog_post.source_url,
+                    class: "status-badge status-badge-default status-badge-link",
+                    target: "_blank",
+                    rel: "noopener" %>
+      <% end %>
+      <% if blog_post.live? %>
+        <%= link_to "Frontend",
+                    news_path(blog_post.slug),
+                    class: "status-badge status-badge-default status-badge-link",
+                    target: "_blank",
+                    rel: "noopener" %>
+      <% end %>
+    </div>
+  </header>
+
+  <%= render "backend/blog_posts/form",
+             blog_post: blog_post,
+             form_id: form_id,
+             status_filter: status_filter,
+             query_filter: query_filter %>
+</div>

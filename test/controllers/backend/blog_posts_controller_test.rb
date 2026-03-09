@@ -21,7 +21,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Blog"
     assert_includes response.body, blog_post.title
-    assert_includes response.body, "News-Redaktion"
+    assert_includes response.body, "Blog-Inbox"
+    assert_select "turbo-frame#blog_editor"
+    assert_select "#blog_posts_list"
   end
 
   test "blogger can create and publish a blog post" do
@@ -40,7 +42,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
 
     blog_post = BlogPost.order(:id).last
 
-    assert_redirected_to edit_backend_blog_post_url(blog_post)
+    assert_redirected_to backend_blog_posts_url(blog_post_id: blog_post.id)
     assert_equal "published", blog_post.status
     assert_equal @blogger, blog_post.author
     assert_equal @blogger, blog_post.published_by
@@ -61,10 +63,24 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
       publication_action: "depublish"
     }
 
-    assert_redirected_to edit_backend_blog_post_url(blog_post)
+    assert_redirected_to backend_blog_posts_url(blog_post_id: blog_post.id)
     assert_equal "draft", blog_post.reload.status
     assert_nil blog_post.published_at
     assert_nil blog_post.published_by
+  end
+
+  test "turbo frame edit renders editor panel" do
+    sign_in_as(@editor)
+    blog_post = create_blog_post(author: @editor)
+
+    get edit_backend_blog_post_url(blog_post), headers: { "Turbo-Frame" => "blog_editor" }
+
+    assert_response :success
+    assert_select "turbo-frame#blog_editor"
+    assert_select ".editor-panel.blog-editor-panel"
+    assert_select "template.editor-actions-template"
+    assert_select "form.editor-form"
+    assert_no_match(/Blog-Inbox/, response.body)
   end
 
   test "editor can delete a blog post" do
@@ -75,7 +91,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
       delete backend_blog_post_url(blog_post)
     end
 
-    assert_redirected_to backend_blog_posts_url(status: "all")
+    assert_redirected_to backend_blog_posts_url
   end
 
   private

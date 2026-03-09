@@ -1,56 +1,90 @@
 <% content_for :title, "Blog" %>
+<% selected_context = if @selected_blog_post.present?
+                        [
+                          (@selected_blog_post.title.presence || (@selected_blog_post.persisted? ? "Unbenannter Beitrag" : "Neuen Beitrag anlegen")),
+                          (@selected_blog_post.persisted? ? @selected_blog_post.display_status : nil),
+                          (@selected_blog_post.published_at.present? ? l(@selected_blog_post.published_at, format: "%d.%m.%Y %H:%M") : nil)
+                        ].compact.join(" · ")
+                      end %>
 
-<section class="blog-admin-shell">
-  <header class="blog-admin-hero">
-    <div>
-      <p class="blog-admin-kicker">Backend / Blog</p>
-      <h1>News-Redaktion</h1>
-      <p class="blog-admin-copy">Kuratiere Beiträge, plane Veröffentlichungen und pflege Titelbild plus Rich-Text-Inhalt an einer Stelle.</p>
+<section class="backend-shell"
+         data-controller="editor-inbox"
+         data-action="turbo:frame-load@document->editor-inbox#syncActiveFromEditor turbo:submit-end@document->editor-inbox#syncActiveAfterSubmit">
+  <header class="backend-topbar backend-topbar-sticky">
+    <div class="backend-topbar-title">
+      <h1>Blog-Inbox</h1>
+      <span class="backend-topbar-context" data-editor-inbox-target="selectedContext"><%= selected_context %></span>
     </div>
-    <div class="blog-admin-hero-actions">
-      <%= link_to "Neuer Beitrag", new_backend_blog_post_path, class: "button" %>
+
+    <div class="backend-topbar-controls">
+      <div class="backend-topbar-editor-actions" data-editor-inbox-target="headerActions">
+        <% if @selected_blog_post.present? %>
+          <%= render "editor_actions", blog_post: @selected_blog_post, form_id: dom_id(@selected_blog_post, :editor_form) %>
+        <% end %>
+      </div>
+
+      <div class="backend-topbar-actions">
+        <%= link_to "Neuer Beitrag",
+                    new_backend_blog_post_path(status: @status_filter, query: @query_filter.presence),
+                    data: { turbo_frame: "blog_editor" },
+                    class: "button button-secondary button-compact" %>
+      </div>
     </div>
   </header>
 
-  <div class="blog-admin-filter-row">
-    <% Backend::BlogPostsController::FILTERS.each do |filter| %>
-      <% label = { "all" => "Alle", "draft" => "Entwürfe", "published" => "Veröffentlicht" }.fetch(filter) %>
-      <%= link_to label,
-                  backend_blog_posts_path(status: (filter == "all" ? nil : filter)),
-                  class: "status-chip #{'status-chip-active' if @status_filter == filter}" %>
-    <% end %>
-  </div>
-
-  <div class="blog-post-grid">
-    <% @blog_posts.each do |blog_post| %>
-      <article class="blog-post-card">
-        <%= link_to edit_backend_blog_post_path(blog_post), class: "blog-post-card-cover" do %>
-          <% if blog_post.cover_image.attached? %>
-            <%= image_tag blog_post.cover_image, alt: blog_post.title %>
-          <% else %>
-            <span class="blog-post-card-cover-placeholder">NEWS</span>
-          <% end %>
+  <div class="backend-split">
+    <aside class="backend-list-column">
+      <div class="backend-status-row">
+        <% Backend::BlogPostsController::FILTERS.each do |filter| %>
+          <% label = { "all" => "Alle", "draft" => "Entwürfe", "published" => "Veröffentlicht" }.fetch(filter) %>
+          <%= link_to label,
+                      backend_blog_posts_path(status: (filter == "all" ? nil : filter), query: @query_filter.presence),
+                      class: "status-chip #{'status-chip-active' if @status_filter == filter}" %>
         <% end %>
+      </div>
 
-        <div class="blog-post-card-body">
-          <div class="blog-post-card-meta">
-            <span class="blog-post-status blog-post-status-<%= blog_post.status %>"><%= blog_post.display_status %></span>
-            <span><%= l((blog_post.published_at || blog_post.updated_at).to_date, format: "%d.%m.%Y") %></span>
-          </div>
-
-          <h2><%= link_to blog_post.title, edit_backend_blog_post_path(blog_post) %></h2>
-          <p><%= blog_post.teaser %></p>
-
-          <div class="blog-post-card-footer">
-            <span>Autor: <%= blog_post.display_author_name %></span>
-            <%= link_to "Bearbeiten", edit_backend_blog_post_path(blog_post), class: "button button-secondary button-compact" %>
+      <%= form_with url: backend_blog_posts_path,
+                    method: :get,
+                    class: "filter-form",
+                    data: { turbo_frame: "_top" } do |form| %>
+        <%= form.hidden_field :status, value: (@status_filter == "all" ? nil : @status_filter) %>
+        <div class="filter-grid">
+          <div class="filter-search-field filter-search-field-full">
+            <%= form.label :query, "Suche", class: "form-label" %>
+            <div class="filter-date-wrap">
+              <%= form.text_field :query,
+                                  value: @query_filter,
+                                  placeholder: "Titel, Teaser, Slug",
+                                  class: "form-input filter-input-with-clear",
+                                  oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
+              <%= button_tag "×",
+                             type: "button",
+                             class: "filter-date-clear filter-input-clear #{'filter-date-clear-visible' if @query_filter.present?}",
+                             aria: { label: "Suche löschen" },
+                             onclick: "this.previousElementSibling.value=''; this.classList.remove('filter-date-clear-visible'); this.form.requestSubmit();" %>
+            </div>
           </div>
         </div>
-      </article>
-    <% end %>
-  </div>
+      <% end %>
 
-  <% if @blog_posts.empty? %>
-    <div class="empty-state">Noch keine Beiträge für diesen Filter.</div>
-  <% end %>
+      <%= render "blog_posts_list",
+                 blog_posts: @blog_posts,
+                 selected_blog_post: @selected_blog_post,
+                 status_filter: @status_filter,
+                 query_filter: @query_filter %>
+    </aside>
+
+    <section class="backend-editor-column">
+      <% if @selected_blog_post.present? %>
+        <%= render "editor_frame",
+                   blog_post: @selected_blog_post,
+                   status_filter: @status_filter,
+                   query_filter: @query_filter %>
+      <% else %>
+        <%= turbo_frame_tag "blog_editor" do %>
+          <div class="empty-state">Keine Beiträge zur aktuellen Filterung.</div>
+        <% end %>
+      <% end %>
+    </section>
+  </div>
 </section>

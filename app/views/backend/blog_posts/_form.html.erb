@@ -21,7 +21,7 @@
     <% end %>
   </aside>
 
-  <div class="editor-panel blog-editor-panel">
+  <div>
     <% if blog_post.errors.any? %>
       <div class="flash flash-alert">
         <strong>Bitte Eingaben prüfen.</strong>
@@ -34,6 +34,8 @@
     <% end %>
 
     <%= form_with model: [ :backend, blog_post ], class: "editor-form", id: form_id do |form| %>
+      <%= hidden_field_tag :status, (status_filter == "all" ? nil : status_filter) %>
+      <%= hidden_field_tag :query, query_filter if query_filter.present? %>
       <div class="editor-grid">
         <div>
           <%= form.label :title, "Titel", class: "form-label" %>
