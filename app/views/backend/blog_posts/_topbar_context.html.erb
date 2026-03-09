@@ -1,5 +1,7 @@
-<%= [
-      (blog_post.title.presence || (blog_post.persisted? ? "Unbenannter Beitrag" : "Neuen Beitrag anlegen")),
-      (blog_post.persisted? ? blog_post.display_status : nil),
-      (blog_post.published_at.present? ? l(blog_post.published_at, format: "%d.%m.%Y %H:%M") : nil)
-    ].compact.join(" · ") %>
+<%= if blog_post.present?
+      [
+        (blog_post.title.presence || (blog_post.persisted? ? "Unbenannter Beitrag" : "Neuen Beitrag anlegen")),
+        (blog_post.persisted? ? blog_post.display_status : nil),
+        (blog_post.published_at.present? ? l(blog_post.published_at, format: "%d.%m.%Y %H:%M") : nil)
+      ].compact.join(" · ")
+    end %>

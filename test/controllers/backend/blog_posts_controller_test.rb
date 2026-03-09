@@ -103,6 +103,31 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Publiziert"
   end
 
+  test "turbo publish keeps active draft filter and refreshes inbox" do
+    sign_in_as(@editor)
+    published_from_draft = create_blog_post(author: @editor, status: "draft", title: "Will Publish")
+    remaining_draft = create_blog_post(author: @editor, status: "draft", title: "Still Draft")
+
+    patch backend_blog_post_url(published_from_draft), params: {
+      status: "draft",
+      blog_post: {
+        title: published_from_draft.title,
+        teaser: published_from_draft.teaser,
+        slug: published_from_draft.slug,
+        body: "<div>Jetzt publiziert.</div>"
+      },
+      publication_action: "publish"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "published", published_from_draft.reload.status
+    assert_includes response.body, 'target="blog_posts_list"'
+    assert_includes response.body, remaining_draft.title
+    assert_not_includes response.body, "Will Publish"
+    assert_includes response.body, 'target="blog_topbar_context"'
+    assert_includes response.body, remaining_draft.title
+  end
+
   test "turbo frame edit renders editor panel" do
     sign_in_as(@editor)
     blog_post = create_blog_post(author: @editor)

@@ -146,30 +146,30 @@ module Backend
         ActiveModel::Type::Boolean.new.cast(params[:new])
       end
 
-      def target_filter_for(blog_post)
-        return "all" if current_filter == "all"
-
-        blog_post.published? ? "published" : "draft"
-      end
-
       def status_param(filter)
         filter == "all" ? nil : filter
       end
 
       def render_persisted_state(target_blog_post:, notice:)
-        target_status = target_filter_for(target_blog_post)
+        target_status = current_filter
+        sidebar_posts = filtered_blog_posts_for(status: target_status, query: @query_filter)
+        selected_blog_post = selected_blog_post_for(sidebar_posts, preferred_blog_post: target_blog_post)
 
         respond_to do |format|
           format.html do
             redirect_to backend_blog_posts_path(
               status: status_param(target_status),
               query: @query_filter.presence,
-              blog_post_id: target_blog_post.id
+              blog_post_id: selected_blog_post&.id
             ), notice: notice
           end
           format.turbo_stream do
             flash.now[:notice] = notice
-            render_inbox_state_turbo_stream(target_blog_post: target_blog_post, target_status: target_status)
+            render_inbox_state_turbo_stream(
+              sidebar_posts: sidebar_posts,
+              selected_blog_post: selected_blog_post,
+              target_status: target_status
+            )
           end
         end
       end
@@ -207,27 +207,25 @@ module Backend
                }
       end
 
-      def render_inbox_state_turbo_stream(target_blog_post:, target_status:)
-        sidebar_posts = filtered_blog_posts_for(status: target_status, query: @query_filter)
-
+      def render_inbox_state_turbo_stream(sidebar_posts:, selected_blog_post:, target_status:)
         render turbo_stream: [
           turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
           turbo_stream.replace(
             "blog_topbar_context",
             partial: "backend/blog_posts/topbar_context",
-            locals: { blog_post: target_blog_post }
+            locals: { blog_post: selected_blog_post }
           ),
           turbo_stream.replace(
             "blog_topbar_editor_actions",
             partial: "backend/blog_posts/topbar_editor_actions",
-            locals: { blog_post: target_blog_post }
+            locals: { blog_post: selected_blog_post }
           ),
           turbo_stream.replace(
             "blog_posts_list",
             partial: "backend/blog_posts/blog_posts_list",
             locals: {
               blog_posts: sidebar_posts,
-              selected_blog_post: target_blog_post,
+              selected_blog_post: selected_blog_post,
               status_filter: target_status,
               query_filter: @query_filter
             }
@@ -236,12 +234,16 @@ module Backend
             "blog_editor",
             partial: "backend/blog_posts/editor_frame",
             locals: {
-              blog_post: target_blog_post,
+              blog_post: selected_blog_post,
               status_filter: target_status,
               query_filter: @query_filter
             }
           )
         ]
+      end
+
+      def selected_blog_post_for(sidebar_posts, preferred_blog_post:)
+        sidebar_posts.find { |candidate| candidate.id == preferred_blog_post.id } || sidebar_posts.first
       end
 
       def creation_notice
