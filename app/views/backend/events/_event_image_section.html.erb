@@ -45,13 +45,13 @@
                                    onchange: "this.form.requestSubmit();" %>
                 <button type="button"
                         class="button button-secondary button-compact"
-                        onclick="document.getElementById('<%= dom_id(event, :event_image_upload) %>')?.click();">Bild ändern</button>
+                        onclick="document.getElementById('<%= dom_id(event, :event_image_upload) %>')?.click();">Change Image</button>
               <% end %>
-              <%= button_tag "Meta speichern",
+              <%= button_tag "Save Meta",
                              type: :submit,
                              form: meta_form_id,
                              class: "button button-ghost button-compact" %>
-              <%= button_to "Bild löschen",
+              <%= button_to "Delete Image",
                             destroy_editorial_main_backend_event_event_images_path(event, status: editor_status),
                             method: :delete,
                             class: "button button-ghost button-compact",
@@ -116,7 +116,7 @@
                                    class: "form-range",
                                    data: { event_image_crop_preview_target: "zoom", action: "input->event-image-crop-preview#update" } %>
 
-              <%= form.submit "Crop speichern", class: "button button-ghost button-compact" %>
+              <%= form.submit "Save Crop", class: "button button-ghost button-compact" %>
             </div>
           </div>
         <% end %>
@@ -138,7 +138,7 @@
         <%= file_field_tag "event_image[files][]", accept: "image/*", required: true, class: "form-input" %>
         <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
         <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text (optional)", class: "form-input" %>
-        <%= button_tag "Eventbild hochladen", type: :submit, class: "button button-secondary button-compact" %>
+        <%= button_tag "Upload", type: :submit, class: "button button-secondary button-compact" %>
       <% end %>
     </div>
   <% end %>

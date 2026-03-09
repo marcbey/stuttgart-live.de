@@ -19,11 +19,11 @@
     <% end %>
 
     <div class="slider-image-meta-actions">
-      <%= button_tag "Meta speichern",
+      <%= button_tag "Save Meta",
                      type: :submit,
                      form: meta_form_id,
                      class: "button button-ghost button-compact" %>
-      <%= button_to "Bild löschen",
+      <%= button_to "Delete Image",
                     backend_event_event_image_path(event, image, status: editor_status),
                     method: :delete,
                     class: "button button-ghost button-compact",
