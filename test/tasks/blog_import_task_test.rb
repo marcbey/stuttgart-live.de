@@ -11,15 +11,25 @@ class BlogImportTaskTest < ActiveSupport::TestCase
     called_author = nil
     result = Blog::WordpressImporter::Result.new(created_count: 0, updated_count: 0, errors: [])
 
-    Blog::WordpressImporter.stub(:call, ->(author:) {
+    importer_singleton = class << Blog::WordpressImporter
+      self
+    end
+
+    original_call = Blog::WordpressImporter.method(:call)
+
+    importer_singleton.define_method(:call) do |author:|
       called_author = author
       result
-    }) do
+    end
+
+    begin
       output = capture_io do
         Rake::Task["blog:import_wordpress_news"].invoke("blogger@example.com")
       end.first
 
       assert_includes output, "Autor: blogger@example.com"
+    ensure
+      importer_singleton.define_method(:call, original_call)
     end
 
     assert_equal users(:blogger), called_author
