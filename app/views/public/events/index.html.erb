@@ -30,8 +30,17 @@
                              @public_query,
                              class: "form-input public-search-input",
                              placeholder: "Suche nach Künstlern und Events",
-                             aria: { label: "Events durchsuchen" } %>
-          <span class="public-search-icon" aria-hidden="true">⌕</span>
+                             aria: { label: "Events durchsuchen" },
+                             oninput: "this.nextElementSibling.classList.toggle('public-search-clear-visible', this.value.length > 0)" %>
+          <%= button_tag "×",
+                         type: "button",
+                         class: "public-search-clear #{'public-search-clear-visible' if @public_query.present?}",
+                         aria: { label: "Suche löschen" },
+                         onclick: "this.previousElementSibling.value=''; this.classList.remove('public-search-clear-visible'); this.form.requestSubmit();" %>
+          <%= button_tag "⌕",
+                         type: "submit",
+                         class: "public-search-icon",
+                         aria: { label: "Suche ausführen" } %>
         </div>
       <% end %>
     </div>
@@ -49,7 +58,25 @@
       <% end %>
     </div>
   <% else %>
-    <% if @page == 1 && @home_featured_events.present? %>
+    <% if @public_query.present? %>
+      <section class="home-slider-section">
+        <div class="home-slider-header">
+          <h2>Suchergebnisse</h2>
+        </div>
+        <div id="search-results-grid" class="flyer-grid flyer-grid-flat">
+          <% @events.each do |event| %>
+            <%= render "event_card",
+                       event: event,
+                       tile_variant: EventImage::GRID_VARIANT_1X1,
+                       card_slot: :grid_default,
+                       public_filter: @public_filter,
+                       public_query: @public_query,
+                       public_event_date: @public_event_date&.iso8601,
+                       card_dom_id: dom_id(event, :search_card) %>
+          <% end %>
+        </div>
+      </section>
+    <% elsif @page == 1 && @home_featured_events.present? %>
       <section class="home-featured-section"
                data-controller="highlights-slider"
                data-highlights-slider-autoplay-value="true"

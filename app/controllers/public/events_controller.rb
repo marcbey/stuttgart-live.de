@@ -20,9 +20,16 @@ module Public
       @public_query = current_public_query
 
       relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date, query: @public_query)
+      if should_redirect_search_result?(relation)
+        event = relation.limit(1).first
+        redirect_to event_path(event.slug, filter: @public_filter, q: @public_query)
+        return
+      end
+
       @events = relation.limit(PER_PAGE).offset((@page - 1) * PER_PAGE)
       @next_page = @page + 1 if relation.offset(@page * PER_PAGE).limit(1).exists?
-      assign_homepage_sections(relation) if @page == 1 && @public_view == VIEW_GRID
+      homepage_relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date, query: nil)
+      assign_homepage_sections(homepage_relation) if @page == 1 && @public_view == VIEW_GRID
 
       respond_to do |format|
         format.html
@@ -157,14 +164,22 @@ module Public
     end
 
     def assign_homepage_sections(current_relation)
-      scoped_highlights = visible_events_relation(filter: FILTER_SKS, event_date: @public_event_date, query: @public_query)
-      scoped_all = visible_events_relation(filter: FILTER_ALL, event_date: @public_event_date, query: @public_query)
+      scoped_highlights = visible_events_relation(filter: FILTER_SKS, event_date: @public_event_date, query: nil)
+      scoped_all = visible_events_relation(filter: FILTER_ALL, event_date: @public_event_date, query: nil)
 
       @home_featured_events = scoped_highlights.to_a
       @home_featured_events = current_relation.limit(PER_PAGE).to_a if @home_featured_events.empty?
       @home_highlight_events = scoped_all.limit(10).to_a
       @home_tagestipp_events = current_relation.offset(6).limit(10).to_a
       @home_tagestipp_events = current_relation.limit(10).to_a if @home_tagestipp_events.empty?
+    end
+
+    def should_redirect_search_result?(relation)
+      return false if @public_query.blank?
+      return false unless @public_view == VIEW_GRID
+      return false unless @page == 1
+
+      relation.limit(2).count == 1
     end
 
     def apply_public_query(relation, query)

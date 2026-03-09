@@ -180,12 +180,48 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "view=list"
   end
 
-  test "index can be searched" do
+  test "index redirects to detail page when search has a single result" do
     get events_url(filter: "all", q: @published_event.artist_name)
 
+    assert_redirected_to event_url(@published_event.slug, filter: "all", q: @published_event.artist_name)
+  end
+
+  test "index renders flat search results and keeps homepage sliders for multiple matches" do
+    first_event = Event.create!(
+      slug: "search-multi-first",
+      source_fingerprint: "test::search::multi::first",
+      title: "Search Cluster Night One",
+      artist_name: "Search Cluster",
+      start_at: 13.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    second_event = Event.create!(
+      slug: "search-multi-second",
+      source_fingerprint: "test::search::multi::second",
+      title: "Search Cluster Night Two",
+      artist_name: "Search Cluster",
+      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all", q: "Search Cluster")
+
     assert_response :success
+    assert_select "#search-results-grid .event-card-grid-1-1", count: 2
+    assert_includes response.body, first_event.title
+    assert_includes response.body, second_event.title
+    assert_includes response.body, "Alle Veranstaltungen in Stuttgart"
+    assert_includes response.body, "Tagestipp"
     assert_includes response.body, @published_event.artist_name
-    assert_includes response.body, "q=#{CGI.escape(@published_event.artist_name)}"
   end
 
   test "preferred ticket offer prefers easyticket in list view" do

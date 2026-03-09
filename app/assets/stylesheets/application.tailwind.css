@@ -1031,23 +1031,47 @@ trix-editor.blog-rich-text:focus {
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.06);
   font-size: 1rem;
-  padding-left: 0.95rem;
-  padding-right: 2.8rem;
+  text-indent: 2.1rem;
+  padding-right: 3rem;
 }
 
 .public-search-input::placeholder {
   color: rgba(17, 17, 17, 0.52);
 }
 
+.public-search-clear,
 .public-search-icon {
   position: absolute;
   top: 50%;
-  right: 0.95rem;
   transform: translateY(-50%);
+  border: 0;
+  background: transparent;
   color: rgba(17, 17, 17, 0.58);
-  font-size: 3.3rem;
   line-height: 1;
-  pointer-events: none;
+}
+
+.public-search-clear {
+  right: 0.9rem;
+  display: none;
+  font-size: 1.35rem;
+  cursor: pointer;
+}
+
+.public-search-clear-visible {
+  display: block;
+}
+
+.public-search-icon {
+  left: 0.65rem;
+  width: 1.1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(17, 17, 17, 0.42);
+  font-size: 2.9rem;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 2;
 }
 
 .flyer-grid {
@@ -1055,6 +1079,10 @@ trix-editor.blog-rich-text:focus {
   grid-template-columns: repeat(1, minmax(0, 1fr));
   gap: 0.95rem;
   grid-auto-flow: row dense;
+}
+
+.flyer-grid-flat {
+  grid-auto-flow: row;
 }
 
 .home-featured-section {
@@ -3151,6 +3179,13 @@ trix-editor.blog-rich-text:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .flyer-grid-flat .event-card-grid-1-2,
+  .flyer-grid-flat .event-card-grid-2-1,
+  .flyer-grid-flat .event-card-grid-2-2 {
+    grid-column: span 1;
+    grid-row: span 1;
+  }
+
   .event-card-grid-1-2,
   .event-card-grid-2-2 {
     grid-row: span 2;
@@ -3205,6 +3240,13 @@ trix-editor.blog-rich-text:focus {
 
   .flyer-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .flyer-grid-flat .event-card-grid-1-2,
+  .flyer-grid-flat .event-card-grid-2-1,
+  .flyer-grid-flat .event-card-grid-2-2 {
+    grid-column: span 1;
+    grid-row: span 1;
   }
 
   .event-card-grid-1-2,
