@@ -47,7 +47,7 @@ a {
   z-index: 30;
   border-bottom: 1px solid var(--line);
   background:
-    linear-gradient(135deg, rgba(247, 220, 214, 0.94), rgba(244, 214, 220, 0.93) 46%, rgba(237, 224, 236, 0.92) 100%);
+    linear-gradient(120deg, rgba(231, 92, 88, 0.34) 0%, rgba(240, 154, 70, 0.3) 24%, rgba(244, 216, 96, 0.28) 46%, rgba(129, 183, 231, 0.24) 72%, rgba(156, 208, 165, 0.28) 100%);
   backdrop-filter: blur(8px);
 }
 
