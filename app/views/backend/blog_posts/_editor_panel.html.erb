@@ -15,7 +15,7 @@
 
   <header class="editor-header">
     <div>
-      <p class="eyebrow"><%= blog_post.persisted? ? "Beitrag ##{blog_post.id}" : "Neuer Beitrag" %></p>
+      <p class="eyebrow"><%= blog_post.persisted? ? "Beitrag ##{blog_post.id}" : "New" %></p>
       <h2><%= blog_post.title.presence || "Unbenannter Beitrag" %></h2>
       <p><%= blog_post.display_author_name.presence || current_user.name.presence || current_user.email_address %></p>
     </div>
@@ -23,7 +23,7 @@
     <div class="editor-header-badges">
       <span class="blog-post-status blog-post-status-<%= blog_post.status %>"><%= blog_post.display_status %></span>
       <% if blog_post.source_url.present? %>
-        <%= link_to "Quelle",
+        <%= link_to "Original",
                     blog_post.source_url,
                     class: "status-badge status-badge-default status-badge-link",
                     target: "_blank",

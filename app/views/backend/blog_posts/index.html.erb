@@ -15,7 +15,7 @@
       <%= render "topbar_editor_actions", blog_post: @selected_blog_post %>
 
       <div class="backend-topbar-actions">
-        <%= link_to "Neuer Beitrag",
+        <%= link_to "New",
                     new_backend_blog_post_path(status: @status_filter, query: @query_filter.presence),
                     data: { turbo_frame: "blog_editor" },
                     class: "button button-secondary button-compact" %>
@@ -27,7 +27,7 @@
     <aside class="backend-list-column">
       <div class="backend-status-row">
         <% Backend::BlogPostsController::FILTERS.each do |filter| %>
-          <% label = { "all" => "Alle", "draft" => "Drafts", "published" => "Published" }.fetch(filter) %>
+          <% label = { "all" => "All", "draft" => "Drafts", "published" => "Published" }.fetch(filter) %>
           <%= link_to label,
                       backend_blog_posts_path(status: (filter == "all" ? nil : filter), query: @query_filter.presence),
                       class: "status-chip #{'status-chip-active' if @status_filter == filter}" %>
