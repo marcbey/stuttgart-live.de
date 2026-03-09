@@ -6,7 +6,17 @@
 <% slider_images = event.event_images.slider.ordered.to_a %>
 <% selected_genre_ids = event.genre_ids %>
 
-<div class="editor-panel" id="event_editor">
+<div class="editor-panel"
+     id="event_editor"
+     data-selected-context="<%= [
+       event.artist_name.to_s.strip.presence,
+       event.title.to_s.strip.presence,
+       l(event.start_at, format: "%d.%m.%Y %H:%M")
+     ].compact.join(" · ") %>">
+  <template class="editor-actions-template">
+    <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled %>
+  </template>
+
   <header class="editor-header">
     <div>
       <p class="eyebrow">Event #<%= event.id %></p>
@@ -25,8 +35,6 @@
                   rel: "noopener" %>
     </div>
   </header>
-
-  <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled %>
 
   <%= form_with model: event,
                 url: backend_event_path(event),
@@ -261,6 +269,4 @@
       <span>vollständig</span>
     <% end %>
   </div>
-
-  <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled %>
 </div>

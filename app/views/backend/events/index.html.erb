@@ -1,17 +1,31 @@
 <% content_for :title, "Redaktion" %>
+<% selected_event_context = if @selected_event.present?
+                              [
+                                @selected_event.artist_name.to_s.strip.presence,
+                                @selected_event.title.to_s.strip.presence,
+                                l(@selected_event.start_at, format: "%d.%m.%Y %H:%M")
+                              ].compact.join(" · ")
+                            end %>
 
 <section class="backend-shell"
          data-controller="keyboard-shortcuts next-event"
          data-action="turbo:frame-load@document->next-event#syncActiveFromEditor turbo:submit-end@document->next-event#syncActiveAfterSubmit"
          data-next-event-enabled-value="<%= @next_event_enabled %>"
          data-next-event-preference-url-value="<%= next_event_preference_backend_events_path %>">
-  <header class="backend-topbar">
-    <div>
+  <header class="backend-topbar backend-topbar-sticky">
+    <div class="backend-topbar-title">
       <h1>Event-Inbox</h1>
+      <span class="backend-topbar-context" data-next-event-target="selectedContext"><%= selected_event_context %></span>
     </div>
-    <div class="backend-topbar-actions">
-      <%= link_to "Neues Event", new_backend_event_path, class: "button button-secondary" %>
-      <%= link_to "Zum Importer", backend_import_sources_path, class: "button button-ghost" %>
+    <div class="backend-topbar-controls">
+      <div class="backend-topbar-editor-actions" data-next-event-target="headerActions">
+        <% if @selected_event.present? %>
+          <%= render "backend/events/editor_actions", event: @selected_event, next_event_enabled: @next_event_enabled %>
+        <% end %>
+      </div>
+      <div class="backend-topbar-actions">
+        <%= link_to "Neues Event", new_backend_event_path, class: "button button-secondary" %>
+      </div>
     </div>
   </header>
 

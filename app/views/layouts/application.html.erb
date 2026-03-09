@@ -30,7 +30,7 @@
   <body>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
-    <nav class="app-nav">
+    <nav class="app-nav" data-controller="nav-offset">
       <div class="<%= nav_inner_classes.join(" ") %>">
         <%= link_to root_path, class: "app-brand" do %>
           <span class="brand-wordmark" aria-label="Stuttgart Live">
@@ -47,7 +47,8 @@
             <%= link_to "Events", events_path, class: app_nav_link_class(active: frontend_nav_active?) %>
             <% if authenticated? %>
               <% if current_user.backend_access? %>
-                <%= link_to "Backend", backend_events_path, class: app_nav_link_class(active: backend_nav_active?) %>
+                <%= link_to "Redaktion", backend_events_path, class: app_nav_link_class(active: backend_nav_active?) %>
+                <%= link_to "Importer", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?) %>
               <% end %>
               <% if current_user.admin? %>
                 <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users") %>

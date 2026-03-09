@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["toggle", "preference"]
+  static targets = ["toggle", "preference", "selectedContext", "headerActions"]
   static values = { enabled: { type: Boolean, default: true }, preferenceUrl: String }
 
   connect() {
@@ -66,6 +66,9 @@ export default class extends Controller {
     const frame = event?.target
     if (frame && frame.id !== "event_editor") return
 
+    this.syncSelectedContext()
+    this.syncHeaderActions()
+
     const form = document.querySelector("turbo-frame#event_editor form.editor-form")
     if (!(form instanceof HTMLFormElement)) return
 
@@ -83,6 +86,24 @@ export default class extends Controller {
     if (!target.id.endsWith("_editor_form")) return
 
     window.requestAnimationFrame(() => this.syncActiveFromEditor())
+  }
+
+  syncSelectedContext() {
+    if (!this.hasSelectedContextTarget) return
+
+    const editorPanel = document.querySelector("turbo-frame#event_editor .editor-panel")
+    const context = editorPanel?.dataset?.selectedContext?.trim() || ""
+    this.selectedContextTarget.textContent = context
+  }
+
+  syncHeaderActions() {
+    if (!this.hasHeaderActionsTarget) return
+
+    const template = document.querySelector("turbo-frame#event_editor .editor-actions-template")
+    this.headerActionsTarget.replaceChildren()
+    if (!(template instanceof HTMLTemplateElement)) return
+
+    this.headerActionsTarget.append(template.content.cloneNode(true))
   }
 
   highlightEventById(eventId) {

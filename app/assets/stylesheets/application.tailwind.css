@@ -1183,11 +1183,30 @@ a {
 }
 
 .backend-topbar {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: flex-start;
   gap: 1rem;
   margin-bottom: 0.9rem;
+}
+
+.backend-topbar-title {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 0.5rem 0.8rem;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.backend-topbar-sticky {
+  position: sticky;
+  top: var(--app-nav-height, 0px);
+  z-index: 20;
+  padding: 0.45rem 0 0.8rem;
+  margin-top: -0.45rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.94) 82%, rgba(255, 255, 255, 0) 100%);
+  backdrop-filter: blur(10px);
 }
 
 .backend-topbar h1 {
@@ -1195,12 +1214,43 @@ a {
   line-height: 0.9;
   text-transform: uppercase;
   font-size: clamp(2rem, 6vw, 4rem);
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.backend-topbar-context {
+  color: #4a4a4a;
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: clamp(1rem, 2vw, 1.35rem);
+  letter-spacing: 0.03em;
+  text-transform: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: clip;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.backend-topbar-context:empty {
+  display: none;
 }
 
 .backend-topbar-actions {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+}
+
+.backend-topbar-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.backend-topbar-editor-actions:empty {
+  display: none;
 }
 
 .backend-status-row {

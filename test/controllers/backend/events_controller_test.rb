@@ -20,7 +20,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url
 
     assert_response :success
-    assert_select ".app-nav-links .app-nav-link-active", text: "Backend"
+    assert_select ".app-nav-links .app-nav-link-active", text: "Redaktion"
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "Filter entfernen"
     assert_includes response.body, "Auto-Weiter"
@@ -33,6 +33,16 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "editor-datetime-clear"
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
+    assert_select ".backend-topbar-context", text: "Published Artist · Published Event · 01.06.2026 22:00"
+  end
+
+  test "index shows selected event context in topbar" do
+    sign_in_as(@user)
+
+    get backend_events_url(status: "needs_review", event_id: @event.id)
+
+    assert_response :success
+    assert_select ".backend-topbar-context", text: "Review Artist · Review Event · 10.07.2026 22:00"
   end
 
   test "slider image meta actions use separate forms for save and delete" do
