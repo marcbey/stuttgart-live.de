@@ -78,75 +78,159 @@
       </section>
     <% elsif @page == 1 && @home_featured_events.present? %>
       <section class="home-featured-section"
-               data-controller="highlights-slider"
+               data-controller="highlights-slider section-view"
                data-highlights-slider-autoplay-value="true"
                data-highlights-slider-interval-value="5000">
         <div class="home-slider-header">
           <h2>Highlights</h2>
           <div class="home-featured-nav">
+            <button type="button"
+                    class="slider-view-toggle"
+                    data-section-view-target="button"
+                    data-action="click->section-view#toggle"
+                    title="Listenansicht"
+                    aria-label="Listenansicht für Highlights"
+                    aria-pressed="false">
+              <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </span>
+              <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+              </span>
+            </button>
             <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
             <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
           </div>
         </div>
-        <div class="home-featured-track" data-highlights-slider-target="track">
-          <% @home_featured_events.each_with_index do |event, index| %>
-            <% tile_variant = effective_public_grid_variant_for(event, index) %>
-            <% card_slot = card_slot_for_grid_variant(tile_variant) %>
-            <%= render "home_feature_card",
-                       event: event,
-                       public_filter: @public_filter,
-                       public_query: @public_query,
-                       public_event_date: @public_event_date&.iso8601,
-                       tile_variant: tile_variant,
-                       card_slot: card_slot %>
-          <% end %>
+        <div data-section-view-target="slider">
+          <div class="home-featured-track" data-highlights-slider-target="track">
+            <% @home_featured_events.each_with_index do |event, index| %>
+              <% tile_variant = effective_public_grid_variant_for(event, index) %>
+              <% card_slot = card_slot_for_grid_variant(tile_variant) %>
+              <%= render "home_feature_card",
+                         event: event,
+                         public_filter: @public_filter,
+                         public_query: @public_query,
+                         public_event_date: @public_event_date&.iso8601,
+                         tile_variant: tile_variant,
+                         card_slot: card_slot %>
+            <% end %>
+          </div>
+        </div>
+        <div class="section-slider-list" data-section-view-target="list" hidden>
+          <div class="event-listing-grid">
+            <% @home_featured_events.each do |event| %>
+              <%= render "event_list_row",
+                         event: event,
+                         public_filter: @public_filter,
+                         public_view: "list",
+                         public_query: @public_query,
+                         public_event_date: @public_event_date&.iso8601 %>
+            <% end %>
+          </div>
         </div>
       </section>
     <% end %>
 
     <% if @page == 1 && @home_highlight_events.present? %>
-      <section class="home-slider-section" data-controller="highlights-slider">
+      <section class="home-slider-section" data-controller="highlights-slider section-view">
         <div class="home-slider-header">
           <h2>Alle Veranstaltungen in Stuttgart</h2>
           <div class="highlights-slider-nav">
+            <button type="button"
+                    class="slider-view-toggle"
+                    data-section-view-target="button"
+                    data-action="click->section-view#toggle"
+                    title="Listenansicht"
+                    aria-label="Listenansicht für Alle Veranstaltungen in Stuttgart"
+                    aria-pressed="false">
+              <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </span>
+              <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+              </span>
+            </button>
             <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
             <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
           </div>
         </div>
-        <div class="home-slider-track" data-highlights-slider-target="track">
-          <% @home_highlight_events.each do |event| %>
-            <%= render "home_slider_card",
-                       event: event,
-                       public_filter: @public_filter,
-                       public_query: @public_query,
-                       public_event_date: @public_event_date&.iso8601 %>
-          <% end %>
+        <div data-section-view-target="slider">
+          <div class="home-slider-track" data-highlights-slider-target="track">
+            <% @home_highlight_events.each do |event| %>
+              <%= render "home_slider_card",
+                         event: event,
+                         public_filter: @public_filter,
+                         public_query: @public_query,
+                         public_event_date: @public_event_date&.iso8601 %>
+            <% end %>
+          </div>
+        </div>
+        <div class="section-slider-list" data-section-view-target="list" hidden>
+          <div class="event-listing-grid">
+            <% @home_highlight_events.each do |event| %>
+              <%= render "event_list_row",
+                         event: event,
+                         public_filter: @public_filter,
+                         public_view: "list",
+                         public_query: @public_query,
+                         public_event_date: @public_event_date&.iso8601 %>
+            <% end %>
+          </div>
         </div>
       </section>
     <% end %>
 
     <% if @page == 1 && @home_tagestipp_events.present? %>
-      <section class="home-slider-section" data-controller="highlights-slider">
+      <section class="home-slider-section" data-controller="highlights-slider section-view">
         <div class="home-slider-header">
           <h2>Tagestipp</h2>
           <div class="highlights-slider-nav">
+            <button type="button"
+                    class="slider-view-toggle"
+                    data-section-view-target="button"
+                    data-action="click->section-view#toggle"
+                    title="Listenansicht"
+                    aria-label="Listenansicht für Tagestipp"
+                    aria-pressed="false">
+              <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+                <span></span><span></span><span></span>
+              </span>
+              <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+                <span></span><span></span><span></span><span></span>
+              </span>
+            </button>
             <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
             <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
           </div>
         </div>
-        <div class="home-slider-track" data-highlights-slider-target="track">
-          <% @home_tagestipp_events.each do |event| %>
-            <%= render "home_slider_card",
-                       event: event,
-                       public_filter: @public_filter,
-                       public_query: @public_query,
-                       public_event_date: @public_event_date&.iso8601 %>
-          <% end %>
+        <div data-section-view-target="slider">
+          <div class="home-slider-track" data-highlights-slider-target="track">
+            <% @home_tagestipp_events.each do |event| %>
+              <%= render "home_slider_card",
+                         event: event,
+                         public_filter: @public_filter,
+                         public_query: @public_query,
+                         public_event_date: @public_event_date&.iso8601 %>
+            <% end %>
+          </div>
+        </div>
+        <div class="section-slider-list" data-section-view-target="list" hidden>
+          <div class="event-listing-grid">
+            <% @home_tagestipp_events.each do |event| %>
+              <%= render "event_list_row",
+                         event: event,
+                         public_filter: @public_filter,
+                         public_view: "list",
+                         public_query: @public_query,
+                         public_event_date: @public_event_date&.iso8601 %>
+            <% end %>
+          </div>
         </div>
       </section>
     <% end %>
 
-    <section class="home-slider-section" data-controller="highlights-slider">
+    <section class="home-slider-section" data-controller="highlights-slider section-view">
       <div class="home-slider-header">
         <h2>Genres</h2>
         <div class="highlights-slider-nav">
@@ -154,22 +238,32 @@
           <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
         </div>
       </div>
-      <div class="genre-slider-track" data-highlights-slider-target="track">
-        <% [
-          [ "Pop", "genre-tile-pop" ],
-          [ "Rock", "genre-tile-rock" ],
-          [ "Hiphop", "genre-tile-hiphop" ],
-          [ "Rap", "genre-tile-rap" ],
-          [ "Metal", "genre-tile-metal" ],
-          [ "Elektro", "genre-tile-elektro" ],
-          [ "Show", "genre-tile-show" ],
-          [ "Punk", "genre-tile-punk" ],
-          [ "Schlager", "genre-tile-schlager" ]
-        ].each do |genre_name, genre_class| %>
-          <article class="genre-tile <%= genre_class %>">
+      <div data-section-view-target="slider">
+        <div class="genre-slider-track" data-highlights-slider-target="track">
+          <% [
+            [ "Pop", "genre-tile-pop" ],
+            [ "Rock", "genre-tile-rock" ],
+            [ "Hiphop", "genre-tile-hiphop" ],
+            [ "Rap", "genre-tile-rap" ],
+            [ "Metal", "genre-tile-metal" ],
+            [ "Elektro", "genre-tile-elektro" ],
+            [ "Show", "genre-tile-show" ],
+            [ "Punk", "genre-tile-punk" ],
+            [ "Schlager", "genre-tile-schlager" ]
+          ].each do |genre_name, genre_class| %>
+            <article class="genre-tile <%= genre_class %>">
+              <span><%= genre_name %></span>
+            </article>
+          <% end %>
+        </div>
+        </div>
+      </div>
+      <div class="section-slider-list" data-section-view-target="list" hidden>
+        <div class="section-slider-list-plain">
+          <% [ "Pop", "Rock", "Hiphop", "Rap", "Metal", "Elektro", "Show", "Punk", "Schlager" ].each do |genre_name| %>
             <span><%= genre_name %></span>
-          </article>
-        <% end %>
+          <% end %>
+        </div>
       </div>
     </section>
 

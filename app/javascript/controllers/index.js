@@ -48,3 +48,6 @@ application.register("nav-offset", NavOffsetController)
 
 import PublicCardStatusController from "./public_card_status_controller"
 application.register("public-card-status", PublicCardStatusController)
+
+import SectionViewController from "./section_view_controller"
+application.register("section-view", SectionViewController)

@@ -1184,6 +1184,7 @@ trix-editor.blog-rich-text:focus {
 
 .home-featured-nav {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.45rem;
   margin-bottom: 0.55rem;
@@ -1226,6 +1227,38 @@ trix-editor.blog-rich-text:focus {
   font-size: 1.25rem;
   line-height: 1;
   text-transform: uppercase;
+}
+
+.slider-view-icon {
+  opacity: 0.62;
+  margin-right: 0.15rem;
+}
+
+.slider-view-icon-grid {
+  display: none;
+}
+
+.slider-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.2rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.slider-view-toggle[aria-pressed="true"] .slider-view-icon {
+  opacity: 1;
+}
+
+.slider-view-toggle[aria-pressed="true"] .slider-view-icon-list {
+  display: none;
+}
+
+.slider-view-toggle[aria-pressed="true"] .slider-view-icon-grid {
+  display: inline-grid;
 }
 
 .home-slider-track {
@@ -1330,6 +1363,21 @@ trix-editor.blog-rich-text:focus {
 
 .genre-slider-track::-webkit-scrollbar {
   display: none;
+}
+
+.section-slider-list {
+  margin-top: 0.7rem;
+}
+
+.section-slider-list-plain {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.7rem;
+}
+
+.section-slider-list-plain span {
+  font-size: 0.96rem;
+  font-weight: 600;
 }
 
 .genre-tile {
