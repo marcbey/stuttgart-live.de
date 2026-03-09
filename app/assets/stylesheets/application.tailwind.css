@@ -364,8 +364,8 @@ a {
 }
 
 .blog-post-status-draft {
-  background: rgba(17, 17, 17, 0.08);
-  color: rgba(17, 17, 17, 0.7);
+  background: #fff4d8;
+  color: #111;
   border-radius: 0;
 }
 
