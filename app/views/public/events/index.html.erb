@@ -131,6 +131,33 @@
       </section>
     <% end %>
 
+    <section class="home-slider-section" data-controller="highlights-slider">
+      <div class="home-slider-header">
+        <h2>Genres</h2>
+        <div class="highlights-slider-nav">
+          <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
+          <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
+        </div>
+      </div>
+      <div class="genre-slider-track" data-highlights-slider-target="track">
+        <% [
+          [ "Pop", "genre-tile-pop" ],
+          [ "Rock", "genre-tile-rock" ],
+          [ "Hiphop", "genre-tile-hiphop" ],
+          [ "Rap", "genre-tile-rap" ],
+          [ "Metal", "genre-tile-metal" ],
+          [ "Elektro", "genre-tile-elektro" ],
+          [ "Show", "genre-tile-show" ],
+          [ "Punk", "genre-tile-punk" ],
+          [ "Schlager", "genre-tile-schlager" ]
+        ].each do |genre_name, genre_class| %>
+          <article class="genre-tile <%= genre_class %>">
+            <span><%= genre_name %></span>
+          </article>
+        <% end %>
+      </div>
+    </section>
+
   <% end %>
 
   <% if @public_view == "list" %>

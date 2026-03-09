@@ -1160,6 +1160,78 @@ trix-editor.blog-rich-text:focus {
   font-size: 0.7rem;
 }
 
+.genre-slider-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(11rem, 11rem);
+  gap: 0.8rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.genre-slider-track::-webkit-scrollbar {
+  display: none;
+}
+
+.genre-tile {
+  display: grid;
+  place-items: center;
+  min-height: 10.5rem;
+  padding: 1rem;
+  border-radius: 1.25rem;
+  scroll-snap-align: start;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+}
+
+.genre-tile span {
+  display: block;
+  max-width: 7ch;
+  text-align: center;
+  font-family: "Bebas Neue", Impact, sans-serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  line-height: 0.9;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.genre-tile-pop {
+  background: linear-gradient(145deg, #f8d7de, #f7ebc5);
+}
+
+.genre-tile-rock {
+  background: linear-gradient(145deg, #d9e3f6, #ebdff7);
+}
+
+.genre-tile-hiphop {
+  background: linear-gradient(145deg, #ffe3c4, #f6d6d0);
+}
+
+.genre-tile-rap {
+  background: linear-gradient(145deg, #d8efe7, #cfe0f5);
+}
+
+.genre-tile-metal {
+  background: linear-gradient(145deg, #d8dbe6, #e7dfd8);
+}
+
+.genre-tile-elektro {
+  background: linear-gradient(145deg, #d5f3f4, #d8ddf8);
+}
+
+.genre-tile-show {
+  background: linear-gradient(145deg, #f9dbcb, #f6e7d0);
+}
+
+.genre-tile-punk {
+  background: linear-gradient(145deg, #f4d0da, #e3d6f4);
+}
+
+.genre-tile-schlager {
+  background: linear-gradient(145deg, #f7e4b9, #f8d4bf);
+}
+
 .home-events-section {
   margin-top: 1.5rem;
 }
@@ -3042,6 +3114,10 @@ trix-editor.blog-rich-text:focus {
     grid-auto-columns: minmax(10.2rem, 10.2rem);
   }
 
+  .genre-slider-track {
+    grid-auto-columns: minmax(13rem, 13rem);
+  }
+
   .newsletter-signup-section {
     grid-template-columns: minmax(0, 1.1fr) minmax(18rem, 0.9fr);
     align-items: end;
@@ -3102,6 +3178,10 @@ trix-editor.blog-rich-text:focus {
 
   .home-slider-track {
     grid-auto-columns: calc((100% - 4rem) / 5);
+  }
+
+  .genre-slider-track {
+    grid-auto-columns: calc((100% - 3.2rem) / 5);
   }
 
   .flyer-grid {
