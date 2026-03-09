@@ -272,6 +272,88 @@ a {
   line-height: 1.5;
 }
 
+.news-index-shell {
+  max-width: 1180px;
+}
+
+.news-index-hero {
+  text-align: center;
+}
+
+.news-index-hero p {
+  margin-inline: auto;
+}
+
+.news-index-search {
+  display: flex;
+  justify-content: center;
+  align-items: stretch;
+  gap: 0;
+  margin: 1.6rem 0 2rem;
+}
+
+.news-index-search-input {
+  width: min(100%, 26rem);
+  min-height: 2.75rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  border-right: 0;
+  background: rgba(255, 255, 255, 0.96);
+  font-size: 0.95rem;
+}
+
+.news-index-search-button {
+  width: 2.9rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background: #ef9a46;
+  color: #fff;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
+.news-index-grid {
+  grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.news-index-card {
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: none;
+}
+
+.news-index-card-no-image .news-index-card-body {
+  min-height: 15.4rem;
+}
+
+.news-index-card-media {
+  aspect-ratio: 1 / 0.78;
+}
+
+.news-index-card-body {
+  position: relative;
+  min-height: 12.5rem;
+}
+
+.news-index-accent {
+  display: inline-block;
+  width: 2.4rem;
+  height: 3px;
+  margin-bottom: 1rem;
+  background: linear-gradient(90deg, #ef9a46, #e31b2e);
+}
+
+.news-index-card h2 {
+  margin-bottom: 0.7rem;
+}
+
+.news-index-card h2 a {
+  text-decoration: none;
+}
+
+.news-index-card-teaser {
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 0.84rem;
+  letter-spacing: 0.01em;
+}
+
 .info-page-hero h1 {
   margin: 0;
   font-size: clamp(2.6rem, 6vw, 5.2rem);
@@ -748,6 +830,10 @@ trix-editor.blog-rich-text:focus {
 }
 
 @media (min-width: 860px) {
+  .news-index-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .news-list-item {
     grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
     gap: 1.1rem;
@@ -3447,6 +3533,10 @@ trix-editor.blog-rich-text:focus {
 }
 
 @media (min-width: 1100px) {
+  .news-index-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .home-featured-track {
     grid-auto-columns: calc((100% - 1.9rem) / 3);
   }

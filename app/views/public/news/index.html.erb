@@ -1,32 +1,43 @@
 <% content_for :title, "Stuttgart Live - News" %>
 
-<section class="public-shell">
-  <header class="hero-header">
-    <h1>News</h1>
+<section class="news-shell news-index-shell">
+  <header class="news-hero news-index-hero">
+    <p class="news-kicker">Redaktion</p>
+    <h1>Freshly Squeezed News</h1>
     <p>Stories, Updates und redaktionelle Highlights aus dem Live-Kosmos.</p>
   </header>
 
+  <%= form_with url: news_index_path, method: :get, local: true, class: "news-index-search" do %>
+    <%= text_field_tag :q,
+                       @news_query,
+                       class: "form-input news-index-search-input",
+                       placeholder: "Search Article Title or Tags",
+                       aria: { label: "News durchsuchen" } %>
+    <%= button_tag "⌕", type: "submit", class: "news-index-search-button", aria: { label: "News durchsuchen" } %>
+  <% end %>
+
   <% if @blog_posts.any? %>
-    <div class="news-list">
+    <div class="news-grid news-index-grid">
       <% @blog_posts.each do |blog_post| %>
-        <article class="news-list-item <%= 'news-list-item-no-image' unless blog_post.cover_image.attached? %>">
+        <article class="news-card news-index-card <%= 'news-index-card-no-image' unless blog_post.cover_image.attached? %>">
           <% if blog_post.cover_image.attached? %>
-            <%= link_to news_path(blog_post.slug), class: "news-list-item-media" do %>
+            <%= link_to news_path(blog_post.slug), class: "news-card-media news-index-card-media" do %>
               <%= image_tag blog_post.cover_image, alt: blog_post.title, class: "news-list-item-image" %>
             <% end %>
           <% end %>
 
-          <div class="news-list-item-copy">
-            <p class="event-detail-meta">
+          <div class="news-card-body news-index-card-body">
+            <span class="news-index-accent" aria-hidden="true"></span>
+            <p class="news-card-meta">
               <span><%= l(blog_post.published_at.to_date, format: "%d.%m.%Y") %></span>
             </p>
-            <h2 class="news-list-item-title"><%= link_to blog_post.title, news_path(blog_post.slug) %></h2>
-            <p class="news-list-item-teaser"><%= blog_post.teaser %></p>
+            <h2><%= link_to blog_post.title, news_path(blog_post.slug) %></h2>
+            <p class="news-index-card-teaser"><%= blog_post.teaser %></p>
           </div>
         </article>
       <% end %>
     </div>
   <% else %>
-    <div class="empty-state">Noch keine veröffentlichten News.</div>
+    <div class="empty-state">Keine passenden News gefunden.</div>
   <% end %>
 </section>
