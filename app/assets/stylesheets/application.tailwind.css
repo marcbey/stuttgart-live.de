@@ -1262,9 +1262,9 @@ a {
 
 .backend-topbar {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: flex-start;
-  gap: 1rem;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 0.75rem;
   margin-bottom: 0.9rem;
 }
 
@@ -1281,14 +1281,13 @@ a {
   position: sticky;
   top: var(--app-nav-height, 0px);
   z-index: 20;
-  padding: 0.45rem 0 0.8rem;
-  margin-top: -0.45rem;
+  padding: 0.2rem 0 0.4rem;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.94) 82%, rgba(255, 255, 255, 0) 100%);
   backdrop-filter: blur(10px);
 }
 
 .backend-topbar h1 {
-  margin: 0.3rem 0 0;
+  margin: 0.05rem 0 0;
   line-height: 0.9;
   text-transform: uppercase;
   font-size: clamp(2rem, 6vw, 4rem);
@@ -1325,6 +1324,8 @@ a {
   justify-content: flex-end;
   align-items: center;
   gap: 0.55rem;
+  min-width: 0;
+  margin-top: 0.2rem;
 }
 
 .backend-topbar-editor-actions:empty {
