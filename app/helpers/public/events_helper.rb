@@ -35,10 +35,10 @@ module Public::EventsHelper
 
   def public_event_status_label(status)
     case status.to_s
-    when "needs_review" then "Review"
-    when "ready_for_publish" then "Bereit"
-    when "published" then "Publiziert"
-    when "rejected" then "Abgelehnt"
+    when "needs_review" then "Draft"
+    when "ready_for_publish" then "Unpublished"
+    when "published" then "Published"
+    when "rejected" then "Rejected"
     else status.to_s
     end
   end

@@ -25,7 +25,7 @@
                  next_event_enabled: @next_event_enabled,
                  filter_status: @filters[:status] %>
       <div class="backend-topbar-actions">
-        <%= link_to "Neues Event", new_backend_event_path, class: "button button-secondary button-compact" %>
+        <%= link_to "New", new_backend_event_path, class: "button button-secondary button-compact" %>
       </div>
     </div>
   </header>
@@ -34,7 +34,7 @@
     <aside class="backend-list-column">
       <div class="backend-status-row">
         <% @status_filters.each do |status| %>
-          <% label = status == "ready_for_publish" ? "Depubliziert" : event_status_label(status) %>
+          <% label = event_status_filter_label(status) %>
           <%= link_to backend_events_path(status: status), class: "status-chip #{'status-chip-active' if @filters[:status] == status}" do %>
             <span><%= label %></span>
           <% end %>

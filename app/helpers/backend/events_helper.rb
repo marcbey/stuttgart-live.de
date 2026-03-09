@@ -47,17 +47,22 @@ module Backend::EventsHelper
   def event_status_label(status)
     case status.to_s
     when "imported" then "importiert"
-    when "needs_review" then "Review"
-    when "ready_for_publish" then "bereit"
-    when "published" then "publiziert"
-    when "rejected" then "abgelehnt"
+    when "needs_review" then "Draft"
+    when "ready_for_publish" then "Unpublished"
+    when "published" then "Published"
+    when "rejected" then "Rejected"
     else status.to_s
     end
   end
 
+  def event_status_filter_label(status)
+    return "Drafts" if status.to_s == "needs_review"
+
+    event_status_label(status)
+  end
+
   def event_status_select_label(status)
-    label = status.to_s == "ready_for_publish" ? "depubliziert" : event_status_label(status)
-    label.upcase
+    event_status_label(status).upcase
   end
 
   def event_status_badge_class(status)

@@ -30,7 +30,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Redaktion"
     assert_includes response.body, "Event-Inbox"
-    assert_includes response.body, "Auto-Weiter"
+    assert_includes response.body, "auto-next"
     assert_includes response.body, "name=\"status\""
     assert_includes response.body, "value=\"published\""
     assert_includes response.body, "Promoter-ID"
@@ -493,7 +493,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_event_url(@published_event)
 
     assert_response :success
-    assert_not_includes response.body, "Publizieren"
+    assert_select "button", text: "Publish", count: 0
     assert_includes response.body, event_path(@published_event.slug)
   end
 
@@ -504,7 +504,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_event_url(@published_event)
 
     assert_response :success
-    assert_not_includes response.body, "Depublizieren"
+    assert_select "button", text: "Unpublish", count: 0
   end
 
   test "unpublish moves published event to ready_for_publish" do
@@ -559,7 +559,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @next_event.artist_name
     assert_includes response.body, 'target="event_editor"'
     assert_includes response.body, "editor_form_event_#{@next_event.id}"
-    assert_includes response.body, "Publizieren"
+    assert_includes response.body, "Publish"
   end
 
   test "turbo unpublish keeps active published filter and refreshes inbox" do

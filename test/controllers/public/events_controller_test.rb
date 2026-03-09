@@ -408,7 +408,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_includes response.body, "Review"
+    assert_includes response.body, "Draft"
   end
 
   test "show renders rejected events for authenticated users with abgelehnt badge" do
@@ -429,7 +429,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(rejected_event.slug)
 
     assert_response :success
-    assert_includes response.body, "Abgelehnt"
+    assert_includes response.body, "Rejected"
   end
 
   test "show renders published past events by slug" do
