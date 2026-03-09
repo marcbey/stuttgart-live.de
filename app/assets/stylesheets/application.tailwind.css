@@ -1835,9 +1835,9 @@ trix-editor.blog-rich-text:focus {
 
 .backend-status-row {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
-  overflow-x: visible;
+  overflow-x: auto;
   margin-right: 0;
   padding-right: 0;
   padding-bottom: 0.4rem;
@@ -2730,6 +2730,6 @@ trix-editor.blog-rich-text:focus {
   }
 
   .backend-split {
-    grid-template-columns: minmax(344px, 0.64fr) minmax(0, 1.66fr);
+    grid-template-columns: minmax(334px, 0.615fr) minmax(0, 1.685fr);
   }
 }
