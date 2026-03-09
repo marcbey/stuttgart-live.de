@@ -33,6 +33,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Preis: 45 EUR"
     assert_includes response.body, "editor-datetime-clear"
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
+    assert_includes response.body, "data-next-event-enabled-value=\"false\""
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
     assert_select ".backend-topbar-context", text: "Published Artist · Published Event · 01.06.2026 22:00"
   end

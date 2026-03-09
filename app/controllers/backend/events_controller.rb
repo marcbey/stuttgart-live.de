@@ -278,7 +278,7 @@ module Backend
 
     def next_event_enabled_preference
       value = session[SESSION_NEXT_EVENT_KEY]
-      return true if value.nil?
+      return false if value.nil?
 
       ActiveModel::Type::Boolean.new.cast(value)
     end
