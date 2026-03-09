@@ -15,14 +15,15 @@
   <header class="backend-topbar backend-topbar-sticky">
     <div class="backend-topbar-title">
       <h1>Event-Inbox</h1>
-      <span class="backend-topbar-context" data-next-event-target="selectedContext"><%= selected_event_context %></span>
+      <span id="event_topbar_context"
+            class="backend-topbar-context"
+            data-next-event-target="selectedContext"><%= render "backend/events/topbar_context", event: @selected_event if @selected_event.present? %></span>
     </div>
     <div class="backend-topbar-controls">
-      <div class="backend-topbar-editor-actions" data-next-event-target="headerActions">
-        <% if @selected_event.present? %>
-          <%= render "backend/events/editor_actions", event: @selected_event, next_event_enabled: @next_event_enabled %>
-        <% end %>
-      </div>
+      <%= render "backend/events/topbar_editor_actions",
+                 event: @selected_event,
+                 next_event_enabled: @next_event_enabled,
+                 filter_status: @filters[:status] %>
       <div class="backend-topbar-actions">
         <%= link_to "Neues Event", new_backend_event_path, class: "button button-secondary button-compact" %>
       </div>

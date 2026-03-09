@@ -41,7 +41,7 @@ module Backend
 
     def show
       @all_genres = Genre.order(:name)
-      @filter_status = inbox_status_for_navigation
+      @filter_status = inbox_status_for_navigation || params[:status].to_s.presence_in(status_filters)
     end
 
     def new
@@ -76,7 +76,8 @@ module Backend
       @all_genres = Genre.order(:name)
       persist_next_event_preference!(params[:next_event_enabled]) if params.key?(:next_event_enabled)
       navigation_status = inbox_status_for_navigation
-      next_event = @next_event_enabled ? next_filtered_event_after(@event.id, status: navigation_status) : nil
+      next_event_status = navigation_status || @event.status
+      next_event = @next_event_enabled ? next_filtered_event_after(@event.id, status: next_event_status) : nil
 
       @event.assign_attributes(event_params)
       @event.status = "published" if save_and_publish_requested?
@@ -92,39 +93,26 @@ module Backend
           changed_fields: @event.saved_changes
         )
 
-        target_event = next_event || @event
         target_status = navigation_status || @event.status
         sidebar_events = filtered_events_for_status(target_status)
+        target_event = selected_event_for_sidebar(
+          sidebar_events,
+          preferred_event: @event,
+          fallback_event: next_event,
+          prefer_fallback: @next_event_enabled
+        )
         sidebar_events_count = filtered_events_count(sidebar_events)
 
         respond_to do |format|
-          format.html { redirect_to backend_events_path(status: target_status, event_id: target_event.id), notice: update_success_message }
+          format.html { redirect_to backend_events_path(status: target_status, event_id: target_event&.id), notice: update_success_message }
           format.turbo_stream do
             flash.now[:notice] = update_success_message
-            render turbo_stream: [
-              turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
-              turbo_stream.replace(
-                "events_list",
-                partial: "backend/events/events_list",
-                locals: {
-                  events: sidebar_events,
-                  selected_event: target_event,
-                  status: target_status,
-                  merge_run_id: selected_merge_run_id_for_filters,
-                  filtered_events_count: sidebar_events_count
-                }
-              ),
-              turbo_stream.replace(
-                "event_editor",
-                partial: "backend/events/editor_panel",
-                locals: {
-                  event: target_event,
-                  all_genres: @all_genres,
-                  next_event_enabled: @next_event_enabled,
-                  filter_status: target_status
-                }
-              )
-            ]
+            render_editor_state_turbo_stream(
+              sidebar_events: sidebar_events,
+              sidebar_events_count: sidebar_events_count,
+              target_event: target_event,
+              target_status: target_status
+            )
           end
         end
       else
@@ -141,7 +129,7 @@ module Backend
                   event: @event,
                   all_genres: @all_genres,
                   next_event_enabled: @next_event_enabled,
-                  filter_status: navigation_status
+                  filter_status: navigation_status || @event.status
                 }
               )
             ], status: :unprocessable_entity
@@ -157,15 +145,32 @@ module Backend
     end
 
     def unpublish
+      navigation_status = inbox_status_for_navigation
+      next_event_status = navigation_status || @event.status
+      next_event = @next_event_enabled ? next_filtered_event_after(@event.id, status: next_event_status) : nil
       @event.update!(status: "ready_for_publish", published_at: nil, published_by: nil, auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "unpublished", user: current_user)
       @all_genres = Genre.order(:name)
+      target_status = navigation_status || @event.status
+      sidebar_events = filtered_events_for_status(target_status)
+      target_event = selected_event_for_sidebar(
+        sidebar_events,
+        preferred_event: @event,
+        fallback_event: next_event,
+        prefer_fallback: @next_event_enabled
+      )
+      sidebar_events_count = filtered_events_count(sidebar_events)
 
       respond_to do |format|
-        format.html { redirect_to backend_events_path(status: "ready_for_publish", event_id: @event.id), notice: "Event wurde depublisht." }
+        format.html { redirect_to backend_events_path(status: target_status, event_id: target_event&.id), notice: "Event wurde depublisht." }
         format.turbo_stream do
           flash.now[:notice] = "Event wurde depublisht."
-          render_editor_state_turbo_stream(target_event: @event, target_status: "ready_for_publish")
+          render_editor_state_turbo_stream(
+            sidebar_events: sidebar_events,
+            sidebar_events_count: sidebar_events_count,
+            target_event: target_event,
+            target_status: target_status
+          )
         end
       end
     end
@@ -315,6 +320,17 @@ module Backend
       events[index + 1]
     end
 
+    def selected_event_for_sidebar(sidebar_events, preferred_event:, fallback_event:, prefer_fallback: false)
+      if prefer_fallback && fallback_event
+        matched_fallback = sidebar_events.find { |candidate| candidate.id == fallback_event.id }
+        return matched_fallback if matched_fallback.present?
+      end
+
+      sidebar_events.find { |candidate| candidate.id == preferred_event.id } ||
+        (fallback_event && sidebar_events.find { |candidate| candidate.id == fallback_event.id }) ||
+        sidebar_events.first
+    end
+
     def filtered_events_for_status(status)
       filters = session_filters_for_index.merge(status: status)
       filters[:merge_run_id] = selected_merge_run_id_for_filters(filters) if filters[:merge_scope] == "last_merge"
@@ -419,12 +435,23 @@ module Backend
       save_and_publish_requested? ? "Event wurde gespeichert und publiziert." : "Event wurde gespeichert."
     end
 
-    def render_editor_state_turbo_stream(target_event:, target_status:)
-      sidebar_events = filtered_events_for_status(target_status)
-      sidebar_events_count = filtered_events_count(sidebar_events)
-
+    def render_editor_state_turbo_stream(sidebar_events:, sidebar_events_count:, target_event:, target_status:)
       render turbo_stream: [
         turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+        turbo_stream.replace(
+          "event_topbar_context",
+          partial: "backend/events/topbar_context",
+          locals: { event: target_event }
+        ),
+        turbo_stream.replace(
+          "event_topbar_editor_actions",
+          partial: "backend/events/topbar_editor_actions",
+          locals: {
+            event: target_event,
+            next_event_enabled: @next_event_enabled,
+            filter_status: target_status
+          }
+        ),
         turbo_stream.replace(
           "events_list",
           partial: "backend/events/events_list",
@@ -438,13 +465,19 @@ module Backend
         ),
         turbo_stream.replace(
           "event_editor",
-          partial: "backend/events/editor_panel",
-          locals: {
-            event: target_event,
-            all_genres: @all_genres,
-            next_event_enabled: @next_event_enabled,
-            filter_status: target_status
-          }
+          partial: (target_event.present? ? "backend/events/editor_panel" : "backend/events/empty_editor"),
+          locals: (
+            if target_event.present?
+              {
+                event: target_event,
+                all_genres: @all_genres,
+                next_event_enabled: @next_event_enabled,
+                filter_status: target_status
+              }
+            else
+              {}
+            end
+          )
         )
       ]
     end

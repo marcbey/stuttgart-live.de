@@ -70,7 +70,10 @@ export default class extends Controller {
     this.syncHeaderActions()
 
     const form = document.querySelector("turbo-frame#event_editor form.editor-form")
-    if (!(form instanceof HTMLFormElement)) return
+    if (!(form instanceof HTMLFormElement)) {
+      this.highlightEventById(null)
+      return
+    }
 
     const eventId = this.eventIdFromEditorForm(form)
     if (eventId === null) return
@@ -109,6 +112,8 @@ export default class extends Controller {
   highlightEventById(eventId) {
     const items = Array.from(document.querySelectorAll(".event-list-item"))
     items.forEach((item) => item.classList.remove("event-list-item-active"))
+
+    if (eventId === null || eventId === undefined) return
 
     const activeLink = document.querySelector(`.event-link[data-next-event-event-id='${eventId}']`)
     const activeItem = activeLink?.closest(".event-list-item")

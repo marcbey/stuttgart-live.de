@@ -14,7 +14,7 @@
        l(event.start_at, format: "%d.%m.%Y %H:%M")
      ].compact.join(" · ") %>">
   <template class="editor-actions-template">
-    <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled %>
+    <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled, filter_status: filter_status %>
   </template>
 
   <header class="editor-header">

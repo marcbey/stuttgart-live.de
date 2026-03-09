@@ -11,6 +11,7 @@
     <%= button_to "Depublizieren",
                   unpublish_backend_event_path(event),
                   method: :patch,
+                  params: (filter_status.present? ? { inbox_status: filter_status } : {}),
                   class: "button button-secondary button-compact",
                   form: { data: { turbo_stream: true } } %>
   <% end %>

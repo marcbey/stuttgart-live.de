@@ -53,6 +53,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".backend-topbar-context", text: "Review Artist · Review Event · 10.07.2026 22:00"
   end
 
+  test "show keeps active inbox status in editor form" do
+    sign_in_as(@user)
+
+    get backend_event_url(@event, status: "needs_review")
+
+    assert_response :success
+    assert_select "input[name='inbox_status'][value='needs_review']"
+  end
+
   test "slider image meta actions use separate forms for save and delete" do
     sign_in_as(@user)
     image = create_event_image(event: @event, purpose: EventImage::PURPOSE_SLIDER)
@@ -521,6 +530,63 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "action=\"update\""
     assert_includes response.body, "Event wurde depublisht."
     assert_equal "ready_for_publish", @published_event.reload.status
+  end
+
+  test "turbo publish keeps active needs_review filter and refreshes inbox" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      inbox_status: "needs_review",
+      next_event_enabled: "0",
+      save_and_publish: "1",
+      event: {
+        artist_name: @event.artist_name,
+        title: @event.title,
+        start_at: @event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        doors_at: "",
+        venue: @event.venue,
+        city: @event.city,
+        status: @event.status,
+        genre_ids: [ genres(:rock).id.to_s ]
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "published", @event.reload.status
+    assert_includes response.body, 'target="event_topbar_context"'
+    assert_includes response.body, 'target="event_topbar_editor_actions"'
+    assert_includes response.body, 'target="events_list"'
+    assert_includes response.body, @next_event.artist_name
+    assert_includes response.body, 'target="event_editor"'
+    assert_includes response.body, "editor_form_event_#{@next_event.id}"
+    assert_includes response.body, "Publizieren"
+  end
+
+  test "turbo unpublish keeps active published filter and refreshes inbox" do
+    sign_in_as(@user)
+    other_published_event = Event.create!(
+      artist_name: "Another Published Artist",
+      title: "Another Published Event",
+      start_at: Time.zone.parse("2026-06-02 20:00:00"),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 2.days.ago,
+      published_by: @user,
+      completeness_score: 100
+    )
+
+    patch unpublish_backend_event_url(@published_event), params: { inbox_status: "published" }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "ready_for_publish", @published_event.reload.status
+    assert_includes response.body, 'target="event_topbar_context"'
+    assert_includes response.body, 'target="event_topbar_editor_actions"'
+    assert_includes response.body, 'target="events_list"'
+    assert_includes response.body, other_published_event.artist_name
+    assert_includes response.body, 'target="event_editor"'
+    assert_includes response.body, "editor_form_event_#{other_published_event.id}"
+    assert_includes response.body, "/backend/events/#{other_published_event.id}/unpublish"
   end
 
   test "bulk publish updates selected events" do
