@@ -353,22 +353,27 @@ a {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.55rem;
+  padding: 0.2rem 0.4rem;
+  border: 1px solid #111;
   border-radius: 999px;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .blog-post-status-draft {
   background: rgba(17, 17, 17, 0.08);
   color: rgba(17, 17, 17, 0.7);
+  border-radius: 0;
 }
 
 .blog-post-status-published {
-  background: rgba(227, 27, 46, 0.12);
-  color: #971322;
+  background: #deffe9;
+  color: #111;
+  border-color: #77c097;
+  border-radius: 0;
 }
 
 .blog-post-card h2,
@@ -1996,6 +2001,7 @@ trix-editor.blog-rich-text:focus {
   padding: 0;
   list-style: none;
   display: grid;
+  align-content: start;
   gap: 0.45rem;
   flex: 1 1 auto;
   min-height: calc(100vh - var(--app-nav-height, 0px) - 24rem);
@@ -2597,6 +2603,10 @@ trix-editor.blog-rich-text:focus {
   align-items: center;
   gap: 0.4rem;
   margin-top: 0.48rem;
+}
+
+.editor-actions-row .check-inline {
+  margin-top: 0;
 }
 
 .empty-state {

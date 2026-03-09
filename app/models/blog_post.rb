@@ -42,7 +42,7 @@ class BlogPost < ApplicationRecord
     return "Entwurf" unless published?
     return "Geplant" if scheduled?
 
-    "Veröffentlicht"
+    "Publiziert"
   end
 
   def display_author_name
