@@ -1765,6 +1765,10 @@ trix-editor.blog-rich-text:focus {
   margin-bottom: 0.9rem;
 }
 
+.blog-topbar {
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
 .backend-topbar-title {
   display: flex;
   flex-wrap: nowrap;

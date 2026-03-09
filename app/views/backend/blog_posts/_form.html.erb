@@ -3,9 +3,6 @@
     <div class="blog-editor-note">
       <p>Autor: <strong><%= blog_post.display_author_name.presence || current_user.name.presence || current_user.email_address %></strong></p>
       <p>Slug: <code><%= blog_post.slug.presence || "wird automatisch erzeugt" %></code></p>
-      <% if blog_post.source_url.present? %>
-        <p>Original: <a href="<%= blog_post.source_url %>" target="_blank" rel="noreferrer"><%= blog_post.source_url %></a></p>
-      <% end %>
       <% if blog_post.published_at.present? %>
         <p>Veröffentlichung: <strong><%= l(blog_post.published_at, format: "%d.%m.%Y %H:%M") %></strong></p>
       <% else %>
