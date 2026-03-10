@@ -6,6 +6,9 @@ Verwaltet werden:
 
 - GitHub Environment
 - Environment Variables
+  - `APP_HOST`
+  - `KAMAL_WEB_HOST`
+  - `KAMAL_SSH_HOST_KEY`
 
 ## Voraussetzungen
 
@@ -33,3 +36,4 @@ script/github_set_production_secrets
 ## Wichtige Hinweise
 
 - Terraform verwaltet hier nur das Environment und nicht-sensitive Variablen.
+- `KAMAL_SSH_HOST_KEY` pinnt den erwarteten SSH-Host-Key des Hetzner-Servers für GitHub Actions.

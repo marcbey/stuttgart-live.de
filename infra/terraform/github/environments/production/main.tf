@@ -4,8 +4,9 @@ provider "github" {
 
 locals {
   environment_variables = {
-    APP_HOST       = var.app_host
-    KAMAL_WEB_HOST = var.kamal_web_host
+    APP_HOST           = var.app_host
+    KAMAL_WEB_HOST     = var.kamal_web_host
+    KAMAL_SSH_HOST_KEY = var.kamal_ssh_host_key
   }
 }
 

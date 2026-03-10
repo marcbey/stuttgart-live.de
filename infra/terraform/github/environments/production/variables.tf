@@ -23,3 +23,8 @@ variable "kamal_web_host" {
   description = "IPv4 oder Hostname des Zielservers."
   type        = string
 }
+
+variable "kamal_ssh_host_key" {
+  description = "Gepinnte known_hosts-Zeile für den SSH-Host-Key des Zielservers."
+  type        = string
+}

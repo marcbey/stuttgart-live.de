@@ -73,6 +73,7 @@ jobs:
         env:
           KAMAL_SSH_PRIVATE_KEY: ${{ secrets.KAMAL_SSH_PRIVATE_KEY }}
           KAMAL_WEB_HOST_OVERRIDE: ${{ vars.KAMAL_WEB_HOST }}
+          KAMAL_SSH_HOST_KEY: ${{ vars.KAMAL_SSH_HOST_KEY }}
         run: |
           set -euo pipefail
 
@@ -81,8 +82,12 @@ jobs:
           chmod 600 "$RUNNER_TEMP/kamal.key"
 
           host="${KAMAL_WEB_HOST_OVERRIDE:-46.225.224.194}"
+          if [ -z "${KAMAL_SSH_HOST_KEY}" ]; then
+            echo "KAMAL_SSH_HOST_KEY fehlt" >&2
+            exit 1
+          fi
           ssh-keygen -R "$host" >/dev/null 2>&1 || true
-          ssh-keyscan -t ed25519 "$host" >> ~/.ssh/known_hosts
+          printf '%s\n' "$KAMAL_SSH_HOST_KEY" >> ~/.ssh/known_hosts
 
       - name: Deploy with Kamal
         env:
