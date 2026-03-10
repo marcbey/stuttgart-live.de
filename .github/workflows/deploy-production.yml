@@ -51,7 +51,7 @@ jobs:
           KAMAL_SSH_KEY_PATH: ${{ runner.temp }}/kamal.key
           KAMAL_WEB_HOST_OVERRIDE: ${{ vars.KAMAL_WEB_HOST }}
           APP_HOST_OVERRIDE: ${{ vars.APP_HOST }}
-          KAMAL_REGISTRY_PASSWORD: ${{ github.token }}
+          KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EASYTICKET_EVENTS_API: ${{ secrets.EASYTICKET_EVENTS_API }}
