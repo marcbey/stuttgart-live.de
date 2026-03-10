@@ -26,7 +26,7 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Datenschutz"
     assert_includes response.body, "stuttgart-live.de/datenschutz"
 
-    get impressum_url
+    get imprint_url
 
     assert_response :success
     assert_includes response.body, "Impressum"
@@ -38,7 +38,7 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "AGB"
     assert_includes response.body, "Easy Ticket"
 
-    get kontakt_url
+    get contact_url
 
     assert_response :success
     assert_includes response.body, "Kontakt"
