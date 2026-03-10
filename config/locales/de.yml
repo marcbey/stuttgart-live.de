@@ -14,3 +14,7 @@ de:
       x_minutes:
         one: "1 Minute"
         other: "%{count} Minuten"
+  errors:
+    messages:
+      invalid: "is invalid"
+      taken: "has already been taken"

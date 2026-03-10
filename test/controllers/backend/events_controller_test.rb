@@ -70,7 +70,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "form##{ActionView::RecordIdentifier.dom_id(image, :meta)}"
-    assert_select "button[form='#{ActionView::RecordIdentifier.dom_id(image, :meta)}']", text: "Meta speichern"
+    assert_select "button[form='#{ActionView::RecordIdentifier.dom_id(image, :meta)}']", text: "Save Meta"
     assert_select "form##{ActionView::RecordIdentifier.dom_id(image, :meta)} form", count: 0
   end
 
