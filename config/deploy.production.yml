@@ -8,7 +8,7 @@ servers:
     - <%= ENV.fetch("KAMAL_WEB_HOST") %>
 
 proxy:
-  ssl: true
+  ssl: <%= ENV.fetch("APP_SSL", "true") == "true" %>
   host: <%= ENV.fetch("APP_HOST") %>
 
 registry:

@@ -60,6 +60,14 @@ Before apply, set DB password in your shell:
 export TF_VAR_db_password='your-strong-db-password'
 ```
 
+For local production runs, you can also reuse the value from
+`.kamal/secrets.production` via the wrapper script:
+
+```bash
+script/terraform_prod plan
+script/terraform_prod apply -auto-approve
+```
+
 Initialize and apply:
 
 ```bash
