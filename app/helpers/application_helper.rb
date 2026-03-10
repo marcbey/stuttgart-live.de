@@ -72,4 +72,23 @@ module ApplicationHelper
 
     "object-position: center #{y_position};"
   end
+
+  def formatted_organizer_notes(notes)
+    formatted_organizer_notes_with_link(notes)
+  end
+
+  def formatted_organizer_notes_with_link(notes, event: nil)
+    escaped = ERB::Util.html_escape(notes.to_s)
+    phrase = "(Das Begleitformular findest Du HIER)"
+    begleitformular_link = link_to(
+      "<span class=\"inline-arrow\">→</span> Begleitformular <span class=\"inline-file-badge\">PDF</span>".html_safe,
+      begleitformular_path(
+        event: [ event&.artist_name, event&.title ].compact.join(" - ").presence,
+        venue: event&.venue,
+        date: event&.start_at&.to_date&.iso8601
+      )
+    )
+
+    simple_format(escaped.gsub(phrase, begleitformular_link).html_safe)
+  end
 end

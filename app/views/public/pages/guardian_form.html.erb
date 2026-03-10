@@ -1,0 +1,126 @@
+<% event_name = params[:event].to_s.presence %>
+<% venue_name = params[:venue].to_s.presence %>
+<% event_date = begin
+                  value = params[:date].to_s
+                  value.present? ? Date.iso8601(value) : nil
+                rescue ArgumentError
+                  nil
+                end %>
+<% content_for :title, "Begleitformular | Stuttgart Live" %>
+
+<article class="static-page guardian-form-page">
+  <div class="static-page-shell guardian-form-shell">
+    <div class="guardian-form-header">
+      <div>
+        <p class="eyebrow">Service</p>
+        <h1>Begleitformular</h1>
+        <p class="static-page-lead">
+          Formular für die Begleitung minderjähriger Besucherinnen und Besucher. Bitte vollständig
+          ausfüllen und unterschrieben zur Veranstaltung mitbringen.
+        </p>
+      </div>
+      <button type="button" class="button guardian-form-print-button" onclick="window.print()">Drucken</button>
+    </div>
+
+    <section class="guardian-form-card">
+      <div class="guardian-form-grid">
+        <label class="guardian-form-field guardian-form-field-wide">
+          <span>Veranstaltung</span>
+          <input type="text" class="form-input" value="<%= event_name %>">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Datum</span>
+          <input type="text" class="form-input" value="<%= event_date.present? ? l(event_date, format: "%d.%m.%Y") : "" %>">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Spielstätte</span>
+          <input type="text" class="form-input" value="<%= venue_name %>">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Name minderjährige Person</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Geburtsdatum</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field guardian-form-field-wide">
+          <span>Anschrift minderjährige Person</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Name Erziehungsberechtigte Person</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Telefon Erziehungsberechtigte Person</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field guardian-form-field-wide">
+          <span>Anschrift Erziehungsberechtigte Person</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Name Begleitperson</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Geburtsdatum Begleitperson</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field guardian-form-field-wide">
+          <span>Anschrift Begleitperson</span>
+          <input type="text" class="form-input">
+        </label>
+      </div>
+
+      <div class="guardian-form-notes">
+        <p>
+          Hiermit bestätige ich, dass die oben genannte Begleitperson die Aufsicht für die
+          minderjährige Person während der Veranstaltung übernimmt.
+        </p>
+        <p>
+          Bitte zusätzlich eine Ausweiskopie der erziehungsberechtigten Person und der
+          Begleitperson mitführen, sofern dies vom Veranstalter verlangt wird.
+        </p>
+      </div>
+
+      <div class="guardian-form-signatures">
+        <label class="guardian-form-field">
+          <span>Ort, Datum</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Unterschrift Erziehungsberechtigte Person</span>
+          <input type="text" class="form-input">
+        </label>
+
+        <label class="guardian-form-field">
+          <span>Unterschrift Begleitperson</span>
+          <input type="text" class="form-input">
+        </label>
+      </div>
+
+      <div class="guardian-form-footnote">
+        <p>
+          Hinweis: Dieses Formular dient als Begleitnachweis für minderjährige Besucherinnen und
+          Besucher. Bitte vollständig ausfüllen, ausdrucken und unterschrieben zur Veranstaltung
+          mitbringen. Zusätzlich können Ausweiskopien der erziehungsberechtigten Person und der
+          Begleitperson verlangt werden.
+        </p>
+      </div>
+    </section>
+  </div>
+</article>

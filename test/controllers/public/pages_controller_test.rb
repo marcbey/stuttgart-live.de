@@ -61,4 +61,13 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".site-footer-nav a", text: "Kontakt"
     assert_select ".site-footer-nav a", text: "Barrierefreiheit"
   end
+
+  test "guardian form page is publicly accessible" do
+    get begleitformular_url(event: "Test Event", venue: "Im Wizemann", date: "2026-03-10")
+
+    assert_response :success
+    assert_includes response.body, "Begleitformular"
+    assert_includes response.body, "Drucken"
+    assert_includes response.body, "Test Event"
+  end
 end

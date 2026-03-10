@@ -63,6 +63,7 @@ Rails.application.routes.draw do
   get "datenschutz", to: "public/pages#privacy", as: :datenschutz
   get "agb", to: "public/pages#terms", as: :agb
   get "barrierefreiheit", to: "public/pages#accessibility", as: :barrierefreiheit
+  get "begleitformular", to: "public/pages#guardian_form", as: :begleitformular
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
