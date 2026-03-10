@@ -6,23 +6,26 @@
                 rescue ArgumentError
                   nil
                 end %>
-<% content_for :title, "Begleitformular | Stuttgart Live" %>
+<% content_for :title, "Begleitformular" %>
 
 <article class="static-page guardian-form-page">
   <div class="static-page-shell guardian-form-shell">
-    <div class="guardian-form-header">
-      <div>
-        <p class="eyebrow">Service</p>
-        <h1>Begleitformular</h1>
-        <p class="static-page-lead">
-          Formular für die Begleitung minderjähriger Besucherinnen und Besucher. Bitte vollständig
-          ausfüllen und unterschrieben zur Veranstaltung mitbringen.
-        </p>
+    <section class="guardian-form-card guardian-form-page-panel">
+      <div class="guardian-form-header">
+        <div class="guardian-form-header-copy">
+          <p class="eyebrow">Service</p>
+          <h1>Begleitformular</h1>
+          <p class="static-page-lead">
+            Formular für die Begleitung minderjähriger Besucherinnen und Besucher. Bitte vollständig
+            ausfüllen und unterschrieben zur Veranstaltung mitbringen.
+          </p>
+        </div>
+        <div class="guardian-form-header-actions">
+          <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "guardian-form-logo" %>
+          <button type="button" class="button guardian-form-print-button" onclick="window.print()">Drucken</button>
+        </div>
       </div>
-      <button type="button" class="button guardian-form-print-button" onclick="window.print()">Drucken</button>
-    </div>
 
-    <section class="guardian-form-card">
       <div class="guardian-form-grid">
         <label class="guardian-form-field guardian-form-field-wide">
           <span>Veranstaltung</span>
@@ -85,17 +88,6 @@
         </label>
       </div>
 
-      <div class="guardian-form-notes">
-        <p>
-          Hiermit bestätige ich, dass die oben genannte Begleitperson die Aufsicht für die
-          minderjährige Person während der Veranstaltung übernimmt.
-        </p>
-        <p>
-          Bitte zusätzlich eine Ausweiskopie der erziehungsberechtigten Person und der
-          Begleitperson mitführen, sofern dies vom Veranstalter verlangt wird.
-        </p>
-      </div>
-
       <div class="guardian-form-signatures">
         <label class="guardian-form-field">
           <span>Ort, Datum</span>
@@ -112,14 +104,71 @@
           <input type="text" class="form-input">
         </label>
       </div>
+    </section>
 
-      <div class="guardian-form-footnote">
-        <p>
-          Hinweis: Dieses Formular dient als Begleitnachweis für minderjährige Besucherinnen und
-          Besucher. Bitte vollständig ausfüllen, ausdrucken und unterschrieben zur Veranstaltung
-          mitbringen. Zusätzlich können Ausweiskopien der erziehungsberechtigten Person und der
-          Begleitperson verlangt werden.
-        </p>
+    <section class="guardian-form-card guardian-form-page-panel guardian-form-second-page">
+      <div class="guardian-form-subheader">
+        <div class="guardian-form-subheader-copy">
+          <h2>
+            <span>Jugendschutz durch</span>
+            <span>Erziehungsbeauftragte</span>
+          </h2>
+          <p>
+            Hinweise für Eltern, Begleitpersonen und Veranstaltungsbesuche von Minderjährigen.
+          </p>
+        </div>
+        <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "guardian-form-logo" %>
+      </div>
+
+      <div class="guardian-form-footnote guardian-form-footnote-columns">
+        <div class="guardian-form-footnote-group">
+          <p>Liebe Eltern,</p>
+          <p>
+            nach dem Jugendschutzgesetz haben Sie die Möglichkeit, für die Begleitung Ihres Kindes
+            eine „erziehungsbeauftragte Person” zu benennen. In Begleitung dieser Person, die Sie
+            ausdrücklich beauftragen müssen, sind gestattet:
+          </p>
+          <ul>
+            <li>der Kinobesuch von Kindern unter 6 Jahren</li>
+            <li>der Besuch von Tanzveranstaltungen durch Kinder und Jugendliche unter 16 Jahren</li>
+            <li>der Besuch von Gaststätten durch Kinder und Jugendliche unter 16 Jahren</li>
+            <li>der Besuch dieser Angebote durch ältere Kinder bzw. Jugendliche außerhalb der gesetzlichen Zeitgrenzen</li>
+          </ul>
+          <p>
+            Das Gesetz schreibt für die Benennung keine bestimmte Form vor; Sie können gerne das
+            oben abgedruckte Formular verwenden, in das Sie alle wichtigen Informationen eintragen
+            können.
+          </p>
+          <p>Bitte bedenken Sie beim Erteilen des Erziehungsauftrages:</p>
+          <ul>
+            <li>Die/der Erziehungsbeauftragte muss volljährig sein und sich gegenüber anderen ausweisen können.</li>
+            <li>Sie/er muss reif genug sein und in der Lage, Ihrem Kind verantwortungsvoll die notwendige Unterstützung zu bieten.</li>
+          </ul>
+        </div>
+
+        <div class="guardian-form-footnote-group">
+          <p>
+            Prinzipiell gilt: Die/der Erziehungsbeauftragte übernimmt auch in rechtlicher Hinsicht
+            die Verantwortung für Ihr Kind, z. B. die Aufsichtspflicht.
+          </p>
+          <p>Überzeugen Sie sich, ob sie/er dieser Aufgabe gewachsen ist:</p>
+          <ul>
+            <li>Stellen Sie beim Besuch abendlicher Veranstaltungen sicher, dass Ihr Kind sicher heimfährt.</li>
+            <li>Stellen Sie sicher, dass die/der Erziehungsbeauftragte während der Begleitung nicht unter Einfluss von Alkohol oder anderen Drogen steht.</li>
+            <li>Stellen Sie sicher, dass die/der Erziehungsbeauftragte über die Regelungen des Jugendschutzgesetzes Bescheid weiß.</li>
+          </ul>
+          <p>
+            Wenn Ihr Kind an Veranstaltungen der Kinder- und Jugendhilfe teilnimmt
+            (Kindertageseinrichtungen, Jugendzentren, Jugendgruppen, Sportvereine usw.) sind die
+            jeweiligen Veranstalter Erziehungsbeauftragte im Sinne des Gesetzes, wenn es sich um
+            spezielle Veranstaltungen für Kinder oder Jugendliche handelt. Eine gesonderte
+            Beauftragung ist dann nicht notwendig.
+          </p>
+          <p>
+            Dieses Formular dient als Begleitnachweis für minderjährige Besucherinnen und Besucher.
+            Bitte vollständig ausfüllen, ausdrucken und unterschrieben zur Veranstaltung mitbringen.
+          </p>
+        </div>
       </div>
     </section>
   </div>
