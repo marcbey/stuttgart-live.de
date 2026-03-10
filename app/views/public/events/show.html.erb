@@ -169,12 +169,13 @@
   <% if @event.show_public_organizer_notes? %>
     <section class="event-detail-copy">
       <div class="event-detail-notes">
-        <h2>Veranstalterhinweise</h2>
-        <div class="event-detail-notes-body">
-          <%= formatted_organizer_notes_with_link(@event.public_organizer_notes, event: @event) %>
+        <div class="event-detail-notes-copy">
+          <h2>Veranstalterhinweise</h2>
+          <div class="event-detail-notes-body">
+            <%= formatted_organizer_notes_with_link(@event.public_organizer_notes, event: @event) %>
+          </div>
         </div>
         <div class="event-detail-organizer-brand">
-          <h3>Veranstalter:</h3>
           <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "event-detail-organizer-logo" %>
         </div>
       </div>

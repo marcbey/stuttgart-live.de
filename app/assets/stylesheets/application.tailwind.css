@@ -2623,11 +2623,15 @@ trix-editor.blog-rich-text:focus {
   padding-top: 0.85rem;
 }
 
+.event-detail-notes-copy {
+  max-width: 52rem;
+}
+
 .event-detail-notes h2 {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  font-size: 1.08rem;
+  font-size: 1.42rem;
   font-weight: 700;
 }
 
@@ -2635,6 +2639,8 @@ trix-editor.blog-rich-text:focus {
   margin-top: 0.85rem;
   display: grid;
   gap: 0.55rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
 
 .event-detail-notes-body p {
@@ -2642,23 +2648,15 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-detail-organizer-brand {
-  margin-top: 1rem;
-  display: grid;
-  justify-items: start;
-  gap: 0.3rem;
-}
-
-.event-detail-organizer-brand h3 {
-  margin: 0;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.92rem;
-  color: rgba(17, 17, 17, 0.66);
+  margin-top: 1.1rem;
+  display: flex;
+  align-items: start;
+  justify-content: start;
 }
 
 .event-detail-organizer-logo {
   display: block;
-  width: clamp(5.5rem, 12vw, 7rem);
+  width: clamp(9.2rem, 18vw, 12.8rem);
   height: auto;
 }
 
