@@ -27,13 +27,13 @@ variable "kamal_web_host" {
 variable "dotenv_file" {
   description = "Pfad zur .env-Datei mit den Laufzeit- und Deploy-Secrets."
   type        = string
-  default     = "../../../../.env"
+  default     = "../../../../../.env"
 }
 
 variable "rails_master_key_file" {
   description = "Pfad zur Rails master.key."
   type        = string
-  default     = "../../../../config/master.key"
+  default     = "../../../../../config/master.key"
 }
 
 variable "ssh_private_key_file" {
