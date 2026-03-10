@@ -27,6 +27,7 @@ module Backend
           image = @event.event_images.new(
             purpose: purpose,
             grid_variant: create_params[:grid_variant],
+            hero_focus_position: create_params[:hero_focus_position],
             alt_text: create_params[:alt_text],
             sub_text: create_params[:sub_text],
             card_focus_x: create_params[:card_focus_x],
@@ -140,6 +141,7 @@ module Backend
       params.require(:event_image).permit(
         :purpose,
         :grid_variant,
+        :hero_focus_position,
         :alt_text,
         :sub_text,
         :card_focus_x,
@@ -150,7 +152,7 @@ module Backend
     end
 
     def update_params
-      params.require(:event_image).permit(:alt_text, :sub_text, :grid_variant, :card_focus_x, :card_focus_y, :card_zoom)
+      params.require(:event_image).permit(:alt_text, :sub_text, :grid_variant, :hero_focus_position, :card_focus_x, :card_focus_y, :card_zoom)
     end
 
     def import_image_params

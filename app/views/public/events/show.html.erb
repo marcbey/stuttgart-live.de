@@ -81,7 +81,7 @@
           <% if hero_mobile_image_source.present? %>
             <source media="(max-width: 699px)" srcset="<%= hero_mobile_image_source %>">
           <% end %>
-          <%= image_tag hero_desktop_image_source, alt: hero_alt_text, class: "event-detail-image" %>
+          <%= image_tag hero_desktop_image_source, alt: hero_alt_text, class: "event-detail-image", style: event_detail_image_style(hero_desktop_image) %>
         </picture>
       </div>
     <% end %>
