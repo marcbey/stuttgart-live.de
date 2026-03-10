@@ -23,5 +23,6 @@ end
 
 require "rubygems"
 require "bundler/setup"
+require_relative "../lib/kamal_password_stdin_patch"
 
 load Gem.bin_path("kamal", "kamal")

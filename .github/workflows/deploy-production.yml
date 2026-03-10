@@ -98,5 +98,11 @@ jobs:
           # unsichtbare Zeilenumbrüche mitbringen. Für GHCR muss der Token
           # exakt einzeilig sein.
           export KAMAL_REGISTRY_PASSWORD="$(printf '%s' "$KAMAL_REGISTRY_PASSWORD" | tr -d '\r\n')"
+          export KAMAL_SKIP_REMOTE_REGISTRY_LOGIN=true
 
-          bundle exec kamal deploy -d hetzner --skip_push
+          host="${KAMAL_WEB_HOST_OVERRIDE:-46.225.224.194}"
+          printf '%s' "$KAMAL_REGISTRY_PASSWORD" | \
+            ssh -i "$KAMAL_SSH_KEY_PATH" -o StrictHostKeyChecking=yes deploy@"$host" \
+              "docker login ghcr.io -u marcbey --password-stdin"
+
+          bin/kamal deploy -d hetzner --skip_push
