@@ -52,7 +52,21 @@ jobs:
             service=stuttgart_live_de
 
       - name: Prepare Kamal secrets file
-        run: cp .kamal/secrets.hetzner.example .kamal/secrets.hetzner
+        run: |
+          cat > .kamal/secrets.hetzner <<'EOF'
+          KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD
+          RAILS_MASTER_KEY=$RAILS_MASTER_KEY
+          DB_PASSWORD=$DB_PASSWORD
+          EASYTICKET_EVENTS_API=$EASYTICKET_EVENTS_API
+          EASYTICKET_EVENT_DETAIL_API=$EASYTICKET_EVENT_DETAIL_API
+          EASYTICKET_PARTNER_SHOP_ID=$EASYTICKET_PARTNER_SHOP_ID
+          EASYTICKET_TICKET_LINK_EVENT_BASE_URL=$EASYTICKET_TICKET_LINK_EVENT_BASE_URL
+          EVENTIM_FEED_URL=$EVENTIM_FEED_URL
+          EVENTIM_USER=$EVENTIM_USER
+          EVENTIM_PASS=$EVENTIM_PASS
+          RESERVIX_API_KEY=$RESERVIX_API_KEY
+          RESERVIX_EVENTS_API=$RESERVIX_EVENTS_API
+          EOF
 
       - name: Prepare SSH access
         env:
