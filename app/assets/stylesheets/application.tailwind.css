@@ -325,6 +325,12 @@ a {
   margin-inline: auto;
 }
 
+.news-index-subscribe-form {
+  justify-content: center;
+  margin: 1.25rem auto 0;
+  max-width: 38rem;
+}
+
 .news-index-grid {
   grid-template-columns: repeat(1, minmax(0, 1fr));
 }
