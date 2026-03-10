@@ -32,8 +32,8 @@
         <h2><%= event.artist_name %></h2>
         <p class="event-card-title"><%= event.title %></p>
         <p class="event-card-meta">
-          <span><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
-          <span><%= event.venue %></span>
+          <span class="event-card-meta-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+          <span class="event-card-meta-venue"><%= event.venue %></span>
         </p>
       </div>
     <% end %>

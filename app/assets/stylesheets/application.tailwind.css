@@ -1835,6 +1835,9 @@ trix-editor.blog-rich-text:focus {
   margin: 0.1rem 0 0;
   font-size: 1.07rem;
   color: #dedede;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .event-card-meta,
@@ -1843,11 +1846,24 @@ trix-editor.blog-rich-text:focus {
   font-size: 0.95rem;
   text-transform: uppercase;
   letter-spacing: 0.03em;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
-.event-card-meta span {
-  display: inline-block;
-  margin-right: 0.5rem;
+.event-card-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+}
+
+.event-card-meta-date {
+  flex: 0 0 auto;
+}
+
+.event-card-meta-venue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .event-card-badge {
