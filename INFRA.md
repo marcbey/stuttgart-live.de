@@ -113,6 +113,7 @@ GitHub Actions übernimmt:
 - Build des App-Images
 - Push in die Registry
 - `kamal deploy` auf Hetzner
+- optional verwaltet Terraform das GitHub-Environment `production`
 
 GitHub Actions übernimmt nicht:
 
@@ -129,6 +130,9 @@ infra/
   terraform/
     aws/
       ...
+    github/
+      environments/
+        production/
     hetzner/
       environments/
         prod/
@@ -165,6 +169,7 @@ config/
 Hinweis:
 
 - Die bestehende AWS-Terraform-Struktur liegt unter [infra/terraform/aws](/Users/marc/Projects/stuttgart-live.de/infra/terraform/aws).
+- GitHub-Environment-Secrets und Variables können zusätzlich unter [infra/terraform/github](/Users/marc/Projects/stuttgart-live.de/infra/terraform/github) verwaltet werden.
 - Der Hetzner-Stack sollte in einem eigenen Pfad leben, damit kein gemischter Provider-Zustand entsteht.
 
 ## Terraform-Plan für Hetzner
