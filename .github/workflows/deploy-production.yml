@@ -62,7 +62,8 @@ jobs:
           chmod 600 "$RUNNER_TEMP/kamal.key"
 
           host="${KAMAL_WEB_HOST_OVERRIDE:-46.225.224.194}"
-          ssh-keyscan -H "$host" >> ~/.ssh/known_hosts
+          ssh-keygen -R "$host" >/dev/null 2>&1 || true
+          ssh-keyscan -t ed25519 "$host" >> ~/.ssh/known_hosts
 
       - name: Deploy with Kamal
         env:
