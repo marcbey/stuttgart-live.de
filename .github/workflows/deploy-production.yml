@@ -45,7 +45,11 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          tags: ghcr.io/marcbey/stuttgart-live-de:${{ github.sha }}
+          tags: |
+            ghcr.io/marcbey/stuttgart-live-de:${{ github.sha }}
+            ghcr.io/marcbey/stuttgart-live-de:latest
+          labels: |
+            service=stuttgart_live_de
 
       - name: Prepare Kamal secrets file
         run: cp .kamal/secrets.hetzner.example .kamal/secrets.hetzner
