@@ -62,6 +62,7 @@ Rails.application.routes.draw do
   resources :news, only: [ :index, :show ], module: :public, param: :slug
   get "datenschutz", to: "public/pages#privacy", as: :datenschutz
   get "agb", to: "public/pages#terms", as: :agb
+  get "barrierefreiheit", to: "public/pages#accessibility", as: :barrierefreiheit
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 

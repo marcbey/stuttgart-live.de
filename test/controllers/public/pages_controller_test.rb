@@ -43,6 +43,12 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Kontakt"
     assert_includes response.body, "0711"
+
+    get barrierefreiheit_url
+
+    assert_response :success
+    assert_includes response.body, "Barrierefreiheit"
+    assert_includes response.body, "digitale Barrierefreiheit"
   end
 
   test "footer navigation is rendered on public pages" do
@@ -53,5 +59,6 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".site-footer-nav a", text: "Impressum"
     assert_select ".site-footer-nav a", text: "AGB"
     assert_select ".site-footer-nav a", text: "Kontakt"
+    assert_select ".site-footer-nav a", text: "Barrierefreiheit"
   end
 end
