@@ -42,7 +42,7 @@ env:
 ssh:
   user: deploy
   keys:
-    - <%= ENV.fetch("KAMAL_SSH_KEY_PATH", File.expand_path("~/.ssh/stgt-live-hetzner-admin")) %>
+    - <%= ENV.fetch("KAMAL_SSH_KEY_PATH", File.expand_path("~/.ssh/stgt-live-hetzner-github")) %>
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"

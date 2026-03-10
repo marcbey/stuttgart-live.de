@@ -12,7 +12,7 @@ Aktuelle Secret-Quellen:
 
 - `.env` im Projekt-Root
 - `config/master.key`
-- `~/.ssh/stgt-live-hetzner-admin`
+- `~/.ssh/stgt-live-hetzner-github`
 
 ## Voraussetzungen
 
