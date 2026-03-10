@@ -3613,3 +3613,36 @@ trix-editor.blog-rich-text:focus {
     grid-template-columns: minmax(334px, 0.626fr) minmax(0, 1.690fr);
   }
 }
+
+@media (min-width: 1500px) {
+  .app-nav-inner,
+  .public-shell,
+  .site-footer-shell,
+  .event-detail {
+    max-width: 1480px;
+  }
+
+  .news-index-shell {
+    max-width: 1440px;
+  }
+
+  .home-featured-track {
+    grid-auto-columns: calc((100% - 2.85rem) / 4);
+  }
+
+  .home-slider-track {
+    grid-auto-columns: calc((100% - 5rem) / 6);
+  }
+
+  .genre-slider-track {
+    grid-auto-columns: calc((100% - 4rem) / 6);
+  }
+
+  .flyer-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .news-index-grid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
