@@ -6,20 +6,10 @@ Verwaltet werden:
 
 - GitHub Environment
 - Environment Variables
-- Environment Secrets für den Kamal-Deploy
-
-Aktuelle Secret-Quellen:
-
-- `.env` im Projekt-Root
-- `config/master.key`
-- `~/.ssh/stgt-live-hetzner-github`
 
 ## Voraussetzungen
 
 - `GITHUB_TOKEN` mit ausreichenden Rechten auf das Repository
-- Zugriff auf `.env`
-- Zugriff auf `config/master.key`
-- Zugriff auf den privaten SSH-Key für den Deploy
 
 ## Nutzung
 
@@ -31,8 +21,15 @@ terraform plan
 terraform apply
 ```
 
+Die sensiblen GitHub-Environment-Secrets werden bewusst nicht per Terraform verwaltet.
+Sie werden separat mit `gh secret set` gesetzt, damit sie nicht im Terraform-State landen.
+
+Dafür gibt es das Skript:
+
+```bash
+script/github_set_production_secrets
+```
+
 ## Wichtige Hinweise
 
-- Der Stack liest Secrets lokal aus Dateien und `.env`.
-- Terraform-State ist daher als sensibel zu behandeln.
-- Die Pfade in `terraform.tfvars` sollten entweder absolut sein oder relativ zu diesem Verzeichnis.
+- Terraform verwaltet hier nur das Environment und nicht-sensitive Variablen.
