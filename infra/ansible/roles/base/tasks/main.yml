@@ -46,6 +46,12 @@
     validate: "/usr/sbin/visudo -cf %s"
   when: admin_user_sudo_nopasswd
 
+- name: Benötigte Gruppen für Deploy-User sicherstellen
+  ansible.builtin.group:
+    name: "{{ item }}"
+    state: present
+  loop: "{{ deploy_user_groups }}"
+
 - name: Deploy-User anlegen
   ansible.builtin.user:
     name: "{{ deploy_user }}"

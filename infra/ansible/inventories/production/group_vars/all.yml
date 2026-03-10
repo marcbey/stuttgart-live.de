@@ -9,7 +9,8 @@ admin_user_authorized_keys:
 
 deploy_user: deploy
 deploy_user_shell: /bin/bash
-deploy_user_groups: []
+deploy_user_groups:
+  - docker
 deploy_user_authorized_keys:
   - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDUladULjCPlmKvwZ0GeNusB9aVVjZ+ZpX1o72mVsRqb stgt-live-hetzner-github
 disable_root_ssh: true
