@@ -421,6 +421,31 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Sichtbare Veranstalterhinweise"
   end
 
+  test "show renders organizer notes for sks events by default" do
+    event = Event.create!(
+      slug: "published-sks-event-with-default-organizer-notes",
+      source_fingerprint: "test::public::published::sks-default-organizer-notes",
+      title: "Published SKS Event",
+      artist_name: "Published SKS Artist",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      event_info: "Öffentliche Beschreibung",
+      organizer_notes: nil,
+      show_organizer_notes: false,
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Veranstalterhinweise"
+    assert_includes response.body, "Wir danken für Ihr Verständnis!"
+  end
+
   test "show includes edit link for authenticated users" do
     sign_in_as(@user)
 

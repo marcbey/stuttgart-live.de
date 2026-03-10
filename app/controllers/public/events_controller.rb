@@ -7,7 +7,6 @@ module Public
     FILTER_ALL = "all".freeze
     FILTER_SKS = "sks".freeze
     FILTER_VALUES = [ FILTER_ALL, FILTER_SKS ].freeze
-    SKS_PROMOTER_IDS = %w[10135 382].freeze
     VIEW_GRID = "grid".freeze
     VIEW_LIST = "list".freeze
     VIEW_VALUES = [ VIEW_GRID, VIEW_LIST ].freeze
@@ -100,7 +99,7 @@ module Public
 
       return relation unless filter == FILTER_SKS
 
-      relation.where(promoter_id: SKS_PROMOTER_IDS)
+      relation.where(promoter_id: Event::SKS_PROMOTER_IDS)
     end
 
     def current_public_filter

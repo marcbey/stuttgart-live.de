@@ -105,14 +105,6 @@
         </div>
       <% end %>
 
-      <% if @event.show_organizer_notes? && @event.organizer_notes.present? %>
-        <details class="event-detail-notes">
-          <summary>Veranstalterhinweise</summary>
-          <div class="event-detail-notes-body">
-            <%= simple_format(@event.organizer_notes) %>
-          </div>
-        </details>
-      <% end %>
     </section>
   <% end %>
 
@@ -169,6 +161,21 @@
         <div class="event-lightbox-inner">
           <img src="" alt="" class="event-lightbox-image" data-lightbox-target="image">
           <p class="event-lightbox-caption" data-lightbox-target="caption" hidden></p>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <% if @event.show_public_organizer_notes? %>
+    <section class="event-detail-copy">
+      <div class="event-detail-notes">
+        <h2>Veranstalterhinweise</h2>
+        <div class="event-detail-notes-body">
+          <%= simple_format(@event.public_organizer_notes) %>
+        </div>
+        <div class="event-detail-organizer-brand">
+          <h3>Veranstalter:</h3>
+          <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "event-detail-organizer-logo" %>
         </div>
       </div>
     </section>

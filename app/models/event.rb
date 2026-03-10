@@ -1,5 +1,25 @@
 class Event < ApplicationRecord
   STATUSES = %w[imported needs_review ready_for_publish published rejected].freeze
+  SKS_PROMOTER_IDS = %w[10135 382].freeze
+  DEFAULT_SKS_ORGANIZER_NOTES = <<~TEXT.strip
+    Wir bitten um Beachtung verstärkter Sicherheitsmaßnahmen
+    Verbot von Handtaschen, Rucksäcken und Helmen
+    Zusätzliche verschärfte Kontrollen und Bodychecks
+    Sämtliche Besucher werden Bodychecks unterzogen. Taschen, Rucksäcke und Handtaschen sowie Helme und Behältnisse aller Art sind verboten.
+    Die Zuschauer werden ausdrücklich gebeten, auf deren Mitbringen zu verzichten, und sich ausschließlich auf wirklich notwendige Utensilien wie Handys, Schlüsselbund und Portemonnaies sowie Medikamente oder Kosmetika in Gürteltaschen oder Kosmetiktäschchen bis zu einer maximalen Größe von Din A4 zu beschränken.
+    Die Einhaltung dieser Regeln und Hinweise sowie ein rechtzeitiges Eintreffen helfen dabei, den Einlass so zügig wie möglich zu organisieren.
+
+    Wir danken für Ihr Verständnis!
+
+    Altersfreigabe:
+    kein Zutritt: unter 6 Jahren
+    nur in Begleitung: bis 14 Jahren (Das Begleitformular findest Du HIER)
+    frei ab 14 Jahren
+
+    Telefonischer Ticketkauf:
+
+    Bei dieser Veranstaltung gibt es auch die Möglichkeit des telefonischen Ticketkaufes. Sie erreichen unsere Tickethotline in der Regel von Montag bis Freitag zwischen 10 und 18 Uhr unter Telefon 0711-550 660 77
+  TEXT
   IMAGE_SLOT_PREFERENCES = {
     [ :grid_default, :desktop ] => [
       [ "cover", %w[landscape square portrait unknown] ],
@@ -86,6 +106,24 @@ class Event < ApplicationRecord
     I18n.l(start_at.to_date, format: "%d.%m.%Y")
   end
 
+  def sks_promoter?
+    SKS_PROMOTER_IDS.include?(promoter_id.to_s)
+  end
+
+  def public_organizer_notes
+    notes = organizer_notes.to_s.strip
+    return notes if notes.present?
+    return DEFAULT_SKS_ORGANIZER_NOTES if sks_promoter?
+
+    nil
+  end
+
+  def show_public_organizer_notes?
+    return false if public_organizer_notes.blank?
+
+    show_organizer_notes? || sks_promoter?
+  end
+
   def youtube_embed_url
     return "" if youtube_url.blank?
 
@@ -153,7 +191,8 @@ class Event < ApplicationRecord
     normalized_city = city.to_s.strip
     self.city = normalized_city.casecmp("Unbekannt").zero? ? nil : normalized_city.presence
     self.badge_text = badge_text.to_s.strip.presence
-    self.organizer_notes = organizer_notes.to_s.strip.presence
+    normalized_organizer_notes = organizer_notes.to_s.strip.presence
+    self.organizer_notes = normalized_organizer_notes.presence || (sks_promoter? ? DEFAULT_SKS_ORGANIZER_NOTES : nil)
     self.homepage_url = homepage_url.to_s.strip.presence
     self.instagram_url = instagram_url.to_s.strip.presence
     self.facebook_url = facebook_url.to_s.strip.presence

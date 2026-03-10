@@ -2303,7 +2303,7 @@ trix-editor.blog-rich-text:focus {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  object-position: center top;
+  object-position: center center;
 }
 
 .event-detail-copy,
@@ -2497,35 +2497,12 @@ trix-editor.blog-rich-text:focus {
   padding-top: 0.85rem;
 }
 
-.event-detail-notes summary {
-  display: flex;
-  align-items: center;
-  gap: 0.9rem;
-  list-style: none;
-  cursor: pointer;
+.event-detail-notes h2 {
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-size: 1.08rem;
   font-weight: 700;
-}
-
-.event-detail-notes summary::-webkit-details-marker {
-  display: none;
-}
-
-.event-detail-notes summary::before {
-  content: "";
-  display: inline-block;
-  width: 0.85rem;
-  height: 0.85rem;
-  border-right: 2px solid #111;
-  border-bottom: 2px solid #111;
-  transform: rotate(45deg) translateY(-2px);
-  transition: transform 160ms ease;
-}
-
-.event-detail-notes[open] summary::before {
-  transform: rotate(225deg) translateY(-1px);
 }
 
 .event-detail-notes-body {
@@ -2536,6 +2513,27 @@ trix-editor.blog-rich-text:focus {
 
 .event-detail-notes-body p {
   margin: 0;
+}
+
+.event-detail-organizer-brand {
+  margin-top: 1rem;
+  display: grid;
+  justify-items: start;
+  gap: 0.3rem;
+}
+
+.event-detail-organizer-brand h3 {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.92rem;
+  color: rgba(17, 17, 17, 0.66);
+}
+
+.event-detail-organizer-logo {
+  display: block;
+  width: clamp(5.5rem, 12vw, 7rem);
+  height: auto;
 }
 
 .event-detail-slider h2 {
