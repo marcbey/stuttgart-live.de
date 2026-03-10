@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TF_DIR="${1:-infra/terraform/environments/prod}"
+TF_DIR="${1:-infra/terraform/aws/environments/prod}"
 
 if [[ ! -d "$TF_DIR" ]]; then
   echo "Terraform directory not found: $TF_DIR" >&2

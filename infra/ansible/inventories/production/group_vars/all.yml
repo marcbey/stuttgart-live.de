@@ -1,0 +1,46 @@
+timezone: Europe/Berlin
+
+deploy_user: deploy
+deploy_user_shell: /bin/bash
+deploy_user_groups:
+  - sudo
+deploy_user_authorized_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGJ36LIqWwbBML/dIql3Aw/Y77+Z4gRkOVDQaTodm2zj stgt-live-hetzner-admin
+disable_root_ssh: false
+
+base_packages:
+  - ca-certificates
+  - curl
+  - fail2ban
+  - gnupg
+  - rsync
+  - sudo
+  - ufw
+  - unattended-upgrades
+
+firewall_allowed_tcp_ports:
+  - 22
+  - 80
+  - 443
+firewall_tcp_cidr_rules:
+  - from: 172.18.0.0/16
+    port: 5432
+    proto: tcp
+
+postgres_app_user: stuttgart_live_de
+postgres_app_password: ""
+postgres_app_databases:
+  - stuttgart_live_de_production
+  - stuttgart_live_de_production_cache
+  - stuttgart_live_de_production_queue
+  - stuttgart_live_de_production_cable
+postgres_listen_addresses: "*"
+postgres_allowed_host_cidrs:
+  - 127.0.0.1/32
+  - ::1/128
+  - 172.18.0.0/16
+
+backup_dir: /var/backups/stuttgart-live
+backup_keep_days: 7
+backup_storage_enabled: false
+backup_storage_source: /var/lib/docker/volumes/stuttgart_live_de_storage/_data

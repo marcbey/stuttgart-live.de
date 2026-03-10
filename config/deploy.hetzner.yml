@@ -1,0 +1,60 @@
+# Hetzner production target for Kamal.
+# Usage: bin/kamal deploy -d hetzner
+
+image: <%= ENV.fetch("KAMAL_IMAGE", "marcbey/stuttgart-live-de") %>
+
+servers:
+  web:
+    - <%= ENV.fetch("KAMAL_WEB_HOST", "46.225.224.194") %>
+
+proxy:
+  ssl: <%= ENV.fetch("APP_SSL", "true") == "true" %>
+  host: <%= ENV.fetch("APP_HOST", "stuttgart-live.schopp3r.de") %>
+  app_port: 80
+
+registry:
+  server: ghcr.io
+  username: <%= ENV.fetch("KAMAL_REGISTRY_USERNAME", "marcbey") %>
+  password:
+    - KAMAL_REGISTRY_PASSWORD
+
+env:
+  secret:
+    - RAILS_MASTER_KEY
+    - DB_PASSWORD
+    - EASYTICKET_EVENTS_API
+    - EASYTICKET_EVENT_DETAIL_API
+    - EASYTICKET_PARTNER_SHOP_ID
+    - EASYTICKET_TICKET_LINK_EVENT_BASE_URL
+    - EVENTIM_FEED_URL
+    - EVENTIM_USER
+    - EVENTIM_PASS
+    - RESERVIX_API_KEY
+    - RESERVIX_EVENTS_API
+  clear:
+    SOLID_QUEUE_IN_PUMA: true
+    DB_HOST: 172.18.0.1
+    DB_PORT: 5432
+    DB_NAME: <%= ENV.fetch("DB_NAME", "stuttgart_live_de_production") %>
+    DB_USER: <%= ENV.fetch("DB_USER", "stuttgart_live_de") %>
+    ACTIVE_STORAGE_SERVICE: <%= ENV.fetch("ACTIVE_STORAGE_SERVICE", "local") %>
+
+ssh:
+  user: deploy
+  keys:
+    - <%= ENV.fetch("KAMAL_SSH_KEY_PATH", File.expand_path("~/.ssh/stgt-live-hetzner-admin")) %>
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+volumes:
+  - "stuttgart_live_de_storage:/rails/storage"
+
+asset_path: /rails/public/assets
+
+builder:
+  context: .
+  arch: amd64

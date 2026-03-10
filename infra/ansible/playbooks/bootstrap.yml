@@ -1,0 +1,7 @@
+---
+- name: Basis-Host für Stuttgart Live vorbereiten
+  hosts: production
+  become: true
+  roles:
+    - base
+    - firewall

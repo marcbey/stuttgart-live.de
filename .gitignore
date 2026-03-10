@@ -66,6 +66,7 @@ terraform.tfvars
 backend.hcl
 
 # Kamal environment-specific secrets
-/.kamal/secrets.production
+/.kamal/secrets.*
+!/.kamal/*.example
 skills-lock.json
 .agents

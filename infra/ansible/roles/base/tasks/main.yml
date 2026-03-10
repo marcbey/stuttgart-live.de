@@ -1,0 +1,64 @@
+---
+- name: Sicherstellen, dass mindestens ein SSH-Key für den Deploy-User vorhanden ist
+  ansible.builtin.assert:
+    that:
+      - deploy_user_authorized_keys | length > 0
+    fail_msg: "Setze deploy_user_authorized_keys, bevor das Basis-Setup ausgeführt wird."
+
+- name: Zeitzone setzen
+  community.general.timezone:
+    name: "{{ timezone }}"
+
+- name: Basis-Pakete installieren
+  ansible.builtin.apt:
+    name: "{{ base_packages }}"
+    state: present
+    update_cache: true
+
+- name: Deploy-User anlegen
+  ansible.builtin.user:
+    name: "{{ deploy_user }}"
+    shell: "{{ deploy_user_shell }}"
+    groups: "{{ deploy_user_groups }}"
+    append: true
+    create_home: true
+
+- name: SSH-Keys für Deploy-User hinterlegen
+  ansible.posix.authorized_key:
+    user: "{{ deploy_user }}"
+    key: "{{ item }}"
+    state: present
+  loop: "{{ deploy_user_authorized_keys }}"
+
+- name: Passwortloses sudo für Deploy-User erlauben
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/90-{{ deploy_user }}"
+    owner: root
+    group: root
+    mode: "0440"
+    content: "{{ deploy_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    validate: "/usr/sbin/visudo -cf %s"
+  when: deploy_user_sudo_nopasswd
+
+- name: SSH-Passwort-Authentifizierung deaktivieren
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PasswordAuthentication\\s+"
+    line: "PasswordAuthentication no"
+    state: present
+  notify: restart ssh
+
+- name: Root-SSH-Login deaktivieren
+  ansible.builtin.lineinfile:
+    path: /etc/ssh/sshd_config
+    regexp: "^#?PermitRootLogin\\s+"
+    line: "PermitRootLogin no"
+    state: present
+  when: disable_root_ssh
+  notify: restart ssh
+
+- name: Fail2ban aktivieren
+  ansible.builtin.service:
+    name: fail2ban
+    state: started
+    enabled: true

@@ -1,0 +1,76 @@
+---
+- name: PostgreSQL-Pakete installieren
+  ansible.builtin.apt:
+    name:
+      - postgresql
+      - postgresql-contrib
+      - python3-psycopg2
+    state: present
+    update_cache: true
+
+- name: PostgreSQL-Dienst aktivieren
+  ansible.builtin.service:
+    name: postgresql
+    state: started
+    enabled: true
+
+- name: PostgreSQL-Konfiguration ermitteln
+  ansible.builtin.shell: |
+    set -euo pipefail
+    sudo -u postgres psql -tAc "show config_file;"
+  args:
+    executable: /bin/bash
+  register: postgres_config_file
+  changed_when: false
+
+- name: PostgreSQL-HBA-Konfiguration ermitteln
+  ansible.builtin.shell: |
+    set -euo pipefail
+    sudo -u postgres psql -tAc "show hba_file;"
+  args:
+    executable: /bin/bash
+  register: postgres_hba_file
+  changed_when: false
+
+- name: PostgreSQL auf Host- und Docker-Netze lauschen lassen
+  ansible.builtin.lineinfile:
+    path: "{{ postgres_config_file.stdout | trim }}"
+    regexp: "^#?listen_addresses\\s*="
+    line: "listen_addresses = '{{ postgres_listen_addresses }}'"
+    state: present
+  notify: restart postgresql
+
+- name: PostgreSQL-Zugriff für definierte Host-CIDRs erlauben
+  community.postgresql.postgresql_pg_hba:
+    dest: "{{ postgres_hba_file.stdout | trim }}"
+    contype: host
+    databases: all
+    users: all
+    source: "{{ item }}"
+    method: scram-sha-256
+    create: true
+  loop: "{{ postgres_allowed_host_cidrs }}"
+  notify: restart postgresql
+
+- name: Sicherstellen, dass ein Datenbank-Passwort gesetzt ist
+  ansible.builtin.assert:
+    that:
+      - postgres_app_password | length > 0
+    fail_msg: "Setze postgres_app_password vor dem PostgreSQL-Setup."
+
+- name: Applikationsrolle in PostgreSQL anlegen
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ postgres_app_user }}"
+    password: "{{ postgres_app_password }}"
+    role_attr_flags: LOGIN
+    state: present
+  no_log: true
+
+- name: Applikationsdatenbanken anlegen
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ item }}"
+    owner: "{{ postgres_app_user }}"
+    state: present
+  loop: "{{ postgres_app_databases }}"

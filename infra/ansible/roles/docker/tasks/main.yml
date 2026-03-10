@@ -1,0 +1,20 @@
+---
+- name: Docker-Pakete installieren
+  ansible.builtin.apt:
+    name:
+      - docker.io
+    state: present
+    update_cache: true
+
+- name: Docker-Dienst aktivieren
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: true
+
+- name: Deploy-User zur Docker-Gruppe hinzufügen
+  ansible.builtin.user:
+    name: "{{ deploy_user }}"
+    groups:
+      - docker
+    append: true

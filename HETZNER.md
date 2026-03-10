@@ -1,10 +1,10 @@
 # Hetzner Hosting Plan
 
-Stand: 10. Maerz 2026
+Stand: 10. März 2026
 
 ## Ziel
 
-Die Anwendung soll guenstig auf Hetzner betrieben werden, ohne die Komplexitaet der bisherigen AWS-Infrastruktur.
+Die Anwendung soll günstig auf Hetzner betrieben werden, ohne die Komplexität der bisherigen AWS-Infrastruktur.
 
 Empfohlene Zielarchitektur:
 
@@ -13,30 +13,49 @@ Empfohlene Zielarchitektur:
 - `Docker + Kamal`
 - `Rails + Puma + Solid Queue` im App-Container
 - `PostgreSQL` lokal auf derselben VM
-- `kamal-proxy` fuer TLS und Routing
+- `kamal-proxy` für TLS und Routing
 - `Hetzner Backups` aktiviert
-- Uploads zunaechst lokal auf Disk
+- Uploads zunächst lokal auf Disk
 
 Diese Architektur passt gut zum bestehenden Repo:
 
-- `Solid Queue` laeuft bereits im Puma-Prozess: [config/puma.rb](/Users/marc/Projects/stuttgart-live.de/config/puma.rb)
-- Production faellt fuer die DB bereits auf `127.0.0.1` zurueck: [config/database.yml](/Users/marc/Projects/stuttgart-live.de/config/database.yml)
+- `Solid Queue` läuft bereits im Puma-Prozess: [config/puma.rb](/Users/marc/Projects/stuttgart-live.de/config/puma.rb)
+- Production fällt für die DB bereits auf `127.0.0.1` zurück: [config/database.yml](/Users/marc/Projects/stuttgart-live.de/config/database.yml)
 - Lokaler Active Storage Service ist bereits vorhanden: [config/storage.yml](/Users/marc/Projects/stuttgart-live.de/config/storage.yml)
 
-## Warum kein Terraform noetig ist
+## Warum Terraform und Ansible sinnvoll sind
 
-Fuer einen einzelnen Produktionsserver ist Terraform nicht zwingend notwendig.
+Für dieses Projekt ist `Terraform + Ansible` sinnvoll, obwohl zunächst nur ein einzelner Produktionsserver geplant ist.
 
-Pragmatischer Ablauf:
+Der entscheidende Grund ist die Wiederholbarkeit:
 
-1. Hetzner-Server anlegen
-2. SSH-Key hinterlegen
-3. Domain auf die Server-IP zeigen lassen
-4. Docker installieren
-5. PostgreSQL lokal einrichten
-6. Mit Kamal deployen
+- die Infrastruktur soll später in einem anderen Hetzner-Konto neu aufgebaut werden können
+- Server, Firewall, Backups, IP-Konfiguration und SSH-Setup sollen nicht manuell nachgeklickt werden müssen
+- die Host-Konfiguration soll reproduzierbar und dokumentiert sein
 
-Terraform wuerde erst dann klaren Mehrwert bringen, wenn z. B. mehrere Server, Staging, Floating IPs, Volumes oder Object Storage reproduzierbar verwaltet werden sollen.
+Empfohlene Aufteilung:
+
+1. `Terraform` provisioniert Hetzner-Ressourcen
+2. `Ansible` konfiguriert den Host
+3. `Kamal` deployt die Anwendung
+4. `GitHub Actions` übernimmt nur CI und App-Deploy
+
+Terraform verwaltet dabei insbesondere:
+
+- Hetzner-Server
+- SSH-Key-Registrierung
+- `Primary IPv4`
+- Firewalls
+- Backups
+- optional Volumes
+
+Ansible verwaltet insbesondere:
+
+- Benutzer und SSH-Hardening
+- Docker
+- PostgreSQL
+- Datenbank-User und Datenbanken
+- Backup-Jobs
 
 ## Kosten
 
@@ -68,7 +87,7 @@ Summe:
 - `10.09 EUR/Monat` exkl. MwSt.
 - `12.01 EUR/Monat` inkl. 19% MwSt.
 
-Guenstigere Sparvariante:
+Günstigere Sparvariante:
 
 - `CX23` statt `CX33`
 
@@ -76,19 +95,19 @@ Dann ab 1. April 2026:
 
 - `6.49 EUR/Monat` exkl. MwSt. inkl. IPv4 und Backups
 
-Fuer Rails + PostgreSQL + Solid Queue auf einer einzelnen Maschine ist `CX33` die sicherere Empfehlung.
+Für Rails + PostgreSQL + Solid Queue auf einer einzelnen Maschine ist `CX33` die sicherere Empfehlung.
 
 ## Datenbank
 
 PostgreSQL sollte auf dem Host laufen, nicht als separater Container.
 
-Gruende:
+Gründe:
 
 - weniger bewegliche Teile
 - einfachere Backups
 - einfachere Administration
 
-Produktionsdatenbanken gemaess App-Setup:
+Produktionsdatenbanken gemäß App-Setup:
 
 - `stuttgart_live_de_production`
 - `stuttgart_live_de_production_cache`
@@ -104,39 +123,38 @@ Passend zu:
 V1-Empfehlung:
 
 - lokale Uploads auf der VM
-- persistentes Kamal-Volume fuer `/rails/storage`
+- persistentes Kamal-Volume für `/rails/storage`
 
-Spaeter optional:
+Später optional:
 
 - Umstieg auf Hetzner Object Storage
 
-Fuer die guenstigste Zielarchitektur ist lokaler Storage zunaechst ausreichend.
+Für die günstigste Zielarchitektur ist lokaler Storage zunächst ausreichend.
 
 ## Backups
 
 Empfohlene Backup-Strategie:
 
 - Hetzner Server Backups aktivieren
-- taegliches `pg_dump`
-- zusaetzliche Sicherung von `/rails/storage`, wenn Uploads geschuetzt werden muessen
+- tägliches `pg_dump`
+- zusätzliche Sicherung von `/rails/storage`, wenn Uploads geschützt werden müssen
 
 ## Migrationsplan
 
-1. Hetzner-VM erstellen
-2. Ubuntu 24.04 und SSH-Zugang einrichten
-3. Docker installieren
-4. PostgreSQL installieren
-5. DB-User und Datenbanken anlegen
-6. Kamal fuer Hetzner konfigurieren
-7. Production-Secrets fuer Hetzner anlegen
-8. App deployen
-9. `bin/rails db:prepare` ausfuehren
-10. DNS auf die Hetzner-IP umstellen
-11. Backups testen
+1. Hetzner-Ressourcen mit Terraform provisionieren
+2. Ubuntu 24.04 Host mit Ansible konfigurieren
+3. Docker und PostgreSQL automatisiert einrichten
+4. DB-User und Datenbanken anlegen
+5. Kamal für Hetzner konfigurieren
+6. Production-Secrets für Hetzner anlegen
+7. App deployen
+8. `bin/rails db:prepare` ausführen
+9. DNS auf die Hetzner-IP umstellen
+10. Backups testen
 
-## Sinnvolle Repo-Anpassungen fuer spaeter
+## Sinnvolle Repo-Anpassungen für später
 
-Wenn das spaeter umgesetzt wird, waeren diese Repo-Aenderungen sinnvoll:
+Wenn das später umgesetzt wird, wären diese Repo-Änderungen sinnvoll:
 
 - neue Deploy-Datei, z. B. `config/deploy.hetzner.yml`
 - neue Secret-Datei, z. B. `.kamal/secrets.hetzner`
@@ -145,14 +163,15 @@ Wenn das spaeter umgesetzt wird, waeren diese Repo-Aenderungen sinnvoll:
 
 ## Empfehlung
 
-Fuer diese Anwendung ist folgende Zielkonfiguration das beste Preis/Leistungs-Verhaeltnis:
+Für diese Anwendung ist folgende Zielkonfiguration das beste Preis/Leistungs-Verhältnis:
 
 - `CX33`
 - lokale PostgreSQL-Datenbank
 - lokale Uploads
 - Hetzner Backups
-- Kamal fuer Deployments
-- kein Terraform im ersten Schritt
+- Kamal für Deployments
+- Terraform für Provisionierung
+- Ansible für Host-Konfiguration
 
 ## Quellen
 

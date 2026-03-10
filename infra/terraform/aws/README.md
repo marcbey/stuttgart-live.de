@@ -1,47 +1,47 @@
-# AWS Infra with Terraform + Kamal
+# AWS Infra mit Terraform + Kamal
 
-This folder provisions the AWS infrastructure for `stuttgart-live.de` and provides the values needed for Kamal deploys.
+Dieses Verzeichnis provisioniert die AWS-Infrastruktur für `stuttgart-live.de` und stellt die Werte für Kamal-Deploys bereit.
 
-## Prerequisites
+## Voraussetzungen
 
 - Terraform >= 1.6
 - AWS CLI v2
 - Kamal (`bin/kamal`)
-- AWS SSO profile configured and working:
+- funktionierendes AWS-SSO-Profil:
 
 ```bash
 aws sso login --profile stgt-live-admin
 aws sts get-caller-identity --profile stgt-live-admin
 ```
 
-## Layout
+## Struktur
 
-- `bootstrap/`: one-time remote state resources (S3 + DynamoDB lock table)
-- `environments/prod/`: production stack
-- `modules/`: reusable infrastructure modules
+- `bootstrap/`: einmalige Ressourcen für den Remote State (S3 + DynamoDB Lock Table)
+- `environments/prod/`: produktiver Stack
+- `modules/`: wiederverwendbare Infrastruktur-Module
 
-## 1) Bootstrap remote Terraform state
+## 1) Remote Terraform State bootstrappen
 
 ```bash
-cd infra/terraform/bootstrap
+cd infra/terraform/aws/bootstrap
 cp terraform.tfvars.example terraform.tfvars
-# edit bucket name to be globally unique
+# Bucket-Namen auf global eindeutigen Wert setzen
 terraform init
 terraform apply
 ```
 
-Use the resulting bucket/table values in `environments/prod/backend.hcl`.
+Die erzeugten Bucket-/Tabellen-Werte anschließend in `environments/prod/backend.hcl` eintragen.
 
-## 2) Provision production stack
+## 2) Produktions-Stack provisionieren
 
 ```bash
 cd ../environments/prod
 cp backend.hcl.example backend.hcl
 cp terraform.tfvars.example terraform.tfvars
-# edit terraform.tfvars
+# terraform.tfvars anpassen
 ```
 
-Create or reuse an EC2 key pair for Kamal SSH:
+EC2-Key-Pair für Kamal-SSH erzeugen oder wiederverwenden:
 
 ```bash
 aws ec2 create-key-pair \
@@ -54,21 +54,21 @@ aws ec2 create-key-pair \
 chmod 600 ~/.ssh/stgt-live-prod.pem
 ```
 
-Before apply, set DB password in your shell:
+Vor dem Apply das DB-Passwort setzen:
 
 ```bash
 export TF_VAR_db_password='your-strong-db-password'
 ```
 
-For local production runs, you can also reuse the value from
-`.kamal/secrets.production` via the wrapper script:
+Für lokale Production-Läufe kann der Wert auch per Wrapper aus
+`.kamal/secrets.production` übernommen werden:
 
 ```bash
 script/terraform_prod plan
 script/terraform_prod apply -auto-approve
 ```
 
-Initialize and apply:
+Initialisieren und anwenden:
 
 ```bash
 terraform init -backend-config=backend.hcl
@@ -76,9 +76,9 @@ terraform plan
 terraform apply
 ```
 
-## 3) Prepare Kamal values from Terraform outputs
+## 3) Kamal-Werte aus Terraform-Outputs ableiten
 
-Run in `infra/terraform/environments/prod`:
+Ausführen in `infra/terraform/aws/environments/prod`:
 
 ```bash
 export KAMAL_WEB_HOST="$(terraform output -raw app_public_ip)"
@@ -89,7 +89,7 @@ export DB_PORT="$(terraform output -raw db_port)"
 export AWS_REGION="eu-central-1"
 ```
 
-Set image and app host explicitly:
+Image und App-Host explizit setzen:
 
 ```bash
 export KAMAL_IMAGE="stgt-live-prod"
@@ -99,30 +99,30 @@ export DB_USER="stuttgart_live_de"
 export KAMAL_SSH_KEY_PATH="$HOME/.ssh/stgt-live-prod.pem"
 ```
 
-Or generate most exports automatically:
+Alternativ die meisten Exports automatisch erzeugen:
 
 ```bash
 eval "$(script/infra_export_kamal_env.sh)"
 ```
 
-## 4) Configure Kamal secrets
+## 4) Kamal-Secrets konfigurieren
 
 ```bash
 cd ../../../
 cp .kamal/secrets.production.example .kamal/secrets.production
-# edit DB_PASSWORD in .kamal/secrets.production
+# DB_PASSWORD in .kamal/secrets.production setzen
 ```
 
-## 5) Deploy with Kamal
+## 5) Mit Kamal deployen
 
 ```bash
 bin/kamal setup -d production
 bin/kamal deploy -d production
 ```
 
-## Notes
+## Hinweise
 
-- The app host is an EC2 instance with Docker preinstalled via user-data.
-- EC2 gets IAM access to the uploads S3 bucket (no AWS access keys needed in app env).
-- Production Active Storage is configured to use S3 (`config/environments/production.rb` + `config/storage.yml`).
-- Restrict `allowed_ssh_cidrs` in `terraform.tfvars` to your static IP(s).
+- Der App-Host ist eine EC2-Instanz mit per User Data vorbereitetem Docker.
+- EC2 erhält IAM-Zugriff auf den Uploads-S3-Bucket, daher sind keine AWS-Access-Keys in der App-Umgebung nötig.
+- Production Active Storage ist auf S3 konfiguriert (`config/environments/production.rb` + `config/storage.yml`).
+- `allowed_ssh_cidrs` in `terraform.tfvars` auf feste eigene IPs begrenzen.

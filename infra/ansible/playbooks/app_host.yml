@@ -1,0 +1,8 @@
+---
+- name: App-Host für Stuttgart Live konfigurieren
+  hosts: production
+  become: true
+  roles:
+    - docker
+    - postgres
+    - backups

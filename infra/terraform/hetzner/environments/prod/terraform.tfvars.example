@@ -1,0 +1,18 @@
+project           = "stgt-live"
+environment       = "prod"
+server_name       = "stgt-live-prod"
+server_type       = "cx33"
+image             = "ubuntu-24.04"
+location          = "nbg1"
+enable_backups    = true
+enable_ipv4       = true
+enable_ipv6       = true
+ssh_key_name      = "stgt-live-prod"
+ssh_public_key    = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... marc@example"
+allowed_ssh_cidrs = ["203.0.113.10/32"]
+app_domain        = "live.stuttgart-live.de"
+volume_size       = 0
+
+labels = {
+  owner = "marc"
+}

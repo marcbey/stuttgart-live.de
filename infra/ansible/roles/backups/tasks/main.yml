@@ -1,0 +1,24 @@
+---
+- name: Backup-Verzeichnis anlegen
+  ansible.builtin.file:
+    path: "{{ backup_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Backup-Skript installieren
+  ansible.builtin.template:
+    src: db_backup.sh.j2
+    dest: /usr/local/bin/stuttgart-live-db-backup
+    owner: root
+    group: root
+    mode: "0750"
+
+- name: Täglichen Datenbank-Backup-Job einrichten
+  ansible.builtin.cron:
+    name: "stuttgart-live-db-backup"
+    user: root
+    minute: "15"
+    hour: "3"
+    job: "/usr/local/bin/stuttgart-live-db-backup"
