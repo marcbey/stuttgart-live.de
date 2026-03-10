@@ -5,23 +5,28 @@
 <% primary_offer = event.preferred_ticket_offer %>
 <% thumbnail_image = event.image_for(slot: :grid_default, breakpoint: :mobile) || event.image_for(slot: :grid_default, breakpoint: :desktop) %>
 <% thumbnail_source = event_image_source(thumbnail_image) %>
+<% event_url = event_path(event.slug, filter: public_filter, view: (public_view == "list" ? public_view : nil), event_date: public_event_date, q: public_query) %>
 
 <article class="event-listing-card">
+  <%= link_to event_url, class: "event-listing-row-link", aria: { label: "#{event.artist_name} anzeigen" } do %>
+    <span class="sr-only"><%= [event.artist_name, event.title].compact.join(" - ") %></span>
+  <% end %>
+
   <% if thumbnail_source.present? %>
-    <%= link_to event_path(event.slug, filter: public_filter, view: (public_view == "list" ? public_view : nil), event_date: public_event_date, q: public_query), class: "event-listing-thumb-link" do %>
+    <div class="event-listing-thumb-link">
       <%= image_tag thumbnail_source, alt: event_image_alt(thumbnail_image, event), loading: "lazy", class: "event-listing-thumb-image" %>
-    <% end %>
+    </div>
   <% end %>
 
   <p class="event-listing-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></p>
 
   <div class="event-listing-body">
-    <%= link_to event_path(event.slug, filter: public_filter, view: (public_view == "list" ? public_view : nil), event_date: public_event_date, q: public_query), class: "event-listing-link" do %>
+    <div class="event-listing-link">
       <strong><%= event.artist_name %></strong>
       <% if event.title.present? %>
         <span> - <%= event.title %></span>
       <% end %>
-    <% end %>
+    </div>
 
     <% if event.venue.present? %>
       <p class="event-listing-location"><%= event.venue %></p>

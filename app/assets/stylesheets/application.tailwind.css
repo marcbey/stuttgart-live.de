@@ -1920,12 +1920,26 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-listing-card {
+  position: relative;
   display: grid;
   grid-template-columns: 3.6rem 6.4rem minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.55rem 0;
+  padding: 0.55rem 0.35rem;
+  border-radius: 0.5rem;
   border-bottom: 1px solid rgba(17, 17, 17, 0.1);
+  transition: background-color 140ms ease;
+}
+
+.event-listing-card:hover {
+  background: rgba(17, 17, 17, 0.045);
+}
+
+.event-listing-row-link {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: inherit;
 }
 
 .event-listing-thumb-link {
@@ -1987,6 +2001,8 @@ trix-editor.blog-rich-text:focus {
 .event-listing-ticket {
   margin: 0;
   justify-self: end;
+  position: relative;
+  z-index: 3;
 }
 
 .event-listing-ticket-button {
