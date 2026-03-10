@@ -33,6 +33,9 @@ Dafür gibt es das Skript:
 script/github_set_production_secrets
 ```
 
+Optional kann `.env` zusätzlich `KAMAL_REGISTRY_PULL_PASSWORD` enthalten.
+Wenn der Wert fehlt, setzt das Skript aus Rückwärtskompatibilität denselben Wert wie `KAMAL_REGISTRY_PASSWORD`.
+
 ## Wichtige Hinweise
 
 - Terraform verwaltet hier nur das Environment und nicht-sensitive Variablen.

@@ -95,6 +95,7 @@ jobs:
           KAMAL_WEB_HOST_OVERRIDE: ${{ vars.KAMAL_WEB_HOST }}
           APP_HOST_OVERRIDE: ${{ vars.APP_HOST }}
           KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
+          KAMAL_REGISTRY_PULL_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PULL_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           EASYTICKET_EVENTS_API: ${{ secrets.EASYTICKET_EVENTS_API }}
@@ -119,11 +120,12 @@ jobs:
 
           # GitHub-Secrets dürfen hier keine Zeilenumbrüche enthalten.
           export KAMAL_REGISTRY_PASSWORD="$(printf '%s' "$KAMAL_REGISTRY_PASSWORD" | tr -d '\r\n')"
+          export KAMAL_REGISTRY_PULL_PASSWORD="$(printf '%s' "${KAMAL_REGISTRY_PULL_PASSWORD:-$KAMAL_REGISTRY_PASSWORD}" | tr -d '\r\n')"
           export KAMAL_SKIP_REMOTE_REGISTRY_LOGIN=true
 
           host="${KAMAL_WEB_HOST_OVERRIDE:-46.225.224.194}"
           # Der Remote-Host braucht weiterhin ein stabiles GHCR-Credential für Pulls.
-          printf '%s' "$KAMAL_REGISTRY_PASSWORD" | \
+          printf '%s' "$KAMAL_REGISTRY_PULL_PASSWORD" | \
             ssh -i "$KAMAL_SSH_KEY_PATH" -o StrictHostKeyChecking=yes deploy@"$host" \
               "docker login ghcr.io -u marcbey --password-stdin"
 
