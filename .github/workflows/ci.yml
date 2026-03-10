@@ -39,11 +39,17 @@ jobs:
         with:
           bundler-cache: true
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: Enable Corepack
+        run: corepack enable
 
       - name: Install JavaScript dependencies
-        run: bun install --frozen-lockfile
+        run: yarn install --frozen-lockfile
 
       - name: Prepare test database
         run: bin/rails db:prepare
