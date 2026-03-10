@@ -24,20 +24,22 @@
     <div class="news-grid news-index-grid">
       <% @blog_posts.each do |blog_post| %>
         <article class="news-card news-index-card <%= 'news-index-card-no-image' unless blog_post.cover_image.attached? %>">
-          <% if blog_post.cover_image.attached? %>
-            <%= link_to news_path(blog_post.slug), class: "news-card-media news-index-card-media" do %>
-              <%= image_tag blog_post.cover_image, alt: blog_post.title, class: "news-list-item-image" %>
+          <%= link_to news_path(blog_post.slug), class: "news-index-card-link" do %>
+            <% if blog_post.cover_image.attached? %>
+              <div class="news-card-media news-index-card-media">
+                <%= image_tag blog_post.cover_image, alt: blog_post.title, class: "news-list-item-image" %>
+              </div>
             <% end %>
-          <% end %>
 
-          <div class="news-card-body news-index-card-body">
-            <span class="news-index-accent" aria-hidden="true"></span>
-            <p class="news-card-meta">
-              <span><%= l(blog_post.published_at.to_date, format: "%d.%m.%Y") %></span>
-            </p>
-            <h2><%= link_to blog_post.title, news_path(blog_post.slug) %></h2>
-            <p class="news-index-card-teaser"><%= blog_post.teaser %></p>
-          </div>
+            <div class="news-card-body news-index-card-body">
+              <span class="news-index-accent" aria-hidden="true"></span>
+              <p class="news-card-meta">
+                <span><%= l(blog_post.published_at.to_date, format: "%d.%m.%Y") %></span>
+              </p>
+              <h2><%= blog_post.title %></h2>
+              <p class="news-index-card-teaser"><%= blog_post.teaser %></p>
+            </div>
+          <% end %>
         </article>
       <% end %>
     </div>
