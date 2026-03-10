@@ -50,6 +50,7 @@ jobs:
             ghcr.io/marcbey/stuttgart-live-de:latest
           labels: |
             service=stuttgart_live_de
+            org.opencontainers.image.source=https://github.com/marcbey/stuttgart-live.de
 
       - name: Prepare Kamal secrets for GitHub Actions
         run: |
