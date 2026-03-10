@@ -51,7 +51,7 @@ jobs:
           labels: |
             service=stuttgart_live_de
 
-      - name: Prepare Kamal secrets file
+      - name: Prepare Kamal secrets for GitHub Actions
         run: |
           cat > .kamal/secrets.hetzner <<'EOF'
           KAMAL_REGISTRY_PASSWORD=$KAMAL_REGISTRY_PASSWORD
@@ -88,7 +88,6 @@ jobs:
           KAMAL_SSH_KEY_PATH: ${{ runner.temp }}/kamal.key
           KAMAL_WEB_HOST_OVERRIDE: ${{ vars.KAMAL_WEB_HOST }}
           APP_HOST_OVERRIDE: ${{ vars.APP_HOST }}
-          KAMAL_REGISTRY_USERNAME: marcbey
           KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -112,9 +111,7 @@ jobs:
             export APP_HOST="${APP_HOST_OVERRIDE}"
           fi
 
-          # GitHub-Secrets können bei manueller Pflege oder Provider-Wechseln
-          # unsichtbare Zeilenumbrüche mitbringen. Für GHCR muss der Token
-          # exakt einzeilig sein.
+          # GitHub-Secrets dürfen hier keine Zeilenumbrüche enthalten.
           export KAMAL_REGISTRY_PASSWORD="$(printf '%s' "$KAMAL_REGISTRY_PASSWORD" | tr -d '\r\n')"
           export KAMAL_SKIP_REMOTE_REGISTRY_LOGIN=true
 
