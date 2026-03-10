@@ -1,4 +1,10 @@
 ---
+- name: Sicherstellen, dass mindestens ein SSH-Key für den Admin-User vorhanden ist
+  ansible.builtin.assert:
+    that:
+      - admin_user_authorized_keys | length > 0
+    fail_msg: "Setze admin_user_authorized_keys, bevor das Basis-Setup ausgeführt wird."
+
 - name: Sicherstellen, dass mindestens ein SSH-Key für den Deploy-User vorhanden ist
   ansible.builtin.assert:
     that:
@@ -15,30 +21,51 @@
     state: present
     update_cache: true
 
+- name: Admin-User anlegen
+  ansible.builtin.user:
+    name: "{{ admin_user }}"
+    shell: "{{ admin_user_shell }}"
+    groups: "{{ admin_user_groups }}"
+    append: true
+    create_home: true
+
+- name: SSH-Keys für Admin-User hinterlegen
+  ansible.posix.authorized_key:
+    user: "{{ admin_user }}"
+    key: "{{ admin_user_authorized_keys | join('\n') }}"
+    state: present
+    exclusive: true
+
+- name: Passwortloses sudo für Admin-User erlauben
+  ansible.builtin.copy:
+    dest: "/etc/sudoers.d/90-{{ admin_user }}"
+    owner: root
+    group: root
+    mode: "0440"
+    content: "{{ admin_user }} ALL=(ALL) NOPASSWD:ALL\n"
+    validate: "/usr/sbin/visudo -cf %s"
+  when: admin_user_sudo_nopasswd
+
 - name: Deploy-User anlegen
   ansible.builtin.user:
     name: "{{ deploy_user }}"
     shell: "{{ deploy_user_shell }}"
     groups: "{{ deploy_user_groups }}"
-    append: true
+    append: false
     create_home: true
 
 - name: SSH-Keys für Deploy-User hinterlegen
   ansible.posix.authorized_key:
     user: "{{ deploy_user }}"
-    key: "{{ item }}"
+    key: "{{ deploy_user_authorized_keys | join('\n') }}"
     state: present
-  loop: "{{ deploy_user_authorized_keys }}"
+    exclusive: true
 
-- name: Passwortloses sudo für Deploy-User erlauben
-  ansible.builtin.copy:
-    dest: "/etc/sudoers.d/90-{{ deploy_user }}"
-    owner: root
-    group: root
-    mode: "0440"
-    content: "{{ deploy_user }} ALL=(ALL) NOPASSWD:ALL\n"
-    validate: "/usr/sbin/visudo -cf %s"
-  when: deploy_user_sudo_nopasswd
+- name: Passwortloses sudo für Deploy-User entfernen
+  ansible.builtin.file:
+    path: "/etc/sudoers.d/90-{{ deploy_user }}"
+    state: absent
+  when: not deploy_user_sudo_nopasswd
 
 - name: SSH-Passwort-Authentifizierung deaktivieren
   ansible.builtin.lineinfile:

@@ -1,12 +1,18 @@
 timezone: Europe/Berlin
 
+admin_user: admin
+admin_user_shell: /bin/bash
+admin_user_groups:
+  - sudo
+admin_user_authorized_keys:
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGJ36LIqWwbBML/dIql3Aw/Y77+Z4gRkOVDQaTodm2zj stgt-live-hetzner-admin
+
 deploy_user: deploy
 deploy_user_shell: /bin/bash
-deploy_user_groups:
-  - sudo
+deploy_user_groups: []
 deploy_user_authorized_keys:
-  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGJ36LIqWwbBML/dIql3Aw/Y77+Z4gRkOVDQaTodm2zj stgt-live-hetzner-admin
-disable_root_ssh: false
+  - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDUladULjCPlmKvwZ0GeNusB9aVVjZ+ZpX1o72mVsRqb stgt-live-hetzner-github
+disable_root_ssh: true
 
 base_packages:
   - ca-certificates

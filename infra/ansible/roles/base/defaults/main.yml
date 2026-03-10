@@ -1,1 +1,2 @@
-deploy_user_sudo_nopasswd: true
+admin_user_sudo_nopasswd: true
+deploy_user_sudo_nopasswd: false

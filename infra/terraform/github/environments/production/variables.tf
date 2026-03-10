@@ -39,5 +39,5 @@ variable "rails_master_key_file" {
 variable "ssh_private_key_file" {
   description = "Pfad zum privaten SSH-Key für GitHub Deploys."
   type        = string
-  default     = "~/.ssh/stgt-live-hetzner-admin"
+  default     = "~/.ssh/stgt-live-hetzner-github"
 }
