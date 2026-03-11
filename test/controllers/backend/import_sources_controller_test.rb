@@ -341,4 +341,20 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "canceled", run.status
     assert run.finished_at.present?
   end
+
+  test "should request stop for a running reservix run" do
+    run = @reservix_source.import_runs.create!(
+      status: "running",
+      source_type: "reservix",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_reservix_run_backend_import_source_url(@reservix_source), params: { run_id: run.id }
+
+    assert_redirected_to backend_import_sources_url
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "canceled", run.status
+    assert run.finished_at.present?
+  end
 end

@@ -1,6 +1,26 @@
 module Backend
   class ImportSourcesController < BaseController
-    IMPORTER_SOURCE_TYPES = %w[easyticket eventim reservix].freeze
+    IMPORTER_CONFIG = {
+      "easyticket" => {
+        label: "Easyticket",
+        run_job_class: Importing::Easyticket::RunJob,
+        importer_class: Importing::Easyticket::Importer,
+        stop_route_helper: :stop_easyticket_run_backend_import_source_path
+      },
+      "eventim" => {
+        label: "Eventim",
+        run_job_class: Importing::Eventim::RunJob,
+        importer_class: Importing::Eventim::Importer,
+        stop_route_helper: :stop_eventim_run_backend_import_source_path
+      },
+      "reservix" => {
+        label: "Reservix",
+        run_job_class: Importing::Reservix::RunJob,
+        importer_class: Importing::Reservix::Importer,
+        stop_route_helper: :stop_reservix_run_backend_import_source_path
+      }
+    }.freeze
+    IMPORTER_SOURCE_TYPES = IMPORTER_CONFIG.keys.freeze
 
     before_action :ensure_supported_sources
     before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
@@ -49,78 +69,27 @@ module Backend
     end
 
     def run_easyticket
-      unless @import_source.easyticket?
-        respond_with_importer_feedback(alert: "Nur Easyticket kann hier gestartet werden.")
-        return
-      end
-
-      feedback = trigger_import!(
-        source_type: "easyticket",
-        label: "Easyticket",
-        run_job_class: Importing::Easyticket::RunJob
-      )
-
-      respond_with_importer_feedback(**feedback)
+      run_import_for("easyticket")
     end
 
     def run_eventim
-      unless @import_source.eventim?
-        respond_with_importer_feedback(alert: "Nur Eventim kann hier gestartet werden.")
-        return
-      end
-
-      feedback = trigger_import!(
-        source_type: "eventim",
-        label: "Eventim",
-        run_job_class: Importing::Eventim::RunJob
-      )
-
-      respond_with_importer_feedback(**feedback)
+      run_import_for("eventim")
     end
 
     def stop_easyticket_run
-      unless @import_source.easyticket?
-        respond_with_importer_feedback(alert: "Nur Easyticket kann hier gestoppt werden.")
-        return
-      end
-
-      feedback = request_stop_for_running_import!(source_type: "easyticket", label: "Easyticket")
-      respond_with_importer_feedback(**feedback)
+      stop_import_for("easyticket")
     end
 
     def stop_eventim_run
-      unless @import_source.eventim?
-        respond_with_importer_feedback(alert: "Nur Eventim kann hier gestoppt werden.")
-        return
-      end
-
-      feedback = request_stop_for_running_import!(source_type: "eventim", label: "Eventim")
-      respond_with_importer_feedback(**feedback)
+      stop_import_for("eventim")
     end
 
     def run_reservix
-      unless @import_source.reservix?
-        respond_with_importer_feedback(alert: "Nur Reservix kann hier gestartet werden.")
-        return
-      end
-
-      feedback = trigger_import!(
-        source_type: "reservix",
-        label: "Reservix",
-        run_job_class: Importing::Reservix::RunJob
-      )
-
-      respond_with_importer_feedback(**feedback)
+      run_import_for("reservix")
     end
 
     def stop_reservix_run
-      unless @import_source.reservix?
-        respond_with_importer_feedback(alert: "Nur Reservix kann hier gestoppt werden.")
-        return
-      end
-
-      feedback = request_stop_for_running_import!(source_type: "reservix", label: "Reservix")
-      respond_with_importer_feedback(**feedback)
+      stop_import_for("reservix")
     end
 
     private
@@ -182,6 +151,10 @@ module Backend
     end
 
     def trigger_import!(source_type:, label:, run_job_class:)
+      config = importer_config_for(source_type)
+      label ||= config.fetch(:label)
+      run_job_class ||= config.fetch(:run_job_class)
+
       active_run = @import_source.import_runs.where(source_type: source_type, status: %w[queued running]).order(started_at: :desc).first
       if active_run&.status == "running" && release_stale_running_run!(active_run)
         active_run = nil
@@ -218,6 +191,7 @@ module Backend
     end
 
     def request_stop_for_running_import!(source_type:, label:)
+      label ||= importer_config_for(source_type).fetch(:label)
       run = find_running_run_for_stop(source_type)
       unless run
         return { alert: "Kein laufender #{label}-Import gefunden." }
@@ -286,7 +260,7 @@ module Backend
     end
 
     def release_stale_running_run!(run)
-      if run.started_at < importer_class_for(run.source_type)::RUN_STALE_AFTER.ago
+      if run.started_at < importer_config_for(run.source_type).fetch(:importer_class)::RUN_STALE_AFTER.ago
         fail_stale_run!(run)
         return true
       end
@@ -298,7 +272,7 @@ module Backend
           fail_stale_run!(
             run,
             reason: "Run exceeded heartbeat timeout",
-            timeout_value: importer_class_for(run.source_type)::RUN_HEARTBEAT_STALE_AFTER
+            timeout_value: importer_config_for(run.source_type).fetch(:importer_class)::RUN_HEARTBEAT_STALE_AFTER
           )
         end
         return true
@@ -316,7 +290,7 @@ module Backend
     end
 
     def heartbeat_stale?(run)
-      run.updated_at < importer_class_for(run.source_type)::RUN_HEARTBEAT_STALE_AFTER.ago
+      run.updated_at < importer_config_for(run.source_type).fetch(:importer_class)::RUN_HEARTBEAT_STALE_AFTER.ago
     end
 
     def cancel_stale_stop_requested_run!(run)
@@ -332,7 +306,7 @@ module Backend
     end
 
     def fail_stale_run!(run, reason: "Run exceeded stale timeout", timeout_value: nil)
-      timeout_value ||= importer_class_for(run.source_type)::RUN_STALE_AFTER
+      timeout_value ||= importer_config_for(run.source_type).fetch(:importer_class)::RUN_STALE_AFTER
       metadata = normalized_metadata(run.metadata)
       metadata["stale_released_at"] = Time.current.iso8601
       metadata["stale_release_reason"] = reason
@@ -348,25 +322,34 @@ module Backend
     def stop_url_for(run, can_stop:)
       return nil unless can_stop
 
-      case run.source_type
-      when "easyticket"
-        stop_easyticket_run_backend_import_source_path(run.import_source_id, run_id: run.id)
-      when "eventim"
-        stop_eventim_run_backend_import_source_path(run.import_source_id, run_id: run.id)
-      when "reservix"
-        stop_reservix_run_backend_import_source_path(run.import_source_id, run_id: run.id)
-      end
+      helper_name = importer_config_for(run.source_type).fetch(:stop_route_helper)
+      public_send(helper_name, run.import_source_id, run_id: run.id)
     end
 
-    def importer_class_for(source_type)
-      case source_type
-      when "eventim"
-        Importing::Eventim::Importer
-      when "reservix"
-        Importing::Reservix::Importer
-      else
-        Importing::Easyticket::Importer
+    def run_import_for(source_type)
+      unless @import_source.source_type == source_type
+        respond_with_importer_feedback(alert: "Nur #{importer_config_for(source_type).fetch(:label)} kann hier gestartet werden.")
+        return
       end
+
+      respond_with_importer_feedback(
+        **trigger_import!(source_type: source_type, label: nil, run_job_class: nil)
+      )
+    end
+
+    def stop_import_for(source_type)
+      unless @import_source.source_type == source_type
+        respond_with_importer_feedback(alert: "Nur #{importer_config_for(source_type).fetch(:label)} kann hier gestoppt werden.")
+        return
+      end
+
+      respond_with_importer_feedback(
+        **request_stop_for_running_import!(source_type: source_type, label: nil)
+      )
+    end
+
+    def importer_config_for(source_type)
+      IMPORTER_CONFIG.fetch(source_type.to_s)
     end
   end
 end
