@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## Schreibweise
+
+- Verwende in deutschsprachigen Texten und Dokumentationen echte Umlaute (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`) sowie `ß` statt ASCII-Umschreibungen wie `ae`, `oe`, `ue`, `ss`, sofern das Dateiformat und der Kontext UTF-8 zulassen.
+
 ## Agent Rules
 
 1. Vor jedem `git push` müssen alle relevanten Linter und Tests erfolgreich durchlaufen.
