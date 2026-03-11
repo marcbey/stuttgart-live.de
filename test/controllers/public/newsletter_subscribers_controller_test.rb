@@ -10,6 +10,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     end
 
     assert_redirected_to events_url(filter: "sks")
+    assert_equal NewsletterSubscriber::MAILCHIMP_STATUS_PENDING, NewsletterSubscriber.order(:created_at).last.mailchimp_status
     follow_redirect!
     assert_includes response.body, "Danke. Du bist jetzt fuer den Newsletter eingetragen."
   end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_10_183000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_11_193000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -302,9 +302,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_10_183000) do
   create_table "newsletter_subscribers", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
+    t.text "mailchimp_error_message"
+    t.datetime "mailchimp_last_synced_at"
+    t.string "mailchimp_member_id"
+    t.string "mailchimp_status", default: "pending", null: false
     t.string "source", default: "homepage", null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_newsletter_subscribers_on_lower_email", unique: true
+    t.index ["mailchimp_member_id"], name: "index_newsletter_subscribers_on_mailchimp_member_id"
+    t.index ["mailchimp_status"], name: "index_newsletter_subscribers_on_mailchimp_status"
   end
 
   create_table "provider_priorities", force: :cascade do |t|
