@@ -1,19 +1,7 @@
 module Importing
   module Easyticket
     class LocationMatcher
-      def initialize(location_whitelist)
-        @location_whitelist = normalize_values(location_whitelist)
-      end
-
-      def match?(dump_payload)
-        return true if @location_whitelist.empty?
-
-        location_candidates(dump_payload).any? do |candidate|
-          @location_whitelist.any? do |allowed|
-            candidate.include?(allowed) || allowed.include?(candidate)
-          end
-        end
-      end
+      include Importing::LocationMatcherSupport
 
       private
 
@@ -41,21 +29,6 @@ module Importing
 
       def first_present(*values)
         values.map { |value| value.to_s.strip }.find(&:present?).to_s
-      end
-
-      def normalize_values(values)
-        Array(values)
-          .map { |value| normalize(value.to_s) }
-          .reject(&:blank?)
-          .uniq
-      end
-
-      def normalize(value)
-        I18n.transliterate(value)
-          .downcase
-          .gsub(/[^a-z0-9]+/, " ")
-          .squeeze(" ")
-          .strip
       end
     end
   end

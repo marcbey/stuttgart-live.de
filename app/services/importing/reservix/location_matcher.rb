@@ -1,19 +1,7 @@
 module Importing
   module Reservix
     class LocationMatcher
-      def initialize(location_whitelist)
-        @location_whitelist = normalize_values(location_whitelist)
-      end
-
-      def match?(event_payload)
-        return true if @location_whitelist.empty?
-
-        location_candidates(event_payload).any? do |candidate|
-          @location_whitelist.any? do |allowed|
-            candidate.include?(allowed) || allowed.include?(candidate)
-          end
-        end
-      end
+      include Importing::LocationMatcherSupport
 
       private
 
@@ -33,21 +21,6 @@ module Importing
         ]
 
         normalize_values(raw_candidates)
-      end
-
-      def normalize_values(values)
-        Array(values)
-          .map { |value| normalize(value.to_s) }
-          .reject(&:blank?)
-          .uniq
-      end
-
-      def normalize(value)
-        I18n.transliterate(value)
-          .downcase
-          .gsub(/[^a-z0-9]+/, " ")
-          .squeeze(" ")
-          .strip
       end
     end
   end
