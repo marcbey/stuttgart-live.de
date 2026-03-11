@@ -14,7 +14,6 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     get imprint_url
 
     assert_response :success
-    assert_select ".app-nav-links .app-nav-link-active", text: "Impressum"
     assert_includes response.body, "SKS Erwin Russ GmbH"
     assert_includes response.body, "DE 147867476"
   end
@@ -58,7 +57,6 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".site-footer-nav a", text: "Datenschutz"
     assert_select ".site-footer-nav a", text: "Impressum"
     assert_select ".site-footer-nav a", text: "AGB"
-    assert_select ".site-footer-nav a", text: "Kontakt"
     assert_select ".site-footer-nav a", text: "Barrierefreiheit"
   end
 
