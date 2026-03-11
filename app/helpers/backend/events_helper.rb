@@ -88,9 +88,9 @@ module Backend::EventsHelper
     return nil if actions.empty?
 
     if actions.include?("merged_create")
-      { label: "Neu (Import)", css_class: "status-badge status-badge-import-new" }
+      { label: "New", css_class: "status-badge status-badge-import-new" }
     else
-      { label: "Aktualisiert (Import)", css_class: "status-badge status-badge-import-updated" }
+      { label: "Updated", css_class: "status-badge status-badge-import-updated" }
     end
   end
 

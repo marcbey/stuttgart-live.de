@@ -98,9 +98,9 @@
               <%= form.label :merge_change_type, "Änderungstyp", class: "form-label" %>
               <%= form.select :merge_change_type,
                               options_for_select([
-                                ["Alle", "all"],
-                                ["Neu", "created"],
-                                ["Aktualisiert", "updated"]
+                                ["All", "all"],
+                                ["New", "created"],
+                                ["Updated", "updated"]
                               ], @filters[:merge_change_type]),
                               {},
                               class: "form-input",

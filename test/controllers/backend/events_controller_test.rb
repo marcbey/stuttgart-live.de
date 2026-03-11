@@ -162,8 +162,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url(status: "needs_review")
 
     assert_response :success
-    assert_includes response.body, "Neu (Import)"
-    assert_not_includes response.body, "Aktualisiert (Import)"
+    assert_select ".status-badge-import-new", text: "New"
+    assert_select ".status-badge-import-updated", count: 0
     assert_includes response.body, "Review Artist"
     assert_not_includes response.body, "Review Artist Two"
   end

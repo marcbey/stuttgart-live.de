@@ -2790,6 +2790,7 @@ trix-editor.blog-rich-text:focus {
   display: flex;
   gap: 0.5rem;
   flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .backend-topbar-controls {
@@ -3288,6 +3289,14 @@ trix-editor.blog-rich-text:focus {
   font-size: 0.78rem;
   letter-spacing: 0.08em;
   color: #646464;
+}
+
+.data-table th.actions-column {
+  text-align: right;
+}
+
+.data-table td.action-cell {
+  justify-content: flex-end;
 }
 
 .action-cell {
