@@ -53,7 +53,7 @@ postgres_host_access_rules:
     users: all
     source: ::1/128
     method: scram-sha-256
-  - databases: "{{ postgres_app_databases | join(',') }}"
+  - databases: "postgres,{{ postgres_app_databases | join(',') }}"
     users: "{{ postgres_app_user }}"
     source: "{{ kamal_docker_subnet }}"
     method: scram-sha-256
