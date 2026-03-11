@@ -1,32 +1,10 @@
 module Backend
   class ImportSourcesController < BaseController
-    IMPORTER_CONFIG = {
-      "easyticket" => {
-        label: "Easyticket",
-        run_job_class: Importing::Easyticket::RunJob,
-        importer_class: Importing::Easyticket::Importer,
-        stop_route_helper: :stop_easyticket_run_backend_import_source_path
-      },
-      "eventim" => {
-        label: "Eventim",
-        run_job_class: Importing::Eventim::RunJob,
-        importer_class: Importing::Eventim::Importer,
-        stop_route_helper: :stop_eventim_run_backend_import_source_path
-      },
-      "reservix" => {
-        label: "Reservix",
-        run_job_class: Importing::Reservix::RunJob,
-        importer_class: Importing::Reservix::Importer,
-        stop_route_helper: :stop_reservix_run_backend_import_source_path
-      }
-    }.freeze
-    IMPORTER_SOURCE_TYPES = IMPORTER_CONFIG.keys.freeze
-
     before_action :ensure_supported_sources
     before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
 
     def index
-      release_stale_running_runs!
+      run_maintenance.release_stale_running_runs!
       @import_sources = ImportSource.includes(:import_source_config).order(:source_type)
       @recent_runs = recent_runs_for_list
       @merge_sync_needed = merge_sync_needed?
@@ -34,7 +12,7 @@ module Backend
       respond_to do |format|
         format.html
         format.json do
-          render json: { runs: @recent_runs.map { |run| serialize_run(run) } }
+          render json: { runs: @recent_runs.map { |run| recent_run_serializer.as_json(run) } }
         end
       end
     end
@@ -106,110 +84,28 @@ module Backend
       params.require(:import_source).permit(:active, :location_whitelist_text)
     end
 
-    def serialize_run(run)
-      stop_requested = run_stop_requested?(run)
-      stop_url = stop_url_for(run, can_stop: true)
-      can_stop = run.status == "running" && !stop_requested && stop_url.present?
-      {
-        id: run.id,
-        import_source_id: run.import_source_id,
-        started_at_label: run.started_at&.strftime("%d.%m.%Y %H:%M:%S"),
-        status_label: run_status_label(run, stop_requested: stop_requested),
-        status: run.status,
-        source_type: run.source_type,
-        fetched_count: run.fetched_count,
-        filtered_count: run.filtered_count,
-        imported_count: run.imported_count,
-        upserted_count: run.upserted_count,
-        failed_count: run.failed_count,
-        can_stop: can_stop,
-        stop_url: can_stop ? stop_url : nil
-      }
+    def importer_registry
+      @importer_registry ||= Backend::ImportSources::ImporterRegistry.new
     end
 
-    def find_running_run_for_stop(source_type)
-      scope = @import_source.import_runs.where(source_type: source_type, status: "running").order(started_at: :desc)
-      return scope.find_by(id: params[:run_id]) if params[:run_id].present?
-
-      scope.first
+    def run_maintenance
+      @run_maintenance ||= Backend::ImportSources::RunMaintenance.new(registry: importer_registry)
     end
 
-    def normalized_metadata(metadata)
-      return {} unless metadata.is_a?(Hash)
-
-      metadata.deep_stringify_keys
-    end
-
-    def run_stop_requested?(run)
-      ActiveModel::Type::Boolean.new.cast(normalized_metadata(run.metadata)["stop_requested"])
-    end
-
-    def run_status_label(run, stop_requested:)
-      return "running (stop angefordert)" if run.status == "running" && stop_requested
-
-      run.status
-    end
-
-    def trigger_import!(source_type:, label:, run_job_class:)
-      config = importer_config_for(source_type)
-      label ||= config.fetch(:label)
-      run_job_class ||= config.fetch(:run_job_class)
-
-      active_run = @import_source.import_runs.where(source_type: source_type, status: %w[queued running]).order(started_at: :desc).first
-      if active_run&.status == "running" && release_stale_running_run!(active_run)
-        active_run = nil
-      end
-
-      if active_run.present?
-        message =
-          if active_run.status == "queued"
-            "Ein #{label}-Import ist bereits eingeplant (Run ##{active_run.id})."
-          else
-            "Ein #{label}-Import läuft bereits (Run ##{active_run.id})."
-          end
-        return { alert: message }
-      end
-
-      queued_run = @import_source.import_runs.create!(
-        status: "queued",
-        source_type: source_type,
-        started_at: Time.current,
-        metadata: { "queued_at" => Time.current.iso8601 }
+    def run_manager
+      @run_manager ||= Backend::ImportSources::RunManager.new(
+        import_source: @import_source,
+        registry: importer_registry,
+        maintenance: run_maintenance
       )
-      job = run_job_class.perform_later(@import_source.id, queued_run.id)
-      queued_run.update!(
-        metadata: normalized_metadata(queued_run.metadata).merge(
-          "job_id" => job.job_id,
-          "provider_job_id" => job.provider_job_id,
-          "job_attempt" => 1,
-          "job_retries_used" => 0,
-          "max_retries" => Importing::RetryPolicy::RETRY_DELAYS.size
-        )
-      )
-      Backend::ImportRunsBroadcaster.broadcast!
-      {}
     end
 
-    def request_stop_for_running_import!(source_type:, label:)
-      label ||= importer_config_for(source_type).fetch(:label)
-      run = find_running_run_for_stop(source_type)
-      unless run
-        return { alert: "Kein laufender #{label}-Import gefunden." }
-      end
-
-      metadata = normalized_metadata(run.metadata)
-      metadata["stop_requested"] = true
-      metadata["stop_requested_at"] = Time.current.iso8601
-      metadata["stop_released_at"] = Time.current.iso8601
-      metadata["stop_release_reason"] = "Stopped by user"
-      run.update!(
-        status: "canceled",
-        finished_at: Time.current,
-        metadata: metadata
+    def recent_run_serializer
+      @recent_run_serializer ||= Backend::ImportSources::RecentRunSerializer.new(
+        controller: self,
+        registry: importer_registry,
+        maintenance: run_maintenance
       )
-      Backend::ImportRunsBroadcaster.broadcast!
-
-      { notice: "Stop für #{label}-Import (Run ##{run.id}) wurde angefordert." }
     end
 
     def recent_runs_for_list
@@ -259,102 +155,22 @@ module Backend
       end
     end
 
-    def release_stale_running_run!(run)
-      if run.started_at < importer_config_for(run.source_type).fetch(:importer_class)::RUN_STALE_AFTER.ago
-        fail_stale_run!(run)
-        return true
-      end
-
-      if heartbeat_stale?(run)
-        if run_stop_requested?(run)
-          cancel_stale_stop_requested_run!(run)
-        else
-          fail_stale_run!(
-            run,
-            reason: "Run exceeded heartbeat timeout",
-            timeout_value: importer_config_for(run.source_type).fetch(:importer_class)::RUN_HEARTBEAT_STALE_AFTER
-          )
-        end
-        return true
-      end
-
-      false
-    end
-
-    def release_stale_running_runs!
-      ImportRun
-        .where(source_type: IMPORTER_SOURCE_TYPES, status: "running")
-        .find_each do |run|
-        release_stale_running_run!(run)
-      end
-    end
-
-    def heartbeat_stale?(run)
-      run.updated_at < importer_config_for(run.source_type).fetch(:importer_class)::RUN_HEARTBEAT_STALE_AFTER.ago
-    end
-
-    def cancel_stale_stop_requested_run!(run)
-      metadata = normalized_metadata(run.metadata)
-      metadata["stop_released_at"] = Time.current.iso8601
-      metadata["stop_release_reason"] = "No progress update after stop request"
-      run.update!(
-        status: "canceled",
-        finished_at: Time.current,
-        metadata: metadata
-      )
-      Backend::ImportRunsBroadcaster.broadcast!
-    end
-
-    def fail_stale_run!(run, reason: "Run exceeded stale timeout", timeout_value: nil)
-      timeout_value ||= importer_config_for(run.source_type).fetch(:importer_class)::RUN_STALE_AFTER
-      metadata = normalized_metadata(run.metadata)
-      metadata["stale_released_at"] = Time.current.iso8601
-      metadata["stale_release_reason"] = reason
-      run.update!(
-        status: "failed",
-        finished_at: Time.current,
-        metadata: metadata,
-        error_message: "Run automatically marked failed after timeout (#{timeout_value.inspect})"
-      )
-      Backend::ImportRunsBroadcaster.broadcast!
-    end
-
-    def stop_url_for(run, can_stop:)
-      return nil unless can_stop
-
-      helper_name = importer_config_for(run.source_type, required: false)&.fetch(:stop_route_helper, nil)
-      return nil if helper_name.blank?
-
-      public_send(helper_name, run.import_source_id, run_id: run.id)
-    end
-
     def run_import_for(source_type)
       unless @import_source.source_type == source_type
-        respond_with_importer_feedback(alert: "Nur #{importer_config_for(source_type).fetch(:label)} kann hier gestartet werden.")
+        respond_with_importer_feedback(alert: "Nur #{importer_registry.fetch(source_type).fetch(:label)} kann hier gestartet werden.")
         return
       end
 
-      respond_with_importer_feedback(
-        **trigger_import!(source_type: source_type, label: nil, run_job_class: nil)
-      )
+      respond_with_importer_feedback(**run_manager.trigger(source_type))
     end
 
     def stop_import_for(source_type)
       unless @import_source.source_type == source_type
-        respond_with_importer_feedback(alert: "Nur #{importer_config_for(source_type).fetch(:label)} kann hier gestoppt werden.")
+        respond_with_importer_feedback(alert: "Nur #{importer_registry.fetch(source_type).fetch(:label)} kann hier gestoppt werden.")
         return
       end
 
-      respond_with_importer_feedback(
-        **request_stop_for_running_import!(source_type: source_type, label: nil)
-      )
-    end
-
-    def importer_config_for(source_type, required: true)
-      config = IMPORTER_CONFIG[source_type.to_s]
-      return config if config.present? || !required
-
-      raise KeyError, "key not found: #{source_type.inspect}"
+      respond_with_importer_feedback(**run_manager.request_stop(source_type, run_id: params[:run_id]))
     end
   end
 end
