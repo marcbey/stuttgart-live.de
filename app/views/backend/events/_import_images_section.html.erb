@@ -1,0 +1,21 @@
+<section class="offer-section">
+  <h3>Import-Bilder (XML)</h3>
+  <% if event.import_event_images.any? %>
+    <ul class="slider-image-editor-grid">
+      <% event.import_event_images.ordered.each do |image| %>
+        <li class="slider-image-editor-card">
+          <div class="action-cell slider-image-editor-thumb">
+            <%= link_to image.image_url, target: "_blank", rel: "noopener" do %>
+              <%= image_tag image.image_url, alt: "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
+            <% end %>
+          </div>
+          <div class="slider-image-editor-meta">
+            <span class="import-image-editor-label"><%= [ image.source, image.image_type, image.role, image.aspect_hint ].reject(&:blank?).join(" · ") %></span>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>Keine Bilder für dieses Event vorhanden.</p>
+  <% end %>
+</section>

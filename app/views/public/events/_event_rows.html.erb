@@ -1,0 +1,14 @@
+<% container_id = local_assigns[:container_id] %>
+<% wrap = local_assigns.fetch(:wrap, true) %>
+
+<% if wrap && container_id.present? %>
+  <div class="event-listing-grid" id="<%= container_id %>">
+<% elsif wrap %>
+  <div class="event-listing-grid">
+<% end %>
+  <% events.each do |event| %>
+    <%= render "event_list_row", event: event, browse_state: browse_state %>
+  <% end %>
+<% if wrap %>
+  </div>
+<% end %>

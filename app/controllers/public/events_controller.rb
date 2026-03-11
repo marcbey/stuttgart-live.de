@@ -4,31 +4,21 @@ module Public
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
-    FILTER_ALL = "all".freeze
-    FILTER_SKS = "sks".freeze
-    FILTER_VALUES = [ FILTER_ALL, FILTER_SKS ].freeze
-    VIEW_GRID = "grid".freeze
-    VIEW_LIST = "list".freeze
-    VIEW_VALUES = [ VIEW_GRID, VIEW_LIST ].freeze
+
+    before_action :set_browse_state, only: [ :index, :show ]
 
     def index
-      @page = [ params[:page].to_i, 1 ].max
-      @public_filter = current_public_filter
-      @public_view = current_public_view
-      @public_event_date = current_public_event_date
-      @public_query = current_public_query
-
-      relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date, query: @public_query)
+      relation = visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: @browse_state.query)
       if should_redirect_search_result?(relation)
         event = relation.limit(1).first
-        redirect_to event_path(event.slug, filter: @public_filter, q: @public_query)
+        redirect_to event_path(event.slug, **@browse_state.route_params(view: Public::Events::BrowseState::VIEW_GRID))
         return
       end
 
-      @events = relation.limit(PER_PAGE).offset((@page - 1) * PER_PAGE)
-      @next_page = @page + 1 if relation.offset(@page * PER_PAGE).limit(1).exists?
-      homepage_relation = visible_events_relation(filter: @public_filter, event_date: @public_event_date, query: nil)
-      assign_homepage_sections(homepage_relation) if @page == 1 && @public_view == VIEW_GRID
+      @events = relation.limit(PER_PAGE).offset((@browse_state.page - 1) * PER_PAGE)
+      @next_page = @browse_state.page + 1 if relation.offset(@browse_state.page * PER_PAGE).limit(1).exists?
+      homepage_relation = visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: nil)
+      assign_homepage_sections(homepage_relation) if @browse_state.page == 1 && @browse_state.grid?
 
       respond_to do |format|
         format.html
@@ -37,20 +27,17 @@ module Public
     end
 
     def show
-      @public_filter = current_public_filter
-      @public_view = current_public_view
-      @public_event_date = current_public_event_date
-      @public_query = current_public_query
       @event = show_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.preferred_ticket_offer
     end
 
     def status
+      browse_state = Public::Events::BrowseState.new(params)
       @event = Event.find_by!(slug: params[:slug])
       desired_status = params[:status].to_s
 
       unless Event::STATUSES.include?(desired_status)
-        redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, event_date: current_public_event_date_param)
+        redirect_back fallback_location: events_path(**browse_state.route_params(page: browse_state.page))
         return
       end
 
@@ -74,8 +61,7 @@ module Public
               locals: {
                 event: @event,
                 card_slot: params[:card_slot].presence || :grid_default,
-                public_filter: current_public_filter,
-                public_event_date: current_public_event_date_param
+                browse_state: browse_state
               }
             )
           else
@@ -85,14 +71,18 @@ module Public
           render turbo_stream: streams
         end
         format.html do
-          redirect_back fallback_location: events_path(page: params[:page], filter: current_public_filter, view: current_public_view_param, event_date: current_public_event_date_param)
+          redirect_back fallback_location: events_path(**browse_state.route_params(page: browse_state.page))
         end
       end
     end
 
     private
 
-    def visible_events_relation(filter: FILTER_ALL, event_date: nil, query: nil)
+    def set_browse_state
+      @browse_state = Public::Events::BrowseState.new(params)
+    end
+
+    def visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
       Public::VisibleEventsQuery.new(
         scope: published_future_events_relation,
         filter: filter,
@@ -101,69 +91,14 @@ module Public
       ).call
     end
 
-    def current_public_filter
-      return @current_public_filter if defined?(@current_public_filter)
-
-      if current_public_view == VIEW_LIST
-        @current_public_filter = FILTER_ALL
-        return @current_public_filter
-      end
-
-      value = params[:filter].to_s
-      @current_public_filter =
-        if FILTER_VALUES.include?(value)
-          value
-        else
-          FILTER_SKS
-        end
-    end
-
-    def current_public_event_date
-      return @current_public_event_date if defined?(@current_public_event_date)
-
-      value = params[:event_date].to_s.strip
-      @current_public_event_date =
-        begin
-          value.present? ? Date.iso8601(value) : nil
-        rescue ArgumentError
-          nil
-        end
-    end
-
-    def current_public_event_date_param
-      current_public_event_date&.iso8601
-    end
-
-    def current_public_query
-      return @current_public_query if defined?(@current_public_query)
-
-      @current_public_query = params[:q].to_s.strip.presence
-    end
-
-    def current_public_view_param
-      current_public_view == VIEW_LIST ? VIEW_LIST : nil
-    end
-
-    def current_public_view
-      return @current_public_view if defined?(@current_public_view)
-
-      value = params[:view].to_s
-      @current_public_view =
-        if VIEW_VALUES.include?(value)
-          value
-        else
-          VIEW_GRID
-        end
-    end
-
     def published_future_events_relation
       published_events_relation
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
     def assign_homepage_sections(current_relation)
-      scoped_highlights = visible_events_relation(filter: FILTER_SKS, event_date: @public_event_date, query: nil)
-      scoped_all = visible_events_relation(filter: FILTER_ALL, event_date: @public_event_date, query: nil)
+      scoped_highlights = visible_events_relation(filter: Public::Events::BrowseState::FILTER_SKS, event_date: @browse_state.event_date, query: nil)
+      scoped_all = visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: @browse_state.event_date, query: nil)
 
       @home_featured_events = scoped_highlights.to_a
       @home_featured_events = current_relation.limit(PER_PAGE).to_a if @home_featured_events.empty?
@@ -173,9 +108,9 @@ module Public
     end
 
     def should_redirect_search_result?(relation)
-      return false if @public_query.blank?
-      return false unless @public_view == VIEW_GRID
-      return false unless @page == 1
+      return false if @browse_state.query.blank?
+      return false unless @browse_state.grid?
+      return false unless @browse_state.page == 1
 
       relation.limit(2).count == 1
     end
@@ -216,11 +151,8 @@ module Public
 
     def render_not_found
       respond_to do |format|
-        format.html do
-          @public_filter = current_public_filter
-          @public_view = current_public_view
-          @public_event_date = current_public_event_date
-          @public_query = current_public_query
+      format.html do
+          @browse_state ||= Public::Events::BrowseState.new(params)
           render "public/events/not_found", status: :not_found
         end
         format.any { head :not_found }

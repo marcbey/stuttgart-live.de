@@ -1,19 +1,17 @@
 <% card_slot = local_assigns.fetch(:card_slot, :grid_default) %>
 <% tile_variant = local_assigns.fetch(:tile_variant, Event::GRID_VARIANT_BY_SLOT[card_slot.to_sym] || EventImage::GRID_VARIANT_1X1) %>
-<% public_filter = local_assigns.fetch(:public_filter, params[:filter].to_s.presence || "sks") %>
-<% public_query = local_assigns.fetch(:public_query, params[:q].to_s.presence) %>
-<% public_event_date = local_assigns.fetch(:public_event_date, params[:event_date].to_s.presence) %>
+<% browse_state = local_assigns.fetch(:browse_state) %>
 <% desktop_image = event.image_for(slot: card_slot, breakpoint: :desktop) %>
 <% mobile_image = desktop_image.is_a?(EventImage) ? desktop_image : (event.image_for(slot: :grid_default, breakpoint: :mobile) || desktop_image) %>
 <% desktop_image_source = event_image_source(desktop_image) %>
 <% mobile_image_source = event_image_source(mobile_image) %>
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
-<% card_dom_id = local_assigns.fetch(:card_dom_id, dom_id(event, :card)) %>
+<% card_dom_id = local_assigns[:card_dom_id].presence || dom_id(event, :card) %>
 
 <article id="<%= card_dom_id %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
   <div class="event-card-image-wrap">
-    <%= link_to event_path(event.slug, filter: public_filter, event_date: public_event_date, q: public_query), class: "event-card-link" do %>
+    <%= link_to public_event_detail_path(event, browse_state), class: "event-card-link" do %>
       <% if desktop_image_source.present? %>
         <picture>
           <% if mobile_image_source.present? %>
@@ -45,9 +43,11 @@
                       class: "event-card-status-form",
                       data: { controller: "public-card-status" } do |form| %>
           <%= hidden_field_tag :card_slot, card_slot %>
-          <%= hidden_field_tag :page, params[:page].presence || 1 %>
-          <%= hidden_field_tag :filter, public_filter %>
-          <%= hidden_field_tag :event_date, public_event_date %>
+          <%= hidden_field_tag :page, browse_state.page %>
+          <%= hidden_field_tag :filter, browse_state.filter %>
+          <%= hidden_field_tag :view, browse_state.route_params[:view] %>
+          <%= hidden_field_tag :event_date, browse_state.event_date_param %>
+          <%= hidden_field_tag :q, browse_state.query %>
           <%= form.select :status,
                           options_for_select(public_event_status_options, event.status),
                           {},

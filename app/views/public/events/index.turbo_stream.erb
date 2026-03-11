@@ -1,29 +1,15 @@
-<%= turbo_stream.append (@public_view == "list" ? "event-list-body" : "event-grid") do %>
-  <% if @public_view == "list" %>
-    <% @events.each do |event| %>
-      <%= render "event_list_row",
-                 event: event,
-                 public_filter: @public_filter,
-                 public_view: @public_view,
-                 public_query: @public_query,
-                 public_event_date: @public_event_date&.iso8601 %>
-    <% end %>
+<%= turbo_stream.append (@browse_state.list? ? "event-list-body" : "event-grid") do %>
+  <% if @browse_state.list? %>
+    <%= render "event_rows", events: @events, browse_state: @browse_state, wrap: false %>
   <% else %>
-    <% @events.each_with_index do |event, index| %>
-      <% absolute_index = ((@page - 1) * Public::EventsController::PER_PAGE) + index %>
-      <% tile_variant = effective_public_grid_variant_for(event, absolute_index) %>
-      <% card_slot = card_slot_for_grid_variant(tile_variant) %>
-      <%= render "event_card",
-                 event: event,
-                 tile_variant: tile_variant,
-                 card_slot: card_slot,
-                 public_filter: @public_filter,
-                 public_query: @public_query,
-                 public_event_date: @public_event_date&.iso8601 %>
-    <% end %>
+    <%= render "event_cards",
+               events: @events,
+               browse_state: @browse_state,
+               offset: ((@browse_state.page - 1) * Public::EventsController::PER_PAGE),
+               wrap: false %>
   <% end %>
 <% end %>
 
 <%= turbo_stream.replace "events-pagination" do %>
-  <%= render "pagination", next_page: @next_page, public_filter: @public_filter, public_view: @public_view, public_query: @public_query, public_event_date: @public_event_date&.iso8601 %>
+  <%= render "pagination", next_page: @next_page, browse_state: @browse_state %>
 <% end %>

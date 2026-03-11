@@ -1,0 +1,112 @@
+<% display_promoter_id = event_display_promoter_id(event) %>
+<% selected_genre_ids = event.genre_ids %>
+
+<%= form_with model: event,
+              url: backend_event_path(event),
+              method: :patch,
+              class: "editor-form",
+              data: { turbo_stream: true },
+              html: { id: dom_id(event, :editor_form) } do |form| %>
+  <%= hidden_field_tag :next_event_enabled, (next_event_enabled ? "1" : "0"), data: { next_event_target: "preference" } %>
+  <%= hidden_field_tag :inbox_status, filter_status if filter_status.present? %>
+  <div class="editor-grid">
+    <div>
+      <%= form.label :artist_name, "Artist", class: "form-label" %>
+      <%= form.text_field :artist_name, class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :title, "Titel", class: "form-label" %>
+      <%= form.text_field :title, class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :start_at, "Beginn", class: "form-label" %>
+      <%= form.datetime_local_field :start_at,
+                                    value: event.start_at&.strftime("%Y-%m-%dT%H:%M"),
+                                    class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :doors_at, "Einlass", class: "form-label" %>
+      <div class="filter-date-wrap">
+        <%= form.datetime_local_field :doors_at,
+                                      value: event.doors_at&.strftime("%Y-%m-%dT%H:%M"),
+                                      class: "form-input",
+                                      onfocus: "if(this.value) return; const startInput=this.form?.querySelector(\"input[name='event[start_at]']\"); if(!startInput||!startInput.value) return; const startDate=new Date(startInput.value); if(Number.isNaN(startDate.getTime())) return; startDate.setHours(startDate.getHours()-1); const pad=(num)=>String(num).padStart(2,'0'); const formatted=`${startDate.getFullYear()}-${pad(startDate.getMonth()+1)}-${pad(startDate.getDate())}T${pad(startDate.getHours())}:${pad(startDate.getMinutes())}`; this.value=formatted; this.dispatchEvent(new Event('input',{ bubbles: true })); this.dispatchEvent(new Event('change',{ bubbles: true }));" %>
+      </div>
+    </div>
+    <div>
+      <%= form.label :status, "Status", class: "form-label" %>
+      <%= form.select :status,
+                      Event::STATUSES.reject { |status| status == "imported" }.map { |status| [ event_status_select_label(status), status ] },
+                      {},
+                      class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :city, "Stadt", class: "form-label" %>
+      <%= form.text_field :city, class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :venue, "Venue", class: "form-label" %>
+      <%= form.text_field :venue, class: "form-input" %>
+    </div>
+    <div>
+      <label class="form-label" for="<%= dom_id(event, :promoter_id_display) %>">Promoter-ID</label>
+      <input id="<%= dom_id(event, :promoter_id_display) %>"
+             class="form-input"
+             type="text"
+             value="<%= display_promoter_id.presence || "-" %>"
+             readonly>
+    </div>
+    <div>
+      <%= form.label :badge_text, "Banderole", class: "form-label" %>
+      <%= form.text_field :badge_text, class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :youtube_url, "YouTube URL", class: "form-label" %>
+      <%= form.url_field :youtube_url, class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :homepage_url, "Homepage URL", class: "form-label" %>
+      <%= form.url_field :homepage_url, class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :instagram_url, "Instagram URL", class: "form-label" %>
+      <%= form.url_field :instagram_url, class: "form-input" %>
+    </div>
+    <div>
+      <%= form.label :facebook_url, "Facebook URL", class: "form-label" %>
+      <%= form.url_field :facebook_url, class: "form-input" %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :event_info, "Beschreibung", class: "form-label" %>
+    <%= form.text_area :event_info, rows: 5, class: "form-textarea" %>
+  </div>
+
+  <div>
+    <%= form.label :organizer_notes, "Veranstalterhinweise", class: "form-label" %>
+    <label class="form-checkbox">
+      <%= form.check_box :show_organizer_notes %>
+      <span>Auf der Detailseite anzeigen</span>
+    </label>
+    <%= form.text_area :organizer_notes, rows: 12, class: "form-textarea" %>
+  </div>
+
+  <div>
+    <%= form.label :editor_notes, "Redaktionsnotiz", class: "form-label" %>
+    <%= form.text_area :editor_notes, rows: 3, class: "form-textarea" %>
+  </div>
+
+  <div>
+    <%= form.label :genre_ids, "Genres", class: "form-label" %>
+    <%= hidden_field_tag "event[genre_ids][]", "" %>
+    <div class="genre-checks">
+      <% all_genres.each do |genre| %>
+        <label>
+          <%= check_box_tag "event[genre_ids][]", genre.id, selected_genre_ids.include?(genre.id) %>
+          <span><%= genre.name %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+<% end %>

@@ -1,4 +1,16 @@
 module Public::EventsHelper
+  PUBLIC_EVENT_GENRE_TILES = [
+    [ "Pop", "genre-tile-pop" ],
+    [ "Rock", "genre-tile-rock" ],
+    [ "Hiphop", "genre-tile-hiphop" ],
+    [ "Rap", "genre-tile-rap" ],
+    [ "Metal", "genre-tile-metal" ],
+    [ "Elektro", "genre-tile-elektro" ],
+    [ "Show", "genre-tile-show" ],
+    [ "Punk", "genre-tile-punk" ],
+    [ "Schlager", "genre-tile-schlager" ]
+  ].freeze
+
   def public_event_visibility_badges(event)
     badges = []
 
@@ -51,6 +63,18 @@ module Public::EventsHelper
     when "rejected" then "status-badge-rejected"
     else "status-badge-default"
     end
+  end
+
+  def public_event_detail_path(event, browse_state, view: browse_state.view)
+    event_path(event.slug, **browse_state.route_params(view: view))
+  end
+
+  def public_events_index_path(browse_state, page: nil, view: browse_state.view, format: nil)
+    events_path(**browse_state.route_params(page: page, view: view, format: format))
+  end
+
+  def public_event_genre_tiles
+    PUBLIC_EVENT_GENRE_TILES
   end
 
   def effective_public_grid_variant_for(event, _index)

@@ -1,4 +1,14 @@
 module Backend::EventsHelper
+  def backend_event_context(event)
+    return if event.blank?
+
+    [
+      event.artist_name.to_s.strip.presence,
+      event.title.to_s.strip.presence,
+      (event.start_at.present? ? l(event.start_at, format: "%d.%m.%Y %H:%M") : nil)
+    ].compact.join(" · ")
+  end
+
   def event_display_promoter_id(event)
     promoter_id = event.promoter_id.to_s.strip
     return promoter_id if promoter_id.present?

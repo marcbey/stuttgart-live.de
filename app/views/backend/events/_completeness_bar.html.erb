@@ -1,0 +1,8 @@
+<div class="completeness-bar">
+  <strong><%= event.completeness_score %>%</strong>
+  <% if event.completeness_flags.any? %>
+    <span><%= event.completeness_flags.join(", ") %></span>
+  <% else %>
+    <span>vollständig</span>
+  <% end %>
+</div>

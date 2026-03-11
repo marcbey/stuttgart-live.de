@@ -1,0 +1,11 @@
+<section class="home-slider-section">
+  <div class="home-slider-header">
+    <h2>Suchergebnisse</h2>
+  </div>
+  <%= render "event_cards",
+             events: events,
+             browse_state: browse_state,
+             container_id: "search-results-grid",
+             container_class: "flyer-grid flyer-grid-flat",
+             card_dom_id_prefix: :search_card %>
+</section>

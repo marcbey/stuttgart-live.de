@@ -1,11 +1,4 @@
 <% content_for :title, "Redaktion" %>
-<% selected_event_context = if @selected_event.present?
-                              [
-                                @selected_event.artist_name.to_s.strip.presence,
-                                @selected_event.title.to_s.strip.presence,
-                                l(@selected_event.start_at, format: "%d.%m.%Y %H:%M")
-                              ].compact.join(" · ")
-                            end %>
 
 <section class="backend-shell"
          data-controller="keyboard-shortcuts next-event"

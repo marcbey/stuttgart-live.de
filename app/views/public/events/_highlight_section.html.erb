@@ -1,0 +1,49 @@
+<% featured = local_assigns.fetch(:featured, false) %>
+<% nav_class = featured ? "home-featured-nav" : "highlights-slider-nav" %>
+<% track_class = featured ? "home-featured-track" : "home-slider-track" %>
+
+<section class="<%= featured ? 'home-featured-section' : 'home-slider-section' %>"
+         data-controller="highlights-slider section-view"
+         <% if featured %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
+  <div class="home-slider-header">
+    <h2><%= title %></h2>
+    <div class="<%= nav_class %>">
+      <button type="button"
+              class="slider-view-toggle"
+              data-section-view-target="button"
+              data-action="click->section-view#toggle"
+              title="Listenansicht"
+              aria-label="<%= list_aria_label %>"
+              aria-pressed="false">
+        <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </span>
+      </button>
+      <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
+      <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
+    </div>
+  </div>
+  <div data-section-view-target="slider">
+    <div class="<%= track_class %>" data-highlights-slider-target="track">
+      <% events.each_with_index do |event, index| %>
+        <% if featured %>
+          <% tile_variant = effective_public_grid_variant_for(event, index) %>
+          <% card_slot = card_slot_for_grid_variant(tile_variant) %>
+          <%= render "home_feature_card",
+                     event: event,
+                     browse_state: browse_state,
+                     tile_variant: tile_variant,
+                     card_slot: card_slot %>
+        <% else %>
+          <%= render "home_slider_card", event: event, browse_state: browse_state %>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+  <div class="section-slider-list" data-section-view-target="list" hidden>
+    <%= render "event_rows", events: events, browse_state: browse_state %>
+  </div>
+</section>

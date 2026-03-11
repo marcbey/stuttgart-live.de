@@ -1,0 +1,31 @@
+<% slider_images = event.event_images.slider.ordered.to_a %>
+
+<section class="offer-section">
+  <h3>Slider-Bilder</h3>
+  <% if slider_images.any? %>
+    <ul class="slider-image-editor-grid">
+      <% slider_images.each do |image| %>
+        <%= render "backend/events/slider_image_editor_card", event: event, image: image, editor_status: editor_status %>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>Keine Slider-Bilder vorhanden.</p>
+  <% end %>
+
+  <div class="event-image-upload-grid">
+    <%= form_with url: backend_event_event_images_path(event),
+                  method: :post,
+                  class: "event-image-upload-form",
+                  html: { multipart: true },
+                  data: { turbo: false } do %>
+      <%= hidden_field_tag :status, editor_status %>
+      <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_SLIDER %>
+      <h4>Slider-Bilder hochladen</h4>
+      <p>Unbegrenzt, Reihenfolge ohne Bedeutung.</p>
+      <%= file_field_tag "event_image[files][]", multiple: true, accept: "image/*", required: true, class: "form-input" %>
+      <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
+      <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text unter dem Bild (optional)", class: "form-input" %>
+      <%= button_tag "Upload", type: :submit, class: "button button-secondary button-compact" %>
+    <% end %>
+  </div>
+</section>

@@ -1,0 +1,24 @@
+<section class="offer-section">
+  <h3>Ticket-Angebote</h3>
+  <% if event.event_offers.any? %>
+    <ul>
+      <% event.event_offers.ordered.each do |offer| %>
+        <li>
+          <span>
+            <%= offer.source %>
+            <% if offer.ticket_price_text.present? %>
+              · Preis: <%= offer.ticket_price_text %>
+            <% end %>
+          </span>
+          <% if offer.resolved_ticket_url.present? %>
+            <%= link_to "Ticket", offer.resolved_ticket_url, target: "_blank", rel: "noopener" %>
+          <% else %>
+            <span>kein Link</span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>Keine Angebote vorhanden.</p>
+  <% end %>
+</section>

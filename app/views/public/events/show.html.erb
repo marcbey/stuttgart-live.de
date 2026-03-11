@@ -24,7 +24,7 @@
 
 <article class="event-detail">
   <div class="event-detail-topbar">
-    <p class="event-detail-back"><%= link_to "← alle events", events_path(filter: @public_filter, view: (@public_view == "list" ? @public_view : nil), event_date: @public_event_date&.iso8601, q: @public_query) %></p>
+    <p class="event-detail-back"><%= link_to "← alle events", public_events_index_path(@browse_state) %></p>
     <% if authenticated? %>
       <div class="event-detail-topbar-actions">
         <% if @event.primary_source.present? %>

@@ -1,0 +1,45 @@
+<section class="public-filter-row public-filter-row-home">
+  <div class="public-filter-row-main">
+    <div class="public-filter-toggle public-view-toggle" aria-label="Darstellung umschalten">
+      <%= link_to public_events_index_path(browse_state, view: Public::Events::BrowseState::VIEW_GRID),
+                  class: "status-chip public-view-chip #{'status-chip-active' if browse_state.grid?}",
+                  title: "Grid-Ansicht",
+                  aria: { label: "Grid-Ansicht" } do %>
+        <span class="public-view-icon public-view-icon-grid" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </span>
+      <% end %>
+      <%= link_to public_events_index_path(browse_state, view: Public::Events::BrowseState::VIEW_LIST),
+                  class: "status-chip public-view-chip #{'status-chip-active' if browse_state.list?}",
+                  title: "Listen-Ansicht",
+                  aria: { label: "Listen-Ansicht" } do %>
+        <span class="public-view-icon public-view-icon-list" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+      <% end %>
+    </div>
+
+    <%= form_with url: events_path, method: :get, local: true, class: "public-search-filter" do %>
+      <%= hidden_field_tag :filter, browse_state.filter %>
+      <%= hidden_field_tag :view, browse_state.route_params[:view] %>
+      <%= hidden_field_tag :event_date, browse_state.event_date_param %>
+      <div class="public-search-field">
+        <%= text_field_tag :q,
+                           browse_state.query,
+                           class: "form-input public-search-input",
+                           placeholder: "Suche nach Künstlern und Events",
+                           aria: { label: "Events durchsuchen" },
+                           oninput: "this.nextElementSibling.classList.toggle('public-search-clear-visible', this.value.length > 0)" %>
+        <%= button_tag "×",
+                       type: "button",
+                       class: "public-search-clear #{'public-search-clear-visible' if browse_state.query.present?}",
+                       aria: { label: "Suche löschen" },
+                       onclick: "this.previousElementSibling.value=''; this.classList.remove('public-search-clear-visible'); this.form.requestSubmit();" %>
+        <%= button_tag "⌕",
+                       type: "submit",
+                       class: "public-search-icon",
+                       aria: { label: "Suche ausführen" } %>
+      </div>
+    <% end %>
+  </div>
+</section>

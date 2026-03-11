@@ -1,315 +1,45 @@
 <% content_for :title, "Stuttgart Live - Konzerte" %>
 
 <section class="public-shell">
-  <div class="public-filter-row public-filter-row-home">
-    <div class="public-filter-row-main">
-      <div class="public-filter-toggle public-view-toggle" aria-label="Darstellung umschalten">
-        <%= link_to events_path(filter: @public_filter, view: "grid", event_date: @public_event_date&.iso8601, q: @public_query),
-                    class: "status-chip public-view-chip #{'status-chip-active' if @public_view == 'grid'}",
-                    title: "Grid-Ansicht",
-                    aria: { label: "Grid-Ansicht" } do %>
-          <span class="public-view-icon public-view-icon-grid" aria-hidden="true">
-            <span></span><span></span><span></span><span></span>
-          </span>
-        <% end %>
-        <%= link_to events_path(filter: @public_filter, view: "list", event_date: @public_event_date&.iso8601, q: @public_query),
-                    class: "status-chip public-view-chip #{'status-chip-active' if @public_view == 'list'}",
-                    title: "Listen-Ansicht",
-                    aria: { label: "Listen-Ansicht" } do %>
-          <span class="public-view-icon public-view-icon-list" aria-hidden="true">
-            <span></span><span></span><span></span>
-          </span>
-        <% end %>
-      </div>
+  <%= render "toolbar", browse_state: @browse_state %>
 
-      <%= form_with url: events_path, method: :get, local: true, class: "public-search-filter" do %>
-        <%= hidden_field_tag :filter, @public_filter %>
-        <%= hidden_field_tag :view, (@public_view == "list" ? @public_view : nil) %>
-        <div class="public-search-field">
-          <%= text_field_tag :q,
-                             @public_query,
-                             class: "form-input public-search-input",
-                             placeholder: "Suche nach Künstlern und Events",
-                             aria: { label: "Events durchsuchen" },
-                             oninput: "this.nextElementSibling.classList.toggle('public-search-clear-visible', this.value.length > 0)" %>
-          <%= button_tag "×",
-                         type: "button",
-                         class: "public-search-clear #{'public-search-clear-visible' if @public_query.present?}",
-                         aria: { label: "Suche löschen" },
-                         onclick: "this.previousElementSibling.value=''; this.classList.remove('public-search-clear-visible'); this.form.requestSubmit();" %>
-          <%= button_tag "⌕",
-                         type: "submit",
-                         class: "public-search-icon",
-                         aria: { label: "Suche ausführen" } %>
-        </div>
-      <% end %>
-    </div>
-  </div>
-
-  <% if @public_view == "list" %>
-    <div class="event-listing-grid" id="event-list-body">
-      <% @events.each do |event| %>
-        <%= render "event_list_row",
-                   event: event,
-                   public_filter: @public_filter,
-                   public_view: @public_view,
-                   public_query: @public_query,
-                   public_event_date: @public_event_date&.iso8601 %>
-      <% end %>
-    </div>
+  <% if @browse_state.list? %>
+    <%= render "event_rows", events: @events, browse_state: @browse_state, container_id: "event-list-body" %>
   <% else %>
-    <% if @public_query.present? %>
-      <section class="home-slider-section">
-        <div class="home-slider-header">
-          <h2>Suchergebnisse</h2>
-        </div>
-        <div id="search-results-grid" class="flyer-grid flyer-grid-flat">
-          <% @events.each do |event| %>
-            <%= render "event_card",
-                       event: event,
-                       tile_variant: EventImage::GRID_VARIANT_1X1,
-                       card_slot: :grid_default,
-                       public_filter: @public_filter,
-                       public_query: @public_query,
-                       public_event_date: @public_event_date&.iso8601,
-                       card_dom_id: dom_id(event, :search_card) %>
-          <% end %>
-        </div>
-      </section>
-    <% elsif @page == 1 && @home_featured_events.present? %>
-      <section class="home-featured-section"
-               data-controller="highlights-slider section-view"
-               data-highlights-slider-autoplay-value="true"
-               data-highlights-slider-interval-value="5000">
-        <div class="home-slider-header">
-          <h2>Highlights</h2>
-          <div class="home-featured-nav">
-            <button type="button"
-                    class="slider-view-toggle"
-                    data-section-view-target="button"
-                    data-action="click->section-view#toggle"
-                    title="Listenansicht"
-                    aria-label="Listenansicht für Highlights"
-                    aria-pressed="false">
-              <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
-                <span></span><span></span><span></span>
-              </span>
-              <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
-                <span></span><span></span><span></span><span></span>
-              </span>
-            </button>
-            <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
-            <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
-          </div>
-        </div>
-        <div data-section-view-target="slider">
-          <div class="home-featured-track" data-highlights-slider-target="track">
-            <% @home_featured_events.each_with_index do |event, index| %>
-              <% tile_variant = effective_public_grid_variant_for(event, index) %>
-              <% card_slot = card_slot_for_grid_variant(tile_variant) %>
-              <%= render "home_feature_card",
-                         event: event,
-                         public_filter: @public_filter,
-                         public_query: @public_query,
-                         public_event_date: @public_event_date&.iso8601,
-                         tile_variant: tile_variant,
-                         card_slot: card_slot %>
-            <% end %>
-          </div>
-        </div>
-        <div class="section-slider-list" data-section-view-target="list" hidden>
-          <div class="event-listing-grid">
-            <% @home_featured_events.each do |event| %>
-              <%= render "event_list_row",
-                         event: event,
-                         public_filter: @public_filter,
-                         public_view: "list",
-                         public_query: @public_query,
-                         public_event_date: @public_event_date&.iso8601 %>
-            <% end %>
-          </div>
-        </div>
-      </section>
+    <% if @browse_state.query.present? %>
+      <%= render "search_results_section", events: @events, browse_state: @browse_state %>
+    <% elsif @browse_state.page == 1 && @home_featured_events.present? %>
+      <%= render "highlight_section",
+                 title: "Highlights",
+                 events: @home_featured_events,
+                 browse_state: @browse_state,
+                 featured: true,
+                 list_aria_label: "Listenansicht für Highlights" %>
     <% end %>
 
-    <% if @page == 1 && @home_highlight_events.present? %>
-      <section class="home-slider-section" data-controller="highlights-slider section-view">
-        <div class="home-slider-header">
-          <h2>Alle Veranstaltungen in Stuttgart</h2>
-          <div class="highlights-slider-nav">
-            <button type="button"
-                    class="slider-view-toggle"
-                    data-section-view-target="button"
-                    data-action="click->section-view#toggle"
-                    title="Listenansicht"
-                    aria-label="Listenansicht für Alle Veranstaltungen in Stuttgart"
-                    aria-pressed="false">
-              <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
-                <span></span><span></span><span></span>
-              </span>
-              <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
-                <span></span><span></span><span></span><span></span>
-              </span>
-            </button>
-            <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
-            <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
-          </div>
-        </div>
-        <div data-section-view-target="slider">
-          <div class="home-slider-track" data-highlights-slider-target="track">
-            <% @home_highlight_events.each do |event| %>
-              <%= render "home_slider_card",
-                         event: event,
-                         public_filter: @public_filter,
-                         public_query: @public_query,
-                         public_event_date: @public_event_date&.iso8601 %>
-            <% end %>
-          </div>
-        </div>
-        <div class="section-slider-list" data-section-view-target="list" hidden>
-          <div class="event-listing-grid">
-            <% @home_highlight_events.each do |event| %>
-              <%= render "event_list_row",
-                         event: event,
-                         public_filter: @public_filter,
-                         public_view: "list",
-                         public_query: @public_query,
-                         public_event_date: @public_event_date&.iso8601 %>
-            <% end %>
-          </div>
-        </div>
-      </section>
+    <% if @browse_state.page == 1 && @home_highlight_events.present? %>
+      <%= render "highlight_section",
+                 title: "Alle Veranstaltungen in Stuttgart",
+                 events: @home_highlight_events,
+                 browse_state: @browse_state,
+                 list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
     <% end %>
 
-    <% if @page == 1 && @home_tagestipp_events.present? %>
-      <section class="home-slider-section" data-controller="highlights-slider section-view">
-        <div class="home-slider-header">
-          <h2>Tagestipp</h2>
-          <div class="highlights-slider-nav">
-            <button type="button"
-                    class="slider-view-toggle"
-                    data-section-view-target="button"
-                    data-action="click->section-view#toggle"
-                    title="Listenansicht"
-                    aria-label="Listenansicht für Tagestipp"
-                    aria-pressed="false">
-              <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
-                <span></span><span></span><span></span>
-              </span>
-              <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
-                <span></span><span></span><span></span><span></span>
-              </span>
-            </button>
-            <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
-            <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
-          </div>
-        </div>
-        <div data-section-view-target="slider">
-          <div class="home-slider-track" data-highlights-slider-target="track">
-            <% @home_tagestipp_events.each do |event| %>
-              <%= render "home_slider_card",
-                         event: event,
-                         public_filter: @public_filter,
-                         public_query: @public_query,
-                         public_event_date: @public_event_date&.iso8601 %>
-            <% end %>
-          </div>
-        </div>
-        <div class="section-slider-list" data-section-view-target="list" hidden>
-          <div class="event-listing-grid">
-            <% @home_tagestipp_events.each do |event| %>
-              <%= render "event_list_row",
-                         event: event,
-                         public_filter: @public_filter,
-                         public_view: "list",
-                         public_query: @public_query,
-                         public_event_date: @public_event_date&.iso8601 %>
-            <% end %>
-          </div>
-        </div>
-      </section>
+    <% if @browse_state.page == 1 && @home_tagestipp_events.present? %>
+      <%= render "highlight_section",
+                 title: "Tagestipp",
+                 events: @home_tagestipp_events,
+                 browse_state: @browse_state,
+                 list_aria_label: "Listenansicht für Tagestipp" %>
     <% end %>
 
-    <section class="home-slider-section" data-controller="highlights-slider section-view">
-      <div class="home-slider-header">
-        <h2>Genres</h2>
-        <div class="highlights-slider-nav">
-          <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
-          <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
-        </div>
-      </div>
-      <div data-section-view-target="slider">
-        <div class="genre-slider-track" data-highlights-slider-target="track">
-          <% [
-            [ "Pop", "genre-tile-pop" ],
-            [ "Rock", "genre-tile-rock" ],
-            [ "Hiphop", "genre-tile-hiphop" ],
-            [ "Rap", "genre-tile-rap" ],
-            [ "Metal", "genre-tile-metal" ],
-            [ "Elektro", "genre-tile-elektro" ],
-            [ "Show", "genre-tile-show" ],
-            [ "Punk", "genre-tile-punk" ],
-            [ "Schlager", "genre-tile-schlager" ]
-          ].each do |genre_name, genre_class| %>
-            <article class="genre-tile <%= genre_class %>">
-              <span><%= genre_name %></span>
-            </article>
-          <% end %>
-        </div>
-        </div>
-      </div>
-      <div class="section-slider-list" data-section-view-target="list" hidden>
-        <div class="section-slider-list-plain">
-          <% [ "Pop", "Rock", "Hiphop", "Rap", "Metal", "Elektro", "Show", "Punk", "Schlager" ].each do |genre_name| %>
-            <span><%= genre_name %></span>
-          <% end %>
-        </div>
-      </div>
-    </section>
-
+    <%= render "genres_section" %>
   <% end %>
 
-  <% if @public_view == "list" %>
-    <%= render "pagination", next_page: @next_page, public_filter: @public_filter, public_view: @public_view, public_query: @public_query, public_event_date: @public_event_date&.iso8601 %>
+  <% if @browse_state.list? %>
+    <%= render "pagination", next_page: @next_page, browse_state: @browse_state %>
   <% end %>
 
-  <section class="newsletter-signup-section">
-    <div class="newsletter-signup-copy">
-      <p class="eyebrow">Newsletter</p>
-      <h2>Nichts verpassen</h2>
-      <p>Neue Konzerte, Highlights und Vorverkäufe direkt in dein Postfach.</p>
-    </div>
-
-    <%= form_with model: NewsletterSubscriber.new, url: newsletter_subscribers_path, method: :post, local: true, class: "newsletter-signup-form" do |form| %>
-      <%= hidden_field_tag :filter, @public_filter %>
-      <%= hidden_field_tag :view, (@public_view == "list" ? @public_view : nil) %>
-      <%= hidden_field_tag :q, @public_query %>
-      <%= form.email_field :email,
-                           class: "form-input newsletter-signup-input",
-                           placeholder: "E-Mail-Adresse",
-                           required: true,
-                           autocomplete: "email" %>
-      <%= form.submit "Newsletter abonnieren", class: "button newsletter-signup-button" %>
-    <% end %>
-  </section>
-
-  <section class="partner-strip-section" aria-label="Partner">
-    <div class="partner-strip">
-      <a href="https://www.russ-live.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-russlive" aria-label="Russ Live">
-        <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "partner-strip-image partner-strip-image-russlive" %>
-      </a>
-      <a href="https://www.russ-klassik.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-russklassik" aria-label="Russ Klassik">
-        <%= image_tag "russ-klassik-logo.svg", alt: "Russ Klassik", class: "partner-strip-image partner-strip-image-russklassik" %>
-      </a>
-      <a href="https://www.easyticket.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-easyticket" aria-label="Easy Ticket">
-        <%= image_tag "easyticket-logo.svg", alt: "Easy Ticket", class: "partner-strip-image partner-strip-image-easyticket" %>
-      </a>
-      <a href="https://www.eventim.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-eventim" aria-label="eventim">
-        <%= image_tag "eventim-logo.svg", alt: "eventim", class: "partner-strip-image partner-strip-image-eventim" %>
-      </a>
-      <a href="https://www.reservix.de" target="_blank" rel="noopener" class="partner-strip-logo partner-strip-logo-reservix" aria-label="Reservix">
-        <%= image_tag "reservix-logo.svg", alt: "Reservix", class: "partner-strip-image partner-strip-image-reservix" %>
-      </a>
-    </div>
-  </section>
+  <%= render "newsletter_signup", browse_state: @browse_state %>
+  <%= render "partner_strip" %>
 </section>

@@ -1,7 +1,1 @@
-<%= if event.present?
-      [
-        event.artist_name.to_s.strip.presence,
-        event.title.to_s.strip.presence,
-        (event.start_at.present? ? l(event.start_at, format: "%d.%m.%Y %H:%M") : nil)
-      ].compact.join(" · ")
-    end %>
+<%= backend_event_context(event) %>
