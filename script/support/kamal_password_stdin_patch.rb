@@ -16,6 +16,9 @@ class Kamal::Commands::Registry
 
     return if registry_config.local?
 
+    # Kamal 2.10.1 nutzt hier noch `docker login -p ...`, was mit GHCR
+    # in unserem Setup unzuverlässig war. `--password-stdin` funktioniert
+    # sowohl lokal als auch in GitHub Actions stabiler.
     pipe \
       [ :printf, "%s", sensitive(Kamal::Utils.escape_shell_value(registry_config.password)) ],
       docker(

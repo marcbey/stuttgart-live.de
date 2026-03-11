@@ -10,6 +10,8 @@ if ! command -v jq >/dev/null 2>&1; then
   exit 1
 fi
 
+# Das Inventory wird direkt aus Terraform-Outputs gebaut, damit Hostname und IP
+# nicht separat in Ansible gepflegt werden müssen.
 OUTPUT_JSON="$(terraform -chdir="$TF_DIR" output -json)"
 SERVER_NAME="$(jq -r '.server_name.value' <<<"$OUTPUT_JSON")"
 SERVER_IPV4="$(jq -r '.server_ipv4.value // empty' <<<"$OUTPUT_JSON")"
@@ -17,6 +19,7 @@ SERVER_IPV6="$(jq -r '.server_ipv6.value // empty' <<<"$OUTPUT_JSON")"
 
 ANSIBLE_HOST="$SERVER_IPV4"
 if [[ -z "$ANSIBLE_HOST" ]]; then
+  # IPv6 bleibt ein Fallback, falls bewusst ohne öffentliche IPv4 gearbeitet wird.
   ANSIBLE_HOST="$SERVER_IPV6"
 fi
 

@@ -10,6 +10,8 @@ fi
 
 cd "$TF_DIR"
 
+# Das Skript emittiert `export ...`-Zeilen für den aktuellen AWS-Terraform-State,
+# damit Kamal-Deploys die nötigen Host-/Bucket-/DB-Werte aus IaC übernehmen können.
 echo "export KAMAL_WEB_HOST=\"$(terraform output -raw app_public_ip)\""
 echo "export KAMAL_REGISTRY_SERVER=\"$(terraform output -raw ecr_registry_server)\""
 echo "export AWS_S3_BUCKET=\"$(terraform output -raw uploads_bucket_name)\""
@@ -25,5 +27,6 @@ if [[ -n "$DB_PORT_VALUE" ]]; then
   echo "export DB_PORT=\"$DB_PORT_VALUE\""
 fi
 
+# Region und Image können bei Bedarf lokal über Umgebungsvariablen überschrieben werden.
 echo "export AWS_REGION=\"${AWS_REGION:-eu-central-1}\""
 echo "export KAMAL_IMAGE=\"${KAMAL_IMAGE:-stgt-live-prod}\""

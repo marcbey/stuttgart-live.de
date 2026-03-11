@@ -8,6 +8,8 @@ PLAYBOOK="$ANSIBLE_DIR/playbooks/app_host.yml"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/stgt-live-hetzner-admin}"
 SSH_USER="${SSH_USER:-admin}"
 
+# Host-Setup und App-Deploy müssen dasselbe DB-Passwort verwenden.
+# Das Skript zieht den Wert daher direkt aus der lokalen `.env`.
 db_password="$(
   ruby - "$ROOT_DIR/.env" <<'RUBY'
 dotenv_file = ARGV.fetch(0)
@@ -30,6 +32,7 @@ RUBY
 )"
 
 cd "$ANSIBLE_DIR"
+# Zusätzliche CLI-Argumente werden unverändert an ansible-playbook weitergereicht.
 exec ansible-playbook \
   -i "$INVENTORY" \
   -u "$SSH_USER" \
