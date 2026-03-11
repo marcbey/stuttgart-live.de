@@ -77,16 +77,12 @@ module Backend
       end
 
       def filtered_blog_posts_for(status:, query:)
-        scope = BlogPost.ordered_for_backend
-        scope = scope.where(status: status) unless status == "all"
-
-        return scope if query.blank?
-
-        pattern = "%#{ActiveRecord::Base.sanitize_sql_like(query.downcase)}%"
-        scope.where(
-          "LOWER(blog_posts.title) LIKE :pattern OR LOWER(blog_posts.teaser) LIKE :pattern OR LOWER(blog_posts.slug) LIKE :pattern OR LOWER(COALESCE(blog_posts.author_name, '')) LIKE :pattern",
-          pattern: pattern
-        )
+        Editorial::BlogPostsInboxQuery.new(
+          params: {
+            status: status == "all" ? nil : status,
+            query: query
+          }
+        ).call
       end
 
       def selected_blog_post_from(blog_posts)
