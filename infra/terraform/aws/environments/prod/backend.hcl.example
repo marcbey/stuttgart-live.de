@@ -1,6 +1,0 @@
-bucket         = "stgt-live-terraform-state-123456789012"
-key            = "prod/terraform.tfstate"
-region         = "eu-central-1"
-dynamodb_table = "stgt-live-terraform-locks"
-profile        = "stgt-live-admin"
-encrypt        = true

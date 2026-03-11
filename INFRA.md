@@ -22,13 +22,12 @@ Nicht Teil von GitHub Actions:
 
 ## Ausgangslage im Repo
 
-Der aktuelle Stand ist noch auf AWS ausgelegt:
+Der produktive Infrastrukturpfad liegt jetzt vollständig auf Hetzner:
 
-- bestehende Terraform-Struktur unter [infra/terraform](/Users/marc/Projects/stuttgart-live.de/infra/terraform)
-- bestehende Production-Deploy-Datei für AWS/ECR in [config/deploy.production.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.production.yml)
+- Hetzner-Terraform unter [infra/terraform/hetzner](/Users/marc/Projects/stuttgart-live.de/infra/terraform/hetzner)
+- GitHub-Environment-Verwaltung unter [infra/terraform/github](/Users/marc/Projects/stuttgart-live.de/infra/terraform/github)
+- Hetzner-Deploy-Datei unter [config/deploy.hetzner.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.yml)
 - vorhandene CI in [ci.yml](/Users/marc/Projects/stuttgart-live.de/.github/workflows/ci.yml)
-
-Für Hetzner müssen Infrastruktur und Production-Deploy-Pfad getrennt von AWS aufgebaut werden, damit beides parallel existieren und kontrolliert migriert werden kann.
 
 ## Zielarchitektur
 
@@ -57,7 +56,6 @@ Diese Architektur passt zum aktuellen Rails-Setup:
 - Infrastruktur-Code darf keine App-Secrets im State speichern.
 - Host-Konfiguration gehört in Ansible, nicht in fragile Einmal-Skripte.
 - GitHub deployt nur die Anwendung auf einen bereits vorbereiteten Host.
-- AWS-spezifische Infrastruktur bleibt während der Migration unberührt, bis Hetzner produktionsbereit ist.
 
 ## Verantwortlichkeiten
 
@@ -123,13 +121,11 @@ GitHub Actions übernimmt nicht:
 
 ## Zielstruktur im Repo
 
-Die neue Struktur sollte die bestehende AWS-Struktur nicht überschreiben, sondern Hetzner separat abbilden:
+Die Repo-Struktur für den aktuellen Produktionspfad sieht so aus:
 
 ```text
 infra/
   terraform/
-    aws/
-      ...
     github/
       environments/
         production/
@@ -159,18 +155,15 @@ infra/
     ci.yml
     deploy-production.yml
 config/
-  deploy.production.yml
   deploy.hetzner.yml
 .kamal/
-  secrets.production
   secrets.hetzner.example
 ```
 
 Hinweis:
 
-- Die bestehende AWS-Terraform-Struktur liegt unter [infra/terraform/aws](/Users/marc/Projects/stuttgart-live.de/infra/terraform/aws).
 - GitHub-Environment-Secrets und Variables können zusätzlich unter [infra/terraform/github](/Users/marc/Projects/stuttgart-live.de/infra/terraform/github) verwaltet werden.
-- Der Hetzner-Stack sollte in einem eigenen Pfad leben, damit kein gemischter Provider-Zustand entsteht.
+- Der Hetzner-Stack lebt in einem eigenen Pfad, damit Provisionierung und Host-Konfiguration klar getrennt bleiben.
 
 ## Terraform-Plan für Hetzner
 
@@ -319,14 +312,10 @@ Enthält mindestens:
 
 Die Hetzner-Zielarchitektur verwendet lokale Uploads statt S3. Deshalb muss die Production-Konfiguration angepasst werden.
 
-Aktuell noch AWS-orientiert:
+Bereits umgesetzt:
 
-- `config.active_storage.service = :amazon` in [config/environments/production.rb](/Users/marc/Projects/stuttgart-live.de/config/environments/production.rb)
-
-Geplante Anpassung:
-
-- Active Storage in Production env-gesteuert machen
-- für Hetzner `:local` verwenden
+- Active Storage ist in Production env-gesteuert
+- Default für Hetzner ist `:local`
 
 Für `kamal-proxy` zusätzlich aktivieren:
 
@@ -379,7 +368,7 @@ Empfehlung:
 Gründe:
 
 - passt natürlich zu GitHub Actions
-- keine AWS/ECR-Abhängigkeit für Hetzner
+- keine zusätzliche Registry-Infrastruktur im Projekt
 - einfacher Build-und-Push-Ablauf
 
 ### GitHub-Schutzmechanismen
@@ -398,7 +387,7 @@ Empfohlen für das Environment `production`:
 Ergebnis:
 
 - Zielarchitektur beschlossen
-- Hetzner statt AWS für neuen Produktionspfad
+- Hetzner als einziger Produktionspfad
 - klare Trennung zwischen Infra und App-Deploy
 
 Arbeitspakete:

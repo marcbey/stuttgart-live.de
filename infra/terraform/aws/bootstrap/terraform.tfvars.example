@@ -1,9 +1,0 @@
-aws_region      = "eu-central-1"
-aws_profile     = "stgt-live-admin"
-tf_state_bucket = "stgt-live-terraform-state-123456789012"
-tf_lock_table   = "stgt-live-terraform-locks"
-
-tags = {
-  Project = "stgt-live"
-  Owner   = "marc"
-}

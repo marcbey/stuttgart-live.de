@@ -4,7 +4,7 @@ Stand: 10. März 2026
 
 ## Ziel
 
-Die Anwendung soll günstig auf Hetzner betrieben werden, ohne die Komplexität der bisherigen AWS-Infrastruktur.
+Die Anwendung soll günstig auf Hetzner betrieben werden, ohne unnötige Infrastruktur-Komplexität.
 
 Empfohlene Zielarchitektur:
 
@@ -159,7 +159,7 @@ Wenn das später umgesetzt wird, wären diese Repo-Änderungen sinnvoll:
 - neue Deploy-Datei, z. B. `config/deploy.hetzner.yml`
 - neue Secret-Datei, z. B. `.kamal/secrets.hetzner`
 - `config.active_storage.service` in Production env-gesteuert machen
-- Registry von ECR auf `ghcr.io` oder Docker Hub umstellen
+- Registry auf `ghcr.io` oder Docker Hub festlegen
 
 ## Empfehlung
 

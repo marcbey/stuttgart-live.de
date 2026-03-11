@@ -15,7 +15,7 @@
 - Jobs/Queue: Active Job + Solid Queue
 - Authentifizierung Redaktion: Rails built-in Generator (`rails generate authentication`)
 - Deployment: Docker + Kamal
-- Infrastruktur: AWS, provisioniert mit Terraform
+- Infrastruktur: Hetzner, provisioniert mit Terraform + Ansible
 - Analytics: zunaechst keine Integration
 
 
@@ -263,7 +263,7 @@ Wichtige DB-Indizes:
 - Phase 0: Projekt-Setup
   - Rails-App, Tailwind, Auth-Generator, Solid Queue, CI-Grundgeruest
 - Phase 1: Infrastruktur-Basis
-  - Terraform-Setup, AWS-Umgebungen (staging/production), Kamal-Basisdeployment
+  - Hetzner-Terraform, Ansible-Host-Setup, Kamal-Basisdeployment
 - Phase 2: Domain & Datenbank
   - Kernschema (`easyticket_import_events`, `eventim_import_events`, `reservix_import_events`, `events`, `event_offers`), States, Indizes
 - Phase 3: Importer v1
@@ -290,31 +290,26 @@ Wichtige DB-Indizes:
 - Alerts:
   - 2 fehlgeschlagene Runs in Folge je Quelle
   - starker Volumenabfall oder Deaktivierungs-Spike
-- Secrets ausschliesslich via AWS Secrets Manager/SSM Parameter Store
+- Secrets über GitHub-Environment-Secrets; lokale Admin-Skripte lesen aus `.env`
 - Rollen- und Session-Sicherheit fuer Backend
 - Kein externes Analytics-Tracking in v1
 
-## 13. Infrastruktur-Provisionierung (Terraform + AWS + Kamal)
+## 13. Infrastruktur-Provisionierung (Terraform + Hetzner + Kamal)
 - Terraform-Struktur:
-  - `infrastructure/terraform/modules/*` (network, security, compute, db, storage, iam, monitoring)
-  - `infrastructure/terraform/envs/staging`
-  - `infrastructure/terraform/envs/production`
+  - `infra/terraform/hetzner/environments/prod`
+  - `infra/terraform/github/environments/production`
 - Terraform State:
-  - Remote State in S3
-  - State Locking via DynamoDB
-- AWS Zielarchitektur:
-  - VPC mit Public/Private Subnets
-  - Security Groups mit minimalen Regeln
-  - EC2-Hosts fuer App-Rollen (web/worker/scheduler via Kamal)
-  - RDS PostgreSQL 18 (staging klein, production mit Backup- und Restore-Strategie)
-  - ECR fuer Docker Images
-  - S3 fuer Active Storage/Import-Artefakte
-  - CloudWatch Logs + Alarme
-  - Route53 + ACM fuer DNS/TLS
+  - Remote State außerhalb des Zielservers
+- Zielarchitektur:
+  - Hetzner Cloud Server `CX33`
+  - lokale PostgreSQL-Installation auf dem Host
+  - `ghcr.io` fuer Docker Images
+  - lokales Volume fuer Active Storage
+  - GitHub Actions fuer Build + Kamal-Deploy
 - Deployment Flow:
-  - CI baut Docker Image und pusht nach ECR
-  - Kamal deployt auf EC2 (rolling deploy, health checks, rollback)
-  - getrennte Kamal-Configs fuer staging/production
+  - CI baut Docker Image und pusht nach `ghcr.io`
+  - Kamal deployt auf den Hetzner-Host (rolling deploy, health checks, rollback)
+  - Ansible haertet Host und Datenbank außerhalb des Deploys
 
 ## 14. Festgelegte Produktentscheidungen
 1. Design: vorerst schlicht, ohne festes bestehendes Design-System.

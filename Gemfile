@@ -41,8 +41,6 @@ gem "thruster", require: false
 
 # Use Active Storage variants [https://guides.rubyonrails.org/active_storage_overview.html#transforming-images]
 gem "image_processing", "~> 1.2"
-# Required by Active Storage S3 service in production.
-gem "aws-sdk-s3", require: false
 
 group :development, :test do
   gem "dotenv-rails"
