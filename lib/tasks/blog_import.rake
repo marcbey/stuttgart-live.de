@@ -1,13 +1,7 @@
 namespace :blog do
   desc "Importiere News-Beiträge von stuttgart-live.de via WordPress API"
-  task :import_wordpress_news, [ :author_email ] => :environment do |_, args|
-    author_email = args[:author_email].to_s.strip.downcase.presence || ENV["AUTHOR_EMAIL"].to_s.strip.downcase.presence
-    author =
-      if author_email.present?
-        User.find_by!(email_address: author_email)
-      else
-        Blog::WordpressImporter.default_author
-      end
+  task import_wordpress_news: :environment do
+    author = Blog::WordpressImporter.default_author
 
     result = Blog::WordpressImporter.call(author: author)
 
