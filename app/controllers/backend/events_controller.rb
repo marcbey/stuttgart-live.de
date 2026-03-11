@@ -2,19 +2,14 @@ module Backend
   class EventsController < BaseController
     EditorState = Data.define(:target_status, :sidebar_events, :sidebar_events_count, :target_event)
 
-    SESSION_FILTERS_KEY = "backend_events_inbox_filters".freeze
-    SESSION_STATUS_KEY = "backend_events_inbox_status".freeze
-    SESSION_NEXT_EVENT_KEY = "backend_events_next_event_enabled".freeze
-    MERGE_SCOPES = %w[all last_merge].freeze
-    MERGE_CHANGE_TYPES = %w[all created updated].freeze
-
     before_action :set_event, only: [ :show, :update, :publish, :unpublish ]
+    before_action :set_inbox_state
     before_action :set_next_event_enabled, only: [ :index, :show, :update, :publish, :unpublish ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish ]
 
     def index
       @latest_successful_merge_run = latest_successful_merge_run
-      @filters = session_filters_for_index.merge(status: current_status)
+      @filters = @inbox_state.filters
       @selected_merge_run_id = selected_merge_run_id_for_filters(@filters)
       @events = filtered_events_for_status(@filters[:status])
       @filtered_events_count = filtered_events_count(@events)
@@ -23,26 +18,17 @@ module Backend
     end
 
     def apply_filters
-      persist_session_filters!(
-        clear: clear_filters_requested?,
-        query: params[:query],
-        promoter_id: params[:promoter_id],
-        starts_after: params[:starts_after],
-        starts_before: params[:starts_before],
-        merge_scope: params[:merge_scope],
-        merge_change_type: params[:merge_change_type]
-      )
-
-      redirect_to backend_events_path(status: current_status)
+      @inbox_state.persist_filters!
+      redirect_to backend_events_path(status: @inbox_state.current_status)
     end
 
     def next_event_preference
-      persist_next_event_preference!(params[:enabled])
+      @next_event_enabled = @inbox_state.persist_next_event_preference!(params[:enabled])
       head :ok
     end
 
     def show
-      @filter_status = inbox_status_for_navigation || params[:status].to_s.presence_in(status_filters)
+      @filter_status = @inbox_state.navigation_status || params[:status].to_s.presence_in(status_filters)
     end
 
     def new
@@ -72,8 +58,8 @@ module Backend
     end
 
     def update
-      persist_next_event_preference!(params[:next_event_enabled]) if params.key?(:next_event_enabled)
-      navigation_status = inbox_status_for_navigation
+      @next_event_enabled = @inbox_state.persist_next_event_preference!(params[:next_event_enabled]) if params.key?(:next_event_enabled)
+      navigation_status = @inbox_state.navigation_status
       next_event = next_event_fallback_for(@event, navigation_status: navigation_status)
 
       @event.assign_attributes(event_params)
@@ -122,7 +108,7 @@ module Backend
     end
 
     def unpublish
-      navigation_status = inbox_status_for_navigation
+      navigation_status = @inbox_state.navigation_status
       next_event = next_event_fallback_for(@event, navigation_status: navigation_status)
       @event.unpublish!(status: "ready_for_publish", auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "unpublished", user: current_user)
@@ -141,122 +127,36 @@ module Backend
       action = params[:bulk_action].to_s
 
       if event_ids.blank?
-        redirect_to backend_events_path(status: current_status), alert: "Bitte mindestens ein Event auswählen."
+        redirect_to backend_events_path(status: @inbox_state.current_status), alert: "Bitte mindestens ein Event auswählen."
         return
       end
 
       events = Event.where(id: event_ids)
-      processed = 0
+      processed = Backend::Events::BulkUpdater.new(events: events, action: action, user: current_user).call
 
-      Event.transaction do
-        events.find_each do |event|
-          case action
-          when "publish"
-            event.publish_now!(user: current_user, auto_published: false)
-          when "unpublish"
-            event.unpublish!(status: "needs_review", auto_published: false)
-          when "mark_complete"
-            event.update!(status: "ready_for_publish")
-          when "mark_incomplete"
-            event.update!(status: "needs_review", auto_published: false)
-          when "reject"
-            event.update!(status: "rejected", auto_published: false)
-          end
-
-          Editorial::EventChangeLogger.log!(
-            event: event,
-            action: "bulk_#{action}",
-            user: current_user
-          )
-          processed += 1
-        end
-      end
-
-      redirect_to backend_events_path(status: current_status), notice: "Bulk-Aktion abgeschlossen (#{processed} Events)."
+      redirect_to backend_events_path(status: @inbox_state.current_status), notice: "Bulk-Aktion abgeschlossen (#{processed} Events)."
     end
 
     private
+
+    def set_inbox_state
+      @inbox_state = Backend::Events::InboxState.new(
+        params: params,
+        session: session,
+        status_filters: status_filters
+      )
+    end
 
     def set_event
       @event = Event.includes(:import_event_images, event_images: [ file_attachment: :blob ]).find(params[:id])
     end
 
     def set_next_event_enabled
-      @next_event_enabled = next_event_enabled_preference
+      @next_event_enabled = @inbox_state.next_event_enabled
     end
 
     def load_all_genres
       @all_genres = Genre.order(:name)
-    end
-
-    def current_status
-      value = params[:status].to_s
-      if status_filters.include?(value)
-        persist_session_status!(value)
-        return value
-      end
-
-      stored = session[SESSION_STATUS_KEY].to_s
-      return stored if status_filters.include?(stored)
-
-      "published"
-    end
-
-    def clear_filters_requested?
-      ActiveModel::Type::Boolean.new.cast(params[:clear_filters])
-    end
-
-    def session_filters_for_index
-      stored = session[SESSION_FILTERS_KEY]
-      normalized = stored.is_a?(Hash) ? stored.stringify_keys : {}
-      starts_after_value =
-        if normalized.key?("starts_after")
-          normalized["starts_after"].to_s.strip.presence
-        else
-          Date.current.iso8601
-        end
-
-      {
-        query: normalized["query"].to_s.strip.presence,
-        promoter_id: normalized["promoter_id"].to_s.strip.presence,
-        starts_after: starts_after_value,
-        starts_before: normalized["starts_before"].to_s.strip.presence,
-        merge_scope: normalize_merge_scope(normalized["merge_scope"]),
-        merge_change_type: normalize_merge_change_type(normalized["merge_change_type"])
-      }
-    end
-
-    def persist_session_filters!(clear:, query:, promoter_id:, starts_after:, starts_before:, merge_scope:, merge_change_type:)
-      if clear
-        session.delete(SESSION_FILTERS_KEY)
-        return
-      end
-
-      session[SESSION_FILTERS_KEY] = {
-        "query" => query.to_s.strip.presence,
-        "promoter_id" => promoter_id.to_s.strip.presence,
-        "starts_after" => starts_after.to_s.strip.presence,
-        "starts_before" => starts_before.to_s.strip.presence,
-        "merge_scope" => normalize_merge_scope(merge_scope),
-        "merge_change_type" => normalize_merge_change_type(merge_change_type)
-      }
-    end
-
-    def persist_session_status!(status)
-      session[SESSION_STATUS_KEY] = status
-    end
-
-    def next_event_enabled_preference
-      value = session[SESSION_NEXT_EVENT_KEY]
-      return false if value.nil?
-
-      ActiveModel::Type::Boolean.new.cast(value)
-    end
-
-    def persist_next_event_preference!(value)
-      normalized = ActiveModel::Type::Boolean.new.cast(value)
-      session[SESSION_NEXT_EVENT_KEY] = normalized
-      @next_event_enabled = normalized
     end
 
     def selected_event_from(events)
@@ -265,13 +165,6 @@ module Backend
       end
 
       events.first
-    end
-
-    def inbox_status_for_navigation
-      value = params[:inbox_status].to_s
-      return value if status_filters.include?(value)
-
-      nil
     end
 
     def next_filtered_event_after(event_id, status:)
@@ -304,7 +197,7 @@ module Backend
     end
 
     def filtered_events_for_status(status)
-      filters = session_filters_for_index.merge(status: status)
+      filters = @inbox_state.filters_for(status: status)
       filters[:merge_run_id] = selected_merge_run_id_for_filters(filters) if filters[:merge_scope] == "last_merge"
       Editorial::EventsInboxQuery.new(params: filters).call
     end
@@ -338,25 +231,11 @@ module Backend
       ImportRun.where(source_type: "merge", status: "succeeded").order(finished_at: :desc, id: :desc).first
     end
 
-    def selected_merge_run_id_for_filters(filters = session_filters_for_index)
+    def selected_merge_run_id_for_filters(filters)
       return nil unless filters[:merge_scope] == "last_merge"
 
       @latest_successful_merge_run ||= latest_successful_merge_run
       @latest_successful_merge_run&.id
-    end
-
-    def normalize_merge_scope(value)
-      normalized = value.to_s.strip
-      return normalized if MERGE_SCOPES.include?(normalized)
-
-      "all"
-    end
-
-    def normalize_merge_change_type(value)
-      normalized = value.to_s.strip
-      return normalized if MERGE_CHANGE_TYPES.include?(normalized)
-
-      "all"
     end
 
     def event_params
@@ -463,7 +342,7 @@ module Backend
             events: editor_state.sidebar_events,
             selected_event: editor_state.target_event,
             status: editor_state.target_status,
-            merge_run_id: selected_merge_run_id_for_filters,
+            merge_run_id: selected_merge_run_id_for_filters(@inbox_state.filters_for(status: editor_state.target_status)),
             filtered_events_count: editor_state.sidebar_events_count
           }
         ),
