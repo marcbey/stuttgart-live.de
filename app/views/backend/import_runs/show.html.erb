@@ -14,7 +14,7 @@
     </div>
   </header>
 
-  <section>
+  <section class="import-run-section">
     <h2>Run Daten</h2>
     <p>Retries genutzt: <strong><%= import_run_retries_label(@import_run) %></strong></p>
     <div class="table-wrap">
@@ -45,7 +45,7 @@
     </div>
   </section>
 
-  <section>
+  <section class="import-run-section">
     <h2>Errors (<%= @run_errors.size %>)</h2>
     <% if @run_errors.any? %>
       <div class="table-wrap">
@@ -84,34 +84,28 @@
 
   <% unless @import_run.source_type == "merge" %>
     <% configured_cities = import_source_configured_cities(@import_run.import_source) %>
-    <section>
+    <section class="import-run-section">
       <h2>Ortsliste konfiguriert (<%= configured_cities.size %>)</h2>
       <% if configured_cities.any? %>
-        <p>
-          <% configured_cities.each_with_index do |city, index| %>
+        <div class="import-run-city-list">
+          <% configured_cities.each do |city| %>
             <%= link_to city, remove_whitelist_city_backend_import_run_path(@import_run, city: city), data: { turbo_method: :post }, class: "button button-ghost" %>
-            <% unless index == configured_cities.length - 1 %>
-              <span>, </span>
-            <% end %>
           <% end %>
-        </p>
+        </div>
       <% else %>
         <p>Keine Städte in der Ortsliste konfiguriert.</p>
       <% end %>
     </section>
 
     <% filtered_out_cities = import_run_filtered_out_cities(@import_run) %>
-    <section>
+    <section class="import-run-section">
       <h2>Aussortierte Städte (<%= filtered_out_cities.size %>)</h2>
       <% if filtered_out_cities.any? %>
-        <p>
-          <% filtered_out_cities.each_with_index do |city, index| %>
+        <div class="import-run-city-list">
+          <% filtered_out_cities.each do |city| %>
             <%= link_to city, add_filtered_city_backend_import_run_path(@import_run, city: city), data: { turbo_method: :post }, class: "button button-ghost" %>
-            <% unless index == filtered_out_cities.length - 1 %>
-              <span>, </span>
-            <% end %>
           <% end %>
-        </p>
+        </div>
       <% else %>
         <p>Keine aussortierten Städte erfasst.</p>
       <% end %>

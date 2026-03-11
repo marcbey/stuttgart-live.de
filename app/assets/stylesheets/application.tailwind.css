@@ -3305,6 +3305,21 @@ trix-editor.blog-rich-text:focus {
   flex-wrap: wrap;
 }
 
+.import-run-city-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.8rem;
+  margin-top: 0.35rem;
+}
+
+.import-run-section + .import-run-section {
+  margin-top: 2rem;
+}
+
+.import-run-section h2 {
+  margin: 0 0 1rem;
+}
+
 .event-image-upload-grid {
   display: grid;
   gap: 0.75rem;
