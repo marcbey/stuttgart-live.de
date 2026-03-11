@@ -1,4 +1,5 @@
-<% payload_sources = event_source_payloads(event) %>
+<% payload_presenter = event_payload_presenter(event) %>
+<% payload_sources = payload_presenter.payload_sources %>
 
 <section class="offer-section payload-section">
   <h3>Payload-Daten</h3>
@@ -7,20 +8,20 @@
       <% payload_sources.each do |payload_source| %>
         <details class="payload-entry">
           <summary>
-            <strong><%= payload_source[:source] %></strong>
-            <% if payload_source[:external_event_id].present? %>
-              <span>· ID <%= payload_source[:external_event_id] %></span>
+            <strong><%= payload_source.source %></strong>
+            <% if payload_source.external_event_id.present? %>
+              <span>· ID <%= payload_source.external_event_id %></span>
             <% end %>
           </summary>
 
           <details class="payload-block">
             <summary>dump_payload</summary>
-            <pre class="payload-json"><%= pretty_json_payload(payload_source[:dump_payload]) %></pre>
+            <pre class="payload-json"><%= payload_source.formatted_dump_payload %></pre>
           </details>
 
           <details class="payload-block">
             <summary>detail_payload</summary>
-            <pre class="payload-json"><%= pretty_json_payload(payload_source[:detail_payload]) %></pre>
+            <pre class="payload-json"><%= payload_source.formatted_detail_payload %></pre>
           </details>
         </details>
       <% end %>

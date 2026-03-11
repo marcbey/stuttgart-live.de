@@ -1,4 +1,8 @@
 module Backend::EventsHelper
+  def event_payload_presenter(event)
+    Backend::Events::SourcePayloadPresenter.new(event)
+  end
+
   def backend_event_context(event)
     return if event.blank?
 
@@ -10,48 +14,7 @@ module Backend::EventsHelper
   end
 
   def event_display_promoter_id(event)
-    promoter_id = event.promoter_id.to_s.strip
-    return promoter_id if promoter_id.present?
-
-    event_source_payloads(event).each do |source|
-      next unless source[:source] == "eventim"
-
-      attributes = Importing::Eventim::PayloadProjection.new(feed_payload: source[:dump_payload]).to_attributes
-      candidate = attributes&.dig(:promoter_id).to_s.strip
-      return candidate if candidate.present?
-    end
-
-    nil
-  end
-
-  def event_source_payloads(event)
-    sources = event.source_snapshot.is_a?(Hash) ? Array(event.source_snapshot["sources"]) : []
-
-    sources.filter_map do |source|
-      next unless source.is_a?(Hash)
-
-      raw_payload = source["raw_payload"]
-      next unless raw_payload.is_a?(Hash)
-
-      {
-        source: source["source"].to_s.presence || "unbekannt",
-        external_event_id: source["external_event_id"].to_s.presence,
-        dump_payload: raw_payload["dump_payload"] || {},
-        detail_payload: raw_payload["detail_payload"] || {}
-      }
-    end
-  end
-
-  def pretty_json_payload(value)
-    parsed = if value.is_a?(String)
-      JSON.parse(value)
-    else
-      value
-    end
-
-    JSON.pretty_generate(parsed)
-  rescue JSON::ParserError, JSON::GeneratorError
-    value.to_s
+    event_payload_presenter(event).display_promoter_id
   end
 
   def event_status_label(status)
