@@ -318,6 +318,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-genre", text: "Genre: Jazz · Pop · Rock"
   end
 
+  test "show gates youtube embeds behind consent placeholder" do
+    @published_event.update!(youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_includes response.body, "YouTube laden"
+    assert_includes response.body, "Datenschutzeinstellungen"
+    assert_select "[data-consent-media-target='frame'] iframe", count: 0
+    assert_select "template iframe[src=?]", "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  end
+
   test "show does not render dangling comma when city is blank" do
     @published_event.update!(city: nil)
 

@@ -1,0 +1,33 @@
+<div class="consent-media-card" data-controller="consent-media">
+  <div data-consent-media-target="frame"></div>
+
+  <div class="consent-media-placeholder" data-consent-media-target="placeholder">
+    <p class="eyebrow">Externer Inhalt</p>
+    <h3><%= title %></h3>
+    <p>
+      Dieses Video wird von YouTube geladen. Erst nach Deiner Freigabe werden Daten an Drittanbieter übertragen.
+    </p>
+
+    <div class="consent-media-actions">
+      <button type="button" class="button button-secondary" data-action="click->consent#acceptMedia">
+        YouTube laden
+      </button>
+      <button type="button" class="button button-ghost" data-action="click->consent#openSettings">
+        Einstellungen
+      </button>
+    </div>
+  </div>
+
+  <template data-consent-media-target="template">
+    <div class="video-frame">
+      <iframe
+        src="<%= url %>"
+        title="<%= title %>"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </template>
+</div>

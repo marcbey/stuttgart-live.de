@@ -54,10 +54,32 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
+    assert_select "body[data-controller='consent']"
     assert_select ".site-footer-nav a", text: "Datenschutz"
     assert_select ".site-footer-nav a", text: "Impressum"
     assert_select ".site-footer-nav a", text: "AGB"
     assert_select ".site-footer-nav a", text: "Barrierefreiheit"
+    assert_select ".site-footer-nav button", text: "Datenschutzeinstellungen"
+    assert_includes response.body, "Google Analytics"
+  end
+
+  test "google analytics measurement id is only exposed on the production host" do
+    with_allowed_hosts("stuttgart-live.de", "stuttgart-live.schopp3r.de") do
+      with_google_analytics_env("G-TEST123") do
+        host! "stuttgart-live.schopp3r.de"
+        get events_path
+
+        assert_response :success
+        assert_includes response.body, 'data-controller="consent"'
+        assert_not_includes response.body, 'data-consent-measurement-id-value="G-TEST123"'
+
+        host! "stuttgart-live.de"
+        get events_path
+
+        assert_response :success
+        assert_includes response.body, 'data-consent-measurement-id-value="G-TEST123"'
+      end
+    end
   end
 
   test "guardian form page is publicly accessible" do
@@ -68,4 +90,24 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Drucken"
     assert_includes response.body, "Test Event"
   end
+
+  private
+    def with_google_analytics_env(value)
+      previous = ENV["GOOGLE_ANALYTICS_ID"]
+      ENV["GOOGLE_ANALYTICS_ID"] = value
+      yield
+    ensure
+      ENV["GOOGLE_ANALYTICS_ID"] = previous
+      host! "www.example.com"
+    end
+
+    def with_allowed_hosts(*hosts)
+      config_hosts = Rails.application.config.hosts
+      previous = config_hosts.to_a.dup
+      hosts.each { |host| config_hosts << host unless config_hosts.include?(host) }
+      yield
+    ensure
+      config_hosts.clear
+      previous.each { |host| config_hosts << host }
+    end
 end

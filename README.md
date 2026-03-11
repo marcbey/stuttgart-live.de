@@ -10,6 +10,7 @@ Things you may want to cover:
 * System dependencies
 
 * Configuration
+  * `GOOGLE_ANALYTICS_ID` (alternativ `GOOGLE_ANALYTICS_MEASUREMENT_ID` oder `GA4_MEASUREMENT_ID`) aktiviert GA4 nach Einwilligung im Consent-Banner.
 
 * Database creation
 

@@ -459,6 +459,21 @@ a {
   border-color: #111;
 }
 
+.inline-link-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(17, 17, 17, 0.28);
+  cursor: pointer;
+}
+
+.inline-link-button:hover {
+  border-color: #111;
+}
+
 .blog-admin-filter-row {
   display: flex;
   gap: 0.6rem;
@@ -1232,17 +1247,169 @@ trix-editor.blog-rich-text:focus {
   gap: 0.6rem 1.3rem;
 }
 
-.site-footer-nav a {
+.site-footer-nav a,
+.site-footer-button {
   color: rgba(17, 17, 17, 0.76);
   font-size: 0.98rem;
   font-weight: 600;
   text-decoration: none;
 }
 
-.site-footer-nav a:hover {
+.site-footer-button {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.site-footer-nav a:hover,
+.site-footer-button:hover {
   color: var(--ink);
   text-decoration: underline;
   text-underline-offset: 0.14em;
+}
+
+.consent-banner {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 60;
+  width: min(36rem, calc(100vw - 2rem));
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.16);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 244, 238, 0.98)),
+    linear-gradient(135deg, rgba(227, 27, 46, 0.07), rgba(240, 154, 70, 0.08));
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.16);
+  padding: 1rem;
+}
+
+.consent-banner h2,
+.consent-dialog h2,
+.consent-media-placeholder h3 {
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.consent-banner p,
+.consent-option p,
+.consent-media-placeholder p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.consent-banner-copy {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.consent-banner-actions,
+.consent-dialog-actions,
+.consent-media-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.consent-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(17, 17, 17, 0.56);
+}
+
+.consent-dialog {
+  width: min(42rem, 100%);
+  display: grid;
+  gap: 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  background: #fffaf5;
+  box-shadow: 0 18px 54px rgba(0, 0, 0, 0.24);
+  padding: 1rem;
+}
+
+.consent-dialog-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.5rem 1rem;
+  align-items: start;
+}
+
+.consent-dialog-header .eyebrow,
+.consent-dialog-header h2 {
+  grid-column: 1;
+}
+
+.consent-dialog-close {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: start;
+  border: 0;
+  background: transparent;
+  color: rgba(17, 17, 17, 0.7);
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.consent-dialog-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.consent-option {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.55rem 1rem;
+  align-items: center;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background: rgba(255, 255, 255, 0.78);
+  padding: 0.9rem 1rem;
+}
+
+.consent-option h3 {
+  margin: 0 0 0.2rem;
+  font-size: 1.25rem;
+  text-transform: uppercase;
+}
+
+.consent-option input {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.consent-option-locked {
+  background: rgba(17, 17, 17, 0.05);
+}
+
+.consent-option-state {
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.consent-dialog-open {
+  overflow: hidden;
+}
+
+.consent-media-card {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.consent-media-placeholder {
+  display: grid;
+  gap: 0.55rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 240, 232, 0.96)),
+    repeating-linear-gradient(135deg, rgba(17, 17, 17, 0.03), rgba(17, 17, 17, 0.03) 8px, transparent 8px, transparent 18px);
+  padding: 1rem;
 }
 
 .public-filter-row-home {
@@ -2696,6 +2863,8 @@ trix-editor.blog-rich-text:focus {
   margin-top: 0.6rem;
   position: relative;
   padding-top: 56.25%;
+  overflow: hidden;
+  background: #111;
 }
 
 .video-frame iframe {
@@ -3903,5 +4072,29 @@ trix-editor.blog-rich-text:focus {
 
   .news-index-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 720px) {
+  .consent-banner {
+    left: 1rem;
+    right: 1rem;
+    width: auto;
+  }
+
+  .consent-option {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .consent-dialog-actions,
+  .consent-banner-actions,
+  .consent-media-actions {
+    display: grid;
+  }
+
+  .consent-dialog-actions .button,
+  .consent-banner-actions .button,
+  .consent-media-actions .button {
+    width: 100%;
   }
 }

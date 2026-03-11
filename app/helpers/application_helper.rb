@@ -1,4 +1,14 @@
 module ApplicationHelper
+  GOOGLE_ANALYTICS_ENV_KEYS = %w[
+    GOOGLE_ANALYTICS_ID
+    GOOGLE_ANALYTICS_MEASUREMENT_ID
+    GA4_MEASUREMENT_ID
+  ].freeze
+  GOOGLE_ANALYTICS_ALLOWED_HOSTS = %w[
+    stuttgart-live.de
+    www.stuttgart-live.de
+  ].freeze
+
   def app_nav_link_class(active: false, accent: false)
     classes = [ "app-nav-link" ]
     classes << "app-nav-link-active" if active
@@ -48,6 +58,23 @@ module ApplicationHelper
     File.exist?(propshaft_path)
   rescue StandardError
     false
+  end
+
+  def google_analytics_measurement_id
+    return unless google_analytics_allowed_host?
+
+    GOOGLE_ANALYTICS_ENV_KEYS
+      .lazy
+      .map { |key| ENV[key].to_s.strip.presence }
+      .find(&:present?)
+  end
+
+  def google_analytics_enabled?
+    google_analytics_measurement_id.present?
+  end
+
+  def google_analytics_allowed_host?
+    GOOGLE_ANALYTICS_ALLOWED_HOSTS.include?(request.host)
   end
 
   def event_card_image_style(image)

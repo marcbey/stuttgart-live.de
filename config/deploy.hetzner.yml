@@ -7,7 +7,7 @@ servers:
 
 proxy:
   ssl: <%= ENV.fetch("APP_SSL", "true") == "true" %>
-  host: <%= ENV.fetch("APP_HOST", "stuttgart-live.schopp3r.de") %>
+  host: <%= ENV.fetch("APP_HOST", "stuttgart-live.de") %>
   app_port: 80
 
 registry:
@@ -20,6 +20,7 @@ env:
   secret:
     - RAILS_MASTER_KEY
     - DB_PASSWORD
+    - GOOGLE_ANALYTICS_ID
     - EASYTICKET_EVENTS_API
     - EASYTICKET_EVENT_DETAIL_API
     - EASYTICKET_PARTNER_SHOP_ID

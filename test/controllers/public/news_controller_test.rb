@@ -34,8 +34,24 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "show gates youtube embeds behind consent placeholder" do
+    post = create_blog_post(
+      title: "Video News",
+      status: "published",
+      published_at: 1.hour.ago,
+      youtube_video_urls: [ "https://youtu.be/dQw4w9WgXcQ" ]
+    )
+
+    get news_url(post.slug)
+
+    assert_response :success
+    assert_includes response.body, "YouTube laden"
+    assert_select "[data-consent-media-target='frame'] iframe", count: 0
+    assert_select "template iframe[src=?]", "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  end
+
   private
-    def create_blog_post(title:, status:, published_at: nil)
+    def create_blog_post(title:, status:, published_at: nil, youtube_video_urls: [])
       BlogPost.create!(
         title: title,
         teaser: "#{title} teaser",
@@ -43,7 +59,8 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
         author: @author,
         status: status,
         published_at: published_at,
-        published_by: (status == "published" ? @author : nil)
+        published_by: (status == "published" ? @author : nil),
+        youtube_video_urls: youtube_video_urls
       )
     end
 end

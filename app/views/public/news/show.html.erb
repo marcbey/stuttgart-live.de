@@ -38,18 +38,12 @@
 
   <% if @blog_post.youtube_video_urls.any? %>
     <section class="event-detail-video">
+      <h2>Videos</h2>
       <div class="news-video-stack">
         <% @blog_post.youtube_video_urls.each do |youtube_url| %>
-          <div class="video-frame">
-            <iframe
-              src="<%= youtube_url %>"
-              title="YouTube video player"
-              loading="lazy"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              referrerpolicy="strict-origin-when-cross-origin"
-              allowfullscreen>
-            </iframe>
-          </div>
+          <%= render "shared/consent_video_embed",
+                     title: "#{@blog_post.title} auf YouTube",
+                     url: youtube_url %>
         <% end %>
       </div>
     </section>

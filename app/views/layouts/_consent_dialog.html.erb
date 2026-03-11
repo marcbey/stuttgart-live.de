@@ -1,0 +1,52 @@
+<div class="consent-dialog-backdrop"
+     data-consent-target="dialog"
+     data-action="click->consent#closeSettings keydown.esc@window->consent#closeSettings"
+     hidden>
+  <section class="consent-dialog" role="dialog" aria-modal="true" aria-labelledby="consent-dialog-title">
+    <div class="consent-dialog-header">
+      <p class="eyebrow">Datenschutz</p>
+      <h2 id="consent-dialog-title">Datenschutzeinstellungen</h2>
+      <button type="button" class="consent-dialog-close" data-action="click->consent#closeSettings" aria-label="Dialog schließen">
+        ×
+      </button>
+    </div>
+
+    <div class="consent-dialog-list">
+      <article class="consent-option consent-option-locked">
+        <div>
+          <h3>Notwendige Funktionen</h3>
+          <p>Erforderlich für Sicherheit, Sitzungen und die Grundfunktionen der Website.</p>
+        </div>
+        <span class="consent-option-state">Immer aktiv</span>
+      </article>
+
+      <label class="consent-option" for="consent-analytics">
+        <div>
+          <h3>Statistik</h3>
+          <p>Google Analytics 4 zur anonymisierten Reichweitenmessung. Aktiv nur nach Deiner Einwilligung.</p>
+        </div>
+        <input id="consent-analytics" type="checkbox" data-consent-target="analyticsInput">
+      </label>
+
+      <label class="consent-option" for="consent-media">
+        <div>
+          <h3>Externe Medien</h3>
+          <p>YouTube-Videos und andere Drittinhalte werden erst nach Freigabe geladen.</p>
+        </div>
+        <input id="consent-media" type="checkbox" data-consent-target="mediaInput">
+      </label>
+    </div>
+
+    <div class="consent-dialog-actions">
+      <button type="button" class="button button-secondary" data-action="click->consent#acceptEssential">
+        Nur notwendige
+      </button>
+      <button type="button" class="button button-ghost" data-action="click->consent#savePreferences">
+        Auswahl speichern
+      </button>
+      <button type="button" class="button button-save-primary" data-action="click->consent#acceptAll">
+        Alles akzeptieren
+      </button>
+    </div>
+  </section>
+</div>

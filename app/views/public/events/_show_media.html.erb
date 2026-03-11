@@ -1,16 +1,9 @@
 <% if presenter.youtube_embed_url.present? %>
   <section class="event-detail-video">
     <h2>Video</h2>
-    <div class="video-frame">
-      <iframe
-        src="<%= presenter.youtube_embed_url %>"
-        title="YouTube video player"
-        loading="lazy"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerpolicy="strict-origin-when-cross-origin"
-        allowfullscreen>
-      </iframe>
-    </div>
+    <%= render "shared/consent_video_embed",
+               title: "#{presenter.meta_title} auf YouTube",
+               url: presenter.youtube_embed_url %>
   </section>
 <% end %>
 

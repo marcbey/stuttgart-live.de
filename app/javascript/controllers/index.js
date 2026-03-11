@@ -10,6 +10,12 @@ application.register("bulk-select", BulkSelectController)
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
+import ConsentController from "./consent_controller"
+application.register("consent", ConsentController)
+
+import ConsentMediaController from "./consent_media_controller"
+application.register("consent-media", ConsentMediaController)
+
 import EditorInboxController from "./editor_inbox_controller"
 application.register("editor-inbox", EditorInboxController)
 

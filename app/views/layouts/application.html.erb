@@ -30,7 +30,13 @@
     <% end %>
   </head>
 
-  <body>
+  <body
+    <% unless controller_path.start_with?("backend/") %>
+      data-controller="consent"
+      <% if google_analytics_enabled? %>
+        data-consent-measurement-id-value="<%= google_analytics_measurement_id %>"
+      <% end %>
+    <% end %>>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
     <nav class="app-nav" data-controller="nav-offset">
@@ -107,6 +113,9 @@
     <%= yield %>
 
     <% unless controller_path.start_with?("backend/") %>
+      <%= render "layouts/consent_banner" %>
+      <%= render "layouts/consent_dialog" %>
+
       <footer class="site-footer">
         <div class="site-footer-shell">
           <nav class="site-footer-nav" aria-label="Footer">
@@ -114,6 +123,9 @@
             <%= link_to "Impressum", imprint_path %>
             <%= link_to "AGB", agb_path %>
             <%= link_to "Barrierefreiheit", barrierefreiheit_path %>
+            <button type="button" class="site-footer-button" data-action="click->consent#openSettings">
+              Datenschutzeinstellungen
+            </button>
           </nav>
         </div>
       </footer>
