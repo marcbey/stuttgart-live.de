@@ -322,7 +322,9 @@ module Backend
     def stop_url_for(run, can_stop:)
       return nil unless can_stop
 
-      helper_name = importer_config_for(run.source_type).fetch(:stop_route_helper)
+      helper_name = importer_config_for(run.source_type, required: false)&.fetch(:stop_route_helper, nil)
+      return nil if helper_name.blank?
+
       public_send(helper_name, run.import_source_id, run_id: run.id)
     end
 
@@ -348,8 +350,11 @@ module Backend
       )
     end
 
-    def importer_config_for(source_type)
-      IMPORTER_CONFIG.fetch(source_type.to_s)
+    def importer_config_for(source_type, required: true)
+      config = IMPORTER_CONFIG[source_type.to_s]
+      return config if config.present? || !required
+
+      raise KeyError, "key not found: #{source_type.inspect}"
     end
   end
 end
