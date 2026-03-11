@@ -93,13 +93,12 @@ module Public
     private
 
     def visible_events_relation(filter: FILTER_ALL, event_date: nil, query: nil)
-      relation = published_future_events_relation
-      relation = relation.where(start_at: event_date.beginning_of_day..event_date.end_of_day) if event_date.present?
-      relation = apply_public_query(relation, query) if query.present?
-
-      return relation unless filter == FILTER_SKS
-
-      relation.where(promoter_id: Event::SKS_PROMOTER_IDS)
+      Public::VisibleEventsQuery.new(
+        scope: published_future_events_relation,
+        filter: filter,
+        event_date: event_date,
+        query: query
+      ).call
     end
 
     def current_public_filter
@@ -179,15 +178,6 @@ module Public
       return false unless @page == 1
 
       relation.limit(2).count == 1
-    end
-
-    def apply_public_query(relation, query)
-      token = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
-
-      relation.where(
-        "events.artist_name ILIKE :token OR events.title ILIKE :token OR events.venue ILIKE :token OR events.city ILIKE :token",
-        token: token
-      )
     end
 
     def published_events_relation
