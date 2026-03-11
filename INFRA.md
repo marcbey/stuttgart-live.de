@@ -338,13 +338,13 @@ Trigger:
 Schritte:
 
 1. Checkout
-2. Ruby und Node einrichten
+2. Ruby und Docker Buildx einrichten
 3. optional Tests oder Abhängigkeit auf erfolgreiche CI
 4. Docker-Login bei `ghcr.io`
 5. SSH-Key aus GitHub Secret schreiben
 6. bekannte Hosts vorbereiten
 7. Kamal-Umgebungsvariablen setzen
-8. `bin/kamal deploy -c config/deploy.hetzner.yml`
+8. `bin/kamal deploy -d hetzner --skip_push`
 
 ### GitHub Secrets / Environment Secrets
 
@@ -352,12 +352,79 @@ Im GitHub-Environment `production`:
 
 - `KAMAL_WEB_HOST`
 - `KAMAL_SSH_PRIVATE_KEY`
+- `KAMAL_SSH_HOST_KEY`
 - `APP_HOST`
+- `KAMAL_REGISTRY_PULL_PASSWORD`
 - `RAILS_MASTER_KEY`
 - `DB_PASSWORD`
 - API-Secrets für Drittanbieter
-- optional `GHCR_USERNAME`
-- optional `GHCR_TOKEN`
+
+## Lokale Deploys und Admin-Kommandos
+
+### Ziel
+
+Von einem lokalen Admin-Rechner aus sollen Host-Konfiguration, Diagnose und
+gezielte Redeploys möglich sein, ohne den GitHub-Workflow zu ersetzen.
+
+### Voraussetzungen lokal
+
+- `.env` mit allen App-Secrets
+- `config/master.key`
+- `~/.ssh/stgt-live-hetzner-admin` für Ansible und Admin-Zugriff
+- `~/.ssh/stgt-live-hetzner-github` für Kamal-Deploys
+- `KAMAL_REGISTRY_PULL_PASSWORD` in `.env`
+
+### Host lokal konfigurieren
+
+Für Docker, PostgreSQL, Firewall und Backups:
+
+```bash
+script/ansible_app_host_production
+```
+
+Das Skript liest `DB_PASSWORD` direkt aus `.env` und ruft `app_host.yml`
+mit dem gehärteten `admin`-Benutzer auf.
+
+### Kamal lokal verwenden
+
+Für Diagnose und Admin-Zugriff:
+
+```bash
+bin/kamal logs -d hetzner
+bin/kamal console -d hetzner
+bin/kamal shell -d hetzner
+bin/kamal app exec -d hetzner "bin/rails db:prepare"
+```
+
+### Lokaler Redeploy eines vorhandenen Images
+
+Wenn das Ziel-Image bereits in `ghcr.io` existiert, kann es lokal erneut
+ausgerollt werden:
+
+```bash
+bin/kamal deploy -d hetzner --skip_push
+```
+
+Wichtig:
+
+- Das funktioniert nur für Images, die bereits in `ghcr.io` vorhanden sind.
+- Bei uncommitteten lokalen Änderungen erwartet Kamal einen lokalen
+  `_uncommitted_...`-Tag, der in der Registry normalerweise nicht existiert.
+
+### Was lokal bewusst nicht der Standardpfad ist
+
+Ein vollständiger lokaler `build + push + deploy` ist im aktuellen Setup nicht
+der Standard, weil:
+
+- GitHub den Build-Push mit `github.token` übernimmt
+- der lokale Registry-Token bewusst nur Pull-Rechte hat
+
+Für den normalen Produktionspfad ist deshalb vorgesehen:
+
+- Push auf `main`
+- GitHub baut das Image
+- GitHub pusht nach `ghcr.io`
+- GitHub deployt per Kamal auf Hetzner
 
 ### Registry-Strategie
 
