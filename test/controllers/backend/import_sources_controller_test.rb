@@ -194,7 +194,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_import_sources_url
     follow_redirect!
     assert_not_includes response.body, "Easyticket-Import wurde gestartet."
-    assert_equal "queued", @source.import_runs.order(:created_at).last.status
+    assert_equal "running", @source.import_runs.order(:created_at).last.status
   end
 
   test "should respond with turbo stream when enqueueing easyticket run" do
@@ -208,8 +208,8 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "target=\"import-runs-table\""
   end
 
-  test "should not enqueue when easyticket run is already active" do
-    @source.import_runs.create!(
+  test "should not enqueue easyticket run when another run is already active" do
+    existing_run = @source.import_runs.create!(
       status: "running",
       source_type: "easyticket",
       started_at: 10.minutes.ago
@@ -220,6 +220,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to backend_import_sources_url
+    assert_equal existing_run.id, @source.import_runs.order(:created_at).last.id
   end
 
   test "should enqueue when only stale run exists" do
@@ -244,6 +245,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       source_type: "easyticket",
       started_at: 5.minutes.ago,
       metadata: {
+        "execution_started_at" => 5.minutes.ago.iso8601,
         "stop_requested" => true,
         "stop_requested_at" => 4.minutes.ago.iso8601
       }
@@ -289,10 +291,10 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_import_sources_url
     follow_redirect!
     assert_not_includes response.body, "Eventim-Import wurde gestartet."
-    assert_equal "queued", @eventim_source.import_runs.order(:created_at).last.status
+    assert_equal "running", @eventim_source.import_runs.order(:created_at).last.status
   end
 
-  test "should list queued runs from different importers at the same time" do
+  test "should list running runs from different importers at the same time" do
     assert_enqueued_jobs 1 do
       post run_reservix_backend_import_source_url(@reservix_source)
     end
@@ -308,12 +310,12 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_includes source_types, "reservix"
     assert_includes source_types, "eventim"
-    assert_equal "queued", @reservix_source.import_runs.order(:created_at).last.status
-    assert_equal "queued", @eventim_source.import_runs.order(:created_at).last.status
+    assert_equal "running", @reservix_source.import_runs.order(:created_at).last.status
+    assert_equal "running", @eventim_source.import_runs.order(:created_at).last.status
   end
 
-  test "should not enqueue when eventim run is already active" do
-    @eventim_source.import_runs.create!(
+  test "should not enqueue eventim run when another run is already active" do
+    existing_run = @eventim_source.import_runs.create!(
       status: "running",
       source_type: "eventim",
       started_at: 10.minutes.ago
@@ -324,6 +326,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to backend_import_sources_url
+    assert_equal existing_run.id, @eventim_source.import_runs.order(:created_at).last.id
   end
 
   test "should request stop for a running eventim run" do

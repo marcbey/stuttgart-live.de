@@ -8,7 +8,7 @@ module Importing
           @events = events
         end
 
-        def fetch_events
+        def fetch_events(heartbeat: nil)
           @events
         end
       end
@@ -78,12 +78,7 @@ module Importing
           started_at: 5.minutes.ago
         )
 
-        feed_fetcher =
-          Class.new do
-            def fetch_events
-              raise "must not fetch while another run is active"
-            end
-          end.new
+        feed_fetcher = StubFeedFetcher.new([])
 
         run = Importer.new(
           import_source: @source,
@@ -100,6 +95,11 @@ module Importing
           source_type: "eventim",
           started_at: 10.minutes.ago
         )
+        stale_run.update!(
+          metadata: {
+            "execution_started_at" => 9.minutes.ago.iso8601
+          }
+        )
         stale_run.update_columns(updated_at: (Importer::RUN_HEARTBEAT_STALE_AFTER + 1.minute).ago)
 
         run = Importer.new(
@@ -109,6 +109,52 @@ module Importing
 
         assert_equal "failed", stale_run.reload.status
         assert_equal "succeeded", run.status
+      end
+
+      test "does not fail its own preexisting run before claiming execution" do
+        preexisting_run = @source.import_runs.create!(
+          status: "running",
+          source_type: "eventim",
+          started_at: 5.minutes.ago,
+          metadata: {
+            "job_id" => "job-1",
+            "provider_job_id" => "provider-1"
+          }
+        )
+        preexisting_run.update_columns(updated_at: 5.minutes.ago)
+
+        run = Importer.new(
+          import_source: @source,
+          preexisting_run_id: preexisting_run.id,
+          run_metadata: { "job_attempt" => 1 },
+          feed_fetcher: StubFeedFetcher.new([])
+        ).call
+
+        assert_equal preexisting_run.id, run.id
+        assert_equal "succeeded", run.reload.status
+        assert run.metadata["execution_started_at"].present?
+      end
+
+      test "does not create a new run when preexisting run is already terminal" do
+        existing_run_count = @source.import_runs.where(source_type: "eventim").count
+        preexisting_run = @source.import_runs.create!(
+          status: "failed",
+          source_type: "eventim",
+          started_at: 5.minutes.ago,
+          finished_at: 4.minutes.ago,
+          error_message: "stale"
+        )
+
+        run = Importer.new(
+          import_source: @source,
+          preexisting_run_id: preexisting_run.id,
+          run_metadata: { "job_attempt" => 1 },
+          feed_fetcher: StubFeedFetcher.new([])
+        ).call
+
+        assert_equal preexisting_run.id, run.id
+        assert_equal "failed", run.reload.status
+        assert_equal existing_run_count + 1, @source.import_runs.where(source_type: "eventim").count
       end
 
       test "does not upsert unchanged payload twice" do
@@ -195,7 +241,7 @@ module Importing
       test "stores import_run_error when run fails" do
         failing_feed_fetcher =
           Class.new do
-            def fetch_events
+            def fetch_events(heartbeat: nil)
               raise "feed download failed"
             end
           end.new

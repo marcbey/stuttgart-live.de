@@ -7,25 +7,31 @@ module Importing
     private
 
     def prepare_import_run!
+      if preexisting_run_terminal?
+        run = import_source.import_runs.find_by(id: @preexisting_run_id, source_type: import_run_source_type)
+        return PreparationResult.new(run:, process: false)
+      end
+
       run = nil
       process = true
 
       import_source.with_lock do
-        fail_stale_runs!
         run = claim_preexisting_run!
-        active_run = active_running_run if run.nil?
-        if active_run.present?
-          logger.info("[#{importer_log_prefix}] skipped because run_id=#{active_run.id} is already running")
-          run = active_run
-          process = false
-        elsif run.nil?
-          run = import_source.import_runs.create!(
-            status: "running",
-            source_type: import_source.source_type,
-            started_at: Time.current,
-            metadata: normalized_metadata(run_metadata)
-          )
-          broadcast_runs_update!
+        fail_stale_runs!(excluding_run_id: run&.id)
+        if run.nil?
+          run = active_running_run
+          if run.present?
+            logger.info("[#{importer_log_prefix}] skipped because run_id=#{run.id} is already running")
+            process = false
+          else
+            run = import_source.import_runs.create!(
+              status: "running",
+              source_type: import_source.source_type,
+              started_at: Time.current,
+              metadata: execution_metadata_for(normalized_metadata(run_metadata))
+            )
+            broadcast_runs_update!
+          end
         end
       end
 
@@ -110,13 +116,14 @@ module Importing
       nil
     end
 
-    def fail_stale_runs_by_source!(source_type)
+    def fail_stale_runs_by_source!(source_type, excluding_run_id: nil)
       stale_runs =
         import_source
           .import_runs
           .where(source_type: source_type, status: "running")
           .where("started_at < ? OR updated_at < ?", self.class::RUN_STALE_AFTER.ago, self.class::RUN_HEARTBEAT_STALE_AFTER.ago)
           .to_a
+          .reject { |run| excluding_run_id.present? && run.id == excluding_run_id }
 
       return if stale_runs.empty?
 
@@ -134,6 +141,8 @@ module Importing
             finished_at: Time.current,
             updated_at: Time.current
           )
+        elsif execution_started_at_for(stale_run).blank?
+          next
         else
           stale_run.update_columns(
             status: "failed",

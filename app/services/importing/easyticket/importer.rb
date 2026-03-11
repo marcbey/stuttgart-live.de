@@ -219,8 +219,8 @@ module Importing
           .update_all(is_active: false)
       end
 
-      def fail_stale_runs!
-        fail_stale_runs_by_source!("easyticket")
+      def fail_stale_runs!(excluding_run_id: nil)
+        fail_stale_runs_by_source!("easyticket", excluding_run_id: excluding_run_id)
       end
 
       def find_existing_import_event(event_id, dump_payload)

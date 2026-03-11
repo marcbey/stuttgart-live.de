@@ -14,11 +14,13 @@ module Importing
         @base_url = base_url.to_s.strip.presence || DEFAULT_BASE_URL
       end
 
-      def fetch_pages(lastupdate: nil)
+      def fetch_pages(lastupdate: nil, heartbeat: nil)
         page = 0
 
         loop do
+          heartbeat&.call
           payload = parse_payload(http_client.get(build_url(page: page, lastupdate: lastupdate)))
+          heartbeat&.call
           events = Array(payload["data"]).filter_map { |entry| entry.is_a?(Hash) ? entry : nil }
 
           yield(

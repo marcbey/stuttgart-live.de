@@ -10,30 +10,24 @@ module Backend
 
       def trigger(source_type)
         config = registry.fetch(source_type)
+        release_stale_running_runs_for(source_type)
         active_run = active_run_for(source_type)
-        if active_run&.status == "running" && maintenance.release_stale_running_run!(active_run)
-          active_run = nil
-        end
 
         if active_run.present?
           return {
-            alert: if active_run.status == "queued"
-                     "Ein #{config.fetch(:label)}-Import ist bereits eingeplant (Run ##{active_run.id})."
-                   else
-                     "Ein #{config.fetch(:label)}-Import läuft bereits (Run ##{active_run.id})."
-                   end
+            alert: "Ein #{config.fetch(:label)}-Import läuft bereits (Run ##{active_run.id})."
           }
         end
 
-        queued_run = import_source.import_runs.create!(
-          status: "queued",
+        run = import_source.import_runs.create!(
+          status: "running",
           source_type: source_type,
           started_at: Time.current,
-          metadata: { "queued_at" => Time.current.iso8601 }
+          metadata: { "triggered_at" => Time.current.iso8601 }
         )
-        job = config.fetch(:run_job_class).perform_later(import_source.id, queued_run.id)
-        queued_run.update!(
-          metadata: maintenance.normalized_metadata(queued_run.metadata).merge(
+        job = config.fetch(:run_job_class).perform_later(import_source.id, run.id)
+        run.update!(
+          metadata: maintenance.normalized_metadata(run.metadata).merge(
             "job_id" => job.job_id,
             "provider_job_id" => job.provider_job_id,
             "job_attempt" => 1,
@@ -70,7 +64,13 @@ module Backend
       attr_reader :broadcaster, :import_source, :maintenance, :registry
 
       def active_run_for(source_type)
-        import_source.import_runs.where(source_type: source_type, status: %w[queued running]).order(started_at: :desc).first
+        import_source.import_runs.where(source_type: source_type, status: "running").order(started_at: :desc).first
+      end
+
+      def release_stale_running_runs_for(source_type)
+        import_source.import_runs.where(source_type: source_type, status: "running").find_each do |run|
+          maintenance.release_stale_running_run!(run)
+        end
       end
 
       def find_running_run_for_stop(source_type, run_id:)

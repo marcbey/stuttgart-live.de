@@ -2,8 +2,10 @@ module Importing
   module ImporterRunSupport
     private
 
-    def active_running_run
-      import_source.import_runs.where(source_type: import_run_source_type, status: "running").order(started_at: :desc).first
+    def active_running_run(excluding_run_id: nil)
+      scope = import_source.import_runs.where(source_type: import_run_source_type, status: "running").order(started_at: :desc)
+      scope = scope.where.not(id: excluding_run_id) if excluding_run_id.present?
+      scope.first
     end
 
     def claim_preexisting_run!
@@ -11,15 +13,33 @@ module Importing
 
       run = import_source.import_runs.lock.find_by(id: @preexisting_run_id, source_type: import_run_source_type)
       return nil unless run.present?
-      return run if run.status == "running"
+
+      if run.status == "running"
+        merged_metadata = execution_metadata_for(normalized_metadata(run.metadata).merge(normalized_metadata(run_metadata)))
+        if merged_metadata != normalized_metadata(run.metadata)
+          run.update!(metadata: merged_metadata)
+          broadcast_runs_update!
+        end
+        return run
+      end
+
       return nil unless run.status == "queued"
 
       run.update!(
         status: "running",
-        metadata: normalized_metadata(run.metadata).merge(normalized_metadata(run_metadata))
+        metadata: execution_metadata_for(normalized_metadata(run.metadata).merge(normalized_metadata(run_metadata)))
       )
       broadcast_runs_update!
       run
+    end
+
+    def preexisting_run_terminal?
+      return false if @preexisting_run_id.blank?
+
+      run = import_source.import_runs.find_by(id: @preexisting_run_id, source_type: import_run_source_type)
+      return false unless run.present?
+
+      %w[succeeded failed canceled].include?(run.status)
     end
 
     def should_flush_progress?(changed_since_flush, last_flush_at)
@@ -64,6 +84,28 @@ module Importing
       ActiveModel::Type::Boolean.new.cast(normalized_metadata(run.metadata)["stop_requested"])
     end
 
+    def touch_run_heartbeat!(run, extra_metadata: nil)
+      return unless run_running?(run)
+
+      metadata = normalized_metadata(run.metadata)
+      merged_metadata = metadata.merge(normalized_metadata(extra_metadata))
+
+      if merged_metadata == metadata
+        run.update_columns(updated_at: Time.current)
+      else
+        run.update_columns(updated_at: Time.current, metadata: merged_metadata)
+      end
+    end
+
+    def execution_started_at_for(run)
+      raw_value = normalized_metadata(run.metadata)["execution_started_at"].to_s.strip
+      return nil if raw_value.blank?
+
+      Time.zone.parse(raw_value)
+    rescue ArgumentError
+      nil
+    end
+
     def broadcast_runs_update!
       Backend::ImportRunsBroadcaster.broadcast!
     rescue StandardError => e
@@ -95,6 +137,12 @@ module Importing
 
     def import_run_source_type
       import_source.source_type
+    end
+
+    def execution_metadata_for(metadata)
+      metadata = normalized_metadata(metadata)
+      metadata["execution_started_at"] ||= Time.current.iso8601
+      metadata
     end
 
     def importer_log_prefix

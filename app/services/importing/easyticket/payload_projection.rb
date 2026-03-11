@@ -8,6 +8,18 @@ module Importing
     class PayloadProjection
       URL_PATTERN = URI::DEFAULT_PARSER.make_regexp(%w[http https]).freeze
       URL_EXTRACT_PATTERN = %r{https?://[^\s"'<>]+}i.freeze
+      CITY_CONNECTORS = %w[am an auf bei der im in ob vor vom von zu zum zur].freeze
+      CITY_PREFIXES = %w[Bad Groß Klein Neu Alt Sankt St St.].freeze
+
+      def self.infer_city_from_location_name(value)
+        location_name = value.to_s.strip.gsub(/\s+/, " ")
+        return nil if location_name.blank?
+
+        delimiter_candidate = trailing_segment_after_delimiter(location_name)
+        return delimiter_candidate if city_phrase?(delimiter_candidate)
+
+        infer_city_from_trailing_tokens(location_name)
+      end
 
       def initialize(dump_payload:, detail_payload:, ticket_base_url: ENV["EASYTICKET_TICKET_LINK_EVENT_BASE_URL"])
         @dump_payload = dump_payload || {}
@@ -25,7 +37,16 @@ module Importing
           dump_data_value("location", "city"),
           detail_value("city"),
           detail_value("location", "city"),
-          detail_value("event", "city")
+          detail_value("event", "city"),
+          self.class.infer_city_from_location_name(
+            first_present(
+              dump_value("location_name"),
+              dump_data_value("location", "name"),
+              detail_value("venue", "name"),
+              detail_value("location", "name"),
+              detail_value("event", "venue")
+            )
+          )
         )
         venue_name = first_present(
           dump_value("loc_name"),
@@ -147,6 +168,67 @@ module Importing
       end
 
       private
+
+      class << self
+        private
+
+        def trailing_segment_after_delimiter(location_name)
+          [/\)\s*([^,\/-]+)\z/u, /,\s*([^,]+)\z/u, /\s-\s([^-]+)\z/u, /\/\s*([^\/]+)\z/u].each do |pattern|
+            match = location_name.match(pattern)
+            candidate = match&.captures&.first.to_s.strip
+            return candidate if candidate.present?
+          end
+
+          nil
+        end
+
+        def infer_city_from_trailing_tokens(location_name)
+          tokens = location_name.split(/\s+/)
+          return nil if tokens.empty?
+
+          last_token = tokens.last
+          return nil unless capitalized_token?(last_token)
+
+          parts = [ last_token ]
+          index = tokens.length - 2
+          used_connector = false
+
+          while index >= 0 && connector_token?(tokens[index])
+            used_connector = true
+            parts.unshift(tokens[index])
+            index -= 1
+          end
+
+          if index >= 0 && capitalized_token?(tokens[index]) && (used_connector || city_prefix_token?(tokens[index]))
+            parts.unshift(tokens[index])
+          end
+
+          candidate = parts.join(" ")
+          city_phrase?(candidate) ? candidate : nil
+        end
+
+        def city_phrase?(value)
+          candidate = value.to_s.strip
+          return false if candidate.blank?
+
+          candidate.split(/\s+/).all? do |token|
+            connector_token?(token) || capitalized_token?(token)
+          end
+        end
+
+        def capitalized_token?(token)
+          value = token.to_s.strip
+          value.match?(/\A[[:upper:]ÄÖÜ][[:alpha:]ÄÖÜäöüß.\-]*\z/u)
+        end
+
+        def connector_token?(token)
+          CITY_CONNECTORS.include?(token.to_s.strip.downcase)
+        end
+
+        def city_prefix_token?(token)
+          CITY_PREFIXES.include?(token.to_s.strip)
+        end
+      end
 
       def dump_value(key)
         @dump_payload[key].to_s.strip

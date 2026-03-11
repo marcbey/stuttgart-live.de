@@ -105,7 +105,7 @@ module Importing
 
         catch(:stop_import) do
           streamed_rows = false
-          returned_rows = feed_fetcher.fetch_events do |feed_payload|
+          returned_rows = feed_fetcher.fetch_events(heartbeat: -> { touch_run_heartbeat!(run) }) do |feed_payload|
             streamed_rows = true
             process_feed_payload.call(feed_payload)
           end
@@ -194,8 +194,8 @@ module Importing
           .update_all(is_active: false)
       end
 
-      def fail_stale_runs!
-        fail_stale_runs_by_source!("eventim")
+      def fail_stale_runs!(excluding_run_id: nil)
+        fail_stale_runs_by_source!("eventim", excluding_run_id: excluding_run_id)
       end
 
       def find_existing_import_event(attributes)

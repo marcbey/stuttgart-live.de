@@ -40,7 +40,10 @@ module Importing
         last_flush_at = Time.current
 
         catch(:stop_import) do
-          event_fetcher.fetch_pages(lastupdate: checkpoint_query_value(checkpoint)) do |events, server_time:, **_page_context|
+          event_fetcher.fetch_pages(
+            lastupdate: checkpoint_query_value(checkpoint),
+            heartbeat: -> { touch_run_heartbeat!(run) }
+          ) do |events, server_time:, **_page_context|
             advance_checkpoint_tracker!(state[:checkpoint_tracker], modified_at: server_time)
 
             events.each do |event_payload|
@@ -205,8 +208,8 @@ module Importing
         )
       end
 
-      def fail_stale_runs!
-        fail_stale_runs_by_source!("reservix")
+      def fail_stale_runs!(excluding_run_id: nil)
+        fail_stale_runs_by_source!("reservix", excluding_run_id: excluding_run_id)
       end
 
       def find_existing_import_event(external_event_id)

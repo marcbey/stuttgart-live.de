@@ -12,19 +12,21 @@ module Importing
         @feed_url = feed_url.to_s.strip
       end
 
-      def fetch_events
+      def fetch_events(heartbeat: nil)
         raise Error, "EVENTIM_FEED_URL is not configured" if @feed_url.blank?
 
         body = @http_client.get(@feed_url, accept: "application/xml,text/xml")
+        heartbeat&.call
         with_xml_file(body) do |xml_path|
+          heartbeat&.call
           status_info_error = extract_status_info_error_from_xml(xml_path)
           raise RequestError, status_info_error if status_info_error.present?
 
           if block_given?
-            parse_event_nodes_from_xml(xml_path) { |row| yield row }
+            parse_event_nodes_from_xml(xml_path, heartbeat: heartbeat) { |row| yield row }
             []
           else
-            parse_event_nodes_from_xml(xml_path)
+            parse_event_nodes_from_xml(xml_path, heartbeat: heartbeat)
           end
         end
       rescue RequestError
@@ -60,12 +62,15 @@ module Importing
         xml_tmp&.close!
       end
 
-      def parse_event_nodes_from_xml(xml_path)
+      def parse_event_nodes_from_xml(xml_path, heartbeat: nil)
         rows = []
+        node_count = 0
         File.open(xml_path, "rb") do |file|
           reader = Nokogiri::XML::Reader(file, nil, "UTF-8")
 
           reader.each do |node|
+            node_count += 1
+            heartbeat&.call if (node_count % 250).zero?
             next unless node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
 
             node_name = node.name.to_s.downcase

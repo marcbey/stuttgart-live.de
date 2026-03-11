@@ -136,7 +136,7 @@ module Importing
         assert_equal "https://tickets.example/event/104364", attributes[:ticket_url]
       end
 
-      test "keeps city blank when payload does not provide one" do
+      test "infers city from location name suffix when no explicit city is present" do
         projection = PayloadProjection.new(
           dump_payload: {
             "event_id" => "104364",
@@ -149,7 +149,23 @@ module Importing
 
         attributes = projection.to_attributes
 
-        assert_nil attributes[:city]
+        assert_equal "Stuttgart", attributes[:city]
+      end
+
+      test "infers multi word city from trailing location name segment" do
+        projection = PayloadProjection.new(
+          dump_payload: {
+            "event_id" => "104365",
+            "date_time" => "2026-06-20 19:30:00",
+            "location_name" => "Neckar Forum Esslingen am Neckar",
+            "title_1" => "Another Band"
+          },
+          detail_payload: {}
+        )
+
+        attributes = projection.to_attributes
+
+        assert_equal "Esslingen am Neckar", attributes[:city]
       end
     end
   end

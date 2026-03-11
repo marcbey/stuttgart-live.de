@@ -60,7 +60,18 @@ module Backend
       end
 
       def heartbeat_stale?(run)
+        return false if execution_started_at(run).blank?
+
         run.updated_at < importer_class_for(run.source_type)::RUN_HEARTBEAT_STALE_AFTER.ago
+      end
+
+      def execution_started_at(run)
+        raw_value = normalized_metadata(run.metadata)["execution_started_at"].to_s.strip
+        return nil if raw_value.blank?
+
+        Time.zone.parse(raw_value)
+      rescue ArgumentError
+        nil
       end
 
       def cancel_stale_stop_requested_run!(run)

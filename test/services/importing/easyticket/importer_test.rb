@@ -147,12 +147,7 @@ module Importing
           started_at: 5.minutes.ago
         )
 
-        dump_fetcher =
-          Class.new do
-            def fetch_events
-              raise "must not fetch while another run is active"
-            end
-          end.new
+        dump_fetcher = StubDumpFetcher.new([])
 
         run = Importer.new(
           import_source: @source,
@@ -520,6 +515,49 @@ module Importing
         assert_equal [ "105036" ], detail_fetcher.calls
         assert_equal "Stuttgart", imported.city
         assert_equal "Stuttgart, KKL Beethoven-Saal Stuttgart", imported.venue_label
+      end
+
+      test "imports event when city can be inferred from location name" do
+        dump_events = [
+          {
+            "id" => "104830",
+            "event_id" => "61480",
+            "date_time" => "2026-05-24 21:15:00",
+            "location_name" => "Rakete (im Theater Rampe) Stuttgart",
+            "title_1" => "Zack Keim with Band",
+            "organizer_id" => "A15",
+            "data" => {
+              "event" => {
+                "title_1" => "Zack Keim with Band"
+              },
+              "images" => {
+                "61480" => [
+                  { "url" => "https://partnershop.easyticket.de/img/media/50245/791916b85a60c19e52b8b671923d44c9.jpg", "type" => "large" }
+                ]
+              }
+            }
+          }
+        ]
+
+        run = Importer.new(
+          import_source: @source,
+          dump_fetcher: StubDumpFetcher.new(dump_events),
+          detail_fetcher: StubDetailFetcher.new("104830" => dump_events.first)
+        ).call
+
+        imported = EasyticketImportEvent.find_by!(
+          import_source: @source,
+          external_event_id: "61480",
+          concert_date: Date.new(2026, 5, 24)
+        )
+
+        assert_equal "succeeded", run.status
+        assert_equal 1, run.imported_count
+        assert_equal 1, run.upserted_count
+        assert_equal 0, run.failed_count
+        assert_equal "Stuttgart", imported.city
+        assert_equal "Rakete (im Theater Rampe) Stuttgart", imported.venue_name
+        assert_equal "Stuttgart, Rakete (im Theater Rampe) Stuttgart", imported.venue_label
       end
 
       test "prefers dump id over title_3 for detail payload fetch" do
