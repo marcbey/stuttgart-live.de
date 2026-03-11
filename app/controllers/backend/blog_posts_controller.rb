@@ -1,19 +1,18 @@
 module Backend
   class BlogPostsController < BlogBaseController
+    EditorState = Data.define(:target_status, :sidebar_posts, :selected_blog_post)
+
     FILTERS = %w[all draft published].freeze
 
     before_action :set_blog_post, only: %i[edit update destroy]
+    before_action :set_filters, only: %i[index new create edit update]
 
     def index
-      @status_filter = current_filter
-      @query_filter = current_query
       @blog_posts = filtered_blog_posts_for(status: @status_filter, query: @query_filter)
       @selected_blog_post = selected_blog_post_from(@blog_posts)
     end
 
     def new
-      @status_filter = current_filter
-      @query_filter = current_query
       @blog_post = current_user.authored_blog_posts.build(status: "draft")
 
       return render_editor_panel(@blog_post, status: @status_filter, query: @query_filter) if turbo_frame_request?
@@ -22,8 +21,6 @@ module Backend
     end
 
     def create
-      @status_filter = current_filter
-      @query_filter = current_query
       @blog_post = current_user.authored_blog_posts.build(blog_post_params)
       @blog_post.apply_publication_action(action: publication_action, user: current_user)
 
@@ -37,17 +34,12 @@ module Backend
     end
 
     def edit
-      @status_filter = current_filter
-      @query_filter = current_query
-
       return render_editor_panel(@blog_post, status: @status_filter, query: @query_filter) if turbo_frame_request?
 
       redirect_to backend_blog_posts_path(status: status_param(@status_filter), query: @query_filter.presence, blog_post_id: @blog_post.id)
     end
 
     def update
-      @status_filter = current_filter
-      @query_filter = current_query
       @blog_post.assign_attributes(blog_post_params)
       @blog_post.apply_publication_action(action: publication_action, user: current_user)
 
@@ -68,6 +60,11 @@ module Backend
     private
       def set_blog_post
         @blog_post = BlogPost.with_rich_text_body_and_embeds.includes(:author, :published_by).with_attached_cover_image.find(params[:id])
+      end
+
+      def set_filters
+        @status_filter = current_filter
+        @query_filter = current_query
       end
 
       def current_filter
@@ -135,27 +132,7 @@ module Backend
       end
 
       def render_persisted_state(target_blog_post:, notice:)
-        target_status = current_filter
-        sidebar_posts = filtered_blog_posts_for(status: target_status, query: @query_filter)
-        selected_blog_post = selected_blog_post_for(sidebar_posts, preferred_blog_post: target_blog_post)
-
-        respond_to do |format|
-          format.html do
-            redirect_to backend_blog_posts_path(
-              status: status_param(target_status),
-              query: @query_filter.presence,
-              blog_post_id: selected_blog_post&.id
-            ), notice: notice
-          end
-          format.turbo_stream do
-            flash.now[:notice] = notice
-            render_inbox_state_turbo_stream(
-              sidebar_posts: sidebar_posts,
-              selected_blog_post: selected_blog_post,
-              target_status: target_status
-            )
-          end
-        end
+        respond_with_editor_state(editor_state_for(target_blog_post), notice: notice)
       end
 
       def render_invalid_state(blog_post)
@@ -183,33 +160,49 @@ module Backend
                locals: editor_frame_locals(blog_post, status: status, query: query)
       end
 
-      def render_inbox_state_turbo_stream(sidebar_posts:, selected_blog_post:, target_status:)
+      def respond_with_editor_state(editor_state, notice:)
+        respond_to do |format|
+          format.html do
+            redirect_to backend_blog_posts_path(
+              status: status_param(editor_state.target_status),
+              query: @query_filter.presence,
+              blog_post_id: editor_state.selected_blog_post&.id
+            ), notice: notice
+          end
+          format.turbo_stream do
+            flash.now[:notice] = notice
+            render_inbox_state_turbo_stream(editor_state)
+          end
+        end
+      end
+
+      def render_inbox_state_turbo_stream(editor_state)
         render turbo_stream: [
           turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
           turbo_stream.replace(
             "blog_topbar_context",
             partial: "backend/blog_posts/topbar_context",
-            locals: { blog_post: selected_blog_post }
+            locals: { blog_post: editor_state.selected_blog_post }
           ),
           turbo_stream.replace(
             "blog_topbar_editor_actions",
             partial: "backend/blog_posts/topbar_editor_actions",
-            locals: { blog_post: selected_blog_post }
+            locals: { blog_post: editor_state.selected_blog_post }
           ),
           turbo_stream.replace(
             "blog_posts_list",
             partial: "backend/blog_posts/blog_posts_list",
             locals: {
-              blog_posts: sidebar_posts,
-              selected_blog_post: selected_blog_post,
-              status_filter: target_status,
+              blog_posts: editor_state.sidebar_posts,
+              selected_blog_post: editor_state.selected_blog_post,
+              status_filter: editor_state.target_status,
               query_filter: @query_filter
             }
           ),
           turbo_stream.replace(
             "blog_editor",
             partial: "backend/blog_posts/editor_frame",
-            locals: editor_frame_locals(selected_blog_post, status: target_status, query: @query_filter)
+            locals: editor_frame_locals(editor_state.selected_blog_post, status: editor_state.target_status, query: @query_filter)
           )
         ]
       end
@@ -220,6 +213,17 @@ module Backend
           status_filter: status,
           query_filter: query
         }
+      end
+
+      def editor_state_for(target_blog_post)
+        target_status = @status_filter
+        sidebar_posts = filtered_blog_posts_for(status: target_status, query: @query_filter)
+
+        EditorState.new(
+          target_status: target_status,
+          sidebar_posts: sidebar_posts,
+          selected_blog_post: selected_blog_post_for(sidebar_posts, preferred_blog_post: target_blog_post)
+        )
       end
 
       def selected_blog_post_for(sidebar_posts, preferred_blog_post:)
