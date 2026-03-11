@@ -1,0 +1,22 @@
+# Gemeinsame Kamal-Basiskonfiguration.
+# Der produktive Zielpfad wird über `-d hetzner` geladen.
+
+require_destination: true
+
+service: stuttgart_live_de
+image: <%= ENV.fetch("KAMAL_IMAGE", "marcbey/stuttgart-live-de") %>
+
+aliases:
+  console: app exec --interactive --reuse "bin/rails console"
+  shell: app exec --interactive --reuse "bash"
+  logs: app logs -f
+  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+
+volumes:
+  - "stuttgart_live_de_storage:/rails/storage"
+
+asset_path: /rails/public/assets
+
+builder:
+  context: .
+  arch: amd64

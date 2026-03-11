@@ -1,8 +1,6 @@
 # Hetzner production target for Kamal.
 # Usage: bin/kamal deploy -d hetzner
 
-image: <%= ENV.fetch("KAMAL_IMAGE", "marcbey/stuttgart-live-de") %>
-
 servers:
   web:
     - <%= ENV.fetch("KAMAL_WEB_HOST", "46.225.224.194") %>
@@ -43,18 +41,3 @@ ssh:
   user: deploy
   keys:
     - <%= ENV.fetch("KAMAL_SSH_KEY_PATH", File.expand_path("~/.ssh/stgt-live-hetzner-github")) %>
-
-aliases:
-  console: app exec --interactive --reuse "bin/rails console"
-  shell: app exec --interactive --reuse "bash"
-  logs: app logs -f
-  dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
-
-volumes:
-  - "stuttgart_live_de_storage:/rails/storage"
-
-asset_path: /rails/public/assets
-
-builder:
-  context: .
-  arch: amd64
