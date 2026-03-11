@@ -173,7 +173,7 @@ module Importing
         private
 
         def trailing_segment_after_delimiter(location_name)
-          [/\)\s*([^,\/-]+)\z/u, /,\s*([^,]+)\z/u, /\s-\s([^-]+)\z/u, /\/\s*([^\/]+)\z/u].each do |pattern|
+          [ /\)\s*([^,\/-]+)\z/u, /,\s*([^,]+)\z/u, /\s-\s([^-]+)\z/u, /\/\s*([^\/]+)\z/u ].each do |pattern|
             match = location_name.match(pattern)
             candidate = match&.captures&.first.to_s.strip
             return candidate if candidate.present?
