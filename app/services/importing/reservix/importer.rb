@@ -4,6 +4,7 @@ require "set"
 module Importing
   module Reservix
     class Importer
+      include Importing::ImporterExecutionSupport
       include Importing::ImporterRunSupport
 
       RUN_STALE_AFTER = 1.hour
@@ -22,60 +23,29 @@ module Importing
       end
 
       def call
-        run = nil
-        import_source.with_lock do
-          fail_stale_runs!
-          run = claim_preexisting_run!
-          active_run = active_running_run if run.nil?
-          if active_run.present?
-            logger.info("[ReservixImporter] skipped because run_id=#{active_run.id} is already running")
-            return active_run
-          end
+        prepared_run = prepare_import_run!
+        return prepared_run.run unless prepared_run.process
 
-          if run.nil?
-            run = import_source.import_runs.create!(
-              status: "running",
-              source_type: import_source.source_type,
-              started_at: Time.current,
-              metadata: normalized_metadata(run_metadata)
-            )
-            broadcast_runs_update!
-          end
-        end
-
-        run_started_at = run.started_at
-        fetched_count = 0
-        filtered_count = 0
-        imported_count = 0
-        upserted_count = 0
-        failed_count = 0
-        canceled = false
-        filtered_out_cities = Set.new
-
-        location_whitelist = import_source.configured_location_whitelist
-        matcher = LocationMatcher.new(location_whitelist)
+        run = prepared_run.run
         checkpoint = load_checkpoint
-        checkpoint_tracker = checkpoint_tracker_for(checkpoint)
-
-        persist_progress!(
-          run,
-          fetched_count: fetched_count,
-          filtered_count: filtered_count,
-          imported_count: imported_count,
-          upserted_count: upserted_count,
-          failed_count: failed_count
+        state = initial_run_state(
+          run: run,
+          checkpoint_tracker: checkpoint_tracker_for(checkpoint)
         )
+        matcher = LocationMatcher.new(state[:location_whitelist])
+
+        persist_progress_from_state!(run, state)
 
         changed_since_flush = 0
         last_flush_at = Time.current
 
         catch(:stop_import) do
           event_fetcher.fetch_pages(lastupdate: checkpoint_query_value(checkpoint)) do |events, server_time:, **_page_context|
-            advance_checkpoint_tracker!(checkpoint_tracker, modified_at: server_time)
+            advance_checkpoint_tracker!(state[:checkpoint_tracker], modified_at: server_time)
 
             events.each do |event_payload|
               if run_canceled?(run) || stop_requested?(run)
-                canceled = true
+                state[:canceled] = true
                 throw :stop_import
               end
 
@@ -85,12 +55,12 @@ module Importing
               external_event_id = event_payload["id"].to_s.strip
 
               advance_checkpoint_tracker!(
-                checkpoint_tracker,
+                state[:checkpoint_tracker],
                 modified_at: modified_at,
                 event_id: external_event_id
               )
 
-              fetched_count += 1
+              state[:fetched_count] += 1
               progress_changed = true
 
               if already_processed_for_checkpoint?(checkpoint, modified_at: modified_at, event_id: external_event_id)
@@ -98,23 +68,23 @@ module Importing
               end
 
               unless matcher.match?(event_payload)
-                add_filtered_out_city!(filtered_out_cities, filtered_out_city_from_payload(event_payload))
+                add_filtered_out_city!(state[:filtered_out_cities], filtered_out_city_from_payload(event_payload))
                 next
               end
 
               unless projection.bookable?
-                if deactivate_existing_import_event!(event_payload: event_payload, seen_at: run_started_at)
-                  upserted_count += 1
+                if deactivate_existing_import_event!(event_payload: event_payload, seen_at: state[:run_started_at])
+                  state[:upserted_count] += 1
                   progress_changed = true
                 end
                 next
               end
 
-              filtered_count += 1
+              state[:filtered_count] += 1
 
               attributes = projection.to_attributes
               if attributes.nil?
-                failed_count += 1
+                state[:failed_count] += 1
                 next
               end
 
@@ -129,9 +99,9 @@ module Importing
                   record: existing_record,
                   event_payload: event_payload,
                   attributes: attributes,
-                  seen_at: run_started_at
+                  seen_at: state[:run_started_at]
                 )
-                imported_count += 1
+                state[:imported_count] += 1
                 next
               end
 
@@ -139,12 +109,12 @@ module Importing
                 attributes: attributes,
                 event_payload: event_payload,
                 image_candidates: projection.image_candidates,
-                seen_at: run_started_at
+                seen_at: state[:run_started_at]
               )
-              imported_count += 1
-              upserted_count += 1
+              state[:imported_count] += 1
+              state[:upserted_count] += 1
             rescue StandardError => e
-              failed_count += 1
+              state[:failed_count] += 1
               progress_changed = true
               logger.error("[ReservixImporter] event_id=#{external_event_id} failed: #{e.class}: #{e.message}")
               create_import_run_error!(
@@ -159,97 +129,55 @@ module Importing
               changed_since_flush += 1
               next unless should_flush_progress?(changed_since_flush, last_flush_at)
 
-              persist_progress!(
-                run,
-                fetched_count: fetched_count,
-                filtered_count: filtered_count,
-                imported_count: imported_count,
-                upserted_count: upserted_count,
-                failed_count: failed_count
-              )
+              persist_progress_from_state!(run, state)
               changed_since_flush = 0
               last_flush_at = Time.current
             end
           end
         end
 
-        persist_progress!(
-          run,
-          fetched_count: fetched_count,
-          filtered_count: filtered_count,
-          imported_count: imported_count,
-          upserted_count: upserted_count,
-          failed_count: failed_count
-        )
-        canceled ||= run_canceled?(run)
+        persist_progress_from_state!(run, state)
+        state[:canceled] ||= run_canceled?(run)
 
-        if canceled
-          run.update!(
-            status: "canceled",
-            finished_at: Time.current,
-            fetched_count: fetched_count,
-            filtered_count: filtered_count,
-            imported_count: imported_count,
-            upserted_count: upserted_count,
-            failed_count: failed_count,
+        if state[:canceled]
+          return finalize_canceled_run!(
+            run,
+            state,
             metadata: run_completion_metadata(
               run: run,
-              location_whitelist: location_whitelist,
-              filtered_out_cities: filtered_out_cities,
-              checkpoint_tracker: checkpoint_tracker
+              location_whitelist: state[:location_whitelist],
+              filtered_out_cities: state[:filtered_out_cities],
+              checkpoint_tracker: state[:checkpoint_tracker]
             )
           )
-          broadcast_runs_update!
-          return run
         end
 
         return run.reload if run_canceled?(run)
 
-        persist_checkpoint!(checkpoint_tracker)
+        persist_checkpoint!(state[:checkpoint_tracker])
 
-        run.update!(
-          status: "succeeded",
-          finished_at: Time.current,
-          fetched_count: fetched_count,
-          filtered_count: filtered_count,
-          imported_count: imported_count,
-          upserted_count: upserted_count,
-          failed_count: failed_count,
+        finalize_succeeded_run!(
+          run,
+          state,
           metadata: run_completion_metadata(
             run: run,
-            location_whitelist: location_whitelist,
-            filtered_out_cities: filtered_out_cities,
-            checkpoint_tracker: checkpoint_tracker
+            location_whitelist: state[:location_whitelist],
+            filtered_out_cities: state[:filtered_out_cities],
+            checkpoint_tracker: state[:checkpoint_tracker]
           )
         )
-        broadcast_runs_update!
-
-        run
       rescue StandardError => e
-        return run.reload if run&.persisted? && run_canceled?(run)
-
-        run&.update!(
-          status: "failed",
-          finished_at: Time.current,
-          fetched_count: fetched_count || 0,
-          filtered_count: filtered_count || 0,
-          imported_count: imported_count || 0,
-          upserted_count: upserted_count || 0,
-          failed_count: failed_count || 0,
-          error_message: e.message,
+        handle_import_failure!(
+          run,
+          state,
+          error: e,
           metadata: run_completion_metadata(
             run: run,
-            location_whitelist: location_whitelist,
-            filtered_out_cities: filtered_out_cities,
-            checkpoint_tracker: checkpoint_tracker
+            location_whitelist: state&.fetch(:location_whitelist, []),
+            filtered_out_cities: state&.fetch(:filtered_out_cities, Set.new),
+            checkpoint_tracker: state&.fetch(:checkpoint_tracker, {})
           )
         )
-        create_import_run_error!(
-          run: run,
-          error: e,
-          payload: {}
-        )
-        broadcast_runs_update!
         raise
       end
 
@@ -278,42 +206,7 @@ module Importing
       end
 
       def fail_stale_runs!
-        stale_runs =
-          import_source
-            .import_runs
-            .where(source_type: "reservix", status: "running")
-            .where("started_at < ? OR updated_at < ?", RUN_STALE_AFTER.ago, RUN_HEARTBEAT_STALE_AFTER.ago)
-            .to_a
-
-        return if stale_runs.empty?
-
-        stale_runs.each do |stale_run|
-          if stale_run.started_at < RUN_STALE_AFTER.ago
-            stale_run.update_columns(
-              status: "failed",
-              finished_at: Time.current,
-              error_message: "Run automatically marked failed after timeout (#{RUN_STALE_AFTER.inspect})",
-              updated_at: Time.current
-            )
-            next
-          end
-
-          if stale_run_stop_requested?(stale_run)
-            stale_run.update_columns(
-              status: "canceled",
-              finished_at: Time.current,
-              updated_at: Time.current
-            )
-          else
-            stale_run.update_columns(
-              status: "failed",
-              finished_at: Time.current,
-              error_message: "Run automatically marked failed after heartbeat timeout (#{RUN_HEARTBEAT_STALE_AFTER.inspect})",
-              updated_at: Time.current
-            )
-          end
-        end
-        broadcast_runs_update!
+        fail_stale_runs_by_source!("reservix")
       end
 
       def find_existing_import_event(external_event_id)

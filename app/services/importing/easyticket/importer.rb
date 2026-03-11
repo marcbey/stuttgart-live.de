@@ -5,6 +5,7 @@ require "set"
 module Importing
   module Easyticket
     class Importer
+      include Importing::ImporterExecutionSupport
       include Importing::ImporterRunSupport
 
       RUN_STALE_AFTER = 1.hour
@@ -30,62 +31,29 @@ module Importing
       end
 
       def call
-        run = nil
-        import_source.with_lock do
-          fail_stale_runs!
-          run = claim_preexisting_run!
-          active_run = active_running_run if run.nil?
-          if active_run.present?
-            logger.info("[EasyticketImporter] skipped because run_id=#{active_run.id} is already running")
-            return active_run
-          end
+        prepared_run = prepare_import_run!
+        return prepared_run.run unless prepared_run.process
 
-          if run.nil?
-            run = import_source.import_runs.create!(
-              status: "running",
-              source_type: import_source.source_type,
-              started_at: Time.current,
-              metadata: normalized_metadata(run_metadata)
-            )
-            broadcast_runs_update!
-          end
-        end
-
-        run_started_at = run.started_at
-        fetched_count = 0
-        filtered_count = 0
-        imported_count = 0
-        upserted_count = 0
-        failed_count = 0
-        canceled = false
-        filtered_out_cities = Set.new
-
-        location_whitelist = import_source.configured_location_whitelist
-        matcher = LocationMatcher.new(location_whitelist)
+        run = prepared_run.run
+        state = initial_run_state(run:)
+        matcher = LocationMatcher.new(state[:location_whitelist])
         events = dump_fetcher.fetch_events
-        fetched_count = events.size
+        state[:fetched_count] = events.size
         return run.reload if run_canceled?(run)
 
-        persist_progress!(
-          run,
-          fetched_count: fetched_count,
-          filtered_count: filtered_count,
-          imported_count: imported_count,
-          upserted_count: upserted_count,
-          failed_count: failed_count
-        )
+        persist_progress_from_state!(run, state)
 
         changed_since_flush = 0
         last_flush_at = Time.current
 
         events.each do |dump_payload|
           if run_canceled?(run)
-            canceled = true
+            state[:canceled] = true
             break
           end
 
           if stop_requested?(run)
-            canceled = true
+            state[:canceled] = true
             break
           end
 
@@ -94,11 +62,11 @@ module Importing
           next if event_id.blank?
 
           unless matcher.match?(dump_payload)
-            add_filtered_out_city!(filtered_out_cities, filtered_out_location_label(dump_payload))
+            add_filtered_out_city!(state[:filtered_out_cities], filtered_out_location_label(dump_payload))
             next
           end
 
-          filtered_count += 1
+          state[:filtered_count] += 1
           progress_changed = true
           source_payload_hash = build_source_payload_hash(dump_payload)
           existing_record = find_existing_import_event(event_id, dump_payload)
@@ -108,7 +76,7 @@ module Importing
           )
           attributes = projection.to_attributes
           if attributes.nil?
-            failed_count += 1
+            state[:failed_count] += 1
             progress_changed = true
             next
           end
@@ -121,7 +89,7 @@ module Importing
           )
           attributes = projection.to_attributes
           if attributes.nil?
-            failed_count += 1
+            state[:failed_count] += 1
             progress_changed = true
             next
           end
@@ -137,9 +105,9 @@ module Importing
               dump_payload: dump_payload,
               detail_payload: detail_payload,
               attributes: attributes,
-              seen_at: run_started_at
+              seen_at: state[:run_started_at]
             )
-            imported_count += 1
+            state[:imported_count] += 1
             next
           end
 
@@ -148,13 +116,13 @@ module Importing
             dump_payload: dump_payload,
             detail_payload: detail_payload,
             image_candidates: projection.image_candidates,
-            seen_at: run_started_at
+            seen_at: state[:run_started_at]
           )
-          imported_count += 1
-          upserted_count += 1
+          state[:imported_count] += 1
+          state[:upserted_count] += 1
           progress_changed = true
         rescue StandardError => e
-          failed_count += 1
+          state[:failed_count] += 1
           progress_changed = true
           logger.error("[EasyticketImporter] event_id=#{event_id} failed: #{e.class}: #{e.message}")
           create_import_run_error!(
@@ -169,93 +137,50 @@ module Importing
           changed_since_flush += 1
           next unless should_flush_progress?(changed_since_flush, last_flush_at)
 
-          persist_progress!(
-            run,
-            fetched_count: fetched_count,
-            filtered_count: filtered_count,
-            imported_count: imported_count,
-            upserted_count: upserted_count,
-            failed_count: failed_count
-          )
+          persist_progress_from_state!(run, state)
           changed_since_flush = 0
           last_flush_at = Time.current
         end
 
-        persist_progress!(
-          run,
-          fetched_count: fetched_count,
-          filtered_count: filtered_count,
-          imported_count: imported_count,
-          upserted_count: upserted_count,
-          failed_count: failed_count
-        )
-        canceled ||= run_canceled?(run)
+        persist_progress_from_state!(run, state)
+        state[:canceled] ||= run_canceled?(run)
 
-        if canceled
-          run.update!(
-            status: "canceled",
-            finished_at: Time.current,
-            fetched_count: fetched_count,
-            filtered_count: filtered_count,
-            imported_count: imported_count,
-            upserted_count: upserted_count,
-            failed_count: failed_count,
+        if state[:canceled]
+          return finalize_canceled_run!(
+            run,
+            state,
             metadata: run_completion_metadata(
               run: run,
-              location_whitelist: location_whitelist,
-              filtered_out_cities: filtered_out_cities
+              location_whitelist: state[:location_whitelist],
+              filtered_out_cities: state[:filtered_out_cities]
             )
           )
-          broadcast_runs_update!
-
-          return run
         end
 
         return run.reload if run_canceled?(run)
 
-        deactivate_stale_events!(seen_at: run_started_at)
+        deactivate_stale_events!(seen_at: state[:run_started_at])
 
-        run.update!(
-          status: "succeeded",
-          finished_at: Time.current,
-          fetched_count: fetched_count,
-          filtered_count: filtered_count,
-          imported_count: imported_count,
-          upserted_count: upserted_count,
-          failed_count: failed_count,
+        finalize_succeeded_run!(
+          run,
+          state,
           metadata: run_completion_metadata(
             run: run,
-            location_whitelist: location_whitelist,
-            filtered_out_cities: filtered_out_cities
+            location_whitelist: state[:location_whitelist],
+            filtered_out_cities: state[:filtered_out_cities]
           )
         )
-        broadcast_runs_update!
-
-        run
       rescue StandardError => e
-        return run.reload if run&.persisted? && run_canceled?(run)
-
-        run&.update!(
-          status: "failed",
-          finished_at: Time.current,
-          fetched_count: fetched_count || 0,
-          filtered_count: filtered_count || 0,
-          imported_count: imported_count || 0,
-          upserted_count: upserted_count || 0,
-          failed_count: failed_count || 0,
-          error_message: e.message,
+        handle_import_failure!(
+          run,
+          state,
+          error: e,
           metadata: run_completion_metadata(
             run: run,
-            location_whitelist: location_whitelist,
-            filtered_out_cities: filtered_out_cities
+            location_whitelist: state&.fetch(:location_whitelist, []),
+            filtered_out_cities: state&.fetch(:filtered_out_cities, Set.new)
           )
         )
-        create_import_run_error!(
-          run: run,
-          error: e,
-          payload: {}
-        )
-        broadcast_runs_update!
         raise
       end
 
@@ -295,35 +220,7 @@ module Importing
       end
 
       def fail_stale_runs!
-        stale_runs =
-          import_source
-            .import_runs
-            .where(source_type: "easyticket", status: "running")
-            .where("started_at < ? OR updated_at < ?", RUN_STALE_AFTER.ago, RUN_HEARTBEAT_STALE_AFTER.ago)
-            .to_a
-
-        return if stale_runs.empty?
-
-        stale_runs.each do |stale_run|
-          if stale_run.started_at < RUN_STALE_AFTER.ago
-            stale_run.update_columns(
-              status: "failed",
-              finished_at: Time.current,
-              error_message: "Run automatically marked failed after timeout (#{RUN_STALE_AFTER.inspect})",
-              updated_at: Time.current
-            )
-            next
-          end
-
-          next unless stale_run_stop_requested?(stale_run)
-
-          stale_run.update_columns(
-            status: "canceled",
-            finished_at: Time.current,
-            updated_at: Time.current
-          )
-        end
-        broadcast_runs_update!
+        fail_stale_runs_by_source!("easyticket")
       end
 
       def find_existing_import_event(event_id, dump_payload)
