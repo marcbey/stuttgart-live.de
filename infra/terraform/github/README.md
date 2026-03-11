@@ -33,8 +33,8 @@ Dafür gibt es das Skript:
 script/github_set_production_secrets
 ```
 
-Optional kann `.env` zusätzlich `KAMAL_REGISTRY_PULL_PASSWORD` enthalten.
-Wenn der Wert fehlt, setzt das Skript aus Rückwärtskompatibilität denselben Wert wie `KAMAL_REGISTRY_PASSWORD`.
+`.env` muss `KAMAL_REGISTRY_PULL_PASSWORD` enthalten.
+Dieser Token sollte nur `read:packages` für den Host-Pull auf `ghcr.io` haben.
 
 ## Wichtige Hinweise
 
