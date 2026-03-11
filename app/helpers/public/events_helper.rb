@@ -77,6 +77,15 @@ module Public::EventsHelper
     PUBLIC_EVENT_GENRE_TILES
   end
 
+  def public_event_show_presenter(event, primary_offer:, browse_state:)
+    Public::Events::ShowPresenter.new(
+      event,
+      primary_offer: primary_offer,
+      browse_state: browse_state,
+      view_context: self
+    )
+  end
+
   def effective_public_grid_variant_for(event, _index)
     editorial_image = editorial_event_image_for(event)
     editorial_image&.grid_variant.presence || EventImage::GRID_VARIANT_1X1

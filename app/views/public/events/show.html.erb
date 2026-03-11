@@ -1,34 +1,13 @@
-<% og_image = @event.image_for(slot: :social_card, breakpoint: :desktop) %>
-<% hero_desktop_image = @event.image_for(slot: :detail_hero, breakpoint: :desktop) %>
-<% hero_mobile_image = @event.image_for(slot: :grid_default, breakpoint: :mobile) || hero_desktop_image %>
-<% slider_images = @event.slider_images.to_a %>
-<% og_image_url = og_image.is_a?(EventImage) ? polymorphic_url(og_image.file) : og_image&.image_url %>
-<% hero_desktop_image_source = event_image_source(hero_desktop_image) %>
-<% hero_mobile_image_source = event_image_source(hero_mobile_image) %>
-<% hero_alt_text = event_image_alt(hero_desktop_image, @event) %>
-<% detail_doors_at = @event.doors_at || (@event.start_at - 1.hour if @event.start_at.present?) %>
-<% weekday_labels = [ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag" ] %>
-<% venue_location = [ @event.venue, @event.city ].reject(&:blank?).join(", ") %>
-
-<% content_for :title, "#{@event.artist_name} - #{@event.title} | Stuttgart Live" %>
-<% content_for :head do %>
-  <%= tag.meta property: "og:title", content: "#{@event.artist_name} - #{@event.title}" %>
-  <%= tag.meta property: "og:description", content: @event.event_info.to_s.truncate(160) %>
-  <%= tag.meta property: "og:type", content: "website" %>
-  <%= tag.meta property: "og:image", content: og_image_url if og_image_url.present? %>
-  <%= tag.meta name: "twitter:card", content: "summary_large_image" %>
-  <%= tag.meta name: "twitter:title", content: "#{@event.artist_name} - #{@event.title}" %>
-  <%= tag.meta name: "twitter:description", content: @event.event_info.to_s.truncate(160) %>
-  <%= tag.link rel: "canonical", href: event_url(@event.slug) %>
-<% end %>
+<% presenter = public_event_show_presenter(@event, primary_offer: @primary_offer, browse_state: @browse_state) %>
+<%= render "show_meta", presenter: presenter %>
 
 <article class="event-detail">
   <div class="event-detail-topbar">
-    <p class="event-detail-back"><%= link_to "← alle events", public_events_index_path(@browse_state) %></p>
+    <p class="event-detail-back"><%= link_to "← alle events", presenter.back_path %></p>
     <% if authenticated? %>
       <div class="event-detail-topbar-actions">
-        <% if @event.primary_source.present? %>
-          <span class="status-badge status-badge-default"><%= event_source_label(@event.primary_source) %></span>
+        <% if presenter.primary_source_label.present? %>
+          <span class="status-badge status-badge-default"><%= presenter.primary_source_label %></span>
         <% end %>
         <%= link_to "Edit",
                     backend_events_path(status: @event.status, event_id: @event.id),
@@ -38,73 +17,19 @@
     <% end %>
   </div>
 
-  <header class="event-detail-header <%= 'event-detail-header-with-image' if hero_desktop_image_source.present? %>">
-    <div class="event-detail-header-copy">
-      <h1><%= @event.artist_name %></h1>
-      <p class="event-detail-title"><%= @event.title %></p>
-      <p class="event-detail-meta event-detail-meta-primary">
-        <span class="event-detail-meta-strong"><%= weekday_labels[@event.start_at.wday] %></span>
-        <span class="event-detail-meta-strong"><%= l(@event.start_at.to_date, format: "%d.%m.%Y") %></span>
-        <span class="event-detail-meta-strong"><%= venue_location %></span>
-      </p>
-      <p class="event-detail-meta">
-        Beginn: <%= l(@event.start_at, format: "%H:%M") %> Uhr · Einlass: <%= l(detail_doors_at, format: "%H:%M") %> Uhr
-      </p>
-      <% if @primary_offer.present? %>
-        <section class="event-detail-cta event-detail-cta-inline">
-          <% if @event.badge_text.present? %>
-            <p class="event-detail-badge-inline"><%= @event.badge_text %></p>
-          <% end %>
-          <%= link_to "Tickets sichern", @primary_offer.resolved_ticket_url, target: "_blank", rel: "noopener", class: "button" %>
-          <% if @primary_offer.ticket_price_text.present? %>
-            <p>Preis: <%= @primary_offer.ticket_price_text %></p>
-          <% end %>
-        </section>
-      <% end %>
-      <% if authenticated? %>
-        <% visibility_badges = public_event_visibility_badges(@event) %>
-        <div class="event-detail-badges-row">
-          <% visibility_badges.each do |badge| %>
-            <span class="status-badge <%= badge[:css_class] %>"><%= badge[:label] %></span>
-          <% end %>
-        </div>
-      <% end %>
-      <% detail_genres = @event.genres.order(:name).pluck(:name) %>
-      <% if detail_genres.any? %>
-        <p class="event-detail-genre">Genre: <%= detail_genres.join(" · ") %></p>
-      <% end %>
-    </div>
-
-    <% if hero_desktop_image_source.present? %>
-      <div class="event-detail-image-wrap">
-        <picture>
-          <% if hero_mobile_image_source.present? %>
-            <source media="(max-width: 699px)" srcset="<%= hero_mobile_image_source %>">
-          <% end %>
-          <%= image_tag hero_desktop_image_source, alt: hero_alt_text, class: "event-detail-image", style: event_detail_image_style(hero_desktop_image) %>
-        </picture>
-      </div>
-    <% end %>
-  </header>
+  <%= render "show_hero", presenter: presenter %>
 
   <% if @event.event_info.present? %>
     <section class="event-detail-copy">
       <h2>Beschreibung</h2>
       <%= simple_format(@event.event_info) %>
-      <% if @event.homepage_url.present? || @event.instagram_url.present? || @event.facebook_url.present? %>
+      <% if presenter.social_links.any? %>
         <div class="event-detail-links">
-          <% if @event.homepage_url.present? %>
-            <%= link_to "Homepage", @event.homepage_url, target: "_blank", rel: "noopener", title: @event.homepage_url %>
-          <% end %>
-          <% if @event.instagram_url.present? %>
-            <%= link_to "Instagram", @event.instagram_url, target: "_blank", rel: "noopener", title: @event.instagram_url %>
-          <% end %>
-          <% if @event.facebook_url.present? %>
-            <%= link_to "Facebook", @event.facebook_url, target: "_blank", rel: "noopener", title: @event.facebook_url %>
+          <% presenter.social_links.each do |link| %>
+            <%= link_to link.label, link.url, target: "_blank", rel: "noopener", title: link.url %>
           <% end %>
         </div>
       <% end %>
-
     </section>
   <% end %>
 
@@ -115,56 +40,7 @@
     </section>
   <% end %>
 
-  <% if @event.youtube_embed_url.present? %>
-    <section class="event-detail-video">
-      <h2>Video</h2>
-      <div class="video-frame">
-        <iframe
-          src="<%= @event.youtube_embed_url %>"
-          title="YouTube video player"
-          loading="lazy"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-          referrerpolicy="strict-origin-when-cross-origin"
-          allowfullscreen>
-        </iframe>
-      </div>
-    </section>
-  <% end %>
-
-  <% if slider_images.any? %>
-    <section class="event-detail-slider" data-controller="lightbox">
-      <h2>Bilder</h2>
-      <div class="event-slider-track">
-        <% slider_images.each do |image| %>
-          <% image_source = event_image_source(image) %>
-          <% next if image_source.blank? %>
-          <figure class="event-slider-item">
-            <button type="button"
-                    class="event-slider-image-wrap"
-                    data-lightbox-target="item"
-                    data-action="click->lightbox#open"
-                    data-lightbox-src-value="<%= image_source %>"
-                    data-lightbox-alt-value="<%= event_image_alt(image, @event) %>"
-                    data-lightbox-caption-value="<%= image.sub_text.to_s %>">
-              <%= image_tag image_source, alt: event_image_alt(image, @event), loading: "lazy", class: "event-slider-image" %>
-            </button>
-            <% if image.sub_text.present? %>
-              <figcaption class="event-slider-sub"><%= image.sub_text %></figcaption>
-            <% end %>
-          </figure>
-        <% end %>
-      </div>
-      <div class="event-lightbox" data-lightbox-target="dialog" data-action="click->lightbox#backdropClose" hidden>
-        <button type="button" class="event-lightbox-nav event-lightbox-nav-prev" data-lightbox-target="previousButton" data-action="click->lightbox#previous" aria-label="Vorheriges Bild">‹</button>
-        <button type="button" class="event-lightbox-nav event-lightbox-nav-next" data-lightbox-target="nextButton" data-action="click->lightbox#next" aria-label="Nächstes Bild">›</button>
-        <button type="button" class="event-lightbox-close" data-action="click->lightbox#close" aria-label="Lightbox schließen">×</button>
-        <div class="event-lightbox-inner">
-          <img src="" alt="" class="event-lightbox-image" data-lightbox-target="image">
-          <p class="event-lightbox-caption" data-lightbox-target="caption" hidden></p>
-        </div>
-      </div>
-    </section>
-  <% end %>
+  <%= render "show_media", presenter: presenter %>
 
   <% if @event.show_public_organizer_notes? %>
     <section class="event-detail-copy">

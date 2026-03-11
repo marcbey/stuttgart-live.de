@@ -1,0 +1,48 @@
+<% if presenter.youtube_embed_url.present? %>
+  <section class="event-detail-video">
+    <h2>Video</h2>
+    <div class="video-frame">
+      <iframe
+        src="<%= presenter.youtube_embed_url %>"
+        title="YouTube video player"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerpolicy="strict-origin-when-cross-origin"
+        allowfullscreen>
+      </iframe>
+    </div>
+  </section>
+<% end %>
+
+<% if presenter.slider_items.any? %>
+  <section class="event-detail-slider" data-controller="lightbox">
+    <h2>Bilder</h2>
+    <div class="event-slider-track">
+      <% presenter.slider_items.each do |item| %>
+        <figure class="event-slider-item">
+          <button type="button"
+                  class="event-slider-image-wrap"
+                  data-lightbox-target="item"
+                  data-action="click->lightbox#open"
+                  data-lightbox-src-value="<%= item.source %>"
+                  data-lightbox-alt-value="<%= item.alt_text %>"
+                  data-lightbox-caption-value="<%= item.caption %>">
+            <%= image_tag item.source, alt: item.alt_text, loading: "lazy", class: "event-slider-image" %>
+          </button>
+          <% if item.caption.present? %>
+            <figcaption class="event-slider-sub"><%= item.caption %></figcaption>
+          <% end %>
+        </figure>
+      <% end %>
+    </div>
+    <div class="event-lightbox" data-lightbox-target="dialog" data-action="click->lightbox#backdropClose" hidden>
+      <button type="button" class="event-lightbox-nav event-lightbox-nav-prev" data-lightbox-target="previousButton" data-action="click->lightbox#previous" aria-label="Vorheriges Bild">‹</button>
+      <button type="button" class="event-lightbox-nav event-lightbox-nav-next" data-lightbox-target="nextButton" data-action="click->lightbox#next" aria-label="Nächstes Bild">›</button>
+      <button type="button" class="event-lightbox-close" data-action="click->lightbox#close" aria-label="Lightbox schließen">×</button>
+      <div class="event-lightbox-inner">
+        <img src="" alt="" class="event-lightbox-image" data-lightbox-target="image">
+        <p class="event-lightbox-caption" data-lightbox-target="caption" hidden></p>
+      </div>
+    </div>
+  </section>
+<% end %>

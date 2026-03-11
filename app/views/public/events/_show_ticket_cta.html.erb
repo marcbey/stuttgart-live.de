@@ -1,0 +1,11 @@
+<% if presenter.show_ticket_cta? %>
+  <section class="event-detail-cta event-detail-cta-inline">
+    <% if presenter.ticket_badge_text.present? %>
+      <p class="event-detail-badge-inline"><%= presenter.ticket_badge_text %></p>
+    <% end %>
+    <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button" %>
+    <% if presenter.ticket_price_text.present? %>
+      <p>Preis: <%= presenter.ticket_price_text %></p>
+    <% end %>
+  </section>
+<% end %>
