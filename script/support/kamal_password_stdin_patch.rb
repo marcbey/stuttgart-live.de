@@ -2,6 +2,7 @@
 
 require "kamal"
 require "kamal/commands/registry"
+require "kamal/utils"
 
 class Kamal::Commands::Registry
   unless method_defined?(:login_without_optional_skip)
@@ -11,6 +12,17 @@ class Kamal::Commands::Registry
   def login(registry_config: nil)
     return if ENV["KAMAL_SKIP_REMOTE_REGISTRY_LOGIN"] == "true"
 
-    login_without_optional_skip(registry_config: registry_config)
+    registry_config ||= config.registry
+
+    return if registry_config.local?
+
+    pipe \
+      [ :printf, "%s", sensitive(Kamal::Utils.escape_shell_value(registry_config.password)) ],
+      docker(
+        :login,
+        registry_config.server,
+        "-u", sensitive(Kamal::Utils.escape_shell_value(registry_config.username)),
+        "--password-stdin"
+      )
   end
 end

@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ANSIBLE_DIR="$ROOT_DIR/infra/ansible"
+INVENTORY="$ANSIBLE_DIR/inventories/production/hosts.yml"
+PLAYBOOK="$ANSIBLE_DIR/playbooks/app_host.yml"
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/stgt-live-hetzner-admin}"
+SSH_USER="${SSH_USER:-admin}"
+
+db_password="$(
+  ruby - "$ROOT_DIR/.env" <<'RUBY'
+dotenv_file = ARGV.fetch(0)
+abort "dotenv fehlt: #{dotenv_file}" unless File.exist?(dotenv_file)
+
+File.readlines(dotenv_file, chomp: true).each do |line|
+  stripped = line.strip
+  next if stripped.empty? || stripped.start_with?("#")
+
+  key, value = line.sub(/\Aexport\s+/, "").split("=", 2)
+  next unless key == "DB_PASSWORD"
+  abort "DB_PASSWORD ist leer" if value.nil? || value.empty?
+
+  puts value
+  exit 0
+end
+
+abort "DB_PASSWORD fehlt in .env"
+RUBY
+)"
+
+cd "$ANSIBLE_DIR"
+exec ansible-playbook \
+  -i "$INVENTORY" \
+  -u "$SSH_USER" \
+  --private-key "$SSH_KEY" \
+  "$PLAYBOOK" \
+  -e "postgres_app_password=$db_password" \
+  "$@"

@@ -29,8 +29,10 @@ firewall_allowed_tcp_ports:
   - 22
   - 80
   - 443
+kamal_docker_subnet: 172.18.0.0/16
+kamal_docker_gateway: 172.18.0.1
 firewall_tcp_cidr_rules:
-  - from: 172.18.0.0/16
+  - from: "{{ kamal_docker_subnet }}"
     port: 5432
     proto: tcp
 
@@ -41,11 +43,25 @@ postgres_app_databases:
   - stuttgart_live_de_production_cache
   - stuttgart_live_de_production_queue
   - stuttgart_live_de_production_cable
-postgres_listen_addresses: "*"
-postgres_allowed_host_cidrs:
-  - 127.0.0.1/32
-  - ::1/128
-  - 172.18.0.0/16
+postgres_listen_addresses: "127.0.0.1,::1,{{ kamal_docker_gateway }}"
+postgres_host_access_rules:
+  - databases: all
+    users: all
+    source: 127.0.0.1/32
+    method: scram-sha-256
+  - databases: all
+    users: all
+    source: ::1/128
+    method: scram-sha-256
+  - databases: "{{ postgres_app_databases | join(',') }}"
+    users: "{{ postgres_app_user }}"
+    source: "{{ kamal_docker_subnet }}"
+    method: scram-sha-256
+postgres_legacy_host_access_rules:
+  - databases: all
+    users: all
+    source: "{{ kamal_docker_subnet }}"
+    method: scram-sha-256
 
 backup_dir: /var/backups/stuttgart-live
 backup_keep_days: 7

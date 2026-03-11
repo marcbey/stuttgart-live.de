@@ -40,16 +40,29 @@
     state: present
   notify: restart postgresql
 
-- name: PostgreSQL-Zugriff für definierte Host-CIDRs erlauben
+- name: PostgreSQL-Zugriff für definierte Regeln erlauben
   community.postgresql.postgresql_pg_hba:
     dest: "{{ postgres_hba_file.stdout | trim }}"
     contype: host
-    databases: all
-    users: all
-    source: "{{ item }}"
-    method: scram-sha-256
+    databases: "{{ item.databases }}"
+    users: "{{ item.users }}"
+    source: "{{ item.source }}"
+    method: "{{ item.method | default('scram-sha-256') }}"
     create: true
-  loop: "{{ postgres_allowed_host_cidrs }}"
+  loop: "{{ postgres_host_access_rules }}"
+  notify: restart postgresql
+
+- name: Veraltete PostgreSQL-Zugriffsregeln entfernen
+  community.postgresql.postgresql_pg_hba:
+    dest: "{{ postgres_hba_file.stdout | trim }}"
+    contype: host
+    databases: "{{ item.databases }}"
+    users: "{{ item.users }}"
+    source: "{{ item.source }}"
+    method: "{{ item.method | default('scram-sha-256') }}"
+    state: absent
+    create: true
+  loop: "{{ postgres_legacy_host_access_rules | default([]) }}"
   notify: restart postgresql
 
 - name: Sicherstellen, dass ein Datenbank-Passwort gesetzt ist

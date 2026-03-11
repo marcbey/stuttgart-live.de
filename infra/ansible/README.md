@@ -38,9 +38,12 @@ ansible-playbook -i inventories/production/hosts.yml -u root playbooks/bootstrap
 Dann Docker, PostgreSQL und Backups einrichten:
 
 ```bash
-ansible-playbook -i inventories/production/hosts.yml -u root playbooks/app_host.yml \
-  -e postgres_app_password='starkes-passwort'
+script/ansible_app_host_production
 ```
+
+Das Wrapper-Skript liest `DB_PASSWORD` direkt aus `.env` und ruft `app_host.yml`
+mit dem gehärteten `admin`-Benutzer und dem Standard-Schlüssel
+`~/.ssh/stgt-live-hetzner-admin` auf.
 
 ## Wichtige Variablen
 
