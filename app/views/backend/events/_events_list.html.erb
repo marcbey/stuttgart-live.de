@@ -24,36 +24,40 @@
       <%= form.submit "Bulk anwenden", class: "button button-compact" %>
     </div>
 
-    <ul class="event-list">
-      <% events.each do |event| %>
-        <% import_change_badge = event_import_change_badge(event, merge_run_id: merge_run_id) %>
-        <li class="event-list-item <%= 'event-list-item-active' if selected_event&.id == event.id %>">
-          <%= check_box_tag "event_ids[]",
-                            event.id,
-                            false,
-                            class: "event-checkbox",
-                            data: { bulk_select_target: "item", action: "change->bulk-select#syncToggleLabel" } %>
-          <%= link_to backend_event_path(event, status: status),
-                      data: {
-                        turbo_frame: "event_editor",
-                        action: "click->next-event#eventLinkClicked",
-                        next_event_event_id: event.id
-                      },
-                      class: "event-link" do %>
-            <div class="event-list-main">
-              <strong><%= event.artist_name %></strong>
-              <span><%= event.title %></span>
-              <small><%= l(event.start_at.to_date, format: "%d.%m.%Y") %> · <%= event.venue %></small>
-            </div>
-            <span class="event-list-badges">
-              <% if import_change_badge.present? %>
-                <span class="<%= import_change_badge[:css_class] %>"><%= import_change_badge[:label] %></span>
-              <% end %>
-              <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
-            </span>
-          <% end %>
-        </li>
-      <% end %>
-    </ul>
+    <% if events.any? %>
+      <ul class="event-list">
+        <% events.each do |event| %>
+          <% import_change_badge = event_import_change_badge(event, merge_run_id: merge_run_id) %>
+          <li class="event-list-item <%= 'event-list-item-active' if selected_event&.id == event.id %>">
+            <%= check_box_tag "event_ids[]",
+                              event.id,
+                              false,
+                              class: "event-checkbox",
+                              data: { bulk_select_target: "item", action: "change->bulk-select#syncToggleLabel" } %>
+            <%= link_to backend_event_path(event, status: status),
+                        data: {
+                          turbo_frame: "event_editor",
+                          action: "click->next-event#eventLinkClicked",
+                          next_event_event_id: event.id
+                        },
+                        class: "event-link" do %>
+              <div class="event-list-main">
+                <strong><%= event.artist_name %></strong>
+                <span><%= event.title %></span>
+                <small><%= l(event.start_at.to_date, format: "%d.%m.%Y") %> · <%= event.venue %></small>
+              </div>
+              <span class="event-list-badges">
+                <% if import_change_badge.present? %>
+                  <span class="<%= import_change_badge[:css_class] %>"><%= import_change_badge[:label] %></span>
+                <% end %>
+                <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
+              </span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <div class="empty-state">Keine Events zur aktuellen Filterung.</div>
+    <% end %>
   <% end %>
 </div>

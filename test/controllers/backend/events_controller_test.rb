@@ -86,6 +86,22 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='merge_change_type'][disabled]"
   end
 
+  test "index shows empty state in event list when filters match no events" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      query: "Keine Treffer"
+    }
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_select "#events_list .event-list-count", text: /0/
+    assert_select "#events_list .empty-state", text: "Keine Events zur aktuellen Filterung."
+    assert_select "#events_list .event-list-item", count: 0
+  end
+
   test "change type filter is enabled when merge scope is last merge" do
     sign_in_as(@user)
 
