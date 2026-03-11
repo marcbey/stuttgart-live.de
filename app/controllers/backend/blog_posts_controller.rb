@@ -25,7 +25,7 @@ module Backend
       @status_filter = current_filter
       @query_filter = current_query
       @blog_post = current_user.authored_blog_posts.build(blog_post_params)
-      apply_publication_state!(@blog_post)
+      @blog_post.apply_publication_action(action: publication_action, user: current_user)
 
       if @blog_post.save
         purge_cover_image_if_requested!(@blog_post)
@@ -49,7 +49,7 @@ module Backend
       @status_filter = current_filter
       @query_filter = current_query
       @blog_post.assign_attributes(blog_post_params)
-      apply_publication_state!(@blog_post)
+      @blog_post.apply_publication_action(action: publication_action, user: current_user)
 
       if @blog_post.save
         purge_cover_image_if_requested!(@blog_post)
@@ -108,22 +108,6 @@ module Backend
       def publication_action
         value = params[:publication_action].to_s
         %w[save publish depublish].include?(value) ? value : "save"
-      end
-
-      def apply_publication_state!(blog_post)
-        case publication_action
-        when "publish"
-          blog_post.status = "published"
-          blog_post.published_at ||= Time.current
-          blog_post.published_by = current_user
-        when "depublish"
-          blog_post.status = "draft"
-          blog_post.published_at = nil
-          blog_post.published_by = nil
-        else
-          blog_post.status ||= "draft"
-          blog_post.published_by = nil if blog_post.status == "draft"
-        end
       end
 
       def remove_cover_image_requested?
@@ -187,11 +171,7 @@ module Backend
               turbo_stream.replace(
                 "blog_editor",
                 partial: "backend/blog_posts/editor_frame",
-                locals: {
-                  blog_post: blog_post,
-                  status_filter: @status_filter,
-                  query_filter: @query_filter
-                }
+                locals: editor_frame_locals(blog_post, status: @status_filter, query: @query_filter)
               )
             ], status: :unprocessable_entity
           end
@@ -200,11 +180,7 @@ module Backend
 
       def render_editor_panel(blog_post, status:, query:)
         render partial: "backend/blog_posts/editor_frame",
-               locals: {
-                 blog_post: blog_post,
-                 status_filter: status,
-                 query_filter: query
-               }
+               locals: editor_frame_locals(blog_post, status: status, query: query)
       end
 
       def render_inbox_state_turbo_stream(sidebar_posts:, selected_blog_post:, target_status:)
@@ -233,13 +209,17 @@ module Backend
           turbo_stream.replace(
             "blog_editor",
             partial: "backend/blog_posts/editor_frame",
-            locals: {
-              blog_post: selected_blog_post,
-              status_filter: target_status,
-              query_filter: @query_filter
-            }
+            locals: editor_frame_locals(selected_blog_post, status: target_status, query: @query_filter)
           )
         ]
+      end
+
+      def editor_frame_locals(blog_post, status:, query:)
+        {
+          blog_post: blog_post,
+          status_filter: status,
+          query_filter: query
+        }
       end
 
       def selected_blog_post_for(sidebar_posts, preferred_blog_post:)

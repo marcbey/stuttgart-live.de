@@ -49,6 +49,22 @@ class BlogPost < ApplicationRecord
     author_name.to_s.strip.presence || author&.name.presence || author&.email_address.to_s
   end
 
+  def apply_publication_action(action:, user:)
+    case action.to_s
+    when "publish"
+      self.status = "published"
+      self.published_at ||= Time.current
+      self.published_by = user
+    when "depublish"
+      self.status = "draft"
+      self.published_at = nil
+      self.published_by = nil
+    else
+      self.status ||= "draft"
+      self.published_by = nil if status == "draft"
+    end
+  end
+
   def self.source_url_candidates_for(source_path)
     normalized_path = normalize_source_path(source_path)
     return [] if normalized_path.blank?

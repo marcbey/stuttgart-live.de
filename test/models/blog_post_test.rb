@@ -69,4 +69,55 @@ class BlogPostTest < ActiveSupport::TestCase
 
     assert_equal [ live_post ], BlogPost.published_live.to_a
   end
+
+  test "apply_publication_action publishes with current user" do
+    blog_post = BlogPost.new(
+      title: "Neu",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft"
+    )
+
+    freeze_time do
+      blog_post.apply_publication_action(action: "publish", user: @author)
+
+      assert_equal "published", blog_post.status
+      assert_equal Time.current, blog_post.published_at
+      assert_equal @author, blog_post.published_by
+    end
+  end
+
+  test "apply_publication_action depublishes and clears publication fields" do
+    blog_post = BlogPost.new(
+      title: "Neu",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @author
+    )
+
+    blog_post.apply_publication_action(action: "depublish", user: @author)
+
+    assert_equal "draft", blog_post.status
+    assert_nil blog_post.published_at
+    assert_nil blog_post.published_by
+  end
+
+  test "apply_publication_action keeps draft as default on regular save" do
+    blog_post = BlogPost.new(
+      title: "Neu",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: nil
+    )
+
+    blog_post.apply_publication_action(action: "save", user: @author)
+
+    assert_equal "draft", blog_post.status
+    assert_nil blog_post.published_by
+  end
 end
