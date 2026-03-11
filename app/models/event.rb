@@ -87,6 +87,32 @@ class Event < ApplicationRecord
     status == "published"
   end
 
+  def sync_publication_fields(user: nil)
+    if published?
+      self.published_at ||= Time.current
+      self.published_by ||= user if user.present?
+    else
+      self.published_at = nil
+      self.published_by = nil
+    end
+  end
+
+  def publish_now!(user:, auto_published: false)
+    self.status = "published"
+    self.auto_published = auto_published
+    self.published_at = Time.current
+    self.published_by = user
+    save!
+  end
+
+  def unpublish!(status: "ready_for_publish", auto_published: false)
+    self.status = status
+    self.auto_published = auto_published
+    self.published_at = nil
+    self.published_by = nil
+    save!
+  end
+
   def primary_offer
     event_offers.active_ticket.ordered.first
   end

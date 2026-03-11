@@ -238,7 +238,7 @@ module Merging
       if completeness.ready_for_publish? && images_present
         event.status = "published"
         event.auto_published = true
-        event.published_at ||= Time.current
+        event.sync_publication_fields
       else
         event.status = "needs_review"
         event.auto_published = false

@@ -218,15 +218,7 @@ module Public
 
       event.status = status
       event.auto_published = false
-
-      if status == "published"
-        event.published_at ||= Time.current
-        event.published_by ||= current_user
-      else
-        event.published_at = nil
-        event.published_by = nil
-      end
-
+      event.sync_publication_fields(user: current_user)
       event.save!
       after_values = event.attributes.slice("status", "published_at", "published_by_id", "auto_published")
       before_values != after_values

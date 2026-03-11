@@ -139,7 +139,7 @@ module Backend
     end
 
     def publish
-      @event.update!(status: "published", published_at: Time.current, published_by: current_user, auto_published: false)
+      @event.publish_now!(user: current_user, auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "published", user: current_user)
       redirect_to backend_events_path(status: "published", event_id: @event.id), notice: "Event wurde veröffentlicht."
     end
@@ -148,7 +148,7 @@ module Backend
       navigation_status = inbox_status_for_navigation
       next_event_status = navigation_status || @event.status
       next_event = @next_event_enabled ? next_filtered_event_after(@event.id, status: next_event_status) : nil
-      @event.update!(status: "ready_for_publish", published_at: nil, published_by: nil, auto_published: false)
+      @event.unpublish!(status: "ready_for_publish", auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "unpublished", user: current_user)
       @all_genres = Genre.order(:name)
       target_status = navigation_status || @event.status
@@ -191,9 +191,9 @@ module Backend
         events.find_each do |event|
           case action
           when "publish"
-            event.update!(status: "published", published_at: Time.current, published_by: current_user, auto_published: false)
+            event.publish_now!(user: current_user, auto_published: false)
           when "unpublish"
-            event.update!(status: "needs_review", published_at: nil, published_by: nil, auto_published: false)
+            event.unpublish!(status: "needs_review", auto_published: false)
           when "mark_complete"
             event.update!(status: "ready_for_publish")
           when "mark_incomplete"
@@ -418,13 +418,7 @@ module Backend
     end
 
     def set_publishing_fields!(event)
-      if event.status == "published"
-        event.published_at ||= Time.current
-        event.published_by ||= current_user
-      elsif event.status != "published"
-        event.published_at = nil
-        event.published_by = nil
-      end
+      event.sync_publication_fields(user: current_user)
     end
 
     def save_and_publish_requested?

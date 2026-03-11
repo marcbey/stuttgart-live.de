@@ -73,4 +73,51 @@ class EventTest < ActiveSupport::TestCase
     assert event.valid?
     assert_nil event.city
   end
+
+  test "syncs publication fields for published events without overriding existing values" do
+    publisher = users(:one)
+    published_at = 2.days.ago.change(usec: 0)
+    event = events(:published_one)
+    event.published_at = published_at
+    event.published_by = publisher
+
+    event.sync_publication_fields(user: users(:blogger))
+
+    assert_equal published_at, event.published_at
+    assert_equal publisher, event.published_by
+  end
+
+  test "syncs publication fields by clearing them for unpublished events" do
+    event = events(:published_one)
+    event.status = "needs_review"
+
+    event.sync_publication_fields(user: users(:one))
+
+    assert_nil event.published_at
+    assert_nil event.published_by
+  end
+
+  test "publish_now persists a manual publication state" do
+    event = events(:needs_review_one)
+
+    freeze_time do
+      event.publish_now!(user: users(:one), auto_published: false)
+
+      assert_equal "published", event.status
+      assert_equal false, event.auto_published
+      assert_equal Time.current, event.published_at
+      assert_equal users(:one), event.published_by
+    end
+  end
+
+  test "unpublish clears persisted publication fields" do
+    event = events(:published_one)
+
+    event.unpublish!(status: "ready_for_publish", auto_published: false)
+
+    assert_equal "ready_for_publish", event.status
+    assert_equal false, event.auto_published
+    assert_nil event.published_at
+    assert_nil event.published_by
+  end
 end
