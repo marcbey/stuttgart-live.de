@@ -80,106 +80,54 @@ module Merging
     attr_reader :merge_run_id, :logger, :priority_map
 
     def import_records
-      easyticket_records + eventim_records + reservix_records
+      ImportSource::SOURCE_TYPES.flat_map { |source| import_records_for(source) }
     end
 
-    def easyticket_records
-      EasyticketImportEvent
+    def import_records_for(source)
+      import_model_for(source)
         .active
         .includes(:import_event_images)
         .joins(:import_source)
-        .where(import_sources: { active: true, source_type: "easyticket" })
+        .where(import_sources: { active: true, source_type: source })
         .map do |record|
-          ensure_import_record_images!(record, source: "easyticket")
-
-          ImportRecord.new(
-            source: "easyticket",
-            external_event_id: record.external_event_id,
-            concert_date: record.concert_date,
-            begin_time: begin_time_for_easyticket(record),
-            city: record.city,
-            venue_name: record.venue_name,
-            title: record.title,
-            artist_name: record.artist_name,
-            promoter_id: promoter_id_for_easyticket(record),
-            description_text: description_text_for_easyticket(record),
-            ticket_url: record.ticket_url,
-            ticket_price_text: ticket_price_text_for_easyticket(record),
-            min_price: nil,
-            max_price: nil,
-            images: images_for_import_record(record, fallback_source: "easyticket"),
-            raw_payload: {
-              dump_payload: record.dump_payload,
-              detail_payload: record.detail_payload
-            }
-          )
+          build_import_record(record, source: source)
         end
     end
 
-    def eventim_records
-      EventimImportEvent
-        .active
-        .includes(:import_event_images)
-        .joins(:import_source)
-        .where(import_sources: { active: true, source_type: "eventim" })
-        .map do |record|
-          ensure_import_record_images!(record, source: "eventim")
-
-          ImportRecord.new(
-            source: "eventim",
-            external_event_id: record.external_event_id,
-            concert_date: record.concert_date,
-            begin_time: begin_time_for_eventim(record),
-            city: record.city,
-            venue_name: record.venue_name,
-            title: record.title,
-            artist_name: record.artist_name,
-            promoter_id: promoter_id_for_eventim(record),
-            description_text: description_text_for_eventim(record),
-            ticket_url: record.ticket_url,
-            ticket_price_text: ticket_price_text_for_eventim(record),
-            min_price: nil,
-            max_price: nil,
-            images: images_for_import_record(record, fallback_source: "eventim"),
-            raw_payload: {
-              dump_payload: record.dump_payload,
-              detail_payload: record.detail_payload
-            }
-          )
-        end
+    def import_model_for(source)
+      case source
+      when "easyticket"
+        EasyticketImportEvent
+      when "eventim"
+        EventimImportEvent
+      when "reservix"
+        ReservixImportEvent
+      else
+        raise ArgumentError, "Unsupported import source: #{source.inspect}"
+      end
     end
 
-    def reservix_records
-      ReservixImportEvent
-        .active
-        .includes(:import_event_images)
-        .joins(:import_source)
-        .where(import_sources: { active: true, source_type: "reservix" })
-        .map do |record|
-          ensure_import_record_images!(record, source: "reservix")
+    def build_import_record(record, source:)
+      ensure_import_record_images!(record, source: source)
 
-          ImportRecord.new(
-            source: "reservix",
-            external_event_id: record.external_event_id,
-            concert_date: record.concert_date,
-            begin_time: begin_time_for_reservix(record),
-            city: record.city,
-            venue_name: record.venue_name,
-            title: record.title,
-            artist_name: record.artist_name,
-            promoter_id: nil,
-            description_text: description_text_for_reservix(record),
-            ticket_url: record.ticket_url,
-            ticket_price_text: ticket_price_text_for_reservix(record),
-            min_price: record.min_price,
-            max_price: record.max_price,
-            images: images_for_import_record(record, fallback_source: "reservix"),
-            raw_payload: {
-              dump_payload: record.dump_payload,
-              detail_payload: record.detail_payload
-            }
-          )
-        end
+      ImportRecord.new(
+        source: source,
+        external_event_id: record.external_event_id,
+        concert_date: record.concert_date,
+        begin_time: import_record_begin_time(record, source: source),
+        city: record.city,
+        venue_name: record.venue_name,
+        title: record.title,
+        artist_name: record.artist_name,
+        promoter_id: import_record_promoter_id(record, source: source),
+        description_text: import_record_description_text(record, source: source),
+        ticket_url: record.ticket_url,
+        ticket_price_text: import_record_ticket_price_text(record, source: source),
+        min_price: import_record_min_price(record, source: source),
+        max_price: import_record_max_price(record, source: source),
+        images: images_for_import_record(record, fallback_source: source),
+        raw_payload: import_record_raw_payload(record)
+      )
     end
 
     def upsert_event_for(records)
@@ -350,6 +298,44 @@ module Merging
 
     def sync_event_images!(event, candidates)
       Importing::ImportEventImagesSync.call(owner: event, candidates: candidates)
+    end
+
+    def import_record_begin_time(record, source:)
+      send("begin_time_for_#{source}", record)
+    end
+
+    def import_record_promoter_id(record, source:)
+      case source
+      when "easyticket"
+        promoter_id_for_easyticket(record)
+      when "eventim"
+        promoter_id_for_eventim(record)
+      else
+        nil
+      end
+    end
+
+    def import_record_description_text(record, source:)
+      send("description_text_for_#{source}", record)
+    end
+
+    def import_record_ticket_price_text(record, source:)
+      send("ticket_price_text_for_#{source}", record)
+    end
+
+    def import_record_min_price(record, source:)
+      source == "reservix" ? record.min_price : nil
+    end
+
+    def import_record_max_price(record, source:)
+      source == "reservix" ? record.max_price : nil
+    end
+
+    def import_record_raw_payload(record)
+      {
+        dump_payload: record.dump_payload,
+        detail_payload: record.detail_payload
+      }
     end
 
     def promoter_id_for_easyticket(record)

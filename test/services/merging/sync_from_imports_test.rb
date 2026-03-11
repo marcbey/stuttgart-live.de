@@ -260,4 +260,53 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert event.present?
     assert_equal "Eventim Description\nLine 2", event.event_info
   end
+
+  test "merges reservix prices into event and offer" do
+    source_reservix = ImportSource.create!(name: "Reservix", source_type: "reservix", active: true)
+    date = Date.new(2026, 12, 6)
+
+    record = source_reservix.reservix_import_events.create!(
+      external_event_id: "merge-reservix-1",
+      concert_date: date,
+      city: "Stuttgart",
+      venue_name: "Liederhalle",
+      title: "Reservix Pricing Night",
+      artist_name: "Band Reservix",
+      concert_date_label: "06.12.2026",
+      venue_label: "Stuttgart, Liederhalle",
+      dump_payload: {
+        "starttime" => "19:00",
+        "description" => "Reservix Description"
+      },
+      detail_payload: {},
+      ticket_url: "https://example.com/reservix",
+      min_price: 22.5,
+      max_price: 39.9,
+      is_active: true,
+      first_seen_at: Time.current,
+      last_seen_at: Time.current,
+      source_payload_hash: "hash-reservix-1"
+    )
+
+    record.import_event_images.create!(
+      source: "reservix",
+      image_type: "image",
+      image_url: "https://example.com/reservix.jpg",
+      role: "cover",
+      aspect_hint: "landscape",
+      position: 0
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by(artist_name: "Band Reservix")
+    assert event.present?
+    assert_equal BigDecimal("22.5"), event.min_price
+    assert_equal BigDecimal("39.9"), event.max_price
+    assert_equal "Reservix Description", event.event_info
+    assert_equal Time.zone.local(2026, 12, 6, 19, 0, 0), event.start_at
+
+    offer = event.event_offers.find_by(source: "reservix")
+    assert_equal "22,50 - 39,90 EUR", offer&.ticket_price_text
+  end
 end
