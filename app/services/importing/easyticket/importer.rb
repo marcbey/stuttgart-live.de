@@ -125,8 +125,8 @@ module Importing
           end
 
           if unchanged_payloads?(existing_record, source_payload_hash, detail_payload)
-            sync_import_event_images!(
-              record: existing_record,
+            Importing::ImportEventImagesSync.call(
+              owner: existing_record,
               source: "easyticket",
               candidates: projection.image_candidates
             )
@@ -278,8 +278,8 @@ module Importing
           )
         )
         record.save!
-        sync_import_event_images!(
-          record: record,
+        Importing::ImportEventImagesSync.call(
+          owner: record,
           source: "easyticket",
           candidates: image_candidates
         )
@@ -518,65 +518,6 @@ module Importing
           "name" => dump_payload["loc_name"].to_s.strip.presence || dump_payload["location_name"].to_s.strip,
           "city" => dump_payload["loc_city"].to_s.strip
         }.reject { |_, value| value.blank? }
-      end
-
-      def sync_import_event_images!(record:, source:, candidates:)
-        normalized_candidates = normalize_image_candidates(candidates, source: source)
-        existing_by_key = record.import_event_images.index_by do |image|
-          image_key(source: image.source, image_type: image.image_type, image_url: image.image_url)
-        end
-
-        normalized_candidates.each_with_index do |candidate, index|
-          key = image_key(
-            source: candidate[:source],
-            image_type: candidate[:image_type],
-            image_url: candidate[:image_url]
-          )
-          image = existing_by_key.delete(key) || record.import_event_images.new
-          image.assign_attributes(
-            source: candidate[:source],
-            image_type: candidate[:image_type],
-            image_url: candidate[:image_url],
-            role: candidate[:role],
-            aspect_hint: candidate[:aspect_hint],
-            position: index
-          )
-          image.save! if image.new_record? || image.changed?
-        end
-
-        existing_by_key.each_value(&:destroy!)
-      end
-
-      def normalize_image_candidates(candidates, source:)
-        seen = Set.new
-
-        Array(candidates).filter_map do |candidate|
-          row = candidate.respond_to?(:to_h) ? candidate.to_h : {}
-          image_url = ImportEventImage.normalize_image_url(row[:image_url] || row["image_url"])
-          next if image_url.blank?
-
-          image_type = (row[:image_type] || row["image_type"]).to_s.strip.presence || "image"
-          normalized_source = source.to_s
-          key = image_key(source: normalized_source, image_type: image_type, image_url: image_url)
-          next if seen.include?(key)
-
-          seen << key
-          {
-            source: normalized_source,
-            image_type: image_type,
-            image_url: image_url,
-            role: (row[:role] || row["role"]).to_s.strip.presence || ImportEventImage.derive_role(source: normalized_source, image_type: image_type),
-            aspect_hint: (row[:aspect_hint] || row["aspect_hint"]).to_s.strip.presence || ImportEventImage.derive_aspect_hint(url: image_url, image_type: image_type)
-          }
-        end
-      end
-
-      def image_key(source:, image_type:, image_url:)
-        [
-          source.to_s.strip.downcase,
-          image_type.to_s.strip,
-          image_url.to_s.strip.downcase
-        ]
       end
 
       def create_import_run_error!(run:, error:, external_event_id: nil, payload: {})
