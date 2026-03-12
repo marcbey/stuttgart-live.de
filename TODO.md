@@ -18,8 +18,6 @@
 - Promoter ID mapping
 
 ## Frontend
-- Impressum: Technische Umsetzung raus
 - Datenschutz: Hosting und technische Dienste?
 - Banderole
 - Newsletter/Mailchimp Bestätigung nach Eingabe
-- neue Bilder habe ein Problem, scheibar ein caching issue
