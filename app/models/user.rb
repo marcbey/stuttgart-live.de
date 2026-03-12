@@ -1,5 +1,7 @@
 class User < ApplicationRecord
   ROLES = %w[admin editor blogger].freeze
+  PASSWORD_MIN_LENGTH = 12
+  PASSWORD_REQUIREMENTS_TEXT = "mindestens #{PASSWORD_MIN_LENGTH} Zeichen sowie Großbuchstaben, Kleinbuchstaben, Zahlen und Sonderzeichen".freeze
 
   has_secure_password
   has_many :sessions, dependent: :destroy
@@ -14,6 +16,7 @@ class User < ApplicationRecord
   validates :role, inclusion: { in: ROLES }
   validates :name, length: { maximum: 120 }, allow_blank: true
   validate :must_keep_an_admin_account, if: :admin_role_removed?
+  validate :password_must_be_strong, if: :password_present?
 
   def admin?
     role == "admin"
@@ -36,6 +39,10 @@ class User < ApplicationRecord
   end
 
   private
+    def password_present?
+      password.present?
+    end
+
     def admin_role_removed?
       persisted? && role_in_database == "admin" && role != "admin"
     end
@@ -44,5 +51,19 @@ class User < ApplicationRecord
       return if self.class.where(role: "admin").where.not(id: id).exists?
 
       errors.add(:role, "muss mindestens einen Admin behalten")
+    end
+
+    def password_must_be_strong
+      return if strong_password?(password)
+
+      errors.add(:password, "muss #{PASSWORD_REQUIREMENTS_TEXT} enthalten")
+    end
+
+    def strong_password?(value)
+      value.length >= PASSWORD_MIN_LENGTH &&
+        value.match?(/[[:lower:]]/) &&
+        value.match?(/[[:upper:]]/) &&
+        value.match?(/\d/) &&
+        value.match?(/[^A-Za-z0-9]/)
     end
 end

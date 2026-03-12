@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Backend::AccountPasswordsControllerTest < ActionDispatch::IntegrationTest
+  STRONG_PASSWORD = "Sicher123!Pass".freeze
+
   setup do
     @user = users(:one)
   end
@@ -18,13 +20,13 @@ class Backend::AccountPasswordsControllerTest < ActionDispatch::IntegrationTest
 
     patch backend_account_password_url, params: {
       user: {
-        password: "new-password",
-        password_confirmation: "new-password"
+        password: STRONG_PASSWORD,
+        password_confirmation: STRONG_PASSWORD
       }
     }
 
     assert_redirected_to edit_backend_account_password_url
-    assert @user.reload.authenticate("new-password")
+    assert @user.reload.authenticate(STRONG_PASSWORD)
     assert Session.exists?(current_session_id)
     assert_not Session.exists?(secondary_session.id)
   end
@@ -35,8 +37,8 @@ class Backend::AccountPasswordsControllerTest < ActionDispatch::IntegrationTest
     patch backend_account_password_url, params: {
       user: {
         role: "admin",
-        password: "new-password",
-        password_confirmation: "new-password"
+        password: STRONG_PASSWORD,
+        password_confirmation: STRONG_PASSWORD
       }
     }
 

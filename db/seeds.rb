@@ -29,12 +29,12 @@ end
 end
 
 default_admin_email = ENV.fetch("DEFAULT_ADMIN_EMAIL", "admin@stuttgart-live.de")
-default_admin_password = ENV.fetch("DEFAULT_ADMIN_PASSWORD", "please-change-me")
+default_admin_password = ENV.fetch("DEFAULT_ADMIN_PASSWORD", "PleaseChangeMe123!")
 
 admin = User.find_or_initialize_by(email_address: default_admin_email)
 admin.name = admin.name.presence || "Admin"
 admin.role = "admin"
-if admin.new_record? || default_admin_password != "please-change-me"
+if admin.new_record? || default_admin_password != "PleaseChangeMe123!"
   admin.password = default_admin_password
   admin.password_confirmation = default_admin_password
 end

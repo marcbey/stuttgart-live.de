@@ -29,7 +29,7 @@
         <%= form.label :role, "Rolle", class: "form-label" %>
         <%= form.select :role, role_options, {}, class: "form-input", disabled: role_locked %>
         <% if role_locked %>
-          <p>Die eigene Rolle kann nicht geaendert werden.</p>
+          <p>Die eigene Rolle kann nicht geändert werden.</p>
         <% end %>
       </div>
     </div>
@@ -42,6 +42,7 @@
                                 autocomplete: "new-password",
                                 maxlength: 72,
                                 class: "form-input" %>
+        <p>Passwort muss <%= User::PASSWORD_REQUIREMENTS_TEXT %> enthalten.</p>
       </div>
 
       <div>
@@ -55,7 +56,7 @@
     </div>
 
     <% if user.persisted? %>
-      <p>Passwortfelder leer lassen, wenn das Passwort unveraendert bleiben soll.</p>
+      <p>Passwortfelder leer lassen, wenn das Passwort unverändert bleiben soll.</p>
     <% end %>
 
     <div class="editor-footer">

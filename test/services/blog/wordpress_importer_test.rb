@@ -5,8 +5,8 @@ class Blog::WordpressImporterTest < ActiveSupport::TestCase
     admin = users(:two)
     later_admin = User.create!(
       email_address: "later-admin@example.com",
-      password: "password",
-      password_confirmation: "password",
+      password: "Sicher123!Pass",
+      password_confirmation: "Sicher123!Pass",
       role: "admin",
       name: "Later Admin"
     )

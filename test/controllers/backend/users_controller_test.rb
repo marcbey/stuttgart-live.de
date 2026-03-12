@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Backend::UsersControllerTest < ActionDispatch::IntegrationTest
+  STRONG_PASSWORD = "Sicher123!Pass".freeze
+
   setup do
     @admin = users(:two)
     @editor = users(:one)
@@ -35,8 +37,8 @@ class Backend::UsersControllerTest < ActionDispatch::IntegrationTest
           name: "Fresh User",
           email_address: "fresh@example.com",
           role: "blogger",
-          password: "password",
-          password_confirmation: "password"
+          password: STRONG_PASSWORD,
+          password_confirmation: STRONG_PASSWORD
         }
       }
     end
@@ -46,6 +48,25 @@ class Backend::UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "blogger", created_user.role
   end
 
+  test "admin cannot create a user with a weak password" do
+    sign_in_as(@admin)
+
+    assert_no_difference -> { User.count } do
+      post backend_users_url, params: {
+        user: {
+          name: "Weak User",
+          email_address: "weak@example.com",
+          role: "blogger",
+          password: "password",
+          password_confirmation: "password"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, User::PASSWORD_REQUIREMENTS_TEXT
+  end
+
   test "admin can change another users role and password" do
     sign_in_as(@admin)
     existing_session = @editor.sessions.create!
@@ -53,14 +74,14 @@ class Backend::UsersControllerTest < ActionDispatch::IntegrationTest
     patch backend_user_url(@editor), params: {
       user: {
         role: "blogger",
-        password: "updated-password",
-        password_confirmation: "updated-password"
+        password: STRONG_PASSWORD,
+        password_confirmation: STRONG_PASSWORD
       }
     }
 
     assert_redirected_to backend_users_url
     assert_equal "blogger", @editor.reload.role
-    assert @editor.authenticate("updated-password")
+    assert @editor.authenticate(STRONG_PASSWORD)
     assert_not Session.exists?(existing_session.id)
   end
 
