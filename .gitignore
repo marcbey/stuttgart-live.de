@@ -70,3 +70,7 @@ backend.hcl
 !/.kamal/*.example
 skills-lock.json
 .agents
+!.agents/
+.agents/*
+!.agents/skills/
+!.agents/skills/**
