@@ -18,11 +18,51 @@ body {
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  left: 1rem;
+  top: 0.75rem;
+  z-index: 120;
+  padding: 0.65rem 0.9rem;
+  background: #111;
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-140%);
+  transition: transform 140ms ease;
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
 input,
 textarea,
 select,
 button {
   font: inherit;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
 }
 
 h1,
@@ -1656,6 +1696,24 @@ trix-editor.blog-rich-text:focus {
   cursor: pointer;
 }
 
+.highlights-slider-toggle {
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--ink);
+  min-height: 2rem;
+  padding: 0.3rem 0.65rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.highlights-slider-toggle[aria-pressed="true"] {
+  background: #111;
+  color: #fff;
+}
+
 .slider-view-toggle[aria-pressed="true"] .slider-view-icon {
   opacity: 1;
 }
@@ -2344,6 +2402,9 @@ trix-editor.blog-rich-text:focus {
 .pagination-sentinel {
   margin: 1rem auto 0;
   max-width: 360px;
+  display: grid;
+  gap: 0.55rem;
+  justify-items: center;
   text-align: center;
   padding: 0.7rem 0.9rem;
   border: 1px solid var(--line);
@@ -2351,6 +2412,19 @@ trix-editor.blog-rich-text:focus {
   letter-spacing: 0.08em;
   font-size: 0.88rem;
   background: #f7f7f7;
+}
+
+.pagination-link.is-loading {
+  pointer-events: none;
+  opacity: 0.65;
+}
+
+.pagination-copy {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.86rem;
+  letter-spacing: normal;
+  text-transform: none;
 }
 
 .event-detail {
@@ -3296,7 +3370,6 @@ trix-editor.blog-rich-text:focus {
 
 .form-input:focus,
 .form-textarea:focus {
-  outline: none;
   border-color: #666;
 }
 

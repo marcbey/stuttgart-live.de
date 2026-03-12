@@ -3,7 +3,7 @@
 <section class="news-shell news-index-shell">
   <header class="news-hero news-index-hero">
     <p class="news-kicker">Redaktion</p>
-    <h1>Freshly Squeezed News</h1>
+    <h1>Aktuelle News</h1>
     <%= form_with model: NewsletterSubscriber.new,
                   url: newsletter_subscribers_path,
                   method: :post,
@@ -11,9 +11,10 @@
                   class: "newsletter-signup-form news-index-subscribe-form" do |form| %>
       <%= hidden_field_tag :return_to, news_index_path %>
       <%= hidden_field_tag :source, "news_index" %>
+      <%= form.label :email, "E-Mail-Adresse für News-Updates", class: "sr-only" %>
       <%= form.email_field :email,
                            autocomplete: "email",
-                           placeholder: "E-Mail-Adresse fuer News-Updates",
+                           placeholder: "E-Mail-Adresse für News-Updates",
                            required: true,
                            class: "form-input newsletter-signup-input" %>
       <%= form.submit "News abonnieren", class: "button newsletter-signup-button" %>

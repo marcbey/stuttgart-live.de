@@ -8,11 +8,12 @@ const DEFAULT_PREFERENCES = {
 }
 
 export default class extends Controller {
-  static targets = ["banner", "dialog", "analyticsInput", "mediaInput"]
+  static targets = ["banner", "dialog", "panel", "analyticsInput", "mediaInput", "closeButton"]
   static values = { measurementId: String }
 
   connect() {
     this.trackPageView = this.trackPageView.bind(this)
+    this.handleKeydown = this.handleKeydown.bind(this)
 
     this.ensureGoogleTag()
 
@@ -24,6 +25,8 @@ export default class extends Controller {
 
   disconnect() {
     document.removeEventListener("turbo:load", this.trackPageView)
+    document.removeEventListener("keydown", this.handleKeydown)
+    this.toggleBackgroundInert(false)
     document.body.classList.remove("consent-dialog-open")
   }
 
@@ -31,17 +34,24 @@ export default class extends Controller {
     event?.preventDefault()
     if (!this.hasDialogTarget) return
 
+    this.lastFocusedElement = document.activeElement instanceof HTMLElement ? document.activeElement : null
     this.syncInputs()
     this.dialogTarget.hidden = false
     document.body.classList.add("consent-dialog-open")
+    this.toggleBackgroundInert(true)
+    document.addEventListener("keydown", this.handleKeydown)
+    window.requestAnimationFrame(() => this.focusFirstElement())
   }
 
   closeSettings(event) {
-    if (event && event.target !== event.currentTarget) return
+    if (event?.type === "click" && event.target !== event.currentTarget) return
     if (!this.hasDialogTarget) return
 
     this.dialogTarget.hidden = true
     document.body.classList.remove("consent-dialog-open")
+    document.removeEventListener("keydown", this.handleKeydown)
+    this.toggleBackgroundInert(false)
+    this.restoreFocus()
   }
 
   acceptAll(event) {
@@ -152,6 +162,77 @@ export default class extends Controller {
     if (this.hasMediaInputTarget) {
       this.mediaInputTarget.checked = this.preferences.media
     }
+  }
+
+  handleKeydown(event) {
+    if (this.dialogTarget.hidden) return
+
+    if (event.key === "Escape") {
+      event.preventDefault()
+      this.closeSettings()
+      return
+    }
+
+    if (event.key !== "Tab") return
+
+    const focusableElements = this.focusableElements()
+    if (focusableElements.length === 0) {
+      event.preventDefault()
+      this.panelTarget?.focus()
+      return
+    }
+
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault()
+      lastElement.focus()
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault()
+      firstElement.focus()
+    }
+  }
+
+  focusFirstElement() {
+    const [firstElement] = this.focusableElements()
+    ;(firstElement || this.closeButtonTarget || this.panelTarget)?.focus()
+  }
+
+  restoreFocus() {
+    if (this.lastFocusedElement?.isConnected) {
+      this.lastFocusedElement.focus()
+    }
+  }
+
+  focusableElements() {
+    const root = this.hasPanelTarget ? this.panelTarget : this.dialogTarget
+    if (!root) return []
+
+    return Array.from(root.querySelectorAll(this.focusableSelector())).filter((element) => {
+      if (!(element instanceof HTMLElement)) return false
+      if (element.hidden || element.getAttribute("aria-hidden") === "true") return false
+      return !element.hasAttribute("disabled")
+    })
+  }
+
+  focusableSelector() {
+    return [
+      "a[href]",
+      "button:not([disabled])",
+      "input:not([disabled])",
+      "select:not([disabled])",
+      "textarea:not([disabled])",
+      "[tabindex]:not([tabindex='-1'])"
+    ].join(",")
+  }
+
+  toggleBackgroundInert(inert) {
+    Array.from(document.body.children).forEach((element) => {
+      if (element === this.dialogTarget) return
+      if (!(element instanceof HTMLElement)) return
+      element.inert = inert
+    })
   }
 
   ensureGoogleTag() {

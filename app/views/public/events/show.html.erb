@@ -9,7 +9,7 @@
         <% if presenter.primary_source_label.present? %>
           <span class="status-badge status-badge-default"><%= presenter.primary_source_label %></span>
         <% end %>
-        <%= link_to "Edit",
+        <%= link_to "Bearbeiten",
                     backend_events_path(status: @event.status, event_id: @event.id),
                     class: "status-badge status-badge-default status-badge-link event-detail-edit-link",
                     data: { turbo: false } %>

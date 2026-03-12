@@ -13,7 +13,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "News"
-    assert_includes response.body, "Freshly Squeezed News"
+    assert_includes response.body, "Aktuelle News"
     assert_includes response.body, @live_post.title
     assert_not_includes response.body, @draft_post.title
     assert_not_includes response.body, @scheduled_post.title

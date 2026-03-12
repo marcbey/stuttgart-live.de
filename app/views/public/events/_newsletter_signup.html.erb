@@ -10,6 +10,7 @@
     <%= hidden_field_tag :view, browse_state.route_params[:view] %>
     <%= hidden_field_tag :event_date, browse_state.event_date_param %>
     <%= hidden_field_tag :q, browse_state.query %>
+    <%= form.label :email, "E-Mail-Adresse", class: "sr-only" %>
     <%= form.email_field :email,
                          class: "form-input newsletter-signup-input",
                          placeholder: "E-Mail-Adresse",

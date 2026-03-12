@@ -1,12 +1,21 @@
 <div class="consent-dialog-backdrop"
      data-consent-target="dialog"
-     data-action="click->consent#closeSettings keydown.esc@window->consent#closeSettings"
+     data-action="click->consent#closeSettings"
      hidden>
-  <section class="consent-dialog" role="dialog" aria-modal="true" aria-labelledby="consent-dialog-title">
+  <section class="consent-dialog"
+           data-consent-target="panel"
+           role="dialog"
+           aria-modal="true"
+           aria-labelledby="consent-dialog-title"
+           tabindex="-1">
     <div class="consent-dialog-header">
       <p class="eyebrow">Datenschutz</p>
       <h2 id="consent-dialog-title">Datenschutzeinstellungen</h2>
-      <button type="button" class="consent-dialog-close" data-action="click->consent#closeSettings" aria-label="Dialog schließen">
+      <button type="button"
+              class="consent-dialog-close"
+              data-consent-target="closeButton"
+              data-action="click->consent#closeSettings"
+              aria-label="Dialog schließen">
         ×
       </button>
     </div>

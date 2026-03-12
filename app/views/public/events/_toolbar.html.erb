@@ -3,8 +3,8 @@
     <div class="public-filter-toggle public-view-toggle" aria-label="Darstellung umschalten">
       <%= link_to public_events_index_path(browse_state, view: Public::Events::BrowseState::VIEW_GRID),
                   class: "status-chip public-view-chip #{'status-chip-active' if browse_state.grid?}",
-                  title: "Grid-Ansicht",
-                  aria: { label: "Grid-Ansicht" } do %>
+                  title: "Kachelansicht",
+                  aria: { label: "Kachelansicht", current: ("page" if browse_state.grid?) } do %>
         <span class="public-view-icon public-view-icon-grid" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
         </span>
@@ -12,7 +12,7 @@
       <%= link_to public_events_index_path(browse_state, view: Public::Events::BrowseState::VIEW_LIST),
                   class: "status-chip public-view-chip #{'status-chip-active' if browse_state.list?}",
                   title: "Listen-Ansicht",
-                  aria: { label: "Listen-Ansicht" } do %>
+                  aria: { label: "Listen-Ansicht", current: ("page" if browse_state.list?) } do %>
         <span class="public-view-icon public-view-icon-list" aria-hidden="true">
           <span></span><span></span><span></span>
         </span>

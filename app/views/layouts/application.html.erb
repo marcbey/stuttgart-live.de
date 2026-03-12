@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="<%= I18n.locale %>">
   <head>
     <title><%= content_for(:title) || "Stuttgart Live" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -39,6 +39,7 @@
     <% end %>>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
+    <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
     <nav class="app-nav" data-controller="nav-offset">
       <div class="<%= nav_inner_classes.join(" ") %>">
         <%= link_to root_path, class: "app-brand" do %>
@@ -54,10 +55,10 @@
         <div class="app-nav-meta">
           <div class="app-nav-links">
             <div class="app-nav-links-group">
-              <%= link_to "Events", events_path, class: app_nav_link_class(active: events_nav_active?) %>
-              <%= link_to "News", news_index_path, class: app_nav_link_class(active: news_nav_active?) %>
-              <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?) %>
-              <div class="app-nav-socials" aria-label="Social Media">
+              <%= link_to "Events", events_path, class: app_nav_link_class(active: events_nav_active?), aria: { current: ("page" if events_nav_active?) } %>
+              <%= link_to "News", news_index_path, class: app_nav_link_class(active: news_nav_active?), aria: { current: ("page" if news_nav_active?) } %>
+              <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?), aria: { current: ("page" if contact_nav_active?) } %>
+              <div class="app-nav-socials" aria-label="Soziale Medien">
                 <%= link_to "https://www.instagram.com/stuttgartlive/",
                             class: "app-nav-social-link",
                             target: "_blank",
@@ -86,23 +87,23 @@
             <div class="app-nav-links-group app-nav-links-group-separated">
               <% if authenticated? %>
                 <% if current_user.backend_access? %>
-                  <%= link_to "Redaktion", backend_events_path, class: app_nav_link_class(active: backend_nav_active?) %>
-                  <%= link_to "Importer", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?) %>
+                  <%= link_to "Redaktion", backend_events_path, class: app_nav_link_class(active: backend_nav_active?), aria: { current: ("page" if backend_nav_active?) } %>
+                  <%= link_to "Importer", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?), aria: { current: ("page" if importer_nav_active?) } %>
                 <% end %>
                 <% if current_user.blog_access? %>
-                  <%= link_to "Blog", backend_blog_posts_path, class: app_nav_link_class(active: blog_nav_active?) %>
+                  <%= link_to "Blog", backend_blog_posts_path, class: app_nav_link_class(active: blog_nav_active?), aria: { current: ("page" if blog_nav_active?) } %>
                 <% end %>
                 <% if current_user.admin? %>
-                  <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users") %>
+                  <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users"), aria: { current: ("page" if controller_path == "backend/users") } %>
                 <% end %>
-                <%= link_to "Passwort", edit_backend_account_password_path, class: app_nav_link_class(active: controller_path == "backend/account_passwords") %>
+                <%= link_to "Passwort", edit_backend_account_password_path, class: app_nav_link_class(active: controller_path == "backend/account_passwords"), aria: { current: ("page" if controller_path == "backend/account_passwords") } %>
                 <%= button_to "Logout",
                               session_path,
                               method: :delete,
                               class: app_nav_link_class(accent: true),
                               form: { class: "app-nav-link-form" } %>
               <% else %>
-                <%= link_to "Login", new_session_path, class: app_nav_link_class(accent: true, active: controller_path == "sessions") %>
+                <%= link_to "Login", new_session_path, class: app_nav_link_class(accent: true, active: controller_path == "sessions"), aria: { current: ("page" if controller_path == "sessions") } %>
               <% end %>
             </div>
           </div>
@@ -110,7 +111,9 @@
       </div>
     </nav>
 
-    <%= yield %>
+    <main id="main-content" tabindex="-1">
+      <%= yield %>
+    </main>
 
     <% unless controller_path.start_with?("backend/") %>
       <%= render "layouts/consent_banner" %>

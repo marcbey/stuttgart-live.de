@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "track", "previousButton", "nextButton" ]
+  static targets = [ "track", "previousButton", "nextButton", "toggleButton" ]
   static values = {
     autoplay: { type: Boolean, default: false },
     interval: { type: Number, default: 5000 }
@@ -9,12 +9,21 @@ export default class extends Controller {
 
   connect() {
     this.updateButtons = this.updateButtons.bind(this)
+    this.handleFocusIn = this.handleFocusIn.bind(this)
+    this.handleFocusOut = this.handleFocusOut.bind(this)
+    this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
+    this.userPaused = window.matchMedia("(prefers-reduced-motion: reduce)").matches
+
     this.trackTarget?.addEventListener("scroll", this.updateButtons, { passive: true })
     this.handleMouseEnter = () => this.stopAutoplay()
     this.handleMouseLeave = () => this.startAutoplay()
     this.element.addEventListener("mouseenter", this.handleMouseEnter)
     this.element.addEventListener("mouseleave", this.handleMouseLeave)
+    this.element.addEventListener("focusin", this.handleFocusIn)
+    this.element.addEventListener("focusout", this.handleFocusOut)
+    document.addEventListener("visibilitychange", this.handleVisibilityChange)
     this.updateButtons()
+    this.updateToggleButton()
     this.startAutoplay()
   }
 
@@ -22,6 +31,9 @@ export default class extends Controller {
     this.trackTarget?.removeEventListener("scroll", this.updateButtons)
     this.element.removeEventListener("mouseenter", this.handleMouseEnter)
     this.element.removeEventListener("mouseleave", this.handleMouseLeave)
+    this.element.removeEventListener("focusin", this.handleFocusIn)
+    this.element.removeEventListener("focusout", this.handleFocusOut)
+    document.removeEventListener("visibilitychange", this.handleVisibilityChange)
     this.stopAutoplay()
   }
 
@@ -33,6 +45,19 @@ export default class extends Controller {
   next(event) {
     event.preventDefault()
     this.scrollByAmount(1)
+  }
+
+  toggleAutoplay(event) {
+    event.preventDefault()
+    this.userPaused = !this.userPaused
+
+    if (this.userPaused) {
+      this.stopAutoplay()
+    } else {
+      this.startAutoplay()
+    }
+
+    this.updateToggleButton()
   }
 
   scrollByAmount(direction) {
@@ -59,6 +84,7 @@ export default class extends Controller {
 
   startAutoplay() {
     if (!this.autoplayValue || !this.hasTrackTarget) return
+    if (this.userPaused || document.hidden) return
     if (this.autoplayTimer) return
 
     this.autoplayTimer = window.setInterval(() => {
@@ -89,5 +115,31 @@ export default class extends Controller {
 
     window.clearInterval(this.autoplayTimer)
     this.autoplayTimer = null
+  }
+
+  updateToggleButton() {
+    if (!this.hasToggleButtonTarget) return
+
+    this.toggleButtonTarget.textContent = this.userPaused ? "Animation starten" : "Animation pausieren"
+    this.toggleButtonTarget.setAttribute("aria-pressed", this.userPaused ? "true" : "false")
+  }
+
+  handleFocusIn() {
+    this.stopAutoplay()
+  }
+
+  handleFocusOut() {
+    window.requestAnimationFrame(() => {
+      if (this.element.contains(document.activeElement)) return
+      this.startAutoplay()
+    })
+  }
+
+  handleVisibilityChange() {
+    if (document.hidden) {
+      this.stopAutoplay()
+    } else {
+      this.startAutoplay()
+    }
   }
 }

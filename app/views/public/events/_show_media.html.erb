@@ -28,10 +28,17 @@
         </figure>
       <% end %>
     </div>
-    <div class="event-lightbox" data-lightbox-target="dialog" data-action="click->lightbox#backdropClose" hidden>
+    <div class="event-lightbox"
+         data-lightbox-target="dialog"
+         data-action="click->lightbox#backdropClose"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Bildansicht"
+         tabindex="-1"
+         hidden>
       <button type="button" class="event-lightbox-nav event-lightbox-nav-prev" data-lightbox-target="previousButton" data-action="click->lightbox#previous" aria-label="Vorheriges Bild">‹</button>
       <button type="button" class="event-lightbox-nav event-lightbox-nav-next" data-lightbox-target="nextButton" data-action="click->lightbox#next" aria-label="Nächstes Bild">›</button>
-      <button type="button" class="event-lightbox-close" data-action="click->lightbox#close" aria-label="Lightbox schließen">×</button>
+      <button type="button" class="event-lightbox-close" data-lightbox-target="closeButton" data-action="click->lightbox#close" aria-label="Lightbox schließen">×</button>
       <div class="event-lightbox-inner">
         <img src="" alt="" class="event-lightbox-image" data-lightbox-target="image">
         <p class="event-lightbox-caption" data-lightbox-target="caption" hidden></p>

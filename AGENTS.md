@@ -13,3 +13,6 @@
 5. Ein `git push` ist zu unterlassen, wenn die Aktualisierung des Branches fehlschlägt oder `bin/ci` bzw. einzelne Prüfschritte rot sind.
 6. Wenn nach `git pull`, Rebase oder Branch-Wechsel neue Migrationen ins Arbeitsverzeichnis kommen, muss die lokale Datenbank vor weiteren Tests, App-Starts oder Deploy-Schritten auf den aktuellen Stand gebracht werden.
 7. Standardmäßig ist dafür das im Projekt vorgesehene Kommando zu verwenden, bevorzugt `bin/rails db:migrate` oder `bin/setup`, sofern dieses die Migrationen zuverlässig mit ausführt.
+8. Bei Änderungen, neuen Seiten oder neuen Features im öffentlich zugänglichen Bereich ohne Login ist Barrierefreiheit von Anfang an mitzudenken. Ziel ist WCAG 2.2 AA: Semantik, Tastaturbedienbarkeit, sichtbarer Fokus, ausreichende Kontraste, verständliche Formularbeschriftungen, sinnvolle ARIA-Nutzung und screenreadertaugliche dynamische Zustände sind bei Umsetzung und Review mit zu prüfen.
+
+9. Bei Änderungen, neuen Seiten oder neuen Features im öffentlich zugänglichen Bereich ohne Login ist SEO ebenfalls von Anfang an mitzudenken. Dazu gehören insbesondere sinnvolle Seitentitel, Meta-Descriptions, klare Überschriftenstruktur, indexierbare Inhalte, sprechende interne Verlinkung, Canonical-URLs, aussagekräftige Linktexte sowie technisch saubere Metadaten für Suchmaschinen und Social Sharing.

@@ -1,10 +1,20 @@
 <div id="events-pagination">
   <% if next_page.present? %>
     <% browse_state = local_assigns.fetch(:browse_state) %>
+    <% next_page_path = public_events_index_path(browse_state, page: next_page) %>
+    <% next_page_stream_path = public_events_index_path(browse_state, page: next_page, format: :turbo_stream) %>
     <div class="pagination-sentinel"
          data-controller="infinite-scroll"
-         data-infinite-scroll-url-value="<%= public_events_index_path(browse_state, page: next_page, format: :turbo_stream) %>">
-      <span>lade mehr events...</span>
+         data-infinite-scroll-url-value="<%= next_page_stream_path %>">
+      <%= link_to "Mehr Events laden",
+                  next_page_path,
+                  class: "button button-secondary button-compact pagination-link",
+                  data: {
+                    action: "click->infinite-scroll#load",
+                    infinite_scroll_target: "link"
+                  },
+                  aria: { controls: "event-list-body" } %>
+      <p class="pagination-copy">Die nächsten Events werden nachgeladen.</p>
     </div>
   <% end %>
 </div>
