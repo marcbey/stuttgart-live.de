@@ -33,8 +33,17 @@ env:
     - EVENTIM_PASS
     - RESERVIX_API_KEY
     - RESERVIX_EVENTS_API
+    - SMTP_ADDRESS
+    - SMTP_PORT
+    - SMTP_USERNAME
+    - SMTP_PASSWORD
+    - SMTP_DOMAIN
+    - SMTP_AUTHENTICATION
+    - SMTP_ENABLE_STARTTLS_AUTO
+    - MAILER_FROM
   clear:
     SOLID_QUEUE_IN_PUMA: true
+    APP_HOST: <%= ENV.fetch("APP_HOST", "stuttgart-live.de") %>
     DB_HOST: 172.18.0.1
     DB_PORT: 5432
     DB_NAME: <%= ENV.fetch("DB_NAME", "stuttgart_live_de_production") %>

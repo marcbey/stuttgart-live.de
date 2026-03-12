@@ -8,7 +8,7 @@ class PasswordsController < ApplicationController
 
   def create
     if user = User.find_by(email_address: params[:email_address])
-      PasswordsMailer.magic_link(user).deliver_later
+      PasswordsMailer.magic_link(user).deliver_now
     end
 
     redirect_to new_session_path, notice: "Falls die E-Mail bekannt ist, wurde ein Magic-Link verschickt."

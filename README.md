@@ -133,6 +133,8 @@ Wichtige Umgebungsvariablen:
 - `GOOGLE_ANALYTICS_ID` aktiviert GA4 nach Einwilligung im Consent-Banner
 - `MAILCHIMP_API_KEY` plus `MAILCHIMP_LIST_ID` aktivieren den optionalen Mailchimp-Sync für Newsletter-Anmeldungen
 - `MAILCHIMP_SERVER_PREFIX` kann explizit gesetzt werden und ist bei euch voraussichtlich `us3`
+- `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` sowie optional `SMTP_DOMAIN`, `SMTP_AUTHENTICATION`, `SMTP_ENABLE_STARTTLS_AUTO` aktivieren den produktiven Mailversand
+- `MAILER_FROM` setzt den Absender für System-E-Mails wie den Passwort-Reset
 - `EASYTICKET_*`, `EVENTIM_*`, `RESERVIX_*` steuern die Importanbindungen externer Anbieter
 - `DB_*` und `RAILS_MASTER_KEY` sind für Laufzeit und Deployment erforderlich
 

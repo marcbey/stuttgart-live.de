@@ -11,8 +11,9 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    post passwords_path, params: { email_address: @user.email_address }
-    assert_enqueued_email_with PasswordsMailer, :magic_link, args: [ @user ]
+    assert_emails 1 do
+      post passwords_path, params: { email_address: @user.email_address }
+    end
     assert_redirected_to new_session_path
 
     follow_redirect!
