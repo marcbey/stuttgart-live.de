@@ -103,7 +103,7 @@ module Public::EventsHelper
 
   def event_image_source(image)
     return nil if image.blank?
-    return url_for(image.file) if image.is_a?(EventImage)
+    return rails_storage_proxy_path(image.file, only_path: true) if image.is_a?(EventImage)
 
     image.image_url
   end

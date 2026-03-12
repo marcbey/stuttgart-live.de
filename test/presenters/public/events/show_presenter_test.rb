@@ -45,7 +45,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       value.strftime(format)
     end
 
-    def polymorphic_url(file)
+    def rails_storage_proxy_url(file)
       "https://cdn.example.test/#{file}"
     end
 
