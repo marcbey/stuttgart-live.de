@@ -38,6 +38,34 @@ class UserTest < ActiveSupport::TestCase
     assert_not blogger.backend_access?
   end
 
+  test "locks the account after too many failed logins" do
+    user = users(:one)
+
+    User::MAX_FAILED_LOGIN_ATTEMPTS.times { user.register_failed_login! }
+
+    user.reload
+
+    assert user.login_locked?
+    assert_equal User::MAX_FAILED_LOGIN_ATTEMPTS, user.failed_login_attempts
+    assert_in_delta User::LOGIN_LOCKOUT_PERIOD.from_now.to_i, user.locked_until.to_i, 5
+  end
+
+  test "clears failed login tracking" do
+    user = users(:one)
+    user.update_columns(
+      failed_login_attempts: 3,
+      last_failed_login_at: Time.current,
+      locked_until: 5.minutes.from_now
+    )
+
+    user.clear_failed_login_attempts!
+    user.reload
+
+    assert_equal 0, user.failed_login_attempts
+    assert_nil user.last_failed_login_at
+    assert_nil user.locked_until
+  end
+
   test "does not allow removing the last admin role" do
     admin = users(:two)
 

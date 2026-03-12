@@ -2,9 +2,12 @@ class User < ApplicationRecord
   ROLES = %w[admin editor blogger].freeze
   PASSWORD_MIN_LENGTH = 12
   PASSWORD_REQUIREMENTS_TEXT = "mindestens #{PASSWORD_MIN_LENGTH} Zeichen sowie Großbuchstaben, Kleinbuchstaben, Zahlen und Sonderzeichen".freeze
+  MAX_FAILED_LOGIN_ATTEMPTS = 5
+  LOGIN_LOCKOUT_PERIOD = 15.minutes
 
   has_secure_password
   has_many :sessions, dependent: :destroy
+  has_many :login_attempts, dependent: :nullify
   has_many :published_events, class_name: "Event", foreign_key: :published_by_id, dependent: :nullify
   has_many :event_change_logs, dependent: :nullify
   has_many :authored_blog_posts, class_name: "BlogPost", foreign_key: :author_id, dependent: :restrict_with_exception
@@ -36,6 +39,35 @@ class User < ApplicationRecord
 
   def blog_access?
     admin? || editor? || blogger?
+  end
+
+  def login_locked?
+    locked_until.present? && locked_until.future?
+  end
+
+  def register_failed_login!
+    now = Time.current
+    attempts = failed_login_attempts.to_i + 1
+    updates = {
+      failed_login_attempts: attempts,
+      last_failed_login_at: now,
+      updated_at: now
+    }
+
+    if attempts >= MAX_FAILED_LOGIN_ATTEMPTS
+      updates[:locked_until] = now + LOGIN_LOCKOUT_PERIOD
+    end
+
+    update_columns(updates)
+  end
+
+  def clear_failed_login_attempts!
+    update_columns(
+      failed_login_attempts: 0,
+      last_failed_login_at: nil,
+      locked_until: nil,
+      updated_at: Time.current
+    )
   end
 
   private

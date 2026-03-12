@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_11_193000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_12_093000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -299,6 +299,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_193000) do
     t.index ["source_type"], name: "index_import_sources_on_source_type", unique: true
   end
 
+  create_table "login_attempts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "email_address"
+    t.string "ip_address"
+    t.string "outcome", null: false
+    t.datetime "updated_at", null: false
+    t.string "user_agent"
+    t.bigint "user_id"
+    t.index ["created_at"], name: "index_login_attempts_on_created_at"
+    t.index ["email_address", "created_at"], name: "index_login_attempts_on_email_address_and_created_at"
+    t.index ["outcome", "created_at"], name: "index_login_attempts_on_outcome_and_created_at"
+    t.index ["user_id"], name: "index_login_attempts_on_user_id"
+  end
+
   create_table "newsletter_subscribers", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email", null: false
@@ -360,11 +374,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_193000) do
   create_table "users", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email_address", null: false
+    t.integer "failed_login_attempts", default: 0, null: false
+    t.datetime "last_failed_login_at"
+    t.datetime "locked_until"
     t.string "name"
     t.string "password_digest", null: false
     t.string "role", default: "editor", null: false
     t.datetime "updated_at", null: false
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
+    t.index ["locked_until"], name: "index_users_on_locked_until"
     t.index ["role"], name: "index_users_on_role"
   end
 
@@ -384,6 +402,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_11_193000) do
   add_foreign_key "import_run_errors", "import_runs"
   add_foreign_key "import_runs", "import_sources"
   add_foreign_key "import_source_configs", "import_sources"
+  add_foreign_key "login_attempts", "users"
   add_foreign_key "reservix_import_events", "import_sources"
   add_foreign_key "sessions", "users"
 end

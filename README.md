@@ -69,6 +69,15 @@ Wichtige Aggregate und ihre Aufgaben:
 - `NewsletterSubscriber`: Newsletter-Anmeldungen inklusive optionalem Mailchimp-Sync
 - `User`, `Session`: Authentifizierung und Backend-Zugriff
 
+## Authentifizierung und Login-Schutz
+
+Der Login für den redaktionellen Bereich ist zusätzlich gegen einfache Brute-Force-Angriffe abgesichert.
+
+- Fehlgeschlagene Login-Versuche werden protokolliert
+- Nach mehreren Fehlversuchen wird das betroffene Benutzerkonto temporär gesperrt
+- Erfolgreiche, fehlgeschlagene und gesperrte Anmeldeversuche werden als Login-Historie gespeichert
+- Passwort-Änderungen und Benutzeranlage unterliegen einer Mindestanforderung an starke Passwörter
+
 ## Datenfluss
 
 ### Event-Import und Redaktion
