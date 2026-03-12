@@ -1,6 +1,6 @@
 <% slider_images = event.event_images.slider.ordered.to_a %>
 
-<section class="offer-section">
+<section id="<%= dom_id(event, :slider_images_section) %>" class="offer-section">
   <h3>Slider-Bilder</h3>
   <% if slider_images.any? %>
     <ul class="slider-image-editor-grid">
@@ -17,7 +17,7 @@
                   method: :post,
                   class: "event-image-upload-form",
                   html: { multipart: true },
-                  data: { turbo: false } do %>
+                  data: { turbo_stream: true } do %>
       <%= hidden_field_tag :status, editor_status %>
       <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_SLIDER %>
       <h4>Slider-Bilder hochladen</h4>

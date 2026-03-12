@@ -31,7 +31,7 @@
                             method: :post,
                             class: "event-image-inline-upload",
                             html: { multipart: true },
-                            data: { turbo: false } do %>
+                            data: { turbo_stream: true } do %>
                 <%= hidden_field_tag :status, editor_status %>
                 <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
                 <%= hidden_field_tag "event_image[alt_text]", event_image.alt_text %>
@@ -134,7 +134,7 @@
                     method: :post,
                     class: "event-image-upload-form",
                     html: { multipart: true },
-                    data: { turbo: false } do %>
+                    data: { turbo_stream: true } do %>
         <%= hidden_field_tag :status, editor_status %>
         <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
         <%= hidden_field_tag "event_image[hero_focus_position]", EventImage::HERO_FOCUS_CENTER %>

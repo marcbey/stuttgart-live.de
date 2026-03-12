@@ -39,6 +39,29 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Slider Sub", created.sub_text
   end
 
+  test "creates multiple slider images via turbo stream without reload" do
+    sign_in_as(@user)
+
+    assert_difference -> { @event.event_images.slider.count }, 2 do
+      post backend_event_event_images_url(@event), params: {
+        status: "needs_review",
+        event_image: {
+          purpose: EventImage::PURPOSE_SLIDER,
+          alt_text: "Slider Alt",
+          sub_text: "Slider Sub",
+          files: [ uploaded_image, uploaded_image ]
+        }
+      }, as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "2 Bilder wurden hochgeladen."
+    assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(@event, :slider_images_section)}\""
+    assert_includes response.body, "action=\"replace\""
+  end
+
   test "ignores filename strings and redirects with alert" do
     sign_in_as(@user)
 
@@ -100,6 +123,47 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 18.0, created.card_focus_x_value
     assert_equal 72.0, created.card_focus_y_value
     assert_equal 145.0, created.card_zoom_value
+  end
+
+  test "creates event image via turbo stream without reload" do
+    sign_in_as(@user)
+
+    assert_difference -> { @event.event_images.detail_hero.count }, 1 do
+      post backend_event_event_images_url(@event), params: {
+        status: "needs_review",
+        event_image: {
+          purpose: EventImage::PURPOSE_DETAIL_HERO,
+          sub_text: "Eventbild Sub",
+          files: [ uploaded_image ]
+        }
+      }, as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "Bild wurde hochgeladen."
+    assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(@event, :event_image_section)}\""
+    assert_includes response.body, "action=\"replace\""
+  end
+
+  test "returns turbo stream error for invalid upload payload" do
+    sign_in_as(@user)
+
+    assert_no_difference -> { @event.event_images.count } do
+      post backend_event_event_images_url(@event), params: {
+        status: "needs_review",
+        event_image: {
+          purpose: EventImage::PURPOSE_SLIDER,
+          files: [ "foo.jpg" ]
+        }
+      }, as: :turbo_stream
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "Bitte gültige Bilddateien auswählen."
   end
 
   test "deletes event image" do

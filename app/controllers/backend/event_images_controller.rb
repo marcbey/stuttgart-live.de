@@ -8,12 +8,12 @@ module Backend
       files = uploaded_files
 
       if files.blank?
-        redirect_to editor_redirect_path, alert: "Bitte gültige Bilddateien auswählen."
+        respond_with_create_error("Bitte gültige Bilddateien auswählen.")
         return
       end
 
       if purpose != EventImage::PURPOSE_SLIDER && files.size > 1
-        redirect_to editor_redirect_path, alert: "Für diesen Bildtyp ist nur eine Datei pro Upload erlaubt."
+        respond_with_create_error("Für diesen Bildtyp ist nur eine Datei pro Upload erlaubt.")
         return
       end
 
@@ -47,7 +47,7 @@ module Backend
       end
 
       if errors.any?
-        redirect_to editor_redirect_path, alert: errors.uniq.join(" | ")
+        respond_with_create_error(errors.uniq.join(" | "))
       else
         notice =
           if created == 1
@@ -55,7 +55,13 @@ module Backend
           else
             "#{created} Bilder wurden hochgeladen."
           end
-        redirect_to editor_redirect_path, notice: notice
+        respond_to do |format|
+          format.turbo_stream do
+            flash.now[:notice] = notice
+            render_event_image_create_turbo_stream(purpose: purpose)
+          end
+          format.html { redirect_to editor_redirect_path, notice: notice }
+        end
       end
     end
 
@@ -197,6 +203,15 @@ module Backend
       render_event_image_section_turbo_stream
     end
 
+    def render_event_image_create_turbo_stream(purpose:)
+      if purpose == EventImage::PURPOSE_SLIDER
+        render_slider_images_section_turbo_stream
+        return
+      end
+
+      render_event_image_section_turbo_stream
+    end
+
     def render_slider_image_destroy_turbo_stream
       unless @event_image.slider?
         render turbo_stream: turbo_stream.update("flash-messages", partial: "layouts/flash_messages")
@@ -206,6 +221,17 @@ module Backend
       render turbo_stream: [
         turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
         turbo_stream.remove(view_context.dom_id(@event_image, :slider_card))
+      ]
+    end
+
+    def render_slider_images_section_turbo_stream
+      render turbo_stream: [
+        turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+        turbo_stream.replace(
+          view_context.dom_id(@event, :slider_images_section),
+          partial: "backend/events/slider_images_section",
+          locals: { event: @event, editor_status: current_editor_status }
+        )
       ]
     end
 
@@ -226,6 +252,17 @@ module Backend
 
     def event_image_update_notice
       @event_image.detail_hero? ? "Eventbild wurde gespeichert." : "Bild-Metadaten wurden gespeichert."
+    end
+
+    def respond_with_create_error(message)
+      respond_to do |format|
+        format.turbo_stream do
+          flash.now[:alert] = message
+          render turbo_stream: turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+                 status: :unprocessable_entity
+        end
+        format.html { redirect_to editor_redirect_path, alert: message }
+      end
     end
   end
 end
