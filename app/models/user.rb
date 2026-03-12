@@ -1,6 +1,6 @@
 class User < ApplicationRecord
   ROLES = %w[admin editor blogger].freeze
-  PASSWORD_MIN_LENGTH = 12
+  PASSWORD_MIN_LENGTH = 8
   PASSWORD_REQUIREMENTS_TEXT = "mindestens #{PASSWORD_MIN_LENGTH} Zeichen sowie Großbuchstaben, Kleinbuchstaben, Zahlen und Sonderzeichen".freeze
   MAX_FAILED_LOGIN_ATTEMPTS = 5
   LOGIN_LOCKOUT_PERIOD = 15.minutes

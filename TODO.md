@@ -6,6 +6,9 @@
 - Mailchimp ID fehlt
 - Rollbacks inkl. migrations
 - Unnötige vars aus .env also config vars refactorn
+- OWASP checks
+- Handbuch erstellen
+- Agent skills ins Projekt ziehen
 
 ## Importer
 - was genau passiert bei einem merge update: überschreibt er editierte Daten
@@ -21,3 +24,5 @@
 - Datenschutz: Hosting und technische Dienste?
 - Banderole
 - Newsletter/Mailchimp Bestätigung nach Eingabe
+- WCAG
+- neue Bilder habe ein Problem, scheibar ein caching issue
