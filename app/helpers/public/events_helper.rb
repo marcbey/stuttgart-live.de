@@ -78,6 +78,12 @@ module Public::EventsHelper
   end
 
   def public_event_show_presenter(event, primary_offer:, browse_state:)
+    unless defined?(Public::Events::ShowPresenter)
+      presenter_path = Rails.root.join("app/presenters/public/events/show_presenter.rb").to_s
+      require_dependency presenter_path
+      load presenter_path unless defined?(Public::Events::ShowPresenter)
+    end
+
     Public::Events::ShowPresenter.new(
       event,
       primary_offer: primary_offer,

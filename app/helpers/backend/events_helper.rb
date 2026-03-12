@@ -1,5 +1,11 @@
 module Backend::EventsHelper
   def event_payload_presenter(event)
+    unless defined?(Backend::Events::SourcePayloadPresenter)
+      presenter_path = Rails.root.join("app/presenters/backend/events/source_payload_presenter.rb").to_s
+      require_dependency presenter_path
+      load presenter_path unless defined?(Backend::Events::SourcePayloadPresenter)
+    end
+
     Backend::Events::SourcePayloadPresenter.new(event)
   end
 
