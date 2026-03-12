@@ -3970,6 +3970,11 @@ trix-editor.blog-rich-text:focus {
 }
 
 @media (max-width: 760px) {
+  .public-view-toggle,
+  .slider-view-toggle {
+    display: none;
+  }
+
   .app-nav-inner {
     padding: 0.68rem 0.82rem;
     gap: 0.55rem;
