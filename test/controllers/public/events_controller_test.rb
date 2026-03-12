@@ -572,7 +572,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     hero_image = create_event_image(
       event: @published_event,
       purpose: EventImage::PURPOSE_DETAIL_HERO,
-      alt_text: "Hero Alt",
+      sub_text: "Foto Max Mustermann",
       grid_variant: EventImage::GRID_VARIANT_1X1
     )
     slider_image = create_event_image(
@@ -585,7 +585,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_includes response.body, "Hero Alt"
+    assert_includes response.body, @published_event.artist_name
+    assert_includes response.body, "© Foto Max Mustermann"
     assert_includes response.body, "Slider Subline"
     assert_includes response.body, rails_storage_proxy_path(hero_image.file, only_path: true)
     assert_includes response.body, rails_storage_proxy_path(slider_image.file, only_path: true)

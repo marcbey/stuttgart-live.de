@@ -10,7 +10,7 @@
     <div class="event-image-main-card">
       <div class="event-image-main-head">
         <%= image_tag event_image.file,
-                      alt: event_image.alt_text.presence || "#{event.artist_name} - #{event.title}",
+                      alt: event.artist_name.to_s.strip.presence || event.title.to_s,
                       class: "event-image-main-thumb" %>
         <div class="event-image-main-side">
           <div class="slider-image-editor-meta">
@@ -19,8 +19,7 @@
                           method: :patch,
                           class: "slider-image-meta-form event-image-meta-inline-form" do |form| %>
               <%= hidden_field_tag :status, editor_status %>
-              <%= form.text_field :alt_text, placeholder: "Alt-Text (optional)", class: "form-input" %>
-              <%= form.text_field :sub_text, placeholder: "Sub-Text (optional)", class: "form-input" %>
+              <%= form.text_field :sub_text, placeholder: "Copyright unter dem Bild (optional)", class: "form-input" %>
               <%= form.select :hero_focus_position,
                               options_for_select([ [ "Fokus oben", EventImage::HERO_FOCUS_TOP ], [ "Fokus mittig", EventImage::HERO_FOCUS_CENTER ], [ "Fokus unten", EventImage::HERO_FOCUS_BOTTOM ] ], event_image.hero_focus_position_value),
                               {},
@@ -85,7 +84,7 @@
                    data-event-image-crop-preview-target="previewFrame"
                    data-grid-variant="<%= event_image.grid_variant %>">
                 <%= image_tag event_image.file,
-                              alt: event_image.alt_text.presence || "#{event.artist_name} - #{event.title}",
+                              alt: event.artist_name.to_s.strip.presence || event.title.to_s,
                               class: "event-image-crop-preview-image",
                               style: event_card_image_style(event_image),
                               data: { event_image_crop_preview_target: "previewImage" } %>
@@ -142,8 +141,7 @@
         <h4>Eventbild hochladen</h4>
         <p>Wird auf der Detailseite und als Standardbild unter /events verwendet.</p>
         <%= file_field_tag "event_image[files][]", accept: "image/*", required: true, class: "form-input" %>
-        <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
-        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text (optional)", class: "form-input" %>
+        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Copyright unter dem Bild (optional)", class: "form-input" %>
         <%= button_tag "Upload", type: :submit, class: "button button-secondary button-compact" %>
       <% end %>
     </div>

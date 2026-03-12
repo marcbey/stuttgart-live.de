@@ -18,7 +18,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
   class ViewContextStub
     def event_image_source(image)
-      image&.source
+      image&.image_url || image&.source
     end
 
     def event_image_alt(image, event)
@@ -78,8 +78,9 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "event-detail-header event-detail-header-with-image", presenter.header_classes
     assert_equal "/hero-desktop.jpg", presenter.hero_desktop_image_source
     assert_equal "/hero-mobile.jpg", presenter.hero_mobile_image_source
-    assert_equal "Hero Alt", presenter.hero_alt_text
+    assert_equal "Band", presenter.hero_alt_text
     assert_equal "object-position: center;", presenter.hero_image_style
+    assert_equal "Bildquelle: Easy Ticket Service / Veranstalter", presenter.hero_image_credit
     assert_equal [ "Mittwoch", "17.06.2026", "Im Wizemann, Stuttgart" ], presenter.primary_meta
     assert_equal "Beginn: 20:00 Uhr · Einlass: 19:00 Uhr", presenter.schedule_line
     assert_equal [ { label: "Published", css_class: "status-badge-published" } ], presenter.visibility_badges
@@ -111,6 +112,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "Homepage", "Instagram" ], presenter.social_links.map(&:label)
     assert_equal [ "https://band.example", "https://instagram.example/band" ], presenter.social_links.map(&:url)
     assert_equal "https://www.youtube.com/embed/demo", presenter.youtube_embed_url
+    assert_nil presenter.hero_image_credit
     assert_equal 1, presenter.slider_items.size
     assert_equal "/slide-1.jpg", presenter.slider_items.first.source
     assert_equal "Slide 1 Alt", presenter.slider_items.first.alt_text
@@ -128,6 +130,29 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     )
   end
 
+  test "uses editorial hero sub text as copyright credit" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      start_at: Time.zone.local(2026, 6, 17, 20, 0)
+    )
+
+    hero_image = EventImage.new(purpose: EventImage::PURPOSE_DETAIL_HERO, sub_text: "Foto Max Mustermann")
+    event.define_singleton_method(:image_for) do |slot:, breakpoint:|
+      case [ slot, breakpoint ]
+      when [ :detail_hero, :desktop ], [ :grid_default, :mobile ]
+        hero_image
+      when [ :social_card, :desktop ]
+        OpenStruct.new(image_url: "https://cdn.example.test/social.jpg")
+      end
+    end
+
+    presenter = build_presenter(event)
+
+    assert_equal "Band", presenter.hero_alt_text
+    assert_equal "© Foto Max Mustermann", presenter.hero_image_credit
+  end
+
   def build_event(**attributes)
     event = Event.new(attributes)
 
@@ -136,9 +161,9 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       when [ :social_card, :desktop ]
         OpenStruct.new(image_url: "https://cdn.example.test/social.jpg")
       when [ :detail_hero, :desktop ]
-        OpenStruct.new(source: "/hero-desktop.jpg", alt: "Hero Alt", style: "object-position: center;")
+        OpenStruct.new(source: "easyticket", image_url: "/hero-desktop.jpg", alt: "Hero Alt", style: "object-position: center;")
       when [ :grid_default, :mobile ]
-        OpenStruct.new(source: "/hero-mobile.jpg", alt: "Hero Mobile Alt")
+        OpenStruct.new(source: "easyticket", image_url: "/hero-mobile.jpg", alt: "Hero Mobile Alt")
       end
     end
 

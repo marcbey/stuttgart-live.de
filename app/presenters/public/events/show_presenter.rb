@@ -67,11 +67,18 @@ module Public
       end
 
       def hero_alt_text
-        @hero_alt_text ||= view_context.event_image_alt(hero_desktop_image, event)
+        @hero_alt_text ||= event.artist_name.to_s.strip.presence || event.title.to_s
       end
 
       def hero_image_style
         view_context.event_detail_image_style(hero_desktop_image)
+      end
+
+      def hero_image_credit
+        return editorial_hero_credit if editorial_hero_credit.present?
+        return unless easyticket_import_hero_image?
+
+        "Bildquelle: Easy Ticket Service / Veranstalter"
       end
 
       def primary_meta
@@ -143,6 +150,21 @@ module Public
 
       def hero_mobile_image
         @hero_mobile_image ||= event.image_for(slot: :grid_default, breakpoint: :mobile) || hero_desktop_image
+      end
+
+      def editorial_hero_credit
+        return unless hero_desktop_image.is_a?(EventImage)
+
+        credit = hero_desktop_image.sub_text.to_s.strip
+        return if credit.blank?
+
+        credit.start_with?("©") ? credit : "© #{credit}"
+      end
+
+      def easyticket_import_hero_image?
+        hero_desktop_image.respond_to?(:source) &&
+          !hero_desktop_image.is_a?(EventImage) &&
+          hero_desktop_image.source.to_s.casecmp("easyticket").zero?
       end
 
       def doors_at
