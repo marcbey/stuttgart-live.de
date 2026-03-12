@@ -49,6 +49,9 @@ application.register("next-event", NextEventController)
 import MergeChangeFilterController from "./merge_change_filter_controller"
 application.register("merge-change-filter", MergeChangeFilterController)
 
+import MobileNavController from "./mobile_nav_controller"
+application.register("mobile-nav", MobileNavController)
+
 import NavOffsetController from "./nav_offset_controller"
 application.register("nav-offset", NavOffsetController)
 

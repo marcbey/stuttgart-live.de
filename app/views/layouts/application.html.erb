@@ -40,7 +40,7 @@
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
     <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
-    <nav class="app-nav" data-controller="nav-offset">
+    <nav class="app-nav" data-controller="nav-offset mobile-nav">
       <div class="<%= nav_inner_classes.join(" ") %>">
         <%= link_to root_path, class: "app-brand" do %>
           <span class="brand-wordmark" aria-label="Stuttgart Live">
@@ -48,11 +48,23 @@
           </span>
         <% end %>
 
+        <button type="button"
+                class="app-nav-toggle"
+                data-action="click->mobile-nav#toggle"
+                data-mobile-nav-target="button"
+                aria-expanded="false"
+                aria-controls="app-nav-menu"
+                aria-label="Navigation öffnen">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+
         <div id="flash-messages" class="app-nav-flash">
           <%= render "layouts/flash_messages" %>
         </div>
 
-        <div class="app-nav-meta">
+        <div id="app-nav-menu" class="app-nav-meta" data-mobile-nav-target="panel">
           <div class="app-nav-links">
             <div class="app-nav-links-group">
               <%= link_to "Events", events_path, class: app_nav_link_class(active: events_nav_active?), aria: { current: ("page" if events_nav_active?) } %>
