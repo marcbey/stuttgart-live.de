@@ -1,0 +1,23 @@
+<article class="slider-image-editor-card preuploaded-image-card"
+         data-upload-kind="<%= kind %>"
+         data-upload-signed-id="<%= signed_id %>"
+         data-upload-state="<%= local_assigns.fetch(:state, "uploaded") %>">
+  <div class="action-cell slider-image-editor-thumb">
+    <%= image_tag url_for(blob),
+                  alt: blob.filename.to_s,
+                  style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
+  </div>
+
+  <div class="slider-image-editor-meta">
+    <span class="import-image-editor-label"><%= blob.filename.to_s %></span>
+    <span class="preuploaded-image-status" data-role="upload-status"><%= local_assigns.fetch(:status_label, "Hochgeladen") %></span>
+    <%= hidden_field_tag field_name, signed_id %>
+    <div class="slider-image-meta-actions">
+      <button type="button"
+              class="button button-ghost button-compact"
+              data-action="click->event-image-preupload#removePreview">
+        Entfernen
+      </button>
+    </div>
+  </div>
+</article>

@@ -3827,6 +3827,27 @@ trix-editor.blog-rich-text:focus {
   justify-content: flex-start;
 }
 
+.preuploaded-image-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.preuploaded-image-card[data-upload-state="pending"] {
+  opacity: 0.82;
+}
+
+.preuploaded-image-status {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.preuploaded-image-live-region {
+  min-height: 1.25rem;
+  margin: 0;
+  font-size: 0.9rem;
+  color: #555;
+}
+
 .slider-image-meta-actions .button_to {
   display: inline-flex;
 }

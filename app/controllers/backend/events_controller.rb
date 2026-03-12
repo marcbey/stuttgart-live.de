@@ -32,15 +32,26 @@ module Backend
 
     def new
       @event = Event.new(start_at: Time.current.change(hour: 20, min: 0), status: "needs_review")
+      @selected_genre_ids = []
+      @manual_image_form_values = {}
     end
 
     def create
       @event = Event.new(event_params)
+      @selected_genre_ids = genre_ids_from_params
+      @manual_image_form_values = manual_image_form_values
+      creation_alert = nil
 
       set_publishing_fields!(@event)
 
-      if @event.save
+      Event.transaction do
+        unless @event.save
+          creation_alert = "Event konnte nicht erstellt werden."
+          raise ActiveRecord::Rollback
+        end
+
         assign_genres!(@event)
+        attach_manual_event_images!
         refresh_completeness!(@event)
         Editorial::EventChangeLogger.log!(
           event: @event,
@@ -48,11 +59,21 @@ module Backend
           user: current_user,
           changed_fields: @event.saved_changes
         )
+      rescue ActiveRecord::RecordInvalid => e
+        creation_alert = e.record.errors.full_messages.to_sentence
+        raise ActiveRecord::Rollback
+      rescue ArgumentError => e
+        creation_alert = e.message
+        raise ActiveRecord::Rollback
+      end
 
-        redirect_to backend_events_path(status: @event.status, event_id: @event.id), notice: "Event wurde erstellt."
-      else
-        flash.now[:alert] = "Event konnte nicht erstellt werden."
+      created_successfully = creation_alert.blank? && @event.id.present? && Event.exists?(@event.id)
+
+      if !created_successfully
+        flash.now[:alert] = creation_alert || "Event konnte nicht erstellt werden."
         render :new, status: :unprocessable_entity
+      else
+        redirect_to backend_events_path(status: @event.status, event_id: @event.id), notice: "Event wurde erstellt."
       end
     end
 
@@ -196,6 +217,30 @@ module Backend
       Array(params.dig(:event, :genre_ids)).reject(&:blank?).map(&:to_i)
     end
 
+    def manual_image_params
+      params.fetch(:event_image, ActionController::Parameters.new).permit(
+        :detail_hero_sub_text,
+        :slider_alt_text,
+        :slider_sub_text,
+        detail_hero_signed_ids: [],
+        slider_signed_ids: [],
+        detail_hero_files: [],
+        slider_files: []
+      )
+    end
+
+    def manual_image_form_values
+      permitted = manual_image_params.to_h.deep_symbolize_keys
+
+      {
+        detail_hero_sub_text: permitted[:detail_hero_sub_text],
+        slider_alt_text: permitted[:slider_alt_text],
+        slider_sub_text: permitted[:slider_sub_text],
+        detail_hero_signed_ids: Array(permitted[:detail_hero_signed_ids]).reject(&:blank?),
+        slider_signed_ids: Array(permitted[:slider_signed_ids]).reject(&:blank?)
+      }
+    end
+
     def assign_genres!(event)
       return unless params[:event].is_a?(ActionController::Parameters) || params[:event].is_a?(Hash)
 
@@ -220,6 +265,65 @@ module Backend
 
     def set_publishing_fields!(event)
       event.sync_publication_fields(user: current_user)
+    end
+
+    def attach_manual_event_images!
+      hero_signed_ids = signed_ids_from(manual_image_params[:detail_hero_signed_ids], label: "Eventbild")
+      slider_signed_ids = signed_ids_from(manual_image_params[:slider_signed_ids], label: "Slider-Bilder")
+      hero_files = uploaded_files_from(manual_image_params[:detail_hero_files], label: "Eventbild")
+      slider_files = uploaded_files_from(manual_image_params[:slider_files], label: "Slider-Bilder")
+
+      hero_sources = hero_signed_ids.presence || hero_files
+      slider_sources = slider_signed_ids.presence || slider_files
+
+      if hero_sources.size > 1
+        raise ArgumentError, "Für das Eventbild ist nur eine Datei erlaubt."
+      end
+
+      hero_sources.each do |upload_source|
+        image = @event.event_images.new(
+          purpose: EventImage::PURPOSE_DETAIL_HERO,
+          hero_focus_position: EventImage::HERO_FOCUS_CENTER,
+          sub_text: manual_image_params[:detail_hero_sub_text]
+        )
+        image.file.attach(upload_source)
+        image.save!
+      end
+
+      slider_sources.each do |upload_source|
+        image = @event.event_images.new(
+          purpose: EventImage::PURPOSE_SLIDER,
+          alt_text: manual_image_params[:slider_alt_text],
+          sub_text: manual_image_params[:slider_sub_text]
+        )
+        image.file.attach(upload_source)
+        image.save!
+      end
+    end
+
+    def uploaded_files_from(values, label:)
+      raw_values = Array(values)
+      valid_files = raw_values.filter_map do |value|
+        next if value.blank?
+        next value if value.respond_to?(:original_filename) && value.respond_to?(:content_type)
+
+        nil
+      end
+
+      return valid_files if raw_values.reject(&:blank?).size == valid_files.size
+
+      raise ArgumentError, "#{label}: Bitte gültige Bilddateien auswählen."
+    end
+
+    def signed_ids_from(values, label:)
+      Array(values).filter_map do |signed_id|
+        next if signed_id.blank?
+        next signed_id if ActiveStorage::Blob.find_signed(signed_id)
+
+        raise ArgumentError, "#{label}: Der temporäre Upload ist ungültig oder abgelaufen."
+      rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
+        raise ArgumentError, "#{label}: Der temporäre Upload ist ungültig oder abgelaufen."
+      end
     end
 
     def save_and_publish_requested?

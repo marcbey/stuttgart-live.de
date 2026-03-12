@@ -65,6 +65,26 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='inbox_status'][value='needs_review']"
   end
 
+  test "new shows the same editable fields as the event editor" do
+    sign_in_as(@user)
+
+    get new_backend_event_url
+
+    assert_response :success
+    assert_select "input[name='event[doors_at]']"
+    assert_select "input[name='event[homepage_url]']"
+    assert_select "input[name='event[instagram_url]']"
+    assert_select "input[name='event[facebook_url]']"
+    assert_select "textarea[name='event[organizer_notes]']"
+    assert_select "input[name='event[show_organizer_notes]'][type='checkbox']"
+    assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
+    assert_select "input[name='event_image[detail_hero_files][]'][type='file']"
+    assert_select "input[name='event_image[slider_files][]'][type='file']"
+    assert_select "input[name='event_image[slider_alt_text]']"
+    assert_select "[data-controller='event-image-preupload']"
+    assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
+  end
+
   test "slider image meta actions use separate forms for save and delete" do
     sign_in_as(@user)
     image = create_event_image(event: @event, purpose: EventImage::PURPOSE_SLIDER)
@@ -300,6 +320,86 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com", @event.homepage_url
     assert_equal "https://instagram.com/example", @event.instagram_url
     assert_equal "https://facebook.com/example", @event.facebook_url
+  end
+
+  test "creates manual event with preuploaded images and extended editor fields" do
+    sign_in_as(@user)
+    start_at = Time.zone.parse("2026-08-18 20:00:00")
+    doors_at = Time.zone.parse("2026-08-18 19:00:00")
+    hero_blob = direct_uploaded_blob(filename: "hero.png")
+    slider_blob_one = direct_uploaded_blob(filename: "slider-1.png")
+    slider_blob_two = direct_uploaded_blob(filename: "slider-2.png")
+
+    assert_difference("Event.count", 1) do
+      assert_difference("EventImage.count", 3) do
+        post backend_events_url, params: {
+          event: {
+            artist_name: "Manual Artist",
+            title: "Manual Tour",
+            start_at: start_at,
+            doors_at: doors_at,
+            venue: "Im Wizemann",
+            city: "Stuttgart",
+            organizer_notes: "Bitte früh erscheinen",
+            show_organizer_notes: "1",
+            badge_text: "Highlight",
+            homepage_url: "https://example.com",
+            instagram_url: "https://instagram.com/manual",
+            facebook_url: "https://facebook.com/manual",
+            youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            event_info: "Lange Beschreibung",
+            editor_notes: "Interne Notiz",
+            status: "needs_review",
+            genre_ids: [ genres(:pop).id.to_s ]
+          },
+          event_image: {
+            detail_hero_signed_ids: [ hero_blob.signed_id ],
+            detail_hero_sub_text: "Foto: Haus",
+            slider_signed_ids: [ slider_blob_one.signed_id, slider_blob_two.signed_id ],
+            slider_alt_text: "Slider Alt",
+            slider_sub_text: "Slider Sub"
+          }
+        }
+      end
+    end
+
+    created = Event.order(:id).last
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: created.id)
+    assert_equal doors_at.to_i, created.doors_at.to_i
+    assert_equal "Bitte früh erscheinen", created.organizer_notes
+    assert_predicate created, :show_organizer_notes?
+    assert_equal "https://example.com", created.homepage_url
+    assert_equal "https://instagram.com/manual", created.instagram_url
+    assert_equal "https://facebook.com/manual", created.facebook_url
+    assert_equal [ "Pop" ], created.genres.order(:name).pluck(:name)
+    assert_equal 1, created.event_images.detail_hero.count
+    assert_equal 2, created.event_images.slider.count
+    assert_equal "Foto: Haus", created.event_images.detail_hero.first.sub_text
+    assert_equal [ "Slider Alt" ], created.event_images.slider.distinct.pluck(:alt_text)
+    assert_equal [ "Slider Sub" ], created.event_images.slider.distinct.pluck(:sub_text)
+  end
+
+  test "rerenders new form when a preuploaded image signed id is invalid" do
+    sign_in_as(@user)
+
+    assert_no_difference("Event.count") do
+      post backend_events_url, params: {
+        event: {
+          artist_name: "Manual Artist",
+          title: "Manual Tour",
+          start_at: Time.zone.parse("2026-08-18 20:00:00"),
+          venue: "Im Wizemann",
+          city: "Stuttgart",
+          status: "needs_review"
+        },
+        event_image: {
+          detail_hero_signed_ids: [ "invalid-signed-id" ]
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "temporäre Upload ist ungültig oder abgelaufen"
   end
 
   test "updates event with blank city" do
@@ -626,6 +726,23 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def uploaded_image
+    Rack::Test::UploadedFile.new(
+      Rails.root.join("test/fixtures/files/test_image.png"),
+      "image/png"
+    )
+  end
+
+  def direct_uploaded_blob(filename:)
+    File.open(Rails.root.join("test/fixtures/files/test_image.png")) do |file|
+      ActiveStorage::Blob.create_and_upload!(
+        io: file,
+        filename: filename,
+        content_type: "image/png"
+      )
+    end
+  end
 
   def create_event_image(event:, purpose:, grid_variant: nil, alt_text: "Alt", sub_text: "Sub")
     image = event.event_images.new(

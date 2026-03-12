@@ -22,6 +22,9 @@ application.register("editor-inbox", EditorInboxController)
 import EventImageCropPreviewController from "./event_image_crop_preview_controller"
 application.register("event-image-crop-preview", EventImageCropPreviewController)
 
+import EventImagePreuploadController from "./event_image_preupload_controller"
+application.register("event-image-preupload", EventImagePreuploadController)
+
 import FilterStateController from "./filter_state_controller"
 application.register("filter-state", FilterStateController)
 

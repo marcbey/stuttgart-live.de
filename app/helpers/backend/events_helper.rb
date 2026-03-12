@@ -73,6 +73,14 @@ module Backend::EventsHelper
     end
   end
 
+  def preuploaded_blob_from_signed_id(signed_id)
+    return if signed_id.blank?
+
+    ActiveStorage::Blob.find_signed(signed_id)
+  rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
+    nil
+  end
+
   private
 
   def import_change_actions_for(event, merge_run_id)
