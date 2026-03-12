@@ -3444,6 +3444,12 @@ trix-editor.blog-rich-text:focus {
   border-color: #666;
 }
 
+.form-input:focus-visible,
+.form-textarea:focus-visible {
+  outline: 3px solid #b8b8b8;
+  outline-offset: 2px;
+}
+
 .editor-panel input.form-input[readonly],
 .editor-panel input.form-input:read-only:not([type="file"]),
 .editor-panel textarea.form-textarea[readonly],
@@ -4234,6 +4240,19 @@ trix-editor.blog-rich-text:focus {
 
   .home-featured-track {
     grid-auto-columns: calc((100% - 1.9rem) / 3);
+  }
+
+  .home-featured-track .event-card-grid-1-1 .event-card-image-wrap,
+  .home-featured-track .event-card-grid-2-2 .event-card-image-wrap {
+    aspect-ratio: 1 / 1.08;
+  }
+
+  .home-featured-track .event-card-grid-1-2 .event-card-image-wrap {
+    aspect-ratio: 1 / 2.18;
+  }
+
+  .home-featured-track .event-card-grid-2-1 .event-card-image-wrap {
+    aspect-ratio: 2 / 1.06;
   }
 
   .home-slider-track {
