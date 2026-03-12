@@ -30,7 +30,7 @@ module Backend
           format.turbo_stream do
             controller.render turbo_stream: [
               controller.turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
-              controller.turbo_stream.replace(
+              controller.turbo_stream.update(
                 "event_editor",
                 partial: "backend/events/editor_panel",
                 locals: editor_panel_locals(event: event, filter_status: filter_status)
@@ -72,7 +72,7 @@ module Backend
               filtered_events_count: editor_state.sidebar_events_count
             }
           ),
-          turbo_stream.replace(
+          turbo_stream.update(
             "event_editor",
             partial: editor_state.target_event.present? ? "backend/events/editor_panel" : "backend/events/empty_editor",
             locals: (

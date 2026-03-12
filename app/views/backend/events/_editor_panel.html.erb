@@ -3,7 +3,7 @@
 <% editor_status = filter_status.presence || event.status %>
 
 <div class="editor-panel"
-     id="event_editor"
+     id="event_editor_panel"
      data-selected-context="<%= backend_event_context(event) %>">
   <template class="editor-actions-template">
     <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled, filter_status: filter_status %>

@@ -59,6 +59,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_event_url(@event, status: "needs_review")
 
     assert_response :success
+    assert_select "turbo-frame#event_editor", count: 1
+    assert_select "div#event_editor", count: 0
+    assert_select "div#event_editor_panel", count: 1
     assert_select "input[name='inbox_status'][value='needs_review']"
   end
 
@@ -334,6 +337,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "<turbo-stream action=\"update\" target=\"event_editor\">"
+    assert_includes response.body, "id=\"event_editor_panel\""
     assert_includes response.body, "Event wurde gespeichert."
     assert_equal "Neu per Turbo", @event.reload.title
   end
@@ -544,6 +549,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_includes response.body, "target=\"flash-messages\""
     assert_includes response.body, "action=\"update\""
+    assert_includes response.body, "<turbo-stream action=\"update\" target=\"event_editor\">"
+    assert_includes response.body, "id=\"event_editor_panel\""
     assert_includes response.body, "Event wurde depublisht."
     assert_equal "ready_for_publish", @published_event.reload.status
   end
