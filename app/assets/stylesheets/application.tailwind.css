@@ -3827,6 +3827,26 @@ trix-editor.blog-rich-text:focus {
   justify-content: flex-start;
 }
 
+.event-image-section .slider-image-meta-actions {
+  align-items: flex-start;
+}
+
+.event-image-section .slider-image-meta-actions > .button,
+.event-image-section .slider-image-meta-actions > .button_to {
+  display: inline-flex;
+}
+
+.event-image-section .slider-image-meta-actions > .button {
+  align-items: center;
+  min-height: 2.05rem;
+}
+
+.event-image-section .slider-image-meta-actions > .button_to > .button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.05rem;
+}
+
 .preuploaded-image-list {
   display: grid;
   gap: 0.75rem;

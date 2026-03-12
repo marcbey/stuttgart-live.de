@@ -25,6 +25,9 @@ application.register("event-image-crop-preview", EventImageCropPreviewController
 import EventImagePreuploadController from "./event_image_preupload_controller"
 application.register("event-image-preupload", EventImagePreuploadController)
 
+import EventImageEditorUploadController from "./event_image_editor_upload_controller"
+application.register("event-image-editor-upload", EventImageEditorUploadController)
+
 import FilterStateController from "./filter_state_controller"
 application.register("filter-state", FilterStateController)
 

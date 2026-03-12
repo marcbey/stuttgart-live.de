@@ -1,0 +1,11 @@
+<%= turbo_frame_tag "event_editor" do %>
+  <% if event.present? %>
+    <%= render "backend/events/editor_panel",
+               event: event,
+               all_genres: all_genres,
+               next_event_enabled: next_event_enabled,
+               filter_status: filter_status %>
+  <% else %>
+    <div class="empty-state">Keine Events zur aktuellen Filterung.</div>
+  <% end %>
+<% end %>

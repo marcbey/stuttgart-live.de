@@ -62,6 +62,28 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "action=\"replace\""
   end
 
+  test "creates multiple slider images from preuploaded signed ids via turbo stream" do
+    sign_in_as(@user)
+    slider_blob_one = direct_uploaded_blob(filename: "slider-1.png")
+    slider_blob_two = direct_uploaded_blob(filename: "slider-2.png")
+
+    assert_difference -> { @event.event_images.slider.count }, 2 do
+      post backend_event_event_images_url(@event), params: {
+        status: "needs_review",
+        event_image: {
+          purpose: EventImage::PURPOSE_SLIDER,
+          alt_text: "Slider Alt",
+          sub_text: "Slider Sub",
+          signed_ids: [ slider_blob_one.signed_id, slider_blob_two.signed_id ]
+        }
+      }, as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "2 Bilder wurden hochgeladen."
+  end
+
   test "ignores filename strings and redirects with alert" do
     sign_in_as(@user)
 
@@ -145,6 +167,26 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Bild wurde hochgeladen."
     assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(@event, :event_image_section)}\""
     assert_includes response.body, "action=\"replace\""
+  end
+
+  test "creates event image from preuploaded signed id via turbo stream" do
+    sign_in_as(@user)
+    hero_blob = direct_uploaded_blob(filename: "hero.png")
+
+    assert_difference -> { @event.event_images.detail_hero.count }, 1 do
+      post backend_event_event_images_url(@event), params: {
+        status: "needs_review",
+        event_image: {
+          purpose: EventImage::PURPOSE_DETAIL_HERO,
+          sub_text: "Eventbild Sub",
+          signed_ids: [ hero_blob.signed_id ]
+        }
+      }, as: :turbo_stream
+    end
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "Bild wurde hochgeladen."
   end
 
   test "returns turbo stream error for invalid upload payload" do
@@ -379,6 +421,16 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
       Rails.root.join("test/fixtures/files/test_image.png"),
       "image/png"
     )
+  end
+
+  def direct_uploaded_blob(filename:)
+    File.open(Rails.root.join("test/fixtures/files/test_image.png")) do |file|
+      ActiveStorage::Blob.create_and_upload!(
+        io: file,
+        filename: filename,
+        content_type: "image/png"
+      )
+    end
   end
 
   def create_event_image(purpose:, grid_variant: nil, alt_text: "Alt", sub_text: "Sub")

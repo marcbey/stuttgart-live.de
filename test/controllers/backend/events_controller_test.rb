@@ -63,6 +63,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div#event_editor", count: 0
     assert_select "div#event_editor_panel", count: 1
     assert_select "input[name='inbox_status'][value='needs_review']"
+    assert_select "[data-controller='event-image-editor-upload']", minimum: 2
+    assert_select "button", text: "Upload", count: 0
+    assert_select "input[name='event_image[files][]'][required]", count: 0
   end
 
   test "new shows the same editable fields as the event editor" do
@@ -437,8 +440,12 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_includes response.body, "target=\"flash-messages\""
-    assert_includes response.body, "<turbo-stream action=\"update\" target=\"event_editor\">"
+    assert_includes response.body, "<turbo-stream action=\"replace\" target=\"event_editor\">"
+    assert_includes response.body, "<turbo-frame id=\"event_editor\">"
     assert_includes response.body, "id=\"event_editor_panel\""
+    assert_includes response.body, "event-image-editor-upload"
+    assert_includes response.body, "event_image_section"
+    assert_includes response.body, "slider_images_section"
     assert_includes response.body, "Event wurde gespeichert."
     assert_equal "Neu per Turbo", @event.reload.title
   end
@@ -649,7 +656,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_includes response.body, "target=\"flash-messages\""
     assert_includes response.body, "action=\"update\""
-    assert_includes response.body, "<turbo-stream action=\"update\" target=\"event_editor\">"
+    assert_includes response.body, "<turbo-stream action=\"replace\" target=\"event_editor\">"
+    assert_includes response.body, "<turbo-frame id=\"event_editor\">"
     assert_includes response.body, "id=\"event_editor_panel\""
     assert_includes response.body, "Event wurde depublisht."
     assert_equal "ready_for_publish", @published_event.reload.status

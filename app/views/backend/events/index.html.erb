@@ -149,13 +149,11 @@
     </aside>
 
     <section class="backend-editor-column">
-      <%= turbo_frame_tag "event_editor" do %>
-        <% if @selected_event.present? %>
-          <%= render "editor_panel", event: @selected_event, all_genres: @all_genres, next_event_enabled: @next_event_enabled, filter_status: @filters[:status] %>
-        <% else %>
-          <div class="empty-state">Keine Events zur aktuellen Filterung.</div>
-        <% end %>
-      <% end %>
+      <%= render "editor_frame",
+                 event: @selected_event,
+                 all_genres: @all_genres,
+                 next_event_enabled: @next_event_enabled,
+                 filter_status: @filters[:status] %>
     </section>
   </div>
 </section>

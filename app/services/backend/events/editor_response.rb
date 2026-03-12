@@ -30,10 +30,10 @@ module Backend
           format.turbo_stream do
             controller.render turbo_stream: [
               controller.turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
-              controller.turbo_stream.update(
+              controller.turbo_stream.replace(
                 "event_editor",
-                partial: "backend/events/editor_panel",
-                locals: editor_panel_locals(event: event, filter_status: filter_status)
+                partial: "backend/events/editor_frame",
+                locals: editor_frame_locals(event: event, filter_status: filter_status)
               )
             ], status: :unprocessable_entity
           end
@@ -72,16 +72,10 @@ module Backend
               filtered_events_count: editor_state.sidebar_events_count
             }
           ),
-          turbo_stream.update(
+          turbo_stream.replace(
             "event_editor",
-            partial: editor_state.target_event.present? ? "backend/events/editor_panel" : "backend/events/empty_editor",
-            locals: (
-              if editor_state.target_event.present?
-                editor_panel_locals(event: editor_state.target_event, filter_status: editor_state.target_status)
-              else
-                {}
-              end
-            )
+            partial: "backend/events/editor_frame",
+            locals: editor_frame_locals(event: editor_state.target_event, filter_status: editor_state.target_status)
           )
         ]
       end
@@ -91,6 +85,10 @@ module Backend
       end
 
       def editor_panel_locals(event:, filter_status:)
+        editor_frame_locals(event: event, filter_status: filter_status)
+      end
+
+      def editor_frame_locals(event:, filter_status:)
         {
           event: event,
           all_genres: all_genres,

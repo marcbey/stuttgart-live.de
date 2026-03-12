@@ -5,7 +5,7 @@ module Backend
 
     def create
       purpose = create_params[:purpose].to_s
-      files = uploaded_files
+      files = signed_ids.presence || uploaded_files
 
       if files.blank?
         respond_with_create_error("Bitte gültige Bilddateien auswählen.")
@@ -153,6 +153,7 @@ module Backend
         :card_focus_x,
         :card_focus_y,
         :card_zoom,
+        signed_ids: [],
         files: []
       )
     end
@@ -177,6 +178,17 @@ module Backend
         next if value.blank?
         next value if value.respond_to?(:original_filename) && value.respond_to?(:content_type)
 
+        nil
+      end
+    end
+
+    def signed_ids
+      Array(create_params[:signed_ids]).filter_map do |signed_id|
+        next if signed_id.blank?
+        next signed_id if ActiveStorage::Blob.find_signed(signed_id)
+
+        raise ActiveSupport::MessageVerifier::InvalidSignature
+      rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
         nil
       end
     end
