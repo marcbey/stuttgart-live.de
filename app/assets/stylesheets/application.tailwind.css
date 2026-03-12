@@ -1639,13 +1639,14 @@ trix-editor.blog-rich-text:focus {
 
 .home-featured-track {
   display: grid;
-  grid-template-rows: repeat(2, minmax(0, auto));
+  grid-template-rows: minmax(0, auto);
   grid-auto-flow: column;
-  grid-auto-columns: minmax(15.5rem, 15.5rem);
+  grid-auto-columns: minmax(100%, 100%);
   gap: 0.95rem;
   overflow-x: auto;
   padding-bottom: 0.35rem;
   scroll-snap-type: x mandatory;
+  scroll-padding-inline: 0;
   scrollbar-width: none;
 }
 
@@ -1655,6 +1656,20 @@ trix-editor.blog-rich-text:focus {
 
 .home-featured-track .event-card {
   scroll-snap-align: start;
+}
+
+.home-featured-track .event-card-grid-1-2,
+.home-featured-track .event-card-grid-2-1,
+.home-featured-track .event-card-grid-2-2 {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.home-featured-track .event-card-image-wrap,
+.home-featured-track .event-card-grid-1-2 .event-card-image-wrap,
+.home-featured-track .event-card-grid-2-1 .event-card-image-wrap,
+.home-featured-track .event-card-grid-2-2 .event-card-image-wrap {
+  aspect-ratio: 1 / 1.16;
 }
 
 .home-slider-section {
@@ -1772,6 +1787,8 @@ trix-editor.blog-rich-text:focus {
 .home-slider-card-copy {
   display: grid;
   gap: 0.12rem;
+  min-height: 4.1rem;
+  align-content: start;
 }
 
 .home-slider-card-name {

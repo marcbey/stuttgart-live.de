@@ -8,15 +8,6 @@
   <div class="home-slider-header">
     <h2><%= title %></h2>
     <div class="<%= nav_class %>">
-      <% if featured %>
-        <button type="button"
-                class="highlights-slider-toggle"
-                data-highlights-slider-target="toggleButton"
-                data-action="click->highlights-slider#toggleAutoplay"
-                aria-pressed="false">
-          Animation pausieren
-        </button>
-      <% end %>
       <button type="button"
               class="slider-view-toggle"
               data-section-view-target="button"
