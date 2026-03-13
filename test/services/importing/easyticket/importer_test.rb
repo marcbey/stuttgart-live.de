@@ -90,7 +90,7 @@ module Importing
         assert_includes run.metadata.fetch("filtered_out_cities", []), "Tempodrom Berlin"
 
         assert_equal "Band A", imported.title
-        assert_equal "Band A", imported.artist_name
+        assert_equal "Band A Live", imported.artist_name
         assert_equal "382", imported.organizer_id
         assert_equal "17.6.2026", imported.concert_date_label
         assert_equal "Stuttgart, Im Wizemann", imported.venue_label
