@@ -213,6 +213,38 @@ Für die meisten Störungen reicht diese Reihenfolge:
 4. bei Host-Problemen per SSH `docker ps` und `systemctl status docker` prüfen
 5. bei einem kaputten Release gezielt `bin/kamal rollback <VERSION> -d hetzner` ausführen
 
+### Rollback-Checkliste
+
+Ein Rollback setzt die laufende App auf eine ältere Container-Version zurück. Datenbankinhalte, Uploads und andere persistente Daten werden dabei nicht automatisch zurückgedreht.
+
+Diese Reihenfolge ist im Ernstfall sinnvoll:
+
+1. Prüfen, ob das Problem wirklich vom letzten Deploy kommt:
+
+```bash
+bin/kamal app logs --since 15m -d hetzner
+bin/kamal app version -d hetzner
+bin/kamal audit -d hetzner
+```
+
+2. Zielversion bestimmen, auf die zurückgerollt werden soll.
+
+3. Rollback ausführen:
+
+```bash
+bin/kamal rollback <VERSION> -d hetzner
+```
+
+4. Direkt danach prüfen:
+
+```bash
+bin/kamal details -d hetzner
+bin/kamal app version -d hetzner
+bin/kamal app logs --since 15m -d hetzner
+```
+
+5. Wenn der Fehler durch eine Migration oder einen Datenzustand entstanden ist, zusätzlich die Datenbank separat prüfen. Ein Rollback des App-Containers macht keine Migration rückgängig.
+
 ## Weiterführende Dateien
 
 Wenn du tiefer einsteigen willst, sind diese Dateien meist die besten Startpunkte:
