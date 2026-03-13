@@ -11,7 +11,7 @@ module Public
       relation = visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: @browse_state.query)
       if should_redirect_search_result?(relation)
         event = relation.limit(1).first
-        redirect_to event_path(event.slug, **@browse_state.route_params(view: Public::Events::BrowseState::VIEW_GRID))
+        redirect_to event_path(event.slug, **@browse_state.route_params(view: Public::Events::BrowseState::VIEW_GRID).except(:q))
         return
       end
 

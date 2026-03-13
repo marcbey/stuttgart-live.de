@@ -247,7 +247,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   test "index redirects to detail page when search has a single result" do
     get events_url(filter: "all", q: @published_event.artist_name)
 
-    assert_redirected_to event_url(@published_event.slug, q: @published_event.artist_name)
+    assert_redirected_to event_url(@published_event.slug)
   end
 
   test "index renders flat search results and keeps homepage sliders for multiple matches" do
