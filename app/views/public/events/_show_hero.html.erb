@@ -14,9 +14,13 @@
     <%= render "show_ticket_cta", presenter: presenter %>
 
     <% if authenticated? %>
+      <% source_label = presenter.primary_source_label %>
       <% visibility_badges = presenter.visibility_badges %>
-      <% if visibility_badges.any? %>
+      <% if source_label.present? || visibility_badges.any? %>
         <div class="event-detail-badges-row">
+          <% if source_label.present? %>
+            <span class="status-badge status-badge-default"><%= source_label %></span>
+          <% end %>
           <% visibility_badges.each do |badge| %>
             <span class="status-badge <%= badge[:css_class] %>"><%= badge[:label] %></span>
           <% end %>

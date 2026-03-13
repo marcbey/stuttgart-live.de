@@ -19,6 +19,47 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-card-genre", count: 0
   end
 
+  test "index hides future unpublished events for guests" do
+    hidden_event = Event.create!(
+      slug: "guest-hidden-draft-event",
+      source_fingerprint: "test::public::guest-hidden-draft",
+      title: "Guest Hidden Draft Event",
+      artist_name: "Hidden Draft Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_not_includes response.body, hidden_event.artist_name
+  end
+
+  test "index shows future unpublished events for authenticated users" do
+    hidden_event = Event.create!(
+      slug: "auth-visible-draft-event",
+      source_fingerprint: "test::public::auth-visible-draft",
+      title: "Auth Visible Draft Event",
+      artist_name: "Auth Visible Draft Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_snapshot: {}
+    )
+
+    sign_in_as(@user)
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_includes response.body, hidden_event.artist_name
+    assert_includes response.body, "event-card-status-select"
+  end
+
   test "index defaults to SKS filter" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 
@@ -465,9 +506,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
-    assert_select ".event-detail-topbar-actions .status-badge", text: "easyticket"
+    assert_select ".event-detail-badges-row .status-badge", text: "easyticket"
     assert_includes response.body, expected_link
-    assert_includes response.body, "Bearbeiten"
+    assert_select ".event-detail-topbar-actions .button", text: "Open"
+    assert_no_match(/Bearbeiten/, response.body)
   end
 
   test "show returns not found for unpublished events" do
@@ -478,6 +520,25 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Zur Startseite"
   end
 
+  test "show returns not found for ready_for_publish events for guests" do
+    event = Event.create!(
+      slug: "ready-for-publish-public-detail",
+      source_fingerprint: "test::public::ready-for-publish::detail",
+      title: "Ready For Publish Public Detail",
+      artist_name: "Ready Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "ready_for_publish",
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :not_found
+    assert_includes response.body, "Dieses Event ist nicht mehr da."
+  end
+
   test "show renders unpublished events for authenticated users with status badge" do
     sign_in_as(@user)
 
@@ -486,6 +547,27 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Draft"
+  end
+
+  test "show renders ready_for_publish events for authenticated users with status badge" do
+    sign_in_as(@user)
+
+    event = Event.create!(
+      slug: "ready-for-publish-auth-detail",
+      source_fingerprint: "test::public::ready-for-publish::auth-detail",
+      title: "Ready For Publish Auth Detail",
+      artist_name: "Ready Auth Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "ready_for_publish",
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Unpublished"
   end
 
   test "show renders rejected events for authenticated users with abgelehnt badge" do
@@ -527,15 +609,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "index shows status overlay for authenticated users" do
     sign_in_as(@user)
+    review_event = events(:needs_review_one)
 
     get events_url(filter: "all")
 
     assert_response :success
     assert_includes response.body, "event-card-status-select"
-    assert_includes response.body, status_event_path(@published_event.slug)
+    assert_includes response.body, status_event_path(review_event.slug)
     assert_includes response.body, "data-controller=\"public-card-status\""
     assert_includes response.body, "change-&gt;public-card-status#change"
-    assert_includes response.body, "/backend/events?event_id=#{@published_event.id}&amp;status=#{@published_event.status}"
+    assert_includes response.body, "/backend/events?event_id=#{review_event.id}&amp;status=#{review_event.status}"
   end
 
   test "status update requires authentication" do

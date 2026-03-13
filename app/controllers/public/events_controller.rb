@@ -84,11 +84,23 @@ module Public
 
     def visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
       Public::VisibleEventsQuery.new(
-        scope: published_future_events_relation,
+        scope: index_events_relation,
         filter: filter,
         event_date: event_date,
         query: query
       ).call
+    end
+
+    def index_events_relation
+      return published_future_events_relation unless authenticated?
+
+      future_events_relation
+    end
+
+    def future_events_relation
+      all_events_relation
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+        .chronological
     end
 
     def published_future_events_relation
@@ -116,26 +128,23 @@ module Public
     end
 
     def published_events_relation
-      Event
+      all_events_relation
         .published_live
-        .includes(
-          :genres,
-          :event_offers,
-          :import_event_images,
-          event_images: [ file_attachment: :blob ]
-        )
     end
 
     def show_events_relation
       return published_events_relation unless authenticated?
 
-      Event
-        .includes(
-          :genres,
-          :event_offers,
-          :import_event_images,
-          event_images: [ file_attachment: :blob ]
-        )
+      all_events_relation
+    end
+
+    def all_events_relation
+      Event.includes(
+        :genres,
+        :event_offers,
+        :import_event_images,
+        event_images: [ file_attachment: :blob ]
+      )
     end
 
     def apply_status!(event, status)
