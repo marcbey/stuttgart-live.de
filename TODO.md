@@ -8,12 +8,12 @@
 - Unnötige vars aus .env also config vars refactorn
 - OWASP checks
 - Handbuch erstellen
+- Data rentention
 
 ## Importer
 - was genau passiert bei einem merge update: überschreibt er editierte Daten
 
 ## Redaktion
-- /backend/events/new ausbauen
 - Genre mapping
 - Promoter ID mapping
 

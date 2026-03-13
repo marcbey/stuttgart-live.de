@@ -1,172 +1,226 @@
 # stuttgart-live.de
 
-stuttgart-live.de ist ein lokales Stadtmagazin für Veranstaltungen, Kultur und Freizeittipps in Stuttgart. Die Anwendung sammelt Termine aus verschiedenen Quellen, bereitet sie redaktionell auf und macht sie in einer klaren, schnellen Oberfläche zugänglich.
+`stuttgart-live.de` ist ein lokales Stadtmagazin für Veranstaltungen, Kultur und Freizeittipps in Stuttgart. Die Anwendung sammelt Termine aus verschiedenen Quellen, führt sie redaktionell zusammen und veröffentlicht sie in einer schnellen, klaren Oberfläche.
 
-Im Mittelpunkt steht ein unkompliziertes Nutzungserlebnis: Besucherinnen und Besucher sollen schnell relevante Events finden, sich inspirieren lassen und über den Newsletter mit neuen Empfehlungen versorgt werden. Dieses Repository enthält die technische Grundlage dafür.
+Das Repository enthält die komplette Anwendung: öffentliche Website, redaktionelles Backend, Importlogik, Hintergrundjobs und die wichtigsten Deploy- und Betriebsbausteine.
 
-## Technischer Überblick
+## Kurzüberblick
 
-- Framework: Ruby on Rails 8.1
-- Sprache: Ruby 3.x
-- Datenbank: PostgreSQL
-- Frontend: Hotwire (Turbo, Stimulus), Tailwind CSS 4, esbuild
-- Hintergrundverarbeitung: Solid Queue
-- Caching und Echtzeit-Infrastruktur: Solid Cache, Solid Cable
-- Medien und Rich Text: Active Storage, Action Text
-- Deployment: Docker-basierte Auslieferung mit Kamal auf Hetzner
-- Test-Stack: Rails/Minitest, Capybara, Selenium
+- Ruby on Rails 8.1
+- PostgreSQL
+- Hotwire mit Turbo und Stimulus
+- Tailwind CSS 4 und esbuild
+- Active Storage und Action Text
+- Solid Queue, Solid Cache und Solid Cable
+- Deployment mit Kamal auf Hetzner
+- Tests mit Minitest, Capybara und Selenium
 
-Die Anwendung ist bewusst als klassischer Rails-Monolith aufgebaut. Öffentliche Seiten, redaktionelles Backend, Importlogik, Hintergrundjobs und Infrastruktur leben im selben Repository und teilen sich ein gemeinsames Domänenmodell.
+Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität niedrig und sorgt dafür, dass redaktionelle Abläufe, Importe und öffentliche Ausgabe auf demselben Domänenmodell arbeiten.
 
-## Produktbereiche
+## Was die Anwendung abdeckt
 
-- Öffentliche Website: Event-Listing, Event-Detailseiten, News, statische Informationsseiten und Newsletter-Anmeldung
-- Redaktionelles Backend: Pflege von Events, Blog-Inhalten, Importquellen, Importläufen, Bildern und Benutzerkonten
-- Import-Pipeline: Anbindung externer Anbieter wie Easyticket, Eventim und Reservix
-- Redaktionelle Verarbeitung: Zusammenführen importierter Daten, Qualitäts- und Vollständigkeitsprüfungen, Protokollierung von Änderungen
-- Content-Erweiterungen: Blog-Import aus WordPress sowie Newsletter-Synchronisation mit Mailchimp
+- Öffentliche Website mit Event-Listen, Event-Detailseiten, News und statischen Inhaltsseiten
+- Redaktionelles Backend für Events, Bilder, Blog, Benutzer und Importquellen
+- Import-Pipeline für externe Anbieter wie Easyticket, Eventim und Reservix
+- Redaktionelle Qualitätssicherung mit Inbox, Änderungsprotokollen und Vollständigkeitsprüfungen
+- Newsletter-Anmeldung mit optionalem Mailchimp-Sync
 
-## Architektur
+## Wie das System grob funktioniert
 
-### Anwendungsstruktur
+Ein typischer Ablauf für Events sieht so aus:
 
-- `app/controllers/public`: Öffentliche Endpunkte für Website, News und Newsletter
-- `app/controllers/backend`: Internes Redaktions- und Administrations-Backend
-- `app/models`: Zentrale Domänenmodelle wie `Event`, `ImportSource`, `ImportRun`, `BlogPost` und `NewsletterSubscriber`
-- `app/services`: Fachlogik für Import, Redaktion, Zusammenführung, Blog und Newsletter
-- `app/queries`: Abfrageobjekte für strukturierte Lesezugriffe, zum Beispiel für öffentliche Event-Listen oder redaktionelle Inboxen
-- `app/jobs`: Asynchrone Verarbeitung für Importe, Merge-Prozesse und Newsletter-Sync
-- `app/presenters`: Darstellungsspezifische Aufbereitung für Backend- und Public-Views
-- `app/javascript/controllers`: Stimulus-Controller für progressive Interaktivität
-- `lib/tasks`: Operative Rake-Tasks, etwa für Hintergrund- oder Nachverarbeitungsjobs
+1. Externe Quellen liefern Rohdaten.
+2. Importläufe holen diese Daten in die Anwendung.
+3. Services gleichen Dubletten und Änderungen ab.
+4. Die Redaktion prüft, ergänzt und veröffentlicht die Inhalte im Backend.
+5. Öffentliche Seiten lesen die freigegebenen Daten aus und zeigen sie Besucherinnen und Besuchern an.
 
-### Schichtenmodell
+Wichtige fachliche Bausteine sind dabei:
 
-1. Router und Controller nehmen HTTP-Anfragen entgegen und trennen klar zwischen öffentlicher Oberfläche und Backend.
-2. Modelle halten Persistenzregeln, Beziehungen, Validierungen und einfache Domäneninvarianten.
-3. Services kapseln fachliche Abläufe, die über einzelne Modelle hinausgehen, etwa Datenimporte, Zusammenführungen oder externe API-Aufrufe.
-4. Queries bilden wiederverwendbare, lesbare Datenzugriffe für Listen- und Inbox-Ansichten.
-5. Jobs verschieben langsame oder externe Arbeit in den Hintergrund, damit Requests kurz bleiben.
+- `Event` als zentrales Veröffentlichungsmodell
+- `EventImage`, `EventOffer` und `EventChangeLog` für ergänzende Event-Daten
+- `ImportSource`, `ImportRun` und anbieterspezifische Importmodelle für Rohdaten und Laufprotokolle
+- `BlogPost` für redaktionelle Inhalte
+- `NewsletterSubscriber` für Newsletter-Anmeldungen
 
-### Routing
+## Wo man im Code typischerweise hinschaut
 
-Das Routing in `config/routes.rb` folgt einer klaren Trennung:
+- `app/controllers/public` für öffentliche Seiten
+- `app/controllers/backend` für Redaktion und Administration
+- `app/models` für Domänenlogik und Persistenz
+- `app/services` für fachliche Abläufe wie Import, Merge, Blog und Newsletter
+- `app/queries` für Listen- und Lesezugriffe
+- `app/jobs` für Hintergrundverarbeitung
+- `app/javascript/controllers` für Stimulus-Verhalten
+- `lib/tasks` für operative Rake-Tasks
 
-- Öffentliche Routen unter Root, `/events`, `/news` sowie einzelnen statischen Seiten
-- Session- und Passwort-Flows für Login und Account-Zugriff
-- Backend-Routen unter `/backend` für Redaktion und Importverwaltung
-- Fehlerseiten werden über `ErrorsController` und `config.exceptions_app = routes` direkt durch die Anwendung gerendert
+## Lokal entwickeln
 
-## Domänenmodell
+### Voraussetzungen
 
-Wichtige Aggregate und ihre Aufgaben:
-
-- `Event`: Zentrale veröffentlichbare Veranstaltung mit redaktionell gepflegten Daten
-- `EventImage`, `EventOffer`, `EventChangeLog`: Ergänzende Medien-, Angebots- und Änderungsinformationen
-- `ImportSource`, `ImportSourceConfig`, `ImportRun`, `ImportRunError`: Steuerung, Ausführung und Beobachtung der Importprozesse
-- `EasyticketImportEvent`, `EventimImportEvent`, `ReservixImportEvent`: Anbieterbezogene Rohdatenmodelle
-- `BlogPost`: Redaktionelle Inhalte und importierte Beiträge
-- `NewsletterSubscriber`: Newsletter-Anmeldungen inklusive optionalem Mailchimp-Sync
-- `User`, `Session`: Authentifizierung und Backend-Zugriff
-
-## Authentifizierung und Login-Schutz
-
-Der Login für den redaktionellen Bereich ist zusätzlich gegen einfache Brute-Force-Angriffe abgesichert.
-
-- Fehlgeschlagene Login-Versuche werden protokolliert
-- Nach mehreren Fehlversuchen wird das betroffene Benutzerkonto temporär gesperrt
-- Erfolgreiche, fehlgeschlagene und gesperrte Anmeldeversuche werden als Login-Historie gespeichert
-- Passwort-Änderungen und Benutzeranlage unterliegen einer Mindestanforderung an starke Passwörter
-
-## Datenfluss
-
-### Event-Import und Redaktion
-
-1. Importquellen werden im Backend konfiguriert.
-2. Hintergrundjobs oder manuelle Backend-Aktionen starten Importläufe.
-3. Anbieterbezogene Rohdaten werden in Importtabellen geschrieben.
-4. Services in `app/services/importing` und `app/services/merging` gleichen Daten ab, führen sie zusammen und übertragen sie in die redaktionellen Event-Modelle.
-5. Das Backend erlaubt Sichtung, Korrektur, Veröffentlichung und Qualitätskontrolle.
-6. Öffentliche Listen greifen über Query-Objekte auf veröffentlichte Inhalte zu.
-
-### Newsletter
-
-1. Öffentliche Anmeldungen werden lokal in `newsletter_subscribers` gespeichert.
-2. Wenn Mailchimp konfiguriert ist, wird zusätzlich ein Hintergrundjob zum externen Sync eingeplant.
-3. Der Sync-Status bleibt am Datensatz nachvollziehbar, damit fehlgeschlagene Übertragungen erneut verarbeitet werden können.
-
-## Frontend
-
-Das Frontend ist serverseitig gerendert und nutzt Hotwire für gezielte Interaktivität statt eines separaten SPA-Clients.
-
-- HTML-Rendering erfolgt über klassische Rails-Views
-- Navigation und inkrementelle Updates laufen über Turbo
-- Interaktive Komponenten liegen als Stimulus-Controller in `app/javascript/controllers`
-- CSS wird mit Tailwind CSS 4 gebaut
-- JavaScript-Bundles entstehen über esbuild
-
-Diese Architektur hält die Komplexität niedrig und erlaubt trotzdem schnelle Oberflächen sowie progressive Erweiterungen im Backend und auf den öffentlichen Seiten.
-
-## Entwicklung
-
-### Lokale Voraussetzungen
-
-- Ruby in passender Projektversion
+- Ruby in der Projektversion
 - PostgreSQL
 - Node.js und npm
 
-### Wichtige Kommandos
+### Schnellstart
 
 ```bash
 bin/setup
 bin/dev
+```
+
+`bin/dev` startet die lokale Entwicklungsumgebung mit Rails, Job-Verarbeitung sowie JavaScript- und CSS-Watchern.
+
+### Wichtige Kommandos
+
+```bash
 bin/rails test
+bin/rails console
+bin/rake -T
 bin/ci
 ```
 
-`bin/dev` startet die lokale Entwicklungsumgebung mit Webserver, Job-Worker sowie JavaScript- und CSS-Watchern. Das zugrunde liegende Prozessmodell ist in `Procfile.dev` definiert.
+## Wichtige Konfiguration
 
-### Konfiguration
+Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-Wichtige Umgebungsvariablen:
+- `DB_*` und `RAILS_MASTER_KEY` für Anwendung und Deployment
+- `EASYTICKET_*`, `EVENTIM_*`, `RESERVIX_*` für externe Event-Importe
+- `MAILCHIMP_API_KEY`, `MAILCHIMP_LIST_ID`, `MAILCHIMP_SERVER_PREFIX` für den optionalen Newsletter-Sync
+- `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, optional `SMTP_DOMAIN`, `SMTP_AUTHENTICATION`, `SMTP_ENABLE_STARTTLS_AUTO` sowie `MAILER_FROM` für produktiven Mailversand
+- `GOOGLE_ANALYTICS_ID` für GA4 nach Einwilligung im Consent-Banner
 
-- `GOOGLE_ANALYTICS_ID` aktiviert GA4 nach Einwilligung im Consent-Banner
-- `MAILCHIMP_API_KEY` plus `MAILCHIMP_LIST_ID` aktivieren den optionalen Mailchimp-Sync für Newsletter-Anmeldungen
-- `MAILCHIMP_SERVER_PREFIX` kann explizit gesetzt werden und ist bei euch voraussichtlich `us3`
-- `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD` sowie optional `SMTP_DOMAIN`, `SMTP_AUTHENTICATION`, `SMTP_ENABLE_STARTTLS_AUTO` aktivieren den produktiven Mailversand
-- `MAILER_FROM` setzt den Absender für System-E-Mails wie den Passwort-Reset
-- `EASYTICKET_*`, `EVENTIM_*`, `RESERVIX_*` steuern die Importanbindungen externer Anbieter
-- `DB_*` und `RAILS_MASTER_KEY` sind für Laufzeit und Deployment erforderlich
-
-Ohne Mailchimp-Konfiguration bleibt die lokale Speicherung von Newsletter-Anmeldungen aktiv, es erfolgt dann aber kein externer Sync.
+Ohne Mailchimp-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus.
 
 ## Qualitätssicherung
 
-Das Projekt bündelt die Standardprüfungen in `bin/ci`. Dabei laufen aktuell:
+Der Standardweg für Prüfungen ist:
 
-- Setup über `bin/setup --skip-server`
-- Ruby-Linting mit RuboCop
-- Sicherheitsprüfungen mit Bundler Audit, `yarn audit` und Brakeman
-- Testlauf mit `bin/rails test`
-- Seed-Prüfung im Testsystem
+```bash
+bin/ci
+```
 
-Vor einem Push sollte `bin/ci` erfolgreich durchlaufen.
+`bin/ci` bündelt Setup, Linting, Security-Checks und Tests. Vor einem Push sollte dieser Lauf grün sein.
 
 ## Deployment und Betrieb
 
-- Das produktive Deployment läuft über Kamal
-- Das Zielsystem ist aktuell Hetzner
-- Die Konfiguration liegt in `config/deploy.hetzner.yml`
-- GitHub Actions übergeben die benötigten Secrets an den Deploy-Prozess
-- Produktionsnahe Infrastrukturhinweise liegen ergänzend in `HETZNER.md` und `INFRA.md`
+Produktion läuft auf Hetzner und wird mit Kamal ausgerollt. Im Alltag gibt es zwei Wege:
 
-Im Produktionsbetrieb werden Webprozess und Job-Verarbeitung gemeinsam innerhalb der Rails-Anwendung betrieben. `SOLID_QUEUE_IN_PUMA=true` ist für das Hetzner-Deployment bereits vorgesehen.
+- automatische Deployments über GitHub Actions nach Pushes auf `main`
+- manuelle Eingriffe von lokal per `bin/kamal ... -d hetzner`
+
+Webprozess und Job-Verarbeitung laufen gemeinsam in der Rails-Anwendung. `SOLID_QUEUE_IN_PUMA=true` ist für dieses Setup bereits vorgesehen.
+
+### Was lokal wichtig ist
+
+Für manuelle Produktions-Kommandos brauchst du lokal:
+
+- `config/master.key`
+- eine lokale `.kamal/secrets.hetzner`
+- den SSH-Key `~/.ssh/stgt-live-hetzner-github` für den Benutzer `deploy`
+- optional den SSH-Key `~/.ssh/stgt-live-hetzner-admin` für Host-Administration als `admin`
+
+Der Standard-Host ist aktuell `46.225.224.194`. Falls sich die Ziel-IP ändert, kann sie über `KAMAL_WEB_HOST` überschrieben werden.
+
+Wichtig: Die lokale `.kamal/secrets.hetzner` ist hier keine Klartext-Secret-Datei. Sie ist ignoriert und löst Werte aus `.env` und `config/master.key` auf. Als Vorlage dient `.kamal/secrets.hetzner.example`.
+
+GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit eine eigene `.kamal/secrets.hetzner` aus den in GitHub hinterlegten Secrets.
+
+### Die wichtigsten Kommandos
+
+Deployment von lokal:
+
+```bash
+bin/kamal deploy -d hetzner
+bin/kamal redeploy -d hetzner
+bin/kamal rollback <VERSION> -d hetzner
+```
+
+Status und Logs:
+
+```bash
+bin/kamal details -d hetzner
+bin/kamal app containers -d hetzner
+bin/kamal app version -d hetzner
+bin/kamal app logs -f -d hetzner
+bin/kamal app logs --since 15m -d hetzner
+bin/kamal app logs --since 30m --grep ERROR -d hetzner
+```
+
+Rails-Konsole, Shell und Tasks im laufenden Container:
+
+```bash
+bin/kamal app exec --interactive --reuse "bin/rails console" -d hetzner
+bin/kamal app exec --interactive --reuse "bash" -d hetzner
+bin/kamal app exec --reuse "bin/rake <namespace>:<task>" -d hetzner
+bin/kamal app exec --reuse "bin/rails runner 'puts Event.count'" -d hetzner
+bin/kamal app exec --reuse "bin/rails db:migrate" -d hetzner
+```
+
+`--interactive` brauchst du für Konsole und Shell. `--reuse` sorgt dafür, dass das Kommando im bereits laufenden Container statt in einem frischen Einmal-Container ausgeführt wird.
+
+### SSH auf den Server
+
+Für Container-nahe Eingriffe als `deploy`:
+
+```bash
+ssh -i ~/.ssh/stgt-live-hetzner-github deploy@46.225.224.194
+```
+
+Für Host-Administration als `admin`:
+
+```bash
+ssh -i ~/.ssh/stgt-live-hetzner-admin admin@46.225.224.194
+```
+
+Nützliche Host-Kommandos:
+
+```bash
+docker ps
+docker logs <container_id>
+docker inspect <container_id>
+sudo systemctl status docker
+sudo journalctl -u docker -n 200 --no-pager
+```
+
+### Datenbank und Uploads
+
+PostgreSQL läuft direkt auf dem Host, nicht in einem separaten Container. Die App nutzt diese Datenbanken:
+
+- `stuttgart_live_de_production`
+- `stuttgart_live_de_production_cache`
+- `stuttgart_live_de_production_queue`
+- `stuttgart_live_de_production_cable`
+
+Uploads liegen im Docker-Volume `stuttgart_live_de_storage`. Der Host-Pfad dafür ist üblicherweise `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`. Backups liegen standardmäßig unter `/var/backups/stuttgart-live`.
+
+Datenbankzugriff auf dem Host:
+
+```bash
+sudo -u postgres psql
+sudo -u postgres psql -l
+sudo -u postgres psql stuttgart_live_de_production
+sudo -u postgres pg_dump stuttgart_live_de_production > /tmp/stuttgart_live_de_production.sql
+```
+
+### Wenn es Probleme gibt
+
+Für die meisten Störungen reicht diese Reihenfolge:
+
+1. `bin/kamal details -d hetzner` prüfen
+2. `bin/kamal app logs --since 15m -d hetzner` ansehen
+3. bei App-Fehlern per `bin/kamal app exec --interactive --reuse "bin/rails console" -d hetzner` in die Konsole
+4. bei Host-Problemen per SSH `docker ps` und `systemctl status docker` prüfen
+5. bei einem kaputten Release gezielt `bin/kamal rollback <VERSION> -d hetzner` ausführen
 
 ## Weiterführende Dateien
 
-- `config/routes.rb`: Einstieg in die fachliche Struktur der HTTP-Oberfläche
-- `app/services/`: Zentrale Geschäftslogik
-- `app/queries/`: Lesezugriffe und Listenlogik
-- `app/jobs/`: Hintergrundverarbeitung
-- `config/ci.rb`: Aufbau der CI-Prüfschritte
-- `config/deploy.hetzner.yml`: Produktionsdeployment
+Wenn du tiefer einsteigen willst, sind diese Dateien meist die besten Startpunkte:
+
+- `config/routes.rb` für die fachliche Struktur der HTTP-Oberfläche
+- `app/services` für zentrale Geschäftslogik
+- `app/queries` für Listen- und Lesezugriffe
+- `app/jobs` für Hintergrundverarbeitung
+- `config/ci.rb` für den CI-Ablauf
+- `config/deploy.hetzner.yml` für das Produktions-Deployment
+- `HETZNER.md`, `INFRA.md` und `infra/ansible/README.md` für Infrastrukturdetails

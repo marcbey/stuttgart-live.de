@@ -16,6 +16,8 @@
 8. Bei Änderungen, neuen Seiten oder neuen Features im öffentlich zugänglichen Bereich ohne Login ist Barrierefreiheit von Anfang an mitzudenken. Ziel ist WCAG 2.2 AA: Semantik, Tastaturbedienbarkeit, sichtbarer Fokus, ausreichende Kontraste, verständliche Formularbeschriftungen, sinnvolle ARIA-Nutzung und screenreadertaugliche dynamische Zustände sind bei Umsetzung und Review mit zu prüfen.
 
 9. Bei Änderungen, neuen Seiten oder neuen Features im öffentlich zugänglichen Bereich ohne Login ist SEO ebenfalls von Anfang an mitzudenken. Dazu gehören insbesondere sinnvolle Seitentitel, Meta-Descriptions, klare Überschriftenstruktur, indexierbare Inhalte, sprechende interne Verlinkung, Canonical-URLs, aussagekräftige Linktexte sowie technisch saubere Metadaten für Suchmaschinen und Social Sharing.
+10. Änderungen an der App, neuen Features, Workflows, Deployments oder Infrastruktur sind immer darauf zu prüfen, ob die `README.md` mitgezogen werden muss. Wenn sich Nutzung, Betrieb, Setup, Architektur, Abhängigkeiten oder Troubleshooting ändern, ist die `README.md` im selben Arbeitsgang zu aktualisieren.
+11. Die `README.md` ist in erster Linie für Menschen zu schreiben: klar, verständlich, knapp und praxisnah. Dokumentation soll Zusammenhänge erklären und konkrete Handgriffe benennen, statt nur interne Implementierungsdetails oder Dateilisten abzulegen.
 
 ## Skills
 
