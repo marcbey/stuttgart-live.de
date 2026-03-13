@@ -4,12 +4,11 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
   test "creates newsletter subscriber from homepage" do
     assert_difference("NewsletterSubscriber.count", 1) do
       post newsletter_subscribers_url, params: {
-        newsletter_subscriber: { email: "new@example.com" },
-        filter: "sks"
+        newsletter_subscriber: { email: "new@example.com" }
       }
     end
 
-    assert_redirected_to events_url(filter: "sks")
+    assert_redirected_to events_url
     assert_equal NewsletterSubscriber::MAILCHIMP_STATUS_PENDING, NewsletterSubscriber.order(:created_at).last.mailchimp_status
     follow_redirect!
     assert_includes response.body, "Danke. Du bist jetzt fuer den Newsletter eingetragen."

@@ -191,7 +191,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_eventim_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easyticket_promoter_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
-    assert_includes response.body, "filter=sks"
+    assert_not_includes response.body, "filter=sks"
   end
 
   test "index can be filtered to a specific day" do
@@ -247,7 +247,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   test "index redirects to detail page when search has a single result" do
     get events_url(filter: "all", q: @published_event.artist_name)
 
-    assert_redirected_to event_url(@published_event.slug, filter: "all", q: @published_event.artist_name)
+    assert_redirected_to event_url(@published_event.slug, q: @published_event.artist_name)
   end
 
   test "index renders flat search results and keeps homepage sliders for multiple matches" do
@@ -655,7 +655,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     patch status_event_url(@published_event.slug), params: { status: "needs_review", page: "1", filter: "all", event_date: "2026-06-01" }
 
-    assert_redirected_to events_url(page: "1", filter: "all", event_date: "2026-06-01")
+    assert_redirected_to events_url(page: "1", event_date: "2026-06-01")
     assert_equal "needs_review", @published_event.reload.status
     assert_nil @published_event.published_at
     assert_nil @published_event.published_by_id

@@ -38,7 +38,6 @@ class Public::Events::BrowseStateTest < ActiveSupport::TestCase
 
     assert_equal(
       {
-        filter: "all",
         view: "list",
         event_date: "2026-07-10",
         q: "Review Artist",

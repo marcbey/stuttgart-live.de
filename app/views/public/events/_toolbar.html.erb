@@ -20,7 +20,6 @@
     </div>
 
     <%= form_with url: events_path, method: :get, local: true, class: "public-search-filter" do %>
-      <%= hidden_field_tag :filter, browse_state.filter %>
       <%= hidden_field_tag :view, browse_state.route_params[:view] %>
       <%= hidden_field_tag :event_date, browse_state.event_date_param %>
       <div class="public-search-field">

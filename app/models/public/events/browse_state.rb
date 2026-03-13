@@ -38,7 +38,6 @@ module Public
 
       def route_params(page: nil, view: self.view, format: nil)
         {
-          filter: normalized_filter_for(view),
           view: view_param_for(view),
           event_date: event_date_param,
           q: query,
@@ -70,10 +69,6 @@ module Public
         Date.iso8601(value)
       rescue ArgumentError
         nil
-      end
-
-      def normalized_filter_for(view)
-        view.to_s == VIEW_LIST ? FILTER_ALL : filter
       end
 
       def view_param_for(view)

@@ -6,7 +6,6 @@
   </div>
 
   <%= form_with model: NewsletterSubscriber.new, url: newsletter_subscribers_path, method: :post, local: true, class: "newsletter-signup-form" do |form| %>
-    <%= hidden_field_tag :filter, browse_state.filter %>
     <%= hidden_field_tag :view, browse_state.route_params[:view] %>
     <%= hidden_field_tag :event_date, browse_state.event_date_param %>
     <%= hidden_field_tag :q, browse_state.query %>
