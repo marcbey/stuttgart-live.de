@@ -1,0 +1,138 @@
+{
+  "id": 2439474,
+  "vat": 2,
+  "name": "Tina Häussermann - HAPPY KONFETTi",
+  "self": "/1/sale/event/2439474",
+  "artist": null,
+  "enddate": null,
+  "endtime": null,
+  "videoId": null,
+  "bookable": true,
+  "delivery": 136,
+  "distance": null,
+  "duration": 0,
+  "maxPrice": 24.5,
+  "minPrice": 24.5,
+  "modified": "2026-03-13 18:10:20",
+  "planzone": null,
+  "startdate": "2026-03-14",
+  "starttime": "20:00",
+  "references": {
+    "genre": [
+      {
+        "id": 183,
+        "name": "Musikkabarett",
+        "self": "/1/sale/genre/183",
+        "parent": 59,
+        "modified": "2013-02-07 15:20:13",
+        "references": []
+      }
+    ],
+    "image": [
+      {
+        "id": 243947400,
+        "url": "https://cdn.reservix.com/core/img/event/detailEvent_2439474.jpg",
+        "hash": "ceeca47d148d2b3cf66cc01dd47da5d815709f0c",
+        "self": "/1/sale/image/243947400",
+        "type": 1,
+        "copyright": null,
+        "references": [],
+        "isPlaceholder": false,
+        "thumbnail_url": "https://cdn.reservix.com/core/img/event/thumbnail_2439474.jpg",
+        "thumbnail_hash": "422f36d58976e7c7cab5583b1b3eaafd2bda15d0"
+      },
+      {
+        "id": 243947401,
+        "url": "https://cdn.reservix.com/core/img/event/slideEvent_2439474_0.jpg",
+        "hash": "7a2b7109f6398552490379b37d1524a0df8ebc2a",
+        "self": "/1/sale/image/243947401",
+        "type": 2,
+        "copyright": null,
+        "references": [],
+        "isPlaceholder": false,
+        "thumbnail_url": null,
+        "thumbnail_hash": null
+      }
+    ],
+    "price": "/1/sale/event/2439474/price",
+    "venue": [
+      {
+        "id": 2660,
+        "city": "Stuttgart",
+        "name": "Renitenztheater",
+        "self": "/1/sale/event/2439474/venue/2660",
+        "street": "Büchsenstr. 26",
+        "country": "DE",
+        "zipcode": "70174",
+        "latitude": 48.778,
+        "modified": "2025-10-23 12:16:19",
+        "formatted": "Büchsenstr. 26, 70174 Stuttgart",
+        "longitude": 9.17305,
+        "references": []
+      }
+    ],
+    "video": null,
+    "location": [
+      {
+        "id": 18971,
+        "name": "Renitenztheater",
+        "self": "/1/sale/location/18971",
+        "venueId": 2660,
+        "modified": "2022-03-18 14:51:20",
+        "formatted": "Renitenztheater - Büchsenstraße 26, 70174 Stuttgart",
+        "references": []
+      }
+    ],
+    "organizer": [
+      {
+        "id": 7295,
+        "name": "Renitenztheater Stuttgart e.V.",
+        "self": "/1/sale/organizer/7295",
+        "modified": "2025-07-01 16:34:41",
+        "references": []
+      }
+    ],
+    "eventgroup": [
+      {
+        "id": 444962,
+        "name": "Tina Häussermann",
+        "self": "/1/sale/eventgroup/444962",
+        "type": 1,
+        "modified": "2026-03-13 18:10:20",
+        "references": [],
+        "description": "Die Kabarettistin und Comedienne Tina Häussermann feuert zu ihrem 25-jährigen Bühnenjubiläum einen Abend voller Sahnehäubchen und Krönungen auf die Bretter, die ihr so viel bedeuten. Blitzgescheit und albern, bierernst und saukomisch, mit Karamba und Karacho!\r\n\r\nIn einer Welt, die sich zunehmend anders dreht als gedacht, bewahrt Tina Häussermann die Übersicht. Mit nahezu unzerstörbarer Resilienz, Komik und Empathie zeigt sie, dass das kleine Glück schon der Moment sein kann, in dem die Kinder in ihren Zimmern selbst in die alte Pizza auf dem Boden treten.\r\nSie zeigt, dass man sich im Notfall immer mit Lachyooga und therapeutischem Fußmattenausklopfen retten kann oder auch mal mit ChatGPT. Allerdings hilft Künstliche Intelligenz nicht gegen natürliche Intoleranz, das muss man wissen.\r\nNur Konfetti - Konfetti hilft immer! Daher weiß Tina Häussermann ganz genau, warum Klimawandel und Klimakterium nicht nur die ersten zwei Silben gemeinsam haben und warum man auf der Suche nach dem großen Glück statt Konfetti lieber gleich den ganzen Locher schmeißt.\r\n\r\nSo viel ist sicher: es wird ein Fest! Gemeinsam mit ihrem Publikum jubelt, plaudert und singt sich die Trägerin des Deutschen Kabarettpreises und des Baden-Württembergischen Kleinkunstpreises durch einen ekstatischen Abend.\r\nHoch die Tassen und die Partydeko!!!\r\nNoch Fragen? Na, dann kommt.\r\nUnd bringt Konfetti mit!\r\n\r\nRegie: Jo van Nelsen",
+        "affiliateSaleUrl": "https://stuttgart-live.reservix.de/p/reservix/group/444962"
+      }
+    ],
+    "availableTickets": [
+      {
+        "self": "/1/sale/availabletickets/2439474",
+        "total": 256,
+        "available": 110,
+        "references": []
+      }
+    ]
+  },
+  "salesstart": null,
+  "description": "Die Kabarettistin und Comedienne Tina Häussermann feuert zu ihrem 25-jährigen Bühnenjubiläum einen Abend voller Sahnehäubchen und Krönungen auf die Bretter, die ihr so viel bedeuten. Blitzgescheit und albern, bierernst und saukomisch, mit Karamba und Karacho!\r\n\r\nIn einer Welt, die sich zunehmend anders dreht als gedacht, bewahrt Tina Häussermann die Übersicht. Mit nahezu unzerstörbarer Resilienz, Komik und Empathie zeigt sie, dass das kleine Glück schon der Moment sein kann, in dem die Kinder in ihren Zimmern selbst in die alte Pizza auf dem Boden treten.\r\nSie zeigt, dass man sich im Notfall immer mit Lachyooga und therapeutischem Fußmattenausklopfen retten kann oder auch mal mit ChatGPT. Allerdings hilft Künstliche Intelligenz nicht gegen natürliche Intoleranz, das muss man wissen.\r\nNur Konfetti - Konfetti hilft immer! Daher weiß Tina Häussermann ganz genau, warum Klimawandel und Klimakterium nicht nur die ersten zwei Silben gemeinsam haben und warum man auf der Suche nach dem großen Glück statt Konfetti lieber gleich den ganzen Locher schmeißt.\r\n\r\nSo viel ist sicher: es wird ein Fest! Gemeinsam mit ihrem Publikum jubelt, plaudert und singt sich die Trägerin des Deutschen Kabarettpreises und des Baden-Württembergischen Kleinkunstpreises durch einen ekstatischen Abend.\r\nHoch die Tassen und die Partydeko!!!\r\nNoch Fragen? Na, dann kommt.\r\nUnd bringt Konfetti mit!\r\n\r\nRegie: Jo van Nelsen",
+  "isTestEvent": false,
+  "salesstatus": 2,
+  "bookableinfo": null,
+  "canonicalUrl": "https://www.reservix.de/tickets-tina-haeussermann-happy-konfetti-in-stuttgart-renitenztheater-am-14-3-2026/e2439474",
+  "discountinfo": "Die ermäßigten Preise gelten für SchülerInnen, StudentInnen, RentnerInnen, Menschen mit Behinderung, Auszubildende, Arbeitslose und Bundesfreiwilligendienstleistende. Wenn der Schwerbehindertenausweis ein \"B\" ausweist, erhält die erforderliche Begleitung freien Eintritt. Ein Nachweis ist beim Einlass vorzuzeigen. Bitte wenden Sie sich zur Buchung direkt an die Kasse unter 0711 / 29 70 75 bzw. kasse@renitenztheater.de. \r\nRollstuhlfahrerInnen wenden sich zur Buchung bitte direkt an das Renitenztheater unter 0711 / 29 70 75.",
+  "showDateTime": 1,
+  "publicSaleUrl": "https://www.reservix.de",
+  "eventSeasonMode": 0,
+  "reservationMode": 0,
+  "affiliateSaleUrl": "https://stuttgart-live.reservix.de/p/reservix/event/2439474",
+  "discountAvailable": true,
+  "originallyDateTime": null,
+  "zipCodeRequirement": null,
+  "publicOrganizerName": "Renitenztheater Stuttgart e.V.",
+  "minPriceMediaPartner": null,
+  "additionalInformation": "Einlass: 19:45 Uhr",
+  "publicOrganizerAddress": "Hospitalstraße 10, 70174 Stuttgart, Deutschland",
+  "organizerEventReference": null,
+  "comboTicketOptionsAvailable": false,
+  "requiredTicketOptionsAvailable": false
+}
