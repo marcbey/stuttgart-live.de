@@ -1,7 +1,7 @@
 require "test_helper"
 
 class Backend::AccountPasswordsControllerTest < ActionDispatch::IntegrationTest
-  STRONG_PASSWORD = "Sicher123!Pass".freeze
+  STRONG_PASSWORD = "Sicher123Pass".freeze
 
   setup do
     @user = users(:one)

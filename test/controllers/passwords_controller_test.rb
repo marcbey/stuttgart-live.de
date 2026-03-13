@@ -1,7 +1,7 @@
 require "test_helper"
 
 class PasswordsControllerTest < ActionDispatch::IntegrationTest
-  STRONG_PASSWORD = "Sicher123!Pass".freeze
+  STRONG_PASSWORD = "Sicher123Pass".freeze
 
   setup { @user = users(:two) }
 

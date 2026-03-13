@@ -1,7 +1,7 @@
 require "test_helper"
 
 class UserTest < ActiveSupport::TestCase
-  STRONG_PASSWORD = "Sicher123!Pass".freeze
+  STRONG_PASSWORD = "Sicher123Pass".freeze
 
   test "downcases and strips email_address" do
     user = User.new(email_address: " DOWNCASED@EXAMPLE.COM ")
@@ -29,6 +29,17 @@ class UserTest < ActiveSupport::TestCase
 
     assert_not user.valid?
     assert_includes user.errors[:password], "muss #{User::PASSWORD_REQUIREMENTS_TEXT} enthalten"
+  end
+
+  test "accepts strong passwords without special characters" do
+    user = User.new(
+      email_address: "no-special-char@example.com",
+      password: STRONG_PASSWORD,
+      password_confirmation: STRONG_PASSWORD,
+      role: "editor"
+    )
+
+    assert user.valid?
   end
 
   test "blogger has blog access but no event backend access" do

@@ -1,7 +1,7 @@
 class User < ApplicationRecord
   ROLES = %w[admin editor blogger].freeze
   PASSWORD_MIN_LENGTH = 8
-  PASSWORD_REQUIREMENTS_TEXT = "mindestens #{PASSWORD_MIN_LENGTH} Zeichen sowie Großbuchstaben, Kleinbuchstaben, Zahlen und Sonderzeichen".freeze
+  PASSWORD_REQUIREMENTS_TEXT = "mindestens #{PASSWORD_MIN_LENGTH} Zeichen sowie Großbuchstaben, Kleinbuchstaben und Zahlen".freeze
   MAX_FAILED_LOGIN_ATTEMPTS = 5
   LOGIN_LOCKOUT_PERIOD = 15.minutes
 
@@ -95,7 +95,6 @@ class User < ApplicationRecord
       value.length >= PASSWORD_MIN_LENGTH &&
         value.match?(/[[:lower:]]/) &&
         value.match?(/[[:upper:]]/) &&
-        value.match?(/\d/) &&
-        value.match?(/[^A-Za-z0-9]/)
+        value.match?(/\d/)
     end
 end
