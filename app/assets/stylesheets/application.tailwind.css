@@ -1363,6 +1363,35 @@ trix-editor.blog-rich-text:focus {
   text-underline-offset: 0.14em;
 }
 
+.scroll-top-button {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 35;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 12px 28px rgba(17, 17, 17, 0.14);
+  color: #111;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.scroll-top-button:hover {
+  transform: translateY(-1px);
+}
+
+.scroll-top-button[hidden] {
+  display: none;
+}
+
 .consent-banner {
   position: fixed;
   right: 1rem;

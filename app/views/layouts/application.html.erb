@@ -31,11 +31,14 @@
   </head>
 
   <body
+    <% body_controllers = [] %>
     <% unless controller_path.start_with?("backend/") %>
-      data-controller="consent"
-      <% if google_analytics_enabled? %>
-        data-consent-measurement-id-value="<%= google_analytics_measurement_id %>"
-      <% end %>
+      <% body_controllers << "consent" %>
+    <% end %>
+    <% body_controllers << "scroll-top" %>
+    data-controller="<%= body_controllers.join(" ") %>"
+    <% if !controller_path.start_with?("backend/") && google_analytics_enabled? %>
+      data-consent-measurement-id-value="<%= google_analytics_measurement_id %>"
     <% end %>>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
@@ -127,6 +130,15 @@
     <main id="main-content" tabindex="-1">
       <%= yield %>
     </main>
+
+    <button type="button"
+            class="scroll-top-button"
+            data-scroll-top-target="button"
+            data-action="click->scroll-top#scroll"
+            aria-label="Nach oben scrollen"
+            hidden>
+      ↑
+    </button>
 
     <% unless controller_path.start_with?("backend/") %>
       <%= render "layouts/consent_banner" %>
