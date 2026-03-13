@@ -111,6 +111,8 @@ Produktion läuft auf Hetzner und wird mit Kamal ausgerollt. Im Alltag gibt es z
 
 Webprozess und Job-Verarbeitung laufen gemeinsam in der Rails-Anwendung. `SOLID_QUEUE_IN_PUMA=true` ist für dieses Setup bereits vorgesehen.
 
+Die produktive öffentliche Domain ist aktuell `stuttgart-live.schopp3r.de`. Für Kamal-Kommandos muss `APP_HOST` lokal auf diesen Wert gesetzt sein, sonst registriert der Proxy den falschen Hostnamen.
+
 ### Was lokal wichtig ist
 
 Für manuelle Produktions-Kommandos brauchst du lokal:
@@ -122,6 +124,14 @@ Für manuelle Produktions-Kommandos brauchst du lokal:
 
 Der Standard-Host ist aktuell `46.225.224.194`. Falls sich die Ziel-IP ändert, kann sie über `KAMAL_WEB_HOST` überschrieben werden.
 
+Vor manuellen Kamal-Eingriffen sollte immer dieser Check laufen:
+
+```bash
+bin/hetzner-check
+```
+
+Das Skript lädt `.env`, prüft `APP_HOST`, die lokalen SSH-Keys sowie die Vollständigkeit von `.kamal/secrets.hetzner` gegen `config/deploy.hetzner.yml` und bricht bei Abweichungen sofort ab.
+
 Wichtig: Die lokale `.kamal/secrets.hetzner` ist hier keine Klartext-Secret-Datei. Sie ist ignoriert und löst Werte aus `.env` und `config/master.key` auf. Als Vorlage dient `.kamal/secrets.hetzner.example`.
 
 GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit eine eigene `.kamal/secrets.hetzner` aus den in GitHub hinterlegten Secrets.
@@ -131,8 +141,11 @@ GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit
 Deployment von lokal:
 
 ```bash
+bin/hetzner-check
 bin/kamal deploy -d hetzner
+bin/hetzner-check
 bin/kamal redeploy -d hetzner
+bin/hetzner-check
 bin/kamal rollback <VERSION> -d hetzner
 ```
 
@@ -150,10 +163,15 @@ bin/kamal app logs --since 30m --grep ERROR -d hetzner
 Rails-Konsole, Shell und Tasks im laufenden Container:
 
 ```bash
+bin/hetzner-check
 bin/kamal app exec --interactive --reuse "bin/rails console" -d hetzner
+bin/hetzner-check
 bin/kamal app exec --interactive --reuse "bash" -d hetzner
+bin/hetzner-check
 bin/kamal app exec --reuse "bin/rake <namespace>:<task>" -d hetzner
+bin/hetzner-check
 bin/kamal app exec --reuse "bin/rails runner 'puts Event.count'" -d hetzner
+bin/hetzner-check
 bin/kamal app exec --reuse "bin/rails db:migrate" -d hetzner
 ```
 
@@ -202,6 +220,54 @@ sudo -u postgres psql -l
 sudo -u postgres psql stuttgart_live_de_production
 sudo -u postgres pg_dump stuttgart_live_de_production > /tmp/stuttgart_live_de_production.sql
 ```
+
+### Produktionsdatenbank neu aufsetzen
+
+Ein vollständiges Neuaufsetzen der Produktionsdatenbanken ist ein Host-Eingriff und darf nicht nur als App-User per `db:setup` erfolgen. Der Datenbankbenutzer der Anwendung hat bewusst kein `CREATEDB`.
+
+Sichere Reihenfolge:
+
+1. App kontrolliert stoppen:
+
+```bash
+bin/hetzner-check
+bin/kamal app stop -d hetzner
+```
+
+2. Datenbanken auf dem Host als `postgres` neu anlegen:
+
+```bash
+ssh -i ~/.ssh/stgt-live-hetzner-admin admin@46.225.224.194
+sudo -u postgres psql -v ON_ERROR_STOP=1 <<'SQL'
+DROP DATABASE IF EXISTS stuttgart_live_de_production;
+DROP DATABASE IF EXISTS stuttgart_live_de_production_cache;
+DROP DATABASE IF EXISTS stuttgart_live_de_production_queue;
+DROP DATABASE IF EXISTS stuttgart_live_de_production_cable;
+CREATE DATABASE stuttgart_live_de_production OWNER stuttgart_live_de;
+CREATE DATABASE stuttgart_live_de_production_cache OWNER stuttgart_live_de;
+CREATE DATABASE stuttgart_live_de_production_queue OWNER stuttgart_live_de;
+CREATE DATABASE stuttgart_live_de_production_cable OWNER stuttgart_live_de;
+SQL
+exit
+```
+
+3. Schema und Seeds aus der App laden:
+
+```bash
+bin/hetzner-check
+bin/kamal app exec -d hetzner -- bin/rails db:schema:load db:seed
+```
+
+4. Vorherigen Release-Container oder einen frischen Deploy wieder hochfahren und prüfen:
+
+```bash
+bin/hetzner-check
+bin/kamal app start -d hetzner --version <VERSION>
+bin/kamal app logs --since 5m -d hetzner
+curl -I https://stuttgart-live.schopp3r.de
+```
+
+`bin/rails db:setup` ist für dieses Produktions-Setup nicht der richtige Weg, weil das Kommando Datenbanken anlegen will.
 
 ### Wenn es Probleme gibt
 
