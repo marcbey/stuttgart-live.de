@@ -221,6 +221,14 @@ sudo -u postgres psql stuttgart_live_de_production
 sudo -u postgres pg_dump stuttgart_live_de_production > /tmp/stuttgart_live_de_production.sql
 ```
 
+Event-Bestand lokal leeren, ohne die Importtabellen anzufassen:
+
+```bash
+bin/rails events:maintenance:purge_all
+```
+
+Der Task löscht `events` samt Relationen und event-bezogene `import_event_images`, lässt aber `easyticket_import_events`, `eventim_import_events` und `reservix_import_events` unverändert.
+
 ### Produktionsdatenbank neu aufsetzen
 
 Ein vollständiges Neuaufsetzen der Produktionsdatenbanken ist ein Host-Eingriff und darf nicht nur als App-User per `db:setup` erfolgen. Der Datenbankbenutzer der Anwendung hat bewusst kein `CREATEDB`.
