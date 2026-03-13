@@ -1,6 +1,6 @@
 class Event < ApplicationRecord
   STATUSES = %w[imported needs_review ready_for_publish published rejected].freeze
-  SKS_PROMOTER_IDS = %w[10135 382].freeze
+  SKS_PROMOTER_IDS = %w[10135 10136 382].freeze
   DEFAULT_SKS_ORGANIZER_NOTES = <<~TEXT.strip
     Wir bitten um Beachtung verstärkter Sicherheitsmaßnahmen
     Verbot von Handtaschen, Rucksäcken und Helmen

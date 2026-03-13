@@ -99,6 +99,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
   end
 
+  test "index includes promoter 10136 in homepage highlights" do
+    future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
+
+    highlighted_event = Event.create!(
+      slug: "homepage-highlight-promoter-10136",
+      source_fingerprint: "test::homepage::highlight::10136",
+      title: "Homepage Highlight Promoter 10136",
+      artist_name: "Highlight Promoter 10136 Artist",
+      start_at: future_start,
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: "10136",
+      source_snapshot: {}
+    )
+
+    get events_url
+
+    assert_response :success
+    assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
+  end
+
   test "index can be filtered to SKS events" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 
