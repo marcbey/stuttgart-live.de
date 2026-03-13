@@ -42,6 +42,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "data-next-event-enabled-value=\"false\""
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
     assert_select ".backend-topbar-context", text: "Published Artist · Published Event · 01.06.2026 22:00"
+    assert_select "#event_topbar_editor_actions a.button", text: "Open"
   end
 
   test "index shows selected event context in topbar" do
@@ -622,7 +623,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "button", text: "Publish", count: 0
-    assert_includes response.body, event_path(@published_event.slug)
+    assert_select "#event_editor_panel .editor-header-badges a", text: "Frontend", count: 0
   end
 
   test "ready_for_publish event editor does not show unpublish button" do

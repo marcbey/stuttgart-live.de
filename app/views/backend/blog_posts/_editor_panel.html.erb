@@ -29,13 +29,6 @@
                     target: "_blank",
                     rel: "noopener" %>
       <% end %>
-      <% if blog_post.live? %>
-        <%= link_to "Frontend",
-                    news_path(blog_post.slug),
-                    class: "status-badge status-badge-default status-badge-link",
-                    target: "_blank",
-                    rel: "noopener" %>
-      <% end %>
     </div>
   </header>
 

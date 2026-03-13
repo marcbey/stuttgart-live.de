@@ -15,4 +15,9 @@
                   class: "button button-secondary button-compact",
                   form: { data: { turbo_stream: true } } %>
   <% end %>
+  <%= link_to "Open",
+              event_path(event.slug),
+              class: "button button-secondary button-compact",
+              target: "_blank",
+              rel: "noreferrer" %>
 </div>

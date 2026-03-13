@@ -24,6 +24,19 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Blog-Inbox"
     assert_select "turbo-frame#blog_editor"
     assert_select "#blog_posts_list"
+    assert_select "#blog_topbar_editor_actions a.button", text: "Open", count: 0
+  end
+
+  test "live blog post shows open button in topbar instead of editor header" do
+    sign_in_as(@editor)
+    blog_post = create_blog_post(author: @editor, status: "published", published_at: Time.current, published_by: @editor)
+
+    get backend_blog_posts_url(blog_post_id: blog_post.id)
+
+    assert_response :success
+    assert_select "#blog_topbar_editor_actions a.button", text: "Open", count: 1
+    assert_includes response.body, news_path(blog_post.slug)
+    assert_select "#blog_editor_panel .editor-header-badges a", text: "Frontend", count: 0
   end
 
   test "index search is case insensitive" do
@@ -99,6 +112,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "published", blog_post.reload.status
     assert_includes response.body, 'target="blog_topbar_editor_actions"'
     assert_includes response.body, "Unpublish"
+    assert_includes response.body, "Open"
     assert_includes response.body, 'target="blog_topbar_context"'
     assert_includes response.body, "Published"
   end

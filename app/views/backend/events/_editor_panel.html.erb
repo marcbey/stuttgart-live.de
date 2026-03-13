@@ -20,11 +20,6 @@
       <% if event.primary_source.present? %>
         <span class="status-badge status-badge-default"><%= event.primary_source %></span>
       <% end %>
-      <%= link_to "Frontend",
-                  event_path(event.slug),
-                  class: "status-badge status-badge-default status-badge-link",
-                  target: "_blank",
-                  rel: "noopener" %>
     </div>
   </header>
 
