@@ -3,7 +3,7 @@ require "test_helper"
 module Importing
   module Eventim
     class PayloadProjectionTest < ActiveSupport::TestCase
-      test "maps core attributes from flexible payload keys" do
+      test "maps artist_name from nested artist.artistname" do
         projection = PayloadProjection.new(
           feed_payload: {
             "eventId" => "evt-77",
@@ -11,7 +11,7 @@ module Importing
             "city" => "Stuttgart",
             "venueName" => "Im Wizemann",
             "eventTitle" => "Band C Live",
-            "performer" => "Band C",
+            "artist" => { "artistname" => "Band C" },
             "promoterId" => "36",
             "ticketUrl" => "https://tickets.example/evt-77",
             "imageUrl" => "https://img.example/evt-77.jpg"
@@ -34,7 +34,7 @@ module Importing
         assert_equal "https://img.example/evt-77.jpg", image_candidates.first[:image_url]
       end
 
-      test "maps attributes from eventim feed keys" do
+      test "falls back to title when nested artist.artistname is missing" do
         projection = PayloadProjection.new(
           feed_payload: {
             "eventid" => "20259466",
@@ -42,7 +42,6 @@ module Importing
             "eventplace" => "Stuttgart",
             "eventvenue" => "Im Wizemann",
             "eventname" => "Das Phantom der Oper",
-            "sideArtistNames" => "Original Cast",
             "promoterid" => "10135",
             "eventlink" => "https://www.eventim.de/noapp/event/20259466/"
           }
@@ -56,7 +55,7 @@ module Importing
         assert_equal "Stuttgart", attributes[:city]
         assert_equal "Im Wizemann", attributes[:venue_name]
         assert_equal "Das Phantom der Oper", attributes[:title]
-        assert_equal "Original Cast", attributes[:artist_name]
+        assert_equal "Das Phantom der Oper", attributes[:artist_name]
         assert_equal "10135", attributes[:promoter_id]
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "https://www.eventim.de/noapp/event/20259466/", attributes[:ticket_url]

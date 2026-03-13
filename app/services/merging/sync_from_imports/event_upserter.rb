@@ -141,32 +141,11 @@ module Merging
       end
 
       def start_at_for(concert_date, begin_time)
-        hour, min = parse_time_components(begin_time)
-        Time.zone.local(concert_date.year, concert_date.month, concert_date.day, hour, min, 0)
-      end
-
-      def parse_time_components(value)
-        raw = value.to_s.strip
-        match = raw.match(/(?<!\d)(\d{1,2})[:.](\d{2})(?!\d)/)
-        if match.present?
-          hour = match[1].to_i
-          min = match[2].to_i
-          return [ hour, min ] if hour.between?(0, 23) && min.between?(0, 59)
-        end
-
-        [ 20, 0 ]
+        DuplicationKey.start_at_for(concert_date, begin_time)
       end
 
       def fingerprint_for(record)
-        [
-          normalize_token(record.artist_name),
-          normalize_token(record.venue_name),
-          record.concert_date.iso8601
-        ].join("::")
-      end
-
-      def normalize_token(value)
-        I18n.transliterate(value.to_s).downcase.gsub(/[^a-z0-9]/, "")
+        DuplicationKey.for_record(record)
       end
 
       def build_source_snapshot(records)

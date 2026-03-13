@@ -90,19 +90,11 @@ module Merging
     end
 
     def fingerprint_for(record)
-      [
-        normalize_token(record.artist_name),
-        normalize_token(record.venue_name),
-        record.concert_date.iso8601
-      ].join("::")
+      DuplicationKey.for_record(record)
     end
 
     def priority_for(source)
       priority_map.fetch(source, 999)
-    end
-
-    def normalize_token(value)
-      I18n.transliterate(value.to_s).downcase.gsub(/[^a-z0-9]/, "")
     end
   end
 end

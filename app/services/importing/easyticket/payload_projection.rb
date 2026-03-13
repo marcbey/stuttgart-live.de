@@ -74,17 +74,7 @@ module Importing
           detail_value("title"),
           detail_value("event", "title")
         )
-        artist_name = first_present(
-          dump_value("sub1"),
-          dump_value("artist"),
-          artist_name_from_dump_titles,
-          detail_value("artist_name"),
-          detail_value("artist"),
-          detail_value("event", "artist"),
-          artist_title_fallback,
-          title
-        )
-        artist_name = artist_title_fallback.presence || title if artist_name.blank? || artist_name.match?(/\A\d+\z/)
+        artist_name = artist_name_from_dump_titles.presence || artist_title_fallback.presence || title
         organizer_id = first_present(
           dump_value("organizer_id"),
           dump_data_value("event", "organizer_id"),
@@ -372,18 +362,10 @@ module Importing
       end
 
       def artist_name_from_dump_titles
-        primary_title = first_present(
-          dump_value("title"),
+        first_present(
           dump_value("title_1"),
           dump_data_value("event", "title_1")
         )
-        secondary_title = first_present(
-          dump_value("title_2"),
-          dump_data_value("event", "title_2")
-        )
-        return "" if primary_title.blank? || secondary_title.blank?
-
-        primary_title.downcase.include?(secondary_title.downcase) ? secondary_title : ""
       end
 
       def deduplicate_candidates(candidates)
