@@ -20,10 +20,6 @@
                           class: "slider-image-meta-form event-image-meta-inline-form" do |form| %>
               <%= hidden_field_tag :status, editor_status %>
               <%= form.text_field :sub_text, placeholder: "Copyright unter dem Bild (optional)", class: "form-input" %>
-              <%= form.select :hero_focus_position,
-                              options_for_select([ [ "Fokus oben", EventImage::HERO_FOCUS_TOP ], [ "Fokus mittig", EventImage::HERO_FOCUS_CENTER ], [ "Fokus unten", EventImage::HERO_FOCUS_BOTTOM ] ], event_image.hero_focus_position_value),
-                              {},
-                              class: "form-input" %>
             <% end %>
 
             <div class="slider-image-meta-actions">
@@ -44,7 +40,6 @@
                 <%= hidden_field_tag "event_image[alt_text]", event_image.alt_text %>
                 <%= hidden_field_tag "event_image[sub_text]", event_image.sub_text %>
                 <%= hidden_field_tag "event_image[grid_variant]", event_image.grid_variant %>
-                <%= hidden_field_tag "event_image[hero_focus_position]", event_image.hero_focus_position_value %>
                 <%= hidden_field_tag "event_image[card_focus_x]", event_image.card_focus_x_value %>
                 <%= hidden_field_tag "event_image[card_focus_y]", event_image.card_focus_y_value %>
                 <%= hidden_field_tag "event_image[card_zoom]", event_image.card_zoom_value %>
@@ -155,7 +150,6 @@
                     } do %>
         <%= hidden_field_tag :status, editor_status %>
         <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
-        <%= hidden_field_tag "event_image[hero_focus_position]", EventImage::HERO_FOCUS_CENTER %>
         <h4>Eventbild hochladen</h4>
         <p>Wird direkt nach der Auswahl hochgeladen und angezeigt.</p>
         <%= file_field_tag "event_image[files][]",

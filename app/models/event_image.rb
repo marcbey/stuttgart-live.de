@@ -2,9 +2,6 @@ class EventImage < ApplicationRecord
   DEFAULT_CARD_FOCUS_X = 50.0
   DEFAULT_CARD_FOCUS_Y = 50.0
   DEFAULT_CARD_ZOOM = 100.0
-  HERO_FOCUS_TOP = "top".freeze
-  HERO_FOCUS_CENTER = "center".freeze
-  HERO_FOCUS_BOTTOM = "bottom".freeze
   PURPOSE_SLIDER = "slider".freeze
   PURPOSE_DETAIL_HERO = "detail_hero".freeze
   PURPOSES = [
@@ -22,12 +19,6 @@ class EventImage < ApplicationRecord
     GRID_VARIANT_1X2,
     GRID_VARIANT_2X2
   ].freeze
-  HERO_FOCUS_POSITIONS = [
-    HERO_FOCUS_TOP,
-    HERO_FOCUS_CENTER,
-    HERO_FOCUS_BOTTOM
-  ].freeze
-
   belongs_to :event
   has_one_attached :file
 
@@ -37,7 +28,6 @@ class EventImage < ApplicationRecord
 
   validates :purpose, presence: true, inclusion: { in: PURPOSES }
   validates :grid_variant, inclusion: { in: GRID_VARIANTS }, allow_nil: true
-  validates :hero_focus_position, inclusion: { in: HERO_FOCUS_POSITIONS }, allow_blank: true
   validates :alt_text, length: { maximum: 240 }, allow_blank: true
   validates :sub_text, length: { maximum: 500 }, allow_blank: true
   validates :card_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
@@ -78,17 +68,11 @@ class EventImage < ApplicationRecord
     zoom.positive? ? zoom : DEFAULT_CARD_ZOOM
   end
 
-  def hero_focus_position_value
-    value = hero_focus_position.to_s
-    HERO_FOCUS_POSITIONS.include?(value) ? value : HERO_FOCUS_CENTER
-  end
-
   private
 
   def normalize_text_fields
     self.purpose = purpose.to_s.strip
     self.grid_variant = grid_variant.to_s.strip.presence
-    self.hero_focus_position = hero_focus_position.to_s.strip.presence
     self.alt_text = alt_text.to_s.strip.presence
     self.sub_text = sub_text.to_s.strip.presence
     self.card_focus_x = normalize_percentage(card_focus_x, fallback: DEFAULT_CARD_FOCUS_X)

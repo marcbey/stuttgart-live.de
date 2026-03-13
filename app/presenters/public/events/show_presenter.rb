@@ -70,10 +70,6 @@ module Public
         @hero_alt_text ||= event.artist_name.to_s.strip.presence || event.title.to_s
       end
 
-      def hero_image_style
-        view_context.event_detail_image_style(hero_desktop_image)
-      end
-
       def hero_image_credit
         return editorial_hero_credit if editorial_hero_credit.present?
         return unless easyticket_import_hero_image?

@@ -25,10 +25,6 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       image&.alt.presence || "#{event.artist_name} - #{event.title}"
     end
 
-    def event_detail_image_style(image)
-      image&.style
-    end
-
     def public_event_visibility_badges(_event)
       [ { label: "Published", css_class: "status-badge-published" } ]
     end
@@ -79,7 +75,6 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "/hero-desktop.jpg", presenter.hero_desktop_image_source
     assert_equal "/hero-mobile.jpg", presenter.hero_mobile_image_source
     assert_equal "Band", presenter.hero_alt_text
-    assert_equal "object-position: center;", presenter.hero_image_style
     assert_equal "Bildquelle: Easy Ticket Service / Veranstalter", presenter.hero_image_credit
     assert_equal [ "Mittwoch", "17.06.2026", "Im Wizemann, Stuttgart" ], presenter.primary_meta
     assert_equal "Beginn: 20:00 Uhr · Einlass: 19:00 Uhr", presenter.schedule_line
@@ -160,7 +155,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       when [ :social_card, :desktop ]
         OpenStruct.new(image_url: "https://cdn.example.test/social.jpg")
       when [ :detail_hero, :desktop ]
-        OpenStruct.new(source: "easyticket", image_url: "/hero-desktop.jpg", alt: "Hero Alt", style: "object-position: center;")
+        OpenStruct.new(source: "easyticket", image_url: "/hero-desktop.jpg", alt: "Hero Alt")
       when [ :grid_default, :mobile ]
         OpenStruct.new(source: "easyticket", image_url: "/hero-mobile.jpg", alt: "Hero Mobile Alt")
       end

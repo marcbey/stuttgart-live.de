@@ -87,19 +87,6 @@ module ApplicationHelper
     ].join("; ")
   end
 
-  def event_detail_image_style(image)
-    return nil unless image.is_a?(EventImage)
-
-    y_position =
-      case image.hero_focus_position_value
-      when EventImage::HERO_FOCUS_TOP then "top"
-      when EventImage::HERO_FOCUS_BOTTOM then "bottom"
-      else "center"
-      end
-
-    "object-position: center #{y_position};"
-  end
-
   def formatted_organizer_notes(notes)
     formatted_organizer_notes_with_link(notes)
   end

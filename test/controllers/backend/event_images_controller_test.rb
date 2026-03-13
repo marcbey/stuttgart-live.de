@@ -295,21 +295,6 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal EventImage::GRID_VARIANT_1X2, image.reload.grid_variant
   end
 
-  test "updates hero focus position for detail image" do
-    sign_in_as(@user)
-    image = create_event_image(purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
-
-    patch backend_event_event_image_url(@event, image), params: {
-      status: "needs_review",
-      event_image: {
-        hero_focus_position: EventImage::HERO_FOCUS_TOP
-      }
-    }
-
-    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
-    assert_equal EventImage::HERO_FOCUS_TOP, image.reload.hero_focus_position_value
-  end
-
   test "creates event image from import image" do
     sign_in_as(@user)
     import_image = create_import_event_image

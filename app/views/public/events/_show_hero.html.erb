@@ -36,7 +36,7 @@
           <% if presenter.hero_mobile_image_source.present? %>
             <source media="(max-width: 699px)" srcset="<%= presenter.hero_mobile_image_source %>">
           <% end %>
-          <%= image_tag presenter.hero_desktop_image_source, alt: presenter.hero_alt_text, class: "event-detail-image", style: presenter.hero_image_style %>
+          <%= image_tag presenter.hero_desktop_image_source, alt: presenter.hero_alt_text, class: "event-detail-image" %>
         </picture>
         <% if presenter.hero_image_credit.present? %>
           <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>

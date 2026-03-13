@@ -283,7 +283,6 @@ module Backend
       hero_sources.each do |upload_source|
         image = @event.event_images.new(
           purpose: EventImage::PURPOSE_DETAIL_HERO,
-          hero_focus_position: EventImage::HERO_FOCUS_CENTER,
           sub_text: manual_image_params[:detail_hero_sub_text]
         )
         image.file.attach(upload_source)
