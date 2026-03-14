@@ -21,7 +21,7 @@ module Public
         return
       end
 
-      relation = visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: @browse_state.query)
+      relation = visible_events_relation(filter: search_filter, event_date: @browse_state.event_date, query: @browse_state.query)
       if should_redirect_search_result?(relation)
         event = relation.limit(1).first
         redirect_to event_path(event.slug, **@browse_state.route_params.except(:q))
@@ -148,6 +148,12 @@ module Public
     def published_events_relation
       all_events_relation
         .published_live
+    end
+
+    def search_filter
+      return Public::Events::BrowseState::FILTER_ALL if @browse_state.query.present?
+
+      @browse_state.filter
     end
 
     def show_events_relation

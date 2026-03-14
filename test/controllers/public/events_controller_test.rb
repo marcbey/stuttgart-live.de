@@ -654,6 +654,27 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to event_url(@published_event.slug)
   end
 
+  test "index search ignores the default sks filter for a single result" do
+    non_sks_event = Event.create!(
+      slug: "search-single-non-sks",
+      source_fingerprint: "test::search::single::non-sks",
+      title: "Search Single Non SKS",
+      artist_name: "Search Single Non SKS Artist",
+      start_at: 17.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Theaterhaus",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: "99999",
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+
+    get events_url(q: non_sks_event.artist_name)
+
+    assert_redirected_to event_url(non_sks_event.slug)
+  end
+
   test "index renders flat search results and keeps homepage sliders for multiple matches" do
     first_event = Event.create!(
       slug: "search-multi-first",
