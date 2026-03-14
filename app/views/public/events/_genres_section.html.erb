@@ -24,10 +24,8 @@
     <% end %>
   </ul>
 
-  <%= turbo_frame_tag "genre-events-panel" do %>
-    <%= render "genre_events_panel",
-               browse_state: browse_state,
-               selected_genre_tile: selected_genre_tile,
-               selected_genre_events: selected_genre_events %>
-  <% end %>
+  <%= render "genre_events_frame",
+             browse_state: browse_state,
+             selected_genre_tile: selected_genre_tile,
+             selected_genre_events: selected_genre_events %>
 </section>

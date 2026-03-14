@@ -114,10 +114,20 @@ class Event < ApplicationRecord
   end
 
   def primary_offer
+    if association(:event_offers).loaded?
+      return loaded_active_ticket_offers.min_by { |offer| [ offer.priority_rank.to_i, offer.id.to_i ] }
+    end
+
     event_offers.active_ticket.ordered.first
   end
 
   def preferred_ticket_offer
+    if association(:event_offers).loaded?
+      return loaded_active_ticket_offers.min_by do |offer|
+        [ offer.source.to_s.casecmp("easyticket").zero? ? 0 : 1, offer.priority_rank.to_i, offer.id.to_i ]
+      end
+    end
+
     event_offers
       .active_ticket
       .order(Arel.sql("CASE WHEN LOWER(source) = 'easyticket' THEN 0 ELSE 1 END"), :priority_rank, :id)
@@ -125,6 +135,10 @@ class Event < ApplicationRecord
   end
 
   def primary_genre
+    if association(:genres).loaded?
+      return genres.min_by { |genre| [ genre.name.to_s, genre.id.to_i ] }
+    end
+
     genres.order(:name).first
   end
 
@@ -163,7 +177,12 @@ class Event < ApplicationRecord
     editorial = editorial_image_for(slot: slot, breakpoint: breakpoint)
     return editorial if editorial.present?
 
-    images = import_event_images.ordered.to_a
+    images =
+      if association(:import_event_images).loaded?
+        import_event_images.sort_by { |image| [ image.position.to_i, image.id.to_i ] }
+      else
+        import_event_images.ordered.to_a
+      end
     return nil if images.empty?
 
     preferences = IMAGE_SLOT_PREFERENCES.fetch([ slot.to_sym, breakpoint.to_sym ], IMAGE_SLOT_PREFERENCES[[ :grid_default, :desktop ]])
@@ -193,14 +212,30 @@ class Event < ApplicationRecord
   end
 
   def slider_images
+    if association(:event_images).loaded?
+      return event_images.select(&:slider?).sort_by { |image| [ image.created_at || Time.at(0), image.id.to_i ] }
+    end
+
     event_images.slider.ordered
   end
 
   def event_image
+    if association(:event_images).loaded?
+      return event_images
+        .select(&:detail_hero?)
+        .min_by { |image| [ image.created_at || Time.at(0), image.id.to_i ] }
+    end
+
     event_images.detail_hero.ordered.first
   end
 
   private
+
+  def loaded_active_ticket_offers
+    event_offers.select do |offer|
+      !offer.sold_out? && offer.ticket_url.present?
+    end
+  end
 
   def editorial_image_for(slot:, breakpoint:)
     detail_hero = event_image

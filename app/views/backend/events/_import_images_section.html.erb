@@ -1,8 +1,13 @@
 <section class="offer-section">
   <h3>Import-Bilder (XML)</h3>
-  <% if event.import_event_images.any? %>
+  <% import_images = if event.association(:import_event_images).loaded?
+                       event.import_event_images.sort_by { |image| [image.position.to_i, image.id.to_i] }
+                     else
+                       event.import_event_images.ordered.to_a
+                     end %>
+  <% if import_images.any? %>
     <ul class="slider-image-editor-grid">
-      <% event.import_event_images.ordered.each do |image| %>
+      <% import_images.each do |image| %>
         <li class="slider-image-editor-card">
           <div class="action-cell slider-image-editor-thumb">
             <%= link_to image.image_url, target: "_blank", rel: "noopener" do %>

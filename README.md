@@ -100,7 +100,13 @@ Der Standardweg für Prüfungen ist:
 bin/ci
 ```
 
-`bin/ci` bündelt Setup, Linting, Security-Checks und Tests. Vor einem Push sollte dieser Lauf grün sein.
+`bin/ci` bündelt Setup, Linting, Security-Checks und Tests. Die Rails-Tests laufen dort mit aktiviertem Bullet, damit N+1-Queries den Lauf fehlschlagen lassen. Vor einem Push sollte dieser Lauf grün sein.
+
+Wenn du Bullet lokal gezielt im Testlauf aktivieren willst:
+
+```bash
+BULLET=1 bin/rails test
+```
 
 ## Deployment und Betrieb
 

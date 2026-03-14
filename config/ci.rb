@@ -8,7 +8,7 @@ CI.run do
   step "Security: Gem audit", "bin/bundler-audit"
   step "Security: Yarn vulnerability audit", "yarn audit"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
-  step "Tests: Rails", "bin/rails test"
+  step "Tests: Rails (Bullet)", "env BULLET=1 bin/rails test"
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
 
   # Optional: Run system tests

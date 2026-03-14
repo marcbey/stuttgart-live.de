@@ -4,10 +4,23 @@ module Public
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
+    HOME_HIGHLIGHT_LIMIT = 100
 
     before_action :set_browse_state, only: [ :index, :show ]
 
     def index
+      if genre_panel_frame_request?
+        @selected_genre_tile = selected_genre_tile
+        @selected_genre_events = selected_genre_events
+        render partial: "public/events/genre_events_frame",
+               locals: {
+                 browse_state: @browse_state,
+                 selected_genre_tile: @selected_genre_tile,
+                 selected_genre_events: @selected_genre_events
+               }
+        return
+      end
+
       relation = visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: @browse_state.query)
       if should_redirect_search_result?(relation)
         event = relation.limit(1).first
@@ -119,7 +132,7 @@ module Public
 
       @home_featured_events = scoped_highlights.to_a
       @home_featured_events = current_relation.reorder(:start_at, :id).to_a if @home_featured_events.empty?
-      @home_highlight_events = scoped_reservix.to_a
+      @home_highlight_events = scoped_reservix.limit(HOME_HIGHLIGHT_LIMIT).to_a
       @home_tagestipp_events = tagestipp_relation.to_a
       @selected_genre_tile = selected_genre_tile
       @selected_genre_events = selected_genre_events
@@ -176,7 +189,7 @@ module Public
 
       visible_events_relation(
         filter: Public::Events::BrowseState::FILTER_ALL,
-        event_date: @browse_state.event_date,
+        event_date: nil,
         query: nil
       )
         .joins(:genres)
@@ -190,6 +203,10 @@ module Public
       helpers.public_event_genre_tiles.map do |name, css_class|
         { name:, css_class:, slug: name.parameterize }
       end
+    end
+
+    def genre_panel_frame_request?
+      turbo_frame_request? && request.headers["Turbo-Frame"] == "genre-events-panel"
     end
 
     def apply_status!(event, status)

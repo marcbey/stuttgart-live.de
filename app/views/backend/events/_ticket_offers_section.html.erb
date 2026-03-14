@@ -1,8 +1,13 @@
 <section class="offer-section">
   <h3>Ticket-Angebote</h3>
-  <% if event.event_offers.any? %>
+  <% ticket_offers = if event.association(:event_offers).loaded?
+                       event.event_offers.sort_by { |offer| [offer.priority_rank.to_i, offer.id.to_i] }
+                     else
+                       event.event_offers.ordered.to_a
+                     end %>
+  <% if ticket_offers.any? %>
     <ul>
-      <% event.event_offers.ordered.each do |offer| %>
+      <% ticket_offers.each do |offer| %>
         <li>
           <span>
             <%= offer.source %>

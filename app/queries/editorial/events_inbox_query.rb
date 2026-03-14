@@ -13,6 +13,7 @@ module Editorial
       relation = scope.includes(
         :genres,
         :event_offers,
+        :import_event_images,
         :event_change_logs,
         event_images: [ file_attachment: :blob ]
       )

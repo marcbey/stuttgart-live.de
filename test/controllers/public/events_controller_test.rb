@@ -46,6 +46,57 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".genre-grid .genre-tile-link[href*='genre=rock'][aria-expanded='true']"
   end
 
+  test "genre panel searches across all visible events regardless of selected date" do
+    selected_date = 12.days.from_now.to_date
+
+    other_promoter_rock_event = Event.create!(
+      slug: "genre-panel-other-promoter-rock",
+      source_fingerprint: "test::public::genre-panel::other-promoter-rock",
+      title: "Genre Panel Other Promoter Rock Event",
+      artist_name: "Genre Other Promoter Rock Artist",
+      start_at: 25.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      promoter_id: "99999",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    other_promoter_rock_event.genres << genres(:rock)
+
+    same_day_pop_event = Event.create!(
+      slug: "genre-panel-same-day-pop",
+      source_fingerprint: "test::public::genre-panel::same-day-pop",
+      title: "Genre Panel Same Day Pop Event",
+      artist_name: "Genre Same Day Pop Artist",
+      start_at: selected_date.in_time_zone.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    same_day_pop_event.genres << genres(:pop)
+
+    get events_url(genre: "rock", event_date: selected_date.iso8601)
+
+    assert_response :success
+    assert_select "turbo-frame#genre-events-panel .event-listing-card", text: /#{Regexp.escape(@published_event.artist_name)}/
+    assert_select "turbo-frame#genre-events-panel .event-listing-card", text: /#{Regexp.escape(other_promoter_rock_event.artist_name)}/
+    assert_select "turbo-frame#genre-events-panel .event-listing-card", text: /#{Regexp.escape(same_day_pop_event.artist_name)}/, count: 0
+  end
+
+  test "genre frame request renders only the genre panel" do
+    get events_url(genre: "rock"), headers: { "Turbo-Frame" => "genre-events-panel" }
+
+    assert_response :success
+    assert_select "turbo-frame#genre-events-panel", count: 1
+    assert_select "turbo-frame#genre-events-panel .genre-events-panel-title", text: "Rock"
+    assert_select "section.public-shell", count: 0
+    assert_no_match(/Alle Veranstaltungen in Stuttgart/, response.body)
+  end
+
   test "index hides future unpublished events for guests" do
     hidden_event = Event.create!(
       slug: "guest-hidden-draft-event",
@@ -279,6 +330,49 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".home-slider-card-name", text: late_reservix_event.artist_name
       assert_select ".home-slider-card-name", text: eventim_event.artist_name, count: 0
     end
+  end
+
+  test "index limits the all events slider to 100 reservix events" do
+    future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
+    included_event_names = []
+    excluded_event_name = nil
+
+    101.times do |index|
+      artist_name = "Reservix Limited Artist #{index}"
+      included_event_names << artist_name if index < 100
+      excluded_event_name = artist_name if index == 100
+
+      Event.create!(
+        slug: "reservix-home-slider-limited-#{index}",
+        source_fingerprint: "test::homepage::reservix::limited::#{index}",
+        title: "Reservix Homepage Limited #{index}",
+        artist_name: artist_name,
+        start_at: future_start + index.minutes,
+        venue: "Venue #{index}",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        primary_source: "reservix",
+        source_snapshot: {}
+      )
+    end
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    slider_section = document.css("section.home-slider-section").find do |section|
+      section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+    end
+
+    assert slider_section.present?, "expected all events slider section to be rendered"
+
+    names = slider_section.css(".home-slider-card-name").map(&:text)
+
+    assert_equal 100, names.size
+    assert_includes names, included_event_names.first
+    assert_includes names, included_event_names.last
+    assert_not_includes names, excluded_event_name
   end
 
   test "index does not limit highlights fallback when no sks events exist for the selected date" do
