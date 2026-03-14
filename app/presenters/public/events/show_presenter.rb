@@ -39,7 +39,7 @@ module Public
       end
 
       def back_path
-        view_context.public_events_index_path(browse_state)
+        view_context.root_path
       end
 
       def primary_source_label

@@ -29,8 +29,8 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       [ { label: "Published", css_class: "status-badge-published" } ]
     end
 
-    def public_events_index_path(_browse_state)
-      "/events"
+    def root_path
+      "/"
     end
 
     def event_source_label(source)
@@ -69,7 +69,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal event.event_info.truncate(160), presenter.meta_description
     assert_equal "https://cdn.example.test/social.jpg", presenter.og_image_url
     assert_equal "https://stuttgart-live.de/events/band-live", presenter.canonical_url
-    assert_equal "/events", presenter.back_path
+    assert_equal "/", presenter.back_path
     assert_equal "eventim", presenter.primary_source_label
     assert_equal "event-detail-header event-detail-header-with-image", presenter.header_classes
     assert_equal "/hero-desktop.jpg", presenter.hero_desktop_image_source
