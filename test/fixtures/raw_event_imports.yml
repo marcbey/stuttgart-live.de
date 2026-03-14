@@ -1,0 +1,12 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  import_source: one
+  import_event_type: easyticket
+  source_identifier: "123:2026-03-02"
+  payload:
+    event_id: "123"
+    date: "2026-03-02"
+    title_1: "Fixture Artist"
+    title_2: "Fixture Title"
+  detail_payload: {}

@@ -8,10 +8,7 @@ class Backend::Events::SourcePayloadPresenterTest < ActiveSupport::TestCase
           {
             "source" => "eventim",
             "external_event_id" => "evt-1",
-            "raw_payload" => {
-              "dump_payload" => { "eventid" => "evt-1", "promoterid" => "36" },
-              "detail_payload" => { "foo" => "bar" }
-            }
+            "raw_payload" => { "eventid" => "evt-1", "promoterid" => "36" }
           }
         ]
       }
@@ -23,7 +20,7 @@ class Backend::Events::SourcePayloadPresenterTest < ActiveSupport::TestCase
     assert_equal 1, presenter.payload_sources.size
     assert_equal "eventim", payload_source.source
     assert_equal "evt-1", payload_source.external_event_id
-    assert_includes payload_source.formatted_dump_payload, "\"promoterid\": \"36\""
+    assert_includes payload_source.formatted_payload, "\"promoterid\": \"36\""
   end
 
   test "uses eventim payload projection to derive promoter id" do
@@ -35,15 +32,12 @@ class Backend::Events::SourcePayloadPresenterTest < ActiveSupport::TestCase
             "source" => "eventim",
             "external_event_id" => "evt-1",
             "raw_payload" => {
-              "dump_payload" => {
-                "eventid" => "evt-1",
-                "eventdate" => "2026-06-17",
-                "eventvenue" => "Im Wizemann",
-                "eventname" => "Band Eventim",
-                "sideArtistNames" => "Band Eventim",
-                "promoterid" => "36"
-              },
-              "detail_payload" => {}
+              "eventid" => "evt-1",
+              "eventdate" => "2026-06-17",
+              "eventvenue" => "Im Wizemann",
+              "eventname" => "Band Eventim",
+              "artistname" => "Band Eventim",
+              "promoterid" => "36"
             }
           }
         ]

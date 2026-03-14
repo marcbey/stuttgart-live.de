@@ -6,17 +6,12 @@ module Merging
       def for_record(record)
         [
           normalize_artist_name(record.artist_name),
-          start_at_for(record.concert_date, record.begin_time).iso8601
+          record.start_at.in_time_zone.iso8601
         ].join("::")
       end
 
       def normalize_artist_name(value)
         I18n.transliterate(value.to_s).downcase.gsub(/[^a-z0-9]/, "")
-      end
-
-      def start_at_for(concert_date, begin_time)
-        hour, minute = parse_time_components(begin_time)
-        Time.zone.local(concert_date.year, concert_date.month, concert_date.day, hour, minute, 0)
       end
 
       def parse_time_components(value)

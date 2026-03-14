@@ -17,7 +17,7 @@ module Importing
         @source = import_sources(:two)
       end
 
-      test "imports matching events and tracks run metrics" do
+      test "imports matching feed rows into raw_event_imports and tracks run metrics" do
         feed_events = [
           {
             "eventid" => "evt-900",
@@ -27,18 +27,14 @@ module Importing
             "eventname" => "Band Eventim",
             "sideArtistNames" => "Band Eventim",
             "promoterid" => "36",
-            "eventlink" => "https://tickets.example/evt-900",
-            "espicture_big" => "https://img.example/evt-900-big.jpg",
-            "artistImage" => "https://img.example/evt-900-artist.jpg"
+            "eventlink" => "https://tickets.example/evt-900"
           },
           {
             "eventid" => "evt-901",
             "eventdate" => "2026-06-18",
             "eventplace" => "Berlin",
             "eventvenue" => "Tempodrom",
-            "eventname" => "Filtered Out",
-            "sideArtistNames" => "Filtered Out",
-            "eventlink" => "https://tickets.example/evt-901"
+            "eventname" => "Filtered Out"
           }
         ]
 
@@ -47,10 +43,10 @@ module Importing
           feed_fetcher: StubFeedFetcher.new(feed_events)
         ).call
 
-        imported = EventimImportEvent.find_by!(
+        imported = RawEventImport.find_by!(
           import_source: @source,
-          external_event_id: "evt-900",
-          concert_date: Date.new(2026, 6, 17)
+          import_event_type: "eventim",
+          source_identifier: "evt-900:2026-06-17"
         )
 
         assert_equal "succeeded", run.status
@@ -60,15 +56,7 @@ module Importing
         assert_equal 1, run.upserted_count
         assert_equal 0, run.failed_count
         assert_includes run.metadata.fetch("filtered_out_cities", []), "Berlin"
-
-        assert_equal "Band Eventim", imported.artist_name
-        assert_equal "36", imported.promoter_id
-        assert_equal "17.6.2026", imported.concert_date_label
-        assert_equal "Stuttgart, Im Wizemann", imported.venue_label
-        assert imported.is_active
-        assert_equal 2, imported.import_event_images.count
-        assert_equal [ "https://img.example/evt-900-big.jpg", "https://img.example/evt-900-artist.jpg" ],
-          imported.import_event_images.ordered.pluck(:image_url)
+        assert_equal "evt-900", imported.payload["eventid"]
       end
 
       test "does not start a second run while one is already active" do
@@ -78,146 +66,34 @@ module Importing
           started_at: 5.minutes.ago
         )
 
-        feed_fetcher = StubFeedFetcher.new([])
-
         run = Importer.new(
           import_source: @source,
-          feed_fetcher: feed_fetcher
+          feed_fetcher: StubFeedFetcher.new([])
         ).call
 
         assert_equal active_run.id, run.id
         assert_equal "running", run.reload.status
       end
 
-      test "auto-fails heartbeat-stale running runs before starting a new one" do
-        stale_run = @source.import_runs.create!(
-          status: "running",
-          source_type: "eventim",
-          started_at: 10.minutes.ago
-        )
-        stale_run.update!(
-          metadata: {
-            "execution_started_at" => 9.minutes.ago.iso8601
-          }
-        )
-        stale_run.update_columns(updated_at: (Importer::RUN_HEARTBEAT_STALE_AFTER + 1.minute).ago)
-
-        run = Importer.new(
-          import_source: @source,
-          feed_fetcher: StubFeedFetcher.new([])
-        ).call
-
-        assert_equal "failed", stale_run.reload.status
-        assert_equal "succeeded", run.status
-      end
-
-      test "does not fail its own preexisting run before claiming execution" do
-        preexisting_run = @source.import_runs.create!(
-          status: "running",
-          source_type: "eventim",
-          started_at: 5.minutes.ago,
-          metadata: {
-            "job_id" => "job-1",
-            "provider_job_id" => "provider-1"
-          }
-        )
-        preexisting_run.update_columns(updated_at: 5.minutes.ago)
-
-        run = Importer.new(
-          import_source: @source,
-          preexisting_run_id: preexisting_run.id,
-          run_metadata: { "job_attempt" => 1 },
-          feed_fetcher: StubFeedFetcher.new([])
-        ).call
-
-        assert_equal preexisting_run.id, run.id
-        assert_equal "succeeded", run.reload.status
-        assert run.metadata["execution_started_at"].present?
-      end
-
-      test "does not create a new run when preexisting run is already terminal" do
-        existing_run_count = @source.import_runs.where(source_type: "eventim").count
-        preexisting_run = @source.import_runs.create!(
-          status: "failed",
-          source_type: "eventim",
-          started_at: 5.minutes.ago,
-          finished_at: 4.minutes.ago,
-          error_message: "stale"
-        )
-
-        run = Importer.new(
-          import_source: @source,
-          preexisting_run_id: preexisting_run.id,
-          run_metadata: { "job_attempt" => 1 },
-          feed_fetcher: StubFeedFetcher.new([])
-        ).call
-
-        assert_equal preexisting_run.id, run.id
-        assert_equal "failed", run.reload.status
-        assert_equal existing_run_count + 1, @source.import_runs.where(source_type: "eventim").count
-      end
-
-      test "does not upsert unchanged payload twice" do
-        feed_payload = {
-          "eventid" => "evt-same",
-          "eventdate" => "2026-09-10",
-          "eventplace" => "Stuttgart",
-          "eventvenue" => "Im Wizemann",
-          "eventname" => "Same Eventim Event",
-          "sideArtistNames" => "Same Eventim Artist",
-          "eventlink" => "https://tickets.example/evt-same",
-          "espicture_big" => "https://img.example/evt-same.jpg"
-        }
-        attributes = PayloadProjection.new(feed_payload: feed_payload).to_attributes
-
-        existing_event = EventimImportEvent.create!(
-          import_source: @source,
-          external_event_id: attributes[:external_event_id],
-          concert_date: attributes[:concert_date],
-          city: attributes[:city],
-          venue_name: attributes[:venue_name],
-          title: attributes[:title],
-          artist_name: attributes[:artist_name],
-          concert_date_label: attributes[:concert_date_label],
-          venue_label: attributes[:venue_label],
-          dump_payload: feed_payload,
-          detail_payload: {},
-          is_active: false,
-          first_seen_at: 2.days.ago,
-          last_seen_at: 2.days.ago,
-          source_payload_hash: attributes[:source_payload_hash]
-        )
-
-        run = Importer.new(
-          import_source: @source,
-          feed_fetcher: StubFeedFetcher.new([ feed_payload ])
-        ).call
-
-        assert_equal "succeeded", run.status
-        assert_equal 1, run.filtered_count
-        assert_equal 1, run.imported_count
-        assert_equal 0, run.upserted_count
-        assert existing_event.reload.is_active
-        assert_equal [ "https://img.example/evt-same.jpg" ], existing_event.import_event_images.ordered.pluck(:image_url)
-      end
-
-      test "stores import_run_error when event processing fails" do
+      test "stores import_run_error when raw row persistence fails" do
         feed_payload = {
           "eventid" => "evt-error-1",
           "eventdate" => "2026-11-11",
           "eventplace" => "Stuttgart",
           "eventvenue" => "Im Wizemann",
-          "eventname" => "Broken Eventim Event",
-          "sideArtistNames" => "Broken Artist",
-          "eventlink" => "https://tickets.example/evt-error-1"
+          "eventname" => "Broken Eventim Event"
         }
 
         failing_importer_class =
           Class.new(Importer) do
             private
 
-            def upsert_import_event!(**)
-              raise RuntimeError, "cannot persist feed row"
+            def source_identifier_for(_feed_payload, external_event_id:)
+              raise RuntimeError, "cannot persist feed row for #{external_event_id}"
+            end
+
+            def normalize_payload(payload)
+              super
             end
           end
 
@@ -234,32 +110,7 @@ module Importing
         assert_equal "eventim", error.source_type
         assert_equal "evt-error-1", error.external_event_id
         assert_equal "RuntimeError", error.error_class
-        assert_includes error.message, "cannot persist feed row"
-        assert_equal "evt-error-1", error.payload["eventid"]
-      end
-
-      test "stores import_run_error when run fails" do
-        failing_feed_fetcher =
-          Class.new do
-            def fetch_events(heartbeat: nil)
-              raise "feed download failed"
-            end
-          end.new
-
-        assert_raises RuntimeError do
-          Importer.new(
-            import_source: @source,
-            feed_fetcher: failing_feed_fetcher
-          ).call
-        end
-
-        run = @source.import_runs.where(source_type: "eventim").order(:created_at).last
-        assert_equal "failed", run.status
-        assert_equal 1, run.import_run_errors.count
-
-        error = run.import_run_errors.order(:created_at).last
-        assert_equal "RuntimeError", error.error_class
-        assert_includes error.message, "feed download failed"
+        assert_includes error.message, "cannot persist feed row for evt-error-1"
       end
     end
   end

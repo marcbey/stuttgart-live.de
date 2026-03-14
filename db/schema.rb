@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_13_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_14_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -73,33 +73,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_120000) do
     t.index ["status", "published_at"], name: "index_blog_posts_on_status_and_published_at"
   end
 
-  create_table "easyticket_import_events", force: :cascade do |t|
-    t.string "artist_name", null: false
-    t.string "city", null: false
-    t.date "concert_date", null: false
-    t.string "concert_date_label", null: false
-    t.datetime "created_at", null: false
-    t.jsonb "detail_payload", default: {}, null: false
-    t.jsonb "dump_payload", default: {}, null: false
-    t.string "external_event_id", null: false
-    t.datetime "first_seen_at", null: false
-    t.bigint "import_source_id", null: false
-    t.boolean "is_active", default: true, null: false
-    t.datetime "last_seen_at", null: false
-    t.string "organizer_id"
-    t.string "source_payload_hash", null: false
-    t.string "ticket_url"
-    t.string "title", null: false
-    t.datetime "updated_at", null: false
-    t.string "venue_label", null: false
-    t.string "venue_name", null: false
-    t.index ["import_source_id", "external_event_id", "concert_date"], name: "idx_easyticket_import_events_unique_event", unique: true
-    t.index ["import_source_id", "is_active", "concert_date"], name: "idx_easyticket_import_events_active_by_date"
-    t.index ["import_source_id"], name: "index_easyticket_import_events_on_import_source_id"
-    t.index ["organizer_id"], name: "index_easyticket_import_events_on_organizer_id"
-    t.index ["source_payload_hash"], name: "index_easyticket_import_events_on_source_payload_hash"
-  end
-
   create_table "event_change_logs", force: :cascade do |t|
     t.string "action", null: false
     t.jsonb "changed_fields", default: {}, null: false
@@ -155,33 +128,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_120000) do
     t.index ["event_id", "source", "source_event_id"], name: "index_event_offers_on_event_id_and_source_and_source_event_id", unique: true
     t.index ["event_id"], name: "index_event_offers_on_event_id"
     t.index ["source", "source_event_id"], name: "index_event_offers_on_source_and_source_event_id"
-  end
-
-  create_table "eventim_import_events", force: :cascade do |t|
-    t.string "artist_name", null: false
-    t.string "city", null: false
-    t.date "concert_date", null: false
-    t.string "concert_date_label", null: false
-    t.datetime "created_at", null: false
-    t.jsonb "detail_payload", default: {}, null: false
-    t.jsonb "dump_payload", default: {}, null: false
-    t.string "external_event_id", null: false
-    t.datetime "first_seen_at", null: false
-    t.bigint "import_source_id", null: false
-    t.boolean "is_active", default: true, null: false
-    t.datetime "last_seen_at", null: false
-    t.string "promoter_id"
-    t.string "source_payload_hash", null: false
-    t.string "ticket_url"
-    t.string "title", null: false
-    t.datetime "updated_at", null: false
-    t.string "venue_label", null: false
-    t.string "venue_name", null: false
-    t.index ["import_source_id", "external_event_id", "concert_date"], name: "idx_eventim_import_events_unique_event", unique: true
-    t.index ["import_source_id", "is_active", "concert_date"], name: "idx_eventim_import_events_active_by_date"
-    t.index ["import_source_id"], name: "index_eventim_import_events_on_import_source_id"
-    t.index ["promoter_id"], name: "index_eventim_import_events_on_promoter_id"
-    t.index ["source_payload_hash"], name: "index_eventim_import_events_on_source_payload_hash"
   end
 
   create_table "events", force: :cascade do |t|
@@ -335,30 +281,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_120000) do
     t.index ["source_type"], name: "index_provider_priorities_on_source_type", unique: true
   end
 
-  create_table "reservix_import_events", force: :cascade do |t|
-    t.string "artist_name", null: false
-    t.string "city", null: false
-    t.date "concert_date", null: false
-    t.string "concert_date_label", null: false
+  create_table "raw_event_imports", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.jsonb "detail_payload", default: {}, null: false
-    t.jsonb "dump_payload", default: {}, null: false
-    t.string "external_event_id", null: false
-    t.datetime "first_seen_at", null: false
+    t.string "import_event_type", null: false
     t.bigint "import_source_id", null: false
-    t.boolean "is_active", default: true, null: false
-    t.datetime "last_seen_at", null: false
-    t.decimal "max_price", precision: 10, scale: 2
-    t.decimal "min_price", precision: 10, scale: 2
-    t.string "source_payload_hash", null: false
-    t.string "ticket_url"
-    t.string "title", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.string "source_identifier", null: false
     t.datetime "updated_at", null: false
-    t.string "venue_label", null: false
-    t.string "venue_name", null: false
-    t.index ["import_source_id", "external_event_id"], name: "index_reservix_import_events_on_source_and_external_id", unique: true
-    t.index ["import_source_id"], name: "index_reservix_import_events_on_import_source_id"
-    t.index ["is_active"], name: "index_reservix_import_events_on_is_active"
+    t.index ["import_event_type", "created_at"], name: "index_raw_event_imports_on_import_event_type_and_created_at"
+    t.index ["import_event_type", "source_identifier", "created_at"], name: "index_raw_event_imports_on_type_identifier_created_at"
+    t.index ["import_source_id"], name: "index_raw_event_imports_on_import_source_id"
   end
 
   create_table "sessions", force: :cascade do |t|
@@ -389,19 +322,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_13_120000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "blog_posts", "users", column: "author_id"
   add_foreign_key "blog_posts", "users", column: "published_by_id"
-  add_foreign_key "easyticket_import_events", "import_sources"
   add_foreign_key "event_change_logs", "events"
   add_foreign_key "event_change_logs", "users"
   add_foreign_key "event_genres", "events"
   add_foreign_key "event_genres", "genres"
   add_foreign_key "event_images", "events"
   add_foreign_key "event_offers", "events"
-  add_foreign_key "eventim_import_events", "import_sources"
   add_foreign_key "events", "users", column: "published_by_id"
   add_foreign_key "import_run_errors", "import_runs"
   add_foreign_key "import_runs", "import_sources"
   add_foreign_key "import_source_configs", "import_sources"
   add_foreign_key "login_attempts", "users"
-  add_foreign_key "reservix_import_events", "import_sources"
+  add_foreign_key "raw_event_imports", "import_sources"
   add_foreign_key "sessions", "users"
 end

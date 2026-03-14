@@ -3,7 +3,7 @@ require "test_helper"
 class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
   test "creates merge import run with metrics" do
     assert_difference -> { ImportRun.where(source_type: "merge").count }, 1 do
-      Merging::SyncImportedEventsJob.perform_now
+      Merging::SyncImportedEventsJob.perform_now(last_run_at: Time.zone.parse("2026-03-14 09:00:00"))
     end
 
     run = ImportRun.where(source_type: "merge").order(:created_at).last
@@ -19,6 +19,7 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     assert run.metadata.key?("events_created_count")
     assert run.metadata.key?("events_updated_count")
     assert run.metadata.key?("offers_upserted_count")
+    assert_equal "2026-03-14T09:00:00+01:00", run.metadata["last_run_at"]
   end
 
   test "stores import_run_error when merge sync fails" do
@@ -34,7 +35,7 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     sync_class.define_method(:new) { |*| failing_service }
 
     assert_raises RuntimeError do
-      Merging::SyncImportedEventsJob.perform_now
+      Merging::SyncImportedEventsJob.perform_now(last_run_at: Time.zone.parse("2026-03-14 09:00:00"))
     end
 
     run = ImportRun.where(source_type: "merge").order(:created_at).last
@@ -68,10 +69,13 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
       fake_service
     end
 
-    Merging::SyncImportedEventsJob.perform_now
+    expected_last_run_at = Time.zone.parse("2026-03-14 10:15:00")
+
+    Merging::SyncImportedEventsJob.perform_now(last_run_at: expected_last_run_at)
 
     run = ImportRun.where(source_type: "merge").order(:created_at).last
     assert_equal run.id, captured_merge_run_id
+    assert_equal expected_last_run_at.to_i, run.metadata.fetch("last_run_at").to_time.to_i
   ensure
     sync_class.alias_method :new, :__original_new_for_test
     sync_class.remove_method :__original_new_for_test

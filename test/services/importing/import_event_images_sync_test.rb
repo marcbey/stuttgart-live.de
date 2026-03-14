@@ -1,8 +1,15 @@
 require "test_helper"
 
 class Importing::ImportEventImagesSyncTest < ActiveSupport::TestCase
-  test "normalizes and deduplicates candidates for import records" do
-    record = eventim_import_events(:one)
+  test "normalizes and deduplicates candidates for events" do
+    record = Event.create!(
+      title: "Import Image Event",
+      artist_name: "Import Image Artist",
+      start_at: Time.zone.local(2026, 6, 1, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
 
     changed = Importing::ImportEventImagesSync.call(
       owner: record,

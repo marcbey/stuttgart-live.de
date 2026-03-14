@@ -6,9 +6,7 @@ class ImportSource < ApplicationRecord
 
   has_one :import_source_config, dependent: :destroy
   has_many :import_runs, dependent: :destroy
-  has_many :easyticket_import_events, dependent: :destroy
-  has_many :eventim_import_events, dependent: :destroy
-  has_many :reservix_import_events, dependent: :destroy
+  has_many :raw_event_imports, dependent: :destroy
 
   validates :name, presence: true
   validates :source_type, presence: true, inclusion: { in: SOURCE_TYPES }, uniqueness: true

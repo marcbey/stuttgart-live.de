@@ -39,9 +39,10 @@ module Importing
           end
 
           progress_changed = false
-
+          external_event_id = external_event_id_from_feed(feed_payload)
           state[:fetched_count] += 1
           progress_changed = true
+          next if external_event_id.blank?
 
           unless matcher.match?(feed_payload)
             add_filtered_out_city!(state[:filtered_out_cities], filtered_out_city_from_feed(feed_payload))
@@ -50,36 +51,13 @@ module Importing
 
           state[:filtered_count] += 1
 
-          projection = PayloadProjection.new(feed_payload: feed_payload)
-          attributes = projection.to_attributes
-          if attributes.nil?
-            state[:failed_count] += 1
-            next
-          end
-
-          existing_record = find_existing_import_event(attributes)
-          if unchanged_feed_payload?(existing_record, attributes[:source_payload_hash])
-            Importing::ImportEventImagesSync.call(
-              owner: existing_record,
-              source: "eventim",
-              candidates: projection.image_candidates
-            )
-            mark_existing_event_as_seen!(
-              record: existing_record,
-              feed_payload: feed_payload,
-              attributes: attributes,
-              seen_at: state[:run_started_at]
-            )
-            state[:imported_count] += 1
-            next
-          end
-
-          upsert_import_event!(
-            attributes: attributes,
-            feed_payload: feed_payload,
-            image_candidates: projection.image_candidates,
-            seen_at: state[:run_started_at]
+          RawEventImport.create!(
+            import_source: import_source,
+            import_event_type: import_source.source_type,
+            source_identifier: source_identifier_for(feed_payload, external_event_id: external_event_id),
+            payload: normalize_payload(feed_payload)
           )
+
           state[:imported_count] += 1
           state[:upserted_count] += 1
         rescue StandardError => e
@@ -89,7 +67,7 @@ module Importing
           create_import_run_error!(
             run: run,
             error: e,
-            external_event_id: external_event_id_from_feed(feed_payload),
+            external_event_id: external_event_id,
             payload: feed_payload
           )
         ensure
@@ -132,10 +110,6 @@ module Importing
           )
         end
 
-        return run.reload if run_canceled?(run)
-
-        deactivate_stale_events!(seen_at: state[:run_started_at])
-
         finalize_succeeded_run!(
           run,
           state,
@@ -161,68 +135,37 @@ module Importing
 
       private
 
-      attr_reader :import_source, :feed_fetcher, :run_metadata, :logger
-
-      def upsert_import_event!(attributes:, feed_payload:, image_candidates:, seen_at:)
-        record = EventimImportEvent.find_or_initialize_by(
-          import_source_id: import_source.id,
-          external_event_id: attributes[:external_event_id],
-          concert_date: attributes[:concert_date]
-        )
-
-        record.assign_attributes(
-          attributes.merge(
-            dump_payload: feed_payload,
-            detail_payload: {},
-            is_active: true,
-            first_seen_at: record.first_seen_at || seen_at,
-            last_seen_at: seen_at
-          )
-        )
-        record.save!
-        Importing::ImportEventImagesSync.call(
-          owner: record,
-          source: "eventim",
-          candidates: image_candidates
-        )
-      end
-
-      def deactivate_stale_events!(seen_at:)
-        import_source
-          .eventim_import_events
-          .where("last_seen_at < ? OR last_seen_at IS NULL", seen_at)
-          .update_all(is_active: false)
-      end
+      attr_reader :feed_fetcher, :import_source, :logger, :run_metadata
 
       def fail_stale_runs!(excluding_run_id: nil)
         fail_stale_runs_by_source!("eventim", excluding_run_id: excluding_run_id)
       end
 
-      def find_existing_import_event(attributes)
-        import_source.eventim_import_events.find_by(
-          external_event_id: attributes[:external_event_id],
-          concert_date: attributes[:concert_date]
-        )
+      def source_identifier_for(feed_payload, external_event_id:)
+        date_token =
+          parse_concert_date_from_feed(feed_payload)&.iso8601 ||
+          feed_payload["eventdate"].to_s.strip.presence ||
+          feed_payload["date"].to_s.strip.presence
+
+        [ external_event_id.presence || "eventim", date_token ].compact.join(":")
       end
 
-      def unchanged_feed_payload?(existing_record, source_payload_hash)
-        existing_record.present? && existing_record.source_payload_hash == source_payload_hash
-      end
+      def parse_concert_date_from_feed(feed_payload)
+        payload = normalize_payload(feed_payload)
+        Importing::Eventim::PayloadProjection::DATE_KEYS.each do |key|
+          raw = payload[key].to_s.strip
+          next if raw.blank?
 
-      def mark_existing_event_as_seen!(record:, feed_payload:, attributes:, seen_at:)
-        promoter_id = attributes[:promoter_id].to_s.strip.presence || record.promoter_id
+          return Date.parse(raw)
+        rescue ArgumentError, TypeError
+          next
+        end
 
-        record.update_columns(
-          dump_payload: feed_payload,
-          promoter_id: promoter_id,
-          is_active: true,
-          last_seen_at: seen_at,
-          updated_at: Time.current
-        )
+        nil
       end
 
       def external_event_id_from_feed(feed_payload)
-        hash = feed_payload.is_a?(Hash) ? feed_payload.deep_stringify_keys : {}
+        hash = normalize_payload(feed_payload)
         PayloadProjection::EVENT_ID_KEYS.each do |key|
           value = hash[key].to_s.strip
           return value if value.present?
@@ -232,7 +175,7 @@ module Importing
       end
 
       def filtered_out_city_from_feed(feed_payload)
-        hash = feed_payload.is_a?(Hash) ? feed_payload.deep_stringify_keys : {}
+        hash = normalize_payload(feed_payload)
         keys = Importing::Eventim::LocationMatcher::CITY_KEYS
 
         keys.each do |key|
@@ -241,6 +184,10 @@ module Importing
         end
 
         ""
+      end
+
+      def normalize_payload(payload)
+        payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
       end
 
       def run_completion_metadata(run:, location_whitelist:, filtered_out_cities:)

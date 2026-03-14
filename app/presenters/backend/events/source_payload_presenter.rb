@@ -1,13 +1,9 @@
 module Backend
   module Events
     class SourcePayloadPresenter
-      PayloadSource = Data.define(:source, :external_event_id, :dump_payload, :detail_payload) do
-        def formatted_dump_payload
-          SourcePayloadPresenter.pretty_json(dump_payload)
-        end
-
-        def formatted_detail_payload
-          SourcePayloadPresenter.pretty_json(detail_payload)
+      PayloadSource = Data.define(:source, :external_event_id, :payload) do
+        def formatted_payload
+          SourcePayloadPresenter.pretty_json(payload)
         end
       end
 
@@ -35,7 +31,7 @@ module Backend
         payload_sources.each do |payload_source|
           next unless payload_source.source == "eventim"
 
-          attributes = Importing::Eventim::PayloadProjection.new(feed_payload: payload_source.dump_payload).to_attributes
+          attributes = Importing::Eventim::PayloadProjection.new(feed_payload: payload_source.payload).to_attributes
           candidate = attributes&.dig(:promoter_id).to_s.strip
           return candidate if candidate.present?
         end
@@ -56,8 +52,7 @@ module Backend
             PayloadSource.new(
               source: source["source"].to_s.presence || "unbekannt",
               external_event_id: source["external_event_id"].to_s.presence,
-              dump_payload: raw_payload["dump_payload"] || {},
-              detail_payload: raw_payload["detail_payload"] || {}
+              payload: raw_payload || {}
             )
           end
         end

@@ -16,16 +16,16 @@
 
           <details class="payload-block"
                    data-controller="clipboard"
-                   data-clipboard-filename-value="<%= "#{payload_source.source}-#{payload_source.external_event_id.presence || event.id}-dump-payload.json".parameterize %>">
+                   data-clipboard-filename-value="<%= "#{payload_source.source}-#{payload_source.external_event_id.presence || event.id}-payload.json".parameterize %>">
             <summary>
-              <span>dump_payload</span>
+              <span>payload</span>
               <span class="payload-actions">
                 <button
                   type="button"
                   class="payload-copy-button"
                   data-action="click->clipboard#copy"
                   data-clipboard-target="copyButton"
-                  aria-label="dump_payload in Zwischenablage kopieren"
+                  aria-label="Payload in Zwischenablage kopieren"
                   title="In Zwischenablage kopieren">
                   <span class="payload-copy-button-icon payload-copy-button-icon-copy" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false">
@@ -45,7 +45,7 @@
                   class="payload-copy-button payload-download-button"
                   data-action="click->clipboard#download"
                   data-clipboard-target="downloadButton"
-                  aria-label="dump_payload herunterladen"
+                  aria-label="Payload herunterladen"
                   title="Herunterladen">
                   <span class="payload-copy-button-icon payload-download-button-icon-download" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false">
@@ -64,60 +64,7 @@
               </span>
             </summary>
             <p class="sr-only" role="status" aria-live="polite" data-clipboard-target="status"></p>
-            <pre class="payload-json" data-clipboard-target="source"><%= payload_source.formatted_dump_payload %></pre>
-          </details>
-
-          <details class="payload-block"
-                   data-controller="clipboard"
-                   data-clipboard-filename-value="<%= "#{payload_source.source}-#{payload_source.external_event_id.presence || event.id}-detail-payload.json".parameterize %>">
-            <summary>
-              <span>detail_payload</span>
-              <span class="payload-actions">
-                <button
-                  type="button"
-                  class="payload-copy-button"
-                  data-action="click->clipboard#copy"
-                  data-clipboard-target="copyButton"
-                  aria-label="detail_payload in Zwischenablage kopieren"
-                  title="In Zwischenablage kopieren">
-                  <span class="payload-copy-button-icon payload-copy-button-icon-copy" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false">
-                      <path d="M9 9.75A2.25 2.25 0 0 1 11.25 7.5h6A2.25 2.25 0 0 1 19.5 9.75v8.25a2.25 2.25 0 0 1-2.25 2.25h-6A2.25 2.25 0 0 1 9 18z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
-                      <path d="M6 15.75V6A2.25 2.25 0 0 1 8.25 3.75h7.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
-                    </svg>
-                  </span>
-                  <span class="payload-copy-button-icon payload-copy-button-icon-check" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false">
-                      <path d="m5 12.75 4.25 4.25L19 7.25" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1"/>
-                    </svg>
-                  </span>
-                  <span class="sr-only">In Zwischenablage kopieren</span>
-                </button>
-                <button
-                  type="button"
-                  class="payload-copy-button payload-download-button"
-                  data-action="click->clipboard#download"
-                  data-clipboard-target="downloadButton"
-                  aria-label="detail_payload herunterladen"
-                  title="Herunterladen">
-                  <span class="payload-copy-button-icon payload-download-button-icon-download" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false">
-                      <path d="M12 4.75v9" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9"/>
-                      <path d="m8.5 10.75 3.5 3.5 3.5-3.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9"/>
-                      <path d="M5.75 18.25h12.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.9"/>
-                    </svg>
-                  </span>
-                  <span class="payload-copy-button-icon payload-download-button-icon-check" aria-hidden="true">
-                    <svg viewBox="0 0 24 24" focusable="false">
-                      <path d="m5 12.75 4.25 4.25L19 7.25" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.1"/>
-                    </svg>
-                  </span>
-                  <span class="sr-only">Herunterladen</span>
-                </button>
-              </span>
-            </summary>
-            <p class="sr-only" role="status" aria-live="polite" data-clipboard-target="status"></p>
-            <pre class="payload-json" data-clipboard-target="source"><%= payload_source.formatted_detail_payload %></pre>
+            <pre class="payload-json" data-clipboard-target="source"><%= payload_source.formatted_payload %></pre>
           </details>
         </details>
       <% end %>

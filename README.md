@@ -39,7 +39,7 @@ Wichtige fachliche Bausteine sind dabei:
 
 - `Event` als zentrales Veröffentlichungsmodell
 - `EventImage`, `EventOffer` und `EventChangeLog` für ergänzende Event-Daten
-- `ImportSource`, `ImportRun` und anbieterspezifische Importmodelle für Rohdaten und Laufprotokolle
+- `ImportSource`, `ImportRun` und `RawEventImport` für Rohdaten, Importläufe und Laufprotokolle
 - `BlogPost` für redaktionelle Inhalte
 - `NewsletterSubscriber` für Newsletter-Anmeldungen
 
@@ -227,7 +227,7 @@ Event-Bestand lokal leeren, ohne die Importtabellen anzufassen:
 bin/rails events:maintenance:purge_all
 ```
 
-Der Task löscht `events` samt Relationen und event-bezogene `import_event_images`, lässt aber `easyticket_import_events`, `eventim_import_events` und `reservix_import_events` unverändert.
+Der Task löscht `events` samt Relationen und event-bezogene `import_event_images`, lässt aber `raw_event_imports` unverändert.
 
 ### Produktionsdatenbank neu aufsetzen
 

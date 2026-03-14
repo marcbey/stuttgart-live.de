@@ -10,20 +10,26 @@ module Merging
 
     ImportRecord = Data.define(
       :source,
+      :source_identifier,
       :external_event_id,
-      :concert_date,
-      :begin_time,
-      :city,
-      :venue_name,
-      :title,
       :artist_name,
+      :title,
+      :start_at,
+      :doors_at,
+      :city,
+      :venue,
       :promoter_id,
-      :description_text,
-      :ticket_url,
-      :ticket_price_text,
+      :badge_text,
+      :youtube_url,
+      :homepage_url,
+      :facebook_url,
+      :event_info,
       :min_price,
       :max_price,
       :images,
+      :genre,
+      :ticket_url,
+      :ticket_price_text,
       :raw_payload
     )
 
@@ -36,11 +42,12 @@ module Merging
       :position
     )
 
-    def initialize(merge_run_id: nil, logger: Rails.logger)
+    def initialize(merge_run_id: nil, last_run_at: nil, logger: Rails.logger)
       @merge_run_id = merge_run_id
+      @last_run_at = normalize_last_run_at(last_run_at)
       @logger = logger
       @priority_map = ProviderPriorityMap.call
-      @record_builder = RecordBuilder.new(priority_map: @priority_map)
+      @record_builder = RecordBuilder.new
       @event_upserter = EventUpserter.new(
         merge_run_id: @merge_run_id,
         logger: @logger,
@@ -49,7 +56,7 @@ module Merging
     end
 
     def call
-      records = record_builder.import_records
+      records = record_builder.import_records(last_run_at: last_run_at)
       groups = records.group_by { |record| fingerprint_for(record) }
 
       created = 0
@@ -57,8 +64,8 @@ module Merging
       offers_upserted = 0
 
       ActiveRecord::Base.transaction do
-        groups.each_value do |records|
-          ordered_records = ordered_records_for_group(records)
+        groups.each_value do |group_records|
+          ordered_records = ordered_records_for_group(group_records)
           _event, created_now, updated_now, offers_count = event_upserter.call(ordered_records)
           created += 1 if created_now
           updated += 1 if updated_now
@@ -77,13 +84,14 @@ module Merging
 
     private
 
-    attr_reader :event_upserter, :logger, :priority_map, :record_builder
+    attr_reader :event_upserter, :last_run_at, :logger, :priority_map, :record_builder
 
     def ordered_records_for_group(records)
       records.sort_by do |record|
         [
           priority_for(record.source),
           record.source.to_s,
+          record.source_identifier.to_s,
           record.external_event_id.to_s
         ]
       end
@@ -91,6 +99,17 @@ module Merging
 
     def fingerprint_for(record)
       DuplicationKey.for_record(record)
+    end
+
+    def normalize_last_run_at(value)
+      return value.in_time_zone if value.respond_to?(:in_time_zone)
+
+      raw_value = value.to_s.strip
+      return nil if raw_value.blank?
+
+      Time.zone.parse(raw_value)
+    rescue ArgumentError
+      nil
     end
 
     def priority_for(source)

@@ -10,10 +10,6 @@ module Importing
       test "parsing_error is a subclass of easyticket error" do
         assert ParsingError < Error
       end
-
-      test "run_already_active_error is a subclass of easyticket error" do
-        assert RunAlreadyActiveError < Error
-      end
     end
   end
 end

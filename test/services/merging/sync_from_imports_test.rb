@@ -1,373 +1,322 @@
 require "test_helper"
 
 class Merging::SyncFromImportsTest < ActiveSupport::TestCase
-  test "merges active easyticket and eventim records into a published event" do
+  setup do
+    RawEventImport.delete_all
+  end
+
+  test "merges easyticket and eventim raw imports into a published event" do
     source_easyticket = import_sources(:one)
     source_eventim = import_sources(:two)
 
-    date = Date.new(2026, 11, 10)
-
-    easy_record = source_easyticket.easyticket_import_events.create!(
-      external_event_id: "merge-easy-1",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "Im Wizemann",
-      title: "Metal Night",
-      artist_name: "Band A",
-      organizer_id: "382",
-      concert_date_label: "10.11.2026",
-      venue_label: "Stuttgart, Im Wizemann",
-      dump_payload: {
+    RawEventImport.create!(
+      import_source: source_easyticket,
+      import_event_type: "easyticket",
+      source_identifier: "merge-easy-1:2026-11-10",
+      payload: {
+        "event_id" => "merge-easy-1",
         "date_time" => "2026-11-10 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band A",
+        "title_2" => "Metal Night",
+        "organizer_id" => "382",
         "price_start" => 59.45,
         "price_end" => 86.70,
-        "description" => "<p>Easy Headline<br />Easy Line</p>"
-      },
-      detail_payload: {},
-      ticket_url: "https://example.com/easy",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-easy-1"
+        "description" => "<p>Easy Headline<br />Easy Line</p>",
+        "ticket_url" => "https://example.com/easy",
+        "data" => {
+          "location" => {
+            "name" => "Im Wizemann",
+            "city" => "Stuttgart"
+          },
+          "images" => {
+            "merge-easy-1" => {
+              "large" => "https://example.com/easy.jpg"
+            }
+          }
+        }
+      }
     )
 
-    easy_record.import_event_images.create!(
-      source: "easyticket",
-      image_type: "large",
-      image_url: "https://example.com/easy.jpg",
-      role: "cover",
-      aspect_hint: "landscape",
-      position: 0
-    )
-
-    eventim_record = source_eventim.eventim_import_events.create!(
-      external_event_id: "merge-eventim-1",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "Im Wizemann",
-      title: "Metal Night",
-      artist_name: "Band A",
-      promoter_id: "10135",
-      concert_date_label: "10.11.2026",
-      venue_label: "Stuttgart, Im Wizemann",
-      dump_payload: {
+    RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: "merge-eventim-1:2026-11-10",
+      payload: {
+        "eventid" => "merge-eventim-1",
+        "eventdate" => "2026-11-10",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Im Wizemann",
+        "eventname" => "Metal Night",
+        "artistname" => "Band A",
+        "promoterid" => "10135",
+        "eventlink" => "https://example.com/eventim",
+        "espicture_big" => "https://example.com/eventim.jpg",
         "pricecategory" => [
           { "price" => "58,84", "currency" => "EUR" },
-          { "price" => "47,84", "currency" => "EUR" },
           { "price" => "36,84", "currency" => "EUR" }
-        ],
-        "estext" => "Eventim fallback text"
-      },
-      detail_payload: {},
-      ticket_url: "https://example.com/eventim",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-eventim-1"
-    )
-
-    eventim_record.import_event_images.create!(
-      source: "eventim",
-      image_type: "espicture_big",
-      image_url: "https://example.com/eventim.jpg",
-      role: "cover",
-      aspect_hint: "landscape",
-      position: 0
+        ]
+      }
     )
 
     result = Merging::SyncFromImports.new.call
 
-    assert result.groups_count.positive?
-    assert result.import_records_count.positive?
+    assert_equal 2, result.import_records_count
+    assert_equal 1, result.groups_count
 
-    event = Event.find_by(artist_name: "Band A", start_at: Time.zone.local(2026, 11, 10, 20, 0, 0))
-    assert event.present?
+    event = Event.find_by!(artist_name: "Band A", start_at: Time.zone.local(2026, 11, 10, 20, 0, 0))
     assert_equal "easyticket", event.primary_source
     assert_equal "382", event.promoter_id
     assert_equal "published", event.status
     assert_equal true, event.auto_published
+    assert_equal "Easy Headline\nEasy Line", event.event_info
     assert_equal 2, event.event_offers.count
     assert_equal "59,45 - 86,70 EUR", event.event_offers.find_by(source: "easyticket")&.ticket_price_text
     assert_equal "36,84 - 58,84 EUR", event.event_offers.find_by(source: "eventim")&.ticket_price_text
-    assert_equal "Easy Headline\nEasy Line", event.event_info
     assert_equal 2, event.import_event_images.count
-    assert_equal 1, event.event_change_logs.where(action: "merged_create").count
-    assert_equal 0, event.event_change_logs.where(action: "merged_update").count
-
-    second_result = Merging::SyncFromImports.new.call
-    assert_equal 0, second_result.events_created_count
-    assert_equal 0, second_result.events_updated_count
-    assert_equal 0, second_result.offers_upserted_count
-    assert_equal 1, event.reload.event_change_logs.where(action: "merged_create").count
-    assert_equal 0, event.event_change_logs.where(action: "merged_update").count
+    assert_equal 2, event.source_snapshot.fetch("sources").size
   end
 
-  test "sets needs_review when import event has no image" do
-    source_easyticket = import_sources(:one)
-    date = Date.new(2026, 12, 1)
-
-    source_easyticket.easyticket_import_events.create!(
-      external_event_id: "merge-easy-no-image",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "LKA Longhorn",
-      title: "No Image Night",
-      artist_name: "Band Without Image",
-      organizer_id: "382",
-      concert_date_label: "01.12.2026",
-      venue_label: "Stuttgart, LKA Longhorn",
-      dump_payload: {},
-      detail_payload: {},
-      ticket_url: "https://example.com/easy-no-image",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-easy-no-image"
+  test "sets needs_review when merged raw imports do not provide an image" do
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "merge-no-image:2026-12-01",
+      payload: {
+        "event_id" => "merge-no-image",
+        "date_time" => "2026-12-01 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "LKA Longhorn",
+        "title_1" => "Band Without Image",
+        "title_2" => "No Image Night"
+      }
     )
 
     Merging::SyncFromImports.new.call
 
-    event = Event.find_by(artist_name: "Band Without Image", start_at: Time.zone.local(2026, 12, 1, 20, 0, 0))
-    assert event.present?
+    event = Event.find_by!(artist_name: "Band Without Image")
     assert_equal "needs_review", event.status
     assert_equal false, event.auto_published
     assert_includes event.completeness_flags, "missing_image"
   end
 
-  test "uses easyticket dump_payload date_time as event begin time" do
-    source_easyticket = import_sources(:one)
-    date = Date.new(2026, 12, 2)
+  test "deduplicates sources by normalized artist_name and start_at" do
+    source_reservix = ImportSource.ensure_reservix_source!
 
-    source_easyticket.easyticket_import_events.create!(
-      external_event_id: "merge-easy-begin-time",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "LKA Longhorn",
-      title: "Begin Time Night",
-      artist_name: "Band Begin Easy",
-      organizer_id: "382",
-      concert_date_label: "02.12.2026",
-      venue_label: "Stuttgart, LKA Longhorn",
-      dump_payload: { "date_time" => "2026-12-02 19:30:00" },
-      detail_payload: {},
-      ticket_url: "https://example.com/easy-begin-time",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-easy-begin-time"
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "dup-easy:2026-12-14",
+      payload: {
+        "event_id" => "dup-easy",
+        "date_time" => "2026-12-14 19:30:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "CAFÉ DEL MUNDO",
+        "title_2" => "Live"
+      }
     )
 
-    Merging::SyncFromImports.new.call
-
-    event = Event.find_by(artist_name: "Band Begin Easy")
-    assert event.present?
-    assert_equal Time.zone.local(2026, 12, 2, 19, 30, 0), event.start_at
-  end
-
-  test "uses eventim dump_payload eventtime as event begin time" do
-    source_eventim = import_sources(:two)
-    date = Date.new(2026, 12, 3)
-
-    source_eventim.eventim_import_events.create!(
-      external_event_id: "merge-eventim-begin-time",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "Porsche Arena",
-      title: "Begin Time Gala",
-      artist_name: "Band Begin Eventim",
-      promoter_id: "10135",
-      concert_date_label: "03.12.2026",
-      venue_label: "Stuttgart, Porsche Arena",
-      dump_payload: { "eventtime" => "18:45" },
-      detail_payload: {},
-      ticket_url: "https://example.com/eventim-begin-time",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-eventim-begin-time"
-    )
-
-    Merging::SyncFromImports.new.call
-
-    event = Event.find_by(artist_name: "Band Begin Eventim")
-    assert event.present?
-    assert_equal Time.zone.local(2026, 12, 3, 18, 45, 0), event.start_at
-  end
-
-  test "merges records with normalized artist_name and same start_at" do
-    source_easyticket = import_sources(:one)
-    source_reservix = ImportSource.create!(name: "Reservix Matching", source_type: "reservix", active: true)
-    date = Date.new(2026, 12, 14)
-    start_at = Time.zone.local(2026, 12, 14, 19, 30, 0)
-
-    source_easyticket.easyticket_import_events.create!(
-      external_event_id: "merge-normalized-artist-easy",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "Im Wizemann",
-      title: "Live",
-      artist_name: "CAFÉ DEL MUNDO",
-      organizer_id: "382",
-      concert_date_label: "14.12.2026",
-      venue_label: "Stuttgart, Im Wizemann",
-      dump_payload: { "date_time" => "2026-12-14 19:30:00" },
-      detail_payload: {},
-      ticket_url: "https://example.com/normalized-artist-easy",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-normalized-artist-easy"
-    )
-
-    source_reservix.reservix_import_events.create!(
-      external_event_id: "merge-normalized-artist-reservix",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "LKA Longhorn",
-      title: "Live",
-      artist_name: "Cafe del Mundo",
-      concert_date_label: "14.12.2026",
-      venue_label: "Stuttgart, LKA Longhorn",
-      dump_payload: {
-        "id" => "merge-normalized-artist-reservix",
+    RawEventImport.create!(
+      import_source: source_reservix,
+      import_event_type: "reservix",
+      source_identifier: "dup-reservix",
+      payload: {
+        "id" => "dup-reservix",
         "name" => "Live",
         "artist" => "Cafe del Mundo",
+        "bookable" => true,
         "startdate" => "2026-12-14",
         "starttime" => "19:30",
-        "minPrice" => "42.00",
-        "maxPrice" => "42.00",
+        "affiliateSaleUrl" => "https://example.com/reservix",
         "references" => {
-          "venue" => [ { "name" => "LKA Longhorn", "city" => "Stuttgart" } ]
+          "venue" => [ { "name" => "LKA Longhorn", "city" => "Stuttgart" } ],
+          "image" => [
+            {
+              "url" => "https://example.com/reservix.jpg",
+              "type" => 1
+            }
+          ]
         }
-      },
-      detail_payload: {},
-      ticket_url: "https://example.com/normalized-artist-reservix",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-normalized-artist-reservix"
+      }
     )
 
     Merging::SyncFromImports.new.call
 
-    assert_equal 1, Event.where(start_at: start_at).where(artist_name: "CAFÉ DEL MUNDO").count
-    event = Event.find_by!(artist_name: "CAFÉ DEL MUNDO", start_at: start_at)
+    event = Event.find_by!(artist_name: "CAFÉ DEL MUNDO", start_at: Time.zone.local(2026, 12, 14, 19, 30, 0))
     assert_equal 2, event.event_offers.count
   end
 
-  test "uses eventim pricecategory object for ticket price text" do
-    source_eventim = import_sources(:two)
-    date = Date.new(2026, 12, 4)
+  test "incremental merge updates only the allowed event fields" do
+    source = import_sources(:one)
+    initial_time = Time.zone.parse("2026-03-14 09:00:00")
+    incremental_time = Time.zone.parse("2026-03-14 11:00:00")
 
-    source_eventim.eventim_import_events.create!(
-      external_event_id: "merge-eventim-price-object",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "Porsche Arena",
-      title: "Price Object Show",
-      artist_name: "Band Price Object",
-      promoter_id: "10135",
-      concert_date_label: "04.12.2026",
-      venue_label: "Stuttgart, Porsche Arena",
-      dump_payload: {
-        "eventtime" => "19:15",
-        "pricecategory" => { "price" => "72,50", "currency" => "EUR" }
-      },
-      detail_payload: {},
-      ticket_url: "https://example.com/eventim-price-object",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-eventim-price-object"
+    first_raw = RawEventImport.create!(
+      import_source: source,
+      import_event_type: "easyticket",
+      source_identifier: "update-easy:2026-12-20",
+      payload: {
+        "event_id" => "update-easy",
+        "date_time" => "2026-12-20 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band Update",
+        "title_2" => "Original Title",
+        "price_start" => 40,
+        "price_end" => 50,
+        "data" => {
+          "images" => {
+            "update-easy" => {
+              "large" => "https://example.com/update.jpg"
+            }
+          }
+        }
+      }
     )
+    first_raw.update_columns(created_at: initial_time, updated_at: initial_time)
 
     Merging::SyncFromImports.new.call
 
-    event = Event.find_by(artist_name: "Band Price Object")
-    assert event.present?
-    offer = event.event_offers.find_by(source: "eventim")
-    assert_equal "72,50 EUR", offer&.ticket_price_text
+    event = Event.find_by!(artist_name: "Band Update")
+    event_id = event.id
+
+    second_raw = RawEventImport.create!(
+      import_source: source,
+      import_event_type: "easyticket",
+      source_identifier: "update-easy:2026-12-20",
+      payload: {
+        "event_id" => "update-easy",
+        "date_time" => "2026-12-20 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Porsche Arena",
+        "title_1" => "Band Update",
+        "title_2" => "Changed Title",
+        "badge_text" => "Ausverkauft fast",
+        "price_start" => 45,
+        "price_end" => 55,
+        "data" => {
+          "images" => {
+            "update-easy" => {
+              "large" => "https://example.com/update.jpg"
+            }
+          }
+        }
+      }
+    )
+    second_raw.update_columns(created_at: incremental_time, updated_at: incremental_time)
+
+    result = Merging::SyncFromImports.new(last_run_at: Time.zone.parse("2026-03-14 10:00:00")).call
+
+    updated_event = Event.find(event_id)
+    assert_equal 1, result.events_updated_count
+    assert_equal "Original Title", updated_event.title
+    assert_equal "Porsche Arena", updated_event.venue
+    assert_equal "Ausverkauft fast", updated_event.badge_text
+    assert_equal BigDecimal("45"), updated_event.min_price
+    assert_equal BigDecimal("55"), updated_event.max_price
   end
 
-  test "uses eventim estext as event description when easyticket text is missing" do
-    source_eventim = import_sources(:two)
-    date = Date.new(2026, 12, 5)
+  test "incremental merge updates start_at by matching the prior source snapshot" do
+    source = import_sources(:one)
+    initial_time = Time.zone.parse("2026-03-14 09:00:00")
+    incremental_time = Time.zone.parse("2026-03-14 11:00:00")
 
-    source_eventim.eventim_import_events.create!(
-      external_event_id: "merge-eventim-description",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "Porsche Arena",
-      title: "Description Show",
-      artist_name: "Band Description Eventim",
-      promoter_id: "10135",
-      concert_date_label: "05.12.2026",
-      venue_label: "Stuttgart, Porsche Arena",
-      dump_payload: {
-        "eventtime" => "20:00",
-        "estext" => "Eventim Description<br>Line 2"
-      },
-      detail_payload: {},
-      ticket_url: "https://example.com/eventim-description",
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-eventim-description"
+    first_raw = RawEventImport.create!(
+      import_source: source,
+      import_event_type: "easyticket",
+      source_identifier: "move-time:2026-12-21",
+      payload: {
+        "event_id" => "move-time",
+        "date_time" => "2026-12-21 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band Move",
+        "title_2" => "Time Shift",
+        "data" => {
+          "images" => {
+            "move-time" => {
+              "large" => "https://example.com/move-time.jpg"
+            }
+          }
+        }
+      }
     )
+    first_raw.update_columns(created_at: initial_time, updated_at: initial_time)
 
     Merging::SyncFromImports.new.call
 
-    event = Event.find_by(artist_name: "Band Description Eventim")
-    assert event.present?
-    assert_equal "Eventim Description\nLine 2", event.event_info
+    event = Event.find_by!(artist_name: "Band Move")
+    event_id = event.id
+
+    second_raw = RawEventImport.create!(
+      import_source: source,
+      import_event_type: "easyticket",
+      source_identifier: "move-time:2026-12-21",
+      payload: {
+        "event_id" => "move-time",
+        "date_time" => "2026-12-21 21:15:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band Move",
+        "title_2" => "Time Shift",
+        "data" => {
+          "images" => {
+            "move-time" => {
+              "large" => "https://example.com/move-time.jpg"
+            }
+          }
+        }
+      }
+    )
+    second_raw.update_columns(created_at: incremental_time, updated_at: incremental_time)
+
+    Merging::SyncFromImports.new(last_run_at: Time.zone.parse("2026-03-14 10:00:00")).call
+
+    updated_event = Event.find(event_id)
+    assert_equal Time.zone.local(2026, 12, 21, 21, 15, 0), updated_event.start_at
+    assert_equal updated_event.source_fingerprint,
+      [
+        Merging::SyncFromImports::DuplicationKey.normalize_artist_name("Band Move"),
+        updated_event.start_at.iso8601
+      ].join("::")
   end
 
-  test "merges reservix prices into event and offer" do
-    source_reservix = ImportSource.create!(name: "Reservix", source_type: "reservix", active: true)
-    date = Date.new(2026, 12, 6)
+  test "uses easyticket detail_payload images when payload has no image" do
+    source_easyticket = import_sources(:one)
 
-    record = source_reservix.reservix_import_events.create!(
-      external_event_id: "merge-reservix-1",
-      concert_date: date,
-      city: "Stuttgart",
-      venue_name: "Liederhalle",
-      title: "Reservix Pricing Night",
-      artist_name: "Band Reservix",
-      concert_date_label: "06.12.2026",
-      venue_label: "Stuttgart, Liederhalle",
-      dump_payload: {
-        "starttime" => "19:00",
-        "description" => "Reservix Description"
+    RawEventImport.create!(
+      import_source: source_easyticket,
+      import_event_type: "easyticket",
+      source_identifier: "merge-easy-detail-image:2026-12-24",
+      payload: {
+        "event_id" => "merge-easy-detail-image",
+        "date_time" => "2026-12-24 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band Detail",
+        "title_2" => "Detail Image Night",
+        "ticket_url" => "https://example.com/easy-detail"
       },
-      detail_payload: {},
-      ticket_url: "https://example.com/reservix",
-      min_price: 22.5,
-      max_price: 39.9,
-      is_active: true,
-      first_seen_at: Time.current,
-      last_seen_at: Time.current,
-      source_payload_hash: "hash-reservix-1"
-    )
-
-    record.import_event_images.create!(
-      source: "reservix",
-      image_type: "image",
-      image_url: "https://example.com/reservix.jpg",
-      role: "cover",
-      aspect_hint: "landscape",
-      position: 0
+      detail_payload: {
+        "data" => {
+          "images" => [
+            {
+              "paths" => [
+                { "type" => "detail_path", "url" => "https://example.com/easy-detail-image.jpg" }
+              ]
+            }
+          ]
+        }
+      }
     )
 
     Merging::SyncFromImports.new.call
 
-    event = Event.find_by(artist_name: "Band Reservix")
-    assert event.present?
-    assert_equal BigDecimal("22.5"), event.min_price
-    assert_equal BigDecimal("39.9"), event.max_price
-    assert_equal "Reservix Description", event.event_info
-    assert_equal Time.zone.local(2026, 12, 6, 19, 0, 0), event.start_at
-
-    offer = event.event_offers.find_by(source: "reservix")
-    assert_equal "22,50 - 39,90 EUR", offer&.ticket_price_text
+    event = Event.find_by!(artist_name: "Band Detail")
+    assert_equal "published", event.status
+    assert_equal [ "https://example.com/easy-detail-image.jpg" ], event.import_event_images.ordered.pluck(:image_url)
   end
 end

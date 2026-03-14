@@ -1,6 +1,6 @@
 namespace :events do
   namespace :maintenance do
-    desc "Delete all events and event relations while keeping import event tables"
+    desc "Delete all events and event relations while keeping raw event imports"
     task purge_all: :environment do
       ActiveRecord::Base.transaction do
         EventImage.delete_all
@@ -18,9 +18,7 @@ namespace :events do
       puts "event_change_logs=#{EventChangeLog.count}"
       puts "event_images=#{EventImage.count}"
       puts "event_import_images=#{ImportEventImage.where(import_class: 'Event').count}"
-      puts "easyticket_import_events=#{EasyticketImportEvent.count}"
-      puts "eventim_import_events=#{EventimImportEvent.count}"
-      puts "reservix_import_events=#{ReservixImportEvent.count}"
+      puts "raw_event_imports=#{RawEventImport.count}"
     end
   end
 end

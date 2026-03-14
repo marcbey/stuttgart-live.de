@@ -1,4 +1,3 @@
-require "digest"
 require "set"
 
 module Importing
@@ -53,9 +52,11 @@ module Importing
               end
 
               progress_changed = false
-              projection = PayloadProjection.new(event_payload: event_payload)
+              payload = normalize_payload(event_payload)
+              projection = PayloadProjection.new(event_payload: payload)
               modified_at = projection.modified_at
-              external_event_id = event_payload["id"].to_s.strip
+              external_event_id = payload["id"].to_s.strip
+              next if external_event_id.blank?
 
               advance_checkpoint_tracker!(
                 state[:checkpoint_tracker],
@@ -70,50 +71,22 @@ module Importing
                 next
               end
 
-              unless matcher.match?(event_payload)
-                add_filtered_out_city!(state[:filtered_out_cities], filtered_out_city_from_payload(event_payload))
+              unless matcher.match?(payload)
+                add_filtered_out_city!(state[:filtered_out_cities], filtered_out_city_from_payload(payload))
                 next
               end
 
-              unless projection.bookable?
-                if deactivate_existing_import_event!(event_payload: event_payload, seen_at: state[:run_started_at])
-                  state[:upserted_count] += 1
-                  progress_changed = true
-                end
-                next
-              end
+              next unless projection.bookable?
 
               state[:filtered_count] += 1
 
-              attributes = projection.to_attributes
-              if attributes.nil?
-                state[:failed_count] += 1
-                next
-              end
-
-              existing_record = find_existing_import_event(attributes[:external_event_id])
-              if unchanged_payload?(existing_record, attributes[:source_payload_hash])
-                Importing::ImportEventImagesSync.call(
-                  owner: existing_record,
-                  source: "reservix",
-                  candidates: projection.image_candidates
-                )
-                mark_existing_event_as_seen!(
-                  record: existing_record,
-                  event_payload: event_payload,
-                  attributes: attributes,
-                  seen_at: state[:run_started_at]
-                )
-                state[:imported_count] += 1
-                next
-              end
-
-              upsert_import_event!(
-                attributes: attributes,
-                event_payload: event_payload,
-                image_candidates: projection.image_candidates,
-                seen_at: state[:run_started_at]
+              RawEventImport.create!(
+                import_source: import_source,
+                import_event_type: import_source.source_type,
+                source_identifier: external_event_id,
+                payload: payload
               )
+
               state[:imported_count] += 1
               state[:upserted_count] += 1
             rescue StandardError => e
@@ -124,7 +97,7 @@ module Importing
                 run: run,
                 error: e,
                 external_event_id: external_event_id,
-                payload: event_payload
+                payload: payload
               )
             ensure
               next unless progress_changed
@@ -155,8 +128,6 @@ module Importing
           )
         end
 
-        return run.reload if run_canceled?(run)
-
         persist_checkpoint!(state[:checkpoint_tracker])
 
         finalize_succeeded_run!(
@@ -186,82 +157,14 @@ module Importing
 
       private
 
-      attr_reader :import_source, :event_fetcher, :run_metadata, :logger
-
-      def upsert_import_event!(attributes:, event_payload:, image_candidates:, seen_at:)
-        record = find_existing_import_event(attributes[:external_event_id]) || import_source.reservix_import_events.new
-
-        record.assign_attributes(
-          attributes.merge(
-            dump_payload: event_payload,
-            detail_payload: {},
-            is_active: true,
-            first_seen_at: record.first_seen_at || seen_at,
-            last_seen_at: seen_at
-          )
-        )
-        record.save!
-        Importing::ImportEventImagesSync.call(
-          owner: record,
-          source: "reservix",
-          candidates: image_candidates
-        )
-      end
+      attr_reader :event_fetcher, :import_source, :logger, :run_metadata
 
       def fail_stale_runs!(excluding_run_id: nil)
         fail_stale_runs_by_source!("reservix", excluding_run_id: excluding_run_id)
       end
 
-      def find_existing_import_event(external_event_id)
-        import_source.reservix_import_events.find_by(external_event_id: external_event_id)
-      end
-
-      def unchanged_payload?(existing_record, source_payload_hash)
-        existing_record.present? && existing_record.source_payload_hash == source_payload_hash
-      end
-
-      def mark_existing_event_as_seen!(record:, event_payload:, attributes:, seen_at:)
-        record.update_columns(
-          concert_date: attributes[:concert_date],
-          concert_date_label: attributes[:concert_date_label],
-          city: attributes[:city],
-          venue_name: attributes[:venue_name],
-          venue_label: attributes[:venue_label],
-          title: attributes[:title],
-          artist_name: attributes[:artist_name],
-          min_price: attributes[:min_price],
-          max_price: attributes[:max_price],
-          ticket_url: attributes[:ticket_url],
-          dump_payload: event_payload,
-          is_active: true,
-          last_seen_at: seen_at,
-          updated_at: Time.current
-        )
-      end
-
-      def deactivate_existing_import_event!(event_payload:, seen_at:)
-        external_event_id = event_payload["id"].to_s.strip
-        return false if external_event_id.blank?
-
-        record = find_existing_import_event(external_event_id)
-        return false unless record.present?
-
-        source_payload_hash = Digest::SHA256.hexdigest((event_payload || {}).to_json)
-        changed = !record.is_active? || record.source_payload_hash != source_payload_hash
-
-        record.update_columns(
-          dump_payload: event_payload,
-          source_payload_hash: source_payload_hash,
-          is_active: false,
-          last_seen_at: seen_at,
-          updated_at: Time.current
-        )
-
-        changed
-      end
-
       def filtered_out_city_from_payload(event_payload)
-        payload = event_payload.is_a?(Hash) ? event_payload.deep_stringify_keys : {}
+        payload = normalize_payload(event_payload)
         references = payload["references"].is_a?(Hash) ? payload["references"].deep_stringify_keys : {}
         venue = Array(references["venue"]).find { |entry| entry.is_a?(Hash) }&.deep_stringify_keys || {}
 
@@ -296,19 +199,16 @@ module Importing
         checkpoint_time = checkpoint[:modified_at]
         return false if checkpoint_time.nil? || modified_at.nil?
 
-        if modified_at < checkpoint_time
-          true
-        elsif modified_at > checkpoint_time
-          false
-        else
-          event_id_comparable_value(event_id) <= event_id_comparable_value(checkpoint[:last_processed_event_id])
-        end
+        return true if modified_at < checkpoint_time
+        return false if modified_at > checkpoint_time
+
+        checkpoint[:last_processed_event_id].present? && event_id <= checkpoint[:last_processed_event_id]
       end
 
       def checkpoint_tracker_for(checkpoint)
         {
           modified_at: checkpoint[:modified_at],
-          last_processed_event_id: checkpoint[:last_processed_event_id].to_s.strip
+          last_processed_event_id: checkpoint[:last_processed_event_id].to_s
         }
       end
 
@@ -316,27 +216,26 @@ module Importing
         return if modified_at.nil?
 
         current_modified_at = tracker[:modified_at]
-        normalized_event_id = event_id.to_s.strip
 
         if current_modified_at.nil? || modified_at > current_modified_at
           tracker[:modified_at] = modified_at
-          tracker[:last_processed_event_id] = normalized_event_id
-        elsif modified_at == current_modified_at && normalized_event_id.present? &&
-            event_id_comparable_value(normalized_event_id) > event_id_comparable_value(tracker[:last_processed_event_id])
-          tracker[:last_processed_event_id] = normalized_event_id
+          tracker[:last_processed_event_id] = event_id.to_s
+        elsif current_modified_at == modified_at
+          tracker[:last_processed_event_id] = event_id.to_s if event_id.present?
         end
       end
 
-      def persist_checkpoint!(checkpoint_tracker)
-        modified_at = checkpoint_tracker[:modified_at]
-        return if modified_at.nil?
-
+      def persist_checkpoint!(tracker)
         config = import_source.import_source_config || import_source.build_import_source_config
         config.reservix_checkpoint = {
-          "lastupdate" => modified_at.iso8601,
-          "last_processed_event_id" => checkpoint_tracker[:last_processed_event_id].to_s.strip
+          "lastupdate" => tracker[:modified_at]&.iso8601,
+          "last_processed_event_id" => tracker[:last_processed_event_id]
         }
         config.save!
+      end
+
+      def normalize_payload(payload)
+        payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
       end
 
       def run_completion_metadata(run:, location_whitelist:, filtered_out_cities:, checkpoint_tracker:)
@@ -345,26 +244,15 @@ module Importing
           "filtered_out_cities" => filtered_out_cities.to_a.sort
         )
 
-        checkpoint_value = checkpoint_metadata(checkpoint_tracker)
-        metadata["reservix_checkpoint"] = checkpoint_value if checkpoint_value.present?
-        metadata
-      end
-
-      def checkpoint_metadata(checkpoint_tracker)
         modified_at = checkpoint_tracker[:modified_at]
-        return {} if modified_at.nil?
+        return metadata if modified_at.nil?
 
-        {
-          "lastupdate" => modified_at.iso8601,
-          "last_processed_event_id" => checkpoint_tracker[:last_processed_event_id].to_s.strip
-        }
-      end
-
-      def event_id_comparable_value(value)
-        raw = value.to_s.strip
-        return -1 if raw.blank?
-
-        Integer(raw, exception: false) || raw
+        metadata.merge(
+          "checkpoint" => {
+            "lastupdate" => modified_at.iso8601,
+            "last_processed_event_id" => checkpoint_tracker[:last_processed_event_id].to_s
+          }
+        )
       end
     end
   end

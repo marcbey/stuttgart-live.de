@@ -2,8 +2,8 @@ module Merging
   class ProviderPriorityMap
     FALLBACK_PRIORITIES = {
       "easyticket" => 0,
-      "reservix" => 10,
-      "eventim" => 20
+      "eventim" => 10,
+      "reservix" => 20
     }.freeze
 
     def self.call

@@ -18,11 +18,12 @@ module Importing
             ImportSource.ensure_reservix_source!
           end
 
-        Importing::Reservix::Importer.new(
+        run = Importing::Reservix::Importer.new(
           import_source: source,
           preexisting_run_id: import_run_id,
           run_metadata: run_metadata_for_execution
         ).call
+        run
       end
 
       private

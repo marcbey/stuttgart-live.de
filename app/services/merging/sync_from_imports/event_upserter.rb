@@ -13,22 +13,10 @@ module Merging
         primary = records.first
         fingerprint = fingerprint_for(primary)
 
-        event = Event.find_or_initialize_by(source_fingerprint: fingerprint)
+        event = find_existing_event(records, fingerprint) || Event.new
         created_now = event.new_record?
 
-        event.title = first_present(records, &:title)
-        event.artist_name = first_present(records, &:artist_name)
-        event.city = first_present(records, &:city)
-        event.venue = first_present(records, &:venue_name)
-        event.promoter_id = first_present(records, &:promoter_id).presence
-        event.min_price = first_present_decimal(records, &:min_price)
-        event.max_price = first_present_decimal(records, &:max_price)
-        imported_description_text = first_present_or_nil(records, &:description_text)
-        event.event_info = imported_description_text if imported_description_text.present?
-        event.start_at = start_at_for(primary.concert_date, primary.begin_time)
-        event.primary_source = primary.source
-        event.source_snapshot = build_source_snapshot(records)
-        updated_now = event.changed?
+        assign_event_attributes(event, records, fingerprint:, created_now:)
 
         merged_images = merged_image_candidates(records)
         offers = build_offer_attributes(records)
@@ -37,9 +25,11 @@ module Merging
         event.completeness_score = completeness.score
         event.completeness_flags = completeness.flags
 
-        apply_status_rules(event, completeness, images_present: images_present)
-        updated_now ||= event.changed?
-        event.save! if created_now || updated_now
+        apply_status_rules(event, created_now:, images_present:)
+        updated_now = event.changed? && !created_now
+
+        event.save! if created_now || event.changed?
+        sync_genre!(event, records, created_now:)
 
         offers_upserted = sync_offers!(event, offers)
         images_changed = sync_event_images!(event, merged_images)
@@ -64,19 +54,79 @@ module Merging
 
       attr_reader :logger, :merge_run_id, :priority_map
 
-      def apply_status_rules(event, completeness, images_present:)
-        return if event.status == "rejected"
-        return if event.published? && !event.auto_published?
+      def assign_event_attributes(event, records, fingerprint:, created_now:)
+        event.source_fingerprint = fingerprint
+        event.primary_source = records.first.source
+        event.source_snapshot = build_source_snapshot(records)
 
-        if completeness.ready_for_publish? && images_present
-          event.status = "published"
-          event.auto_published = true
-          event.sync_publication_fields
-        else
-          event.status = "needs_review"
-          event.auto_published = false
-          event.published_at = nil if event.published_by_id.nil?
+        if created_now
+          event.title = first_present(records, &:title)
+          event.artist_name = first_present(records, &:artist_name)
+          event.city = first_present_or_nil(records, &:city)
+          event.promoter_id = first_present_or_nil(records, &:promoter_id)
+          event.doors_at = first_present_time(records, &:doors_at)
+          event.youtube_url = first_present_or_nil(records, &:youtube_url)
+          event.homepage_url = first_present_or_nil(records, &:homepage_url)
+          event.facebook_url = first_present_or_nil(records, &:facebook_url)
+          imported_description_text = first_present_or_nil(records, &:event_info)
+          event.event_info = imported_description_text if imported_description_text.present?
         end
+
+        event.start_at = first_present_time(records, &:start_at)
+        event.venue = first_present(records, &:venue)
+        event.badge_text = first_present_or_nil(records, &:badge_text)
+        event.min_price = first_present_decimal(records, &:min_price)
+        event.max_price = first_present_decimal(records, &:max_price)
+      end
+
+      def apply_status_rules(event, created_now:, images_present:)
+        return if event.status == "rejected"
+
+        if created_now
+          if auto_publishable?(event, images_present:)
+            event.status = "published"
+            event.auto_published = true
+            event.sync_publication_fields
+          else
+            event.status = "needs_review"
+            event.auto_published = false
+            event.published_at = nil if event.published_by_id.nil?
+          end
+          return
+        end
+
+        return unless event.published? && event.auto_published?
+        return if auto_publishable?(event, images_present:)
+
+        event.status = "needs_review"
+        event.auto_published = false
+        event.published_at = nil if event.published_by_id.nil?
+      end
+
+      def auto_publishable?(event, images_present:)
+        event.artist_name.present? &&
+          event.title.present? &&
+          event.start_at.present? &&
+          event.city.present? &&
+          event.venue.present? &&
+          images_present
+      end
+
+      def find_existing_event(records, fingerprint)
+        Event.find_by(source_fingerprint: fingerprint) || find_by_source_snapshot(records)
+      end
+
+      def find_by_source_snapshot(records)
+        records.each do |record|
+          event =
+            Event.where(
+              "source_snapshot -> 'sources' @> ?",
+              [ { "source" => record.source, "external_event_id" => record.external_event_id } ].to_json
+            ).first
+          return event if event.present?
+        end
+
+        nil
       end
 
       def sync_offers!(event, offers)
@@ -140,8 +190,15 @@ module Merging
         Importing::ImportEventImagesSync.call(owner: event, candidates: candidates)
       end
 
-      def start_at_for(concert_date, begin_time)
-        DuplicationKey.start_at_for(concert_date, begin_time)
+      def sync_genre!(event, records, created_now:)
+        genre_name = first_present_or_nil(records, &:genre)
+        return if genre_name.blank?
+        return unless created_now || event.genres.empty?
+
+        genre = Genre.find_or_create_by!(name: genre_name) do |record|
+          record.slug = genre_name.parameterize
+        end
+        event.genres = [ genre ]
       end
 
       def fingerprint_for(record)
@@ -154,19 +211,23 @@ module Merging
             records.map do |record|
               {
                 "source" => record.source,
+                "source_identifier" => record.source_identifier,
                 "external_event_id" => record.external_event_id,
-                "concert_date" => record.concert_date.iso8601,
-                "begin_time" => record.begin_time,
-                "city" => record.city,
-                "venue_name" => record.venue_name,
-                "title" => record.title,
                 "artist_name" => record.artist_name,
+                "title" => record.title,
+                "start_at" => record.start_at&.iso8601,
+                "doors_at" => record.doors_at&.iso8601,
+                "city" => record.city,
+                "venue" => record.venue,
                 "promoter_id" => record.promoter_id,
-                "description_text" => record.description_text,
-                "ticket_url" => record.ticket_url,
-                "ticket_price_text" => record.ticket_price_text,
+                "badge_text" => record.badge_text,
+                "youtube_url" => record.youtube_url,
+                "homepage_url" => record.homepage_url,
+                "facebook_url" => record.facebook_url,
+                "event_info" => record.event_info,
                 "min_price" => decimal_as_json(record.min_price),
                 "max_price" => decimal_as_json(record.max_price),
+                "genre" => record.genre,
                 "images" =>
                   record.images.map do |image|
                     {
@@ -207,6 +268,15 @@ module Merging
           value = yield(record)
           decimal = normalize_decimal(value)
           return decimal if decimal.present?
+        end
+
+        nil
+      end
+
+      def first_present_time(records)
+        records.each do |record|
+          value = yield(record)
+          return value if value.present?
         end
 
         nil
