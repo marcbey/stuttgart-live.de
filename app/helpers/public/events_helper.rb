@@ -65,12 +65,12 @@ module Public::EventsHelper
     end
   end
 
-  def public_event_detail_path(event, browse_state, view: browse_state.view)
-    event_path(event.slug, **browse_state.route_params(view: view))
+  def public_event_detail_path(event, browse_state)
+    event_path(event.slug, **browse_state.route_params)
   end
 
-  def public_events_index_path(browse_state, page: nil, view: browse_state.view, format: nil)
-    events_path(**browse_state.route_params(page: page, view: view, format: format))
+  def public_events_index_path(browse_state, page: nil, format: nil)
+    events_path(**browse_state.route_params(page: page, format: format))
   end
 
   def public_event_genre_tiles

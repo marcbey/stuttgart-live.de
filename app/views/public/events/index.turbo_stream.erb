@@ -1,13 +1,9 @@
-<%= turbo_stream.append (@browse_state.list? ? "event-list-body" : "event-grid") do %>
-  <% if @browse_state.list? %>
-    <%= render "event_rows", events: @events, browse_state: @browse_state, wrap: false %>
-  <% else %>
-    <%= render "event_cards",
-               events: @events,
-               browse_state: @browse_state,
-               offset: ((@browse_state.page - 1) * Public::EventsController::PER_PAGE),
-               wrap: false %>
-  <% end %>
+<%= turbo_stream.append "event-grid" do %>
+  <%= render "event_cards",
+             events: @events,
+             browse_state: @browse_state,
+             offset: ((@browse_state.page - 1) * Public::EventsController::PER_PAGE),
+             wrap: false %>
 <% end %>
 
 <%= turbo_stream.replace "events-pagination" do %>

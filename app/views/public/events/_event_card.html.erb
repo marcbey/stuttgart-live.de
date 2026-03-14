@@ -44,7 +44,6 @@
                       data: { controller: "public-card-status" } do |form| %>
           <%= hidden_field_tag :card_slot, card_slot %>
           <%= hidden_field_tag :page, browse_state.page %>
-          <%= hidden_field_tag :view, browse_state.route_params[:view] %>
           <%= hidden_field_tag :event_date, browse_state.event_date_param %>
           <%= hidden_field_tag :q, browse_state.query %>
           <%= form.select :status,

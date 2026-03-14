@@ -1543,12 +1543,6 @@ trix-editor.blog-rich-text:focus {
   font-size: clamp(1rem, 2.2vw, 1.25rem);
 }
 
-.public-filter-toggle {
-  margin-top: 0.75rem;
-  display: inline-flex;
-  gap: 0.45rem;
-}
-
 .public-filter-row {
   margin-top: 0.75rem;
   display: flex;
@@ -1558,26 +1552,11 @@ trix-editor.blog-rich-text:focus {
   gap: 0.6rem 0.8rem;
 }
 
-.public-filter-row .public-filter-toggle {
-  margin-top: 0;
-}
-
 .public-filter-row-main {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem 0.8rem;
-}
-
-.public-view-toggle {
-  gap: 0.35rem;
-}
-
-.public-view-chip {
-  justify-content: center;
-  min-width: 2.7rem;
-  min-height: 2.4rem;
-  padding: 0.35rem;
 }
 
 .public-view-icon {
@@ -4140,7 +4119,6 @@ trix-editor.blog-rich-text:focus {
     aspect-ratio: 1 / 1.16;
   }
 
-  .public-view-toggle,
   .slider-view-toggle {
     display: none;
   }

@@ -2,7 +2,7 @@
 <% primary_offer = event.preferred_ticket_offer %>
 <% thumbnail_image = event.image_for(slot: :grid_default, breakpoint: :mobile) || event.image_for(slot: :grid_default, breakpoint: :desktop) %>
 <% thumbnail_source = event_image_source(thumbnail_image) %>
-<% event_url = public_event_detail_path(event, browse_state, view: Public::Events::BrowseState::VIEW_LIST) %>
+<% event_url = public_event_detail_path(event, browse_state) %>
 
 <article class="event-listing-card">
   <%= link_to event_url, class: "event-listing-row-link", aria: { label: "#{event.artist_name} anzeigen" } do %>

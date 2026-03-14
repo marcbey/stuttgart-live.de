@@ -1,26 +1,6 @@
 <section class="public-filter-row public-filter-row-home">
   <div class="public-filter-row-main">
-    <div class="public-filter-toggle public-view-toggle" aria-label="Darstellung umschalten">
-      <%= link_to public_events_index_path(browse_state, view: Public::Events::BrowseState::VIEW_GRID),
-                  class: "status-chip public-view-chip #{'status-chip-active' if browse_state.grid?}",
-                  title: "Kachelansicht",
-                  aria: { label: "Kachelansicht", current: ("page" if browse_state.grid?) } do %>
-        <span class="public-view-icon public-view-icon-grid" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-        </span>
-      <% end %>
-      <%= link_to public_events_index_path(browse_state, view: Public::Events::BrowseState::VIEW_LIST),
-                  class: "status-chip public-view-chip #{'status-chip-active' if browse_state.list?}",
-                  title: "Listen-Ansicht",
-                  aria: { label: "Listen-Ansicht", current: ("page" if browse_state.list?) } do %>
-        <span class="public-view-icon public-view-icon-list" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-      <% end %>
-    </div>
-
     <%= form_with url: events_path, method: :get, local: true, class: "public-search-filter" do %>
-      <%= hidden_field_tag :view, browse_state.route_params[:view] %>
       <%= hidden_field_tag :event_date, browse_state.event_date_param %>
       <div class="public-search-field">
         <%= text_field_tag :q,

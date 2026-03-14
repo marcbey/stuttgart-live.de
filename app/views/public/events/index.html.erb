@@ -3,43 +3,38 @@
 <section class="public-shell">
   <%= render "toolbar", browse_state: @browse_state %>
 
-  <% if @browse_state.list? %>
-    <%= render "event_rows", events: @events, browse_state: @browse_state, container_id: "event-list-body" %>
-  <% else %>
-    <% if @browse_state.query.present? %>
-      <%= render "search_results_section", events: @events, browse_state: @browse_state %>
-    <% elsif @browse_state.page == 1 && @home_featured_events.present? %>
-      <%= render "highlight_section",
-                 title: "Highlights",
-                 events: @home_featured_events,
-                 browse_state: @browse_state,
-                 featured: true,
-                 list_aria_label: "Listenansicht für Highlights" %>
-    <% end %>
-
-    <% if @browse_state.page == 1 && @home_highlight_events.present? %>
-      <%= render "highlight_section",
-                 title: "Alle Veranstaltungen in Stuttgart",
-                 events: @home_highlight_events,
-                 browse_state: @browse_state,
-                 list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
-    <% end %>
-
-    <% if @browse_state.page == 1 && @home_tagestipp_events.present? %>
-      <%= render "highlight_section",
-                 title: "Tagestipp",
-                 events: @home_tagestipp_events,
-                 browse_state: @browse_state,
-                 list_aria_label: "Listenansicht für Tagestipp" %>
-    <% end %>
-
-    <%= render "genres_section" %>
-  <% end %>
-
-  <% if @browse_state.list? %>
+  <% if @browse_state.query.present? %>
+    <%= render "search_results_section", events: @events, browse_state: @browse_state %>
     <%= render "pagination", next_page: @next_page, browse_state: @browse_state %>
     <p id="events-pagination-status" class="sr-only" role="status" aria-live="polite"></p>
   <% end %>
+
+  <% if @browse_state.page == 1 && @home_featured_events.present? %>
+    <%= render "highlight_section",
+               title: "Highlights",
+               events: @home_featured_events,
+               browse_state: @browse_state,
+               featured: true,
+               list_aria_label: "Listenansicht für Highlights" %>
+  <% end %>
+
+  <% if @browse_state.page == 1 && @home_highlight_events.present? %>
+    <%= render "highlight_section",
+               title: "Alle Veranstaltungen in Stuttgart",
+               events: @home_highlight_events,
+               browse_state: @browse_state,
+               list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
+  <% end %>
+
+  <% if @browse_state.page == 1 && @home_tagestipp_events.present? %>
+    <%= render "highlight_section",
+               title: "Tagestipp",
+               events: @home_tagestipp_events,
+               browse_state: @browse_state,
+               list_aria_label: "Listenansicht für Tagestipp" %>
+  <% end %>
+
+  <%= render "genres_section" if @browse_state.page == 1 %>
 
   <%= render "newsletter_signup", browse_state: @browse_state %>
   <%= render "partner_strip" %>

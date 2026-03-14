@@ -21,7 +21,7 @@ module Public
     end
 
     def newsletter_redirect_target
-      params[:return_to].presence || events_path(view: params[:view].presence, q: params[:q].presence)
+      params[:return_to].presence || events_path(q: params[:q].presence)
     end
 
     def newsletter_source

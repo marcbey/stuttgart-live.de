@@ -234,14 +234,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "event_date=#{selected_date.iso8601}"
   end
 
-  test "index can render list view" do
+  test "index renders only the search filter in the public filter row" do
     get events_url(filter: "all", view: "list")
 
     assert_response :success
-    assert_includes response.body, "event-listing-grid"
-    assert_includes response.body, "event-listing-card"
-    assert_includes response.body, @published_event.artist_name
-    assert_includes response.body, "view=list"
+    assert_select ".public-filter-row-main .public-search-filter", count: 1
+    assert_select ".public-filter-row-main .public-view-toggle", count: 0
+    assert_select ".public-filter-row-main input[name='view']", count: 0
   end
 
   test "index redirects to detail page when search has a single result" do
@@ -280,7 +279,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all", q: "Search Cluster")
 
     assert_response :success
-    assert_select "#search-results-grid .event-card-grid-1-1", count: 2
+    assert_select "#event-grid .event-card-grid-1-1", count: 2
     assert_includes response.body, first_event.title
     assert_includes response.body, second_event.title
     assert_includes response.body, "Alle Veranstaltungen in Stuttgart"
@@ -288,17 +287,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @published_event.artist_name
   end
 
-  test "preferred ticket offer prefers easyticket in list view" do
+  test "highlight list rows prefer easyticket offer" do
     event = Event.create!(
       slug: "list-view-ticket-priority",
       source_fingerprint: "test::public::list::ticket-priority",
       title: "List Ticket Priority",
       artist_name: "List Ticket Artist",
-      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      start_at: 2.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
       source_snapshot: {}
     )
 
@@ -320,7 +320,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    get events_url(filter: "all", view: "list")
+    get events_url(filter: "all")
 
     assert_response :success
     assert_includes response.body, "https://easyticket.example/tickets"

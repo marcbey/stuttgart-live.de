@@ -11,14 +11,14 @@ module Public
       relation = visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: @browse_state.query)
       if should_redirect_search_result?(relation)
         event = relation.limit(1).first
-        redirect_to event_path(event.slug, **@browse_state.route_params(view: Public::Events::BrowseState::VIEW_GRID).except(:q))
+        redirect_to event_path(event.slug, **@browse_state.route_params.except(:q))
         return
       end
 
       @events = relation.limit(PER_PAGE).offset((@browse_state.page - 1) * PER_PAGE)
       @next_page = @browse_state.page + 1 if relation.offset(@browse_state.page * PER_PAGE).limit(1).exists?
       homepage_relation = visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: nil)
-      assign_homepage_sections(homepage_relation) if @browse_state.page == 1 && @browse_state.grid?
+      assign_homepage_sections(homepage_relation) if @browse_state.page == 1
 
       respond_to do |format|
         format.html
@@ -121,7 +121,6 @@ module Public
 
     def should_redirect_search_result?(relation)
       return false if @browse_state.query.blank?
-      return false unless @browse_state.grid?
       return false unless @browse_state.page == 1
 
       relation.limit(2).count == 1
