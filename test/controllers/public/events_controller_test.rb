@@ -17,6 +17,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Review Artist"
     assert_not_includes response.body, "event-card-status-select"
     assert_select ".event-card-genre", count: 0
+    assert_select ".genre-grid .genre-tile", count: Public::EventsHelper::PUBLIC_EVENT_GENRE_TILES.size
+    assert_select ".genre-slider-track", count: 0
   end
 
   test "index hides future unpublished events for guests" do

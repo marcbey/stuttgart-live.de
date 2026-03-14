@@ -1,25 +1,12 @@
-<section class="home-slider-section" data-controller="highlights-slider section-view">
+<section class="home-slider-section">
   <div class="home-slider-header">
     <h2>Genres</h2>
-    <div class="highlights-slider-nav">
-      <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
-      <button type="button" class="highlights-slider-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
-    </div>
   </div>
-  <div data-section-view-target="slider">
-    <div class="genre-slider-track" data-highlights-slider-target="track">
-      <% public_event_genre_tiles.each do |genre_name, genre_class| %>
-        <article class="genre-tile <%= genre_class %>">
-          <span><%= genre_name %></span>
-        </article>
-      <% end %>
-    </div>
-  </div>
-  <div class="section-slider-list" data-section-view-target="list" hidden>
-    <div class="section-slider-list-plain">
-      <% public_event_genre_tiles.each do |genre_name, _genre_class| %>
+  <div class="genre-grid" role="list" aria-label="Genres">
+    <% public_event_genre_tiles.each do |genre_name, genre_class| %>
+      <article class="genre-tile <%= genre_class %>" role="listitem">
         <span><%= genre_name %></span>
-      <% end %>
-    </div>
+      </article>
+    <% end %>
   </div>
 </section>
