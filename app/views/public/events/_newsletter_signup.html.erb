@@ -5,15 +5,7 @@
     <p>Neue Konzerte, Highlights und Vorverkäufe direkt in dein Postfach.</p>
   </div>
 
-  <%= form_with model: NewsletterSubscriber.new, url: newsletter_subscribers_path, method: :post, local: true, class: "newsletter-signup-form" do |form| %>
-    <%= hidden_field_tag :event_date, browse_state.event_date_param %>
-    <%= hidden_field_tag :q, browse_state.query %>
-    <%= form.label :email, "E-Mail-Adresse", class: "sr-only" %>
-    <%= form.email_field :email,
-                         class: "form-input newsletter-signup-input",
-                         placeholder: "E-Mail-Adresse",
-                         required: true,
-                         autocomplete: "email" %>
-    <%= form.submit "Newsletter abonnieren", class: "button newsletter-signup-button" %>
-  <% end %>
+  <%= render "public/newsletter_subscribers/signup",
+             subscriber: NewsletterSubscriber.new,
+             signup: newsletter_signup_config("events_index", return_to: request.fullpath) %>
 </section>

@@ -1,0 +1,39 @@
+<% subscribed = local_assigns.fetch(:subscribed, false) %>
+
+<%= turbo_frame_tag signup[:frame_id], class: "newsletter-signup-frame" do %>
+  <% if subscribed %>
+    <div class="newsletter-signup-feedback newsletter-signup-confirmation" role="status" aria-live="polite">
+      <p class="eyebrow">Danke!</p>
+      <p>Du bist jetzt für den Newsletter eingetragen.</p>
+    </div>
+  <% else %>
+    <% email_field_options = {
+      autocomplete: "email",
+      placeholder: signup[:placeholder],
+      required: true,
+      class: "form-input newsletter-signup-input"
+    } %>
+    <% if subscriber.errors[:email].any? %>
+      <% email_field_options[:aria] = { invalid: true, describedby: "#{signup[:frame_id]}-errors" } %>
+    <% end %>
+
+    <%= form_with model: subscriber,
+                  url: newsletter_subscribers_path,
+                  method: :post,
+                  class: signup[:form_class] do |form| %>
+      <%= hidden_field_tag :context, signup[:context] %>
+      <%= hidden_field_tag :return_to, signup[:return_to] %>
+      <%= hidden_field_tag :source, signup[:source] %>
+
+      <% if subscriber.errors.any? %>
+        <div id="<%= "#{signup[:frame_id]}-errors" %>" class="newsletter-signup-feedback flash flash-alert" role="alert">
+          <%= subscriber.errors.full_messages.to_sentence %>
+        </div>
+      <% end %>
+
+      <%= form.label :email, signup[:label], class: "sr-only" %>
+      <%= form.email_field :email, **email_field_options %>
+      <%= form.submit signup[:submit_label], class: "button newsletter-signup-button" %>
+    <% end %>
+  <% end %>
+<% end %>
