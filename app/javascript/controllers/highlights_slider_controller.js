@@ -39,12 +39,12 @@ export default class extends Controller {
 
   previous(event) {
     event.preventDefault()
-    this.scrollByAmount(-1)
+    this.scrollByPage(-1)
   }
 
   next(event) {
     event.preventDefault()
-    this.scrollByAmount(1)
+    this.scrollByPage(1)
   }
 
   toggleAutoplay(event) {
@@ -60,11 +60,15 @@ export default class extends Controller {
     this.updateToggleButton()
   }
 
-  scrollByAmount(direction) {
-    if (!this.hasTrackTarget) return
+  scrollByPage(direction) {
+    const items = this.sliderItems()
+    if (items.length === 0) return
 
-    const amount = this.scrollStep()
-    this.trackTarget.scrollBy({ left: amount * direction, behavior: "smooth" })
+    const currentIndex = this.leadingVisibleIndex(items)
+    const pageSize = this.visibleItemCount(items)
+    const targetIndex = this.clampIndex(currentIndex + (pageSize * direction), items)
+
+    this.scrollToItem(items[targetIndex])
   }
 
   updateButtons() {
@@ -94,20 +98,61 @@ export default class extends Controller {
       if (currentScroll >= maxScrollLeft - 4) {
         this.trackTarget.scrollTo({ left: 0, behavior: "smooth" })
       } else {
-        this.scrollByAmount(1)
+        this.scrollBySingleItem()
       }
     }, this.intervalValue)
   }
 
-  scrollStep() {
-    const firstCard = this.trackTarget.firstElementChild
-    if (!(firstCard instanceof HTMLElement)) {
-      return Math.round(this.trackTarget.clientWidth * 0.82)
+  scrollBySingleItem() {
+    const items = this.sliderItems()
+    if (items.length === 0) return
+
+    const currentIndex = this.leadingVisibleIndex(items)
+    const targetIndex = this.clampIndex(currentIndex + 1, items)
+    this.scrollToItem(items[targetIndex])
+  }
+
+  sliderItems() {
+    if (!this.hasTrackTarget) return []
+
+    return Array.from(this.trackTarget.children).filter((item) => item instanceof HTMLElement)
+  }
+
+  leadingVisibleIndex(items) {
+    const currentScroll = this.trackTarget.scrollLeft
+
+    for (let index = 0; index < items.length; index += 1) {
+      const item = items[index]
+      if ((item.offsetLeft + item.offsetWidth) > currentScroll + 4) {
+        return index
+      }
     }
 
-    const styles = window.getComputedStyle(this.trackTarget)
-    const gap = Number.parseFloat(styles.columnGap || styles.gap || "0") || 0
-    return Math.round(firstCard.getBoundingClientRect().width + gap)
+    return Math.max(0, items.length - 1)
+  }
+
+  visibleItemCount(items) {
+    const viewportStart = this.trackTarget.scrollLeft + 4
+    const viewportEnd = viewportStart + this.trackTarget.clientWidth - 8
+    let count = 0
+
+    items.forEach((item) => {
+      const itemStart = item.offsetLeft
+      const itemEnd = itemStart + item.offsetWidth
+      if (itemEnd > viewportStart && itemStart < viewportEnd) count += 1
+    })
+
+    return Math.max(count, 1)
+  }
+
+  clampIndex(index, items) {
+    return Math.max(0, Math.min(index, items.length - 1))
+  }
+
+  scrollToItem(item) {
+    if (!(item instanceof HTMLElement)) return
+
+    this.trackTarget.scrollTo({ left: item.offsetLeft, behavior: "smooth" })
   }
 
   stopAutoplay() {
