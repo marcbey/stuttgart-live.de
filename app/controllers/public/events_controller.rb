@@ -112,12 +112,16 @@ module Public
       scoped_highlights = visible_events_relation(filter: Public::Events::BrowseState::FILTER_SKS, event_date: @browse_state.event_date, query: nil)
       scoped_all = visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: @browse_state.event_date, query: nil)
       scoped_reservix = scoped_all.where(primary_source: "reservix")
+      scoped_today_non_reservix = visible_events_relation(
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: Time.zone.today,
+        query: nil
+      ).where.not(primary_source: "reservix")
 
       @home_featured_events = scoped_highlights.to_a
       @home_featured_events = current_relation.limit(PER_PAGE).to_a if @home_featured_events.empty?
       @home_highlight_events = scoped_reservix.limit(10).to_a
-      @home_tagestipp_events = current_relation.offset(6).limit(10).to_a
-      @home_tagestipp_events = current_relation.limit(10).to_a if @home_tagestipp_events.empty?
+      @home_tagestipp_events = scoped_today_non_reservix.limit(10).to_a
     end
 
     def should_redirect_search_result?(relation)

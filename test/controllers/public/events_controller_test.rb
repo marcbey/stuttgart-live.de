@@ -28,6 +28,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
       status: "needs_review",
       source_snapshot: {}
     )
@@ -47,6 +48,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
       status: "needs_review",
       source_snapshot: {}
     )
@@ -159,6 +161,61 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "section.home-slider-section", text: /Alle Veranstaltungen in Stuttgart/ do
       assert_select ".home-slider-card-name", text: reservix_event.artist_name
       assert_select ".home-slider-card-name", text: eventim_event.artist_name, count: 0
+    end
+  end
+
+  test "index shows only today's non-reservix events in tagestipp" do
+    today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
+
+    today_event = Event.create!(
+      slug: "tagestipp-today-event",
+      source_fingerprint: "test::homepage::tagestipp::today",
+      title: "Today Spotlight Event",
+      artist_name: "Today Slider Artist",
+      start_at: today_start,
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+
+    reservix_today_event = Event.create!(
+      slug: "tagestipp-reservix-today-event",
+      source_fingerprint: "test::homepage::tagestipp::reservix",
+      title: "Reservix Spotlight Event",
+      artist_name: "Reservix Today Artist",
+      start_at: today_start + 1.hour,
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+
+    tomorrow_event = Event.create!(
+      slug: "tagestipp-tomorrow-event",
+      source_fingerprint: "test::homepage::tagestipp::tomorrow",
+      title: "Tomorrow Spotlight Event",
+      artist_name: "Tomorrow Slider Artist",
+      start_at: today_start + 1.day,
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "easyticket",
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select "section.home-slider-section", text: /Tagestipp/ do
+      assert_select ".home-slider-card-name", text: today_event.artist_name
+      assert_select ".home-slider-card-name", text: reservix_today_event.artist_name, count: 0
+      assert_select ".home-slider-card-name", text: tomorrow_event.artist_name, count: 0
     end
   end
 
@@ -330,6 +387,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
+    tagestipp_event = Event.create!(
+      slug: "search-page-tagestipp",
+      source_fingerprint: "test::search::tagestipp",
+      title: "Tagestipp Search Day Event",
+      artist_name: "Tagestipp Search Artist",
+      start_at: Time.zone.now.change(hour: 21, min: 0, sec: 0),
+      venue: "Club Cann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+
     get events_url(filter: "all", q: "Search Cluster")
 
     assert_response :success
@@ -339,6 +410,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Alle Veranstaltungen in Stuttgart"
     assert_includes response.body, reservix_slider_event.artist_name
     assert_includes response.body, "Tagestipp"
+    assert_includes response.body, tagestipp_event.artist_name
     assert_includes response.body, @published_event.artist_name
   end
 
