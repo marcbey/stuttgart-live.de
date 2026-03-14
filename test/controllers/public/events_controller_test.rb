@@ -124,6 +124,65 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
   end
 
+  test "index sorts highlights chronologically by start_at" do
+    later_event = Event.create!(
+      slug: "homepage-highlight-later",
+      source_fingerprint: "test::homepage::highlight::later",
+      title: "Homepage Highlight Later",
+      artist_name: "Highlight Later Artist",
+      start_at: 12.days.from_now.change(hour: 21, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      source_snapshot: {}
+    )
+
+    earlier_event = Event.create!(
+      slug: "homepage-highlight-earlier",
+      source_fingerprint: "test::homepage::highlight::earlier",
+      title: "Homepage Highlight Earlier",
+      artist_name: "Highlight Earlier Artist",
+      start_at: 12.days.from_now.change(hour: 18, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: Event::SKS_PROMOTER_IDS.second,
+      source_snapshot: {}
+    )
+
+    middle_event = Event.create!(
+      slug: "homepage-highlight-middle",
+      source_fingerprint: "test::homepage::highlight::middle",
+      title: "Homepage Highlight Middle",
+      artist_name: "Highlight Middle Artist",
+      start_at: 12.days.from_now.change(hour: 19, min: 30, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: Event::SKS_PROMOTER_IDS.last,
+      source_snapshot: {}
+    )
+
+    get events_url
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    highlights_section = document.css("section.home-featured-section").find do |section|
+      section.at_css("h2")&.text == "Highlights"
+    end
+
+    assert highlights_section.present?, "expected Highlights section to be rendered"
+
+    names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
+
+    assert_equal [ earlier_event.artist_name, middle_event.artist_name, later_event.artist_name ], names.first(3)
+  end
+
   test "index shows only reservix events in the all events slider" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 
@@ -155,17 +214,104 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
+    10.times do |index|
+      Event.create!(
+        slug: "reservix-home-slider-filler-#{index}",
+        source_fingerprint: "test::homepage::reservix::filler::#{index}",
+        title: "Reservix Homepage Filler #{index}",
+        artist_name: "Reservix Filler Artist #{index}",
+        start_at: future_start + index.minutes,
+        venue: "Venue #{index}",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        primary_source: "reservix",
+        source_snapshot: {}
+      )
+    end
+
+    late_reservix_event = Event.create!(
+      slug: "reservix-home-slider-late-event",
+      source_fingerprint: "test::homepage::reservix::late",
+      title: "Reservix Homepage Late Event",
+      artist_name: "Reservix Late Artist",
+      start_at: future_start + 2.hours,
+      venue: "Late Hall",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+
     get events_url(filter: "all")
 
     assert_response :success
     assert_select "section.home-slider-section", text: /Alle Veranstaltungen in Stuttgart/ do
       assert_select ".home-slider-card-name", text: reservix_event.artist_name
+      assert_select ".home-slider-card-name", text: late_reservix_event.artist_name
       assert_select ".home-slider-card-name", text: eventim_event.artist_name, count: 0
+    end
+  end
+
+  test "index does not limit highlights fallback when no sks events exist for the selected date" do
+    selected_date = 20.days.from_now.to_date
+
+    12.times do |index|
+      Event.create!(
+        slug: "highlights-fallback-event-#{index}",
+        source_fingerprint: "test::homepage::highlights::fallback::#{index}",
+        title: "Highlights Fallback Event #{index}",
+        artist_name: "Highlights Fallback Artist #{index}",
+        start_at: selected_date.in_time_zone.change(hour: 10 + index, min: 0, sec: 0),
+        venue: "Fallback Venue #{index}",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        promoter_id: "99999",
+        source_snapshot: {}
+      )
+    end
+
+    final_event = Event.create!(
+      slug: "highlights-fallback-event-final",
+      source_fingerprint: "test::homepage::highlights::fallback::final",
+      title: "Highlights Fallback Final Event",
+      artist_name: "Highlights Fallback Final Artist",
+      start_at: selected_date.in_time_zone.change(hour: 23, min: 0, sec: 0),
+      venue: "Fallback Venue Final",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: "99999",
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all", event_date: selected_date.iso8601)
+
+    assert_response :success
+    assert_select "section.home-featured-section", text: /Highlights/ do
+      assert_select ".event-card-copy h2", text: final_event.artist_name
     end
   end
 
   test "index shows only today's non-reservix events in tagestipp" do
     today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
+
+    sks_today_event = Event.create!(
+      slug: "tagestipp-sks-today-event",
+      source_fingerprint: "test::homepage::tagestipp::sks",
+      title: "SKS Spotlight Event",
+      artist_name: "SKS Today Artist",
+      start_at: today_start + 3.hours,
+      venue: "Schleyer-Halle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      source_snapshot: {}
+    )
 
     today_event = Event.create!(
       slug: "tagestipp-today-event",
@@ -209,14 +355,54 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
+    10.times do |index|
+      Event.create!(
+        slug: "tagestipp-filler-event-#{index}",
+        source_fingerprint: "test::homepage::tagestipp::filler::#{index}",
+        title: "Tagestipp Filler Event #{index}",
+        artist_name: "Tagestipp Filler Artist #{index}",
+        start_at: today_start - (index + 1).minutes,
+        venue: "Club #{index}",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        primary_source: index.even? ? "eventim" : "easyticket",
+        source_snapshot: {}
+      )
+    end
+
+    late_today_event = Event.create!(
+      slug: "tagestipp-late-today-event",
+      source_fingerprint: "test::homepage::tagestipp::late",
+      title: "Late Spotlight Event",
+      artist_name: "Late Today Artist",
+      start_at: today_start + 2.hours,
+      venue: "Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select "section.home-slider-section", text: /Tagestipp/ do
-      assert_select ".home-slider-card-name", text: today_event.artist_name
-      assert_select ".home-slider-card-name", text: reservix_today_event.artist_name, count: 0
-      assert_select ".home-slider-card-name", text: tomorrow_event.artist_name, count: 0
+
+    document = Nokogiri::HTML.parse(response.body)
+    tagestipp_section = document.css("section.home-slider-section").find do |section|
+      section.at_css("h2")&.text == "Tagestipp"
     end
+
+    assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
+
+    names = tagestipp_section.css(".home-slider-card-name").map(&:text)
+
+    assert_equal sks_today_event.artist_name, names.first
+    assert_includes names, today_event.artist_name
+    assert_includes names, late_today_event.artist_name
+    assert_not_includes names, reservix_today_event.artist_name
+    assert_not_includes names, tomorrow_event.artist_name
   end
 
   test "index can be filtered to SKS events" do

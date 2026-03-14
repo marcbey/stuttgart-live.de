@@ -109,19 +109,18 @@ module Public
     end
 
     def assign_homepage_sections(current_relation)
-      scoped_highlights = visible_events_relation(filter: Public::Events::BrowseState::FILTER_SKS, event_date: @browse_state.event_date, query: nil)
+      scoped_highlights = visible_events_relation(
+        filter: Public::Events::BrowseState::FILTER_SKS,
+        event_date: @browse_state.event_date,
+        query: nil
+      ).reorder(:start_at, :id)
       scoped_all = visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: @browse_state.event_date, query: nil)
       scoped_reservix = scoped_all.where(primary_source: "reservix")
-      scoped_today_non_reservix = visible_events_relation(
-        filter: Public::Events::BrowseState::FILTER_ALL,
-        event_date: Time.zone.today,
-        query: nil
-      ).where.not(primary_source: "reservix")
 
       @home_featured_events = scoped_highlights.to_a
-      @home_featured_events = current_relation.limit(PER_PAGE).to_a if @home_featured_events.empty?
-      @home_highlight_events = scoped_reservix.limit(10).to_a
-      @home_tagestipp_events = scoped_today_non_reservix.limit(10).to_a
+      @home_featured_events = current_relation.reorder(:start_at, :id).to_a if @home_featured_events.empty?
+      @home_highlight_events = scoped_reservix.to_a
+      @home_tagestipp_events = tagestipp_relation.to_a
     end
 
     def should_redirect_search_result?(relation)
@@ -149,6 +148,21 @@ module Public
         :import_event_images,
         event_images: [ file_attachment: :blob ]
       )
+    end
+
+    def tagestipp_relation
+      visible_events_relation(
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: Time.zone.today,
+        query: nil
+      )
+        .where.not(primary_source: "reservix")
+        .reorder(Arel.sql(sks_first_order_sql), :start_at, :id)
+    end
+
+    def sks_first_order_sql
+      quoted_ids = Event::SKS_PROMOTER_IDS.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
+      "CASE WHEN events.promoter_id IN (#{quoted_ids}) THEN 0 ELSE 1 END"
     end
 
     def apply_status!(event, status)
