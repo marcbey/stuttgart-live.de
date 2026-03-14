@@ -181,7 +181,8 @@ module Public
     end
 
     def selected_genre_tile
-      genre_tiles.find { |tile| tile[:slug] == params[:genre].to_s.strip }
+      requested_slug = helpers.send(:public_event_genre_slug, params[:genre].to_s.strip)
+      genre_tiles.find { |tile| tile[:slug] == requested_slug }
     end
 
     def selected_genre_events
@@ -193,16 +194,14 @@ module Public
         query: nil
       )
         .joins(:genres)
-        .where(genres: { name: selected_genre_tile[:name] })
+        .where(genres: { id: selected_genre_tile[:id] })
         .distinct
         .reorder(:start_at, :id)
         .to_a
     end
 
     def genre_tiles
-      helpers.public_event_genre_tiles.map do |name, css_class|
-        { name:, css_class:, slug: name.parameterize }
-      end
+      helpers.public_event_genre_tiles
     end
 
     def genre_panel_frame_request?

@@ -1917,6 +1917,10 @@ trix-editor.blog-rich-text:focus {
   overflow-wrap: anywhere;
 }
 
+.genre-tile-default {
+  background: linear-gradient(145deg, #ece8df, #dfe6f0);
+}
+
 .genre-events-panel {
   margin-top: 1rem;
   border-top: 1px solid rgba(17, 17, 17, 0.14);
@@ -2085,6 +2089,31 @@ trix-editor.blog-rich-text:focus {
   display: grid;
   gap: 0.7rem;
   align-items: end;
+}
+
+.newsletter-signup-frame {
+  display: block;
+}
+
+.newsletter-signup-feedback {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.newsletter-signup-form .newsletter-signup-feedback {
+  grid-column: 1 / -1;
+}
+
+.newsletter-signup-confirmation {
+  max-width: 32rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.75rem 0.9rem;
+}
+
+.newsletter-signup-confirmation p,
+.newsletter-signup-confirmation .eyebrow {
+  margin: 0;
 }
 
 .newsletter-signup-input {

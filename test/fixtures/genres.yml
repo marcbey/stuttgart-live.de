@@ -5,3 +5,31 @@ rock:
 pop:
   name: Pop
   slug: pop
+
+electro:
+  name: Electro
+  slug: electro
+
+hip_hop:
+  name: Hip-Hop
+  slug: hip-hop
+
+indie:
+  name: Indie
+  slug: indie
+
+jazz:
+  name: Jazz
+  slug: jazz
+
+klassik:
+  name: Klassik
+  slug: klassik
+
+metal:
+  name: Metal
+  slug: metal
+
+schlager:
+  name: Schlager
+  slug: schlager

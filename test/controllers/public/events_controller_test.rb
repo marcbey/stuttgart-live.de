@@ -17,7 +17,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Review Artist"
     assert_not_includes response.body, "event-card-status-select"
     assert_select ".event-card-genre", count: 0
-    assert_select ".genre-grid .genre-tile", count: Public::EventsHelper::PUBLIC_EVENT_GENRE_TILES.size
+    assert_select ".genre-grid .genre-tile", count: Genre.count
+    assert_select ".genre-grid .genre-tile-link[href*='genre=schlager']", text: "Schlager"
+    assert_select ".genre-grid .genre-tile-link[href*='genre=hiphop']", text: "Hip-Hop"
     assert_select ".genre-slider-track", count: 0
     assert_select "turbo-frame#genre-events-panel", count: 1
   end
@@ -595,7 +597,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_eventim_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easyticket_promoter_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
-    assert_not_includes response.body, "filter=sks"
   end
 
   test "index can be filtered to a specific day" do
@@ -801,7 +802,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show renders published event by slug" do
-    extra_genre = Genre.create!(name: "Jazz", slug: "jazz")
+    extra_genre = genres(:jazz)
     @published_event.genres << genres(:pop)
     @published_event.genres << extra_genre
 

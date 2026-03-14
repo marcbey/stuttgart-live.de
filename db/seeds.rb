@@ -22,7 +22,7 @@ ImportSource.ensure_supported_sources!
   end
 end
 
-%w[Rock Pop Hip-Hop Metal Jazz Klassik Indie Electro].each do |name|
+%w[Rock Pop Hip-Hop Metal Jazz Klassik Indie Electro Schlager].each do |name|
   Genre.find_or_create_by!(name: name) do |genre|
     genre.slug = name.parameterize
   end

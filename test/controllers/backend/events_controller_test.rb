@@ -67,6 +67,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
     assert_select "input[name='event_image[files][]'][required]", count: 0
+    assert_select "input[type='checkbox'][name='event[genre_ids][]'][value='#{genres(:schlager).id}']"
   end
 
   test "new shows the same editable fields as the event editor" do

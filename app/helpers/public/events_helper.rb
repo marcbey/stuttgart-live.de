@@ -1,15 +1,16 @@
 module Public::EventsHelper
-  PUBLIC_EVENT_GENRE_TILES = [
-    [ "Pop", "genre-tile-pop" ],
-    [ "Rock", "genre-tile-rock" ],
-    [ "Hiphop", "genre-tile-hiphop" ],
-    [ "Rap", "genre-tile-rap" ],
-    [ "Metal", "genre-tile-metal" ],
-    [ "Elektro", "genre-tile-elektro" ],
-    [ "Show", "genre-tile-show" ],
-    [ "Punk", "genre-tile-punk" ],
-    [ "Schlager", "genre-tile-schlager" ]
-  ].freeze
+  PUBLIC_EVENT_GENRE_SLUG_ALIASES = {
+    "electro" => "elektro",
+    "hip-hop" => "hiphop"
+  }.freeze
+  PUBLIC_EVENT_GENRE_TILE_CLASSES = {
+    "pop" => "genre-tile-pop",
+    "rock" => "genre-tile-rock",
+    "hiphop" => "genre-tile-hiphop",
+    "metal" => "genre-tile-metal",
+    "elektro" => "genre-tile-elektro",
+    "schlager" => "genre-tile-schlager"
+  }.freeze
 
   def public_event_visibility_badges(event)
     badges = []
@@ -74,7 +75,16 @@ module Public::EventsHelper
   end
 
   def public_event_genre_tiles
-    PUBLIC_EVENT_GENRE_TILES
+    @public_event_genre_tiles ||= Genre.order(:name).map do |genre|
+      public_slug = public_event_genre_slug(genre.slug.presence || genre.name.parameterize)
+
+      {
+        id: genre.id,
+        name: genre.name,
+        slug: public_slug,
+        css_class: public_event_genre_tile_class(public_slug)
+      }
+    end
   end
 
   def public_event_show_presenter(event, primary_offer:, browse_state:)
@@ -120,7 +130,17 @@ module Public::EventsHelper
 
     image.alt_text.presence || default_alt
   end
+
   private
+
+  def public_event_genre_slug(raw_slug)
+    normalized_slug = raw_slug.to_s.parameterize
+    PUBLIC_EVENT_GENRE_SLUG_ALIASES.fetch(normalized_slug, normalized_slug)
+  end
+
+  def public_event_genre_tile_class(slug)
+    PUBLIC_EVENT_GENRE_TILE_CLASSES.fetch(slug, "genre-tile-default")
+  end
 
   def editorial_event_image_for(event)
     images = event.event_images

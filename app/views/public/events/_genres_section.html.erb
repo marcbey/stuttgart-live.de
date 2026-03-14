@@ -7,18 +7,17 @@
     <h2>Genres</h2>
   </div>
   <ul class="genre-grid" role="list" aria-label="Genres">
-    <% public_event_genre_tiles.each do |genre_name, genre_class| %>
-      <% genre_slug = genre_name.parameterize %>
-      <% genre_active = selected_genre_tile&.fetch(:slug, nil) == genre_slug %>
+    <% public_event_genre_tiles.each do |tile| %>
+      <% genre_active = selected_genre_tile&.fetch(:slug, nil) == tile.fetch(:slug) %>
       <li class="genre-grid-item">
-        <%= link_to events_path(event_date: browse_state.event_date_param, genre: genre_slug),
-                    class: "genre-tile genre-tile-link #{genre_class}#{' genre-tile-active' if genre_active}",
+        <%= link_to events_path(event_date: browse_state.event_date_param, genre: tile.fetch(:slug)),
+                    class: "genre-tile genre-tile-link #{tile.fetch(:css_class)}#{' genre-tile-active' if genre_active}",
                     data: { turbo_frame: "genre-events-panel", turbo_action: "advance" },
                     aria: {
                       controls: "genre-events-panel",
                       expanded: genre_active
                     } do %>
-          <span><%= genre_name %></span>
+          <span><%= tile.fetch(:name) %></span>
         <% end %>
       </li>
     <% end %>
