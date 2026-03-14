@@ -3554,6 +3554,83 @@ trix-editor.blog-rich-text:focus {
   margin-top: 0.35rem;
 }
 
+.payload-block > summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.payload-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.payload-copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 1.9rem;
+  height: 1.9rem;
+  padding: 0;
+  border: 1px solid #d3d3d3;
+  border-radius: 999px;
+  background: #fff;
+  color: #222;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.payload-copy-button:hover {
+  border-color: #111;
+  background: #f3f3f3;
+  transform: translateY(-1px);
+}
+
+.payload-copy-button[data-copied="true"] {
+  border-color: #24834f;
+  background: #ecfff3;
+  color: #155731;
+}
+
+.payload-download-button[data-downloaded="true"] {
+  border-color: #24834f;
+  background: #ecfff3;
+  color: #155731;
+}
+
+.payload-copy-button svg {
+  display: block;
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.payload-copy-button-icon-check {
+  display: none;
+}
+
+.payload-copy-button[data-copied="true"] .payload-copy-button-icon-copy {
+  display: none;
+}
+
+.payload-copy-button[data-copied="true"] .payload-copy-button-icon-check {
+  display: inline-flex;
+}
+
+.payload-download-button-icon-check {
+  display: none;
+}
+
+.payload-download-button[data-downloaded="true"] .payload-download-button-icon-download {
+  display: none;
+}
+
+.payload-download-button[data-downloaded="true"] .payload-download-button-icon-check {
+  display: inline-flex;
+}
+
 .payload-json {
   margin: 0.35rem 0 0;
   max-height: 16rem;
@@ -3901,9 +3978,11 @@ trix-editor.blog-rich-text:focus {
   position: relative;
   width: min(100%, 18rem);
   aspect-ratio: 1 / 1.16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
-  border: 1px solid #d9d9d9;
-  background: #111;
+  background: transparent;
 }
 
 .event-image-crop-frame[data-grid-variant="1x1"] {
@@ -3923,9 +4002,33 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-image-crop-preview-image {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+.event-image-crop-image-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  max-height: 100%;
+  line-height: 0;
+}
+
+.event-image-crop-box {
+  position: absolute;
+  inset: 0 auto auto 0;
+  border: 2px solid #0a66c2;
+  background: rgb(10 102 194 / 0.08);
+  box-shadow: 0 0 0 999px rgb(0 0 0 / 0.14);
+  pointer-events: none;
+}
+
+.event-image-crop-box.is-hidden {
+  display: none;
 }
 
 .event-image-crop-controls {

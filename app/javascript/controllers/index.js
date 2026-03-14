@@ -16,6 +16,9 @@ application.register("consent", ConsentController)
 import ConsentMediaController from "./consent_media_controller"
 application.register("consent-media", ConsentMediaController)
 
+import ClipboardController from "./clipboard_controller"
+application.register("clipboard", ClipboardController)
+
 import EditorInboxController from "./editor_inbox_controller"
 application.register("editor-inbox", EditorInboxController)
 
