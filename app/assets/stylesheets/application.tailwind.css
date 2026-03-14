@@ -1802,12 +1802,21 @@ trix-editor.blog-rich-text:focus {
   scroll-snap-align: start;
 }
 
+.home-slider-card-media {
+  position: relative;
+}
+
 .home-slider-card-thumb {
   display: block;
   aspect-ratio: 0.84 / 1.16;
   overflow: hidden;
   border-radius: 0.8rem;
   text-decoration: none;
+}
+
+.home-slider-card-admin-controls {
+  top: 0.55rem;
+  right: 0.55rem;
 }
 
 .home-slider-card-thumb picture {
@@ -3377,6 +3386,12 @@ trix-editor.blog-rich-text:focus {
 .status-badge-link:hover {
   border-color: #111;
   background: #ededed;
+}
+
+.event-card-admin-controls .status-badge.event-card-admin-link {
+  padding: 0.35rem 0.42rem;
+  font-size: 0.7rem;
+  line-height: 1;
 }
 
 .editor-panel {

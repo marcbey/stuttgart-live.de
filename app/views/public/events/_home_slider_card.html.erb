@@ -7,18 +7,54 @@
 <% image_style = event_card_image_style(desktop_image) %>
 
 <article class="home-slider-card">
-  <%= link_to public_event_detail_path(event, browse_state), class: "home-slider-card-thumb" do %>
-    <% if desktop_image_source.present? %>
-      <picture>
-        <% if mobile_image_source.present? %>
-          <source media="(max-width: 699px)" srcset="<%= mobile_image_source %>">
-        <% end %>
-        <%= image_tag desktop_image_source, alt: image_alt_text, loading: "lazy", class: "home-slider-card-image", style: image_style %>
-      </picture>
-    <% else %>
-      <div class="home-slider-card-image event-card-placeholder"></div>
+  <div class="home-slider-card-media">
+    <%= link_to public_event_detail_path(event, browse_state), class: "home-slider-card-thumb" do %>
+      <% if desktop_image_source.present? %>
+        <picture>
+          <% if mobile_image_source.present? %>
+            <source media="(max-width: 699px)" srcset="<%= mobile_image_source %>">
+          <% end %>
+          <%= image_tag desktop_image_source, alt: image_alt_text, loading: "lazy", class: "home-slider-card-image", style: image_style %>
+        </picture>
+      <% else %>
+        <div class="home-slider-card-image event-card-placeholder"></div>
+      <% end %>
     <% end %>
-  <% end %>
+
+    <% if authenticated? %>
+      <div class="event-card-admin-controls home-slider-card-admin-controls">
+        <%= form_with url: status_event_path(event.slug),
+                      method: :patch,
+                      class: "event-card-status-form",
+                      data: { controller: "public-card-status" } do |form| %>
+          <%= hidden_field_tag :page, browse_state.page %>
+          <%= hidden_field_tag :view, browse_state.route_params[:view] %>
+          <%= hidden_field_tag :event_date, browse_state.event_date_param %>
+          <%= hidden_field_tag :q, browse_state.query %>
+          <%= form.select :status,
+                          options_for_select(public_event_status_options, event.status),
+                          {},
+                          class: "event-card-status-select",
+                          data: {
+                            public_card_status_target: "select",
+                            action: "change->public-card-status#change"
+                          } %>
+          <noscript>
+            <%= form.submit "Ok", class: "event-card-status-submit" %>
+          </noscript>
+        <% end %>
+
+        <%= link_to "Bearbeiten",
+                    backend_events_path(status: event.status, event_id: event.id),
+                    class: "event-card-admin-link event-card-admin-link-attention",
+                    data: { turbo: false } %>
+
+        <% if event.primary_source.present? %>
+          <span class="status-badge event-card-admin-link"><%= event_source_label(event.primary_source) %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 
   <div class="home-slider-card-copy">
     <%= link_to event.artist_name, public_event_detail_path(event, browse_state), class: "home-slider-card-name" %>

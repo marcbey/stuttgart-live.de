@@ -64,6 +64,10 @@
                     backend_events_path(status: event.status, event_id: event.id),
                     class: "event-card-admin-link event-card-admin-link-attention",
                     data: { turbo: false } %>
+
+        <% if event.primary_source.present? %>
+          <span class="status-badge event-card-admin-link"><%= event_source_label(event.primary_source) %></span>
+        <% end %>
       </div>
     <% end %>
   </div>
