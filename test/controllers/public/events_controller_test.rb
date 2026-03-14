@@ -122,6 +122,46 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
   end
 
+  test "index shows only reservix events in the all events slider" do
+    future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
+
+    reservix_event = Event.create!(
+      slug: "reservix-home-slider-event",
+      source_fingerprint: "test::homepage::reservix::slider",
+      title: "Reservix Homepage Slider Event",
+      artist_name: "Reservix Slider Artist",
+      start_at: future_start,
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+
+    eventim_event = Event.create!(
+      slug: "eventim-home-slider-event",
+      source_fingerprint: "test::homepage::eventim::slider",
+      title: "Eventim Homepage Slider Event",
+      artist_name: "Eventim Slider Artist",
+      start_at: future_start + 1.hour,
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select "section.home-slider-section", text: /Alle Veranstaltungen in Stuttgart/ do
+      assert_select ".home-slider-card-name", text: reservix_event.artist_name
+      assert_select ".home-slider-card-name", text: eventim_event.artist_name, count: 0
+    end
+  end
+
   test "index can be filtered to SKS events" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 
@@ -276,6 +316,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
+    reservix_slider_event = Event.create!(
+      slug: "search-page-reservix-slider",
+      source_fingerprint: "test::search::reservix::slider",
+      title: "Reservix Slider Night",
+      artist_name: "Reservix Slider Artist",
+      start_at: 15.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Theaterhaus",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+
     get events_url(filter: "all", q: "Search Cluster")
 
     assert_response :success
@@ -283,6 +337,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, first_event.title
     assert_includes response.body, second_event.title
     assert_includes response.body, "Alle Veranstaltungen in Stuttgart"
+    assert_includes response.body, reservix_slider_event.artist_name
     assert_includes response.body, "Tagestipp"
     assert_includes response.body, @published_event.artist_name
   end

@@ -111,10 +111,11 @@ module Public
     def assign_homepage_sections(current_relation)
       scoped_highlights = visible_events_relation(filter: Public::Events::BrowseState::FILTER_SKS, event_date: @browse_state.event_date, query: nil)
       scoped_all = visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: @browse_state.event_date, query: nil)
+      scoped_reservix = scoped_all.where(primary_source: "reservix")
 
       @home_featured_events = scoped_highlights.to_a
       @home_featured_events = current_relation.limit(PER_PAGE).to_a if @home_featured_events.empty?
-      @home_highlight_events = scoped_all.limit(10).to_a
+      @home_highlight_events = scoped_reservix.limit(10).to_a
       @home_tagestipp_events = current_relation.offset(6).limit(10).to_a
       @home_tagestipp_events = current_relation.limit(10).to_a if @home_tagestipp_events.empty?
     end
