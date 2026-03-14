@@ -34,7 +34,10 @@
                list_aria_label: "Listenansicht für Tagestipp" %>
   <% end %>
 
-  <%= render "genres_section" if @browse_state.page == 1 %>
+  <%= render "genres_section",
+             browse_state: @browse_state,
+             selected_genre_tile: @selected_genre_tile,
+             selected_genre_events: @selected_genre_events if @browse_state.page == 1 %>
 
   <%= render "newsletter_signup", browse_state: @browse_state %>
   <%= render "partner_strip" %>

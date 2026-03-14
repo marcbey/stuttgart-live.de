@@ -1861,10 +1861,17 @@ trix-editor.blog-rich-text:focus {
 }
 
 .genre-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
   display: grid;
   grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 0.45rem;
   align-items: stretch;
+}
+
+.genre-grid-item {
+  min-width: 0;
 }
 
 .genre-tile {
@@ -1877,6 +1884,27 @@ trix-editor.blog-rich-text:focus {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
 
+.genre-tile-link {
+  width: 100%;
+  color: inherit;
+  text-decoration: none;
+  transition: transform 140ms ease, box-shadow 140ms ease;
+}
+
+.genre-tile-link:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.11);
+}
+
+.genre-tile-link:focus-visible {
+  outline: 3px solid #111;
+  outline-offset: 2px;
+}
+
+.genre-tile-active {
+  box-shadow: inset 0 0 0 2px #111, 0 16px 34px rgba(0, 0, 0, 0.11);
+}
+
 .genre-tile span {
   display: block;
   max-width: none;
@@ -1887,6 +1915,32 @@ trix-editor.blog-rich-text:focus {
   letter-spacing: 0.03em;
   text-transform: uppercase;
   overflow-wrap: anywhere;
+}
+
+.genre-events-panel {
+  margin-top: 1rem;
+  border-top: 1px solid rgba(17, 17, 17, 0.14);
+  padding-top: 1rem;
+}
+
+.genre-events-panel-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.9rem;
+}
+
+.genre-events-panel-title {
+  margin: 0.2rem 0 0;
+  font-size: clamp(1.25rem, 2.4vw, 1.8rem);
+  text-transform: uppercase;
+}
+
+.genre-events-empty {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.96rem;
 }
 
 .genre-tile-pop {

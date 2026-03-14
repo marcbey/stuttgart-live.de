@@ -121,6 +121,8 @@ module Public
       @home_featured_events = current_relation.reorder(:start_at, :id).to_a if @home_featured_events.empty?
       @home_highlight_events = scoped_reservix.to_a
       @home_tagestipp_events = tagestipp_relation.to_a
+      @selected_genre_tile = selected_genre_tile
+      @selected_genre_events = selected_genre_events
     end
 
     def should_redirect_search_result?(relation)
@@ -163,6 +165,31 @@ module Public
     def sks_first_order_sql
       quoted_ids = Event::SKS_PROMOTER_IDS.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
       "CASE WHEN events.promoter_id IN (#{quoted_ids}) THEN 0 ELSE 1 END"
+    end
+
+    def selected_genre_tile
+      genre_tiles.find { |tile| tile[:slug] == params[:genre].to_s.strip }
+    end
+
+    def selected_genre_events
+      return [] unless selected_genre_tile.present?
+
+      visible_events_relation(
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: @browse_state.event_date,
+        query: nil
+      )
+        .joins(:genres)
+        .where(genres: { name: selected_genre_tile[:name] })
+        .distinct
+        .reorder(:start_at, :id)
+        .to_a
+    end
+
+    def genre_tiles
+      helpers.public_event_genre_tiles.map do |name, css_class|
+        { name:, css_class:, slug: name.parameterize }
+      end
     end
 
     def apply_status!(event, status)

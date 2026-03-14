@@ -1,0 +1,24 @@
+<% browse_state = local_assigns.fetch(:browse_state) %>
+<% selected_genre_tile = local_assigns[:selected_genre_tile] %>
+<% selected_genre_events = Array(local_assigns.fetch(:selected_genre_events, [])) %>
+
+<% if selected_genre_tile.present? %>
+  <section class="genre-events-panel" aria-label="Events zum Genre <%= selected_genre_tile.fetch(:name) %>">
+    <div class="genre-events-panel-header">
+      <div>
+        <p class="eyebrow">Genres</p>
+        <h3 class="genre-events-panel-title"><%= selected_genre_tile.fetch(:name) %></h3>
+      </div>
+      <%= link_to "Schließen",
+                  events_path(event_date: browse_state.event_date_param),
+                  class: "button button-secondary button-compact",
+                  data: { turbo_frame: "genre-events-panel", turbo_action: "advance" } %>
+    </div>
+
+    <% if selected_genre_events.any? %>
+      <%= render "event_rows", events: selected_genre_events, browse_state: browse_state, container_id: "genre-events-list" %>
+    <% else %>
+      <p class="genre-events-empty">Zu diesem Genre sind aktuell keine Events sichtbar.</p>
+    <% end %>
+  </section>
+<% end %>

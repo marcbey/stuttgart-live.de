@@ -19,6 +19,31 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-card-genre", count: 0
     assert_select ".genre-grid .genre-tile", count: Public::EventsHelper::PUBLIC_EVENT_GENRE_TILES.size
     assert_select ".genre-slider-track", count: 0
+    assert_select "turbo-frame#genre-events-panel", count: 1
+  end
+
+  test "index expands a genre panel with matching events" do
+    pop_event = Event.create!(
+      slug: "genre-panel-pop-event",
+      source_fingerprint: "test::public::genre-panel::pop",
+      title: "Genre Panel Pop Event",
+      artist_name: "Genre Pop Artist",
+      start_at: 18.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    pop_event.genres << genres(:pop)
+
+    get events_url(genre: "rock")
+
+    assert_response :success
+    assert_select "turbo-frame#genre-events-panel .genre-events-panel-title", text: "Rock"
+    assert_select "turbo-frame#genre-events-panel .event-listing-card", text: /#{Regexp.escape(@published_event.artist_name)}/
+    assert_select "turbo-frame#genre-events-panel .event-listing-card", text: /#{Regexp.escape(pop_event.artist_name)}/, count: 0
+    assert_select ".genre-grid .genre-tile-link[href*='genre=rock'][aria-expanded='true']"
   end
 
   test "index hides future unpublished events for guests" do

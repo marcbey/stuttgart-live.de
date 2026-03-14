@@ -1,12 +1,33 @@
+<% browse_state = local_assigns.fetch(:browse_state) %>
+<% selected_genre_tile = local_assigns[:selected_genre_tile] %>
+<% selected_genre_events = local_assigns.fetch(:selected_genre_events, []) %>
+
 <section class="home-slider-section">
   <div class="home-slider-header">
     <h2>Genres</h2>
   </div>
-  <div class="genre-grid" role="list" aria-label="Genres">
+  <ul class="genre-grid" role="list" aria-label="Genres">
     <% public_event_genre_tiles.each do |genre_name, genre_class| %>
-      <article class="genre-tile <%= genre_class %>" role="listitem">
-        <span><%= genre_name %></span>
-      </article>
+      <% genre_slug = genre_name.parameterize %>
+      <% genre_active = selected_genre_tile&.fetch(:slug, nil) == genre_slug %>
+      <li class="genre-grid-item">
+        <%= link_to events_path(event_date: browse_state.event_date_param, genre: genre_slug),
+                    class: "genre-tile genre-tile-link #{genre_class}#{' genre-tile-active' if genre_active}",
+                    data: { turbo_frame: "genre-events-panel", turbo_action: "advance" },
+                    aria: {
+                      controls: "genre-events-panel",
+                      expanded: genre_active
+                    } do %>
+          <span><%= genre_name %></span>
+        <% end %>
+      </li>
     <% end %>
-  </div>
+  </ul>
+
+  <%= turbo_frame_tag "genre-events-panel" do %>
+    <%= render "genre_events_panel",
+               browse_state: browse_state,
+               selected_genre_tile: selected_genre_tile,
+               selected_genre_events: selected_genre_events %>
+  <% end %>
 </section>
