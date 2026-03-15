@@ -2,23 +2,35 @@ namespace :events do
   namespace :maintenance do
     desc "Delete all events and event relations while keeping raw event imports"
     task purge_all: :environment do
-      ActiveRecord::Base.transaction do
-        EventImage.delete_all
-        ImportEventImage.where(import_class: "Event").delete_all
-        EventOffer.delete_all
-        EventGenre.delete_all
-        EventChangeLog.delete_all
-        Event.delete_all
-      end
-
-      puts "Event-Daten gelöscht."
-      puts "events=#{Event.count}"
-      puts "event_offers=#{EventOffer.count}"
-      puts "event_genres=#{EventGenre.count}"
-      puts "event_change_logs=#{EventChangeLog.count}"
-      puts "event_images=#{EventImage.count}"
-      puts "event_import_images=#{ImportEventImage.where(import_class: 'Event').count}"
-      puts "raw_event_imports=#{RawEventImport.count}"
+      result = Events::Maintenance::Purger.call
+      print_events_maintenance_result(result, success_message: "Event-Daten gelöscht.")
     end
+
+    desc "Delete all events, import runtime data, and Solid Queue jobs while keeping importer setup"
+    task purge_all_with_imports: :environment do
+      result = Events::Maintenance::Purger.call(include_imports: true, include_solid_queue: true)
+      print_events_maintenance_result(result, success_message: "Event-, Import- und Queue-Daten gelöscht.")
+    end
+  end
+end
+
+def print_events_maintenance_result(result, success_message:)
+  puts success_message
+
+  result.event_counts.each do |name, count|
+    puts "#{name}=#{count}"
+  end
+
+  result.import_counts.each do |name, count|
+    puts "#{name}=#{count}"
+  end
+
+  case result.solid_queue_status
+  when :cleared
+    result.solid_queue_counts.each do |name, count|
+      puts "#{name}=#{count}"
+    end
+  when :skipped
+    puts "solid_queue=übersprungen"
   end
 end

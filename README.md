@@ -269,6 +269,14 @@ bin/rails events:maintenance:purge_all
 
 Der Task löscht `events` samt Relationen und event-bezogene `import_event_images`, lässt aber `raw_event_imports` unverändert.
 
+Kompletter lokaler Reset von Events, Importläufen, Rohimporten und Solid-Queue-Jobzustand:
+
+```bash
+bin/rails events:maintenance:purge_all_with_imports
+```
+
+Der Task leert zusätzlich `import_runs`, `import_run_errors`, `raw_event_imports` sowie die laufzeitbezogenen `solid_queue_*`-Tabellen. Importquellen, Whitelists und wiederkehrende Queue-Definitionen aus `config/recurring.yml` bleiben erhalten; Reservix-Checkpoints werden zurückgesetzt.
+
 ### Produktionsdatenbank neu aufsetzen
 
 Ein vollständiges Neuaufsetzen der Produktionsdatenbanken ist ein Host-Eingriff und darf nicht nur als App-User per `db:setup` erfolgen. Der Datenbankbenutzer der Anwendung hat bewusst kein `CREATEDB`.
