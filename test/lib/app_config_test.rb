@@ -1,6 +1,12 @@
 require "test_helper"
 
 class AppConfigTest < ActiveSupport::TestCase
+  test "production environment eagerly requires app config" do
+    production_config = Rails.root.join("config/environments/production.rb").read
+
+    assert_includes production_config, 'require Rails.root.join("app/lib/app_config").to_s'
+  end
+
   test "prefers credentials over env values" do
     with_env("RESERVIX_API_KEY" => "env-api-key") do
       with_credentials(reservix: { api_key: "credentials-api-key" }) do

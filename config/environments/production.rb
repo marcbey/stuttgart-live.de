@@ -1,4 +1,5 @@
 require "active_support/core_ext/integer/time"
+require Rails.root.join("app/lib/app_config").to_s
 require Rails.root.join("app/lib/hetzner_deploy_config").to_s
 
 Rails.application.configure do
