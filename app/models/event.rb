@@ -1,24 +1,5 @@
 class Event < ApplicationRecord
   STATUSES = %w[imported needs_review ready_for_publish published rejected].freeze
-  DEFAULT_SKS_ORGANIZER_NOTES = <<~TEXT.strip
-    Wir bitten um Beachtung verstärkter Sicherheitsmaßnahmen
-    Verbot von Handtaschen, Rucksäcken und Helmen
-    Zusätzliche verschärfte Kontrollen und Bodychecks
-    Sämtliche Besucher werden Bodychecks unterzogen. Taschen, Rucksäcke und Handtaschen sowie Helme und Behältnisse aller Art sind verboten.
-    Die Zuschauer werden ausdrücklich gebeten, auf deren Mitbringen zu verzichten, und sich ausschließlich auf wirklich notwendige Utensilien wie Handys, Schlüsselbund und Portemonnaies sowie Medikamente oder Kosmetika in Gürteltaschen oder Kosmetiktäschchen bis zu einer maximalen Größe von Din A4 zu beschränken.
-    Die Einhaltung dieser Regeln und Hinweise sowie ein rechtzeitiges Eintreffen helfen dabei, den Einlass so zügig wie möglich zu organisieren.
-
-    Wir danken für Ihr Verständnis!
-
-    Altersfreigabe:
-    kein Zutritt: unter 6 Jahren
-    nur in Begleitung: bis 14 Jahren (Das Begleitformular findest Du HIER)
-    frei ab 14 Jahren
-
-    Telefonischer Ticketkauf:
-
-    Bei dieser Veranstaltung gibt es auch die Möglichkeit des telefonischen Ticketkaufes. Sie erreichen unsere Tickethotline in der Regel von Montag bis Freitag zwischen 10 und 18 Uhr unter Telefon 0711-550 660 77
-  TEXT
   IMAGE_SLOT_PREFERENCES = {
     [ :grid_default, :desktop ] => [
       [ "cover", %w[landscape square portrait unknown] ],
@@ -156,7 +137,7 @@ class Event < ApplicationRecord
   def public_organizer_notes
     notes = organizer_notes.to_s.strip
     return notes if notes.present?
-    return DEFAULT_SKS_ORGANIZER_NOTES if sks_promoter?
+    return AppSetting.sks_organizer_notes if sks_promoter?
 
     nil
   end
@@ -256,7 +237,7 @@ class Event < ApplicationRecord
     self.city = normalized_city.casecmp("Unbekannt").zero? ? nil : normalized_city.presence
     self.badge_text = badge_text.to_s.strip.presence
     normalized_organizer_notes = organizer_notes.to_s.strip.presence
-    self.organizer_notes = normalized_organizer_notes.presence || (sks_promoter? ? DEFAULT_SKS_ORGANIZER_NOTES : nil)
+    self.organizer_notes = normalized_organizer_notes.presence || (sks_promoter? ? AppSetting.sks_organizer_notes : nil)
     self.homepage_url = homepage_url.to_s.strip.presence
     self.instagram_url = instagram_url.to_s.strip.presence
     self.facebook_url = facebook_url.to_s.strip.presence

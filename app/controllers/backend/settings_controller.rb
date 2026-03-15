@@ -3,14 +3,22 @@ module Backend
     before_action :require_admin!
 
     def edit
-      @app_setting = AppSetting.sks_promoter_ids_record
+      @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
+      @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
     end
 
     def update
-      @app_setting = AppSetting.sks_promoter_ids_record
-      @app_setting.sks_promoter_ids_text = settings_params[:sks_promoter_ids_text]
+      @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
+      @sks_promoter_ids_setting.sks_promoter_ids_text = settings_params[:sks_promoter_ids_text]
+      @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
+      @sks_organizer_notes_setting.sks_organizer_notes_text = settings_params[:sks_organizer_notes_text]
 
-      if @app_setting.save
+      if @sks_promoter_ids_setting.valid? && @sks_organizer_notes_setting.valid?
+        AppSetting.transaction do
+          @sks_promoter_ids_setting.save!
+          @sks_organizer_notes_setting.save!
+        end
+
         redirect_to edit_backend_settings_path, notice: "Einstellungen wurden gespeichert."
       else
         flash.now[:alert] = "Einstellungen konnten nicht gespeichert werden."
@@ -21,7 +29,7 @@ module Backend
     private
 
     def settings_params
-      params.require(:app_setting).permit(:sks_promoter_ids_text)
+      params.require(:app_setting).permit(:sks_promoter_ids_text, :sks_organizer_notes_text)
     end
   end
 end

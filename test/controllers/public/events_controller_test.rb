@@ -3,7 +3,9 @@ require "test_helper"
 class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   setup do
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
+    AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382" ])
+    AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Konfigurierter SKS Hinweis\nWir danken für Ihr Verständnis!")
     AppSetting.reset_cache!
     @published_event = events(:published_one)
     @past_published_event = events(:published_past_one)
@@ -13,6 +15,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   teardown do
     AppSetting.reset_cache!
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
+    AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
   end
 
   test "index is publicly accessible" do
@@ -1115,7 +1118,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Veranstalterhinweise"
-    assert_includes response.body, "Wir danken für Ihr Verständnis!"
+    assert_includes response.body, "Konfigurierter SKS Hinweis"
   end
 
   test "show includes edit link for authenticated users" do

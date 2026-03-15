@@ -1,5 +1,6 @@
 class AppSetting < ApplicationRecord
   SKS_PROMOTER_IDS_KEY = "sks_promoter_ids".freeze
+  SKS_ORGANIZER_NOTES_KEY = "sks_organizer_notes".freeze
 
   validates :key, presence: true, uniqueness: true
   validate :sks_promoter_ids_must_be_present
@@ -11,8 +12,16 @@ class AppSetting < ApplicationRecord
       @sks_promoter_ids ||= normalize_id_list(find_by(key: SKS_PROMOTER_IDS_KEY)&.value)
     end
 
+    def sks_organizer_notes
+      @sks_organizer_notes ||= normalize_text(find_by(key: SKS_ORGANIZER_NOTES_KEY)&.value)
+    end
+
     def sks_promoter_ids_record
       find_or_initialize_by(key: SKS_PROMOTER_IDS_KEY)
+    end
+
+    def sks_organizer_notes_record
+      find_or_initialize_by(key: SKS_ORGANIZER_NOTES_KEY)
     end
 
     def normalize_id_list(value)
@@ -32,13 +41,29 @@ class AppSetting < ApplicationRecord
         .uniq
     end
 
+    def normalize_text(value)
+      case value
+      when String
+        value.strip.presence
+      when Array
+        value.join("\n").strip.presence
+      else
+        value.to_s.strip.presence
+      end
+    end
+
     def reset_cache!
       @sks_promoter_ids = nil
+      @sks_organizer_notes = nil
     end
   end
 
   def sks_promoter_ids
     self.class.normalize_id_list(value)
+  end
+
+  def sks_organizer_notes
+    self.class.normalize_text(value)
   end
 
   def sks_promoter_ids_text
@@ -47,6 +72,14 @@ class AppSetting < ApplicationRecord
 
   def sks_promoter_ids_text=(raw_value)
     self.value = self.class.normalize_id_list(raw_value)
+  end
+
+  def sks_organizer_notes_text
+    sks_organizer_notes.to_s
+  end
+
+  def sks_organizer_notes_text=(raw_value)
+    self.value = self.class.normalize_text(raw_value)
   end
 
   private

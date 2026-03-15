@@ -28,4 +28,17 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_not setting.valid?
     assert_includes setting.errors[:value], "muss mindestens eine Promoter-ID enthalten"
   end
+
+  test "normalizes sks organizer notes text" do
+    setting = AppSetting.new(key: AppSetting::SKS_ORGANIZER_NOTES_KEY)
+    setting.sks_organizer_notes_text = " Hinweis eins \nHinweis zwei \n"
+
+    assert_equal "Hinweis eins \nHinweis zwei", setting.sks_organizer_notes
+  end
+
+  test "returns configured sks organizer notes" do
+    AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Line one\nLine two")
+
+    assert_equal "Line one\nLine two", AppSetting.sks_organizer_notes
+  end
 end
