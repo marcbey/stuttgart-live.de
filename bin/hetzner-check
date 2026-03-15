@@ -26,6 +26,16 @@ require_value() {
   [[ -n "${!name:-}" ]] || fail "Umgebungsvariable fehlt oder ist leer: $name"
 }
 
+read_deploy_config_value() {
+  local key="$1"
+
+  ruby - "$key" <<'RUBY'
+require File.expand_path("app/lib/hetzner_deploy_config.rb", Dir.pwd)
+
+puts HetznerDeployConfig.fetch(ARGV.fetch(0))
+RUBY
+}
+
 extract_secret_names() {
   ruby <<'RUBY'
 require "yaml"
@@ -41,14 +51,12 @@ RUBY
 printf 'Prüfe lokale Hetzner-Voraussetzungen in %s\n' "$APP_ROOT"
 
 require_file "config/master.key"
+require_file "config/deploy.hetzner.shared.yml"
 require_file ".kamal/secrets.hetzner"
 require_file "$HOME/.ssh/stgt-live-hetzner-github"
-require_value "APP_HOST"
 
-expected_host="stuttgart-live.schopp3r.de"
-if [[ "${APP_HOST}" != "${expected_host}" ]]; then
-  fail "APP_HOST ist '${APP_HOST}', erwartet wird '${expected_host}'"
-fi
+app_host="$(read_deploy_config_value "app_host")"
+web_host="$(read_deploy_config_value "web_host")"
 
 while IFS= read -r secret_name; do
   [[ -n "$secret_name" ]] || continue
@@ -57,7 +65,8 @@ while IFS= read -r secret_name; do
   fi
 done < <(extract_secret_names)
 
-printf 'APP_HOST: %s\n' "$APP_HOST"
+printf 'APP_HOST: %s\n' "$app_host"
+printf 'KAMAL_WEB_HOST: %s\n' "$web_host"
 printf 'Kamal-Secrets: vollständig\n'
 printf 'SSH-Key: %s\n' "$HOME/.ssh/stgt-live-hetzner-github"
 printf 'Status: OK\n'

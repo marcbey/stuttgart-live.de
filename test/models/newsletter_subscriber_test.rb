@@ -18,7 +18,7 @@ class NewsletterSubscriberTest < ActiveSupport::TestCase
   end
 
   test "enqueues mailchimp sync when mailchimp is configured" do
-    with_mailchimp_env do
+    with_mailchimp_config do
       assert_enqueued_with(job: Newsletter::SyncSubscriberJob) do
         NewsletterSubscriber.create!(email: "queued@example.com", source: "homepage")
       end
@@ -27,54 +27,40 @@ class NewsletterSubscriberTest < ActiveSupport::TestCase
 
   test "does not enqueue mailchimp sync when mailchimp is not configured" do
     clear_enqueued_jobs
-    previous_api_key = ENV["MAILCHIMP_API_KEY"]
-    previous_list_id = ENV["MAILCHIMP_LIST_ID"]
-    previous_server_prefix = ENV["MAILCHIMP_SERVER_PREFIX"]
-    ENV["MAILCHIMP_API_KEY"] = nil
-    ENV["MAILCHIMP_LIST_ID"] = nil
-    ENV["MAILCHIMP_SERVER_PREFIX"] = nil
-
-    assert_no_enqueued_jobs only: Newsletter::SyncSubscriberJob do
-      NewsletterSubscriber.create!(email: "local-only@example.com", source: "homepage")
+    with_mailchimp_config(api_key: nil, list_id: nil, server_prefix: nil) do
+      assert_no_enqueued_jobs only: Newsletter::SyncSubscriberJob do
+        NewsletterSubscriber.create!(email: "local-only@example.com", source: "homepage")
+      end
     end
-  ensure
-    ENV["MAILCHIMP_API_KEY"] = previous_api_key
-    ENV["MAILCHIMP_LIST_ID"] = previous_list_id
-    ENV["MAILCHIMP_SERVER_PREFIX"] = previous_server_prefix
   end
 
   test "does not enqueue mailchimp sync for placeholder api key" do
-    previous_api_key = ENV["MAILCHIMP_API_KEY"]
-    previous_list_id = ENV["MAILCHIMP_LIST_ID"]
-    previous_server_prefix = ENV["MAILCHIMP_SERVER_PREFIX"]
-    ENV["MAILCHIMP_API_KEY"] = "todo"
-    ENV["MAILCHIMP_LIST_ID"] = "d55edf9631"
-    ENV["MAILCHIMP_SERVER_PREFIX"] = "us3"
-
-    assert_no_enqueued_jobs only: Newsletter::SyncSubscriberJob do
-      NewsletterSubscriber.create!(email: "placeholder@example.com", source: "homepage")
+    with_mailchimp_config(api_key: "todo", list_id: "d55edf9631", server_prefix: "us3") do
+      assert_no_enqueued_jobs only: Newsletter::SyncSubscriberJob do
+        NewsletterSubscriber.create!(email: "placeholder@example.com", source: "homepage")
+      end
     end
-  ensure
-    ENV["MAILCHIMP_API_KEY"] = previous_api_key
-    ENV["MAILCHIMP_LIST_ID"] = previous_list_id
-    ENV["MAILCHIMP_SERVER_PREFIX"] = previous_server_prefix
   end
 
   private
 
-  def with_mailchimp_env
-    previous_api_key = ENV["MAILCHIMP_API_KEY"]
-    previous_list_id = ENV["MAILCHIMP_LIST_ID"]
-    previous_server_prefix = ENV["MAILCHIMP_SERVER_PREFIX"]
-    ENV["MAILCHIMP_API_KEY"] = "test-us1"
-    ENV["MAILCHIMP_LIST_ID"] = "audience123"
-    ENV["MAILCHIMP_SERVER_PREFIX"] = "us1"
-    yield
+  def with_mailchimp_config(api_key: "test-us1", list_id: "audience123", server_prefix: "us1", &block)
+    with_singleton_return_value(AppConfig, :mailchimp_api_key, api_key) do
+      with_singleton_return_value(AppConfig, :mailchimp_list_id, list_id) do
+        with_singleton_return_value(AppConfig, :mailchimp_server_prefix, server_prefix, &block)
+      end
+    end
   ensure
-    ENV["MAILCHIMP_API_KEY"] = previous_api_key
-    ENV["MAILCHIMP_LIST_ID"] = previous_list_id
-    ENV["MAILCHIMP_SERVER_PREFIX"] = previous_server_prefix
     clear_enqueued_jobs
     clear_performed_jobs
+  end
+
+  def with_singleton_return_value(target, method_name, value)
+    original_method = target.method(method_name)
+
+    target.singleton_class.send(:define_method, method_name) { value }
+    yield
+  ensure
+    target.singleton_class.send(:define_method, method_name, original_method)
   end
 end

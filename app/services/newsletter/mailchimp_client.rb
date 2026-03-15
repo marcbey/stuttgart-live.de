@@ -10,9 +10,9 @@ module Newsletter
     attr_reader :api_key, :audience_id
 
     def initialize(
-      api_key: ENV["MAILCHIMP_API_KEY"].to_s.strip,
-      audience_id: ENV["MAILCHIMP_LIST_ID"].to_s.strip.presence || ENV["MAILCHIMP_AUDIENCE_ID"].to_s.strip,
-      server_prefix: ENV["MAILCHIMP_SERVER_PREFIX"].to_s.strip
+      api_key: AppConfig.mailchimp_api_key.to_s.strip,
+      audience_id: AppConfig.mailchimp_list_id.to_s.strip,
+      server_prefix: AppConfig.mailchimp_server_prefix.to_s.strip
     )
       @api_key = api_key
       @audience_id = audience_id

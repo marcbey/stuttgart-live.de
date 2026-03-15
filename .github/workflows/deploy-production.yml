@@ -24,6 +24,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
+      - name: Load versioned Hetzner deploy config
+        run: |
+          ruby <<'RUBY' >> "$GITHUB_ENV"
+          require File.expand_path("app/lib/hetzner_deploy_config.rb", Dir.pwd)
+
+          puts "APP_HOST=#{HetznerDeployConfig.app_host}"
+          puts "KAMAL_WEB_HOST=#{HetznerDeployConfig.web_host}"
+          puts "KAMAL_SSH_HOST_KEY=#{HetznerDeployConfig.ssh_host_key}"
+          RUBY
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -58,34 +68,11 @@ jobs:
           KAMAL_REGISTRY_PULL_PASSWORD=$KAMAL_REGISTRY_PULL_PASSWORD
           RAILS_MASTER_KEY=$RAILS_MASTER_KEY
           DB_PASSWORD=$DB_PASSWORD
-          GOOGLE_ANALYTICS_ID=$GOOGLE_ANALYTICS_ID
-          MAILCHIMP_API_KEY=$MAILCHIMP_API_KEY
-          MAILCHIMP_LIST_ID=$MAILCHIMP_LIST_ID
-          MAILCHIMP_SERVER_PREFIX=$MAILCHIMP_SERVER_PREFIX
-          SMTP_ADDRESS=$SMTP_ADDRESS
-          SMTP_PORT=$SMTP_PORT
-          SMTP_USERNAME=$SMTP_USERNAME
-          SMTP_PASSWORD=$SMTP_PASSWORD
-          SMTP_DOMAIN=$SMTP_DOMAIN
-          SMTP_AUTHENTICATION=$SMTP_AUTHENTICATION
-          SMTP_ENABLE_STARTTLS_AUTO=$SMTP_ENABLE_STARTTLS_AUTO
-          MAILER_FROM=$MAILER_FROM
-          EASYTICKET_EVENTS_API=$EASYTICKET_EVENTS_API
-          EASYTICKET_EVENT_DETAIL_API=$EASYTICKET_EVENT_DETAIL_API
-          EASYTICKET_PARTNER_SHOP_ID=$EASYTICKET_PARTNER_SHOP_ID
-          EASYTICKET_TICKET_LINK_EVENT_BASE_URL=$EASYTICKET_TICKET_LINK_EVENT_BASE_URL
-          EVENTIM_FEED_URL=$EVENTIM_FEED_URL
-          EVENTIM_USER=$EVENTIM_USER
-          EVENTIM_PASS=$EVENTIM_PASS
-          RESERVIX_API_KEY=$RESERVIX_API_KEY
-          RESERVIX_EVENTS_API=$RESERVIX_EVENTS_API
           EOF
 
       - name: Prepare SSH access
         env:
           KAMAL_SSH_PRIVATE_KEY: ${{ secrets.KAMAL_SSH_PRIVATE_KEY }}
-          KAMAL_WEB_HOST_OVERRIDE: ${{ vars.KAMAL_WEB_HOST }}
-          KAMAL_SSH_HOST_KEY: ${{ vars.KAMAL_SSH_HOST_KEY }}
         run: |
           set -euo pipefail
 
@@ -93,7 +80,7 @@ jobs:
           printf '%s\n' "$KAMAL_SSH_PRIVATE_KEY" > "$RUNNER_TEMP/kamal.key"
           chmod 600 "$RUNNER_TEMP/kamal.key"
 
-          host="${KAMAL_WEB_HOST_OVERRIDE:-46.225.224.194}"
+          host="${KAMAL_WEB_HOST}"
           if [ -z "${KAMAL_SSH_HOST_KEY}" ]; then
             echo "KAMAL_SSH_HOST_KEY fehlt" >&2
             exit 1
@@ -104,48 +91,17 @@ jobs:
       - name: Deploy with Kamal
         env:
           KAMAL_SSH_KEY_PATH: ${{ runner.temp }}/kamal.key
-          KAMAL_WEB_HOST_OVERRIDE: ${{ vars.KAMAL_WEB_HOST }}
-          APP_HOST_OVERRIDE: ${{ vars.APP_HOST }}
           KAMAL_REGISTRY_PULL_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PULL_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-          GOOGLE_ANALYTICS_ID: ${{ secrets.GOOGLE_ANALYTICS_ID }}
-          MAILCHIMP_API_KEY: ${{ secrets.MAILCHIMP_API_KEY }}
-          MAILCHIMP_LIST_ID: ${{ secrets.MAILCHIMP_LIST_ID }}
-          MAILCHIMP_SERVER_PREFIX: ${{ secrets.MAILCHIMP_SERVER_PREFIX }}
-          SMTP_ADDRESS: ${{ secrets.SMTP_ADDRESS }}
-          SMTP_PORT: ${{ secrets.SMTP_PORT }}
-          SMTP_USERNAME: ${{ secrets.SMTP_USERNAME }}
-          SMTP_PASSWORD: ${{ secrets.SMTP_PASSWORD }}
-          SMTP_DOMAIN: ${{ secrets.SMTP_DOMAIN }}
-          SMTP_AUTHENTICATION: ${{ secrets.SMTP_AUTHENTICATION }}
-          SMTP_ENABLE_STARTTLS_AUTO: ${{ secrets.SMTP_ENABLE_STARTTLS_AUTO }}
-          MAILER_FROM: ${{ secrets.MAILER_FROM }}
-          EASYTICKET_EVENTS_API: ${{ secrets.EASYTICKET_EVENTS_API }}
-          EASYTICKET_EVENT_DETAIL_API: ${{ secrets.EASYTICKET_EVENT_DETAIL_API }}
-          EASYTICKET_PARTNER_SHOP_ID: ${{ secrets.EASYTICKET_PARTNER_SHOP_ID }}
-          EASYTICKET_TICKET_LINK_EVENT_BASE_URL: ${{ secrets.EASYTICKET_TICKET_LINK_EVENT_BASE_URL }}
-          EVENTIM_FEED_URL: ${{ secrets.EVENTIM_FEED_URL }}
-          EVENTIM_USER: ${{ secrets.EVENTIM_USER }}
-          EVENTIM_PASS: ${{ secrets.EVENTIM_PASS }}
-          RESERVIX_API_KEY: ${{ secrets.RESERVIX_API_KEY }}
-          RESERVIX_EVENTS_API: ${{ secrets.RESERVIX_EVENTS_API }}
         run: |
           set -euo pipefail
-
-          if [ -n "${KAMAL_WEB_HOST_OVERRIDE}" ]; then
-            export KAMAL_WEB_HOST="${KAMAL_WEB_HOST_OVERRIDE}"
-          fi
-
-          if [ -n "${APP_HOST_OVERRIDE}" ]; then
-            export APP_HOST="${APP_HOST_OVERRIDE}"
-          fi
 
           # GitHub-Secrets dürfen hier keine Zeilenumbrüche enthalten.
           export KAMAL_REGISTRY_PULL_PASSWORD="$(printf '%s' "$KAMAL_REGISTRY_PULL_PASSWORD" | tr -d '\r\n')"
           export KAMAL_SKIP_REMOTE_REGISTRY_LOGIN=true
 
-          host="${KAMAL_WEB_HOST_OVERRIDE:-46.225.224.194}"
+          host="${KAMAL_WEB_HOST}"
           # Der Remote-Host braucht weiterhin ein stabiles GHCR-Credential für Pulls.
           printf '%s' "$KAMAL_REGISTRY_PULL_PASSWORD" | \
             ssh -i "$KAMAL_SSH_KEY_PATH" -o StrictHostKeyChecking=yes deploy@"$host" \

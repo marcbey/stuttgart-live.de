@@ -84,13 +84,31 @@ bin/ci
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `DB_*` und `RAILS_MASTER_KEY` für Anwendung und Deployment
-- `EASYTICKET_*`, `EVENTIM_*`, `RESERVIX_*` für externe Event-Importe
-- `MAILCHIMP_API_KEY`, `MAILCHIMP_LIST_ID`, `MAILCHIMP_SERVER_PREFIX` für den optionalen Newsletter-Sync
-- `SMTP_ADDRESS`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, optional `SMTP_DOMAIN`, `SMTP_AUTHENTICATION`, `SMTP_ENABLE_STARTTLS_AUTO` sowie `MAILER_FROM` für produktiven Mailversand
-- `GOOGLE_ANALYTICS_ID` für GA4 nach Einwilligung im Consent-Banner
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`
+- statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
+- `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
+- lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform
+- lokale Datei `config/master.key`: Schlüssel für `config/credentials.yml.enc`
+- GitHub-Secrets für Deployments: `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD`, `KAMAL_SSH_PRIVATE_KEY`
 
 Ohne Mailchimp-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus.
+
+### Typische Arbeitsweisen
+
+Mit der aktuellen Struktur gibt es vier übliche Betriebsmodi:
+
+- lokale Entwicklung: Rails liest App-Konfiguration aus `config/credentials.yml.enc`; dafür braucht die App vor allem `config/master.key`
+- lokale Hetzner-Infrastruktur: Terraform nutzt lokal `HCLOUD_TOKEN`, typischerweise aus `.env` oder der Shell
+- lokaler Produktions-Deploy: Kamal nutzt lokal `DB_PASSWORD` und `KAMAL_REGISTRY_PULL_PASSWORD` aus `.env` sowie `config/master.key`
+- GitHub-Produktions-Deploy: GitHub Actions nutzt `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD` und `KAMAL_SSH_PRIVATE_KEY` aus GitHub-Secrets
+
+Wenn du lokal sowohl entwickelst als auch Hetzner-Infrastruktur steuerst und manuell nach Produktion deployen willst, reicht aktuell in `.env` in der Regel:
+
+```dotenv
+DB_PASSWORD=...
+HCLOUD_TOKEN=...
+KAMAL_REGISTRY_PULL_PASSWORD=...
+```
 
 ## Qualitätssicherung
 
@@ -117,18 +135,20 @@ Produktion läuft auf Hetzner und wird mit Kamal ausgerollt. Im Alltag gibt es z
 
 Webprozess und Job-Verarbeitung laufen gemeinsam in der Rails-Anwendung. `SOLID_QUEUE_IN_PUMA=true` ist für dieses Setup bereits vorgesehen.
 
-Die produktive öffentliche Domain ist aktuell `stuttgart-live.schopp3r.de`. Für Kamal-Kommandos muss `APP_HOST` lokal auf diesen Wert gesetzt sein, sonst registriert der Proxy den falschen Hostnamen.
+Die produktive öffentliche Domain, die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
 
 ### Was lokal wichtig ist
 
 Für manuelle Produktions-Kommandos brauchst du lokal:
 
 - `config/master.key`
+- die versionierte Datei `config/deploy.hetzner.shared.yml`
 - eine lokale `.kamal/secrets.hetzner`
 - den SSH-Key `~/.ssh/stgt-live-hetzner-github` für den Benutzer `deploy`
 - optional den SSH-Key `~/.ssh/stgt-live-hetzner-admin` für Host-Administration als `admin`
+- eine `.env` mit `DB_PASSWORD` und `KAMAL_REGISTRY_PULL_PASSWORD`
 
-Der Standard-Host ist aktuell `46.225.224.194`. Falls sich die Ziel-IP ändert, kann sie über `KAMAL_WEB_HOST` überschrieben werden.
+Der aktuell konfigurierte Zielhost ist `46.225.224.194`.
 
 Vor manuellen Kamal-Eingriffen sollte immer dieser Check laufen:
 
@@ -136,11 +156,24 @@ Vor manuellen Kamal-Eingriffen sollte immer dieser Check laufen:
 bin/hetzner-check
 ```
 
-Das Skript lädt `.env`, prüft `APP_HOST`, die lokalen SSH-Keys sowie die Vollständigkeit von `.kamal/secrets.hetzner` gegen `config/deploy.hetzner.yml` und bricht bei Abweichungen sofort ab.
+Das Skript liest die versionierte Hetzner-Konfiguration, prüft die lokalen SSH-Keys sowie die Vollständigkeit von `.kamal/secrets.hetzner` gegen `config/deploy.hetzner.yml` und bricht bei Abweichungen sofort ab.
 
-Wichtig: Die lokale `.kamal/secrets.hetzner` ist hier keine Klartext-Secret-Datei. Sie ist ignoriert und löst Werte aus `.env` und `config/master.key` auf. Als Vorlage dient `.kamal/secrets.hetzner.example`.
+Wichtig: Die lokale `.kamal/secrets.hetzner` ist hier keine Klartext-Secret-Datei. Sie ist ignoriert und löst nur die Deploy-Secrets aus `.env` und `config/master.key` auf. Die App-Konfiguration für Importer, Newsletter und SMTP kommt aus `config/credentials.yml.enc`. Als Vorlage dient `.kamal/secrets.hetzner.example`.
 
 GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit eine eigene `.kamal/secrets.hetzner` aus den in GitHub hinterlegten Secrets.
+
+### Automatischer Deploy über GitHub
+
+Der GitHub-Workflow liest `APP_HOST`, `KAMAL_WEB_HOST` und `KAMAL_SSH_HOST_KEY` direkt aus der versionierten Datei `config/deploy.hetzner.shared.yml`.
+
+In GitHub müssen deshalb nur diese Secrets gepflegt sein:
+
+- `DB_PASSWORD`
+- `RAILS_MASTER_KEY`
+- `KAMAL_REGISTRY_PULL_PASSWORD`
+- `KAMAL_SSH_PRIVATE_KEY`
+
+Nicht-geheime Zielwerte für Domain, Server-IP und gepinnten SSH-Host-Key werden nicht mehr als GitHub-Variablen gepflegt.
 
 ### Die wichtigsten Kommandos
 

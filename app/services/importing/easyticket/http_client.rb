@@ -33,7 +33,7 @@ module Importing
       private
 
       def apply_partner_shop_id!(request)
-        partner_shop_id = ENV["EASYTICKET_PARTNER_SHOP_ID"].to_s
+        partner_shop_id = AppConfig.easyticket_partner_shop_id.to_s
         return if partner_shop_id.blank?
 
         request["partnershopId"] = partner_shop_id

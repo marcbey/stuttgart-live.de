@@ -350,14 +350,14 @@ Schritte:
 
 Im GitHub-Environment `production`:
 
-- `KAMAL_WEB_HOST`
 - `KAMAL_SSH_PRIVATE_KEY`
-- `KAMAL_SSH_HOST_KEY`
-- `APP_HOST`
 - `KAMAL_REGISTRY_PULL_PASSWORD`
 - `RAILS_MASTER_KEY`
 - `DB_PASSWORD`
 - API-Secrets für Drittanbieter
+
+Nicht-geheime Hetzner-Zieldaten wie Domain, Server-IP und gepinnter SSH-Host-Key
+liegen versioniert in `config/deploy.hetzner.shared.yml`.
 
 ## Lokale Deploys und Admin-Kommandos
 

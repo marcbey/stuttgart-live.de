@@ -9,7 +9,7 @@ module Importing
       LIMIT = 200
       MIN_LIMIT = 3
 
-      def initialize(http_client: HttpClient.new, base_url: ENV["RESERVIX_EVENTS_API"])
+      def initialize(http_client: HttpClient.new, base_url: AppConfig.reservix_events_api)
         @http_client = http_client
         @base_url = base_url.to_s.strip.presence || DEFAULT_BASE_URL
       end

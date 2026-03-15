@@ -21,7 +21,7 @@ module Importing
         infer_city_from_trailing_tokens(location_name)
       end
 
-      def initialize(dump_payload:, detail_payload:, ticket_base_url: ENV["EASYTICKET_TICKET_LINK_EVENT_BASE_URL"])
+      def initialize(dump_payload:, detail_payload:, ticket_base_url: AppConfig.easyticket_ticket_link_event_base_url)
         @dump_payload = dump_payload || {}
         @detail_payload = detail_payload || {}
         @ticket_base_url = ticket_base_url.to_s

@@ -40,8 +40,8 @@ module Importing
       private
 
       def apply_basic_auth!(request)
-        user = ENV["EVENTIM_USER"].to_s
-        pass = ENV["EVENTIM_PASS"].to_s
+        user = AppConfig.eventim_user.to_s
+        pass = AppConfig.eventim_pass.to_s
         raise RequestError, "EVENTIM_USER or EVENTIM_PASS is missing" if user.blank? || pass.blank?
 
         request.basic_auth(user, pass)

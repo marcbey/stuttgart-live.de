@@ -65,20 +65,18 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
 
   test "google analytics measurement id is only exposed on the production host" do
     with_allowed_hosts("stuttgart-live.de", "stuttgart-live.schopp3r.de") do
-      with_google_analytics_env("G-TEST123") do
-        host! "stuttgart-live.schopp3r.de"
-        get events_path
+      host! "stuttgart-live.schopp3r.de"
+      get events_path
 
-        assert_response :success
-        assert_includes response.body, 'data-controller="consent"'
-        assert_not_includes response.body, 'data-consent-measurement-id-value="G-TEST123"'
+      assert_response :success
+      assert_includes response.body, 'data-controller="consent"'
+      assert_not_includes response.body, 'data-consent-measurement-id-value="G-103580617"'
 
-        host! "stuttgart-live.de"
-        get events_path
+      host! "stuttgart-live.de"
+      get events_path
 
-        assert_response :success
-        assert_includes response.body, 'data-consent-measurement-id-value="G-TEST123"'
-      end
+      assert_response :success
+      assert_includes response.body, 'data-consent-measurement-id-value="G-103580617"'
     end
   end
 
@@ -92,15 +90,6 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
-    def with_google_analytics_env(value)
-      previous = ENV["GOOGLE_ANALYTICS_ID"]
-      ENV["GOOGLE_ANALYTICS_ID"] = value
-      yield
-    ensure
-      ENV["GOOGLE_ANALYTICS_ID"] = previous
-      host! "www.example.com"
-    end
-
     def with_allowed_hosts(*hosts)
       config_hosts = Rails.application.config.hosts
       previous = config_hosts.to_a.dup
@@ -109,5 +98,6 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     ensure
       config_hosts.clear
       previous.each { |host| config_hosts << host }
+      host! "www.example.com"
     end
 end

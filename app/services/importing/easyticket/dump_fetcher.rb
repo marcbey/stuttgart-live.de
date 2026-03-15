@@ -7,7 +7,7 @@ module Importing
     class DumpFetcher
       DEFAULT_PAGE_SIZE = 100
 
-      def initialize(http_client: HttpClient.new, events_api_url: ENV["EASYTICKET_EVENTS_API"])
+      def initialize(http_client: HttpClient.new, events_api_url: AppConfig.easyticket_events_api)
         @http_client = http_client
         @events_api_url = events_api_url.to_s
       end

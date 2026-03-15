@@ -1,15 +1,15 @@
 require "active_support/core_ext/integer/time"
+require Rails.root.join("app/lib/hetzner_deploy_config").to_s
 
 Rails.application.configure do
-  app_host = ENV.fetch("APP_HOST", "stuttgart-live.de")
-  smtp_address = ENV["SMTP_ADDRESS"] || Rails.application.credentials.dig(:smtp, :address)
-  smtp_port = ENV["SMTP_PORT"] || Rails.application.credentials.dig(:smtp, :port)
-  smtp_user_name = ENV["SMTP_USERNAME"] || Rails.application.credentials.dig(:smtp, :user_name)
-  smtp_password = ENV["SMTP_PASSWORD"] || Rails.application.credentials.dig(:smtp, :password)
-  smtp_domain = ENV["SMTP_DOMAIN"] || Rails.application.credentials.dig(:smtp, :domain) || app_host
-  smtp_authentication = ENV["SMTP_AUTHENTICATION"] || Rails.application.credentials.dig(:smtp, :authentication)
-  smtp_enable_starttls_auto = ENV["SMTP_ENABLE_STARTTLS_AUTO"]
-  smtp_enable_starttls_auto = Rails.application.credentials.dig(:smtp, :enable_starttls_auto) if smtp_enable_starttls_auto.nil?
+  app_host = ENV["APP_HOST"].presence || HetznerDeployConfig.app_host
+  smtp_address = AppConfig.smtp_address
+  smtp_port = AppConfig.smtp_port
+  smtp_user_name = AppConfig.smtp_user_name
+  smtp_password = AppConfig.smtp_password
+  smtp_domain = AppConfig.smtp_domain || app_host
+  smtp_authentication = AppConfig.smtp_authentication
+  smtp_enable_starttls_auto = AppConfig.smtp_enable_starttls_auto
 
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -67,8 +67,6 @@ Rails.application.configure do
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: app_host, protocol: "https" }
-  config.x.mailer_from = ENV.fetch("MAILER_FROM", "no-reply@#{app_host}")
-
   if smtp_address.present?
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.smtp_settings = {

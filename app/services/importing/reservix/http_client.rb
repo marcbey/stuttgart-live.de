@@ -41,7 +41,7 @@ module Importing
       private
 
       def api_key
-        value = ENV["RESERVIX_API_KEY"].to_s.strip
+        value = AppConfig.reservix_api_key.to_s.strip
         raise RequestError, "RESERVIX_API_KEY is missing" if value.blank?
 
         value

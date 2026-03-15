@@ -1,9 +1,4 @@
 module ApplicationHelper
-  GOOGLE_ANALYTICS_ENV_KEYS = %w[
-    GOOGLE_ANALYTICS_ID
-    GOOGLE_ANALYTICS_MEASUREMENT_ID
-    GA4_MEASUREMENT_ID
-  ].freeze
   GOOGLE_ANALYTICS_ALLOWED_HOSTS = %w[
     stuttgart-live.de
     www.stuttgart-live.de
@@ -63,10 +58,7 @@ module ApplicationHelper
   def google_analytics_measurement_id
     return unless google_analytics_allowed_host?
 
-    GOOGLE_ANALYTICS_ENV_KEYS
-      .lazy
-      .map { |key| ENV[key].to_s.strip.presence }
-      .find(&:present?)
+    Rails.configuration.x.google_analytics_measurement_id.to_s.strip.presence
   end
 
   def google_analytics_enabled?

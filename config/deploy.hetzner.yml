@@ -1,13 +1,17 @@
+<%
+require File.expand_path("app/lib/hetzner_deploy_config.rb", Dir.pwd)
+%>
+
 # Hetzner production target for Kamal.
 # Usage: bin/kamal deploy -d hetzner
 
 servers:
   web:
-    - <%= ENV.fetch("KAMAL_WEB_HOST", "46.225.224.194") %>
+    - <%= HetznerDeployConfig.web_host %>
 
 proxy:
   ssl: <%= ENV.fetch("APP_SSL", "true") == "true" %>
-  host: <%= ENV.fetch("APP_HOST") %>
+  host: <%= HetznerDeployConfig.app_host %>
   app_port: 80
 
 registry:
@@ -20,30 +24,9 @@ env:
   secret:
     - RAILS_MASTER_KEY
     - DB_PASSWORD
-    - GOOGLE_ANALYTICS_ID
-    - MAILCHIMP_API_KEY
-    - MAILCHIMP_LIST_ID
-    - MAILCHIMP_SERVER_PREFIX
-    - EASYTICKET_EVENTS_API
-    - EASYTICKET_EVENT_DETAIL_API
-    - EASYTICKET_PARTNER_SHOP_ID
-    - EASYTICKET_TICKET_LINK_EVENT_BASE_URL
-    - EVENTIM_FEED_URL
-    - EVENTIM_USER
-    - EVENTIM_PASS
-    - RESERVIX_API_KEY
-    - RESERVIX_EVENTS_API
-    - SMTP_ADDRESS
-    - SMTP_PORT
-    - SMTP_USERNAME
-    - SMTP_PASSWORD
-    - SMTP_DOMAIN
-    - SMTP_AUTHENTICATION
-    - SMTP_ENABLE_STARTTLS_AUTO
-    - MAILER_FROM
   clear:
     SOLID_QUEUE_IN_PUMA: true
-    APP_HOST: <%= ENV.fetch("APP_HOST") %>
+    APP_HOST: <%= HetznerDeployConfig.app_host %>
     DB_HOST: 172.18.0.1
     DB_PORT: 5432
     DB_NAME: <%= ENV.fetch("DB_NAME", "stuttgart_live_de_production") %>

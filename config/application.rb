@@ -24,6 +24,8 @@ module StuttgartLiveDe
     config.time_zone = "Europe/Berlin"
     config.i18n.default_locale = :de
     config.exceptions_app = routes
+    config.x.google_analytics_measurement_id = "G-103580617"
+    config.x.mailer_from = "Stuttgart Live <no-reply@stuttgart-live.schopp3r.de>"
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end

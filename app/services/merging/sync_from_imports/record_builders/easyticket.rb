@@ -130,7 +130,7 @@ module Merging
           direct = projected_attributes[:ticket_url].to_s.strip.presence
           return direct if direct.present? && direct.match?(URL_PATTERN)
 
-          base = ENV["EASYTICKET_TICKET_LINK_EVENT_BASE_URL"].to_s.strip
+          base = AppConfig.easyticket_ticket_link_event_base_url.to_s.strip
           ticket_event_id = payload["title_3"].to_s.strip.presence || external_event_id
           return nil if base.blank? || ticket_event_id.blank?
 

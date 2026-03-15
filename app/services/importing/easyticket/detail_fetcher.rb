@@ -6,8 +6,8 @@ module Importing
     class DetailFetcher
       def initialize(
         http_client: HttpClient.new,
-        event_detail_api: ENV["EASYTICKET_EVENT_DETAIL_API"],
-        partner_shop_id: ENV["EASYTICKET_PARTNER_SHOP_ID"]
+        event_detail_api: AppConfig.easyticket_event_detail_api,
+        partner_shop_id: AppConfig.easyticket_partner_shop_id
       )
         @http_client = http_client
         @event_detail_api = event_detail_api.to_s
