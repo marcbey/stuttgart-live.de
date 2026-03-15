@@ -43,6 +43,77 @@ Wichtige fachliche Bausteine sind dabei:
 - `BlogPost` für redaktionelle Inhalte
 - `NewsletterSubscriber` für Newsletter-Anmeldungen
 
+## Wie die Importer funktionieren
+
+Die Import-Pipeline arbeitet bewusst zweistufig:
+
+1. Die Provider-Importer holen Rohdaten von den externen Quellen und speichern sie in `raw_event_imports`.
+2. Der Merge-Import liest diese Rohimporte, führt Dubletten providerübergreifend zusammen und schreibt daraus `events`, `event_offers` und `event_images`.
+
+Dadurch bleiben die gelieferten Quelldaten nachvollziehbar gespeichert, während das öffentliche Event-Modell trotzdem nur einen bereinigten zusammengeführten Datensatz pro Termin bekommt.
+
+### Gemeinsames Verhalten aller Provider-Importer
+
+Easyticket, Eventim und Reservix folgen demselben Grundmuster:
+
+- Jeder Lauf erzeugt einen `ImportRun` mit Zählern für `fetched`, `filtered`, `imported`, `upserted` und `failed`.
+- Vor dem eigentlichen Start werden hängengebliebene alte Läufe derselben Quelle automatisch als fehlgeschlagen oder abgebrochen markiert.
+- Jeder Importer prüft eine konfigurierbare Orts-Whitelist aus der jeweiligen `ImportSource`. Standardmäßig ist Stuttgart hinterlegt.
+- Treffer außerhalb der Whitelist werden nicht importiert; die dabei gesehenen Städte werden im Run-Metadatenblock als `filtered_out_cities` festgehalten.
+- Pro Quelldatensatz wird ein `RawEventImport` angelegt. Das ist absichtlich append-only: Die Rohhistorie bleibt erhalten, statt ältere Zeilen zu überschreiben.
+- Fehler einzelner Datensätze landen in `import_run_errors`, ohne den kompletten Lauf sofort abzubrechen.
+
+Für den täglichen Betrieb startet `Importing::DailyRunJob` die aktiven Provider standardmäßig über `config/recurring.yml` jeden Tag um `03:05` Uhr. Manuell lassen sich die Läufe im Backend unter den Importquellen oder per Rake-Task starten:
+
+```bash
+bin/rake importing:easyticket:run
+bin/rake importing:eventim:run
+bin/rake importing:reservix:run
+```
+
+### Easyticket
+
+Der Easyticket-Importer lädt zunächst einen Event-Dump und verarbeitet anschließend jeden Datensatz einzeln. Wenn im Dump noch keine brauchbaren Bildkandidaten enthalten sind, wird zusätzlich ein Detail-Request ausgeführt und als `detail_payload` am `RawEventImport` gespeichert. Als eindeutige Rohimport-ID dient im Regelfall `event_id:datum`, damit unterschiedliche Termine desselben Events getrennt bleiben.
+
+### Eventim
+
+Der Eventim-Importer verarbeitet den Feed streamend. Dadurch muss nicht erst die komplette Quelle im Speicher liegen, bevor der Lauf beginnen kann. Auch hier wird pro passendem Feed-Eintrag ein `RawEventImport` geschrieben; die `source_identifier` setzt sich typischerweise aus externer Event-ID und Datum zusammen.
+
+### Reservix
+
+Der Reservix-Importer arbeitet inkrementell. Er merkt sich in der `ImportSourceConfig` einen Checkpoint aus `lastupdate` und der zuletzt verarbeiteten Event-ID. Der nächste Lauf fragt die API mit leichtem Zeitüberlapp erneut ab, überspringt aber bereits bekannte Datensätze anhand dieses Checkpoints. Zusätzlich werden nur buchbare Events übernommen.
+
+### Wie der Merge-Import funktioniert
+
+Der Merge-Import ist der zweite Schritt nach den Provider-Läufen. Er wird im Backend über "Importierte Events synchronisieren" gestartet und läuft technisch als eigener `ImportRun` mit `source_type = "merge"`.
+
+Der Ablauf ist:
+
+1. Zuerst wird je Quelle nur der aktuellste `RawEventImport` pro `source_identifier` berücksichtigt.
+2. Daraus baut `Merging::SyncFromImports::RecordBuilder` normierte Import-Records mit vereinheitlichten Feldern wie Artist, Titel, Startzeit, Venue, Preisen, Links und Bildern.
+3. Diese Records werden providerübergreifend über einen Dublettenschlüssel gruppiert. Der Schlüssel besteht aus normalisiertem Artist-Namen und Startzeit.
+4. Innerhalb einer Gruppe gilt eine Provider-Priorität. Höher priorisierte Quellen liefern bevorzugt die führenden Feldwerte; zusätzliche Ticketangebote und Bilder aus den anderen Quellen bleiben trotzdem erhalten.
+5. `EventUpserter` sucht zuerst ein bestehendes `Event` über `source_fingerprint` oder den gespeicherten `source_snapshot`. Falls nichts passt, wird ein neues Event angelegt.
+6. Danach werden `event_offers`, Genres und Bilder synchronisiert und ein Änderungslog mit `merged_create` oder `merged_update` geschrieben.
+
+Wichtig für das Verhalten im Backend:
+
+- Neue oder aktualisierte automatisch gemergte Events werden nur dann direkt veröffentlicht, wenn die Pflichtfelder inklusive Bild vorhanden sind.
+- Fehlen dafür wichtige Informationen, landet das Event stattdessen in `needs_review`.
+- Bereits automatisch veröffentlichte Events fallen ebenfalls zurück auf `needs_review`, wenn sie nach einem späteren Merge nicht mehr vollständig genug sind.
+- Der Button zum Starten des Merge-Imports wird im Backend hervorgehoben, sobald seit dem letzten erfolgreichen Merge neue erfolgreiche Provider-Imports vorliegen.
+
+Wichtig für Updates bestehender Events:
+
+- Bei jedem Merge-Update werden `start_at`, `venue`, `badge_text`, `min_price`, `max_price`, `primary_source`, `source_fingerprint` und `source_snapshot` neu aus den aktuellen Importdaten gesetzt.
+- `event_offers` werden vollständig auf den aktuellen Importstand synchronisiert: bestehende passende Offers werden aktualisiert, neue angelegt und nicht mehr vorhandene entfernt.
+- Bilder werden ebenfalls auf den aktuellen Merge-Stand synchronisiert.
+- Das Genre wird nur gesetzt oder ersetzt, wenn das Event neu ist oder bisher noch keine Genres hat.
+- `title`, `artist_name`, `city`, `promoter_id`, `doors_at`, `youtube_url`, `homepage_url`, `facebook_url` und `event_info` werden bei einem bestehenden Event durch den Merge nicht überschrieben. Diese Felder werden nur beim erstmaligen Anlegen aus den Importdaten vorbelegt.
+- Manuelle redaktionelle Änderungen an genau diesen nicht überschriebenen Feldern bleiben bei späteren Merge-Läufen deshalb erhalten.
+
+Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In diesem Fall werden nur Fingerprints neu gebaut, die seit `last_run_at` von neuen Rohimporten berührt wurden; für diese Gruppen wird aber jeweils wieder der aktuelle Gesamtstand aller Quellen zusammengeführt.
+
 ## Wo man im Code typischerweise hinschaut
 
 - `app/controllers/public` für öffentliche Seiten
@@ -92,6 +163,8 @@ Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese
 - GitHub-Secrets für Deployments: `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD`, `KAMAL_SSH_PRIVATE_KEY`
 
 Ohne Mailchimp-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus.
+
+Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`. Diese Werte werden im Admin-Bereich unter `Einstellungen` gepflegt und sind bewusst nicht in Credentials oder Umgebungsvariablen abgelegt. Aktuell liegen dort unter anderem die `sks_promoter_ids` für SKS-Filter und Sortierung sowie die `sks_organizer_notes` für den Standardtext bei SKS-Events ohne eigene Veranstalterhinweise.
 
 ### Typische Arbeitsweisen
 
