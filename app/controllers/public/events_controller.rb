@@ -30,7 +30,7 @@ module Public
 
       @events = relation.limit(PER_PAGE).offset((@browse_state.page - 1) * PER_PAGE)
       @next_page = @browse_state.page + 1 if relation.offset(@browse_state.page * PER_PAGE).limit(1).exists?
-      homepage_relation = visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: nil)
+      homepage_relation = published_visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: nil)
       assign_homepage_sections(homepage_relation) if @browse_state.page == 1
 
       respond_to do |format|
@@ -104,6 +104,15 @@ module Public
       ).call
     end
 
+    def published_visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
+      Public::VisibleEventsQuery.new(
+        scope: published_future_events_relation,
+        filter: filter,
+        event_date: event_date,
+        query: query
+      ).call
+    end
+
     def index_events_relation
       return published_future_events_relation unless authenticated?
 
@@ -122,12 +131,16 @@ module Public
     end
 
     def assign_homepage_sections(current_relation)
-      scoped_highlights = visible_events_relation(
+      scoped_highlights = published_visible_events_relation(
         filter: Public::Events::BrowseState::FILTER_SKS,
         event_date: @browse_state.event_date,
         query: nil
       ).reorder(:start_at, :id)
-      scoped_all = visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: @browse_state.event_date, query: nil)
+      scoped_all = published_visible_events_relation(
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: @browse_state.event_date,
+        query: nil
+      )
       scoped_reservix = scoped_all.where(primary_source: "reservix")
 
       @home_featured_events = scoped_highlights.to_a
@@ -172,7 +185,7 @@ module Public
     end
 
     def tagestipp_relation
-      visible_events_relation(
+      published_visible_events_relation(
         filter: Public::Events::BrowseState::FILTER_ALL,
         event_date: Time.zone.today,
         query: nil

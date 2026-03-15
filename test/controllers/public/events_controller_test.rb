@@ -119,12 +119,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, hidden_event.artist_name
   end
 
-  test "index shows future unpublished events for authenticated users" do
+  test "index shows future unpublished events in search results for authenticated users" do
     hidden_event = Event.create!(
       slug: "auth-visible-draft-event",
       source_fingerprint: "test::public::auth-visible-draft",
       title: "Auth Visible Draft Event",
-      artist_name: "Auth Visible Draft Artist",
+      artist_name: "Auth Visible Draft Search Artist",
       start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
@@ -132,14 +132,146 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       status: "needs_review",
       source_snapshot: {}
     )
+    matching_published_event = Event.create!(
+      slug: "auth-visible-published-search-event",
+      source_fingerprint: "test::public::auth-visible-search::published",
+      title: "Auth Visible Published Search Event",
+      artist_name: "Auth Visible Draft Search Published",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
 
     sign_in_as(@user)
+
+    get events_url(filter: "all", q: "Auth Visible Draft Search")
+
+    assert_response :success
+    assert_includes response.body, hidden_event.artist_name
+    assert_includes response.body, matching_published_event.artist_name
+    assert_includes response.body, "event-card-status-select"
+  end
+
+  test "index shows only published events in homepage sections for authenticated users" do
+    sign_in_as(@user)
+
+    published_highlight = Event.create!(
+      slug: "auth-homepage-published-highlight",
+      source_fingerprint: "test::public::auth-homepage::published-highlight",
+      title: "Auth Homepage Published Highlight",
+      artist_name: "Auth Homepage Published Highlight Artist",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      primary_source: "eventim",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    unpublished_highlight = Event.create!(
+      slug: "auth-homepage-unpublished-highlight",
+      source_fingerprint: "test::public::auth-homepage::unpublished-highlight",
+      title: "Auth Homepage Unpublished Highlight",
+      artist_name: "Auth Homepage Unpublished Highlight Artist",
+      start_at: 11.days.from_now.change(hour: 21, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      primary_source: "eventim",
+      status: "needs_review",
+      source_snapshot: {}
+    )
+
+    published_slider = Event.create!(
+      slug: "auth-homepage-published-slider",
+      source_fingerprint: "test::public::auth-homepage::published-slider",
+      title: "Auth Homepage Published Slider",
+      artist_name: "Auth Homepage Published Slider Artist",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Theaterhaus",
+      city: "Stuttgart",
+      promoter_id: "99999",
+      primary_source: "reservix",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    unpublished_slider = Event.create!(
+      slug: "auth-homepage-unpublished-slider",
+      source_fingerprint: "test::public::auth-homepage::unpublished-slider",
+      title: "Auth Homepage Unpublished Slider",
+      artist_name: "Auth Homepage Unpublished Slider Artist",
+      start_at: 12.days.from_now.change(hour: 21, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      promoter_id: "99999",
+      primary_source: "reservix",
+      status: "needs_review",
+      source_snapshot: {}
+    )
+
+    published_tagestipp = Event.create!(
+      slug: "auth-homepage-published-tagestipp",
+      source_fingerprint: "test::public::auth-homepage::published-tagestipp",
+      title: "Auth Homepage Published Tagestipp",
+      artist_name: "Auth Homepage Published Tagestipp Artist",
+      start_at: Time.zone.today.in_time_zone.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Cann",
+      city: "Stuttgart",
+      promoter_id: "99999",
+      primary_source: "eventim",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    unpublished_tagestipp = Event.create!(
+      slug: "auth-homepage-unpublished-tagestipp",
+      source_fingerprint: "test::public::auth-homepage::unpublished-tagestipp",
+      title: "Auth Homepage Unpublished Tagestipp",
+      artist_name: "Auth Homepage Unpublished Tagestipp Artist",
+      start_at: Time.zone.today.in_time_zone.change(hour: 21, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      promoter_id: "99999",
+      primary_source: "eventim",
+      status: "needs_review",
+      source_snapshot: {}
+    )
 
     get events_url(filter: "all")
 
     assert_response :success
-    assert_includes response.body, hidden_event.artist_name
-    assert_includes response.body, "event-card-status-select"
+
+    document = Nokogiri::HTML.parse(response.body)
+    highlights_section = document.css("section.home-featured-section").find do |section|
+      section.at_css("h2")&.text == "Highlights"
+    end
+    all_events_section = document.css("section.home-slider-section").find do |section|
+      section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+    end
+    tagestipp_section = document.css("section.home-slider-section").find do |section|
+      section.at_css("h2")&.text == "Tagestipp"
+    end
+
+    assert highlights_section.present?, "expected Highlights section to be rendered"
+    assert all_events_section.present?, "expected all events section to be rendered"
+    assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
+
+    highlight_names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
+    all_event_names = all_events_section.css(".home-slider-card-name").map(&:text)
+    tagestipp_names = tagestipp_section.css(".home-slider-card-name").map(&:text)
+
+    assert_includes highlight_names, published_highlight.artist_name
+    assert_not_includes highlight_names, unpublished_highlight.artist_name
+    assert_includes all_event_names, published_slider.artist_name
+    assert_not_includes all_event_names, unpublished_slider.artist_name
+    assert_includes tagestipp_names, published_tagestipp.artist_name
+    assert_not_includes tagestipp_names, unpublished_tagestipp.artist_name
   end
 
   test "index defaults to SKS filter" do
@@ -1088,16 +1220,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "index shows status overlay for authenticated users" do
     sign_in_as(@user)
-    review_event = events(:needs_review_one)
+    event = @published_event
 
     get events_url(filter: "all")
 
     assert_response :success
     assert_includes response.body, "event-card-status-select"
-    assert_includes response.body, status_event_path(review_event.slug)
+    assert_includes response.body, status_event_path(event.slug)
     assert_includes response.body, "data-controller=\"public-card-status\""
     assert_includes response.body, "change-&gt;public-card-status#change"
-    assert_includes response.body, "/backend/events?event_id=#{review_event.id}&amp;status=#{review_event.status}"
+    assert_includes response.body, "/backend/events?event_id=#{event.id}&amp;status=#{event.status}"
   end
 
   test "status update requires authentication" do
