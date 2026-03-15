@@ -13,7 +13,7 @@ module Backend
     def require_admin!
       return if current_user&.admin?
 
-      redirect_to current_user&.backend_access? ? backend_root_path : root_path, alert: "Nur Admins dürfen Benutzer verwalten."
+      redirect_to current_user&.backend_access? ? backend_root_path : root_path, alert: "Nur Admins dürfen diesen Bereich verwalten."
     end
   end
 end

@@ -1,9 +1,33 @@
 require "test_helper"
 
 class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
+  setup do
+    AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382" ])
+    AppSetting.reset_cache!
+  end
+
+  teardown do
+    AppSetting.reset_cache!
+    AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
+  end
+
   test "filters to sks promoter ids" do
-    matching_event = create_visible_event(title: "SKS Query", artist_name: "SKS Artist", promoter_id: Event::SKS_PROMOTER_IDS.first)
+    matching_event = create_visible_event(title: "SKS Query", artist_name: "SKS Artist", promoter_id: AppSetting.sks_promoter_ids.first)
     create_visible_event(title: "Other Query", artist_name: "Other Artist", promoter_id: "99999")
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_SKS
+    ).call
+
+    assert_equal [ matching_event ], result.to_a
+  end
+
+  test "uses configured sks promoter ids" do
+    AppSetting.find_by!(key: AppSetting::SKS_PROMOTER_IDS_KEY).update!(value: [ "77777" ])
+    AppSetting.reset_cache!
+    matching_event = create_visible_event(title: "Configured SKS Query", artist_name: "Configured Artist", promoter_id: "77777")
+    create_visible_event(title: "Other SKS Query", artist_name: "Default Artist", promoter_id: "10135")
 
     result = Public::VisibleEventsQuery.new(
       scope: Event.published_live,

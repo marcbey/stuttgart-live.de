@@ -2,9 +2,17 @@ require "test_helper"
 
 class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   setup do
+    AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
+    AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382" ])
+    AppSetting.reset_cache!
     @published_event = events(:published_one)
     @past_published_event = events(:published_past_one)
     @user = users(:one)
+  end
+
+  teardown do
+    AppSetting.reset_cache!
+    AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
   end
 
   test "index is publicly accessible" do
@@ -74,7 +82,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: selected_date.in_time_zone.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       status: "published",
       published_at: 1.day.ago,
       source_snapshot: {}
@@ -108,7 +116,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       status: "needs_review",
       source_snapshot: {}
     )
@@ -128,7 +136,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       status: "needs_review",
       source_snapshot: {}
     )
@@ -140,7 +148,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "LKA Longhorn",
       city: "Stuttgart",
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       status: "published",
       published_at: 1.day.ago,
       source_snapshot: {}
@@ -167,7 +175,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Liederhalle",
       city: "Stuttgart",
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       primary_source: "eventim",
       status: "published",
       published_at: 1.day.ago,
@@ -181,7 +189,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: 11.days.from_now.change(hour: 21, min: 0, sec: 0),
       venue: "Porsche-Arena",
       city: "Stuttgart",
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       primary_source: "eventim",
       status: "needs_review",
       source_snapshot: {}
@@ -347,7 +355,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       source_snapshot: {}
     )
 
@@ -361,7 +369,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      promoter_id: Event::SKS_PROMOTER_IDS.second,
+      promoter_id: AppSetting.sks_promoter_ids.second,
       source_snapshot: {}
     )
 
@@ -375,7 +383,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      promoter_id: Event::SKS_PROMOTER_IDS.last,
+      promoter_id: AppSetting.sks_promoter_ids.last,
       source_snapshot: {}
     )
 
@@ -564,7 +572,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       status: "published",
       published_at: 1.day.ago,
       primary_source: "eventim",
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       source_snapshot: {}
     )
 
@@ -886,7 +894,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       source_snapshot: {}
     )
 
@@ -1097,7 +1105,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       event_info: "Öffentliche Beschreibung",
       organizer_notes: nil,
       show_organizer_notes: false,
-      promoter_id: Event::SKS_PROMOTER_IDS.first,
+      promoter_id: AppSetting.sks_promoter_ids.first,
       status: "published",
       published_at: 1.day.ago,
       source_snapshot: {}

@@ -195,7 +195,9 @@ module Public
     end
 
     def sks_first_order_sql
-      quoted_ids = Event::SKS_PROMOTER_IDS.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
+      quoted_ids = Event.sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
+      return "1" if quoted_ids.blank?
+
       "CASE WHEN events.promoter_id IN (#{quoted_ids}) THEN 0 ELSE 1 END"
     end
 

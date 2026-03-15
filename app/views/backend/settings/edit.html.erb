@@ -1,0 +1,38 @@
+<% content_for :title, "Einstellungen" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Einstellungen</h1>
+    </div>
+  </header>
+
+  <div class="editor-panel">
+    <% if @app_setting.errors.any? %>
+      <div class="flash flash-alert">
+        <strong>Bitte Eingaben prüfen.</strong>
+        <ul>
+          <% @app_setting.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @app_setting, url: backend_settings_path, method: :patch, class: "editor-form" do |form| %>
+      <div>
+        <%= form.label :sks_promoter_ids_text, "SKS Promoter IDs (eine Zeile pro ID oder komma-separiert)", class: "form-label" %>
+        <%= form.text_area :sks_promoter_ids_text,
+                           value: @app_setting.sks_promoter_ids_text,
+                           rows: 8,
+                           class: "form-textarea",
+                           aria: { describedby: "sks-promoter-ids-help" } %>
+        <p id="sks-promoter-ids-help" class="form-hint">Diese IDs steuern den SKS-Filter, die Tagestipp-Sortierung und automatische SKS-spezifische Hinweise bei Events.</p>
+      </div>
+
+      <div class="editor-footer">
+        <%= form.submit "Speichern", class: "button" %>
+      </div>
+    <% end %>
+  </div>
+</section>

@@ -1,6 +1,5 @@
 class Event < ApplicationRecord
   STATUSES = %w[imported needs_review ready_for_publish published rejected].freeze
-  SKS_PROMOTER_IDS = %w[10135 10136 382].freeze
   DEFAULT_SKS_ORGANIZER_NOTES = <<~TEXT.strip
     Wir bitten um Beachtung verstärkter Sicherheitsmaßnahmen
     Verbot von Handtaschen, Rucksäcken und Helmen
@@ -83,6 +82,10 @@ class Event < ApplicationRecord
   scope :by_status, ->(status) { where(status: status) }
   scope :published_live, -> { where(status: "published").where("published_at <= ?", Time.current).chronological }
 
+  def self.sks_promoter_ids
+    AppSetting.sks_promoter_ids
+  end
+
   def published?
     status == "published"
   end
@@ -147,7 +150,7 @@ class Event < ApplicationRecord
   end
 
   def sks_promoter?
-    SKS_PROMOTER_IDS.include?(promoter_id.to_s)
+    self.class.sks_promoter_ids.include?(promoter_id.to_s)
   end
 
   def public_organizer_notes

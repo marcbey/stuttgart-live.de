@@ -39,6 +39,10 @@ module ApplicationHelper
     controller_path == "backend/import_sources" || controller_path == "backend/import_runs"
   end
 
+  def settings_nav_active?
+    controller_path == "backend/settings"
+  end
+
   def compiled_asset_exists?(logical_path)
     manifest_assets =
       if Rails.application.respond_to?(:assets_manifest)

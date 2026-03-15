@@ -21,6 +21,7 @@ Rails.application.routes.draw do
 
   namespace :backend do
     resource :account_password, only: [ :edit, :update ]
+    resource :settings, only: [ :edit, :update ]
     resources :blog_posts, path: "blog", except: [ :show ]
     resources :users, only: [ :index, :new, :create, :edit, :update ]
 

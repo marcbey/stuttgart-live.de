@@ -106,6 +106,7 @@
                   <%= link_to "Blog", backend_blog_posts_path, class: app_nav_link_class(active: blog_nav_active?), aria: { current: ("page" if blog_nav_active?) } %>
                 <% end %>
                 <% if current_user.admin? %>
+                  <%= link_to "Einstellungen", edit_backend_settings_path, class: app_nav_link_class(active: settings_nav_active?), aria: { current: ("page" if settings_nav_active?) } %>
                   <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users"), aria: { current: ("page" if controller_path == "backend/users") } %>
                 <% end %>
                 <%= link_to "Passwort", edit_backend_account_password_path, class: app_nav_link_class(active: controller_path == "backend/account_passwords"), aria: { current: ("page" if controller_path == "backend/account_passwords") } %>
