@@ -18,8 +18,12 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal %w[500 600], AppSetting.sks_promoter_ids
   end
 
-  test "returns empty sks promoter ids when nothing is configured" do
-    assert_equal [], AppSetting.sks_promoter_ids
+  test "returns seeded sks promoter ids from the database" do
+    AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
+    AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: %w[10135 10136 382])
+    AppSetting.reset_cache!
+
+    assert_equal %w[10135 10136 382], AppSetting.sks_promoter_ids
   end
 
   test "requires at least one configured sks promoter id" do

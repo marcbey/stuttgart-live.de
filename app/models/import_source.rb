@@ -1,8 +1,5 @@
 class ImportSource < ApplicationRecord
   SOURCE_TYPES = %w[easyticket eventim reservix].freeze
-  DEFAULT_EASYTICKET_LOCATION_WHITELIST = [
-    "Stuttgart"
-  ].freeze
 
   has_one :import_source_config, dependent: :destroy
   has_many :import_runs, dependent: :destroy
@@ -45,11 +42,7 @@ class ImportSource < ApplicationRecord
   end
 
   def configured_location_whitelist
-    configured = import_source_config&.location_whitelist.to_a
-    return configured if configured.present?
-    return DEFAULT_EASYTICKET_LOCATION_WHITELIST if easyticket?
-
-    []
+    import_source_config&.location_whitelist.to_a
   end
 
   private
@@ -61,25 +54,9 @@ class ImportSource < ApplicationRecord
     source.save! if source.new_record? || source.changed?
 
     config = source.import_source_config || source.build_import_source_config
-    default_location_whitelist = default_location_whitelist_for(source_type)
-
-    if config.location_whitelist.blank? && default_location_whitelist.present?
-      config.location_whitelist = default_location_whitelist
-      config.save!
-    elsif config.new_record?
-      config.save!
-    end
+    config.save! if config.new_record?
 
     source
-  end
-
-  def self.default_location_whitelist_for(source_type)
-    case source_type
-    when "easyticket", "eventim", "reservix"
-      DEFAULT_EASYTICKET_LOCATION_WHITELIST
-    else
-      []
-    end
   end
 
   def apply_defaults

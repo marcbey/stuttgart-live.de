@@ -22,6 +22,10 @@ module Importing
 
       setup do
         @source = ImportSource.ensure_reservix_source!
+        (@source.import_source_config || @source.build_import_source_config).tap do |config|
+          config.location_whitelist = [ "Stuttgart" ]
+          config.save!
+        end
       end
 
       test "imports paged bookable rows into raw_event_imports and persists checkpoint" do

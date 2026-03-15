@@ -58,7 +58,7 @@ Easyticket, Eventim und Reservix folgen demselben Grundmuster:
 
 - Jeder Lauf erzeugt einen `ImportRun` mit Zählern für `fetched`, `filtered`, `imported`, `upserted` und `failed`.
 - Vor dem eigentlichen Start werden hängengebliebene alte Läufe derselben Quelle automatisch als fehlgeschlagen oder abgebrochen markiert.
-- Jeder Importer prüft eine konfigurierbare Orts-Whitelist aus der jeweiligen `ImportSource`. Standardmäßig ist Stuttgart hinterlegt.
+- Jeder Importer prüft eine konfigurierbare Orts-Whitelist aus der jeweiligen `ImportSource`.
 - Treffer außerhalb der Whitelist werden nicht importiert; die dabei gesehenen Städte werden im Run-Metadatenblock als `filtered_out_cities` festgehalten.
 - Pro Quelldatensatz wird ein `RawEventImport` angelegt. Das ist absichtlich append-only: Die Rohhistorie bleibt erhalten, statt ältere Zeilen zu überschreiben.
 - Fehler einzelner Datensätze landen in `import_run_errors`, ohne den kompletten Lauf sofort abzubrechen.
