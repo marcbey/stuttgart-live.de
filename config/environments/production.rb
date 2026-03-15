@@ -2,7 +2,9 @@ require "active_support/core_ext/integer/time"
 require Rails.root.join("app/lib/hetzner_deploy_config").to_s
 
 Rails.application.configure do
-  app_host = ENV["APP_HOST"].presence || HetznerDeployConfig.app_host
+  # The Docker image build excludes deploy config files. Kamal still injects
+  # APP_HOST at runtime from the shared Hetzner deploy config.
+  app_host = ENV["APP_HOST"].presence || HetznerDeployConfig.app_host_if_present
   smtp_address = AppConfig.smtp_address
   smtp_port = AppConfig.smtp_port
   smtp_user_name = AppConfig.smtp_user_name
@@ -66,7 +68,7 @@ Rails.application.configure do
   config.action_mailer.raise_delivery_errors = true
 
   # Set host to be used by links generated in mailer templates.
-  config.action_mailer.default_url_options = { host: app_host, protocol: "https" }
+  config.action_mailer.default_url_options = { host: app_host, protocol: "https" }.compact
   if smtp_address.present?
     config.action_mailer.delivery_method = :smtp
     config.action_mailer.smtp_settings = {
