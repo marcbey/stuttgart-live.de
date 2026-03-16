@@ -1,17 +1,14 @@
 # TODOs
 
 ## Infra
-- Db Backup Strategie
-- File Backup Strategie
-- Mailchimp ID fehlt
-- Rollbacks inkl. migrations
-- Unnötige vars aus .env also config vars refactorn
-- OWASP checks
-- Handbuch erstellen
-- Data rentention
+- DB Backup & File Backup Strategie
+- Mailchimp ID fehlt / Newsletter integration
+- Rollbacks inkl. migration rollbacks ausprobieren
+- OWASP checks initial & evtl. als bin/ci ?
+- wie mit Data rentention umgehen?
+- Logfile rotation vorhanden?
 
 ## Importer
-- was genau passiert bei einem merge update: überschreibt er editierte Daten
 
 ## Redaktion
 - Genre mapping
