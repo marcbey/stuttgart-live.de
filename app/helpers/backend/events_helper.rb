@@ -23,6 +23,10 @@ module Backend::EventsHelper
     event_payload_presenter(event).display_promoter_id
   end
 
+  def event_display_ticket_url(event)
+    event.preferred_ticket_offer&.resolved_ticket_url.to_s.strip.presence
+  end
+
   def event_status_label(status)
     case status.to_s
     when "imported" then "importiert"

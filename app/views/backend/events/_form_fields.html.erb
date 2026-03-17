@@ -2,7 +2,7 @@
 <% show_promoter_id = local_assigns.fetch(:show_promoter_id, false) %>
 <% display_promoter_id = show_promoter_id ? (local_assigns[:display_promoter_id] || event_display_promoter_id(event)) : nil %>
 <% editable_promoter_id = local_assigns.fetch(:editable_promoter_id, false) %>
-<% manual_ticket_url = local_assigns[:manual_ticket_url] %>
+<% manual_ticket_url = local_assigns.fetch(:manual_ticket_url, event_display_ticket_url(event)) %>
 
 <div class="editor-grid">
   <div>

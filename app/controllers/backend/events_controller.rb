@@ -89,6 +89,7 @@ module Backend
       set_publishing_fields!(@event)
 
       if @event.save
+        sync_ticket_offer!(@event)
         assign_genres!(@event) if params[:event].respond_to?(:key?) && params[:event].key?(:genre_ids)
         refresh_completeness!(@event)
         Editorial::EventChangeLogger.log!(
@@ -318,6 +319,23 @@ module Backend
         priority_rank: 0,
         sold_out: false
       )
+    end
+
+    def sync_ticket_offer!(event)
+      preferred_offer = event.preferred_ticket_offer
+
+      if manual_ticket_url.present?
+        offer = preferred_offer || event.event_offers.build(
+          source: "manual",
+          source_event_id: event.id.to_s,
+          priority_rank: 0,
+          sold_out: false
+        )
+        offer.ticket_url = manual_ticket_url
+        offer.save!
+      elsif preferred_offer.present?
+        preferred_offer.update!(ticket_url: nil)
+      end
     end
 
     def uploaded_files_from(values, label:)

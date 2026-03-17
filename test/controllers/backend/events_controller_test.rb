@@ -72,6 +72,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='checkbox'][name='event[genre_ids][]'][value='#{genres(:schlager).id}']"
   end
 
+  test "show populates ticket url with the frontend ticket url" do
+    sign_in_as(@user)
+
+    get backend_event_url(@published_event, status: "published")
+
+    assert_response :success
+    assert_select "input[name='event[ticket_url]'][value='https://example.com/tickets/published']"
+  end
+
   test "new shows the same editable fields as the event editor" do
     sign_in_as(@user)
 
@@ -302,6 +311,13 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   test "updates event" do
     sign_in_as(@user)
     doors_at = Time.zone.parse("2026-07-10 18:30:00")
+    offer = @event.event_offers.create!(
+      source: "manual",
+      source_event_id: @event.id.to_s,
+      ticket_url: "https://tickets.example/original",
+      priority_rank: 0,
+      sold_out: false
+    )
 
     patch backend_event_url(@event), params: {
       event: {
@@ -316,6 +332,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         homepage_url: "https://example.com",
         instagram_url: "https://instagram.com/example",
         facebook_url: "https://facebook.com/example",
+        ticket_url: "https://tickets.example/updated",
         status: "needs_review"
       }
     }
@@ -329,6 +346,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com", @event.homepage_url
     assert_equal "https://instagram.com/example", @event.instagram_url
     assert_equal "https://facebook.com/example", @event.facebook_url
+    assert_equal "https://tickets.example/updated", offer.reload.resolved_ticket_url
+    assert_equal "https://tickets.example/updated", @event.preferred_ticket_offer&.resolved_ticket_url
   end
 
   test "creates manual event with preuploaded images and extended editor fields" do
