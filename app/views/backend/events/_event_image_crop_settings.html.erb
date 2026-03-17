@@ -1,0 +1,40 @@
+<div class="action-cell">
+  <label class="form-label" for="event_image_grid_variant">Grid-Variante</label>
+  <%= select_tag "event_image[grid_variant]",
+                 options_for_select(EventImage::GRID_VARIANTS.map { |variant| [ variant, variant ] }, selected_grid_variant),
+                 class: "form-input",
+                 data: { event_image_crop_preview_target: "gridVariant", action: "change->event-image-crop-preview#update" } %>
+  <p class="event-image-crop-hint">Legt das Seitenverhältnis der Event-Kachel fest: <code>1x1</code> ist der Standard, <code>2x1</code> ist breit, <code>1x2</code> hoch und <code>2x2</code> groß.</p>
+</div>
+
+<div class="event-image-crop-controls">
+  <label class="form-label" for="<%= dom_id(event_image, :card_focus_x) %>">Ausschnitt horizontal <span data-event-image-crop-preview-target="focusXOutput"><%= event_image.card_focus_x_value.round %>%</span></label>
+  <%= range_field_tag "event_image[card_focus_x]",
+                      event_image.card_focus_x_value,
+                      min: 0,
+                      max: 100,
+                      step: 1,
+                      id: dom_id(event_image, :card_focus_x),
+                      class: "form-range",
+                      data: { event_image_crop_preview_target: "focusX", action: "input->event-image-crop-preview#update" } %>
+
+  <label class="form-label" for="<%= dom_id(event_image, :card_focus_y) %>">Ausschnitt vertikal <span data-event-image-crop-preview-target="focusYOutput"><%= event_image.card_focus_y_value.round %>%</span></label>
+  <%= range_field_tag "event_image[card_focus_y]",
+                      event_image.card_focus_y_value,
+                      min: 0,
+                      max: 100,
+                      step: 1,
+                      id: dom_id(event_image, :card_focus_y),
+                      class: "form-range",
+                      data: { event_image_crop_preview_target: "focusY", action: "input->event-image-crop-preview#update" } %>
+
+  <label class="form-label" for="<%= dom_id(event_image, :card_zoom) %>">Zoom <span data-event-image-crop-preview-target="zoomOutput"><%= event_image.card_zoom_value.round %>%</span></label>
+  <%= range_field_tag "event_image[card_zoom]",
+                      event_image.card_zoom_value,
+                      min: 100,
+                      max: 300,
+                      step: 5,
+                      id: dom_id(event_image, :card_zoom),
+                      class: "form-range",
+                      data: { event_image_crop_preview_target: "zoom", action: "input->event-image-crop-preview#update" } %>
+</div>

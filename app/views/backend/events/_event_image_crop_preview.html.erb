@@ -1,0 +1,9 @@
+<div class="event-image-crop-frame"
+     data-event-image-crop-preview-target="previewFrame"
+     data-grid-variant="<%= selected_grid_variant %>">
+  <%= image_tag optimized_event_image_source,
+                alt: event.artist_name.to_s.strip.presence || event.title.to_s,
+                class: "event-image-crop-preview-image",
+                data: { event_image_crop_preview_target: "previewImage" } %>
+  <div class="event-image-crop-box is-hidden" data-event-image-crop-preview-target="previewBox"></div>
+</div>

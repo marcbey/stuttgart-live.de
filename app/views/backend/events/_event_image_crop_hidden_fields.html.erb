@@ -1,0 +1,16 @@
+<%= hidden_field_tag "event_image[grid_variant]",
+                     selected_grid_variant,
+                     form: editor_form_id,
+                     data: { event_image_crop_preview_target: "saveGridVariant" } %>
+<%= hidden_field_tag "event_image[card_focus_x]",
+                     event_image.card_focus_x_value,
+                     form: editor_form_id,
+                     data: { event_image_crop_preview_target: "saveFocusX" } %>
+<%= hidden_field_tag "event_image[card_focus_y]",
+                     event_image.card_focus_y_value,
+                     form: editor_form_id,
+                     data: { event_image_crop_preview_target: "saveFocusY" } %>
+<%= hidden_field_tag "event_image[card_zoom]",
+                     event_image.card_zoom_value,
+                     form: editor_form_id,
+                     data: { event_image_crop_preview_target: "saveZoom" } %>
