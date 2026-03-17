@@ -340,6 +340,7 @@ module Backend
 
     def detail_hero_crop_params
       params.fetch(:event_image, ActionController::Parameters.new).permit(
+        :sub_text,
         :grid_variant,
         :card_focus_x,
         :card_focus_y,

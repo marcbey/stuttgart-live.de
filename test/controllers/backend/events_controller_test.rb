@@ -105,16 +105,18 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
   end
 
-  test "slider image meta actions use separate forms for save and delete" do
+  test "slider image meta actions keep delete separate from meta form" do
     sign_in_as(@user)
     image = create_event_image(event: @event, purpose: EventImage::PURPOSE_SLIDER)
 
     get backend_events_url(status: "needs_review", event_id: @event.id)
 
     assert_response :success
-    assert_select "form##{ActionView::RecordIdentifier.dom_id(image, :meta)}"
-    assert_select "button[form='#{ActionView::RecordIdentifier.dom_id(image, :meta)}']", text: "Save Meta"
-    assert_select "form##{ActionView::RecordIdentifier.dom_id(image, :meta)} form", count: 0
+    assert_select ".slider-image-editor-card .slider-image-meta-form", count: 1
+    assert_select ".slider-image-editor-card .slider-image-meta-actions .button_to", count: 1
+    assert_select "input[value='Save Meta']", count: 0
+    assert_select "button", text: "Save Meta", count: 0
+    assert_select ".slider-image-editor-card .slider-image-meta-form form", count: 0
   end
 
   test "show includes event image crop fields in the main editor form" do
@@ -124,10 +126,12 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url(status: "needs_review", event_id: @event.id)
 
     assert_response :success
+    assert_select "input[name='event_image[sub_text]'][form='editor_form_event_#{@event.id}'][value='#{image.sub_text}']"
     assert_select "input[name='event_image[grid_variant]'][form='editor_form_event_#{@event.id}'][value='#{image.grid_variant}']"
     assert_select "input[name='event_image[card_focus_x]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_x_value}']"
     assert_select "input[name='event_image[card_focus_y]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_y_value}']"
     assert_select "input[name='event_image[card_zoom]'][form='editor_form_event_#{@event.id}'][value='#{image.card_zoom_value}']"
+    assert_includes response.body, "Kein Crop</code> verwendet die Standard-Kachelgröße"
   end
 
   test "index renders status chips without counts and shows filtered event count" do
@@ -586,6 +590,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         status: "needs_review"
       },
       event_image: {
+        sub_text: "Foto: Neues Copyright",
         grid_variant: EventImage::GRID_VARIANT_1X2,
         card_focus_x: "18",
         card_focus_y: "72",
@@ -595,6 +600,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     }, as: :turbo_stream
 
     assert_response :success
+    assert_equal "Foto: Neues Copyright", image.reload.sub_text
     assert_equal EventImage::GRID_VARIANT_1X2, image.reload.grid_variant
     assert_equal 18.0, image.card_focus_x_value
     assert_equal 72.0, image.card_focus_y_value

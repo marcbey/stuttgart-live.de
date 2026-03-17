@@ -6,23 +6,46 @@
   <% if event_image.present? %>
     <% optimized_event_image_source = optimized_event_image_source(event_image) %>
     <% editor_form_id = dom_id(event, :editor_form) %>
-    <% meta_form_id = dom_id(event_image, :meta) %>
-    <% crop_form_id = dom_id(event_image, :crop) %>
+    <% event_image_sub_text_upload_id = dom_id(event_image, :upload_sub_text) %>
 
-    <div class="event-image-main-card">
-      <div class="event-image-main-head">
-        <%= image_tag optimized_event_image_source,
-                      alt: event.artist_name.to_s.strip.presence || event.title.to_s,
-                      class: "event-image-main-thumb" %>
-        <div class="event-image-main-side">
+    <div class="event-image-crop-shell">
+      <div class="event-image-crop-editor" data-controller="event-image-crop-preview">
+        <%= hidden_field_tag "event_image[grid_variant]",
+                             event_image.grid_variant,
+                             form: editor_form_id,
+                             data: { event_image_crop_preview_target: "saveGridVariant" } %>
+        <%= hidden_field_tag "event_image[card_focus_x]",
+                             event_image.card_focus_x_value,
+                             form: editor_form_id,
+                             data: { event_image_crop_preview_target: "saveFocusX" } %>
+        <%= hidden_field_tag "event_image[card_focus_y]",
+                             event_image.card_focus_y_value,
+                             form: editor_form_id,
+                             data: { event_image_crop_preview_target: "saveFocusY" } %>
+        <%= hidden_field_tag "event_image[card_zoom]",
+                             event_image.card_zoom_value,
+                             form: editor_form_id,
+                             data: { event_image_crop_preview_target: "saveZoom" } %>
+        <div class="event-image-crop-frame"
+             data-event-image-crop-preview-target="previewFrame"
+             data-grid-variant="<%= event_image.grid_variant %>">
+          <%= image_tag optimized_event_image_source,
+                        alt: event.artist_name.to_s.strip.presence || event.title.to_s,
+                        class: "event-image-crop-preview-image",
+                        style: event_card_image_style(event_image),
+                        data: { event_image_crop_preview_target: "previewImage" } %>
+        </div>
+
+        <div class="event-image-crop-sidebar">
           <div class="slider-image-editor-meta">
-            <%= form_with model: [ :backend, event, event_image ],
-                          id: meta_form_id,
-                          method: :patch,
-                          class: "slider-image-meta-form event-image-meta-inline-form" do |form| %>
-              <%= hidden_field_tag :status, editor_status %>
-              <%= form.text_field :sub_text, placeholder: "Copyright unter dem Bild (optional)", class: "form-input" %>
-            <% end %>
+            <div class="event-image-meta-inline-form">
+              <%= text_field_tag "event_image[sub_text]",
+                                 event_image.sub_text,
+                                 placeholder: "Copyright unter dem Bild (optional)",
+                                 class: "form-input",
+                                 form: editor_form_id,
+                                 oninput: "document.getElementById('#{event_image_sub_text_upload_id}')?.value = this.value" %>
+            </div>
 
             <div class="slider-image-meta-actions">
               <%= form_with url: backend_event_event_images_path(event),
@@ -40,7 +63,7 @@
                 <%= hidden_field_tag :status, editor_status %>
                 <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
                 <%= hidden_field_tag "event_image[alt_text]", event_image.alt_text %>
-                <%= hidden_field_tag "event_image[sub_text]", event_image.sub_text %>
+                <%= hidden_field_tag "event_image[sub_text]", event_image.sub_text, id: event_image_sub_text_upload_id %>
                 <%= hidden_field_tag "event_image[grid_variant]", event_image.grid_variant %>
                 <%= hidden_field_tag "event_image[card_focus_x]", event_image.card_focus_x_value %>
                 <%= hidden_field_tag "event_image[card_focus_y]", event_image.card_focus_y_value %>
@@ -59,10 +82,6 @@
                 <div class="preuploaded-image-list event-image-inline-preview" data-event-image-editor-upload-target="preview"></div>
                 <p class="preuploaded-image-live-region" data-event-image-editor-upload-target="status" role="status" aria-live="polite"></p>
               <% end %>
-              <%= button_tag "Save Meta",
-                             type: :submit,
-                             form: meta_form_id,
-                             class: "button button-ghost button-compact" %>
               <%= button_to "Delete Image",
                             destroy_editorial_main_backend_event_event_images_path(event, status: editor_status),
                             method: :delete,
@@ -70,84 +89,47 @@
                             form: { data: { turbo_stream: true } } %>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="event-image-main-body">
-        <%= form_with model: [ :backend, event, event_image ],
-                      id: crop_form_id,
-                      method: :patch,
-                      class: "event-image-crop-shell" do |form| %>
-          <%= hidden_field_tag :status, editor_status %>
-          <div class="event-image-crop-editor" data-controller="event-image-crop-preview">
-            <%= hidden_field_tag "event_image[grid_variant]",
-                                 event_image.grid_variant,
-                                 form: editor_form_id,
-                                 data: { event_image_crop_preview_target: "saveGridVariant" } %>
-            <%= hidden_field_tag "event_image[card_focus_x]",
-                                 event_image.card_focus_x_value,
-                                 form: editor_form_id,
-                                 data: { event_image_crop_preview_target: "saveFocusX" } %>
-            <%= hidden_field_tag "event_image[card_focus_y]",
-                                 event_image.card_focus_y_value,
-                                 form: editor_form_id,
-                                 data: { event_image_crop_preview_target: "saveFocusY" } %>
-            <%= hidden_field_tag "event_image[card_zoom]",
-                                 event_image.card_zoom_value,
-                                 form: editor_form_id,
-                                 data: { event_image_crop_preview_target: "saveZoom" } %>
-            <div class="action-cell">
-              <%= form.select :grid_variant,
-                              options_for_select([ [ "Kein Crop", "" ] ] + EventImage::GRID_VARIANTS.map { |variant| [ variant, variant ] }, event_image.grid_variant),
-                              {},
-                              class: "form-input",
-                              data: { event_image_crop_preview_target: "gridVariant", action: "change->event-image-crop-preview#update" } %>
-            </div>
-            <div class="event-image-crop-preview">
-              <div class="event-image-crop-frame"
-                   data-event-image-crop-preview-target="previewFrame"
-                   data-grid-variant="<%= event_image.grid_variant %>">
-                <%= image_tag optimized_event_image_source,
-                              alt: event.artist_name.to_s.strip.presence || event.title.to_s,
-                              class: "event-image-crop-preview-image",
-                              style: event_card_image_style(event_image),
-                              data: { event_image_crop_preview_target: "previewImage" } %>
-              </div>
-              <p>Kartenausschnitt-Vorschau fuer die Event-Kacheln unter /events.</p>
-            </div>
-
-            <div class="event-image-crop-controls">
-              <label class="form-label" for="<%= dom_id(event_image, :card_focus_x) %>">Ausschnitt horizontal <span data-event-image-crop-preview-target="focusXOutput"><%= event_image.card_focus_x_value.round %>%</span></label>
-              <%= form.range_field :card_focus_x,
-                                   min: 0,
-                                   max: 100,
-                                   step: 1,
-                                   id: dom_id(event_image, :card_focus_x),
-                                   class: "form-range",
-                                   data: { event_image_crop_preview_target: "focusX", action: "input->event-image-crop-preview#update" } %>
-
-              <label class="form-label" for="<%= dom_id(event_image, :card_focus_y) %>">Ausschnitt vertikal <span data-event-image-crop-preview-target="focusYOutput"><%= event_image.card_focus_y_value.round %>%</span></label>
-              <%= form.range_field :card_focus_y,
-                                   min: 0,
-                                   max: 100,
-                                   step: 1,
-                                   id: dom_id(event_image, :card_focus_y),
-                                   class: "form-range",
-                                   data: { event_image_crop_preview_target: "focusY", action: "input->event-image-crop-preview#update" } %>
-
-              <label class="form-label" for="<%= dom_id(event_image, :card_zoom) %>">Zoom <span data-event-image-crop-preview-target="zoomOutput"><%= event_image.card_zoom_value.round %>%</span></label>
-              <%= form.range_field :card_zoom,
-                                   min: 100,
-                                   max: 300,
-                                   step: 5,
-                                   id: dom_id(event_image, :card_zoom),
-                                   class: "form-range",
-                                   data: { event_image_crop_preview_target: "zoom", action: "input->event-image-crop-preview#update" } %>
-
-              <%= form.submit "Save Crop", class: "button button-ghost button-compact" %>
-            </div>
+          <div class="action-cell">
+            <%= select_tag "event_image[grid_variant]",
+                           options_for_select([ [ "Kein Crop", "" ] ] + EventImage::GRID_VARIANTS.map { |variant| [ variant, variant ] }, event_image.grid_variant),
+                           class: "form-input",
+                           data: { event_image_crop_preview_target: "gridVariant", action: "change->event-image-crop-preview#update" } %>
+            <p class="event-image-crop-hint">Legt das Seitenverhältnis der Event-Kachel fest: <code>2x1</code> ist breit, <code>1x2</code> hoch und <code>2x2</code> groß. <code>Kein Crop</code> verwendet die Standard-Kachelgröße (<code>1x1</code>).</p>
           </div>
-        <% end %>
+
+          <div class="event-image-crop-controls">
+            <label class="form-label" for="<%= dom_id(event_image, :card_focus_x) %>">Ausschnitt horizontal <span data-event-image-crop-preview-target="focusXOutput"><%= event_image.card_focus_x_value.round %>%</span></label>
+            <%= range_field_tag "event_image[card_focus_x]",
+                                event_image.card_focus_x_value,
+                                min: 0,
+                                max: 100,
+                                step: 1,
+                                id: dom_id(event_image, :card_focus_x),
+                                class: "form-range",
+                                data: { event_image_crop_preview_target: "focusX", action: "input->event-image-crop-preview#update" } %>
+
+            <label class="form-label" for="<%= dom_id(event_image, :card_focus_y) %>">Ausschnitt vertikal <span data-event-image-crop-preview-target="focusYOutput"><%= event_image.card_focus_y_value.round %>%</span></label>
+            <%= range_field_tag "event_image[card_focus_y]",
+                                event_image.card_focus_y_value,
+                                min: 0,
+                                max: 100,
+                                step: 1,
+                                id: dom_id(event_image, :card_focus_y),
+                                class: "form-range",
+                                data: { event_image_crop_preview_target: "focusY", action: "input->event-image-crop-preview#update" } %>
+
+            <label class="form-label" for="<%= dom_id(event_image, :card_zoom) %>">Zoom <span data-event-image-crop-preview-target="zoomOutput"><%= event_image.card_zoom_value.round %>%</span></label>
+            <%= range_field_tag "event_image[card_zoom]",
+                                event_image.card_zoom_value,
+                                min: 100,
+                                max: 300,
+                                step: 5,
+                                id: dom_id(event_image, :card_zoom),
+                                class: "form-range",
+                                data: { event_image_crop_preview_target: "zoom", action: "input->event-image-crop-preview#update" } %>
+          </div>
+        </div>
       </div>
     </div>
   <% else %>

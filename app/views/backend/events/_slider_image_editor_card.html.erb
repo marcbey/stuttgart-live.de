@@ -1,4 +1,3 @@
-<% meta_form_id = dom_id(image, :meta) %>
 <% optimized_image_source = optimized_event_image_source(image) %>
 
 <li id="<%= dom_id(image, :slider_card) %>" class="slider-image-editor-card">
@@ -10,7 +9,6 @@
 
   <div class="slider-image-editor-meta">
     <%= form_with model: [ :backend, event, image ],
-                  id: meta_form_id,
                   method: :patch,
                   class: "slider-image-meta-form",
                   data: { turbo_stream: true } do |form| %>
@@ -20,10 +18,6 @@
     <% end %>
 
     <div class="slider-image-meta-actions">
-      <%= button_tag "Save Meta",
-                     type: :submit,
-                     form: meta_form_id,
-                     class: "button button-ghost button-compact" %>
       <%= button_to "Delete Image",
                     backend_event_event_image_path(event, image, status: editor_status),
                     method: :delete,
