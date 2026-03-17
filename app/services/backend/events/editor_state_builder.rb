@@ -41,7 +41,8 @@ module Backend
           target_event: selected_event_for_sidebar(
             sidebar_events,
             preferred_event: preferred_event,
-            fallback_event: fallback_event
+            fallback_event: fallback_event,
+            target_status: target_status
           ),
           merge_run_id: selected_merge_run_id_for_status(target_status)
         )
@@ -75,7 +76,11 @@ module Backend
         next_filtered_event_after(event.id, status: next_event_status)
       end
 
-      def selected_event_for_sidebar(sidebar_events, preferred_event:, fallback_event:)
+      def selected_event_for_sidebar(sidebar_events, preferred_event:, fallback_event:, target_status:)
+        if !next_event_enabled && preferred_event.status == target_status
+          return preferred_event
+        end
+
         if next_event_enabled && fallback_event
           matched_fallback = sidebar_events.find { |candidate| candidate.id == fallback_event.id }
           return matched_fallback if matched_fallback.present?

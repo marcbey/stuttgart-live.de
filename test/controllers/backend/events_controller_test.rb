@@ -559,6 +559,30 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "data-next-event-enabled-value=\"false\""
   end
 
+  test "update keeps explicitly opened event when auto-next is disabled" do
+    sign_in_as(@user)
+
+    post apply_filters_backend_events_url, params: {
+      status: "published",
+      query: "definitely-no-match"
+    }
+
+    patch backend_event_url(@published_event), params: {
+      event: {
+        title: "Published Event Updated",
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published"
+      },
+      inbox_status: "published",
+      next_event_enabled: "0"
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+  end
+
   test "turbo update renders next filtered event when next event preference is enabled" do
     sign_in_as(@user)
 

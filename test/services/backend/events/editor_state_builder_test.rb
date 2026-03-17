@@ -55,4 +55,26 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
 
     assert_equal merge_run.id, builder.selected_merge_run_id_for_status("needs_review")
   end
+
+  test "build keeps preferred event when auto-next is disabled and status still matches" do
+    published_event = events(:published_one)
+    inbox_state = Backend::Events::InboxState.new(
+      params: { "query" => "definitely-no-match", "status" => "published" },
+      session: @session,
+      status_filters: @status_filters
+    )
+    inbox_state.persist_filters!
+
+    builder = Backend::Events::EditorStateBuilder.new(
+      inbox_state: inbox_state,
+      latest_successful_merge_run: nil,
+      next_event_enabled: false
+    )
+
+    result = builder.build(preferred_event: published_event, navigation_status: "published")
+
+    assert_equal "published", result.target_status
+    assert_equal published_event.id, result.target_event.id
+    assert_empty result.sidebar_events.to_a
+  end
 end
