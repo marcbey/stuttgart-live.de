@@ -54,7 +54,7 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select "body[data-controller='consent']"
+    assert_select "body[data-controller~='consent']"
     assert_select ".site-footer-nav a", text: "Datenschutz"
     assert_select ".site-footer-nav a", text: "Impressum"
     assert_select ".site-footer-nav a", text: "AGB"
@@ -69,7 +69,7 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
       get events_path
 
       assert_response :success
-      assert_includes response.body, 'data-controller="consent"'
+      assert_includes response.body, 'data-controller="consent scroll-top"'
       assert_not_includes response.body, 'data-consent-measurement-id-value="G-103580617"'
 
       host! "stuttgart-live.de"
