@@ -108,7 +108,11 @@ module Public
       end
 
       def genres
-        @genres ||= event.genres.order(:name).pluck(:name)
+        @genres ||= if event.association(:genres).loaded?
+          event.genres.sort_by { |genre| [ genre.name.to_s, genre.id.to_i ] }.map(&:name)
+        else
+          event.genres.order(:name).pluck(:name)
+        end
       end
 
       def social_links

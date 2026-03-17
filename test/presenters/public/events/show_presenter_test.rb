@@ -113,6 +113,21 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Live auf der Bühne", presenter.slider_items.first.caption
   end
 
+  test "uses loaded genres without extra queries" do
+    event = events(:published_one)
+    loaded_event = Event.includes(:genres).find(event.id)
+    presenter = Public::Events::ShowPresenter.new(
+      loaded_event,
+      primary_offer: nil,
+      browse_state: Object.new,
+      view_context: ViewContextStub.new
+    )
+
+    queries = capture_sql_queries { assert_equal [ "Rock" ], presenter.genres }
+
+    assert_equal 0, queries
+  end
+
   private
 
   def build_presenter(event, primary_offer: nil)
@@ -173,5 +188,23 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     end
 
     event
+  end
+
+  def capture_sql_queries
+    queries = 0
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      sql = payload[:sql].to_s
+      next if payload[:name] == "SCHEMA"
+      next if payload[:cached]
+      next if sql.match?(/\A(?:BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)/)
+
+      queries += 1
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      yield
+    end
+
+    queries
   end
 end
