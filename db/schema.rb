@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_17_130500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -177,6 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
     t.index ["slug"], name: "index_events_on_slug", unique: true
     t.index ["source_fingerprint"], name: "index_events_on_source_fingerprint", unique: true, where: "(source_fingerprint IS NOT NULL)"
     t.index ["start_at", "id"], name: "index_events_on_published_highlighted_start_at_and_id", where: "(((status)::text = 'published'::text) AND (highlighted = true))"
+    t.index ["start_at", "id"], name: "index_events_on_published_reservix_start_at_and_id", where: "(((status)::text = 'published'::text) AND ((primary_source)::text = 'reservix'::text))"
     t.index ["status", "start_at"], name: "index_events_on_status_and_start_at"
   end
 
