@@ -1,11 +1,7 @@
-<%= turbo_stream.append "event-grid" do %>
+<%= turbo_stream.replace "event-grid" do %>
   <%= render "event_cards",
              events: @events,
              browse_state: @browse_state,
-             offset: ((@browse_state.page - 1) * Public::EventsController::PER_PAGE),
+             container_id: "event-grid",
              wrap: false %>
-<% end %>
-
-<%= turbo_stream.replace "events-pagination" do %>
-  <%= render "pagination", next_page: @next_page, browse_state: @browse_state %>
 <% end %>

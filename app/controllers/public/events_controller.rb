@@ -21,17 +21,31 @@ module Public
         return
       end
 
-      relation = visible_events_relation(filter: search_filter, event_date: @browse_state.event_date, query: @browse_state.query)
-      if should_redirect_search_result?(relation)
-        event = relation.limit(1).first
-        redirect_to event_path(event.slug, **@browse_state.route_params.except(:q))
-        return
+      if @browse_state.query.present?
+        relation = visible_events_relation(
+          scope: searchable_index_events_relation,
+          filter: search_filter,
+          event_date: @browse_state.event_date,
+          query: @browse_state.query
+        )
+        if should_redirect_search_result?(relation)
+          event = relation.limit(1).first
+          redirect_to event_path(event.slug, **@browse_state.route_params.except(:q))
+          return
+        end
+
+        @events = relation.to_a
       end
 
-      @events = relation.limit(PER_PAGE).offset((@browse_state.page - 1) * PER_PAGE)
-      @next_page = @browse_state.page + 1 if relation.offset(@browse_state.page * PER_PAGE).limit(1).exists?
-      homepage_relation = published_visible_events_relation(filter: @browse_state.filter, event_date: @browse_state.event_date, query: nil)
-      assign_homepage_sections(homepage_relation) if @browse_state.page == 1
+      if @browse_state.page == 1
+        homepage_relation = published_visible_events_relation(
+          scope: homepage_events_relation,
+          filter: @browse_state.filter,
+          event_date: @browse_state.event_date,
+          query: nil
+        )
+        assign_homepage_sections(homepage_relation)
+      end
 
       respond_to do |format|
         format.html
@@ -95,18 +109,18 @@ module Public
       @browse_state = Public::Events::BrowseState.new(params)
     end
 
-    def visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
+    def visible_events_relation(scope: index_events_relation, filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
       Public::VisibleEventsQuery.new(
-        scope: index_events_relation,
+        scope: scope,
         filter: filter,
         event_date: event_date,
         query: query
       ).call
     end
 
-    def published_visible_events_relation(filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
+    def published_visible_events_relation(scope: published_future_events_relation, filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
       Public::VisibleEventsQuery.new(
-        scope: published_future_events_relation,
+        scope: scope,
         filter: filter,
         event_date: event_date,
         query: query
@@ -117,6 +131,13 @@ module Public
       return published_future_events_relation unless authenticated?
 
       future_events_relation
+    end
+
+    def searchable_index_events_relation
+      relation = search_events_relation
+      return relation.where(status: "published").where("published_at <= ?", Time.current).where("start_at >= ?", Time.zone.today.beginning_of_day) unless authenticated?
+
+      relation.where("start_at >= ?", Time.zone.today.beginning_of_day).chronological
     end
 
     def future_events_relation
@@ -132,11 +153,13 @@ module Public
 
     def assign_homepage_sections(current_relation)
       scoped_highlights = published_visible_events_relation(
+        scope: homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_SKS,
         event_date: @browse_state.event_date,
         query: nil
       ).reorder(:start_at, :id)
       scoped_all = published_visible_events_relation(
+        scope: homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_ALL,
         event_date: @browse_state.event_date,
         query: nil
@@ -161,6 +184,21 @@ module Public
     def published_events_relation
       all_events_relation
         .published_live
+    end
+
+    def homepage_events_relation
+      Event.includes(
+        :event_offers,
+        :import_event_images,
+        event_images: [ file_attachment: :blob ]
+      ).published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
+    end
+
+    def search_events_relation
+      Event.includes(
+        :import_event_images,
+        event_images: [ file_attachment: :blob ]
+      )
     end
 
     def search_filter

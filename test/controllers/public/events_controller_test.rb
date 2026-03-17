@@ -908,6 +908,31 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Tagestipp"
     assert_includes response.body, tagestipp_event.artist_name
     assert_includes response.body, @published_event.artist_name
+    assert_not_includes response.body, "Mehr Events laden"
+    assert_select "#events-pagination", count: 0
+  end
+
+  test "index search renders all matching results without pagination" do
+    13.times do |index|
+      Event.create!(
+        slug: "search-all-results-#{index}",
+        source_fingerprint: "test::search::all-results::#{index}",
+        title: "Search All Results #{index}",
+        artist_name: "Search All Results",
+        start_at: (20 + index).days.from_now.change(hour: 20, min: 0, sec: 0),
+        venue: "Venue #{index}",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+    end
+
+    get events_url(q: "Search All Results")
+
+    assert_response :success
+    assert_select "#event-grid article.event-card", count: 13
+    assert_select "#events-pagination", count: 0
   end
 
   test "highlight list rows prefer easyticket offer" do

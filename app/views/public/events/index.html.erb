@@ -5,8 +5,6 @@
 
   <% if @browse_state.query.present? %>
     <%= render "search_results_section", events: @events, browse_state: @browse_state %>
-    <%= render "pagination", next_page: @next_page, browse_state: @browse_state %>
-    <p id="events-pagination-status" class="sr-only" role="status" aria-live="polite"></p>
   <% end %>
 
   <% if @browse_state.page == 1 && @home_featured_events.present? %>
