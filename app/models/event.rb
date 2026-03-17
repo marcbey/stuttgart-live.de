@@ -62,6 +62,7 @@ class Event < ApplicationRecord
   scope :reverse_chronological, -> { order(start_at: :desc, id: :desc) }
   scope :by_status, ->(status) { where(status: status) }
   scope :published_live, -> { where(status: "published").where("published_at <= ?", Time.current).chronological }
+  scope :homepage_highlights, -> { where(promoter_id: sks_promoter_ids).or(where(highlighted: true)) }
 
   def self.sks_promoter_ids
     AppSetting.sks_promoter_ids

@@ -23,6 +23,19 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     assert_equal [ matching_event ], result.to_a
   end
 
+  test "includes manually highlighted events without sks promoter id" do
+    sks_event = create_visible_event(title: "SKS Query", artist_name: "SKS Artist", promoter_id: AppSetting.sks_promoter_ids.first)
+    highlighted_event = create_visible_event(title: "Manual Highlight", artist_name: "Manual Highlight Artist", promoter_id: "99999", highlighted: true)
+    create_visible_event(title: "Other Query", artist_name: "Other Artist", promoter_id: "99999")
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_SKS
+    ).call
+
+    assert_equal [ sks_event, highlighted_event ], result.to_a
+  end
+
   test "uses configured sks promoter ids" do
     AppSetting.find_by!(key: AppSetting::SKS_PROMOTER_IDS_KEY).update!(value: [ "77777" ])
     AppSetting.reset_cache!
@@ -67,7 +80,7 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
 
   private
 
-  def create_visible_event(title:, artist_name:, promoter_id: nil, start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0))
+  def create_visible_event(title:, artist_name:, promoter_id: nil, highlighted: false, start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0))
     Event.create!(
       title: title,
       artist_name: artist_name,
@@ -77,6 +90,7 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
       status: "published",
       published_at: 1.day.ago,
       promoter_id: promoter_id,
+      highlighted: highlighted,
       source_fingerprint: SecureRandom.uuid,
       source_snapshot: {}
     )

@@ -66,6 +66,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='inbox_status'][value='needs_review']"
     assert_select "input[name='event[promoter_id]'][value='#{@event.promoter_id}']"
     assert_select "input[readonly]#event_#{@event.id}_promoter_id_display", count: 0
+    assert_select "input[name='event[highlighted]'][type='checkbox']"
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
     assert_select "input[name='event_image[files][]'][required]", count: 0
@@ -93,6 +94,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[facebook_url]']"
     assert_select "input[name='event[promoter_id]']"
     assert_select "input[name='event[ticket_url]']"
+    assert_select "input[name='event[highlighted]'][type='checkbox']"
     assert_select "textarea[name='event[organizer_notes]']"
     assert_select "input[name='event[show_organizer_notes]'][type='checkbox']"
     assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
@@ -332,6 +334,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         homepage_url: "https://example.com",
         instagram_url: "https://instagram.com/example",
         facebook_url: "https://facebook.com/example",
+        highlighted: "1",
         ticket_url: "https://tickets.example/updated",
         status: "needs_review"
       }
@@ -346,6 +349,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com", @event.homepage_url
     assert_equal "https://instagram.com/example", @event.instagram_url
     assert_equal "https://facebook.com/example", @event.facebook_url
+    assert_predicate @event, :highlighted?
     assert_equal "https://tickets.example/updated", offer.reload.resolved_ticket_url
     assert_equal "https://tickets.example/updated", @event.preferred_ticket_offer&.resolved_ticket_url
   end
@@ -377,6 +381,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
             facebook_url: "https://facebook.com/manual",
             youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             promoter_id: "10135",
+            highlighted: "1",
             ticket_url: "https://tickets.example/manual-tour",
             event_info: "Lange Beschreibung",
             editor_notes: "Interne Notiz",
@@ -404,6 +409,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://instagram.com/manual", created.instagram_url
     assert_equal "https://facebook.com/manual", created.facebook_url
     assert_equal "10135", created.promoter_id
+    assert_predicate created, :highlighted?
     assert_equal "ready_for_publish", created.status
     assert_equal [ "Pop" ], created.genres.order(:name).pluck(:name)
     assert_equal "https://tickets.example/manual-tour", created.preferred_ticket_offer&.resolved_ticket_url

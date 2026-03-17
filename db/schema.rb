@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_15_134500) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_17_123000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -150,6 +150,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_134500) do
     t.text "editor_notes"
     t.text "event_info"
     t.string "facebook_url"
+    t.boolean "highlighted", default: false, null: false
     t.string "homepage_url"
     t.string "instagram_url"
     t.decimal "max_price", precision: 10, scale: 2
@@ -169,11 +170,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_15_134500) do
     t.datetime "updated_at", null: false
     t.string "venue", null: false
     t.string "youtube_url"
+    t.index ["promoter_id", "start_at", "id"], name: "index_events_on_published_promoter_id_start_at_and_id", where: "((status)::text = 'published'::text)"
     t.index ["promoter_id"], name: "index_events_on_promoter_id"
     t.index ["published_at", "start_at"], name: "index_events_on_published_at_and_start_at"
     t.index ["published_by_id"], name: "index_events_on_published_by_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true
     t.index ["source_fingerprint"], name: "index_events_on_source_fingerprint", unique: true, where: "(source_fingerprint IS NOT NULL)"
+    t.index ["start_at", "id"], name: "index_events_on_published_highlighted_start_at_and_id", where: "(((status)::text = 'published'::text) AND (highlighted = true))"
     t.index ["status", "start_at"], name: "index_events_on_status_and_start_at"
   end
 

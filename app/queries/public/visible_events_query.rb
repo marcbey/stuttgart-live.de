@@ -16,7 +16,7 @@ module Public
       relation = apply_query(relation) if query.present?
       return relation unless filter == FILTER_SKS
 
-      relation.where(promoter_id: Event.sks_promoter_ids)
+      relation.homepage_highlights
     end
 
     private

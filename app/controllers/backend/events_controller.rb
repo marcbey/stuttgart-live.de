@@ -213,6 +213,7 @@ module Backend
         :facebook_url,
         :youtube_url,
         :promoter_id,
+        :highlighted,
         :status,
         :editor_notes
       )
