@@ -131,6 +131,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event_image[card_focus_x]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_x_value}']"
     assert_select "input[name='event_image[card_focus_y]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_y_value}']"
     assert_select "input[name='event_image[card_zoom]'][form='editor_form_event_#{@event.id}'][value='#{image.card_zoom_value}']"
+    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
     assert_includes response.body, "Kein Crop</code> verwendet die Standard-Kachelgröße"
   end
 

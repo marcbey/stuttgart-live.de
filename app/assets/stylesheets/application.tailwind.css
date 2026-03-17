@@ -4219,7 +4219,9 @@ trix-editor.blog-rich-text:focus {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  background: transparent;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 244, 244, 0.96)),
+    linear-gradient(135deg, rgba(227, 27, 46, 0.06), rgba(10, 102, 194, 0.06));
 }
 
 .event-image-crop-frame[data-grid-variant="1x1"] {
@@ -4245,22 +4247,18 @@ trix-editor.blog-rich-text:focus {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
-}
-
-.event-image-crop-image-wrap {
-  position: relative;
-  display: inline-block;
-  max-width: 100%;
-  max-height: 100%;
-  line-height: 0;
+  box-shadow: 0 8px 18px rgba(17, 17, 17, 0.12);
 }
 
 .event-image-crop-box {
   position: absolute;
-  inset: 0 auto auto 0;
+  inset: auto;
   border: 2px solid #0a66c2;
   background: rgb(10 102 194 / 0.08);
-  box-shadow: 0 0 0 999px rgb(0 0 0 / 0.14);
+  box-shadow:
+    0 0 0 999px rgb(17 17 17 / 0.28),
+    0 0 0 1px rgb(255 255 255 / 0.9) inset;
+  backdrop-filter: saturate(1.05);
   pointer-events: none;
 }
 
