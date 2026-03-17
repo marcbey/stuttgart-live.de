@@ -5,6 +5,7 @@
 
   <% if event_image.present? %>
     <% optimized_event_image_source = optimized_event_image_source(event_image) %>
+    <% editor_form_id = dom_id(event, :editor_form) %>
     <% meta_form_id = dom_id(event_image, :meta) %>
     <% crop_form_id = dom_id(event_image, :crop) %>
 
@@ -79,6 +80,22 @@
                       class: "event-image-crop-shell" do |form| %>
           <%= hidden_field_tag :status, editor_status %>
           <div class="event-image-crop-editor" data-controller="event-image-crop-preview">
+            <%= hidden_field_tag "event_image[grid_variant]",
+                                 event_image.grid_variant,
+                                 form: editor_form_id,
+                                 data: { event_image_crop_preview_target: "saveGridVariant" } %>
+            <%= hidden_field_tag "event_image[card_focus_x]",
+                                 event_image.card_focus_x_value,
+                                 form: editor_form_id,
+                                 data: { event_image_crop_preview_target: "saveFocusX" } %>
+            <%= hidden_field_tag "event_image[card_focus_y]",
+                                 event_image.card_focus_y_value,
+                                 form: editor_form_id,
+                                 data: { event_image_crop_preview_target: "saveFocusY" } %>
+            <%= hidden_field_tag "event_image[card_zoom]",
+                                 event_image.card_zoom_value,
+                                 form: editor_form_id,
+                                 data: { event_image_crop_preview_target: "saveZoom" } %>
             <div class="action-cell">
               <%= form.select :grid_variant,
                               options_for_select([ [ "Kein Crop", "" ] ] + EventImage::GRID_VARIANTS.map { |variant| [ variant, variant ] }, event_image.grid_variant),

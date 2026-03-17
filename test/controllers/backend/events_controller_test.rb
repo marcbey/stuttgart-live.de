@@ -117,6 +117,19 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form##{ActionView::RecordIdentifier.dom_id(image, :meta)} form", count: 0
   end
 
+  test "show includes event image crop fields in the main editor form" do
+    sign_in_as(@user)
+    image = create_event_image(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    get backend_events_url(status: "needs_review", event_id: @event.id)
+
+    assert_response :success
+    assert_select "input[name='event_image[grid_variant]'][form='editor_form_event_#{@event.id}'][value='#{image.grid_variant}']"
+    assert_select "input[name='event_image[card_focus_x]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_x_value}']"
+    assert_select "input[name='event_image[card_focus_y]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_y_value}']"
+    assert_select "input[name='event_image[card_zoom]'][form='editor_form_event_#{@event.id}'][value='#{image.card_zoom_value}']"
+  end
+
   test "index renders status chips without counts and shows filtered event count" do
     sign_in_as(@user)
 
@@ -557,6 +570,35 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url
     assert_response :success
     assert_includes response.body, "data-next-event-enabled-value=\"false\""
+  end
+
+  test "top save persists event image crop settings" do
+    sign_in_as(@user)
+    image = create_event_image(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: @event.title,
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review"
+      },
+      event_image: {
+        grid_variant: EventImage::GRID_VARIANT_1X2,
+        card_focus_x: "18",
+        card_focus_y: "72",
+        card_zoom: "145"
+      },
+      next_event_enabled: "0"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal EventImage::GRID_VARIANT_1X2, image.reload.grid_variant
+    assert_equal 18.0, image.card_focus_x_value
+    assert_equal 72.0, image.card_focus_y_value
+    assert_equal 145.0, image.card_zoom_value
   end
 
   test "update keeps explicitly opened event when auto-next is disabled" do

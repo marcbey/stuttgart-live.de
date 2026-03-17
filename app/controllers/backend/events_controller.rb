@@ -104,6 +104,14 @@ module Backend
       set_publishing_fields!(@event)
 
       if @event.save
+        begin
+          update_detail_hero_crop!
+        rescue ActiveRecord::RecordInvalid => e
+          @event.errors.add(:base, e.record.errors.full_messages.to_sentence)
+          editor_response.validation_error(event: @event, filter_status: navigation_status || @event.status)
+          return
+        end
+
         sync_ticket_offer!(@event)
         assign_genres!(@event) if params[:event].respond_to?(:key?) && params[:event].key?(:genre_ids)
         refresh_completeness!(@event)
@@ -328,6 +336,24 @@ module Backend
       end
 
       created_images
+    end
+
+    def detail_hero_crop_params
+      params.fetch(:event_image, ActionController::Parameters.new).permit(
+        :grid_variant,
+        :card_focus_x,
+        :card_focus_y,
+        :card_zoom
+      )
+    end
+
+    def update_detail_hero_crop!
+      return unless params[:event_image].respond_to?(:key?)
+
+      detail_hero = @event.event_images.detail_hero.ordered.first
+      return unless detail_hero.present?
+
+      detail_hero.update!(detail_hero_crop_params)
     end
 
     def create_manual_ticket_offer!(event)
