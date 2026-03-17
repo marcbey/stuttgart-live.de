@@ -14,9 +14,10 @@ module Public
       relation = scope
       relation = relation.where(start_at: event_date.beginning_of_day..event_date.end_of_day) if event_date.present?
       relation = apply_query(relation) if query.present?
-      return relation unless filter == FILTER_SKS
+      relation = relation.homepage_highlights if filter == FILTER_SKS
+      relation = relation.search_priority_first if query.present?
 
-      relation.homepage_highlights
+      relation
     end
 
     private

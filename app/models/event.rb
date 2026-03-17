@@ -63,9 +63,25 @@ class Event < ApplicationRecord
   scope :by_status, ->(status) { where(status: status) }
   scope :published_live, -> { where(status: "published").where("published_at <= ?", Time.current).chronological }
   scope :homepage_highlights, -> { where(promoter_id: sks_promoter_ids).or(where(highlighted: true)) }
+  scope :sks_first, -> { reorder(Arel.sql(sks_first_order_sql), :start_at, :id) }
+  scope :search_priority_first, -> { reorder(Arel.sql(search_priority_order_sql), :start_at, :id) }
 
   def self.sks_promoter_ids
     AppSetting.sks_promoter_ids
+  end
+
+  def self.sks_first_order_sql
+    quoted_ids = sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
+    return "1" if quoted_ids.blank?
+
+    "CASE WHEN events.promoter_id IN (#{quoted_ids}) THEN 0 ELSE 1 END"
+  end
+
+  def self.search_priority_order_sql
+    quoted_ids = sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
+    promoter_condition = quoted_ids.present? ? "events.promoter_id IN (#{quoted_ids}) OR " : ""
+
+    "CASE WHEN #{promoter_condition}events.highlighted = TRUE THEN 0 ELSE 1 END"
   end
 
   def published?

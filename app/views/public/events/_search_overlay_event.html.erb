@@ -1,0 +1,40 @@
+<% thumbnail_image = event.image_for(slot: :grid_default, breakpoint: :mobile) || event.image_for(slot: :grid_default, breakpoint: :desktop) %>
+<% thumbnail_source = event_image_source(thumbnail_image) %>
+<% event_url = public_event_detail_path(event, browse_state) %>
+
+<%= link_to event_url,
+            class: "public-search-result",
+            data: { action: "keydown->public-search#handleResultKeydown" } do %>
+  <span class="public-search-result-media">
+    <% if thumbnail_source.present? %>
+      <%= image_tag thumbnail_source,
+                    alt: event_image_alt(thumbnail_image, event),
+                    loading: "lazy",
+                    class: "public-search-result-image" %>
+    <% else %>
+      <span class="public-search-result-placeholder" aria-hidden="true">
+        <%= event.artist_name.to_s.first&.upcase || "?" %>
+      </span>
+    <% end %>
+  </span>
+
+  <span class="public-search-result-copy">
+    <strong class="public-search-result-artist"><%= event.artist_name %></strong>
+
+    <% if event.title.present? %>
+      <span class="public-search-result-title"><%= event.title %></span>
+    <% end %>
+
+    <span class="public-search-result-meta">
+      <time datetime="<%= event.start_at.iso8601 %>">
+        Beginn <%= l(event.start_at, format: "%d.%m.%Y, %H:%M Uhr") %>
+      </time>
+
+      <% if event.venue.present? %>
+        <span><%= event.venue %></span>
+      <% end %>
+    </span>
+  </span>
+
+  <span class="public-search-result-arrow" aria-hidden="true">→</span>
+<% end %>

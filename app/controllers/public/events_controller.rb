@@ -1,12 +1,13 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :show ]
+    allow_unauthenticated_access only: [ :index, :show, :search_overlay ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
     HOME_HIGHLIGHT_LIMIT = 100
+    SEARCH_OVERLAY_LIMIT = 6
 
-    before_action :set_browse_state, only: [ :index, :show ]
+    before_action :set_browse_state, only: [ :index, :show, :search_overlay ]
 
     def index
       if genre_panel_frame_request?
@@ -56,6 +57,27 @@ module Public
     def show
       @event = show_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.preferred_ticket_offer
+    end
+
+    def search_overlay
+      @events =
+        if @browse_state.query.present?
+          visible_events_relation(
+            scope: searchable_index_events_relation,
+            filter: Public::Events::BrowseState::FILTER_ALL,
+            event_date: @browse_state.event_date,
+            query: @browse_state.query
+          ).limit(SEARCH_OVERLAY_LIMIT).to_a
+        else
+          []
+        end
+
+      render partial: "public/events/search_overlay",
+             locals: {
+               browse_state: @browse_state,
+               events: @events,
+               query: @browse_state.query
+             }
     end
 
     def status

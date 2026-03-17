@@ -1292,6 +1292,119 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "/backend/events?event_id=#{event.id}&amp;status=#{event.status}"
   end
 
+  test "search overlay renders matching future events for guests" do
+    matching_event = Event.create!(
+      slug: "search-overlay-match",
+      source_fingerprint: "test::public::search-overlay::match",
+      title: "Electric Skyline Tour",
+      artist_name: "Search Overlay Artist",
+      start_at: 15.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "search-overlay-hidden-draft",
+      source_fingerprint: "test::public::search-overlay::hidden-draft",
+      title: "Electric Skyline Internal",
+      artist_name: "Search Overlay Artist Draft",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: "Electric Skyline")
+
+    assert_response :success
+    assert_includes response.body, "Search Overlay Artist"
+    assert_includes response.body, event_path(matching_event.slug, q: "Electric Skyline")
+    assert_includes response.body, "Beginn"
+    assert_not_includes response.body, "Search Overlay Artist Draft"
+  end
+
+  test "search overlay prioritizes sks and highlighted matches before regular matches" do
+    regular_event = Event.create!(
+      slug: "search-overlay-priority-regular",
+      source_fingerprint: "test::public::search-overlay::priority-regular",
+      title: "Priority Search Tour",
+      artist_name: "Regular Priority Artist",
+      start_at: 5.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      promoter_id: "99999",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    highlighted_event = Event.create!(
+      slug: "search-overlay-priority-highlighted",
+      source_fingerprint: "test::public::search-overlay::priority-highlighted",
+      title: "Priority Search Tour",
+      artist_name: "Highlighted Priority Artist",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      promoter_id: "99999",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    sks_event = Event.create!(
+      slug: "search-overlay-priority-sks",
+      source_fingerprint: "test::public::search-overlay::priority-sks",
+      title: "Priority Search Tour",
+      artist_name: "SKS Priority Artist",
+      start_at: 15.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: "Priority Search")
+
+    assert_response :success
+    assert_operator response.body.index(sks_event.artist_name), :<, response.body.index(regular_event.artist_name)
+    assert_operator response.body.index(highlighted_event.artist_name), :<, response.body.index(regular_event.artist_name)
+  end
+
+  test "search overlay renders hint without query" do
+    get search_overlay_events_url
+
+    assert_response :success
+    assert_includes response.body, "Suche startet mit der ersten Eingabe"
+    assert_includes response.body, "Beliebte Suchvorschläge ergänzen wir im nächsten Schritt."
+  end
+
+  test "search overlay shows unpublished matching events for authenticated users" do
+    sign_in_as(@user)
+
+    unpublished_event = Event.create!(
+      slug: "search-overlay-auth-draft",
+      source_fingerprint: "test::public::search-overlay::auth-draft",
+      title: "Members Only Draft Tour",
+      artist_name: "Search Overlay Auth Artist",
+      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: "Members Only Draft")
+
+    assert_response :success
+    assert_includes response.body, unpublished_event.artist_name
+    assert_includes response.body, event_path(unpublished_event.slug, q: "Members Only Draft")
+  end
+
   test "status update requires authentication" do
     patch status_event_url(@published_event.slug), params: { status: "needs_review" }
 

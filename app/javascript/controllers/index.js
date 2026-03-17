@@ -67,6 +67,9 @@ application.register("nav-offset", NavOffsetController)
 import PublicCardStatusController from "./public_card_status_controller"
 application.register("public-card-status", PublicCardStatusController)
 
+import PublicSearchController from "./public_search_controller"
+application.register("public-search", PublicSearchController)
+
 import ScrollTopController from "./scroll_top_controller"
 application.register("scroll-top", ScrollTopController)
 

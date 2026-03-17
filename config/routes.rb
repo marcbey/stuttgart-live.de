@@ -54,6 +54,7 @@ Rails.application.routes.draw do
   end
 
   resources :events, only: [ :index, :show ], module: :public, param: :slug do
+    get :search_overlay, on: :collection
     patch :status, on: :member
   end
   resources :newsletter_subscribers, only: [ :create ], module: :public

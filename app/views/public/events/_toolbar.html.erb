@@ -1,23 +1,63 @@
 <section class="public-filter-row public-filter-row-home">
   <div class="public-filter-row-main">
-    <%= form_with url: events_path, method: :get, local: true, class: "public-search-filter" do %>
+    <%= form_with url: events_path,
+                  method: :get,
+                  local: true,
+                  class: "public-search-filter",
+                  data: {
+                    controller: "public-search",
+                    public_search_search_url_value: search_overlay_events_path
+                  } do %>
       <%= hidden_field_tag :event_date, browse_state.event_date_param %>
       <div class="public-search-field">
+        <p class="sr-only" id="public-search-help">
+          Beim Tippen erscheint eine Ergebnisliste mit zukünftigen Events.
+        </p>
         <%= text_field_tag :q,
                            browse_state.query,
+                           type: "search",
                            class: "form-input public-search-input",
                            placeholder: "Suche nach Künstlern und Events",
-                           aria: { label: "Events durchsuchen" },
-                           oninput: "this.nextElementSibling.classList.toggle('public-search-clear-visible', this.value.length > 0)" %>
+                           autocomplete: "off",
+                           spellcheck: false,
+                           data: {
+                             public_search_target: "input",
+                             action: "focus->public-search#open input->public-search#search keydown->public-search#handleInputKeydown"
+                           },
+                           aria: {
+                             label: "Events durchsuchen",
+                             controls: "public-search-overlay",
+                             expanded: "false",
+                             describedby: "public-search-help"
+                           } %>
         <%= button_tag "×",
                        type: "button",
                        class: "public-search-clear #{'public-search-clear-visible' if browse_state.query.present?}",
                        aria: { label: "Suche löschen" },
-                       onclick: "this.previousElementSibling.value=''; this.classList.remove('public-search-clear-visible'); this.form.requestSubmit();" %>
+                       data: {
+                         public_search_target: "clear",
+                         action: "public-search#clear"
+                       } %>
         <%= button_tag "⌕",
                        type: "submit",
                        class: "public-search-icon",
                        aria: { label: "Suche ausführen" } %>
+
+        <div id="public-search-overlay"
+             class="public-search-overlay"
+             data-public-search-target="panel"
+             hidden>
+          <div class="public-search-overlay-results"
+               data-public-search-target="results"
+               aria-live="polite"
+               aria-label="Live-Suchergebnisse">
+            <%= render "search_overlay", browse_state: browse_state, events: [], query: nil %>
+          </div>
+        </div>
+
+        <template data-public-search-target="idleTemplate">
+          <%= render "search_overlay", browse_state: browse_state, events: [], query: nil %>
+        </template>
       </div>
     <% end %>
   </div>

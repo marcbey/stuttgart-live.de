@@ -78,6 +78,53 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     assert_equal [ matching_event ], result.to_a
   end
 
+  test "prioritizes sks events in search results" do
+    regular_event = create_visible_event(
+      title: "Search Priority Night",
+      artist_name: "Regular Search Artist",
+      promoter_id: "99999",
+      start_at: 5.days.from_now.change(hour: 20, min: 0, sec: 0)
+    )
+    sks_event = create_visible_event(
+      title: "Search Priority Night",
+      artist_name: "SKS Search Artist",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0)
+    )
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_ALL,
+      query: "Search Priority"
+    ).call
+
+    assert_equal [ sks_event, regular_event ], result.to_a
+  end
+
+  test "prioritizes highlighted events in search results" do
+    regular_event = create_visible_event(
+      title: "Highlight Priority Night",
+      artist_name: "Regular Highlight Artist",
+      promoter_id: "99999",
+      start_at: 5.days.from_now.change(hour: 20, min: 0, sec: 0)
+    )
+    highlighted_event = create_visible_event(
+      title: "Highlight Priority Night",
+      artist_name: "Highlighted Search Artist",
+      promoter_id: "99999",
+      highlighted: true,
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0)
+    )
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_ALL,
+      query: "Highlight Priority"
+    ).call
+
+    assert_equal [ highlighted_event, regular_event ], result.to_a
+  end
+
   private
 
   def create_visible_event(title:, artist_name:, promoter_id: nil, highlighted: false, start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0))
