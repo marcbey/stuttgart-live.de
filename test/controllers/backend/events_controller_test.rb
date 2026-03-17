@@ -64,6 +64,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div#event_editor", count: 0
     assert_select "div#event_editor_panel", count: 1
     assert_select "input[name='inbox_status'][value='needs_review']"
+    assert_select "input[name='event[promoter_id]'][value='#{@event.promoter_id}']"
+    assert_select "input[readonly]#event_#{@event.id}_promoter_id_display", count: 0
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
     assert_select "input[name='event_image[files][]'][required]", count: 0
