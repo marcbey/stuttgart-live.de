@@ -1,6 +1,8 @@
 <% selected_genre_ids = Array(local_assigns.fetch(:selected_genre_ids, event.genre_ids)).map(&:to_i) %>
 <% show_promoter_id = local_assigns.fetch(:show_promoter_id, false) %>
 <% display_promoter_id = show_promoter_id ? (local_assigns[:display_promoter_id] || event_display_promoter_id(event)) : nil %>
+<% editable_promoter_id = local_assigns.fetch(:editable_promoter_id, false) %>
+<% manual_ticket_url = local_assigns[:manual_ticket_url] %>
 
 <div class="editor-grid">
   <div>
@@ -41,7 +43,12 @@
     <%= form.label :venue, "Venue", class: "form-label" %>
     <%= form.text_field :venue, class: "form-input" %>
   </div>
-  <% if show_promoter_id %>
+  <% if editable_promoter_id %>
+    <div>
+      <%= form.label :promoter_id, "Promoter-ID", class: "form-label" %>
+      <%= form.text_field :promoter_id, class: "form-input" %>
+    </div>
+  <% elsif show_promoter_id %>
     <div>
       <label class="form-label" for="<%= dom_id(event, :promoter_id_display) %>">Promoter-ID</label>
       <input id="<%= dom_id(event, :promoter_id_display) %>"
@@ -71,6 +78,12 @@
     <%= form.label :facebook_url, "Facebook URL", class: "form-label" %>
     <%= form.url_field :facebook_url, class: "form-input" %>
   </div>
+  <% if manual_ticket_url.present? || editable_promoter_id %>
+    <div>
+      <%= label_tag "event_ticket_url", "Ticket-URL", class: "form-label" %>
+      <%= url_field_tag "event[ticket_url]", manual_ticket_url, id: "event_ticket_url", class: "form-input" %>
+    </div>
+  <% end %>
 </div>
 
 <div>

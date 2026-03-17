@@ -80,6 +80,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[homepage_url]']"
     assert_select "input[name='event[instagram_url]']"
     assert_select "input[name='event[facebook_url]']"
+    assert_select "input[name='event[promoter_id]']"
+    assert_select "input[name='event[ticket_url]']"
     assert_select "textarea[name='event[organizer_notes]']"
     assert_select "input[name='event[show_organizer_notes]'][type='checkbox']"
     assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
@@ -337,6 +339,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_difference("Event.count", 1) do
       assert_difference("EventImage.count", 3) do
+        assert_difference("EventOffer.count", 1) do
         post backend_events_url, params: {
           event: {
             artist_name: "Manual Artist",
@@ -352,6 +355,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
             instagram_url: "https://instagram.com/manual",
             facebook_url: "https://facebook.com/manual",
             youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            promoter_id: "10135",
+            ticket_url: "https://tickets.example/manual-tour",
             event_info: "Lange Beschreibung",
             editor_notes: "Interne Notiz",
             status: "needs_review",
@@ -365,18 +370,23 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
             slider_sub_text: "Slider Sub"
           }
         }
+        end
       end
     end
 
     created = Event.order(:id).last
-    assert_redirected_to backend_events_url(status: "needs_review", event_id: created.id)
+    assert_redirected_to backend_events_url(status: "ready_for_publish", event_id: created.id)
     assert_equal doors_at.to_i, created.doors_at.to_i
     assert_equal "Bitte früh erscheinen", created.organizer_notes
     assert_predicate created, :show_organizer_notes?
     assert_equal "https://example.com", created.homepage_url
     assert_equal "https://instagram.com/manual", created.instagram_url
     assert_equal "https://facebook.com/manual", created.facebook_url
+    assert_equal "10135", created.promoter_id
+    assert_equal "ready_for_publish", created.status
     assert_equal [ "Pop" ], created.genres.order(:name).pluck(:name)
+    assert_equal "https://tickets.example/manual-tour", created.preferred_ticket_offer&.resolved_ticket_url
+    assert_equal "manual", created.preferred_ticket_offer&.source
     assert_equal 1, created.event_images.detail_hero.count
     assert_equal 2, created.event_images.slider.count
     assert_equal "Foto: Haus", created.event_images.detail_hero.first.sub_text

@@ -34,12 +34,14 @@ module Backend
       @event = Event.new(start_at: Time.current.change(hour: 20, min: 0), status: "needs_review")
       @selected_genre_ids = []
       @manual_image_form_values = {}
+      @manual_ticket_url = nil
     end
 
     def create
       @event = Event.new(event_params)
       @selected_genre_ids = genre_ids_from_params
       @manual_image_form_values = manual_image_form_values
+      @manual_ticket_url = manual_ticket_url
       creation_alert = nil
 
       set_publishing_fields!(@event)
@@ -51,6 +53,7 @@ module Backend
         end
 
         assign_genres!(@event)
+        create_manual_ticket_offer!(@event)
         attach_manual_event_images!
         refresh_completeness!(@event)
         Editorial::EventChangeLogger.log!(
@@ -208,9 +211,14 @@ module Backend
         :instagram_url,
         :facebook_url,
         :youtube_url,
+        :promoter_id,
         :status,
         :editor_notes
       )
+    end
+
+    def manual_ticket_url
+      params.dig(:event, :ticket_url).to_s.strip.presence
     end
 
     def genre_ids_from_params
@@ -298,6 +306,18 @@ module Backend
         image.file.attach(upload_source)
         image.save!
       end
+    end
+
+    def create_manual_ticket_offer!(event)
+      return if manual_ticket_url.blank?
+
+      event.event_offers.create!(
+        source: "manual",
+        source_event_id: event.id.to_s,
+        ticket_url: manual_ticket_url,
+        priority_rank: 0,
+        sold_out: false
+      )
     end
 
     def uploaded_files_from(values, label:)
