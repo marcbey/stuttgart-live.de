@@ -4013,6 +4013,15 @@ trix-editor.blog-rich-text:focus {
 
 .event-image-inline-upload {
   margin: 0;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 0.4rem;
+}
+
+.event-image-inline-upload .preuploaded-image-list,
+.event-image-inline-upload .preuploaded-image-live-region {
+  flex-basis: 100%;
 }
 
 .event-image-inline-file-input {
@@ -4154,6 +4163,10 @@ trix-editor.blog-rich-text:focus {
   color: #555;
 }
 
+.event-image-inline-upload .preuploaded-image-live-region:empty {
+  display: none;
+}
+
 .slider-image-meta-actions .button_to {
   display: inline-flex;
 }
@@ -4200,7 +4213,7 @@ trix-editor.blog-rich-text:focus {
 
 .event-image-crop-sidebar {
   display: grid;
-  gap: 0.8rem;
+  gap: 0.55rem;
   align-content: start;
 }
 
