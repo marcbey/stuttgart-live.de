@@ -7,11 +7,12 @@
     <% optimized_event_image_source = optimized_event_image_source(event_image) %>
     <% editor_form_id = dom_id(event, :editor_form) %>
     <% event_image_sub_text_upload_id = dom_id(event_image, :upload_sub_text) %>
+    <% selected_grid_variant = event_image.grid_variant.presence || EventImage::GRID_VARIANT_1X1 %>
 
     <div class="event-image-crop-shell">
       <div class="event-image-crop-editor" data-controller="event-image-crop-preview">
         <%= hidden_field_tag "event_image[grid_variant]",
-                             event_image.grid_variant,
+                             selected_grid_variant,
                              form: editor_form_id,
                              data: { event_image_crop_preview_target: "saveGridVariant" } %>
         <%= hidden_field_tag "event_image[card_focus_x]",
@@ -28,7 +29,7 @@
                              data: { event_image_crop_preview_target: "saveZoom" } %>
         <div class="event-image-crop-frame"
              data-event-image-crop-preview-target="previewFrame"
-             data-grid-variant="<%= event_image.grid_variant %>">
+             data-grid-variant="<%= selected_grid_variant %>">
           <%= image_tag optimized_event_image_source,
                         alt: event.artist_name.to_s.strip.presence || event.title.to_s,
                         class: "event-image-crop-preview-image",
@@ -39,6 +40,7 @@
         <div class="event-image-crop-sidebar">
           <div class="slider-image-editor-meta">
             <div class="event-image-meta-inline-form">
+              <label class="form-label" for="event_image_sub_text">Copyright</label>
               <%= text_field_tag "event_image[sub_text]",
                                  event_image.sub_text,
                                  placeholder: "Copyright unter dem Bild (optional)",
@@ -64,7 +66,7 @@
                 <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
                 <%= hidden_field_tag "event_image[alt_text]", event_image.alt_text %>
                 <%= hidden_field_tag "event_image[sub_text]", event_image.sub_text, id: event_image_sub_text_upload_id %>
-                <%= hidden_field_tag "event_image[grid_variant]", event_image.grid_variant %>
+                <%= hidden_field_tag "event_image[grid_variant]", selected_grid_variant %>
                 <%= hidden_field_tag "event_image[card_focus_x]", event_image.card_focus_x_value %>
                 <%= hidden_field_tag "event_image[card_focus_y]", event_image.card_focus_y_value %>
                 <%= hidden_field_tag "event_image[card_zoom]", event_image.card_zoom_value %>
@@ -91,11 +93,12 @@
           </div>
 
           <div class="action-cell">
+            <label class="form-label" for="event_image_grid_variant">Grid-Variante</label>
             <%= select_tag "event_image[grid_variant]",
-                           options_for_select([ [ "Kein Crop", "" ] ] + EventImage::GRID_VARIANTS.map { |variant| [ variant, variant ] }, event_image.grid_variant),
+                           options_for_select(EventImage::GRID_VARIANTS.map { |variant| [ variant, variant ] }, selected_grid_variant),
                            class: "form-input",
                            data: { event_image_crop_preview_target: "gridVariant", action: "change->event-image-crop-preview#update" } %>
-            <p class="event-image-crop-hint">Legt das Seitenverhältnis der Event-Kachel fest: <code>2x1</code> ist breit, <code>1x2</code> hoch und <code>2x2</code> groß. <code>Kein Crop</code> verwendet die Standard-Kachelgröße (<code>1x1</code>).</p>
+            <p class="event-image-crop-hint">Legt das Seitenverhältnis der Event-Kachel fest: <code>1x1</code> ist der Standard, <code>2x1</code> ist breit, <code>1x2</code> hoch und <code>2x2</code> groß.</p>
           </div>
 
           <div class="event-image-crop-controls">

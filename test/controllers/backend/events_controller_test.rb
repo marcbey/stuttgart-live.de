@@ -126,13 +126,16 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url(status: "needs_review", event_id: @event.id)
 
     assert_response :success
+    assert_select "label[for='event_image_sub_text']", text: "Copyright"
+    assert_select "label[for='event_image_grid_variant']", text: "Grid-Variante"
     assert_select "input[name='event_image[sub_text]'][form='editor_form_event_#{@event.id}'][value='#{image.sub_text}']"
     assert_select "input[name='event_image[grid_variant]'][form='editor_form_event_#{@event.id}'][value='#{image.grid_variant}']"
+    assert_select "select[name='event_image[grid_variant]'] option[value='']", count: 0
     assert_select "input[name='event_image[card_focus_x]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_x_value}']"
     assert_select "input[name='event_image[card_focus_y]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_y_value}']"
     assert_select "input[name='event_image[card_zoom]'][form='editor_form_event_#{@event.id}'][value='#{image.card_zoom_value}']"
     assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
-    assert_includes response.body, "Kein Crop</code> verwendet die Standard-Kachelgröße"
+    assert_includes response.body, "<code>1x1</code> ist der Standard"
   end
 
   test "index renders status chips without counts and shows filtered event count" do
