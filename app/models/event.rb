@@ -204,7 +204,7 @@ class Event < ApplicationRecord
     return image.image_url unless image.is_a?(EventImage)
     return nil unless image.file.attached?
 
-    Rails.application.routes.url_helpers.rails_storage_proxy_path(image.file, only_path: true)
+    Rails.application.routes.url_helpers.rails_storage_proxy_path(image.processed_optimized_variant, only_path: true)
   end
 
   def has_import_images?

@@ -83,6 +83,27 @@ module ApplicationHelper
     ].join("; ")
   end
 
+  def optimized_event_image_representation(image)
+    return if image.blank?
+    return image unless image.is_a?(EventImage)
+
+    image.processed_optimized_variant
+  end
+
+  def optimized_event_image_source(image)
+    return if image.blank?
+    return image.image_url unless image.is_a?(EventImage)
+
+    rails_storage_proxy_path(optimized_event_image_representation(image), only_path: true)
+  end
+
+  def optimized_event_image_url(image)
+    return if image.blank?
+    return image.image_url unless image.is_a?(EventImage)
+
+    rails_storage_proxy_url(optimized_event_image_representation(image))
+  end
+
   def formatted_organizer_notes(notes)
     formatted_organizer_notes_with_link(notes)
   end

@@ -4,12 +4,13 @@
   <h3>Eventbild</h3>
 
   <% if event_image.present? %>
+    <% optimized_event_image_source = optimized_event_image_source(event_image) %>
     <% meta_form_id = dom_id(event_image, :meta) %>
     <% crop_form_id = dom_id(event_image, :crop) %>
 
     <div class="event-image-main-card">
       <div class="event-image-main-head">
-        <%= image_tag event_image.file,
+        <%= image_tag optimized_event_image_source,
                       alt: event.artist_name.to_s.strip.presence || event.title.to_s,
                       class: "event-image-main-thumb" %>
         <div class="event-image-main-side">
@@ -89,7 +90,7 @@
               <div class="event-image-crop-frame"
                    data-event-image-crop-preview-target="previewFrame"
                    data-grid-variant="<%= event_image.grid_variant %>">
-                <%= image_tag event_image.file,
+                <%= image_tag optimized_event_image_source,
                               alt: event.artist_name.to_s.strip.presence || event.title.to_s,
                               class: "event-image-crop-preview-image",
                               style: event_card_image_style(event_image),

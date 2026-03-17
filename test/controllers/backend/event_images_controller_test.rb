@@ -1,9 +1,15 @@
 require "test_helper"
+require "vips"
 
 class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   setup do
     @event = events(:needs_review_one)
     @user = users(:one)
+    @tempfiles = []
+  end
+
+  teardown do
+    @tempfiles.each(&:close!)
   end
 
   test "requires authentication for uploads" do
@@ -60,6 +66,8 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "2 Bilder wurden hochgeladen."
     assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(@event, :slider_images_section)}\""
     assert_includes response.body, "action=\"replace\""
+    created = @event.event_images.slider.ordered.last
+    assert_includes response.body, rails_storage_proxy_path(created.processed_optimized_variant, only_path: true)
   end
 
   test "creates multiple slider images from preuploaded signed ids via turbo stream" do
@@ -167,6 +175,8 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Bild wurde hochgeladen."
     assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(@event, :event_image_section)}\""
     assert_includes response.body, "action=\"replace\""
+    created = @event.event_images.detail_hero.ordered.last
+    assert_includes response.body, rails_storage_proxy_path(created.processed_optimized_variant, only_path: true)
   end
 
   test "creates event image from preuploaded signed id via turbo stream" do
@@ -206,6 +216,50 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_includes response.body, "target=\"flash-messages\""
     assert_includes response.body, "Bitte gültige Bilddateien auswählen."
+  end
+
+  test "returns turbo stream error when image optimization fails" do
+    sign_in_as(@user)
+
+    assert_no_difference -> { @event.event_images.count } do
+      post backend_event_event_images_url(@event), params: {
+        status: "needs_review",
+        event_image: {
+          purpose: EventImage::PURPOSE_DETAIL_HERO,
+          files: [ broken_uploaded_image ]
+        }
+      }, as: :turbo_stream
+    end
+
+    assert_response :unprocessable_entity
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "Bild konnte nicht für Web und Mobile optimiert werden."
+  end
+
+  test "optimized representation is downscaled while original upload remains attached" do
+    sign_in_as(@user)
+
+    post backend_event_event_images_url(@event), params: {
+      status: "needs_review",
+      event_image: {
+        purpose: EventImage::PURPOSE_DETAIL_HERO,
+        files: [ large_uploaded_image(width: 2000, height: 1500) ]
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+
+    created = @event.event_images.detail_hero.ordered.last
+    original = Vips::Image.new_from_buffer(created.file.download, "")
+    optimized_path = rails_storage_proxy_path(created.processed_optimized_variant, only_path: true)
+
+    get optimized_path
+
+    assert_response :success
+
+    optimized = Vips::Image.new_from_buffer(response.body, "")
+    assert_equal [ 2000, 1500 ], [ original.width, original.height ]
+    assert_equal [ 1280, 960 ], [ optimized.width, optimized.height ]
   end
 
   test "deletes event image" do
@@ -408,6 +462,22 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
+  def large_uploaded_image(width:, height:)
+    create_uploaded_image(
+      filename: "large-test-image.png",
+      binary: Vips::Image.black(width, height).write_to_buffer(".png"),
+      content_type: "image/png"
+    )
+  end
+
+  def broken_uploaded_image
+    create_uploaded_image(
+      filename: "broken-image.png",
+      binary: "broken-image-data",
+      content_type: "image/png"
+    )
+  end
+
   def direct_uploaded_blob(filename:)
     File.open(Rails.root.join("test/fixtures/files/test_image.png")) do |file|
       ActiveStorage::Blob.create_and_upload!(
@@ -416,6 +486,15 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
         content_type: "image/png"
       )
     end
+  end
+
+  def create_uploaded_image(filename:, binary:, content_type:)
+    file = Tempfile.new([ File.basename(filename, ".*"), File.extname(filename) ])
+    file.binmode
+    file.write(binary)
+    file.rewind
+    @tempfiles << file
+    Rack::Test::UploadedFile.new(file.path, content_type, true, original_filename: filename)
   end
 
   def create_event_image(purpose:, grid_variant: nil, alt_text: "Alt", sub_text: "Sub")

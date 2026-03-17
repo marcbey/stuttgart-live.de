@@ -2,12 +2,15 @@ class EventImage < ApplicationRecord
   DEFAULT_CARD_FOCUS_X = 50.0
   DEFAULT_CARD_FOCUS_Y = 50.0
   DEFAULT_CARD_ZOOM = 100.0
+  WEB_MAX_DIMENSION = 1280
+  WEB_QUALITY = 82
   PURPOSE_SLIDER = "slider".freeze
   PURPOSE_DETAIL_HERO = "detail_hero".freeze
   PURPOSES = [
     PURPOSE_SLIDER,
     PURPOSE_DETAIL_HERO
   ].freeze
+  ProcessingError = Class.new(StandardError)
 
   GRID_VARIANT_1X1 = "1x1".freeze
   GRID_VARIANT_2X1 = "2x1".freeze
@@ -68,6 +71,23 @@ class EventImage < ApplicationRecord
     zoom.positive? ? zoom : DEFAULT_CARD_ZOOM
   end
 
+  def optimized_variant
+    file.variant(
+      format: :webp,
+      saver: {
+        strip: true,
+        quality: WEB_QUALITY
+      },
+      resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
+    )
+  end
+
+  def processed_optimized_variant
+    optimized_variant.processed
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error, Vips::Error => error
+    raise ProcessingError, processing_error_message(error)
+  end
+
   private
 
   def normalize_text_fields
@@ -116,5 +136,10 @@ class EventImage < ApplicationRecord
     return if content_type.start_with?("image/")
 
     errors.add(:file, "muss ein Bild sein")
+  end
+
+  def processing_error_message(error)
+    Rails.logger.warn("EventImage optimization failed for ##{id || 'new'}: #{error.class}: #{error.message}")
+    "Bild konnte nicht für Web und Mobile optimiert werden."
   end
 end

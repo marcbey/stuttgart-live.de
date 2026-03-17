@@ -45,6 +45,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       "https://cdn.example.test/#{file}"
     end
 
+    def optimized_event_image_url(image)
+      "https://cdn.example.test/optimized/#{image.object_id}"
+    end
+
     def event_url(slug)
       "https://stuttgart-live.de/events/#{slug}"
     end

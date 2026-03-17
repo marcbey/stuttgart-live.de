@@ -1,9 +1,10 @@
 <% meta_form_id = dom_id(image, :meta) %>
+<% optimized_image_source = optimized_event_image_source(image) %>
 
 <li id="<%= dom_id(image, :slider_card) %>" class="slider-image-editor-card">
   <div class="action-cell slider-image-editor-thumb">
-    <%= link_to url_for(image.file), target: "_blank", rel: "noopener" do %>
-      <%= image_tag image.file, alt: image.alt_text.presence || "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
+    <%= link_to optimized_image_source, target: "_blank", rel: "noopener" do %>
+      <%= image_tag optimized_image_source, alt: image.alt_text.presence || "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
     <% end %>
   </div>
 

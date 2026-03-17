@@ -18,6 +18,7 @@ module Backend
       end
 
       created = 0
+      created_images = []
       errors = []
 
       EventImage.transaction do
@@ -37,12 +38,22 @@ module Backend
 
           if image.save
             created += 1
+            created_images << image
           else
             errors << image.errors.full_messages.to_sentence
           end
         end
 
         raise ActiveRecord::Rollback if errors.any?
+      end
+
+      if errors.none?
+        begin
+          created_images.each(&:processed_optimized_variant)
+        rescue EventImage::ProcessingError => e
+          created_images.each(&:destroy!)
+          errors << e.message
+        end
       end
 
       if errors.any?
@@ -174,7 +185,7 @@ module Backend
     def uploaded_files
       Array(create_params[:files]).filter_map do |value|
         next if value.blank?
-        next value if value.respond_to?(:original_filename) && value.respond_to?(:content_type)
+        next persist_uploaded_blob(value) if value.respond_to?(:original_filename) && value.respond_to?(:content_type)
 
         nil
       end
@@ -183,12 +194,23 @@ module Backend
     def signed_ids
       Array(create_params[:signed_ids]).filter_map do |signed_id|
         next if signed_id.blank?
-        next signed_id if ActiveStorage::Blob.find_signed(signed_id)
+        next ActiveStorage::Blob.find_signed!(signed_id)
 
         raise ActiveSupport::MessageVerifier::InvalidSignature
       rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
         nil
       end
+    end
+
+    def persist_uploaded_blob(upload)
+      io = upload.respond_to?(:tempfile) ? upload.tempfile : upload
+      io.rewind if io.respond_to?(:rewind)
+
+      ActiveStorage::Blob.create_and_upload!(
+        io: io,
+        filename: upload.original_filename,
+        content_type: upload.content_type
+      )
     end
 
     def editor_redirect_path

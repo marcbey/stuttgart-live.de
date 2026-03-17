@@ -1455,8 +1455,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @published_event.artist_name
     assert_includes response.body, "© Foto Max Mustermann"
     assert_includes response.body, "Slider Subline"
-    assert_includes response.body, rails_storage_proxy_path(hero_image.file, only_path: true)
-    assert_includes response.body, rails_storage_proxy_path(slider_image.file, only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(hero_image.processed_optimized_variant, only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_variant, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
@@ -1480,7 +1480,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "event-card-grid-2-2"
     assert_includes response.body, "Grid 2x2 Alt"
-    assert_includes response.body, rails_storage_proxy_path(image.file, only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(image.processed_optimized_variant, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 

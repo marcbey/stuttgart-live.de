@@ -419,6 +419,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Foto: Haus", created.event_images.detail_hero.first.sub_text
     assert_equal [ "Slider Alt" ], created.event_images.slider.distinct.pluck(:alt_text)
     assert_equal [ "Slider Sub" ], created.event_images.slider.distinct.pluck(:sub_text)
+    assert_nothing_raised { created.event_images.detail_hero.first.processed_optimized_variant }
+    created.event_images.slider.each do |image|
+      assert_nothing_raised { image.processed_optimized_variant }
+    end
   end
 
   test "rerenders new form when a preuploaded image signed id is invalid" do

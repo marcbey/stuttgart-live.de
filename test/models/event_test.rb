@@ -166,6 +166,16 @@ class EventTest < ActiveSupport::TestCase
     assert_equal 0, queries
   end
 
+  test "image_url_for returns optimized representation path for editorial images" do
+    event = events(:published_one)
+    event_image = create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO)
+
+    assert_equal(
+      Rails.application.routes.url_helpers.rails_storage_proxy_path(event_image.processed_optimized_variant, only_path: true),
+      event.image_url_for(slot: :detail_hero, breakpoint: :desktop)
+    )
+  end
+
   private
 
   def create_event_image(event:, purpose:)

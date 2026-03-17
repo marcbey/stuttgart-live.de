@@ -29,7 +29,7 @@ module Public
 
       def og_image_url
         image = event.image_for(slot: :social_card, breakpoint: :desktop)
-        return view_context.rails_storage_proxy_url(image.file) if image.is_a?(EventImage)
+        return view_context.optimized_event_image_url(image) if image.is_a?(EventImage)
 
         image&.image_url
       end

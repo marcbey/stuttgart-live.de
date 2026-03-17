@@ -42,6 +42,7 @@ module Backend
       @selected_genre_ids = genre_ids_from_params
       @manual_image_form_values = manual_image_form_values
       @manual_ticket_url = manual_ticket_url
+      created_images = []
       creation_alert = nil
 
       set_publishing_fields!(@event)
@@ -54,7 +55,7 @@ module Backend
 
         assign_genres!(@event)
         create_manual_ticket_offer!(@event)
-        attach_manual_event_images!
+        created_images = attach_manual_event_images!
         refresh_completeness!(@event)
         Editorial::EventChangeLogger.log!(
           event: @event,
@@ -65,12 +66,26 @@ module Backend
       rescue ActiveRecord::RecordInvalid => e
         creation_alert = e.record.errors.full_messages.to_sentence
         raise ActiveRecord::Rollback
+      rescue EventImage::ProcessingError => e
+        creation_alert = e.message
+        raise ActiveRecord::Rollback
       rescue ArgumentError => e
         creation_alert = e.message
         raise ActiveRecord::Rollback
       end
 
       created_successfully = creation_alert.blank? && @event.id.present? && Event.exists?(@event.id)
+
+      if created_successfully
+        begin
+          created_images.each(&:processed_optimized_variant)
+        rescue EventImage::ProcessingError => e
+          creation_alert = e.message
+          @event.destroy! if @event.persisted?
+          @event = Event.new(event_params)
+          created_successfully = false
+        end
+      end
 
       if !created_successfully
         flash.now[:alert] = creation_alert || "Event konnte nicht erstellt werden."
@@ -278,6 +293,7 @@ module Backend
     end
 
     def attach_manual_event_images!
+      created_images = []
       hero_signed_ids = signed_ids_from(manual_image_params[:detail_hero_signed_ids], label: "Eventbild")
       slider_signed_ids = signed_ids_from(manual_image_params[:slider_signed_ids], label: "Slider-Bilder")
       hero_files = uploaded_files_from(manual_image_params[:detail_hero_files], label: "Eventbild")
@@ -297,6 +313,7 @@ module Backend
         )
         image.file.attach(upload_source)
         image.save!
+        created_images << image
       end
 
       slider_sources.each do |upload_source|
@@ -307,7 +324,10 @@ module Backend
         )
         image.file.attach(upload_source)
         image.save!
+        created_images << image
       end
+
+      created_images
     end
 
     def create_manual_ticket_offer!(event)
@@ -343,7 +363,7 @@ module Backend
       raw_values = Array(values)
       valid_files = raw_values.filter_map do |value|
         next if value.blank?
-        next value if value.respond_to?(:original_filename) && value.respond_to?(:content_type)
+        next persist_uploaded_blob(value) if value.respond_to?(:original_filename) && value.respond_to?(:content_type)
 
         nil
       end
@@ -356,12 +376,23 @@ module Backend
     def signed_ids_from(values, label:)
       Array(values).filter_map do |signed_id|
         next if signed_id.blank?
-        next signed_id if ActiveStorage::Blob.find_signed(signed_id)
+        next ActiveStorage::Blob.find_signed!(signed_id)
 
         raise ArgumentError, "#{label}: Der temporäre Upload ist ungültig oder abgelaufen."
       rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
         raise ArgumentError, "#{label}: Der temporäre Upload ist ungültig oder abgelaufen."
       end
+    end
+
+    def persist_uploaded_blob(upload)
+      io = upload.respond_to?(:tempfile) ? upload.tempfile : upload
+      io.rewind if io.respond_to?(:rewind)
+
+      ActiveStorage::Blob.create_and_upload!(
+        io: io,
+        filename: upload.original_filename,
+        content_type: upload.content_type
+      )
     end
 
     def save_and_publish_requested?

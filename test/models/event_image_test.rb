@@ -1,4 +1,5 @@
 require "test_helper"
+require "vips"
 
 class EventImageTest < ActiveSupport::TestCase
   setup do
@@ -58,6 +59,44 @@ class EventImageTest < ActiveSupport::TestCase
     assert_includes image.errors[:file], "muss ein Bild sein"
   end
 
+  test "optimized variant scales down to web size and keeps original blob" do
+    image = EventImage.new(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO)
+    original_binary = large_test_image_binary(width: 2000, height: 1500)
+
+    image.file.attach(
+      io: StringIO.new(original_binary),
+      filename: "large-test-image.png",
+      content_type: "image/png"
+    )
+    image.save!
+
+    optimized_binary = image.processed_optimized_variant.image.download
+    optimized_image = Vips::Image.new_from_buffer(optimized_binary, "")
+    original_image = Vips::Image.new_from_buffer(image.file.download, "")
+
+    assert_equal 1280, optimized_image.width
+    assert_equal 960, optimized_image.height
+    assert_equal 2000, original_image.width
+    assert_equal 1500, original_image.height
+    assert_equal original_binary, image.file.download
+  end
+
+  test "optimized variant raises a processing error for broken image payloads" do
+    image = EventImage.new(event: @event, purpose: EventImage::PURPOSE_SLIDER)
+    image.file.attach(
+      io: StringIO.new("broken-image-data"),
+      filename: "broken-image.png",
+      content_type: "image/png"
+    )
+    image.save!
+
+    error = assert_raises(EventImage::ProcessingError) do
+      image.processed_optimized_variant
+    end
+
+    assert_includes error.message, "Bild konnte nicht für Web und Mobile optimiert werden."
+  end
+
   private
 
   def build_image(event: @event, purpose:, grid_variant: nil)
@@ -75,5 +114,9 @@ class EventImageTest < ActiveSupport::TestCase
       content_type: "image/png"
     )
     image
+  end
+
+  def large_test_image_binary(width:, height:)
+    Vips::Image.black(width, height).write_to_buffer(".png")
   end
 end
