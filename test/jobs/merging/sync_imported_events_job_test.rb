@@ -18,6 +18,7 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     assert run.metadata.key?("groups_count")
     assert run.metadata.key?("events_created_count")
     assert run.metadata.key?("events_updated_count")
+    assert run.metadata.key?("duplicate_matches_count")
     assert run.metadata.key?("offers_upserted_count")
     assert_equal "2026-03-14T09:00:00+01:00", run.metadata["last_run_at"]
   end
@@ -58,6 +59,7 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
       groups_count: 0,
       events_created_count: 0,
       events_updated_count: 0,
+      duplicate_matches_count: 0,
       offers_upserted_count: 0
     )
     fake_service = Struct.new(:call).new(fake_result)

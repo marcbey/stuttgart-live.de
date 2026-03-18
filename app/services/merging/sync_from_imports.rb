@@ -5,6 +5,7 @@ module Merging
       :groups_count,
       :events_created_count,
       :events_updated_count,
+      :duplicate_matches_count,
       :offers_upserted_count
     )
 
@@ -63,14 +64,16 @@ module Merging
 
       created = 0
       updated = 0
+      duplicates = 0
       offers_upserted = 0
 
       ActiveRecord::Base.transaction do
         groups.each_value do |group_records|
           ordered_records = ordered_records_for_group(group_records)
-          _event, created_now, updated_now, offers_count = event_upserter.call(ordered_records)
+          _event, created_now, updated_now, duplicate_now, offers_count = event_upserter.call(ordered_records)
           created += 1 if created_now
           updated += 1 if updated_now
+          duplicates += 1 if duplicate_now
           offers_upserted += offers_count
         end
       end
@@ -80,6 +83,7 @@ module Merging
         groups_count: groups.count,
         events_created_count: created,
         events_updated_count: updated,
+        duplicate_matches_count: duplicates,
         offers_upserted_count: offers_upserted
       )
     end

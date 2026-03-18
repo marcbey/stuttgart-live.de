@@ -89,17 +89,21 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child", text: /Stop angefordert/, count: 0
   end
 
-  test "should show merge upserts as created plus updated events in recent runs table" do
+  test "should show merge raw imports groups and similarity duplicates in recent runs table" do
     merge_run = @source.import_runs.create!(
       status: "succeeded",
       source_type: "merge",
       started_at: 1.minute.ago,
       finished_at: Time.current,
+      fetched_count: 5,
       imported_count: 3,
       upserted_count: 999,
       metadata: {
+        "import_records_count" => 5,
+        "groups_count" => 3,
         "events_created_count" => 1,
         "events_updated_count" => 2,
+        "duplicate_matches_count" => 1,
         "offers_upserted_count" => 999
       }
     )
@@ -107,7 +111,32 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
     assert_response :success
 
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(6)", text: "3"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(4)", text: "5"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(5)", text: "3"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(7)", text: "1"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(8)", text: "2"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(9)", text: "1"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(10)", text: "2"
+  end
+
+  test "should show source importer runs with raw imports and no merge-only metrics in recent runs table" do
+    run = @source.import_runs.create!(
+      status: "succeeded",
+      source_type: "easyticket",
+      started_at: 1.minute.ago,
+      finished_at: Time.current,
+      upserted_count: 7
+    )
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "7"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "-"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "7"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(8)", text: "-"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(9)", text: "-"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(10)", text: "-"
   end
 
   test "should show import run detail page with errors" do

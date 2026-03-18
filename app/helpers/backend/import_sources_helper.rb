@@ -45,18 +45,50 @@ module Backend::ImportSourcesHelper
     run.filtered_count
   end
 
-  def import_run_upserts_label(run)
+  def import_run_raw_imports_label(run)
+    return merge_import_records_count(run) if run.source_type == "merge"
+
+    run.upserted_count
+  end
+
+  def import_run_merge_groups_label(run)
+    return "-" unless run.source_type == "merge"
+
+    merge_groups_count(run) || run.imported_count
+  end
+
+  def import_run_inserts_label(run)
     return run.upserted_count unless run.source_type == "merge"
 
     metadata = import_run_metadata(run)
     events_created_count = Integer(metadata["events_created_count"], exception: false)
-    events_updated_count = Integer(metadata["events_updated_count"], exception: false)
+    return events_created_count if events_created_count
 
-    if events_created_count && events_updated_count
-      events_created_count + events_updated_count
-    else
-      run.imported_count
-    end
+    run.imported_count
+  end
+
+  def import_run_updates_label(run)
+    return "-" unless run.source_type == "merge"
+
+    metadata = import_run_metadata(run)
+    Integer(metadata["events_updated_count"], exception: false) || "-"
+  end
+
+  def import_run_duplicates_label(run)
+    return "-" unless run.source_type == "merge"
+
+    metadata = import_run_metadata(run)
+    Integer(metadata["duplicate_matches_count"], exception: false) || 0
+  end
+
+  def import_run_collapsed_records_label(run)
+    return "-" unless run.source_type == "merge"
+
+    raw_imports = merge_import_records_count(run)
+    groups_count = merge_groups_count(run) || run.imported_count
+    return "-" if raw_imports.nil? || groups_count.nil?
+
+    raw_imports - groups_count
   end
 
   def import_run_retries_label(run)
@@ -105,5 +137,13 @@ module Backend::ImportSourcesHelper
     return nil if raw_value.nil?
 
     Integer(raw_value, exception: false)
+  end
+
+  def merge_import_records_count(run)
+    Integer(import_run_metadata(run)["import_records_count"], exception: false) || run.fetched_count
+  end
+
+  def merge_groups_count(run)
+    Integer(import_run_metadata(run)["groups_count"], exception: false)
   end
 end

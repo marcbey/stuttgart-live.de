@@ -14,8 +14,10 @@ module Merging
         primary = records.first
         fingerprint = fingerprint_for(primary)
 
-        event = find_existing_event(records, fingerprint) || Event.new
+        match_result = find_existing_event(records, fingerprint)
+        event = match_result&.event || Event.new
         created_now = event.new_record?
+        duplicate_now = similarity_duplicate?(match_result)
 
         assign_event_attributes(event, records, fingerprint:, created_now:)
 
@@ -47,7 +49,7 @@ module Merging
 
         logger.info("[Merging::SyncFromImports] synced event ##{event.id} with #{records.size} source records")
 
-        [ event, created_now, effective_updated, offers_upserted ]
+        [ event, created_now, effective_updated, duplicate_now, offers_upserted ]
       end
 
       private
@@ -113,7 +115,13 @@ module Merging
       end
 
       def find_existing_event(records, _fingerprint)
-        match_strategy.call(records:)&.event
+        match_strategy.call(records:)
+      end
+
+      def similarity_duplicate?(match_result)
+        return false if match_result.nil?
+
+        !%w[source_snapshot exact_fingerprint].include?(match_result.reason.to_s)
       end
 
       def sync_offers!(event, offers)

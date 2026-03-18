@@ -90,23 +90,51 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Aussortierte Staedte"
   end
 
-  test "shows merge upserts as created plus updated events on detail page" do
+  test "shows merge raw imports groups and similarity duplicates on detail page" do
     merge_run = @source.import_runs.create!(
       status: "succeeded",
       source_type: "merge",
       started_at: 2.minutes.ago,
       finished_at: 1.minute.ago,
+      fetched_count: 5,
       imported_count: 5,
       upserted_count: 961,
       metadata: {
+        "import_records_count" => 5,
+        "groups_count" => 5,
         "events_created_count" => 1,
         "events_updated_count" => 4,
+        "duplicate_matches_count" => 2,
         "offers_upserted_count" => 961
       }
     )
 
     get backend_import_run_url(merge_run)
     assert_response :success
-    assert_select "table.data-table tbody tr td:nth-child(6)", text: "5"
+    assert_select "table.data-table tbody tr td:nth-child(4)", text: "5"
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "5"
+    assert_select "table.data-table tbody tr td:nth-child(7)", text: "1"
+    assert_select "table.data-table tbody tr td:nth-child(8)", text: "4"
+    assert_select "table.data-table tbody tr td:nth-child(9)", text: "2"
+    assert_select "table.data-table tbody tr td:nth-child(10)", text: "0"
+  end
+
+  test "shows source importer runs with raw imports and no merge-only metrics on detail page" do
+    run = @source.import_runs.create!(
+      status: "succeeded",
+      source_type: "easyticket",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago,
+      upserted_count: 3
+    )
+
+    get backend_import_run_url(run)
+    assert_response :success
+    assert_select "table.data-table tbody tr td:nth-child(4)", text: "3"
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "-"
+    assert_select "table.data-table tbody tr td:nth-child(7)", text: "3"
+    assert_select "table.data-table tbody tr td:nth-child(8)", text: "-"
+    assert_select "table.data-table tbody tr td:nth-child(9)", text: "-"
+    assert_select "table.data-table tbody tr td:nth-child(10)", text: "-"
   end
 end

@@ -260,6 +260,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
 
     assert_equal 2, result.import_records_count
     assert_equal 2, result.groups_count
+    assert_equal 1, result.duplicate_matches_count
     assert_equal 1, Event.where(start_at: Time.zone.local(2026, 12, 19, 20, 0, 0)).count
   end
 

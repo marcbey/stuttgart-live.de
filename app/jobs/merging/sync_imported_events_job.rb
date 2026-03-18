@@ -26,6 +26,7 @@ module Merging
           "groups_count" => result.groups_count,
           "events_created_count" => result.events_created_count,
           "events_updated_count" => result.events_updated_count,
+          "duplicate_matches_count" => result.duplicate_matches_count,
           "offers_upserted_count" => result.offers_upserted_count
         )
       )

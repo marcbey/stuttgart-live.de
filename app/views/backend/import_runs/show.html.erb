@@ -24,9 +24,13 @@
             <th>Gestartet</th>
             <th>Import Typ</th>
             <th>Status</th>
-            <th>Fetched</th>
+            <th>Raw Imports</th>
+            <th>Merge Groups</th>
             <th>Filtered</th>
-            <th>Upserts</th>
+            <th>Inserts</th>
+            <th>Updates</th>
+            <th>Similarity Duplicates</th>
+            <th>Collapsed Records</th>
             <th>Failed</th>
           </tr>
         </thead>
@@ -35,9 +39,13 @@
             <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
             <td><%= import_run_type_label(@import_run) %></td>
             <td><%= import_run_status_label(@import_run) %></td>
-            <td><%= @import_run.fetched_count %></td>
+            <td><%= import_run_raw_imports_label(@import_run) %></td>
+            <td><%= import_run_merge_groups_label(@import_run) %></td>
             <td><%= import_run_filtered_label(@import_run) %></td>
-            <td><%= import_run_upserts_label(@import_run) %></td>
+            <td><%= import_run_inserts_label(@import_run) %></td>
+            <td><%= import_run_updates_label(@import_run) %></td>
+            <td><%= import_run_duplicates_label(@import_run) %></td>
+            <td><%= import_run_collapsed_records_label(@import_run) %></td>
             <td><%= @import_run.failed_count %></td>
           </tr>
         </tbody>
