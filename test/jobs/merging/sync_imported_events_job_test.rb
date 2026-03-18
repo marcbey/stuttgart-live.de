@@ -82,4 +82,57 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     sync_class.alias_method :new, :__original_new_for_test
     sync_class.remove_method :__original_new_for_test
   end
+
+  test "persists merge progress while the job is still running" do
+    observed_run_state = {}
+    fake_result = Merging::SyncFromImports::Result.new(
+      import_records_count: 12,
+      groups_count: 4,
+      events_created_count: 2,
+      events_updated_count: 1,
+      duplicate_matches_count: 1,
+      offers_upserted_count: 7
+    )
+
+    sync_class = Merging::SyncFromImports.singleton_class
+    sync_class.alias_method :__original_new_for_test, :new
+    sync_class.define_method(:new) do |*args, **kwargs|
+      progress_callback = kwargs.fetch(:progress_callback)
+      merge_run_id = kwargs.fetch(:merge_run_id)
+
+      Class.new do
+        define_method(:call) do
+          progress_callback.call(
+            import_records_count: 12,
+            groups_count: 4,
+            events_created_count: 2,
+            events_updated_count: 1,
+            duplicate_matches_count: 1,
+            offers_upserted_count: 7,
+            processed_groups_count: 3
+          )
+
+          observed_run_state[:value] = ImportRun.find(merge_run_id)
+          fake_result
+        end
+      end.new
+    end
+
+    Merging::SyncImportedEventsJob.perform_now(last_run_at: Time.zone.parse("2026-03-14 10:15:00"))
+
+    observed_run_state = observed_run_state.fetch(:value)
+
+    assert_equal 12, observed_run_state.fetched_count
+    assert_equal 3, observed_run_state.imported_count
+    assert_equal 7, observed_run_state.upserted_count
+    assert_equal 12, observed_run_state.metadata["import_records_count"]
+    assert_equal 4, observed_run_state.metadata["groups_count"]
+    assert_equal 2, observed_run_state.metadata["events_created_count"]
+    assert_equal 1, observed_run_state.metadata["events_updated_count"]
+    assert_equal 1, observed_run_state.metadata["duplicate_matches_count"]
+    assert_equal 3, observed_run_state.metadata["processed_groups_count"]
+  ensure
+    sync_class.alias_method :new, :__original_new_for_test
+    sync_class.remove_method :__original_new_for_test
+  end
 end

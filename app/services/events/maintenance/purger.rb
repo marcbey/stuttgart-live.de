@@ -65,6 +65,7 @@ module Events
       end
 
       def purge_event_data!
+        EventLlmEnrichment.delete_all
         EventImage.delete_all
         ImportEventImage.where(import_class: "Event").delete_all
         EventOffer.delete_all
@@ -116,6 +117,7 @@ module Events
       def event_counts
         {
           "events" => Event.count,
+          "event_llm_enrichments" => EventLlmEnrichment.count,
           "event_offers" => EventOffer.count,
           "event_genres" => EventGenre.count,
           "event_change_logs" => EventChangeLog.count,

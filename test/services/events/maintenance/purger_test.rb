@@ -34,12 +34,25 @@ class Events::Maintenance::PurgerTest < ActiveSupport::TestCase
         }
       )
     )
+    EventLlmEnrichment.create!(
+      event: events(:published_one),
+      source_run: import_runs(:one),
+      genre: [ "Jazz" ],
+      venue: events(:published_one).venue,
+      artist_description: "Beschreibung",
+      event_description: "Event-Beschreibung",
+      venue_description: "Venue-Beschreibung",
+      model: "gpt-5-mini",
+      prompt_version: "v1",
+      raw_response: {}
+    )
   end
 
   test "purges event data and keeps import data by default" do
     result = Events::Maintenance::Purger.call
 
     assert_equal 0, Event.count
+    assert_equal 0, EventLlmEnrichment.count
     assert_equal 0, EventOffer.count
     assert_equal 0, EventGenre.count
     assert_equal 0, EventChangeLog.count
@@ -50,6 +63,7 @@ class Events::Maintenance::PurgerTest < ActiveSupport::TestCase
     assert_equal :not_requested, result.solid_queue_status
     assert_empty result.import_counts
     assert_empty result.solid_queue_counts
+    assert_equal 0, result.event_counts.fetch("event_llm_enrichments")
   end
 
   test "purges import runtime data and resets reservix checkpoints" do
