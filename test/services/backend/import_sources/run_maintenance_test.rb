@@ -36,4 +36,20 @@ class Backend::ImportSources::RunMaintenanceTest < ActiveSupport::TestCase
     assert_equal "failed", run.reload.status
     assert_includes run.metadata["stale_release_reason"], "heartbeat timeout"
   end
+
+  test "does not mark healthy llm enrichment run stale before its longer timeout" do
+    run = @source.import_runs.create!(
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 50.minutes.ago,
+      metadata: {
+        "triggered_at" => 50.minutes.ago.iso8601,
+        "execution_started_at" => 49.minutes.ago.iso8601
+      }
+    )
+    run.update_columns(updated_at: 1.minute.ago)
+
+    assert_equal false, @maintenance.release_stale_running_run!(run)
+    assert_equal "running", run.reload.status
+  end
 end

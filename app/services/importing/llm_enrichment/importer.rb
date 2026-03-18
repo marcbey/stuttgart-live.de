@@ -3,7 +3,7 @@ require "json"
 module Importing
   module LlmEnrichment
     class Importer
-      RUN_STALE_AFTER = 45.minutes
+      RUN_STALE_AFTER = 4.hours
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       BATCH_SIZE = 25
       PROMPT_VERSION = "v1"
@@ -374,12 +374,16 @@ module Importing
       end
 
       def touch_run_heartbeat!(extra_metadata = {})
+        return unless run_running?
+
         metadata = current_run_metadata.merge(extra_metadata.deep_stringify_keys)
         run.update_columns(metadata: metadata, updated_at: Time.current)
         Backend::ImportRunsBroadcaster.broadcast!
       end
 
       def update_run_progress!(selected_count:, skipped_count:, enriched_count:, batches_count:, batches_processed:, **extra_metadata)
+        return unless run_running?
+
         run.update!(
           fetched_count: selected_count,
           filtered_count: skipped_count,
@@ -400,6 +404,10 @@ module Importing
 
       def stop_requested?
         ActiveModel::Type::Boolean.new.cast(current_run_metadata["stop_requested"])
+      end
+
+      def run_running?
+        run.reload.status == "running"
       end
 
       def canceled_result(selected_events:, skipped_count:, enriched_count:, batches_count:, merge_run:)

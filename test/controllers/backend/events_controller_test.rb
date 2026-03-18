@@ -758,6 +758,26 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event_editor_panel .editor-header-badges a", text: "Frontend", count: 0
   end
 
+  test "editor header shows llm enriched badge when enrichment exists" do
+    sign_in_as(@user)
+
+    @published_event.create_llm_enrichment!(
+      source_run: import_runs(:one),
+      artist_description: "LLM Artist Beschreibung",
+      event_description: "LLM Event Beschreibung",
+      venue_description: "LLM Venue Beschreibung",
+      genre: [ "Indie" ],
+      model: "gpt-test",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+
+    get backend_event_url(@published_event)
+
+    assert_response :success
+    assert_select "#event_editor_panel .editor-header-badges .status-badge", text: "LLM enriched"
+  end
+
   test "ready_for_publish event editor does not show unpublish button" do
     sign_in_as(@user)
 

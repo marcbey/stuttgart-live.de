@@ -20,6 +20,9 @@
       <% if event.primary_source.present? %>
         <span class="status-badge status-badge-default"><%= event.primary_source %></span>
       <% end %>
+      <% if event.llm_enrichment.present? %>
+        <span class="status-badge status-badge-default">LLM enriched</span>
+      <% end %>
     </div>
   </header>
 

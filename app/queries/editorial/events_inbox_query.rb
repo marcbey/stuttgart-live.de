@@ -11,6 +11,7 @@ module Editorial
 
     def call
       relation = scope.includes(
+        :llm_enrichment,
         :genres,
         :event_offers,
         :import_event_images,

@@ -16,10 +16,10 @@
 
   <%= render "show_hero", presenter: presenter %>
 
-  <% if @event.event_info.present? %>
+  <% if presenter.description_text.present? %>
     <section class="event-detail-copy">
       <h2>Beschreibung</h2>
-      <%= simple_format(@event.event_info) %>
+      <%= simple_format(presenter.description_text) %>
       <% if presenter.social_links.any? %>
         <div class="event-detail-links">
           <% presenter.social_links.each do |link| %>
@@ -27,6 +27,27 @@
           <% end %>
         </div>
       <% end %>
+    </section>
+  <% end %>
+
+  <% if presenter.artist_description.present? %>
+    <section class="event-detail-copy">
+      <h2>Über den Act</h2>
+      <%= simple_format(presenter.artist_description) %>
+    </section>
+  <% end %>
+
+  <% if presenter.venue_description.present? %>
+    <section class="event-detail-copy">
+      <h2>Über die Venue</h2>
+      <%= simple_format(presenter.venue_description) %>
+    </section>
+  <% end %>
+
+  <% if presenter.enrichment_genres.any? %>
+    <section class="event-detail-copy">
+      <h2>Genres</h2>
+      <p><%= presenter.enrichment_genres.join(" · ") %></p>
     </section>
   <% end %>
 

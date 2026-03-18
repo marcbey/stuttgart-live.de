@@ -1,7 +1,7 @@
 <header class="<%= presenter.header_classes %>">
   <div class="event-detail-header-copy">
     <h1><%= presenter.event.artist_name %></h1>
-    <p class="event-detail-title"><%= presenter.event.title %></p>
+    <p class="event-detail-title"><%= presenter.display_title %></p>
     <p class="event-detail-meta event-detail-meta-primary">
       <% presenter.primary_meta.each do |item| %>
         <span class="event-detail-meta-strong"><%= item %></span>
@@ -28,8 +28,8 @@
       <% end %>
     <% end %>
 
-    <% if presenter.genres.any? %>
-      <p class="event-detail-genre">Genre: <%= presenter.genres.join(" · ") %></p>
+    <% if presenter.detail_genres.any? %>
+      <p class="event-detail-genre">Genre: <%= presenter.detail_genres.join(" · ") %></p>
     <% end %>
   </div>
 

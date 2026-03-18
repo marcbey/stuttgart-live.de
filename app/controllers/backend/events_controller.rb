@@ -176,7 +176,7 @@ module Backend
     end
 
     def set_event
-      @event = Event.includes(:import_event_images, event_images: [ file_attachment: :blob ]).find(params[:id])
+      @event = Event.includes(:llm_enrichment, :import_event_images, event_images: [ file_attachment: :blob ]).find(params[:id])
     end
 
     def set_next_event_enabled
@@ -205,7 +205,7 @@ module Backend
 
     def selected_event_from(events)
       if params[:event_id].present?
-        return Event.includes(:import_event_images, event_images: [ file_attachment: :blob ]).find_by(id: params[:event_id])
+        return Event.includes(:llm_enrichment, :import_event_images, event_images: [ file_attachment: :blob ]).find_by(id: params[:event_id])
       end
 
       events.first

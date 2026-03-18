@@ -108,6 +108,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "https://tickets.example/band", presenter.ticket_url
     assert_equal "39,00 €", presenter.ticket_price_text
     assert_equal [ "Pop", "Rock" ], presenter.genres
+    assert_equal [ "Pop", "Rock" ], presenter.detail_genres
     assert_equal [ "Homepage", "Instagram" ], presenter.social_links.map(&:label)
     assert_equal [ "https://band.example", "https://instagram.example/band" ], presenter.social_links.map(&:url)
     assert_equal "https://www.youtube.com/embed/demo", presenter.youtube_embed_url
@@ -115,6 +116,44 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "/slide-1.jpg", presenter.slider_items.first.source
     assert_equal "Slide 1 Alt", presenter.slider_items.first.alt_text
     assert_equal "Live auf der Bühne", presenter.slider_items.first.caption
+  end
+
+  test "uses llm enrichment as fallback for detail content" do
+    event = build_event(
+      artist_name: "Band",
+      title: "",
+      event_info: "",
+      homepage_url: "",
+      instagram_url: "",
+      facebook_url: "",
+      youtube_url: ""
+    )
+
+    event.build_llm_enrichment(
+      event_description: "LLM Event Beschreibung",
+      artist_description: "LLM Artist Beschreibung",
+      venue_description: "LLM Venue Beschreibung",
+      homepage_link: "https://llm-homepage.example",
+      instagram_link: "https://instagram.example/llm-band",
+      facebook_link: "https://facebook.example/llm-band",
+      youtube_link: "https://www.youtube.com/watch?v=fallback",
+      genre: [ "Indie", "Rock" ],
+      model: "gpt-test",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+
+    presenter = build_presenter(event)
+
+    assert_equal "LLM Event Beschreibung", presenter.display_title
+    assert_equal "LLM Event Beschreibung", presenter.description_text
+    assert_equal "LLM Artist Beschreibung", presenter.artist_description
+    assert_equal "LLM Venue Beschreibung", presenter.venue_description
+    assert_equal [ "Homepage", "Instagram", "Facebook" ], presenter.social_links.map(&:label)
+    assert_equal [ "https://llm-homepage.example", "https://instagram.example/llm-band", "https://facebook.example/llm-band" ], presenter.social_links.map(&:url)
+    assert_equal "https://www.youtube.com/embed/fallback", presenter.youtube_embed_url
+    assert_equal [ "Pop", "Rock", "Indie" ], presenter.detail_genres
+    assert_equal [ "Indie", "Rock" ], presenter.enrichment_genres
   end
 
   test "uses loaded genres without extra queries" do

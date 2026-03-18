@@ -1018,6 +1018,53 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Interner Hinweis"
   end
 
+  test "show renders llm enrichment fallbacks and extra sections" do
+    event = Event.create!(
+      slug: "published-event-with-llm-enrichment",
+      source_fingerprint: "test::public::published::llm-enrichment",
+      title: "Published Event With LLM Enrichment",
+      artist_name: "Published Artist With LLM Enrichment",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      event_info: nil,
+      homepage_url: nil,
+      instagram_url: nil,
+      facebook_url: nil,
+      youtube_url: nil,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    event.create_llm_enrichment!(
+      artist_description: "LLM Artist Beschreibung",
+      event_description: "LLM Event Beschreibung",
+      venue_description: "LLM Venue Beschreibung",
+      homepage_link: "https://llm-homepage.example",
+      instagram_link: "https://instagram.example/llm-band",
+      facebook_link: "https://facebook.example/llm-band",
+      youtube_link: "https://www.youtube.com/watch?v=llm123",
+      genre: [ "Indie", "Synthpop" ],
+      source_run: import_runs(:one),
+      model: "gpt-test",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "LLM Event Beschreibung"
+    assert_includes response.body, "LLM Artist Beschreibung"
+    assert_includes response.body, "LLM Venue Beschreibung"
+    assert_includes response.body, "https://llm-homepage.example"
+    assert_includes response.body, "https://instagram.example/llm-band"
+    assert_includes response.body, "https://facebook.example/llm-band"
+    assert_includes response.body, "https://www.youtube.com/embed/llm123"
+    assert_includes response.body, "Indie"
+    assert_includes response.body, "Synthpop"
+  end
+
   test "show hides organizer notes unless explicitly enabled" do
     event = Event.create!(
       slug: "published-event-with-hidden-organizer-notes",

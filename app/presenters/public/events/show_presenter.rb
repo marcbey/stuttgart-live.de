@@ -20,11 +20,11 @@ module Public
       end
 
       def meta_title
-        "#{event.artist_name} - #{event.title}"
+        "#{event.artist_name} - #{display_title}"
       end
 
       def meta_description
-        event.event_info.to_s.truncate(160)
+        description_text.to_s.truncate(160)
       end
 
       def og_image_url
@@ -67,7 +67,11 @@ module Public
       end
 
       def hero_alt_text
-        @hero_alt_text ||= event.artist_name.to_s.strip.presence || event.title.to_s
+        @hero_alt_text ||= event.artist_name.to_s.strip.presence || display_title.to_s
+      end
+
+      def display_title
+        event.title.to_s.strip.presence || llm_enrichment&.event_description.to_s.strip
       end
 
       def hero_image_credit
@@ -115,16 +119,38 @@ module Public
         end
       end
 
+      def detail_genres
+        @detail_genres ||= (genres + enrichment_genres).uniq
+      end
+
       def social_links
         @social_links ||= [
-          build_link("Homepage", event.homepage_url),
-          build_link("Instagram", event.instagram_url),
-          build_link("Facebook", event.facebook_url)
+          build_link("Homepage", event.homepage_url, llm_enrichment&.homepage_link),
+          build_link("Instagram", event.instagram_url, llm_enrichment&.instagram_link),
+          build_link("Facebook", event.facebook_url, llm_enrichment&.facebook_link)
         ].compact
       end
 
       def youtube_embed_url
-        event.youtube_embed_url.presence
+        embed_url_for(primary_youtube_url)
+      end
+
+      def description_text
+        event.event_info.to_s.strip.presence || llm_enrichment&.event_description.to_s.strip.presence
+      end
+
+      def artist_description
+        llm_enrichment&.artist_description.to_s.strip.presence
+      end
+
+      def venue_description
+        llm_enrichment&.venue_description.to_s.strip.presence
+      end
+
+      def enrichment_genres
+        Array(llm_enrichment&.genre).filter_map do |entry|
+          entry.to_s.strip.presence
+        end
       end
 
       def slider_items
@@ -143,6 +169,10 @@ module Public
       private
 
       attr_reader :primary_offer, :browse_state, :view_context
+
+      def llm_enrichment
+        @llm_enrichment ||= event.llm_enrichment
+      end
 
       def hero_desktop_image
         @hero_desktop_image ||= event.image_for(slot: :detail_hero, breakpoint: :desktop)
@@ -195,8 +225,22 @@ module Public
         [ event.venue, event.city ].reject(&:blank?).join(", ")
       end
 
-      def build_link(label, url)
+      def primary_youtube_url
+        event.youtube_url.to_s.strip.presence || llm_enrichment&.youtube_link.to_s.strip.presence
+      end
+
+      def embed_url_for(url)
         normalized_url = url.to_s.strip.presence
+        return if normalized_url.blank?
+
+        id = event.send(:extract_youtube_id, normalized_url)
+        return if id.blank?
+
+        "https://www.youtube.com/embed/#{id}"
+      end
+
+      def build_link(label, *urls)
+        normalized_url = urls.filter_map { |url| url.to_s.strip.presence }.first
         return if normalized_url.blank?
 
         Link.new(label: label, url: normalized_url)

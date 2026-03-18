@@ -223,6 +223,7 @@ module Public
 
     def all_events_relation
       Event.includes(
+        :llm_enrichment,
         :genres,
         :event_offers,
         :import_event_images,
