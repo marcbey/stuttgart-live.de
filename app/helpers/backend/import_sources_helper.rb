@@ -1,4 +1,14 @@
 module Backend::ImportSourcesHelper
+  IMPORT_RUN_COLUMN_DESCRIPTIONS = {
+    raw_imports: "Provider-Importer: Anzahl der in diesem Lauf geschriebenen Rohimporte. Merge: Anzahl der aktuellen Import-Records nach Auswahl der neuesten Rohimporte je source_identifier.",
+    merge_groups: "Nur für Merge-Läufe: Anzahl der providerübergreifenden Gruppen nach Dublettenzusammenführung über Artist und Startzeit.",
+    filtered: "Nur für Provider-Läufe: Anzahl der Datensätze, die die Orts- und Importfilter passiert haben.",
+    inserts: "Provider-Importer: entspricht den geschriebenen Rohimporten dieses Laufs. Merge: Anzahl der neu angelegten Events.",
+    updates: "Nur für Merge-Läufe: Anzahl bestehender Events, die in diesem Lauf aktualisiert wurden. Überschrieben werden dabei start_at, doors_at, venue, badge_text, min_price, max_price, primary_source, source_fingerprint und source_snapshot.",
+    similarity_duplicates: "Nur für Merge-Läufe: Teilmenge der Updates, bei denen das Ähnlichkeits-Matching ein Import-Record einem bestehenden Event zugeordnet hat.",
+    collapsed_records: "Nur für Merge-Läufe: Differenz aus Raw Imports und Merge Groups. Zeigt, wie viele aktuelle Rohimporte vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden."
+  }.freeze
+
   def import_run_type_label(run)
     case run.source_type
     when "easyticket"
@@ -89,6 +99,10 @@ module Backend::ImportSourcesHelper
     return "-" if raw_imports.nil? || groups_count.nil?
 
     raw_imports - groups_count
+  end
+
+  def import_run_column_description(key)
+    IMPORT_RUN_COLUMN_DESCRIPTIONS.fetch(key)
   end
 
   def import_run_retries_label(run)
