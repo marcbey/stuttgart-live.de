@@ -3,10 +3,11 @@ require "set"
 module Merging
   class SyncFromImports
     class EventUpserter
-      def initialize(merge_run_id:, logger:, priority_map:)
+      def initialize(merge_run_id:, logger:, priority_map:, match_strategy:)
         @merge_run_id = merge_run_id
         @logger = logger
         @priority_map = priority_map
+        @match_strategy = match_strategy
       end
 
       def call(records)
@@ -51,12 +52,12 @@ module Merging
 
       private
 
-      attr_reader :logger, :merge_run_id, :priority_map
+      attr_reader :logger, :match_strategy, :merge_run_id, :priority_map
 
       def assign_event_attributes(event, records, fingerprint:, created_now:)
         event.source_fingerprint = fingerprint
-        event.primary_source = records.first.source
-        event.source_snapshot = build_source_snapshot(records)
+        event.source_snapshot = build_source_snapshot(event, records)
+        event.primary_source = prioritized_primary_source(event.source_snapshot, fallback: records.first.source)
 
         if created_now
           event.title = first_present(records, &:title)
@@ -111,26 +112,14 @@ module Merging
           images_present
       end
 
-      def find_existing_event(records, fingerprint)
-        Event.find_by(source_fingerprint: fingerprint) || find_by_source_snapshot(records)
-      end
-
-      def find_by_source_snapshot(records)
-        records.each do |record|
-          event =
-            Event.where(
-              "source_snapshot -> 'sources' @> ?",
-              [ { "source" => record.source, "external_event_id" => record.external_event_id } ].to_json
-            ).first
-          return event if event.present?
-        end
-
-        nil
+      def find_existing_event(records, _fingerprint)
+        match_strategy.call(records:)&.event
       end
 
       def sync_offers!(event, offers)
         existing = event.event_offers.index_by { |offer| [ offer.source, offer.source_event_id ] }
         upserted = 0
+        touched_sources = offers.map { |attrs| attrs[:source].to_s }.uniq
 
         offers.each do |attrs|
           key = [ attrs[:source], attrs[:source_event_id] ]
@@ -142,7 +131,11 @@ module Merging
           upserted += 1
         end
 
-        existing.each_value(&:destroy!)
+        existing.each_value do |offer|
+          next unless touched_sources.include?(offer.source.to_s)
+
+          offer.destroy!
+        end
         upserted
       end
 
@@ -186,51 +179,81 @@ module Merging
       end
 
       def sync_event_images!(event, candidates)
-        Importing::ImportEventImagesSync.call(owner: event, candidates: candidates)
+        touched_sources = candidates.map { |candidate| candidate[:source].to_s }.uniq
+        Importing::ImportEventImagesSync.call(owner: event, candidates: candidates, source: touched_sources)
       end
 
       def fingerprint_for(record)
         DuplicationKey.for_record(record)
       end
 
-      def build_source_snapshot(records)
+      def build_source_snapshot(event, records)
+        existing_sources = event.source_snapshot.is_a?(Hash) ? Array(event.source_snapshot["sources"]) : []
+        merged_sources = existing_sources.index_by { |source| source_snapshot_key(source) }
+
+        records.each do |record|
+          source = build_source_snapshot_source(record)
+          merged_sources[source_snapshot_key(source)] = source
+        end
+
         {
-          "sources" =>
-            records.map do |record|
-              {
-                "source" => record.source,
-                "source_identifier" => record.source_identifier,
-                "external_event_id" => record.external_event_id,
-                "artist_name" => record.artist_name,
-                "title" => record.title,
-                "start_at" => record.start_at&.iso8601,
-                "doors_at" => record.doors_at&.iso8601,
-                "city" => record.city,
-                "venue" => record.venue,
-                "promoter_id" => record.promoter_id,
-                "badge_text" => record.badge_text,
-                "youtube_url" => record.youtube_url,
-                "homepage_url" => record.homepage_url,
-                "facebook_url" => record.facebook_url,
-                "event_info" => record.event_info,
-                "min_price" => decimal_as_json(record.min_price),
-                "max_price" => decimal_as_json(record.max_price),
-                "genre" => record.genre,
-                "images" =>
-                  record.images.map do |image|
-                    {
-                      "source" => image.source,
-                      "image_type" => image.image_type,
-                      "image_url" => image.image_url,
-                      "role" => image.role,
-                      "aspect_hint" => image.aspect_hint,
-                      "position" => image.position
-                    }
-                  end,
-                "raw_payload" => record.raw_payload
-              }
-            end
+          "sources" => merged_sources.values.sort_by do |source|
+            [
+              priority_for(source["source"]),
+              source["source"].to_s,
+              source["source_identifier"].to_s,
+              source["external_event_id"].to_s
+            ]
+          end
         }
+      end
+
+      def build_source_snapshot_source(record)
+        {
+          "source" => record.source,
+          "source_identifier" => record.source_identifier,
+          "external_event_id" => record.external_event_id,
+          "artist_name" => record.artist_name,
+          "title" => record.title,
+          "start_at" => record.start_at&.iso8601,
+          "doors_at" => record.doors_at&.iso8601,
+          "city" => record.city,
+          "venue" => record.venue,
+          "promoter_id" => record.promoter_id,
+          "badge_text" => record.badge_text,
+          "youtube_url" => record.youtube_url,
+          "homepage_url" => record.homepage_url,
+          "facebook_url" => record.facebook_url,
+          "event_info" => record.event_info,
+          "min_price" => decimal_as_json(record.min_price),
+          "max_price" => decimal_as_json(record.max_price),
+          "genre" => record.genre,
+          "images" =>
+            record.images.map do |image|
+              {
+                "source" => image.source,
+                "image_type" => image.image_type,
+                "image_url" => image.image_url,
+                "role" => image.role,
+                "aspect_hint" => image.aspect_hint,
+                "position" => image.position
+              }
+            end,
+          "raw_payload" => record.raw_payload
+        }
+      end
+
+      def prioritized_primary_source(source_snapshot, fallback:)
+        sources = source_snapshot.is_a?(Hash) ? Array(source_snapshot["sources"]) : []
+        best_source = sources.min_by { |source| [ priority_for(source["source"]), source["source"].to_s ] }
+        best_source&.fetch("source", nil).presence || fallback
+      end
+
+      def source_snapshot_key(source)
+        [
+          source["source"].to_s,
+          source["external_event_id"].to_s
+        ]
       end
 
       def first_present(records)

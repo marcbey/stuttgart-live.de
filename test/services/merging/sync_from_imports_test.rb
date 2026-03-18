@@ -3,6 +3,12 @@ require "test_helper"
 class Merging::SyncFromImportsTest < ActiveSupport::TestCase
   setup do
     RawEventImport.delete_all
+    AppSetting.where(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).delete_all
+    AppSetting.reset_cache!
+  end
+
+  teardown do
+    AppSetting.reset_cache!
   end
 
   test "merges easyticket and eventim raw imports into a published event" do
@@ -176,6 +182,145 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
 
     event = Event.find_by!(artist_name: "CAFÉ DEL MUNDO", start_at: Time.zone.local(2026, 12, 14, 19, 30, 0))
     assert_equal 2, event.event_offers.count
+  end
+
+  test "does not similarity-match artist variants when similarity matching is disabled" do
+    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: false)
+    AppSetting.reset_cache!
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "similarity-off-easy:2026-12-18",
+      payload: {
+        "event_id" => "similarity-off-easy",
+        "date_time" => "2026-12-18 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Gregory Porter",
+        "title_2" => "Jazz Night"
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: import_sources(:two),
+      import_event_type: "eventim",
+      source_identifier: "similarity-off-eventim:2026-12-18",
+      payload: {
+        "eventid" => "similarity-off-eventim",
+        "eventdate" => "2026-12-18",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "LKA Longhorn",
+        "eventname" => "Jazz Night",
+        "artistname" => "Gregory Porter & Orchestra"
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+
+    assert_equal 2, result.groups_count
+    assert_equal 2, Event.where(start_at: Time.zone.local(2026, 12, 18, 20, 0, 0)).count
+  end
+
+  test "similarity-matches artist variants when enabled" do
+    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+    AppSetting.reset_cache!
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "similarity-on-easy:2026-12-19",
+      payload: {
+        "event_id" => "similarity-on-easy",
+        "date_time" => "2026-12-19 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Vier Pianisten",
+        "title_2" => "Konzertabend"
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: import_sources(:two),
+      import_event_type: "eventim",
+      source_identifier: "similarity-on-eventim:2026-12-19",
+      payload: {
+        "eventid" => "similarity-on-eventim",
+        "eventdate" => "2026-12-19",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "LKA Longhorn",
+        "eventname" => "Konzertabend",
+        "artistname" => "Vier Pianisten - Ein Konzert"
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+
+    assert_equal 2, result.import_records_count
+    assert_equal 2, result.groups_count
+    assert_equal 1, Event.where(start_at: Time.zone.local(2026, 12, 19, 20, 0, 0)).count
+  end
+
+  test "similarity match keeps easyticket as primary source over existing eventim event" do
+    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+    AppSetting.reset_cache!
+
+    source_eventim = import_sources(:two)
+    source_easyticket = import_sources(:one)
+    eventim_time = Time.zone.parse("2026-03-18 10:00:00")
+    easyticket_time = Time.zone.parse("2026-03-18 11:00:00")
+
+    eventim_raw = RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: "priority-eventim:2026-12-16",
+      payload: {
+        "eventid" => "priority-eventim",
+        "eventdate" => "2026-12-16",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "LKA Longhorn",
+        "eventname" => "Gregory Porter & Orchestra - The Spirit Of Christmas Tour 2026",
+        "artistname" => "Gregory Porter",
+        "eventlink" => "https://example.com/eventim-priority",
+        "espicture_big" => "https://example.com/gregory-eventim.jpg"
+      }
+    )
+    eventim_raw.update_columns(created_at: eventim_time, updated_at: eventim_time)
+
+    Merging::SyncFromImports.new.call
+
+    easyticket_raw = RawEventImport.create!(
+      import_source: source_easyticket,
+      import_event_type: "easyticket",
+      source_identifier: "priority-easy:2026-12-16",
+      payload: {
+        "event_id" => "priority-easy",
+        "date_time" => "2026-12-16 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Gregory Porter & Orchestra",
+        "title_2" => "THE SPIRIT OF CHRISTMAS TOUR 2026",
+        "ticket_url" => "https://example.com/easy-priority",
+        "data" => {
+          "images" => {
+            "priority-easy" => {
+              "large" => "https://example.com/gregory-easy.jpg"
+            }
+          }
+        }
+      }
+    )
+    easyticket_raw.update_columns(created_at: easyticket_time, updated_at: easyticket_time)
+
+    Merging::SyncFromImports.new(last_run_at: eventim_time + 30.minutes).call
+
+    event = Event.find_by!(start_at: Time.zone.local(2026, 12, 16, 20, 0, 0))
+    assert_equal "easyticket", event.primary_source
+    assert_equal %w[easyticket eventim], event.event_offers.order(:priority_rank, :id).pluck(:source)
+    assert_equal %w[easyticket eventim], event.source_snapshot.fetch("sources").map { |source| source.fetch("source") }
   end
 
   test "incremental merge updates only the allowed event fields" do

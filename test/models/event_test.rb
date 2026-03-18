@@ -78,6 +78,20 @@ class EventTest < ActiveSupport::TestCase
     assert_nil event.city
   end
 
+  test "sets normalized_artist_name from artist_name" do
+    event = Event.new(
+      artist_name: "Band X + Support",
+      title: "Band X - Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal "bandx", event.normalized_artist_name
+  end
+
   test "syncs publication fields for published events without overriding existing values" do
     publisher = users(:one)
     published_at = 2.days.ago.change(usec: 0)

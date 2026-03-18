@@ -48,7 +48,7 @@ class Event < ApplicationRecord
     dependent: :delete_all,
     inverse_of: :import_event
 
-  validates :slug, :title, :artist_name, :start_at, :venue, :status, presence: true
+  validates :slug, :title, :artist_name, :normalized_artist_name, :start_at, :venue, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
   validates :slug, uniqueness: true
   validates :source_fingerprint, uniqueness: true, allow_nil: true
@@ -249,6 +249,7 @@ class Event < ApplicationRecord
     self.title = title.to_s.strip
     self.artist_name = artist_name.to_s.strip
     split_artist_and_tour_from_title!
+    self.normalized_artist_name = Merging::ArtistNameNormalizer.normalize_with_fallback(artist_name, title)
     self.venue = normalize_venue_name(venue)
     normalized_city = city.to_s.strip
     self.city = normalized_city.casecmp("Unbekannt").zero? ? nil : normalized_city.presence

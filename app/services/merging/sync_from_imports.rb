@@ -48,10 +48,12 @@ module Merging
       @logger = logger
       @priority_map = ProviderPriorityMap.call
       @record_builder = RecordBuilder.new
+      @match_strategy = MatchStrategy.new(priority_map: @priority_map)
       @event_upserter = EventUpserter.new(
         merge_run_id: @merge_run_id,
         logger: @logger,
-        priority_map: @priority_map
+        priority_map: @priority_map,
+        match_strategy: @match_strategy
       )
     end
 

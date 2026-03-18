@@ -8,7 +8,9 @@
   </header>
 
   <div class="editor-panel">
-    <% errors = @sks_promoter_ids_setting.errors.full_messages + @sks_organizer_notes_setting.errors.full_messages %>
+    <% errors = @sks_promoter_ids_setting.errors.full_messages +
+                @sks_organizer_notes_setting.errors.full_messages +
+                @merge_artist_similarity_matching_setting.errors.full_messages %>
     <% if errors.any? %>
       <div class="flash flash-alert">
         <strong>Bitte Eingaben prüfen.</strong>
@@ -39,6 +41,18 @@
                            class: "form-textarea",
                            aria: { describedby: "sks-organizer-notes-help" } %>
         <p id="sks-organizer-notes-help" class="form-hint">Dieser Text wird bei SKS-Events ohne eigene Veranstalterhinweise öffentlich angezeigt.</p>
+      </div>
+
+      <div>
+        <%= form.label :merge_artist_similarity_matching_enabled, "Ähnlichkeits-Matching für Artist-Dubletten", class: "form-label" %>
+        <label class="check-inline">
+          <%= form.check_box :merge_artist_similarity_matching_enabled,
+                             { checked: @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled },
+                             true,
+                             false %>
+          <span>Aktiviert</span>
+        </label>
+        <p class="form-hint">Wenn aktiviert, vergleicht der Merge-Importer bei exakt gleicher Startzeit auch ähnliche Artist-Namen und kann sie als denselben Termin zusammenführen. Dadurch werden zum Beispiel Varianten wie „Vier Pianisten - Ein Konzert“ und „Vier Pianisten“ oder „Gregory Porter &amp; Orchestra“ und „Gregory Porter“ als Dublette erkannt. Unterschiedliche Uhrzeiten bleiben trotz ähnlichem Namen weiterhin getrennte Events.</p>
       </div>
 
       <div class="editor-footer">

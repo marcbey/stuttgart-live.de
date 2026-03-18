@@ -1,6 +1,7 @@
 class AppSetting < ApplicationRecord
   SKS_PROMOTER_IDS_KEY = "sks_promoter_ids".freeze
   SKS_ORGANIZER_NOTES_KEY = "sks_organizer_notes".freeze
+  MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY = "merge_artist_similarity_matching_enabled".freeze
 
   validates :key, presence: true, uniqueness: true
   validate :sks_promoter_ids_must_be_present
@@ -22,6 +23,20 @@ class AppSetting < ApplicationRecord
 
     def sks_organizer_notes_record
       find_or_initialize_by(key: SKS_ORGANIZER_NOTES_KEY)
+    end
+
+    def merge_artist_similarity_matching_enabled_record
+      find_or_initialize_by(key: MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY)
+    end
+
+    def merge_artist_similarity_matching_enabled?
+      @merge_artist_similarity_matching_enabled =
+        if @merge_artist_similarity_matching_enabled.nil?
+          setting = find_by(key: MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY)
+          setting.nil? ? true : normalize_boolean(setting.value)
+        else
+          @merge_artist_similarity_matching_enabled
+        end
     end
 
     def normalize_id_list(value)
@@ -52,9 +67,18 @@ class AppSetting < ApplicationRecord
       end
     end
 
+    def normalize_boolean(value)
+      case value
+      when true, 1, "1", "true", "TRUE", "yes", "on" then true
+      else
+        false
+      end
+    end
+
     def reset_cache!
       @sks_promoter_ids = nil
       @sks_organizer_notes = nil
+      @merge_artist_similarity_matching_enabled = nil
     end
   end
 
@@ -80,6 +104,18 @@ class AppSetting < ApplicationRecord
 
   def sks_organizer_notes_text=(raw_value)
     self.value = self.class.normalize_text(raw_value)
+  end
+
+  def merge_artist_similarity_matching_enabled
+    if key == MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY && new_record? && (value.nil? || value == [])
+      return self.class.merge_artist_similarity_matching_enabled?
+    end
+
+    self.class.normalize_boolean(value)
+  end
+
+  def merge_artist_similarity_matching_enabled=(raw_value)
+    self.value = self.class.normalize_boolean(raw_value)
   end
 
   private

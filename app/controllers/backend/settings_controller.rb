@@ -5,6 +5,7 @@ module Backend
     def edit
       @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
       @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
+      @merge_artist_similarity_matching_setting = AppSetting.merge_artist_similarity_matching_enabled_record
     end
 
     def update
@@ -12,11 +13,17 @@ module Backend
       @sks_promoter_ids_setting.sks_promoter_ids_text = settings_params[:sks_promoter_ids_text]
       @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
       @sks_organizer_notes_setting.sks_organizer_notes_text = settings_params[:sks_organizer_notes_text]
+      @merge_artist_similarity_matching_setting = AppSetting.merge_artist_similarity_matching_enabled_record
+      @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled =
+        settings_params[:merge_artist_similarity_matching_enabled]
 
-      if @sks_promoter_ids_setting.valid? && @sks_organizer_notes_setting.valid?
+      if @sks_promoter_ids_setting.valid? &&
+          @sks_organizer_notes_setting.valid? &&
+          @merge_artist_similarity_matching_setting.valid?
         AppSetting.transaction do
           @sks_promoter_ids_setting.save!
           @sks_organizer_notes_setting.save!
+          @merge_artist_similarity_matching_setting.save!
         end
 
         redirect_to edit_backend_settings_path, notice: "Einstellungen wurden gespeichert."
@@ -29,7 +36,11 @@ module Backend
     private
 
     def settings_params
-      params.require(:app_setting).permit(:sks_promoter_ids_text, :sks_organizer_notes_text)
+      params.require(:app_setting).permit(
+        :sks_promoter_ids_text,
+        :sks_organizer_notes_text,
+        :merge_artist_similarity_matching_enabled
+      )
     end
   end
 end

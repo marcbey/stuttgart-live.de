@@ -3,6 +3,7 @@ published_one:
   source_fingerprint: seed::published::1
   title: Published Event
   artist_name: Published Artist
+  normalized_artist_name: publishedartist
   start_at: 2026-06-01 20:00:00
   venue: LKA Longhorn
   city: Stuttgart
@@ -24,6 +25,7 @@ published_past_one:
   source_fingerprint: seed::published::past
   title: Past Published Event
   artist_name: Past Artist
+  normalized_artist_name: pastartist
   start_at: 2026-01-10 20:00:00
   venue: LKA Longhorn
   city: Stuttgart
@@ -45,6 +47,7 @@ needs_review_one:
   source_fingerprint: seed::review::1
   title: Review Event
   artist_name: Review Artist
+  normalized_artist_name: reviewartist
   start_at: 2026-07-10 20:00:00
   venue: Im Wizemann
   city: Stuttgart
@@ -69,6 +72,7 @@ needs_review_two:
   source_fingerprint: seed::review::2
   title: Review Event Two
   artist_name: Review Artist Two
+  normalized_artist_name: reviewartisttwo
   start_at: 2026-07-12 20:00:00
   venue: Im Wizemann
   city: Stuttgart

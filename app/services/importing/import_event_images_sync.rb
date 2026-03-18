@@ -13,7 +13,7 @@ module Importing
     end
 
     def call
-      existing_by_key = owner.import_event_images.index_by do |image|
+      existing_by_key = existing_images_scope.index_by do |image|
         image_key(source: image.source, image_type: image.image_type, image_url: image.image_url)
       end
       changed = false
@@ -43,6 +43,12 @@ module Importing
     private
 
     attr_reader :owner, :candidates, :source
+
+    def existing_images_scope
+      return owner.import_event_images unless source.present?
+
+      owner.import_event_images.where(source: Array(source).map(&:to_s))
+    end
 
     def normalized_candidates
       @normalized_candidates ||= begin

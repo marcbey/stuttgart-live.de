@@ -11,7 +11,7 @@ module Merging
       end
 
       def normalize_artist_name(value)
-        I18n.transliterate(value.to_s).downcase.gsub(/[^a-z0-9]/, "")
+        Merging::ArtistNameNormalizer.normalize(value)
       end
 
       def parse_time_components(value, fallback: [ 20, 0 ])

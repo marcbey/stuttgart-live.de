@@ -45,4 +45,30 @@ class AppSettingTest < ActiveSupport::TestCase
 
     assert_equal "Line one\nLine two", AppSetting.sks_organizer_notes
   end
+
+  test "returns true for merge similarity matching when not configured" do
+    assert_equal true, AppSetting.merge_artist_similarity_matching_enabled?
+  end
+
+  test "returns configured merge similarity matching flag" do
+    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+
+    assert_equal true, AppSetting.merge_artist_similarity_matching_enabled?
+  end
+
+  test "allows disabling merge similarity matching explicitly" do
+    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: false)
+
+    assert_equal false, AppSetting.merge_artist_similarity_matching_enabled?
+  end
+
+  test "normalizes merge similarity matching value from boolean-like input" do
+    setting = AppSetting.new(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY)
+
+    setting.merge_artist_similarity_matching_enabled = "0"
+    assert_equal false, setting.merge_artist_similarity_matching_enabled
+
+    setting.merge_artist_similarity_matching_enabled = "1"
+    assert_equal true, setting.merge_artist_similarity_matching_enabled
+  end
 end
