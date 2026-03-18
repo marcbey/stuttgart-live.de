@@ -18,7 +18,7 @@ module Importing
         detail_fetcher: DetailFetcher.new,
         preexisting_run_id: nil,
         run_metadata: {},
-        logger: Rails.logger
+        logger: Importing::Logging.logger
       )
         @import_source = import_source
         @dump_fetcher = dump_fetcher

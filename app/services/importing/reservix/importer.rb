@@ -13,7 +13,7 @@ module Importing
       FILTERED_OUT_CITIES_LIMIT = 500
       CHECKPOINT_OVERLAP = 5.minutes
 
-      def initialize(import_source:, event_fetcher: EventFetcher.new, preexisting_run_id: nil, run_metadata: {}, logger: Rails.logger)
+      def initialize(import_source:, event_fetcher: EventFetcher.new, preexisting_run_id: nil, run_metadata: {}, logger: Importing::Logging.logger)
         @import_source = import_source
         @event_fetcher = event_fetcher
         @preexisting_run_id = preexisting_run_id

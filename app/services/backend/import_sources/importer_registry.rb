@@ -19,6 +19,12 @@ module Backend
           run_job_class: Importing::Reservix::RunJob,
           importer_class: Importing::Reservix::Importer,
           stop_route_helper: :stop_reservix_run_backend_import_source_path
+        },
+        "llm_enrichment" => {
+          label: "LLM Enrichment",
+          run_job_class: Importing::LlmEnrichment::RunJob,
+          importer_class: Importing::LlmEnrichment::Importer,
+          stop_route_helper: :stop_llm_enrichment_run_backend_import_sources_path
         }
       }.freeze
 

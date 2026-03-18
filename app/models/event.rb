@@ -41,6 +41,7 @@ class Event < ApplicationRecord
   has_many :genres, through: :event_genres
   has_many :event_change_logs, dependent: :destroy
   has_many :event_images, dependent: :destroy
+  has_one :llm_enrichment, class_name: "EventLlmEnrichment", dependent: :destroy
   has_many :import_event_images,
     as: :import_event,
     foreign_key: :import_event_id,

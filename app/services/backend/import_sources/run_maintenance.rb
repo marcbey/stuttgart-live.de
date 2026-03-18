@@ -40,7 +40,7 @@ module Backend
       end
 
       def status_label(run)
-        return "running (stop angefordert)" if run.status == "running" && stop_requested?(run)
+        return "stopping" if run.status == "running" && stop_requested?(run)
 
         run.status
       end

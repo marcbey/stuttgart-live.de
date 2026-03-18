@@ -25,6 +25,57 @@ module Backend
       redirect_to backend_import_sources_path, notice: "Merge-Sync wurde gestartet."
     end
 
+    def run_llm_enrichment
+      source = llm_enrichment_run_source
+      source.with_lock do
+        active_run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
+        if active_run.present?
+          redirect_to backend_import_sources_path, alert: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{active_run.id})."
+          return
+        end
+
+        run = source.import_runs.create!(
+          status: "running",
+          source_type: "llm_enrichment",
+          started_at: Time.current,
+          metadata: { "triggered_at" => Time.current.iso8601 }
+        )
+        job = Importing::LlmEnrichment::RunJob.perform_later(run.id)
+        run.update!(
+          metadata: run.metadata.merge(
+            "job_id" => job.job_id,
+            "provider_job_id" => job.provider_job_id,
+            "job_attempt" => 1,
+            "job_retries_used" => 0,
+            "max_retries" => 0
+          )
+        )
+      end
+
+      Backend::ImportRunsBroadcaster.broadcast!
+      redirect_to backend_import_sources_path, notice: "LLM-Enrichment wurde gestartet."
+    end
+
+    def stop_llm_enrichment_run
+      source = llm_enrichment_run_source
+      run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc)
+      run = run.find_by(id: params[:run_id]) if params[:run_id].present?
+      run ||= source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
+
+      if run.blank?
+        redirect_to backend_import_sources_path, alert: "Kein laufender LLM-Enrichment-Run gefunden."
+        return
+      end
+
+      metadata = run.metadata.is_a?(Hash) ? run.metadata.deep_stringify_keys : {}
+      metadata["stop_requested"] = true
+      metadata["stop_requested_at"] = Time.current.iso8601
+      run.update!(metadata: metadata)
+
+      Backend::ImportRunsBroadcaster.broadcast!
+      redirect_to backend_import_sources_path, notice: "Stop für LLM-Enrichment (Run ##{run.id}) wurde angefordert."
+    end
+
     def update
       @import_source.assign_attributes(
         active: import_source_params[:active] == "1"
@@ -74,6 +125,12 @@ module Backend
 
     def ensure_supported_sources
       ImportSource.ensure_supported_sources!
+    end
+
+    def llm_enrichment_run_source
+      ImportSource.find_by(source_type: "eventim") ||
+        ImportSource.find_by(source_type: "easyticket") ||
+        ImportSource.ensure_eventim_source!
     end
 
     def set_import_source

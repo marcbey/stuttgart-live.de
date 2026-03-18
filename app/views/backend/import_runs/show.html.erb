@@ -90,7 +90,7 @@
     <% end %>
   </section>
 
-  <% unless @import_run.source_type == "merge" %>
+  <% if [ "easyticket", "eventim", "reservix" ].include?(@import_run.source_type) %>
     <% configured_cities = import_source_configured_cities(@import_run.import_source) %>
     <section class="import-run-section">
       <h2>Ortsliste konfiguriert (<%= configured_cities.size %>)</h2>

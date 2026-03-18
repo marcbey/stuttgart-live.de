@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_18_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_18_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -119,6 +119,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_120000) do
     t.index ["event_id", "purpose"], name: "index_event_images_on_event_id_and_purpose"
     t.index ["event_id", "purpose"], name: "index_event_images_on_unique_detail_hero_per_event", unique: true, where: "((purpose)::text = 'detail_hero'::text)"
     t.index ["event_id"], name: "index_event_images_on_event_id"
+  end
+
+  create_table "event_llm_enrichments", force: :cascade do |t|
+    t.text "artist_description"
+    t.datetime "created_at", null: false
+    t.text "event_description"
+    t.bigint "event_id", null: false
+    t.string "facebook_link"
+    t.jsonb "genre", default: [], null: false
+    t.string "homepage_link"
+    t.string "instagram_link"
+    t.string "model", null: false
+    t.string "prompt_version", null: false
+    t.jsonb "raw_response", default: {}, null: false
+    t.bigint "source_run_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "venue"
+    t.text "venue_description"
+    t.string "youtube_link"
+    t.index ["event_id"], name: "index_event_llm_enrichments_on_event_id", unique: true
+    t.index ["source_run_id"], name: "index_event_llm_enrichments_on_source_run_id"
   end
 
   create_table "event_offers", force: :cascade do |t|
@@ -341,6 +362,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_18_120000) do
   add_foreign_key "event_genres", "events"
   add_foreign_key "event_genres", "genres"
   add_foreign_key "event_images", "events"
+  add_foreign_key "event_llm_enrichments", "events"
+  add_foreign_key "event_llm_enrichments", "import_runs", column: "source_run_id"
   add_foreign_key "event_offers", "events"
   add_foreign_key "events", "users", column: "published_by_id"
   add_foreign_key "import_run_errors", "import_runs"

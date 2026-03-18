@@ -12,6 +12,10 @@
                     method: :post,
                     class: [ "button", "button-compact", (@merge_sync_needed ? "button-attention" : nil) ].compact.join(" "),
                     title: (@merge_sync_needed ? "Seit dem letzten Merge wurden neue Importdaten gefunden." : nil) %>
+      <%= button_to "LLM-Enrichment starten",
+                    run_llm_enrichment_backend_import_sources_path,
+                    method: :post,
+                    class: "button button-compact button-secondary" %>
     </div>
   </header>
 

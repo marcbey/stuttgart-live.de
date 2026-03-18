@@ -12,7 +12,7 @@ module Importing
       PROGRESS_FLUSH_AFTER_SECONDS = 2
       FILTERED_OUT_CITIES_LIMIT = 500
 
-      def initialize(import_source:, feed_fetcher: FeedFetcher.new, preexisting_run_id: nil, run_metadata: {}, logger: Rails.logger)
+      def initialize(import_source:, feed_fetcher: FeedFetcher.new, preexisting_run_id: nil, run_metadata: {}, logger: Importing::Logging.logger)
         @import_source = import_source
         @feed_fetcher = feed_fetcher
         @preexisting_run_id = preexisting_run_id

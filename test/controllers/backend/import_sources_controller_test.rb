@@ -89,6 +89,25 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child", text: /Stop angefordert/, count: 0
   end
 
+  test "should render stopping status instead of stop requested text" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {
+        "stop_requested" => true,
+        "stop_requested_at" => 10.seconds.ago.iso8601
+      }
+    )
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(3)", text: "stopping"
+    assert_select "tr[data-run-id='#{run.id}'] td:last-child", text: /Stop angefordert/, count: 0
+  end
+
   test "should show merge raw imports groups and similarity duplicates in recent runs table" do
     merge_run = @source.import_runs.create!(
       status: "succeeded",
@@ -214,6 +233,97 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_import_sources_url
     follow_redirect!
     assert_includes response.body, "Merge-Sync wurde gestartet."
+  end
+
+  test "should render llm enrichment button on index" do
+    get backend_import_sources_url
+
+    assert_response :success
+    assert_includes response.body, "LLM-Enrichment starten"
+  end
+
+  test "should enqueue llm enrichment run from import sources page" do
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      post run_llm_enrichment_backend_import_sources_url
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+    assert_equal "running", run.status
+
+    assert_redirected_to backend_import_sources_url
+    follow_redirect!
+    assert_includes response.body, "LLM-Enrichment wurde gestartet."
+  end
+
+  test "should not enqueue llm enrichment run when another llm run is active" do
+    ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
+      post run_llm_enrichment_backend_import_sources_url
+    end
+
+    assert_redirected_to backend_import_sources_url
+    follow_redirect!
+    assert_includes response.body, "LLM-Enrichment-Lauf läuft bereits"
+  end
+
+  test "should request stop for a running llm enrichment run" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_llm_enrichment_run_backend_import_sources_url(run_id: run.id)
+
+    assert_redirected_to backend_import_sources_url
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    follow_redirect!
+    assert_includes response.body, "Stop für LLM-Enrichment"
+  end
+
+  test "should render stop action for running llm enrichment jobs" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{run.id}'] td:last-child form button", text: "Stoppen"
+  end
+
+  test "should include llm enrichment runs in recent runs json" do
+    llm_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    get backend_import_sources_url(format: :json)
+    assert_response :success
+
+    payload = JSON.parse(response.body)
+    run_payload = payload.fetch("runs").find { |run| run["id"] == llm_run.id }
+
+    assert run_payload.present?
+    assert_equal "llm_enrichment", run_payload["source_type"]
+    assert_equal true, run_payload["can_stop"]
+    assert_includes run_payload["stop_url"], "stop_llm_enrichment_run"
   end
 
   test "should enqueue easyticket run" do
