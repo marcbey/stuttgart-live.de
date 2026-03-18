@@ -1,7 +1,7 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
-require "mini_magick"
+require "vips"
 require "zlib"
 require_relative "test_helpers/session_test_helper"
 
@@ -53,7 +53,7 @@ module ActiveSupport
     end
 
     def image_dimensions(binary)
-      image = MiniMagick::Image.read(binary)
+      image = Vips::Image.new_from_buffer(binary, "")
       [ image.width, image.height ]
     end
 
