@@ -8,7 +8,7 @@
     </div>
     <div class="backend-topbar-actions">
       <% if current_user.backend_access? %>
-        <%= link_to "Zum Backend", backend_root_path, class: "button button-secondary" %>
+        <%= link_to "Zum Backend", backend_root_path, class: "button button-secondary button-compact" %>
       <% end %>
     </div>
   </header>

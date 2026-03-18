@@ -10,7 +10,7 @@
       <%= button_to "Import-Merge synchronisieren",
                     sync_imported_events_backend_import_sources_path,
                     method: :post,
-                    class: [ "button", (@merge_sync_needed ? "button-attention" : nil) ].compact.join(" "),
+                    class: [ "button", "button-compact", (@merge_sync_needed ? "button-attention" : nil) ].compact.join(" "),
                     title: (@merge_sync_needed ? "Seit dem letzten Merge wurden neue Importdaten gefunden." : nil) %>
     </div>
   </header>
