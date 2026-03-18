@@ -77,6 +77,18 @@ module Backend::EventsHelper
     end
   end
 
+  def event_llm_badge_title(event)
+    enrichment = event.llm_enrichment
+    return if enrichment.blank?
+
+    raw_response = enrichment.raw_response
+    return if raw_response.blank?
+
+    JSON.pretty_generate(raw_response)
+  rescue JSON::GeneratorError
+    raw_response.to_json
+  end
+
   def preuploaded_blob_from_signed_id(signed_id)
     return if signed_id.blank?
 

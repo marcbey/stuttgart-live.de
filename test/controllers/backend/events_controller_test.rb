@@ -769,13 +769,18 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       genre: [ "Indie" ],
       model: "gpt-test",
       prompt_version: "v1",
-      raw_response: {}
+      raw_response: {
+        "artist_description" => "LLM Artist Beschreibung",
+        "genre" => [ "Indie" ]
+      }
     )
 
     get backend_event_url(@published_event)
 
     assert_response :success
     assert_select "#event_editor_panel .editor-header-badges .status-badge", text: "LLM enriched"
+    assert_includes response.body, "&quot;artist_description&quot;: &quot;LLM Artist Beschreibung&quot;"
+    assert_includes response.body, "&quot;genre&quot;: ["
   end
 
   test "ready_for_publish event editor does not show unpublish button" do
