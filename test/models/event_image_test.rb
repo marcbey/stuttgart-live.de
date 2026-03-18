@@ -1,5 +1,4 @@
 require "test_helper"
-require "vips"
 
 class EventImageTest < ActiveSupport::TestCase
   setup do
@@ -71,13 +70,9 @@ class EventImageTest < ActiveSupport::TestCase
     image.save!
 
     optimized_binary = image.processed_optimized_variant.image.download
-    optimized_image = Vips::Image.new_from_buffer(optimized_binary, "")
-    original_image = Vips::Image.new_from_buffer(image.file.download, "")
 
-    assert_equal 1280, optimized_image.width
-    assert_equal 960, optimized_image.height
-    assert_equal 2000, original_image.width
-    assert_equal 1500, original_image.height
+    assert_equal [ 1280, 960 ], image_dimensions(optimized_binary)
+    assert_equal [ 2000, 1500 ], image_dimensions(image.file.download)
     assert_equal original_binary, image.file.download
   end
 
@@ -117,6 +112,6 @@ class EventImageTest < ActiveSupport::TestCase
   end
 
   def large_test_image_binary(width:, height:)
-    Vips::Image.black(width, height).write_to_buffer(".png")
+    solid_png_binary(width: width, height: height)
   end
 end

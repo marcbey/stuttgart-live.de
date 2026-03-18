@@ -1,6 +1,8 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
+require "mini_magick"
+require "zlib"
 require_relative "test_helpers/session_test_helper"
 
 if defined?(Bullet)
@@ -36,6 +38,33 @@ module ActiveSupport
     fixtures :all
 
     # Add more helper methods to be used by all tests here...
+    def solid_png_binary(width:, height:, rgb: [ 0, 0, 0 ])
+      signature = "\x89PNG\r\n\x1A\n".b
+      ihdr = [ width, height, 8, 2, 0, 0, 0 ].pack("NNC5")
+      pixel = rgb.pack("C3")
+      row = ("\x00".b + (pixel * width)).b
+      image_data = row * height
+      idat = Zlib::Deflate.deflate(image_data, Zlib::BEST_COMPRESSION)
+
+      signature +
+        png_chunk("IHDR", ihdr) +
+        png_chunk("IDAT", idat) +
+        png_chunk("IEND", +"")
+    end
+
+    def image_dimensions(binary)
+      image = MiniMagick::Image.read(binary)
+      [ image.width, image.height ]
+    end
+
+    private
+
+    def png_chunk(type, data)
+      [ data.bytesize ].pack("N") +
+        type +
+        data +
+        [ Zlib.crc32(type + data) ].pack("N")
+    end
   end
 end
 

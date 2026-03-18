@@ -1,5 +1,4 @@
 require "test_helper"
-require "vips"
 
 class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -250,16 +249,14 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     created = @event.event_images.detail_hero.ordered.last
-    original = Vips::Image.new_from_buffer(created.file.download, "")
     optimized_path = rails_storage_proxy_path(created.processed_optimized_variant, only_path: true)
 
     get optimized_path
 
     assert_response :success
 
-    optimized = Vips::Image.new_from_buffer(response.body, "")
-    assert_equal [ 2000, 1500 ], [ original.width, original.height ]
-    assert_equal [ 1280, 960 ], [ optimized.width, optimized.height ]
+    assert_equal [ 2000, 1500 ], image_dimensions(created.file.download)
+    assert_equal [ 1280, 960 ], image_dimensions(response.body)
   end
 
   test "deletes event image" do
@@ -465,7 +462,7 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   def large_uploaded_image(width:, height:)
     create_uploaded_image(
       filename: "large-test-image.png",
-      binary: Vips::Image.black(width, height).write_to_buffer(".png"),
+      binary: solid_png_binary(width: width, height: height),
       content_type: "image/png"
     )
   end
