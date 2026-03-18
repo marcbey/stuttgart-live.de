@@ -4263,6 +4263,20 @@ trix-editor.blog-rich-text:focus {
   box-shadow: 0 8px 18px rgba(17, 17, 17, 0.12);
 }
 
+.event-image-crop-preview-image.is-hidden,
+.event-image-crop-placeholder.is-hidden {
+  display: none;
+}
+
+.event-image-crop-placeholder {
+  margin: 0;
+  padding: 1rem;
+  text-align: center;
+  color: #666;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
 .event-image-crop-box {
   position: absolute;
   inset: auto;

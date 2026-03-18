@@ -2,16 +2,22 @@ import { Controller } from "@hotwired/stimulus"
 import { DirectUpload } from "@rails/activestorage"
 
 export default class extends Controller {
-  static targets = [ "heroInput", "sliderInput", "heroPreview", "sliderPreview", "submitButton", "status" ]
+  static targets = [ "heroInput", "heroSignedInput", "heroRemoveButton", "sliderInput", "sliderPreview", "submitButton", "status" ]
   static values = { directUploadUrl: String }
 
   connect() {
     this.pendingUploads = 0
+    this.heroObjectUrl = null
+    this.syncHeroRemoveButton()
     this.refreshSubmitState()
   }
 
+  disconnect() {
+    this.revokeHeroObjectUrl()
+  }
+
   selectHero(event) {
-    this.uploadFiles(Array.from(event.target.files || []), { kind: "hero", replaceExisting: true })
+    this.uploadHeroFile(Array.from(event.target.files || [])[0])
     event.target.value = ""
   }
 
@@ -42,6 +48,43 @@ export default class extends Controller {
 
     card.remove()
     this.setStatus("Bild aus der aktuellen Auswahl entfernt.")
+  }
+
+  removeHero() {
+    this.revokeHeroObjectUrl()
+    if (this.hasHeroSignedInputTarget) this.heroSignedInputTarget.value = ""
+    this.updateHeroPreview(null)
+    this.syncHeroRemoveButton()
+    this.setStatus("Eventbild aus der aktuellen Auswahl entfernt.")
+  }
+
+  uploadHeroFile(file) {
+    if (!file) return
+
+    this.pendingUploads += 1
+    this.refreshSubmitState()
+
+    const previewUrl = URL.createObjectURL(file)
+    this.setHeroObjectUrl(previewUrl)
+    this.updateHeroPreview(previewUrl)
+    this.setStatus(`${file.name} wird hochgeladen.`)
+
+    const upload = new DirectUpload(file, this.directUploadUrlValue)
+    upload.create((error, blob) => {
+      this.pendingUploads -= 1
+
+      if (error) {
+        this.removeHero()
+        this.setStatus(`Upload fehlgeschlagen: ${error}`)
+        this.refreshSubmitState()
+        return
+      }
+
+      if (this.hasHeroSignedInputTarget) this.heroSignedInputTarget.value = blob.signed_id
+      this.syncHeroRemoveButton()
+      this.setStatus(`${file.name} wurde hochgeladen.`)
+      this.refreshSubmitState()
+    })
   }
 
   uploadFiles(files, { kind, replaceExisting }) {
@@ -80,11 +123,11 @@ export default class extends Controller {
   }
 
   previewTargetFor(kind) {
-    return kind === "hero" ? this.heroPreviewTarget : this.sliderPreviewTarget
+    return this.sliderPreviewTarget
   }
 
   hiddenFieldNameFor(kind) {
-    return kind === "hero" ? "event_image[detail_hero_signed_ids][]" : "event_image[slider_signed_ids][]"
+    return "event_image[slider_signed_ids][]"
   }
 
   buildPendingCard(file, kind) {
@@ -128,8 +171,49 @@ export default class extends Controller {
     this.statusTarget.textContent = message
   }
 
+  syncHeroRemoveButton() {
+    if (!this.hasHeroRemoveButtonTarget) return
+
+    this.heroRemoveButtonTarget.hidden = !this.hasHeroSelection()
+  }
+
+  hasHeroSelection() {
+    return this.hasHeroSignedInputTarget && this.heroSignedInputTarget.value.trim() !== ""
+  }
+
+  updateHeroPreview(url) {
+    const previewImage = this.element.querySelector("[data-event-image-crop-preview-target='previewImage']")
+    const placeholder = this.element.querySelector("[data-role='event-image-crop-placeholder']")
+    const previewBox = this.element.querySelector("[data-event-image-crop-preview-target='previewBox']")
+
+    if (previewImage) {
+      previewImage.src = url || ""
+      previewImage.classList.toggle("is-hidden", !url)
+    }
+
+    if (placeholder) {
+      placeholder.classList.toggle("is-hidden", Boolean(url))
+    }
+
+    if (!url && previewBox) {
+      previewBox.classList.add("is-hidden")
+    }
+  }
+
+  setHeroObjectUrl(url) {
+    this.revokeHeroObjectUrl()
+    this.heroObjectUrl = url
+  }
+
+  revokeHeroObjectUrl() {
+    if (!this.heroObjectUrl) return
+
+    URL.revokeObjectURL(this.heroObjectUrl)
+    this.heroObjectUrl = null
+  }
+
   hasSignedUploads(fieldName) {
-    return this.element.querySelector(`input[type='hidden'][name='${fieldName}']`) !== null
+    return Array.from(this.element.querySelectorAll(`input[type='hidden'][name='${fieldName}']`)).some((input) => input.value.trim() !== "")
   }
 
   escapeHtml(value) {

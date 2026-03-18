@@ -21,7 +21,7 @@ export default class extends Controller {
   connect() {
     this.boundUpdate = () => this.update()
 
-    if (this.hasPreviewImageTarget && !this.previewImageTarget.complete) {
+    if (this.hasPreviewImageTarget) {
       this.previewImageTarget.addEventListener("load", this.boundUpdate)
     }
 

@@ -99,9 +99,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[show_organizer_notes]'][type='checkbox']"
     assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
     assert_select "input[name='event_image[detail_hero_files][]'][type='file']"
+    assert_select "input[name='event_image[sub_text]']"
+    assert_select "select[name='event_image[grid_variant]']"
+    assert_select "input[name='event_image[card_focus_x]'][value='50.0']"
+    assert_select "input[name='event_image[card_focus_y]'][value='50.0']"
+    assert_select "input[name='event_image[card_zoom]'][value='100.0']"
     assert_select "input[name='event_image[slider_files][]'][type='file']"
     assert_select "input[name='event_image[slider_alt_text]']"
     assert_select "[data-controller='event-image-preupload']"
+    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
   end
 
@@ -411,7 +417,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
           },
           event_image: {
             detail_hero_signed_ids: [ hero_blob.signed_id ],
-            detail_hero_sub_text: "Foto: Haus",
+            sub_text: "Foto: Haus",
+            grid_variant: EventImage::GRID_VARIANT_2X1,
+            card_focus_x: "18",
+            card_focus_y: "72",
+            card_zoom: "145",
             slider_signed_ids: [ slider_blob_one.signed_id, slider_blob_two.signed_id ],
             slider_alt_text: "Slider Alt",
             slider_sub_text: "Slider Sub"
@@ -438,6 +448,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, created.event_images.detail_hero.count
     assert_equal 2, created.event_images.slider.count
     assert_equal "Foto: Haus", created.event_images.detail_hero.first.sub_text
+    assert_equal EventImage::GRID_VARIANT_2X1, created.event_images.detail_hero.first.grid_variant
+    assert_equal 18.0, created.event_images.detail_hero.first.card_focus_x_value
+    assert_equal 72.0, created.event_images.detail_hero.first.card_focus_y_value
+    assert_equal 145.0, created.event_images.detail_hero.first.card_zoom_value
     assert_equal [ "Slider Alt" ], created.event_images.slider.distinct.pluck(:alt_text)
     assert_equal [ "Slider Sub" ], created.event_images.slider.distinct.pluck(:sub_text)
     assert_nothing_raised { created.event_images.detail_hero.first.processed_optimized_variant }

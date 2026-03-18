@@ -29,8 +29,8 @@
              next_event_enabled: next_event_enabled,
              filter_status: filter_status %>
 
-  <%= render "backend/events/ticket_offers_section", event: event %>
   <%= render "backend/events/event_image_section", event: event, editor_status: editor_status %>
+  <%= render "backend/events/ticket_offers_section", event: event %>
   <%= render "backend/events/slider_images_section", event: event, editor_status: editor_status %>
   <%= render "backend/events/import_images_section", event: event %>
   <%= render "backend/events/payload_section", event: event %>

@@ -1,4 +1,17 @@
 <% content_for :title, "Neues Event" %>
+<% hero_signed_ids = Array(@manual_image_form_values[:detail_hero_signed_ids]).reject(&:blank?) %>
+<% slider_signed_ids = Array(@manual_image_form_values[:slider_signed_ids]).reject(&:blank?) %>
+<% hero_signed_id_candidate = hero_signed_ids.first %>
+<% hero_blob = preuploaded_blob_from_signed_id(hero_signed_id_candidate) %>
+<% hero_signed_id = hero_blob.present? ? hero_signed_id_candidate : nil %>
+<% editor_form_id = dom_id(@event, :editor_form) %>
+<% manual_event_image = EventImage.new(
+     sub_text: @manual_image_form_values[:sub_text],
+     grid_variant: @manual_image_form_values[:grid_variant],
+     card_focus_x: @manual_image_form_values[:card_focus_x],
+     card_focus_y: @manual_image_form_values[:card_focus_y],
+     card_zoom: @manual_image_form_values[:card_zoom]
+   ) %>
 
 <section class="backend-shell">
   <header class="backend-topbar">
@@ -6,24 +19,19 @@
       <h1>Manuelles Event anlegen</h1>
     </div>
     <div class="backend-topbar-actions">
-      <%= link_to "Zur Inbox", backend_events_path, class: "button button-secondary" %>
+      <%= link_to "Zur Inbox", backend_events_path, class: "button button-secondary button-compact" %>
     </div>
   </header>
 
-  <% hero_signed_ids = Array(@manual_image_form_values[:detail_hero_signed_ids]).reject(&:blank?) %>
-  <% slider_signed_ids = Array(@manual_image_form_values[:slider_signed_ids]).reject(&:blank?) %>
-
-  <div class="editor-panel">
+  <div class="editor-panel"
+       data-controller="event-image-preupload"
+       data-event-image-preupload-direct-upload-url-value="<%= rails_direct_uploads_path %>">
     <%= form_with model: @event,
                   url: backend_events_path,
                   method: :post,
                   class: "editor-form",
-                  html: { multipart: true },
-                  data: {
-                    controller: "event-image-preupload",
-                    action: "submit->event-image-preupload#beforeSubmit",
-                    event_image_preupload_direct_upload_url_value: rails_direct_uploads_path
-                  } do |form| %>
+                  html: { multipart: true, id: editor_form_id },
+                  data: { action: "submit->event-image-preupload#beforeSubmit" } do |form| %>
       <%= render "backend/events/form_fields",
                  form: form,
                  event: @event,
@@ -32,37 +40,13 @@
                  editable_promoter_id: true,
                  manual_ticket_url: @manual_ticket_url %>
 
-      <section class="offer-section event-image-section">
-        <h3>Eventbild</h3>
-        <div class="event-image-upload-grid">
-          <div class="event-image-upload-form">
-            <h4>Eventbild hochladen</h4>
-            <p>Wird vorab hochgeladen und direkt im Formular angezeigt.</p>
-            <%= file_field_tag "event_image[detail_hero_files][]",
-                               accept: "image/*",
-                               class: "form-input",
-                               data: {
-                                 event_image_preupload_target: "heroInput",
-                                 action: "change->event-image-preupload#selectHero"
-                               } %>
-            <%= text_field_tag "event_image[detail_hero_sub_text]",
-                               @manual_image_form_values[:detail_hero_sub_text],
-                               placeholder: "Copyright unter dem Bild (optional)",
-                               class: "form-input" %>
-            <div class="preuploaded-image-list" data-event-image-preupload-target="heroPreview">
-              <% hero_signed_ids.each do |signed_id| %>
-                <% blob = preuploaded_blob_from_signed_id(signed_id) %>
-                <% next if blob.blank? %>
-                <%= render "backend/events/preuploaded_image_preview",
-                           kind: "hero",
-                           blob: blob,
-                           signed_id: signed_id,
-                           field_name: "event_image[detail_hero_signed_ids][]" %>
-              <% end %>
-            </div>
-          </div>
-        </div>
-      </section>
+      <%= render "backend/events/event_image_section",
+                 event: @event,
+                 editor_form_id: editor_form_id,
+                 form_mode: :new,
+                 manual_event_image: manual_event_image,
+                 manual_event_image_blob: hero_blob,
+                 manual_event_image_signed_id: hero_signed_id %>
 
       <section class="offer-section">
         <h3>Slider-Bilder</h3>
@@ -104,7 +88,7 @@
       <p class="preuploaded-image-live-region" data-event-image-preupload-target="status" role="status" aria-live="polite"></p>
 
       <div class="editor-footer">
-        <%= form.submit "Event erstellen", class: "button", data: { event_image_preupload_target: "submitButton" } %>
+        <%= form.submit "Event erstellen", class: "button button-compact", data: { event_image_preupload_target: "submitButton" } %>
       </div>
     <% end %>
   </div>

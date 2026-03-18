@@ -89,7 +89,7 @@
       <% if configured_cities.any? %>
         <div class="import-run-city-list">
           <% configured_cities.each do |city| %>
-            <%= link_to city, remove_whitelist_city_backend_import_run_path(@import_run, city: city), data: { turbo_method: :post }, class: "button button-ghost" %>
+            <%= link_to city, remove_whitelist_city_backend_import_run_path(@import_run, city: city), data: { turbo_method: :post }, class: "button button-ghost button-compact" %>
           <% end %>
         </div>
       <% else %>
@@ -103,7 +103,7 @@
       <% if filtered_out_cities.any? %>
         <div class="import-run-city-list">
           <% filtered_out_cities.each do |city| %>
-            <%= link_to city, add_filtered_city_backend_import_run_path(@import_run, city: city), data: { turbo_method: :post }, class: "button button-ghost" %>
+            <%= link_to city, add_filtered_city_backend_import_run_path(@import_run, city: city), data: { turbo_method: :post }, class: "button button-ghost button-compact" %>
           <% end %>
         </div>
       <% else %>

@@ -1,31 +1,42 @@
-<% event_image = event.event_images.detail_hero.ordered.first %>
+<% form_mode = local_assigns.fetch(:form_mode, :editor) %>
+<% event_image = local_assigns[:event_image] || event.event_images.detail_hero.ordered.first %>
+<% manual_event_image = local_assigns[:manual_event_image] || EventImage.new %>
+<% manual_event_image_blob = local_assigns[:manual_event_image_blob] %>
+<% manual_event_image_signed_id = local_assigns[:manual_event_image_signed_id].to_s.presence %>
+<% section_event_image = event_image.presence || manual_event_image %>
+<% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
+<% editor_status = local_assigns[:editor_status] %>
+<% selected_grid_variant = section_event_image.grid_variant.presence || EventImage::GRID_VARIANT_1X1 %>
+<% image_source =
+     if event_image.present?
+       optimized_event_image_source(event_image)
+     elsif manual_event_image_blob.present?
+       url_for(manual_event_image_blob)
+     end %>
 
 <section id="<%= dom_id(event, :event_image_section) %>" class="offer-section event-image-section">
   <h3>Eventbild</h3>
 
-  <% if event_image.present? %>
-    <% optimized_event_image_source = optimized_event_image_source(event_image) %>
-    <% editor_form_id = dom_id(event, :editor_form) %>
-    <% event_image_sub_text_upload_id = dom_id(event_image, :upload_sub_text) %>
-    <% selected_grid_variant = event_image.grid_variant.presence || EventImage::GRID_VARIANT_1X1 %>
-
+  <% if event_image.present? || form_mode == :new %>
     <div class="event-image-crop-shell">
       <div class="event-image-crop-editor" data-controller="event-image-crop-preview">
         <%= render "backend/events/event_image_crop_hidden_fields",
                    editor_form_id: editor_form_id,
-                   event_image: event_image,
+                   event_image: section_event_image,
                    selected_grid_variant: selected_grid_variant %>
         <%= render "backend/events/event_image_crop_preview",
                    event: event,
-                   optimized_event_image_source: optimized_event_image_source,
+                   optimized_event_image_source: image_source,
                    selected_grid_variant: selected_grid_variant %>
         <%= render "backend/events/event_image_crop_sidebar",
                    editor_form_id: editor_form_id,
                    editor_status: editor_status,
                    event: event,
-                   event_image: event_image,
-                   event_image_sub_text_upload_id: event_image_sub_text_upload_id,
-                   selected_grid_variant: selected_grid_variant %>
+                   event_image: section_event_image,
+                   event_image_sub_text_upload_id: (dom_id(event_image, :upload_sub_text) if event_image.present?),
+                   selected_grid_variant: selected_grid_variant,
+                   upload_mode: form_mode,
+                   manual_event_image_signed_id: manual_event_image_signed_id %>
       </div>
     </div>
   <% else %>

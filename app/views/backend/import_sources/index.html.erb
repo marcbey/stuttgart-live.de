@@ -32,13 +32,13 @@
             <td><%= source.active ? "Ja" : "Nein" %></td>
             <td><%= source.configured_location_whitelist.join(", ") %></td>
             <td class="action-cell">
-              <%= link_to "Bearbeiten", edit_backend_import_source_path(source), class: "button button-ghost" %>
+              <%= link_to "Bearbeiten", edit_backend_import_source_path(source), class: "button button-ghost button-compact" %>
               <% if source.easyticket? %>
-                <%= button_to "Easyticket starten", run_easyticket_backend_import_source_path(source), method: :post, class: "button" %>
+                <%= button_to "Easyticket starten", run_easyticket_backend_import_source_path(source), method: :post, class: "button button-compact" %>
               <% elsif source.eventim? %>
-                <%= button_to "Eventim starten", run_eventim_backend_import_source_path(source), method: :post, class: "button" %>
+                <%= button_to "Eventim starten", run_eventim_backend_import_source_path(source), method: :post, class: "button button-compact" %>
               <% elsif source.reservix? %>
-                <%= button_to "Reservix starten", run_reservix_backend_import_source_path(source), method: :post, class: "button" %>
+                <%= button_to "Reservix starten", run_reservix_backend_import_source_path(source), method: :post, class: "button button-compact" %>
               <% end %>
             </td>
           </tr>

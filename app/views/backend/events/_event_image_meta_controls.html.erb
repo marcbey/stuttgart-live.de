@@ -1,3 +1,5 @@
+<% upload_mode = local_assigns.fetch(:upload_mode, :editor) %>
+
 <div class="slider-image-editor-meta">
   <div class="event-image-meta-inline-form">
     <label class="form-label" for="event_image_sub_text">Copyright</label>
@@ -6,48 +8,73 @@
                        placeholder: "Copyright unter dem Bild (optional)",
                        class: "form-input",
                        form: editor_form_id,
-                       oninput: "document.getElementById('#{event_image_sub_text_upload_id}')?.value = this.value" %>
+                       oninput: (upload_mode == :editor ? "document.getElementById('#{event_image_sub_text_upload_id}')?.value = this.value" : nil) %>
   </div>
 
   <div class="slider-image-meta-actions">
-    <%= form_with url: backend_event_event_images_path(event),
-                  method: :post,
-                  class: "event-image-inline-upload",
-                  html: { multipart: true },
-                  data: {
-                    turbo_stream: true,
-                    controller: "event-image-editor-upload",
-                    action: "submit->event-image-editor-upload#beforeSubmit",
-                    event_image_editor_upload_direct_upload_url_value: rails_direct_uploads_path,
-                    event_image_editor_upload_signed_field_name_value: "event_image[signed_ids][]",
-                    event_image_editor_upload_replace_existing_value: true
-                  } do %>
-      <%= hidden_field_tag :status, editor_status %>
-      <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
-      <%= hidden_field_tag "event_image[alt_text]", event_image.alt_text %>
-      <%= hidden_field_tag "event_image[sub_text]", event_image.sub_text, id: event_image_sub_text_upload_id %>
-      <%= hidden_field_tag "event_image[grid_variant]", selected_grid_variant %>
-      <%= hidden_field_tag "event_image[card_focus_x]", event_image.card_focus_x_value %>
-      <%= hidden_field_tag "event_image[card_focus_y]", event_image.card_focus_y_value %>
-      <%= hidden_field_tag "event_image[card_zoom]", event_image.card_zoom_value %>
-      <%= file_field_tag "event_image[files][]",
+    <% if upload_mode == :editor %>
+      <%= form_with url: backend_event_event_images_path(event),
+                    method: :post,
+                    class: "event-image-inline-upload",
+                    html: { multipart: true },
+                    data: {
+                      turbo_stream: true,
+                      controller: "event-image-editor-upload",
+                      action: "submit->event-image-editor-upload#beforeSubmit",
+                      event_image_editor_upload_direct_upload_url_value: rails_direct_uploads_path,
+                      event_image_editor_upload_signed_field_name_value: "event_image[signed_ids][]",
+                      event_image_editor_upload_replace_existing_value: true
+                    } do %>
+        <%= hidden_field_tag :status, editor_status %>
+        <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_DETAIL_HERO %>
+        <%= hidden_field_tag "event_image[alt_text]", event_image.alt_text %>
+        <%= hidden_field_tag "event_image[sub_text]", event_image.sub_text, id: event_image_sub_text_upload_id %>
+        <%= hidden_field_tag "event_image[grid_variant]", selected_grid_variant %>
+        <%= hidden_field_tag "event_image[card_focus_x]", event_image.card_focus_x_value %>
+        <%= hidden_field_tag "event_image[card_focus_y]", event_image.card_focus_y_value %>
+        <%= hidden_field_tag "event_image[card_zoom]", event_image.card_zoom_value %>
+        <%= file_field_tag "event_image[files][]",
+                           accept: "image/*",
+                           class: "event-image-inline-file-input",
+                           id: dom_id(event, :event_image_upload),
+                           data: {
+                             event_image_editor_upload_target: "input",
+                             action: "change->event-image-editor-upload#select"
+                           } %>
+        <button type="button"
+                class="button button-secondary button-compact"
+                onclick="document.getElementById('<%= dom_id(event, :event_image_upload) %>')?.click();">Change Image</button>
+        <div class="preuploaded-image-list event-image-inline-preview" data-event-image-editor-upload-target="preview"></div>
+        <p class="preuploaded-image-live-region" data-event-image-editor-upload-target="status" role="status" aria-live="polite"></p>
+      <% end %>
+      <%= button_to "Delete Image",
+                    destroy_editorial_main_backend_event_event_images_path(event, status: editor_status),
+                    method: :delete,
+                    class: "button button-ghost button-compact",
+                    form: { data: { turbo_stream: true } } %>
+    <% else %>
+      <%= hidden_field_tag "event_image[detail_hero_signed_ids][]",
+                           local_assigns[:manual_event_image_signed_id],
+                           form: editor_form_id,
+                           data: { event_image_preupload_target: "heroSignedInput" } %>
+      <%= file_field_tag "event_image[detail_hero_files][]",
                          accept: "image/*",
                          class: "event-image-inline-file-input",
-                         id: dom_id(event, :event_image_upload),
+                         id: dom_id(event, :manual_event_image_upload),
                          data: {
-                           event_image_editor_upload_target: "input",
-                           action: "change->event-image-editor-upload#select"
+                           event_image_preupload_target: "heroInput",
+                           action: "change->event-image-preupload#selectHero"
                          } %>
       <button type="button"
               class="button button-secondary button-compact"
-              onclick="document.getElementById('<%= dom_id(event, :event_image_upload) %>')?.click();">Change Image</button>
-      <div class="preuploaded-image-list event-image-inline-preview" data-event-image-editor-upload-target="preview"></div>
-      <p class="preuploaded-image-live-region" data-event-image-editor-upload-target="status" role="status" aria-live="polite"></p>
+              onclick="document.getElementById('<%= dom_id(event, :manual_event_image_upload) %>')?.click();">Bild auswählen</button>
+      <button type="button"
+              class="button button-ghost button-compact"
+              data-event-image-preupload-target="heroRemoveButton"
+              data-action="click->event-image-preupload#removeHero"
+              <%= "hidden" if local_assigns[:manual_event_image_signed_id].blank? %>>
+        Bild entfernen
+      </button>
     <% end %>
-    <%= button_to "Delete Image",
-                  destroy_editorial_main_backend_event_event_images_path(event, status: editor_status),
-                  method: :delete,
-                  class: "button button-ghost button-compact",
-                  form: { data: { turbo_stream: true } } %>
   </div>
 </div>

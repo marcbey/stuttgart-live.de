@@ -252,6 +252,11 @@ module Backend
 
     def manual_image_params
       params.fetch(:event_image, ActionController::Parameters.new).permit(
+        :sub_text,
+        :grid_variant,
+        :card_focus_x,
+        :card_focus_y,
+        :card_zoom,
         :detail_hero_sub_text,
         :slider_alt_text,
         :slider_sub_text,
@@ -266,7 +271,11 @@ module Backend
       permitted = manual_image_params.to_h.deep_symbolize_keys
 
       {
-        detail_hero_sub_text: permitted[:detail_hero_sub_text],
+        sub_text: permitted[:sub_text].presence || permitted[:detail_hero_sub_text],
+        grid_variant: permitted[:grid_variant],
+        card_focus_x: permitted[:card_focus_x],
+        card_focus_y: permitted[:card_focus_y],
+        card_zoom: permitted[:card_zoom],
         slider_alt_text: permitted[:slider_alt_text],
         slider_sub_text: permitted[:slider_sub_text],
         detail_hero_signed_ids: Array(permitted[:detail_hero_signed_ids]).reject(&:blank?),
@@ -317,7 +326,11 @@ module Backend
       hero_sources.each do |upload_source|
         image = @event.event_images.new(
           purpose: EventImage::PURPOSE_DETAIL_HERO,
-          sub_text: manual_image_params[:detail_hero_sub_text]
+          sub_text: manual_detail_hero_sub_text,
+          grid_variant: manual_image_params[:grid_variant],
+          card_focus_x: manual_image_params[:card_focus_x],
+          card_focus_y: manual_image_params[:card_focus_y],
+          card_zoom: manual_image_params[:card_zoom]
         )
         image.file.attach(upload_source)
         image.save!
@@ -409,6 +422,10 @@ module Backend
       rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
         raise ArgumentError, "#{label}: Der temporäre Upload ist ungültig oder abgelaufen."
       end
+    end
+
+    def manual_detail_hero_sub_text
+      manual_image_params[:sub_text].presence || manual_image_params[:detail_hero_sub_text]
     end
 
     def persist_uploaded_blob(upload)

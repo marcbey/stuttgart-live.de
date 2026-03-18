@@ -5,7 +5,9 @@
              event: event,
              event_image: event_image,
              event_image_sub_text_upload_id: event_image_sub_text_upload_id,
-             selected_grid_variant: selected_grid_variant %>
+             selected_grid_variant: selected_grid_variant,
+             upload_mode: local_assigns.fetch(:upload_mode, :editor),
+             manual_event_image_signed_id: local_assigns[:manual_event_image_signed_id] %>
   <%= render "backend/events/event_image_crop_settings",
              event_image: event_image,
              selected_grid_variant: selected_grid_variant %>

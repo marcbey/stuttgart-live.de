@@ -1,9 +1,13 @@
 <div class="event-image-crop-frame"
      data-event-image-crop-preview-target="previewFrame"
      data-grid-variant="<%= selected_grid_variant %>">
-  <%= image_tag optimized_event_image_source,
+  <%= image_tag optimized_event_image_source.presence || "",
                 alt: event.artist_name.to_s.strip.presence || event.title.to_s,
-                class: "event-image-crop-preview-image",
+                class: class_names("event-image-crop-preview-image", "is-hidden": optimized_event_image_source.blank?),
                 data: { event_image_crop_preview_target: "previewImage" } %>
+  <p class="event-image-crop-placeholder<%= " is-hidden" if optimized_event_image_source.present? %>"
+     data-role="event-image-crop-placeholder">
+    Noch kein Eventbild ausgewählt.
+  </p>
   <div class="event-image-crop-box is-hidden" data-event-image-crop-preview-target="previewBox"></div>
 </div>
