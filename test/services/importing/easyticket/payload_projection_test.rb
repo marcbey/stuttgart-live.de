@@ -9,6 +9,7 @@ module Importing
             "event_id" => "42",
             "title_3" => "4200",
             "date_time" => "2026-06-17 20:00:00",
+            "doors_at" => "18:30",
             "location_name" => "Im Wizemann Stuttgart",
             "title_1" => "The Band",
             "title_2" => "Live",
@@ -49,6 +50,7 @@ module Importing
         assert_equal "Live", attributes[:title]
         assert_equal "The Band", attributes[:artist_name]
         assert_equal "141", attributes[:organizer_id]
+        assert_equal "18:30", attributes[:doors_time]
         assert_equal "https://tickets.example/4200", attributes[:ticket_url]
 
         image_candidates = projection.image_candidates

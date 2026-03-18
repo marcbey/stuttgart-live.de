@@ -6,6 +6,8 @@ require "set"
 module Importing
   module Reservix
     class PayloadProjection
+      DOORS_TIME_KEYS = %w[doors doorsat doors_at doorsopen doors_open entrytime entry_time].freeze
+
       def initialize(event_payload:)
         @event_payload = (event_payload || {}).deep_stringify_keys
         @references = @event_payload["references"].is_a?(Hash) ? @event_payload["references"].deep_stringify_keys : {}
@@ -20,6 +22,7 @@ module Importing
         artist_name = @event_payload["artist"].to_s.strip.presence || title
         city = venue_reference["city"].to_s.strip.presence || location_city_fallback
         venue_name = extract_venue_name.presence || "Unbekannte Venue"
+        doors_time = first_value_for_keys(DOORS_TIME_KEYS).presence
 
         min_price = parse_decimal(@event_payload["minPrice"])
         max_price = parse_decimal(@event_payload["maxPrice"])
@@ -33,6 +36,7 @@ module Importing
           venue_name: venue_name,
           title: title,
           artist_name: artist_name,
+          doors_time: doors_time,
           min_price: min_price,
           max_price: max_price,
           concert_date_label: format_concert_date(concert_date),
@@ -151,6 +155,52 @@ module Importing
         Array(@references[key]).find { |entry| entry.is_a?(Hash) }&.deep_stringify_keys || {}
       end
 
+      def first_value_for_keys(keys)
+        values_for_keys(keys).first.to_s
+      end
+
+      def values_for_keys(keys)
+        normalized_keys = keys.map { |key| normalize_key(key) }
+        index = deep_value_index
+
+        normalized_keys
+          .flat_map { |key| Array(index[key]) }
+          .map { |value| value.to_s.strip }
+          .reject(&:blank?)
+          .uniq
+      end
+
+      def deep_value_index
+        return @deep_value_index unless @deep_value_index.nil?
+
+        values = Hash.new { |hash, key| hash[key] = [] }
+        collect_values_for_keys(@event_payload, values)
+        @deep_value_index = values.transform_values { |entries| entries.map(&:to_s).reject(&:blank?).uniq }
+      end
+
+      def collect_values_for_keys(node, values)
+        case node
+        when Hash
+          node.each do |key, value|
+            values[normalize_key(key)].concat(extract_scalar_values(value))
+            collect_values_for_keys(value, values)
+          end
+        when Array
+          node.each { |entry| collect_values_for_keys(entry, values) }
+        end
+      end
+
+      def extract_scalar_values(value)
+        case value
+        when String, Numeric, TrueClass, FalseClass
+          [ value.to_s ]
+        when Array
+          value.flat_map { |entry| extract_scalar_values(entry) }
+        else
+          []
+        end
+      end
+
       def location_reference
         @location_reference ||= event_reference("location")
       end
@@ -165,6 +215,10 @@ module Importing
 
       def format_venue(city, venue_name)
         [ city, venue_name ].reject(&:blank?).join(", ")
+      end
+
+      def normalize_key(value)
+        I18n.transliterate(value.to_s).downcase.gsub(/[^a-z0-9]/, "")
       end
     end
   end

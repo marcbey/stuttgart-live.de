@@ -29,7 +29,6 @@ module Merging
         updated_now = event.changed? && !created_now
 
         event.save! if created_now || event.changed?
-        sync_genre!(event, records, created_now:)
 
         offers_upserted = sync_offers!(event, offers)
         images_changed = sync_event_images!(event, merged_images)
@@ -64,7 +63,6 @@ module Merging
           event.artist_name = first_present(records, &:artist_name)
           event.city = first_present_or_nil(records, &:city)
           event.promoter_id = first_present_or_nil(records, &:promoter_id)
-          event.doors_at = first_present_time(records, &:doors_at)
           event.youtube_url = first_present_or_nil(records, &:youtube_url)
           event.homepage_url = first_present_or_nil(records, &:homepage_url)
           event.facebook_url = first_present_or_nil(records, &:facebook_url)
@@ -73,6 +71,7 @@ module Merging
         end
 
         event.start_at = first_present_time(records, &:start_at)
+        event.doors_at = first_present_time(records, &:doors_at)
         event.venue = first_present(records, &:venue)
         event.badge_text = first_present_or_nil(records, &:badge_text)
         event.min_price = first_present_decimal(records, &:min_price)
@@ -188,17 +187,6 @@ module Merging
 
       def sync_event_images!(event, candidates)
         Importing::ImportEventImagesSync.call(owner: event, candidates: candidates)
-      end
-
-      def sync_genre!(event, records, created_now:)
-        genre_name = first_present_or_nil(records, &:genre)
-        return if genre_name.blank?
-        return unless created_now || event.genres.empty?
-
-        genre = Genre.find_or_create_by!(name: genre_name) do |record|
-          record.slug = genre_name.parameterize
-        end
-        event.genres = [ genre ]
       end
 
       def fingerprint_for(record)

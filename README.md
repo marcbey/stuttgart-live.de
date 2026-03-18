@@ -105,11 +105,10 @@ Wichtig für das Verhalten im Backend:
 
 Wichtig für Updates bestehender Events:
 
-- Bei jedem Merge-Update werden `start_at`, `venue`, `badge_text`, `min_price`, `max_price`, `primary_source`, `source_fingerprint` und `source_snapshot` neu aus den aktuellen Importdaten gesetzt.
+- Bei jedem Merge-Update werden `start_at`, `doors_at`, `venue`, `badge_text`, `min_price`, `max_price`, `primary_source`, `source_fingerprint` und `source_snapshot` neu aus den aktuellen Importdaten gesetzt.
 - `event_offers` werden vollständig auf den aktuellen Importstand synchronisiert: bestehende passende Offers werden aktualisiert, neue angelegt und nicht mehr vorhandene entfernt.
 - Bilder werden ebenfalls auf den aktuellen Merge-Stand synchronisiert.
-- Das Genre wird nur gesetzt oder ersetzt, wenn das Event neu ist oder bisher noch keine Genres hat.
-- `title`, `artist_name`, `city`, `promoter_id`, `doors_at`, `youtube_url`, `homepage_url`, `facebook_url` und `event_info` werden bei einem bestehenden Event durch den Merge nicht überschrieben. Diese Felder werden nur beim erstmaligen Anlegen aus den Importdaten vorbelegt.
+- `title`, `artist_name`, `city`, `promoter_id`, `youtube_url`, `homepage_url`, `facebook_url` und `event_info` werden bei einem bestehenden Event durch den Merge nicht überschrieben. Diese Felder werden nur beim erstmaligen Anlegen aus den Importdaten vorbelegt.
 - Manuelle redaktionelle Änderungen an genau diesen nicht überschriebenen Feldern bleiben bei späteren Merge-Läufen deshalb erhalten.
 
 Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In diesem Fall werden nur Fingerprints neu gebaut, die seit `last_run_at` von neuen Rohimporten berührt wurden; für diese Gruppen wird aber jeweils wieder der aktuelle Gesamtstand aller Quellen zusammengeführt.

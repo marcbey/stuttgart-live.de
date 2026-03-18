@@ -8,6 +8,7 @@ module Importing
           feed_payload: {
             "eventId" => "evt-77",
             "startDateTime" => "2026-11-03T20:00:00+01:00",
+            "entryTime" => "18:45",
             "city" => "Stuttgart",
             "venueName" => "Im Wizemann",
             "eventTitle" => "Band C Live",
@@ -26,6 +27,7 @@ module Importing
         assert_equal "Stuttgart, Im Wizemann", attributes[:venue_label]
         assert_equal "Band C", attributes[:artist_name]
         assert_equal "36", attributes[:promoter_id]
+        assert_equal "18:45", attributes[:doors_time]
         assert_equal "https://tickets.example/evt-77", attributes[:ticket_url]
 
         image_candidates = projection.image_candidates

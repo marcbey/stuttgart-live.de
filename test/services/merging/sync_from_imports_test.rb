@@ -248,6 +248,68 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal BigDecimal("55"), updated_event.max_price
   end
 
+  test "incremental merge updates doors_at from current import data" do
+    source = import_sources(:one)
+    initial_time = Time.zone.parse("2026-03-14 09:00:00")
+    incremental_time = Time.zone.parse("2026-03-14 11:00:00")
+
+    first_raw = RawEventImport.create!(
+      import_source: source,
+      import_event_type: "easyticket",
+      source_identifier: "doors-update:2026-12-20",
+      payload: {
+        "event_id" => "doors-update",
+        "date_time" => "2026-12-20 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band Doors",
+        "title_2" => "Original Title",
+        "data" => {
+          "images" => {
+            "doors-update" => {
+              "large" => "https://example.com/doors-update.jpg"
+            }
+          }
+        }
+      }
+    )
+    first_raw.update_columns(created_at: initial_time, updated_at: initial_time)
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(artist_name: "Band Doors")
+    event_id = event.id
+    event.update!(doors_at: Time.zone.local(2026, 12, 20, 17, 0, 0))
+
+    second_raw = RawEventImport.create!(
+      import_source: source,
+      import_event_type: "easyticket",
+      source_identifier: "doors-update:2026-12-20",
+      payload: {
+        "event_id" => "doors-update",
+        "date_time" => "2026-12-20 20:00:00",
+        "doors_at" => "18:30",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band Doors",
+        "title_2" => "Original Title",
+        "data" => {
+          "images" => {
+            "doors-update" => {
+              "large" => "https://example.com/doors-update.jpg"
+            }
+          }
+        }
+      }
+    )
+    second_raw.update_columns(created_at: incremental_time, updated_at: incremental_time)
+
+    Merging::SyncFromImports.new(last_run_at: Time.zone.parse("2026-03-14 10:00:00")).call
+
+    updated_event = Event.find(event_id)
+    assert_equal Time.zone.local(2026, 12, 20, 18, 30, 0), updated_event.doors_at
+  end
+
   test "incremental merge updates start_at by matching the prior source snapshot" do
     source = import_sources(:one)
     initial_time = Time.zone.parse("2026-03-14 09:00:00")

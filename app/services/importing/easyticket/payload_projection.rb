@@ -81,6 +81,11 @@ module Importing
           detail_value("organizer_id"),
           detail_value("event", "organizer_id")
         )
+        doors_time = first_present(
+          dump_value("doors_at"),
+          dump_value("entry_time"),
+          dump_data_value("event", "doors_at")
+        ).presence
         ticket_event_id = dump_value("title_3").presence || external_event_id
 
         city = city.presence
@@ -95,6 +100,7 @@ module Importing
           title: title,
           artist_name: artist_name,
           organizer_id: organizer_id.presence,
+          doors_time: doors_time,
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
           ticket_url: build_ticket_url(ticket_event_id),

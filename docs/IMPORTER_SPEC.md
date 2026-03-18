@@ -233,7 +233,6 @@ These are not set by merge and remain editorial:
 - `editor_notes`
 - `badge_text`
 - `youtube_url`
-- genres
 
 ### Fingerprint behavior
 

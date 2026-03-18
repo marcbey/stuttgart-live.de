@@ -15,6 +15,7 @@ module Importing
       TITLE_KEYS = %w[title name eventtitle event_name eventname showtitle].freeze
       ARTIST_KEYS = %w[artistname].freeze
       PROMOTER_ID_KEYS = %w[promoterid promoter_id organizerid organizer_id].freeze
+      DOORS_TIME_KEYS = %w[doors doorsat doors_at entrytime entry_time].freeze
       TICKET_URL_KEYS = %w[ticket_url ticketurl deeplink bookingurl eventurl url link eventlink].freeze
       IMAGE_CANDIDATE_KEYS = %w[
         espicture_big
@@ -46,6 +47,7 @@ module Importing
         title = first_value_for_keys(TITLE_KEYS).presence || "Unbekanntes Event"
         artist_name = artist_name_from_payload.presence || title
         promoter_id = first_value_for_keys(PROMOTER_ID_KEYS).presence
+        doors_time = first_value_for_keys(DOORS_TIME_KEYS).presence
         ticket_url = first_url_for_keys(TICKET_URL_KEYS)
         {
           external_event_id: external_event_id,
@@ -55,6 +57,7 @@ module Importing
           title: title,
           artist_name: artist_name,
           promoter_id: promoter_id,
+          doors_time: doors_time,
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
           ticket_url: ticket_url,

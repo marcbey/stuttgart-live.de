@@ -51,9 +51,7 @@ module Merging
           date = start_at&.to_date
           combine_date_and_time(
             date,
-            payload["doors_at"].to_s.strip.presence ||
-              payload["entry_time"].to_s.strip.presence ||
-              payload.dig("data", "event", "doors_at").to_s.strip.presence,
+            projected_attributes[:doors_time],
             fallback_time: nil
           )
         end
