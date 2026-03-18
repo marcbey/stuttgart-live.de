@@ -1,17 +1,4 @@
 module Public::EventsHelper
-  PUBLIC_EVENT_GENRE_SLUG_ALIASES = {
-    "electro" => "elektro",
-    "hip-hop" => "hiphop"
-  }.freeze
-  PUBLIC_EVENT_GENRE_TILE_CLASSES = {
-    "pop" => "genre-tile-pop",
-    "rock" => "genre-tile-rock",
-    "hiphop" => "genre-tile-hiphop",
-    "metal" => "genre-tile-metal",
-    "elektro" => "genre-tile-elektro",
-    "schlager" => "genre-tile-schlager"
-  }.freeze
-
   def public_event_visibility_badges(event)
     badges = []
 
@@ -74,19 +61,6 @@ module Public::EventsHelper
     events_path(**browse_state.route_params(page: page, format: format))
   end
 
-  def public_event_genre_tiles
-    @public_event_genre_tiles ||= Genre.order(:name).map do |genre|
-      public_slug = public_event_genre_slug(genre.slug.presence || genre.name.parameterize)
-
-      {
-        id: genre.id,
-        name: genre.name,
-        slug: public_slug,
-        css_class: public_event_genre_tile_class(public_slug)
-      }
-    end
-  end
-
   def public_event_show_presenter(event, primary_offer:, browse_state:)
     unless defined?(Public::Events::ShowPresenter)
       presenter_path = Rails.root.join("app/presenters/public/events/show_presenter.rb").to_s
@@ -132,15 +106,6 @@ module Public::EventsHelper
   end
 
   private
-
-  def public_event_genre_slug(raw_slug)
-    normalized_slug = raw_slug.to_s.parameterize
-    PUBLIC_EVENT_GENRE_SLUG_ALIASES.fetch(normalized_slug, normalized_slug)
-  end
-
-  def public_event_genre_tile_class(slug)
-    PUBLIC_EVENT_GENRE_TILE_CLASSES.fetch(slug, "genre-tile-default")
-  end
 
   def editorial_event_image_for(event)
     images = event.event_images

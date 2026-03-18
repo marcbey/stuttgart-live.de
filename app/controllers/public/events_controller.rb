@@ -10,18 +10,6 @@ module Public
     before_action :set_browse_state, only: [ :index, :show, :search_overlay ]
 
     def index
-      if genre_panel_frame_request?
-        @selected_genre_tile = selected_genre_tile
-        @selected_genre_events = selected_genre_events
-        render partial: "public/events/genre_events_frame",
-               locals: {
-                 browse_state: @browse_state,
-                 selected_genre_tile: @selected_genre_tile,
-                 selected_genre_events: @selected_genre_events
-               }
-        return
-      end
-
       if @browse_state.query.present?
         relation = visible_events_relation(
           scope: searchable_index_events_relation,
@@ -192,8 +180,6 @@ module Public
       @home_featured_events = current_relation.reorder(:start_at, :id).to_a if @home_featured_events.empty?
       @home_highlight_events = scoped_reservix.limit(HOME_HIGHLIGHT_LIMIT).to_a
       @home_tagestipp_events = tagestipp_relation.to_a
-      @selected_genre_tile = selected_genre_tile
-      @selected_genre_events = selected_genre_events
     end
 
     def should_redirect_search_result?(relation)
@@ -259,34 +245,6 @@ module Public
       return "1" if quoted_ids.blank?
 
       "CASE WHEN events.promoter_id IN (#{quoted_ids}) THEN 0 ELSE 1 END"
-    end
-
-    def selected_genre_tile
-      requested_slug = helpers.send(:public_event_genre_slug, params[:genre].to_s.strip)
-      genre_tiles.find { |tile| tile[:slug] == requested_slug }
-    end
-
-    def selected_genre_events
-      return [] unless selected_genre_tile.present?
-
-      visible_events_relation(
-        filter: Public::Events::BrowseState::FILTER_ALL,
-        event_date: nil,
-        query: nil
-      )
-        .joins(:genres)
-        .where(genres: { id: selected_genre_tile[:id] })
-        .distinct
-        .reorder(:start_at, :id)
-        .to_a
-    end
-
-    def genre_tiles
-      helpers.public_event_genre_tiles
-    end
-
-    def genre_panel_frame_request?
-      turbo_frame_request? && request.headers["Turbo-Frame"] == "genre-events-panel"
     end
 
     def apply_status!(event, status)
