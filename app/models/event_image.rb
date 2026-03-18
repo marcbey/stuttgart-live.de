@@ -84,7 +84,11 @@ class EventImage < ApplicationRecord
 
   def processed_optimized_variant
     optimized_variant.processed
-  rescue ActiveStorage::InvariableError, ImageProcessing::Error, Vips::Error => error
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
     raise ProcessingError, processing_error_message(error)
   end
 
@@ -141,5 +145,9 @@ class EventImage < ApplicationRecord
   def processing_error_message(error)
     Rails.logger.warn("EventImage optimization failed for ##{id || 'new'}: #{error.class}: #{error.message}")
     "Bild konnte nicht für Web und Mobile optimiert werden."
+  end
+
+  def vips_processing_error?(error)
+    defined?(Vips::Error) && error.is_a?(Vips::Error)
   end
 end
