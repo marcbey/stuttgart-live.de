@@ -53,7 +53,8 @@ module Merging
             date,
             payload["doors_at"].to_s.strip.presence ||
               payload["entry_time"].to_s.strip.presence ||
-              payload.dig("data", "event", "doors_at").to_s.strip.presence
+              payload.dig("data", "event", "doors_at").to_s.strip.presence,
+            fallback_time: nil
           )
         end
 

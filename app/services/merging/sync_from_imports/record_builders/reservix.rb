@@ -36,7 +36,8 @@ module Merging
         def doors_at
           combine_date_and_time(
             start_at&.to_date,
-            first_value_for_keys(%w[doors doorsat doors_at doorsopen doors_open entrytime entry_time])
+            first_value_for_keys(%w[doors doorsat doors_at doorsopen doors_open entrytime entry_time]),
+            fallback_time: nil
           )
         end
 

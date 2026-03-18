@@ -14,7 +14,7 @@ module Merging
         I18n.transliterate(value.to_s).downcase.gsub(/[^a-z0-9]/, "")
       end
 
-      def parse_time_components(value)
+      def parse_time_components(value, fallback: [ 20, 0 ])
         raw = value.to_s.strip
         match = raw.match(/(?<!\d)(\d{1,2})[:.](\d{2})(?!\d)/)
 
@@ -24,7 +24,7 @@ module Merging
           return [ hour, minute ] if hour.between?(0, 23) && minute.between?(0, 59)
         end
 
-        [ 20, 0 ]
+        fallback
       end
     end
   end

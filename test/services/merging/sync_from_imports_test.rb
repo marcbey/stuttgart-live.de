@@ -102,6 +102,35 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_includes event.completeness_flags, "missing_image"
   end
 
+  test "leaves doors_at empty when import does not provide a valid doors time" do
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "merge-no-doors:2026-12-02",
+      payload: {
+        "event_id" => "merge-no-doors",
+        "date_time" => "2026-12-02 20:00:00",
+        "doors_at" => "open end",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "LKA Longhorn",
+        "title_1" => "Band Without Doors",
+        "title_2" => "No Doors Time",
+        "data" => {
+          "images" => {
+            "merge-no-doors" => {
+              "large" => "https://example.com/no-doors.jpg"
+            }
+          }
+        }
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(artist_name: "Band Without Doors")
+    assert_nil event.doors_at
+  end
+
   test "deduplicates sources by normalized artist_name and start_at" do
     source_reservix = ImportSource.ensure_reservix_source!
 

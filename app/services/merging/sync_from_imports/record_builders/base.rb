@@ -171,10 +171,13 @@ module Merging
           parse_datetime(value)&.strftime("%H:%M")
         end
 
-        def combine_date_and_time(date, time_value)
+        def combine_date_and_time(date, time_value, fallback_time: [ 20, 0 ])
           return nil if date.nil?
 
-          hour, minute = DuplicationKey.parse_time_components(time_value)
+          components = DuplicationKey.parse_time_components(time_value, fallback: fallback_time)
+          return nil if components.nil?
+
+          hour, minute = components
           Time.zone.local(date.year, date.month, date.day, hour, minute, 0)
         end
 
