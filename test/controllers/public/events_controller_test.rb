@@ -292,8 +292,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
   end
 
-  test "index sorts highlights chronologically by start_at" do
-    later_event = Event.create!(
+  test "index places manually highlighted events first in homepage highlights" do
+    highlighted_event = Event.create!(
       slug: "homepage-highlight-later",
       source_fingerprint: "test::homepage::highlight::later",
       title: "Homepage Highlight Later",
@@ -303,7 +303,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
-      promoter_id: AppSetting.sks_promoter_ids.first,
+      promoter_id: "99999",
+      highlighted: true,
       source_snapshot: {}
     )
 
@@ -348,7 +349,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
 
-    assert_equal [ earlier_event.artist_name, middle_event.artist_name, later_event.artist_name ], names.first(3)
+    assert_equal [ highlighted_event.artist_name, earlier_event.artist_name, middle_event.artist_name ], names.first(3)
   end
 
   test "index shows only reservix events in the all events slider" do

@@ -167,7 +167,7 @@ module Public
         filter: Public::Events::BrowseState::FILTER_SKS,
         event_date: @browse_state.event_date,
         query: nil
-      ).reorder(:start_at, :id)
+      ).highlighted_first
       scoped_all = published_visible_events_relation(
         scope: homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_ALL,
