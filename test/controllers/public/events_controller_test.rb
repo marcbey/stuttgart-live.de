@@ -88,6 +88,21 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "event-card-status-select"
   end
 
+  test "index groups backend navigation links into a burger menu for authenticated users" do
+    sign_in_as(@user)
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".app-nav-backend-menu[data-controller='backend-nav-menu']", count: 1
+    assert_select ".app-nav-backend-toggle[aria-controls='app-nav-backend-menu']", text: /Backend/
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Redaktion"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Importer"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Passwort"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Logout"
+    assert_select ".app-nav-links-group-separated", count: 0
+  end
+
   test "index shows only published events in homepage sections for authenticated users" do
     sign_in_as(@user)
 

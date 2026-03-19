@@ -40,9 +40,33 @@
     <% if !controller_path.start_with?("backend/") && google_analytics_enabled? %>
       data-consent-measurement-id-value="<%= google_analytics_measurement_id %>"
     <% end %>>
+    <% backend_context = controller_path.start_with?("backend/") %>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
-    <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
+    <% nav_inner_classes << "app-nav-inner-backend" if backend_context %>
     <% public_events_search_visible = controller_path == "public/events" && action_name == "index" && @browse_state.present? %>
+    <% backend_nav_links = capture do %>
+      <% if authenticated? %>
+        <% if current_user.backend_access? %>
+          <%= link_to "Redaktion", backend_events_path, class: app_nav_link_class(active: backend_nav_active?), aria: { current: ("page" if backend_nav_active?) } %>
+          <%= link_to "Importer", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?), aria: { current: ("page" if importer_nav_active?) } %>
+        <% end %>
+        <% if current_user.blog_access? %>
+          <%= link_to "Blog", backend_blog_posts_path, class: app_nav_link_class(active: blog_nav_active?), aria: { current: ("page" if blog_nav_active?) } %>
+        <% end %>
+        <% if current_user.admin? %>
+          <%= link_to "Einstellungen", edit_backend_settings_path, class: app_nav_link_class(active: settings_nav_active?), aria: { current: ("page" if settings_nav_active?) } %>
+          <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users"), aria: { current: ("page" if controller_path == "backend/users") } %>
+        <% end %>
+        <%= link_to "Passwort", edit_backend_account_password_path, class: app_nav_link_class(active: controller_path == "backend/account_passwords"), aria: { current: ("page" if controller_path == "backend/account_passwords") } %>
+        <%= button_to "Logout",
+                      session_path,
+                      method: :delete,
+                      class: app_nav_link_class,
+                      form: { class: "app-nav-link-form" } %>
+      <% else %>
+        <%= link_to "Login", new_session_path, class: app_nav_link_class(active: controller_path == "sessions"), aria: { current: ("page" if controller_path == "sessions") } %>
+      <% end %>
+    <% end %>
     <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
     <nav class="app-nav" data-controller="nav-offset mobile-nav">
       <div class="<%= nav_inner_classes.join(" ") %>">
@@ -106,30 +130,37 @@
               </div>
             </div>
 
-            <% if authenticated? || controller_path.start_with?("backend/") %>
-              <div class="app-nav-links-group app-nav-links-group-separated">
-                <% if authenticated? %>
-                  <% if current_user.backend_access? %>
-                    <%= link_to "Redaktion", backend_events_path, class: app_nav_link_class(active: backend_nav_active?), aria: { current: ("page" if backend_nav_active?) } %>
-                    <%= link_to "Importer", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?), aria: { current: ("page" if importer_nav_active?) } %>
-                  <% end %>
-                  <% if current_user.blog_access? %>
-                    <%= link_to "Blog", backend_blog_posts_path, class: app_nav_link_class(active: blog_nav_active?), aria: { current: ("page" if blog_nav_active?) } %>
-                  <% end %>
-                  <% if current_user.admin? %>
-                    <%= link_to "Einstellungen", edit_backend_settings_path, class: app_nav_link_class(active: settings_nav_active?), aria: { current: ("page" if settings_nav_active?) } %>
-                    <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users"), aria: { current: ("page" if controller_path == "backend/users") } %>
-                  <% end %>
-                  <%= link_to "Passwort", edit_backend_account_password_path, class: app_nav_link_class(active: controller_path == "backend/account_passwords"), aria: { current: ("page" if controller_path == "backend/account_passwords") } %>
-                  <%= button_to "Logout",
-                                session_path,
-                                method: :delete,
-                                class: app_nav_link_class(accent: true),
-                                form: { class: "app-nav-link-form" } %>
-                <% else %>
-                  <%= link_to "Login", new_session_path, class: app_nav_link_class(accent: true, active: controller_path == "sessions"), aria: { current: ("page" if controller_path == "sessions") } %>
-                <% end %>
-              </div>
+            <% if authenticated? || backend_context %>
+              <% if backend_context %>
+                <div class="app-nav-links-group app-nav-links-group-separated">
+                  <%= backend_nav_links %>
+                </div>
+              <% else %>
+                <div class="app-nav-backend-menu"
+                     data-controller="backend-nav-menu">
+                  <button type="button"
+                          class="app-nav-backend-toggle"
+                          data-action="click->backend-nav-menu#toggle"
+                          data-backend-nav-menu-target="button"
+                          aria-expanded="false"
+                          aria-controls="app-nav-backend-menu"
+                          aria-label="Backend-Menü öffnen">
+                    <span class="app-nav-backend-toggle-label">Backend</span>
+                    <span class="app-nav-backend-toggle-icon" aria-hidden="true">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                  </button>
+
+                  <div id="app-nav-backend-menu"
+                       class="app-nav-backend-panel app-nav-links-group"
+                       data-backend-nav-menu-target="panel"
+                       hidden>
+                    <%= backend_nav_links %>
+                  </div>
+                </div>
+              <% end %>
             <% end %>
           </div>
         </div>

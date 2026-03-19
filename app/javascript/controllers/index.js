@@ -10,6 +10,9 @@ application.register("bulk-select", BulkSelectController)
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
+import BackendNavMenuController from "./backend_nav_menu_controller"
+application.register("backend-nav-menu", BackendNavMenuController)
+
 import BlogPostImagePreuploadController from "./blog_post_image_preupload_controller"
 application.register("blog-post-image-preupload", BlogPostImagePreuploadController)
 
