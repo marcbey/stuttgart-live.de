@@ -91,6 +91,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       title: "Live",
       start_at: Time.zone.local(2026, 6, 17, 20, 0),
       badge_text: "Fast ausverkauft",
+      support: "Special Guest",
       homepage_url: "https://band.example",
       instagram_url: "https://instagram.example/band",
       facebook_url: "",
@@ -112,6 +113,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "Homepage", "Instagram" ], presenter.social_links.map(&:label)
     assert_equal [ "https://band.example", "https://instagram.example/band" ], presenter.social_links.map(&:url)
     assert_equal "https://www.youtube.com/embed/demo", presenter.youtube_embed_url
+    assert_equal "Special Guest", presenter.support_text
     assert_equal 1, presenter.slider_items.size
     assert_equal "/slide-1.jpg", presenter.slider_items.first.source
     assert_equal "Slide 1 Alt", presenter.slider_items.first.alt_text

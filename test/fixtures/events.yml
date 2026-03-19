@@ -8,6 +8,7 @@ published_one:
   venue: LKA Longhorn
   city: Stuttgart
   event_info: Infos
+  support: Support Act
   badge_text: Highlight
   youtube_url:
   status: published
@@ -52,6 +53,7 @@ needs_review_one:
   venue: Im Wizemann
   city: Stuttgart
   event_info:
+  support:
   badge_text:
   youtube_url:
   promoter_id: "10135"
@@ -77,6 +79,7 @@ needs_review_two:
   venue: Im Wizemann
   city: Stuttgart
   event_info:
+  support:
   badge_text:
   youtube_url:
   promoter_id: "36"

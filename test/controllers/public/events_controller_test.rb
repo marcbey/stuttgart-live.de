@@ -1018,6 +1018,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Interner Hinweis"
   end
 
+  test "show renders support section when support is present" do
+    event = Event.create!(
+      slug: "published-event-with-support",
+      source_fingerprint: "test::public::published::support",
+      title: "Published Event With Support",
+      artist_name: "Published Artist With Support",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      event_info: "Öffentliche Beschreibung",
+      support: "Support Act",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Support"
+    assert_includes response.body, "Support Act"
+  end
+
   test "show renders llm enrichment fallbacks and extra sections" do
     event = Event.create!(
       slug: "published-event-with-llm-enrichment",

@@ -44,6 +44,13 @@
     </section>
   <% end %>
 
+  <% if presenter.support_text.present? %>
+    <section class="event-detail-copy">
+      <h2>Support</h2>
+      <%= simple_format(presenter.support_text) %>
+    </section>
+  <% end %>
+
   <% if presenter.enrichment_genres.any? %>
     <section class="event-detail-copy">
       <h2>Genres</h2>

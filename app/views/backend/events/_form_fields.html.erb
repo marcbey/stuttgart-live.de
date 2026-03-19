@@ -92,6 +92,11 @@
 </div>
 
 <div>
+  <%= form.label :support, "Support", class: "form-label" %>
+  <%= form.text_field :support, class: "form-input" %>
+</div>
+
+<div>
   <%= form.label :organizer_notes, "Veranstalterhinweise", class: "form-label" %>
   <label class="form-checkbox">
     <%= form.check_box :show_organizer_notes %>

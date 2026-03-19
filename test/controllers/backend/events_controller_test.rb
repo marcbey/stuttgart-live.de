@@ -67,6 +67,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[promoter_id]'][value='#{@event.promoter_id}']"
     assert_select "input[readonly]#event_#{@event.id}_promoter_id_display", count: 0
     assert_select "input[name='event[highlighted]'][type='checkbox']"
+    assert_select "input[name='event[support]']", count: 1
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
     assert_select "input[name='event_image[files][]'][required]", count: 0
@@ -95,6 +96,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[promoter_id]']"
     assert_select "input[name='event[ticket_url]']"
     assert_select "input[name='event[highlighted]'][type='checkbox']"
+    assert_select "input[name='event[support]']"
     assert_select "textarea[name='event[organizer_notes]']"
     assert_select "input[name='event[show_organizer_notes]'][type='checkbox']"
     assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
@@ -356,6 +358,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         doors_at: doors_at,
         venue: @event.venue,
         city: @event.city,
+        support: "Special Guest",
         organizer_notes: "Eigene Hinweise\nZweite Zeile",
         show_organizer_notes: "1",
         homepage_url: "https://example.com",
@@ -371,6 +374,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     @event.reload
     assert_equal "Neu betitelt", @event.title
     assert_equal doors_at.to_i, @event.doors_at.to_i
+    assert_equal "Special Guest", @event.support
     assert_equal "Eigene Hinweise\nZweite Zeile", @event.organizer_notes
     assert_predicate @event, :show_organizer_notes?
     assert_equal "https://example.com", @event.homepage_url
@@ -400,6 +404,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
             doors_at: doors_at,
             venue: "Im Wizemann",
             city: "Stuttgart",
+            support: "Local Opener",
             organizer_notes: "Bitte früh erscheinen",
             show_organizer_notes: "1",
             badge_text: "Highlight",
@@ -434,6 +439,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     created = Event.order(:id).last
     assert_redirected_to backend_events_url(status: "ready_for_publish", event_id: created.id)
     assert_equal doors_at.to_i, created.doors_at.to_i
+    assert_equal "Local Opener", created.support
     assert_equal "Bitte früh erscheinen", created.organizer_notes
     assert_predicate created, :show_organizer_notes?
     assert_equal "https://example.com", created.homepage_url

@@ -228,6 +228,7 @@ module Backend
         :venue,
         :city,
         :event_info,
+        :support,
         :organizer_notes,
         :show_organizer_notes,
         :badge_text,

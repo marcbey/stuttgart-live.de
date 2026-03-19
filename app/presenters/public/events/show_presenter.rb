@@ -147,6 +147,10 @@ module Public
         llm_enrichment&.venue_description.to_s.strip.presence
       end
 
+      def support_text
+        event.support.to_s.strip.presence
+      end
+
       def enrichment_genres
         Array(llm_enrichment&.genre).filter_map do |entry|
           entry.to_s.strip.presence
