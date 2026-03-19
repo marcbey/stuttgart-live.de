@@ -42,6 +42,7 @@
     <% end %>>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if controller_path.start_with?("backend/") %>
+    <% public_events_search_visible = controller_path == "public/events" && action_name == "index" && @browse_state.present? %>
     <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
     <nav class="app-nav" data-controller="nav-offset mobile-nav">
       <div class="<%= nav_inner_classes.join(" ") %>">
@@ -49,6 +50,12 @@
           <span class="brand-wordmark" aria-label="Stuttgart Live">
             <span class="brand-wordmark-city">STUTTGART</span><span class="brand-wordmark-live">LIVE</span>
           </span>
+        <% end %>
+
+        <% if public_events_search_visible %>
+          <div class="app-nav-search">
+            <%= render "public/events/toolbar", browse_state: @browse_state %>
+          </div>
         <% end %>
 
         <button type="button"

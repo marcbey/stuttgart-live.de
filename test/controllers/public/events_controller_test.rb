@@ -772,13 +772,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "event_date=#{selected_date.iso8601}"
   end
 
-  test "index renders only the search filter in the public filter row" do
+  test "index renders the search filter in the app nav" do
     get events_url(filter: "all", view: "list")
 
     assert_response :success
-    assert_select ".public-filter-row-main .public-search-filter", count: 1
-    assert_select ".public-filter-row-main .public-view-toggle", count: 0
-    assert_select ".public-filter-row-main input[name='view']", count: 0
+    assert_select ".app-nav-search .public-search-filter", count: 1
+    assert_select ".public-filter-row", count: 0
+    assert_select ".public-view-toggle", count: 0
+    assert_select "input[name='view']", count: 0
   end
 
   test "index redirects to detail page when search has a single result" do

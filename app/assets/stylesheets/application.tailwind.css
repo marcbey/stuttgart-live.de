@@ -1648,6 +1648,14 @@ trix-editor.blog-rich-text:focus {
   color: rgba(17, 17, 17, 0.52);
 }
 
+.public-search-input::-webkit-search-decoration,
+.public-search-input::-webkit-search-cancel-button,
+.public-search-input::-webkit-search-results-button,
+.public-search-input::-webkit-search-results-decoration {
+  appearance: none;
+  display: none;
+}
+
 .public-search-clear,
 .public-search-icon {
   position: absolute;
