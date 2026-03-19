@@ -10,6 +10,9 @@ application.register("bulk-select", BulkSelectController)
 import AutosaveController from "./autosave_controller"
 application.register("autosave", AutosaveController)
 
+import BlogPostImagePreuploadController from "./blog_post_image_preupload_controller"
+application.register("blog-post-image-preupload", BlogPostImagePreuploadController)
+
 import ConsentController from "./consent_controller"
 application.register("consent", ConsentController)
 

@@ -66,6 +66,14 @@ module ActiveSupport
       )
     end
 
+    def create_uploaded_blob(filename: "test.png", width: 8, height: 8, rgb: [ 0, 0, 0 ])
+      ActiveStorage::Blob.create_and_upload!(
+        io: StringIO.new(solid_png_binary(width: width, height: height, rgb: rgb)),
+        filename: filename,
+        content_type: "image/png"
+      )
+    end
+
     private
 
     def png_chunk(type, data)

@@ -9,18 +9,6 @@
         <p>Veröffentlichung: <strong>noch nicht gesetzt</strong></p>
       <% end %>
     </div>
-
-    <% if blog_post.persisted? && blog_post.cover_image.attached? %>
-      <div class="blog-editor-cover-card">
-        <%= image_tag blog_post.cover_image, alt: blog_post.title, class: "blog-editor-cover-preview" %>
-      </div>
-    <% end %>
-
-    <% if blog_post.persisted? && blog_post.promotion_banner_image.attached? %>
-      <div class="blog-editor-cover-card">
-        <%= image_tag blog_post.promotion_banner_image, alt: "#{blog_post.title} Promotion Banner", class: "blog-editor-cover-preview" %>
-      </div>
-    <% end %>
   </aside>
 
   <div>
@@ -69,39 +57,40 @@
         </div>
 
         <div>
-          <%= form.label :cover_image, "Titelbild", class: "form-label" %>
-          <%= form.file_field :cover_image, accept: "image/*", class: "form-input" %>
-          <% if blog_post.cover_image.attached? %>
-            <label class="blog-editor-checkbox">
-              <%= check_box_tag "blog_post[remove_cover_image]", "1", false %>
-              <span>Titelbild entfernen</span>
-            </label>
-          <% end %>
-        </div>
-      </div>
-
-      <div class="editor-grid">
-        <div>
-          <%= form.label :promotion_banner_image, "Promotion-Banner-Bild", class: "form-label" %>
-          <%= form.file_field :promotion_banner_image, accept: "image/*", class: "form-input" %>
-          <p class="blog-editor-hint">Wird auf der Startseite unter den Highlights in voller Breite angezeigt.</p>
-          <% if blog_post.promotion_banner_image.attached? %>
-            <label class="blog-editor-checkbox">
-              <%= check_box_tag "blog_post[remove_promotion_banner_image]", "1", false %>
-              <span>Promotion-Banner-Bild entfernen</span>
-            </label>
-          <% end %>
-        </div>
-
-        <div>
           <span class="form-label">Promotion Banner</span>
           <label class="blog-editor-checkbox">
             <%= form.check_box :promotion_banner %>
-            <span>Als Promotion Banner veröffentlichen</span>
+            <span>Als Promotion Banner markieren</span>
           </label>
-          <p class="blog-editor-hint">Es kann immer nur ein veröffentlichter Beitrag gleichzeitig als Promotion Banner aktiv sein.</p>
+          <p class="blog-editor-hint">Es kann immer nur ein Beitrag gleichzeitig als Promotion Banner aktiv sein.</p>
+        </div>
+
+        <div>
+          <p class="blog-editor-hint">Das Promotion-Banner-Bild wird auf der Startseite direkt unter den Highlights verwendet.</p>
         </div>
       </div>
+
+      <%= render "backend/blog_posts/image_editor",
+                 form: form,
+                 form_id: form_id,
+                 blog_post: blog_post,
+                 title: "Titelbild",
+                 description: "Wird auf der News-Übersicht und im Beitrag verwendet.",
+                 image_slot: :cover_image,
+                 copyright_attribute: :cover_image_copyright,
+                 image_alt: blog_post.title,
+                 preview_variant: "blog-cover" %>
+
+      <%= render "backend/blog_posts/image_editor",
+                 form: form,
+                 form_id: form_id,
+                 blog_post: blog_post,
+                 title: "Promotion-Banner-Bild",
+                 description: "Wird auf der Startseite unter den Highlights in voller Breite angezeigt.",
+                 image_slot: :promotion_banner_image,
+                 copyright_attribute: :promotion_banner_image_copyright,
+                 image_alt: "#{blog_post.title} Promotion Banner",
+                 preview_variant: "blog-promotion-banner" %>
 
       <div>
         <%= form.label :body, "Inhalt", class: "form-label" %>

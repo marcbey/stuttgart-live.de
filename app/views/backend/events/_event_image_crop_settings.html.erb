@@ -8,25 +8,15 @@
 </div>
 
 <div class="event-image-crop-controls">
-  <label class="form-label" for="<%= dom_id(event_image, :card_focus_x) %>">Ausschnitt horizontal <span data-event-image-crop-preview-target="focusXOutput"><%= event_image.card_focus_x_value.round %>%</span></label>
-  <%= range_field_tag "event_image[card_focus_x]",
-                      event_image.card_focus_x_value,
-                      min: 0,
-                      max: 100,
-                      step: 1,
-                      id: dom_id(event_image, :card_focus_x),
-                      class: "form-range",
-                      data: { event_image_crop_preview_target: "focusX", action: "input->event-image-crop-preview#update" } %>
-
-  <label class="form-label" for="<%= dom_id(event_image, :card_focus_y) %>">Ausschnitt vertikal <span data-event-image-crop-preview-target="focusYOutput"><%= event_image.card_focus_y_value.round %>%</span></label>
-  <%= range_field_tag "event_image[card_focus_y]",
-                      event_image.card_focus_y_value,
-                      min: 0,
-                      max: 100,
-                      step: 1,
-                      id: dom_id(event_image, :card_focus_y),
-                      class: "form-range",
-                      data: { event_image_crop_preview_target: "focusY", action: "input->event-image-crop-preview#update" } %>
+  <p class="event-image-crop-hint">Den Ausschnitt direkt im Bild per Drag verschieben.</p>
+  <%= hidden_field_tag "event_image[card_focus_x]",
+                       event_image.card_focus_x_value,
+                       id: dom_id(event_image, :card_focus_x),
+                       data: { event_image_crop_preview_target: "focusX" } %>
+  <%= hidden_field_tag "event_image[card_focus_y]",
+                       event_image.card_focus_y_value,
+                       id: dom_id(event_image, :card_focus_y),
+                       data: { event_image_crop_preview_target: "focusY" } %>
 
   <label class="form-label" for="<%= dom_id(event_image, :card_zoom) %>">Zoom <span data-event-image-crop-preview-target="zoomOutput"><%= event_image.card_zoom_value.round %>%</span></label>
   <%= range_field_tag "event_image[card_zoom]",

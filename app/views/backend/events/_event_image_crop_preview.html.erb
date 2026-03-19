@@ -1,5 +1,6 @@
 <div class="event-image-crop-frame"
      data-event-image-crop-preview-target="previewFrame"
+     data-action="pointerdown->event-image-crop-preview#startDrag"
      data-grid-variant="<%= selected_grid_variant %>">
   <%= image_tag optimized_event_image_source.presence || "",
                 alt: event.artist_name.to_s.strip.presence || event.title.to_s,

@@ -25,6 +25,8 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#blog_editor"
     assert_select "#blog_posts_list"
     assert_select "#blog_topbar_editor_actions a.button", text: "Open", count: 0
+    assert_select "section.blog-post-image-section", count: 2
+    assert_select "[data-controller='event-image-crop-preview blog-post-image-preupload']", count: 2
   end
 
   test "live blog post shows open button in topbar instead of editor header" do
@@ -101,6 +103,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     previous_banner.update!(promotion_banner: true)
 
     blog_post = create_blog_post(author: @editor, status: "published", published_at: 1.day.ago, published_by: @editor)
+    promotion_blob = create_uploaded_blob(filename: "promotion-banner.png")
 
     patch backend_blog_post_url(blog_post), params: {
       blog_post: {
@@ -109,7 +112,14 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         slug: blog_post.slug,
         body: "<div>Jetzt Banner.</div>",
         promotion_banner: "1",
-        promotion_banner_image: png_upload(filename: "promotion-banner.png")
+        promotion_banner_image_copyright: "Foto: Redaktion",
+        promotion_banner_image_focus_x: "18",
+        promotion_banner_image_focus_y: "72",
+        promotion_banner_image_zoom: "140"
+      },
+      blog_post_images: {
+        promotion_banner_image_signed_id: promotion_blob.signed_id,
+        remove_promotion_banner_image: "0"
       },
       publication_action: "publish"
     }
@@ -118,6 +128,10 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate blog_post.reload, :promotion_banner?
     assert_not previous_banner.reload.promotion_banner?
     assert blog_post.promotion_banner_image.attached?
+    assert_equal "Foto: Redaktion", blog_post.promotion_banner_image_copyright
+    assert_equal 18.0, blog_post.promotion_banner_image_focus_x_value
+    assert_equal 72.0, blog_post.promotion_banner_image_focus_y_value
+    assert_equal 140.0, blog_post.promotion_banner_image_zoom_value
   end
 
   test "editor cannot remove the promotion banner image while the banner stays active" do
@@ -132,7 +146,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         teaser: blog_post.teaser,
         slug: blog_post.slug,
         body: "<div>Banner bleibt aktiv.</div>",
-        promotion_banner: "1",
+        promotion_banner: "1"
+      },
+      blog_post_images: {
         remove_promotion_banner_image: "1"
       },
       publication_action: "save"

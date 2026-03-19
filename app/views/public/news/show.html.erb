@@ -27,7 +27,15 @@
 
     <% if @blog_post.cover_image.attached? %>
       <div class="event-detail-image-wrap">
-        <%= image_tag @blog_post.cover_image, alt: @blog_post.title, class: "event-detail-image" %>
+        <div class="event-detail-image-frame">
+          <%= image_tag @blog_post.cover_image,
+                        alt: @blog_post.title,
+                        class: "event-detail-image",
+                        style: blog_post_image_style(@blog_post, :cover_image) %>
+          <% if blog_post_image_copyright(@blog_post, :cover_image).present? %>
+            <p class="event-detail-image-credit"><%= blog_post_image_copyright(@blog_post, :cover_image) %></p>
+          <% end %>
+        </div>
       </div>
     <% end %>
   </header>

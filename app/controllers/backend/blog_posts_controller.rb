@@ -23,12 +23,13 @@ module Backend
     def create
       @blog_post = current_user.authored_blog_posts.build(blog_post_params)
       @blog_post.apply_publication_action(action: publication_action, user: current_user)
+      prepare_blog_post_images(@blog_post)
 
-      if invalid_promotion_banner_removal?(@blog_post)
+      if @blog_post.errors.any?
         flash.now[:alert] = "Beitrag konnte nicht gespeichert werden."
         render_invalid_state(@blog_post)
       elsif @blog_post.save
-        purge_cover_image_if_requested!(@blog_post)
+        persist_blog_post_images!(@blog_post)
         render_persisted_state(target_blog_post: @blog_post, notice: creation_notice)
       else
         flash.now[:alert] = "Beitrag konnte nicht gespeichert werden."
@@ -45,12 +46,13 @@ module Backend
     def update
       @blog_post.assign_attributes(blog_post_params)
       @blog_post.apply_publication_action(action: publication_action, user: current_user)
+      prepare_blog_post_images(@blog_post)
 
-      if invalid_promotion_banner_removal?(@blog_post)
+      if @blog_post.errors.any?
         flash.now[:alert] = "Beitrag konnte nicht gespeichert werden."
         render_invalid_state(@blog_post)
       elsif @blog_post.save
-        purge_cover_image_if_requested!(@blog_post)
+        persist_blog_post_images!(@blog_post)
         render_persisted_state(target_blog_post: @blog_post, notice: update_notice)
       else
         flash.now[:alert] = "Beitrag konnte nicht gespeichert werden."
@@ -101,44 +103,28 @@ module Backend
       end
 
       def blog_post_params
-        params.require(:blog_post).permit(:title, :teaser, :slug, :body, :cover_image, :promotion_banner_image, :published_at, :author_name, :promotion_banner)
+        params.require(:blog_post).permit(
+          :title,
+          :teaser,
+          :slug,
+          :body,
+          :published_at,
+          :author_name,
+          :promotion_banner,
+          :cover_image_copyright,
+          :cover_image_focus_x,
+          :cover_image_focus_y,
+          :cover_image_zoom,
+          :promotion_banner_image_copyright,
+          :promotion_banner_image_focus_x,
+          :promotion_banner_image_focus_y,
+          :promotion_banner_image_zoom
+        )
       end
 
       def publication_action
         value = params[:publication_action].to_s
         %w[save publish depublish].include?(value) ? value : "save"
-      end
-
-      def remove_cover_image_requested?
-        ActiveModel::Type::Boolean.new.cast(params.dig(:blog_post, :remove_cover_image))
-      end
-
-      def cover_image_upload_present?
-        params.dig(:blog_post, :cover_image).present?
-      end
-
-      def purge_cover_image_if_requested!(blog_post)
-        return unless remove_cover_image_requested?
-        return if cover_image_upload_present?
-        return unless blog_post.cover_image.attached?
-
-        blog_post.cover_image.purge_later
-      end
-
-      def remove_promotion_banner_image_requested?
-        ActiveModel::Type::Boolean.new.cast(params.dig(:blog_post, :remove_promotion_banner_image))
-      end
-
-      def promotion_banner_image_upload_present?
-        params.dig(:blog_post, :promotion_banner_image).present?
-      end
-
-      def purge_promotion_banner_image_if_requested!(blog_post)
-        return unless remove_promotion_banner_image_requested?
-        return if promotion_banner_image_upload_present?
-        return unless blog_post.promotion_banner_image.attached?
-
-        blog_post.promotion_banner_image.purge_later
       end
 
       def new_panel_requested?
@@ -150,17 +136,67 @@ module Backend
       end
 
       def render_persisted_state(target_blog_post:, notice:)
-        purge_promotion_banner_image_if_requested!(target_blog_post)
         respond_with_editor_state(editor_state_for(target_blog_post), notice: notice)
       end
 
-      def invalid_promotion_banner_removal?(blog_post)
-        return false unless remove_promotion_banner_image_requested?
-        return false if promotion_banner_image_upload_present?
-        return false unless blog_post.promotion_banner?
+      def prepare_blog_post_images(blog_post)
+        image_params = blog_post_image_params
 
-        blog_post.errors.add(:promotion_banner_image, "muss für einen Promotion Banner vorhanden sein")
-        true
+        blog_post.pending_cover_image_blob = resolve_signed_blob(image_params[:cover_image_signed_id], label: "Titelbild", blog_post: blog_post)
+        blog_post.pending_promotion_banner_image_blob = resolve_signed_blob(image_params[:promotion_banner_image_signed_id], label: "Promotion-Banner-Bild", blog_post: blog_post)
+        blog_post.remove_cover_image = remove_cover_image_requested?
+        blog_post.remove_promotion_banner_image = remove_promotion_banner_image_requested?
+      end
+
+      def persist_blog_post_images!(blog_post)
+        persist_blog_post_image!(
+          blog_post: blog_post,
+          attachment_name: :cover_image,
+          pending_blob: blog_post.pending_cover_image_blob,
+          remove: blog_post.remove_cover_image?
+        )
+        persist_blog_post_image!(
+          blog_post: blog_post,
+          attachment_name: :promotion_banner_image,
+          pending_blob: blog_post.pending_promotion_banner_image_blob,
+          remove: blog_post.remove_promotion_banner_image?
+        )
+      end
+
+      def persist_blog_post_image!(blog_post:, attachment_name:, pending_blob:, remove:)
+        attachment = blog_post.public_send(attachment_name)
+
+        if pending_blob.present?
+          attachment.attach(pending_blob)
+        elsif remove && attachment.attached?
+          attachment.purge_later
+        end
+      end
+
+      def blog_post_image_params
+        params.fetch(:blog_post_images, ActionController::Parameters.new).permit(
+          :cover_image_signed_id,
+          :promotion_banner_image_signed_id,
+          :remove_cover_image,
+          :remove_promotion_banner_image
+        )
+      end
+
+      def remove_cover_image_requested?
+        ActiveModel::Type::Boolean.new.cast(blog_post_image_params[:remove_cover_image])
+      end
+
+      def remove_promotion_banner_image_requested?
+        ActiveModel::Type::Boolean.new.cast(blog_post_image_params[:remove_promotion_banner_image])
+      end
+
+      def resolve_signed_blob(signed_id, label:, blog_post:)
+        return if signed_id.blank?
+
+        ActiveStorage::Blob.find_signed!(signed_id)
+      rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
+        blog_post.errors.add(:base, "#{label}: Der temporäre Upload ist ungültig oder abgelaufen.")
+        nil
       end
 
       def render_invalid_state(blog_post)

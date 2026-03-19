@@ -1,5 +1,8 @@
 class BlogPost < ApplicationRecord
   STATUSES = %w[draft published].freeze
+  DEFAULT_IMAGE_FOCUS_X = 50.0
+  DEFAULT_IMAGE_FOCUS_Y = 50.0
+  DEFAULT_IMAGE_ZOOM = 100.0
 
   belongs_to :author, class_name: "User"
   belongs_to :published_by, class_name: "User", optional: true
@@ -8,12 +11,25 @@ class BlogPost < ApplicationRecord
   has_one_attached :promotion_banner_image
   has_rich_text :body
 
+  attr_accessor :pending_cover_image_blob,
+                :pending_promotion_banner_image_blob,
+                :remove_cover_image,
+                :remove_promotion_banner_image
+
   validates :title, presence: true, length: { maximum: 180 }
   validates :teaser, presence: true, length: { maximum: 320 }
   validates :slug, presence: true, uniqueness: true
   validates :source_identifier, uniqueness: true, allow_nil: true
   validates :status, inclusion: { in: STATUSES }
   validates :published_at, presence: true, if: :published?
+  validates :cover_image_copyright, length: { maximum: 500 }, allow_blank: true
+  validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
+  validates :cover_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :cover_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :cover_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
+  validates :promotion_banner_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :promotion_banner_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :promotion_banner_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
   validate :body_must_be_present
   validate :cover_image_must_be_image
   validate :promotion_banner_image_must_be_image
@@ -52,6 +68,46 @@ class BlogPost < ApplicationRecord
 
   def display_author_name
     author_name.to_s.strip.presence || author&.name.presence || author&.email_address.to_s
+  end
+
+  def cover_image_blob_for_editor
+    image_blob_for_editor(:cover_image)
+  end
+
+  def promotion_banner_image_blob_for_editor
+    image_blob_for_editor(:promotion_banner_image)
+  end
+
+  def remove_cover_image?
+    ActiveModel::Type::Boolean.new.cast(remove_cover_image)
+  end
+
+  def remove_promotion_banner_image?
+    ActiveModel::Type::Boolean.new.cast(remove_promotion_banner_image)
+  end
+
+  def cover_image_focus_x_value
+    image_focus_value(cover_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+  end
+
+  def cover_image_focus_y_value
+    image_focus_value(cover_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+  end
+
+  def cover_image_zoom_value
+    image_focus_value(cover_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
+  end
+
+  def promotion_banner_image_focus_x_value
+    image_focus_value(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+  end
+
+  def promotion_banner_image_focus_y_value
+    image_focus_value(promotion_banner_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+  end
+
+  def promotion_banner_image_zoom_value
+    image_focus_value(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
   end
 
   def apply_publication_action(action:, user:)
@@ -115,6 +171,14 @@ class BlogPost < ApplicationRecord
       self.author_name = author_name.to_s.strip.presence
       self.source_identifier = source_identifier.to_s.strip.presence
       self.source_url = source_url.to_s.strip.presence
+      self.cover_image_copyright = cover_image_copyright.to_s.strip.presence
+      self.promotion_banner_image_copyright = promotion_banner_image_copyright.to_s.strip.presence
+      self.cover_image_focus_x = normalize_percentage(cover_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+      self.cover_image_focus_y = normalize_percentage(cover_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+      self.cover_image_zoom = normalize_percentage(cover_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
+      self.promotion_banner_image_focus_x = normalize_percentage(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+      self.promotion_banner_image_focus_y = normalize_percentage(promotion_banner_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+      self.promotion_banner_image_zoom = normalize_percentage(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
       self.youtube_video_urls = Array(youtube_video_urls).filter_map { |value| normalize_youtube_url(value) }.uniq
     end
 
@@ -144,28 +208,70 @@ class BlogPost < ApplicationRecord
     end
 
     def cover_image_must_be_image
-      return unless cover_image.attached?
-      return if cover_image.content_type.to_s.start_with?("image/")
+      image_blob = cover_image_blob_for_editor
+      return unless image_blob.present?
+      return if image_blob.content_type.to_s.start_with?("image/")
 
       errors.add(:cover_image, "muss ein Bild sein")
     end
 
     def promotion_banner_image_must_be_image
-      return unless promotion_banner_image.attached?
-      return if promotion_banner_image.content_type.to_s.start_with?("image/")
+      image_blob = promotion_banner_image_blob_for_editor
+      return unless image_blob.present?
+      return if image_blob.content_type.to_s.start_with?("image/")
 
       errors.add(:promotion_banner_image, "muss ein Bild sein")
     end
 
     def promotion_banner_requires_image
       return unless promotion_banner?
-      return if promotion_banner_image.attached?
+      return if promotion_banner_image_blob_for_editor.present?
 
       errors.add(:promotion_banner_image, "muss für einen Promotion Banner vorhanden sein")
     end
 
     def clear_other_promotion_banners
       self.class.where.not(id: id).where(promotion_banner: true).update_all(promotion_banner: false, updated_at: Time.current)
+    end
+
+    def image_blob_for_editor(slot)
+      pending_blob = pending_blob_for(slot)
+      return pending_blob if pending_blob.present?
+      return if remove_image_for(slot)
+
+      attachment = public_send(slot)
+      attachment.blob if attachment.attached?
+    end
+
+    def pending_blob_for(slot)
+      case slot
+      when :cover_image
+        pending_cover_image_blob
+      when :promotion_banner_image
+        pending_promotion_banner_image_blob
+      end
+    end
+
+    def remove_image_for(slot)
+      case slot
+      when :cover_image
+        remove_cover_image?
+      when :promotion_banner_image
+        remove_promotion_banner_image?
+      else
+        false
+      end
+    end
+
+    def image_focus_value(value, fallback:)
+      normalized = value.to_f
+      normalized.positive? ? normalized : fallback
+    end
+
+    def normalize_percentage(value, fallback:)
+      return fallback if value.blank?
+
+      value.to_f.round(2)
     end
 
     def normalize_youtube_url(value)

@@ -104,8 +104,65 @@ module ApplicationHelper
     rails_storage_proxy_url(optimized_event_image_representation(image))
   end
 
+  def blog_post_image_style(blog_post, slot)
+    focus_x = blog_post.public_send("#{slot}_focus_x_value")
+    focus_y = blog_post.public_send("#{slot}_focus_y_value")
+    zoom = blog_post.public_send("#{slot}_zoom_value")
+
+    [
+      "object-position: #{focus_x}% #{focus_y}%",
+      "transform: scale(#{(zoom / 100.0).round(3)})",
+      "transform-origin: #{focus_x}% #{focus_y}%"
+    ].join("; ")
+  end
+
+  def blog_post_cropped_image_style(blog_post, slot, frame_ratio:)
+    image = blog_post.public_send(slot)
+    metadata = image&.attached? ? image.blob.metadata : {}
+    image_width = metadata["width"].to_f
+    image_height = metadata["height"].to_f
+
+    return blog_post_image_style(blog_post, slot) unless image_width.positive? && image_height.positive?
+
+    focus_x = blog_post.public_send("#{slot}_focus_x_value") / 100.0
+    focus_y = blog_post.public_send("#{slot}_focus_y_value") / 100.0
+    zoom_scale = blog_post.public_send("#{slot}_zoom_value") / 100.0
+    image_ratio = image_width / image_height
+
+    width_factor, height_factor =
+      if image_ratio > frame_ratio
+        [ (image_ratio / frame_ratio) * zoom_scale, zoom_scale ]
+      else
+        [ zoom_scale, (frame_ratio / image_ratio) * zoom_scale ]
+      end
+
+    offset_x = clamp_crop_offset(0.5 - (focus_x * width_factor), width_factor)
+    offset_y = clamp_crop_offset(0.5 - (focus_y * height_factor), height_factor)
+
+    [
+      "position: absolute",
+      "left: #{(offset_x * 100).round(3)}%",
+      "top: #{(offset_y * 100).round(3)}%",
+      "width: #{(width_factor * 100).round(3)}%",
+      "height: #{(height_factor * 100).round(3)}%",
+      "object-fit: fill",
+      "max-width: none",
+      "max-height: none"
+    ].join("; ")
+  end
+
+  def blog_post_image_copyright(blog_post, slot)
+    blog_post.public_send("#{slot}_copyright")
+  end
+
   def formatted_organizer_notes(notes)
     formatted_organizer_notes_with_link(notes)
+  end
+
+  private
+
+  def clamp_crop_offset(offset, size_factor)
+    [[ offset, 0 ].min, 1 - size_factor].max
   end
 
   def formatted_organizer_notes_with_link(notes, event: nil)

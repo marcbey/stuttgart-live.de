@@ -164,4 +164,18 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_predicate second.reload, :promotion_banner?
     assert_not first.reload.promotion_banner?
   end
+
+  test "pending promotion banner blob satisfies required image validation" do
+    blog_post = BlogPost.new(
+      title: "Banner mit Pending Blob",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      promotion_banner: true
+    )
+    blog_post.pending_promotion_banner_image_blob = create_uploaded_blob(filename: "pending-banner.png")
+
+    assert_predicate blog_post, :valid?
+  end
 end
