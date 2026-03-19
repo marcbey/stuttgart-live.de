@@ -1879,6 +1879,79 @@ trix-editor.blog-rich-text:focus {
   margin-top: 1.35rem;
 }
 
+.promotion-banner {
+  margin: 1.4rem 0 1.6rem;
+}
+
+.promotion-banner-link {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.85fr);
+  align-items: stretch;
+  min-height: 20rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background:
+    linear-gradient(135deg, rgba(227, 27, 46, 0.1) 0%, rgba(255, 214, 160, 0.5) 42%, rgba(255, 255, 255, 0.96) 100%);
+  box-shadow: 0 18px 44px rgba(17, 17, 17, 0.08);
+  overflow: clip;
+  text-decoration: none;
+}
+
+.promotion-banner-link:hover {
+  transform: translateY(-1px);
+}
+
+.promotion-banner-media {
+  position: relative;
+  min-height: 100%;
+  background: #111;
+}
+
+.promotion-banner-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.promotion-banner-copy {
+  display: grid;
+  align-content: center;
+  gap: 0.85rem;
+  padding: clamp(1.35rem, 3vw, 2.5rem);
+}
+
+.promotion-banner-kicker {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.58);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.promotion-banner-copy h2 {
+  margin: 0;
+  font-size: clamp(2.3rem, 4vw, 4.2rem);
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.promotion-banner-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #8d1320;
+  font-size: 0.96rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.promotion-banner-cta::after {
+  content: "→";
+  font-size: 1.05rem;
+}
+
 .home-slider-header {
   display: flex;
   align-items: center;
@@ -4663,6 +4736,19 @@ trix-editor.blog-rich-text:focus {
 }
 
 @media (max-width: 720px) {
+  .promotion-banner-link {
+    grid-template-columns: minmax(0, 1fr);
+    min-height: 0;
+  }
+
+  .promotion-banner-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  .promotion-banner-copy h2 {
+    font-size: clamp(2rem, 11vw, 3.2rem);
+  }
+
   .consent-banner {
     left: 1rem;
     right: 1rem;

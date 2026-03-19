@@ -245,6 +245,50 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
   end
 
+  test "homepage renders promotion banner below highlights when configured" do
+    Event.create!(
+      slug: "promotion-banner-highlight-event",
+      source_fingerprint: "test::homepage::promotion-banner-highlight",
+      title: "Promotion Banner Highlight",
+      artist_name: "Promotion Banner Highlight Artist",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      primary_source: "eventim",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    blog_post = BlogPost.create!(
+      title: "Großer Promo-Post",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user
+    )
+    blog_post.promotion_banner_image.attach(png_upload(filename: "homepage-banner.png"))
+    blog_post.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner h2", text: "Großer Promo-Post"
+    assert_select ".promotion-banner a[href='#{news_path(blog_post.slug)}']"
+
+    document = Nokogiri::HTML.parse(response.body)
+    shell_children = document.css("section.public-shell > *")
+    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
+    promotion_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") }
+
+    assert highlights_index.present?, "expected Highlights section to be rendered"
+    assert promotion_index.present?, "expected Promotion Banner to be rendered"
+    assert_equal highlights_index + 1, promotion_index
+  end
+
   test "index includes promoter 10136 in homepage highlights" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 

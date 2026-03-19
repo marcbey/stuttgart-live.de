@@ -4,6 +4,7 @@ require "rails/test_help"
 require "vips"
 require "zlib"
 require_relative "test_helpers/session_test_helper"
+require "stringio"
 
 if defined?(Bullet)
   module BulletRequestLifecycle
@@ -55,6 +56,14 @@ module ActiveSupport
     def image_dimensions(binary)
       image = Vips::Image.new_from_buffer(binary, "")
       [ image.width, image.height ]
+    end
+
+    def png_upload(filename: "test.png", width: 8, height: 8, rgb: [ 0, 0, 0 ])
+      Rack::Test::UploadedFile.new(
+        StringIO.new(solid_png_binary(width: width, height: height, rgb: rgb)),
+        "image/png",
+        original_filename: filename
+      )
     end
 
     private

@@ -24,7 +24,10 @@ module Backend
       @blog_post = current_user.authored_blog_posts.build(blog_post_params)
       @blog_post.apply_publication_action(action: publication_action, user: current_user)
 
-      if @blog_post.save
+      if invalid_promotion_banner_removal?(@blog_post)
+        flash.now[:alert] = "Beitrag konnte nicht gespeichert werden."
+        render_invalid_state(@blog_post)
+      elsif @blog_post.save
         purge_cover_image_if_requested!(@blog_post)
         render_persisted_state(target_blog_post: @blog_post, notice: creation_notice)
       else
@@ -43,7 +46,10 @@ module Backend
       @blog_post.assign_attributes(blog_post_params)
       @blog_post.apply_publication_action(action: publication_action, user: current_user)
 
-      if @blog_post.save
+      if invalid_promotion_banner_removal?(@blog_post)
+        flash.now[:alert] = "Beitrag konnte nicht gespeichert werden."
+        render_invalid_state(@blog_post)
+      elsif @blog_post.save
         purge_cover_image_if_requested!(@blog_post)
         render_persisted_state(target_blog_post: @blog_post, notice: update_notice)
       else
@@ -59,7 +65,7 @@ module Backend
 
     private
       def set_blog_post
-        @blog_post = BlogPost.with_rich_text_body_and_embeds.includes(:author, :published_by).with_attached_cover_image.find(params[:id])
+        @blog_post = BlogPost.with_rich_text_body_and_embeds.includes(:author, :published_by).with_attached_cover_image.with_attached_promotion_banner_image.find(params[:id])
       end
 
       def set_filters
@@ -95,7 +101,7 @@ module Backend
       end
 
       def blog_post_params
-        params.require(:blog_post).permit(:title, :teaser, :slug, :body, :cover_image, :published_at, :author_name)
+        params.require(:blog_post).permit(:title, :teaser, :slug, :body, :cover_image, :promotion_banner_image, :published_at, :author_name, :promotion_banner)
       end
 
       def publication_action
@@ -119,6 +125,22 @@ module Backend
         blog_post.cover_image.purge_later
       end
 
+      def remove_promotion_banner_image_requested?
+        ActiveModel::Type::Boolean.new.cast(params.dig(:blog_post, :remove_promotion_banner_image))
+      end
+
+      def promotion_banner_image_upload_present?
+        params.dig(:blog_post, :promotion_banner_image).present?
+      end
+
+      def purge_promotion_banner_image_if_requested!(blog_post)
+        return unless remove_promotion_banner_image_requested?
+        return if promotion_banner_image_upload_present?
+        return unless blog_post.promotion_banner_image.attached?
+
+        blog_post.promotion_banner_image.purge_later
+      end
+
       def new_panel_requested?
         ActiveModel::Type::Boolean.new.cast(params[:new])
       end
@@ -128,7 +150,17 @@ module Backend
       end
 
       def render_persisted_state(target_blog_post:, notice:)
+        purge_promotion_banner_image_if_requested!(target_blog_post)
         respond_with_editor_state(editor_state_for(target_blog_post), notice: notice)
+      end
+
+      def invalid_promotion_banner_removal?(blog_post)
+        return false unless remove_promotion_banner_image_requested?
+        return false if promotion_banner_image_upload_present?
+        return false unless blog_post.promotion_banner?
+
+        blog_post.errors.add(:promotion_banner_image, "muss für einen Promotion Banner vorhanden sein")
+        true
       end
 
       def render_invalid_state(blog_post)

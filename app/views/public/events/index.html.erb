@@ -16,6 +16,10 @@
                list_aria_label: "Listenansicht für Highlights" %>
   <% end %>
 
+  <% if @browse_state.page == 1 && @promotion_banner_blog_post.present? %>
+    <%= render "promotion_banner", blog_post: @promotion_banner_blog_post %>
+  <% end %>
+
   <% if @browse_state.page == 1 && @home_highlight_events.present? %>
     <%= render "highlight_section",
                title: "Alle Veranstaltungen in Stuttgart",

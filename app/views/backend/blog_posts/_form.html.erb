@@ -10,9 +10,15 @@
       <% end %>
     </div>
 
-    <% if blog_post.cover_image.attached? %>
+    <% if blog_post.persisted? && blog_post.cover_image.attached? %>
       <div class="blog-editor-cover-card">
         <%= image_tag blog_post.cover_image, alt: blog_post.title, class: "blog-editor-cover-preview" %>
+      </div>
+    <% end %>
+
+    <% if blog_post.persisted? && blog_post.promotion_banner_image.attached? %>
+      <div class="blog-editor-cover-card">
+        <%= image_tag blog_post.promotion_banner_image, alt: "#{blog_post.title} Promotion Banner", class: "blog-editor-cover-preview" %>
       </div>
     <% end %>
   </aside>
@@ -71,6 +77,29 @@
               <span>Titelbild entfernen</span>
             </label>
           <% end %>
+        </div>
+      </div>
+
+      <div class="editor-grid">
+        <div>
+          <%= form.label :promotion_banner_image, "Promotion-Banner-Bild", class: "form-label" %>
+          <%= form.file_field :promotion_banner_image, accept: "image/*", class: "form-input" %>
+          <p class="blog-editor-hint">Wird auf der Startseite unter den Highlights in voller Breite angezeigt.</p>
+          <% if blog_post.promotion_banner_image.attached? %>
+            <label class="blog-editor-checkbox">
+              <%= check_box_tag "blog_post[remove_promotion_banner_image]", "1", false %>
+              <span>Promotion-Banner-Bild entfernen</span>
+            </label>
+          <% end %>
+        </div>
+
+        <div>
+          <span class="form-label">Promotion Banner</span>
+          <label class="blog-editor-checkbox">
+            <%= form.check_box :promotion_banner %>
+            <span>Als Promotion Banner veröffentlichen</span>
+          </label>
+          <p class="blog-editor-hint">Es kann immer nur ein veröffentlichter Beitrag gleichzeitig als Promotion Banner aktiv sein.</p>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ class BlogPost < ApplicationRecord
   belongs_to :published_by, class_name: "User", optional: true
 
   has_one_attached :cover_image
+  has_one_attached :promotion_banner_image
   has_rich_text :body
 
   validates :title, presence: true, length: { maximum: 180 }
@@ -15,12 +16,16 @@ class BlogPost < ApplicationRecord
   validates :published_at, presence: true, if: :published?
   validate :body_must_be_present
   validate :cover_image_must_be_image
+  validate :promotion_banner_image_must_be_image
+  validate :promotion_banner_requires_image
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
+  before_save :clear_other_promotion_banners, if: :promotion_banner?
 
-  scope :ordered_for_backend, -> { includes(:author, :published_by).with_attached_cover_image.order(updated_at: :desc, id: :desc) }
+  scope :ordered_for_backend, -> { includes(:author, :published_by).with_attached_cover_image.with_attached_promotion_banner_image.order(updated_at: :desc, id: :desc) }
   scope :published_live, -> { where(status: "published").where("published_at <= ?", Time.current).order(published_at: :desc, id: :desc) }
+  scope :promotion_banner_live, -> { published_live.where(promotion_banner: true).with_attached_promotion_banner_image }
 
   def self.find_live_by_source_path!(source_path)
     published_live.find_by!(source_url: source_url_candidates_for(source_path))
@@ -143,6 +148,24 @@ class BlogPost < ApplicationRecord
       return if cover_image.content_type.to_s.start_with?("image/")
 
       errors.add(:cover_image, "muss ein Bild sein")
+    end
+
+    def promotion_banner_image_must_be_image
+      return unless promotion_banner_image.attached?
+      return if promotion_banner_image.content_type.to_s.start_with?("image/")
+
+      errors.add(:promotion_banner_image, "muss ein Bild sein")
+    end
+
+    def promotion_banner_requires_image
+      return unless promotion_banner?
+      return if promotion_banner_image.attached?
+
+      errors.add(:promotion_banner_image, "muss für einen Promotion Banner vorhanden sein")
+    end
+
+    def clear_other_promotion_banners
+      self.class.where.not(id: id).where(promotion_banner: true).update_all(promotion_banner: false, updated_at: Time.current)
     end
 
     def normalize_youtube_url(value)

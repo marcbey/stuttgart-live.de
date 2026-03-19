@@ -94,6 +94,55 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_nil blog_post.published_by
   end
 
+  test "editor can publish a promotion banner and it replaces the previous one" do
+    sign_in_as(@editor)
+    previous_banner = create_blog_post(author: @editor, status: "published", published_at: 2.days.ago, published_by: @editor)
+    previous_banner.promotion_banner_image.attach(png_upload(filename: "previous-banner.png"))
+    previous_banner.update!(promotion_banner: true)
+
+    blog_post = create_blog_post(author: @editor, status: "published", published_at: 1.day.ago, published_by: @editor)
+
+    patch backend_blog_post_url(blog_post), params: {
+      blog_post: {
+        title: blog_post.title,
+        teaser: blog_post.teaser,
+        slug: blog_post.slug,
+        body: "<div>Jetzt Banner.</div>",
+        promotion_banner: "1",
+        promotion_banner_image: png_upload(filename: "promotion-banner.png")
+      },
+      publication_action: "publish"
+    }
+
+    assert_redirected_to backend_blog_posts_url(blog_post_id: blog_post.id)
+    assert_predicate blog_post.reload, :promotion_banner?
+    assert_not previous_banner.reload.promotion_banner?
+    assert blog_post.promotion_banner_image.attached?
+  end
+
+  test "editor cannot remove the promotion banner image while the banner stays active" do
+    sign_in_as(@editor)
+    blog_post = create_blog_post(author: @editor, status: "published", published_at: 1.day.ago, published_by: @editor)
+    blog_post.promotion_banner_image.attach(png_upload(filename: "promotion-banner.png"))
+    blog_post.update!(promotion_banner: true)
+
+    patch backend_blog_post_url(blog_post), params: {
+      blog_post: {
+        title: blog_post.title,
+        teaser: blog_post.teaser,
+        slug: blog_post.slug,
+        body: "<div>Banner bleibt aktiv.</div>",
+        promotion_banner: "1",
+        remove_promotion_banner_image: "1"
+      },
+      publication_action: "save"
+    }
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "muss für einen Promotion Banner vorhanden sein"
+    assert blog_post.reload.promotion_banner_image.attached?
+  end
+
   test "turbo publish updates topbar controls" do
     sign_in_as(@editor)
     blog_post = create_blog_post(author: @editor, status: "draft")

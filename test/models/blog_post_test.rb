@@ -120,4 +120,48 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_equal "draft", blog_post.status
     assert_nil blog_post.published_by
   end
+
+  test "promotion banner requires banner image" do
+    blog_post = BlogPost.new(
+      title: "Banner Entwurf",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      promotion_banner: true
+    )
+
+    assert_not blog_post.valid?
+    assert_includes blog_post.errors[:promotion_banner_image], "muss für einen Promotion Banner vorhanden sein"
+  end
+
+  test "promotion banner clears previous banner post" do
+    first = BlogPost.create!(
+      title: "Erster Banner",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "published",
+      published_at: 2.hours.ago,
+      published_by: @author
+    )
+    first.promotion_banner_image.attach(png_upload(filename: "first-banner.png"))
+    first.update!(promotion_banner: true)
+
+    second = BlogPost.new(
+      title: "Zweiter Banner",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @author,
+      promotion_banner: true
+    )
+    second.promotion_banner_image.attach(png_upload(filename: "second-banner.png"))
+    second.save!
+
+    assert_predicate second.reload, :promotion_banner?
+    assert_not first.reload.promotion_banner?
+  end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_19_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_19_143000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_130000) do
     t.bigint "author_id", null: false
     t.string "author_name"
     t.datetime "created_at", null: false
+    t.boolean "promotion_banner", default: false, null: false
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.string "slug", null: false
@@ -75,6 +76,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_130000) do
     t.datetime "updated_at", null: false
     t.jsonb "youtube_video_urls", default: [], null: false
     t.index ["author_id"], name: "index_blog_posts_on_author_id"
+    t.index ["promotion_banner"], name: "index_blog_posts_on_unique_promotion_banner", unique: true, where: "promotion_banner"
     t.index ["published_by_id"], name: "index_blog_posts_on_published_by_id"
     t.index ["slug"], name: "index_blog_posts_on_slug", unique: true
     t.index ["source_identifier"], name: "index_blog_posts_on_source_identifier", unique: true
