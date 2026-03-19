@@ -32,7 +32,7 @@ export default class extends Controller {
     if (this.query.present) {
       this.scheduleSearch()
     } else {
-      this.renderIdleState()
+      this.loadIdleResults()
     }
   }
 
@@ -43,7 +43,7 @@ export default class extends Controller {
     if (!this.query.present) {
       this.abortPendingRequest()
       this.clearScheduledSearch()
-      this.renderIdleState()
+      this.loadIdleResults()
       return
     }
 
@@ -57,7 +57,7 @@ export default class extends Controller {
     this.abortPendingRequest()
     this.clearScheduledSearch()
     this.syncControls()
-    this.renderIdleState()
+    this.loadIdleResults()
     this.showPanel()
     this.inputTarget.focus()
 
@@ -204,6 +204,11 @@ export default class extends Controller {
   renderIdleState() {
     this.resultsTarget.innerHTML = this.idleTemplateTarget.innerHTML
     this.lastRequestUrl = null
+  }
+
+  loadIdleResults() {
+    this.renderIdleState()
+    this.fetchResults()
   }
 
   showPanel() {

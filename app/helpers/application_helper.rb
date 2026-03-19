@@ -162,7 +162,7 @@ module ApplicationHelper
   private
 
   def clamp_crop_offset(offset, size_factor)
-    [[ offset, 0 ].min, 1 - size_factor].max
+    [ [ offset, 0 ].min, 1 - size_factor ].max
   end
 
   def formatted_organizer_notes_with_link(notes, event: nil)

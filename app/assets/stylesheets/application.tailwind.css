@@ -1917,12 +1917,11 @@ trix-editor.blog-rich-text:focus {
   padding: 0.72rem;
   border-radius: 0.8rem;
   text-decoration: none;
-  transition: background-color 140ms ease, transform 140ms ease;
+  transition: background-color 140ms ease;
 }
 
 .public-search-result:hover {
   background: rgba(17, 17, 17, 0.045);
-  transform: translateY(-1px);
 }
 
 .public-search-result-media {
@@ -1935,7 +1934,7 @@ trix-editor.blog-rich-text:focus {
   display: block;
   width: 100%;
   aspect-ratio: 1 / 1;
-  border-radius: 0.7rem;
+  border-radius: 2px;
 }
 
 .public-search-result-image {
@@ -2567,7 +2566,7 @@ trix-editor.blog-rich-text:focus {
   position: relative;
   aspect-ratio: 1 / 1.16;
   overflow: hidden;
-  border-radius: 0.4rem;
+  border-radius: 2px;
 }
 
 .home-featured-section .event-card-image-wrap {
@@ -4495,6 +4494,12 @@ trix-editor.blog-rich-text:focus {
   .public-search-result {
     grid-template-columns: 3.35rem minmax(0, 1fr);
     align-items: start;
+  }
+
+  .public-search-overlay-list > li + li .public-search-result {
+    border-top: 1px solid rgba(17, 17, 17, 0.08);
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
   }
 
   .public-search-result-media {

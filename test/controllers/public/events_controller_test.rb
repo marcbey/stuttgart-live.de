@@ -1427,12 +1427,76 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_operator response.body.index(highlighted_event.artist_name), :<, response.body.index(regular_event.artist_name)
   end
 
-  test "search overlay renders hint without query" do
+  test "search overlay renders highlighted events without query" do
+    highlighted_event = Event.create!(
+      slug: "search-overlay-initial-highlighted",
+      source_fingerprint: "test::public::search-overlay::initial-highlighted",
+      title: "Initial Search Highlight",
+      artist_name: "Initial Highlight Artist",
+      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "search-overlay-initial-regular",
+      source_fingerprint: "test::public::search-overlay::initial-regular",
+      title: "Initial Search Regular",
+      artist_name: "Initial Regular Artist",
+      start_at: 5.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
     get search_overlay_events_url
 
     assert_response :success
-    assert_includes response.body, "Suche startet mit der ersten Eingabe"
-    assert_includes response.body, "Beliebte Suchvorschläge ergänzen wir im nächsten Schritt."
+    assert_includes response.body, "Unsere Highlights"
+    assert_includes response.body, highlighted_event.artist_name
+    assert_not_includes response.body, "Initial Regular Artist"
+  end
+
+  test "search overlay filters initial highlights by selected date" do
+    selected_date = 11.days.from_now.to_date
+    matching_event = Event.create!(
+      slug: "search-overlay-initial-date-match",
+      source_fingerprint: "test::public::search-overlay::initial-date-match",
+      title: "Date Filter Highlight",
+      artist_name: "Date Match Artist",
+      start_at: selected_date.in_time_zone.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "search-overlay-initial-date-other",
+      source_fingerprint: "test::public::search-overlay::initial-date-other",
+      title: "Date Filter Highlight Later",
+      artist_name: "Date Other Artist",
+      start_at: (selected_date + 1.day).in_time_zone.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(event_date: selected_date.iso8601)
+
+    assert_response :success
+    assert_includes response.body, "Unsere Highlights"
+    assert_includes response.body, matching_event.artist_name
+    assert_not_includes response.body, "Date Other Artist"
   end
 
   test "search overlay shows unpublished matching events for authenticated users" do

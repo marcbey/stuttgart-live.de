@@ -19,8 +19,22 @@
     </div>
   <% end %>
 <% else %>
-  <div class="public-search-overlay-empty">
-    <h2>Suche startet mit der ersten Eingabe</h2>
-    <p>Beliebte Suchvorschläge ergänzen wir im nächsten Schritt. Hier erscheinen dann direkt passende Events.</p>
-  </div>
+  <% if events.any? %>
+    <div class="public-search-overlay-summary">
+      <h2>Unsere Highlights</h2>
+    </div>
+
+    <ul class="public-search-overlay-list" role="list">
+      <% events.each do |event| %>
+        <li>
+          <%= render "search_overlay_event", event: event, browse_state: browse_state %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="public-search-overlay-empty">
+      <h2>Unsere Highlights</h2>
+      <p>Aktuell sind keine hervorgehobenen Events verfügbar.</p>
+    </div>
+  <% end %>
 <% end %>

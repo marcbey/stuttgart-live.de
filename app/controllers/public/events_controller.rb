@@ -58,7 +58,7 @@ module Public
             query: @browse_state.query
           ).limit(SEARCH_OVERLAY_LIMIT).to_a
         else
-          []
+          initial_search_overlay_events
         end
 
       render partial: "public/events/search_overlay",
@@ -208,6 +208,15 @@ module Public
         :import_event_images,
         event_images: [ file_attachment: :blob ]
       )
+    end
+
+    def initial_search_overlay_events
+      published_visible_events_relation(
+        scope: search_events_relation.where(highlighted: true),
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: @browse_state.event_date,
+        query: nil
+      ).limit(SEARCH_OVERLAY_LIMIT).to_a
     end
 
     def search_filter
