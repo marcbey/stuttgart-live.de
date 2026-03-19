@@ -1,43 +1,192 @@
-<div id="import-runs-table" class="table-wrap">
-  <table class="data-table">
-    <thead>
-      <tr>
-        <th>Gestartet</th>
-        <th>Import Typ</th>
-        <th>Status</th>
-        <th><span title="<%= import_run_column_description(:raw_imports) %>">Raw Imports</span></th>
-        <th><span title="<%= import_run_column_description(:merge_groups) %>">Merge Groups</span></th>
-        <th><span title="<%= import_run_column_description(:filtered) %>">Filtered</span></th>
-        <th><span title="<%= import_run_column_description(:inserts) %>">Inserts</span></th>
-        <th><span title="<%= import_run_column_description(:updates) %>">Updates</span></th>
-        <th><span title="<%= import_run_column_description(:similarity_duplicates) %>">Similarity Duplicates</span></th>
-        <th><span title="<%= import_run_column_description(:collapsed_records) %>">Collapsed Records</span></th>
-        <th>Failed</th>
-        <th class="actions-column">Aktionen</th>
-      </tr>
-    </thead>
-    <tbody>
-      <% recent_runs.each do |run| %>
-        <tr data-run-id="<%= run.id %>">
-          <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
-          <td><%= import_run_type_label(run) %></td>
-          <td><%= import_run_status_label(run) %></td>
-          <td><%= import_run_raw_imports_label(run) %></td>
-          <td><%= import_run_merge_groups_label(run) %></td>
-          <td><%= import_run_filtered_label(run) %></td>
-          <td><%= import_run_inserts_label(run) %></td>
-          <td><%= import_run_updates_label(run) %></td>
-          <td><%= import_run_duplicates_label(run) %></td>
-          <td><%= import_run_collapsed_records_label(run) %></td>
-          <td><%= run.failed_count %></td>
-          <td class="action-cell">
-            <%= link_to "Details", backend_import_run_path(run), class: "button button-ghost button-compact" %>
-            <% if import_run_can_stop?(run) %>
-              <%= button_to "Stoppen", import_run_stop_path(run), method: :post, class: "button button-secondary button-compact" %>
+<div id="import-runs-table" class="import-runs-panels">
+  <% import_sources = local_assigns.fetch(:import_sources) { ImportSource.includes(:import_source_config).order(:source_type) } %>
+  <% raw_runs = recent_runs.select { |run| raw_import_run?(run) } %>
+  <% merge_runs = recent_runs.select { |run| merge_import_run?(run) } %>
+  <% llm_runs = recent_runs.select { |run| llm_import_run?(run) } %>
+
+  <section class="import-runs-panel">
+    <div class="import-runs-group-header">
+      <h3>Raw Importer</h3>
+    </div>
+
+    <div class="import-runs-block">
+      <h4 class="import-runs-subheading">Scheduler</h4>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Typ</th>
+            <th>Aktiv</th>
+            <th>Ortsliste</th>
+            <th class="actions-column">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% import_sources.each do |source| %>
+            <tr>
+              <td><code><%= source.source_type %></code></td>
+              <td><%= source.active ? "Ja" : "Nein" %></td>
+              <td><%= source.configured_location_whitelist.join(", ") %></td>
+              <td class="action-cell">
+                <% if source.easyticket? %>
+                  <%= button_to "Easyticket starten", run_easyticket_backend_import_source_path(source), method: :post, class: "button button-compact" %>
+                <% elsif source.eventim? %>
+                  <%= button_to "Eventim starten", run_eventim_backend_import_source_path(source), method: :post, class: "button button-compact" %>
+                <% elsif source.reservix? %>
+                  <%= button_to "Reservix starten", run_reservix_backend_import_source_path(source), method: :post, class: "button button-compact" %>
+                <% end %>
+                <%= link_to "Bearbeiten", edit_backend_import_source_path(source), class: "button button-ghost button-compact" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+    <p class="import-runs-note">Automatischer Lauf täglich um 03:05 Uhr (Europe/Berlin).</p>
+
+    <div class="import-runs-block">
+      <h4 class="import-runs-subheading">Jobs</h4>
+    </div>
+
+    <% if raw_runs.any? %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gestartet</th>
+              <th>Importer</th>
+              <th>Status</th>
+              <th><span title="<%= import_run_column_description(:raw_imports) %>">Raw Imports</span></th>
+              <th><span title="<%= import_run_column_description(:filtered) %>">Filtered</span></th>
+              <th><span title="<%= import_run_column_description(:inserts) %>">Inserts</span></th>
+              <th>Failed</th>
+              <th class="actions-column">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% raw_runs.each do |run| %>
+              <tr data-run-id="<%= run.id %>">
+                <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+                <td><%= import_run_type_label(run) %></td>
+                <td><%= import_run_status_label(run) %></td>
+                <td><%= import_run_raw_imports_label(run) %></td>
+                <td><%= import_run_filtered_label(run) %></td>
+                <td><%= import_run_inserts_label(run) %></td>
+                <td><%= run.failed_count %></td>
+                <td class="action-cell">
+                  <%= link_to "Details", backend_import_run_path(run), class: "button button-ghost button-compact" %>
+                  <% if import_run_can_stop?(run) %>
+                    <%= button_to "Stoppen", import_run_stop_path(run), method: :post, class: "button button-secondary button-compact" %>
+                  <% end %>
+                </td>
+              </tr>
             <% end %>
-          </td>
-        </tr>
-      <% end %>
-    </tbody>
-  </table>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p>Keine Raw Importer Jobs vorhanden.</p>
+    <% end %>
+  </section>
+
+  <section class="import-runs-panel">
+    <div class="import-runs-group-header">
+      <h3>Merge Importer Jobs</h3>
+      <%= button_to "Import-Merge synchronisieren",
+                    sync_imported_events_backend_import_sources_path,
+                    method: :post,
+                    class: [ "button", "button-compact", (merge_sync_needed_for_importer_jobs? ? "button-attention" : nil) ].compact.join(" "),
+                    title: (merge_sync_needed_for_importer_jobs? ? "Seit dem letzten Merge wurden neue Importdaten gefunden." : nil) %>
+    </div>
+    <% if merge_runs.any? %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gestartet</th>
+              <th>Status</th>
+              <th><span title="<%= import_run_column_description(:raw_imports) %>">Raw Imports</span></th>
+              <th><span title="<%= import_run_column_description(:merge_groups) %>">Merge Groups</span></th>
+              <th><span title="<%= import_run_column_description(:inserts) %>">Inserts</span></th>
+              <th><span title="<%= import_run_column_description(:updates) %>">Updates</span></th>
+              <th><span title="<%= import_run_column_description(:similarity_duplicates) %>">Similarity Duplicates</span></th>
+              <th><span title="<%= import_run_column_description(:collapsed_records) %>">Collapsed Records</span></th>
+              <th>Failed</th>
+              <th class="actions-column">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% merge_runs.each do |run| %>
+              <tr data-run-id="<%= run.id %>">
+                <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+                <td><%= import_run_status_label(run) %></td>
+                <td><%= import_run_raw_imports_label(run) %></td>
+                <td><%= import_run_merge_groups_label(run) %></td>
+                <td><%= import_run_inserts_label(run) %></td>
+                <td><%= import_run_updates_label(run) %></td>
+                <td><%= import_run_duplicates_label(run) %></td>
+                <td><%= import_run_collapsed_records_label(run) %></td>
+                <td><%= run.failed_count %></td>
+                <td class="action-cell">
+                  <%= link_to "Details", backend_import_run_path(run), class: "button button-ghost button-compact" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p>Keine Merge Importer Jobs vorhanden.</p>
+    <% end %>
+  </section>
+
+  <section class="import-runs-panel">
+    <div class="import-runs-group-header">
+      <h3>LLM Jobs</h3>
+      <%= button_to "LLM-Enrichment starten",
+                    run_llm_enrichment_backend_import_sources_path,
+                    method: :post,
+                    class: "button button-compact button-secondary" %>
+    </div>
+    <% if llm_runs.any? %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gestartet</th>
+              <th>Status</th>
+              <th><span title="<%= import_run_column_description(:raw_imports) %>">Selected Events</span></th>
+              <th><span title="<%= import_run_column_description(:filtered) %>">Skipped</span></th>
+              <th><span title="<%= import_run_column_description(:inserts) %>">Enrichments</span></th>
+              <th><span title="<%= import_run_column_description(:collapsed_records) %>">Batches</span></th>
+              <th>Failed</th>
+              <th class="actions-column">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% llm_runs.each do |run| %>
+              <tr data-run-id="<%= run.id %>">
+                <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+                <td><%= import_run_status_label(run) %></td>
+                <td><%= import_run_raw_imports_label(run) %></td>
+                <td><%= import_run_filtered_label(run) %></td>
+                <td><%= import_run_inserts_label(run) %></td>
+                <td><%= import_run_collapsed_records_label(run) %></td>
+                <td><%= run.failed_count %></td>
+                <td class="action-cell">
+                  <%= link_to "Details", backend_import_run_path(run), class: "button button-ghost button-compact" %>
+                  <% if import_run_can_stop?(run) %>
+                    <%= button_to "Stoppen", import_run_stop_path(run), method: :post, class: "button button-secondary button-compact" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p>Keine LLM Jobs vorhanden.</p>
+    <% end %>
+  </section>
 </div>

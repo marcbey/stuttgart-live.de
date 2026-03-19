@@ -26,6 +26,26 @@ module Backend::ImportSourcesHelper
     end
   end
 
+  def merge_sync_needed_for_importer_jobs?
+    latest_import_success_at = ImportRun.where(source_type: %w[easyticket reservix eventim], status: "succeeded").maximum(:finished_at)
+    return false if latest_import_success_at.blank?
+
+    latest_merge_success_at = ImportRun.where(source_type: "merge", status: "succeeded").maximum(:finished_at)
+    latest_merge_success_at.blank? || latest_import_success_at > latest_merge_success_at
+  end
+
+  def raw_import_run?(run)
+    %w[easyticket eventim reservix].include?(run.source_type.to_s)
+  end
+
+  def merge_import_run?(run)
+    run.source_type.to_s == "merge"
+  end
+
+  def llm_import_run?(run)
+    run.source_type.to_s == "llm_enrichment"
+  end
+
   def import_run_stop_requested?(run)
     ActiveModel::Type::Boolean.new.cast(import_run_metadata(run)["stop_requested"])
   end

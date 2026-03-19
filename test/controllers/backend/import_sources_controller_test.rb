@@ -104,7 +104,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
     assert_response :success
 
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(3)", text: "stopping"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(2)", text: "stopping"
     assert_select "tr[data-run-id='#{run.id}'] td:last-child", text: /Stop angefordert/, count: 0
   end
 
@@ -130,12 +130,13 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
     assert_response :success
 
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(4)", text: "5"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(5)", text: "3"
+    assert_select "h3", text: "Merge Importer Jobs"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(3)", text: "5"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(4)", text: "3"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(5)", text: "1"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(6)", text: "2"
     assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(7)", text: "1"
     assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(8)", text: "2"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(9)", text: "1"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(10)", text: "2"
   end
 
   test "should show source importer runs with raw imports and no merge-only metrics in recent runs table" do
@@ -150,12 +151,36 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
     assert_response :success
 
+    assert_select "h3", text: "Raw Importer"
     assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "7"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "-"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "7"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(8)", text: "-"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(9)", text: "-"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(10)", text: "-"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "0"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "7"
+  end
+
+  test "should show llm enrichment runs in dedicated llm jobs table" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      fetched_count: 120,
+      filtered_count: 15,
+      imported_count: 40,
+      failed_count: 2,
+      metadata: {
+        "batches_count" => 5
+      }
+    )
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "h3", text: "LLM Jobs"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(3)", text: "120"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "15"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "40"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "5"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "2"
   end
 
   test "should show import run detail page with errors" do

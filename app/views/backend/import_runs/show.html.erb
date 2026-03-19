@@ -18,38 +18,86 @@
     <h2>Run Daten</h2>
     <p>Retries genutzt: <strong><%= import_run_retries_label(@import_run) %></strong></p>
     <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Gestartet</th>
-            <th>Import Typ</th>
-            <th>Status</th>
-            <th><span title="<%= import_run_column_description(:raw_imports) %>">Raw Imports</span></th>
-            <th><span title="<%= import_run_column_description(:merge_groups) %>">Merge Groups</span></th>
-            <th><span title="<%= import_run_column_description(:filtered) %>">Filtered</span></th>
-            <th><span title="<%= import_run_column_description(:inserts) %>">Inserts</span></th>
-            <th><span title="<%= import_run_column_description(:updates) %>">Updates</span></th>
-            <th><span title="<%= import_run_column_description(:similarity_duplicates) %>">Similarity Duplicates</span></th>
-            <th><span title="<%= import_run_column_description(:collapsed_records) %>">Collapsed Records</span></th>
-            <th>Failed</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
-            <td><%= import_run_type_label(@import_run) %></td>
-            <td><%= import_run_status_label(@import_run) %></td>
-            <td><%= import_run_raw_imports_label(@import_run) %></td>
-            <td><%= import_run_merge_groups_label(@import_run) %></td>
-            <td><%= import_run_filtered_label(@import_run) %></td>
-            <td><%= import_run_inserts_label(@import_run) %></td>
-            <td><%= import_run_updates_label(@import_run) %></td>
-            <td><%= import_run_duplicates_label(@import_run) %></td>
-            <td><%= import_run_collapsed_records_label(@import_run) %></td>
-            <td><%= @import_run.failed_count %></td>
-          </tr>
-        </tbody>
-      </table>
+      <% if raw_import_run?(@import_run) %>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gestartet</th>
+              <th>Importer</th>
+              <th>Status</th>
+              <th><span title="<%= import_run_column_description(:raw_imports) %>">Raw Imports</span></th>
+              <th><span title="<%= import_run_column_description(:filtered) %>">Filtered</span></th>
+              <th><span title="<%= import_run_column_description(:inserts) %>">Inserts</span></th>
+              <th>Failed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+              <td><%= import_run_type_label(@import_run) %></td>
+              <td><%= import_run_status_label(@import_run) %></td>
+              <td><%= import_run_raw_imports_label(@import_run) %></td>
+              <td><%= import_run_filtered_label(@import_run) %></td>
+              <td><%= import_run_inserts_label(@import_run) %></td>
+              <td><%= @import_run.failed_count %></td>
+            </tr>
+          </tbody>
+        </table>
+      <% elsif merge_import_run?(@import_run) %>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gestartet</th>
+              <th>Status</th>
+              <th><span title="<%= import_run_column_description(:raw_imports) %>">Raw Imports</span></th>
+              <th><span title="<%= import_run_column_description(:merge_groups) %>">Merge Groups</span></th>
+              <th><span title="<%= import_run_column_description(:inserts) %>">Inserts</span></th>
+              <th><span title="<%= import_run_column_description(:updates) %>">Updates</span></th>
+              <th><span title="<%= import_run_column_description(:similarity_duplicates) %>">Similarity Duplicates</span></th>
+              <th><span title="<%= import_run_column_description(:collapsed_records) %>">Collapsed Records</span></th>
+              <th>Failed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+              <td><%= import_run_status_label(@import_run) %></td>
+              <td><%= import_run_raw_imports_label(@import_run) %></td>
+              <td><%= import_run_merge_groups_label(@import_run) %></td>
+              <td><%= import_run_inserts_label(@import_run) %></td>
+              <td><%= import_run_updates_label(@import_run) %></td>
+              <td><%= import_run_duplicates_label(@import_run) %></td>
+              <td><%= import_run_collapsed_records_label(@import_run) %></td>
+              <td><%= @import_run.failed_count %></td>
+            </tr>
+          </tbody>
+        </table>
+      <% elsif llm_import_run?(@import_run) %>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gestartet</th>
+              <th>Status</th>
+              <th><span title="<%= import_run_column_description(:raw_imports) %>">Selected Events</span></th>
+              <th><span title="<%= import_run_column_description(:filtered) %>">Skipped</span></th>
+              <th><span title="<%= import_run_column_description(:inserts) %>">Enrichments</span></th>
+              <th><span title="<%= import_run_column_description(:collapsed_records) %>">Batches</span></th>
+              <th>Failed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+              <td><%= import_run_status_label(@import_run) %></td>
+              <td><%= import_run_raw_imports_label(@import_run) %></td>
+              <td><%= import_run_filtered_label(@import_run) %></td>
+              <td><%= import_run_inserts_label(@import_run) %></td>
+              <td><%= import_run_collapsed_records_label(@import_run) %></td>
+              <td><%= @import_run.failed_count %></td>
+            </tr>
+          </tbody>
+        </table>
+      <% end %>
     </div>
   </section>
 

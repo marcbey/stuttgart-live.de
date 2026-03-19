@@ -111,12 +111,12 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
 
     get backend_import_run_url(merge_run)
     assert_response :success
+    assert_select "table.data-table tbody tr td:nth-child(3)", text: "5"
     assert_select "table.data-table tbody tr td:nth-child(4)", text: "5"
-    assert_select "table.data-table tbody tr td:nth-child(5)", text: "5"
-    assert_select "table.data-table tbody tr td:nth-child(7)", text: "1"
-    assert_select "table.data-table tbody tr td:nth-child(8)", text: "4"
-    assert_select "table.data-table tbody tr td:nth-child(9)", text: "2"
-    assert_select "table.data-table tbody tr td:nth-child(10)", text: "0"
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "1"
+    assert_select "table.data-table tbody tr td:nth-child(6)", text: "4"
+    assert_select "table.data-table tbody tr td:nth-child(7)", text: "2"
+    assert_select "table.data-table tbody tr td:nth-child(8)", text: "0"
   end
 
   test "shows source importer runs with raw imports and no merge-only metrics on detail page" do
@@ -131,10 +131,29 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     get backend_import_run_url(run)
     assert_response :success
     assert_select "table.data-table tbody tr td:nth-child(4)", text: "3"
-    assert_select "table.data-table tbody tr td:nth-child(5)", text: "-"
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "0"
+    assert_select "table.data-table tbody tr td:nth-child(6)", text: "3"
+  end
+
+  test "shows llm run with dedicated columns on detail page" do
+    run = import_sources(:two).import_runs.create!(
+      status: "succeeded",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago,
+      fetched_count: 200,
+      filtered_count: 25,
+      imported_count: 140,
+      failed_count: 3,
+      metadata: { "batches_count" => 8 }
+    )
+
+    get backend_import_run_url(run)
+    assert_response :success
+    assert_select "table.data-table tbody tr td:nth-child(3)", text: "200"
+    assert_select "table.data-table tbody tr td:nth-child(4)", text: "25"
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "140"
+    assert_select "table.data-table tbody tr td:nth-child(6)", text: "8"
     assert_select "table.data-table tbody tr td:nth-child(7)", text: "3"
-    assert_select "table.data-table tbody tr td:nth-child(8)", text: "-"
-    assert_select "table.data-table tbody tr td:nth-child(9)", text: "-"
-    assert_select "table.data-table tbody tr td:nth-child(10)", text: "-"
   end
 end

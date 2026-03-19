@@ -4,55 +4,10 @@
   <header class="backend-topbar">
     <div>
       <h1>Importer-Konfiguration</h1>
-      <p class="backend-topbar-context">Automatischer Lauf täglich um 03:05 Uhr (Europe/Berlin).</p>
-    </div>
-    <div class="backend-topbar-actions">
-      <%= button_to "Import-Merge synchronisieren",
-                    sync_imported_events_backend_import_sources_path,
-                    method: :post,
-                    class: [ "button", "button-compact", (@merge_sync_needed ? "button-attention" : nil) ].compact.join(" "),
-                    title: (@merge_sync_needed ? "Seit dem letzten Merge wurden neue Importdaten gefunden." : nil) %>
-      <%= button_to "LLM-Enrichment starten",
-                    run_llm_enrichment_backend_import_sources_path,
-                    method: :post,
-                    class: "button button-compact button-secondary" %>
     </div>
   </header>
 
-  <div class="table-wrap">
-    <table class="data-table">
-      <thead>
-        <tr>
-          <th>Typ</th>
-          <th>Aktiv</th>
-          <th>Ortsliste</th>
-          <th class="actions-column">Aktionen</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% @import_sources.each do |source| %>
-          <tr>
-            <td><code><%= source.source_type %></code></td>
-            <td><%= source.active ? "Ja" : "Nein" %></td>
-            <td><%= source.configured_location_whitelist.join(", ") %></td>
-            <td class="action-cell">
-              <%= link_to "Bearbeiten", edit_backend_import_source_path(source), class: "button button-ghost button-compact" %>
-              <% if source.easyticket? %>
-                <%= button_to "Easyticket starten", run_easyticket_backend_import_source_path(source), method: :post, class: "button button-compact" %>
-              <% elsif source.eventim? %>
-                <%= button_to "Eventim starten", run_eventim_backend_import_source_path(source), method: :post, class: "button button-compact" %>
-              <% elsif source.reservix? %>
-                <%= button_to "Reservix starten", run_reservix_backend_import_source_path(source), method: :post, class: "button button-compact" %>
-              <% end %>
-            </td>
-          </tr>
-        <% end %>
-      </tbody>
-    </table>
-  </div>
-
   <section class="import-sources-runs-section">
-    <h2>Importer Jobs</h2>
     <%= turbo_stream_from [ :backend, :import_runs ] %>
     <%= render "recent_runs_table", recent_runs: @recent_runs %>
   </section>

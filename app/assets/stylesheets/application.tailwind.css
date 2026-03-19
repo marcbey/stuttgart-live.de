@@ -3787,8 +3787,47 @@ trix-editor.blog-rich-text:focus {
   margin-top: 1.75rem;
 }
 
-.import-sources-runs-section h2 {
-  margin: 0 0 0.75rem;
+.import-runs-panels {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.import-runs-panel {
+  border: 1px solid var(--line);
+  background: #f8f6f1;
+  padding: 1.1rem;
+}
+
+.import-runs-block + .table-wrap,
+.import-runs-note + .import-runs-block,
+.import-runs-note + .table-wrap {
+  margin-top: 0.75rem;
+}
+
+.import-runs-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin: 0 0 0.85rem;
+}
+
+.import-runs-group-header h3 {
+  margin: 0;
+}
+
+.import-runs-subheading {
+  margin: 0;
+  font-size: 0.84rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #646464;
+}
+
+.import-runs-note {
+  margin-top: 0.7rem;
+  font-size: 0.84rem;
+  color: #6f6a60;
 }
 
 .data-table {
