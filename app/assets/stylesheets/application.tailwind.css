@@ -2157,22 +2157,27 @@ trix-editor.blog-rich-text:focus {
 }
 
 .partner-strip {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 0.5rem;
+  position: relative;
+  min-height: 2.6rem;
+  overflow: hidden;
 }
 
 .partner-strip-logo {
+  position: absolute;
+  inset: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 5rem;
-  padding: 0.4rem 0.5rem;
+  min-height: 2.4rem;
+  padding: 0.05rem 0.3rem;
   border-radius: 0.9rem;
   color: #111;
   text-align: center;
   text-decoration: none;
-  transition: transform 180ms ease, opacity 180ms ease;
+  opacity: 0;
+  transform: translate3d(100vw, 0, 0) scale(0.92);
+  animation: partner-strip-flyby 16s infinite;
+  will-change: transform, opacity;
 }
 
 .partner-strip-logo:hover {
@@ -2226,6 +2231,92 @@ trix-editor.blog-rich-text:focus {
 
 .partner-strip-logo-reservix {
   background: transparent;
+}
+
+.partner-strip-logo:nth-child(2) {
+  animation-delay: 3.2s;
+}
+
+.partner-strip-logo:nth-child(3) {
+  animation-delay: 6.4s;
+}
+
+.partner-strip-logo:nth-child(4) {
+  animation-delay: 9.6s;
+}
+
+.partner-strip-logo:nth-child(5) {
+  animation-delay: 12.8s;
+}
+
+@keyframes partner-strip-flyby {
+  0% {
+    opacity: 0;
+    transform: translate3d(100vw, 0, 0) scale(0.92);
+  }
+
+  4% {
+    opacity: 0;
+    transform: translate3d(100vw, 0, 0) scale(0.92);
+  }
+
+  11.99% {
+    opacity: 0;
+    transform: translate3d(100vw, 0, 0) scale(0.92);
+  }
+
+  12% {
+    opacity: 0;
+    transform: translate3d(20vw, 0, 0) scale(0.94);
+  }
+
+  18% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  24% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  30% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  40% {
+    opacity: 1;
+    transform: translate3d(-100vw, 0, 0) scale(0.95);
+  }
+
+  40.01% {
+    opacity: 0;
+    transform: translate3d(-100vw, 0, 0) scale(0.95);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(-100vw, 0, 0) scale(0.95);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .partner-strip {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .partner-strip-logo {
+    position: static;
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition: transform 180ms ease, opacity 180ms ease;
+  }
 }
 
 .newsletter-signup-section {
@@ -4582,7 +4673,19 @@ trix-editor.blog-rich-text:focus {
   }
 
   .partner-strip {
+    display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 0.5rem;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .partner-strip-logo {
+    position: static;
+    opacity: 1;
+    transform: none;
+    animation: none;
+    transition: transform 180ms ease, opacity 180ms ease;
   }
 
   .newsletter-signup-section {
