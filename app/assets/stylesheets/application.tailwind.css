@@ -96,7 +96,7 @@ a {
   margin: 0 auto;
   padding: 0.85rem 1rem;
   display: flex;
-  justify-content: space-between;
+  gap: 0.75rem;
   align-items: center;
   position: relative;
 }
@@ -110,6 +110,13 @@ a {
   align-items: center;
   gap: 0.2rem;
   text-decoration: none;
+}
+
+.app-nav-search {
+  flex: 1 1 24rem;
+  min-width: 16rem;
+  max-width: 28rem;
+  margin-left: auto;
 }
 
 .brand-wordmark {
@@ -1615,14 +1622,14 @@ trix-editor.blog-rich-text:focus {
 }
 
 .public-search-filter {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  flex: 0 1 auto;
+  width: 100%;
 }
 
 .public-search-field {
   position: relative;
-  width: min(24rem, 46vw);
+  width: 100%;
 }
 
 .public-search-input {
@@ -2410,6 +2417,10 @@ trix-editor.blog-rich-text:focus {
   aspect-ratio: 1 / 1.16;
   overflow: hidden;
   border-radius: 0.4rem;
+}
+
+.home-featured-section .event-card-image-wrap {
+  border-radius: 0;
 }
 
 .event-card-image-wrap::after {
@@ -4319,7 +4330,7 @@ trix-editor.blog-rich-text:focus {
 
 @media (max-width: 560px) {
   .public-search-field {
-    width: min(100vw - 2rem, 24rem);
+    width: 100%;
   }
 
   .public-search-input {
@@ -4570,6 +4581,14 @@ trix-editor.blog-rich-text:focus {
     flex: 0 0 auto;
   }
 
+  .app-nav-search {
+    order: 3;
+    flex: 1 0 100%;
+    min-width: 0;
+    max-width: none;
+    margin-left: 0;
+  }
+
   .app-nav-flash {
     order: 4;
     width: 100%;
@@ -4577,7 +4596,7 @@ trix-editor.blog-rich-text:focus {
 
   .app-nav-meta {
     display: none;
-    order: 3;
+    order: 5;
     width: 100%;
     justify-items: stretch;
     gap: 0.85rem;
