@@ -28,7 +28,7 @@
     <% if @blog_post.cover_image.attached? %>
       <div class="event-detail-image-wrap">
         <div class="event-detail-image-frame">
-          <%= image_tag @blog_post.cover_image,
+          <%= image_tag optimized_blog_post_image_representation(@blog_post, :cover_image),
                         alt: @blog_post.title,
                         class: "event-detail-image",
                         style: blog_post_image_style(@blog_post, :cover_image) %>

@@ -116,6 +116,15 @@ module ApplicationHelper
     ].join("; ")
   end
 
+  def optimized_blog_post_image_representation(blog_post, slot)
+    return unless blog_post.present?
+
+    attachment = blog_post.public_send(slot)
+    return attachment unless attachment.attached?
+
+    blog_post.processed_optimized_image_variant(slot)
+  end
+
   def blog_post_cropped_image_style(blog_post, slot, frame_ratio:)
     image = blog_post.public_send(slot)
     metadata = image&.attached? ? image.blob.metadata : {}

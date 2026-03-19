@@ -304,6 +304,46 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal highlights_index + 1, promotion_index
   end
 
+  test "homepage renders optimized promotion banner image" do
+    highlight = Event.create!(
+      slug: "promotion-banner-optimized-highlight-event",
+      source_fingerprint: "test::homepage::promotion-banner-optimized-highlight",
+      title: "Promotion Banner Optimized Highlight",
+      artist_name: "Promotion Banner Optimized Highlight Artist",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      primary_source: "eventim",
+      status: "published",
+      published_at: 2.days.ago,
+      source_snapshot: {}
+    )
+
+    create_event_image(event: highlight, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    blog_post = BlogPost.create!(
+      title: "Optimierter Promo-Post",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user
+    )
+    blog_post.promotion_banner_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2200, height: 1400)),
+      filename: "homepage-banner-large.png",
+      content_type: "image/png"
+    )
+    blog_post.update!(promotion_banner: true)
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_includes response.body, url_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
+  end
+
   test "index includes promoter 10136 in homepage highlights" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 

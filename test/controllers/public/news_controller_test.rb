@@ -28,6 +28,32 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "alle news"
   end
 
+  test "index renders optimized cover images" do
+    @live_post.cover_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
+      filename: "news-cover.png",
+      content_type: "image/png"
+    )
+
+    get news_index_url
+
+    assert_response :success
+    assert_includes response.body, url_for(@live_post.processed_optimized_image_variant(:cover_image))
+  end
+
+  test "show renders optimized cover images" do
+    @live_post.cover_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
+      filename: "news-cover.png",
+      content_type: "image/png"
+    )
+
+    get news_url(@live_post.slug)
+
+    assert_response :success
+    assert_includes response.body, url_for(@live_post.processed_optimized_image_variant(:cover_image))
+  end
+
   test "show returns not found for drafts" do
     get news_url(@draft_post.slug)
 

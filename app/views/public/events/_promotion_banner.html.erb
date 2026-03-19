@@ -9,7 +9,7 @@
   <% end %>
   <%= link_to news_path(blog_post.slug), class: "promotion-banner-link" do %>
     <div class="promotion-banner-media">
-      <%= image_tag blog_post.promotion_banner_image,
+      <%= image_tag optimized_blog_post_image_representation(blog_post, :promotion_banner_image),
                     alt: blog_post.title,
                     class: "promotion-banner-image",
                     style: blog_post_cropped_image_style(blog_post, :promotion_banner_image, frame_ratio: 16.0 / 9.0) %>

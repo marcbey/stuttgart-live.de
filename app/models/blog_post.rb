@@ -3,6 +3,10 @@ class BlogPost < ApplicationRecord
   DEFAULT_IMAGE_FOCUS_X = 50.0
   DEFAULT_IMAGE_FOCUS_Y = 50.0
   DEFAULT_IMAGE_ZOOM = 100.0
+  WEB_MAX_DIMENSION = 1280
+  WEB_QUALITY = 82
+  IMAGE_SLOTS = %i[cover_image promotion_banner_image].freeze
+  ProcessingError = Class.new(StandardError)
 
   belongs_to :author, class_name: "User"
   belongs_to :published_by, class_name: "User", optional: true
@@ -108,6 +112,27 @@ class BlogPost < ApplicationRecord
 
   def promotion_banner_image_zoom_value
     image_focus_value(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
+  end
+
+  def optimized_image_variant(slot)
+    attachment_for_slot(slot).variant(
+      format: :webp,
+      saver: {
+        strip: true,
+        quality: WEB_QUALITY
+      },
+      resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
+    )
+  end
+
+  def processed_optimized_image_variant(slot)
+    optimized_image_variant(slot).processed
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(slot, error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
+    raise ProcessingError, processing_error_message(slot, error)
   end
 
   def apply_publication_action(action:, user:)
@@ -272,6 +297,25 @@ class BlogPost < ApplicationRecord
       return fallback if value.blank?
 
       value.to_f.round(2)
+    end
+
+    def attachment_for_slot(slot)
+      normalized_slot = slot.to_sym
+      raise ArgumentError, "unsupported image slot: #{slot}" unless IMAGE_SLOTS.include?(normalized_slot)
+
+      attachment = public_send(normalized_slot)
+      raise ArgumentError, "missing image attachment for #{normalized_slot}" unless attachment.attached?
+
+      attachment
+    end
+
+    def processing_error_message(slot, error)
+      Rails.logger.warn("BlogPost image optimization failed for ##{id || 'new'} (#{slot}): #{error.class}: #{error.message}")
+      "Bild konnte nicht für Web und Mobile optimiert werden."
+    end
+
+    def vips_processing_error?(error)
+      defined?(Vips::Error) && error.is_a?(Vips::Error)
     end
 
     def normalize_youtube_url(value)

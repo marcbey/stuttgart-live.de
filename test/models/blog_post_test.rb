@@ -178,4 +178,69 @@ class BlogPostTest < ActiveSupport::TestCase
 
     assert_predicate blog_post, :valid?
   end
+
+  test "optimized cover image variant scales down to web size and keeps original blob" do
+    blog_post = BlogPost.create!(
+      title: "Großes Titelbild",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft"
+    )
+    original_binary = solid_png_binary(width: 2200, height: 1600)
+
+    blog_post.cover_image.attach(
+      io: StringIO.new(original_binary),
+      filename: "large-cover.png",
+      content_type: "image/png"
+    )
+
+    optimized_binary = blog_post.processed_optimized_image_variant(:cover_image).image.download
+
+    assert_equal [ 1280, 931 ], image_dimensions(optimized_binary)
+    assert_equal [ 2200, 1600 ], image_dimensions(blog_post.cover_image.download)
+    assert_equal original_binary, blog_post.cover_image.download
+  end
+
+  test "optimized promotion banner variant scales down to web size" do
+    blog_post = BlogPost.create!(
+      title: "Großes Banner",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft"
+    )
+
+    blog_post.promotion_banner_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2400, height: 1200)),
+      filename: "large-banner.png",
+      content_type: "image/png"
+    )
+
+    optimized_binary = blog_post.processed_optimized_image_variant(:promotion_banner_image).image.download
+
+    assert_equal [ 1280, 640 ], image_dimensions(optimized_binary)
+  end
+
+  test "optimized image variant raises a processing error for broken image payloads" do
+    blog_post = BlogPost.create!(
+      title: "Defektes Bild",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft"
+    )
+
+    blog_post.cover_image.attach(
+      io: StringIO.new("broken-image-data"),
+      filename: "broken-cover.png",
+      content_type: "image/png"
+    )
+
+    error = assert_raises(BlogPost::ProcessingError) do
+      blog_post.processed_optimized_image_variant(:cover_image)
+    end
+
+    assert_includes error.message, "Bild konnte nicht für Web und Mobile optimiert werden."
+  end
 end
