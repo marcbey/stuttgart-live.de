@@ -20,6 +20,8 @@ module Events
       def initialize(
         job_class_name: JOB_CLASS_NAME,
         source_type: SOURCE_TYPE,
+        event_model: Event,
+        event_change_log_model: EventChangeLog,
         event_llm_enrichment_model: EventLlmEnrichment,
         import_run_model: ImportRun,
         import_run_error_model: ImportRunError,
@@ -31,6 +33,8 @@ module Events
       )
         @job_class_name = job_class_name
         @source_type = source_type
+        @event_model = event_model
+        @event_change_log_model = event_change_log_model
         @event_llm_enrichment_model = event_llm_enrichment_model
         @import_run_model = import_run_model
         @import_run_error_model = import_run_error_model
@@ -58,14 +62,15 @@ module Events
 
       private
 
-      attr_reader :event_llm_enrichment_model, :import_run_error_model, :import_run_model, :job_class_name,
-        :queue_configurations, :solid_queue_execution_models, :solid_queue_job_model, :solid_queue_record_class,
-        :source_type
+      attr_reader :event_change_log_model, :event_llm_enrichment_model, :event_model, :import_run_error_model,
+        :import_run_model, :job_class_name, :queue_configurations, :solid_queue_execution_models,
+        :solid_queue_job_model, :solid_queue_record_class, :source_type
 
       def purge_llm_data!
         event_llm_enrichment_model.delete_all
         llm_import_run_errors.delete_all
         llm_import_runs.delete_all
+        backfill_latest_merge_change_logs!
       end
 
       def purge_solid_queue_data!
@@ -133,6 +138,38 @@ module Events
             connection.data_source_exists?(model.table_name)
           end
         end
+      end
+
+      def latest_successful_merge_run
+        import_run_model.where(source_type: "merge", status: "succeeded").order(finished_at: :desc, id: :desc).first
+      end
+
+      def backfill_latest_merge_change_logs!
+        merge_run = latest_successful_merge_run
+        return if merge_run.blank?
+
+        event_ids_with_latest_merge = event_change_log_model
+          .where(action: [ "merged_create", "merged_update" ])
+          .where("metadata ->> 'merge_run_id' = ?", merge_run.id.to_s)
+          .distinct
+          .pluck(:event_id)
+
+        missing_event_ids = event_model.where.not(id: event_ids_with_latest_merge).pluck(:id)
+        return if missing_event_ids.empty?
+
+        timestamp = Time.current
+        event_change_log_model.insert_all(
+          missing_event_ids.map do |event_id|
+            {
+              event_id: event_id,
+              action: "merged_update",
+              changed_fields: {},
+              metadata: { "merge_run_id" => merge_run.id },
+              created_at: timestamp,
+              updated_at: timestamp
+            }
+          end
+        )
       end
     end
   end

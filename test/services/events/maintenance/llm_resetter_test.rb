@@ -91,6 +91,14 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
   end
 
   setup do
+    @latest_merge_run = ImportRun.create!(
+      import_source: import_sources(:one),
+      source_type: "merge",
+      status: "succeeded",
+      started_at: 3.minutes.ago,
+      finished_at: 2.minutes.ago,
+      metadata: {}
+    )
     @llm_run = ImportRun.create!(
       import_source: import_sources(:one),
       source_type: "llm_enrichment",
@@ -130,6 +138,13 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
       message: "Anderer Fehler",
       error_class: "RuntimeError",
       payload: {}
+    )
+
+    EventChangeLog.create!(
+      event: events(:published_one),
+      action: "merged_create",
+      changed_fields: {},
+      metadata: { "merge_run_id" => @latest_merge_run.id }
     )
 
     FakeJobModel.records = [
@@ -177,6 +192,7 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
     assert_equal 0, result.queue_counts.fetch("solid_queue_jobs")
     assert_equal 0, result.queue_counts.fetch("solid_queue_ready_executions")
     assert_equal 0, result.queue_counts.fetch("solid_queue_scheduled_executions")
+    assert_equal Event.count, latest_merge_selected_events.count
   end
 
   test "skips queue cleanup when solid queue is unavailable" do
@@ -195,5 +211,16 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
     assert_equal 0, ImportRun.where(source_type: "llm_enrichment").count
     assert_equal 2, FakeJobModel.records.count
     assert_equal 2, FakeReadyExecutionModel.records.count
+    assert_equal Event.count, latest_merge_selected_events.count
+  end
+
+  private
+
+  def latest_merge_selected_events
+    Event
+      .joins(:event_change_logs)
+      .where(event_change_logs: { action: [ "merged_create", "merged_update" ] })
+      .where("event_change_logs.metadata ->> 'merge_run_id' = ?", @latest_merge_run.id.to_s)
+      .distinct
   end
 end
