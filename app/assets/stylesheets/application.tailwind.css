@@ -1881,6 +1881,17 @@ trix-editor.blog-rich-text:focus {
 
 .promotion-banner {
   margin: 1.4rem 0 1.6rem;
+  position: relative;
+}
+
+.promotion-banner-admin-controls {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .promotion-banner-link {
