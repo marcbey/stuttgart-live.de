@@ -5,14 +5,14 @@ module OpenAi
     Error = Class.new(StandardError)
     attr_reader :model
 
-    def initialize(model: ENV.fetch("OPENAI_LLM_ENRICHMENT_MODEL", "gpt-5-mini"), sdk_client: nil)
+    def initialize(model: Rails.application.config.x.openai.llm_enrichment_model, sdk_client: nil)
       @model = model.to_s.strip
       @sdk_client = sdk_client
     end
 
     def create!(input:, text_format:)
       raise Error, "openai.api_key ist nicht in den Rails Credentials gesetzt." if resolved_api_key.blank?
-      raise Error, "OPENAI_LLM_ENRICHMENT_MODEL ist nicht gesetzt." if model.blank?
+      raise Error, "config.x.openai.llm_enrichment_model ist nicht gesetzt." if model.blank?
 
       response = client.responses.create(
         model: model,

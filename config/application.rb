@@ -26,6 +26,7 @@ module StuttgartLiveDe
     config.exceptions_app = routes
     config.x.google_analytics_measurement_id = "G-103580617"
     config.x.mailer_from = "Stuttgart Live <no-reply@stuttgart-live.schopp3r.de>"
+    config.x.openai.llm_enrichment_model = ENV.fetch("OPENAI_LLM_ENRICHMENT_MODEL", "gpt-5.1")
     # config.eager_load_paths << Rails.root.join("extras")
   end
 end
