@@ -2077,7 +2077,7 @@ trix-editor.blog-rich-text:focus {
   display: block;
   aspect-ratio: 0.84 / 1.16;
   overflow: hidden;
-  border-radius: 0.8rem;
+  border-radius: 0.4rem;
   text-decoration: none;
 }
 
@@ -2409,6 +2409,7 @@ trix-editor.blog-rich-text:focus {
   position: relative;
   aspect-ratio: 1 / 1.16;
   overflow: hidden;
+  border-radius: 0.4rem;
 }
 
 .event-card-image-wrap::after {
