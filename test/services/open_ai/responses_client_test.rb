@@ -2,6 +2,25 @@ require "test_helper"
 
 module OpenAi
   class ResponsesClientTest < ActiveSupport::TestCase
+    test "falls back to default model when configured model is blank" do
+      responses_client = ResponsesClient.new(model: " \n\t")
+
+      assert_equal "gpt-5.1", responses_client.model
+    end
+
+    test "uses llm enrichment model from app settings by default" do
+      AppSetting.where(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY).delete_all
+      AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5-mini")
+      AppSetting.reset_cache!
+
+      responses_client = ResponsesClient.new
+
+      assert_equal "gpt-5-mini", responses_client.model
+    ensure
+      AppSetting.where(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY).delete_all
+      AppSetting.reset_cache!
+    end
+
     test "uses api key from rails credentials" do
       fake_sdk_client = Object.new
       captured_api_key = nil

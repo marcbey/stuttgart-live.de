@@ -50,6 +50,23 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_includes AppSetting.llm_enrichment_prompt_template, "{{input_json}}"
   end
 
+  test "returns default llm enrichment model when no setting exists" do
+    assert_equal "gpt-5.1", AppSetting.llm_enrichment_model
+  end
+
+  test "returns configured llm enrichment model" do
+    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5-mini")
+
+    assert_equal "gpt-5-mini", AppSetting.llm_enrichment_model
+  end
+
+  test "requires llm enrichment model to be supported" do
+    setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-4.1")
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "ist kein unterstütztes LLM-Modell"
+  end
+
   test "returns configured llm enrichment prompt template" do
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
 

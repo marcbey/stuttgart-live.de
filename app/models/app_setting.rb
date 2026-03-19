@@ -2,8 +2,14 @@ class AppSetting < ApplicationRecord
   SKS_PROMOTER_IDS_KEY = "sks_promoter_ids".freeze
   SKS_ORGANIZER_NOTES_KEY = "sks_organizer_notes".freeze
   MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY = "merge_artist_similarity_matching_enabled".freeze
+  LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
   LLM_ENRICHMENT_INPUT_PLACEHOLDER = "{{input_json}}".freeze
+  AVAILABLE_LLM_ENRICHMENT_MODELS = [
+    [ "GPT-5.1", "gpt-5.1" ],
+    [ "GPT-5 mini", "gpt-5-mini" ],
+    [ "GPT-5 nano", "gpt-5-nano" ]
+  ].freeze
 
   LLM_ENRICHMENT_PROMPT_TEMPLATE = <<~TEXT.strip
     Ermittle zu den Events aus `Input` die fehlenden Felder
@@ -81,6 +87,7 @@ class AppSetting < ApplicationRecord
 
   validates :key, presence: true, uniqueness: true
   validate :sks_promoter_ids_must_be_present
+  validate :llm_enrichment_model_must_be_valid
   validate :llm_enrichment_prompt_template_must_be_valid
 
   after_commit { self.class.reset_cache! }
@@ -99,6 +106,11 @@ class AppSetting < ApplicationRecord
         normalize_text(find_by(key: LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY)&.value) || LLM_ENRICHMENT_PROMPT_TEMPLATE
     end
 
+    def llm_enrichment_model
+      @llm_enrichment_model ||=
+        normalize_llm_enrichment_model(find_by(key: LLM_ENRICHMENT_MODEL_KEY)&.value) || default_llm_enrichment_model
+    end
+
     def sks_promoter_ids_record
       find_or_initialize_by(key: SKS_PROMOTER_IDS_KEY)
     end
@@ -111,6 +123,14 @@ class AppSetting < ApplicationRecord
       find_or_initialize_by(key: LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY).tap do |setting|
         if normalize_text(setting.value).blank?
           setting.value = LLM_ENRICHMENT_PROMPT_TEMPLATE
+        end
+      end
+    end
+
+    def llm_enrichment_model_record
+      find_or_initialize_by(key: LLM_ENRICHMENT_MODEL_KEY).tap do |setting|
+        if normalize_llm_enrichment_model(setting.value).blank?
+          setting.value = llm_enrichment_model
         end
       end
     end
@@ -165,9 +185,25 @@ class AppSetting < ApplicationRecord
       end
     end
 
+    def normalize_llm_enrichment_model(value)
+      model = normalize_text(value)
+      return if model.blank?
+
+      available_llm_enrichment_model_values.include?(model) ? model : nil
+    end
+
+    def available_llm_enrichment_model_values
+      AVAILABLE_LLM_ENRICHMENT_MODELS.map(&:last)
+    end
+
+    def default_llm_enrichment_model
+      Rails.application.config.x.openai.llm_enrichment_model.to_s.strip.presence || "gpt-5.1"
+    end
+
     def reset_cache!
       @sks_promoter_ids = nil
       @sks_organizer_notes = nil
+      @llm_enrichment_model = nil
       @llm_enrichment_prompt_template = nil
       @merge_artist_similarity_matching_enabled = nil
     end
@@ -202,6 +238,17 @@ class AppSetting < ApplicationRecord
     return self.class.llm_enrichment_prompt_template if key == LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY && template.blank?
 
     template
+  end
+
+  def llm_enrichment_model
+    model = self.class.normalize_llm_enrichment_model(value)
+    return self.class.llm_enrichment_model if key == LLM_ENRICHMENT_MODEL_KEY && model.blank?
+
+    model
+  end
+
+  def llm_enrichment_model=(raw_value)
+    self.value = self.class.normalize_text(raw_value)
   end
 
   def llm_enrichment_prompt_template_text
@@ -245,5 +292,19 @@ class AppSetting < ApplicationRecord
     return if template.include?(LLM_ENRICHMENT_INPUT_PLACEHOLDER)
 
     errors.add(:value, "{{input_json}} muss im Prompt enthalten sein")
+  end
+
+  def llm_enrichment_model_must_be_valid
+    return unless key == LLM_ENRICHMENT_MODEL_KEY
+
+    model = self.class.normalize_text(value)
+    if model.blank?
+      errors.add(:value, "darf nicht leer sein")
+      return
+    end
+
+    return if self.class.available_llm_enrichment_model_values.include?(model)
+
+    errors.add(:value, "ist kein unterstütztes LLM-Modell")
   end
 end

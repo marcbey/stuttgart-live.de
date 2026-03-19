@@ -10,6 +10,7 @@
   <div class="editor-panel">
     <% errors = @sks_promoter_ids_setting.errors.full_messages +
                 @sks_organizer_notes_setting.errors.full_messages +
+                @llm_enrichment_model_setting.errors.full_messages +
                 @llm_enrichment_prompt_template_setting.errors.full_messages +
                 @merge_artist_similarity_matching_setting.errors.full_messages %>
     <% if errors.any? %>
@@ -64,10 +65,18 @@
 
       <section id="llm-enrichment-prompt" class="settings-group">
         <div class="settings-group-header">
-          <h2>LLM-Enrichment Prompt</h2>
-          <p>Das Template für die Anfrage an den Enrichment-Importer. <code>{{input_json}}</code> muss enthalten bleiben.</p>
+          <h2>LLM-Enrichment</h2>
+          <p>Modell und Prompt für die Anfrage an den Enrichment-Importer. <code>{{input_json}}</code> muss im Prompt enthalten bleiben.</p>
         </div>
         <div class="settings-group-body">
+          <%= form.label :llm_enrichment_model, "LLM-Modell", class: "form-label" %>
+          <%= form.select :llm_enrichment_model,
+                          options_for_select(AppSetting::AVAILABLE_LLM_ENRICHMENT_MODELS, @llm_enrichment_model_setting.llm_enrichment_model),
+                          {},
+                          class: "form-input",
+                          aria: { describedby: "llm-enrichment-model-help" } %>
+          <p id="llm-enrichment-model-help" class="form-hint">Dieses Modell wird für neue LLM-Enrichment-Läufe verwendet.</p>
+
           <%= form.label :llm_enrichment_prompt_template_text, "LLM-Enrichment Prompt", class: "form-label" %>
           <%= form.text_area :llm_enrichment_prompt_template_text,
                              value: @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text,
