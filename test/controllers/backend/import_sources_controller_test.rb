@@ -265,6 +265,8 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "LLM-Enrichment starten"
+    assert_includes response.body, "Prompt konfigurieren"
+    assert_select "a[href='#{edit_backend_settings_path(anchor: "llm-enrichment-prompt")}']", text: "Prompt konfigurieren"
   end
 
   test "should enqueue llm enrichment run from import sources page" do

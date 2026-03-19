@@ -46,6 +46,23 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal "Line one\nLine two", AppSetting.sks_organizer_notes
   end
 
+  test "returns default llm enrichment prompt template when no setting exists" do
+    assert_includes AppSetting.llm_enrichment_prompt_template, "{{input_json}}"
+  end
+
+  test "returns configured llm enrichment prompt template" do
+    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
+
+    assert_equal "Prompt\n{{input_json}}", AppSetting.llm_enrichment_prompt_template
+  end
+
+  test "requires llm enrichment prompt template to contain input placeholder" do
+    setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt ohne Platzhalter")
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "{{input_json}} muss im Prompt enthalten sein"
+  end
+
   test "returns true for merge similarity matching when not configured" do
     assert_equal true, AppSetting.merge_artist_similarity_matching_enabled?
   end

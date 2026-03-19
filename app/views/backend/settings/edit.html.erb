@@ -10,6 +10,7 @@
   <div class="editor-panel">
     <% errors = @sks_promoter_ids_setting.errors.full_messages +
                 @sks_organizer_notes_setting.errors.full_messages +
+                @llm_enrichment_prompt_template_setting.errors.full_messages +
                 @merge_artist_similarity_matching_setting.errors.full_messages %>
     <% if errors.any? %>
       <div class="flash flash-alert">
@@ -23,41 +24,83 @@
     <% end %>
 
     <%= form_with model: @sks_promoter_ids_setting, url: backend_settings_path, method: :patch, class: "editor-form" do |form| %>
-      <div>
-        <%= form.label :sks_promoter_ids_text, "SKS Promoter IDs (eine Zeile pro ID oder komma-separiert)", class: "form-label" %>
-        <%= form.text_area :sks_promoter_ids_text,
-                           value: @sks_promoter_ids_setting.sks_promoter_ids_text,
-                           rows: 8,
-                           class: "form-textarea",
-                           aria: { describedby: "sks-promoter-ids-help" } %>
-        <p id="sks-promoter-ids-help" class="form-hint">Diese IDs steuern den SKS-Filter, die Tagestipp-Sortierung und automatische SKS-spezifische Hinweise bei Events.</p>
-      </div>
+      <section class="settings-group">
+        <div class="settings-group-header">
+          <h2>SKS Promoter IDs</h2>
+          <p>Eine Zeile pro ID oder komma-separiert.</p>
+        </div>
+        <div class="settings-group-body">
+          <%= form.label :sks_promoter_ids_text, "SKS Promoter IDs (eine Zeile pro ID oder komma-separiert)", class: "form-label" %>
+          <%= form.text_area :sks_promoter_ids_text,
+                             value: @sks_promoter_ids_setting.sks_promoter_ids_text,
+                             rows: 8,
+                             class: "form-textarea",
+                             aria: { describedby: "sks-promoter-ids-help" } %>
+          <p id="sks-promoter-ids-help" class="form-hint">Diese IDs steuern den SKS-Filter, die Tagestipp-Sortierung und automatische SKS-spezifische Hinweise bei Events.</p>
+          <div class="settings-group-footer">
+            <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+          </div>
+        </div>
+      </section>
 
-      <div>
-        <%= form.label :sks_organizer_notes_text, "SKS Standard-Veranstalterhinweise", class: "form-label" %>
-        <%= form.text_area :sks_organizer_notes_text,
-                           value: @sks_organizer_notes_setting.sks_organizer_notes_text,
-                           rows: 14,
-                           class: "form-textarea",
-                           aria: { describedby: "sks-organizer-notes-help" } %>
-        <p id="sks-organizer-notes-help" class="form-hint">Dieser Text wird bei SKS-Events ohne eigene Veranstalterhinweise öffentlich angezeigt.</p>
-      </div>
+      <section class="settings-group">
+        <div class="settings-group-header">
+          <h2>SKS Standard-Veranstalterhinweise</h2>
+          <p>Wird für SKS-Events ohne eigene Hinweise als Fallback verwendet.</p>
+        </div>
+        <div class="settings-group-body">
+          <%= form.label :sks_organizer_notes_text, "SKS Standard-Veranstalterhinweise", class: "form-label" %>
+          <%= form.text_area :sks_organizer_notes_text,
+                             value: @sks_organizer_notes_setting.sks_organizer_notes_text,
+                             rows: 14,
+                             class: "form-textarea",
+                             aria: { describedby: "sks-organizer-notes-help" } %>
+          <p id="sks-organizer-notes-help" class="form-hint">Dieser Text wird bei SKS-Events ohne eigene Veranstalterhinweise öffentlich angezeigt.</p>
+          <div class="settings-group-footer">
+            <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+          </div>
+        </div>
+      </section>
 
-      <div>
-        <%= form.label :merge_artist_similarity_matching_enabled, "Ähnlichkeits-Matching für Artist-Dubletten", class: "form-label" %>
-        <label class="check-inline">
-          <%= form.check_box :merge_artist_similarity_matching_enabled,
-                             { checked: @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled },
-                             true,
-                             false %>
-          <span>Aktiviert</span>
-        </label>
-        <p class="form-hint">Wenn aktiviert, vergleicht der Merge-Importer bei exakt gleicher Startzeit auch ähnliche Artist-Namen und kann sie als denselben Termin zusammenführen. Dadurch werden zum Beispiel Varianten wie „Vier Pianisten - Ein Konzert“ und „Vier Pianisten“ oder „Gregory Porter &amp; Orchestra“ und „Gregory Porter“ als Dublette erkannt. Unterschiedliche Uhrzeiten bleiben trotz ähnlichem Namen weiterhin getrennte Events.</p>
-      </div>
+      <section id="llm-enrichment-prompt" class="settings-group">
+        <div class="settings-group-header">
+          <h2>LLM-Enrichment Prompt</h2>
+          <p>Das Template für die Anfrage an den Enrichment-Importer. <code>{{input_json}}</code> muss enthalten bleiben.</p>
+        </div>
+        <div class="settings-group-body">
+          <%= form.label :llm_enrichment_prompt_template_text, "LLM-Enrichment Prompt", class: "form-label" %>
+          <%= form.text_area :llm_enrichment_prompt_template_text,
+                             value: @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text,
+                             rows: 24,
+                             class: "form-textarea",
+                             aria: { describedby: "llm-enrichment-prompt-help" } %>
+          <p id="llm-enrichment-prompt-help" class="form-hint">Dieses Template steuert den Prompt für den LLM-Enrichment-Importer. Der Platzhalter <code>{{input_json}}</code> muss enthalten bleiben und wird pro Batch durch die Eventdaten ersetzt.</p>
+          <div class="settings-group-footer">
+            <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+          </div>
+        </div>
+      </section>
 
-      <div class="editor-footer">
-        <%= form.submit "Speichern", class: "button" %>
-      </div>
+      <section class="settings-group">
+        <div class="settings-group-header">
+          <h2>Ähnlichkeits-Matching für Artist-Dubletten</h2>
+          <p>Steuert, ob der Merge-Importer ähnliche Artist-Namen bei gleicher Startzeit zusammenführen darf.</p>
+        </div>
+        <div class="settings-group-body">
+          <%= form.label :merge_artist_similarity_matching_enabled, "Ähnlichkeits-Matching für Artist-Dubletten", class: "form-label" %>
+          <label class="check-inline">
+            <%= form.check_box :merge_artist_similarity_matching_enabled,
+                               { checked: @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled },
+                               true,
+                               false %>
+            <span>Aktiviert</span>
+          </label>
+          <p class="form-hint">Wenn aktiviert, vergleicht der Merge-Importer bei exakt gleicher Startzeit auch ähnliche Artist-Namen und kann sie als denselben Termin zusammenführen. Dadurch werden zum Beispiel Varianten wie „Vier Pianisten - Ein Konzert“ und „Vier Pianisten“ oder „Gregory Porter &amp; Orchestra“ und „Gregory Porter“ als Dublette erkannt. Unterschiedliche Uhrzeiten bleiben trotz ähnlichem Namen weiterhin getrennte Events.</p>
+          <div class="settings-group-footer">
+            <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+          </div>
+        </div>
+      </section>
     <% end %>
   </div>
 </section>

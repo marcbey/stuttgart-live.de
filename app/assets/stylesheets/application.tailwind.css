@@ -3539,6 +3539,41 @@ trix-editor.blog-rich-text:focus {
   gap: 0.8rem;
 }
 
+.settings-group {
+  border: 1px solid #d7d1c7;
+  background: linear-gradient(180deg, #fffdf9 0%, #f7f3ed 100%);
+  box-shadow: 0 1px 0 #ebe5dc;
+}
+
+.settings-group-header {
+  padding: 0.9rem 1rem 0.65rem;
+  border-bottom: 1px solid #e3ddd3;
+}
+
+.settings-group-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.settings-group-header p {
+  margin: 0.35rem 0 0;
+  color: #645d52;
+  font-size: 0.92rem;
+}
+
+.settings-group-body {
+  padding: 0.95rem 1rem 1rem;
+}
+
+.settings-group-footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.9rem;
+}
+
 .editor-grid {
   display: grid;
   gap: 0.65rem;

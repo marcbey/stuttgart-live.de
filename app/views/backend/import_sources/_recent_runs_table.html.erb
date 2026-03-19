@@ -144,10 +144,15 @@
   <section class="import-runs-panel">
     <div class="import-runs-group-header">
       <h3>LLM Jobs</h3>
-      <%= button_to "LLM-Enrichment starten",
-                    run_llm_enrichment_backend_import_sources_path,
-                    method: :post,
-                    class: "button button-compact button-secondary" %>
+      <div class="action-cell">
+        <%= link_to "Prompt konfigurieren",
+                    edit_backend_settings_path(anchor: "llm-enrichment-prompt"),
+                    class: "button button-ghost button-compact" %>
+        <%= button_to "LLM-Enrichment starten",
+                      run_llm_enrichment_backend_import_sources_path,
+                      method: :post,
+                      class: "button button-compact button-secondary" %>
+      </div>
     </div>
     <% if llm_runs.any? %>
       <div class="table-wrap">
