@@ -5,6 +5,7 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
   setup do
     Rails.application.load_tasks unless Rake::Task.task_defined?("events:maintenance:purge_all_with_imports")
     Rake::Task["events:maintenance:purge_all_with_imports"].reenable
+    Rake::Task["events:maintenance:reset_llm_enrichment"].reenable
   end
 
   test "purge_all_with_imports delegates to the full purger mode" do
@@ -34,5 +35,34 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
     assert_includes output, "solid_queue_jobs=0"
   ensure
     Events::Maintenance::Purger.singleton_class.define_method(:call, original_call)
+  end
+
+  test "reset_llm_enrichment delegates to the llm resetter" do
+    captured_kwargs = nil
+    result = Events::Maintenance::LlmResetter::Result.new(
+      event_counts: { "event_llm_enrichments" => 0 },
+      import_counts: { "llm_import_runs" => 0, "llm_import_run_errors" => 0 },
+      queue_counts: { "solid_queue_jobs" => 0 },
+      queue_status: :cleared
+    )
+
+    original_call = Events::Maintenance::LlmResetter.method(:call)
+
+    Events::Maintenance::LlmResetter.singleton_class.define_method(:call) do |**kwargs|
+      captured_kwargs = kwargs
+      result
+    end
+
+    output = capture_io do
+      Rake::Task["events:maintenance:reset_llm_enrichment"].invoke
+    end.first
+
+    assert_equal({}, captured_kwargs)
+    assert_includes output, "LLM-Enrichment-Daten zurückgesetzt."
+    assert_includes output, "event_llm_enrichments=0"
+    assert_includes output, "llm_import_runs=0"
+    assert_includes output, "solid_queue_jobs=0"
+  ensure
+    Events::Maintenance::LlmResetter.singleton_class.define_method(:call, original_call)
   end
 end

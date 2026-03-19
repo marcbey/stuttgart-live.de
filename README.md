@@ -375,6 +375,14 @@ bin/rails events:maintenance:purge_all_with_imports
 
 Der Task leert zusätzlich `import_runs`, `import_run_errors`, `raw_event_imports` sowie die laufzeitbezogenen `solid_queue_*`-Tabellen. Importquellen, Whitelists und wiederkehrende Queue-Definitionen aus `config/recurring.yml` bleiben erhalten; Reservix-Checkpoints werden zurückgesetzt.
 
+Gezielter Reset für LLM-Enrichment-Daten, LLM-Läufe und dazugehörige Queue-Jobs:
+
+```bash
+bin/rails events:maintenance:reset_llm_enrichment
+```
+
+Der Task löscht alle Einträge aus `event_llm_enrichments`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
+
 ### Produktionsdatenbank neu aufsetzen
 
 Ein vollständiges Neuaufsetzen der Produktionsdatenbanken ist ein Host-Eingriff und darf nicht nur als App-User per `db:setup` erfolgen. Der Datenbankbenutzer der Anwendung hat bewusst kein `CREATEDB`.

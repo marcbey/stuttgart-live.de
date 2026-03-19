@@ -11,6 +11,12 @@ namespace :events do
       result = Events::Maintenance::Purger.call(include_imports: true, include_solid_queue: true)
       print_events_maintenance_result(result, success_message: "Event-, Import- und Queue-Daten gelöscht.")
     end
+
+    desc "Reset all event LLM enrichments, related LLM runs, and queued LLM jobs"
+    task reset_llm_enrichment: :environment do
+      result = Events::Maintenance::LlmResetter.call
+      print_events_llm_maintenance_result(result, success_message: "LLM-Enrichment-Daten zurückgesetzt.")
+    end
   end
 end
 
@@ -28,6 +34,27 @@ def print_events_maintenance_result(result, success_message:)
   case result.solid_queue_status
   when :cleared
     result.solid_queue_counts.each do |name, count|
+      puts "#{name}=#{count}"
+    end
+  when :skipped
+    puts "solid_queue=übersprungen"
+  end
+end
+
+def print_events_llm_maintenance_result(result, success_message:)
+  puts success_message
+
+  result.event_counts.each do |name, count|
+    puts "#{name}=#{count}"
+  end
+
+  result.import_counts.each do |name, count|
+    puts "#{name}=#{count}"
+  end
+
+  case result.queue_status
+  when :cleared
+    result.queue_counts.each do |name, count|
       puts "#{name}=#{count}"
     end
   when :skipped
