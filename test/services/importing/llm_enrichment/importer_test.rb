@@ -29,7 +29,7 @@ module Importing
         )
       end
 
-      test "selects only merged_create events from latest successful merge and persists enrichments" do
+      test "selects merged create and update events from latest successful merge and persists enrichments" do
         create_change_log!(events(:needs_review_one), merge_run_id: @merge_run.id, action: "merged_create")
         create_change_log!(events(:needs_review_two), merge_run_id: @merge_run.id, action: "merged_create")
 
@@ -72,6 +72,18 @@ module Importing
                     instagram_link: nil,
                     homepage_link: "https://example.com/two",
                     facebook_link: nil
+                  },
+                  {
+                    event_id: events(:published_past_one).id,
+                    genre: [ "Show" ],
+                    venue: "Im Wizemann",
+                    artist_description: "Artist drei",
+                    event_description: "Event drei",
+                    venue_description: "Venue drei",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: nil,
+                    facebook_link: nil
                   }
                 ]
               }.to_json
@@ -81,9 +93,9 @@ module Importing
 
         result = Importer.new(run: @run, client: client).call
 
-        assert_equal 2, result.selected_count
+        assert_equal 3, result.selected_count
         assert_equal 0, result.skipped_count
-        assert_equal 2, result.enriched_count
+        assert_equal 3, result.enriched_count
         assert_equal 1, result.batches_count
         assert_equal @merge_run.id, result.merge_run_id
 
@@ -93,7 +105,7 @@ module Importing
         assert_equal @run, enrichment.source_run
 
         assert_nil events(:published_one).reload.llm_enrichment
-        assert_nil events(:published_past_one).reload.llm_enrichment
+        assert_equal [ "Show" ], events(:published_past_one).reload.llm_enrichment.genre
       end
 
       test "skips events that already have an enrichment and batches remaining events" do

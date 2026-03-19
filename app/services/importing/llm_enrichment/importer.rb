@@ -106,7 +106,7 @@ module Importing
       def events_for_merge_run(merge_run)
         Event
           .joins(:event_change_logs)
-          .where(event_change_logs: { action: "merged_create" })
+          .where(event_change_logs: { action: [ "merged_create", "merged_update" ] })
           .where("event_change_logs.metadata ->> 'merge_run_id' = ?", merge_run.id.to_s)
           .distinct
       end
