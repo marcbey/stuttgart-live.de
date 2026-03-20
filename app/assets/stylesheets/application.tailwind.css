@@ -2824,6 +2824,13 @@ trix-editor.blog-rich-text:focus {
   box-shadow: 0 16px 40px rgba(17, 17, 17, 0.08);
 }
 
+.newsletter-signup-inner {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 1.2rem;
+}
+
 .newsletter-signup-glow {
   position: absolute;
   inset: auto -4rem -5.5rem auto;
@@ -2843,8 +2850,6 @@ trix-editor.blog-rich-text:focus {
 }
 
 .newsletter-signup-copy {
-  position: relative;
-  z-index: 1;
   display: grid;
   align-content: start;
 }
@@ -2888,8 +2893,6 @@ trix-editor.blog-rich-text:focus {
 }
 
 .newsletter-signup-panel {
-  position: relative;
-  z-index: 1;
   display: grid;
   gap: 0.85rem;
   align-content: start;
@@ -5495,14 +5498,25 @@ trix-editor.blog-rich-text:focus {
   }
 
   .newsletter-signup-section {
-    grid-template-columns: minmax(0, 1.12fr) minmax(20rem, 0.88fr);
-    align-items: center;
-    gap: 1.5rem;
     padding: 1.6rem;
+  }
+
+  .newsletter-signup-inner {
+    max-width: 68rem;
+    margin: 0 auto;
+    grid-template-columns: minmax(0, 36rem) minmax(22rem, 32rem);
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
   }
 
   .newsletter-signup-copy h2 {
     white-space: nowrap;
+  }
+
+  .newsletter-signup-panel {
+    width: 100%;
+    transform: translateX(-0.75rem);
   }
 
   .newsletter-signup-section .newsletter-signup-form {
