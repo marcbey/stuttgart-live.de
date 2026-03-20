@@ -2860,6 +2860,22 @@ trix-editor.blog-rich-text:focus {
   }
 }
 
+@keyframes newsletter-particle-storm {
+  0% {
+    opacity: 0;
+    transform: translate3d(-12vw, 4vh, 0) scale(0.55) rotate(-18deg);
+  }
+
+  8% {
+    opacity: 0.85;
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(118vw, -8vh, 0) scale(1.15) rotate(14deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .partner-strip {
     display: grid;
@@ -2875,6 +2891,10 @@ trix-editor.blog-rich-text:focus {
     transform: none;
     animation: none;
     transition: transform 180ms ease, opacity 180ms ease;
+  }
+
+  .newsletter-signup-particle {
+    animation: none;
   }
 }
 
@@ -2901,6 +2921,14 @@ trix-editor.blog-rich-text:focus {
   gap: 1.2rem;
 }
 
+.newsletter-signup-motion {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
 .newsletter-signup-glow {
   position: absolute;
   inset: auto -4rem -5.5rem auto;
@@ -2910,6 +2938,144 @@ trix-editor.blog-rich-text:focus {
   background:
     radial-gradient(circle, rgba(17, 17, 17, 0.14) 0, rgba(17, 17, 17, 0.03) 42%, rgba(17, 17, 17, 0) 72%);
   pointer-events: none;
+}
+
+.newsletter-signup-particle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95) 0, rgba(255, 255, 255, 0.7) 16%, rgba(255, 255, 255, 0.08) 42%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(135deg, rgba(227, 27, 46, 0.95) 0%, rgba(244, 216, 96, 0.92) 100%);
+  box-shadow:
+    0 0 12px rgba(227, 27, 46, 0.18),
+    0 0 24px rgba(244, 216, 96, 0.12);
+  opacity: 0;
+  filter: blur(0.2px);
+  animation: newsletter-particle-storm 12s linear infinite;
+}
+
+.newsletter-signup-particle::after {
+  content: "";
+  position: absolute;
+  left: -2.5rem;
+  top: 50%;
+  width: 3.25rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.72) 100%);
+  transform: translateY(-50%);
+  opacity: 0.7;
+}
+
+.newsletter-signup-particle-1 {
+  top: 12%;
+  animation-duration: 11s;
+  animation-delay: -1s;
+}
+
+.newsletter-signup-particle-2 {
+  top: 18%;
+  animation-duration: 14s;
+  animation-delay: -5s;
+  width: 0.8rem;
+  height: 0.8rem;
+}
+
+.newsletter-signup-particle-3 {
+  top: 24%;
+  animation-duration: 10.5s;
+  animation-delay: -2.2s;
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.newsletter-signup-particle-4 {
+  top: 31%;
+  animation-duration: 13.2s;
+  animation-delay: -7.4s;
+}
+
+.newsletter-signup-particle-5 {
+  top: 39%;
+  animation-duration: 9.8s;
+  animation-delay: -3.6s;
+  width: 0.7rem;
+  height: 0.7rem;
+}
+
+.newsletter-signup-particle-6 {
+  top: 46%;
+  animation-duration: 12.8s;
+  animation-delay: -9.4s;
+}
+
+.newsletter-signup-particle-7 {
+  top: 52%;
+  animation-duration: 15s;
+  animation-delay: -11.3s;
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+.newsletter-signup-particle-8 {
+  top: 58%;
+  animation-duration: 11.6s;
+  animation-delay: -4.1s;
+}
+
+.newsletter-signup-particle-9 {
+  top: 64%;
+  animation-duration: 13.8s;
+  animation-delay: -8.5s;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
+.newsletter-signup-particle-10 {
+  top: 70%;
+  animation-duration: 10.9s;
+  animation-delay: -6.8s;
+}
+
+.newsletter-signup-particle-11 {
+  top: 77%;
+  animation-duration: 12.4s;
+  animation-delay: -10.1s;
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.newsletter-signup-particle-12 {
+  top: 84%;
+  animation-duration: 14.6s;
+  animation-delay: -12.7s;
+}
+
+.newsletter-signup-particle-13 {
+  top: 15%;
+  animation-duration: 16.8s;
+  animation-delay: -13.2s;
+  width: 0.55rem;
+  height: 0.55rem;
+}
+
+.newsletter-signup-particle-14 {
+  top: 49%;
+  animation-duration: 17.5s;
+  animation-delay: -14.4s;
+  width: 0.62rem;
+  height: 0.62rem;
+}
+
+.newsletter-signup-particle-15 {
+  top: 88%;
+  animation-duration: 18.4s;
+  animation-delay: -15.7s;
+  width: 0.5rem;
+  height: 0.5rem;
 }
 
 .newsletter-signup-copy h2 {
@@ -5566,6 +5732,11 @@ trix-editor.blog-rich-text:focus {
   .newsletter-signup-panel {
     width: 100%;
     transform: translateX(-0.75rem);
+  }
+
+  .newsletter-signup-particle::after {
+    width: 4rem;
+    left: -3rem;
   }
 
   .newsletter-signup-section .newsletter-signup-form {
