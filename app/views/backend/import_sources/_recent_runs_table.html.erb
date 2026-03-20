@@ -9,6 +9,10 @@
     <div class="import-runs-group-header">
       <h3>Raw Importer</h3>
     </div>
+    <p class="import-runs-note">
+      Diese Jobs holen Rohdaten direkt von Easyticket, Eventim und Reservix ab und speichern jeden passenden Quelldatensatz als `RawEventImport`.
+      Sie bilden die erste Stufe der Pipeline und liefern die nachvollziehbare Datengrundlage für den späteren Merge.
+    </p>
 
     <div class="import-runs-block">
       <h4 class="import-runs-subheading">Scheduler</h4>
@@ -100,6 +104,10 @@
                     class: [ "button", "button-compact", (merge_sync_needed_for_importer_jobs? ? "button-attention" : nil) ].compact.join(" "),
                     title: (merge_sync_needed_for_importer_jobs? ? "Seit dem letzten Merge wurden neue Importdaten gefunden." : nil) %>
     </div>
+    <p class="import-runs-note">
+      Diese Jobs lesen die aktuellen Rohimporte aller Quellen, erkennen Dubletten providerübergreifend und schreiben daraus die zusammengeführten `events`, `event_offers` und Importbilder.
+      Damit entsteht aus mehreren externen Quellen ein konsolidierter Event-Bestand. Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Job gestartet, sofern nicht bereits einer läuft.
+    </p>
     <% if merge_runs.any? %>
       <div class="table-wrap">
         <table class="data-table">
@@ -158,6 +166,10 @@
                       class: "button button-compact" %>
       </div>
     </div>
+    <p class="import-runs-note">
+      Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten wie Genre-Vorschläge, Beschreibungen und weitere strukturierte Felder.
+      Sie verbessern die Qualität des bestehenden Event-Bestands, ohne neue Rohdaten einzulesen. Erfolgreiche Merge-Importer-Jobs starten dieses Enrichment standardmäßig automatisch als nächsten Schritt.
+    </p>
     <% if llm_runs.any? %>
       <div class="table-wrap">
         <table class="data-table">
@@ -212,6 +224,10 @@
                       class: "button button-compact" %>
       </div>
     </div>
+    <p class="import-runs-note">
+      Diese Jobs analysieren die im System vorhandenen Rohgenre-Werte und fassen sie zu stabilen redaktionellen Obergruppen zusammen.
+      Das reduziert Genre-Varianten aus unterschiedlichen Quellen und verbessert Filter, Zuordnung und thematische Übersichten.
+    </p>
     <% if llm_genre_grouping_runs.any? %>
       <div class="table-wrap">
         <table class="data-table">

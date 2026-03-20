@@ -40,6 +40,7 @@ Wichtige fachliche Bausteine sind dabei:
 - `Event` als zentrales Veröffentlichungsmodell
 - `EventImage`, `EventOffer` und `EventChangeLog` für ergänzende Event-Daten
 - `ImportSource`, `ImportRun` und `RawEventImport` für Rohdaten, Importläufe und Laufprotokolle
+- `EventLlmEnrichment` und `LlmGenreGroupingSnapshot` für nachgelagerte LLM-basierte Qualitäts- und Strukturierungsschritte
 - `BlogPost` für redaktionelle Inhalte
 - `NewsletterSubscriber` für Newsletter-Anmeldungen
 
@@ -95,6 +96,7 @@ Der Ablauf ist:
 4. Innerhalb einer Gruppe gilt eine Provider-Priorität. Höher priorisierte Quellen liefern bevorzugt die führenden Feldwerte; zusätzliche Ticketangebote und Bilder aus den anderen Quellen bleiben trotzdem erhalten.
 5. `EventUpserter` sucht zuerst ein bestehendes `Event` über `source_fingerprint` oder den gespeicherten `source_snapshot`. Falls nichts passt, wird ein neues Event angelegt.
 6. Danach werden `event_offers`, Genres und Bilder synchronisiert und ein Änderungslog mit `merged_create` oder `merged_update` geschrieben.
+7. Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Lauf gestartet, sofern nicht bereits ein Enrichment-Run aktiv ist.
 
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen bei exakt gleicher Startzeit. Damit kann der Merge-Import auch Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten` oder `Gregory Porter & Orchestra` und `Gregory Porter` als denselben Termin erkennen. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Artist-Dubletten` ein- oder ausschalten.
 
@@ -104,6 +106,7 @@ Wichtig für das Verhalten im Backend:
 - Fehlen dafür wichtige Informationen, landet das Event stattdessen in `needs_review`.
 - Bereits automatisch veröffentlichte Events fallen ebenfalls zurück auf `needs_review`, wenn sie nach einem späteren Merge nicht mehr vollständig genug sind.
 - Der Button zum Starten des Merge-Imports wird im Backend hervorgehoben, sobald seit dem letzten erfolgreichen Merge neue erfolgreiche Provider-Imports vorliegen.
+- Ein erfolgreicher Merge stößt standardmäßig direkt das LLM-Enrichment an, damit neue oder geänderte Events ohne zusätzlichen manuellen Schritt für die nächste Qualitätsstufe bereitstehen.
 
 Wichtig für Updates bestehender Events:
 
@@ -116,6 +119,43 @@ Wichtig für Updates bestehender Events:
 - Manuelle redaktionelle Änderungen an genau diesen nicht überschriebenen Feldern bleiben bei späteren Merge-Läufen deshalb erhalten.
 
 Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In diesem Fall werden nur Fingerprints neu gebaut, die seit `last_run_at` von neuen Rohimporten berührt wurden; für diese Gruppen wird aber jeweils wieder der aktuelle Gesamtstand aller Quellen zusammengeführt.
+
+### Wie das LLM-Enrichment funktioniert
+
+Das LLM-Enrichment läuft auf bereits gemergten `events` und ist damit bewusst ein nachgelagerter Qualitätsschritt. Es erzeugt keine neuen Events und verändert keine Rohimporte, sondern ergänzt vorhandene Datensätze um zusätzliche redaktionelle Informationen.
+
+Der Ablauf ist:
+
+1. Zuerst wählt der Job geeignete bestehende Events aus, typischerweise solche ohne vollständige LLM-Anreicherung oder mit veralteten Enrichment-Daten.
+2. Diese Events werden in Batches an das konfigurierte LLM-Modell geschickt.
+3. Die Antwort wird validiert, normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
+4. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, Batch-Zahl und Fehler im zugehörigen `ImportRun`.
+
+Fachlich ist wichtig:
+
+- Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
+- Erfolgreiche Merge-Läufe starten den Enrichment-Job automatisch, solange nicht bereits ein Enrichment-Lauf aktiv ist.
+- Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
+- Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.
+- Fehlerhafte Einzelantworten sollen im Laufprotokoll sichtbar sein, ohne zwangsläufig den kompletten Prozess unbrauchbar zu machen.
+
+### Wie die LLM-Genre-Gruppierung funktioniert
+
+Die LLM-Genre-Gruppierung ist ein eigener Schritt zur Vereinheitlichung der Genre-Landschaft im System. Sie betrachtet nicht einzelne Event-Beschreibungen, sondern die bereits vorhandenen Genre-Werte und ordnet ähnliche oder doppelte Begriffe zu größeren, konsistenten Gruppen.
+
+Der Ablauf ist:
+
+1. Der Job sammelt die vorhandenen Rohgenre-Werte aus dem Datenbestand.
+2. Diese Werte werden normalisiert, offensichtliche Duplikate reduziert und in Requests an das konfigurierte LLM-Modell aufgeteilt.
+3. Das Modell schlägt Obergruppen und Zuordnungen vor.
+4. Das Ergebnis wird als `llm_genre_grouping_snapshot` mit zugehörigen Gruppen gespeichert und kann danach als aktive Gruppierung verwendet werden.
+
+Fachlich ist wichtig:
+
+- Ziel ist eine stabilere, redaktionell brauchbare Genre-Struktur für Filter, Übersichten und thematische Strecken.
+- Der Lauf arbeitet snapshot-basiert, damit Ergebnisse nachvollziehbar und versionierbar bleiben.
+- Modell, Prompt und Zielanzahl der Gruppen werden über `app_settings` gesteuert.
+- Die Import-Job-Tabelle zeigt bei diesem Lauf vor allem, wie viele Rohgenres verarbeitet, verworfen, gruppiert und an das LLM geschickt wurden.
 
 ### Kennzahlen in "Importer Jobs"
 

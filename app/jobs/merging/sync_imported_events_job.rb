@@ -61,6 +61,7 @@ module Merging
           "offers_upserted_count" => result.offers_upserted_count
         )
       )
+      enqueue_llm_enrichment_run!(merge_run: run)
     rescue StandardError => e
       formatted_error_message = format_error_message(e)
       run&.update!(
@@ -175,6 +176,46 @@ module Merging
 
     def broadcast_runs_update!
       Backend::ImportRunsBroadcaster.broadcast!
+    end
+
+    def enqueue_llm_enrichment_run!(merge_run:)
+      source = llm_enrichment_run_source
+      created_run = nil
+
+      source.with_lock do
+        active_run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
+        return if active_run.present?
+
+        created_run = source.import_runs.create!(
+          status: "running",
+          source_type: "llm_enrichment",
+          started_at: Time.current,
+          metadata: {
+            "triggered_at" => Time.current.iso8601,
+            "triggered_by" => "merge_success",
+            "merge_run_id" => merge_run.id
+          }
+        )
+
+        job = Importing::LlmEnrichment::RunJob.perform_later(created_run.id)
+        created_run.update!(
+          metadata: created_run.metadata.merge(
+            "job_id" => job.job_id,
+            "provider_job_id" => job.provider_job_id,
+            "job_attempt" => 1,
+            "job_retries_used" => 0,
+            "max_retries" => 0
+          )
+        )
+      end
+
+      broadcast_runs_update! if created_run.present?
+    end
+
+    def llm_enrichment_run_source
+      ImportSource.find_by(source_type: "eventim") ||
+        ImportSource.find_by(source_type: "easyticket") ||
+        ImportSource.ensure_eventim_source!
     end
 
     def create_import_run_error!(run:, error:, message: nil, payload: {})

@@ -241,6 +241,17 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "1"
   end
 
+  test "should render explanatory text for each importer block" do
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_includes response.body, "Diese Jobs holen Rohdaten direkt von Easyticket, Eventim und Reservix ab"
+    assert_includes response.body, "Diese Jobs lesen die aktuellen Rohimporte aller Quellen"
+    assert_includes response.body, "Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Job gestartet"
+    assert_includes response.body, "Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten"
+    assert_includes response.body, "Diese Jobs analysieren die im System vorhandenen Rohgenre-Werte"
+  end
+
   test "should show import run detail page with errors" do
     run = @source.import_runs.create!(
       status: "failed",
