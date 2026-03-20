@@ -46,6 +46,10 @@ module Public
     def show
       @event = show_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.preferred_ticket_offer
+      @related_genre_lane = Public::Events::RelatedGenreLaneBuilder.new(
+        event: @event,
+        relation: show_related_genre_lane_events_relation
+      ).call
     end
 
     def search_overlay
@@ -230,6 +234,14 @@ module Public
       return published_events_relation unless authenticated?
 
       all_events_relation
+    end
+
+    def show_related_genre_lane_events_relation
+      Event.includes(
+        :event_offers,
+        :import_event_images,
+        event_images: [ file_attachment: :blob ]
+      ).published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
     def all_events_relation

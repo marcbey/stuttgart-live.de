@@ -75,4 +75,13 @@
     </section>
   <% end %>
 
+  <% if @related_genre_lane.present? %>
+    <%= render "genre_lane_section",
+               group: @related_genre_lane.group,
+               events: @related_genre_lane.events,
+               browse_state: @browse_state,
+               title: "Mehr aus diesem Genre",
+               summary: @related_genre_lane.group.name,
+               list_aria_label: "Listenansicht für #{@related_genre_lane.group.name}" %>
+  <% end %>
 </article>

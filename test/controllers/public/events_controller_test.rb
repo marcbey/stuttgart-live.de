@@ -1229,6 +1229,78 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[type='application/ld+json']", /Published Artist/
   end
 
+  test "show renders related genre lane with future published matches" do
+    snapshot, rock_group, = create_homepage_genre_snapshot
+    related_event = Event.create!(
+      slug: "show-related-genre-match",
+      source_fingerprint: "test::public::show-related-genre::match",
+      title: "Show Related Match",
+      artist_name: "Related Match Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    unpublished_event = Event.create!(
+      slug: "show-related-genre-unpublished",
+      source_fingerprint: "test::public::show-related-genre::unpublished",
+      title: "Show Related Unpublished",
+      artist_name: "Related Unpublished Artist",
+      start_at: 8.days.from_now.change(hour: 21, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_snapshot: {}
+    )
+    past_event = Event.create!(
+      slug: "show-related-genre-past",
+      source_fingerprint: "test::public::show-related-genre::past",
+      title: "Show Related Past",
+      artist_name: "Related Past Artist",
+      start_at: 2.days.ago.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 5.days.ago,
+      source_snapshot: {}
+    )
+
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.active_snapshot.id
+
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: related_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: unpublished_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: past_event, genres: [ "Rock" ])
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select "section.genre-lane-section h2", text: "Mehr aus diesem Genre"
+    assert_select "section.genre-lane-section .genre-lane-summary", text: rock_group.name
+    assert_select "section.genre-lane-section .genre-lane-card-name", text: related_event.artist_name
+    assert_select "section.genre-lane-section .genre-lane-card-name", text: @published_event.artist_name, count: 0
+    assert_select "section.genre-lane-section .genre-lane-card-name", text: unpublished_event.artist_name, count: 0
+    assert_select "section.genre-lane-section .genre-lane-card-name", text: past_event.artist_name, count: 0
+  end
+
+  test "show does not render related genre lane without active snapshot or additional matches" do
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select "section.genre-lane-section", count: 0
+
+    snapshot, = create_homepage_genre_snapshot
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
+    snapshot.update!(active: false)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select "section.genre-lane-section", count: 0
+  end
+
   test "show gates youtube embeds behind consent placeholder" do
     @published_event.update!(youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ")
 
