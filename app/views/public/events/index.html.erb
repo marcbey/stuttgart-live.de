@@ -30,18 +30,20 @@
   <% end %>
 
   <% if @browse_state.page == 1 && @home_highlight_events.present? %>
-    <%= render "highlight_section",
+    <%= render "genre_lane_section",
                title: "Alle Veranstaltungen in Stuttgart",
                events: @home_highlight_events,
                browse_state: @browse_state,
+               tone_class: "genre-lane-section--tone-2",
                list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
   <% end %>
 
   <% if @browse_state.page == 1 && @home_tagestipp_events.present? %>
-    <%= render "highlight_section",
+    <%= render "genre_lane_section",
                title: "Tagestipp",
                events: @home_tagestipp_events,
                browse_state: @browse_state,
+               tone_class: "genre-lane-section--tone-3",
                list_aria_label: "Listenansicht für Tagestipp" %>
   <% end %>
 

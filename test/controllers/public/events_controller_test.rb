@@ -136,7 +136,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     promotion_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") }
     first_genre_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("genre-lane-section") }
     all_events_index = shell_children.index do |node|
-      node.name == "section" && node["class"].to_s.include?("home-slider-section") && node.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
     end
 
     assert_equal snapshot.id, LlmGenreGrouping::Lookup.active_snapshot.id
@@ -336,10 +336,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     highlights_section = document.css("section.home-featured-section").find do |section|
       section.at_css("h2")&.text == "Highlights"
     end
-    all_events_section = document.css("section.home-slider-section").find do |section|
+    all_events_section = document.css("section.genre-lane-section").find do |section|
       section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
     end
-    tagestipp_section = document.css("section.home-slider-section").find do |section|
+    tagestipp_section = document.css("section.genre-lane-section").find do |section|
       section.at_css("h2")&.text == "Tagestipp"
     end
 
@@ -348,8 +348,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
 
     highlight_names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
-    all_event_names = all_events_section.css(".home-slider-card-name").map(&:text)
-    tagestipp_names = tagestipp_section.css(".home-slider-card-name").map(&:text)
+    all_event_names = all_events_section.css(".genre-lane-card-name").map(&:text)
+    tagestipp_names = tagestipp_section.css(".genre-lane-card-name").map(&:text)
 
     assert_includes highlight_names, published_highlight.artist_name
     assert_not_includes highlight_names, unpublished_highlight.artist_name
@@ -653,10 +653,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select "section.home-slider-section", text: /Alle Veranstaltungen in Stuttgart/ do
-      assert_select ".home-slider-card-name", text: reservix_event.artist_name
-      assert_select ".home-slider-card-name", text: late_reservix_event.artist_name
-      assert_select ".home-slider-card-name", text: eventim_event.artist_name, count: 0
+    assert_select "section.genre-lane-section", text: /Alle Veranstaltungen in Stuttgart/ do
+      assert_select ".genre-lane-card-name", text: reservix_event.artist_name
+      assert_select ".genre-lane-card-name", text: late_reservix_event.artist_name
+      assert_select ".genre-lane-card-name", text: eventim_event.artist_name, count: 0
     end
   end
 
@@ -689,13 +689,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     document = Nokogiri::HTML.parse(response.body)
-    slider_section = document.css("section.home-slider-section").find do |section|
+    slider_section = document.css("section.genre-lane-section").find do |section|
       section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
     end
 
     assert slider_section.present?, "expected all events slider section to be rendered"
 
-    names = slider_section.css(".home-slider-card-name").map(&:text)
+    names = slider_section.css(".genre-lane-card-name").map(&:text)
 
     assert_equal 100, names.size
     assert_includes names, included_event_names.first
@@ -839,13 +839,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.parse(response.body)
-    tagestipp_section = document.css("section.home-slider-section").find do |section|
+    tagestipp_section = document.css("section.genre-lane-section").find do |section|
       section.at_css("h2")&.text == "Tagestipp"
     end
 
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
 
-    names = tagestipp_section.css(".home-slider-card-name").map(&:text)
+    names = tagestipp_section.css(".genre-lane-card-name").map(&:text)
 
     assert_equal sks_today_event.artist_name, names.first
     assert_includes names, today_event.artist_name

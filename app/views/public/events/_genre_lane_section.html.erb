@@ -1,9 +1,12 @@
+<% title = local_assigns[:title] || group&.name %>
+<% summary = local_assigns[:summary] || "#{pluralize(events.size, "Event", "Events")} im kommenden Programm" %>
+
 <section class="genre-lane-section <%= local_assigns.fetch(:tone_class, "genre-lane-section--tone-1") %>"
          data-controller="highlights-slider section-view">
   <div class="genre-lane-header">
     <div class="genre-lane-heading">
-      <h2><%= group.name %></h2>
-      <p class="genre-lane-summary"><%= pluralize(events.size, "Event", "Events") %> im kommenden Programm</p>
+      <h2><%= title %></h2>
+      <p class="genre-lane-summary"><%= summary %></p>
     </div>
 
     <div class="genre-lane-nav">
