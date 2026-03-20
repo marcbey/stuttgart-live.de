@@ -16,6 +16,7 @@ Rails.application.routes.draw do
   match "/500", to: "errors#show", via: :all, defaults: { code: 500 }
   match "/errors/:code", to: "errors#show", via: :all
 
+  get "/login", to: redirect("/session/new"), as: :login
   resource :session, only: [ :new, :create, :destroy ]
   resources :passwords, param: :token, only: [ :show, :new, :create, :edit, :update ]
 

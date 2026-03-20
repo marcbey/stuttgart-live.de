@@ -12,6 +12,12 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a[href='#{new_password_path}']", text: "Passwort vergessen"
   end
 
+  test "login route redirects to new session" do
+    get login_path
+
+    assert_redirected_to new_session_path
+  end
+
   test "create with valid credentials" do
     post session_path, params: { email_address: @editor.email_address, password: "password" }
 
