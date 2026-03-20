@@ -253,10 +253,7 @@ module Backend
     end
 
     def recent_runs_for_list
-      ImportRun
-        .where(source_type: Backend::ImportRunsBroadcaster::LISTED_SOURCE_TYPES)
-        .recent
-        .limit(Backend::ImportRunsBroadcaster::RECENT_RUNS_LIMIT)
+      Backend::ImportRunsBroadcaster.recent_runs_for_list
     end
 
     def merge_sync_needed?

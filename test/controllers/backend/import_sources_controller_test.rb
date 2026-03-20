@@ -287,7 +287,34 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     payload = JSON.parse(response.body)
-    assert_equal Backend::ImportRunsBroadcaster::RECENT_RUNS_LIMIT, payload["runs"].size
+    easyticket_runs = payload["runs"].select { |run| run["source_type"] == "easyticket" }
+    assert_equal Backend::ImportRunsBroadcaster::RECENT_RUNS_LIMIT_PER_BLOCK, easyticket_runs.size
+  end
+
+  test "should show llm enrichment runs even when more than ten newer runs exist in other blocks" do
+    llm_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "succeeded",
+      source_type: "llm_enrichment",
+      started_at: 30.minutes.ago,
+      finished_at: 29.minutes.ago
+    )
+
+    12.times do |index|
+      ImportRun.create!(
+        import_source: @source,
+        status: "succeeded",
+        source_type: "merge",
+        started_at: (index + 1).minutes.ago,
+        finished_at: index.minutes.ago
+      )
+    end
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "h3", text: "LLM-Enrichment Jobs"
+    assert_select "tr[data-run-id='#{llm_run.id}']"
   end
 
   test "should get edit" do
