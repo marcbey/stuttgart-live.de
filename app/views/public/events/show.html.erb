@@ -16,7 +16,7 @@
 
   <%= render "show_hero", presenter: presenter %>
 
-  <div class="event-detail-body <%= "event-detail-body-with-sidebar" if presenter.has_media_block? %>">
+  <div class="event-detail-body">
     <div class="event-detail-main">
       <% if presenter.primary_description.present? %>
         <section class="event-detail-panel event-detail-copy event-detail-copy-primary">
@@ -52,13 +52,11 @@
           <%= simple_format(@event.editor_notes) %>
         </section>
       <% end %>
-    </div>
 
-    <% if presenter.has_media_block? %>
-      <aside class="event-detail-sidebar">
+      <% if presenter.has_media_block? %>
         <%= render "show_media", presenter: presenter %>
-      </aside>
-    <% end %>
+      <% end %>
+    </div>
   </div>
 
   <% if @event.show_public_organizer_notes? %>

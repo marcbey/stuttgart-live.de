@@ -177,6 +177,19 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Fallschirmvertrauen - Tour 2026", presenter.primary_description
   end
 
+  test "does not duplicate city when venue already includes it" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      venue: "Im Wizemann (Halle) Stuttgart",
+      city: "Stuttgart"
+    )
+
+    presenter = build_presenter(event)
+
+    assert_equal "Im Wizemann (Halle) Stuttgart", presenter.send(:venue_location)
+  end
+
   test "uses loaded genres without extra queries" do
     event = events(:published_one)
     loaded_event = Event.includes(:genres).find(event.id)

@@ -300,7 +300,13 @@ module Public
       end
 
       def venue_location
-        [ event.venue.to_s.strip.presence, event.city.to_s.strip.presence ].compact.join(", ")
+        venue = event.venue.to_s.strip.presence
+        city = event.city.to_s.strip.presence
+        return city if venue.blank?
+        return venue if city.blank?
+        return venue if venue_contains_city?(venue, city)
+
+        [ venue, city ].join(", ")
       end
 
       def meta_schedule_label
@@ -309,6 +315,12 @@ module Public
 
       def meta_location_context
         [ event_date_label, venue_location.presence || "Stuttgart" ].compact.join(" · ")
+      end
+
+      def venue_contains_city?(venue, city)
+        normalized_venue = normalize_comparison_token(venue)
+        normalized_city = normalize_comparison_token(city)
+        normalized_venue.include?(normalized_city)
       end
 
       def primary_youtube_url

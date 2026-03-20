@@ -4157,19 +4157,9 @@ trix-editor.blog-rich-text:focus {
 .event-detail-header-panel,
 .event-detail-header-copy,
 .event-detail-header-intro,
-.event-detail-main,
-.event-detail-sidebar {
+.event-detail-main {
   display: grid;
   gap: 1rem;
-}
-
-.event-detail-kicker {
-  margin: 0;
-  color: rgba(17, 17, 17, 0.62);
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  font-size: 0.78rem;
-  font-weight: 700;
 }
 
 .event-detail h1 {
@@ -4372,11 +4362,6 @@ trix-editor.blog-rich-text:focus {
 
   .event-detail-header-panel {
     align-content: start;
-  }
-
-  .event-detail-body-with-sidebar {
-    grid-template-columns: minmax(0, 1.25fr) minmax(18rem, 0.75fr);
-    align-items: start;
   }
 }
 

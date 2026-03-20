@@ -1251,6 +1251,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/#{Regexp.escape(@published_event.venue)}\s*,\s*<\/span>/, response.body)
   end
 
+  test "show does not duplicate city when venue already contains it" do
+    @published_event.update!(venue: "Im Wizemann (Halle) Stuttgart", city: "Stuttgart")
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Im Wizemann (Halle) Stuttgart"
+    assert_not_includes response.body, "Im Wizemann (Halle) Stuttgart, Stuttgart"
+  end
+
   test "show renders einlass when present" do
     event = Event.create!(
       slug: "published-event-with-einlass",
