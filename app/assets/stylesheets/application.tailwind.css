@@ -6010,3 +6010,11 @@ trix-editor.blog-rich-text:focus {
     width: 100%;
   }
 }
+
+.news-index-newsletter-slot {
+  grid-column: 1 / -1;
+}
+
+.news-index-newsletter-slot .newsletter-signup-section {
+  margin-top: 0;
+}
