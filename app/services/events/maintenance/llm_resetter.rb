@@ -3,8 +3,11 @@ module Events
     class LlmResetter
       Result = Data.define(:event_counts, :import_counts, :queue_counts, :queue_status)
 
-      JOB_CLASS_NAME = "Importing::LlmEnrichment::RunJob".freeze
-      SOURCE_TYPE = "llm_enrichment".freeze
+      JOB_CLASS_NAMES = [
+        "Importing::LlmEnrichment::RunJob",
+        "Importing::LlmGenreGrouping::RunJob"
+      ].freeze
+      SOURCE_TYPES = %w[llm_enrichment llm_genre_grouping].freeze
       SOLID_QUEUE_EXECUTION_MODELS = [
         [ "solid_queue_blocked_executions", SolidQueue::BlockedExecution ],
         [ "solid_queue_claimed_executions", SolidQueue::ClaimedExecution ],
@@ -18,11 +21,13 @@ module Events
       end
 
       def initialize(
-        job_class_name: JOB_CLASS_NAME,
-        source_type: SOURCE_TYPE,
+        job_class_names: JOB_CLASS_NAMES,
+        source_types: SOURCE_TYPES,
         event_model: Event,
         event_change_log_model: EventChangeLog,
         event_llm_enrichment_model: EventLlmEnrichment,
+        llm_genre_grouping_group_model: LlmGenreGroupingGroup,
+        llm_genre_grouping_snapshot_model: LlmGenreGroupingSnapshot,
         import_run_model: ImportRun,
         import_run_error_model: ImportRunError,
         solid_queue_job_model: SolidQueue::Job,
@@ -31,11 +36,13 @@ module Events
         solid_queue_available: nil,
         queue_configurations: ActiveRecord::Base.configurations
       )
-        @job_class_name = job_class_name
-        @source_type = source_type
+        @job_class_names = Array(job_class_names)
+        @source_types = Array(source_types)
         @event_model = event_model
         @event_change_log_model = event_change_log_model
         @event_llm_enrichment_model = event_llm_enrichment_model
+        @llm_genre_grouping_group_model = llm_genre_grouping_group_model
+        @llm_genre_grouping_snapshot_model = llm_genre_grouping_snapshot_model
         @import_run_model = import_run_model
         @import_run_error_model = import_run_error_model
         @solid_queue_job_model = solid_queue_job_model
@@ -63,10 +70,13 @@ module Events
       private
 
       attr_reader :event_change_log_model, :event_llm_enrichment_model, :event_model, :import_run_error_model,
-        :import_run_model, :job_class_name, :queue_configurations, :solid_queue_execution_models,
-        :solid_queue_job_model, :solid_queue_record_class, :source_type
+        :import_run_model, :job_class_names, :queue_configurations, :solid_queue_execution_models,
+        :solid_queue_job_model, :solid_queue_record_class, :llm_genre_grouping_group_model,
+        :llm_genre_grouping_snapshot_model, :source_types
 
       def purge_llm_data!
+        llm_genre_grouping_group_model.delete_all
+        llm_genre_grouping_snapshot_model.delete_all
         event_llm_enrichment_model.delete_all
         llm_import_run_errors.delete_all
         llm_import_runs.delete_all
@@ -101,7 +111,9 @@ module Events
 
       def event_counts
         {
-          "event_llm_enrichments" => event_llm_enrichment_model.count
+          "event_llm_enrichments" => event_llm_enrichment_model.count,
+          "llm_genre_grouping_snapshots" => llm_genre_grouping_snapshot_model.count,
+          "llm_genre_grouping_groups" => llm_genre_grouping_group_model.count
         }
       end
 
@@ -121,7 +133,7 @@ module Events
       end
 
       def llm_import_runs
-        import_run_model.where(source_type: source_type)
+        import_run_model.where(source_type: source_types)
       end
 
       def llm_import_run_errors
@@ -129,7 +141,7 @@ module Events
       end
 
       def llm_solid_queue_jobs
-        solid_queue_job_model.where(class_name: job_class_name)
+        solid_queue_job_model.where(class_name: job_class_names)
       end
 
       def available_solid_queue_execution_models

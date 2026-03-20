@@ -47,7 +47,7 @@ module Backend
     private
 
     def set_import_run
-      @import_run = ImportRun.includes(:import_source, :import_run_errors).find(params[:id])
+      @import_run = ImportRun.includes(:import_source, :import_run_errors, llm_genre_grouping_snapshot: :groups).find(params[:id])
     end
 
     def allowed_filtered_city?(city)

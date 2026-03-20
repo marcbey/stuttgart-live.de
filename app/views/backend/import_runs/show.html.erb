@@ -97,9 +97,74 @@
             </tr>
           </tbody>
         </table>
+      <% elsif llm_genre_grouping_import_run?(@import_run) %>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gestartet</th>
+              <th>Status</th>
+              <th><span title="<%= import_run_column_description(:raw_imports) %>">Genres</span></th>
+              <th><span title="<%= import_run_column_description(:filtered) %>">Skipped</span></th>
+              <th><span title="<%= import_run_column_description(:inserts) %>">Groups</span></th>
+              <th><span title="<%= import_run_column_description(:collapsed_records) %>">Requests</span></th>
+              <th>Failed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+              <td><%= import_run_status_label(@import_run) %></td>
+              <td><%= import_run_raw_imports_label(@import_run) %></td>
+              <td><%= import_run_filtered_label(@import_run) %></td>
+              <td><%= import_run_inserts_label(@import_run) %></td>
+              <td><%= import_run_collapsed_records_label(@import_run) %></td>
+              <td><%= @import_run.failed_count %></td>
+            </tr>
+          </tbody>
+        </table>
       <% end %>
     </div>
   </section>
+
+  <% if llm_genre_grouping_import_run?(@import_run) %>
+    <% snapshot = @import_run.llm_genre_grouping_snapshot %>
+    <section class="import-run-section">
+      <h2>Gruppierungs-Snapshot</h2>
+      <% if snapshot.present? %>
+        <p>
+          Snapshot-Key: <strong><%= snapshot.snapshot_key %></strong>
+          · Aktiv: <strong><%= snapshot.active ? "Ja" : "Nein" %></strong>
+          · Modell: <strong><%= snapshot.model %></strong>
+          · Zielgruppen: <strong><%= snapshot.requested_group_count %></strong>
+          · Effektive Gruppen: <strong><%= snapshot.effective_group_count %></strong>
+        </p>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Position</th>
+                <th>Name</th>
+                <th>Genres</th>
+                <th>Genre-Anzahl</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% snapshot.groups.each do |group| %>
+                <tr>
+                  <td><%= group.position %></td>
+                  <td><%= group.name %></td>
+                  <td><%= group.member_genres.join(", ") %></td>
+                  <td><%= group.genre_count %></td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p>Für diesen Lauf wurde kein Snapshot gespeichert.</p>
+      <% end %>
+    </section>
+  <% end %>
 
   <section class="import-run-section">
     <h2>Errors (<%= @run_errors.size %>)</h2>

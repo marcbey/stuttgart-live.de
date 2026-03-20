@@ -2,7 +2,7 @@ module Backend
   class ImportRunsBroadcaster
     STREAM = [ :backend, :import_runs ].freeze
     TARGET = "import-runs-table".freeze
-    LISTED_SOURCE_TYPES = %w[easyticket eventim reservix merge llm_enrichment].freeze
+    LISTED_SOURCE_TYPES = %w[easyticket eventim reservix merge llm_enrichment llm_genre_grouping].freeze
     RECENT_RUNS_LIMIT = 10
 
     def self.broadcast!

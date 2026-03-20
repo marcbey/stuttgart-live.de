@@ -80,6 +80,50 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_includes setting.errors[:value], "{{input_json}} muss im Prompt enthalten sein"
   end
 
+  test "returns default llm genre grouping prompt template when no setting exists" do
+    assert_includes AppSetting.llm_genre_grouping_prompt_template, "{{input_json}}"
+    assert_includes AppSetting.llm_genre_grouping_prompt_template, "{{group_count}}"
+  end
+
+  test "returns default llm genre grouping model when no setting exists" do
+    assert_equal "gpt-5.1", AppSetting.llm_genre_grouping_model
+  end
+
+  test "returns default llm genre grouping group count when no setting exists" do
+    assert_equal 30, AppSetting.llm_genre_grouping_group_count
+  end
+
+  test "returns configured llm genre grouping settings" do
+    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5-mini")
+    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Gruppiere\n{{group_count}}\n{{input_json}}")
+    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 42)
+
+    assert_equal "gpt-5-mini", AppSetting.llm_genre_grouping_model
+    assert_equal "Gruppiere\n{{group_count}}\n{{input_json}}", AppSetting.llm_genre_grouping_prompt_template
+    assert_equal 42, AppSetting.llm_genre_grouping_group_count
+  end
+
+  test "requires llm genre grouping prompt template to contain both placeholders" do
+    setting = AppSetting.new(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "{{group_count}} muss im Prompt enthalten sein"
+  end
+
+  test "requires llm genre grouping model to be supported" do
+    setting = AppSetting.new(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-4.1")
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "ist kein unterstütztes LLM-Modell"
+  end
+
+  test "requires llm genre grouping group count to be positive" do
+    setting = AppSetting.new(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 0)
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "muss eine positive Ganzzahl sein"
+  end
+
   test "returns true for merge similarity matching when not configured" do
     assert_equal true, AppSetting.merge_artist_similarity_matching_enabled?
   end

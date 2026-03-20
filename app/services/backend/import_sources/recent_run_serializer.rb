@@ -39,7 +39,7 @@ module Backend
         helper_name = registry.fetch(run.source_type, required: false)&.fetch(:stop_route_helper, nil)
         return nil if helper_name.blank?
 
-        return controller.public_send(helper_name, run_id: run.id) if run.source_type == "llm_enrichment"
+        return controller.public_send(helper_name, run_id: run.id) if %w[llm_enrichment llm_genre_grouping].include?(run.source_type)
 
         controller.public_send(helper_name, run.import_source_id, run_id: run.id)
       end

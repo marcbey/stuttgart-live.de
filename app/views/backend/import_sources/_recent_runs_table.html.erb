@@ -3,6 +3,7 @@
   <% raw_runs = recent_runs.select { |run| raw_import_run?(run) } %>
   <% merge_runs = recent_runs.select { |run| merge_import_run?(run) } %>
   <% llm_runs = recent_runs.select { |run| llm_import_run?(run) } %>
+  <% llm_genre_grouping_runs = recent_runs.select { |run| llm_genre_grouping_import_run?(run) } %>
 
   <section class="import-runs-panel">
     <div class="import-runs-group-header">
@@ -195,6 +196,60 @@
       </div>
     <% else %>
       <p>Keine LLM Jobs vorhanden.</p>
+    <% end %>
+  </section>
+
+  <section class="import-runs-panel">
+    <div class="import-runs-group-header">
+      <h3>LLM-Genre-Gruppierung Jobs</h3>
+      <div class="action-cell">
+        <%= link_to "Bearbeiten",
+                    edit_backend_settings_path(anchor: "llm-genre-grouping"),
+                    class: "button button-ghost button-compact" %>
+        <%= button_to "LLM-Genre-Gruppierung starten",
+                      run_llm_genre_grouping_backend_import_sources_path,
+                      method: :post,
+                      class: "button button-compact" %>
+      </div>
+    </div>
+    <% if llm_genre_grouping_runs.any? %>
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Gestartet</th>
+              <th>Status</th>
+              <th><span title="<%= import_run_column_description(:raw_imports) %>">Genres</span></th>
+              <th><span title="<%= import_run_column_description(:filtered) %>">Skipped</span></th>
+              <th><span title="<%= import_run_column_description(:inserts) %>">Groups</span></th>
+              <th><span title="<%= import_run_column_description(:collapsed_records) %>">Requests</span></th>
+              <th>Failed</th>
+              <th class="actions-column">Aktionen</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% llm_genre_grouping_runs.each do |run| %>
+              <tr data-run-id="<%= run.id %>">
+                <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+                <td><%= import_run_status_label(run) %></td>
+                <td><%= import_run_raw_imports_label(run) %></td>
+                <td><%= import_run_filtered_label(run) %></td>
+                <td><%= import_run_inserts_label(run) %></td>
+                <td><%= import_run_collapsed_records_label(run) %></td>
+                <td><%= run.failed_count %></td>
+                <td class="action-cell">
+                  <%= link_to "Details", backend_import_run_path(run), class: "button button-ghost button-compact" %>
+                  <% if import_run_can_stop?(run) %>
+                    <%= button_to "Stoppen", import_run_stop_path(run), method: :post, class: "button button-secondary button-compact" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p>Keine LLM-Genre-Gruppierungs-Jobs vorhanden.</p>
     <% end %>
   </section>
 </div>

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_20_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -149,6 +149,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
     t.text "venue_description"
     t.string "youtube_link"
     t.index ["event_id"], name: "index_event_llm_enrichments_on_event_id", unique: true
+    t.index ["genre"], name: "index_event_llm_enrichments_on_genre", using: :gin
     t.index ["source_run_id"], name: "index_event_llm_enrichments_on_source_run_id"
   end
 
@@ -290,6 +291,38 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
     t.index ["source_type"], name: "index_import_sources_on_source_type", unique: true
   end
 
+  create_table "llm_genre_grouping_groups", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "member_genres", default: [], null: false
+    t.string "name", null: false
+    t.integer "position", null: false
+    t.string "slug", null: false
+    t.bigint "snapshot_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["member_genres"], name: "index_llm_genre_grouping_groups_on_member_genres", using: :gin
+    t.index ["snapshot_id", "position"], name: "index_llm_genre_grouping_groups_on_snapshot_id_and_position", unique: true
+    t.index ["snapshot_id", "slug"], name: "index_llm_genre_grouping_groups_on_snapshot_id_and_slug", unique: true
+    t.index ["snapshot_id"], name: "index_llm_genre_grouping_groups_on_snapshot_id"
+  end
+
+  create_table "llm_genre_grouping_snapshots", force: :cascade do |t|
+    t.boolean "active", default: false, null: false
+    t.datetime "created_at", null: false
+    t.integer "effective_group_count", null: false
+    t.bigint "import_run_id", null: false
+    t.string "model", null: false
+    t.string "prompt_template_digest", null: false
+    t.jsonb "raw_response", default: {}, null: false
+    t.jsonb "request_payload", default: {}, null: false
+    t.integer "requested_group_count", null: false
+    t.uuid "snapshot_key", null: false
+    t.integer "source_genres_count", null: false
+    t.datetime "updated_at", null: false
+    t.index ["active"], name: "index_llm_genre_grouping_snapshots_on_active_true", unique: true, where: "(active = true)"
+    t.index ["import_run_id"], name: "index_llm_genre_grouping_snapshots_on_import_run_id", unique: true
+    t.index ["snapshot_key"], name: "index_llm_genre_grouping_snapshots_on_snapshot_key", unique: true
+  end
+
   create_table "login_attempts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.string "email_address"
@@ -380,6 +413,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_19_152000) do
   add_foreign_key "import_run_errors", "import_runs"
   add_foreign_key "import_runs", "import_sources"
   add_foreign_key "import_source_configs", "import_sources"
+  add_foreign_key "llm_genre_grouping_groups", "llm_genre_grouping_snapshots", column: "snapshot_id"
+  add_foreign_key "llm_genre_grouping_snapshots", "import_runs"
   add_foreign_key "login_attempts", "users"
   add_foreign_key "raw_event_imports", "import_sources"
   add_foreign_key "sessions", "users"

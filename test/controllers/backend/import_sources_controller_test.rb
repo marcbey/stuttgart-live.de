@@ -216,6 +216,31 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "2"
   end
 
+  test "should show llm genre grouping runs in dedicated jobs table" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_genre_grouping",
+      started_at: 1.minute.ago,
+      fetched_count: 320,
+      filtered_count: 4,
+      imported_count: 30,
+      upserted_count: 2,
+      failed_count: 1,
+      metadata: {}
+    )
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "h3", text: "LLM-Genre-Gruppierung Jobs"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(3)", text: "320"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "4"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "30"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "2"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "1"
+  end
+
   test "should show import run detail page with errors" do
     run = @source.import_runs.create!(
       status: "failed",
@@ -330,6 +355,14 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "LLM-Enrichment starten"
     assert_includes response.body, "Bearbeiten"
     assert_select "a[href='#{edit_backend_settings_path(anchor: "llm-enrichment-prompt")}']", text: "Bearbeiten"
+  end
+
+  test "should render llm genre grouping button on index" do
+    get backend_import_sources_url
+
+    assert_response :success
+    assert_includes response.body, "LLM-Genre-Gruppierung starten"
+    assert_select "a[href='#{edit_backend_settings_path(anchor: "llm-genre-grouping")}']", text: "Bearbeiten"
   end
 
   test "should enqueue llm enrichment run from import sources page" do
@@ -462,6 +495,87 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "llm_enrichment", run_payload["source_type"]
     assert_equal true, run_payload["can_stop"]
     assert_includes run_payload["stop_url"], "stop_llm_enrichment_run"
+  end
+
+  test "should enqueue llm genre grouping run from import sources page" do
+    assert_enqueued_jobs 1, only: Importing::LlmGenreGrouping::RunJob do
+      post run_llm_genre_grouping_backend_import_sources_url
+    end
+
+    run = ImportRun.where(source_type: "llm_genre_grouping").order(:created_at).last
+    assert_equal "running", run.status
+
+    assert_redirected_to backend_import_sources_url
+    follow_redirect!
+    assert_includes response.body, "LLM-Genre-Gruppierung wurde gestartet."
+  end
+
+  test "should respond with turbo stream when enqueueing llm genre grouping run from import sources page" do
+    assert_enqueued_jobs 1, only: Importing::LlmGenreGrouping::RunJob do
+      post run_llm_genre_grouping_backend_import_sources_url, as: :turbo_stream
+    end
+
+    run = ImportRun.where(source_type: "llm_genre_grouping").order(:created_at).last
+    assert_equal "running", run.status
+
+    assert_import_sources_turbo_feedback(message: "LLM-Genre-Gruppierung wurde gestartet.")
+    assert_import_run_row_in_response(run)
+  end
+
+  test "should not enqueue llm genre grouping run when another grouping run is active" do
+    existing_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_genre_grouping",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    assert_no_enqueued_jobs only: Importing::LlmGenreGrouping::RunJob do
+      post run_llm_genre_grouping_backend_import_sources_url, as: :turbo_stream
+    end
+
+    assert_import_sources_turbo_feedback(message: "Ein LLM-Genre-Gruppierungs-Lauf läuft bereits (Run ##{existing_run.id}).")
+    assert_import_run_row_in_response(existing_run)
+  end
+
+  test "should request stop for a running llm genre grouping run" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_genre_grouping",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_llm_genre_grouping_run_backend_import_sources_url(run_id: run.id)
+
+    assert_redirected_to backend_import_sources_url
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "running", run.status
+    follow_redirect!
+    assert_includes response.body, "Stop für LLM-Genre-Gruppierung"
+  end
+
+  test "should include llm genre grouping runs in recent runs json" do
+    llm_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_genre_grouping",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    get backend_import_sources_url(format: :json)
+    assert_response :success
+
+    payload = JSON.parse(response.body)
+    run_payload = payload.fetch("runs").find { |run| run["id"] == llm_run.id }
+
+    assert run_payload.present?
+    assert_equal "llm_genre_grouping", run_payload["source_type"]
+    assert_equal true, run_payload["can_stop"]
+    assert_includes run_payload["stop_url"], "stop_llm_genre_grouping_run"
   end
 
   test "should enqueue easyticket run" do

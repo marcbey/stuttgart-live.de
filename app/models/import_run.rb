@@ -3,6 +3,7 @@ class ImportRun < ApplicationRecord
 
   belongs_to :import_source
   has_many :import_run_errors, dependent: :destroy
+  has_one :llm_genre_grouping_snapshot, dependent: :destroy
 
   validates :source_type, presence: true
   validates :status, inclusion: { in: STATUSES }

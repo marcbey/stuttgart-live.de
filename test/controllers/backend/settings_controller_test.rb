@@ -8,6 +8,9 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
     AppSetting.where(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY).delete_all
     AppSetting.where(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY).delete_all
+    AppSetting.where(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY).delete_all
+    AppSetting.where(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY).delete_all
+    AppSetting.where(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY).delete_all
     AppSetting.where(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).delete_all
     AppSetting.reset_cache!
   end
@@ -22,6 +25,9 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Bestehender Hinweistext")
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5-mini")
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
+    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5-mini")
+    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Gruppiere\n{{group_count}}\n{{input_json}}")
+    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 30)
     AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
 
     get edit_backend_settings_url
@@ -32,6 +38,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "SKS Standard-Veranstalterhinweise"
     assert_includes response.body, "LLM-Modell"
     assert_includes response.body, "LLM-Enrichment Prompt"
+    assert_includes response.body, "LLM-Genre-Gruppierung"
     assert_includes response.body, "Ähnlichkeits-Matching für Artist-Dubletten"
   end
 
@@ -52,6 +59,9 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
         sks_organizer_notes_text: "Neuer Hinweistext\nZweite Zeile",
         llm_enrichment_model: "gpt-5-mini",
         llm_enrichment_prompt_template_text: "Bitte recherchiere\n{{input_json}}",
+        llm_genre_grouping_model: "gpt-5-mini",
+        llm_genre_grouping_prompt_template_text: "Bitte gruppiere\n{{group_count}}\n{{input_json}}",
+        llm_genre_grouping_group_count: "24",
         merge_artist_similarity_matching_enabled: "0"
       }
     }
@@ -62,6 +72,9 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neuer Hinweistext\nZweite Zeile", AppSetting.sks_organizer_notes
     assert_equal "gpt-5-mini", AppSetting.llm_enrichment_model
     assert_equal "Bitte recherchiere\n{{input_json}}", AppSetting.llm_enrichment_prompt_template
+    assert_equal "gpt-5-mini", AppSetting.llm_genre_grouping_model
+    assert_equal "Bitte gruppiere\n{{group_count}}\n{{input_json}}", AppSetting.llm_genre_grouping_prompt_template
+    assert_equal 24, AppSetting.llm_genre_grouping_group_count
     assert_equal false, AppSetting.merge_artist_similarity_matching_enabled?
   end
 
@@ -74,6 +87,9 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
         sks_organizer_notes_text: "Hinweistext",
         llm_enrichment_model: "gpt-5.1",
         llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
+        llm_genre_grouping_model: "gpt-5-mini",
+        llm_genre_grouping_prompt_template_text: "Gruppiere\n{{group_count}}\n{{input_json}}",
+        llm_genre_grouping_group_count: "30",
         merge_artist_similarity_matching_enabled: "1"
       }
     }
@@ -92,6 +108,9 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
         sks_organizer_notes_text: "Hinweistext",
         llm_enrichment_model: "gpt-5.1",
         llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
+        llm_genre_grouping_model: "gpt-5-mini",
+        llm_genre_grouping_prompt_template_text: "Gruppiere\n{{group_count}}\n{{input_json}}",
+        llm_genre_grouping_group_count: "30",
         merge_artist_similarity_matching_enabled: "1"
       }
     }
@@ -109,6 +128,9 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
         sks_organizer_notes_text: "Hinweistext",
         llm_enrichment_model: "gpt-5.1",
         llm_enrichment_prompt_template_text: "Prompt ohne Platzhalter",
+        llm_genre_grouping_model: "gpt-5-mini",
+        llm_genre_grouping_prompt_template_text: "Gruppiere\n{{group_count}}\n{{input_json}}",
+        llm_genre_grouping_group_count: "30",
         merge_artist_similarity_matching_enabled: "1"
       }
     }
@@ -126,11 +148,35 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
         sks_organizer_notes_text: "Hinweistext",
         llm_enrichment_model: "gpt-4.1",
         llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
+        llm_genre_grouping_model: "gpt-5-mini",
+        llm_genre_grouping_prompt_template_text: "Gruppiere\n{{group_count}}\n{{input_json}}",
+        llm_genre_grouping_group_count: "30",
         merge_artist_similarity_matching_enabled: "1"
       }
     }
 
     assert_response :unprocessable_entity
     assert_includes response.body, "ist kein unterstütztes LLM-Modell"
+  end
+
+  test "admin cannot save invalid llm genre grouping settings" do
+    sign_in_as(@admin)
+
+    patch backend_settings_url, params: {
+      app_setting: {
+        sks_promoter_ids_text: "900",
+        sks_organizer_notes_text: "Hinweistext",
+        llm_enrichment_model: "gpt-5.1",
+        llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
+        llm_genre_grouping_model: "gpt-5-mini",
+        llm_genre_grouping_prompt_template_text: "Gruppiere\n{{input_json}}",
+        llm_genre_grouping_group_count: "0",
+        merge_artist_similarity_matching_enabled: "1"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "{{group_count}} muss im Prompt enthalten sein"
+    assert_includes response.body, "muss eine positive Ganzzahl sein"
   end
 end

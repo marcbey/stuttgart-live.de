@@ -80,7 +80,7 @@ module Backend
     end
 
     def stop_llm_enrichment_run
-      source = llm_enrichment_run_source
+      source = llm_run_source
       run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc)
       run = run.find_by(id: params[:run_id]) if params[:run_id].present?
       run ||= source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
@@ -97,6 +97,62 @@ module Backend
 
       Backend::ImportRunsBroadcaster.broadcast!
       respond_with_importer_feedback(notice: "Stop für LLM-Enrichment (Run ##{run.id}) wurde angefordert.")
+    end
+
+    def run_llm_genre_grouping
+      source = llm_run_source
+      feedback = nil
+      broadcast = false
+
+      source.with_lock do
+        active_run = source.import_runs.where(source_type: "llm_genre_grouping", status: "running").order(started_at: :desc).first
+        if active_run.present?
+          feedback = { alert: "Ein LLM-Genre-Gruppierungs-Lauf läuft bereits (Run ##{active_run.id})." }
+          next
+        end
+
+        run = source.import_runs.create!(
+          status: "running",
+          source_type: "llm_genre_grouping",
+          started_at: Time.current,
+          metadata: { "triggered_at" => Time.current.iso8601 }
+        )
+        job = Importing::LlmGenreGrouping::RunJob.perform_later(run.id)
+        run.update!(
+          metadata: run.metadata.merge(
+            "job_id" => job.job_id,
+            "provider_job_id" => job.provider_job_id,
+            "job_attempt" => 1,
+            "job_retries_used" => 0,
+            "max_retries" => 0
+          )
+        )
+        feedback = { notice: "LLM-Genre-Gruppierung wurde gestartet." }
+        broadcast = true
+      end
+
+      Backend::ImportRunsBroadcaster.broadcast! if broadcast
+      respond_with_importer_feedback(**feedback)
+    end
+
+    def stop_llm_genre_grouping_run
+      source = llm_run_source
+      run = source.import_runs.where(source_type: "llm_genre_grouping", status: "running").order(started_at: :desc)
+      run = run.find_by(id: params[:run_id]) if params[:run_id].present?
+      run ||= source.import_runs.where(source_type: "llm_genre_grouping", status: "running").order(started_at: :desc).first
+
+      if run.blank?
+        respond_with_importer_feedback(alert: "Kein laufender LLM-Genre-Gruppierungs-Run gefunden.")
+        return
+      end
+
+      metadata = run.metadata.is_a?(Hash) ? run.metadata.deep_stringify_keys : {}
+      metadata["stop_requested"] = true
+      metadata["stop_requested_at"] = Time.current.iso8601
+      run.update!(metadata: metadata)
+
+      Backend::ImportRunsBroadcaster.broadcast!
+      respond_with_importer_feedback(notice: "Stop für LLM-Genre-Gruppierung (Run ##{run.id}) wurde angefordert.")
     end
 
     def update
@@ -151,6 +207,10 @@ module Backend
     end
 
     def llm_enrichment_run_source
+      llm_run_source
+    end
+
+    def llm_run_source
       ImportSource.find_by(source_type: "eventim") ||
         ImportSource.find_by(source_type: "easyticket") ||
         ImportSource.ensure_eventim_source!

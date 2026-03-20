@@ -25,6 +25,12 @@ module Backend
           run_job_class: Importing::LlmEnrichment::RunJob,
           importer_class: Importing::LlmEnrichment::Importer,
           stop_route_helper: :stop_llm_enrichment_run_backend_import_sources_path
+        },
+        "llm_genre_grouping" => {
+          label: "LLM-Genre-Gruppierung",
+          run_job_class: Importing::LlmGenreGrouping::RunJob,
+          importer_class: Importing::LlmGenreGrouping::Importer,
+          stop_route_helper: :stop_llm_genre_grouping_run_backend_import_sources_path
         }
       }.freeze
 

@@ -65,6 +65,8 @@ module Events
       end
 
       def purge_event_data!
+        LlmGenreGroupingGroup.delete_all
+        LlmGenreGroupingSnapshot.delete_all
         EventLlmEnrichment.delete_all
         EventImage.delete_all
         ImportEventImage.where(import_class: "Event").delete_all
@@ -118,6 +120,8 @@ module Events
         {
           "events" => Event.count,
           "event_llm_enrichments" => EventLlmEnrichment.count,
+          "llm_genre_grouping_snapshots" => LlmGenreGroupingSnapshot.count,
+          "llm_genre_grouping_groups" => LlmGenreGroupingGroup.count,
           "event_offers" => EventOffer.count,
           "event_genres" => EventGenre.count,
           "event_change_logs" => EventChangeLog.count,

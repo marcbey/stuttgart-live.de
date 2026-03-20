@@ -46,6 +46,26 @@ class Events::Maintenance::PurgerTest < ActiveSupport::TestCase
       prompt_version: "v1",
       raw_response: {}
     )
+    ImportRun.create!(
+      import_source: import_sources(:one),
+      source_type: "llm_genre_grouping",
+      status: "succeeded",
+      started_at: 1.minute.ago,
+      finished_at: Time.current
+    ).create_llm_genre_grouping_snapshot!(
+      active: true,
+      requested_group_count: 30,
+      effective_group_count: 1,
+      source_genres_count: 1,
+      model: "gpt-5-mini",
+      prompt_template_digest: "digest",
+      request_payload: {},
+      raw_response: {}
+    ).groups.create!(
+      position: 1,
+      name: "Jazz",
+      member_genres: [ "Jazz" ]
+    )
   end
 
   test "purges event data and keeps import data by default" do
@@ -53,17 +73,21 @@ class Events::Maintenance::PurgerTest < ActiveSupport::TestCase
 
     assert_equal 0, Event.count
     assert_equal 0, EventLlmEnrichment.count
+    assert_equal 0, LlmGenreGroupingSnapshot.count
+    assert_equal 0, LlmGenreGroupingGroup.count
     assert_equal 0, EventOffer.count
     assert_equal 0, EventGenre.count
     assert_equal 0, EventChangeLog.count
     assert_equal 0, ImportEventImage.where(import_class: "Event").count
     assert_equal 1, RawEventImport.count
-    assert_equal 2, ImportRun.count
+    assert_equal 3, ImportRun.count
     assert_equal 1, ImportRunError.count
     assert_equal :not_requested, result.solid_queue_status
     assert_empty result.import_counts
     assert_empty result.solid_queue_counts
     assert_equal 0, result.event_counts.fetch("event_llm_enrichments")
+    assert_equal 0, result.event_counts.fetch("llm_genre_grouping_snapshots")
+    assert_equal 0, result.event_counts.fetch("llm_genre_grouping_groups")
   end
 
   test "purges import runtime data and resets reservix checkpoints" do

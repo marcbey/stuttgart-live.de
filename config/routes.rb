@@ -30,6 +30,8 @@ Rails.application.routes.draw do
       post :stop_merge_run, on: :collection
       post :run_llm_enrichment, on: :collection
       post :stop_llm_enrichment_run, on: :collection
+      post :run_llm_genre_grouping, on: :collection
+      post :stop_llm_genre_grouping_run, on: :collection
       post :run_easyticket, on: :member
       post :stop_easyticket_run, on: :member
       post :run_eventim, on: :member

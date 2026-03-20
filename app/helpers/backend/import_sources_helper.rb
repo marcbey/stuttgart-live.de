@@ -1,12 +1,12 @@
 module Backend::ImportSourcesHelper
   IMPORT_RUN_COLUMN_DESCRIPTIONS = {
-    raw_imports: "Provider-Importer: Anzahl der in diesem Lauf geschriebenen Rohimporte. Merge: Anzahl der aktuellen Import-Records nach Auswahl der neuesten Rohimporte je source_identifier. LLM-Enrichment: Anzahl der aus dem letzten Merge-Lauf ausgewählten Events.",
+    raw_imports: "Provider-Importer: Anzahl der in diesem Lauf geschriebenen Rohimporte. Merge: Anzahl der aktuellen Import-Records nach Auswahl der neuesten Rohimporte je source_identifier. LLM-Enrichment: Anzahl der aus dem letzten Merge-Lauf ausgewählten Events. LLM-Genre-Gruppierung: Anzahl der ausgewählten eindeutigen Genres.",
     merge_groups: "Nur für Merge-Läufe: Anzahl der providerübergreifenden Gruppen nach Dublettenzusammenführung über Artist und Startzeit.",
-    filtered: "Nur für Provider-Läufe: Anzahl der Datensätze, die die Orts- und Importfilter passiert haben. LLM-Enrichment: Anzahl bereits übersprungener Events mit vorhandenem Enrichment.",
-    inserts: "Provider-Importer: entspricht den geschriebenen Rohimporten dieses Laufs. Merge: Anzahl der neu angelegten Events. LLM-Enrichment: Anzahl neu gespeicherter Enrichments.",
+    filtered: "Nur für Provider-Läufe: Anzahl der Datensätze, die die Orts- und Importfilter passiert haben. LLM-Enrichment: Anzahl bereits übersprungener Events mit vorhandenem Enrichment. LLM-Genre-Gruppierung: Anzahl verworfener Rohgenre-Werte nach Normalisierung.",
+    inserts: "Provider-Importer: entspricht den geschriebenen Rohimporten dieses Laufs. Merge: Anzahl der neu angelegten Events. LLM-Enrichment: Anzahl neu gespeicherter Enrichments. LLM-Genre-Gruppierung: Anzahl gespeicherter Obergruppen.",
     updates: "Nur für Merge-Läufe: Anzahl bestehender Events, die in diesem Lauf aktualisiert wurden. Überschrieben werden dabei start_at, doors_at, venue, badge_text, min_price, max_price, primary_source, source_fingerprint und source_snapshot.",
     similarity_duplicates: "Nur für Merge-Läufe: Teilmenge der Updates, bei denen das Ähnlichkeits-Matching ein Import-Record einem bestehenden Event zugeordnet hat.",
-    collapsed_records: "Nur für Merge-Läufe: Differenz aus Raw Imports und Merge Groups. Zeigt, wie viele aktuelle Rohimporte vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden. LLM-Enrichment: Anzahl der an OpenAI gesendeten Batches."
+    collapsed_records: "Nur für Merge-Läufe: Differenz aus Raw Imports und Merge Groups. Zeigt, wie viele aktuelle Rohimporte vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden. LLM-Enrichment: Anzahl der an OpenAI gesendeten Batches. LLM-Genre-Gruppierung: Anzahl der an OpenAI gesendeten Requests."
   }.freeze
 
   def import_run_type_label(run)
@@ -21,6 +21,8 @@ module Backend::ImportSourcesHelper
       "Merge"
     when "llm_enrichment"
       "LLM Enrichment"
+    when "llm_genre_grouping"
+      "LLM-Genre-Gruppierung"
     else
       run.source_type.to_s
     end
@@ -44,6 +46,10 @@ module Backend::ImportSourcesHelper
 
   def llm_import_run?(run)
     run.source_type.to_s == "llm_enrichment"
+  end
+
+  def llm_genre_grouping_import_run?(run)
+    run.source_type.to_s == "llm_genre_grouping"
   end
 
   def import_run_stop_requested?(run)
@@ -72,10 +78,13 @@ module Backend::ImportSourcesHelper
       stop_reservix_run_backend_import_source_path(run.import_source_id, run_id: run.id)
     when "llm_enrichment"
       stop_llm_enrichment_run_backend_import_sources_path(run_id: run.id)
+    when "llm_genre_grouping"
+      stop_llm_genre_grouping_run_backend_import_sources_path(run_id: run.id)
     end
   end
 
   def import_run_filtered_label(run)
+    return llm_genre_grouping_skipped_count(run) if llm_genre_grouping_import_run?(run)
     return llm_skipped_count(run) if run.source_type == "llm_enrichment"
     return "-" if run.source_type == "merge"
 
@@ -83,6 +92,7 @@ module Backend::ImportSourcesHelper
   end
 
   def import_run_raw_imports_label(run)
+    return llm_genre_grouping_selected_count(run) if llm_genre_grouping_import_run?(run)
     return llm_selected_count(run) if run.source_type == "llm_enrichment"
     return merge_import_records_count(run) if run.source_type == "merge"
 
@@ -90,13 +100,14 @@ module Backend::ImportSourcesHelper
   end
 
   def import_run_merge_groups_label(run)
-    return "-" if run.source_type == "llm_enrichment"
+    return "-" if %w[llm_enrichment llm_genre_grouping].include?(run.source_type)
     return "-" unless run.source_type == "merge"
 
     merge_groups_count(run) || run.imported_count
   end
 
   def import_run_inserts_label(run)
+    return llm_genre_grouping_groups_count(run) if llm_genre_grouping_import_run?(run)
     return llm_enriched_count(run) if run.source_type == "llm_enrichment"
     return run.upserted_count unless run.source_type == "merge"
 
@@ -108,7 +119,7 @@ module Backend::ImportSourcesHelper
   end
 
   def import_run_updates_label(run)
-    return "-" if run.source_type == "llm_enrichment"
+    return "-" if %w[llm_enrichment llm_genre_grouping].include?(run.source_type)
     return "-" unless run.source_type == "merge"
 
     metadata = import_run_metadata(run)
@@ -116,7 +127,7 @@ module Backend::ImportSourcesHelper
   end
 
   def import_run_duplicates_label(run)
-    return "-" if run.source_type == "llm_enrichment"
+    return "-" if %w[llm_enrichment llm_genre_grouping].include?(run.source_type)
     return "-" unless run.source_type == "merge"
 
     metadata = import_run_metadata(run)
@@ -124,6 +135,7 @@ module Backend::ImportSourcesHelper
   end
 
   def import_run_collapsed_records_label(run)
+    return llm_genre_grouping_requests_count(run) if llm_genre_grouping_import_run?(run)
     return llm_batches_count(run) if run.source_type == "llm_enrichment"
     return "-" unless run.source_type == "merge"
 
@@ -208,5 +220,21 @@ module Backend::ImportSourcesHelper
 
   def llm_batches_count(run)
     Integer(import_run_metadata(run)["batches_count"], exception: false) || "-"
+  end
+
+  def llm_genre_grouping_selected_count(run)
+    Integer(import_run_metadata(run)["genres_selected_count"], exception: false) || run.fetched_count
+  end
+
+  def llm_genre_grouping_skipped_count(run)
+    Integer(import_run_metadata(run)["genres_skipped_count"], exception: false) || run.filtered_count
+  end
+
+  def llm_genre_grouping_groups_count(run)
+    Integer(import_run_metadata(run)["groups_created_count"], exception: false) || run.imported_count
+  end
+
+  def llm_genre_grouping_requests_count(run)
+    Integer(import_run_metadata(run)["requests_count"], exception: false) || run.upserted_count
   end
 end

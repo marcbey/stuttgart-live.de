@@ -121,13 +121,13 @@ Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In dies
 
 Im Backend zeigen die Tabellen `Importer Jobs` und `Importer Job #...` absichtlich verschiedene Ebenen der Import-Pipeline. Die Spalten haben dieselbe Bedeutung wie die Hover-Texte im UI:
 
-- `Raw Imports`: Provider-Importer zeigen hier die Anzahl der in diesem Lauf geschriebenen `RawEventImport`-Zeilen. Beim Merge ist es die Anzahl der aktuellen normierten Import-Records nach Auswahl des neuesten Rohimports je `source_identifier`.
+- `Raw Imports`: Provider-Importer zeigen hier die Anzahl der in diesem Lauf geschriebenen `RawEventImport`-Zeilen. Beim Merge ist es die Anzahl der aktuellen normierten Import-Records nach Auswahl des neuesten Rohimports je `source_identifier`. Beim LLM-Genre-Gruppierungsjob ist es die Anzahl der eindeutigen LLM-Genres, die in diesem Lauf gruppiert wurden.
 - `Merge Groups`: Nur beim Merge befüllt. Zeigt, wie viele providerübergreifende Gruppen nach Dublettenzusammenführung über normalisierten Artist-Namen und Startzeit entstanden sind.
-- `Filtered`: Nur bei Provider-Läufen befüllt. Zeigt, wie viele Quelldatensätze die Orts- und Importfilter passiert haben.
-- `Inserts`: Bei Provider-Läufen entspricht das den geschriebenen Rohimporten dieses Laufs. Beim Merge ist es die Anzahl neu angelegter `Event`-Datensätze.
+- `Filtered`: Nur bei Provider-Läufen befüllt. Zeigt, wie viele Quelldatensätze die Orts- und Importfilter passiert haben. Beim LLM-Genre-Gruppierungsjob ist es die Anzahl verworfener Rohgenre-Werte nach Normalisierung.
+- `Inserts`: Bei Provider-Läufen entspricht das den geschriebenen Rohimporten dieses Laufs. Beim Merge ist es die Anzahl neu angelegter `Event`-Datensätze. Beim LLM-Genre-Gruppierungsjob ist es die Anzahl gespeicherter Obergruppen.
 - `Updates`: Nur beim Merge befüllt. Zählt bestehende `Event`-Datensätze, die in diesem Lauf aktualisiert wurden. Dabei überschreibt der Merge `start_at`, `doors_at`, `venue`, `badge_text`, `min_price`, `max_price`, `primary_source`, `source_fingerprint` und `source_snapshot`.
 - `Similarity Duplicates`: Nur beim Merge befüllt. Das ist keine zusätzliche dritte Menge neben `Inserts` und `Updates`, sondern eine Teilmenge der `Updates`. Gezählt werden nur Fälle, in denen das Ähnlichkeits-Matching einen Import-Record einem bestehenden Event zuordnet.
-- `Collapsed Records`: Nur beim Merge befüllt. Das ist `Raw Imports - Merge Groups` und zeigt, wie viele aktuelle Rohimporte schon vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden.
+- `Collapsed Records`: Nur beim Merge befüllt. Das ist `Raw Imports - Merge Groups` und zeigt, wie viele aktuelle Rohimporte schon vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden. Beim LLM-Genre-Gruppierungsjob ist es die Anzahl der an OpenAI gesendeten Requests.
 
 Wichtig für die Interpretation:
 
@@ -189,6 +189,8 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 
 - `sks_promoter_ids` für SKS-Filter und Sortierung
 - `sks_organizer_notes` für den Standardtext bei SKS-Events ohne eigene Veranstalterhinweise
+- `llm_enrichment_model` und `llm_enrichment_prompt_template` für den Enrichment-Job
+- `llm_genre_grouping_model`, `llm_genre_grouping_prompt_template` und `llm_genre_grouping_group_count` für den Genre-Gruppierungsjob
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen im Merge-Import bei exakt gleicher Startzeit
 
 ### Typische Arbeitsweisen
@@ -375,13 +377,13 @@ bin/rails events:maintenance:purge_all_with_imports
 
 Der Task leert zusätzlich `import_runs`, `import_run_errors`, `raw_event_imports` sowie die laufzeitbezogenen `solid_queue_*`-Tabellen. Importquellen, Whitelists und wiederkehrende Queue-Definitionen aus `config/recurring.yml` bleiben erhalten; Reservix-Checkpoints werden zurückgesetzt.
 
-Gezielter Reset für LLM-Enrichment-Daten, LLM-Läufe und dazugehörige Queue-Jobs:
+Gezielter Reset für LLM-Enrichment-Daten, Genre-Gruppierungs-Snapshots, die zugehörigen LLM-Läufe und passende Queue-Jobs:
 
 ```bash
 bin/rails events:maintenance:reset_llm_enrichment
 ```
 
-Der Task löscht alle Einträge aus `event_llm_enrichments`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
+Der Task löscht alle Einträge aus `event_llm_enrichments`, `llm_genre_grouping_snapshots` und `llm_genre_grouping_groups`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` oder `source_type = "llm_genre_grouping"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
 
 ### Produktionsdatenbank neu aufsetzen
 

@@ -4,7 +4,13 @@ class AppSetting < ApplicationRecord
   MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY = "merge_artist_similarity_matching_enabled".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
+  LLM_GENRE_GROUPING_MODEL_KEY = "llm_genre_grouping_model".freeze
+  LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY = "llm_genre_grouping_prompt_template".freeze
+  LLM_GENRE_GROUPING_GROUP_COUNT_KEY = "llm_genre_grouping_group_count".freeze
   LLM_ENRICHMENT_INPUT_PLACEHOLDER = "{{input_json}}".freeze
+  LLM_GENRE_GROUPING_INPUT_PLACEHOLDER = "{{input_json}}".freeze
+  LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER = "{{group_count}}".freeze
+  DEFAULT_LLM_GENRE_GROUPING_GROUP_COUNT = 30
   AVAILABLE_LLM_ENRICHMENT_MODELS = [
     [ "GPT-5.1", "gpt-5.1" ],
     [ "GPT-5 mini", "gpt-5-mini" ],
@@ -85,10 +91,50 @@ class AppSetting < ApplicationRecord
     #{LLM_ENRICHMENT_INPUT_PLACEHOLDER}
   TEXT
 
+  LLM_GENRE_GROUPING_PROMPT_TEMPLATE = <<~TEXT.strip
+    Gruppiere die Genres aus `Input` in genau #{LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER} Obergruppen.
+
+    Gib das Ergebnis ausschließlich als JSON im Format von `Output` zurück.
+
+    ABSOLUTE PFLICHTREGELN:
+    1. Jedes Input-Genre darf genau ein einziges Mal in der gesamten Antwort vorkommen.
+    2. Ein Genre darf niemals in zwei oder mehr Gruppen auftauchen.
+    3. Kein Input-Genre darf fehlen. Null fehlende Genres ist eine harte Pflicht, keine Empfehlung.
+    4. Erfinde keine Genres und erfinde keine zusätzlichen Obergruppen.
+    5. Wenn du ein Genre nicht sicher zuordnen kannst, musst du es trotzdem genau einer einzigen am besten passenden Gruppe zuordnen. Weglassen ist verboten.
+    6. Bevor du antwortest, führe intern einen vollständigen Abgleich zwischen allen Input-Genres und allen ausgegebenen Genres durch.
+    7. Wenn auch nur ein einziges Genre fehlen oder doppelt vorkommen würde, musst du deine Antwort vor der Ausgabe korrigieren.
+
+    Weitere Regeln:
+    1. Die Anzahl der Obergruppen muss exakt #{LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER} sein.
+    2. Jede Obergruppe braucht einen kurzen, redaktionell brauchbaren Namen auf Deutsch.
+    3. Jede Obergruppe muss mindestens ein Genre enthalten.
+    4. `position` muss fortlaufend bei 1 beginnen und ohne Lücken bis zur letzten Gruppe reichen.
+    5. Ordne stilistisch oder fachlich ähnliche Genres sinnvoll zusammen, auch wenn einzelne Labels unterschiedlich formuliert sind.
+    6. Prüfe unmittelbar vor der Ausgabe deine Antwort selbst noch einmal und stelle sicher, dass jedes einzelne Input-Genre exakt einmal vorkommt.
+
+    Output:
+    {
+      "groups": [
+        {
+          "position": 1,
+          "name": "Beispielgruppe",
+          "genres": [ "Genre A", "Genre B" ]
+        }
+      ]
+    }
+
+    Input:
+    #{LLM_GENRE_GROUPING_INPUT_PLACEHOLDER}
+  TEXT
+
   validates :key, presence: true, uniqueness: true
   validate :sks_promoter_ids_must_be_present
   validate :llm_enrichment_model_must_be_valid
   validate :llm_enrichment_prompt_template_must_be_valid
+  validate :llm_genre_grouping_model_must_be_valid
+  validate :llm_genre_grouping_prompt_template_must_be_valid
+  validate :llm_genre_grouping_group_count_must_be_valid
 
   after_commit { self.class.reset_cache! }
 
@@ -111,6 +157,21 @@ class AppSetting < ApplicationRecord
         normalize_llm_enrichment_model(find_by(key: LLM_ENRICHMENT_MODEL_KEY)&.value) || default_llm_enrichment_model
     end
 
+    def llm_genre_grouping_prompt_template
+      @llm_genre_grouping_prompt_template ||=
+        normalize_text(find_by(key: LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY)&.value) || LLM_GENRE_GROUPING_PROMPT_TEMPLATE
+    end
+
+    def llm_genre_grouping_model
+      @llm_genre_grouping_model ||=
+        normalize_llm_enrichment_model(find_by(key: LLM_GENRE_GROUPING_MODEL_KEY)&.value) || default_llm_enrichment_model
+    end
+
+    def llm_genre_grouping_group_count
+      @llm_genre_grouping_group_count ||=
+        normalize_positive_integer(find_by(key: LLM_GENRE_GROUPING_GROUP_COUNT_KEY)&.value) || DEFAULT_LLM_GENRE_GROUPING_GROUP_COUNT
+    end
+
     def sks_promoter_ids_record
       find_or_initialize_by(key: SKS_PROMOTER_IDS_KEY)
     end
@@ -131,6 +192,30 @@ class AppSetting < ApplicationRecord
       find_or_initialize_by(key: LLM_ENRICHMENT_MODEL_KEY).tap do |setting|
         if normalize_llm_enrichment_model(setting.value).blank?
           setting.value = llm_enrichment_model
+        end
+      end
+    end
+
+    def llm_genre_grouping_prompt_template_record
+      find_or_initialize_by(key: LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY).tap do |setting|
+        if normalize_text(setting.value).blank?
+          setting.value = LLM_GENRE_GROUPING_PROMPT_TEMPLATE
+        end
+      end
+    end
+
+    def llm_genre_grouping_model_record
+      find_or_initialize_by(key: LLM_GENRE_GROUPING_MODEL_KEY).tap do |setting|
+        if normalize_llm_enrichment_model(setting.value).blank?
+          setting.value = llm_genre_grouping_model
+        end
+      end
+    end
+
+    def llm_genre_grouping_group_count_record
+      find_or_initialize_by(key: LLM_GENRE_GROUPING_GROUP_COUNT_KEY).tap do |setting|
+        if normalize_positive_integer(setting.value).blank?
+          setting.value = llm_genre_grouping_group_count
         end
       end
     end
@@ -185,6 +270,13 @@ class AppSetting < ApplicationRecord
       end
     end
 
+    def normalize_positive_integer(value)
+      integer = Integer(normalize_text(value) || value, exception: false)
+      return if integer.blank? || integer <= 0
+
+      integer
+    end
+
     def normalize_llm_enrichment_model(value)
       model = normalize_text(value)
       return if model.blank?
@@ -205,6 +297,9 @@ class AppSetting < ApplicationRecord
       @sks_organizer_notes = nil
       @llm_enrichment_model = nil
       @llm_enrichment_prompt_template = nil
+      @llm_genre_grouping_model = nil
+      @llm_genre_grouping_prompt_template = nil
+      @llm_genre_grouping_group_count = nil
       @merge_artist_similarity_matching_enabled = nil
     end
   end
@@ -259,6 +354,48 @@ class AppSetting < ApplicationRecord
     self.value = self.class.normalize_text(raw_value)
   end
 
+  def llm_genre_grouping_prompt_template
+    template = self.class.normalize_text(value)
+    return self.class.llm_genre_grouping_prompt_template if key == LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY && template.blank?
+
+    template
+  end
+
+  def llm_genre_grouping_model
+    model = self.class.normalize_llm_enrichment_model(value)
+    return self.class.llm_genre_grouping_model if key == LLM_GENRE_GROUPING_MODEL_KEY && model.blank?
+
+    model
+  end
+
+  def llm_genre_grouping_group_count
+    group_count = self.class.normalize_positive_integer(value)
+    if key == LLM_GENRE_GROUPING_GROUP_COUNT_KEY && group_count.blank?
+      raw_value = self.class.normalize_text(value)
+      return self.class.llm_genre_grouping_group_count if raw_value.blank?
+
+      return raw_value
+    end
+
+    group_count
+  end
+
+  def llm_genre_grouping_model=(raw_value)
+    self.value = self.class.normalize_text(raw_value)
+  end
+
+  def llm_genre_grouping_prompt_template_text
+    llm_genre_grouping_prompt_template.to_s
+  end
+
+  def llm_genre_grouping_prompt_template_text=(raw_value)
+    self.value = self.class.normalize_text(raw_value)
+  end
+
+  def llm_genre_grouping_group_count=(raw_value)
+    self.value = self.class.normalize_positive_integer(raw_value) || self.class.normalize_text(raw_value)
+  end
+
   def merge_artist_similarity_matching_enabled
     if key == MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY && new_record? && (value.nil? || value == [])
       return self.class.merge_artist_similarity_matching_enabled?
@@ -306,5 +443,46 @@ class AppSetting < ApplicationRecord
     return if self.class.available_llm_enrichment_model_values.include?(model)
 
     errors.add(:value, "ist kein unterstütztes LLM-Modell")
+  end
+
+  def llm_genre_grouping_prompt_template_must_be_valid
+    return unless key == LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY
+
+    template = self.class.normalize_text(value)
+    if template.blank?
+      errors.add(:value, "darf nicht leer sein")
+      return
+    end
+
+    unless template.include?(LLM_GENRE_GROUPING_INPUT_PLACEHOLDER)
+      errors.add(:value, "{{input_json}} muss im Prompt enthalten sein")
+    end
+
+    return if template.include?(LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER)
+
+    errors.add(:value, "{{group_count}} muss im Prompt enthalten sein")
+  end
+
+  def llm_genre_grouping_model_must_be_valid
+    return unless key == LLM_GENRE_GROUPING_MODEL_KEY
+
+    model = self.class.normalize_text(value)
+    if model.blank?
+      errors.add(:value, "darf nicht leer sein")
+      return
+    end
+
+    return if self.class.available_llm_enrichment_model_values.include?(model)
+
+    errors.add(:value, "ist kein unterstütztes LLM-Modell")
+  end
+
+  def llm_genre_grouping_group_count_must_be_valid
+    return unless key == LLM_GENRE_GROUPING_GROUP_COUNT_KEY
+
+    integer = self.class.normalize_positive_integer(value)
+    return if integer.present?
+
+    errors.add(:value, "muss eine positive Ganzzahl sein")
   end
 end

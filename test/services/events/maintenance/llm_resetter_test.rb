@@ -106,6 +106,13 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
       started_at: Time.current,
       metadata: {}
     )
+    @llm_grouping_run = ImportRun.create!(
+      import_source: import_sources(:one),
+      source_type: "llm_genre_grouping",
+      status: "running",
+      started_at: Time.current,
+      metadata: {}
+    )
     @other_run = ImportRun.create!(
       import_source: import_sources(:one),
       source_type: "merge",
@@ -126,10 +133,26 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
       prompt_version: "v1",
       raw_response: {}
     )
+    @llm_grouping_run.create_llm_genre_grouping_snapshot!(
+      active: true,
+      requested_group_count: 30,
+      effective_group_count: 1,
+      source_genres_count: 1,
+      model: "gpt-5-mini",
+      prompt_template_digest: "digest",
+      request_payload: {},
+      raw_response: {}
+    ).groups.create!(position: 1, name: "Jazz", member_genres: [ "Jazz" ])
 
     @llm_run.import_run_errors.create!(
       source_type: "llm_enrichment",
       message: "LLM Fehler",
+      error_class: "RuntimeError",
+      payload: {}
+    )
+    @llm_grouping_run.import_run_errors.create!(
+      source_type: "llm_genre_grouping",
+      message: "Grouping Fehler",
       error_class: "RuntimeError",
       payload: {}
     )
@@ -149,14 +172,17 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
 
     FakeJobModel.records = [
       { id: 1, class_name: "Importing::LlmEnrichment::RunJob" },
-      { id: 2, class_name: "Importing::Eventim::RunJob" }
+      { id: 2, class_name: "Importing::LlmGenreGrouping::RunJob" },
+      { id: 3, class_name: "Importing::Eventim::RunJob" }
     ]
     FakeReadyExecutionModel.records = [
       { id: 1, job_id: 1 },
-      { id: 2, job_id: 2 }
+      { id: 2, job_id: 2 },
+      { id: 3, job_id: 3 }
     ]
     FakeScheduledExecutionModel.records = [
-      { id: 1, job_id: 1 }
+      { id: 1, job_id: 1 },
+      { id: 2, job_id: 2 }
     ]
     FakeQueueRecord.available_tables = [
       "solid_queue_ready_executions",
@@ -176,17 +202,22 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
     )
 
     assert_equal 0, EventLlmEnrichment.count
-    assert_equal 0, ImportRun.where(source_type: "llm_enrichment").count
+    assert_equal 0, ImportRun.where(source_type: %w[llm_enrichment llm_genre_grouping]).count
     assert_equal 0, ImportRunError.where(import_run_id: @llm_run.id).count
+    assert_equal 0, ImportRunError.where(import_run_id: @llm_grouping_run.id).count
+    assert_equal 0, LlmGenreGroupingSnapshot.count
+    assert_equal 0, LlmGenreGroupingGroup.count
     assert_equal 1, ImportRun.where(id: @other_run.id).count
     assert_equal 1, ImportRunError.where(import_run_id: @other_run.id).count
 
-    assert_equal [ { id: 2, class_name: "Importing::Eventim::RunJob" } ], FakeJobModel.records
-    assert_equal [ { id: 2, job_id: 2 } ], FakeReadyExecutionModel.records
+    assert_equal [ { id: 3, class_name: "Importing::Eventim::RunJob" } ], FakeJobModel.records
+    assert_equal [ { id: 3, job_id: 3 } ], FakeReadyExecutionModel.records
     assert_empty FakeScheduledExecutionModel.records
 
     assert_equal :cleared, result.queue_status
     assert_equal 0, result.event_counts.fetch("event_llm_enrichments")
+    assert_equal 0, result.event_counts.fetch("llm_genre_grouping_snapshots")
+    assert_equal 0, result.event_counts.fetch("llm_genre_grouping_groups")
     assert_equal 0, result.import_counts.fetch("llm_import_runs")
     assert_equal 0, result.import_counts.fetch("llm_import_run_errors")
     assert_equal 0, result.queue_counts.fetch("solid_queue_jobs")
@@ -208,9 +239,9 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
     assert_equal :skipped, result.queue_status
     assert_empty result.queue_counts
     assert_equal 0, EventLlmEnrichment.count
-    assert_equal 0, ImportRun.where(source_type: "llm_enrichment").count
-    assert_equal 2, FakeJobModel.records.count
-    assert_equal 2, FakeReadyExecutionModel.records.count
+    assert_equal 0, ImportRun.where(source_type: %w[llm_enrichment llm_genre_grouping]).count
+    assert_equal 3, FakeJobModel.records.count
+    assert_equal 3, FakeReadyExecutionModel.records.count
     assert_equal Event.count, latest_merge_selected_events.count
   end
 
