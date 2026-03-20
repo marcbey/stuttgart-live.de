@@ -60,7 +60,8 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
       events_created_count: 0,
       events_updated_count: 0,
       duplicate_matches_count: 0,
-      offers_upserted_count: 0
+      offers_upserted_count: 0,
+      canceled: false
     )
     fake_service = Struct.new(:call).new(fake_result)
 
@@ -91,7 +92,8 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
       events_created_count: 2,
       events_updated_count: 1,
       duplicate_matches_count: 1,
-      offers_upserted_count: 7
+      offers_upserted_count: 7,
+      canceled: false
     )
 
     sync_class = Merging::SyncFromImports.singleton_class
@@ -131,6 +133,60 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     assert_equal 1, observed_run_state.metadata["events_updated_count"]
     assert_equal 1, observed_run_state.metadata["duplicate_matches_count"]
     assert_equal 3, observed_run_state.metadata["processed_groups_count"]
+  ensure
+    sync_class.alias_method :new, :__original_new_for_test
+    sync_class.remove_method :__original_new_for_test
+  end
+
+  test "marks merge run as canceled when stop is requested" do
+    run = nil
+
+    sync_class = Merging::SyncFromImports.singleton_class
+    sync_class.alias_method :__original_new_for_test, :new
+    sync_class.define_method(:new) do |*args, **kwargs|
+      merge_run_id = kwargs.fetch(:merge_run_id)
+      stop_requested_callback = kwargs.fetch(:stop_requested_callback)
+      progress_callback = kwargs.fetch(:progress_callback)
+
+      Class.new do
+        define_method(:call) do
+          ImportRun.find(merge_run_id).update!(
+            metadata: { "stop_requested" => true, "stop_requested_at" => Time.current.iso8601 }
+          )
+
+          progress_callback.call(
+            import_records_count: 12,
+            groups_count: 4,
+            events_created_count: 2,
+            events_updated_count: 1,
+            duplicate_matches_count: 1,
+            offers_upserted_count: 7,
+            processed_groups_count: 3
+          )
+
+          raise "expected stop request" unless stop_requested_callback.call
+
+          Merging::SyncFromImports::Result.new(
+            import_records_count: 12,
+            groups_count: 4,
+            events_created_count: 0,
+            events_updated_count: 0,
+            duplicate_matches_count: 0,
+            offers_upserted_count: 0,
+            canceled: true
+          )
+        end
+      end.new
+    end
+
+    Merging::SyncImportedEventsJob.perform_now(last_run_at: Time.zone.parse("2026-03-14 10:15:00"))
+
+    run = ImportRun.where(source_type: "merge").order(:created_at).last
+    assert_equal "canceled", run.status
+    assert_equal 12, run.fetched_count
+    assert_equal 0, run.imported_count
+    assert_equal 0, run.upserted_count
+    assert_equal "Stopped by user", run.metadata["stop_release_reason"]
   ensure
     sync_class.alias_method :new, :__original_new_for_test
     sync_class.remove_method :__original_new_for_test

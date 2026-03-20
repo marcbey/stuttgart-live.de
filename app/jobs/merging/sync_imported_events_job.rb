@@ -18,8 +18,32 @@ module Merging
       result = Merging::SyncFromImports.new(
         merge_run_id: run.id,
         last_run_at: normalized_last_run_at,
-        progress_callback: ->(progress) { persist_progress!(run, progress, progress_state) }
+        progress_callback: ->(progress) { persist_progress!(run, progress, progress_state) },
+        stop_requested_callback: -> { stop_requested?(run) }
       ).call
+
+      if result.canceled
+        run.update!(
+          status: "canceled",
+          finished_at: Time.current,
+          fetched_count: result.import_records_count,
+          filtered_count: 0,
+          imported_count: 0,
+          upserted_count: 0,
+          failed_count: 0,
+          metadata: current_run_metadata(run).merge(
+            "import_records_count" => result.import_records_count,
+            "groups_count" => result.groups_count,
+            "events_created_count" => 0,
+            "events_updated_count" => 0,
+            "duplicate_matches_count" => 0,
+            "offers_upserted_count" => 0,
+            "stop_released_at" => Time.current.iso8601,
+            "stop_release_reason" => "Stopped by user"
+          )
+        )
+        return
+      end
 
       run.update!(
         status: "succeeded",
@@ -120,6 +144,10 @@ module Merging
       return {} unless run.reload.metadata.is_a?(Hash)
 
       run.metadata.deep_stringify_keys
+    end
+
+    def stop_requested?(run)
+      ActiveModel::Type::Boolean.new.cast(current_run_metadata(run)["stop_requested"])
     end
 
     def normalize_last_run_at(value)

@@ -27,6 +27,7 @@ Rails.application.routes.draw do
 
     resources :import_sources, only: [ :index, :edit, :update ] do
       post :sync_imported_events, on: :collection
+      post :stop_merge_run, on: :collection
       post :run_llm_enrichment, on: :collection
       post :stop_llm_enrichment_run, on: :collection
       post :run_easyticket, on: :member

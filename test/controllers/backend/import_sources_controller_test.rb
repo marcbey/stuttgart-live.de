@@ -55,7 +55,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert payload["runs"].map { |run| run["source_type"] }.include?("eventim")
   end
 
-  test "should include merge runs as non-stoppable jobs" do
+  test "should include merge runs as stoppable jobs" do
     merge_run = @source.import_runs.create!(
       status: "running",
       source_type: "merge",
@@ -70,11 +70,11 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert run_payload.present?
     assert_equal "merge", run_payload["source_type"]
-    assert_equal false, run_payload["can_stop"]
-    assert_nil run_payload["stop_url"]
+    assert_equal true, run_payload["can_stop"]
+    assert_includes run_payload["stop_url"], "stop_merge_run"
   end
 
-  test "should render details action and no stop-request label for running merge jobs" do
+  test "should render stop action for running merge jobs" do
     merge_run = @source.import_runs.create!(
       status: "running",
       source_type: "merge",
@@ -86,7 +86,23 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child a", text: "Details"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child form button", text: "Stoppen"
     assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child", text: /Stop angefordert/, count: 0
+  end
+
+  test "should request stop for a running merge run" do
+    run = @source.import_runs.create!(
+      status: "running",
+      source_type: "merge",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    post stop_merge_run_backend_import_sources_url(run_id: run.id)
+
+    assert_redirected_to backend_import_sources_url
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "running", run.status
   end
 
   test "should render stopping status instead of stop requested text" do

@@ -62,6 +62,8 @@ module Backend::ImportSourcesHelper
 
   def import_run_stop_path(run)
     case run.source_type
+    when "merge"
+      stop_merge_run_backend_import_sources_path(run_id: run.id)
     when "easyticket"
       stop_easyticket_run_backend_import_source_path(run.import_source_id, run_id: run.id)
     when "eventim"

@@ -25,6 +25,25 @@ module Backend
       redirect_to backend_import_sources_path, notice: "Merge-Sync wurde gestartet."
     end
 
+    def stop_merge_run
+      run = ImportRun.where(source_type: "merge", status: "running").order(started_at: :desc)
+      run = run.find_by(id: params[:run_id]) if params[:run_id].present?
+      run ||= ImportRun.where(source_type: "merge", status: "running").order(started_at: :desc).first
+
+      if run.blank?
+        redirect_to backend_import_sources_path, alert: "Kein laufender Merge-Run gefunden."
+        return
+      end
+
+      metadata = run.metadata.is_a?(Hash) ? run.metadata.deep_stringify_keys : {}
+      metadata["stop_requested"] = true
+      metadata["stop_requested_at"] = Time.current.iso8601
+      run.update!(metadata: metadata)
+
+      Backend::ImportRunsBroadcaster.broadcast!
+      redirect_to backend_import_sources_path, notice: "Stop für Merge-Run ##{run.id} wurde angefordert."
+    end
+
     def run_llm_enrichment
       source = llm_enrichment_run_source
       source.with_lock do

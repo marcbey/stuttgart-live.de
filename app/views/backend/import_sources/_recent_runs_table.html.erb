@@ -130,6 +130,9 @@
                 <td><%= run.failed_count %></td>
                 <td class="action-cell">
                   <%= link_to "Details", backend_import_run_path(run), class: "button button-ghost button-compact" %>
+                  <% if import_run_can_stop?(run) %>
+                    <%= button_to "Stoppen", import_run_stop_path(run), method: :post, class: "button button-secondary button-compact" %>
+                  <% end %>
                 </td>
               </tr>
             <% end %>

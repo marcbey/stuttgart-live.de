@@ -34,6 +34,8 @@ module Backend
       attr_reader :controller, :maintenance, :registry
 
       def stop_url_for(run)
+        return controller.stop_merge_run_backend_import_sources_path(run_id: run.id) if run.source_type == "merge"
+
         helper_name = registry.fetch(run.source_type, required: false)&.fetch(:stop_route_helper, nil)
         return nil if helper_name.blank?
 

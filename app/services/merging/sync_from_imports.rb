@@ -6,7 +6,8 @@ module Merging
       :events_created_count,
       :events_updated_count,
       :duplicate_matches_count,
-      :offers_upserted_count
+      :offers_upserted_count,
+      :canceled
     )
 
     ImportRecord = Data.define(
@@ -43,11 +44,14 @@ module Merging
       :position
     )
 
-    def initialize(merge_run_id: nil, last_run_at: nil, logger: Rails.logger, progress_callback: nil)
+    StopRequested = Class.new(StandardError)
+
+    def initialize(merge_run_id: nil, last_run_at: nil, logger: Rails.logger, progress_callback: nil, stop_requested_callback: nil)
       @merge_run_id = merge_run_id
       @last_run_at = normalize_last_run_at(last_run_at)
       @logger = logger
       @progress_callback = progress_callback
+      @stop_requested_callback = stop_requested_callback
       @priority_map = ProviderPriorityMap.call
       @record_builder = RecordBuilder.new
       @match_strategy = MatchStrategy.new(priority_map: @priority_map)
@@ -77,9 +81,12 @@ module Merging
         offers_upserted_count: offers_upserted,
         processed_groups_count: 0
       )
+      stop_if_requested!
 
       ActiveRecord::Base.transaction do
         groups.each_value.with_index(1) do |group_records, processed_groups_count|
+          stop_if_requested!
+
           ordered_records = ordered_records_for_group(group_records)
           _event, created_now, updated_now, duplicate_now, offers_count = event_upserter.call(ordered_records)
           created += 1 if created_now
@@ -105,13 +112,24 @@ module Merging
         events_created_count: created,
         events_updated_count: updated,
         duplicate_matches_count: duplicates,
-        offers_upserted_count: offers_upserted
+        offers_upserted_count: offers_upserted,
+        canceled: false
+      )
+    rescue StopRequested
+      Result.new(
+        import_records_count: records.size,
+        groups_count: groups.count,
+        events_created_count: 0,
+        events_updated_count: 0,
+        duplicate_matches_count: 0,
+        offers_upserted_count: 0,
+        canceled: true
       )
     end
 
     private
 
-    attr_reader :event_upserter, :last_run_at, :logger, :priority_map, :progress_callback, :record_builder
+    attr_reader :event_upserter, :last_run_at, :logger, :priority_map, :progress_callback, :record_builder, :stop_requested_callback
 
     def ordered_records_for_group(records)
       records.sort_by do |record|
@@ -145,6 +163,10 @@ module Merging
 
     def report_progress!(attributes)
       progress_callback&.call(attributes)
+    end
+
+    def stop_if_requested!
+      raise StopRequested if stop_requested_callback&.call
     end
   end
 end
