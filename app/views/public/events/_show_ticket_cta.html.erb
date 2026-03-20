@@ -13,8 +13,8 @@
           <% if presenter.ticket_badge_text.present? %>
             <p class="event-detail-badge-inline"><%= presenter.ticket_badge_text %></p>
           <% end %>
+          <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
         </div>
-        <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
       </div>
       <% if presenter.external_links.any? %>
         <div class="event-detail-cta-actions">
