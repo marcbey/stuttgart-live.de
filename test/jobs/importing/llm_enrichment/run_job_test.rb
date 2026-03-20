@@ -19,7 +19,7 @@ module Importing
           skipped_count: 2,
           enriched_count: 3,
           batches_count: 1,
-          merge_run_id: 123,
+          merge_run_id: nil,
           model: "gpt-5-mini",
           canceled: false
         )
@@ -37,7 +37,7 @@ module Importing
         assert_equal 2, @run.filtered_count
         assert_equal 3, @run.imported_count
         assert_equal 1, @run.upserted_count
-        assert_equal 123, @run.metadata["merge_run_id"]
+        assert_nil @run.metadata["merge_run_id"]
         assert_equal "gpt-5-mini", @run.metadata["model"]
       ensure
         importer_class.alias_method :new, :__original_new_for_test

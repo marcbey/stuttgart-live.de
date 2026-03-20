@@ -30,25 +30,24 @@ module Importing
       end
 
       def call
-        merge_run = latest_successful_merge_run
-        raise Error, "Kein erfolgreicher Merge-Lauf gefunden." if merge_run.blank?
-
-        selected_events = events_for_merge_run(merge_run)
+        selection_time = Time.current
+        selected_events = future_events_scope(selection_time)
+        selected_count = selected_events.count
         skipped_count = already_enriched_count(selected_events)
-        pending_events = selected_events.where.missing(:llm_enrichment).order(:id).to_a
+        pending_events = selected_events.where.missing(:llm_enrichment).order(:start_at, :id).to_a
         batches = pending_events.each_slice(BATCH_SIZE).to_a
         enriched_count = 0
         batches_processed = 0
 
-        logger.info("[LlmEnrichmentImporter] run_id=#{run.id} started merge_run_id=#{merge_run.id} selected=#{selected_events.count} skipped=#{skipped_count} batches=#{batches.count}")
+        logger.info("[LlmEnrichmentImporter] run_id=#{run.id} started selected=#{selected_count} skipped=#{skipped_count} batches=#{batches.count}")
 
         update_run_progress!(
-          selected_count: selected_events.count,
+          selected_count: selected_count,
           skipped_count: skipped_count,
           enriched_count: enriched_count,
           batches_count: batches.count,
           batches_processed: batches_processed,
-          "merge_run_id" => merge_run.id,
+          "merge_run_id" => nil,
           "batch_size" => BATCH_SIZE,
           "model" => client_model
         )
@@ -56,7 +55,7 @@ module Importing
         batches.each_with_index do |batch_events, index|
           if stop_requested?
             logger.info("[LlmEnrichmentImporter] run_id=#{run.id} stop requested before batch=#{index + 1}")
-            return canceled_result(selected_events:, skipped_count:, enriched_count:, batches_count: batches.count, merge_run:)
+            return canceled_result(selected_count:, skipped_count:, enriched_count:, batches_count: batches.count)
           end
 
           touch_run_heartbeat!("current_batch" => index + 1)
@@ -70,7 +69,7 @@ module Importing
           logger.info("[LlmEnrichmentImporter] run_id=#{run.id} completed batch=#{batches_processed}/#{batches.count} enriched_total=#{enriched_count}")
 
           update_run_progress!(
-            selected_count: selected_events.count,
+            selected_count: selected_count,
             skipped_count: skipped_count,
             enriched_count: enriched_count,
             batches_count: batches.count,
@@ -80,11 +79,11 @@ module Importing
         end
 
         Result.new(
-          selected_count: selected_events.count,
+          selected_count: selected_count,
           skipped_count: skipped_count,
           enriched_count: enriched_count,
           batches_count: batches.count,
-          merge_run_id: merge_run.id,
+          merge_run_id: nil,
           model: client_model,
           canceled: false
         )
@@ -99,16 +98,8 @@ module Importing
 
       attr_reader :client, :logger, :run
 
-      def latest_successful_merge_run
-        ImportRun.where(source_type: "merge", status: "succeeded").order(finished_at: :desc, id: :desc).first
-      end
-
-      def events_for_merge_run(merge_run)
-        Event
-          .joins(:event_change_logs)
-          .where(event_change_logs: { action: [ "merged_create", "merged_update" ] })
-          .where("event_change_logs.metadata ->> 'merge_run_id' = ?", merge_run.id.to_s)
-          .distinct
+      def future_events_scope(selection_time)
+        Event.where("start_at >= ?", selection_time)
       end
 
       def already_enriched_count(scope)
@@ -343,13 +334,13 @@ module Importing
         run.reload.status == "running"
       end
 
-      def canceled_result(selected_events:, skipped_count:, enriched_count:, batches_count:, merge_run:)
+      def canceled_result(selected_count:, skipped_count:, enriched_count:, batches_count:)
         Result.new(
-          selected_count: selected_events.count,
+          selected_count: selected_count,
           skipped_count: skipped_count,
           enriched_count: enriched_count,
           batches_count: batches_count,
-          merge_run_id: merge_run.id,
+          merge_run_id: nil,
           model: client_model,
           canceled: true
         )
