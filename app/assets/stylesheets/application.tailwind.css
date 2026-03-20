@@ -4170,6 +4170,12 @@ trix-editor.blog-rich-text:focus {
   text-wrap: balance;
 }
 
+.event-detail-header-intro h1 {
+  max-width: none;
+  font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 0.96;
+}
+
 .event-detail-title {
   margin: 0;
   max-width: 28rem;
