@@ -2500,11 +2500,21 @@ trix-editor.blog-rich-text:focus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.2rem;
-  border: 0;
-  background: transparent;
+  min-width: 2rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid rgba(17, 17, 17, 0.22);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
   color: inherit;
   cursor: pointer;
+  transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease;
+}
+
+.slider-view-toggle:hover {
+  transform: translateY(-1px);
+  border-color: rgba(17, 17, 17, 0.34);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.12);
 }
 
 .highlights-slider-toggle {
