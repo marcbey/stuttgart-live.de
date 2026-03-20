@@ -1,11 +1,24 @@
-<section class="newsletter-signup-section">
+<section class="newsletter-signup-section" aria-labelledby="newsletter-signup-title">
+  <div class="newsletter-signup-glow" aria-hidden="true"></div>
+
   <div class="newsletter-signup-copy">
-    <p class="eyebrow">Newsletter</p>
-    <h2>Nichts verpassen</h2>
-    <p>Neue Konzerte, Highlights und Vorverkäufe direkt in dein Postfach.</p>
+    <h2 id="newsletter-signup-title">Nichts verpassen</h2>
+    <p class="newsletter-signup-lead">Neue Konzerte, Highlights und Vorverkäufe landen direkt in deinem Postfach.</p>
+
+    <ul class="newsletter-signup-highlights" aria-label="Vorteile des Newsletters">
+      <li>Frische Konzerttipps aus Stuttgart</li>
+      <li>Highlights und redaktionelle Empfehlungen</li>
+      <li>Schnell, kompakt und ohne Feed-Chaos</li>
+    </ul>
   </div>
 
-  <%= render "public/newsletter_subscribers/signup",
-             subscriber: NewsletterSubscriber.new,
-             signup: newsletter_signup_config("events_index", return_to: request.fullpath) %>
+  <div class="newsletter-signup-panel">
+    <p class="newsletter-signup-panel-kicker">Direkt in deine Inbox</p>
+
+    <%= render "public/newsletter_subscribers/signup",
+               subscriber: NewsletterSubscriber.new,
+               signup: newsletter_signup_config("events_index", return_to: request.fullpath) %>
+
+    <p class="newsletter-signup-note">Nur die wichtigsten Updates. Kein täglicher Spam.</p>
+  </div>
 </section>
