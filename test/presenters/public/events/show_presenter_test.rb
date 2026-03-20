@@ -162,6 +162,22 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "Indie", "Rock" ], presenter.enrichment_genres
   end
 
+  test "adds youtube fallback link when url is not embeddable" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      youtube_url: "https://www.youtube.com/@BandChannel"
+    )
+    event.define_singleton_method(:slider_images) { [] }
+
+    presenter = build_presenter(event)
+
+    assert_nil presenter.youtube_embed_url
+    assert_equal [ "YouTube" ], presenter.external_links.map(&:label)
+    assert_equal "https://www.youtube.com/@BandChannel", presenter.external_links.first.url
+    assert_not presenter.has_media_block?
+  end
+
   test "hides duplicate title lines and deduplicates repeated paragraphs" do
     event = build_event(
       artist_name: "Kuult",

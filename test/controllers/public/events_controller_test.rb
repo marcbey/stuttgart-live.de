@@ -1240,6 +1240,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "template iframe[src=?]", "https://www.youtube.com/embed/dQw4w9WgXcQ"
   end
 
+  test "show renders youtube fallback link when video is not embeddable" do
+    @published_event.update!(youtube_url: "https://www.youtube.com/@publishedartist")
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-links a", text: "YouTube"
+    assert_select ".event-detail-links a[href='https://www.youtube.com/@publishedartist']"
+    assert_select "template iframe", count: 0
+    assert_not_includes response.body, "YouTube laden"
+  end
+
   test "show does not render dangling comma when city is blank" do
     @published_event.update!(city: nil)
 

@@ -158,7 +158,8 @@ module Public
         @external_links ||= [
           build_link("Homepage", event.homepage_url, llm_enrichment&.homepage_link),
           build_link("Instagram", event.instagram_url, llm_enrichment&.instagram_link),
-          build_link("Facebook", event.facebook_url, llm_enrichment&.facebook_link)
+          build_link("Facebook", event.facebook_url, llm_enrichment&.facebook_link),
+          youtube_fallback_link
         ].compact
       end
 
@@ -325,6 +326,13 @@ module Public
 
       def primary_youtube_url
         event.youtube_url.to_s.strip.presence || llm_enrichment&.youtube_link.to_s.strip.presence
+      end
+
+      def youtube_fallback_link
+        return if primary_youtube_url.blank?
+        return if youtube_embed_url.present?
+
+        build_link("YouTube", primary_youtube_url)
       end
 
       def embed_url_for(url)
