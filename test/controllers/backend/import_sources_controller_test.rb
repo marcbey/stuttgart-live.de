@@ -21,7 +21,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
 
     assert_response :success
-    assert_includes response.body, "Import-Merge synchronisieren"
+    assert_includes response.body, "Import-Merge starten"
     assert_includes response.body, "button-attention"
   end
 
@@ -37,7 +37,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
 
     assert_response :success
-    assert_includes response.body, "Import-Merge synchronisieren"
+    assert_includes response.body, "Import-Merge starten"
     assert_not_includes response.body, "button-attention"
   end
 
@@ -208,7 +208,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
     assert_response :success
 
-    assert_select "h3", text: "LLM Jobs"
+    assert_select "h3", text: "LLM-Enrichment Jobs"
     assert_select "tr[data-run-id='#{run.id}'] td:nth-child(3)", text: "120"
     assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "15"
     assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "40"
@@ -328,8 +328,8 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "LLM-Enrichment starten"
-    assert_includes response.body, "Prompt konfigurieren"
-    assert_select "a[href='#{edit_backend_settings_path(anchor: "llm-enrichment-prompt")}']", text: "Prompt konfigurieren"
+    assert_includes response.body, "Bearbeiten"
+    assert_select "a[href='#{edit_backend_settings_path(anchor: "llm-enrichment-prompt")}']", text: "Bearbeiten"
   end
 
   test "should enqueue llm enrichment run from import sources page" do
