@@ -6,6 +6,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     @editor = users(:one)
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
+    AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
     AppSetting.where(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY).delete_all
     AppSetting.where(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY).delete_all
     AppSetting.where(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY).delete_all
@@ -23,12 +24,14 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@admin)
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: %w[10135 10136 382])
     AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Bestehender Hinweistext")
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ "rock-alternative", "pop-mainstream" ])
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5-mini")
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5-mini")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Gruppiere\n{{group_count}}\n{{input_json}}")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 30)
     AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+    create_homepage_genre_snapshot
 
     get edit_backend_settings_url
 
@@ -36,6 +39,13 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links .app-nav-link-active", text: "Einstellungen"
     assert_includes response.body, "SKS Promoter IDs"
     assert_includes response.body, "SKS Standard-Veranstalterhinweise"
+    assert_includes response.body, "Homepage Genre-Lanes"
+    assert_includes response.body, "Aktive Obergruppen im Snapshot"
+    assert_includes response.body, "Reihenfolge per Drag & Drop"
+    assert_not_includes response.body, "Obergruppen-Slugs für die Homepage"
+    assert_select ".settings-reference-items-columns[data-controller='settings-sortable']", count: 1
+    assert_select ".settings-reference-item[draggable='true']", minimum: 1
+    assert_select ".settings-reference-items-columns input[type=checkbox]", minimum: 1
     assert_includes response.body, "LLM-Modell"
     assert_includes response.body, "LLM-Enrichment Prompt"
     assert_includes response.body, "LLM-Genre-Gruppierung"
@@ -57,6 +67,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       app_setting: {
         sks_promoter_ids_text: "900\n901, 902",
         sks_organizer_notes_text: "Neuer Hinweistext\nZweite Zeile",
+        homepage_genre_lane_slugs: [ "rock-alternative", "pop-mainstream" ],
         llm_enrichment_model: "gpt-5-mini",
         llm_enrichment_prompt_template_text: "Bitte recherchiere\n{{input_json}}",
         llm_genre_grouping_model: "gpt-5-mini",
@@ -70,6 +81,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal %w[900 901 902], AppSetting.sks_promoter_ids
     assert_equal %w[900 901 902], AppSetting.find_by!(key: AppSetting::SKS_PROMOTER_IDS_KEY).value
     assert_equal "Neuer Hinweistext\nZweite Zeile", AppSetting.sks_organizer_notes
+    assert_equal [ "rock-alternative", "pop-mainstream" ], AppSetting.homepage_genre_lane_slugs
     assert_equal "gpt-5-mini", AppSetting.llm_enrichment_model
     assert_equal "Bitte recherchiere\n{{input_json}}", AppSetting.llm_enrichment_prompt_template
     assert_equal "gpt-5-mini", AppSetting.llm_genre_grouping_model
@@ -85,6 +97,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       app_setting: {
         sks_promoter_ids_text: "900",
         sks_organizer_notes_text: "Hinweistext",
+        homepage_genre_lane_slugs: [ "rock-alternative" ],
         llm_enrichment_model: "gpt-5.1",
         llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
         llm_genre_grouping_model: "gpt-5-mini",
@@ -106,6 +119,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       app_setting: {
         sks_promoter_ids_text: " \n ",
         sks_organizer_notes_text: "Hinweistext",
+        homepage_genre_lane_slugs: [ "rock-alternative" ],
         llm_enrichment_model: "gpt-5.1",
         llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
         llm_genre_grouping_model: "gpt-5-mini",
@@ -126,6 +140,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       app_setting: {
         sks_promoter_ids_text: "900",
         sks_organizer_notes_text: "Hinweistext",
+        homepage_genre_lane_slugs: [ "rock-alternative" ],
         llm_enrichment_model: "gpt-5.1",
         llm_enrichment_prompt_template_text: "Prompt ohne Platzhalter",
         llm_genre_grouping_model: "gpt-5-mini",
@@ -146,6 +161,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       app_setting: {
         sks_promoter_ids_text: "900",
         sks_organizer_notes_text: "Hinweistext",
+        homepage_genre_lane_slugs: [ "rock-alternative" ],
         llm_enrichment_model: "gpt-4.1",
         llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
         llm_genre_grouping_model: "gpt-5-mini",
@@ -166,6 +182,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       app_setting: {
         sks_promoter_ids_text: "900",
         sks_organizer_notes_text: "Hinweistext",
+        homepage_genre_lane_slugs: [ "rock-alternative" ],
         llm_enrichment_model: "gpt-5.1",
         llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
         llm_genre_grouping_model: "gpt-5-mini",
@@ -178,5 +195,30 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_includes response.body, "{{group_count}} muss im Prompt enthalten sein"
     assert_includes response.body, "muss eine positive Ganzzahl sein"
+  end
+
+  private
+
+  def create_homepage_genre_snapshot
+    run = import_sources(:two).import_runs.create!(
+      source_type: "llm_genre_grouping",
+      status: "succeeded",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago
+    )
+
+    snapshot = run.create_llm_genre_grouping_snapshot!(
+      active: true,
+      requested_group_count: 30,
+      effective_group_count: 2,
+      source_genres_count: 2,
+      model: "gpt-5-mini",
+      prompt_template_digest: "digest",
+      request_payload: {},
+      raw_response: {}
+    )
+
+    snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
+    snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
   end
 end

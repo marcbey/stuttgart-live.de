@@ -2029,6 +2029,206 @@ trix-editor.blog-rich-text:focus {
   margin-top: 1.35rem;
 }
 
+.genre-lane-section {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background:
+    radial-gradient(circle at top left, rgba(227, 27, 46, 0.08), transparent 28%),
+    linear-gradient(160deg, rgba(255, 248, 239, 0.98), rgba(255, 255, 255, 0.98));
+  box-shadow: 0 16px 36px rgba(17, 17, 17, 0.06);
+}
+
+.genre-lane-header {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.9rem;
+}
+
+.genre-lane-heading {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.genre-lane-kicker {
+  margin: 0;
+  color: rgba(141, 19, 32, 0.78);
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.genre-lane-heading h2 {
+  margin: 0;
+  font-size: clamp(1.35rem, 2vw, 1.8rem);
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+.genre-lane-summary {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.62);
+  font-size: 0.84rem;
+}
+
+.genre-lane-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.genre-lane-toggle,
+.genre-lane-arrow {
+  background: rgba(255, 255, 255, 0.84);
+  backdrop-filter: blur(10px);
+}
+
+.genre-lane-track {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(16.5rem, 16.5rem);
+  gap: 1rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.genre-lane-track::-webkit-scrollbar {
+  display: none;
+}
+
+.genre-lane-card {
+  scroll-snap-align: start;
+}
+
+.genre-lane-card-link {
+  display: grid;
+  gap: 0.7rem;
+  min-height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+
+.genre-lane-card-media {
+  position: relative;
+  aspect-ratio: 0.98 / 1.12;
+  overflow: hidden;
+  border-radius: 0.7rem;
+  background: #111;
+  box-shadow: 0 14px 28px rgba(17, 17, 17, 0.14);
+}
+
+.genre-lane-card-media picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.genre-lane-card-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 220ms ease;
+}
+
+.genre-lane-card-link:hover .genre-lane-card-image {
+  transform: scale(1.03);
+}
+
+.genre-lane-card-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: linear-gradient(180deg, rgba(17, 17, 17, 0.22), rgba(17, 17, 17, 0.02) 36%, rgba(17, 17, 17, 0.76));
+}
+
+.genre-lane-card-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.genre-lane-card-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.55rem;
+  padding: 0.14rem 0.48rem;
+  border-radius: 999px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.genre-lane-card-badge-highlight {
+  background: rgba(255, 232, 160, 0.92);
+  color: #4e2900;
+}
+
+.genre-lane-card-badge-sks {
+  background: rgba(255, 255, 255, 0.9);
+  color: #111;
+}
+
+.genre-lane-card-date {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.genre-lane-card-copy {
+  display: grid;
+  gap: 0.26rem;
+  min-width: 0;
+}
+
+.genre-lane-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem 0.5rem;
+  margin: 0;
+  color: rgba(17, 17, 17, 0.56);
+  font-size: 0.73rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.genre-lane-card-name {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  font-size: 1.08rem;
+  line-height: 1.01;
+}
+
+.genre-lane-card-title {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+  color: rgba(17, 17, 17, 0.7);
+  font-size: 0.82rem;
+  line-height: 1.16;
+}
+
+.genre-lane-list {
+  margin-top: 0.9rem;
+}
+
 .promotion-banner {
   margin: 1.4rem 0 1.6rem;
   position: relative;
@@ -3923,6 +4123,106 @@ trix-editor.blog-rich-text:focus {
   margin-top: 0.9rem;
 }
 
+.settings-reference-list {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(248, 248, 248, 0.85);
+}
+
+.settings-reference-list h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.settings-reference-items {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.settings-reference-items-columns {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.settings-reference-items li {
+  display: block;
+}
+
+.settings-reference-items span {
+  color: rgba(17, 17, 17, 0.64);
+  font-size: 0.84rem;
+}
+
+.settings-reference-item {
+  min-width: 0;
+}
+
+.settings-reference-checkbox {
+  display: grid;
+  grid-template-columns: auto auto auto minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 100%;
+  padding: 0.7rem 0.75rem;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+  cursor: pointer;
+}
+
+.settings-reference-item[draggable="true"] .settings-reference-checkbox {
+  cursor: grab;
+}
+
+.settings-reference-item.settings-reference-item-dragging .settings-reference-checkbox {
+  opacity: 0.45;
+}
+
+.settings-reference-item.settings-reference-item-drop-before .settings-reference-checkbox {
+  box-shadow: inset 0 3px 0 #8d1320;
+}
+
+.settings-reference-item.settings-reference-item-drop-after .settings-reference-checkbox {
+  box-shadow: inset 0 -3px 0 #8d1320;
+}
+
+.settings-reference-checkbox input {
+  margin-top: 0;
+  justify-self: center;
+}
+
+.settings-reference-drag-handle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(17, 17, 17, 0.45);
+  font-size: 0.92rem;
+  letter-spacing: -0.14em;
+  user-select: none;
+}
+
+.settings-reference-checkbox-copy {
+  display: grid;
+  gap: 0.12rem;
+  min-width: 0;
+}
+
+.settings-reference-selection-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  color: #8d1320;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  justify-self: center;
+  align-self: center;
+}
+
 .editor-grid {
   display: grid;
   gap: 0.65rem;
@@ -4709,6 +5009,18 @@ trix-editor.blog-rich-text:focus {
     display: none;
   }
 
+  .genre-lane-section {
+    padding: 0.9rem 0.82rem;
+  }
+
+  .genre-lane-header {
+    align-items: start;
+  }
+
+  .settings-reference-items-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .app-nav-inner {
     padding: 0.68rem 0.82rem;
     gap: 0.55rem;
@@ -4856,6 +5168,26 @@ trix-editor.blog-rich-text:focus {
 }
 
 @media (max-width: 699px) {
+  .settings-reference-items-columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .genre-lane-header {
+    display: grid;
+  }
+
+  .genre-lane-nav {
+    justify-content: flex-start;
+  }
+
+  .genre-lane-track {
+    grid-auto-columns: minmax(84%, 84%);
+  }
+
+  .genre-lane-card-media {
+    aspect-ratio: 1 / 1.06;
+  }
+
   .blog-link {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -4893,6 +5225,10 @@ trix-editor.blog-rich-text:focus {
 
   .home-slider-track {
     grid-auto-columns: minmax(10.2rem, 10.2rem);
+  }
+
+  .genre-lane-track {
+    grid-auto-columns: minmax(18rem, 18rem);
   }
 
   .partner-strip {
@@ -5052,6 +5388,10 @@ trix-editor.blog-rich-text:focus {
     grid-auto-columns: calc((100% - 4rem + 1px) / 5);
   }
 
+  .genre-lane-track {
+    grid-auto-columns: calc((100% - 2rem) / 3);
+  }
+
   .flyer-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -5096,6 +5436,10 @@ trix-editor.blog-rich-text:focus {
 
   .home-slider-track {
     grid-auto-columns: calc((100% - 4.8rem + 1px) / 6);
+  }
+
+  .genre-lane-track {
+    grid-auto-columns: calc((100% - 3rem) / 4);
   }
 
   .flyer-grid {

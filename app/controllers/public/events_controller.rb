@@ -179,6 +179,7 @@ module Public
 
       @home_featured_events = scoped_highlights.to_a
       @home_featured_events = current_relation.reorder(:start_at, :id).to_a if @home_featured_events.empty?
+      @home_genre_lanes = Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
       @home_highlight_events = scoped_reservix.limit(HOME_HIGHLIGHT_LIMIT).to_a
       @home_tagestipp_events = tagestipp_relation.to_a
     end

@@ -81,3 +81,6 @@ application.register("scroll-top", ScrollTopController)
 
 import SectionViewController from "./section_view_controller"
 application.register("section-view", SectionViewController)
+
+import SettingsSortableController from "./settings_sortable_controller"
+application.register("settings-sortable", SettingsSortableController)

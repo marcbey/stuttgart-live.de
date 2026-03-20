@@ -4,6 +4,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   setup do
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
+    AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382" ])
     AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Konfigurierter SKS Hinweis\nWir danken für Ihr Verständnis!")
     AppSetting.reset_cache!
@@ -16,6 +17,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.reset_cache!
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
+    AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
   end
 
   test "index is publicly accessible" do
@@ -28,7 +30,143 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Review Artist"
     assert_not_includes response.body, "event-card-status-select"
     assert_select ".event-card-genre", count: 0
-    assert_select ".genre-slider-track", count: 0
+    assert_select ".genre-lane-section", count: 0
+  end
+
+  test "index renders configured homepage genre lanes in priority order" do
+    snapshot, rock_group, pop_group = create_homepage_genre_snapshot
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ pop_group.slug, rock_group.slug ])
+    AppSetting.reset_cache!
+
+    highlighted_event = Event.create!(
+      slug: "genre-lane-highlighted",
+      source_fingerprint: "test::public::genre-lane::highlighted",
+      title: "Genre Lane Highlighted",
+      artist_name: "Highlighted Lane Artist",
+      start_at: 8.days.from_now.change(hour: 22, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    sks_event = Event.create!(
+      slug: "genre-lane-sks",
+      source_fingerprint: "test::public::genre-lane::sks",
+      title: "Genre Lane SKS",
+      artist_name: "SKS Lane Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "easyticket",
+      source_snapshot: {}
+    )
+    regular_event = Event.create!(
+      slug: "genre-lane-regular",
+      source_fingerprint: "test::public::genre-lane::regular",
+      title: "Genre Lane Regular",
+      artist_name: "Regular Lane Artist",
+      start_at: 8.days.from_now.change(hour: 18, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    pop_event = Event.create!(
+      slug: "genre-lane-pop",
+      source_fingerprint: "test::public::genre-lane::pop",
+      title: "Genre Lane Pop",
+      artist_name: "Pop Lane Artist",
+      start_at: 9.days.from_now.change(hour: 19, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    unpublished_event = Event.create!(
+      slug: "genre-lane-unpublished",
+      source_fingerprint: "test::public::genre-lane::unpublished",
+      title: "Genre Lane Unpublished",
+      artist_name: "Unpublished Lane Artist",
+      start_at: 8.days.from_now.change(hour: 21, min: 0, sec: 0),
+      venue: "Club Zwölfzehn",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_snapshot: {}
+    )
+    past_event = Event.create!(
+      slug: "genre-lane-past",
+      source_fingerprint: "test::public::genre-lane::past",
+      title: "Genre Lane Past",
+      artist_name: "Past Lane Artist",
+      start_at: 3.days.ago.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Cann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 5.days.ago,
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: highlighted_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: sks_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: regular_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: pop_event, genres: [ "Pop" ])
+    build_homepage_genre_enrichment(event: unpublished_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: past_event, genres: [ "Rock" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    shell_children = document.css("section.public-shell > *")
+    genre_sections = document.css("section.genre-lane-section")
+    pop_section = genre_sections.find { |section| section.at_css("h2")&.text == pop_group.name }
+    rock_section = genre_sections.find { |section| section.at_css("h2")&.text == rock_group.name }
+    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
+    promotion_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") }
+    first_genre_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("genre-lane-section") }
+    all_events_index = shell_children.index do |node|
+      node.name == "section" && node["class"].to_s.include?("home-slider-section") && node.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+    end
+
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.active_snapshot.id
+    assert pop_section.present?, "expected configured pop lane to be rendered"
+    assert rock_section.present?, "expected configured rock lane to be rendered"
+    expected_first_genre_index = promotion_index.present? ? promotion_index + 1 : highlights_index + 1
+    assert_equal expected_first_genre_index, first_genre_index
+    assert_operator all_events_index, :>, first_genre_index
+
+    pop_names = pop_section.css(".genre-lane-card-name").map(&:text)
+    rock_names = rock_section.css(".genre-lane-card-name").map(&:text)
+
+    assert_equal [ pop_event.artist_name ], pop_names
+    assert_equal [
+      highlighted_event.artist_name,
+      sks_event.artist_name,
+      regular_event.artist_name
+    ], rock_names
+    assert_not_includes rock_names, unpublished_event.artist_name
+    assert_not_includes rock_names, past_event.artist_name
+  end
+
+  test "index does not render homepage genre lanes without active snapshot" do
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ "rock-alternative" ])
+    AppSetting.reset_cache!
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".genre-lane-section", count: 0
   end
 
   test "index hides future unpublished events for guests" do
@@ -1686,5 +1824,41 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     )
     image.save!
     image
+  end
+
+  def create_homepage_genre_snapshot
+    run = import_sources(:two).import_runs.create!(
+      source_type: "llm_genre_grouping",
+      status: "succeeded",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago
+    )
+
+    snapshot = run.create_llm_genre_grouping_snapshot!(
+      active: true,
+      requested_group_count: 30,
+      effective_group_count: 2,
+      source_genres_count: 2,
+      model: "gpt-5-mini",
+      prompt_template_digest: "digest",
+      request_payload: {},
+      raw_response: {}
+    )
+
+    rock_group = snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
+    pop_group = snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
+
+    [ snapshot, rock_group, pop_group ]
+  end
+
+  def build_homepage_genre_enrichment(event:, genres:)
+    EventLlmEnrichment.create!(
+      event: event,
+      source_run: import_runs(:one),
+      genre: genres,
+      model: "gpt-5-mini",
+      prompt_version: "v1",
+      raw_response: {}
+    )
   end
 end

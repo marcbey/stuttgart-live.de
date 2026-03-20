@@ -5,12 +5,14 @@ module Backend
     def edit
       @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
       @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
+      @homepage_genre_lane_slugs_setting = AppSetting.homepage_genre_lane_slugs_record
       @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
       @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
       @llm_genre_grouping_model_setting = AppSetting.llm_genre_grouping_model_record
       @llm_genre_grouping_prompt_template_setting = AppSetting.llm_genre_grouping_prompt_template_record
       @llm_genre_grouping_group_count_setting = AppSetting.llm_genre_grouping_group_count_record
       @merge_artist_similarity_matching_setting = AppSetting.merge_artist_similarity_matching_enabled_record
+      @homepage_genre_lane_reference_groups = homepage_genre_lane_reference_groups(@homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs)
     end
 
     def update
@@ -18,6 +20,8 @@ module Backend
       @sks_promoter_ids_setting.sks_promoter_ids_text = settings_params[:sks_promoter_ids_text]
       @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
       @sks_organizer_notes_setting.sks_organizer_notes_text = settings_params[:sks_organizer_notes_text]
+      @homepage_genre_lane_slugs_setting = AppSetting.homepage_genre_lane_slugs_record
+      @homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs = settings_params.fetch(:homepage_genre_lane_slugs, [])
       @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
       @llm_enrichment_model_setting.llm_enrichment_model = settings_params[:llm_enrichment_model]
       @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
@@ -38,6 +42,7 @@ module Backend
       settings_records = [
         @sks_promoter_ids_setting,
         @sks_organizer_notes_setting,
+        @homepage_genre_lane_slugs_setting,
         @llm_enrichment_model_setting,
         @llm_enrichment_prompt_template_setting,
         @llm_genre_grouping_model_setting,
@@ -55,6 +60,7 @@ module Backend
 
         redirect_to edit_backend_settings_path, notice: "Einstellungen wurden gespeichert."
       else
+        @homepage_genre_lane_reference_groups = homepage_genre_lane_reference_groups(@homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs)
         flash.now[:alert] = "Einstellungen konnten nicht gespeichert werden."
         render :edit, status: :unprocessable_entity
       end
@@ -71,8 +77,33 @@ module Backend
         :llm_genre_grouping_model,
         :llm_genre_grouping_prompt_template_text,
         :llm_genre_grouping_group_count,
-        :merge_artist_similarity_matching_enabled
+        :merge_artist_similarity_matching_enabled,
+        homepage_genre_lane_slugs: []
       )
+    end
+
+    def homepage_genre_lane_reference_groups(selected_slugs = [])
+      snapshot = LlmGenreGrouping::Lookup.active_snapshot
+      return [] if snapshot.blank?
+
+      upcoming_relation = Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
+      selected_positions = Array(selected_slugs).each_with_index.to_h
+
+      snapshot.groups.map do |group|
+        {
+          position: group.position,
+          name: group.name,
+          slug: group.slug,
+          upcoming_events_count: LlmGenreGrouping::Lookup.events_for_group(group, relation: upcoming_relation).count
+        }
+      end.sort_by do |group|
+        selection_index = selected_positions[group[:slug]]
+        [
+          selection_index.nil? ? 1 : 0,
+          selection_index || group[:position],
+          group[:position]
+        ]
+      end
     end
   end
 end

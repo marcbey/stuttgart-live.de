@@ -1,0 +1,51 @@
+<% browse_state = local_assigns.fetch(:browse_state) %>
+<% desktop_image = event.image_for(slot: :grid_default, breakpoint: :desktop) %>
+<% mobile_image = desktop_image.is_a?(EventImage) ? desktop_image : (event.image_for(slot: :grid_default, breakpoint: :mobile) || desktop_image) %>
+<% desktop_image_source = event_image_source(desktop_image) %>
+<% mobile_image_source = event_image_source(mobile_image) %>
+<% image_alt_text = event_image_alt(desktop_image, event) %>
+<% image_style = event_card_image_style(desktop_image) %>
+
+<article class="genre-lane-card">
+  <%= link_to public_event_detail_path(event, browse_state), class: "genre-lane-card-link" do %>
+    <div class="genre-lane-card-media">
+      <% if desktop_image_source.present? %>
+        <picture>
+          <% if mobile_image_source.present? %>
+            <source media="(max-width: 699px)" srcset="<%= mobile_image_source %>">
+          <% end %>
+          <%= image_tag desktop_image_source, alt: image_alt_text, loading: "lazy", class: "genre-lane-card-image", style: image_style %>
+        </picture>
+      <% else %>
+        <div class="genre-lane-card-image event-card-placeholder"></div>
+      <% end %>
+
+      <div class="genre-lane-card-overlay">
+        <div class="genre-lane-card-badges">
+          <% if event.highlighted? %>
+            <span class="genre-lane-card-badge genre-lane-card-badge-highlight">Highlight</span>
+          <% end %>
+          <% if event.sks_promoter? %>
+            <span class="genre-lane-card-badge genre-lane-card-badge-sks">SKS</span>
+          <% end %>
+        </div>
+        <p class="genre-lane-card-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></p>
+      </div>
+    </div>
+
+    <div class="genre-lane-card-copy">
+      <p class="genre-lane-card-meta">
+        <% if event.venue.present? %>
+          <span><%= event.venue %></span>
+        <% end %>
+        <% if event.primary_source.present? %>
+          <span><%= event_source_label(event.primary_source) %></span>
+        <% end %>
+      </p>
+      <h3 class="genre-lane-card-name"><%= event.artist_name %></h3>
+      <% if event.title.present? %>
+        <p class="genre-lane-card-title"><%= event.title %></p>
+      <% end %>
+    </div>
+  <% end %>
+</article>

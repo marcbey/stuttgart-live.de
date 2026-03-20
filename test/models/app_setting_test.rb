@@ -46,6 +46,31 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal "Line one\nLine two", AppSetting.sks_organizer_notes
   end
 
+  test "normalizes homepage genre lane slugs from text" do
+    setting = AppSetting.new(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY)
+    setting.homepage_genre_lane_slugs_text = "Rock & Alternative\npop-mainstream, Rock & Alternative\n"
+
+    assert_equal [ "rock-alternative", "pop-mainstream" ], setting.homepage_genre_lane_slugs
+    assert_equal "rock-alternative\npop-mainstream", setting.homepage_genre_lane_slugs_text
+  end
+
+  test "normalizes homepage genre lane slugs from checkbox array" do
+    setting = AppSetting.new(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY)
+    setting.homepage_genre_lane_slugs = [ "", "Rock & Alternative", "pop-mainstream", "Rock & Alternative" ]
+
+    assert_equal [ "rock-alternative", "pop-mainstream" ], setting.homepage_genre_lane_slugs
+  end
+
+  test "returns configured homepage genre lane slugs" do
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ "rock-alternative", "pop-mainstream" ])
+
+    assert_equal [ "rock-alternative", "pop-mainstream" ], AppSetting.homepage_genre_lane_slugs
+  end
+
+  test "returns empty homepage genre lane slugs when not configured" do
+    assert_equal [], AppSetting.homepage_genre_lane_slugs
+  end
+
   test "returns default llm enrichment prompt template when no setting exists" do
     assert_includes AppSetting.llm_enrichment_prompt_template, "{{input_json}}"
   end

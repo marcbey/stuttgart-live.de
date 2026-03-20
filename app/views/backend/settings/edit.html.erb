@@ -10,6 +10,7 @@
   <div class="editor-panel">
     <% errors = @sks_promoter_ids_setting.errors.full_messages +
                 @sks_organizer_notes_setting.errors.full_messages +
+                @homepage_genre_lane_slugs_setting.errors.full_messages +
                 @llm_enrichment_model_setting.errors.full_messages +
                 @llm_enrichment_prompt_template_setting.errors.full_messages +
                 @llm_genre_grouping_model_setting.errors.full_messages +
@@ -60,6 +61,51 @@
                              class: "form-textarea",
                              aria: { describedby: "sks-organizer-notes-help" } %>
           <p id="sks-organizer-notes-help" class="form-hint">Dieser Text wird bei SKS-Events ohne eigene Veranstalterhinweise öffentlich angezeigt.</p>
+          <div class="settings-group-footer">
+            <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-group">
+        <div class="settings-group-header">
+          <h2>Homepage Genre-Lanes</h2>
+          <p>Steuert, welche Obergruppen aus dem aktiven Genre-Snapshot als zusätzliche Slider-Lanes auf der Startseite erscheinen.</p>
+        </div>
+        <div class="settings-group-body">
+          <% if @homepage_genre_lane_reference_groups.any? %>
+            <div class="settings-reference-list">
+              <h3>Aktive Obergruppen im Snapshot</h3>
+              <p class="form-hint">Auswahl per Checkbox. Reihenfolge per Drag & Drop.</p>
+              <%= hidden_field_tag "app_setting[homepage_genre_lane_slugs][]", "" %>
+              <ul class="settings-reference-items settings-reference-items-columns"
+                  data-controller="settings-sortable">
+                <% @homepage_genre_lane_reference_groups.each do |group| %>
+                  <li class="settings-reference-item"
+                      data-settings-sortable-target="item"
+                      data-action="dragstart->settings-sortable#dragstart dragover->settings-sortable#dragover dragenter->settings-sortable#dragenter drop->settings-sortable#drop dragend->settings-sortable#dragend"
+                      draggable="true">
+                    <label class="settings-reference-checkbox">
+                      <span class="settings-reference-selection-index"
+                            data-settings-sortable-target="index"></span>
+                      <span class="settings-reference-drag-handle" aria-hidden="true">⋮⋮</span>
+                      <%= check_box_tag "app_setting[homepage_genre_lane_slugs][]",
+                                        group[:slug],
+                                        @homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs.include?(group[:slug]),
+                                        data: { action: "change->settings-sortable#syncSelectionState" } %>
+                      <span class="settings-reference-checkbox-copy">
+                        <strong><%= group[:name] %></strong>
+                        <span><%= group[:upcoming_events_count] %> kommende Events</span>
+                      </span>
+                    </label>
+                  </li>
+                <% end %>
+              </ul>
+            </div>
+          <% else %>
+            <p class="form-hint">Aktuell ist kein aktiver Genre-Snapshot vorhanden.</p>
+          <% end %>
+
           <div class="settings-group-footer">
             <%= form.submit "Save", class: "button button-save-primary button-compact" %>
           </div>

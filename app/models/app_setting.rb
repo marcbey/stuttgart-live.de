@@ -2,6 +2,7 @@ class AppSetting < ApplicationRecord
   SKS_PROMOTER_IDS_KEY = "sks_promoter_ids".freeze
   SKS_ORGANIZER_NOTES_KEY = "sks_organizer_notes".freeze
   MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY = "merge_artist_similarity_matching_enabled".freeze
+  HOMEPAGE_GENRE_LANE_SLUGS_KEY = "homepage_genre_lane_slugs".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
   LLM_GENRE_GROUPING_MODEL_KEY = "llm_genre_grouping_model".freeze
@@ -147,6 +148,10 @@ class AppSetting < ApplicationRecord
       @sks_organizer_notes ||= normalize_text(find_by(key: SKS_ORGANIZER_NOTES_KEY)&.value)
     end
 
+    def homepage_genre_lane_slugs
+      @homepage_genre_lane_slugs ||= normalize_slug_list(find_by(key: HOMEPAGE_GENRE_LANE_SLUGS_KEY)&.value)
+    end
+
     def llm_enrichment_prompt_template
       @llm_enrichment_prompt_template ||=
         normalize_text(find_by(key: LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY)&.value) || LLM_ENRICHMENT_PROMPT_TEMPLATE
@@ -178,6 +183,10 @@ class AppSetting < ApplicationRecord
 
     def sks_organizer_notes_record
       find_or_initialize_by(key: SKS_ORGANIZER_NOTES_KEY)
+    end
+
+    def homepage_genre_lane_slugs_record
+      find_or_initialize_by(key: HOMEPAGE_GENRE_LANE_SLUGS_KEY)
     end
 
     def llm_enrichment_prompt_template_record
@@ -251,6 +260,23 @@ class AppSetting < ApplicationRecord
         .uniq
     end
 
+    def normalize_slug_list(value)
+      raw_values =
+        case value
+        when String
+          value.split(/[\n,]/)
+        when Array
+          value
+        else
+          Array(value)
+        end
+
+      raw_values
+        .map { |entry| entry.to_s.parameterize.presence }
+        .compact
+        .uniq
+    end
+
     def normalize_text(value)
       case value
       when String
@@ -295,6 +321,7 @@ class AppSetting < ApplicationRecord
     def reset_cache!
       @sks_promoter_ids = nil
       @sks_organizer_notes = nil
+      @homepage_genre_lane_slugs = nil
       @llm_enrichment_model = nil
       @llm_enrichment_prompt_template = nil
       @llm_genre_grouping_model = nil
@@ -326,6 +353,22 @@ class AppSetting < ApplicationRecord
 
   def sks_organizer_notes_text=(raw_value)
     self.value = self.class.normalize_text(raw_value)
+  end
+
+  def homepage_genre_lane_slugs
+    self.class.normalize_slug_list(value)
+  end
+
+  def homepage_genre_lane_slugs_text
+    homepage_genre_lane_slugs.join("\n")
+  end
+
+  def homepage_genre_lane_slugs_text=(raw_value)
+    self.value = self.class.normalize_slug_list(raw_value)
+  end
+
+  def homepage_genre_lane_slugs=(raw_value)
+    self.value = self.class.normalize_slug_list(raw_value)
   end
 
   def llm_enrichment_prompt_template

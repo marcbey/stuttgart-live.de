@@ -1,0 +1,41 @@
+<section class="genre-lane-section"
+         data-controller="highlights-slider section-view">
+  <div class="genre-lane-header">
+    <div class="genre-lane-heading">
+      <p class="genre-lane-kicker">Genre-Obergruppe</p>
+      <h2><%= group.name %></h2>
+      <p class="genre-lane-summary"><%= pluralize(events.size, "Event", "Events") %> im kommenden Programm</p>
+    </div>
+
+    <div class="genre-lane-nav">
+      <button type="button"
+              class="slider-view-toggle genre-lane-toggle"
+              data-section-view-target="button"
+              data-action="click->section-view#toggle"
+              title="Listenansicht"
+              aria-label="<%= list_aria_label %>"
+              aria-pressed="false">
+        <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </span>
+      </button>
+      <button type="button" class="highlights-slider-arrow genre-lane-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
+      <button type="button" class="highlights-slider-arrow genre-lane-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
+    </div>
+  </div>
+
+  <div data-section-view-target="slider">
+    <div class="genre-lane-track" data-highlights-slider-target="track">
+      <% events.each do |event| %>
+        <%= render "genre_lane_card", event: event, browse_state: browse_state %>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
+    <%= render "event_rows", events: events, browse_state: browse_state %>
+  </div>
+</section>

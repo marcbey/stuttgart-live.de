@@ -18,6 +18,16 @@
     <%= render "promotion_banner", blog_post: @promotion_banner_blog_post %>
   <% end %>
 
+  <% if @browse_state.page == 1 && @home_genre_lanes.present? %>
+    <% @home_genre_lanes.each do |lane| %>
+      <%= render "genre_lane_section",
+                 group: lane.group,
+                 events: lane.events,
+                 browse_state: @browse_state,
+                 list_aria_label: "Listenansicht für #{lane.group.name}" %>
+    <% end %>
+  <% end %>
+
   <% if @browse_state.page == 1 && @home_highlight_events.present? %>
     <%= render "highlight_section",
                title: "Alle Veranstaltungen in Stuttgart",
