@@ -1,59 +1,46 @@
 <% content_for :title, "AGB | Stuttgart Live" %>
 
-<section class="info-page-shell">
-  <div class="info-page-hero">
-    <p class="news-kicker">Service</p>
-    <h1>AGB</h1>
+<%= render "public/pages/info_page",
+           kicker: "Service",
+           title: "AGB",
+           intro: "Für Ticketkäufe über Stuttgart Live gelten je nach Bestellweg die Bedingungen des jeweils eingebundenen Ticketanbieters sowie die nachstehenden Servicehinweise." do %>
+  <%= render "public/pages/info_page_card", title: "Ticketkauf über Partner" do %>
     <p>
-      Für Ticketkäufe über StuttgartLIVE gelten je nach Bestellweg die Bedingungen des jeweils
-      eingebundenen Ticketanbieters sowie die nachstehenden Servicehinweise.
+      Der eigentliche Vertragsabschluss erfolgt in der Regel über den jeweiligen Ticketdienst,
+      etwa Easy Ticket, Eventim oder Reservix. Maßgeblich sind deshalb die AGB, Zahlungs-,
+      Versand- und Widerrufsbedingungen des ausgewählten Partners.
     </p>
-  </div>
+  <% end %>
 
-  <div class="info-page-grid">
-    <section class="info-page-card">
-      <h2>Ticketkauf über Partner</h2>
-      <p>
-        Der eigentliche Vertragsabschluss erfolgt in der Regel über den jeweiligen Ticketdienst,
-        etwa Easy Ticket, Eventim oder Reservix. Maßgeblich sind deshalb die AGB, Zahlungs-,
-        Versand- und Widerrufsbedingungen des ausgewählten Partners.
-      </p>
-    </section>
+  <%= render "public/pages/info_page_card", title: "Mailorder und telefonischer Service" do %>
+    <p>
+      Zusätzlich bietet Stuttgart Live persönliche Unterstützung bei der Ticketauswahl. Für
+      telefonische Bestellungen und Mailorder-Anfragen können Sie sich an
+      <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a> oder die Bestell-Hotline
+      wenden. Verfügbarkeit, Preisstufen und Versand richten sich nach dem konkreten Angebot.
+    </p>
+  <% end %>
 
-    <section class="info-page-card">
-      <h2>Mailorder und telefonischer Service</h2>
-      <p>
-        Zusätzlich bietet StuttgartLIVE persönliche Unterstützung bei der Ticketauswahl. Für
-        telefonische Bestellungen und Mailorder-Anfragen können Sie sich an
-        <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a> oder die Bestell-Hotline
-        wenden. Verfügbarkeit, Preisstufen und Versand richten sich nach dem konkreten Angebot.
-      </p>
-    </section>
+  <%= render "public/pages/info_page_card", title: "Preise und Verfügbarkeit" do %>
+    <p>
+      Alle Preise verstehen sich vorbehaltlich Verfügbarkeit. Gebühren, Versandkosten und
+      Zusatzleistungen können je nach Ticketanbieter und Versandart abweichen.
+    </p>
+  <% end %>
 
-    <section class="info-page-card">
-      <h2>Preise und Verfügbarkeit</h2>
-      <p>
-        Alle Preise verstehen sich vorbehaltlich Verfügbarkeit. Gebühren, Versandkosten und
-        Zusatzleistungen können je nach Ticketanbieter und Versandart abweichen.
-      </p>
-    </section>
+  <%= render "public/pages/info_page_card", title: "Reklamationen" do %>
+    <p>
+      Sollten Tickets nach einer Bestellung nicht eintreffen oder Rückfragen zu einer Buchung
+      bestehen, wenden Sie sich bitte unter Angabe Ihrer Bestelldaten an das Stuttgart-Live-Team,
+      damit der Vorgang geprüft werden kann.
+    </p>
+  <% end %>
 
-    <section class="info-page-card">
-      <h2>Reklamationen</h2>
-      <p>
-        Sollten Tickets nach einer Bestellung nicht eintreffen oder Rückfragen zu einer Buchung
-        bestehen, wenden Sie sich bitte unter Angabe Ihrer Bestelldaten an das StuttgartLIVE-Team,
-        damit der Vorgang geprüft werden kann.
-      </p>
-    </section>
-
-    <section class="info-page-card info-page-card-wide">
-      <h2>Hinweis</h2>
-      <p>
-        Für veranstaltungsbezogene Sonderregelungen, Hausordnungen, Altersfreigaben oder
-        Sicherheitsauflagen gelten zusätzlich die Angaben auf der jeweiligen Eventseite und die
-        Bedingungen des Veranstaltungsortes.
-      </p>
-    </section>
-  </div>
-</section>
+  <%= render "public/pages/info_page_card", title: "Ergänzende Hinweise", wide: true do %>
+    <p>
+      Für veranstaltungsbezogene Sonderregelungen, Hausordnungen, Altersfreigaben oder
+      Sicherheitsauflagen gelten zusätzlich die Angaben auf der jeweiligen Eventseite und die
+      Bedingungen des Veranstaltungsortes.
+    </p>
+  <% end %>
+<% end %>
