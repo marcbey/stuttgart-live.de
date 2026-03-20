@@ -1,0 +1,2494 @@
+- generic [active] [ref=e1]:
+  - link "Zum Inhalt springen" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - navigation [ref=e3]:
+    - generic [ref=e4]:
+      - link "Stuttgart Live" [ref=e5] [cursor=pointer]:
+        - /url: /
+        - generic "Stuttgart Live" [ref=e6]:
+          - generic [ref=e7]: STUTTGART
+          - generic [ref=e8]: LIVE
+      - generic [ref=e11]:
+        - paragraph [ref=e12]: Beim Tippen erscheint eine Ergebnisliste mit zukünftigen Events.
+        - searchbox "Events durchsuchen" [ref=e13]
+        - button "Suche ausführen" [ref=e14] [cursor=pointer]: ⌕
+      - button "Navigation öffnen" [ref=e2836] [cursor=pointer]
+  - main [ref=e30]:
+    - generic [ref=e31]:
+      - generic [ref=e32]:
+        - generic [ref=e33]:
+          - heading "Unsere Highlights für dich ausgesucht" [level=2] [ref=e34]
+          - generic [ref=e35]:
+            - button "Zurück" [ref=e41] [cursor=pointer]: ‹
+            - button "Weiter" [ref=e42] [cursor=pointer]: ›
+        - generic [ref=e44]:
+          - article [ref=e45]:
+            - link "Fjørt - Be Fjort Tour 2026 Fjørt Be Fjort Tour 2026 27.03.2026 Im Wizemann (Halle) Stuttgart" [ref=e47] [cursor=pointer]:
+              - /url: /events/fjort-2026-03-27
+              - img "Fjørt - Be Fjort Tour 2026" [ref=e49]
+              - generic [ref=e51]:
+                - heading "Fjørt" [level=2] [ref=e52]
+                - paragraph [ref=e53]: Be Fjort Tour 2026
+                - paragraph [ref=e54]:
+                  - generic [ref=e55]: 27.03.2026
+                  - generic [ref=e56]: Im Wizemann (Halle) Stuttgart
+          - article [ref=e57]:
+            - link "WILHELMINE - magisch Tour 2026 WILHELMINE magisch Tour 2026 23.05.2026 Im Wizemann (Halle) Stuttgart" [ref=e59] [cursor=pointer]:
+              - /url: /events/wilhelmine-2026-05-23
+              - img "WILHELMINE - magisch Tour 2026" [ref=e61]
+              - generic [ref=e63]:
+                - heading "WILHELMINE" [level=2] [ref=e64]
+                - paragraph [ref=e65]: magisch Tour 2026
+                - paragraph [ref=e66]:
+                  - generic [ref=e67]: 23.05.2026
+                  - generic [ref=e68]: Im Wizemann (Halle) Stuttgart
+          - article [ref=e69]:
+            - link "Levka - Vertigo Tour 2026 Levka Vertigo Tour 2026 25.03.2026 Im Wizemann (Studio)" [ref=e71] [cursor=pointer]:
+              - /url: /events/levka-2026-03-25
+              - img "Levka - Vertigo Tour 2026" [ref=e73]
+              - generic [ref=e75]:
+                - heading "Levka" [level=2] [ref=e76]
+                - paragraph [ref=e77]: Vertigo Tour 2026
+                - paragraph [ref=e78]:
+                  - generic [ref=e79]: 25.03.2026
+                  - generic [ref=e80]: Im Wizemann (Studio)
+          - article [ref=e81]:
+            - link "Kuult - Kuult Kuult Kuult 28.03.2026 Kulturquartier Stuttgart" [ref=e83] [cursor=pointer]:
+              - /url: /events/kuult-2026-03-28
+              - img "Kuult - Kuult" [ref=e85]
+              - generic [ref=e87]:
+                - heading "Kuult" [level=2] [ref=e88]
+                - paragraph [ref=e89]: Kuult
+                - paragraph [ref=e90]:
+                  - generic [ref=e91]: 28.03.2026
+                  - generic [ref=e92]: Kulturquartier Stuttgart
+          - article [ref=e93]:
+            - link "NEK - HITS - EUROPEAN TOUR 2026 NEK HITS - EUROPEAN TOUR 2026 09.04.2026 KKL Hegel-Saal Stuttgart" [ref=e95] [cursor=pointer]:
+              - /url: /events/nek-2026-04-09
+              - img "NEK - HITS - EUROPEAN TOUR 2026" [ref=e97]
+              - generic [ref=e99]:
+                - heading "NEK" [level=2] [ref=e100]
+                - paragraph [ref=e101]: HITS - EUROPEAN TOUR 2026
+                - paragraph [ref=e102]:
+                  - generic [ref=e103]: 09.04.2026
+                  - generic [ref=e104]: KKL Hegel-Saal Stuttgart
+          - article [ref=e105]:
+            - link "Naomi Jon - Strawberry Tour 2026 Naomi Jon Strawberry Tour 2026 10.04.2026 Im Wizemann (Club) Stuttgart" [ref=e107] [cursor=pointer]:
+              - /url: /events/naomi-jon-2026-04-10
+              - img "Naomi Jon - Strawberry Tour 2026" [ref=e109]
+              - generic [ref=e111]:
+                - heading "Naomi Jon" [level=2] [ref=e112]
+                - paragraph [ref=e113]: Strawberry Tour 2026
+                - paragraph [ref=e114]:
+                  - generic [ref=e115]: 10.04.2026
+                  - generic [ref=e116]: Im Wizemann (Club) Stuttgart
+          - article [ref=e117]:
+            - link "Heavysaurus - Heavysaurus Heavysaurus Heavysaurus 12.04.2026 KKL Hegel-Saal Stuttgart" [ref=e119] [cursor=pointer]:
+              - /url: /events/heavysaurus-2026-04-12
+              - img "Heavysaurus - Heavysaurus" [ref=e121]
+              - generic [ref=e123]:
+                - heading "Heavysaurus" [level=2] [ref=e124]
+                - paragraph [ref=e125]: Heavysaurus
+                - paragraph [ref=e126]:
+                  - generic [ref=e127]: 12.04.2026
+                  - generic [ref=e128]: KKL Hegel-Saal Stuttgart
+          - article [ref=e129]:
+            - link "Black Oak County - Black Oak County Black Oak County Black Oak County 14.04.2026 Goldmark's" [ref=e131] [cursor=pointer]:
+              - /url: /events/black-oak-county-2026-04-14
+              - img "Black Oak County - Black Oak County" [ref=e133]
+              - generic [ref=e135]:
+                - heading "Black Oak County" [level=2] [ref=e136]
+                - paragraph [ref=e137]: Black Oak County
+                - paragraph [ref=e138]:
+                  - generic [ref=e139]: 14.04.2026
+                  - generic [ref=e140]: Goldmark's
+          - article [ref=e141]:
+            - 'link "Knallblech - Brassband meets DJ | 10 Jahre, 10 Städte: Deutschland-Tour 2026 Knallblech Brassband meets DJ | 10 Jahre, 10 Städte: Deutschland-Tour 2026 18.04.2026 Im Wizemann (Halle)" [ref=e143] [cursor=pointer]':
+              - /url: /events/knallblech-2026-04-18
+              - 'img "Knallblech - Brassband meets DJ | 10 Jahre, 10 Städte: Deutschland-Tour 2026" [ref=e145]'
+              - generic [ref=e147]:
+                - heading "Knallblech" [level=2] [ref=e148]
+                - paragraph [ref=e149]: "Brassband meets DJ | 10 Jahre, 10 Städte: Deutschland-Tour 2026"
+                - paragraph [ref=e150]:
+                  - generic [ref=e151]: 18.04.2026
+                  - generic [ref=e152]: Im Wizemann (Halle)
+          - article [ref=e153]:
+            - link "HELLSONGS - The Return of the Hellsingers pt3 HELLSONGS The Return of the Hellsingers pt3 21.04.2026 Goldmark's Stuttgart" [ref=e155] [cursor=pointer]:
+              - /url: /events/hellsongs-2026-04-21
+              - img "HELLSONGS - The Return of the Hellsingers pt3" [ref=e157]
+              - generic [ref=e159]:
+                - heading "HELLSONGS" [level=2] [ref=e160]
+                - paragraph [ref=e161]: The Return of the Hellsingers pt3
+                - paragraph [ref=e162]:
+                  - generic [ref=e163]: 21.04.2026
+                  - generic [ref=e164]: Goldmark's Stuttgart
+          - article [ref=e165]:
+            - link "Only The Poets - And I'd Do It Again Tour 2026 Only The Poets And I'd Do It Again Tour 2026 21.04.2026 LKA-Longhorn Stuttgart" [ref=e167] [cursor=pointer]:
+              - /url: /events/only-the-poets-2026-04-21
+              - img "Only The Poets - And I'd Do It Again Tour 2026" [ref=e169]
+              - generic [ref=e171]:
+                - heading "Only The Poets" [level=2] [ref=e172]
+                - paragraph [ref=e173]: And I'd Do It Again Tour 2026
+                - paragraph [ref=e174]:
+                  - generic [ref=e175]: 21.04.2026
+                  - generic [ref=e176]: LKA-Longhorn Stuttgart
+          - article [ref=e177]:
+            - link "Aymen & Amo - AYMO Arena Tour 2026 Aymen & Amo AYMO Arena Tour 2026 26.04.2026 Hanns-Martin-Schleyer-Halle" [ref=e179] [cursor=pointer]:
+              - /url: /events/aymen-amo-2026-04-26
+              - img "Aymen & Amo - AYMO Arena Tour 2026" [ref=e181]
+              - generic [ref=e183]:
+                - heading "Aymen & Amo" [level=2] [ref=e184]
+                - paragraph [ref=e185]: AYMO Arena Tour 2026
+                - paragraph [ref=e186]:
+                  - generic [ref=e187]: 26.04.2026
+                  - generic [ref=e188]: Hanns-Martin-Schleyer-Halle
+          - article [ref=e189]:
+            - link "Juliano - Auf die geile Tour Juliano Auf die geile Tour 23.05.2026 Schräglage Stuttgart" [ref=e191] [cursor=pointer]:
+              - /url: /events/juliano-2026-05-23
+              - img "Juliano - Auf die geile Tour" [ref=e193]
+              - generic [ref=e195]:
+                - heading "Juliano" [level=2] [ref=e196]
+                - paragraph [ref=e197]: Auf die geile Tour
+                - paragraph [ref=e198]:
+                  - generic [ref=e199]: 23.05.2026
+                  - generic [ref=e200]: Schräglage Stuttgart
+          - article [ref=e201]:
+            - link "Truckfighters - Masterflow – Tour 2026 Truckfighters Masterflow – Tour 2026 26.05.2026 Im Wizemann (Club) Stuttgart" [ref=e203] [cursor=pointer]:
+              - /url: /events/truckfighters-2026-05-26
+              - img "Truckfighters - Masterflow – Tour 2026" [ref=e205]
+              - generic [ref=e207]:
+                - heading "Truckfighters" [level=2] [ref=e208]
+                - paragraph [ref=e209]: Masterflow – Tour 2026
+                - paragraph [ref=e210]:
+                  - generic [ref=e211]: 26.05.2026
+                  - generic [ref=e212]: Im Wizemann (Club) Stuttgart
+          - article [ref=e213]:
+            - link "Melrose Avenue - Melrose Avenue Melrose Avenue Melrose Avenue 16.06.2026 Kulturquartier" [ref=e215] [cursor=pointer]:
+              - /url: /events/melrose-avenue-2026-06-16
+              - img "Melrose Avenue - Melrose Avenue" [ref=e217]
+              - generic [ref=e219]:
+                - heading "Melrose Avenue" [level=2] [ref=e220]
+                - paragraph [ref=e221]: Melrose Avenue
+                - paragraph [ref=e222]:
+                  - generic [ref=e223]: 16.06.2026
+                  - generic [ref=e224]: Kulturquartier
+          - article [ref=e225]:
+            - link "Starbenders - The Beast goes on Tour Starbenders The Beast goes on Tour 16.06.2026 Goldmark's" [ref=e227] [cursor=pointer]:
+              - /url: /events/starbenders-2026-06-16
+              - img "Starbenders - The Beast goes on Tour" [ref=e229]
+              - generic [ref=e231]:
+                - heading "Starbenders" [level=2] [ref=e232]
+                - paragraph [ref=e233]: The Beast goes on Tour
+                - paragraph [ref=e234]:
+                  - generic [ref=e235]: 16.06.2026
+                  - generic [ref=e236]: Goldmark's
+          - article [ref=e237]:
+            - link "All Them Witches - House Of Mirros Tour All Them Witches House Of Mirros Tour 30.06.2026 LKA-Longhorn Stuttgart" [ref=e239] [cursor=pointer]:
+              - /url: /events/all-them-witches-2026-06-30
+              - img "All Them Witches - House Of Mirros Tour" [ref=e241]
+              - generic [ref=e243]:
+                - heading "All Them Witches" [level=2] [ref=e244]
+                - paragraph [ref=e245]: House Of Mirros Tour
+                - paragraph [ref=e246]:
+                  - generic [ref=e247]: 30.06.2026
+                  - generic [ref=e248]: LKA-Longhorn Stuttgart
+          - article [ref=e249]:
+            - link "Steel Panther - Europe Twenty Twenty S€X Tour Steel Panther Europe Twenty Twenty S€X Tour 08.07.2026 LKA-Longhorn Stuttgart" [ref=e251] [cursor=pointer]:
+              - /url: /events/steel-panther-2026-07-08
+              - img "Steel Panther - Europe Twenty Twenty S€X Tour" [ref=e253]
+              - generic [ref=e255]:
+                - heading "Steel Panther" [level=2] [ref=e256]
+                - paragraph [ref=e257]: Europe Twenty Twenty S€X Tour
+                - paragraph [ref=e258]:
+                  - generic [ref=e259]: 08.07.2026
+                  - generic [ref=e260]: LKA-Longhorn Stuttgart
+          - article [ref=e261]:
+            - link "Slaughter To Prevail - Summer Tour 2026 Slaughter To Prevail Summer Tour 2026 02.08.2026 LKA-Longhorn Stuttgart" [ref=e263] [cursor=pointer]:
+              - /url: /events/slaughter-to-prevail-2026-08-02
+              - img "Slaughter To Prevail - Summer Tour 2026" [ref=e265]
+              - generic [ref=e267]:
+                - heading "Slaughter To Prevail" [level=2] [ref=e268]
+                - paragraph [ref=e269]: Summer Tour 2026
+                - paragraph [ref=e270]:
+                  - generic [ref=e271]: 02.08.2026
+                  - generic [ref=e272]: LKA-Longhorn Stuttgart
+          - article [ref=e273]:
+            - link "David Garrett - Millennium Symphony Open Air Tour 2026 David Garrett Millennium Symphony Open Air Tour 2026 02.08.2026 Schloss Ludwigsburg Innenhof" [ref=e275] [cursor=pointer]:
+              - /url: /events/david-garrett-2026-08-02
+              - img "David Garrett - Millennium Symphony Open Air Tour 2026" [ref=e277]
+              - generic [ref=e279]:
+                - heading "David Garrett" [level=2] [ref=e280]
+                - paragraph [ref=e281]: Millennium Symphony Open Air Tour 2026
+                - paragraph [ref=e282]:
+                  - generic [ref=e283]: 02.08.2026
+                  - generic [ref=e284]: Schloss Ludwigsburg Innenhof
+          - article [ref=e285]:
+            - link "TJARK - auch wenn’s uns morgen nicht mehr gibt Tour 2026 TJARK auch wenn’s uns morgen nicht mehr gibt Tour 2026 08.09.2026 Im Wizemann (Halle) Stuttgart" [ref=e287] [cursor=pointer]:
+              - /url: /events/tjark-2026-09-08
+              - img "TJARK - auch wenn’s uns morgen nicht mehr gibt Tour 2026" [ref=e289]
+              - generic [ref=e291]:
+                - heading "TJARK" [level=2] [ref=e292]
+                - paragraph [ref=e293]: auch wenn’s uns morgen nicht mehr gibt Tour 2026
+                - paragraph [ref=e294]:
+                  - generic [ref=e295]: 08.09.2026
+                  - generic [ref=e296]: Im Wizemann (Halle) Stuttgart
+          - article [ref=e297]:
+            - link "Mike Oldfield's Tubular Bells - The Best of Tubular Bells I, II & III Mike Oldfield's Tubular Bells The Best of Tubular Bells I, II & III 09.09.2026 Liederhalle Hegelsaal" [ref=e299] [cursor=pointer]:
+              - /url: /events/mike-oldfield-s-tubular-bells-2026-09-09
+              - img "Mike Oldfield's Tubular Bells - The Best of Tubular Bells I, II & III" [ref=e301]
+              - generic [ref=e303]:
+                - heading "Mike Oldfield's Tubular Bells" [level=2] [ref=e304]
+                - paragraph [ref=e305]: The Best of Tubular Bells I, II & III
+                - paragraph [ref=e306]:
+                  - generic [ref=e307]: 09.09.2026
+                  - generic [ref=e308]: Liederhalle Hegelsaal
+          - article [ref=e309]:
+            - link "Nizi19 - Risiken & Nebenwirkungen Tour Nizi19 Risiken & Nebenwirkungen Tour 13.09.2026 Kulturquartier" [ref=e311] [cursor=pointer]:
+              - /url: /events/nizi19-2026-09-13
+              - img "Nizi19 - Risiken & Nebenwirkungen Tour" [ref=e313]
+              - generic [ref=e315]:
+                - heading "Nizi19" [level=2] [ref=e316]
+                - paragraph [ref=e317]: Risiken & Nebenwirkungen Tour
+                - paragraph [ref=e318]:
+                  - generic [ref=e319]: 13.09.2026
+                  - generic [ref=e320]: Kulturquartier
+          - article [ref=e321]:
+            - link "\"Vier Pianisten - Ein Konzert\" - Die Jubiläumstour \"Vier Pianisten - Ein Konzert\" Die Jubiläumstour 16.09.2026 Theaterhaus (am Pragsattel)" [ref=e323] [cursor=pointer]:
+              - /url: /events/vier-pianisten-ein-konzert-2026-09-16
+              - img "\"Vier Pianisten - Ein Konzert\" - Die Jubiläumstour" [ref=e325]
+              - generic [ref=e327]:
+                - heading "\"Vier Pianisten - Ein Konzert\"" [level=2] [ref=e328]
+                - paragraph [ref=e329]: Die Jubiläumstour
+                - paragraph [ref=e330]:
+                  - generic [ref=e331]: 16.09.2026
+                  - generic [ref=e332]: Theaterhaus (am Pragsattel)
+          - article [ref=e333]:
+            - link "jolle - ballons halten tour 2026 jolle ballons halten tour 2026 16.09.2026 Im Wizemann (Club)" [ref=e335] [cursor=pointer]:
+              - /url: /events/jolle-2026-09-16
+              - img "jolle - ballons halten tour 2026" [ref=e337]
+              - generic [ref=e339]:
+                - heading "jolle" [level=2] [ref=e340]
+                - paragraph [ref=e341]: ballons halten tour 2026
+                - paragraph [ref=e342]:
+                  - generic [ref=e343]: 16.09.2026
+                  - generic [ref=e344]: Im Wizemann (Club)
+          - article [ref=e345]:
+            - link "Kiss Forever Band - XXX Years on Fire! Anniversary Tour Kiss Forever Band XXX Years on Fire! Anniversary Tour 26.09.2026 LKA-Longhorn Stuttgart" [ref=e347] [cursor=pointer]:
+              - /url: /events/kiss-forever-band-2026-09-26
+              - img "Kiss Forever Band - XXX Years on Fire! Anniversary Tour" [ref=e349]
+              - generic [ref=e351]:
+                - heading "Kiss Forever Band" [level=2] [ref=e352]
+                - paragraph [ref=e353]: XXX Years on Fire! Anniversary Tour
+                - paragraph [ref=e354]:
+                  - generic [ref=e355]: 26.09.2026
+                  - generic [ref=e356]: LKA-Longhorn Stuttgart
+          - article [ref=e357]:
+            - link "Twin Noir - Chapter III Tour 2026 Twin Noir Chapter III Tour 2026 02.10.2026 Im Wizemann (Studio) Stuttgart" [ref=e359] [cursor=pointer]:
+              - /url: /events/twin-noir-2026-10-02
+              - img "Twin Noir - Chapter III Tour 2026" [ref=e361]
+              - generic [ref=e363]:
+                - heading "Twin Noir" [level=2] [ref=e364]
+                - paragraph [ref=e365]: Chapter III Tour 2026
+                - paragraph [ref=e366]:
+                  - generic [ref=e367]: 02.10.2026
+                  - generic [ref=e368]: Im Wizemann (Studio) Stuttgart
+          - article [ref=e369]:
+            - link "Lake Street Dive - Lake Street Dive Lake Street Dive Lake Street Dive 08.10.2026 LKA-Longhorn Stuttgart" [ref=e371] [cursor=pointer]:
+              - /url: /events/lake-street-dive-2026-10-08
+              - img "Lake Street Dive - Lake Street Dive" [ref=e373]
+              - generic [ref=e375]:
+                - heading "Lake Street Dive" [level=2] [ref=e376]
+                - paragraph [ref=e377]: Lake Street Dive
+                - paragraph [ref=e378]:
+                  - generic [ref=e379]: 08.10.2026
+                  - generic [ref=e380]: LKA-Longhorn Stuttgart
+          - article [ref=e381]:
+            - link "Kolja Goldstein - Baltic Café Tour Kolja Goldstein Baltic Café Tour 10.10.2026 Kulturquartier" [ref=e383] [cursor=pointer]:
+              - /url: /events/kolja-goldstein-2026-10-10
+              - img "Kolja Goldstein - Baltic Café Tour" [ref=e385]
+              - generic [ref=e387]:
+                - heading "Kolja Goldstein" [level=2] [ref=e388]
+                - paragraph [ref=e389]: Baltic Café Tour
+                - paragraph [ref=e390]:
+                  - generic [ref=e391]: 10.10.2026
+                  - generic [ref=e392]: Kulturquartier
+          - article [ref=e393]:
+            - link "Das Lumpenpack - Bevor der Mut dich verlässt -Tour Das Lumpenpack Bevor der Mut dich verlässt -Tour 16.10.2026 MHPArena Ludwigsburg" [ref=e395] [cursor=pointer]:
+              - /url: /events/das-lumpenpack-2026-10-16
+              - img "Das Lumpenpack - Bevor der Mut dich verlässt -Tour" [ref=e397]
+              - generic [ref=e399]:
+                - heading "Das Lumpenpack" [level=2] [ref=e400]
+                - paragraph [ref=e401]: Bevor der Mut dich verlässt -Tour
+                - paragraph [ref=e402]:
+                  - generic [ref=e403]: 16.10.2026
+                  - generic [ref=e404]: MHPArena Ludwigsburg
+          - article [ref=e405]:
+            - link "Niklas Dee - Keiner kennt mich Tour 2026 Niklas Dee Keiner kennt mich Tour 2026 16.10.2026 Kulturquartier" [ref=e407] [cursor=pointer]:
+              - /url: /events/niklas-dee-2026-10-16
+              - img "Niklas Dee - Keiner kennt mich Tour 2026" [ref=e409]
+              - generic [ref=e411]:
+                - heading "Niklas Dee" [level=2] [ref=e412]
+                - paragraph [ref=e413]: Keiner kennt mich Tour 2026
+                - paragraph [ref=e414]:
+                  - generic [ref=e415]: 16.10.2026
+                  - generic [ref=e416]: Kulturquartier
+          - article [ref=e417]:
+            - link "The Kilkennys - The Kilkennys The Kilkennys The Kilkennys 21.10.2026 Goldmark's Stuttgart" [ref=e419] [cursor=pointer]:
+              - /url: /events/the-kilkennys-2026-10-21
+              - img "The Kilkennys - The Kilkennys" [ref=e421]
+              - generic [ref=e423]:
+                - heading "The Kilkennys" [level=2] [ref=e424]
+                - paragraph [ref=e425]: The Kilkennys
+                - paragraph [ref=e426]:
+                  - generic [ref=e427]: 21.10.2026
+                  - generic [ref=e428]: Goldmark's Stuttgart
+          - article [ref=e429]:
+            - link "Andreas Gabalier - 10 Jahre VRR Unplugged Andreas Gabalier 10 Jahre VRR Unplugged 22.10.2026 KKL Beethoven-Saal Stuttgart" [ref=e431] [cursor=pointer]:
+              - /url: /events/andreas-gabalier-2026-10-22
+              - img "Andreas Gabalier - 10 Jahre VRR Unplugged" [ref=e433]
+              - generic [ref=e435]:
+                - heading "Andreas Gabalier" [level=2] [ref=e436]
+                - paragraph [ref=e437]: 10 Jahre VRR Unplugged
+                - paragraph [ref=e438]:
+                  - generic [ref=e439]: 22.10.2026
+                  - generic [ref=e440]: KKL Beethoven-Saal Stuttgart
+          - article [ref=e441]:
+            - link "The Music Of Genesis - Live in Concert - The Best From 1976-1980 The Music Of Genesis Live in Concert - The Best From 1976-1980 30.10.2026 Theaterhaus T1 Stuttgart" [ref=e443] [cursor=pointer]:
+              - /url: /events/the-music-of-genesis-2026-10-30
+              - img "The Music Of Genesis - Live in Concert - The Best From 1976-1980" [ref=e445]
+              - generic [ref=e447]:
+                - heading "The Music Of Genesis" [level=2] [ref=e448]
+                - paragraph [ref=e449]: Live in Concert - The Best From 1976-1980
+                - paragraph [ref=e450]:
+                  - generic [ref=e451]: 30.10.2026
+                  - generic [ref=e452]: Theaterhaus T1 Stuttgart
+          - article [ref=e453]:
+            - link "Christine Thürmer - Christine Thürmer Christine Thürmer Christine Thürmer 10.11.2026 Theaterhaus T1 Stuttgart" [ref=e455] [cursor=pointer]:
+              - /url: /events/christine-thurmer-2026-11-10
+              - img "Christine Thürmer - Christine Thürmer" [ref=e457]
+              - generic [ref=e459]:
+                - heading "Christine Thürmer" [level=2] [ref=e460]
+                - paragraph [ref=e461]: Christine Thürmer
+                - paragraph [ref=e462]:
+                  - generic [ref=e463]: 10.11.2026
+                  - generic [ref=e464]: Theaterhaus T1 Stuttgart
+          - article [ref=e465]:
+            - link "Blue - 25TH ANNIVERSARY TOUR Blue 25TH ANNIVERSARY TOUR 19.11.2026 Porsche-Arena Stuttgart" [ref=e467] [cursor=pointer]:
+              - /url: /events/blue-2026-11-19
+              - img "Blue - 25TH ANNIVERSARY TOUR" [ref=e469]
+              - generic [ref=e471]:
+                - heading "Blue" [level=2] [ref=e472]
+                - paragraph [ref=e473]: 25TH ANNIVERSARY TOUR
+                - paragraph [ref=e474]:
+                  - generic [ref=e475]: 19.11.2026
+                  - generic [ref=e476]: Porsche-Arena Stuttgart
+          - article [ref=e477]:
+            - link "Not Scientists - Not Scientists Not Scientists Not Scientists 20.11.2026 Goldmark's Stuttgart" [ref=e479] [cursor=pointer]:
+              - /url: /events/not-scientists-2026-11-20
+              - img "Not Scientists - Not Scientists" [ref=e481]
+              - generic [ref=e483]:
+                - heading "Not Scientists" [level=2] [ref=e484]
+                - paragraph [ref=e485]: Not Scientists
+                - paragraph [ref=e486]:
+                  - generic [ref=e487]: 20.11.2026
+                  - generic [ref=e488]: Goldmark's Stuttgart
+          - article [ref=e489]:
+            - link "Faroon - 4 A Living Tour 2026 Faroon 4 A Living Tour 2026 21.11.2026 Schräglage Stuttgart" [ref=e491] [cursor=pointer]:
+              - /url: /events/faroon-2026-11-21
+              - img "Faroon - 4 A Living Tour 2026" [ref=e493]
+              - generic [ref=e495]:
+                - heading "Faroon" [level=2] [ref=e496]
+                - paragraph [ref=e497]: 4 A Living Tour 2026
+                - paragraph [ref=e498]:
+                  - generic [ref=e499]: 21.11.2026
+                  - generic [ref=e500]: Schräglage Stuttgart
+          - article [ref=e501]:
+            - link "Glueboys - Glueboys Glueboys Glueboys 26.11.2026 Kulturquartier" [ref=e503] [cursor=pointer]:
+              - /url: /events/glueboys-2026-11-26
+              - img "Glueboys - Glueboys" [ref=e505]
+              - generic [ref=e507]:
+                - heading "Glueboys" [level=2] [ref=e508]
+                - paragraph [ref=e509]: Glueboys
+                - paragraph [ref=e510]:
+                  - generic [ref=e511]: 26.11.2026
+                  - generic [ref=e512]: Kulturquartier
+          - article [ref=e513]:
+            - link "Zuna - MELE7 3 TOUR 2026 Zuna MELE7 3 TOUR 2026 27.11.2026 LKA-Longhorn Stuttgart" [ref=e515] [cursor=pointer]:
+              - /url: /events/zuna-2026-11-27
+              - img "Zuna - MELE7 3 TOUR 2026" [ref=e517]
+              - generic [ref=e519]:
+                - heading "Zuna" [level=2] [ref=e520]
+                - paragraph [ref=e521]: MELE7 3 TOUR 2026
+                - paragraph [ref=e522]:
+                  - generic [ref=e523]: 27.11.2026
+                  - generic [ref=e524]: LKA-Longhorn Stuttgart
+          - article [ref=e525]:
+            - link "Elif - Live Tour 2026 Elif Live Tour 2026 28.11.2026 LKA-Longhorn Stuttgart" [ref=e527] [cursor=pointer]:
+              - /url: /events/elif-2026-11-28
+              - img "Elif - Live Tour 2026" [ref=e529]
+              - generic [ref=e531]:
+                - heading "Elif" [level=2] [ref=e532]
+                - paragraph [ref=e533]: Live Tour 2026
+                - paragraph [ref=e534]:
+                  - generic [ref=e535]: 28.11.2026
+                  - generic [ref=e536]: LKA-Longhorn Stuttgart
+          - article [ref=e537]:
+            - link "Mammoth - Mammoth Mammoth Mammoth 02.12.2026 LKA-Longhorn Stuttgart" [ref=e539] [cursor=pointer]:
+              - /url: /events/mammoth-2026-12-02
+              - img "Mammoth - Mammoth" [ref=e541]
+              - generic [ref=e543]:
+                - heading "Mammoth" [level=2] [ref=e544]
+                - paragraph [ref=e545]: Mammoth
+                - paragraph [ref=e546]:
+                  - generic [ref=e547]: 02.12.2026
+                  - generic [ref=e548]: LKA-Longhorn Stuttgart
+          - article [ref=e549]:
+            - link "Mathias Richling - KI-Keine Identität Mathias Richling KI-Keine Identität 05.12.2026 Theaterhaus - T2" [ref=e551] [cursor=pointer]:
+              - /url: /events/mathias-richling-2026-12-04
+              - img "Mathias Richling - KI-Keine Identität" [ref=e553]
+              - generic [ref=e555]:
+                - heading "Mathias Richling" [level=2] [ref=e556]
+                - paragraph [ref=e557]: KI-Keine Identität
+                - paragraph [ref=e558]:
+                  - generic [ref=e559]: 05.12.2026
+                  - generic [ref=e560]: Theaterhaus - T2
+          - article [ref=e561]:
+            - link "Nimo - Home Sweet Home Arena Tour 2026 Nimo Home Sweet Home Arena Tour 2026 06.12.2026 Schleyer-Halle Stuttgart" [ref=e563] [cursor=pointer]:
+              - /url: /events/nimo-2026-12-06
+              - img "Nimo - Home Sweet Home Arena Tour 2026" [ref=e565]
+              - generic [ref=e567]:
+                - heading "Nimo" [level=2] [ref=e568]
+                - paragraph [ref=e569]: Home Sweet Home Arena Tour 2026
+                - paragraph [ref=e570]:
+                  - generic [ref=e571]: 06.12.2026
+                  - generic [ref=e572]: Schleyer-Halle Stuttgart
+          - article [ref=e573]:
+            - link "Rea Garvey´s Christmas Calling - Rea Garvey´s Christmas Calling Rea Garvey´s Christmas Calling Rea Garvey´s Christmas Calling 08.12.2026 Porsche-Arena" [ref=e575] [cursor=pointer]:
+              - /url: /events/rea-garvey-s-christmas-calling-2026-12-08
+              - img "Rea Garvey´s Christmas Calling - Rea Garvey´s Christmas Calling" [ref=e577]
+              - generic [ref=e579]:
+                - heading "Rea Garvey´s Christmas Calling" [level=2] [ref=e580]
+                - paragraph [ref=e581]: Rea Garvey´s Christmas Calling
+                - paragraph [ref=e582]:
+                  - generic [ref=e583]: 08.12.2026
+                  - generic [ref=e584]: Porsche-Arena
+          - article [ref=e585]:
+            - link "Azet - FAST LIFE FOREVER TOUR 2026 Azet FAST LIFE FOREVER TOUR 2026 11.12.2026 Porsche-Arena Stuttgart" [ref=e587] [cursor=pointer]:
+              - /url: /events/azet-2026-12-11
+              - img "Azet - FAST LIFE FOREVER TOUR 2026" [ref=e589]
+              - generic [ref=e591]:
+                - heading "Azet" [level=2] [ref=e592]
+                - paragraph [ref=e593]: FAST LIFE FOREVER TOUR 2026
+                - paragraph [ref=e594]:
+                  - generic [ref=e595]: 11.12.2026
+                  - generic [ref=e596]: Porsche-Arena Stuttgart
+          - article [ref=e597]:
+            - link "Gregory Porter & Orchestra - THE SPIRIT OF CHRISTMAS TOUR 2026 Gregory Porter & Orchestra THE SPIRIT OF CHRISTMAS TOUR 2026 16.12.2026 Liederhalle Beethovensaal" [ref=e599] [cursor=pointer]:
+              - /url: /events/gregory-porter-orchestra-2026-12-16
+              - img "Gregory Porter & Orchestra - THE SPIRIT OF CHRISTMAS TOUR 2026" [ref=e601]
+              - generic [ref=e603]:
+                - heading "Gregory Porter & Orchestra" [level=2] [ref=e604]
+                - paragraph [ref=e605]: THE SPIRIT OF CHRISTMAS TOUR 2026
+                - paragraph [ref=e606]:
+                  - generic [ref=e607]: 16.12.2026
+                  - generic [ref=e608]: Liederhalle Beethovensaal
+          - article [ref=e609]:
+            - link "voXXclub - Tour 2026 voXXclub Tour 2026 19.12.2026 Im Wizemann (Halle) Stuttgart" [ref=e611] [cursor=pointer]:
+              - /url: /events/voxxclub-2026-12-19
+              - img "voXXclub - Tour 2026" [ref=e613]
+              - generic [ref=e615]:
+                - heading "voXXclub" [level=2] [ref=e616]
+                - paragraph [ref=e617]: Tour 2026
+                - paragraph [ref=e618]:
+                  - generic [ref=e619]: 19.12.2026
+                  - generic [ref=e620]: Im Wizemann (Halle) Stuttgart
+          - article [ref=e621]:
+            - link "Sascha Lange - Depeche Mode Lesetour Sascha Lange Depeche Mode Lesetour 13.01.2027 ifa – Weltraum" [ref=e623] [cursor=pointer]:
+              - /url: /events/sascha-lange-2027-01-13
+              - img "Sascha Lange - Depeche Mode Lesetour" [ref=e625]
+              - generic [ref=e627]:
+                - heading "Sascha Lange" [level=2] [ref=e628]
+                - paragraph [ref=e629]: Depeche Mode Lesetour
+                - paragraph [ref=e630]:
+                  - generic [ref=e631]: 13.01.2027
+                  - generic [ref=e632]: ifa – Weltraum
+          - article [ref=e633]:
+            - link "Lover - A Tribute to Taylor Swift by Charity Eden - The unofficial Eras Experience - TOUR 2027 Lover - A Tribute to Taylor Swift by Charity Eden The unofficial Eras Experience - TOUR 2027 18.02.2027 MHPArena Ludwigsburg" [ref=e635] [cursor=pointer]:
+              - /url: /events/lover-a-tribute-to-taylor-swift-by-charity-eden-2027-02-18
+              - img "Lover - A Tribute to Taylor Swift by Charity Eden - The unofficial Eras Experience - TOUR 2027" [ref=e637]
+              - generic [ref=e639]:
+                - heading "Lover - A Tribute to Taylor Swift by Charity Eden" [level=2] [ref=e640]
+                - paragraph [ref=e641]: The unofficial Eras Experience - TOUR 2027
+                - paragraph [ref=e642]:
+                  - generic [ref=e643]: 18.02.2027
+                  - generic [ref=e644]: MHPArena Ludwigsburg
+          - article [ref=e645]:
+            - link "LEVKA - Tour 2027 LEVKA Tour 2027 04.03.2027 Im Wizemann (Club) Stuttgart" [ref=e647] [cursor=pointer]:
+              - /url: /events/levka-2027-03-04
+              - img "LEVKA - Tour 2027" [ref=e649]
+              - generic [ref=e651]:
+                - heading "LEVKA" [level=2] [ref=e652]
+                - paragraph [ref=e653]: Tour 2027
+                - paragraph [ref=e654]:
+                  - generic [ref=e655]: 04.03.2027
+                  - generic [ref=e656]: Im Wizemann (Club) Stuttgart
+          - article [ref=e657]:
+            - link "Kati K - Auf die Liebe Tour 2027 Kati K Auf die Liebe Tour 2027 14.04.2027 Im Wizemann (Club)" [ref=e659] [cursor=pointer]:
+              - /url: /events/kati-k-2027-04-14
+              - img "Kati K - Auf die Liebe Tour 2027" [ref=e661]
+              - generic [ref=e663]:
+                - heading "Kati K" [level=2] [ref=e664]
+                - paragraph [ref=e665]: Auf die Liebe Tour 2027
+                - paragraph [ref=e666]:
+                  - generic [ref=e667]: 14.04.2027
+                  - generic [ref=e668]: Im Wizemann (Club)
+          - article [ref=e669]:
+            - link "LEA - Sieben Monde Arena Tour 2027 LEA Sieben Monde Arena Tour 2027 25.04.2027 Schleyer-Halle Stuttgart" [ref=e671] [cursor=pointer]:
+              - /url: /events/lea-2027-04-25
+              - img "LEA - Sieben Monde Arena Tour 2027" [ref=e673]
+              - generic [ref=e675]:
+                - heading "LEA" [level=2] [ref=e676]
+                - paragraph [ref=e677]: Sieben Monde Arena Tour 2027
+                - paragraph [ref=e678]:
+                  - generic [ref=e679]: 25.04.2027
+                  - generic [ref=e680]: Schleyer-Halle Stuttgart
+      - article [ref=e681]:
+        - link "PSSST GEHEIMKONZERT foo promo Promotion PSSST GEHEIMKONZERT Zum Beitrag →" [ref=e682] [cursor=pointer]:
+          - /url: /news/pssst-geheimkonzert
+          - generic [ref=e683]:
+            - img "PSSST GEHEIMKONZERT" [ref=e684]
+            - paragraph [ref=e685]: foo promo
+          - generic [ref=e686]:
+            - paragraph [ref=e687]: Promotion
+            - heading "PSSST GEHEIMKONZERT" [level=2] [ref=e688]
+            - generic [ref=e689]: Zum Beitrag →
+      - generic [ref=e690]:
+        - generic [ref=e691]:
+          - generic [ref=e692]:
+            - heading "Theater & Schauspiel" [level=2] [ref=e693]
+            - paragraph [ref=e694]: 11 Events im kommenden Programm
+          - generic [ref=e695]:
+            - button "Zurück" [disabled] [ref=e701]: ‹
+            - button "Weiter" [ref=e702] [cursor=pointer]: ›
+        - generic [ref=e704]:
+          - article [ref=e705]:
+            - 'link "New English American Theatre presents: Agatha Christie''s Murder on the Orient Ex - New English American Theatre presents: Agatha Christie''s Murder on the Orient Ex Theater am Olgaeck Stuttgart New English American Theatre presents: Agatha Christie''s Murder on the Orient Ex New English American Theatre presents: Agatha Christie''s Murder on the Orient Ex 26.03.2026" [ref=e706] [cursor=pointer]':
+              - /url: /events/new-english-american-theatre-presents-agatha-christie-s-murder-on-the-orient-ex-2026-03-19
+              - 'img "New English American Theatre presents: Agatha Christie''s Murder on the Orient Ex - New English American Theatre presents: Agatha Christie''s Murder on the Orient Ex" [ref=e709]'
+              - generic [ref=e710]:
+                - paragraph [ref=e711]:
+                  - generic [ref=e712]: Theater am Olgaeck Stuttgart
+                - 'heading "New English American Theatre presents: Agatha Christie''s Murder on the Orient Ex" [level=3] [ref=e713]'
+                - paragraph [ref=e714]: "New English American Theatre presents: Agatha Christie's Murder on the Orient Ex"
+                - paragraph [ref=e715]: 26.03.2026
+          - article [ref=e716]:
+            - link "Felix Schinder - Felix Schinder Theater am Olgaeck Stuttgart Felix Schinder Felix Schinder 27.03.2026" [ref=e717] [cursor=pointer]:
+              - /url: /events/felix-schinder-2026-03-27
+              - img "Felix Schinder - Felix Schinder" [ref=e720]
+              - generic [ref=e721]:
+                - paragraph [ref=e722]:
+                  - generic [ref=e723]: Theater am Olgaeck Stuttgart
+                - heading "Felix Schinder" [level=3] [ref=e724]
+                - paragraph [ref=e725]: Felix Schinder
+                - paragraph [ref=e726]: 27.03.2026
+          - article [ref=e727]:
+            - link "Bruno Jonas - \"Klappe halten\" Theaterhaus T1 Stuttgart Bruno Jonas \"Klappe halten\" 27.03.2026" [ref=e728] [cursor=pointer]:
+              - /url: /events/bruno-jonas-2026-03-27
+              - img "Bruno Jonas - \"Klappe halten\"" [ref=e731]
+              - generic [ref=e732]:
+                - paragraph [ref=e733]:
+                  - generic [ref=e734]: Theaterhaus T1 Stuttgart
+                - heading "Bruno Jonas" [level=3] [ref=e735]
+                - paragraph [ref=e736]: "\"Klappe halten\""
+                - paragraph [ref=e737]: 27.03.2026
+          - article [ref=e738]:
+            - link "Amphitryon - Amphitryon Theater am Olgaeck Stuttgart Amphitryon Amphitryon 29.03.2026" [ref=e739] [cursor=pointer]:
+              - /url: /events/amphitryon-2026-03-28
+              - img "Amphitryon - Amphitryon" [ref=e742]
+              - generic [ref=e743]:
+                - paragraph [ref=e744]:
+                  - generic [ref=e745]: Theater am Olgaeck Stuttgart
+                - heading "Amphitryon" [level=3] [ref=e746]
+                - paragraph [ref=e747]: Amphitryon
+                - paragraph [ref=e748]: 29.03.2026
+          - article [ref=e749]:
+            - link "FAUST Fragment - FAUST Fragment Theater am Olgaeck Stuttgart FAUST Fragment FAUST Fragment 12.04.2026" [ref=e750] [cursor=pointer]:
+              - /url: /events/faust-fragment-2026-03-20
+              - img "FAUST Fragment - FAUST Fragment" [ref=e753]
+              - generic [ref=e754]:
+                - paragraph [ref=e755]:
+                  - generic [ref=e756]: Theater am Olgaeck Stuttgart
+                - heading "FAUST Fragment" [level=3] [ref=e757]
+                - paragraph [ref=e758]: FAUST Fragment
+                - paragraph [ref=e759]: 12.04.2026
+          - article [ref=e760]:
+            - link "\"HEROES\" - Alexander Scheer singt David Bowie KKL Hegel-Saal Stuttgart \"HEROES\" Alexander Scheer singt David Bowie 17.04.2026" [ref=e761] [cursor=pointer]:
+              - /url: /events/heroes-2026-04-17
+              - img "\"HEROES\" - Alexander Scheer singt David Bowie" [ref=e764]
+              - generic [ref=e765]:
+                - paragraph [ref=e766]:
+                  - generic [ref=e767]: KKL Hegel-Saal Stuttgart
+                - heading "\"HEROES\"" [level=3] [ref=e768]
+                - paragraph [ref=e769]: Alexander Scheer singt David Bowie
+                - paragraph [ref=e770]: 17.04.2026
+          - article [ref=e771]:
+            - link "Loriot - Loriot Liederhalle Hegelsaal Loriot Loriot 26.04.2026" [ref=e772] [cursor=pointer]:
+              - /url: /events/loriot-2026-04-26
+              - img "Loriot - Loriot" [ref=e775]
+              - generic [ref=e776]:
+                - paragraph [ref=e777]:
+                  - generic [ref=e778]: Liederhalle Hegelsaal
+                - heading "Loriot" [level=3] [ref=e779]
+                - paragraph [ref=e780]: Loriot
+                - paragraph [ref=e781]: 26.04.2026
+          - article [ref=e782]:
+            - link "SELBST IST DIE FRAU! - Komödie von Cordula Polster und Stefanie Stroebele Theaterschiff Stuttgart SELBST IST DIE FRAU! Komödie von Cordula Polster und Stefanie Stroebele 30.04.2026" [ref=e783] [cursor=pointer]:
+              - /url: /events/selbst-ist-die-frau-2026-03-18
+              - img "SELBST IST DIE FRAU! - Komödie von Cordula Polster und Stefanie Stroebele" [ref=e786]
+              - generic [ref=e787]:
+                - paragraph [ref=e788]:
+                  - generic [ref=e789]: Theaterschiff Stuttgart
+                - heading "SELBST IST DIE FRAU!" [level=3] [ref=e790]
+                - paragraph [ref=e791]: Komödie von Cordula Polster und Stefanie Stroebele
+                - paragraph [ref=e792]: 30.04.2026
+          - article [ref=e793]:
+            - link "Sister Act - Das himmlische Musical - Das himmlische Musical Forum am Schlosspark Ludwigsburg Sister Act - Das himmlische Musical Das himmlische Musical 07.06.2026" [ref=e794] [cursor=pointer]:
+              - /url: /events/sister-act-das-himmlische-musical-2026-05-29
+              - img "Sister Act - Das himmlische Musical - Das himmlische Musical" [ref=e797]
+              - generic [ref=e798]:
+                - paragraph [ref=e799]:
+                  - generic [ref=e800]: Forum am Schlosspark Ludwigsburg
+                - heading "Sister Act - Das himmlische Musical" [level=3] [ref=e801]
+                - paragraph [ref=e802]: Das himmlische Musical
+                - paragraph [ref=e803]: 07.06.2026
+          - article [ref=e804]:
+            - link "Suche impotenten Mann fürs Leben - Komödie von Gaby Hauptmann Theaterschiff Stuttgart Suche impotenten Mann fürs Leben Komödie von Gaby Hauptmann 28.06.2026" [ref=e805] [cursor=pointer]:
+              - /url: /events/suche-impotenten-mann-furs-leben-2026-05-08
+              - img "Suche impotenten Mann fürs Leben - Komödie von Gaby Hauptmann" [ref=e808]
+              - generic [ref=e809]:
+                - paragraph [ref=e810]:
+                  - generic [ref=e811]: Theaterschiff Stuttgart
+                - heading "Suche impotenten Mann fürs Leben" [level=3] [ref=e812]
+                - paragraph [ref=e813]: Komödie von Gaby Hauptmann
+                - paragraph [ref=e814]: 28.06.2026
+          - article [ref=e815]:
+            - 'link "Stadt-Erlebnis-Tour: Verschwörung in der Soldatenstadt - Stadt-Erlebnis-Tour: Verschwörung in der Soldatenstadt studio 55 Ludwigsburg Stadt-Erlebnis-Tour: Verschwörung in der Soldatenstadt Stadt-Erlebnis-Tour: Verschwörung in der Soldatenstadt 11.09.2026" [ref=e816] [cursor=pointer]':
+              - /url: /events/stadt-erlebnis-tour-verschworung-in-der-soldatenstadt-2026-05-17
+              - 'img "Stadt-Erlebnis-Tour: Verschwörung in der Soldatenstadt - Stadt-Erlebnis-Tour: Verschwörung in der Soldatenstadt" [ref=e819]'
+              - generic [ref=e820]:
+                - paragraph [ref=e821]:
+                  - generic [ref=e822]: studio 55 Ludwigsburg
+                - 'heading "Stadt-Erlebnis-Tour: Verschwörung in der Soldatenstadt" [level=3] [ref=e823]'
+                - paragraph [ref=e824]: "Stadt-Erlebnis-Tour: Verschwörung in der Soldatenstadt"
+                - paragraph [ref=e825]: 11.09.2026
+      - generic [ref=e826]:
+        - generic [ref=e827]:
+          - generic [ref=e828]:
+            - paragraph [ref=e829]: Programmübersicht
+            - heading "Alle Veranstaltungen in Stuttgart" [level=2] [ref=e830]
+            - paragraph [ref=e831]: 100 Events aus dem aktuellen Feed
+          - generic [ref=e832]:
+            - button "Zurück" [disabled] [ref=e838]: ‹
+            - button "Weiter" [ref=e839] [cursor=pointer]: ›
+        - generic [ref=e841]:
+          - article [ref=e842]:
+            - link "On the move - On the move Altes Schauspielhaus On the move On the move 20.03.2026" [ref=e843] [cursor=pointer]:
+              - /url: /events/on-the-move-2026-03-20
+              - img "On the move - On the move" [ref=e846]
+              - generic [ref=e847]:
+                - paragraph [ref=e848]:
+                  - generic [ref=e849]: Altes Schauspielhaus
+                - heading "On the move" [level=3] [ref=e850]
+                - paragraph [ref=e851]: On the move
+                - paragraph [ref=e852]: 20.03.2026
+          - article [ref=e853]:
+            - link "On the move - On the move Altes Schauspielhaus On the move On the move 20.03.2026" [ref=e854] [cursor=pointer]:
+              - /url: /events/on-the-move-2026-03-20-2
+              - img "On the move - On the move" [ref=e857]
+              - generic [ref=e858]:
+                - paragraph [ref=e859]:
+                  - generic [ref=e860]: Altes Schauspielhaus
+                - heading "On the move" [level=3] [ref=e861]
+                - paragraph [ref=e862]: On the move
+                - paragraph [ref=e863]: 20.03.2026
+          - article [ref=e864]:
+            - link "Stunde der Kirchenmusik - Dionysos Now!/Tore Tom Denys Stiftskirche Stunde der Kirchenmusik Dionysos Now!/Tore Tom Denys 20.03.2026" [ref=e865] [cursor=pointer]:
+              - /url: /events/stunde-der-kirchenmusik-2026-03-20
+              - img "Stunde der Kirchenmusik - Dionysos Now!/Tore Tom Denys" [ref=e868]
+              - generic [ref=e869]:
+                - paragraph [ref=e870]:
+                  - generic [ref=e871]: Stiftskirche
+                - heading "Stunde der Kirchenmusik" [level=3] [ref=e872]
+                - paragraph [ref=e873]: Dionysos Now!/Tore Tom Denys
+                - paragraph [ref=e874]: 20.03.2026
+          - article [ref=e875]:
+            - link "Konfetti! - Konfetti! Theater tri-bühne Konfetti! Konfetti! 20.03.2026" [ref=e876] [cursor=pointer]:
+              - /url: /events/konfetti-2026-03-20
+              - img "Konfetti! - Konfetti!" [ref=e879]
+              - generic [ref=e880]:
+                - paragraph [ref=e881]:
+                  - generic [ref=e882]: Theater tri-bühne
+                - heading "Konfetti!" [level=3] [ref=e883]
+                - paragraph [ref=e884]: Konfetti!
+                - paragraph [ref=e885]: 20.03.2026
+          - article [ref=e886]:
+            - link "Auf Herz und Niere - Premiere Komödie im Marquardt Auf Herz und Niere Premiere 20.03.2026" [ref=e887] [cursor=pointer]:
+              - /url: /events/auf-herz-und-niere-2026-03-20
+              - img "Auf Herz und Niere - Premiere" [ref=e890]
+              - generic [ref=e891]:
+                - paragraph [ref=e892]:
+                  - generic [ref=e893]: Komödie im Marquardt
+                - heading "Auf Herz und Niere" [level=3] [ref=e894]
+                - paragraph [ref=e895]: Premiere
+                - paragraph [ref=e896]: 20.03.2026
+          - article [ref=e897]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 20.03.2026" [ref=e898] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-20
+              - img "Der Hexer - Der Hexer" [ref=e901]
+              - generic [ref=e902]:
+                - paragraph [ref=e903]:
+                  - generic [ref=e904]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e905]
+                - paragraph [ref=e906]: Der Hexer
+                - paragraph [ref=e907]: 20.03.2026
+          - article [ref=e908]:
+            - link "Life - Performance nach dem Buch von Maja und Daniela Aldinger Theater der Altstadt Life Performance nach dem Buch von Maja und Daniela Aldinger 20.03.2026" [ref=e909] [cursor=pointer]:
+              - /url: /events/life-2026-03-20
+              - img "Life - Performance nach dem Buch von Maja und Daniela Aldinger" [ref=e912]
+              - generic [ref=e913]:
+                - paragraph [ref=e914]:
+                  - generic [ref=e915]: Theater der Altstadt
+                - heading "Life" [level=3] [ref=e916]
+                - paragraph [ref=e917]: Performance nach dem Buch von Maja und Daniela Aldinger
+                - paragraph [ref=e918]: 20.03.2026
+          - article [ref=e919]:
+            - link "Antje Töpfer, Stuttgart - Porzellan FITZ Das Theater animierter Formen Antje Töpfer, Stuttgart Porzellan 20.03.2026" [ref=e920] [cursor=pointer]:
+              - /url: /events/antje-topfer-stuttgart-2026-03-20
+              - img "Antje Töpfer, Stuttgart - Porzellan" [ref=e923]
+              - generic [ref=e924]:
+                - paragraph [ref=e925]:
+                  - generic [ref=e926]: FITZ Das Theater animierter Formen
+                - heading "Antje Töpfer, Stuttgart" [level=3] [ref=e927]
+                - paragraph [ref=e928]: Porzellan
+                - paragraph [ref=e929]: 20.03.2026
+          - article [ref=e930]:
+            - link "Stuttgart-Premiere - Annette Kruhl - Vom Karma-Coach ins Kuschel-Camp Renitenztheater Stuttgart-Premiere Annette Kruhl - Vom Karma-Coach ins Kuschel-Camp 20.03.2026" [ref=e931] [cursor=pointer]:
+              - /url: /events/stuttgart-premiere-2026-03-20
+              - img "Stuttgart-Premiere - Annette Kruhl - Vom Karma-Coach ins Kuschel-Camp" [ref=e934]
+              - generic [ref=e935]:
+                - paragraph [ref=e936]:
+                  - generic [ref=e937]: Renitenztheater
+                - heading "Stuttgart-Premiere" [level=3] [ref=e938]
+                - paragraph [ref=e939]: Annette Kruhl - Vom Karma-Coach ins Kuschel-Camp
+                - paragraph [ref=e940]: 20.03.2026
+          - article [ref=e941]:
+            - link "Einlass & Bewirtung ab 18.00 Uhr - Tino Bomelino - mit „Wegen Apokalypse vorverlegt“ Rosenau - Lokalität & Bühne Einlass & Bewirtung ab 18.00 Uhr Tino Bomelino - mit „Wegen Apokalypse vorverlegt“ 20.03.2026" [ref=e942] [cursor=pointer]:
+              - /url: /events/einlass-bewirtung-ab-18-00-uhr-2026-03-20
+              - img "Einlass & Bewirtung ab 18.00 Uhr - Tino Bomelino - mit „Wegen Apokalypse vorverlegt“" [ref=e945]
+              - generic [ref=e946]:
+                - paragraph [ref=e947]:
+                  - generic [ref=e948]: Rosenau - Lokalität & Bühne
+                - heading "Einlass & Bewirtung ab 18.00 Uhr" [level=3] [ref=e949]
+                - paragraph [ref=e950]: Tino Bomelino - mit „Wegen Apokalypse vorverlegt“
+                - paragraph [ref=e951]: 20.03.2026
+          - article [ref=e952]:
+            - link "Mit Jakob, Kunkel, Plaumann, Setzer, Ruchmann, Butikova und Grakovski - Kill den Drachen Theater Atelier Mit Jakob, Kunkel, Plaumann, Setzer, Ruchmann, Butikova und Grakovski Kill den Drachen 20.03.2026" [ref=e953] [cursor=pointer]:
+              - /url: /events/mit-jakob-kunkel-plaumann-setzer-ruchmann-butikova-und-grakovski-2026-03-20
+              - img "Mit Jakob, Kunkel, Plaumann, Setzer, Ruchmann, Butikova und Grakovski - Kill den Drachen" [ref=e956]
+              - generic [ref=e957]:
+                - paragraph [ref=e958]:
+                  - generic [ref=e959]: Theater Atelier
+                - heading "Mit Jakob, Kunkel, Plaumann, Setzer, Ruchmann, Butikova und Grakovski" [level=3] [ref=e960]
+                - paragraph [ref=e961]: Kill den Drachen
+                - paragraph [ref=e962]: 20.03.2026
+          - article [ref=e963]:
+            - link "mit \"Ding Dong\" - Eva Karl Faltermeier Theaterhaus - T2 mit \"Ding Dong\" Eva Karl Faltermeier 20.03.2026" [ref=e964] [cursor=pointer]:
+              - /url: /events/mit-ding-dong-2026-03-20
+              - img "mit \"Ding Dong\" - Eva Karl Faltermeier" [ref=e967]
+              - generic [ref=e968]:
+                - paragraph [ref=e969]:
+                  - generic [ref=e970]: Theaterhaus - T2
+                - heading "mit \"Ding Dong\"" [level=3] [ref=e971]
+                - paragraph [ref=e972]: Eva Karl Faltermeier
+                - paragraph [ref=e973]: 20.03.2026
+          - article [ref=e974]:
+            - link "Theater Miamou, Berlin - Das Karussell - Frei nach dem Gedicht von R. M. Rilke FITZ Das Theater animierter Formen Theater Miamou, Berlin Das Karussell - Frei nach dem Gedicht von R. M. Rilke 21.03.2026" [ref=e975] [cursor=pointer]:
+              - /url: /events/theater-miamou-berlin-2026-03-21
+              - img "Theater Miamou, Berlin - Das Karussell - Frei nach dem Gedicht von R. M. Rilke" [ref=e978]
+              - generic [ref=e979]:
+                - paragraph [ref=e980]:
+                  - generic [ref=e981]: FITZ Das Theater animierter Formen
+                - heading "Theater Miamou, Berlin" [level=3] [ref=e982]
+                - paragraph [ref=e983]: Das Karussell - Frei nach dem Gedicht von R. M. Rilke
+                - paragraph [ref=e984]: 21.03.2026
+          - article [ref=e985]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 21.03.2026" [ref=e986] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-21-2
+              - img "Der Hexer - Der Hexer" [ref=e989]
+              - generic [ref=e990]:
+                - paragraph [ref=e991]:
+                  - generic [ref=e992]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e993]
+                - paragraph [ref=e994]: Der Hexer
+                - paragraph [ref=e995]: 21.03.2026
+          - article [ref=e996]:
+            - link "Lahme Ente, blindes Huhn - Theaterhaus Schauspiel Theaterhaus - T4 Lahme Ente, blindes Huhn Theaterhaus Schauspiel 21.03.2026" [ref=e997] [cursor=pointer]:
+              - /url: /events/lahme-ente-blindes-huhn-2026-03-21
+              - img "Lahme Ente, blindes Huhn - Theaterhaus Schauspiel" [ref=e1000]
+              - generic [ref=e1001]:
+                - paragraph [ref=e1002]:
+                  - generic [ref=e1003]: Theaterhaus - T4
+                - heading "Lahme Ente, blindes Huhn" [level=3] [ref=e1004]
+                - paragraph [ref=e1005]: Theaterhaus Schauspiel
+                - paragraph [ref=e1006]: 21.03.2026
+          - article [ref=e1007]:
+            - link "Antje Töpfer, Stuttgart - Porzellan FITZ Das Theater animierter Formen Antje Töpfer, Stuttgart Porzellan 21.03.2026" [ref=e1008] [cursor=pointer]:
+              - /url: /events/antje-topfer-stuttgart-2026-03-21
+              - img "Antje Töpfer, Stuttgart - Porzellan" [ref=e1011]
+              - generic [ref=e1012]:
+                - paragraph [ref=e1013]:
+                  - generic [ref=e1014]: FITZ Das Theater animierter Formen
+                - heading "Antje Töpfer, Stuttgart" [level=3] [ref=e1015]
+                - paragraph [ref=e1016]: Porzellan
+                - paragraph [ref=e1017]: 21.03.2026
+          - article [ref=e1018]:
+            - link "Konfetti! - Konfetti! Theater tri-bühne Konfetti! Konfetti! 21.03.2026" [ref=e1019] [cursor=pointer]:
+              - /url: /events/konfetti-2026-03-21
+              - img "Konfetti! - Konfetti!" [ref=e1022]
+              - generic [ref=e1023]:
+                - paragraph [ref=e1024]:
+                  - generic [ref=e1025]: Theater tri-bühne
+                - heading "Konfetti!" [level=3] [ref=e1026]
+                - paragraph [ref=e1027]: Konfetti!
+                - paragraph [ref=e1028]: 21.03.2026
+          - article [ref=e1029]:
+            - link "Auf Herz und Niere - Auf Herz und Niere Komödie im Marquardt Auf Herz und Niere Auf Herz und Niere 21.03.2026" [ref=e1030] [cursor=pointer]:
+              - /url: /events/auf-herz-und-niere-2026-03-21
+              - img "Auf Herz und Niere - Auf Herz und Niere" [ref=e1033]
+              - generic [ref=e1034]:
+                - paragraph [ref=e1035]:
+                  - generic [ref=e1036]: Komödie im Marquardt
+                - heading "Auf Herz und Niere" [level=3] [ref=e1037]
+                - paragraph [ref=e1038]: Auf Herz und Niere
+                - paragraph [ref=e1039]: 21.03.2026
+          - article [ref=e1040]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 21.03.2026" [ref=e1041] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-21
+              - img "Der Hexer - Der Hexer" [ref=e1044]
+              - generic [ref=e1045]:
+                - paragraph [ref=e1046]:
+                  - generic [ref=e1047]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e1048]
+                - paragraph [ref=e1049]: Der Hexer
+                - paragraph [ref=e1050]: 21.03.2026
+          - article [ref=e1051]:
+            - link "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen Theater der Altstadt Halbe Treppe Uraufführung nach dem Film von Andreas Dresen 21.03.2026" [ref=e1052] [cursor=pointer]:
+              - /url: /events/halbe-treppe-2026-03-21
+              - img "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen" [ref=e1055]
+              - generic [ref=e1056]:
+                - paragraph [ref=e1057]:
+                  - generic [ref=e1058]: Theater der Altstadt
+                - heading "Halbe Treppe" [level=3] [ref=e1059]
+                - paragraph [ref=e1060]: Uraufführung nach dem Film von Andreas Dresen
+                - paragraph [ref=e1061]: 21.03.2026
+          - article [ref=e1062]:
+            - link "9 Volt Nelly - Bäng! Bäng! Bäng! Renitenztheater 9 Volt Nelly Bäng! Bäng! Bäng! 21.03.2026" [ref=e1063] [cursor=pointer]:
+              - /url: /events/9-volt-nelly-2026-03-21
+              - img "9 Volt Nelly - Bäng! Bäng! Bäng!" [ref=e1066]
+              - generic [ref=e1067]:
+                - paragraph [ref=e1068]:
+                  - generic [ref=e1069]: Renitenztheater
+                - heading "9 Volt Nelly" [level=3] [ref=e1070]
+                - paragraph [ref=e1071]: Bäng! Bäng! Bäng!
+                - paragraph [ref=e1072]: 21.03.2026
+          - article [ref=e1073]:
+            - link "Antje Pfundtner in Gesellschaft - OH, A VISITOR Theater Rampe Antje Pfundtner in Gesellschaft OH, A VISITOR 21.03.2026" [ref=e1074] [cursor=pointer]:
+              - /url: /events/antje-pfundtner-in-gesellschaft-2026-03-21
+              - img "Antje Pfundtner in Gesellschaft - OH, A VISITOR" [ref=e1077]
+              - generic [ref=e1078]:
+                - paragraph [ref=e1079]:
+                  - generic [ref=e1080]: Theater Rampe
+                - heading "Antje Pfundtner in Gesellschaft" [level=3] [ref=e1081]
+                - paragraph [ref=e1082]: OH, A VISITOR
+                - paragraph [ref=e1083]: 21.03.2026
+          - article [ref=e1084]:
+            - link "Einlass & Bewirtung ab 18.00 Uhr - Sebastian Krämer - mit „Gesänge auf der Falltür“ Rosenau - Lokalität & Bühne Einlass & Bewirtung ab 18.00 Uhr Sebastian Krämer - mit „Gesänge auf der Falltür“ 21.03.2026" [ref=e1085] [cursor=pointer]:
+              - /url: /events/einlass-bewirtung-ab-18-00-uhr-2026-03-21
+              - img "Einlass & Bewirtung ab 18.00 Uhr - Sebastian Krämer - mit „Gesänge auf der Falltür“" [ref=e1088]
+              - generic [ref=e1089]:
+                - paragraph [ref=e1090]:
+                  - generic [ref=e1091]: Rosenau - Lokalität & Bühne
+                - heading "Einlass & Bewirtung ab 18.00 Uhr" [level=3] [ref=e1092]
+                - paragraph [ref=e1093]: Sebastian Krämer - mit „Gesänge auf der Falltür“
+                - paragraph [ref=e1094]: 21.03.2026
+          - article [ref=e1095]:
+            - link "CAVEMAN - Martin Luding Theaterhaus - T2 CAVEMAN Martin Luding 21.03.2026" [ref=e1096] [cursor=pointer]:
+              - /url: /events/caveman-2026-03-21
+              - img "CAVEMAN - Martin Luding" [ref=e1099]
+              - generic [ref=e1100]:
+                - paragraph [ref=e1101]:
+                  - generic [ref=e1102]: Theaterhaus - T2
+                - heading "CAVEMAN" [level=3] [ref=e1103]
+                - paragraph [ref=e1104]: Martin Luding
+                - paragraph [ref=e1105]: 21.03.2026
+          - article [ref=e1106]:
+            - link "In 80 Tagen um die Welt * - Schauspiel-Spektakel von Soeren Voima nach Jules Verne Das K - Kultur- und Kongresszentrum - Theatersaal In 80 Tagen um die Welt * Schauspiel-Spektakel von Soeren Voima nach Jules Verne 21.03.2026" [ref=e1107] [cursor=pointer]:
+              - /url: /events/in-80-tagen-um-die-welt-2026-03-21
+              - img "In 80 Tagen um die Welt * - Schauspiel-Spektakel von Soeren Voima nach Jules Verne" [ref=e1110]
+              - generic [ref=e1111]:
+                - paragraph [ref=e1112]:
+                  - generic [ref=e1113]: Das K - Kultur- und Kongresszentrum - Theatersaal
+                - heading "In 80 Tagen um die Welt *" [level=3] [ref=e1114]
+                - paragraph [ref=e1115]: Schauspiel-Spektakel von Soeren Voima nach Jules Verne
+                - paragraph [ref=e1116]: 21.03.2026
+          - article [ref=e1117]:
+            - link "Roland Baisch & Gäste - Ein Junge namens Renate Theaterhaus - T3 Roland Baisch & Gäste Ein Junge namens Renate 21.03.2026" [ref=e1118] [cursor=pointer]:
+              - /url: /events/roland-baisch-gaste-2026-03-21
+              - img "Roland Baisch & Gäste - Ein Junge namens Renate" [ref=e1121]
+              - generic [ref=e1122]:
+                - paragraph [ref=e1123]:
+                  - generic [ref=e1124]: Theaterhaus - T3
+                - heading "Roland Baisch & Gäste" [level=3] [ref=e1125]
+                - paragraph [ref=e1126]: Ein Junge namens Renate
+                - paragraph [ref=e1127]: 21.03.2026
+          - article [ref=e1128]:
+            - link "Theater Miamou, Berlin - Das Karussell - Frei nach dem Gedicht von R. M. Rilke FITZ Das Theater animierter Formen Theater Miamou, Berlin Das Karussell - Frei nach dem Gedicht von R. M. Rilke 22.03.2026" [ref=e1129] [cursor=pointer]:
+              - /url: /events/theater-miamou-berlin-2026-03-22
+              - img "Theater Miamou, Berlin - Das Karussell - Frei nach dem Gedicht von R. M. Rilke" [ref=e1132]
+              - generic [ref=e1133]:
+                - paragraph [ref=e1134]:
+                  - generic [ref=e1135]: FITZ Das Theater animierter Formen
+                - heading "Theater Miamou, Berlin" [level=3] [ref=e1136]
+                - paragraph [ref=e1137]: Das Karussell - Frei nach dem Gedicht von R. M. Rilke
+                - paragraph [ref=e1138]: 22.03.2026
+          - article [ref=e1139]:
+            - link "Eine Produktion des Renitenztheaters. - Freunde fürs Leben - Ein Kinderstück für die ganze Familie - mit Angela Neis und Hannah Jasna Hess Renitenztheater Eine Produktion des Renitenztheaters. Freunde fürs Leben - Ein Kinderstück für die ganze Familie - mit Angela Neis und Hannah Jasna Hess 22.03.2026" [ref=e1140] [cursor=pointer]:
+              - /url: /events/eine-produktion-des-renitenztheaters-2026-03-22
+              - img "Eine Produktion des Renitenztheaters. - Freunde fürs Leben - Ein Kinderstück für die ganze Familie - mit Angela Neis und Hannah Jasna Hess" [ref=e1143]
+              - generic [ref=e1144]:
+                - paragraph [ref=e1145]:
+                  - generic [ref=e1146]: Renitenztheater
+                - heading "Eine Produktion des Renitenztheaters." [level=3] [ref=e1147]
+                - paragraph [ref=e1148]: Freunde fürs Leben - Ein Kinderstück für die ganze Familie - mit Angela Neis und Hannah Jasna Hess
+                - paragraph [ref=e1149]: 22.03.2026
+          - article [ref=e1150]:
+            - 'link "Tamar Valkenier - EXPEDITION ERDE: Die Vollzeit-Abenteurerin - In der Wildnis zu Hause Scala Ludwigsburg Tamar Valkenier EXPEDITION ERDE: Die Vollzeit-Abenteurerin - In der Wildnis zu Hause 22.03.2026" [ref=e1151] [cursor=pointer]':
+              - /url: /events/tamar-valkenier-2026-03-22
+              - 'img "Tamar Valkenier - EXPEDITION ERDE: Die Vollzeit-Abenteurerin - In der Wildnis zu Hause" [ref=e1154]'
+              - generic [ref=e1155]:
+                - paragraph [ref=e1156]:
+                  - generic [ref=e1157]: Scala Ludwigsburg
+                - heading "Tamar Valkenier" [level=3] [ref=e1158]
+                - paragraph [ref=e1159]: "EXPEDITION ERDE: Die Vollzeit-Abenteurerin - In der Wildnis zu Hause"
+                - paragraph [ref=e1160]: 22.03.2026
+          - article [ref=e1161]:
+            - link "Antje Pfundtner in Gesellschaft - OH, A VISITOR - Mit Kinderbetreuung Theater Rampe Antje Pfundtner in Gesellschaft OH, A VISITOR - Mit Kinderbetreuung 22.03.2026" [ref=e1162] [cursor=pointer]:
+              - /url: /events/antje-pfundtner-in-gesellschaft-2026-03-22
+              - img "Antje Pfundtner in Gesellschaft - OH, A VISITOR - Mit Kinderbetreuung" [ref=e1165]
+              - generic [ref=e1166]:
+                - paragraph [ref=e1167]:
+                  - generic [ref=e1168]: Theater Rampe
+                - heading "Antje Pfundtner in Gesellschaft" [level=3] [ref=e1169]
+                - paragraph [ref=e1170]: OH, A VISITOR - Mit Kinderbetreuung
+                - paragraph [ref=e1171]: 22.03.2026
+          - article [ref=e1172]:
+            - link "Lahme Ente, blindes Huhn - Theaterhaus Schauspiel Theaterhaus - T4 Lahme Ente, blindes Huhn Theaterhaus Schauspiel 22.03.2026" [ref=e1173] [cursor=pointer]:
+              - /url: /events/lahme-ente-blindes-huhn-2026-03-22
+              - img "Lahme Ente, blindes Huhn - Theaterhaus Schauspiel" [ref=e1176]
+              - generic [ref=e1177]:
+                - paragraph [ref=e1178]:
+                  - generic [ref=e1179]: Theaterhaus - T4
+                - heading "Lahme Ente, blindes Huhn" [level=3] [ref=e1180]
+                - paragraph [ref=e1181]: Theaterhaus Schauspiel
+                - paragraph [ref=e1182]: 22.03.2026
+          - article [ref=e1183]:
+            - 'link "Stuttgarter Hymnus-Chorknaben - Johann Sebastian Bach: \"Johannes-Passion\" - BWV 245 Stiftskirche Stuttgarter Hymnus-Chorknaben Johann Sebastian Bach: \"Johannes-Passion\" - BWV 245 22.03.2026" [ref=e1184] [cursor=pointer]':
+              - /url: /events/stuttgarter-hymnus-chorknaben-2026-03-22
+              - 'img "Stuttgarter Hymnus-Chorknaben - Johann Sebastian Bach: \"Johannes-Passion\" - BWV 245" [ref=e1187]'
+              - generic [ref=e1188]:
+                - paragraph [ref=e1189]:
+                  - generic [ref=e1190]: Stiftskirche
+                - heading "Stuttgarter Hymnus-Chorknaben" [level=3] [ref=e1191]
+                - paragraph [ref=e1192]: "Johann Sebastian Bach: \"Johannes-Passion\" - BWV 245"
+                - paragraph [ref=e1193]: 22.03.2026
+          - article [ref=e1194]:
+            - link "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen Theater der Altstadt Halbe Treppe Uraufführung nach dem Film von Andreas Dresen 22.03.2026" [ref=e1195] [cursor=pointer]:
+              - /url: /events/halbe-treppe-2026-03-22
+              - img "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen" [ref=e1198]
+              - generic [ref=e1199]:
+                - paragraph [ref=e1200]:
+                  - generic [ref=e1201]: Theater der Altstadt
+                - heading "Halbe Treppe" [level=3] [ref=e1202]
+                - paragraph [ref=e1203]: Uraufführung nach dem Film von Andreas Dresen
+                - paragraph [ref=e1204]: 22.03.2026
+          - article [ref=e1205]:
+            - link "Kammerchor Stuttgart, Klassische Philharmonie Stuttgart, Frieder Bernius - Mendelssohn, Oratorium Paulus - Mendelssohn Paulus Friedenskirche Kammerchor Stuttgart, Klassische Philharmonie Stuttgart, Frieder Bernius Mendelssohn, Oratorium Paulus - Mendelssohn Paulus 22.03.2026" [ref=e1206] [cursor=pointer]:
+              - /url: /events/kammerchor-stuttgart-klassische-philharmonie-stuttgart-frieder-bernius-2026-03-22
+              - img "Kammerchor Stuttgart, Klassische Philharmonie Stuttgart, Frieder Bernius - Mendelssohn, Oratorium Paulus - Mendelssohn Paulus" [ref=e1209]
+              - generic [ref=e1210]:
+                - paragraph [ref=e1211]:
+                  - generic [ref=e1212]: Friedenskirche
+                - heading "Kammerchor Stuttgart, Klassische Philharmonie Stuttgart, Frieder Bernius" [level=3] [ref=e1213]
+                - paragraph [ref=e1214]: Mendelssohn, Oratorium Paulus - Mendelssohn Paulus
+                - paragraph [ref=e1215]: 22.03.2026
+          - article [ref=e1216]:
+            - link "Auf Herz und Niere - Auf Herz und Niere Komödie im Marquardt Auf Herz und Niere Auf Herz und Niere 22.03.2026" [ref=e1217] [cursor=pointer]:
+              - /url: /events/auf-herz-und-niere-2026-03-22
+              - img "Auf Herz und Niere - Auf Herz und Niere" [ref=e1220]
+              - generic [ref=e1221]:
+                - paragraph [ref=e1222]:
+                  - generic [ref=e1223]: Komödie im Marquardt
+                - heading "Auf Herz und Niere" [level=3] [ref=e1224]
+                - paragraph [ref=e1225]: Auf Herz und Niere
+                - paragraph [ref=e1226]: 22.03.2026
+          - article [ref=e1227]:
+            - link "Mit Vitelariu, Dellagiacoma, Morina, Mary, Sky, Vetter, Skopp u.a. - Mario und der Zauberer Theater Atelier Mit Vitelariu, Dellagiacoma, Morina, Mary, Sky, Vetter, Skopp u.a. Mario und der Zauberer 22.03.2026" [ref=e1228] [cursor=pointer]:
+              - /url: /events/mit-vitelariu-dellagiacoma-morina-mary-sky-vetter-skopp-u-a-2026-03-22
+              - img "Mit Vitelariu, Dellagiacoma, Morina, Mary, Sky, Vetter, Skopp u.a. - Mario und der Zauberer" [ref=e1231]
+              - generic [ref=e1232]:
+                - paragraph [ref=e1233]:
+                  - generic [ref=e1234]: Theater Atelier
+                - heading "Mit Vitelariu, Dellagiacoma, Morina, Mary, Sky, Vetter, Skopp u.a." [level=3] [ref=e1235]
+                - paragraph [ref=e1236]: Mario und der Zauberer
+                - paragraph [ref=e1237]: 22.03.2026
+          - article [ref=e1238]:
+            - 'link "Steffen Hoppe - EXPEDITION ERDE: Zu Fuß über die Alpen - Vom Königssee zum Gardasee Scala Ludwigsburg Steffen Hoppe EXPEDITION ERDE: Zu Fuß über die Alpen - Vom Königssee zum Gardasee 22.03.2026" [ref=e1239] [cursor=pointer]':
+              - /url: /events/steffen-hoppe-2026-03-22
+              - 'img "Steffen Hoppe - EXPEDITION ERDE: Zu Fuß über die Alpen - Vom Königssee zum Gardasee" [ref=e1242]'
+              - generic [ref=e1243]:
+                - paragraph [ref=e1244]:
+                  - generic [ref=e1245]: Scala Ludwigsburg
+                - heading "Steffen Hoppe" [level=3] [ref=e1246]
+                - paragraph [ref=e1247]: "EXPEDITION ERDE: Zu Fuß über die Alpen - Vom Königssee zum Gardasee"
+                - paragraph [ref=e1248]: 22.03.2026
+          - article [ref=e1249]:
+            - link "Aisata Blackman - KULTURBAR - SUNDAY BAR TALK & SHOW Spielbank Stuttgart THE NEW GRACE (SI-Centrum) Aisata Blackman KULTURBAR - SUNDAY BAR TALK & SHOW 22.03.2026" [ref=e1250] [cursor=pointer]:
+              - /url: /events/aisata-blackman-2026-03-22
+              - img "Aisata Blackman - KULTURBAR - SUNDAY BAR TALK & SHOW" [ref=e1253]
+              - generic [ref=e1254]:
+                - paragraph [ref=e1255]:
+                  - generic [ref=e1256]: Spielbank Stuttgart THE NEW GRACE (SI-Centrum)
+                - heading "Aisata Blackman" [level=3] [ref=e1257]
+                - paragraph [ref=e1258]: KULTURBAR - SUNDAY BAR TALK & SHOW
+                - paragraph [ref=e1259]: 22.03.2026
+          - article [ref=e1260]:
+            - link "Ingo Oschmann - HerzScherz Renitenztheater Ingo Oschmann HerzScherz 22.03.2026" [ref=e1261] [cursor=pointer]:
+              - /url: /events/ingo-oschmann-2026-03-22
+              - img "Ingo Oschmann - HerzScherz" [ref=e1264]
+              - generic [ref=e1265]:
+                - paragraph [ref=e1266]:
+                  - generic [ref=e1267]: Renitenztheater
+                - heading "Ingo Oschmann" [level=3] [ref=e1268]
+                - paragraph [ref=e1269]: HerzScherz
+                - paragraph [ref=e1270]: 22.03.2026
+          - article [ref=e1271]:
+            - link "Marie-Anjes Lumpp - Mama ohne Plan Theaterhaus - T3 Marie-Anjes Lumpp Mama ohne Plan 22.03.2026" [ref=e1272] [cursor=pointer]:
+              - /url: /events/marie-anjes-lumpp-2026-03-22
+              - img "Marie-Anjes Lumpp - Mama ohne Plan" [ref=e1275]
+              - generic [ref=e1276]:
+                - paragraph [ref=e1277]:
+                  - generic [ref=e1278]: Theaterhaus - T3
+                - heading "Marie-Anjes Lumpp" [level=3] [ref=e1279]
+                - paragraph [ref=e1280]: Mama ohne Plan
+                - paragraph [ref=e1281]: 22.03.2026
+          - article [ref=e1282]:
+            - link "Ungarn, Viktor Orbán und die unterwanderte Demokratie - Petra Thorbrietz und Philipp Haußmann Literaturhaus Stuttgart Ungarn, Viktor Orbán und die unterwanderte Demokratie Petra Thorbrietz und Philipp Haußmann 23.03.2026" [ref=e1283] [cursor=pointer]:
+              - /url: /events/ungarn-viktor-orban-und-die-unterwanderte-demokratie-2026-03-23
+              - img "Ungarn, Viktor Orbán und die unterwanderte Demokratie - Petra Thorbrietz und Philipp Haußmann" [ref=e1286]
+              - generic [ref=e1287]:
+                - paragraph [ref=e1288]:
+                  - generic [ref=e1289]: Literaturhaus Stuttgart
+                - heading "Ungarn, Viktor Orbán und die unterwanderte Demokratie" [level=3] [ref=e1290]
+                - paragraph [ref=e1291]: Petra Thorbrietz und Philipp Haußmann
+                - paragraph [ref=e1292]: 23.03.2026
+          - article [ref=e1293]:
+            - link "Susan Wolf - Susan Wolf Theaterhaus - T4 Susan Wolf Susan Wolf 23.03.2026" [ref=e1294] [cursor=pointer]:
+              - /url: /events/susan-wolf-2026-03-23
+              - img "Susan Wolf - Susan Wolf" [ref=e1297]
+              - generic [ref=e1298]:
+                - paragraph [ref=e1299]:
+                  - generic [ref=e1300]: Theaterhaus - T4
+                - heading "Susan Wolf" [level=3] [ref=e1301]
+                - paragraph [ref=e1302]: Susan Wolf
+                - paragraph [ref=e1303]: 23.03.2026
+          - article [ref=e1304]:
+            - 'link "Frank Willmann - Stuttgarter Kriminächte: Frank Willmann - \"Balkanblut\" Thalia Stuttgart Schlossplatz Frank Willmann Stuttgarter Kriminächte: Frank Willmann - \"Balkanblut\" 23.03.2026" [ref=e1305] [cursor=pointer]':
+              - /url: /events/frank-willmann-2026-03-23
+              - 'img "Frank Willmann - Stuttgarter Kriminächte: Frank Willmann - \"Balkanblut\"" [ref=e1308]'
+              - generic [ref=e1309]:
+                - paragraph [ref=e1310]:
+                  - generic [ref=e1311]: Thalia Stuttgart Schlossplatz
+                - heading "Frank Willmann" [level=3] [ref=e1312]
+                - paragraph [ref=e1313]: "Stuttgarter Kriminächte: Frank Willmann - \"Balkanblut\""
+                - paragraph [ref=e1314]: 23.03.2026
+          - article [ref=e1315]:
+            - link "David Aaron Carpenter - Viola; Vladimir Fanshil - Leitung - Lyrische Welten Liederhalle Beethoven-Saal David Aaron Carpenter - Viola; Vladimir Fanshil - Leitung Lyrische Welten 23.03.2026" [ref=e1316] [cursor=pointer]:
+              - /url: /events/david-aaron-carpenter-viola-vladimir-fanshil-leitung-2026-03-23
+              - img "David Aaron Carpenter - Viola; Vladimir Fanshil - Leitung - Lyrische Welten" [ref=e1319]
+              - generic [ref=e1320]:
+                - paragraph [ref=e1321]:
+                  - generic [ref=e1322]: Liederhalle Beethoven-Saal
+                - heading "David Aaron Carpenter - Viola; Vladimir Fanshil - Leitung" [level=3] [ref=e1323]
+                - paragraph [ref=e1324]: Lyrische Welten
+                - paragraph [ref=e1325]: 23.03.2026
+          - article [ref=e1326]:
+            - link "Wildes Europa -Eine bildgewaltige Reise zu den Naturschätzen unseres Kontinents - Sarah Ziegler, Simon Straetker & Joshi Nitchell Theaterhaus - T2 Wildes Europa -Eine bildgewaltige Reise zu den Naturschätzen unseres Kontinents Sarah Ziegler, Simon Straetker & Joshi Nitchell 23.03.2026" [ref=e1327] [cursor=pointer]:
+              - /url: /events/wildes-europa-eine-bildgewaltige-reise-zu-den-naturschatzen-unseres-kontinents-2026-03-23
+              - img "Wildes Europa -Eine bildgewaltige Reise zu den Naturschätzen unseres Kontinents - Sarah Ziegler, Simon Straetker & Joshi Nitchell" [ref=e1330]
+              - generic [ref=e1331]:
+                - paragraph [ref=e1332]:
+                  - generic [ref=e1333]: Theaterhaus - T2
+                - heading "Wildes Europa -Eine bildgewaltige Reise zu den Naturschätzen unseres Kontinents" [level=3] [ref=e1334]
+                - paragraph [ref=e1335]: Sarah Ziegler, Simon Straetker & Joshi Nitchell
+                - paragraph [ref=e1336]: 23.03.2026
+          - article [ref=e1337]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 24.03.2026" [ref=e1338] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-24
+              - img "Der Hexer - Der Hexer" [ref=e1341]
+              - generic [ref=e1342]:
+                - paragraph [ref=e1343]:
+                  - generic [ref=e1344]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e1345]
+                - paragraph [ref=e1346]: Der Hexer
+                - paragraph [ref=e1347]: 24.03.2026
+          - article [ref=e1348]:
+            - link "Einlass & Bewirtung ab 18.00 Uhr - Open Stage IN DER ROSENAU - präsentiert von Roland Baisch Rosenau - Lokalität & Bühne Einlass & Bewirtung ab 18.00 Uhr Open Stage IN DER ROSENAU - präsentiert von Roland Baisch 24.03.2026" [ref=e1349] [cursor=pointer]:
+              - /url: /events/einlass-bewirtung-ab-18-00-uhr-2026-03-24
+              - img "Einlass & Bewirtung ab 18.00 Uhr - Open Stage IN DER ROSENAU - präsentiert von Roland Baisch" [ref=e1352]
+              - generic [ref=e1353]:
+                - paragraph [ref=e1354]:
+                  - generic [ref=e1355]: Rosenau - Lokalität & Bühne
+                - heading "Einlass & Bewirtung ab 18.00 Uhr" [level=3] [ref=e1356]
+                - paragraph [ref=e1357]: Open Stage IN DER ROSENAU - präsentiert von Roland Baisch
+                - paragraph [ref=e1358]: 24.03.2026
+          - article [ref=e1359]:
+            - link "www.falco-amadeus.com - FALCO MEETS AMADEUS Theaterhaus - T1 www.falco-amadeus.com FALCO MEETS AMADEUS 24.03.2026" [ref=e1360] [cursor=pointer]:
+              - /url: /events/www-falco-amadeus-com-2026-03-24
+              - img "www.falco-amadeus.com - FALCO MEETS AMADEUS" [ref=e1363]
+              - generic [ref=e1364]:
+                - paragraph [ref=e1365]:
+                  - generic [ref=e1366]: Theaterhaus - T1
+                - heading "www.falco-amadeus.com" [level=3] [ref=e1367]
+                - paragraph [ref=e1368]: FALCO MEETS AMADEUS
+                - paragraph [ref=e1369]: 24.03.2026
+          - article [ref=e1370]:
+            - link "Inseln des Nordens - Abenteuer am Polarkreis - Kerstin Langenberger & Olaf Krüger Theaterhaus - T2 Inseln des Nordens - Abenteuer am Polarkreis Kerstin Langenberger & Olaf Krüger 24.03.2026" [ref=e1371] [cursor=pointer]:
+              - /url: /events/inseln-des-nordens-abenteuer-am-polarkreis-2026-03-24
+              - img "Inseln des Nordens - Abenteuer am Polarkreis - Kerstin Langenberger & Olaf Krüger" [ref=e1374]
+              - generic [ref=e1375]:
+                - paragraph [ref=e1376]:
+                  - generic [ref=e1377]: Theaterhaus - T2
+                - heading "Inseln des Nordens - Abenteuer am Polarkreis" [level=3] [ref=e1378]
+                - paragraph [ref=e1379]: Kerstin Langenberger & Olaf Krüger
+                - paragraph [ref=e1380]: 24.03.2026
+          - article [ref=e1381]:
+            - link "Gregor Hübner, Veit Hübner, Karl Albrecht \"Bobbi\" Fischer - BERTA EPPLE - Das ganze Jahr geöffnet! Theaterhaus - T4 Gregor Hübner, Veit Hübner, Karl Albrecht \"Bobbi\" Fischer BERTA EPPLE - Das ganze Jahr geöffnet! 24.03.2026" [ref=e1382] [cursor=pointer]:
+              - /url: /events/gregor-hubner-veit-hubner-karl-albrecht-bobbi-fischer-2026-03-24
+              - img "Gregor Hübner, Veit Hübner, Karl Albrecht \"Bobbi\" Fischer - BERTA EPPLE - Das ganze Jahr geöffnet!" [ref=e1385]
+              - generic [ref=e1386]:
+                - paragraph [ref=e1387]:
+                  - generic [ref=e1388]: Theaterhaus - T4
+                - heading "Gregor Hübner, Veit Hübner, Karl Albrecht \"Bobbi\" Fischer" [level=3] [ref=e1389]
+                - paragraph [ref=e1390]: BERTA EPPLE - Das ganze Jahr geöffnet!
+                - paragraph [ref=e1391]: 24.03.2026
+          - article [ref=e1392]:
+            - link "Theater Miamou, Berlin - Das Karussell - Frei nach dem Gedicht von R. M. Rilke FITZ Das Theater animierter Formen Theater Miamou, Berlin Das Karussell - Frei nach dem Gedicht von R. M. Rilke 25.03.2026" [ref=e1393] [cursor=pointer]:
+              - /url: /events/theater-miamou-berlin-2026-03-25
+              - img "Theater Miamou, Berlin - Das Karussell - Frei nach dem Gedicht von R. M. Rilke" [ref=e1396]
+              - generic [ref=e1397]:
+                - paragraph [ref=e1398]:
+                  - generic [ref=e1399]: FITZ Das Theater animierter Formen
+                - heading "Theater Miamou, Berlin" [level=3] [ref=e1400]
+                - paragraph [ref=e1401]: Das Karussell - Frei nach dem Gedicht von R. M. Rilke
+                - paragraph [ref=e1402]: 25.03.2026
+          - article [ref=e1403]:
+            - link "Eine Produktion des Renitenztheaters. Kita-/Schul-Vorstellung - Freunde fürs Leben - Ein Kinderstück für die ganze Familie - mit Angela Neis und Hannah Jasna Hess Renitenztheater Eine Produktion des Renitenztheaters. Kita-/Schul-Vorstellung Freunde fürs Leben - Ein Kinderstück für die ganze Familie - mit Angela Neis und Hannah Jasna Hess 25.03.2026" [ref=e1404] [cursor=pointer]:
+              - /url: /events/eine-produktion-des-renitenztheaters-kita-schul-vorstellung-2026-03-25
+              - img "Eine Produktion des Renitenztheaters. Kita-/Schul-Vorstellung - Freunde fürs Leben - Ein Kinderstück für die ganze Familie - mit Angela Neis und Hannah Jasna Hess" [ref=e1407]
+              - generic [ref=e1408]:
+                - paragraph [ref=e1409]:
+                  - generic [ref=e1410]: Renitenztheater
+                - heading "Eine Produktion des Renitenztheaters. Kita-/Schul-Vorstellung" [level=3] [ref=e1411]
+                - paragraph [ref=e1412]: Freunde fürs Leben - Ein Kinderstück für die ganze Familie - mit Angela Neis und Hannah Jasna Hess
+                - paragraph [ref=e1413]: 25.03.2026
+          - article [ref=e1414]:
+            - 'link "Einlass & Bewirtung ab 17.30 Uhr - Science Pub - zum Thema „Beton à la carte: Raffinierte Rezepte für leichtes und nachhaltiges Bauen von morgen.“, Moderation: Tobias Wilhelm Rosenau - Lokalität & Bühne Einlass & Bewirtung ab 17.30 Uhr Science Pub - zum Thema „Beton à la carte: Raffinierte Rezepte für leichtes und nachhaltiges Bauen von morgen.“, Moderation: Tobias Wilhelm 25.03.2026" [ref=e1415] [cursor=pointer]':
+              - /url: /events/einlass-bewirtung-ab-17-30-uhr-2026-03-25
+              - 'img "Einlass & Bewirtung ab 17.30 Uhr - Science Pub - zum Thema „Beton à la carte: Raffinierte Rezepte für leichtes und nachhaltiges Bauen von morgen.“, Moderation: Tobias Wilhelm" [ref=e1418]'
+              - generic [ref=e1419]:
+                - paragraph [ref=e1420]:
+                  - generic [ref=e1421]: Rosenau - Lokalität & Bühne
+                - heading "Einlass & Bewirtung ab 17.30 Uhr" [level=3] [ref=e1422]
+                - paragraph [ref=e1423]: "Science Pub - zum Thema „Beton à la carte: Raffinierte Rezepte für leichtes und nachhaltiges Bauen von morgen.“, Moderation: Tobias Wilhelm"
+                - paragraph [ref=e1424]: 25.03.2026
+          - article [ref=e1425]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 25.03.2026" [ref=e1426] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-25
+              - img "Der Hexer - Der Hexer" [ref=e1429]
+              - generic [ref=e1430]:
+                - paragraph [ref=e1431]:
+                  - generic [ref=e1432]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e1433]
+                - paragraph [ref=e1434]: Der Hexer
+                - paragraph [ref=e1435]: 25.03.2026
+          - article [ref=e1436]:
+            - link "Dieser Drang nach Härte - Eva von Redecker Literaturhaus Stuttgart Dieser Drang nach Härte Eva von Redecker 25.03.2026" [ref=e1437] [cursor=pointer]:
+              - /url: /events/dieser-drang-nach-harte-2026-03-25
+              - img "Dieser Drang nach Härte - Eva von Redecker" [ref=e1440]
+              - generic [ref=e1441]:
+                - paragraph [ref=e1442]:
+                  - generic [ref=e1443]: Literaturhaus Stuttgart
+                - heading "Dieser Drang nach Härte" [level=3] [ref=e1444]
+                - paragraph [ref=e1445]: Eva von Redecker
+                - paragraph [ref=e1446]: 25.03.2026
+          - article [ref=e1447]:
+            - link "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen Theater der Altstadt Halbe Treppe Uraufführung nach dem Film von Andreas Dresen 25.03.2026" [ref=e1448] [cursor=pointer]:
+              - /url: /events/halbe-treppe-2026-03-25
+              - img "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen" [ref=e1451]
+              - generic [ref=e1452]:
+                - paragraph [ref=e1453]:
+                  - generic [ref=e1454]: Theater der Altstadt
+                - heading "Halbe Treppe" [level=3] [ref=e1455]
+                - paragraph [ref=e1456]: Uraufführung nach dem Film von Andreas Dresen
+                - paragraph [ref=e1457]: 25.03.2026
+          - article [ref=e1458]:
+            - link "Theaterhaus Schauspiel - And now Hanau - And now Hanau Theaterhaus - T3 Theaterhaus Schauspiel And now Hanau - And now Hanau 25.03.2026" [ref=e1459] [cursor=pointer]:
+              - /url: /events/theaterhaus-schauspiel-2026-03-25
+              - img "Theaterhaus Schauspiel - And now Hanau - And now Hanau" [ref=e1462]
+              - generic [ref=e1463]:
+                - paragraph [ref=e1464]:
+                  - generic [ref=e1465]: Theaterhaus - T3
+                - heading "Theaterhaus Schauspiel" [level=3] [ref=e1466]
+                - paragraph [ref=e1467]: And now Hanau - And now Hanau
+                - paragraph [ref=e1468]: 25.03.2026
+          - article [ref=e1469]:
+            - link "Werner Koczwara - Sternhagelschwäbisch Renitenztheater Werner Koczwara Sternhagelschwäbisch 25.03.2026" [ref=e1470] [cursor=pointer]:
+              - /url: /events/werner-koczwara-2026-03-25
+              - img "Werner Koczwara - Sternhagelschwäbisch" [ref=e1473]
+              - generic [ref=e1474]:
+                - paragraph [ref=e1475]:
+                  - generic [ref=e1476]: Renitenztheater
+                - heading "Werner Koczwara" [level=3] [ref=e1477]
+                - paragraph [ref=e1478]: Sternhagelschwäbisch
+                - paragraph [ref=e1479]: 25.03.2026
+          - article [ref=e1480]:
+            - link "Smadar Goshen - BODY THAT STANDS Theater Rampe Smadar Goshen BODY THAT STANDS 25.03.2026" [ref=e1481] [cursor=pointer]:
+              - /url: /events/smadar-goshen-2026-03-25
+              - img "Smadar Goshen - BODY THAT STANDS" [ref=e1484]
+              - generic [ref=e1485]:
+                - paragraph [ref=e1486]:
+                  - generic [ref=e1487]: Theater Rampe
+                - heading "Smadar Goshen" [level=3] [ref=e1488]
+                - paragraph [ref=e1489]: BODY THAT STANDS
+                - paragraph [ref=e1490]: 25.03.2026
+          - article [ref=e1491]:
+            - link "www.falco-amadeus.com - FALCO MEETS AMADEUS Theaterhaus - T1 www.falco-amadeus.com FALCO MEETS AMADEUS 25.03.2026" [ref=e1492] [cursor=pointer]:
+              - /url: /events/www-falco-amadeus-com-2026-03-25
+              - img "www.falco-amadeus.com - FALCO MEETS AMADEUS" [ref=e1495]
+              - generic [ref=e1496]:
+                - paragraph [ref=e1497]:
+                  - generic [ref=e1498]: Theaterhaus - T1
+                - heading "www.falco-amadeus.com" [level=3] [ref=e1499]
+                - paragraph [ref=e1500]: FALCO MEETS AMADEUS
+                - paragraph [ref=e1501]: 25.03.2026
+          - article [ref=e1502]:
+            - link "Schule Backstage! * - Matthias Zeitler Atrium der Stadtbücherei Schule Backstage! * Matthias Zeitler 25.03.2026" [ref=e1503] [cursor=pointer]:
+              - /url: /events/schule-backstage-2026-03-25
+              - img "Schule Backstage! * - Matthias Zeitler" [ref=e1506]
+              - generic [ref=e1507]:
+                - paragraph [ref=e1508]:
+                  - generic [ref=e1509]: Atrium der Stadtbücherei
+                - heading "Schule Backstage! *" [level=3] [ref=e1510]
+                - paragraph [ref=e1511]: Matthias Zeitler
+                - paragraph [ref=e1512]: 25.03.2026
+          - article [ref=e1513]:
+            - link "„Froschkönigin“ – Zwanzig Jahre La Signora - Carmela de Feo Theaterhaus - T2 „Froschkönigin“ – Zwanzig Jahre La Signora Carmela de Feo 25.03.2026" [ref=e1514] [cursor=pointer]:
+              - /url: /events/froschkonigin-zwanzig-jahre-la-signora-2026-03-25
+              - img "„Froschkönigin“ – Zwanzig Jahre La Signora - Carmela de Feo" [ref=e1517]
+              - generic [ref=e1518]:
+                - paragraph [ref=e1519]:
+                  - generic [ref=e1520]: Theaterhaus - T2
+                - heading "„Froschkönigin“ – Zwanzig Jahre La Signora" [level=3] [ref=e1521]
+                - paragraph [ref=e1522]: Carmela de Feo
+                - paragraph [ref=e1523]: 25.03.2026
+          - article [ref=e1524]:
+            - link "Das falsche Leben - Maja Nielsen und Thomas Raufeisen Literaturhaus Stuttgart Das falsche Leben Maja Nielsen und Thomas Raufeisen 26.03.2026" [ref=e1525] [cursor=pointer]:
+              - /url: /events/das-falsche-leben-2026-03-26
+              - img "Das falsche Leben - Maja Nielsen und Thomas Raufeisen" [ref=e1528]
+              - generic [ref=e1529]:
+                - paragraph [ref=e1530]:
+                  - generic [ref=e1531]: Literaturhaus Stuttgart
+                - heading "Das falsche Leben" [level=3] [ref=e1532]
+                - paragraph [ref=e1533]: Maja Nielsen und Thomas Raufeisen
+                - paragraph [ref=e1534]: 26.03.2026
+          - article [ref=e1535]:
+            - link "Auf Herz und Niere - Auf Herz und Niere Komödie im Marquardt Auf Herz und Niere Auf Herz und Niere 26.03.2026" [ref=e1536] [cursor=pointer]:
+              - /url: /events/auf-herz-und-niere-2026-03-26
+              - img "Auf Herz und Niere - Auf Herz und Niere" [ref=e1539]
+              - generic [ref=e1540]:
+                - paragraph [ref=e1541]:
+                  - generic [ref=e1542]: Komödie im Marquardt
+                - heading "Auf Herz und Niere" [level=3] [ref=e1543]
+                - paragraph [ref=e1544]: Auf Herz und Niere
+                - paragraph [ref=e1545]: 26.03.2026
+          - article [ref=e1546]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 26.03.2026" [ref=e1547] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-26
+              - img "Der Hexer - Der Hexer" [ref=e1550]
+              - generic [ref=e1551]:
+                - paragraph [ref=e1552]:
+                  - generic [ref=e1553]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e1554]
+                - paragraph [ref=e1555]: Der Hexer
+                - paragraph [ref=e1556]: 26.03.2026
+          - article [ref=e1557]:
+            - link "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen Theater der Altstadt Halbe Treppe Uraufführung nach dem Film von Andreas Dresen 26.03.2026" [ref=e1558] [cursor=pointer]:
+              - /url: /events/halbe-treppe-2026-03-26
+              - img "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen" [ref=e1561]
+              - generic [ref=e1562]:
+                - paragraph [ref=e1563]:
+                  - generic [ref=e1564]: Theater der Altstadt
+                - heading "Halbe Treppe" [level=3] [ref=e1565]
+                - paragraph [ref=e1566]: Uraufführung nach dem Film von Andreas Dresen
+                - paragraph [ref=e1567]: 26.03.2026
+          - article [ref=e1568]:
+            - link "Die neue Eigenproduktion mit dem Renitenz-Ensemble - Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis) Renitenztheater Die neue Eigenproduktion mit dem Renitenz-Ensemble Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis) 26.03.2026" [ref=e1569] [cursor=pointer]:
+              - /url: /events/die-neue-eigenproduktion-mit-dem-renitenz-ensemble-2026-03-26
+              - img "Die neue Eigenproduktion mit dem Renitenz-Ensemble - Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis)" [ref=e1572]
+              - generic [ref=e1573]:
+                - paragraph [ref=e1574]:
+                  - generic [ref=e1575]: Renitenztheater
+                - heading "Die neue Eigenproduktion mit dem Renitenz-Ensemble" [level=3] [ref=e1576]
+                - paragraph [ref=e1577]: Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis)
+                - paragraph [ref=e1578]: 26.03.2026
+          - article [ref=e1579]:
+            - link "Smadar Goshen - BODY THAT STANDS - Mit Audiodeskription Theater Rampe Smadar Goshen BODY THAT STANDS - Mit Audiodeskription 26.03.2026" [ref=e1580] [cursor=pointer]:
+              - /url: /events/smadar-goshen-2026-03-26
+              - img "Smadar Goshen - BODY THAT STANDS - Mit Audiodeskription" [ref=e1583]
+              - generic [ref=e1584]:
+                - paragraph [ref=e1585]:
+                  - generic [ref=e1586]: Theater Rampe
+                - heading "Smadar Goshen" [level=3] [ref=e1587]
+                - paragraph [ref=e1588]: BODY THAT STANDS - Mit Audiodeskription
+                - paragraph [ref=e1589]: 26.03.2026
+          - article [ref=e1590]:
+            - link "Reimart und Lachkunde - Prädikat Wortvoll - WILLY ASTOR Theaterhaus - T1 Reimart und Lachkunde - Prädikat Wortvoll WILLY ASTOR 26.03.2026" [ref=e1591] [cursor=pointer]:
+              - /url: /events/reimart-und-lachkunde-pradikat-wortvoll-2026-03-26
+              - img "Reimart und Lachkunde - Prädikat Wortvoll - WILLY ASTOR" [ref=e1594]
+              - generic [ref=e1595]:
+                - paragraph [ref=e1596]:
+                  - generic [ref=e1597]: Theaterhaus - T1
+                - heading "Reimart und Lachkunde - Prädikat Wortvoll" [level=3] [ref=e1598]
+                - paragraph [ref=e1599]: WILLY ASTOR
+                - paragraph [ref=e1600]: 26.03.2026
+          - article [ref=e1601]:
+            - link "Flip Fabrique Québec (Canada) - Six° Theaterhaus - T2 Flip Fabrique Québec (Canada) Six° 26.03.2026" [ref=e1602] [cursor=pointer]:
+              - /url: /events/flip-fabrique-quebec-canada-2026-03-26
+              - img "Flip Fabrique Québec (Canada) - Six°" [ref=e1605]
+              - generic [ref=e1606]:
+                - paragraph [ref=e1607]:
+                  - generic [ref=e1608]: Theaterhaus - T2
+                - heading "Flip Fabrique Québec (Canada)" [level=3] [ref=e1609]
+                - paragraph [ref=e1610]: Six°
+                - paragraph [ref=e1611]: 26.03.2026
+          - article [ref=e1612]:
+            - link "Boris Rosenberger - Pornosüchtig Theaterhaus - T4 Boris Rosenberger Pornosüchtig 26.03.2026" [ref=e1613] [cursor=pointer]:
+              - /url: /events/boris-rosenberger-2026-03-26
+              - img "Boris Rosenberger - Pornosüchtig" [ref=e1616]
+              - generic [ref=e1617]:
+                - paragraph [ref=e1618]:
+                  - generic [ref=e1619]: Theaterhaus - T4
+                - heading "Boris Rosenberger" [level=3] [ref=e1620]
+                - paragraph [ref=e1621]: Pornosüchtig
+                - paragraph [ref=e1622]: 26.03.2026
+          - article [ref=e1623]:
+            - link "Als die Welt uns gehörte - Liz Kessler Hospitalhof Stuttgart Als die Welt uns gehörte Liz Kessler 27.03.2026" [ref=e1624] [cursor=pointer]:
+              - /url: /events/als-die-welt-uns-gehorte-2026-03-27
+              - img "Als die Welt uns gehörte - Liz Kessler" [ref=e1627]
+              - generic [ref=e1628]:
+                - paragraph [ref=e1629]:
+                  - generic [ref=e1630]: Hospitalhof Stuttgart
+                - heading "Als die Welt uns gehörte" [level=3] [ref=e1631]
+                - paragraph [ref=e1632]: Liz Kessler
+                - paragraph [ref=e1633]: 27.03.2026
+          - article [ref=e1634]:
+            - link "Ich, Bertolt Brecht - Dialog mit dem Dichter Theater tri-bühne Ich, Bertolt Brecht Dialog mit dem Dichter 27.03.2026" [ref=e1635] [cursor=pointer]:
+              - /url: /events/ich-bertolt-brecht-2026-03-27
+              - img "Ich, Bertolt Brecht - Dialog mit dem Dichter" [ref=e1638]
+              - generic [ref=e1639]:
+                - paragraph [ref=e1640]:
+                  - generic [ref=e1641]: Theater tri-bühne
+                - heading "Ich, Bertolt Brecht" [level=3] [ref=e1642]
+                - paragraph [ref=e1643]: Dialog mit dem Dichter
+                - paragraph [ref=e1644]: 27.03.2026
+          - article [ref=e1645]:
+            - link "Auf Herz und Niere - Auf Herz und Niere Komödie im Marquardt Auf Herz und Niere Auf Herz und Niere 27.03.2026" [ref=e1646] [cursor=pointer]:
+              - /url: /events/auf-herz-und-niere-2026-03-27
+              - img "Auf Herz und Niere - Auf Herz und Niere" [ref=e1649]
+              - generic [ref=e1650]:
+                - paragraph [ref=e1651]:
+                  - generic [ref=e1652]: Komödie im Marquardt
+                - heading "Auf Herz und Niere" [level=3] [ref=e1653]
+                - paragraph [ref=e1654]: Auf Herz und Niere
+                - paragraph [ref=e1655]: 27.03.2026
+          - article [ref=e1656]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 27.03.2026" [ref=e1657] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-27
+              - img "Der Hexer - Der Hexer" [ref=e1660]
+              - generic [ref=e1661]:
+                - paragraph [ref=e1662]:
+                  - generic [ref=e1663]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e1664]
+                - paragraph [ref=e1665]: Der Hexer
+                - paragraph [ref=e1666]: 27.03.2026
+          - article [ref=e1667]:
+            - link "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen Theater der Altstadt Halbe Treppe Uraufführung nach dem Film von Andreas Dresen 27.03.2026" [ref=e1668] [cursor=pointer]:
+              - /url: /events/halbe-treppe-2026-03-27
+              - img "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen" [ref=e1671]
+              - generic [ref=e1672]:
+                - paragraph [ref=e1673]:
+                  - generic [ref=e1674]: Theater der Altstadt
+                - heading "Halbe Treppe" [level=3] [ref=e1675]
+                - paragraph [ref=e1676]: Uraufführung nach dem Film von Andreas Dresen
+                - paragraph [ref=e1677]: 27.03.2026
+          - article [ref=e1678]:
+            - link "Eine Produktion des. Stdg. Sprechkunst der HMDK Stuttgart - PADUM Wilhelma Theater Eine Produktion des. Stdg. Sprechkunst der HMDK Stuttgart PADUM 27.03.2026" [ref=e1679] [cursor=pointer]:
+              - /url: /events/eine-produktion-des-stdg-sprechkunst-der-hmdk-stuttgart-2026-03-27
+              - img "Eine Produktion des. Stdg. Sprechkunst der HMDK Stuttgart - PADUM" [ref=e1682]
+              - generic [ref=e1683]:
+                - paragraph [ref=e1684]:
+                  - generic [ref=e1685]: Wilhelma Theater
+                - heading "Eine Produktion des. Stdg. Sprechkunst der HMDK Stuttgart" [level=3] [ref=e1686]
+                - paragraph [ref=e1687]: PADUM
+                - paragraph [ref=e1688]: 27.03.2026
+          - article [ref=e1689]:
+            - link "„Klappe halten“ - BRUNO JONAS Theaterhaus - T1 „Klappe halten“ BRUNO JONAS 27.03.2026" [ref=e1690] [cursor=pointer]:
+              - /url: /events/klappe-halten-2026-03-27
+              - img "„Klappe halten“ - BRUNO JONAS" [ref=e1693]
+              - generic [ref=e1694]:
+                - paragraph [ref=e1695]:
+                  - generic [ref=e1696]: Theaterhaus - T1
+                - heading "„Klappe halten“" [level=3] [ref=e1697]
+                - paragraph [ref=e1698]: BRUNO JONAS
+                - paragraph [ref=e1699]: 27.03.2026
+          - article [ref=e1700]:
+            - link "Jennifer Bright - \"The Final Bow (Pure Grace Academy 1)\" Thalia Stuttgart Schlossplatz Jennifer Bright \"The Final Bow (Pure Grace Academy 1)\" 27.03.2026" [ref=e1701] [cursor=pointer]:
+              - /url: /events/jennifer-bright-2026-03-27
+              - img "Jennifer Bright - \"The Final Bow (Pure Grace Academy 1)\"" [ref=e1704]
+              - generic [ref=e1705]:
+                - paragraph [ref=e1706]:
+                  - generic [ref=e1707]: Thalia Stuttgart Schlossplatz
+                - heading "Jennifer Bright" [level=3] [ref=e1708]
+                - paragraph [ref=e1709]: "\"The Final Bow (Pure Grace Academy 1)\""
+                - paragraph [ref=e1710]: 27.03.2026
+          - article [ref=e1711]:
+            - link "Theater Miamou, Berlin - Der Granatapfel FITZ Theater Miamou, Berlin Der Granatapfel 27.03.2026" [ref=e1712] [cursor=pointer]:
+              - /url: /events/theater-miamou-berlin-2026-03-27
+              - img "Theater Miamou, Berlin - Der Granatapfel" [ref=e1715]
+              - generic [ref=e1716]:
+                - paragraph [ref=e1717]:
+                  - generic [ref=e1718]: FITZ
+                - heading "Theater Miamou, Berlin" [level=3] [ref=e1719]
+                - paragraph [ref=e1720]: Der Granatapfel
+                - paragraph [ref=e1721]: 27.03.2026
+          - article [ref=e1722]:
+            - link "Die neue Eigenproduktion mit dem Renitenz-Ensemble - Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis) Renitenztheater Die neue Eigenproduktion mit dem Renitenz-Ensemble Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis) 27.03.2026" [ref=e1723] [cursor=pointer]:
+              - /url: /events/die-neue-eigenproduktion-mit-dem-renitenz-ensemble-2026-03-27
+              - img "Die neue Eigenproduktion mit dem Renitenz-Ensemble - Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis)" [ref=e1726]
+              - generic [ref=e1727]:
+                - paragraph [ref=e1728]:
+                  - generic [ref=e1729]: Renitenztheater
+                - heading "Die neue Eigenproduktion mit dem Renitenz-Ensemble" [level=3] [ref=e1730]
+                - paragraph [ref=e1731]: Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis)
+                - paragraph [ref=e1732]: 27.03.2026
+          - article [ref=e1733]:
+            - 'link "Einlass & Getränke ab 19.00 Uhr - Quatsch Comedy Club - Die Live Show - mit: Noah Nemeth, Der Storb, Nektarios Vlachopoulos, Götz Frittrang, Moderation: Martin Sierp SpardaWelt Eventcenter Einlass & Getränke ab 19.00 Uhr Quatsch Comedy Club - Die Live Show - mit: Noah Nemeth, Der Storb, Nektarios Vlachopoulos, Götz Frittrang, Moderation: Martin Sierp 27.03.2026" [ref=e1734] [cursor=pointer]':
+              - /url: /events/einlass-getranke-ab-19-00-uhr-2026-03-27
+              - 'img "Einlass & Getränke ab 19.00 Uhr - Quatsch Comedy Club - Die Live Show - mit: Noah Nemeth, Der Storb, Nektarios Vlachopoulos, Götz Frittrang, Moderation: Martin Sierp" [ref=e1737]'
+              - generic [ref=e1738]:
+                - paragraph [ref=e1739]:
+                  - generic [ref=e1740]: SpardaWelt Eventcenter
+                - heading "Einlass & Getränke ab 19.00 Uhr" [level=3] [ref=e1741]
+                - paragraph [ref=e1742]: "Quatsch Comedy Club - Die Live Show - mit: Noah Nemeth, Der Storb, Nektarios Vlachopoulos, Götz Frittrang, Moderation: Martin Sierp"
+                - paragraph [ref=e1743]: 27.03.2026
+          - article [ref=e1744]:
+            - link "Impro-Show Die Maßschneiderei - Impro-Show Die Maßschneiderei Theater Atelier Impro-Show Die Maßschneiderei Impro-Show Die Maßschneiderei 27.03.2026" [ref=e1745] [cursor=pointer]:
+              - /url: /events/impro-show-die-massschneiderei-2026-03-27
+              - img "Impro-Show Die Maßschneiderei - Impro-Show Die Maßschneiderei" [ref=e1748]
+              - generic [ref=e1749]:
+                - paragraph [ref=e1750]:
+                  - generic [ref=e1751]: Theater Atelier
+                - heading "Impro-Show Die Maßschneiderei" [level=3] [ref=e1752]
+                - paragraph [ref=e1753]: Impro-Show Die Maßschneiderei
+                - paragraph [ref=e1754]: 27.03.2026
+          - article [ref=e1755]:
+            - link "Boris Rosenberger - Pornosüchtig Theaterhaus - T4 Boris Rosenberger Pornosüchtig 27.03.2026" [ref=e1756] [cursor=pointer]:
+              - /url: /events/boris-rosenberger-2026-03-27
+              - img "Boris Rosenberger - Pornosüchtig" [ref=e1759]
+              - generic [ref=e1760]:
+                - paragraph [ref=e1761]:
+                  - generic [ref=e1762]: Theaterhaus - T4
+                - heading "Boris Rosenberger" [level=3] [ref=e1763]
+                - paragraph [ref=e1764]: Pornosüchtig
+                - paragraph [ref=e1765]: 27.03.2026
+          - article [ref=e1766]:
+            - link "Theater Miamou, Berlin - Der Granatapfel FITZ Theater Miamou, Berlin Der Granatapfel 28.03.2026" [ref=e1767] [cursor=pointer]:
+              - /url: /events/theater-miamou-berlin-2026-03-28
+              - img "Theater Miamou, Berlin - Der Granatapfel" [ref=e1770]
+              - generic [ref=e1771]:
+                - paragraph [ref=e1772]:
+                  - generic [ref=e1773]: FITZ
+                - heading "Theater Miamou, Berlin" [level=3] [ref=e1774]
+                - paragraph [ref=e1775]: Der Granatapfel
+                - paragraph [ref=e1776]: 28.03.2026
+          - article [ref=e1777]:
+            - link "Ich, Bertolt Brecht - Dialog mit dem Dichter Theater tri-bühne Ich, Bertolt Brecht Dialog mit dem Dichter 28.03.2026" [ref=e1778] [cursor=pointer]:
+              - /url: /events/ich-bertolt-brecht-2026-03-28
+              - img "Ich, Bertolt Brecht - Dialog mit dem Dichter" [ref=e1781]
+              - generic [ref=e1782]:
+                - paragraph [ref=e1783]:
+                  - generic [ref=e1784]: Theater tri-bühne
+                - heading "Ich, Bertolt Brecht" [level=3] [ref=e1785]
+                - paragraph [ref=e1786]: Dialog mit dem Dichter
+                - paragraph [ref=e1787]: 28.03.2026
+          - article [ref=e1788]:
+            - link "Auf Herz und Niere - Auf Herz und Niere Komödie im Marquardt Auf Herz und Niere Auf Herz und Niere 28.03.2026" [ref=e1789] [cursor=pointer]:
+              - /url: /events/auf-herz-und-niere-2026-03-28
+              - img "Auf Herz und Niere - Auf Herz und Niere" [ref=e1792]
+              - generic [ref=e1793]:
+                - paragraph [ref=e1794]:
+                  - generic [ref=e1795]: Komödie im Marquardt
+                - heading "Auf Herz und Niere" [level=3] [ref=e1796]
+                - paragraph [ref=e1797]: Auf Herz und Niere
+                - paragraph [ref=e1798]: 28.03.2026
+          - article [ref=e1799]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 28.03.2026" [ref=e1800] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-28
+              - img "Der Hexer - Der Hexer" [ref=e1803]
+              - generic [ref=e1804]:
+                - paragraph [ref=e1805]:
+                  - generic [ref=e1806]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e1807]
+                - paragraph [ref=e1808]: Der Hexer
+                - paragraph [ref=e1809]: 28.03.2026
+          - article [ref=e1810]:
+            - link "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen Theater der Altstadt Halbe Treppe Uraufführung nach dem Film von Andreas Dresen 28.03.2026" [ref=e1811] [cursor=pointer]:
+              - /url: /events/halbe-treppe-2026-03-28
+              - img "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen" [ref=e1814]
+              - generic [ref=e1815]:
+                - paragraph [ref=e1816]:
+                  - generic [ref=e1817]: Theater der Altstadt
+                - heading "Halbe Treppe" [level=3] [ref=e1818]
+                - paragraph [ref=e1819]: Uraufführung nach dem Film von Andreas Dresen
+                - paragraph [ref=e1820]: 28.03.2026
+          - article [ref=e1821]:
+            - link "Eine Produktion des. Stdg. Sprechkunst der HMDK Stuttgart - PADUM Wilhelma Theater Eine Produktion des. Stdg. Sprechkunst der HMDK Stuttgart PADUM 28.03.2026" [ref=e1822] [cursor=pointer]:
+              - /url: /events/eine-produktion-des-stdg-sprechkunst-der-hmdk-stuttgart-2026-03-28
+              - img "Eine Produktion des. Stdg. Sprechkunst der HMDK Stuttgart - PADUM" [ref=e1825]
+              - generic [ref=e1826]:
+                - paragraph [ref=e1827]:
+                  - generic [ref=e1828]: Wilhelma Theater
+                - heading "Eine Produktion des. Stdg. Sprechkunst der HMDK Stuttgart" [level=3] [ref=e1829]
+                - paragraph [ref=e1830]: PADUM
+                - paragraph [ref=e1831]: 28.03.2026
+          - article [ref=e1832]:
+            - link "Die neue Eigenproduktion mit dem Renitenz-Ensemble - Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis) Renitenztheater Die neue Eigenproduktion mit dem Renitenz-Ensemble Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis) 28.03.2026" [ref=e1833] [cursor=pointer]:
+              - /url: /events/die-neue-eigenproduktion-mit-dem-renitenz-ensemble-2026-03-28
+              - img "Die neue Eigenproduktion mit dem Renitenz-Ensemble - Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis)" [ref=e1836]
+              - generic [ref=e1837]:
+                - paragraph [ref=e1838]:
+                  - generic [ref=e1839]: Renitenztheater
+                - heading "Die neue Eigenproduktion mit dem Renitenz-Ensemble" [level=3] [ref=e1840]
+                - paragraph [ref=e1841]: Renitenz-Ensemble - Meinung Macht Mobil - Ein Stück (für) Stuttgart (mit Magdalena Ganter, Ismael Boerner und Angela Neis)
+                - paragraph [ref=e1842]: 28.03.2026
+          - article [ref=e1843]:
+            - 'link "Einlass & Getränke ab 19.00 Uhr - Quatsch Comedy Club - Die Live Show - mit: Noah Nemeth, Der Storb, Nektarios Vlachopoulos, Götz Frittrang, Moderation: Martin Sierp SpardaWelt Eventcenter Einlass & Getränke ab 19.00 Uhr Quatsch Comedy Club - Die Live Show - mit: Noah Nemeth, Der Storb, Nektarios Vlachopoulos, Götz Frittrang, Moderation: Martin Sierp 28.03.2026" [ref=e1844] [cursor=pointer]':
+              - /url: /events/einlass-getranke-ab-19-00-uhr-2026-03-28
+              - 'img "Einlass & Getränke ab 19.00 Uhr - Quatsch Comedy Club - Die Live Show - mit: Noah Nemeth, Der Storb, Nektarios Vlachopoulos, Götz Frittrang, Moderation: Martin Sierp" [ref=e1847]'
+              - generic [ref=e1848]:
+                - paragraph [ref=e1849]:
+                  - generic [ref=e1850]: SpardaWelt Eventcenter
+                - heading "Einlass & Getränke ab 19.00 Uhr" [level=3] [ref=e1851]
+                - paragraph [ref=e1852]: "Quatsch Comedy Club - Die Live Show - mit: Noah Nemeth, Der Storb, Nektarios Vlachopoulos, Götz Frittrang, Moderation: Martin Sierp"
+                - paragraph [ref=e1853]: 28.03.2026
+          - article [ref=e1854]:
+            - link "Mit Rothenhöfer, Plaumann, Gagliano, Murturi und Butikova - Der Mieter Theater Atelier Mit Rothenhöfer, Plaumann, Gagliano, Murturi und Butikova Der Mieter 28.03.2026" [ref=e1855] [cursor=pointer]:
+              - /url: /events/mit-rothenhofer-plaumann-gagliano-murturi-und-butikova-2026-03-28
+              - img "Mit Rothenhöfer, Plaumann, Gagliano, Murturi und Butikova - Der Mieter" [ref=e1858]
+              - generic [ref=e1859]:
+                - paragraph [ref=e1860]:
+                  - generic [ref=e1861]: Theater Atelier
+                - heading "Mit Rothenhöfer, Plaumann, Gagliano, Murturi und Butikova" [level=3] [ref=e1862]
+                - paragraph [ref=e1863]: Der Mieter
+                - paragraph [ref=e1864]: 28.03.2026
+          - article [ref=e1865]:
+            - link "Paolo Nani - The Letter Theaterhaus - T2 Paolo Nani The Letter 28.03.2026" [ref=e1866] [cursor=pointer]:
+              - /url: /events/paolo-nani-2026-03-28
+              - img "Paolo Nani - The Letter" [ref=e1869]
+              - generic [ref=e1870]:
+                - paragraph [ref=e1871]:
+                  - generic [ref=e1872]: Theaterhaus - T2
+                - heading "Paolo Nani" [level=3] [ref=e1873]
+                - paragraph [ref=e1874]: The Letter
+                - paragraph [ref=e1875]: 28.03.2026
+          - article [ref=e1876]:
+            - link "Du bist meine Mutter - Theaterhaus Schauspiel Theaterhaus - T4 Du bist meine Mutter Theaterhaus Schauspiel 28.03.2026" [ref=e1877] [cursor=pointer]:
+              - /url: /events/du-bist-meine-mutter-2026-03-28
+              - img "Du bist meine Mutter - Theaterhaus Schauspiel" [ref=e1880]
+              - generic [ref=e1881]:
+                - paragraph [ref=e1882]:
+                  - generic [ref=e1883]: Theaterhaus - T4
+                - heading "Du bist meine Mutter" [level=3] [ref=e1884]
+                - paragraph [ref=e1885]: Theaterhaus Schauspiel
+                - paragraph [ref=e1886]: 28.03.2026
+          - article [ref=e1887]:
+            - link "Der Hexer - Der Hexer Altes Schauspielhaus Der Hexer Der Hexer 29.03.2026" [ref=e1888] [cursor=pointer]:
+              - /url: /events/der-hexer-2026-03-29
+              - img "Der Hexer - Der Hexer" [ref=e1891]
+              - generic [ref=e1892]:
+                - paragraph [ref=e1893]:
+                  - generic [ref=e1894]: Altes Schauspielhaus
+                - heading "Der Hexer" [level=3] [ref=e1895]
+                - paragraph [ref=e1896]: Der Hexer
+                - paragraph [ref=e1897]: 29.03.2026
+          - article [ref=e1898]:
+            - link "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen Theater der Altstadt Halbe Treppe Uraufführung nach dem Film von Andreas Dresen 29.03.2026" [ref=e1899] [cursor=pointer]:
+              - /url: /events/halbe-treppe-2026-03-29
+              - img "Halbe Treppe - Uraufführung nach dem Film von Andreas Dresen" [ref=e1902]
+              - generic [ref=e1903]:
+                - paragraph [ref=e1904]:
+                  - generic [ref=e1905]: Theater der Altstadt
+                - heading "Halbe Treppe" [level=3] [ref=e1906]
+                - paragraph [ref=e1907]: Uraufführung nach dem Film von Andreas Dresen
+                - paragraph [ref=e1908]: 29.03.2026
+          - article [ref=e1909]:
+            - link "Auf Herz und Niere - Auf Herz und Niere Komödie im Marquardt Auf Herz und Niere Auf Herz und Niere 29.03.2026" [ref=e1910] [cursor=pointer]:
+              - /url: /events/auf-herz-und-niere-2026-03-29
+              - img "Auf Herz und Niere - Auf Herz und Niere" [ref=e1913]
+              - generic [ref=e1914]:
+                - paragraph [ref=e1915]:
+                  - generic [ref=e1916]: Komödie im Marquardt
+                - heading "Auf Herz und Niere" [level=3] [ref=e1917]
+                - paragraph [ref=e1918]: Auf Herz und Niere
+                - paragraph [ref=e1919]: 29.03.2026
+          - article [ref=e1920]:
+            - link "Württembergischer Kammerchor, Lukas Grimm (Leitung) - Worthy is the Lamb - Motetten für Chor und Orgel Hospitalkirche Württembergischer Kammerchor, Lukas Grimm (Leitung) Worthy is the Lamb - Motetten für Chor und Orgel 29.03.2026" [ref=e1921] [cursor=pointer]:
+              - /url: /events/wurttembergischer-kammerchor-lukas-grimm-leitung-2026-03-29
+              - img "Württembergischer Kammerchor, Lukas Grimm (Leitung) - Worthy is the Lamb - Motetten für Chor und Orgel" [ref=e1924]
+              - generic [ref=e1925]:
+                - paragraph [ref=e1926]:
+                  - generic [ref=e1927]: Hospitalkirche
+                - heading "Württembergischer Kammerchor, Lukas Grimm (Leitung)" [level=3] [ref=e1928]
+                - paragraph [ref=e1929]: Worthy is the Lamb - Motetten für Chor und Orgel
+                - paragraph [ref=e1930]: 29.03.2026
+          - article [ref=e1931]:
+            - link "Mit Usacheva / Andreeva, Ruchmann, Grakovski, Kamalov, Mary, Säckler, Poprocki - Sojkas Wohnung (auf Russisch) Theater Atelier Mit Usacheva / Andreeva, Ruchmann, Grakovski, Kamalov, Mary, Säckler, Poprocki Sojkas Wohnung (auf Russisch) 29.03.2026" [ref=e1932] [cursor=pointer]:
+              - /url: /events/mit-usacheva-andreeva-ruchmann-grakovski-kamalov-mary-sackler-poprocki-2026-03-29
+              - img "Mit Usacheva / Andreeva, Ruchmann, Grakovski, Kamalov, Mary, Säckler, Poprocki - Sojkas Wohnung (auf Russisch)" [ref=e1935]
+              - generic [ref=e1936]:
+                - paragraph [ref=e1937]:
+                  - generic [ref=e1938]: Theater Atelier
+                - heading "Mit Usacheva / Andreeva, Ruchmann, Grakovski, Kamalov, Mary, Säckler, Poprocki" [level=3] [ref=e1939]
+                - paragraph [ref=e1940]: Sojkas Wohnung (auf Russisch)
+                - paragraph [ref=e1941]: 29.03.2026
+      - generic [ref=e1942]:
+        - generic [ref=e1943]:
+          - generic [ref=e1944]:
+            - heading "Feste, Partys & Events" [level=2] [ref=e1945]
+            - paragraph [ref=e1946]: 11 Events im kommenden Programm
+          - generic [ref=e1947]:
+            - button "Zurück" [disabled] [ref=e1953]: ‹
+            - button "Weiter" [ref=e1954] [cursor=pointer]: ›
+        - generic [ref=e1956]:
+          - article [ref=e1957]:
+            - 'link "Knallblech - Brassband meets DJ | 10 Jahre, 10 Städte: Deutschland-Tour 2026 Im Wizemann (Halle) Knallblech Brassband meets DJ | 10 Jahre, 10 Städte: Deutschland-Tour 2026 18.04.2026" [ref=e1958] [cursor=pointer]':
+              - /url: /events/knallblech-2026-04-18
+              - 'img "Knallblech - Brassband meets DJ | 10 Jahre, 10 Städte: Deutschland-Tour 2026" [ref=e1961]'
+              - generic [ref=e1962]:
+                - paragraph [ref=e1963]:
+                  - generic [ref=e1964]: Im Wizemann (Halle)
+                - heading "Knallblech" [level=3] [ref=e1965]
+                - paragraph [ref=e1966]: "Brassband meets DJ | 10 Jahre, 10 Städte: Deutschland-Tour 2026"
+                - paragraph [ref=e1967]: 18.04.2026
+          - article [ref=e1968]:
+            - link "KPOP FEVER - KPOP FEVER KKL Hegel-Saal Stuttgart KPOP FEVER KPOP FEVER 19.04.2026" [ref=e1969] [cursor=pointer]:
+              - /url: /events/kpop-fever-2026-04-19
+              - img "KPOP FEVER - KPOP FEVER" [ref=e1972]
+              - generic [ref=e1973]:
+                - paragraph [ref=e1974]:
+                  - generic [ref=e1975]: KKL Hegel-Saal Stuttgart
+                - heading "KPOP FEVER" [level=3] [ref=e1976]
+                - paragraph [ref=e1977]: KPOP FEVER
+                - paragraph [ref=e1978]: 19.04.2026
+          - article [ref=e1979]:
+            - link "Gala-Abend 75 Jahre Institut français Stuttgart - Gala-Abend 75 Jahre Institut français Stuttgart KKL Mozart-Saal Stuttgart Gala-Abend 75 Jahre Institut français Stuttgart Gala-Abend 75 Jahre Institut français Stuttgart 21.04.2026" [ref=e1980] [cursor=pointer]:
+              - /url: /events/gala-abend-75-jahre-institut-francais-stuttgart-2026-04-21
+              - img "Gala-Abend 75 Jahre Institut français Stuttgart - Gala-Abend 75 Jahre Institut français Stuttgart" [ref=e1983]
+              - generic [ref=e1984]:
+                - paragraph [ref=e1985]:
+                  - generic [ref=e1986]: KKL Mozart-Saal Stuttgart
+                - heading "Gala-Abend 75 Jahre Institut français Stuttgart" [level=3] [ref=e1987]
+                - paragraph [ref=e1988]: Gala-Abend 75 Jahre Institut français Stuttgart
+                - paragraph [ref=e1989]: 21.04.2026
+          - article [ref=e1990]:
+            - link "MOUNTAIN MANIA 2026 - MOUNTAIN MANIA 2026 Schleyer-Halle Stuttgart MOUNTAIN MANIA 2026 MOUNTAIN MANIA 2026 24.04.2026" [ref=e1991] [cursor=pointer]:
+              - /url: /events/mountain-mania-2026-2026-04-24
+              - img "MOUNTAIN MANIA 2026 - MOUNTAIN MANIA 2026" [ref=e1994]
+              - generic [ref=e1995]:
+                - paragraph [ref=e1996]:
+                  - generic [ref=e1997]: Schleyer-Halle Stuttgart
+                - heading "MOUNTAIN MANIA 2026" [level=3] [ref=e1998]
+                - paragraph [ref=e1999]: MOUNTAIN MANIA 2026
+                - paragraph [ref=e2000]: 24.04.2026
+          - article [ref=e2001]:
+            - 'link "Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ - Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ Theater am Olgaeck Stuttgart Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ 24.04.2026" [ref=e2002] [cursor=pointer]':
+              - /url: /events/roma-tag-festival-2026-gipsy-jazz-django-s-tiger-django-trifft-coltrane-2026-04-24
+              - 'img "Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ - Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“" [ref=e2005]'
+              - generic [ref=e2006]:
+                - paragraph [ref=e2007]:
+                  - generic [ref=e2008]: Theater am Olgaeck Stuttgart
+                - 'heading "Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“" [level=3] [ref=e2009]'
+                - paragraph [ref=e2010]: "Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“"
+                - paragraph [ref=e2011]: 24.04.2026
+          - article [ref=e2012]:
+            - link "Wine Wednesday - Sip happens - Tour 2026 Im Wizemann (Halle) Wine Wednesday Sip happens - Tour 2026 24.04.2026" [ref=e2013] [cursor=pointer]:
+              - /url: /events/wine-wednesday-2026-04-24
+              - img "Wine Wednesday - Sip happens - Tour 2026" [ref=e2016]
+              - generic [ref=e2017]:
+                - paragraph [ref=e2018]:
+                  - generic [ref=e2019]: Im Wizemann (Halle)
+                - heading "Wine Wednesday" [level=3] [ref=e2020]
+                - paragraph [ref=e2021]: Sip happens - Tour 2026
+                - paragraph [ref=e2022]: 24.04.2026
+          - article [ref=e2023]:
+            - 'link "Roma-Tag-Festival 2026: Noelia Vargas Flamenco Company - “Sastipen” Theater am Olgaeck Stuttgart Roma-Tag-Festival 2026: Noelia Vargas Flamenco Company “Sastipen” 25.04.2026" [ref=e2024] [cursor=pointer]':
+              - /url: /events/roma-tag-festival-2026-noelia-vargas-flamenco-company-2026-04-25
+              - 'img "Roma-Tag-Festival 2026: Noelia Vargas Flamenco Company - “Sastipen”" [ref=e2027]'
+              - generic [ref=e2028]:
+                - paragraph [ref=e2029]:
+                  - generic [ref=e2030]: Theater am Olgaeck Stuttgart
+                - 'heading "Roma-Tag-Festival 2026: Noelia Vargas Flamenco Company" [level=3] [ref=e2031]'
+                - paragraph [ref=e2032]: “Sastipen”
+                - paragraph [ref=e2033]: 25.04.2026
+          - article [ref=e2034]:
+            - link "Beethoven Tage - Beethoven Tage Gustav-Siegle-Haus Stuttgart Beethoven Tage Beethoven Tage 17.05.2026" [ref=e2035] [cursor=pointer]:
+              - /url: /events/beethoven-tage-2026-05-15
+              - img "Beethoven Tage - Beethoven Tage" [ref=e2038]
+              - generic [ref=e2039]:
+                - paragraph [ref=e2040]:
+                  - generic [ref=e2041]: Gustav-Siegle-Haus Stuttgart
+                - heading "Beethoven Tage" [level=3] [ref=e2042]
+                - paragraph [ref=e2043]: Beethoven Tage
+                - paragraph [ref=e2044]: 17.05.2026
+          - article [ref=e2045]:
+            - link "Nachtschwärmer-Konzerte - Nachtschwärmer-Konzerte Gustav-Siegle Haus Stuttgart Nachtschwärmer-Konzerte Nachtschwärmer-Konzerte 25.06.2026" [ref=e2046] [cursor=pointer]:
+              - /url: /events/nachtschwarmer-konzerte-2026-04-24
+              - img "Nachtschwärmer-Konzerte - Nachtschwärmer-Konzerte" [ref=e2049]
+              - generic [ref=e2050]:
+                - paragraph [ref=e2051]:
+                  - generic [ref=e2052]: Gustav-Siegle Haus Stuttgart
+                - heading "Nachtschwärmer-Konzerte" [level=3] [ref=e2053]
+                - paragraph [ref=e2054]: Nachtschwärmer-Konzerte
+                - paragraph [ref=e2055]: 25.06.2026
+          - article [ref=e2056]:
+            - link "Kultur am Nachmittag - Kultur am Nachmittag Gustav-Siegle-Haus Stuttgart Kultur am Nachmittag Kultur am Nachmittag 02.07.2026" [ref=e2057] [cursor=pointer]:
+              - /url: /events/kultur-am-nachmittag-2026-03-30
+              - img "Kultur am Nachmittag - Kultur am Nachmittag" [ref=e2060]
+              - generic [ref=e2061]:
+                - paragraph [ref=e2062]:
+                  - generic [ref=e2063]: Gustav-Siegle-Haus Stuttgart
+                - heading "Kultur am Nachmittag" [level=3] [ref=e2064]
+                - paragraph [ref=e2065]: Kultur am Nachmittag
+                - paragraph [ref=e2066]: 02.07.2026
+          - article [ref=e2067]:
+            - 'link "Stadt-Erlebnis-Tour: Voll im Glück - Stadt-Erlebnis-Tour: Voll im Glück Bärenwiese Ludwigsburg Stadt-Erlebnis-Tour: Voll im Glück Stadt-Erlebnis-Tour: Voll im Glück 26.09.2026" [ref=e2068] [cursor=pointer]':
+              - /url: /events/stadt-erlebnis-tour-voll-im-gluck-2026-03-28
+              - 'img "Stadt-Erlebnis-Tour: Voll im Glück - Stadt-Erlebnis-Tour: Voll im Glück" [ref=e2071]'
+              - generic [ref=e2072]:
+                - paragraph [ref=e2073]:
+                  - generic [ref=e2074]: Bärenwiese Ludwigsburg
+                - 'heading "Stadt-Erlebnis-Tour: Voll im Glück" [level=3] [ref=e2075]'
+                - paragraph [ref=e2076]: "Stadt-Erlebnis-Tour: Voll im Glück"
+                - paragraph [ref=e2077]: 26.09.2026
+      - generic [ref=e2078]:
+        - generic [ref=e2079]:
+          - generic [ref=e2080]:
+            - paragraph [ref=e2081]: Heute empfohlen
+            - heading "Tagestipp" [level=2] [ref=e2082]
+            - paragraph [ref=e2083]: 21 Events in der heutigen Auswahl
+          - generic [ref=e2084]:
+            - button "Zurück" [disabled] [ref=e2090]: ‹
+            - button "Weiter" [ref=e2091] [cursor=pointer]: ›
+        - generic [ref=e2093]:
+          - article [ref=e2094]:
+            - link "Mirjam Grossmann Management Unternehmensberatung - Frauen KI Marketing Master Class biz - Bildungszentrum des Handels Baden Württemberg GmbH Mirjam Grossmann Management Unternehmensberatung Frauen KI Marketing Master Class 20.03.2026" [ref=e2095] [cursor=pointer]:
+              - /url: /events/mirjam-grossmann-management-unternehmensberatung-2026-03-20
+              - img "Mirjam Grossmann Management Unternehmensberatung - Frauen KI Marketing Master Class" [ref=e2098]
+              - generic [ref=e2099]:
+                - paragraph [ref=e2100]:
+                  - generic [ref=e2101]: biz - Bildungszentrum des Handels Baden Württemberg GmbH
+                - heading "Mirjam Grossmann Management Unternehmensberatung" [level=3] [ref=e2102]
+                - paragraph [ref=e2103]: Frauen KI Marketing Master Class
+                - paragraph [ref=e2104]: 20.03.2026
+          - article [ref=e2105]:
+            - 'link "Marvel: Die Ausstellung - Universe of Super Heroes - MARVEL: Die Ausstellung - Universe of Super Heroes | Tages-Flex-Ticket urbanharbor, MM Studios Marvel: Die Ausstellung - Universe of Super Heroes MARVEL: Die Ausstellung - Universe of Super Heroes | Tages-Flex-Ticket 20.03.2026" [ref=e2106] [cursor=pointer]':
+              - /url: /events/marvel-die-ausstellung-universe-of-super-heroes-2026-03-20
+              - 'img "Marvel: Die Ausstellung - Universe of Super Heroes - MARVEL: Die Ausstellung - Universe of Super Heroes | Tages-Flex-Ticket" [ref=e2109]'
+              - generic [ref=e2110]:
+                - paragraph [ref=e2111]:
+                  - generic [ref=e2112]: urbanharbor, MM Studios
+                - 'heading "Marvel: Die Ausstellung - Universe of Super Heroes" [level=3] [ref=e2113]'
+                - paragraph [ref=e2114]: "MARVEL: Die Ausstellung - Universe of Super Heroes | Tages-Flex-Ticket"
+                - paragraph [ref=e2115]: 20.03.2026
+          - article [ref=e2116]:
+            - link "DTB Pokal 2026 - Team Challenge Frauen Porsche-Arena Stuttgart DTB Pokal 2026 Team Challenge Frauen 20.03.2026" [ref=e2117] [cursor=pointer]:
+              - /url: /events/dtb-pokal-2026-2026-03-20
+              - img "DTB Pokal 2026 - Team Challenge Frauen" [ref=e2120]
+              - generic [ref=e2121]:
+                - paragraph [ref=e2122]:
+                  - generic [ref=e2123]: Porsche-Arena Stuttgart
+                - heading "DTB Pokal 2026" [level=3] [ref=e2124]
+                - paragraph [ref=e2125]: Team Challenge Frauen
+                - paragraph [ref=e2126]: 20.03.2026
+          - article [ref=e2127]:
+            - 'link "#21 BACH TO MINIMALISM - Internationales Bachfest Stuttgart 2026 Johanneskirche Stuttgart #21 BACH TO MINIMALISM Internationales Bachfest Stuttgart 2026 20.03.2026" [ref=e2128] [cursor=pointer]':
+              - /url: /events/21-bach-to-minimalism-2026-03-20
+              - img "#21 BACH TO MINIMALISM - Internationales Bachfest Stuttgart 2026" [ref=e2131]
+              - generic [ref=e2132]:
+                - paragraph [ref=e2133]:
+                  - generic [ref=e2134]: Johanneskirche Stuttgart
+                - heading "#21 BACH TO MINIMALISM" [level=3] [ref=e2135]
+                - paragraph [ref=e2136]: Internationales Bachfest Stuttgart 2026
+                - paragraph [ref=e2137]: 20.03.2026
+          - article [ref=e2138]:
+            - link "Comedyflash - Die Stand Up Comedy Show Wonders Club Stuttgart Comedyflash Die Stand Up Comedy Show 20.03.2026" [ref=e2139] [cursor=pointer]:
+              - /url: /events/comedyflash-2026-03-20
+              - img "Comedyflash - Die Stand Up Comedy Show" [ref=e2142]
+              - generic [ref=e2143]:
+                - paragraph [ref=e2144]:
+                  - generic [ref=e2145]: Wonders Club Stuttgart
+                - heading "Comedyflash" [level=3] [ref=e2146]
+                - paragraph [ref=e2147]: Die Stand Up Comedy Show
+                - paragraph [ref=e2148]: 20.03.2026
+          - article [ref=e2149]:
+            - link "Disneys DIE EISKÖNIGIN - Das Musical Stage Apollo Theater Stuttgart Disneys DIE EISKÖNIGIN Das Musical 20.03.2026" [ref=e2150] [cursor=pointer]:
+              - /url: /events/disneys-die-eiskonigin-2026-03-20
+              - img "Disneys DIE EISKÖNIGIN - Das Musical" [ref=e2153]
+              - generic [ref=e2154]:
+                - paragraph [ref=e2155]:
+                  - generic [ref=e2156]: Stage Apollo Theater Stuttgart
+                - heading "Disneys DIE EISKÖNIGIN" [level=3] [ref=e2157]
+                - paragraph [ref=e2158]: Das Musical
+                - paragraph [ref=e2159]: 20.03.2026
+          - article [ref=e2160]:
+            - link "Harald Wohlfahrt PALAZZO - Harald Wohlfahrt PALAZZO PALAZZO Spiegelpalast Stuttgart Harald Wohlfahrt PALAZZO Harald Wohlfahrt PALAZZO 20.03.2026" [ref=e2161] [cursor=pointer]:
+              - /url: /events/harald-wohlfahrt-palazzo-2026-03-20
+              - img "Harald Wohlfahrt PALAZZO - Harald Wohlfahrt PALAZZO" [ref=e2164]
+              - generic [ref=e2165]:
+                - paragraph [ref=e2166]:
+                  - generic [ref=e2167]: PALAZZO Spiegelpalast Stuttgart
+                - heading "Harald Wohlfahrt PALAZZO" [level=3] [ref=e2168]
+                - paragraph [ref=e2169]: Harald Wohlfahrt PALAZZO
+                - paragraph [ref=e2170]: 20.03.2026
+          - article [ref=e2171]:
+            - link "Running City Tours - Running City Tours Kunstmuseum Stuttgart Running City Tours Running City Tours 20.03.2026" [ref=e2172] [cursor=pointer]:
+              - /url: /events/running-city-tours-2026-03-20
+              - img "Running City Tours - Running City Tours" [ref=e2175]
+              - generic [ref=e2176]:
+                - paragraph [ref=e2177]:
+                  - generic [ref=e2178]: Kunstmuseum Stuttgart
+                - heading "Running City Tours" [level=3] [ref=e2179]
+                - paragraph [ref=e2180]: Running City Tours
+                - paragraph [ref=e2181]: 20.03.2026
+          - article [ref=e2182]:
+            - link "Theaterworkshop mit Horst Emrich - Theaterworkshop mit Horst Emrich Zentrum Weißenburg Theaterworkshop mit Horst Emrich Theaterworkshop mit Horst Emrich 20.03.2026" [ref=e2183] [cursor=pointer]:
+              - /url: /events/theaterworkshop-mit-horst-emrich-2026-03-20
+              - img "Theaterworkshop mit Horst Emrich - Theaterworkshop mit Horst Emrich" [ref=e2186]
+              - generic [ref=e2187]:
+                - paragraph [ref=e2188]:
+                  - generic [ref=e2189]: Zentrum Weißenburg
+                - heading "Theaterworkshop mit Horst Emrich" [level=3] [ref=e2190]
+                - paragraph [ref=e2191]: Theaterworkshop mit Horst Emrich
+                - paragraph [ref=e2192]: 20.03.2026
+          - article [ref=e2193]:
+            - link "WE WILL ROCK YOU – Das Musical von Queen und Ben Elton - We Will Rock You - Das Musical Stage Palladium Theater Stuttgart WE WILL ROCK YOU – Das Musical von Queen und Ben Elton We Will Rock You - Das Musical 20.03.2026" [ref=e2194] [cursor=pointer]:
+              - /url: /events/we-will-rock-you-das-musical-von-queen-und-ben-elton-2026-03-20
+              - img "WE WILL ROCK YOU – Das Musical von Queen und Ben Elton - We Will Rock You - Das Musical" [ref=e2197]
+              - generic [ref=e2198]:
+                - paragraph [ref=e2199]:
+                  - generic [ref=e2200]: Stage Palladium Theater Stuttgart
+                - heading "WE WILL ROCK YOU – Das Musical von Queen und Ben Elton" [level=3] [ref=e2201]
+                - paragraph [ref=e2202]: We Will Rock You - Das Musical
+                - paragraph [ref=e2203]: 20.03.2026
+          - article [ref=e2204]:
+            - link "ABENTEUERLAND – Das Musical mit den Hits von PUR - ABENTEUERLAND - Singalong-Show Theaterhaus - T1 ABENTEUERLAND – Das Musical mit den Hits von PUR ABENTEUERLAND - Singalong-Show 20.03.2026" [ref=e2205] [cursor=pointer]:
+              - /url: /events/abenteuerland-das-musical-mit-den-hits-von-pur-2026-03-20
+              - img "ABENTEUERLAND – Das Musical mit den Hits von PUR - ABENTEUERLAND - Singalong-Show" [ref=e2208]
+              - generic [ref=e2209]:
+                - paragraph [ref=e2210]:
+                  - generic [ref=e2211]: Theaterhaus - T1
+                - heading "ABENTEUERLAND – Das Musical mit den Hits von PUR" [level=3] [ref=e2212]
+                - paragraph [ref=e2213]: ABENTEUERLAND - Singalong-Show
+                - paragraph [ref=e2214]: 20.03.2026
+          - article [ref=e2215]:
+            - link "SHIMMER. - Nie genug - Tour 26 Im Wizemann (Club) SHIMMER. Nie genug - Tour 26 20.03.2026" [ref=e2216] [cursor=pointer]:
+              - /url: /events/shimmer-2026-03-20
+              - img "SHIMMER. - Nie genug - Tour 26" [ref=e2219]
+              - generic [ref=e2220]:
+                - paragraph [ref=e2221]:
+                  - generic [ref=e2222]: Im Wizemann (Club)
+                - heading "SHIMMER." [level=3] [ref=e2223]
+                - paragraph [ref=e2224]: Nie genug - Tour 26
+                - paragraph [ref=e2225]: 20.03.2026
+          - article [ref=e2226]:
+            - link "Bülent Ceylan - Diktatürk Schleyer-Halle Stuttgart Bülent Ceylan Diktatürk 20.03.2026" [ref=e2227] [cursor=pointer]:
+              - /url: /events/bulent-ceylan-2026-03-20
+              - img "Bülent Ceylan - Diktatürk" [ref=e2230]
+              - generic [ref=e2231]:
+                - paragraph [ref=e2232]:
+                  - generic [ref=e2233]: Schleyer-Halle Stuttgart
+                - heading "Bülent Ceylan" [level=3] [ref=e2234]
+                - paragraph [ref=e2235]: Diktatürk
+                - paragraph [ref=e2236]: 20.03.2026
+          - article [ref=e2237]:
+            - link "Sascha Thamm - Gesammelte Abrissbirnen Kultur Brauerei Burg Sascha Thamm Gesammelte Abrissbirnen 20.03.2026" [ref=e2238] [cursor=pointer]:
+              - /url: /events/sascha-thamm-2026-03-20
+              - img "Sascha Thamm - Gesammelte Abrissbirnen" [ref=e2241]
+              - generic [ref=e2242]:
+                - paragraph [ref=e2243]:
+                  - generic [ref=e2244]: Kultur Brauerei Burg
+                - heading "Sascha Thamm" [level=3] [ref=e2245]
+                - paragraph [ref=e2246]: Gesammelte Abrissbirnen
+                - paragraph [ref=e2247]: 20.03.2026
+          - article [ref=e2248]:
+            - link "SWR Symphonieorchester - Abokonzert 7b Kultur- und Kongresszentrum Liederhalle SWR Symphonieorchester Abokonzert 7b 20.03.2026" [ref=e2249] [cursor=pointer]:
+              - /url: /events/swr-symphonieorchester-2026-03-20
+              - img "SWR Symphonieorchester - Abokonzert 7b" [ref=e2252]
+              - generic [ref=e2253]:
+                - paragraph [ref=e2254]:
+                  - generic [ref=e2255]: Kultur- und Kongresszentrum Liederhalle
+                - heading "SWR Symphonieorchester" [level=3] [ref=e2256]
+                - paragraph [ref=e2257]: Abokonzert 7b
+                - paragraph [ref=e2258]: 20.03.2026
+          - article [ref=e2259]:
+            - link "Matching Night Stuttgart - Matching Night Stuttgart Aloft Stuttgart Matching Night Stuttgart Matching Night Stuttgart 20.03.2026" [ref=e2260] [cursor=pointer]:
+              - /url: /events/matching-night-stuttgart-2026-03-20
+              - img "Matching Night Stuttgart - Matching Night Stuttgart" [ref=e2263]
+              - generic [ref=e2264]:
+                - paragraph [ref=e2265]:
+                  - generic [ref=e2266]: Aloft Stuttgart
+                - heading "Matching Night Stuttgart" [level=3] [ref=e2267]
+                - paragraph [ref=e2268]: Matching Night Stuttgart
+                - paragraph [ref=e2269]: 20.03.2026
+          - article [ref=e2270]:
+            - link "Ahoi für eine Leiche - Ahoi für eine Leiche ABV-Zimmertheater Ahoi für eine Leiche Ahoi für eine Leiche 20.03.2026" [ref=e2271] [cursor=pointer]:
+              - /url: /events/ahoi-fur-eine-leiche-2026-03-20
+              - img "Ahoi für eine Leiche - Ahoi für eine Leiche" [ref=e2274]
+              - generic [ref=e2275]:
+                - paragraph [ref=e2276]:
+                  - generic [ref=e2277]: ABV-Zimmertheater
+                - heading "Ahoi für eine Leiche" [level=3] [ref=e2278]
+                - paragraph [ref=e2279]: Ahoi für eine Leiche
+                - paragraph [ref=e2280]: 20.03.2026
+          - article [ref=e2281]:
+            - link "MHP RIESEN Ludwigsburg - Frankfurt SKYLINERS MHP Arena MHP RIESEN Ludwigsburg Frankfurt SKYLINERS 20.03.2026" [ref=e2282] [cursor=pointer]:
+              - /url: /events/mhp-riesen-ludwigsburg-2026-03-20
+              - img "MHP RIESEN Ludwigsburg - Frankfurt SKYLINERS" [ref=e2285]
+              - generic [ref=e2286]:
+                - paragraph [ref=e2287]:
+                  - generic [ref=e2288]: MHP Arena
+                - heading "MHP RIESEN Ludwigsburg" [level=3] [ref=e2289]
+                - paragraph [ref=e2290]: Frankfurt SKYLINERS
+                - paragraph [ref=e2291]: 20.03.2026
+          - article [ref=e2292]:
+            - link "Das Pack - 20 Jahre Tour HELENE P Das Pack 20 Jahre Tour 20.03.2026" [ref=e2293] [cursor=pointer]:
+              - /url: /events/das-pack-2026-03-20
+              - img "Das Pack - 20 Jahre Tour" [ref=e2296]
+              - generic [ref=e2297]:
+                - paragraph [ref=e2298]:
+                  - generic [ref=e2299]: HELENE P
+                - heading "Das Pack" [level=3] [ref=e2300]
+                - paragraph [ref=e2301]: 20 Jahre Tour
+                - paragraph [ref=e2302]: 20.03.2026
+          - article [ref=e2303]:
+            - link "ABV-Zimmertheater - Mord ist ihr Metier ABV-Zimmertheater ABV-Zimmertheater Mord ist ihr Metier 20.03.2026" [ref=e2304] [cursor=pointer]:
+              - /url: /events/abv-zimmertheater-2026-03-20
+              - img "ABV-Zimmertheater - Mord ist ihr Metier" [ref=e2307]
+              - generic [ref=e2308]:
+                - paragraph [ref=e2309]:
+                  - generic [ref=e2310]: ABV-Zimmertheater
+                - heading "ABV-Zimmertheater" [level=3] [ref=e2311]
+                - paragraph [ref=e2312]: Mord ist ihr Metier
+                - paragraph [ref=e2313]: 20.03.2026
+          - article [ref=e2314]:
+            - 'link "ProgMotion: Barrens | Support: Aflmsmp - ProgMotion: Barrens | Support: Aflmsmp Club Zentral Stuttgart ProgMotion: Barrens | Support: Aflmsmp ProgMotion: Barrens | Support: Aflmsmp 20.03.2026" [ref=e2315] [cursor=pointer]':
+              - /url: /events/progmotion-barrens-support-aflmsmp-2026-03-20
+              - 'img "ProgMotion: Barrens | Support: Aflmsmp - ProgMotion: Barrens | Support: Aflmsmp" [ref=e2318]'
+              - generic [ref=e2319]:
+                - paragraph [ref=e2320]:
+                  - generic [ref=e2321]: Club Zentral Stuttgart
+                - 'heading "ProgMotion: Barrens | Support: Aflmsmp" [level=3] [ref=e2322]'
+                - paragraph [ref=e2323]: "ProgMotion: Barrens | Support: Aflmsmp"
+                - paragraph [ref=e2324]: 20.03.2026
+      - generic [ref=e2325]:
+        - generic [ref=e2326]:
+          - generic [ref=e2327]:
+            - heading "Folk, Welt & Tradition" [level=2] [ref=e2328]
+            - paragraph [ref=e2329]: 8 Events im kommenden Programm
+          - generic [ref=e2330]:
+            - button "Zurück" [disabled] [ref=e2336]: ‹
+            - button "Weiter" [ref=e2337] [cursor=pointer]: ›
+        - generic [ref=e2339]:
+          - article [ref=e2340]:
+            - link "Santiano - Die große Arena Tour Porsche-Arena Stuttgart Santiano Die große Arena Tour 25.03.2026" [ref=e2341] [cursor=pointer]:
+              - /url: /events/santiano-2026-03-25
+              - img "Santiano - Die große Arena Tour" [ref=e2344]
+              - generic [ref=e2345]:
+                - paragraph [ref=e2346]:
+                  - generic [ref=e2347]: Porsche-Arena Stuttgart
+                - heading "Santiano" [level=3] [ref=e2348]
+                - paragraph [ref=e2349]: Die große Arena Tour
+                - paragraph [ref=e2350]: 25.03.2026
+          - article [ref=e2351]:
+            - link "Feuerschwanz - Knightclub Tour 2026 Wagenhallen Stuttgart Feuerschwanz Knightclub Tour 2026 28.03.2026" [ref=e2352] [cursor=pointer]:
+              - /url: /events/feuerschwanz-2026-03-28
+              - img "Feuerschwanz - Knightclub Tour 2026" [ref=e2355]
+              - generic [ref=e2356]:
+                - paragraph [ref=e2357]:
+                  - generic [ref=e2358]: Wagenhallen Stuttgart
+                - heading "Feuerschwanz" [level=3] [ref=e2359]
+                - paragraph [ref=e2360]: Knightclub Tour 2026
+                - paragraph [ref=e2361]: 28.03.2026
+          - article [ref=e2362]:
+            - link "Etta Scollo Trio & Eva Mattes - NIRGENDLAND – ein literarisch-musikalischer Abend für Mascha Kaléko Liederhalle Mozartsaal Etta Scollo Trio & Eva Mattes NIRGENDLAND – ein literarisch-musikalischer Abend für Mascha Kaléko 28.03.2026" [ref=e2363] [cursor=pointer]:
+              - /url: /events/etta-scollo-trio-eva-mattes-2026-03-28
+              - img "Etta Scollo Trio & Eva Mattes - NIRGENDLAND – ein literarisch-musikalischer Abend für Mascha Kaléko" [ref=e2366]
+              - generic [ref=e2367]:
+                - paragraph [ref=e2368]:
+                  - generic [ref=e2369]: Liederhalle Mozartsaal
+                - heading "Etta Scollo Trio & Eva Mattes" [level=3] [ref=e2370]
+                - paragraph [ref=e2371]: NIRGENDLAND – ein literarisch-musikalischer Abend für Mascha Kaléko
+                - paragraph [ref=e2372]: 28.03.2026
+          - article [ref=e2373]:
+            - link "Villagers of Ioannina City - Villagers of Ioannina City Im Wizemann (Club) Stuttgart Villagers of Ioannina City Villagers of Ioannina City 04.04.2026" [ref=e2374] [cursor=pointer]:
+              - /url: /events/villagers-of-ioannina-city-2026-04-04
+              - img "Villagers of Ioannina City - Villagers of Ioannina City" [ref=e2377]
+              - generic [ref=e2378]:
+                - paragraph [ref=e2379]:
+                  - generic [ref=e2380]: Im Wizemann (Club) Stuttgart
+                - heading "Villagers of Ioannina City" [level=3] [ref=e2381]
+                - paragraph [ref=e2382]: Villagers of Ioannina City
+                - paragraph [ref=e2383]: 04.04.2026
+          - article [ref=e2384]:
+            - link "Bagjan Oktyabr „SOUL THERAPY“ – Neues Programm - Welttournee 2026 Liederhalle Mozartsaal Bagjan Oktyabr „SOUL THERAPY“ – Neues Programm Welttournee 2026 07.04.2026" [ref=e2385] [cursor=pointer]:
+              - /url: /events/bagjan-oktyabr-soul-therapy-neues-programm-2026-04-07
+              - img "Bagjan Oktyabr „SOUL THERAPY“ – Neues Programm - Welttournee 2026" [ref=e2388]
+              - generic [ref=e2389]:
+                - paragraph [ref=e2390]:
+                  - generic [ref=e2391]: Liederhalle Mozartsaal
+                - heading "Bagjan Oktyabr „SOUL THERAPY“ – Neues Programm" [level=3] [ref=e2392]
+                - paragraph [ref=e2393]: Welttournee 2026
+                - paragraph [ref=e2394]: 07.04.2026
+          - article [ref=e2395]:
+            - link "Cornamusa - World of Pipe Rock and Irish Dance - Im Schatten der Krone MHPArena Ludwigsburg Cornamusa - World of Pipe Rock and Irish Dance Im Schatten der Krone 24.04.2026" [ref=e2396] [cursor=pointer]:
+              - /url: /events/cornamusa-world-of-pipe-rock-and-irish-dance-2026-04-24
+              - img "Cornamusa - World of Pipe Rock and Irish Dance - Im Schatten der Krone" [ref=e2399]
+              - generic [ref=e2400]:
+                - paragraph [ref=e2401]:
+                  - generic [ref=e2402]: MHPArena Ludwigsburg
+                - heading "Cornamusa - World of Pipe Rock and Irish Dance" [level=3] [ref=e2403]
+                - paragraph [ref=e2404]: Im Schatten der Krone
+                - paragraph [ref=e2405]: 24.04.2026
+          - article [ref=e2406]:
+            - link "Dotan - European Solo Acoustic Tour Im Wizemann (Studio) Stuttgart Dotan European Solo Acoustic Tour 25.04.2026" [ref=e2407] [cursor=pointer]:
+              - /url: /events/dotan-2026-04-25
+              - img "Dotan - European Solo Acoustic Tour" [ref=e2410]
+              - generic [ref=e2411]:
+                - paragraph [ref=e2412]:
+                  - generic [ref=e2413]: Im Wizemann (Studio) Stuttgart
+                - heading "Dotan" [level=3] [ref=e2414]
+                - paragraph [ref=e2415]: European Solo Acoustic Tour
+                - paragraph [ref=e2416]: 25.04.2026
+          - article [ref=e2417]:
+            - link "Versengold - EINGENORDET TOUR 2026 Porsche-Arena Stuttgart Versengold EINGENORDET TOUR 2026 25.04.2026" [ref=e2418] [cursor=pointer]:
+              - /url: /events/versengold-2026-04-25
+              - img "Versengold - EINGENORDET TOUR 2026" [ref=e2421]
+              - generic [ref=e2422]:
+                - paragraph [ref=e2423]:
+                  - generic [ref=e2424]: Porsche-Arena Stuttgart
+                - heading "Versengold" [level=3] [ref=e2425]
+                - paragraph [ref=e2426]: EINGENORDET TOUR 2026
+                - paragraph [ref=e2427]: 25.04.2026
+      - generic [ref=e2428]:
+        - generic [ref=e2429]:
+          - generic [ref=e2430]:
+            - heading "Jazz, Swing & Big Band" [level=2] [ref=e2431]
+            - paragraph [ref=e2432]: 7 Events im kommenden Programm
+          - generic [ref=e2433]:
+            - button "Zurück" [disabled] [ref=e2439]: ‹
+            - button "Weiter" [ref=e2440] [cursor=pointer]: ›
+        - generic [ref=e2442]:
+          - article [ref=e2443]:
+            - 'link "#27 TIM ALLHOFF: VON BACH BIS BEATLES - Internationales Bachfest Stuttgart 2026 Landesmuseum Die Dürnitz Stuttgart #27 TIM ALLHOFF: VON BACH BIS BEATLES Internationales Bachfest Stuttgart 2026 23.03.2026" [ref=e2444] [cursor=pointer]':
+              - /url: /events/27-tim-allhoff-von-bach-bis-beatles-2026-03-23
+              - 'img "#27 TIM ALLHOFF: VON BACH BIS BEATLES - Internationales Bachfest Stuttgart 2026" [ref=e2447]'
+              - generic [ref=e2448]:
+                - paragraph [ref=e2449]:
+                  - generic [ref=e2450]: Landesmuseum Die Dürnitz Stuttgart
+                - 'heading "#27 TIM ALLHOFF: VON BACH BIS BEATLES" [level=3] [ref=e2451]'
+                - paragraph [ref=e2452]: Internationales Bachfest Stuttgart 2026
+                - paragraph [ref=e2453]: 23.03.2026
+          - article [ref=e2454]:
+            - 'link "#32 PATRICK BEBELAAR & FRIENDS: PANTHEON - Internationales Bachfest Stuttgart 2026 Altes Schloss Schlosskirche Stuttgart #32 PATRICK BEBELAAR & FRIENDS: PANTHEON Internationales Bachfest Stuttgart 2026 27.03.2026" [ref=e2455] [cursor=pointer]':
+              - /url: /events/32-patrick-bebelaar-friends-pantheon-2026-03-27
+              - 'img "#32 PATRICK BEBELAAR & FRIENDS: PANTHEON - Internationales Bachfest Stuttgart 2026" [ref=e2458]'
+              - generic [ref=e2459]:
+                - paragraph [ref=e2460]:
+                  - generic [ref=e2461]: Altes Schloss Schlosskirche Stuttgart
+                - 'heading "#32 PATRICK BEBELAAR & FRIENDS: PANTHEON" [level=3] [ref=e2462]'
+                - paragraph [ref=e2463]: Internationales Bachfest Stuttgart 2026
+                - paragraph [ref=e2464]: 27.03.2026
+          - article [ref=e2465]:
+            - link "DAS Heimspiel - 75 Jahre SWR Big Band KKL Beethoven-Saal Stuttgart DAS Heimspiel 75 Jahre SWR Big Band 01.04.2026" [ref=e2466] [cursor=pointer]:
+              - /url: /events/das-heimspiel-2026-04-01
+              - img "DAS Heimspiel - 75 Jahre SWR Big Band" [ref=e2469]
+              - generic [ref=e2470]:
+                - paragraph [ref=e2471]:
+                  - generic [ref=e2472]: KKL Beethoven-Saal Stuttgart
+                - heading "DAS Heimspiel" [level=3] [ref=e2473]
+                - paragraph [ref=e2474]: 75 Jahre SWR Big Band
+                - paragraph [ref=e2475]: 01.04.2026
+          - article [ref=e2476]:
+            - link "Till Brönner - Italia - live 2026 KKL Beethoven-Saal Stuttgart Till Brönner Italia - live 2026 15.04.2026" [ref=e2477] [cursor=pointer]:
+              - /url: /events/till-bronner-2026-04-15
+              - img "Till Brönner - Italia - live 2026" [ref=e2480]
+              - generic [ref=e2481]:
+                - paragraph [ref=e2482]:
+                  - generic [ref=e2483]: KKL Beethoven-Saal Stuttgart
+                - heading "Till Brönner" [level=3] [ref=e2484]
+                - paragraph [ref=e2485]: Italia - live 2026
+                - paragraph [ref=e2486]: 15.04.2026
+          - article [ref=e2487]:
+            - 'link "Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ - Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ Theater am Olgaeck Stuttgart Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ 24.04.2026" [ref=e2488] [cursor=pointer]':
+              - /url: /events/roma-tag-festival-2026-gipsy-jazz-django-s-tiger-django-trifft-coltrane-2026-04-24
+              - 'img "Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“ - Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“" [ref=e2491]'
+              - generic [ref=e2492]:
+                - paragraph [ref=e2493]:
+                  - generic [ref=e2494]: Theater am Olgaeck Stuttgart
+                - 'heading "Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“" [level=3] [ref=e2495]'
+                - paragraph [ref=e2496]: "Roma-Tag-Festival 2026: Gipsy Jazz „Django’s Tiger” „Django trifft Coltrane“"
+                - paragraph [ref=e2497]: 24.04.2026
+          - article [ref=e2498]:
+            - link "SWR Big Band - Heimspiel No. 19 Phoenixhalle im Römerkastell SWR Big Band Heimspiel No. 19 07.06.2026" [ref=e2499] [cursor=pointer]:
+              - /url: /events/swr-big-band-2026-06-06
+              - img "SWR Big Band - Heimspiel No. 19" [ref=e2502]
+              - generic [ref=e2503]:
+                - paragraph [ref=e2504]:
+                  - generic [ref=e2505]: Phoenixhalle im Römerkastell
+                - heading "SWR Big Band" [level=3] [ref=e2506]
+                - paragraph [ref=e2507]: Heimspiel No. 19
+                - paragraph [ref=e2508]: 07.06.2026
+          - article [ref=e2509]:
+            - link "Dennis van Aarssen & die DVA Bigband - Keep The Great Crooners Alive - Tour 2026 Theaterhaus (am Pragsattel) Dennis van Aarssen & die DVA Bigband Keep The Great Crooners Alive - Tour 2026 16.06.2026" [ref=e2510] [cursor=pointer]:
+              - /url: /events/dennis-van-aarssen-die-dva-bigband-2026-06-16
+              - img "Dennis van Aarssen & die DVA Bigband - Keep The Great Crooners Alive - Tour 2026" [ref=e2513]
+              - generic [ref=e2514]:
+                - paragraph [ref=e2515]:
+                  - generic [ref=e2516]: Theaterhaus (am Pragsattel)
+                - heading "Dennis van Aarssen & die DVA Bigband" [level=3] [ref=e2517]
+                - paragraph [ref=e2518]: Keep The Great Crooners Alive - Tour 2026
+                - paragraph [ref=e2519]: 16.06.2026
+      - generic [ref=e2520]:
+        - generic [ref=e2521]:
+          - generic [ref=e2522]:
+            - heading "Rock & Alternative" [level=2] [ref=e2523]
+            - paragraph [ref=e2524]: 24 Events im kommenden Programm
+          - generic [ref=e2525]:
+            - button "Zurück" [disabled] [ref=e2531]: ‹
+            - button "Weiter" [ref=e2532] [cursor=pointer]: ›
+        - generic [ref=e2534]:
+          - article [ref=e2535]:
+            - link "Fjørt - Be Fjort Tour 2026 Im Wizemann (Halle) Stuttgart Fjørt Be Fjort Tour 2026 27.03.2026" [ref=e2536] [cursor=pointer]:
+              - /url: /events/fjort-2026-03-27
+              - img "Fjørt - Be Fjort Tour 2026" [ref=e2539]
+              - generic [ref=e2540]:
+                - paragraph [ref=e2541]:
+                  - generic [ref=e2542]: Im Wizemann (Halle) Stuttgart
+                - heading "Fjørt" [level=3] [ref=e2543]
+                - paragraph [ref=e2544]: Be Fjort Tour 2026
+                - paragraph [ref=e2545]: 27.03.2026
+          - article [ref=e2546]:
+            - link "Heavysaurus - Heavysaurus KKL Hegel-Saal Stuttgart Heavysaurus Heavysaurus 12.04.2026" [ref=e2547] [cursor=pointer]:
+              - /url: /events/heavysaurus-2026-04-12
+              - img "Heavysaurus - Heavysaurus" [ref=e2550]
+              - generic [ref=e2551]:
+                - paragraph [ref=e2552]:
+                  - generic [ref=e2553]: KKL Hegel-Saal Stuttgart
+                - heading "Heavysaurus" [level=3] [ref=e2554]
+                - paragraph [ref=e2555]: Heavysaurus
+                - paragraph [ref=e2556]: 12.04.2026
+          - article [ref=e2557]:
+            - link "HELLSONGS - The Return of the Hellsingers pt3 Goldmark's Stuttgart HELLSONGS The Return of the Hellsingers pt3 21.04.2026" [ref=e2558] [cursor=pointer]:
+              - /url: /events/hellsongs-2026-04-21
+              - img "HELLSONGS - The Return of the Hellsingers pt3" [ref=e2561]
+              - generic [ref=e2562]:
+                - paragraph [ref=e2563]:
+                  - generic [ref=e2564]: Goldmark's Stuttgart
+                - heading "HELLSONGS" [level=3] [ref=e2565]
+                - paragraph [ref=e2566]: The Return of the Hellsingers pt3
+                - paragraph [ref=e2567]: 21.04.2026
+          - article [ref=e2568]:
+            - link "Only The Poets - And I'd Do It Again Tour 2026 LKA-Longhorn Stuttgart Only The Poets And I'd Do It Again Tour 2026 21.04.2026" [ref=e2569] [cursor=pointer]:
+              - /url: /events/only-the-poets-2026-04-21
+              - img "Only The Poets - And I'd Do It Again Tour 2026" [ref=e2572]
+              - generic [ref=e2573]:
+                - paragraph [ref=e2574]:
+                  - generic [ref=e2575]: LKA-Longhorn Stuttgart
+                - heading "Only The Poets" [level=3] [ref=e2576]
+                - paragraph [ref=e2577]: And I'd Do It Again Tour 2026
+                - paragraph [ref=e2578]: 21.04.2026
+          - article [ref=e2579]:
+            - link "Dekker - Neither up nor down-Tour 2026 Im Wizemann (Club) Stuttgart Dekker Neither up nor down-Tour 2026 21.03.2026" [ref=e2580] [cursor=pointer]:
+              - /url: /events/dekker-2026-03-21
+              - img "Dekker - Neither up nor down-Tour 2026" [ref=e2583]
+              - generic [ref=e2584]:
+                - paragraph [ref=e2585]:
+                  - generic [ref=e2586]: Im Wizemann (Club) Stuttgart
+                - heading "Dekker" [level=3] [ref=e2587]
+                - paragraph [ref=e2588]: Neither up nor down-Tour 2026
+                - paragraph [ref=e2589]: 21.03.2026
+          - article [ref=e2590]:
+            - link "Tristan Brusch - Am Anfang Tour 2026 Im Wizemann (Studio) Stuttgart Tristan Brusch Am Anfang Tour 2026 21.03.2026" [ref=e2591] [cursor=pointer]:
+              - /url: /events/tristan-brusch-2026-03-21
+              - img "Tristan Brusch - Am Anfang Tour 2026" [ref=e2594]
+              - generic [ref=e2595]:
+                - paragraph [ref=e2596]:
+                  - generic [ref=e2597]: Im Wizemann (Studio) Stuttgart
+                - heading "Tristan Brusch" [level=3] [ref=e2598]
+                - paragraph [ref=e2599]: Am Anfang Tour 2026
+                - paragraph [ref=e2600]: 21.03.2026
+          - article [ref=e2601]:
+            - link "ok.danke.tschüss - Knutschen & Boxen Tour 2025 Im Wizemann (Halle) Stuttgart ok.danke.tschüss Knutschen & Boxen Tour 2025 22.03.2026" [ref=e2602] [cursor=pointer]:
+              - /url: /events/ok-danke-tschuss-2026-03-22
+              - img "ok.danke.tschüss - Knutschen & Boxen Tour 2025" [ref=e2605]
+              - generic [ref=e2606]:
+                - paragraph [ref=e2607]:
+                  - generic [ref=e2608]: Im Wizemann (Halle) Stuttgart
+                - heading "ok.danke.tschüss" [level=3] [ref=e2609]
+                - paragraph [ref=e2610]: Knutschen & Boxen Tour 2025
+                - paragraph [ref=e2611]: 22.03.2026
+          - article [ref=e2612]:
+            - link "Santiano - Die große Arena Tour Porsche-Arena Stuttgart Santiano Die große Arena Tour 25.03.2026" [ref=e2613] [cursor=pointer]:
+              - /url: /events/santiano-2026-03-25
+              - img "Santiano - Die große Arena Tour" [ref=e2616]
+              - generic [ref=e2617]:
+                - paragraph [ref=e2618]:
+                  - generic [ref=e2619]: Porsche-Arena Stuttgart
+                - heading "Santiano" [level=3] [ref=e2620]
+                - paragraph [ref=e2621]: Die große Arena Tour
+                - paragraph [ref=e2622]: 25.03.2026
+          - article [ref=e2623]:
+            - link "Demented Are Go - Demented Are Go Goldmark´s Stuttgart Demented Are Go Demented Are Go 27.03.2026" [ref=e2624] [cursor=pointer]:
+              - /url: /events/demented-are-go-2026-03-27
+              - img "Demented Are Go - Demented Are Go" [ref=e2627]
+              - generic [ref=e2628]:
+                - paragraph [ref=e2629]:
+                  - generic [ref=e2630]: Goldmark´s Stuttgart
+                - heading "Demented Are Go" [level=3] [ref=e2631]
+                - paragraph [ref=e2632]: Demented Are Go
+                - paragraph [ref=e2633]: 27.03.2026
+          - article [ref=e2634]:
+            - link "Sind - Tour 2026 Im Wizemann (Studio) Stuttgart Sind Tour 2026 02.04.2026" [ref=e2635] [cursor=pointer]:
+              - /url: /events/sind-2026-04-02
+              - img "Sind - Tour 2026" [ref=e2638]
+              - generic [ref=e2639]:
+                - paragraph [ref=e2640]:
+                  - generic [ref=e2641]: Im Wizemann (Studio) Stuttgart
+                - heading "Sind" [level=3] [ref=e2642]
+                - paragraph [ref=e2643]: Tour 2026
+                - paragraph [ref=e2644]: 02.04.2026
+          - article [ref=e2645]:
+            - link "Villagers of Ioannina City - Villagers of Ioannina City Im Wizemann (Club) Stuttgart Villagers of Ioannina City Villagers of Ioannina City 04.04.2026" [ref=e2646] [cursor=pointer]:
+              - /url: /events/villagers-of-ioannina-city-2026-04-04
+              - img "Villagers of Ioannina City - Villagers of Ioannina City" [ref=e2649]
+              - generic [ref=e2650]:
+                - paragraph [ref=e2651]:
+                  - generic [ref=e2652]: Im Wizemann (Club) Stuttgart
+                - heading "Villagers of Ioannina City" [level=3] [ref=e2653]
+                - paragraph [ref=e2654]: Villagers of Ioannina City
+                - paragraph [ref=e2655]: 04.04.2026
+          - article [ref=e2656]:
+            - link "Simply the Best - Die Tina Turner Story KKL Hegel-Saal Stuttgart Simply the Best Die Tina Turner Story 06.04.2026" [ref=e2657] [cursor=pointer]:
+              - /url: /events/simply-the-best-2026-04-06
+              - img "Simply the Best - Die Tina Turner Story" [ref=e2660]
+              - generic [ref=e2661]:
+                - paragraph [ref=e2662]:
+                  - generic [ref=e2663]: KKL Hegel-Saal Stuttgart
+                - heading "Simply the Best" [level=3] [ref=e2664]
+                - paragraph [ref=e2665]: Die Tina Turner Story
+                - paragraph [ref=e2666]: 06.04.2026
+          - article [ref=e2667]:
+            - link "PRIME ORCHESTRA - PRIME ORCHESTRA KKL Beethoven-Saal Stuttgart PRIME ORCHESTRA PRIME ORCHESTRA 06.04.2026" [ref=e2668] [cursor=pointer]:
+              - /url: /events/prime-orchestra-2026-04-06
+              - img "PRIME ORCHESTRA - PRIME ORCHESTRA" [ref=e2671]
+              - generic [ref=e2672]:
+                - paragraph [ref=e2673]:
+                  - generic [ref=e2674]: KKL Beethoven-Saal Stuttgart
+                - heading "PRIME ORCHESTRA" [level=3] [ref=e2675]
+                - paragraph [ref=e2676]: PRIME ORCHESTRA
+                - paragraph [ref=e2677]: 06.04.2026
+          - article [ref=e2678]:
+            - link "ELVIS - Das Musical KKL Hegel-Saal Stuttgart ELVIS Das Musical 07.04.2026" [ref=e2679] [cursor=pointer]:
+              - /url: /events/elvis-2026-04-07
+              - img "ELVIS - Das Musical" [ref=e2682]
+              - generic [ref=e2683]:
+                - paragraph [ref=e2684]:
+                  - generic [ref=e2685]: KKL Hegel-Saal Stuttgart
+                - heading "ELVIS" [level=3] [ref=e2686]
+                - paragraph [ref=e2687]: Das Musical
+                - paragraph [ref=e2688]: 07.04.2026
+          - article [ref=e2689]:
+            - link "KAFFKIEZ - WIR TOUR 2026 KKL Beethoven-Saal Stuttgart KAFFKIEZ WIR TOUR 2026 09.04.2026" [ref=e2690] [cursor=pointer]:
+              - /url: /events/kaffkiez-2026-04-09
+              - img "KAFFKIEZ - WIR TOUR 2026" [ref=e2693]
+              - generic [ref=e2694]:
+                - paragraph [ref=e2695]:
+                  - generic [ref=e2696]: KKL Beethoven-Saal Stuttgart
+                - heading "KAFFKIEZ" [level=3] [ref=e2697]
+                - paragraph [ref=e2698]: WIR TOUR 2026
+                - paragraph [ref=e2699]: 09.04.2026
+          - article [ref=e2700]:
+            - link "The Beatles Legend - The Beatles Legend Liederhalle Mozartsaal The Beatles Legend The Beatles Legend 09.04.2026" [ref=e2701] [cursor=pointer]:
+              - /url: /events/the-beatles-legend-2026-04-09
+              - img "The Beatles Legend - The Beatles Legend" [ref=e2704]
+              - generic [ref=e2705]:
+                - paragraph [ref=e2706]:
+                  - generic [ref=e2707]: Liederhalle Mozartsaal
+                - heading "The Beatles Legend" [level=3] [ref=e2708]
+                - paragraph [ref=e2709]: The Beatles Legend
+                - paragraph [ref=e2710]: 09.04.2026
+          - article [ref=e2711]:
+            - link "The Peacocks - The Peacocks Goldmark's Stuttgart The Peacocks The Peacocks 10.04.2026" [ref=e2712] [cursor=pointer]:
+              - /url: /events/the-peacocks-2026-04-10
+              - img "The Peacocks - The Peacocks" [ref=e2715]
+              - generic [ref=e2716]:
+                - paragraph [ref=e2717]:
+                  - generic [ref=e2718]: Goldmark's Stuttgart
+                - heading "The Peacocks" [level=3] [ref=e2719]
+                - paragraph [ref=e2720]: The Peacocks
+                - paragraph [ref=e2721]: 10.04.2026
+          - article [ref=e2722]:
+            - link "DeWolff & Blues Pills - DeWolff & Blues Pills Im Wizemann (Halle) DeWolff & Blues Pills DeWolff & Blues Pills 11.04.2026" [ref=e2723] [cursor=pointer]:
+              - /url: /events/dewolff-blues-pills-2026-04-11
+              - img "DeWolff & Blues Pills - DeWolff & Blues Pills" [ref=e2726]
+              - generic [ref=e2727]:
+                - paragraph [ref=e2728]:
+                  - generic [ref=e2729]: Im Wizemann (Halle)
+                - heading "DeWolff & Blues Pills" [level=3] [ref=e2730]
+                - paragraph [ref=e2731]: DeWolff & Blues Pills
+                - paragraph [ref=e2732]: 11.04.2026
+          - article [ref=e2733]:
+            - link "Jethro Tull - The Curiosity Tour KKL Beethoven-Saal Stuttgart Jethro Tull The Curiosity Tour 11.04.2026" [ref=e2734] [cursor=pointer]:
+              - /url: /events/jethro-tull-2026-04-11
+              - img "Jethro Tull - The Curiosity Tour" [ref=e2737]
+              - generic [ref=e2738]:
+                - paragraph [ref=e2739]:
+                  - generic [ref=e2740]: KKL Beethoven-Saal Stuttgart
+                - heading "Jethro Tull" [level=3] [ref=e2741]
+                - paragraph [ref=e2742]: The Curiosity Tour
+                - paragraph [ref=e2743]: 11.04.2026
+          - article [ref=e2744]:
+            - link "Roachford - THEN & NOW 2026 Im Wizemann (Studio) Stuttgart Roachford THEN & NOW 2026 14.04.2026" [ref=e2745] [cursor=pointer]:
+              - /url: /events/roachford-2026-04-14
+              - img "Roachford - THEN & NOW 2026" [ref=e2748]
+              - generic [ref=e2749]:
+                - paragraph [ref=e2750]:
+                  - generic [ref=e2751]: Im Wizemann (Studio) Stuttgart
+                - heading "Roachford" [level=3] [ref=e2752]
+                - paragraph [ref=e2753]: THEN & NOW 2026
+                - paragraph [ref=e2754]: 14.04.2026
+          - article [ref=e2755]:
+            - link "High Fade - Unsigned & Dangerous Tour 2026 Im Wizemann (Club) Stuttgart High Fade Unsigned & Dangerous Tour 2026 14.04.2026" [ref=e2756] [cursor=pointer]:
+              - /url: /events/high-fade-2026-04-14
+              - img "High Fade - Unsigned & Dangerous Tour 2026" [ref=e2759]
+              - generic [ref=e2760]:
+                - paragraph [ref=e2761]:
+                  - generic [ref=e2762]: Im Wizemann (Club) Stuttgart
+                - heading "High Fade" [level=3] [ref=e2763]
+                - paragraph [ref=e2764]: Unsigned & Dangerous Tour 2026
+                - paragraph [ref=e2765]: 14.04.2026
+          - article [ref=e2766]:
+            - link "Kiki Rockwell - Europe Tour 2026 Im Wizemann (Club) Stuttgart Kiki Rockwell Europe Tour 2026 15.04.2026" [ref=e2767] [cursor=pointer]:
+              - /url: /events/kiki-rockwell-2026-04-15
+              - img "Kiki Rockwell - Europe Tour 2026" [ref=e2770]
+              - generic [ref=e2771]:
+                - paragraph [ref=e2772]:
+                  - generic [ref=e2773]: Im Wizemann (Club) Stuttgart
+                - heading "Kiki Rockwell" [level=3] [ref=e2774]
+                - paragraph [ref=e2775]: Europe Tour 2026
+                - paragraph [ref=e2776]: 15.04.2026
+          - article [ref=e2777]:
+            - link "Lonely Spring - it still is what it is Goldmark's Stuttgart Lonely Spring it still is what it is 16.04.2026" [ref=e2778] [cursor=pointer]:
+              - /url: /events/lonely-spring-2026-04-16
+              - img "Lonely Spring - it still is what it is" [ref=e2781]
+              - generic [ref=e2782]:
+                - paragraph [ref=e2783]:
+                  - generic [ref=e2784]: Goldmark's Stuttgart
+                - heading "Lonely Spring" [level=3] [ref=e2785]
+                - paragraph [ref=e2786]: it still is what it is
+                - paragraph [ref=e2787]: 16.04.2026
+          - article [ref=e2788]:
+            - link "Project Pitchfork - Project Pitchfork Im Wizemann (Club) Stuttgart Project Pitchfork Project Pitchfork 17.04.2026" [ref=e2789] [cursor=pointer]:
+              - /url: /events/project-pitchfork-2026-04-17
+              - img "Project Pitchfork - Project Pitchfork" [ref=e2792]
+              - generic [ref=e2793]:
+                - paragraph [ref=e2794]:
+                  - generic [ref=e2795]: Im Wizemann (Club) Stuttgart
+                - heading "Project Pitchfork" [level=3] [ref=e2796]
+                - paragraph [ref=e2797]: Project Pitchfork
+                - paragraph [ref=e2798]: 17.04.2026
+      - region "Nichts verpassen" [ref=e2799]:
+        - generic [ref=e2800]:
+          - paragraph [ref=e2801]: Newsletter
+          - heading "Nichts verpassen" [level=2] [ref=e2802]
+          - paragraph [ref=e2803]: Neue Konzerte, Highlights und Vorverkäufe landen direkt in deinem Postfach.
+          - list "Vorteile des Newsletters" [ref=e2804]:
+            - listitem [ref=e2805]: Frische Konzerttipps aus Stuttgart
+            - listitem [ref=e2806]: Highlights und redaktionelle Empfehlungen
+            - listitem [ref=e2807]: Schnell, kompakt und ohne Feed-Chaos
+        - generic [ref=e2808]:
+          - paragraph [ref=e2809]: Direkt in deine Inbox
+          - generic [ref=e2811]:
+            - generic [ref=e2812]: E-Mail-Adresse
+            - textbox "E-Mail-Adresse" [ref=e2813]
+            - button "Newsletter abonnieren" [ref=e2814] [cursor=pointer]
+          - paragraph [ref=e2815]: Nur die wichtigsten Updates. Kein täglicher Spam.
+      - region "Partner" [ref=e2816]:
+        - generic [ref=e2817]:
+          - link "Russ Live" [ref=e2818] [cursor=pointer]:
+            - /url: https://www.russ-live.de
+            - img "Russ Live" [ref=e2819]
+          - link "Russ Klassik" [ref=e2820] [cursor=pointer]:
+            - /url: https://www.russ-klassik.de
+            - img "Russ Klassik" [ref=e2821]
+          - link "Easy Ticket" [ref=e2822] [cursor=pointer]:
+            - /url: https://www.easyticket.de
+            - img "Easy Ticket" [ref=e2823]
+          - link "eventim" [ref=e2824] [cursor=pointer]:
+            - /url: https://www.eventim.de
+            - img "eventim" [ref=e2825]
+          - link "Reservix" [ref=e2826] [cursor=pointer]:
+            - /url: https://www.reservix.de
+            - img "Reservix" [ref=e2827]
+  - button "Nach oben scrollen" [ref=e2840] [cursor=pointer]: ↑
+  - contentinfo [ref=e2828]:
+    - navigation "Footer" [ref=e2830]:
+      - link "Datenschutz" [ref=e2831] [cursor=pointer]:
+        - /url: /datenschutz
+      - link "Impressum" [ref=e2832] [cursor=pointer]:
+        - /url: /impressum
+      - link "AGB" [ref=e2833] [cursor=pointer]:
+        - /url: /agb
+      - link "Barrierefreiheit" [ref=e2834] [cursor=pointer]:
+        - /url: /barrierefreiheit
+      - button "Datenschutzeinstellungen" [ref=e2835] [cursor=pointer]
