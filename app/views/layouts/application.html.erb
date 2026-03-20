@@ -43,7 +43,8 @@
     <% backend_context = controller_path.start_with?("backend/") %>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if backend_context %>
-    <% public_events_search_visible = controller_path == "public/events" && action_name == "index" && @browse_state.present? %>
+    <% nav_browse_state = @browse_state || @header_browse_state %>
+    <% public_events_search_visible = nav_browse_state.present? %>
     <% backend_nav_links = capture do %>
       <% if authenticated? %>
         <% if current_user.backend_access? %>
@@ -78,7 +79,7 @@
 
         <% if public_events_search_visible %>
           <div class="app-nav-search">
-            <%= render "public/events/toolbar", browse_state: @browse_state %>
+            <%= render "public/events/toolbar", browse_state: nav_browse_state %>
           </div>
         <% end %>
 
