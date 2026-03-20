@@ -4368,14 +4368,35 @@ trix-editor.blog-rich-text:focus {
 .event-detail-notes-panel {
   margin-top: 0;
   border: 1px solid rgba(17, 17, 17, 0.08);
-  background: rgba(255, 255, 255, 0.96);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 246, 242, 0.96));
   padding: 1rem 1.05rem;
   box-shadow: 0 14px 28px rgba(17, 17, 17, 0.035);
 }
 
+.event-detail-main > .event-detail-panel:nth-of-type(4n + 1) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 244, 239, 0.96));
+}
+
+.event-detail-main > .event-detail-panel:nth-of-type(4n + 2) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(242, 247, 243, 0.96));
+}
+
+.event-detail-main > .event-detail-panel:nth-of-type(4n + 3) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(244, 246, 250, 0.96));
+}
+
+.event-detail-main > .event-detail-panel:nth-of-type(4n + 4) {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(248, 243, 247, 0.96));
+}
+
 .event-detail-copy-primary {
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 245, 241, 0.98));
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(249, 245, 239, 0.97));
 }
 
 .event-detail-copy h2,
