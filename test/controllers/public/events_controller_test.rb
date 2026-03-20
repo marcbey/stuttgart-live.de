@@ -223,7 +223,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, hidden_event.artist_name
     assert_includes response.body, matching_published_event.artist_name
-    assert_includes response.body, "event-card-status-select"
+    assert_includes response.body, "event-card-admin-controls"
+    assert_includes response.body, "/backend/events?event_id=#{hidden_event.id}&amp;status=#{hidden_event.status}"
   end
 
   test "index groups backend navigation links into a burger menu for authenticated users" do
@@ -1548,10 +1549,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_includes response.body, "event-card-status-select"
-    assert_includes response.body, status_event_path(event.slug)
-    assert_includes response.body, "data-controller=\"public-card-status\""
-    assert_includes response.body, "change-&gt;public-card-status#change"
+    assert_includes response.body, "event-card-admin-controls"
     assert_includes response.body, "/backend/events?event_id=#{event.id}&amp;status=#{event.status}"
   end
 
