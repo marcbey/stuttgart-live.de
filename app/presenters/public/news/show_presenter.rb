@@ -40,6 +40,7 @@ module Public
         classes = [ "event-detail-header", "news-detail-header" ]
         classes << "event-detail-header-with-image" if hero_image?
         classes << "news-detail-header-with-image" if hero_image?
+        classes << "news-detail-header-no-image" unless hero_image?
         classes.join(" ")
       end
 
@@ -53,7 +54,6 @@ module Public
 
       def fact_items
         @fact_items ||= [
-          FactItem.new(label: "Typ", value: "News"),
           FactItem.new(label: "Datum", value: published_on_label),
           FactItem.new(label: "Autor", value: author_label)
         ].compact

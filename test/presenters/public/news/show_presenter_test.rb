@@ -48,13 +48,30 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "event-detail-header news-detail-header event-detail-header-with-image news-detail-header-with-image", presenter.header_classes
     assert_equal "Neue Headline", presenter.headline
     assert_equal "Kurzbeschreibung", presenter.teaser
-    assert_equal [ "Typ", "Datum", "Autor" ], presenter.fact_items.map(&:label)
-    assert_equal [ "News", "17.03.2026", "Autor Eins" ], presenter.fact_items.map(&:value)
+    assert_equal [ "Datum", "Autor" ], presenter.fact_items.map(&:label)
+    assert_equal [ "17.03.2026", "Autor Eins" ], presenter.fact_items.map(&:value)
     assert_equal "https://cdn.example.test/news-cover.webp", presenter.hero_image_source
     assert_equal "Neue Headline", presenter.hero_alt_text
     assert_equal "Foto: Agentur", presenter.hero_image_credit
     assert presenter.has_video_block?
     assert_match(/"@type":"NewsArticle"/, presenter.schema_json_ld)
+  end
+
+  test "uses compact no-image header classes without hero image data" do
+    blog_post = build_post(
+      title: "Ohne Bild",
+      teaser: "Kompakter Einstieg",
+      slug: "ohne-bild",
+      published_at: Time.zone.local(2026, 3, 18, 12, 0),
+      cover_image_copyright: nil
+    )
+
+    presenter = build_presenter(blog_post)
+
+    assert_equal "event-detail-header news-detail-header news-detail-header-no-image", presenter.header_classes
+    assert_not presenter.hero_image?
+    assert_nil presenter.hero_image_source
+    assert_nil presenter.hero_image_credit
   end
 
   private
