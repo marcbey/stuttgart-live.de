@@ -30,11 +30,11 @@
               <td><%= source.configured_location_whitelist.join(", ") %></td>
               <td class="action-cell">
                 <% if source.easyticket? %>
-                  <%= button_to "Easyticket starten", run_easyticket_backend_import_source_path(source), method: :post, class: "button button-compact" %>
+                  <%= button_to "Easyticket Import starten", run_easyticket_backend_import_source_path(source), method: :post, class: "button button-compact" %>
                 <% elsif source.eventim? %>
-                  <%= button_to "Eventim starten", run_eventim_backend_import_source_path(source), method: :post, class: "button button-compact" %>
+                  <%= button_to "Eventim Import starten", run_eventim_backend_import_source_path(source), method: :post, class: "button button-compact" %>
                 <% elsif source.reservix? %>
-                  <%= button_to "Reservix starten", run_reservix_backend_import_source_path(source), method: :post, class: "button button-compact" %>
+                  <%= button_to "Reservix Import starten", run_reservix_backend_import_source_path(source), method: :post, class: "button button-compact" %>
                 <% end %>
                 <%= link_to "Bearbeiten", edit_backend_import_source_path(source), class: "button button-ghost button-compact" %>
               </td>
@@ -93,7 +93,7 @@
   <section class="import-runs-panel">
     <div class="import-runs-group-header">
       <h3>Merge Importer Jobs</h3>
-      <%= button_to "Import-Merge synchronisieren",
+      <%= button_to "Import-Merge starten",
                     sync_imported_events_backend_import_sources_path,
                     method: :post,
                     class: [ "button", "button-compact", (merge_sync_needed_for_importer_jobs? ? "button-attention" : nil) ].compact.join(" "),
@@ -146,15 +146,15 @@
 
   <section class="import-runs-panel">
     <div class="import-runs-group-header">
-      <h3>LLM Jobs</h3>
+      <h3>LLM-Enrichment Jobs</h3>
       <div class="action-cell">
-        <%= link_to "Prompt konfigurieren",
+        <%= link_to "Bearbeiten",
                     edit_backend_settings_path(anchor: "llm-enrichment-prompt"),
                     class: "button button-ghost button-compact" %>
         <%= button_to "LLM-Enrichment starten",
                       run_llm_enrichment_backend_import_sources_path,
                       method: :post,
-                      class: "button button-compact button-secondary" %>
+                      class: "button button-compact" %>
       </div>
     </div>
     <% if llm_runs.any? %>
