@@ -151,6 +151,10 @@ module Public
         @genre_tags ||= (genres + enrichment_genres).uniq
       end
 
+      def genre_group_label
+        @genre_group_label ||= related_genre_group&.name.to_s.strip.presence
+      end
+
       def detail_genres
         genre_tags
       end
@@ -248,6 +252,10 @@ module Public
 
       def llm_enrichment
         @llm_enrichment ||= event.llm_enrichment
+      end
+
+      def related_genre_group
+        @related_genre_group ||= LlmGenreGrouping::Lookup.groups_for_event(event).first
       end
 
       def hero_desktop_image

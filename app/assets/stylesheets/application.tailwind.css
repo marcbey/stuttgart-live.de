@@ -4233,6 +4233,23 @@ trix-editor.blog-rich-text:focus {
   line-height: 1.2;
 }
 
+.event-detail-tag-group {
+  border-color: rgba(227, 27, 46, 0.18);
+  background: linear-gradient(180deg, rgba(227, 27, 46, 0.1), rgba(244, 216, 96, 0.1));
+}
+
+.event-detail-tag-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  padding-inline: 0.1rem 0.2rem;
+  color: rgba(17, 17, 17, 0.52);
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
 .event-detail-links {
   margin-top: 0;
 }
