@@ -1,18 +1,14 @@
 <% content_for :title, "Stuttgart Live - News" %>
 <% newsletter_signup = newsletter_signup_config("news_index", return_to: request.fullpath) %>
-
 <section class="news-shell news-index-shell">
   <header class="news-hero news-index-hero">
     <p class="news-kicker">Redaktion</p>
     <h1>Aktuelle News</h1>
-    <%= render "public/newsletter_subscribers/signup",
-               subscriber: NewsletterSubscriber.new,
-               signup: newsletter_signup %>
   </header>
 
   <% if @blog_posts.any? %>
     <div class="news-grid news-index-grid">
-      <% @blog_posts.each do |blog_post| %>
+      <% @blog_posts.each_with_index do |blog_post, index| %>
         <article class="news-card news-index-card <%= 'news-index-card-no-image' unless blog_post.cover_image.attached? %>">
           <%= link_to news_path(blog_post.slug), class: "news-index-card-link" do %>
             <% if blog_post.cover_image.attached? %>
@@ -34,6 +30,14 @@
             </div>
           <% end %>
         </article>
+
+        <% if index == 4 %>
+          <div class="news-index-newsletter-slot">
+            <%= render "public/events/newsletter_signup",
+                       subscriber: NewsletterSubscriber.new,
+                       signup: newsletter_signup %>
+          </div>
+        <% end %>
       <% end %>
     </div>
   <% else %>
