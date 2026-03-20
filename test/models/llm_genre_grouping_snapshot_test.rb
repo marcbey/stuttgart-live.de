@@ -39,6 +39,6 @@ class LlmGenreGroupingSnapshotTest < ActiveSupport::TestCase
     )
 
     assert_not second.valid?
-    assert_includes second.errors[:active], "has already been taken"
+    assert_includes second.errors[:active], I18n.t("errors.messages.taken")
   end
 end

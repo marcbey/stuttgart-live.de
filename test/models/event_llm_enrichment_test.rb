@@ -28,7 +28,7 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
     duplicate.source_run = import_runs(:two)
 
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:event_id], "has already been taken"
+    assert duplicate.errors.added?(:event_id, :taken, value: events(:published_one).id)
   end
 
   test "normalizes invalid raw_response to empty hash" do

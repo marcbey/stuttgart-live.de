@@ -1,6 +1,12 @@
 require "test_helper"
 
 class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationTest
+  def expected_invalid_email_message(email)
+    subscriber = NewsletterSubscriber.new(email: email, source: "homepage")
+    subscriber.valid?
+    subscriber.errors.full_messages.to_sentence
+  end
+
   test "creates newsletter subscriber from homepage" do
     assert_difference("NewsletterSubscriber.count", 1) do
       post newsletter_subscribers_url, params: {
@@ -15,6 +21,8 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
   end
 
   test "shows validation error for invalid email" do
+    expected_message = expected_invalid_email_message("ungueltig")
+
     assert_no_difference("NewsletterSubscriber.count") do
       post newsletter_subscribers_url, params: {
         newsletter_subscriber: { email: "ungueltig" }
@@ -23,7 +31,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
 
     assert_redirected_to events_url
     follow_redirect!
-    assert_includes response.body, "Email is invalid"
+    assert_includes response.body, expected_message
   end
 
   test "replaces the events newsletter form with a confirmation after turbo signup" do
@@ -65,6 +73,8 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
   end
 
   test "shows inline validation errors in the turbo frame" do
+    expected_message = expected_invalid_email_message("ungültig")
+
     assert_no_difference("NewsletterSubscriber.count") do
       post newsletter_subscribers_url,
            params: {
@@ -78,7 +88,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
 
     assert_response :unprocessable_entity
     assert_includes response.body, 'id="events-newsletter-signup"'
-    assert_includes response.body, "Email is invalid"
+    assert_includes response.body, expected_message
     assert_includes response.body, "<form"
   end
 end

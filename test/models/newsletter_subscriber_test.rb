@@ -14,7 +14,7 @@ class NewsletterSubscriberTest < ActiveSupport::TestCase
     duplicate = NewsletterSubscriber.new(email: "HELLO@example.com", source: "homepage")
 
     assert_not duplicate.valid?
-    assert_includes duplicate.errors[:email], "has already been taken"
+    assert duplicate.errors.added?(:email, :taken, value: "hello@example.com")
   end
 
   test "enqueues mailchimp sync when mailchimp is configured" do
