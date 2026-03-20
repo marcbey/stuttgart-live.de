@@ -38,9 +38,6 @@
         <% if event.venue.present? %>
           <span><%= event.venue %></span>
         <% end %>
-        <% if event.primary_source.present? %>
-          <span><%= event_source_label(event.primary_source) %></span>
-        <% end %>
       </p>
       <h3 class="genre-lane-card-name"><%= event.artist_name %></h3>
       <% if event.title.present? %>

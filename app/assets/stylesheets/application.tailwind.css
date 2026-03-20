@@ -2117,7 +2117,6 @@ trix-editor.blog-rich-text:focus {
   position: relative;
   aspect-ratio: 0.98 / 1.12;
   overflow: hidden;
-  border-radius: 0.7rem;
   background: #111;
   box-shadow: 0 14px 28px rgba(17, 17, 17, 0.14);
 }
@@ -5389,7 +5388,7 @@ trix-editor.blog-rich-text:focus {
   }
 
   .genre-lane-track {
-    grid-auto-columns: calc((100% - 2rem) / 3);
+    grid-auto-columns: calc((100% - 4rem) / 5);
   }
 
   .flyer-grid {
@@ -5439,7 +5438,7 @@ trix-editor.blog-rich-text:focus {
   }
 
   .genre-lane-track {
-    grid-auto-columns: calc((100% - 3rem) / 4);
+    grid-auto-columns: calc((100% - 4rem) / 5);
   }
 
   .flyer-grid {
