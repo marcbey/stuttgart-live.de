@@ -2648,6 +2648,30 @@ trix-editor.blog-rich-text:focus {
   margin-top: 0.7rem;
 }
 
+@media (min-width: 1100px) {
+  .section-slider-list .event-listing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .section-slider-list .event-listing-card {
+    grid-template-columns: 4.6rem 5.6rem minmax(0, 1fr);
+    gap: 0.9rem;
+    padding: 0.7rem 0.75rem;
+    border: 1px solid rgba(17, 17, 17, 0.08);
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 8px 18px rgba(17, 17, 17, 0.05);
+  }
+
+  .section-slider-list .event-listing-thumb-link {
+    width: 4.6rem;
+  }
+
+  .section-slider-list .event-listing-thumb-image {
+    border-radius: 0;
+  }
+}
+
 .home-events-section {
   margin-top: 1.5rem;
 }
@@ -3283,17 +3307,18 @@ trix-editor.blog-rich-text:focus {
 .event-listing-card {
   position: relative;
   display: grid;
-  grid-template-columns: 3.6rem 6.4rem minmax(0, 1fr) auto;
-  align-items: center;
+  grid-template-columns: 3.6rem 5.2rem minmax(0, 1fr);
+  align-items: start;
   gap: 0.75rem;
-  padding: 0.55rem 0.35rem;
+  padding: 0.75rem;
   border-radius: 0.5rem;
-  border-bottom: 1px solid rgba(17, 17, 17, 0.1);
-  transition: background-color 140ms ease;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  transition: background-color 140ms ease, box-shadow 140ms ease;
 }
 
 .event-listing-card:hover {
   background: rgba(17, 17, 17, 0.045);
+  box-shadow: 0 8px 18px rgba(17, 17, 17, 0.06);
 }
 
 .event-listing-row-link {
@@ -3322,14 +3347,36 @@ trix-editor.blog-rich-text:focus {
   line-height: 1.15;
 }
 
-.event-listing-body {
+.event-listing-meta {
   display: grid;
+  align-content: start;
   gap: 0.08rem;
   min-width: 0;
 }
 
+.event-listing-time,
+.event-listing-price {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.2;
+  color: var(--ink-soft);
+}
+
+.event-listing-price {
+  margin-top: 0.15rem;
+  font-weight: 600;
+  color: rgba(17, 17, 17, 0.76);
+}
+
+.event-listing-body {
+  display: grid;
+  gap: 0.14rem;
+  min-width: 0;
+}
+
 .event-listing-link {
-  display: block;
+  display: grid;
+  gap: 0.12rem;
   color: inherit;
   text-decoration: none;
   line-height: 1.15;
@@ -3339,44 +3386,22 @@ trix-editor.blog-rich-text:focus {
   font-size: 1.05rem;
   line-height: 1.12;
   font-weight: 500;
-  display: inline;
+  display: block;
 }
 
 .event-listing-link span {
   color: var(--ink-soft);
-  font-size: 0.95rem;
-  line-height: 1.18;
-  display: inline;
-}
-
-.event-listing-location {
-  margin: 0;
-  color: var(--ink-soft);
   font-size: 0.9rem;
-  line-height: 1.22;
+  line-height: 1.18;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.event-listing-ticket {
-  margin: 0;
-  justify-self: end;
-  position: relative;
-  z-index: 3;
-}
-
-.event-listing-ticket-button {
-  width: auto;
-  min-width: 0;
-  justify-content: center;
-  font-size: 0.78rem;
-  padding: 0.36rem 0.62rem;
 }
 
 @media (min-width: 900px) {
   .event-listing-card {
-    grid-template-columns: 4rem 7.2rem minmax(0, 1fr) auto;
+    grid-template-columns: 4rem 5.6rem minmax(0, 1fr);
   }
 }
 

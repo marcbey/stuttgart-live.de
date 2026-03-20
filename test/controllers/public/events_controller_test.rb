@@ -1091,7 +1091,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#events-pagination", count: 0
   end
 
-  test "highlight list rows prefer easyticket offer" do
+  test "highlight list rows do not render ticket links" do
     event = Event.create!(
       slug: "list-view-ticket-priority",
       source_fingerprint: "test::public::list::ticket-priority",
@@ -1127,7 +1127,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_includes response.body, "https://easyticket.example/tickets"
+    assert_not_includes response.body, "https://easyticket.example/tickets"
     assert_not_includes response.body, "https://eventim.example/tickets"
   end
 
