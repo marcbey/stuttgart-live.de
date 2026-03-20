@@ -7,7 +7,7 @@
 
   <% if @browse_state.page == 1 && @home_featured_events.present? %>
     <%= render "highlight_section",
-               title: "Highlights",
+               title: "Unsere Highlights für dich ausgesucht",
                events: @home_featured_events,
                browse_state: @browse_state,
                featured: true,
@@ -18,33 +18,72 @@
     <%= render "promotion_banner", blog_post: @promotion_banner_blog_post %>
   <% end %>
 
-  <% if @browse_state.page == 1 && @home_genre_lanes.present? %>
-    <% @home_genre_lanes.each_with_index do |lane, index| %>
+  <% if @browse_state.page == 1 %>
+    <% inserted_all_events = false %>
+    <% inserted_tagestipp = false %>
+
+    <% Array(@home_genre_lanes).each_with_index do |lane, index| %>
       <%= render "genre_lane_section",
                  group: lane.group,
                  events: lane.events,
                  browse_state: @browse_state,
                  tone_class: "genre-lane-section--tone-#{(index % 4) + 1}",
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>
+
+      <% if !inserted_all_events && @home_highlight_events.present? && index >= 0 %>
+        <% inserted_all_events = true %>
+        <%= render "genre_lane_section",
+                   title: "Alle Veranstaltungen in Stuttgart",
+                   events: @home_highlight_events,
+                   browse_state: @browse_state,
+                   kicker: "Programmübersicht",
+                   summary: "#{pluralize(@home_highlight_events.size, "Event", "Events")} aus dem aktuellen Feed",
+                   tone_class: "genre-lane-section--tone-2",
+                   section_variant: "editorial",
+                   card_variant: "editorial",
+                   list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
+      <% end %>
+
+      <% if !inserted_tagestipp && @home_tagestipp_events.present? && index >= 1 %>
+        <% inserted_tagestipp = true %>
+        <%= render "genre_lane_section",
+                   title: "Tagestipp",
+                   events: @home_tagestipp_events,
+                   browse_state: @browse_state,
+                   kicker: "Heute empfohlen",
+                   summary: "#{pluralize(@home_tagestipp_events.size, "Event", "Events")} in der heutigen Auswahl",
+                   tone_class: "genre-lane-section--tone-3",
+                   section_variant: "spotlight",
+                   card_variant: "spotlight",
+                   list_aria_label: "Listenansicht für Tagestipp" %>
+      <% end %>
     <% end %>
-  <% end %>
 
-  <% if @browse_state.page == 1 && @home_highlight_events.present? %>
-    <%= render "genre_lane_section",
-               title: "Alle Veranstaltungen in Stuttgart",
-               events: @home_highlight_events,
-               browse_state: @browse_state,
-               tone_class: "genre-lane-section--tone-2",
-               list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
-  <% end %>
+    <% if !inserted_all_events && @home_highlight_events.present? %>
+      <%= render "genre_lane_section",
+                 title: "Alle Veranstaltungen in Stuttgart",
+                 events: @home_highlight_events,
+                 browse_state: @browse_state,
+                 kicker: "Programmübersicht",
+                 summary: "#{pluralize(@home_highlight_events.size, "Event", "Events")} aus dem aktuellen Feed",
+                 tone_class: "genre-lane-section--tone-2",
+                 section_variant: "editorial",
+                 card_variant: "editorial",
+                 list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
+    <% end %>
 
-  <% if @browse_state.page == 1 && @home_tagestipp_events.present? %>
-    <%= render "genre_lane_section",
-               title: "Tagestipp",
-               events: @home_tagestipp_events,
-               browse_state: @browse_state,
-               tone_class: "genre-lane-section--tone-3",
-               list_aria_label: "Listenansicht für Tagestipp" %>
+    <% if !inserted_tagestipp && @home_tagestipp_events.present? %>
+      <%= render "genre_lane_section",
+                 title: "Tagestipp",
+                 events: @home_tagestipp_events,
+                 browse_state: @browse_state,
+                 kicker: "Heute empfohlen",
+                 summary: "#{pluralize(@home_tagestipp_events.size, "Event", "Events")} in der heutigen Auswahl",
+                 tone_class: "genre-lane-section--tone-3",
+                 section_variant: "spotlight",
+                 card_variant: "spotlight",
+                 list_aria_label: "Listenansicht für Tagestipp" %>
+    <% end %>
   <% end %>
 
   <%= render "newsletter_signup", browse_state: @browse_state %>

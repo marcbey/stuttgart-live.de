@@ -333,9 +333,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.parse(response.body)
-    highlights_section = document.css("section.home-featured-section").find do |section|
-      section.at_css("h2")&.text == "Highlights"
-    end
+    highlights_section = document.at_css("section.home-featured-section")
     all_events_section = document.css("section.genre-lane-section").find do |section|
       section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
     end
@@ -578,9 +576,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.parse(response.body)
-    highlights_section = document.css("section.home-featured-section").find do |section|
-      section.at_css("h2")&.text == "Highlights"
-    end
+    highlights_section = document.at_css("section.home-featured-section")
 
     assert highlights_section.present?, "expected Highlights section to be rendered"
 

@@ -2063,6 +2063,59 @@ trix-editor.blog-rich-text:focus {
   --genre-lane-end: rgba(255, 255, 255, 0.99);
 }
 
+.genre-lane-section--editorial {
+  border-color: rgba(22, 34, 48, 0.2);
+  background:
+    radial-gradient(circle at top left, rgba(90, 215, 255, 0.34), transparent 24%),
+    radial-gradient(circle at 85% 18%, rgba(124, 112, 255, 0.24), transparent 22%),
+    linear-gradient(145deg, rgba(18, 30, 55, 0.99), rgba(22, 73, 89, 0.96));
+  box-shadow: 0 18px 36px rgba(8, 18, 30, 0.18);
+}
+
+.genre-lane-section--editorial .genre-lane-kicker {
+  color: rgba(191, 225, 239, 0.82);
+}
+
+.genre-lane-section--editorial .genre-lane-heading h2 {
+  font-size: clamp(1.22rem, 1.8vw, 1.55rem);
+  letter-spacing: 0.03em;
+  color: #f4fbff;
+}
+
+.genre-lane-section--editorial .genre-lane-summary {
+  color: rgba(223, 236, 243, 0.76);
+}
+
+.genre-lane-section--editorial .genre-lane-toggle,
+.genre-lane-section--editorial .genre-lane-arrow {
+  background: rgba(244, 251, 255, 0.12);
+  color: #f4fbff;
+}
+
+.genre-lane-section--spotlight {
+  border-color: rgba(17, 17, 17, 0.16);
+  background:
+    radial-gradient(circle at top left, rgba(255, 205, 92, 0.34), transparent 24%),
+    radial-gradient(circle at 82% 16%, rgba(255, 115, 95, 0.24), transparent 21%),
+    linear-gradient(145deg, rgba(70, 24, 18, 0.98), rgba(129, 69, 20, 0.95));
+  box-shadow: 0 22px 44px rgba(44, 18, 10, 0.22);
+}
+
+.genre-lane-section--spotlight .genre-lane-kicker,
+.genre-lane-section--spotlight .genre-lane-heading h2 {
+  color: #fff3da;
+}
+
+.genre-lane-section--spotlight .genre-lane-summary {
+  color: rgba(255, 243, 218, 0.76);
+}
+
+.genre-lane-section--spotlight .genre-lane-toggle,
+.genre-lane-section--spotlight .genre-lane-arrow {
+  background: rgba(255, 244, 223, 0.12);
+  color: #fff3da;
+}
+
 .genre-lane-header {
   display: flex;
   align-items: end;
@@ -2131,6 +2184,18 @@ trix-editor.blog-rich-text:focus {
   border: 1px solid rgba(17, 17, 17, 0.09);
 }
 
+.genre-lane-card--editorial {
+  background: linear-gradient(180deg, rgba(244, 250, 253, 0.98), rgba(229, 240, 246, 0.98));
+  border-color: rgba(90, 126, 145, 0.28);
+  box-shadow: 0 12px 24px rgba(9, 19, 28, 0.12);
+}
+
+.genre-lane-card--spotlight {
+  background: linear-gradient(180deg, rgba(255, 248, 237, 0.98), rgba(255, 241, 219, 0.98));
+  border-color: rgba(122, 73, 24, 0.24);
+  box-shadow: 0 12px 24px rgba(17, 17, 17, 0.09);
+}
+
 .genre-lane-card-link {
   display: grid;
   gap: 0.7rem;
@@ -2140,12 +2205,31 @@ trix-editor.blog-rich-text:focus {
   text-decoration: none;
 }
 
+.genre-lane-card-link--editorial {
+  gap: 0.5rem;
+}
+
+.genre-lane-card-link--spotlight {
+  gap: 0.8rem;
+  padding: 0.75rem;
+}
+
 .genre-lane-card-media {
   position: relative;
   aspect-ratio: 0.98 / 1.12;
   overflow: hidden;
   background: #111;
   border: 1px solid rgba(17, 17, 17, 0.08);
+}
+
+.genre-lane-card-media--editorial {
+  aspect-ratio: 1.08 / 1;
+  border-color: rgba(90, 126, 145, 0.18);
+}
+
+.genre-lane-card-media--spotlight {
+  aspect-ratio: 0.94 / 1.18;
+  border-color: rgba(122, 73, 24, 0.18);
 }
 
 .genre-lane-card-media picture {
@@ -2175,10 +2259,27 @@ trix-editor.blog-rich-text:focus {
   text-transform: uppercase;
 }
 
+.genre-lane-card-date--editorial {
+  font-size: 0.72rem;
+  color: rgba(17, 17, 17, 0.5);
+}
+
+.genre-lane-card-date--spotlight {
+  color: rgba(88, 56, 24, 0.88);
+}
+
 .genre-lane-card-copy {
   display: grid;
   gap: 0.26rem;
   min-width: 0;
+}
+
+.genre-lane-card-copy--editorial {
+  gap: 0.2rem;
+}
+
+.genre-lane-card-copy--spotlight {
+  gap: 0.32rem;
 }
 
 .genre-lane-card-meta {
@@ -2192,6 +2293,16 @@ trix-editor.blog-rich-text:focus {
   text-transform: uppercase;
 }
 
+.genre-lane-card-meta--editorial {
+  font-size: 0.69rem;
+  letter-spacing: 0.04em;
+  color: rgba(41, 70, 86, 0.72);
+}
+
+.genre-lane-card-meta--spotlight {
+  color: rgba(88, 56, 24, 0.72);
+}
+
 .genre-lane-card-name {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -2200,6 +2311,18 @@ trix-editor.blog-rich-text:focus {
   margin: 0;
   font-size: 1.08rem;
   line-height: 1.01;
+}
+
+.genre-lane-card-name--editorial {
+  font-size: 0.95rem;
+  line-height: 1.08;
+  letter-spacing: 0.02em;
+  color: #122330;
+}
+
+.genre-lane-card-name--spotlight {
+  font-size: 1.18rem;
+  line-height: 0.98;
 }
 
 .genre-lane-card-title {
@@ -2211,6 +2334,15 @@ trix-editor.blog-rich-text:focus {
   color: rgba(17, 17, 17, 0.7);
   font-size: 0.82rem;
   line-height: 1.16;
+}
+
+.genre-lane-card-title--editorial {
+  font-size: 0.7rem;
+  color: rgba(28, 57, 73, 0.68);
+}
+
+.genre-lane-card-title--spotlight {
+  color: rgba(88, 56, 24, 0.86);
 }
 
 .genre-lane-list {
