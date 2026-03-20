@@ -2388,9 +2388,10 @@ trix-editor.blog-rich-text:focus {
   grid-template-columns: minmax(0, 1.45fr) minmax(18rem, 0.85fr);
   align-items: stretch;
   min-height: 20rem;
-  border: 1px solid rgba(17, 17, 17, 0.12);
+  border: 1px solid rgba(33, 96, 98, 0.18);
   background:
-    linear-gradient(135deg, rgba(227, 27, 46, 0.1) 0%, rgba(255, 214, 160, 0.5) 42%, rgba(255, 255, 255, 0.96) 100%);
+    radial-gradient(circle at top right, rgba(145, 233, 212, 0.28) 0%, rgba(145, 233, 212, 0) 24%),
+    linear-gradient(135deg, rgba(224, 247, 242, 0.96) 0%, rgba(199, 236, 230, 0.92) 42%, rgba(247, 252, 251, 0.98) 100%);
   box-shadow: 0 18px 44px rgba(17, 17, 17, 0.08);
   text-decoration: none;
 }
