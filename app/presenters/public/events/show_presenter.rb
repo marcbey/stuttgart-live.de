@@ -47,9 +47,10 @@ module Public
       end
 
       def primary_source_label
-        return if event.primary_source.blank?
+        source = event.primary_source.to_s.strip.presence || primary_offer&.source.to_s.strip.presence
+        return if source.blank?
 
-        view_context.event_source_label(event.primary_source)
+        view_context.event_source_label(source)
       end
 
       def header_classes
