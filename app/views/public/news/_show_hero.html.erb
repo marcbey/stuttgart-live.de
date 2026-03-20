@@ -1,0 +1,37 @@
+<header class="<%= presenter.header_classes %>">
+  <div class="event-detail-header-panel">
+    <div class="event-detail-header-copy">
+      <div class="event-detail-header-intro">
+        <h1><%= presenter.headline %></h1>
+        <% if presenter.teaser.present? %>
+          <p class="event-detail-title"><%= presenter.teaser %></p>
+        <% end %>
+      </div>
+
+      <% if presenter.fact_items.any? %>
+        <dl class="event-detail-facts" aria-label="Artikeldetails">
+          <% presenter.fact_items.each do |item| %>
+            <div class="event-detail-fact-card">
+              <dt><%= item.label %></dt>
+              <dd><%= item.value %></dd>
+            </div>
+          <% end %>
+        </dl>
+      <% end %>
+    </div>
+  </div>
+
+  <% if presenter.hero_image? %>
+    <div class="event-detail-image-wrap">
+      <div class="event-detail-image-frame">
+        <%= image_tag presenter.hero_image_source,
+                      alt: presenter.hero_alt_text,
+                      class: "event-detail-image",
+                      style: blog_post_image_style(presenter.blog_post, :cover_image) %>
+        <% if presenter.hero_image_credit.present? %>
+          <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</header>

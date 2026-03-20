@@ -25,7 +25,9 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, @live_post.title
     assert_includes response.body, @live_post.teaser
+    assert_includes response.body, @live_post.display_author_name
     assert_includes response.body, "alle news"
+    assert_select "h2", text: "Artikel"
   end
 
   test "index renders optimized cover images" do
@@ -51,7 +53,39 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     get news_url(@live_post.slug)
 
     assert_response :success
-    assert_includes response.body, url_for(@live_post.processed_optimized_image_variant(:cover_image))
+    assert_select "img[src*=?]", "/rails/active_storage/representations/redirect/"
+  end
+
+  test "show renders seo tags and article schema" do
+    @live_post.cover_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
+      filename: "news-cover.png",
+      content_type: "image/png"
+    )
+
+    get news_url(@live_post.slug)
+
+    assert_response :success
+    assert_select "meta[name='description']", count: 1
+    assert_select "meta[property='og:url'][content=?]", news_url(@live_post.slug)
+    assert_select "meta[property='og:image']", count: 1
+    assert_select "link[rel='canonical'][href=?]", news_url(@live_post.slug)
+    assert_match(/"@type":"NewsArticle"/, response.body)
+    assert_match(/"url":"#{Regexp.escape(news_url(@live_post.slug))}"/, response.body)
+  end
+
+  test "show renders image copyright" do
+    @live_post.update!(cover_image_copyright: "Foto: Redaktion")
+    @live_post.cover_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
+      filename: "news-cover.png",
+      content_type: "image/png"
+    )
+
+    get news_url(@live_post.slug)
+
+    assert_response :success
+    assert_includes response.body, "Foto: Redaktion"
   end
 
   test "show returns not found for drafts" do

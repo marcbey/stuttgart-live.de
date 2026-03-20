@@ -125,6 +125,13 @@ module ApplicationHelper
     blog_post.processed_optimized_image_variant(slot)
   end
 
+  def optimized_blog_post_image_url(blog_post, slot)
+    representation = optimized_blog_post_image_representation(blog_post, slot)
+    return if representation.blank?
+
+    url_for(representation)
+  end
+
   def blog_post_cropped_image_style(blog_post, slot, frame_ratio:)
     image = blog_post.public_send(slot)
     metadata = image&.attached? ? image.blob.metadata : {}

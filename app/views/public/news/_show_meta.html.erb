@@ -1,0 +1,15 @@
+<% content_for :title, presenter.page_title %>
+<% content_for :head do %>
+  <%= tag.meta name: "description", content: presenter.meta_description %>
+  <%= tag.meta property: "og:title", content: presenter.meta_title %>
+  <%= tag.meta property: "og:description", content: presenter.meta_description %>
+  <%= tag.meta property: "og:type", content: "article" %>
+  <%= tag.meta property: "og:url", content: presenter.canonical_url %>
+  <%= tag.meta property: "og:image", content: presenter.og_image_url if presenter.og_image_url.present? %>
+  <%= tag.meta name: "twitter:card", content: "summary_large_image" %>
+  <%= tag.meta name: "twitter:title", content: presenter.meta_title %>
+  <%= tag.meta name: "twitter:description", content: presenter.meta_description %>
+  <%= tag.meta name: "twitter:image", content: presenter.og_image_url if presenter.og_image_url.present? %>
+  <%= tag.link rel: "canonical", href: presenter.canonical_url %>
+  <script type="application/ld+json"><%= raw json_escape(presenter.schema_json_ld) %></script>
+<% end %>

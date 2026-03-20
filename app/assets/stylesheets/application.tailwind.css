@@ -1145,6 +1145,10 @@ trix-editor.blog-rich-text:focus {
   font-size: 1.04rem;
 }
 
+.news-detail-copy .trix-content > :first-child {
+  margin-top: 0;
+}
+
 .news-detail-copy .trix-content h1,
 .news-detail-copy .trix-content h2,
 .news-detail-copy .trix-content h3 {
@@ -1158,15 +1162,6 @@ trix-editor.blog-rich-text:focus {
 
 .news-detail-header {
   grid-template-columns: minmax(0, 1fr);
-}
-
-.news-detail-heading {
-  grid-column: 1 / -1;
-}
-
-.news-detail-header-copy {
-  display: grid;
-  align-content: start;
 }
 
 @media (min-width: 860px) {
@@ -4174,6 +4169,11 @@ trix-editor.blog-rich-text:focus {
   max-width: none;
   font-size: clamp(2rem, 4vw, 3rem);
   line-height: 0.96;
+}
+
+.event-detail-header-copy h1,
+.event-detail-header-copy .event-detail-title {
+  max-width: none;
 }
 
 .event-detail-title {

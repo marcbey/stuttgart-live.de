@@ -1,0 +1,10 @@
+<section class="event-detail-panel event-detail-video">
+  <h2>Videos</h2>
+  <div class="news-video-stack">
+    <% presenter.video_urls.each do |youtube_url| %>
+      <%= render "shared/consent_video_embed",
+                 title: "#{presenter.headline} auf YouTube",
+                 url: youtube_url %>
+    <% end %>
+  </div>
+</section>

@@ -1,8 +1,9 @@
-<% content_for :title, "#{@blog_post.title} | Stuttgart Live" %>
+<% presenter = public_news_show_presenter(@blog_post) %>
+<%= render "show_meta", presenter: presenter %>
 
 <article class="event-detail news-detail">
   <div class="event-detail-topbar">
-    <p class="event-detail-back"><%= link_to "← alle news", news_index_path %></p>
+    <p class="event-detail-back"><%= link_to "← alle news", presenter.back_path %></p>
     <% if authenticated? && current_user.blog_access? %>
       <div class="event-detail-topbar-actions">
         <%= link_to "Bearbeiten",
@@ -13,47 +14,18 @@
     <% end %>
   </div>
 
-  <header class="event-detail-header news-detail-header <%= 'news-detail-header-with-image' if @blog_post.cover_image.attached? %>">
-    <h1 class="news-detail-heading"><%= @blog_post.title %></h1>
+  <%= render "show_hero", presenter: presenter %>
 
-    <div class="news-detail-header-copy">
-      <p class="event-detail-title"><%= @blog_post.teaser %></p>
-      <p class="event-detail-meta event-detail-meta-primary">
-        <span class="event-detail-meta-strong">News</span>
-        <span class="event-detail-meta-strong"><%= l(@blog_post.published_at.to_date, format: "%d.%m.%Y") %></span>
-        <span class="event-detail-meta-strong"><%= @blog_post.display_author_name %></span>
-      </p>
+  <div class="event-detail-body">
+    <div class="event-detail-main">
+      <section class="event-detail-panel event-detail-copy event-detail-copy-primary news-detail-copy">
+        <h2>Artikel</h2>
+        <%= presenter.body %>
+      </section>
+
+      <% if presenter.has_video_block? %>
+        <%= render "show_media", presenter: presenter %>
+      <% end %>
     </div>
-
-    <% if @blog_post.cover_image.attached? %>
-      <div class="event-detail-image-wrap">
-        <div class="event-detail-image-frame">
-          <%= image_tag optimized_blog_post_image_representation(@blog_post, :cover_image),
-                        alt: @blog_post.title,
-                        class: "event-detail-image",
-                        style: blog_post_image_style(@blog_post, :cover_image) %>
-          <% if blog_post_image_copyright(@blog_post, :cover_image).present? %>
-            <p class="event-detail-image-credit"><%= blog_post_image_copyright(@blog_post, :cover_image) %></p>
-          <% end %>
-        </div>
-      </div>
-    <% end %>
-  </header>
-
-  <section class="event-detail-copy news-detail-copy">
-    <%= @blog_post.body %>
-  </section>
-
-  <% if @blog_post.youtube_video_urls.any? %>
-    <section class="event-detail-video">
-      <h2>Videos</h2>
-      <div class="news-video-stack">
-        <% @blog_post.youtube_video_urls.each do |youtube_url| %>
-          <%= render "shared/consent_video_embed",
-                     title: "#{@blog_post.title} auf YouTube",
-                     url: youtube_url %>
-        <% end %>
-      </div>
-    </section>
-  <% end %>
+  </div>
 </article>
