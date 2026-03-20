@@ -15,7 +15,7 @@ module Merging
         fingerprint = fingerprint_for(primary)
 
         match_result = find_existing_event(records, fingerprint)
-        event = match_result&.event || Event.new
+        event = resolve_event_for_fingerprint(match_result&.event || Event.new, fingerprint)
         created_now = event.new_record?
         duplicate_now = similarity_duplicate?(match_result)
 
@@ -116,6 +116,14 @@ module Merging
 
       def find_existing_event(records, _fingerprint)
         match_strategy.call(records:)
+      end
+
+      def resolve_event_for_fingerprint(event, fingerprint)
+        exact_event = Event.find_by(source_fingerprint: fingerprint)
+        return event if exact_event.blank?
+        return event if event.persisted? && event.id == exact_event.id
+
+        exact_event
       end
 
       def similarity_duplicate?(match_result)

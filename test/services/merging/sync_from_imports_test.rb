@@ -521,6 +521,94 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       ].join("::")
   end
 
+  test "prefers the event with the exact source fingerprint when a stale match points elsewhere" do
+    source = import_sources(:two)
+    target_start_at = Time.zone.local(2027, 4, 26, 19, 30, 0)
+    target_fingerprint = [
+      Merging::SyncFromImports::DuplicationKey.normalize_artist_name("This is THE GREATEST SHOW!"),
+      target_start_at.iso8601
+    ].join("::")
+
+    stale_event = Event.create!(
+      artist_name: "This is THE GREATEST SHOW!",
+      title: "Die größten Musical Hits aller Zeiten - Tour 2027",
+      start_at: Time.zone.local(2027, 4, 5, 19, 30, 0),
+      venue: "Stage Apollo Theater Stuttgart",
+      city: "Stuttgart",
+      status: "published",
+      primary_source: "eventim",
+      source_fingerprint: [
+        Merging::SyncFromImports::DuplicationKey.normalize_artist_name("This is THE GREATEST SHOW!"),
+        Time.zone.local(2027, 4, 5, 19, 30, 0).iso8601
+      ].join("::"),
+      source_snapshot: {
+        "sources" => [
+          {
+            "source" => "eventim",
+            "external_event_id" => "old-eventim-id",
+            "source_identifier" => "old-eventim-id:2027-04-05",
+            "start_at" => Time.zone.local(2027, 4, 5, 19, 30, 0).iso8601
+          }
+        ]
+      }
+    )
+    stale_event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "old-eventim-id",
+      ticket_url: "https://example.com/old-event",
+      sold_out: false,
+      priority_rank: 10
+    )
+
+    exact_event = Event.create!(
+      artist_name: "This is THE GREATEST SHOW!",
+      title: "Die größten Musical Hits aller Zeiten - Tour 2027",
+      start_at: target_start_at,
+      venue: "Stage Apollo Theater Stuttgart",
+      city: "Stuttgart",
+      status: "published",
+      primary_source: "eventim",
+      source_fingerprint: target_fingerprint
+    )
+
+    RawEventImport.create!(
+      import_source: source,
+      import_event_type: "eventim",
+      source_identifier: "new-eventim-id:2027-04-26",
+      payload: {
+        "eventid" => "new-eventim-id",
+        "eventdate" => "2027-04-26",
+        "eventtime" => "19:30",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Stage Apollo Theater Stuttgart",
+        "eventname" => "This is THE GREATEST SHOW! - Die größten Musical Hits aller Zeiten - Tour 2027",
+        "artistname" => "This is THE GREATEST SHOW!",
+        "eventlink" => "https://example.com/new-event",
+        "espicture_big" => "https://example.com/new-event.jpg"
+      }
+    )
+
+    match_strategy_class = Merging::SyncFromImports::MatchStrategy
+    match_strategy_class.alias_method :__original_call_for_test, :call
+    match_strategy_class.define_method(:call) do |records:|
+      Merging::SyncFromImports::MatchStrategy::Result.new(event: stale_event, reason: "source_snapshot", score: 1.0)
+    end
+
+    assert_nothing_raised do
+      Merging::SyncFromImports.new.call
+    end
+
+    assert_equal target_fingerprint, exact_event.reload.source_fingerprint
+    assert_equal target_start_at, exact_event.start_at
+    assert_includes exact_event.source_snapshot.fetch("sources").map { |entry| entry.fetch("external_event_id") }, "new-eventim-id"
+
+    assert_equal Time.zone.local(2027, 4, 5, 19, 30, 0), stale_event.reload.start_at
+    assert_equal "old-eventim-id", stale_event.event_offers.order(:id).last.source_event_id
+  ensure
+    match_strategy_class.alias_method :call, :__original_call_for_test
+    match_strategy_class.remove_method :__original_call_for_test
+  end
+
   test "uses easyticket detail_payload images when payload has no image" do
     source_easyticket = import_sources(:one)
 

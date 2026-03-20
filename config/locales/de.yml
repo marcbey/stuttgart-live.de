@@ -1,4 +1,8 @@
 de:
+  activerecord:
+    errors:
+      messages:
+        record_invalid: "Validierung fehlgeschlagen: %{errors}"
   date:
     formats:
       default: "%d.%m.%Y"
@@ -16,5 +20,31 @@ de:
         other: "%{count} Minuten"
   errors:
     messages:
-      invalid: "is invalid"
-      taken: "has already been taken"
+      accepted: "muss akzeptiert werden"
+      blank: "darf nicht leer sein"
+      confirmation: "stimmt nicht mit der Bestätigung überein"
+      empty: "darf nicht leer sein"
+      equal_to: "muss genau %{count} sein"
+      even: "muss gerade sein"
+      exclusion: "ist reserviert"
+      greater_than: "muss größer als %{count} sein"
+      greater_than_or_equal_to: "muss größer oder gleich %{count} sein"
+      inclusion: "ist kein gültiger Wert"
+      invalid: "ist ungültig"
+      less_than: "muss kleiner als %{count} sein"
+      less_than_or_equal_to: "muss kleiner oder gleich %{count} sein"
+      not_a_number: "ist keine Zahl"
+      not_an_integer: "muss eine ganze Zahl sein"
+      odd: "muss ungerade sein"
+      present: "muss leer sein"
+      required: "muss vorhanden sein"
+      taken: "ist bereits vergeben"
+      too_long:
+        one: "ist zu lang (maximal 1 Zeichen)"
+        other: "ist zu lang (maximal %{count} Zeichen)"
+      too_short:
+        one: "ist zu kurz (mindestens 1 Zeichen)"
+        other: "ist zu kurz (mindestens %{count} Zeichen)"
+      wrong_length:
+        one: "hat die falsche Länge (muss 1 Zeichen lang sein)"
+        other: "hat die falsche Länge (muss %{count} Zeichen lang sein)"

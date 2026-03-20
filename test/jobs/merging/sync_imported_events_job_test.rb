@@ -52,6 +52,47 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     sync_class.remove_method :__original_new_for_test
   end
 
+  test "stores record validation details when merge sync raises record invalid" do
+    sync_class = Merging::SyncFromImports.singleton_class
+
+    I18n.with_locale(:de) do
+      invalid_event = Event.new
+      invalid_event.valid?
+
+      failing_service =
+        Class.new do
+          define_method(:initialize) do |error|
+            @error = error
+          end
+
+          def call
+            raise @error
+          end
+        end.new(ActiveRecord::RecordInvalid.new(invalid_event))
+
+      sync_class.alias_method :__original_new_for_test, :new
+      sync_class.define_method(:new) { |*| failing_service }
+
+      assert_raises ActiveRecord::RecordInvalid do
+        Merging::SyncImportedEventsJob.perform_now(last_run_at: Time.zone.parse("2026-03-14 09:00:00"))
+      end
+
+      run = ImportRun.where(source_type: "merge").order(:created_at).last
+      assert_equal "failed", run.status
+      assert_includes run.error_message, "Title darf nicht leer sein"
+      assert_includes run.error_message, "Artist name darf nicht leer sein"
+
+      error = run.import_run_errors.order(:created_at).last
+      assert_equal "ActiveRecord::RecordInvalid", error.error_class
+      assert_equal "Event", error.payload["record_class"]
+      assert error.payload["record_errors"].key?("title")
+      assert error.payload["record_errors"].key?("artist_name")
+    ensure
+      sync_class.alias_method :new, :__original_new_for_test
+      sync_class.remove_method :__original_new_for_test
+    end
+  end
+
   test "passes merge run id to sync service" do
     captured_merge_run_id = nil
     fake_result = Merging::SyncFromImports::Result.new(

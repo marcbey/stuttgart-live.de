@@ -62,12 +62,13 @@ module Merging
         )
       )
     rescue StandardError => e
+      formatted_error_message = format_error_message(e)
       run&.update!(
         status: "failed",
         finished_at: Time.current,
-        error_message: e.message
+        error_message: formatted_error_message
       )
-      create_import_run_error!(run: run, error: e)
+      create_import_run_error!(run: run, error: e, message: formatted_error_message, payload: error_payload(e))
       raise
     ensure
       broadcast_runs_update!
@@ -176,17 +177,38 @@ module Merging
       Backend::ImportRunsBroadcaster.broadcast!
     end
 
-    def create_import_run_error!(run:, error:)
+    def create_import_run_error!(run:, error:, message: nil, payload: {})
       return unless run&.persisted?
 
       run.import_run_errors.create!(
         source_type: "merge",
         error_class: error.class.to_s,
-        message: error.message.to_s.presence || error.class.to_s,
-        payload: {}
+        message: message.to_s.presence || error.message.to_s.presence || error.class.to_s,
+        payload: payload
       )
     rescue StandardError
       nil
+    end
+
+    def format_error_message(error)
+      return error.message.to_s.presence || error.class.to_s unless error.is_a?(ActiveRecord::RecordInvalid)
+
+      record = error.record
+      return error.message.to_s.presence || error.class.to_s if record.blank?
+
+      record.errors.full_messages.to_sentence.presence || error.message.to_s.presence || error.class.to_s
+    end
+
+    def error_payload(error)
+      return {} unless error.is_a?(ActiveRecord::RecordInvalid)
+
+      record = error.record
+      return {} if record.blank?
+
+      {
+        "record_class" => record.class.name,
+        "record_errors" => record.errors.to_hash(true)
+      }
     end
   end
 end

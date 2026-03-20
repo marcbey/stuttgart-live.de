@@ -11,10 +11,8 @@
 ## Importer
 
 ## Redaktion
-- Genre mapping
 - Promoter ID mapping
 
 ## Frontend
-- Datenschutz: Hosting und technische Dienste?
-- Banderole
-- Newsletter/Mailchimp Bestätigung nach Eingabe
+- Banderole?
+- Newsletter/Mailchimp
