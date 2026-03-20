@@ -2139,48 +2139,10 @@ trix-editor.blog-rich-text:focus {
   transform: scale(1.03);
 }
 
-.genre-lane-card-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 0.75rem;
-  background: linear-gradient(180deg, rgba(17, 17, 17, 0.22), rgba(17, 17, 17, 0.02) 36%, rgba(17, 17, 17, 0.76));
-}
-
-.genre-lane-card-badges {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-}
-
-.genre-lane-card-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 1.55rem;
-  padding: 0.14rem 0.48rem;
-  border-radius: 999px;
-  font-size: 0.66rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.genre-lane-card-badge-highlight {
-  background: rgba(255, 232, 160, 0.92);
-  color: #4e2900;
-}
-
-.genre-lane-card-badge-sks {
-  background: rgba(255, 255, 255, 0.9);
-  color: #111;
-}
-
 .genre-lane-card-date {
   margin: 0;
-  color: rgba(255, 255, 255, 0.96);
-  font-size: 0.78rem;
+  color: rgba(17, 17, 17, 0.62);
+  font-size: 0.76rem;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;

@@ -20,17 +20,6 @@
         <div class="genre-lane-card-image event-card-placeholder"></div>
       <% end %>
 
-      <div class="genre-lane-card-overlay">
-        <div class="genre-lane-card-badges">
-          <% if event.highlighted? %>
-            <span class="genre-lane-card-badge genre-lane-card-badge-highlight">Highlight</span>
-          <% end %>
-          <% if event.sks_promoter? %>
-            <span class="genre-lane-card-badge genre-lane-card-badge-sks">SKS</span>
-          <% end %>
-        </div>
-        <p class="genre-lane-card-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></p>
-      </div>
     </div>
 
     <div class="genre-lane-card-copy">
@@ -43,6 +32,7 @@
       <% if event.title.present? %>
         <p class="genre-lane-card-title"><%= event.title %></p>
       <% end %>
+      <p class="genre-lane-card-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></p>
     </div>
   <% end %>
 </article>
