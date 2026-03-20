@@ -19,11 +19,12 @@
   <% end %>
 
   <% if @browse_state.page == 1 && @home_genre_lanes.present? %>
-    <% @home_genre_lanes.each do |lane| %>
+    <% @home_genre_lanes.each_with_index do |lane, index| %>
       <%= render "genre_lane_section",
                  group: lane.group,
                  events: lane.events,
                  browse_state: @browse_state,
+                 tone_class: "genre-lane-section--tone-#{(index % 4) + 1}",
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>
     <% end %>
   <% end %>

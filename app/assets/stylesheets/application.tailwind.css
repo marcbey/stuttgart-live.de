@@ -2034,9 +2034,33 @@ trix-editor.blog-rich-text:focus {
   padding: 1rem;
   border: 1px solid rgba(17, 17, 17, 0.08);
   background:
-    radial-gradient(circle at top left, rgba(227, 27, 46, 0.08), transparent 28%),
-    linear-gradient(160deg, rgba(255, 248, 239, 0.98), rgba(255, 255, 255, 0.98));
+    radial-gradient(circle at top left, var(--genre-lane-accent, rgba(227, 27, 46, 0.08)), transparent 28%),
+    linear-gradient(160deg, var(--genre-lane-start, rgba(255, 248, 239, 0.98)), var(--genre-lane-end, rgba(255, 255, 255, 0.98)));
   box-shadow: 0 16px 36px rgba(17, 17, 17, 0.06);
+}
+
+.genre-lane-section--tone-1 {
+  --genre-lane-accent: rgba(227, 27, 46, 0.08);
+  --genre-lane-start: rgba(255, 248, 239, 0.98);
+  --genre-lane-end: rgba(255, 255, 255, 0.98);
+}
+
+.genre-lane-section--tone-2 {
+  --genre-lane-accent: rgba(18, 126, 140, 0.09);
+  --genre-lane-start: rgba(242, 250, 249, 0.98);
+  --genre-lane-end: rgba(255, 255, 255, 0.99);
+}
+
+.genre-lane-section--tone-3 {
+  --genre-lane-accent: rgba(201, 137, 32, 0.1);
+  --genre-lane-start: rgba(255, 249, 237, 0.98);
+  --genre-lane-end: rgba(255, 255, 255, 0.99);
+}
+
+.genre-lane-section--tone-4 {
+  --genre-lane-accent: rgba(79, 89, 168, 0.08);
+  --genre-lane-start: rgba(244, 245, 255, 0.98);
+  --genre-lane-end: rgba(255, 255, 255, 0.99);
 }
 
 .genre-lane-header {
@@ -2103,12 +2127,15 @@ trix-editor.blog-rich-text:focus {
 
 .genre-lane-card {
   scroll-snap-align: start;
+  background: #fff;
+  border: 1px solid rgba(17, 17, 17, 0.09);
 }
 
 .genre-lane-card-link {
   display: grid;
   gap: 0.7rem;
   min-height: 100%;
+  padding: 0.6rem;
   color: inherit;
   text-decoration: none;
 }
@@ -2118,7 +2145,7 @@ trix-editor.blog-rich-text:focus {
   aspect-ratio: 0.98 / 1.12;
   overflow: hidden;
   background: #111;
-  box-shadow: 0 14px 28px rgba(17, 17, 17, 0.14);
+  border: 1px solid rgba(17, 17, 17, 0.08);
 }
 
 .genre-lane-card-media picture {
