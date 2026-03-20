@@ -3,6 +3,7 @@ module Public
     class ShowPresenter
       Link = Data.define(:label, :url)
       Slide = Data.define(:source, :alt_text, :caption)
+      FactItem = Data.define(:label, :value)
 
       WEEKDAY_LABELS = [ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag" ].freeze
 
@@ -20,11 +21,14 @@ module Public
       end
 
       def meta_title
-        "#{event.artist_name} - #{display_title}"
+        [ schema_name, event_date_label, venue_location.presence || "Stuttgart" ].compact.join(" | ")
       end
 
       def meta_description
-        description_text.to_s.truncate(160)
+        summary = primary_description.presence || artist_description.presence || venue_description.presence
+        return summary.to_s.truncate(160) if summary.present?
+
+        [ schema_name, meta_schedule_label, venue_location.presence ].compact.join(" · ").truncate(160)
       end
 
       def og_image_url
@@ -67,11 +71,23 @@ module Public
       end
 
       def hero_alt_text
-        @hero_alt_text ||= event.artist_name.to_s.strip.presence || display_title.to_s
+        @hero_alt_text ||= display_headline.to_s.strip.presence || schema_name
+      end
+
+      def display_headline
+        event.artist_name.to_s.strip.presence || event.title.to_s.strip.presence || llm_enrichment&.event_description.to_s.strip.presence
       end
 
       def display_title
-        event.title.to_s.strip.presence || llm_enrichment&.event_description.to_s.strip
+        event.title.to_s.strip.presence
+      end
+
+      def show_distinct_title?
+        display_title.present? && !same_meaning?(display_headline, display_title)
+      end
+
+      def title_line
+        display_title if show_distinct_title?
       end
 
       def hero_image_credit
@@ -81,8 +97,13 @@ module Public
         "Bildquelle: Easy Ticket Service / Veranstalter"
       end
 
-      def primary_meta
-        [ weekday_label, event_date_label, venue_location ].reject(&:blank?)
+      def fact_items
+        @fact_items ||= [
+          build_fact_item("Datum", meta_schedule_label),
+          build_fact_item("Beginn", formatted_start_time.present? ? "#{formatted_start_time} Uhr" : nil),
+          build_fact_item("Einlass", formatted_doors_time.present? ? "#{formatted_doors_time} Uhr" : nil),
+          build_fact_item("Ort", venue_location)
+        ].compact
       end
 
       def schedule_line
@@ -119,42 +140,64 @@ module Public
         end
       end
 
-      def detail_genres
-        @detail_genres ||= (genres + enrichment_genres).uniq
+      def enrichment_genres
+        @enrichment_genres ||= Array(llm_enrichment&.genre).filter_map do |entry|
+          entry.to_s.strip.presence
+        end
       end
 
-      def social_links
-        @social_links ||= [
+      def genre_tags
+        @genre_tags ||= (genres + enrichment_genres).uniq
+      end
+
+      def detail_genres
+        genre_tags
+      end
+
+      def external_links
+        @external_links ||= [
           build_link("Homepage", event.homepage_url, llm_enrichment&.homepage_link),
           build_link("Instagram", event.instagram_url, llm_enrichment&.instagram_link),
           build_link("Facebook", event.facebook_url, llm_enrichment&.facebook_link)
         ].compact
       end
 
+      def social_links
+        external_links
+      end
+
       def youtube_embed_url
         embed_url_for(primary_youtube_url)
       end
 
+      def primary_description
+        @primary_description ||= normalized_copy(
+          event.event_info.to_s.strip.presence || llm_enrichment&.event_description.to_s.strip.presence
+        )
+      end
+
       def description_text
-        event.event_info.to_s.strip.presence || llm_enrichment&.event_description.to_s.strip.presence
+        primary_description
       end
 
       def artist_description
-        llm_enrichment&.artist_description.to_s.strip.presence
+        @artist_description ||= normalized_copy(llm_enrichment&.artist_description.to_s.strip.presence)
       end
 
       def venue_description
-        llm_enrichment&.venue_description.to_s.strip.presence
+        @venue_description ||= normalized_copy(llm_enrichment&.venue_description.to_s.strip.presence)
       end
 
       def support_text
         event.support.to_s.strip.presence
       end
 
-      def enrichment_genres
-        Array(llm_enrichment&.genre).filter_map do |entry|
-          entry.to_s.strip.presence
-        end
+      def has_media_block?
+        youtube_embed_url.present? || slider_items.any?
+      end
+
+      def has_secondary_content?
+        has_media_block? || artist_description.present? || venue_description.present? || support_text.present?
       end
 
       def slider_items
@@ -168,6 +211,33 @@ module Public
             caption: image.sub_text.to_s
           )
         end
+      end
+
+      def schema_name
+        [ display_headline, title_line ].compact.join(" – ").presence || display_headline
+      end
+
+      def schema_json_ld
+        data = {
+          "@context" => "https://schema.org",
+          "@type" => schema_type,
+          name: schema_name,
+          description: meta_description,
+          startDate: event.start_at&.iso8601,
+          url: canonical_url,
+          eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
+          eventStatus: "https://schema.org/EventScheduled",
+          image: og_image_url.presence && [ og_image_url ],
+          location: schema_location,
+          organizer: schema_organizer,
+          offers: schema_offer
+        }.compact
+
+        if doors_at.present?
+          data[:doorTime] = doors_at.iso8601
+        end
+
+        data.to_json
       end
 
       private
@@ -202,7 +272,7 @@ module Public
       end
 
       def doors_at
-        @doors_at ||= event.doors_at || (event.start_at - 1.hour if event.start_at.present?)
+        @doors_at ||= event.doors_at
       end
 
       def weekday_label
@@ -218,15 +288,27 @@ module Public
       end
 
       def formatted_start_time
+        return if event.start_at.blank?
+
         view_context.l(event.start_at, format: "%H:%M")
       end
 
       def formatted_doors_time
+        return if doors_at.blank?
+
         view_context.l(doors_at, format: "%H:%M")
       end
 
       def venue_location
-        [ event.venue, event.city ].reject(&:blank?).join(", ")
+        [ event.venue.to_s.strip.presence, event.city.to_s.strip.presence ].compact.join(", ")
+      end
+
+      def meta_schedule_label
+        [ weekday_label, event_date_label ].compact.join(", ")
+      end
+
+      def meta_location_context
+        [ event_date_label, venue_location.presence || "Stuttgart" ].compact.join(" · ")
       end
 
       def primary_youtube_url
@@ -248,6 +330,72 @@ module Public
         return if normalized_url.blank?
 
         Link.new(label: label, url: normalized_url)
+      end
+
+      def build_fact_item(label, value)
+        normalized_value = value.to_s.strip.presence
+        return if normalized_value.blank?
+
+        FactItem.new(label: label, value: normalized_value)
+      end
+
+      def normalized_copy(text)
+        normalized_text = text.to_s.strip
+        return if normalized_text.blank?
+
+        paragraphs = normalized_text.split(/\n{2,}/).map { |paragraph| paragraph.strip }.reject(&:blank?)
+        unique_paragraphs = paragraphs.uniq { |paragraph| normalize_comparison_token(paragraph) }
+        unique_paragraphs.join("\n\n")
+      end
+
+      def same_meaning?(left, right)
+        normalize_comparison_token(left) == normalize_comparison_token(right)
+      end
+
+      def normalize_comparison_token(value)
+        value.to_s.downcase.gsub(/[^[:alnum:]]+/, "")
+      end
+
+      def schema_type
+        "Event"
+      end
+
+      def schema_location
+        return if event.venue.blank? && event.city.blank?
+
+        {
+          "@type" => "Place",
+          name: event.venue.to_s.strip.presence,
+          address: event.city.to_s.strip.presence
+        }.compact
+      end
+
+      def schema_organizer
+        return unless event.show_public_organizer_notes?
+
+        {
+          "@type" => "Organization",
+          name: "Russ Live"
+        }
+      end
+
+      def schema_offer
+        return if ticket_url.blank?
+
+        offer = {
+          "@type" => "Offer",
+          url: ticket_url,
+          availability: "https://schema.org/InStock",
+          priceCurrency: "EUR"
+        }
+
+        if event.min_price.present?
+          offer[:lowPrice] = event.min_price.to_s
+          offer[:price] = event.min_price.to_s if event.max_price.blank? || event.min_price == event.max_price
+        end
+
+        offer[:highPrice] = event.max_price.to_s if event.max_price.present?
+        offer
       end
     end
   end

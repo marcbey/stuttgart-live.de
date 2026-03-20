@@ -68,8 +68,8 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event)
 
-    assert_equal "Band - Live | Stuttgart Live", presenter.page_title
-    assert_equal "Band - Live", presenter.meta_title
+    assert_equal "Band – Live | 17.06.2026 | Im Wizemann, Stuttgart | Stuttgart Live", presenter.page_title
+    assert_equal "Band – Live | 17.06.2026 | Im Wizemann, Stuttgart", presenter.meta_title
     assert_equal event.event_info.truncate(160), presenter.meta_description
     assert_equal "https://cdn.example.test/social.jpg", presenter.og_image_url
     assert_equal "https://stuttgart-live.de/events/band-live", presenter.canonical_url
@@ -80,8 +80,9 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "/hero-mobile.jpg", presenter.hero_mobile_image_source
     assert_equal "Band", presenter.hero_alt_text
     assert_equal "Bildquelle: Easy Ticket Service / Veranstalter", presenter.hero_image_credit
-    assert_equal [ "Mittwoch", "17.06.2026", "Im Wizemann, Stuttgart" ], presenter.primary_meta
-    assert_equal "Beginn: 20:00 Uhr · Einlass: 19:00 Uhr", presenter.schedule_line
+    assert_equal [ "Datum", "Beginn", "Ort" ], presenter.fact_items.map(&:label)
+    assert_equal [ "Mittwoch, 17.06.2026", "20:00 Uhr", "Im Wizemann, Stuttgart" ], presenter.fact_items.map(&:value)
+    assert_nil presenter.schedule_line
     assert_equal [ { label: "Published", css_class: "status-badge-published" } ], presenter.visibility_badges
   end
 
@@ -109,11 +110,13 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "https://tickets.example/band", presenter.ticket_url
     assert_equal "39,00 €", presenter.ticket_price_text
     assert_equal [ "Pop", "Rock" ], presenter.genres
-    assert_equal [ "Pop", "Rock" ], presenter.detail_genres
-    assert_equal [ "Homepage", "Instagram" ], presenter.social_links.map(&:label)
-    assert_equal [ "https://band.example", "https://instagram.example/band" ], presenter.social_links.map(&:url)
+    assert_equal [ "Pop", "Rock" ], presenter.genre_tags
+    assert_equal [ "Homepage", "Instagram" ], presenter.external_links.map(&:label)
+    assert_equal [ "https://band.example", "https://instagram.example/band" ], presenter.external_links.map(&:url)
     assert_equal "https://www.youtube.com/embed/demo", presenter.youtube_embed_url
     assert_equal "Special Guest", presenter.support_text
+    assert presenter.has_media_block?
+    assert presenter.has_secondary_content?
     assert_equal 1, presenter.slider_items.size
     assert_equal "/slide-1.jpg", presenter.slider_items.first.source
     assert_equal "Slide 1 Alt", presenter.slider_items.first.alt_text
@@ -147,15 +150,31 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event)
 
-    assert_equal "LLM Event Beschreibung", presenter.display_title
-    assert_equal "LLM Event Beschreibung", presenter.description_text
+    assert_nil presenter.display_title
+    assert_equal "Band", presenter.display_headline
+    assert_equal "LLM Event Beschreibung", presenter.primary_description
     assert_equal "LLM Artist Beschreibung", presenter.artist_description
     assert_equal "LLM Venue Beschreibung", presenter.venue_description
-    assert_equal [ "Homepage", "Instagram", "Facebook" ], presenter.social_links.map(&:label)
-    assert_equal [ "https://llm-homepage.example", "https://instagram.example/llm-band", "https://facebook.example/llm-band" ], presenter.social_links.map(&:url)
+    assert_equal [ "Homepage", "Instagram", "Facebook" ], presenter.external_links.map(&:label)
+    assert_equal [ "https://llm-homepage.example", "https://instagram.example/llm-band", "https://facebook.example/llm-band" ], presenter.external_links.map(&:url)
     assert_equal "https://www.youtube.com/embed/fallback", presenter.youtube_embed_url
-    assert_equal [ "Pop", "Rock", "Indie" ], presenter.detail_genres
+    assert_equal [ "Pop", "Rock", "Indie" ], presenter.genre_tags
     assert_equal [ "Indie", "Rock" ], presenter.enrichment_genres
+  end
+
+  test "hides duplicate title lines and deduplicates repeated paragraphs" do
+    event = build_event(
+      artist_name: "Kuult",
+      title: "Kuult",
+      event_info: "Fallschirmvertrauen - Tour 2026\n\nFallschirmvertrauen - Tour 2026"
+    )
+
+    presenter = build_presenter(event)
+
+    assert_equal "Kuult", presenter.display_headline
+    assert_equal "Kuult", presenter.display_title
+    assert_not presenter.show_distinct_title?
+    assert_equal "Fallschirmvertrauen - Tour 2026", presenter.primary_description
   end
 
   test "uses loaded genres without extra queries" do

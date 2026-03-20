@@ -1,36 +1,58 @@
 <header class="<%= presenter.header_classes %>">
-  <div class="event-detail-header-copy">
-    <h1><%= presenter.event.artist_name %></h1>
-    <p class="event-detail-title"><%= presenter.display_title %></p>
-    <p class="event-detail-meta event-detail-meta-primary">
-      <% presenter.primary_meta.each do |item| %>
-        <span class="event-detail-meta-strong"><%= item %></span>
-      <% end %>
-    </p>
-    <% if presenter.schedule_line.present? %>
-      <p class="event-detail-meta"><%= presenter.schedule_line %></p>
-    <% end %>
+  <div class="event-detail-header-panel">
+    <div class="event-detail-header-copy">
+      <div class="event-detail-header-intro">
+        <p class="event-detail-kicker">Live-Event in Stuttgart</p>
+        <h1><%= presenter.display_headline %></h1>
+        <% if presenter.show_distinct_title? %>
+          <p class="event-detail-title"><%= presenter.title_line %></p>
+        <% end %>
 
-    <%= render "show_ticket_cta", presenter: presenter %>
-
-    <% if authenticated? %>
-      <% source_label = presenter.primary_source_label %>
-      <% visibility_badges = presenter.visibility_badges %>
-      <% if source_label.present? || visibility_badges.any? %>
-        <div class="event-detail-badges-row">
-          <% if source_label.present? %>
-            <span class="status-badge status-badge-default"><%= source_label %></span>
+        <% if authenticated? %>
+          <% source_label = presenter.primary_source_label %>
+          <% visibility_badges = presenter.visibility_badges %>
+          <% if source_label.present? || visibility_badges.any? %>
+            <div class="event-detail-badges-row">
+              <% if source_label.present? %>
+                <span class="status-badge status-badge-default"><%= source_label %></span>
+              <% end %>
+              <% visibility_badges.each do |badge| %>
+                <span class="status-badge <%= badge[:css_class] %>"><%= badge[:label] %></span>
+              <% end %>
+            </div>
           <% end %>
-          <% visibility_badges.each do |badge| %>
-            <span class="status-badge <%= badge[:css_class] %>"><%= badge[:label] %></span>
+        <% end %>
+      </div>
+
+      <% if presenter.fact_items.any? %>
+        <dl class="event-detail-facts" aria-label="Eventdetails">
+          <% presenter.fact_items.each do |item| %>
+            <div class="event-detail-fact-card">
+              <dt><%= item.label %></dt>
+              <dd><%= item.value %></dd>
+            </div>
+          <% end %>
+        </dl>
+      <% end %>
+
+      <% if presenter.genre_tags.any? %>
+        <div class="event-detail-tags" aria-label="Genres">
+          <% presenter.genre_tags.each do |genre| %>
+            <span class="event-detail-tag"><%= genre %></span>
           <% end %>
         </div>
       <% end %>
-    <% end %>
 
-    <% if presenter.detail_genres.any? %>
-      <p class="event-detail-genre">Genre: <%= presenter.detail_genres.join(" · ") %></p>
-    <% end %>
+      <% if presenter.external_links.any? %>
+        <div class="event-detail-links" aria-label="Externe Links">
+          <% presenter.external_links.each do |link| %>
+            <%= link_to link.label, link.url, target: "_blank", rel: "noopener", title: link.url %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%= render "show_ticket_cta", presenter: presenter %>
   </div>
 
   <% if presenter.hero_image? %>

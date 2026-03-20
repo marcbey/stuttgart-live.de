@@ -1218,10 +1218,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_includes response.body, "Published Artist"
-    assert_match(/Beginn:\s*\d{2}:\d{2}\s*Uhr/, response.body)
-    assert_match(/Einlass:\s*\d{2}:\d{2}\s*Uhr/, response.body)
+    assert_select ".event-detail-fact-card dt", text: "Beginn"
+    assert_select ".event-detail-fact-card dd", text: /\d{2}:\d{2}\s*Uhr/
+    assert_select ".event-detail-fact-card dt", text: "Einlass", count: 0
     assert_includes response.body, "Preis: 45 EUR"
-    assert_select ".event-detail-genre", text: "Genre: Jazz · Pop · Rock"
+    assert_select ".event-detail-tag", text: "Jazz"
+    assert_select ".event-detail-tag", text: "Pop"
+    assert_select ".event-detail-tag", text: "Rock"
+    assert_select "script[type='application/ld+json']", /Published Artist/
   end
 
   test "show gates youtube embeds behind consent placeholder" do
@@ -1265,7 +1269,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_match(/Einlass:\s*\d{2}:\d{2}\s*Uhr/, response.body)
+    assert_select ".event-detail-fact-card dt", text: "Einlass"
+    assert_select ".event-detail-fact-card dd", text: "18:30 Uhr"
   end
 
   test "show renders redaktionsnotiz section when editor notes are present" do
@@ -1359,6 +1364,48 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "https://www.youtube.com/embed/llm123"
     assert_includes response.body, "Indie"
     assert_includes response.body, "Synthpop"
+  end
+
+  test "show avoids duplicate subtitle and genre section" do
+    event = Event.create!(
+      slug: "published-event-with-duplicate-title",
+      source_fingerprint: "test::public::published::duplicate-title",
+      title: "Kuult",
+      artist_name: "Kuult",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Kulturquartier Stuttgart",
+      city: "Stuttgart",
+      event_info: "Fallschirmvertrauen - Tour 2026\n\nFallschirmvertrauen - Tour 2026",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    event.create_llm_enrichment!(
+      genre: [ "Pop", "Deutschpop" ],
+      source_run: import_runs(:one),
+      model: "gpt-test",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select "h1", text: "Kuult"
+    assert_select ".event-detail-title", count: 0
+    assert_select ".event-detail-tag", text: "Pop"
+    assert_select ".event-detail-tag", text: "Deutschpop"
+    assert_select "h2", text: "Genres", count: 0
+    assert_select ".event-detail-copy-primary p", text: "Fallschirmvertrauen - Tour 2026", count: 1
+  end
+
+  test "show renders meta description and canonical seo tags" do
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select "meta[name='description']", count: 1
+    assert_select "meta[property='og:url'][content=?]", event_url(@published_event.slug)
+    assert_select "link[rel='canonical'][href=?]", event_url(@published_event.slug)
   end
 
   test "show hides organizer notes unless explicitly enabled" do

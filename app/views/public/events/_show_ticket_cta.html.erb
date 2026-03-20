@@ -1,11 +1,14 @@
 <% if presenter.show_ticket_cta? %>
-  <section class="event-detail-cta event-detail-cta-inline">
-    <% if presenter.ticket_badge_text.present? %>
-      <p class="event-detail-badge-inline"><%= presenter.ticket_badge_text %></p>
-    <% end %>
-    <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button" %>
-    <% if presenter.ticket_price_text.present? %>
-      <p>Preis: <%= presenter.ticket_price_text %></p>
-    <% end %>
+  <section class="event-detail-cta event-detail-cta-card" aria-label="Ticketinformationen">
+    <div class="event-detail-cta-copy">
+      <p class="event-detail-cta-label">Tickets</p>
+      <% if presenter.ticket_badge_text.present? %>
+        <p class="event-detail-badge-inline"><%= presenter.ticket_badge_text %></p>
+      <% end %>
+      <% if presenter.ticket_price_text.present? %>
+        <p class="event-detail-cta-price">Preis: <%= presenter.ticket_price_text %></p>
+      <% end %>
+    </div>
+    <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
   </section>
 <% end %>

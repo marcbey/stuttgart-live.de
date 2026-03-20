@@ -1,5 +1,5 @@
 <% if presenter.youtube_embed_url.present? %>
-  <section class="event-detail-video">
+  <section class="event-detail-panel event-detail-video">
     <h2>Video</h2>
     <%= render "shared/consent_video_embed",
                title: "#{presenter.meta_title} auf YouTube",
@@ -8,7 +8,7 @@
 <% end %>
 
 <% if presenter.slider_items.any? %>
-  <section class="event-detail-slider" data-controller="lightbox">
+  <section class="event-detail-panel event-detail-slider" data-controller="lightbox">
     <h2>Bilder</h2>
     <div class="event-slider-track">
       <% presenter.slider_items.each do |item| %>

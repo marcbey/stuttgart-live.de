@@ -16,59 +16,53 @@
 
   <%= render "show_hero", presenter: presenter %>
 
-  <% if presenter.description_text.present? %>
-    <section class="event-detail-copy">
-      <h2>Beschreibung</h2>
-      <%= simple_format(presenter.description_text) %>
-      <% if presenter.social_links.any? %>
-        <div class="event-detail-links">
-          <% presenter.social_links.each do |link| %>
-            <%= link_to link.label, link.url, target: "_blank", rel: "noopener", title: link.url %>
-          <% end %>
-        </div>
+  <div class="event-detail-body <%= "event-detail-body-with-sidebar" if presenter.has_media_block? %>">
+    <div class="event-detail-main">
+      <% if presenter.primary_description.present? %>
+        <section class="event-detail-panel event-detail-copy event-detail-copy-primary">
+          <h2>Beschreibung</h2>
+          <%= simple_format(presenter.primary_description) %>
+        </section>
       <% end %>
-    </section>
-  <% end %>
 
-  <% if presenter.artist_description.present? %>
-    <section class="event-detail-copy">
-      <h2>Über den Act</h2>
-      <%= simple_format(presenter.artist_description) %>
-    </section>
-  <% end %>
+      <% if presenter.artist_description.present? %>
+        <section class="event-detail-panel event-detail-copy">
+          <h2>Über den Act</h2>
+          <%= simple_format(presenter.artist_description) %>
+        </section>
+      <% end %>
 
-  <% if presenter.venue_description.present? %>
-    <section class="event-detail-copy">
-      <h2>Über die Venue</h2>
-      <%= simple_format(presenter.venue_description) %>
-    </section>
-  <% end %>
+      <% if presenter.venue_description.present? %>
+        <section class="event-detail-panel event-detail-copy">
+          <h2>Über die Venue</h2>
+          <%= simple_format(presenter.venue_description) %>
+        </section>
+      <% end %>
 
-  <% if presenter.support_text.present? %>
-    <section class="event-detail-copy">
-      <h2>Support</h2>
-      <%= simple_format(presenter.support_text) %>
-    </section>
-  <% end %>
+      <% if presenter.support_text.present? %>
+        <section class="event-detail-panel event-detail-copy">
+          <h2>Support</h2>
+          <%= simple_format(presenter.support_text) %>
+        </section>
+      <% end %>
 
-  <% if presenter.enrichment_genres.any? %>
-    <section class="event-detail-copy">
-      <h2>Genres</h2>
-      <p><%= presenter.enrichment_genres.join(" · ") %></p>
-    </section>
-  <% end %>
+      <% if @event.editor_notes.present? %>
+        <section class="event-detail-panel event-detail-copy">
+          <h2>Redaktionsnotiz</h2>
+          <%= simple_format(@event.editor_notes) %>
+        </section>
+      <% end %>
+    </div>
 
-  <% if @event.editor_notes.present? %>
-    <section class="event-detail-copy">
-      <h2>Redaktionsnotiz</h2>
-      <%= simple_format(@event.editor_notes) %>
-    </section>
-  <% end %>
-
-  <%= render "show_media", presenter: presenter %>
+    <% if presenter.has_media_block? %>
+      <aside class="event-detail-sidebar">
+        <%= render "show_media", presenter: presenter %>
+      </aside>
+    <% end %>
+  </div>
 
   <% if @event.show_public_organizer_notes? %>
-    <section class="event-detail-copy">
+    <section class="event-detail-panel event-detail-copy event-detail-notes-panel">
       <div class="event-detail-notes">
         <div class="event-detail-notes-copy">
           <h2>Veranstalterhinweise</h2>
