@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_20_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_20_113000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -69,10 +69,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_20_100000) do
     t.float "cover_image_zoom"
     t.datetime "created_at", null: false
     t.boolean "promotion_banner", default: false, null: false
+    t.string "promotion_banner_cta_text"
     t.text "promotion_banner_image_copyright"
     t.float "promotion_banner_image_focus_x"
     t.float "promotion_banner_image_focus_y"
     t.float "promotion_banner_image_zoom"
+    t.string "promotion_banner_kicker_text"
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.string "slug", null: false

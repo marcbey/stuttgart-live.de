@@ -112,6 +112,8 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         slug: blog_post.slug,
         body: "<div>Jetzt Banner.</div>",
         promotion_banner: "1",
+        promotion_banner_kicker_text: "Empfehlung",
+        promotion_banner_cta_text: "Jetzt lesen",
         promotion_banner_image_copyright: "Foto: Redaktion",
         promotion_banner_image_focus_x: "18",
         promotion_banner_image_focus_y: "72",
@@ -128,6 +130,8 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate blog_post.reload, :promotion_banner?
     assert_not previous_banner.reload.promotion_banner?
     assert blog_post.promotion_banner_image.attached?
+    assert_equal "Empfehlung", blog_post.promotion_banner_kicker_text
+    assert_equal "Jetzt lesen", blog_post.promotion_banner_cta_text
     assert_equal "Foto: Redaktion", blog_post.promotion_banner_image_copyright
     assert_equal 18.0, blog_post.promotion_banner_image_focus_x_value
     assert_equal 72.0, blog_post.promotion_banner_image_focus_y_value
@@ -218,6 +222,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".editor-panel.blog-editor-panel"
     assert_select "template.editor-actions-template"
     assert_select "form.editor-form"
+    assert_select ".blog-editor-section-promotion"
+    assert_select "input[name='blog_post[promotion_banner_kicker_text]']"
+    assert_select "input[name='blog_post[promotion_banner_cta_text]']"
     assert_no_match(/Blog-Inbox/, response.body)
   end
 

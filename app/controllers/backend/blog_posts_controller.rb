@@ -111,6 +111,8 @@ module Backend
           :published_at,
           :author_name,
           :promotion_banner,
+          :promotion_banner_kicker_text,
+          :promotion_banner_cta_text,
           :cover_image_copyright,
           :cover_image_focus_x,
           :cover_image_focus_y,

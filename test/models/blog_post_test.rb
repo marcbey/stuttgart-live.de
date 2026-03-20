@@ -179,6 +179,34 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_predicate blog_post, :valid?
   end
 
+  test "promotion banner text values fall back to defaults" do
+    blog_post = BlogPost.new(
+      title: "Banner Defaults",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft"
+    )
+
+    assert_equal "Promotion", blog_post.promotion_banner_kicker_text_value
+    assert_equal "Zum Beitrag", blog_post.promotion_banner_cta_text_value
+  end
+
+  test "promotion banner texts are normalized" do
+    blog_post = BlogPost.create!(
+      title: "Banner Texte",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      promotion_banner_kicker_text: "  Szene Tipp  ",
+      promotion_banner_cta_text: "  Mehr lesen  "
+    )
+
+    assert_equal "Szene Tipp", blog_post.promotion_banner_kicker_text
+    assert_equal "Mehr lesen", blog_post.promotion_banner_cta_text
+  end
+
   test "optimized cover image variant scales down to web size and keeps original blob" do
     blog_post = BlogPost.create!(
       title: "Großes Titelbild",

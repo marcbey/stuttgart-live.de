@@ -1,5 +1,7 @@
 class BlogPost < ApplicationRecord
   STATUSES = %w[draft published].freeze
+  DEFAULT_PROMOTION_BANNER_KICKER_TEXT = "Promotion"
+  DEFAULT_PROMOTION_BANNER_CTA_TEXT = "Zum Beitrag"
   DEFAULT_IMAGE_FOCUS_X = 50.0
   DEFAULT_IMAGE_FOCUS_Y = 50.0
   DEFAULT_IMAGE_ZOOM = 100.0
@@ -28,6 +30,8 @@ class BlogPost < ApplicationRecord
   validates :published_at, presence: true, if: :published?
   validates :cover_image_copyright, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
+  validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
+  validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
   validates :cover_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :cover_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :cover_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
@@ -114,6 +118,14 @@ class BlogPost < ApplicationRecord
     image_focus_value(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
   end
 
+  def promotion_banner_kicker_text_value
+    promotion_banner_kicker_text.presence || DEFAULT_PROMOTION_BANNER_KICKER_TEXT
+  end
+
+  def promotion_banner_cta_text_value
+    promotion_banner_cta_text.presence || DEFAULT_PROMOTION_BANNER_CTA_TEXT
+  end
+
   def optimized_image_variant(slot)
     attachment_for_slot(slot).variant(
       format: :webp,
@@ -198,6 +210,8 @@ class BlogPost < ApplicationRecord
       self.source_url = source_url.to_s.strip.presence
       self.cover_image_copyright = cover_image_copyright.to_s.strip.presence
       self.promotion_banner_image_copyright = promotion_banner_image_copyright.to_s.strip.presence
+      self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
+      self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
       self.cover_image_focus_x = normalize_percentage(cover_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
       self.cover_image_focus_y = normalize_percentage(cover_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
       self.cover_image_zoom = normalize_percentage(cover_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)

@@ -944,6 +944,41 @@ a {
   font-size: 0.92rem;
 }
 
+.blog-editor-section {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 243, 238, 0.98)),
+    linear-gradient(135deg, rgba(227, 27, 46, 0.06), rgba(17, 17, 17, 0.03));
+}
+
+.blog-editor-section-header {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.blog-editor-section-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.blog-editor-section-header p {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.blog-editor-section-grid {
+  align-items: start;
+}
+
+.blog-editor-section-promotion .blog-post-image-section {
+  margin-top: 0;
+}
+
 trix-toolbar {
   position: sticky;
   top: 4.9rem;
@@ -3139,45 +3174,8 @@ trix-editor.blog-rich-text:focus {
   flex-wrap: wrap;
 }
 
-.event-card-admin-controls .event-card-status-form,
 .event-card-admin-controls .event-card-admin-link {
   flex: 0 0 auto;
-}
-
-.event-card-admin-controls .event-card-status-form {
-  border: 1px solid rgba(17, 17, 17, 0.24);
-  background: rgba(248, 248, 248, 0.14);
-  backdrop-filter: blur(2px);
-  padding: 0.2rem;
-}
-
-.event-card-status-form {
-  margin: 0;
-}
-
-.event-card-status-select {
-  appearance: none;
-  -webkit-appearance: none;
-  border: 1px solid rgba(23, 23, 23, 0.44);
-  background: rgba(255, 255, 255, 0.2);
-  color: #111;
-  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  font-size: 0.74rem;
-  min-width: 8.6rem;
-  padding: 0.2rem 0.25rem;
-}
-
-.event-card-status-submit {
-  margin-left: 0.25rem;
-  border: 1px solid #171717;
-  background: #171717;
-  color: #fff;
-  font-size: 0.72rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 0.18rem 0.32rem;
 }
 
 .event-card-copy {

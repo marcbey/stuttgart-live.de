@@ -440,6 +440,43 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal highlights_index + 1, promotion_index
   end
 
+  test "homepage renders custom promotion banner texts from blog post" do
+    Event.create!(
+      slug: "promotion-banner-copy-event",
+      source_fingerprint: "test::homepage::promotion-banner-copy",
+      title: "Promotion Banner Copy",
+      artist_name: "Promotion Banner Copy Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      primary_source: "eventim",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    blog_post = BlogPost.create!(
+      title: "Promo mit Copy",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user,
+      promotion_banner_kicker_text: "Lesetipp",
+      promotion_banner_cta_text: "Beitrag öffnen"
+    )
+    blog_post.promotion_banner_image.attach(png_upload(filename: "homepage-banner-copy.png"))
+    blog_post.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner-kicker", text: "Lesetipp"
+    assert_select ".promotion-banner-cta", text: "Beitrag öffnen"
+  end
+
   test "homepage renders optimized promotion banner image" do
     highlight = Event.create!(
       slug: "promotion-banner-optimized-highlight-event",

@@ -19,9 +19,9 @@
     </div>
 
     <div class="promotion-banner-copy">
-      <p class="promotion-banner-kicker">Promotion</p>
+      <p class="promotion-banner-kicker"><%= blog_post.promotion_banner_kicker_text_value %></p>
       <h2><%= blog_post.title %></h2>
-      <span class="promotion-banner-cta">Zum Beitrag</span>
+      <span class="promotion-banner-cta"><%= blog_post.promotion_banner_cta_text_value %></span>
     </div>
   <% end %>
 </article>
