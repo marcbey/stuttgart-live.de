@@ -4,10 +4,9 @@ module Merging
     PROGRESS_FLUSH_EVERY_N_GROUPS = 25
     PROGRESS_FLUSH_AFTER = 2.seconds
 
-    def perform(last_run_at: nil)
-      run = nil
+    def perform(last_run_at: nil, import_run_id: nil)
       normalized_last_run_at = normalize_last_run_at(last_run_at)
-      run = start_run!(last_run_at: normalized_last_run_at)
+      run = prepare_run!(import_run_id:, last_run_at: normalized_last_run_at)
       broadcast_runs_update!
 
       progress_state = {
@@ -75,6 +74,18 @@ module Merging
     end
 
     private
+
+    def prepare_run!(import_run_id:, last_run_at:)
+      return start_run!(last_run_at:) if import_run_id.blank?
+
+      run = ImportRun.find(import_run_id)
+      metadata = current_run_metadata(run)
+      if last_run_at.present? && metadata["last_run_at"].blank?
+        metadata["last_run_at"] = last_run_at.iso8601
+        run.update!(metadata: metadata)
+      end
+      run
+    end
 
     def start_run!(last_run_at:)
       ImportRun.create!(

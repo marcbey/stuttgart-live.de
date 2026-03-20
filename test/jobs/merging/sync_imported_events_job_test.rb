@@ -84,6 +84,46 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     sync_class.remove_method :__original_new_for_test
   end
 
+  test "reuses a precreated merge import run when import_run_id is provided" do
+    run = ImportRun.create!(
+      import_source: import_sources(:two),
+      source_type: "merge",
+      status: "running",
+      started_at: Time.zone.parse("2026-03-14 10:10:00"),
+      metadata: { "triggered_at" => Time.zone.parse("2026-03-14 10:10:00").iso8601 }
+    )
+
+    fake_result = Merging::SyncFromImports::Result.new(
+      import_records_count: 2,
+      groups_count: 1,
+      events_created_count: 1,
+      events_updated_count: 0,
+      duplicate_matches_count: 0,
+      offers_upserted_count: 1,
+      canceled: false
+    )
+    captured_merge_run_id = nil
+
+    sync_class = Merging::SyncFromImports.singleton_class
+    sync_class.alias_method :__original_new_for_test, :new
+    sync_class.define_method(:new) do |*args, **kwargs|
+      captured_merge_run_id = kwargs[:merge_run_id]
+      Struct.new(:call).new(fake_result)
+    end
+
+    assert_no_difference -> { ImportRun.where(source_type: "merge").count } do
+      Merging::SyncImportedEventsJob.perform_now(import_run_id: run.id)
+    end
+
+    assert_equal run.id, captured_merge_run_id
+    assert_equal "succeeded", run.reload.status
+    assert_equal 2, run.fetched_count
+    assert_equal 1, run.imported_count
+  ensure
+    sync_class.alias_method :new, :__original_new_for_test
+    sync_class.remove_method :__original_new_for_test
+  end
+
   test "persists merge progress while the job is still running" do
     observed_run_state = {}
     fake_result = Merging::SyncFromImports::Result.new(

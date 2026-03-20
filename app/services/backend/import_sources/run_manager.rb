@@ -10,33 +10,42 @@ module Backend
 
       def trigger(source_type)
         config = registry.fetch(source_type)
-        release_stale_running_runs_for(source_type)
-        active_run = active_run_for(source_type)
+        result = nil
 
-        if active_run.present?
-          return {
-            alert: "Ein #{config.fetch(:label)}-Import läuft bereits (Run ##{active_run.id})."
-          }
+        import_source.with_lock do
+          release_stale_running_runs_for(source_type)
+          active_run = active_run_for(source_type)
+
+          if active_run.present?
+            result = {
+              alert: "Ein #{config.fetch(:label)}-Import läuft bereits (Run ##{active_run.id})."
+            }
+            next
+          end
+
+          run = import_source.import_runs.create!(
+            status: "running",
+            source_type: source_type,
+            started_at: Time.current,
+            metadata: { "triggered_at" => Time.current.iso8601 }
+          )
+          job = config.fetch(:run_job_class).perform_later(import_source.id, run.id)
+          run.update!(
+            metadata: maintenance.normalized_metadata(run.metadata).merge(
+              "job_id" => job.job_id,
+              "provider_job_id" => job.provider_job_id,
+              "job_attempt" => 1,
+              "job_retries_used" => 0,
+              "max_retries" => Importing::RetryPolicy::RETRY_DELAYS.size
+            )
+          )
+          result = { notice: "#{config.fetch(:label)}-Import wurde gestartet." }
         end
 
-        run = import_source.import_runs.create!(
-          status: "running",
-          source_type: source_type,
-          started_at: Time.current,
-          metadata: { "triggered_at" => Time.current.iso8601 }
-        )
-        job = config.fetch(:run_job_class).perform_later(import_source.id, run.id)
-        run.update!(
-          metadata: maintenance.normalized_metadata(run.metadata).merge(
-            "job_id" => job.job_id,
-            "provider_job_id" => job.provider_job_id,
-            "job_attempt" => 1,
-            "job_retries_used" => 0,
-            "max_retries" => Importing::RetryPolicy::RETRY_DELAYS.size
-          )
-        )
+        return result if result[:alert].present?
+
         broadcaster.broadcast!
-        {}
+        result
       end
 
       def request_stop(source_type, run_id: nil)
@@ -47,11 +56,7 @@ module Backend
         metadata = maintenance.normalized_metadata(run.metadata)
         metadata["stop_requested"] = true
         metadata["stop_requested_at"] = Time.current.iso8601
-        metadata["stop_released_at"] = Time.current.iso8601
-        metadata["stop_release_reason"] = "Stopped by user"
         run.update!(
-          status: "canceled",
-          finished_at: Time.current,
           metadata: metadata
         )
         broadcaster.broadcast!

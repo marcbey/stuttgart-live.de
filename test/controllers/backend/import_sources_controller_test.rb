@@ -105,6 +105,23 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "running", run.status
   end
 
+  test "should respond with turbo stream when stopping a running merge run" do
+    run = @source.import_runs.create!(
+      status: "running",
+      source_type: "merge",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    post stop_merge_run_backend_import_sources_url(run_id: run.id), as: :turbo_stream
+
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "running", run.status
+    assert_import_sources_turbo_feedback(message: "Stop für Merge-Run ##{run.id} wurde angefordert.")
+    assert_import_run_row_in_response(run)
+    assert_includes response.body, "stopping"
+  end
+
   test "should render stopping status instead of stop requested text" do
     run = ImportRun.create!(
       import_source: @eventim_source,
@@ -271,9 +288,39 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       post sync_imported_events_backend_import_sources_url
     end
 
+    run = ImportRun.where(source_type: "merge").order(:created_at).last
+    assert_equal "running", run.status
     assert_redirected_to backend_import_sources_url
     follow_redirect!
     assert_includes response.body, "Merge-Sync wurde gestartet."
+  end
+
+  test "should respond with turbo stream when enqueueing merge sync from import sources page" do
+    assert_enqueued_jobs 1, only: Merging::SyncImportedEventsJob do
+      post sync_imported_events_backend_import_sources_url, as: :turbo_stream
+    end
+
+    run = ImportRun.where(source_type: "merge").order(:created_at).last
+    assert_equal "running", run.status
+
+    assert_import_sources_turbo_feedback(message: "Merge-Sync wurde gestartet.")
+    assert_import_run_row_in_response(run)
+  end
+
+  test "should not enqueue merge sync when another merge run is already active" do
+    existing_run = @source.import_runs.create!(
+      status: "running",
+      source_type: "merge",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    assert_no_enqueued_jobs only: Merging::SyncImportedEventsJob do
+      post sync_imported_events_backend_import_sources_url, as: :turbo_stream
+    end
+
+    assert_import_sources_turbo_feedback(message: "Ein Merge-Run läuft bereits (Run ##{existing_run.id}).")
+    assert_import_run_row_in_response(existing_run)
   end
 
   test "should render llm enrichment button on index" do
@@ -298,6 +345,18 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "LLM-Enrichment wurde gestartet."
   end
 
+  test "should respond with turbo stream when enqueueing llm enrichment run from import sources page" do
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      post run_llm_enrichment_backend_import_sources_url, as: :turbo_stream
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+    assert_equal "running", run.status
+
+    assert_import_sources_turbo_feedback(message: "LLM-Enrichment wurde gestartet.")
+    assert_import_run_row_in_response(run)
+  end
+
   test "should not enqueue llm enrichment run when another llm run is active" do
     ImportRun.create!(
       import_source: @eventim_source,
@@ -316,6 +375,23 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "LLM-Enrichment-Lauf läuft bereits"
   end
 
+  test "should respond with turbo stream when another llm run is active" do
+    existing_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
+      post run_llm_enrichment_backend_import_sources_url, as: :turbo_stream
+    end
+
+    assert_import_sources_turbo_feedback(message: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{existing_run.id}).")
+    assert_import_run_row_in_response(existing_run)
+  end
+
   test "should request stop for a running llm enrichment run" do
     run = ImportRun.create!(
       import_source: @eventim_source,
@@ -329,8 +405,27 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_import_sources_url
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "running", run.status
     follow_redirect!
     assert_includes response.body, "Stop für LLM-Enrichment"
+  end
+
+  test "should respond with turbo stream when stopping a running llm enrichment run" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_llm_enrichment_run_backend_import_sources_url(run_id: run.id), as: :turbo_stream
+
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "running", run.status
+    assert_import_sources_turbo_feedback(message: "Stop für LLM-Enrichment (Run ##{run.id}) wurde angefordert.")
+    assert_import_run_row_in_response(run)
+    assert_includes response.body, "stopping"
   end
 
   test "should render stop action for running llm enrichment jobs" do
@@ -375,7 +470,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to backend_import_sources_url
     follow_redirect!
-    assert_not_includes response.body, "Easyticket-Import wurde gestartet."
+    assert_includes response.body, "Easyticket-Import wurde gestartet."
     assert_equal "running", @source.import_runs.order(:created_at).last.status
   end
 
@@ -384,10 +479,26 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       post run_easyticket_backend_import_source_url(@source), as: :turbo_stream
     end
 
-    assert_response :success
-    assert_includes response.media_type, "turbo-stream"
-    assert_includes response.body, "target=\"flash-messages\""
-    assert_includes response.body, "target=\"import-runs-table\""
+    run = @source.import_runs.order(:created_at).last
+
+    assert_import_sources_turbo_feedback(message: "Easyticket-Import wurde gestartet.")
+    assert_import_run_row_in_response(run)
+  end
+
+  test "should respond with turbo stream when another easyticket run is already active" do
+    existing_run = @source.import_runs.create!(
+      status: "running",
+      source_type: "easyticket",
+      started_at: 10.minutes.ago,
+      metadata: {}
+    )
+
+    assert_no_enqueued_jobs do
+      post run_easyticket_backend_import_source_url(@source), as: :turbo_stream
+    end
+
+    assert_import_sources_turbo_feedback(message: "Ein Easyticket-Import läuft bereits (Run ##{existing_run.id}).")
+    assert_import_run_row_in_response(existing_run)
   end
 
   test "should not enqueue easyticket run when another run is already active" do
@@ -455,8 +566,24 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_import_sources_url
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
-    assert_equal "canceled", run.status
-    assert run.finished_at.present?
+    assert_equal "running", run.status
+  end
+
+  test "should respond with turbo stream when stopping a running easyticket run" do
+    run = @source.import_runs.create!(
+      status: "running",
+      source_type: "easyticket",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_easyticket_run_backend_import_source_url(@source), params: { run_id: run.id }, as: :turbo_stream
+
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "running", run.status
+    assert_import_sources_turbo_feedback(message: "Stop für Easyticket-Import (Run ##{run.id}) wurde angefordert.")
+    assert_import_run_row_in_response(run)
+    assert_includes response.body, "stopping"
   end
 
   test "should not request stop when no running run exists" do
@@ -472,8 +599,19 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_import_sources_url
     follow_redirect!
-    assert_not_includes response.body, "Eventim-Import wurde gestartet."
+    assert_includes response.body, "Eventim-Import wurde gestartet."
     assert_equal "running", @eventim_source.import_runs.order(:created_at).last.status
+  end
+
+  test "should respond with turbo stream when enqueueing eventim run" do
+    assert_enqueued_jobs 1 do
+      post run_eventim_backend_import_source_url(@eventim_source), as: :turbo_stream
+    end
+
+    run = @eventim_source.import_runs.order(:created_at).last
+
+    assert_import_sources_turbo_feedback(message: "Eventim-Import wurde gestartet.")
+    assert_import_run_row_in_response(run)
   end
 
   test "should list running runs from different importers at the same time" do
@@ -511,6 +649,50 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_equal existing_run.id, @eventim_source.import_runs.order(:created_at).last.id
   end
 
+  test "should respond with turbo stream when another eventim run is already active" do
+    existing_run = @eventim_source.import_runs.create!(
+      status: "running",
+      source_type: "eventim",
+      started_at: 10.minutes.ago,
+      metadata: {}
+    )
+
+    assert_no_enqueued_jobs do
+      post run_eventim_backend_import_source_url(@eventim_source), as: :turbo_stream
+    end
+
+    assert_import_sources_turbo_feedback(message: "Ein Eventim-Import läuft bereits (Run ##{existing_run.id}).")
+    assert_import_run_row_in_response(existing_run)
+  end
+
+  test "should respond with turbo stream when enqueueing reservix run" do
+    assert_enqueued_jobs 1 do
+      post run_reservix_backend_import_source_url(@reservix_source), as: :turbo_stream
+    end
+
+    run = @reservix_source.import_runs.order(:created_at).last
+    assert_equal "running", run.status
+
+    assert_import_sources_turbo_feedback(message: "Reservix-Import wurde gestartet.")
+    assert_import_run_row_in_response(run)
+  end
+
+  test "should respond with turbo stream when another reservix run is already active" do
+    existing_run = @reservix_source.import_runs.create!(
+      status: "running",
+      source_type: "reservix",
+      started_at: 10.minutes.ago,
+      metadata: {}
+    )
+
+    assert_no_enqueued_jobs do
+      post run_reservix_backend_import_source_url(@reservix_source), as: :turbo_stream
+    end
+
+    assert_import_sources_turbo_feedback(message: "Ein Reservix-Import läuft bereits (Run ##{existing_run.id}).")
+    assert_import_run_row_in_response(existing_run)
+  end
+
   test "should request stop for a running eventim run" do
     run = @eventim_source.import_runs.create!(
       status: "running",
@@ -523,8 +705,24 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_import_sources_url
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
-    assert_equal "canceled", run.status
-    assert run.finished_at.present?
+    assert_equal "running", run.status
+  end
+
+  test "should respond with turbo stream when stopping a running eventim run" do
+    run = @eventim_source.import_runs.create!(
+      status: "running",
+      source_type: "eventim",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_eventim_run_backend_import_source_url(@eventim_source), params: { run_id: run.id }, as: :turbo_stream
+
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "running", run.status
+    assert_import_sources_turbo_feedback(message: "Stop für Eventim-Import (Run ##{run.id}) wurde angefordert.")
+    assert_import_run_row_in_response(run)
+    assert_includes response.body, "stopping"
   end
 
   test "should request stop for a running reservix run" do
@@ -539,7 +737,38 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_import_sources_url
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
-    assert_equal "canceled", run.status
-    assert run.finished_at.present?
+    assert_equal "running", run.status
+  end
+
+  test "should respond with turbo stream when stopping a running reservix run" do
+    run = @reservix_source.import_runs.create!(
+      status: "running",
+      source_type: "reservix",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_reservix_run_backend_import_source_url(@reservix_source), params: { run_id: run.id }, as: :turbo_stream
+
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
+    assert_equal "running", run.status
+    assert_import_sources_turbo_feedback(message: "Stop für Reservix-Import (Run ##{run.id}) wurde angefordert.")
+    assert_import_run_row_in_response(run)
+    assert_includes response.body, "stopping"
+  end
+
+  private
+
+  def assert_import_sources_turbo_feedback(message:)
+    assert_response :success
+    assert_includes response.media_type, "turbo-stream"
+    assert_includes response.body, "action=\"update\" target=\"flash-messages\""
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "target=\"import-runs-table\""
+    assert_includes response.body, message
+  end
+
+  def assert_import_run_row_in_response(run)
+    assert_includes response.body, "data-run-id=\"#{run.id}\""
   end
 end

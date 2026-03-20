@@ -21,8 +21,7 @@ module Backend
     end
 
     def sync_imported_events
-      Merging::SyncImportedEventsJob.perform_later
-      redirect_to backend_import_sources_path, notice: "Merge-Sync wurde gestartet."
+      respond_with_importer_feedback(**trigger_merge_sync)
     end
 
     def stop_merge_run
@@ -31,7 +30,7 @@ module Backend
       run ||= ImportRun.where(source_type: "merge", status: "running").order(started_at: :desc).first
 
       if run.blank?
-        redirect_to backend_import_sources_path, alert: "Kein laufender Merge-Run gefunden."
+        respond_with_importer_feedback(alert: "Kein laufender Merge-Run gefunden.")
         return
       end
 
@@ -41,16 +40,19 @@ module Backend
       run.update!(metadata: metadata)
 
       Backend::ImportRunsBroadcaster.broadcast!
-      redirect_to backend_import_sources_path, notice: "Stop für Merge-Run ##{run.id} wurde angefordert."
+      respond_with_importer_feedback(notice: "Stop für Merge-Run ##{run.id} wurde angefordert.")
     end
 
     def run_llm_enrichment
       source = llm_enrichment_run_source
+      feedback = nil
+      broadcast = false
+
       source.with_lock do
         active_run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
         if active_run.present?
-          redirect_to backend_import_sources_path, alert: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{active_run.id})."
-          return
+          feedback = { alert: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{active_run.id})." }
+          next
         end
 
         run = source.import_runs.create!(
@@ -69,10 +71,12 @@ module Backend
             "max_retries" => 0
           )
         )
+        feedback = { notice: "LLM-Enrichment wurde gestartet." }
+        broadcast = true
       end
 
-      Backend::ImportRunsBroadcaster.broadcast!
-      redirect_to backend_import_sources_path, notice: "LLM-Enrichment wurde gestartet."
+      Backend::ImportRunsBroadcaster.broadcast! if broadcast
+      respond_with_importer_feedback(**feedback)
     end
 
     def stop_llm_enrichment_run
@@ -82,7 +86,7 @@ module Backend
       run ||= source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
 
       if run.blank?
-        redirect_to backend_import_sources_path, alert: "Kein laufender LLM-Enrichment-Run gefunden."
+        respond_with_importer_feedback(alert: "Kein laufender LLM-Enrichment-Run gefunden.")
         return
       end
 
@@ -92,7 +96,7 @@ module Backend
       run.update!(metadata: metadata)
 
       Backend::ImportRunsBroadcaster.broadcast!
-      redirect_to backend_import_sources_path, notice: "Stop für LLM-Enrichment (Run ##{run.id}) wurde angefordert."
+      respond_with_importer_feedback(notice: "Stop für LLM-Enrichment (Run ##{run.id}) wurde angefordert.")
     end
 
     def update
@@ -150,6 +154,10 @@ module Backend
       ImportSource.find_by(source_type: "eventim") ||
         ImportSource.find_by(source_type: "easyticket") ||
         ImportSource.ensure_eventim_source!
+    end
+
+    def merge_run_source
+      llm_enrichment_run_source
     end
 
     def set_import_source
@@ -220,7 +228,7 @@ module Backend
           flash.now[:alert] = alert if alert.present?
 
           render turbo_stream: [
-            turbo_stream.replace("flash-messages", partial: "layouts/flash_messages"),
+            turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
             turbo_stream.replace(
               "import-runs-table",
               partial: "backend/import_sources/recent_runs_table",
@@ -229,6 +237,32 @@ module Backend
           ]
         end
       end
+    end
+
+    def trigger_merge_sync
+      result = nil
+      run_source = merge_run_source
+
+      run_source.with_lock do
+        active_run = ImportRun.where(source_type: "merge", status: "running").order(started_at: :desc).first
+        if active_run.present?
+          result = { alert: "Ein Merge-Run läuft bereits (Run ##{active_run.id})." }
+          next
+        end
+
+        run = ImportRun.create!(
+          import_source: run_source,
+          source_type: "merge",
+          status: "running",
+          started_at: Time.current,
+          metadata: { "triggered_at" => Time.current.iso8601 }
+        )
+        Merging::SyncImportedEventsJob.perform_later(import_run_id: run.id)
+        Backend::ImportRunsBroadcaster.broadcast!
+        result = { notice: "Merge-Sync wurde gestartet." }
+      end
+
+      result
     end
 
     def run_import_for(source_type)
