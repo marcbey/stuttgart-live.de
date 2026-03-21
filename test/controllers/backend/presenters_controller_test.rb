@@ -12,7 +12,7 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     get backend_presenters_url
 
     assert_response :success
-    assert_select ".app-nav-links .app-nav-link-active", text: "Presenter"
+    assert_select ".app-nav-links .app-nav-link-active", text: "Präsentatoren"
     assert_includes response.body, "Live Nation"
     assert_includes response.body, @presenter.external_url
   end
@@ -95,7 +95,7 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_presenters_url
     follow_redirect!
-    assert_includes response.body, "Presenter ist noch Events zugeordnet und kann nicht gelöscht werden."
+    assert_includes response.body, "Präsentator ist noch Events zugeordnet und kann nicht gelöscht werden."
   end
 
   private

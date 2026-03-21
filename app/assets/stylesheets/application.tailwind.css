@@ -4100,6 +4100,7 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-detail-copy h2,
+.event-detail-presenters h2,
 .event-detail-video h2,
 .event-detail-offers h2 {
   margin: 0;
@@ -4471,6 +4472,7 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-detail-copy h2,
+.event-detail-presenters h2,
 .event-detail-video h2,
 .event-detail-slider h2,
 .event-detail-notes h2 {

@@ -14,9 +14,9 @@ module Backend
       @presenter = Presenter.new(presenter_params)
 
       if @presenter.save
-        redirect_to backend_presenters_path, notice: "Presenter wurde angelegt."
+        redirect_to backend_presenters_path, notice: "Präsentator wurde angelegt."
       else
-        flash.now[:alert] = "Presenter konnte nicht angelegt werden."
+        flash.now[:alert] = "Präsentator konnte nicht angelegt werden."
         render :new, status: :unprocessable_entity
       end
     end
@@ -26,23 +26,23 @@ module Backend
 
     def update
       if @presenter.update(presenter_params)
-        redirect_to backend_presenters_path, notice: "Presenter wurde aktualisiert."
+        redirect_to backend_presenters_path, notice: "Präsentator wurde aktualisiert."
       else
-        flash.now[:alert] = "Presenter konnte nicht aktualisiert werden."
+        flash.now[:alert] = "Präsentator konnte nicht aktualisiert werden."
         render :edit, status: :unprocessable_entity
       end
     end
 
     def destroy
       if @presenter.event_presenters.exists?
-        redirect_to backend_presenters_path, alert: "Presenter ist noch Events zugeordnet und kann nicht gelöscht werden."
+        redirect_to backend_presenters_path, alert: "Präsentator ist noch Events zugeordnet und kann nicht gelöscht werden."
         return
       end
 
       if @presenter.destroy
-        redirect_to backend_presenters_path, notice: "Presenter wurde gelöscht."
+        redirect_to backend_presenters_path, notice: "Präsentator wurde gelöscht."
       else
-        redirect_to backend_presenters_path, alert: @presenter.errors.full_messages.to_sentence.presence || "Presenter konnte nicht gelöscht werden."
+        redirect_to backend_presenters_path, alert: @presenter.errors.full_messages.to_sentence.presence || "Präsentator konnte nicht gelöscht werden."
       end
     end
 

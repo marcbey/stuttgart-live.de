@@ -235,12 +235,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-backend-menu[data-controller='backend-nav-menu']", count: 1
     assert_select ".app-nav-backend-toggle[aria-controls='app-nav-backend-menu']", text: /Backend/
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Events"
-    assert_select "#app-nav-backend-menu .app-nav-link", text: "Presenter"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Präsentatoren"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "News"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Importer"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Passwort"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Logout"
-    assert_match(/Events.*Presenter.*News.*Importer.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*Präsentatoren.*News.*Importer.*Passwort.*Logout/m, response.body)
     assert_select ".app-nav-links-group-separated", count: 0
   end
 
@@ -1607,12 +1607,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     main_children = document.css(".event-detail-main > *")
     presenter_section_index = main_children.index { |node| node["class"].to_s.include?("event-detail-presenters") }
     media_section_index = main_children.index { |node| node["class"].to_s.include?("event-detail-video") || node["class"].to_s.include?("event-detail-slider") }
-    presenter_names = document.css(".event-presenter-name").map(&:text)
-
-    assert_equal [ "Alpha Presenter", "Beta Presenter" ], presenter_names
     assert presenter_section_index.present?
     assert media_section_index.present?
     assert_operator presenter_section_index, :<, media_section_index
+    assert_select ".event-detail-presenters h2", text: "Präsentatoren", count: 1
+    assert_select ".event-presenter-name", count: 0
     assert_select ".event-presenter-item[href='#{presenter_one.external_url}']", count: 1
     assert_select ".event-presenter-item[href='#{presenter_two.external_url}']", count: 1
   end
