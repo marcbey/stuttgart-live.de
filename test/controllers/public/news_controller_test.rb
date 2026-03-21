@@ -19,6 +19,21 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, @scheduled_post.title
   end
 
+  test "index inserts newsletter signup after every four live posts" do
+    8.times do |index|
+      create_blog_post(
+        title: "Weitere News #{index}",
+        status: "published",
+        published_at: (index + 3).hours.ago
+      )
+    end
+
+    get news_index_url
+
+    assert_response :success
+    assert_select ".news-index-newsletter-slot", count: 2
+  end
+
   test "show renders a published post" do
     get news_url(@live_post.slug)
 
