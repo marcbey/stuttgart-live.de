@@ -107,4 +107,16 @@ jobs:
             ssh -i "$KAMAL_SSH_KEY_PATH" -o StrictHostKeyChecking=yes deploy@"$host" \
               "docker login ghcr.io -u marcbey --password-stdin"
 
+          deploy_log="$RUNNER_TEMP/kamal-deploy.log"
+
+          if bin/kamal deploy -d hetzner --skip_push 2>&1 | tee "$deploy_log"; then
+            exit 0
+          fi
+
+          if ! grep -Fq "kamal-proxy version" "$deploy_log"; then
+            exit 1
+          fi
+
+          echo "kamal-proxy ist veraltet, führe Proxy-Reboot aus und wiederhole Deploy"
+          bin/kamal proxy reboot -d hetzner
           bin/kamal deploy -d hetzner --skip_push

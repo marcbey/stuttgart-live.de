@@ -6,7 +6,6 @@
 - OWASP checks initial & evtl. als bin/ci ?
 - Plan für Data Rentention
 - Logfile Rotation
-- Deprecation für actions/setup-node@v4 wegen Node 20
 - Ruby 4.x umstellen
 
 ## Importer
@@ -48,6 +47,14 @@ Im Frontend zeigen die Event-Reihen an folgenden Stellen Auswirkung:
 In den Teaser Slider Lanes: Dort soll ...
 
 
+## Presenter Domainobject
+Es soll ein Presenter Domainobject enstehen:
+Ein Presenter besteht aus
+- Name
+- Logo (image)
+- Beschreibung (optional)
+- Link
+Ein Event kann viele Presenter haben.
+Presenter werden über eine neue backend Navi verlinkt
 
-
-
+Am 

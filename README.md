@@ -337,6 +337,7 @@ Status und Logs:
 
 ```bash
 bin/kamal details -d hetzner
+bin/kamal proxy reboot -d hetzner
 bin/kamal app containers -d hetzner
 bin/kamal app version -d hetzner
 bin/kamal app logs -f -d hetzner
