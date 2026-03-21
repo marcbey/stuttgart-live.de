@@ -49,6 +49,8 @@ class Event < ApplicationRecord
     dependent: :delete_all,
     inverse_of: :import_event
 
+  accepts_nested_attributes_for :llm_enrichment, update_only: true
+
   validates :slug, :title, :artist_name, :normalized_artist_name, :start_at, :venue, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
   validates :slug, uniqueness: true

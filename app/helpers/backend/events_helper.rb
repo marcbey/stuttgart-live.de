@@ -77,7 +77,14 @@ module Backend::EventsHelper
     end
   end
 
-  def event_llm_badge_title(event)
+  def event_editor_errors(event)
+    [
+      *event.errors.full_messages,
+      *event.llm_enrichment&.errors&.full_messages.to_a
+    ].uniq
+  end
+
+  def event_llm_raw_response(event)
     enrichment = event.llm_enrichment
     return if enrichment.blank?
 

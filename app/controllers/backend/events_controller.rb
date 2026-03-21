@@ -28,6 +28,7 @@ module Backend
 
     def show
       @filter_status = @inbox_state.navigation_status || params[:status].to_s.presence_in(status_filters)
+      @active_editor_tab = editor_tab_for(@event)
     end
 
     def new
@@ -108,7 +109,11 @@ module Backend
           update_detail_hero_crop!
         rescue ActiveRecord::RecordInvalid => e
           @event.errors.add(:base, e.record.errors.full_messages.to_sentence)
-          editor_response.validation_error(event: @event, filter_status: navigation_status || @event.status)
+          editor_response.validation_error(
+            event: @event,
+            filter_status: navigation_status || @event.status,
+            active_editor_tab: editor_tab_for(@event)
+          )
           return
         end
 
@@ -122,12 +127,19 @@ module Backend
           changed_fields: @event.saved_changes
         )
 
+        editor_state = build_editor_state_builder.build(preferred_event: @event, navigation_status: navigation_status)
+
         editor_response.success(
-          editor_state: build_editor_state_builder.build(preferred_event: @event, navigation_status: navigation_status),
-          notice: update_success_message
+          editor_state: editor_state,
+          notice: update_success_message,
+          active_editor_tab: editor_tab_for_success(target_event: editor_state.target_event)
         )
       else
-        editor_response.validation_error(event: @event, filter_status: navigation_status || @event.status)
+        editor_response.validation_error(
+          event: @event,
+          filter_status: navigation_status || @event.status,
+          active_editor_tab: editor_tab_for(@event)
+        )
       end
     end
 
@@ -146,7 +158,8 @@ module Backend
           preferred_event: @event,
           navigation_status: navigation_status
         ),
-        notice: "Event wurde depublisht."
+        notice: "Event wurde depublisht.",
+        active_editor_tab: "event"
       )
     end
 
@@ -239,8 +252,32 @@ module Backend
         :promoter_id,
         :highlighted,
         :status,
-        :editor_notes
+        :editor_notes,
+        llm_enrichment_attributes: [
+          :id,
+          :venue,
+          :genre_list,
+          :artist_description,
+          :event_description,
+          :venue_description,
+          :youtube_link,
+          :instagram_link,
+          :homepage_link,
+          :facebook_link
+        ]
       )
+    end
+
+    def editor_tab_for(event)
+      return "event" if event.blank? || event.llm_enrichment.blank?
+
+      params[:editor_tab].to_s.presence_in(%w[event llm_enrichment]) || "event"
+    end
+
+    def editor_tab_for_success(target_event:)
+      return "event" if target_event.blank? || target_event.id != @event.id
+
+      editor_tab_for(@event)
     end
 
     def manual_ticket_url

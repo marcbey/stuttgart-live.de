@@ -37,6 +37,9 @@ application.register("event-image-preupload", EventImagePreuploadController)
 import EventImageEditorUploadController from "./event_image_editor_upload_controller"
 application.register("event-image-editor-upload", EventImageEditorUploadController)
 
+import EventEditorTabsController from "./event_editor_tabs_controller"
+application.register("event-editor-tabs", EventEditorTabsController)
+
 import FilterStateController from "./filter_state_controller"
 application.register("filter-state", FilterStateController)
 

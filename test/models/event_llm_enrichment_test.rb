@@ -2,7 +2,7 @@ require "test_helper"
 
 class EventLlmEnrichmentTest < ActiveSupport::TestCase
   test "normalizes attributes and enforces one enrichment per event" do
-      enrichment = EventLlmEnrichment.create!(
+    enrichment = EventLlmEnrichment.create!(
       event: events(:published_one),
       source_run: import_runs(:one),
       genre: [ " Jazz ", "", "Jazz" ],
@@ -42,5 +42,21 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
 
     assert enrichment.valid?
     assert_equal({}, enrichment.raw_response)
+  end
+
+  test "genre_list assigns normalized genres" do
+    enrichment = EventLlmEnrichment.new(
+      event: events(:published_one),
+      source_run: import_runs(:one),
+      model: "gpt-5-mini",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+
+    enrichment.genre_list = " Indie \nRock, Pop ; Rock "
+
+    assert enrichment.valid?
+    assert_equal [ "Indie", "Rock", "Pop" ], enrichment.genre
+    assert_equal " Indie \nRock, Pop ; Rock ", enrichment.genre_list
   end
 end

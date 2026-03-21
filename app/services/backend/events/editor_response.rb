@@ -7,7 +7,7 @@ module Backend
         @next_event_enabled = next_event_enabled
       end
 
-      def success(editor_state:, notice:)
+      def success(editor_state:, notice:, active_editor_tab: "event")
         controller.respond_to do |format|
           format.html do
             controller.redirect_to(
@@ -17,23 +17,26 @@ module Backend
           end
           format.turbo_stream do
             controller.flash.now[:notice] = notice
-            controller.render turbo_stream: success_streams(editor_state:)
+            controller.render turbo_stream: success_streams(editor_state:, active_editor_tab:)
           end
         end
       end
 
-      def validation_error(event:, filter_status:)
+      def validation_error(event:, filter_status:, active_editor_tab: "event")
         controller.flash.now[:alert] = "Event konnte nicht gespeichert werden."
 
         controller.respond_to do |format|
-          format.html { controller.render :show, status: :unprocessable_entity }
+          format.html do
+            controller.instance_variable_set(:@active_editor_tab, active_editor_tab)
+            controller.render :show, status: :unprocessable_entity
+          end
           format.turbo_stream do
             controller.render turbo_stream: [
-              controller.turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
-              controller.turbo_stream.replace(
+              turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+              turbo_stream.replace(
                 "event_editor",
                 partial: "backend/events/editor_frame",
-                locals: editor_frame_locals(event: event, filter_status: filter_status)
+                locals: editor_frame_locals(event: event, filter_status: filter_status, active_editor_tab: active_editor_tab)
               )
             ], status: :unprocessable_entity
           end
@@ -44,7 +47,7 @@ module Backend
 
       attr_reader :all_genres, :controller, :next_event_enabled
 
-      def success_streams(editor_state:)
+      def success_streams(editor_state:, active_editor_tab:)
         [
           turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
           turbo_stream.replace(
@@ -75,7 +78,11 @@ module Backend
           turbo_stream.replace(
             "event_editor",
             partial: "backend/events/editor_frame",
-            locals: editor_frame_locals(event: editor_state.target_event, filter_status: editor_state.target_status)
+            locals: editor_frame_locals(
+              event: editor_state.target_event,
+              filter_status: editor_state.target_status,
+              active_editor_tab: active_editor_tab
+            )
           )
         ]
       end
@@ -84,16 +91,13 @@ module Backend
         controller.send(:turbo_stream)
       end
 
-      def editor_panel_locals(event:, filter_status:)
-        editor_frame_locals(event: event, filter_status: filter_status)
-      end
-
-      def editor_frame_locals(event:, filter_status:)
+      def editor_frame_locals(event:, filter_status:, active_editor_tab: "event")
         {
           event: event,
           all_genres: all_genres,
           next_event_enabled: next_event_enabled,
-          filter_status: filter_status
+          filter_status: filter_status,
+          active_editor_tab: active_editor_tab
         }
       end
     end

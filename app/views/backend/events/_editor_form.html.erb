@@ -6,6 +6,9 @@
               html: { id: dom_id(event, :editor_form) } do |form| %>
   <%= hidden_field_tag :next_event_enabled, (next_event_enabled ? "1" : "0"), data: { next_event_target: "preference" } %>
   <%= hidden_field_tag :inbox_status, filter_status if filter_status.present? %>
+  <%= hidden_field_tag :editor_tab,
+                       local_assigns.fetch(:active_editor_tab, "event"),
+                       data: { event_editor_tabs_target: "stateInput" } %>
   <%= render "backend/events/form_fields",
              form: form,
              event: event,

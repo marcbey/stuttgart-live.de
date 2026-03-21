@@ -9,6 +9,17 @@ class EventLlmEnrichment < ApplicationRecord
 
   before_validation :normalize_attributes
 
+  def genre_list
+    return @genre_list if defined?(@genre_list)
+
+    Array(genre).join("\n")
+  end
+
+  def genre_list=(value)
+    @genre_list = value.to_s
+    self.genre = @genre_list.split(/[\n,;]+/)
+  end
+
   private
 
   def normalize_attributes

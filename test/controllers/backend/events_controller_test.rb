@@ -765,31 +765,129 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "button", text: "Publish", count: 0
     assert_select "#event_editor_panel .editor-header-badges a", text: "Frontend", count: 0
+    assert_select "#event-editor-tab-event", count: 0
+    assert_no_match(/LLM enriched/i, response.body)
   end
 
-  test "editor header shows llm enriched badge when enrichment exists" do
+  test "editor shows llm enrichment tabs and read-only raw response when enrichment exists" do
     sign_in_as(@user)
 
-    @published_event.create_llm_enrichment!(
-      source_run: import_runs(:one),
-      artist_description: "LLM Artist Beschreibung",
-      event_description: "LLM Event Beschreibung",
-      venue_description: "LLM Venue Beschreibung",
-      genre: [ "Indie" ],
-      model: "gpt-test",
-      prompt_version: "v1",
-      raw_response: {
-        "artist_description" => "LLM Artist Beschreibung",
-        "genre" => [ "Indie" ]
-      }
-    )
+    create_llm_enrichment(event: @published_event)
 
     get backend_event_url(@published_event)
 
     assert_response :success
-    assert_select "#event_editor_panel .editor-header-badges .status-badge", text: "LLM enriched"
+    assert_select "#event-editor-tab-event[aria-selected='true']", count: 1
+    assert_select "#event-editor-tab-llm-enrichment[aria-selected='false']", count: 1
+    assert_select "#event-editor-panel-llm-enrichment[hidden]", count: 1
+    assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 1
+    assert_select "textarea[name='event[llm_enrichment_attributes][raw_response_json]']", count: 0
     assert_includes response.body, "&quot;artist_description&quot;: &quot;LLM Artist Beschreibung&quot;"
     assert_includes response.body, "&quot;genre&quot;: ["
+  end
+
+  test "update stores nested llm enrichment fields from editor" do
+    sign_in_as(@user)
+    create_llm_enrichment(event: @published_event)
+
+    patch backend_event_url(@published_event), params: {
+      editor_tab: "llm_enrichment",
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        llm_enrichment_attributes: {
+          id: @published_event.llm_enrichment.id,
+          venue: "Neues LLM Venue",
+          genre_list: "Indie\nRock",
+          artist_description: "Aktualisierte Artist-Beschreibung",
+          event_description: "Aktualisierte Event-Beschreibung",
+          venue_description: "Aktualisierte Venue-Beschreibung",
+          youtube_link: "https://youtube.example/updated",
+          instagram_link: "https://instagram.example/updated",
+          homepage_link: "https://homepage.example/updated",
+          facebook_link: "https://facebook.example/updated"
+        }
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+
+    enrichment = @published_event.reload.llm_enrichment
+    assert_equal "Neues LLM Venue", enrichment.venue
+    assert_equal [ "Indie", "Rock" ], enrichment.genre
+    assert_equal "Aktualisierte Artist-Beschreibung", enrichment.artist_description
+    assert_equal "Aktualisierte Event-Beschreibung", enrichment.event_description
+    assert_equal "Aktualisierte Venue-Beschreibung", enrichment.venue_description
+    assert_equal "https://youtube.example/updated", enrichment.youtube_link
+    assert_equal "https://instagram.example/updated", enrichment.instagram_link
+    assert_equal "https://homepage.example/updated", enrichment.homepage_link
+    assert_equal "https://facebook.example/updated", enrichment.facebook_link
+  end
+
+  test "turbo update keeps llm tab active after successful save" do
+    sign_in_as(@user)
+    create_llm_enrichment(event: @published_event)
+
+    patch backend_event_url(@published_event), params: {
+      inbox_status: "published",
+      next_event_enabled: "0",
+      editor_tab: "llm_enrichment",
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        llm_enrichment_attributes: {
+          id: @published_event.llm_enrichment.id,
+          event_description: "Neu aus Turbo gespeichert"
+        }
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, 'target="event_editor"'
+    assert_includes response.body, 'id="event-editor-tab-llm-enrichment"'
+    assert_includes response.body, 'aria-selected="true"'
+    assert_includes response.body, 'name="editor_tab"'
+    assert_includes response.body, 'value="llm_enrichment"'
+    assert_equal "Neu aus Turbo gespeichert", @published_event.reload.llm_enrichment.event_description
+  end
+
+  test "validation error keeps llm tab active and does not persist changes" do
+    sign_in_as(@user)
+    create_llm_enrichment(event: @published_event, event_description: "Vorheriger Text")
+
+    patch backend_event_url(@published_event), params: {
+      inbox_status: "published",
+      next_event_enabled: "0",
+      editor_tab: "llm_enrichment",
+      event: {
+        title: @published_event.title,
+        artist_name: "",
+        start_at: @published_event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        llm_enrichment_attributes: {
+          id: @published_event.llm_enrichment.id,
+          event_description: "Nicht gespeichert"
+        }
+      }
+    }, as: :turbo_stream
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, 'target="event_editor"'
+    assert_includes response.body, 'id="event-editor-tab-llm-enrichment"'
+    assert_includes response.body, 'aria-selected="true"'
+    assert_includes response.body, "Event konnte nicht gespeichert werden."
+    assert_equal "Published Artist", @published_event.reload.artist_name
+    assert_equal "Vorheriger Text", @published_event.llm_enrichment.event_description
   end
 
   test "ready_for_publish event editor does not show unpublish button" do
@@ -937,5 +1035,21 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     image
+  end
+
+  def create_llm_enrichment(event:, event_description: "LLM Event Beschreibung")
+    event.create_llm_enrichment!(
+      source_run: import_runs(:one),
+      artist_description: "LLM Artist Beschreibung",
+      event_description: event_description,
+      venue_description: "LLM Venue Beschreibung",
+      genre: [ "Indie" ],
+      model: "gpt-test",
+      prompt_version: "v1",
+      raw_response: {
+        "artist_description" => "LLM Artist Beschreibung",
+        "genre" => [ "Indie" ]
+      }
+    )
   end
 end

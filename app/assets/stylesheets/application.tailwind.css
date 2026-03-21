@@ -4993,6 +4993,15 @@ trix-editor.blog-rich-text:focus {
   gap: 0.8rem;
 }
 
+.event-editor-tabs {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.event-editor-tabs-nav button {
+  cursor: pointer;
+}
+
 .settings-tabs {
   display: grid;
   gap: 0.9rem;
@@ -5049,6 +5058,21 @@ trix-editor.blog-rich-text:focus {
 
 .settings-tab-panel.is-active {
   display: block;
+}
+
+.llm-enrichment-section {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.llm-enrichment-raw-response {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.llm-enrichment-raw-response-pre {
+  min-height: 12rem;
+  max-height: 30rem;
 }
 
 .import-runs-tab-indicator {
@@ -5221,6 +5245,12 @@ trix-editor.blog-rich-text:focus {
   text-transform: uppercase;
   font-size: 0.78rem;
   letter-spacing: 0.07em;
+}
+
+.form-hint {
+  margin: 0.28rem 0 0;
+  color: #645d52;
+  font-size: 0.92rem;
 }
 
 .form-input,
