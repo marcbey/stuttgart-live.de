@@ -235,11 +235,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-backend-menu[data-controller='backend-nav-menu']", count: 1
     assert_select ".app-nav-backend-toggle[aria-controls='app-nav-backend-menu']", text: /Backend/
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Events"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Presenter"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "News"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Importer"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Passwort"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Logout"
-    assert_match(/Events.*News.*Importer.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*Presenter.*News.*Importer.*Passwort.*Logout/m, response.body)
     assert_select ".app-nav-links-group-separated", count: 0
   end
 
@@ -1591,6 +1592,31 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Bearbeiten/, response.body)
   end
 
+  test "show renders presenter block before media block" do
+    presenter_one = create_presenter(name: "Alpha Presenter")
+    presenter_two = create_presenter(name: "Beta Presenter")
+    @published_event.event_presenters.create!(presenter: presenter_two, position: 2)
+    @published_event.event_presenters.create!(presenter: presenter_one, position: 1)
+    create_event_image(event: @published_event, purpose: EventImage::PURPOSE_SLIDER)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    main_children = document.css(".event-detail-main > *")
+    presenter_section_index = main_children.index { |node| node["class"].to_s.include?("event-detail-presenters") }
+    media_section_index = main_children.index { |node| node["class"].to_s.include?("event-detail-video") || node["class"].to_s.include?("event-detail-slider") }
+    presenter_names = document.css(".event-presenter-name").map(&:text)
+
+    assert_equal [ "Alpha Presenter", "Beta Presenter" ], presenter_names
+    assert presenter_section_index.present?
+    assert media_section_index.present?
+    assert_operator presenter_section_index, :<, media_section_index
+    assert_select ".event-presenter-item[href='#{presenter_one.external_url}']", count: 1
+    assert_select ".event-presenter-item[href='#{presenter_two.external_url}']", count: 1
+  end
+
   test "show returns not found for unpublished events" do
     get event_url(events(:needs_review_one).slug)
 
@@ -2037,5 +2063,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       prompt_version: "v1",
       raw_response: {}
     )
+  end
+
+  def create_presenter(name:)
+    presenter = Presenter.new(
+      name: name,
+      external_url: "https://example.com/#{name.parameterize}"
+    )
+    presenter.logo.attach(create_uploaded_blob(filename: "#{name.parameterize}.png"))
+    presenter.save!
+    presenter
   end
 end

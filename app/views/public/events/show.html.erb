@@ -53,6 +53,10 @@
         </section>
       <% end %>
 
+      <% if presenter.has_presenters? %>
+        <%= render "show_presenters", presenter: presenter %>
+      <% end %>
+
       <% if presenter.has_media_block? %>
         <%= render "show_media", presenter: presenter %>
       <% end %>

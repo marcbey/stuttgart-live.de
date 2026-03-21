@@ -1,0 +1,47 @@
+<div class="backend-section-stack">
+  <section class="backend-section backend-section-form">
+    <div class="backend-section-header backend-section-header-with-actions">
+      <div>
+        <h3>Presenter</h3>
+        <p>Auswahl per Checkbox. Reihenfolge per Drag & Drop.</p>
+      </div>
+      <div class="backend-section-header-actions">
+        <%= link_to "Presenter verwalten", backend_presenters_path, class: "button button-secondary button-compact" %>
+      </div>
+    </div>
+    <div class="backend-section-body">
+      <% if all_presenters.any? %>
+        <%= hidden_field_tag "event[presenter_ids][]", "", form: dom_id(event, :editor_form) %>
+        <ul class="settings-reference-items presenter-reference-items"
+            data-controller="settings-sortable">
+          <% event_presenter_reference_items(event: event, all_presenters: all_presenters).each do |item| %>
+            <% presenter = item.fetch(:presenter) %>
+            <li class="settings-reference-item"
+                data-settings-sortable-target="item"
+                data-action="dragstart->settings-sortable#dragstart dragover->settings-sortable#dragover dragenter->settings-sortable#dragenter drop->settings-sortable#drop dragend->settings-sortable#dragend"
+                draggable="true">
+              <label class="settings-reference-checkbox presenter-reference-checkbox">
+                <span class="settings-reference-selection-index"
+                      data-settings-sortable-target="index"><%= item.fetch(:selected_index) || "-" %></span>
+                <span class="settings-reference-drag-handle" aria-hidden="true">⋮⋮</span>
+                <%= check_box_tag "event[presenter_ids][]",
+                                  presenter.id,
+                                  item.fetch(:selected),
+                                  form: dom_id(event, :editor_form),
+                                  data: { action: "change->settings-sortable#syncSelectionState" } %>
+                <span class="settings-reference-checkbox-copy presenter-reference-copy">
+                  <span class="presenter-reference-logo">
+                    <%= image_tag presenter.thumbnail_logo_variant, alt: presenter.name %>
+                  </span>
+                  <strong><%= presenter.name %></strong>
+                </span>
+              </label>
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <p class="form-hint">Noch keine Presenter angelegt. Erst im Backend anlegen, dann hier zuweisen.</p>
+      <% end %>
+    </div>
+  </section>
+</div>

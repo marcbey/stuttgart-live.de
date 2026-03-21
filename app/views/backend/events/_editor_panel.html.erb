@@ -7,6 +7,7 @@
 <% event_tab_active = active_editor_tab == "event" %>
 <% event_image_tab_active = active_editor_tab == "event_image" %>
 <% slider_images_tab_active = active_editor_tab == "slider_images" %>
+<% presenters_tab_active = active_editor_tab == "presenters" %>
 <% llm_tab_active = active_editor_tab == "llm_enrichment" %>
 
 <div class="editor-panel backend-panel"
@@ -81,6 +82,18 @@
               data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
         Slider-Bilder
       </button>
+      <button type="button"
+              id="event-editor-tab-presenters"
+              class="settings-tabs-link<%= " is-active" if presenters_tab_active %>"
+              role="tab"
+              aria-controls="event-editor-panel-presenters"
+              aria-selected="<%= presenters_tab_active %>"
+              tabindex="<%= presenters_tab_active ? 0 : -1 %>"
+              data-event-editor-tabs-target="tab"
+              data-event-editor-tabs-tab-key-param="presenters"
+              data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+        Presenter
+      </button>
       <% if llm_enrichment.present? %>
         <button type="button"
                 id="event-editor-tab-llm-enrichment"
@@ -134,6 +147,17 @@
                data-event-editor-tabs-target="panel"
                data-event-editor-tabs-panel-key="slider_images">
         <%= render "backend/events/slider_images_section", event: event, editor_status: editor_status %>
+      </section>
+
+      <section id="event-editor-panel-presenters"
+               class="settings-tab-panel backend-tab-panel<%= " is-active" if presenters_tab_active %>"
+               role="tabpanel"
+               aria-labelledby="event-editor-tab-presenters"
+               tabindex="0"
+               <%= "hidden" unless presenters_tab_active %>
+               data-event-editor-tabs-target="panel"
+               data-event-editor-tabs-panel-key="presenters">
+        <%= render "backend/events/presenters_section", event: event, all_presenters: all_presenters %>
       </section>
 
       <% if llm_enrichment.present? %>

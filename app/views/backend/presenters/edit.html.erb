@@ -1,0 +1,15 @@
+<% content_for :title, "Presenter bearbeiten" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Presenter bearbeiten</h1>
+      <p><%= @presenter.name %></p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zur Presenter-Liste", backend_presenters_path, class: "button button-secondary button-compact" %>
+    </div>
+  </header>
+
+  <%= render "form", presenter: @presenter, submit_label: "Presenter speichern" %>
+</section>

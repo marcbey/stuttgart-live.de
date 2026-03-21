@@ -4484,6 +4484,54 @@ trix-editor.blog-rich-text:focus {
   margin-bottom: 0;
 }
 
+.event-presenters-grid {
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(10.5rem, 1fr));
+}
+
+.event-presenter-item {
+  display: grid;
+  gap: 0.7rem;
+  align-items: center;
+  justify-items: center;
+  min-height: 100%;
+  padding: 0.95rem 0.85rem;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(255, 255, 255, 0.72);
+  color: #111;
+  text-align: center;
+  text-decoration: none;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.event-presenter-item:hover {
+  transform: translateY(-1px);
+  border-color: rgba(17, 17, 17, 0.18);
+  box-shadow: 0 10px 18px rgba(17, 17, 17, 0.05);
+}
+
+.event-presenter-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 5rem;
+}
+
+.event-presenter-logo img {
+  max-width: 8rem;
+  max-height: 4.5rem;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.event-presenter-name {
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
 .event-detail-notes {
   margin-top: 0;
   border-top: 0;
@@ -5187,6 +5235,17 @@ trix-editor.blog-rich-text:focus {
   gap: 0.3rem;
 }
 
+.backend-section-header-with-actions {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
+.backend-section-header-actions {
+  display: flex;
+  justify-content: flex-end;
+  justify-self: end;
+}
+
 .backend-section-header h2,
 .backend-section-header h3 {
   margin: 0;
@@ -5413,10 +5472,42 @@ trix-editor.blog-rich-text:focus {
   color: #8d1320;
 }
 
+.presenter-reference-items {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.presenter-reference-checkbox {
+  align-items: start;
+}
+
+.presenter-reference-copy {
+  gap: 0.45rem;
+}
+
+.presenter-reference-logo {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: 100%;
+  min-height: 4.5rem;
+}
+
+.presenter-reference-logo img {
+  max-width: 7rem;
+  max-height: 4rem;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
 .editor-grid {
   display: grid;
   gap: 0.65rem;
   grid-template-columns: repeat(1, minmax(0, 1fr));
+}
+
+.editor-grid-span-full {
+  grid-column: 1 / -1;
 }
 
 .form-label {
@@ -5448,6 +5539,8 @@ trix-editor.blog-rich-text:focus {
 
 .form-textarea {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.94rem;
+  line-height: 1.15;
 }
 
 .form-input:focus,
@@ -5769,6 +5862,71 @@ trix-editor.blog-rich-text:focus {
 
 .data-table td.action-cell {
   justify-content: flex-end;
+}
+
+.presenter-table td {
+  vertical-align: middle;
+}
+
+.presenter-table-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 5.5rem;
+  min-height: 3.75rem;
+  padding: 0.25rem;
+}
+
+.presenter-table-logo img {
+  max-width: 100%;
+  max-height: 3.25rem;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.presenter-table-copy {
+  margin-top: 0.2rem;
+  max-width: 26rem;
+  color: rgba(17, 17, 17, 0.64);
+  white-space: normal;
+}
+
+.presenter-table-link {
+  display: inline-block;
+  max-width: 24rem;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.presenter-table-actions {
+  justify-content: flex-end;
+}
+
+.presenter-table-actions .button_to {
+  display: inline-flex;
+}
+
+.presenter-form-logo-grid {
+  align-items: start;
+}
+
+.presenter-form-logo-preview {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 10rem;
+  padding: 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.presenter-form-logo-preview img {
+  max-width: 100%;
+  max-height: 8rem;
+  width: auto;
+  height: auto;
+  object-fit: contain;
 }
 
 .action-cell {
@@ -6529,6 +6687,10 @@ trix-editor.blog-rich-text:focus {
 
   .editor-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .presenter-reference-items {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .event-image-upload-grid {

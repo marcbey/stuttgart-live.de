@@ -4,6 +4,7 @@ module Public
       Link = Data.define(:label, :url)
       Slide = Data.define(:source, :alt_text, :caption)
       FactItem = Data.define(:label, :value)
+      PresenterItem = Data.define(:name, :external_url, :logo_variant)
 
       WEEKDAY_LABELS = [ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag" ].freeze
 
@@ -200,6 +201,22 @@ module Public
 
       def has_media_block?
         youtube_embed_url.present? || slider_items.any?
+      end
+
+      def presenters
+        @presenters ||= event.ordered_presenters.filter_map do |presenter|
+          next unless presenter.logo.attached?
+
+          PresenterItem.new(
+            name: presenter.name,
+            external_url: presenter.external_url,
+            logo_variant: presenter.detail_logo_variant
+          )
+        end
+      end
+
+      def has_presenters?
+        presenters.any?
       end
 
       def has_secondary_content?

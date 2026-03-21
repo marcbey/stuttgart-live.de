@@ -1,0 +1,77 @@
+<% content_for :title, "Presenter" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Presenter</h1>
+      <p>Globale Presenter für Events mit Logo und externer Verlinkung.</p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Presenter anlegen", new_backend_presenter_path, class: "button button-compact" %>
+    </div>
+  </header>
+
+  <section class="backend-section backend-table-section">
+    <div class="backend-section-header">
+      <h3>Alle Presenter</h3>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table presenter-table">
+        <thead>
+          <tr>
+            <th>Logo</th>
+            <th>Name</th>
+            <th>Externe URL</th>
+            <th>Events</th>
+            <th class="actions-column">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @presenters.each do |presenter| %>
+            <tr>
+              <td>
+                <div class="presenter-table-logo">
+                  <% if presenter.logo.attached? %>
+                    <%= image_tag presenter.thumbnail_logo_variant, alt: presenter.name %>
+                  <% end %>
+                </div>
+              </td>
+              <td>
+                <strong><%= presenter.name %></strong>
+                <% if presenter.description.present? %>
+                  <div class="presenter-table-copy"><%= truncate(presenter.description, length: 110) %></div>
+                <% end %>
+              </td>
+              <td>
+                <% if presenter.external_url.present? %>
+                  <%= link_to presenter.external_url,
+                              presenter.external_url,
+                              target: "_blank",
+                              rel: "noopener",
+                              class: "presenter-table-link" %>
+                <% else %>
+                  <span class="presenter-table-copy">-</span>
+                <% end %>
+              </td>
+              <td><%= presenter.event_presenters.size %></td>
+              <td>
+                <div class="action-cell presenter-table-actions">
+                  <%= link_to "Bearbeiten", edit_backend_presenter_path(presenter), class: "button button-ghost button-compact" %>
+                  <%= button_to "Löschen",
+                                backend_presenter_path(presenter),
+                                method: :delete,
+                                class: "button button-secondary button-compact",
+                                form: {
+                                  data: {
+                                    turbo_confirm: "Presenter wirklich löschen?"
+                                  }
+                                } %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</section>

@@ -41,6 +41,8 @@ class Event < ApplicationRecord
   has_many :genres, through: :event_genres
   has_many :event_change_logs, dependent: :destroy
   has_many :event_images, dependent: :destroy
+  has_many :event_presenters, -> { order(:position, :id) }, dependent: :destroy
+  has_many :presenters, -> { order("event_presenters.position ASC", "event_presenters.id ASC") }, through: :event_presenters
   has_one :llm_enrichment, class_name: "EventLlmEnrichment", dependent: :destroy
   has_many :import_event_images,
     as: :import_event,
@@ -214,6 +216,18 @@ class Event < ApplicationRecord
   def has_import_images?
     association = import_event_images
     association.loaded? ? association.any? : association.exists?
+  end
+
+  def ordered_presenters
+    association = event_presenters
+
+    if association.loaded?
+      association
+        .sort_by { |event_presenter| [ event_presenter.position.to_i, event_presenter.id.to_i ] }
+        .filter_map(&:presenter)
+    else
+      presenters.to_a
+    end
   end
 
   def slider_images

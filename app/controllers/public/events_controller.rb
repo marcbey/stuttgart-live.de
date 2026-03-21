@@ -204,14 +204,16 @@ module Public
       Event.includes(
         :event_offers,
         :import_event_images,
-        event_images: [ file_attachment: :blob ]
+        event_images: [ file_attachment: :blob ],
+        event_presenters: { presenter: [ logo_attachment: :blob ] }
       ).published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
     def search_events_relation
       Event.includes(
         :import_event_images,
-        event_images: [ file_attachment: :blob ]
+        event_images: [ file_attachment: :blob ],
+        event_presenters: { presenter: [ logo_attachment: :blob ] }
       )
     end
 
@@ -240,7 +242,8 @@ module Public
       Event.includes(
         :event_offers,
         :import_event_images,
-        event_images: [ file_attachment: :blob ]
+        event_images: [ file_attachment: :blob ],
+        event_presenters: { presenter: [ logo_attachment: :blob ] }
       ).published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
@@ -250,7 +253,8 @@ module Public
         :genres,
         :event_offers,
         :import_event_images,
-        event_images: [ file_attachment: :blob ]
+        event_images: [ file_attachment: :blob ],
+        event_presenters: { presenter: [ logo_attachment: :blob ] }
       )
     end
 

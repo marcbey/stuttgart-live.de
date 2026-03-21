@@ -31,7 +31,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
     assert_select ".app-nav-backend-menu", count: 0
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
-    assert_match(/Events.*News.*Importer.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*Presenter.*News.*Importer.*Passwort.*Logout/m, response.body)
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "auto-next"
     assert_includes response.body, "name=\"status\""
@@ -783,6 +783,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-tab-event[aria-selected='true']", count: 1
     assert_select "#event-editor-tab-event-image[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-presenters[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-llm-enrichment", count: 0
     assert_no_match(/LLM enriched/i, response.body)
   end
@@ -798,9 +799,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-tab-event[aria-selected='true']", count: 1
     assert_select "#event-editor-tab-event-image[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-presenters[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-llm-enrichment[aria-selected='false']", count: 1
     assert_select "#event-editor-panel-event-image[hidden]", count: 1
     assert_select "#event-editor-panel-slider-images[hidden]", count: 1
+    assert_select "#event-editor-panel-presenters[hidden]", count: 1
     assert_select "#event-editor-panel-llm-enrichment[hidden]", count: 1
     assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 1
     assert_select "textarea[name='event[llm_enrichment_attributes][raw_response_json]']", count: 0
@@ -817,11 +820,99 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-tab-event[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-event-image[aria-selected='true']", count: 1
     assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-presenters[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-llm-enrichment", count: 0
     assert_select "#event-editor-panel-event[hidden]", count: 1
     assert_select "#event-editor-panel-event-image:not([hidden])", count: 1
     assert_select "#event-editor-panel-slider-images[hidden]", count: 1
+    assert_select "#event-editor-panel-presenters[hidden]", count: 1
     assert_select "input[name='editor_tab'][value='event_image']", count: 1
+  end
+
+  test "editor shows presenters tab with sortable selection list" do
+    sign_in_as(@user)
+    create_presenter(name: "Alpha Presenter")
+    create_presenter(name: "Beta Presenter")
+
+    get backend_event_url(@published_event, editor_tab: "presenters")
+
+    assert_response :success
+    assert_select "#event-editor-tab-presenters[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-presenters:not([hidden])", count: 1
+    assert_select "input[name='event[presenter_ids][]'][type='hidden'][value='']", count: 1
+    assert_select ".presenter-reference-items[data-controller='settings-sortable']", count: 1
+  end
+
+  test "update stores presenter selection order from editor" do
+    sign_in_as(@user)
+    presenter_one = create_presenter(name: "Alpha Presenter")
+    presenter_two = create_presenter(name: "Beta Presenter")
+
+    patch backend_event_url(@published_event), params: {
+      editor_tab: "presenters",
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        presenter_ids: [ presenter_two.id.to_s, presenter_one.id.to_s ]
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+    assert_equal [ presenter_two.id, presenter_one.id ], @published_event.reload.event_presenters.order(:position).pluck(:presenter_id)
+  end
+
+  test "turbo update keeps presenters tab active after successful save" do
+    sign_in_as(@user)
+    presenter = create_presenter(name: "Gamma Presenter")
+
+    patch backend_event_url(@published_event), params: {
+      inbox_status: "published",
+      next_event_enabled: "0",
+      editor_tab: "presenters",
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        presenter_ids: [ presenter.id.to_s ]
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, 'id="event-editor-tab-presenters"'
+    assert_includes response.body, 'value="presenters"'
+    assert_match(/id="event-editor-tab-presenters"[^>]*aria-selected="true"/, response.body)
+  end
+
+  test "validation error keeps presenters tab active" do
+    sign_in_as(@user)
+    presenter = create_presenter(name: "Delta Presenter")
+
+    patch backend_event_url(@published_event), params: {
+      inbox_status: "published",
+      next_event_enabled: "0",
+      editor_tab: "presenters",
+      event: {
+        title: @published_event.title,
+        artist_name: "",
+        start_at: @published_event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        presenter_ids: [ presenter.id.to_s ]
+      }
+    }, as: :turbo_stream
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, 'id="event-editor-tab-presenters"'
+    assert_includes response.body, 'value="presenters"'
+    assert_match(/id="event-editor-tab-presenters"[^>]*aria-selected="true"/, response.body)
   end
 
   test "update stores nested llm enrichment fields from editor" do
@@ -1141,5 +1232,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         "genre" => [ "Indie" ]
       }
     )
+  end
+
+  def create_presenter(name:)
+    presenter = Presenter.new(
+      name: name,
+      external_url: "https://example.com/#{name.parameterize}"
+    )
+    presenter.logo.attach(create_uploaded_blob(filename: "#{name.parameterize}.png"))
+    presenter.save!
+    presenter
   end
 end

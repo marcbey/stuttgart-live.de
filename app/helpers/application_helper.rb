@@ -35,6 +35,10 @@ module ApplicationHelper
     controller_path == "backend/blog_posts"
   end
 
+  def presenter_nav_active?
+    controller_path == "backend/presenters"
+  end
+
   def importer_nav_active?
     controller_path == "backend/import_sources" || controller_path == "backend/import_runs"
   end

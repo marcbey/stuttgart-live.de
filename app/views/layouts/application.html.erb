@@ -49,6 +49,7 @@
       <% if authenticated? %>
         <% if current_user.backend_access? %>
           <%= link_to "Events", backend_events_path, class: app_nav_link_class(active: backend_nav_active?), aria: { current: ("page" if backend_nav_active?) } %>
+          <%= link_to "Presenter", backend_presenters_path, class: app_nav_link_class(active: presenter_nav_active?), aria: { current: ("page" if presenter_nav_active?) } %>
         <% end %>
         <% if current_user.blog_access? %>
           <%= link_to "News", backend_blog_posts_path, class: app_nav_link_class(active: blog_nav_active?), aria: { current: ("page" if blog_nav_active?) } %>

@@ -1,0 +1,25 @@
+<section class="event-detail-panel event-detail-presenters">
+  <h2>Presenter</h2>
+  <div class="event-presenters-grid">
+    <% presenter.presenters.each do |item| %>
+      <% if item.external_url.present? %>
+        <%= link_to item.external_url,
+                    class: "event-presenter-item",
+                    target: "_blank",
+                    rel: "noopener" do %>
+          <span class="event-presenter-logo">
+            <%= image_tag item.logo_variant, alt: item.name %>
+          </span>
+          <span class="event-presenter-name"><%= item.name %></span>
+        <% end %>
+      <% else %>
+        <div class="event-presenter-item">
+          <span class="event-presenter-logo">
+            <%= image_tag item.logo_variant, alt: item.name %>
+          </span>
+          <span class="event-presenter-name"><%= item.name %></span>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+</section>

@@ -104,6 +104,28 @@ module Backend::EventsHelper
     nil
   end
 
+  def event_presenter_reference_items(event:, all_presenters:)
+    selected_ids = event.ordered_presenters.map(&:id)
+    selected_positions = selected_ids.each_with_index.to_h
+
+    all_presenters.sort_by do |presenter|
+      selection_index = selected_positions[presenter.id]
+      [
+        selection_index.nil? ? 1 : 0,
+        selection_index || presenter.name.to_s.downcase,
+        presenter.id
+      ]
+    end.map do |presenter|
+      selection_index = selected_positions[presenter.id]
+
+      {
+        presenter: presenter,
+        selected: selection_index.present?,
+        selected_index: selection_index&.+(1)
+      }
+    end
+  end
+
   private
 
   def import_change_actions_for(event, merge_run_id)

@@ -4,6 +4,7 @@ module Backend
     before_action :set_inbox_state
     before_action :set_next_event_enabled, only: [ :index, :show, :update, :publish, :unpublish ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish ]
+    before_action :load_all_presenters, only: [ :index, :show, :update, :unpublish ]
 
     def index
       @latest_successful_merge_run = latest_successful_merge_run
@@ -100,13 +101,14 @@ module Backend
       @next_event_enabled = @inbox_state.persist_next_event_preference!(params[:next_event_enabled]) if params.key?(:next_event_enabled)
       navigation_status = @inbox_state.navigation_status
 
-      @event.assign_attributes(event_params)
+      @event.assign_attributes(event_attribute_params)
       @event.status = "published" if save_and_publish_requested?
       set_publishing_fields!(@event)
 
       if @event.save
         begin
           update_detail_hero_crop!
+          sync_presenters!(@event)
         rescue ActiveRecord::RecordInvalid => e
           @event.errors.add(:base, e.record.errors.full_messages.to_sentence)
           editor_response.validation_error(
@@ -189,7 +191,12 @@ module Backend
     end
 
     def set_event
-      @event = Event.includes(:llm_enrichment, :import_event_images, event_images: [ file_attachment: :blob ]).find(params[:id])
+      @event = Event.includes(
+        :llm_enrichment,
+        :import_event_images,
+        event_images: [ file_attachment: :blob ],
+        event_presenters: { presenter: [ logo_attachment: :blob ] }
+      ).find(params[:id])
     end
 
     def set_next_event_enabled
@@ -198,6 +205,10 @@ module Backend
 
     def load_all_genres
       @all_genres = Genre.order(:name)
+    end
+
+    def load_all_presenters
+      @all_presenters = Presenter.with_attached_logo.ordered_by_name.to_a
     end
 
     def build_editor_state_builder
@@ -212,13 +223,19 @@ module Backend
       @editor_response ||= Backend::Events::EditorResponse.new(
         controller: self,
         all_genres: @all_genres,
+        all_presenters: @all_presenters,
         next_event_enabled: @next_event_enabled
       )
     end
 
     def selected_event_from(events)
       if params[:event_id].present?
-        return Event.includes(:llm_enrichment, :import_event_images, event_images: [ file_attachment: :blob ]).find_by(id: params[:event_id])
+        return Event.includes(
+          :llm_enrichment,
+          :import_event_images,
+          event_images: [ file_attachment: :blob ],
+          event_presenters: { presenter: [ logo_attachment: :blob ] }
+        ).find_by(id: params[:event_id])
       end
 
       events.first
@@ -253,6 +270,7 @@ module Backend
         :highlighted,
         :status,
         :editor_notes,
+        presenter_ids: [],
         llm_enrichment_attributes: [
           :id,
           :venue,
@@ -266,6 +284,10 @@ module Backend
           :facebook_link
         ]
       )
+    end
+
+    def event_attribute_params
+      event_params.except(:presenter_ids)
     end
 
     def editor_tab_for(event)
@@ -282,6 +304,7 @@ module Backend
 
     def allowed_editor_tabs_for(event)
       tabs = %w[event event_image slider_images]
+      tabs << "presenters"
       tabs << "llm_enrichment" if event.present? && event.llm_enrichment.present?
       tabs
     end
@@ -292,6 +315,10 @@ module Backend
 
     def genre_ids_from_params
       Array(params.dig(:event, :genre_ids)).reject(&:blank?).map(&:to_i)
+    end
+
+    def presenter_ids_from_params
+      Array(params.dig(:event, :presenter_ids)).reject(&:blank?).map(&:to_i).uniq
     end
 
     def manual_image_params
@@ -332,6 +359,20 @@ module Backend
 
       ids = genre_ids_from_params
       event.genres = Genre.where(id: ids)
+    end
+
+    def sync_presenters!(event)
+      return unless params[:event].respond_to?(:key?) && params[:event].key?(:presenter_ids)
+
+      valid_presenter_ids = Presenter.where(id: presenter_ids_from_params).pluck(:id)
+
+      event.event_presenters.destroy_all
+
+      presenter_ids_from_params.each_with_index do |presenter_id, index|
+        next unless valid_presenter_ids.include?(presenter_id)
+
+        event.event_presenters.create!(presenter_id:, position: index + 1)
+      end
     end
 
     def refresh_completeness!(event)

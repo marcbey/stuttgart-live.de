@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_21_113000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_21_121000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -170,6 +170,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_113000) do
     t.index ["event_id", "source", "source_event_id"], name: "index_event_offers_on_event_id_and_source_and_source_event_id", unique: true
     t.index ["event_id"], name: "index_event_offers_on_event_id"
     t.index ["source", "source_event_id"], name: "index_event_offers_on_source_and_source_event_id"
+  end
+
+  create_table "event_presenters", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "event_id", null: false
+    t.integer "position", null: false
+    t.bigint "presenter_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_id", "position"], name: "index_event_presenters_on_event_id_and_position", unique: true
+    t.index ["event_id", "presenter_id"], name: "index_event_presenters_on_event_id_and_presenter_id", unique: true
+    t.index ["event_id"], name: "index_event_presenters_on_event_id"
+    t.index ["presenter_id"], name: "index_event_presenters_on_presenter_id"
   end
 
   create_table "events", force: :cascade do |t|
@@ -361,6 +373,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_113000) do
     t.index ["mailchimp_status"], name: "index_newsletter_subscribers_on_mailchimp_status"
   end
 
+  create_table "presenters", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "external_url"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index ["name"], name: "index_presenters_on_name"
+  end
+
   create_table "provider_priorities", force: :cascade do |t|
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
@@ -419,6 +440,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_113000) do
   add_foreign_key "event_llm_enrichments", "events"
   add_foreign_key "event_llm_enrichments", "import_runs", column: "source_run_id"
   add_foreign_key "event_offers", "events"
+  add_foreign_key "event_presenters", "events"
+  add_foreign_key "event_presenters", "presenters"
   add_foreign_key "events", "users", column: "published_by_id"
   add_foreign_key "homepage_genre_lane_configurations", "llm_genre_grouping_snapshots", column: "snapshot_id"
   add_foreign_key "import_run_errors", "import_runs"
