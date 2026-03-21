@@ -88,6 +88,45 @@ jobs:
           ssh-keygen -R "$host" >/dev/null 2>&1 || true
           printf '%s\n' "$KAMAL_SSH_HOST_KEY" >> ~/.ssh/known_hosts
 
+      - name: Ensure compatible kamal-proxy version
+        env:
+          KAMAL_SSH_KEY_PATH: ${{ runner.temp }}/kamal.key
+          KAMAL_REGISTRY_PULL_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PULL_PASSWORD }}
+          RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          REQUIRED_KAMAL_PROXY_VERSION: v0.9.2
+        run: |
+          set -euo pipefail
+
+          host="${KAMAL_WEB_HOST}"
+          current_proxy_image="$(
+            ssh -i "$KAMAL_SSH_KEY_PATH" -o StrictHostKeyChecking=yes deploy@"$host" \
+              "docker inspect kamal-proxy --format '{{.Config.Image}}' 2>/dev/null || true"
+          )"
+          current_proxy_version="${current_proxy_image##*:}"
+
+          if [ -z "$current_proxy_image" ]; then
+            echo "kamal-proxy läuft noch nicht, starte ihn mit bin/kamal proxy reboot"
+            bin/kamal proxy reboot -d hetzner
+            exit 0
+          fi
+
+          if [ "$current_proxy_version" = "$REQUIRED_KAMAL_PROXY_VERSION" ]; then
+            echo "kamal-proxy ist bereits auf $current_proxy_version"
+            exit 0
+          fi
+
+          lowest_version="$(
+            printf '%s\n%s\n' "$REQUIRED_KAMAL_PROXY_VERSION" "$current_proxy_version" | sort -V | head -n1
+          )"
+          if [ "$lowest_version" = "$REQUIRED_KAMAL_PROXY_VERSION" ]; then
+            echo "kamal-proxy ist bereits kompatibel ($current_proxy_version)"
+            exit 0
+          fi
+
+          echo "kamal-proxy ist zu alt ($current_proxy_version), aktualisiere auf mindestens $REQUIRED_KAMAL_PROXY_VERSION"
+          bin/kamal proxy reboot -d hetzner
+
       - name: Deploy with Kamal
         env:
           KAMAL_SSH_KEY_PATH: ${{ runner.temp }}/kamal.key

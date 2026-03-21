@@ -310,6 +310,8 @@ GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit
 ### Automatischer Deploy über GitHub
 
 Der GitHub-Workflow liest `APP_HOST`, `KAMAL_WEB_HOST` und `KAMAL_SSH_HOST_KEY` direkt aus der versionierten Datei `config/deploy.hetzner.shared.yml`.
+Vor dem eigentlichen App-Deploy prüft der Workflow außerdem die Version von `kamal-proxy` auf dem Zielhost und führt bei Bedarf automatisch `bin/kamal proxy reboot -d hetzner` aus.
+Hintergrund: Seit `kamal 2.11.0` ist `kamal-proxy v0.9.2` oder neuer für Deployments erforderlich.
 
 In GitHub müssen deshalb nur diese Secrets gepflegt sein:
 

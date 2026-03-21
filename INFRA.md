@@ -343,8 +343,9 @@ Schritte:
 4. Docker-Login bei `ghcr.io`
 5. SSH-Key aus GitHub Secret schreiben
 6. bekannte Hosts vorbereiten
-7. Kamal-Umgebungsvariablen setzen
-8. `bin/kamal deploy -d hetzner --skip_push`
+7. `kamal-proxy` auf dem Zielhost auf eine mit der Kamal-Version kompatible Version prüfen und bei Bedarf per `bin/kamal proxy reboot -d hetzner` aktualisieren
+8. Kamal-Umgebungsvariablen setzen
+9. `bin/kamal deploy -d hetzner --skip_push`
 
 ### GitHub Secrets / Environment Secrets
 
