@@ -41,7 +41,7 @@ module Importing
         AppSetting.reset_cache!
       end
 
-      test "groups normalized distinct genres and persists an active snapshot" do
+      test "groups normalized distinct genres and persists a new snapshot without switching older ones" do
         EventLlmEnrichment.create!(
           event: events(:published_one),
           source_run: import_runs(:one),
@@ -108,8 +108,8 @@ module Importing
 
         snapshot = @run.reload.llm_genre_grouping_snapshot
         assert snapshot.present?
-        assert_equal true, snapshot.active
-        assert_equal false, old_snapshot.reload.active
+        assert_equal false, snapshot.active
+        assert_equal true, old_snapshot.reload.active
         assert_equal 3, snapshot.groups.count
         assert_equal [ "Rock", "Pop" ].sort, snapshot.groups.find_by!(position: 1).member_genres.sort
       end

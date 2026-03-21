@@ -3,6 +3,7 @@ require "test_helper"
 class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
   setup do
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
+    AppSetting.where(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY).delete_all
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135" ])
     AppSetting.reset_cache!
 
@@ -26,6 +27,7 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
 
     @rock_group = @snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
     @pop_group = @snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
+    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: @snapshot.id)
   end
 
   teardown do

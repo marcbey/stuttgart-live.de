@@ -139,7 +139,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
     end
 
-    assert_equal snapshot.id, LlmGenreGrouping::Lookup.active_snapshot.id
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
     assert pop_section.present?, "expected configured pop lane to be rendered"
     assert rock_section.present?, "expected configured rock lane to be rendered"
     expected_first_genre_index = promotion_index.present? ? promotion_index + 1 : highlights_index + 1
@@ -159,8 +159,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes rock_names, past_event.artist_name
   end
 
-  test "index does not render homepage genre lanes without active snapshot" do
-    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ "rock-alternative" ])
+  test "index does not render homepage genre lanes without selected snapshot" do
     AppSetting.reset_cache!
 
     get events_url(filter: "all")
@@ -1269,7 +1268,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
-    assert_equal snapshot.id, LlmGenreGrouping::Lookup.active_snapshot.id
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
 
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
     build_homepage_genre_enrichment(event: related_event, genres: [ "Rock" ])
@@ -1287,7 +1286,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "section.genre-lane-section .genre-lane-card-name", text: past_event.artist_name, count: 0
   end
 
-  test "show does not render related genre lane without active snapshot or additional matches" do
+  test "show does not render related genre lane without selected snapshot or additional matches" do
     get event_url(@published_event.slug)
 
     assert_response :success
@@ -1295,7 +1294,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     snapshot, = create_homepage_genre_snapshot
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
-    snapshot.update!(active: false)
+    AppSetting.where(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY).delete_all
+    AppSetting.reset_cache!
 
     get event_url(@published_event.slug)
 
@@ -2001,7 +2001,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     image
   end
 
-  def create_homepage_genre_snapshot
+  def create_homepage_genre_snapshot(selected: true, lane_slugs: [ "rock-alternative", "pop-mainstream" ])
     run = import_sources(:two).import_runs.create!(
       source_type: "llm_genre_grouping",
       status: "succeeded",
@@ -2010,7 +2010,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     )
 
     snapshot = run.create_llm_genre_grouping_snapshot!(
-      active: true,
+      active: false,
       requested_group_count: 30,
       effective_group_count: 2,
       source_genres_count: 2,
@@ -2022,6 +2022,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     rock_group = snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
     pop_group = snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
+    snapshot.create_homepage_genre_lane_configuration!(lane_slugs:)
+    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: snapshot.id) if selected
 
     [ snapshot, rock_group, pop_group ]
   end

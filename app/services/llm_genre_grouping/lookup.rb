@@ -1,15 +1,18 @@
 module LlmGenreGrouping
   class Lookup
     class << self
-      def active_snapshot
-        LlmGenreGroupingSnapshot.active.includes(:groups).first
+      def selected_snapshot
+        snapshot_id = AppSetting.public_genre_grouping_snapshot_id
+        return if snapshot_id.blank?
+
+        LlmGenreGroupingSnapshot.includes(:groups, :homepage_genre_lane_configuration).find_by(id: snapshot_id)
       end
 
       def groups_for_event(event)
         genres = normalized_event_genres(event)
         return LlmGenreGroupingGroup.none if genres.empty?
 
-        snapshot = active_snapshot
+        snapshot = selected_snapshot
         return LlmGenreGroupingGroup.none if snapshot.blank?
 
         matching_groups(snapshot.groups, genres)

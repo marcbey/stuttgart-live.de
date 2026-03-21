@@ -45,7 +45,7 @@ module Importing
         importer_class.remove_method :__original_new_for_test
       end
 
-      test "stores import_run_error when importer fails and keeps active snapshot unchanged" do
+      test "stores import_run_error when importer fails and keeps existing snapshots unchanged" do
         existing_snapshot = ImportRun.create!(
           import_source: import_sources(:one),
           source_type: "llm_genre_grouping",

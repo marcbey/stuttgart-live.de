@@ -1,5 +1,10 @@
 class LlmGenreGroupingSnapshot < ApplicationRecord
   belongs_to :import_run
+  has_one :homepage_genre_lane_configuration,
+    class_name: "HomepageGenreLaneConfiguration",
+    foreign_key: :snapshot_id,
+    inverse_of: :snapshot,
+    dependent: :destroy
   has_many :groups,
     -> { order(:position, :id) },
     class_name: "LlmGenreGroupingGroup",
@@ -7,7 +12,6 @@ class LlmGenreGroupingSnapshot < ApplicationRecord
     inverse_of: :snapshot,
     dependent: :destroy
 
-  scope :active, -> { where(active: true) }
   scope :recent_first, -> { order(created_at: :desc, id: :desc) }
 
   validates :snapshot_key, presence: true, uniqueness: true

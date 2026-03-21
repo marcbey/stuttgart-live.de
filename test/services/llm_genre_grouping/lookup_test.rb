@@ -2,6 +2,7 @@ require "test_helper"
 
 class LlmGenreGrouping::LookupTest < ActiveSupport::TestCase
   setup do
+    AppSetting.where(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY).delete_all
     @run = import_sources(:two).import_runs.create!(
       source_type: "llm_genre_grouping",
       status: "succeeded",
@@ -20,6 +21,7 @@ class LlmGenreGrouping::LookupTest < ActiveSupport::TestCase
     )
     @rock_group = @snapshot.groups.create!(position: 1, name: "Rock & Pop", member_genres: [ "Rock", "Pop" ])
     @jazz_group = @snapshot.groups.create!(position: 2, name: "Jazz", member_genres: [ "Jazz" ])
+    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: @snapshot.id)
 
     EventLlmEnrichment.create!(
       event: events(:published_one),
@@ -39,8 +41,8 @@ class LlmGenreGrouping::LookupTest < ActiveSupport::TestCase
     )
   end
 
-  test "returns active snapshot" do
-    assert_equal @snapshot, LlmGenreGrouping::Lookup.active_snapshot
+  test "returns selected snapshot" do
+    assert_equal @snapshot, LlmGenreGrouping::Lookup.selected_snapshot
   end
 
   test "finds groups for an event by overlapping llm enrichment genres" do

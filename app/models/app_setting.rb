@@ -3,6 +3,7 @@ class AppSetting < ApplicationRecord
   SKS_ORGANIZER_NOTES_KEY = "sks_organizer_notes".freeze
   MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY = "merge_artist_similarity_matching_enabled".freeze
   HOMEPAGE_GENRE_LANE_SLUGS_KEY = "homepage_genre_lane_slugs".freeze
+  PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY = "public_genre_grouping_snapshot_id".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
   LLM_GENRE_GROUPING_MODEL_KEY = "llm_genre_grouping_model".freeze
@@ -133,6 +134,7 @@ class AppSetting < ApplicationRecord
   validate :sks_promoter_ids_must_be_present
   validate :llm_enrichment_model_must_be_valid
   validate :llm_enrichment_prompt_template_must_be_valid
+  validate :public_genre_grouping_snapshot_id_must_be_valid
   validate :llm_genre_grouping_model_must_be_valid
   validate :llm_genre_grouping_prompt_template_must_be_valid
   validate :llm_genre_grouping_group_count_must_be_valid
@@ -150,6 +152,10 @@ class AppSetting < ApplicationRecord
 
     def homepage_genre_lane_slugs
       @homepage_genre_lane_slugs ||= normalize_slug_list(find_by(key: HOMEPAGE_GENRE_LANE_SLUGS_KEY)&.value)
+    end
+
+    def public_genre_grouping_snapshot_id
+      @public_genre_grouping_snapshot_id ||= normalize_positive_integer(find_by(key: PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY)&.value)
     end
 
     def llm_enrichment_prompt_template
@@ -187,6 +193,10 @@ class AppSetting < ApplicationRecord
 
     def homepage_genre_lane_slugs_record
       find_or_initialize_by(key: HOMEPAGE_GENRE_LANE_SLUGS_KEY)
+    end
+
+    def public_genre_grouping_snapshot_id_record
+      find_or_initialize_by(key: PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY)
     end
 
     def llm_enrichment_prompt_template_record
@@ -322,6 +332,7 @@ class AppSetting < ApplicationRecord
       @sks_promoter_ids = nil
       @sks_organizer_notes = nil
       @homepage_genre_lane_slugs = nil
+      @public_genre_grouping_snapshot_id = nil
       @llm_enrichment_model = nil
       @llm_enrichment_prompt_template = nil
       @llm_genre_grouping_model = nil
@@ -369,6 +380,14 @@ class AppSetting < ApplicationRecord
 
   def homepage_genre_lane_slugs=(raw_value)
     self.value = self.class.normalize_slug_list(raw_value)
+  end
+
+  def public_genre_grouping_snapshot_id
+    self.class.normalize_positive_integer(value)
+  end
+
+  def public_genre_grouping_snapshot_id=(raw_value)
+    self.value = self.class.normalize_positive_integer(raw_value)
   end
 
   def llm_enrichment_prompt_template
@@ -486,6 +505,14 @@ class AppSetting < ApplicationRecord
     return if self.class.available_llm_enrichment_model_values.include?(model)
 
     errors.add(:value, "ist kein unterstütztes LLM-Modell")
+  end
+
+  def public_genre_grouping_snapshot_id_must_be_valid
+    return unless key == PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY
+    return if value.blank?
+    return if self.class.normalize_positive_integer(value).present?
+
+    errors.add(:value, "muss eine positive Ganzzahl sein")
   end
 
   def llm_genre_grouping_prompt_template_must_be_valid

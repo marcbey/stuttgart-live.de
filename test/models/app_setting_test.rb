@@ -71,6 +71,26 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal [], AppSetting.homepage_genre_lane_slugs
   end
 
+  test "normalizes public genre grouping snapshot id" do
+    setting = AppSetting.new(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY)
+    setting.public_genre_grouping_snapshot_id = "42"
+
+    assert_equal 42, setting.public_genre_grouping_snapshot_id
+  end
+
+  test "returns configured public genre grouping snapshot id" do
+    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: 7)
+
+    assert_equal 7, AppSetting.public_genre_grouping_snapshot_id
+  end
+
+  test "rejects invalid public genre grouping snapshot id" do
+    setting = AppSetting.new(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: "abc")
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "muss eine positive Ganzzahl sein"
+  end
+
   test "returns default llm enrichment prompt template when no setting exists" do
     assert_includes AppSetting.llm_enrichment_prompt_template, "{{input_json}}"
   end

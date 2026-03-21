@@ -71,7 +71,7 @@ module Backend
           active_section_records.each(&:save!)
         end
 
-        redirect_to edit_backend_settings_path(section: @active_section_key), notice: "Einstellungen wurden gespeichert."
+        redirect_to active_section_redirect_path, notice: "Einstellungen wurden gespeichert."
       else
         flash.now[:alert] = "Einstellungen konnten nicht gespeichert werden."
         render :edit, status: :unprocessable_entity
@@ -109,9 +109,13 @@ module Backend
       when "sks_organizer_notes"
         @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
       when "homepage_genre_lanes"
-        @homepage_genre_lane_slugs_setting = AppSetting.homepage_genre_lane_slugs_record
+        @public_genre_grouping_snapshot_id_setting = AppSetting.public_genre_grouping_snapshot_id_record
+        @homepage_genre_lane_snapshots = LlmGenreGroupingSnapshot.recent_first.includes(:groups, :homepage_genre_lane_configuration).to_a
+        @homepage_selected_snapshot = homepage_selected_snapshot
+        @homepage_genre_lane_configuration =
+          @homepage_selected_snapshot&.homepage_genre_lane_configuration || @homepage_selected_snapshot&.build_homepage_genre_lane_configuration
         @homepage_genre_lane_reference_groups =
-          homepage_genre_lane_reference_groups(@homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs)
+          homepage_genre_lane_reference_groups(@homepage_selected_snapshot, @homepage_genre_lane_configuration&.lane_slugs)
       when "llm_enrichment"
         @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
         @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
@@ -131,7 +135,9 @@ module Backend
       when "sks_organizer_notes"
         @sks_organizer_notes_setting.sks_organizer_notes_text = active_settings_params[:sks_organizer_notes_text]
       when "homepage_genre_lanes"
-        @homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs = active_settings_params.fetch(:homepage_genre_lane_slugs, [])
+        @public_genre_grouping_snapshot_id_setting.public_genre_grouping_snapshot_id =
+          active_settings_params[:public_genre_grouping_snapshot_id]
+        @homepage_genre_lane_configuration&.lane_slugs = active_settings_params.fetch(:homepage_genre_lane_slugs, [])
       when "llm_enrichment"
         @llm_enrichment_model_setting.llm_enrichment_model = active_settings_params[:llm_enrichment_model]
         @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text =
@@ -155,7 +161,7 @@ module Backend
       when "sks_organizer_notes"
         [ @sks_organizer_notes_setting ]
       when "homepage_genre_lanes"
-        [ @homepage_genre_lane_slugs_setting ]
+        [ @public_genre_grouping_snapshot_id_setting, @homepage_genre_lane_configuration ].compact
       when "llm_enrichment"
         [ @llm_enrichment_model_setting, @llm_enrichment_prompt_template_setting ]
       when "llm_genre_grouping"
@@ -178,7 +184,7 @@ module Backend
       when "sks_organizer_notes"
         params.require(:app_setting).permit(:sks_organizer_notes_text)
       when "homepage_genre_lanes"
-        params.require(:app_setting).permit(homepage_genre_lane_slugs: [])
+        params.require(:app_setting).permit(:public_genre_grouping_snapshot_id, homepage_genre_lane_slugs: [])
       when "llm_enrichment"
         params.require(:app_setting).permit(:llm_enrichment_model, :llm_enrichment_prompt_template_text)
       when "llm_genre_grouping"
@@ -202,8 +208,25 @@ module Backend
       }
     end
 
-    def homepage_genre_lane_reference_groups(selected_slugs = [])
-      snapshot = LlmGenreGrouping::Lookup.active_snapshot
+    def active_section_redirect_path
+      return edit_backend_settings_path(section: @active_section_key, selected_snapshot_id: @homepage_selected_snapshot&.id) if @active_section_key == "homepage_genre_lanes"
+
+      edit_backend_settings_path(section: @active_section_key)
+    end
+
+    def homepage_selected_snapshot
+      snapshot_id = selected_homepage_snapshot_id
+      return if snapshot_id.blank?
+
+      @homepage_genre_lane_snapshots.find { |snapshot| snapshot.id == snapshot_id }
+    end
+
+    def selected_homepage_snapshot_id
+      AppSetting.normalize_positive_integer(params[:selected_snapshot_id].presence || params.dig(:app_setting, :public_genre_grouping_snapshot_id).presence) ||
+        AppSetting.public_genre_grouping_snapshot_id
+    end
+
+    def homepage_genre_lane_reference_groups(snapshot, selected_slugs = [])
       return [] if snapshot.blank?
 
       upcoming_relation = Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)

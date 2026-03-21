@@ -1079,12 +1079,10 @@ module Importing
 
       def persist_snapshot!(groups:, request_payload:, raw_response:, selected_count:, requested_group_count:, effective_group_count:)
         snapshot_model.transaction do
-          snapshot_model.active.update_all(active: false)
-
           snapshot = snapshot_model.create!(
             import_run: run,
             snapshot_key: SecureRandom.uuid,
-            active: true,
+            active: false,
             requested_group_count: requested_group_count,
             effective_group_count: effective_group_count,
             source_genres_count: selected_count,

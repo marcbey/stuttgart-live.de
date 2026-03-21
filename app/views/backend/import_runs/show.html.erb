@@ -136,12 +136,15 @@
 
   <% if llm_genre_grouping_import_run?(@import_run) %>
     <% snapshot = @import_run.llm_genre_grouping_snapshot %>
+    <% public_snapshot_id = AppSetting.public_genre_grouping_snapshot_id %>
     <section class="import-run-section">
       <h2>Gruppierungs-Snapshot</h2>
       <% if snapshot.present? %>
         <p>
+          Snapshot-ID: <strong><%= snapshot.id %></strong>
+          · Öffentlich ausgewählt: <strong><%= public_snapshot_id == snapshot.id ? "Ja" : "Nein" %></strong>
+          <br>
           Snapshot-Key: <strong><%= snapshot.snapshot_key %></strong>
-          · Aktiv: <strong><%= snapshot.active ? "Ja" : "Nein" %></strong>
           · Modell: <strong><%= snapshot.model %></strong>
           · Zielgruppen: <strong><%= snapshot.requested_group_count %></strong>
           · Effektive Gruppen: <strong><%= snapshot.effective_group_count %></strong>

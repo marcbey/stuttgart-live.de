@@ -3,16 +3,39 @@
 <section class="settings-group">
   <div class="settings-group-header">
     <h2>Homepage Genre-Lanes</h2>
-    <p>Steuert, welche Obergruppen aus dem aktiven Genre-Snapshot als zusätzliche Slider-Lanes auf der Startseite erscheinen.</p>
+    <p>Wählt den global verwendeten Genre-Snapshot und steuert pro Snapshot, welche Obergruppen als zusätzliche Slider-Lanes auf der Startseite erscheinen.</p>
   </div>
   <div class="settings-group-body">
-    <%= form_with model: @homepage_genre_lane_slugs_setting,
+    <%= form_with url: edit_backend_settings_path,
+                  method: :get,
+                  class: "editor-form" do |form| %>
+      <%= hidden_field_tag :section, section_key %>
+      <div class="form-group">
+        <%= form.label :selected_snapshot_id, "Genre-Snapshot", class: "form-label" %>
+        <%= form.select :selected_snapshot_id,
+                        options_for_select(
+                          @homepage_genre_lane_snapshots.map do |snapshot|
+                            [ "Snapshot ##{snapshot.id} · #{l(snapshot.created_at, format: '%d.%m.%Y %H:%M')} · #{snapshot.model} · #{snapshot.groups.size} Gruppen", snapshot.id ]
+                          end,
+                          @homepage_selected_snapshot&.id
+                        ),
+                        { include_blank: "Kein Snapshot ausgewählt" },
+                        {
+                          class: "form-select",
+                          onchange: "this.form.requestSubmit()"
+                        } %>
+      </div>
+    <% end %>
+
+    <%= form_with model: @public_genre_grouping_snapshot_id_setting,
                   url: backend_settings_path(section: section_key),
                   method: :patch,
                   class: "editor-form" do |form| %>
+      <%= form.hidden_field :public_genre_grouping_snapshot_id, value: @homepage_selected_snapshot&.id %>
+
       <% if @homepage_genre_lane_reference_groups.any? %>
         <div class="settings-reference-list">
-          <h3>Aktive Obergruppen im Snapshot</h3>
+          <h3>Obergruppen aus Snapshot <%= @homepage_selected_snapshot.id %></h3>
           <p class="form-hint">Auswahl per Checkbox. Reihenfolge per Drag & Drop.</p>
           <%= hidden_field_tag "app_setting[homepage_genre_lane_slugs][]", "" %>
           <ul class="settings-reference-items settings-reference-items-columns"
@@ -28,7 +51,7 @@
                   <span class="settings-reference-drag-handle" aria-hidden="true">⋮⋮</span>
                   <%= check_box_tag "app_setting[homepage_genre_lane_slugs][]",
                                     group[:slug],
-                                    @homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs.include?(group[:slug]),
+                                    @homepage_genre_lane_configuration&.lane_slugs.to_a.include?(group[:slug]),
                                     data: { action: "change->settings-sortable#syncSelectionState" } %>
                   <span class="settings-reference-checkbox-copy">
                     <strong><%= group[:name] %></strong>
@@ -39,8 +62,10 @@
             <% end %>
           </ul>
         </div>
+      <% elsif @homepage_selected_snapshot.present? %>
+        <p class="form-hint">Der ausgewählte Snapshot enthält aktuell keine Obergruppen.</p>
       <% else %>
-        <p class="form-hint">Aktuell ist kein aktiver Genre-Snapshot vorhanden.</p>
+        <p class="form-hint">Aktuell ist kein Genre-Snapshot ausgewählt.</p>
       <% end %>
 
       <div class="settings-group-footer">

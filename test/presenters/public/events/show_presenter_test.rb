@@ -184,6 +184,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       raw_response: {}
     )
     snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
+    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: snapshot.id)
 
     event.build_llm_enrichment(
       genre: [ "Rock" ],

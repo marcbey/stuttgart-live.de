@@ -5,9 +5,9 @@ module Public
 
       DEFAULT_LIMIT = 24
 
-      def initialize(relation:, slugs: AppSetting.homepage_genre_lane_slugs, snapshot: LlmGenreGrouping::Lookup.active_snapshot, limit: DEFAULT_LIMIT)
+      def initialize(relation:, slugs: nil, snapshot: LlmGenreGrouping::Lookup.selected_snapshot, limit: DEFAULT_LIMIT)
         @relation = relation
-        @slugs = Array(slugs)
+        @slugs = slugs
         @snapshot = snapshot
         @limit = limit
       end
@@ -34,7 +34,9 @@ module Public
       attr_reader :limit, :relation, :slugs, :snapshot
 
       def normalized_slugs
-        @normalized_slugs ||= AppSetting.normalize_slug_list(slugs)
+        @normalized_slugs ||= AppSetting.normalize_slug_list(
+          slugs.nil? ? snapshot&.homepage_genre_lane_configuration&.lane_slugs : slugs
+        )
       end
 
       def prioritized_group_events(group)

@@ -26,6 +26,8 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
 
     @rock_group = @snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
     @pop_group = @snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
+    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: @snapshot.id)
+    @snapshot.create_homepage_genre_lane_configuration!(lane_slugs: [ @rock_group.slug, @pop_group.slug ])
   end
 
   teardown do
@@ -70,6 +72,20 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
       normal_earlier.id,
       normal_latest.id
     ], lanes.first.events.map(&:id)
+  end
+
+  test "uses the snapshot-specific lane configuration by default" do
+    rock_event = build_lane_event(slug: "lane-default-rock", artist_name: "Default Rock", start_at: 10.days.from_now.change(hour: 20))
+    pop_event = build_lane_event(slug: "lane-default-pop", artist_name: "Default Pop", start_at: 10.days.from_now.change(hour: 21))
+
+    build_lane_enrichment(event: rock_event, genres: [ "Rock" ])
+    build_lane_enrichment(event: pop_event, genres: [ "Pop" ])
+
+    lanes = Public::Events::HomepageGenreLanesBuilder.new(
+      relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
+    ).call
+
+    assert_equal [ @rock_group.slug, @pop_group.slug ], lanes.map { |lane| lane.group.slug }
   end
 
   private

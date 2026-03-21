@@ -148,12 +148,15 @@ Der Ablauf ist:
 1. Der Job sammelt die vorhandenen Rohgenre-Werte aus dem Datenbestand.
 2. Diese Werte werden normalisiert, offensichtliche Duplikate reduziert und in Requests an das konfigurierte LLM-Modell aufgeteilt.
 3. Das Modell schlägt Obergruppen und Zuordnungen vor.
-4. Das Ergebnis wird als `llm_genre_grouping_snapshot` mit zugehörigen Gruppen gespeichert und kann danach als aktive Gruppierung verwendet werden.
+4. Das Ergebnis wird als `llm_genre_grouping_snapshot` mit zugehörigen Gruppen gespeichert. Jeder erfolgreiche Lauf erzeugt einen neuen Snapshot mit eigener ID.
 
 Fachlich ist wichtig:
 
 - Ziel ist eine stabilere, redaktionell brauchbare Genre-Struktur für Filter, Übersichten und thematische Strecken.
 - Der Lauf arbeitet snapshot-basiert, damit Ergebnisse nachvollziehbar und versionierbar bleiben.
+- Ein neuer erfolgreicher Lauf schaltet keinen Snapshot automatisch um. Welcher Snapshot öffentlich verwendet wird, wird separat im Backend gewählt.
+- Die öffentliche Verwendung der Genre-Gruppierung ist global an einen ausgewählten Snapshot gebunden. Das betrifft die Homepage-Genre-Lanes, die Genre-Obergruppe im Event-Detail und die Related-Genre-Lane.
+- Die Lane-Auswahl auf der Startseite wird pro Snapshot gespeichert. Ein Wechsel des ausgewählten Snapshots im Backend zeigt deshalb seine eigene gespeicherte Lane-Konfiguration.
 - Modell, Prompt und Zielanzahl der Gruppen werden über `app_settings` gesteuert.
 - Die Import-Job-Tabelle zeigt bei diesem Lauf vor allem, wie viele Rohgenres verarbeitet, verworfen, gruppiert und an das LLM geschickt wurden.
 
@@ -231,6 +234,7 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 - `sks_organizer_notes` für den Standardtext bei SKS-Events ohne eigene Veranstalterhinweise
 - `llm_enrichment_model` und `llm_enrichment_prompt_template` für den Enrichment-Job
 - `llm_genre_grouping_model`, `llm_genre_grouping_prompt_template` und `llm_genre_grouping_group_count` für den Genre-Gruppierungsjob
+- `public_genre_grouping_snapshot_id` für den global öffentlich verwendeten Genre-Snapshot
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen im Merge-Import bei exakt gleicher Startzeit
 
 ### Typische Arbeitsweisen

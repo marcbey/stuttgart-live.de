@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_20_113000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_21_113000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -227,6 +227,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_20_113000) do
     t.index ["slug"], name: "index_genres_on_slug", unique: true
   end
 
+  create_table "homepage_genre_lane_configurations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "lane_slugs", default: [], null: false
+    t.bigint "snapshot_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["snapshot_id"], name: "index_homepage_genre_lane_configurations_on_snapshot_id", unique: true
+  end
+
   create_table "import_event_images", force: :cascade do |t|
     t.string "aspect_hint", default: "unknown", null: false
     t.datetime "created_at", null: false
@@ -412,6 +420,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_20_113000) do
   add_foreign_key "event_llm_enrichments", "import_runs", column: "source_run_id"
   add_foreign_key "event_offers", "events"
   add_foreign_key "events", "users", column: "published_by_id"
+  add_foreign_key "homepage_genre_lane_configurations", "llm_genre_grouping_snapshots", column: "snapshot_id"
   add_foreign_key "import_run_errors", "import_runs"
   add_foreign_key "import_runs", "import_sources"
   add_foreign_key "import_source_configs", "import_sources"
