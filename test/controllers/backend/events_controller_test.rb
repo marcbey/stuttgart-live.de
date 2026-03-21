@@ -781,7 +781,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "button", text: "Publish", count: 0
     assert_select "#event_editor_panel .editor-header-badges a", text: "Frontend", count: 0
-    assert_select "#event-editor-tab-event", count: 0
+    assert_select "#event-editor-tab-event[aria-selected='true']", count: 1
+    assert_select "#event-editor-tab-event-image[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-llm-enrichment", count: 0
     assert_no_match(/LLM enriched/i, response.body)
   end
 
@@ -794,12 +797,32 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#event-editor-tab-event[aria-selected='true']", count: 1
+    assert_select "#event-editor-tab-event-image[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-llm-enrichment[aria-selected='false']", count: 1
+    assert_select "#event-editor-panel-event-image[hidden]", count: 1
+    assert_select "#event-editor-panel-slider-images[hidden]", count: 1
     assert_select "#event-editor-panel-llm-enrichment[hidden]", count: 1
     assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 1
     assert_select "textarea[name='event[llm_enrichment_attributes][raw_response_json]']", count: 0
     assert_includes response.body, "&quot;artist_description&quot;: &quot;LLM Artist Beschreibung&quot;"
     assert_includes response.body, "&quot;genre&quot;: ["
+  end
+
+  test "editor shows event image and slider tabs without llm enrichment" do
+    sign_in_as(@user)
+
+    get backend_event_url(@published_event, editor_tab: "event_image")
+
+    assert_response :success
+    assert_select "#event-editor-tab-event[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-event-image[aria-selected='true']", count: 1
+    assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-llm-enrichment", count: 0
+    assert_select "#event-editor-panel-event[hidden]", count: 1
+    assert_select "#event-editor-panel-event-image:not([hidden])", count: 1
+    assert_select "#event-editor-panel-slider-images[hidden]", count: 1
+    assert_select "input[name='editor_tab'][value='event_image']", count: 1
   end
 
   test "update stores nested llm enrichment fields from editor" do
@@ -875,6 +898,31 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neu aus Turbo gespeichert", @published_event.reload.llm_enrichment.event_description
   end
 
+  test "turbo update keeps event image tab active after successful save" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@published_event), params: {
+      inbox_status: "published",
+      next_event_enabled: "0",
+      editor_tab: "event_image",
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, 'target="event_editor"'
+    assert_includes response.body, 'id="event-editor-tab-event-image"'
+    assert_includes response.body, 'name="editor_tab"'
+    assert_includes response.body, 'value="event_image"'
+    assert_match(/id="event-editor-tab-event-image"[^>]*aria-selected="true"/, response.body)
+  end
+
   test "validation error keeps llm tab active and does not persist changes" do
     sign_in_as(@user)
     create_llm_enrichment(event: @published_event, event_description: "Vorheriger Text")
@@ -904,6 +952,33 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Event konnte nicht gespeichert werden."
     assert_equal "Published Artist", @published_event.reload.artist_name
     assert_equal "Vorheriger Text", @published_event.llm_enrichment.event_description
+  end
+
+  test "validation error keeps slider images tab active" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@published_event), params: {
+      inbox_status: "published",
+      next_event_enabled: "0",
+      editor_tab: "slider_images",
+      event: {
+        title: @published_event.title,
+        artist_name: "",
+        start_at: @published_event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published"
+      }
+    }, as: :turbo_stream
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, 'target="event_editor"'
+    assert_includes response.body, 'id="event-editor-tab-slider-images"'
+    assert_includes response.body, 'name="editor_tab"'
+    assert_includes response.body, 'value="slider_images"'
+    assert_match(/id="event-editor-tab-slider-images"[^>]*aria-selected="true"/, response.body)
+    assert_includes response.body, "Event konnte nicht gespeichert werden."
+    assert_equal "Published Artist", @published_event.reload.artist_name
   end
 
   test "ready_for_publish event editor does not show unpublish button" do

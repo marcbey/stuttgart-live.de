@@ -269,15 +269,21 @@ module Backend
     end
 
     def editor_tab_for(event)
-      return "event" if event.blank? || event.llm_enrichment.blank?
+      return "event" if event.blank?
 
-      params[:editor_tab].to_s.presence_in(%w[event llm_enrichment]) || "event"
+      params[:editor_tab].to_s.presence_in(allowed_editor_tabs_for(event)) || "event"
     end
 
     def editor_tab_for_success(target_event:)
       return "event" if target_event.blank? || target_event.id != @event.id
 
       editor_tab_for(@event)
+    end
+
+    def allowed_editor_tabs_for(event)
+      tabs = %w[event event_image slider_images]
+      tabs << "llm_enrichment" if event.present? && event.llm_enrichment.present?
+      tabs
     end
 
     def manual_ticket_url

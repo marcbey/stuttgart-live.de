@@ -4,8 +4,10 @@
 <% active_editor_tab = local_assigns[:active_editor_tab].presence || "event" %>
 <% llm_enrichment = event.llm_enrichment %>
 <% form_errors = event_editor_errors(event) %>
-<% event_tab_active = active_editor_tab != "llm_enrichment" %>
-<% llm_tab_active = !event_tab_active %>
+<% event_tab_active = active_editor_tab == "event" %>
+<% event_image_tab_active = active_editor_tab == "event_image" %>
+<% slider_images_tab_active = active_editor_tab == "slider_images" %>
+<% llm_tab_active = active_editor_tab == "llm_enrichment" %>
 
 <div class="editor-panel backend-panel"
      id="event_editor_panel"
@@ -39,23 +41,47 @@
     </div>
   <% end %>
 
-  <% if llm_enrichment.present? %>
-    <section class="event-editor-tabs"
-             data-controller="event-editor-tabs"
-             data-event-editor-tabs-initial-tab-value="<%= active_editor_tab %>">
-      <div class="settings-tabs-nav event-editor-tabs-nav" role="tablist" aria-label="Event-Editor Ansichten">
-        <button type="button"
-                id="event-editor-tab-event"
-                class="settings-tabs-link<%= " is-active" if event_tab_active %>"
-                role="tab"
-                aria-controls="event-editor-panel-event"
-                aria-selected="<%= event_tab_active %>"
-                tabindex="<%= event_tab_active ? 0 : -1 %>"
-                data-event-editor-tabs-target="tab"
-                data-event-editor-tabs-tab-key-param="event"
-                data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
-          Event
-        </button>
+  <section class="event-editor-tabs"
+           data-controller="event-editor-tabs"
+           data-event-editor-tabs-initial-tab-value="<%= active_editor_tab %>">
+    <div class="settings-tabs-nav event-editor-tabs-nav" role="tablist" aria-label="Event-Editor Ansichten">
+      <button type="button"
+              id="event-editor-tab-event"
+              class="settings-tabs-link<%= " is-active" if event_tab_active %>"
+              role="tab"
+              aria-controls="event-editor-panel-event"
+              aria-selected="<%= event_tab_active %>"
+              tabindex="<%= event_tab_active ? 0 : -1 %>"
+              data-event-editor-tabs-target="tab"
+              data-event-editor-tabs-tab-key-param="event"
+              data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+        Event
+      </button>
+      <button type="button"
+              id="event-editor-tab-event-image"
+              class="settings-tabs-link<%= " is-active" if event_image_tab_active %>"
+              role="tab"
+              aria-controls="event-editor-panel-event-image"
+              aria-selected="<%= event_image_tab_active %>"
+              tabindex="<%= event_image_tab_active ? 0 : -1 %>"
+              data-event-editor-tabs-target="tab"
+              data-event-editor-tabs-tab-key-param="event_image"
+              data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+        Eventbild
+      </button>
+      <button type="button"
+              id="event-editor-tab-slider-images"
+              class="settings-tabs-link<%= " is-active" if slider_images_tab_active %>"
+              role="tab"
+              aria-controls="event-editor-panel-slider-images"
+              aria-selected="<%= slider_images_tab_active %>"
+              tabindex="<%= slider_images_tab_active ? 0 : -1 %>"
+              data-event-editor-tabs-target="tab"
+              data-event-editor-tabs-tab-key-param="slider_images"
+              data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+        Slider-Bilder
+      </button>
+      <% if llm_enrichment.present? %>
         <button type="button"
                 id="event-editor-tab-llm-enrichment"
                 class="settings-tabs-link<%= " is-active" if llm_tab_active %>"
@@ -68,26 +94,49 @@
                 data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
           LLM-Enrichment
         </button>
-      </div>
+      <% end %>
+    </div>
 
-      <div class="settings-tabs-panels backend-tabs-panels">
-        <section id="event-editor-panel-event"
-                 class="settings-tab-panel backend-tab-panel<%= " is-active" if event_tab_active %>"
-                 role="tabpanel"
-                 aria-labelledby="event-editor-tab-event"
-                 tabindex="0"
-                 <%= "hidden" unless event_tab_active %>
-                 data-event-editor-tabs-target="panel"
-                 data-event-editor-tabs-panel-key="event">
-          <%= render "backend/events/editor_event_view",
-                     event: event,
-                     all_genres: all_genres,
-                     next_event_enabled: next_event_enabled,
-                     filter_status: filter_status,
-                     editor_status: editor_status,
-                     active_editor_tab: active_editor_tab %>
-        </section>
+    <div class="settings-tabs-panels backend-tabs-panels">
+      <section id="event-editor-panel-event"
+               class="settings-tab-panel backend-tab-panel<%= " is-active" if event_tab_active %>"
+               role="tabpanel"
+               aria-labelledby="event-editor-tab-event"
+               tabindex="0"
+               <%= "hidden" unless event_tab_active %>
+               data-event-editor-tabs-target="panel"
+               data-event-editor-tabs-panel-key="event">
+        <%= render "backend/events/editor_event_view",
+                   event: event,
+                   all_genres: all_genres,
+                   next_event_enabled: next_event_enabled,
+                   filter_status: filter_status,
+                   active_editor_tab: active_editor_tab %>
+      </section>
 
+      <section id="event-editor-panel-event-image"
+               class="settings-tab-panel backend-tab-panel<%= " is-active" if event_image_tab_active %>"
+               role="tabpanel"
+               aria-labelledby="event-editor-tab-event-image"
+               tabindex="0"
+               <%= "hidden" unless event_image_tab_active %>
+               data-event-editor-tabs-target="panel"
+               data-event-editor-tabs-panel-key="event_image">
+        <%= render "backend/events/event_image_section", event: event, editor_status: editor_status %>
+      </section>
+
+      <section id="event-editor-panel-slider-images"
+               class="settings-tab-panel backend-tab-panel<%= " is-active" if slider_images_tab_active %>"
+               role="tabpanel"
+               aria-labelledby="event-editor-tab-slider-images"
+               tabindex="0"
+               <%= "hidden" unless slider_images_tab_active %>
+               data-event-editor-tabs-target="panel"
+               data-event-editor-tabs-panel-key="slider_images">
+        <%= render "backend/events/slider_images_section", event: event, editor_status: editor_status %>
+      </section>
+
+      <% if llm_enrichment.present? %>
         <section id="event-editor-panel-llm-enrichment"
                  class="settings-tab-panel backend-tab-panel<%= " is-active" if llm_tab_active %>"
                  role="tabpanel"
@@ -101,15 +150,7 @@
                      llm_enrichment: llm_enrichment,
                      editor_form_id: dom_id(event, :editor_form) %>
         </section>
-      </div>
-    </section>
-  <% else %>
-    <%= render "backend/events/editor_event_view",
-               event: event,
-               all_genres: all_genres,
-               next_event_enabled: next_event_enabled,
-               filter_status: filter_status,
-               editor_status: editor_status,
-               active_editor_tab: active_editor_tab %>
-  <% end %>
+      <% end %>
+    </div>
+  </section>
 </div>
