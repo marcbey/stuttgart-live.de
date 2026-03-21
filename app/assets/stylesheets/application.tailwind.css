@@ -5054,24 +5054,24 @@ trix-editor.blog-rich-text:focus {
 .settings-tabs-nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.55rem;
+  gap: 0.4rem;
 }
 
 .settings-tabs-link {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 2.6rem;
-  padding: 0.65rem 0.9rem;
+  gap: 0.35rem;
+  min-height: 2.2rem;
+  padding: 0.45rem 0.72rem;
   border: 1px solid #d7d1c7;
   background: linear-gradient(180deg, #f7f1e7 0%, #efe7da 100%);
   color: #2f2922;
-  font-size: 0.92rem;
+  font-size: 0.82rem;
   font-weight: 700;
   line-height: 1.1;
   text-decoration: none;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.035em;
   box-shadow: 0 1px 0 #ebe5dc;
 }
 
