@@ -6,9 +6,9 @@
     <p class="event-detail-back"><%= link_to "← alle news", presenter.back_path %></p>
     <% if authenticated? && current_user.blog_access? %>
       <div class="event-detail-topbar-actions">
-        <%= link_to "Bearbeiten",
+        <%= link_to "Edit",
                     edit_backend_blog_post_path(@blog_post),
-                    class: "event-card-admin-link event-card-admin-link-attention event-detail-edit-link",
+                    class: "button button-secondary button-compact event-detail-edit-link",
                     data: { turbo: false } %>
       </div>
     <% end %>

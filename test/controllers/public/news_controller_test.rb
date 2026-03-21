@@ -45,6 +45,17 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h2", text: "Artikel"
   end
 
+  test "show includes edit link for authenticated blog users" do
+    sign_in_as(users(:blogger))
+
+    get news_url(@live_post.slug)
+
+    assert_response :success
+    assert_select ".event-detail-topbar-actions .button.event-detail-edit-link[href='#{edit_backend_blog_post_path(@live_post)}']",
+                  text: "Edit"
+    assert_no_match(/Bearbeiten/, response.body)
+  end
+
   test "index renders optimized cover images" do
     @live_post.cover_image.attach(
       io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),

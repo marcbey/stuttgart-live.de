@@ -1587,7 +1587,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
     assert_select ".event-detail-cta .status-badge", text: "easyticket"
     assert_includes response.body, expected_link
-    assert_select ".event-detail-topbar-actions .button", text: "Open"
+    assert_select ".event-detail-topbar-actions .button", text: "Edit"
     assert_no_match(/Bearbeiten/, response.body)
   end
 
