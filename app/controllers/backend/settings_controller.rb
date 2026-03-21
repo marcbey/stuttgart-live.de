@@ -233,12 +233,15 @@ module Backend
       selected_positions = Array(selected_slugs).each_with_index.to_h
 
       snapshot.groups.map do |group|
+        member_genres = homepage_genre_group_member_genres(group)
+
         {
           position: group.position,
           name: group.name,
           slug: group.slug,
           upcoming_events_count: LlmGenreGrouping::Lookup.events_for_group(group, relation: upcoming_relation).count,
-          member_genres_tooltip: homepage_genre_group_member_genres_tooltip(group)
+          member_genres_text: "#{group.name}: #{member_genres.join(', ')}",
+          member_genres_tooltip: homepage_genre_group_member_genres_tooltip(member_genres)
         }
       end.sort_by do |group|
         selection_index = selected_positions[group[:slug]]
@@ -250,14 +253,17 @@ module Backend
       end
     end
 
-    def homepage_genre_group_member_genres_tooltip(group)
-      genres = Array(group.member_genres).filter_map do |entry|
+    def homepage_genre_group_member_genres(group)
+      Array(group.member_genres).filter_map do |entry|
         value = entry.to_s.strip
         value.presence
       end.uniq
-      return if genres.empty?
+    end
 
-      "Enthaltene Genres: #{genres.join(', ')}"
+    def homepage_genre_group_member_genres_tooltip(member_genres)
+      return if member_genres.empty?
+
+      "Enthaltene Genres: #{member_genres.join(', ')}"
     end
   end
 end

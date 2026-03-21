@@ -45,9 +45,26 @@
                   data-settings-sortable-target="item"
                   data-action="dragstart->settings-sortable#dragstart dragover->settings-sortable#dragover dragenter->settings-sortable#dragenter drop->settings-sortable#drop dragend->settings-sortable#dragend"
                   draggable="true">
+                <div class="settings-reference-item-actions"
+                     data-controller="clipboard">
+                  <button type="button"
+                          class="settings-reference-copy-button"
+                          data-action="click->clipboard#copy"
+                          data-clipboard-target="copyButton"
+                          aria-label="Genres von <%= group[:name] %> in Zwischenablage kopieren"
+                          title="Genres kopieren">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                      <path d="M9 9.75A2.25 2.25 0 0 1 11.25 7.5h6A2.25 2.25 0 0 1 19.5 9.75v8.25a2.25 2.25 0 0 1-2.25 2.25h-6A2.25 2.25 0 0 1 9 18z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                      <path d="M6 15.75V6A2.25 2.25 0 0 1 8.25 3.75h7.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
+                    </svg>
+                    <span class="sr-only">Genres kopieren</span>
+                  </button>
+                  <p class="sr-only" role="status" aria-live="polite" data-clipboard-target="status"></p>
+                  <span class="sr-only" data-clipboard-target="source"><%= group[:member_genres_text] %></span>
+                </div>
                 <label class="settings-reference-checkbox">
                   <span class="settings-reference-selection-index"
-                        data-settings-sortable-target="index"></span>
+                        data-settings-sortable-target="index">-</span>
                   <span class="settings-reference-drag-handle" aria-hidden="true">⋮⋮</span>
                   <%= check_box_tag "app_setting[homepage_genre_lane_slugs][]",
                                     group[:slug],

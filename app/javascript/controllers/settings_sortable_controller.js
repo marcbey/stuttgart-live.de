@@ -117,11 +117,9 @@ export default class extends Controller {
         selectedIndex += 1
         item.dataset.selected = "true"
         indexElement.textContent = String(selectedIndex)
-        indexElement.hidden = false
       } else {
         item.dataset.selected = "false"
-        indexElement.textContent = ""
-        indexElement.hidden = true
+        indexElement.textContent = "-"
       }
     })
   }

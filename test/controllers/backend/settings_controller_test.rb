@@ -130,6 +130,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='rock-alternative'][checked='checked']", count: 1
     assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='pop-mainstream'][checked='checked']", count: 0
+    assert_select ".settings-reference-selection-index", text: "-", count: 2
   end
 
   test "homepage genre lanes section shows member genres as hover tooltip" do
@@ -143,6 +144,21 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".settings-reference-checkbox-copy[title='Enthaltene Genres: Alternative, Rock'] strong",
                   text: "Rock & Alternative",
                   count: 1
+  end
+
+  test "homepage genre lanes section renders copy buttons for member genres" do
+    sign_in_as(@admin)
+    snapshot = create_homepage_genre_snapshot(selected: true)
+    snapshot.groups.find_by!(slug: "rock-alternative").update!(member_genres: [ "Rock", " Alternative ", "", "Rock" ])
+
+    get edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot.id)
+
+    assert_response :success
+    assert_select ".settings-reference-item-actions[data-controller='clipboard']", count: 2
+    assert_select ".settings-reference-copy-button[aria-label='Genres von Rock & Alternative in Zwischenablage kopieren']",
+                  count: 1
+    assert_select ".settings-reference-copy-button svg", count: 2
+    assert_select "[data-clipboard-target='source']", text: "Rock & Alternative: Alternative, Rock", count: 1
   end
 
   test "admin can enable similarity matching in settings" do

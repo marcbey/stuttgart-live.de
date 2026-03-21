@@ -5,8 +5,12 @@ export default class extends Controller {
   static values = { filename: String }
 
   connect() {
-    this.defaultCopyButtonLabel = this.copyButtonTarget.getAttribute("aria-label") || "In Zwischenablage kopieren"
-    this.defaultDownloadButtonLabel = this.downloadButtonTarget.getAttribute("aria-label") || "Payload herunterladen"
+    this.defaultCopyButtonLabel = this.hasCopyButtonTarget ?
+      (this.copyButtonTarget.getAttribute("aria-label") || "In Zwischenablage kopieren") :
+      "In Zwischenablage kopieren"
+    this.defaultDownloadButtonLabel = this.hasDownloadButtonTarget ?
+      (this.downloadButtonTarget.getAttribute("aria-label") || "Payload herunterladen") :
+      "Payload herunterladen"
   }
 
   disconnect() {
@@ -77,6 +81,8 @@ export default class extends Controller {
   }
 
   showCopiedState() {
+    if (!this.hasCopyButtonTarget) return
+
     window.clearTimeout(this.copyResetTimer)
     this.copyButtonTarget.dataset.copied = "true"
     this.copyButtonTarget.setAttribute("aria-label", "In Zwischenablage kopiert")
@@ -90,6 +96,8 @@ export default class extends Controller {
   }
 
   showDownloadedState() {
+    if (!this.hasDownloadButtonTarget) return
+
     window.clearTimeout(this.downloadResetTimer)
     this.downloadButtonTarget.dataset.downloaded = "true"
     this.downloadButtonTarget.setAttribute("aria-label", "Payload heruntergeladen")
