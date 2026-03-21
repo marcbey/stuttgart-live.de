@@ -31,7 +31,7 @@
           <% end %>
         </article>
 
-        <% if ((index + 1) % 4).zero? %>
+        <% if index == 3 %>
           <div class="news-index-newsletter-slot">
             <%= render "public/events/newsletter_signup",
                        subscriber: NewsletterSubscriber.new,
