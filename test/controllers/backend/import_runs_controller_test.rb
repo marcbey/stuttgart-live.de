@@ -19,6 +19,7 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     get backend_import_run_url(@run)
     assert_response :success
 
+    assert_select "section.import-run-section.backend-section", count: 4
     assert_select "a[href='#{remove_whitelist_city_backend_import_run_path(@run, city: "Stuttgart")}']"
     assert_select "a[href='#{add_filtered_city_backend_import_run_path(@run, city: "Berlin")}']"
     assert_select "a[href='#{add_filtered_city_backend_import_run_path(@run, city: "Stuttgart")}']", count: 0

@@ -1,26 +1,30 @@
-<section class="offer-section">
-  <h3>Import-Bilder (XML)</h3>
-  <% import_images = if event.association(:import_event_images).loaded?
-                       event.import_event_images.sort_by { |image| [image.position.to_i, image.id.to_i] }
-                     else
-                       event.import_event_images.ordered.to_a
-                     end %>
-  <% if import_images.any? %>
-    <ul class="slider-image-editor-grid">
-      <% import_images.each do |image| %>
-        <li class="slider-image-editor-card">
-          <div class="action-cell slider-image-editor-thumb">
-            <%= link_to image.image_url, target: "_blank", rel: "noopener" do %>
-              <%= image_tag image.image_url, alt: "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
-            <% end %>
-          </div>
-          <div class="slider-image-editor-meta">
-            <span class="import-image-editor-label"><%= [ image.source, image.image_type, image.role, image.aspect_hint ].reject(&:blank?).join(" · ") %></span>
-          </div>
-        </li>
-      <% end %>
-    </ul>
-  <% else %>
-    <p>Keine Bilder für dieses Event vorhanden.</p>
-  <% end %>
+<section class="offer-section backend-section backend-section-media">
+  <div class="backend-section-header">
+    <h3>Bilder aus Import</h3>
+  </div>
+  <div class="backend-section-body">
+    <% import_images = if event.association(:import_event_images).loaded?
+                         event.import_event_images.sort_by { |image| [image.position.to_i, image.id.to_i] }
+                       else
+                         event.import_event_images.ordered.to_a
+                       end %>
+    <% if import_images.any? %>
+      <ul class="slider-image-editor-grid">
+        <% import_images.each do |image| %>
+          <li class="slider-image-editor-card">
+            <div class="action-cell slider-image-editor-thumb">
+              <%= link_to image.image_url, target: "_blank", rel: "noopener" do %>
+                <%= image_tag image.image_url, alt: "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
+              <% end %>
+            </div>
+            <div class="slider-image-editor-meta">
+              <span class="import-image-editor-label"><%= [ image.source, image.image_type, image.role, image.aspect_hint ].reject(&:blank?).join(" · ") %></span>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>Keine Bilder für dieses Event vorhanden.</p>
+    <% end %>
+  </div>
 </section>

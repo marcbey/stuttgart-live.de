@@ -13,6 +13,16 @@ class Backend::AccountPasswordsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_url
   end
 
+  test "renders password editor with backend panel styling" do
+    sign_in_as(@user)
+
+    get edit_backend_account_password_url
+
+    assert_response :success
+    assert_select ".editor-panel.backend-panel", count: 1
+    assert_select "section.backend-section.backend-section-compact", count: 1
+  end
+
   test "updates the current users password and expires other sessions" do
     sign_in_as(@user)
     current_session_id = Current.session.id

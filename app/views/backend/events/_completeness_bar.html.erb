@@ -1,8 +1,13 @@
-<div class="completeness-bar">
-  <strong><%= event.completeness_score %>%</strong>
-  <% if event.completeness_flags.any? %>
-    <span><%= event.completeness_flags.join(", ") %></span>
-  <% else %>
-    <span>vollständig</span>
-  <% end %>
-</div>
+<section class="backend-section backend-section-status">
+  <div class="backend-section-header">
+    <h3>Vollständigkeit</h3>
+  </div>
+  <div class="backend-section-body">
+    <div class="completeness-bar">
+      <strong><%= event.completeness_score %>%</strong>
+      <span class="completeness-bar-separator" aria-hidden="true">·</span>
+      <% completeness_text = event.completeness_flags.any? ? event.completeness_flags.join(", ") : "vollständig" %>
+      <span class="completeness-bar-text" title="<%= completeness_text %>"><%= completeness_text %></span>
+    </div>
+  </div>
+</section>

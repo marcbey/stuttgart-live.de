@@ -1,46 +1,50 @@
 <% slider_images = event.event_images.slider.ordered.to_a %>
 
-<section id="<%= dom_id(event, :slider_images_section) %>" class="offer-section">
-  <h3>Slider-Bilder</h3>
-  <% if slider_images.any? %>
-    <ul class="slider-image-editor-grid">
-      <% slider_images.each do |image| %>
-        <%= render "backend/events/slider_image_editor_card", event: event, image: image, editor_status: editor_status %>
-      <% end %>
-    </ul>
-  <% else %>
-    <p>Keine Slider-Bilder vorhanden.</p>
-  <% end %>
-
-  <div class="event-image-upload-grid">
-    <%= form_with url: backend_event_event_images_path(event),
-                  method: :post,
-                  class: "event-image-upload-form",
-                  html: { multipart: true },
-                  data: {
-                    turbo_stream: true,
-                    controller: "event-image-editor-upload",
-                    action: "submit->event-image-editor-upload#beforeSubmit",
-                    event_image_editor_upload_direct_upload_url_value: rails_direct_uploads_path,
-                    event_image_editor_upload_signed_field_name_value: "event_image[signed_ids][]",
-                    event_image_editor_upload_replace_existing_value: false
-                  } do %>
-      <%= hidden_field_tag :status, editor_status %>
-      <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_SLIDER %>
-      <h4>Slider-Bilder hochladen</h4>
-      <p>Unbegrenzt, Reihenfolge ohne Bedeutung. Upload startet direkt nach der Auswahl.</p>
-      <%= file_field_tag "event_image[files][]",
-                         multiple: true,
-                         accept: "image/*",
-                         class: "form-input",
-                         data: {
-                           event_image_editor_upload_target: "input",
-                           action: "change->event-image-editor-upload#select"
-                         } %>
-      <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
-      <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text unter dem Bild (optional)", class: "form-input" %>
-      <div class="preuploaded-image-list" data-event-image-editor-upload-target="preview"></div>
-      <p class="preuploaded-image-live-region" data-event-image-editor-upload-target="status" role="status" aria-live="polite"></p>
+<section id="<%= dom_id(event, :slider_images_section) %>" class="offer-section backend-section backend-section-media">
+  <div class="backend-section-header">
+    <h3>Slider-Bilder</h3>
+  </div>
+  <div class="backend-section-body">
+    <% if slider_images.any? %>
+      <ul class="slider-image-editor-grid">
+        <% slider_images.each do |image| %>
+          <%= render "backend/events/slider_image_editor_card", event: event, image: image, editor_status: editor_status %>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>Keine Slider-Bilder vorhanden.</p>
     <% end %>
+
+    <div class="event-image-upload-grid">
+      <%= form_with url: backend_event_event_images_path(event),
+                    method: :post,
+                    class: "event-image-upload-form",
+                    html: { multipart: true },
+                    data: {
+                      turbo_stream: true,
+                      controller: "event-image-editor-upload",
+                      action: "submit->event-image-editor-upload#beforeSubmit",
+                      event_image_editor_upload_direct_upload_url_value: rails_direct_uploads_path,
+                      event_image_editor_upload_signed_field_name_value: "event_image[signed_ids][]",
+                      event_image_editor_upload_replace_existing_value: false
+                    } do %>
+        <%= hidden_field_tag :status, editor_status %>
+        <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_SLIDER %>
+        <h4>Slider-Bilder hochladen</h4>
+        <p>Unbegrenzt, Reihenfolge ohne Bedeutung. Upload startet direkt nach der Auswahl.</p>
+        <%= file_field_tag "event_image[files][]",
+                           multiple: true,
+                           accept: "image/*",
+                           class: "form-input",
+                           data: {
+                             event_image_editor_upload_target: "input",
+                             action: "change->event-image-editor-upload#select"
+                           } %>
+        <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
+        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text unter dem Bild (optional)", class: "form-input" %>
+        <div class="preuploaded-image-list" data-event-image-editor-upload-target="preview"></div>
+        <p class="preuploaded-image-live-region" data-event-image-editor-upload-target="status" role="status" aria-live="polite"></p>
+      <% end %>
+    </div>
   </div>
 </section>

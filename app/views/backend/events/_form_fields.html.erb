@@ -110,23 +110,33 @@
   <%= form.text_area :editor_notes, rows: 3, class: "form-textarea" %>
 </div>
 
-<div>
-  <label class="form-checkbox">
-    <%= form.check_box :highlighted %>
-    <span>Im Highlights-Teaser anzeigen</span>
-  </label>
-  <p class="form-hint">Zeigt das Event auf der Startseite unter „Highlights“ an, auch ohne SKS Promoter-ID.</p>
-</div>
-
-<div>
-  <%= form.label :genre_ids, "Genres", class: "form-label" %>
-  <%= hidden_field_tag "event[genre_ids][]", "" %>
-  <div class="genre-checks">
-    <% all_genres.each do |genre| %>
-      <label>
-        <%= check_box_tag "event[genre_ids][]", genre.id, selected_genre_ids.include?(genre.id) %>
-        <span><%= genre.name %></span>
-      </label>
-    <% end %>
+<section class="backend-section backend-section-compact editor-subsection">
+  <div class="backend-section-header">
+    <h3>Highlights-Teaser</h3>
   </div>
-</div>
+  <div class="backend-section-body">
+    <label class="form-checkbox">
+      <%= form.check_box :highlighted %>
+      <span>Im Highlights-Teaser anzeigen</span>
+    </label>
+    <p class="form-hint">Zeigt das Event auf der Startseite unter „Highlights“ an, auch ohne SKS Promoter-ID.</p>
+  </div>
+</section>
+
+<section class="backend-section backend-section-compact editor-subsection editor-genre-section">
+  <div class="backend-section-header">
+    <h3>Genres</h3>
+  </div>
+  <div class="backend-section-body">
+    <%= form.label :genre_ids, "Genres", class: "form-label sr-only" %>
+    <%= hidden_field_tag "event[genre_ids][]", "" %>
+    <div class="genre-checks">
+      <% all_genres.each do |genre| %>
+        <label>
+          <%= check_box_tag "event[genre_ids][]", genre.id, selected_genre_ids.include?(genre.id) %>
+          <span><%= genre.name %></span>
+        </label>
+      <% end %>
+    </div>
+  </div>
+</section>

@@ -15,6 +15,8 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Importer"
     assert_select ".app-nav-links .app-nav-link", text: "Events"
+    assert_select ".import-sources-runs-section.backend-section", count: 1
+    assert_select "#import-runs-live-shell.backend-tabs", count: 1
     assert_select "[data-controller='settings-tabs']", count: 1
     assert_select "#import-runs-tabs [role='tab']", count: 4
     assert_select "#import-runs-tab-raw-importer[aria-selected='true']", count: 1

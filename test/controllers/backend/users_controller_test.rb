@@ -16,6 +16,8 @@ class Backend::UsersControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Benutzerverwaltung"
+    assert_includes response.body, "Passwörter"
+    assert_select "section.backend-section.backend-table-section", count: 1
     assert_includes response.body, @editor.email_address
     assert_includes response.body, @blogger.email_address
   end

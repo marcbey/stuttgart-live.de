@@ -10,22 +10,34 @@
     </div>
   </header>
 
-  <div class="editor-panel">
+  <div class="editor-panel backend-panel">
     <%= form_with model: @import_source, url: backend_import_source_path(@import_source), method: :patch, class: "editor-form" do |form| %>
-      <div class="editor-grid">
-        <div>
-          <%= form.label :active, "Aktiv", class: "form-label" %>
-          <div class="check-inline"><%= form.check_box :active %> <span>Importer aktiv</span></div>
+      <section class="backend-section backend-section-compact">
+        <div class="backend-section-header">
+          <h3>Status</h3>
         </div>
-      </div>
+        <div class="backend-section-body">
+          <div class="editor-grid">
+            <div>
+              <%= form.label :active, "Aktiv", class: "form-label" %>
+              <div class="check-inline"><%= form.check_box :active %> <span>Importer aktiv</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div>
-        <%= form.label :location_whitelist_text, "Ortsliste (eine Zeile pro Ort oder komma-separiert)", class: "form-label" %>
-        <%= form.text_area :location_whitelist_text,
-                           value: @import_source.configured_location_whitelist.join("\n"),
-                           rows: 8,
-                           class: "form-textarea" %>
-      </div>
+      <section class="backend-section backend-section-compact">
+        <div class="backend-section-header">
+          <h3>Ortsliste</h3>
+        </div>
+        <div class="backend-section-body">
+          <%= form.label :location_whitelist_text, "Ortsliste (eine Zeile pro Ort oder komma-separiert)", class: "form-label" %>
+          <%= form.text_area :location_whitelist_text,
+                             value: @import_source.configured_location_whitelist.join("\n"),
+                             rows: 8,
+                             class: "form-textarea" %>
+        </div>
+      </section>
 
       <div class="editor-footer">
         <%= form.submit "Speichern", class: "button" %>

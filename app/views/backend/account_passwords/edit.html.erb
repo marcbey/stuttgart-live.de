@@ -13,26 +13,33 @@
     </div>
   </header>
 
-  <div class="editor-panel" style="max-width: 620px;">
+  <div class="editor-panel backend-panel" style="max-width: 620px;">
     <%= form_with model: current_user, url: backend_account_password_path, method: :patch, class: "editor-form" do |form| %>
-      <div>
-        <%= form.label :password, "Neues Passwort", class: "form-label" %>
-        <%= form.password_field :password,
-                                required: true,
-                                autocomplete: "new-password",
-                                maxlength: 72,
-                                class: "form-input" %>
-        <p>Passwort muss <%= User::PASSWORD_REQUIREMENTS_TEXT %> enthalten.</p>
-      </div>
+      <section class="backend-section backend-section-compact">
+        <div class="backend-section-header">
+          <h3>Neues Passwort</h3>
+        </div>
+        <div class="backend-section-body">
+          <div>
+            <%= form.label :password, "Neues Passwort", class: "form-label" %>
+            <%= form.password_field :password,
+                                    required: true,
+                                    autocomplete: "new-password",
+                                    maxlength: 72,
+                                    class: "form-input" %>
+            <p>Passwort muss <%= User::PASSWORD_REQUIREMENTS_TEXT %> enthalten.</p>
+          </div>
 
-      <div>
-        <%= form.label :password_confirmation, "Passwort bestätigen", class: "form-label" %>
-        <%= form.password_field :password_confirmation,
-                                required: true,
-                                autocomplete: "new-password",
-                                maxlength: 72,
-                                class: "form-input" %>
-      </div>
+          <div>
+            <%= form.label :password_confirmation, "Passwort bestätigen", class: "form-label" %>
+            <%= form.password_field :password_confirmation,
+                                    required: true,
+                                    autocomplete: "new-password",
+                                    maxlength: 72,
+                                    class: "form-input" %>
+          </div>
+        </div>
+      </section>
 
       <div class="editor-footer">
         <%= form.submit "Passwort speichern", class: "button" %>

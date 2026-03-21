@@ -5,7 +5,7 @@
      (blog_post.published_at.present? ? l(blog_post.published_at, format: "%d.%m.%Y %H:%M") : nil)
    ].compact.join(" · ") %>
 
-<div class="editor-panel blog-editor-panel"
+<div class="editor-panel backend-panel blog-editor-panel"
      id="blog_editor_panel"
      data-selected-context="<%= selected_context %>"
      data-selected-item-id="<%= blog_post.id if blog_post.persisted? %>">

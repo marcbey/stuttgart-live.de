@@ -7,7 +7,7 @@
     </div>
   </header>
 
-  <section class="import-sources-runs-section">
+  <section class="import-sources-runs-section backend-section backend-section-compact">
     <%= turbo_stream_from [ :backend, :import_runs ] %>
     <%= render "live_shell",
                sections: @overview_state.sections,

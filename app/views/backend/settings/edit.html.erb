@@ -7,7 +7,7 @@
     </div>
   </header>
 
-  <div class="editor-panel">
+  <div class="editor-panel backend-panel">
     <section class="settings-tabs"
              data-controller="settings-tabs"
              data-settings-tabs-section-url-template-value="<%= section_backend_settings_path(section: "__SECTION__") %>"
@@ -36,11 +36,11 @@
         <% end %>
       </div>
 
-      <div class="settings-tabs-panels">
+      <div class="settings-tabs-panels backend-tabs-panels">
         <% settings_sections.each do |section| %>
           <% active = section.fetch(:key) == active_settings_section.fetch(:key) %>
           <div id="<%= section.fetch(:panel_id) %>"
-               class="settings-tab-panel"
+               class="settings-tab-panel backend-tab-panel"
                role="tabpanel"
                aria-labelledby="<%= section.fetch(:tab_id) %>"
                tabindex="0"

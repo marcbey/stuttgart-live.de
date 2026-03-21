@@ -40,7 +40,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Beginn"
     assert_select "button[aria-label='Suche löschen']"
     assert_select "button[aria-label='Promoter-ID löschen']"
-    assert_includes response.body, "Preis: 45 EUR"
+    assert_includes response.body, "Bilder aus Import"
+    assert_not_includes response.body, "Ticket-Angebote"
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_includes response.body, "data-next-event-enabled-value=\"false\""
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
@@ -512,6 +513,17 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "updates event via turbo stream and renders flash message" do
     sign_in_as(@user)
+    @event.update!(
+      source_snapshot: {
+        "sources" => [
+          {
+            "source" => "eventim",
+            "external_event_id" => "evt-123",
+            "raw_payload" => { "name" => "Payload Event" }
+          }
+        ]
+      }
+    )
 
     patch backend_event_url(@event), params: {
       event: {
@@ -533,6 +545,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "event-image-editor-upload"
     assert_includes response.body, "event_image_section"
     assert_includes response.body, "slider_images_section"
+    assert_includes response.body, "Bilder aus Import"
+    assert_includes response.body, "payload-entry"
+    assert_not_includes response.body, "payload-block"
+    assert_not_includes response.body, "Ticket-Angebote"
     assert_includes response.body, "Event wurde gespeichert."
     assert_equal "Neu per Turbo", @event.reload.title
   end

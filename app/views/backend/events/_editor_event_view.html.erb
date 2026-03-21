@@ -1,12 +1,18 @@
-<%= render "backend/events/editor_form",
-           event: event,
-           all_genres: all_genres,
-           next_event_enabled: next_event_enabled,
-           filter_status: filter_status,
-           active_editor_tab: local_assigns[:active_editor_tab] %>
+<section class="backend-section backend-section-form">
+  <div class="backend-section-header">
+    <h3>Event-Daten</h3>
+  </div>
+  <div class="backend-section-body">
+    <%= render "backend/events/editor_form",
+               event: event,
+               all_genres: all_genres,
+               next_event_enabled: next_event_enabled,
+               filter_status: filter_status,
+               active_editor_tab: local_assigns[:active_editor_tab] %>
+  </div>
+</section>
 
 <%= render "backend/events/event_image_section", event: event, editor_status: editor_status %>
-<%= render "backend/events/ticket_offers_section", event: event %>
 <%= render "backend/events/slider_images_section", event: event, editor_status: editor_status %>
 <%= render "backend/events/import_images_section", event: event %>
 <%= render "backend/events/payload_section", event: event %>

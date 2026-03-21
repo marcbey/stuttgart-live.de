@@ -1,14 +1,14 @@
 <div id="import-runs-live-shell"
-     class="settings-tabs"
+     class="settings-tabs backend-tabs"
      data-controller="settings-tabs"
      data-settings-tabs-initial-section-value="<%= active_section_key %>">
   <%= render "backend/import_sources/tabs", sections: sections, active_section_key: active_section_key %>
 
-  <div class="settings-tabs-panels">
+  <div class="settings-tabs-panels backend-tabs-panels">
     <% sections.each do |section| %>
       <% active = section.fetch(:key) == active_section_key %>
       <section id="<%= section.fetch(:panel_id) %>"
-               class="settings-tab-panel<%= " is-active" if active %>"
+               class="settings-tab-panel backend-tab-panel<%= " is-active" if active %>"
                role="tabpanel"
                aria-labelledby="<%= section.fetch(:tab_id) %>"
                tabindex="0"

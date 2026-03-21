@@ -70,8 +70,8 @@ module Importing
       end
 
       test "touch_run_heartbeat does not modify a run that is no longer running" do
-        updated_at_before = @run.updated_at
         @run.update!(status: "failed")
+        updated_at_before = @run.updated_at
 
         @importer.send(:touch_run_heartbeat!, "current_batch" => 7)
 

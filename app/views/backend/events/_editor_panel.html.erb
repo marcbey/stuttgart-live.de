@@ -7,7 +7,7 @@
 <% event_tab_active = active_editor_tab != "llm_enrichment" %>
 <% llm_tab_active = !event_tab_active %>
 
-<div class="editor-panel"
+<div class="editor-panel backend-panel"
      id="event_editor_panel"
      data-selected-context="<%= backend_event_context(event) %>">
   <template class="editor-actions-template">
@@ -70,9 +70,9 @@
         </button>
       </div>
 
-      <div class="settings-tabs-panels">
+      <div class="settings-tabs-panels backend-tabs-panels">
         <section id="event-editor-panel-event"
-                 class="settings-tab-panel<%= " is-active" if event_tab_active %>"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if event_tab_active %>"
                  role="tabpanel"
                  aria-labelledby="event-editor-tab-event"
                  tabindex="0"
@@ -89,7 +89,7 @@
         </section>
 
         <section id="event-editor-panel-llm-enrichment"
-                 class="settings-tab-panel<%= " is-active" if llm_tab_active %>"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if llm_tab_active %>"
                  role="tabpanel"
                  aria-labelledby="event-editor-tab-llm-enrichment"
                  tabindex="0"

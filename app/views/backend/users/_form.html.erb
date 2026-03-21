@@ -1,7 +1,7 @@
 <% role_options = User::ROLES.map { |role| [role.humanize, role] } %>
 <% role_locked = user == current_user %>
 
-<div class="editor-panel">
+<div class="editor-panel backend-panel">
   <% if user.errors.any? %>
     <div class="flash flash-alert">
       <strong>Bitte Eingaben prüfen.</strong>
@@ -14,46 +14,60 @@
   <% end %>
 
   <%= form_with model: [ :backend, user ], class: "editor-form" do |form| %>
-    <div class="editor-grid">
-      <div>
-        <%= form.label :name, "Name", class: "form-label" %>
-        <%= form.text_field :name, class: "form-input", maxlength: 120 %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Profil</h3>
       </div>
+      <div class="backend-section-body">
+        <div class="editor-grid">
+          <div>
+            <%= form.label :name, "Name", class: "form-label" %>
+            <%= form.text_field :name, class: "form-input", maxlength: 120 %>
+          </div>
 
-      <div>
-        <%= form.label :email_address, "E-Mail", class: "form-label" %>
-        <%= form.email_field :email_address, required: true, autocomplete: "email", class: "form-input" %>
-      </div>
+          <div>
+            <%= form.label :email_address, "E-Mail", class: "form-label" %>
+            <%= form.email_field :email_address, required: true, autocomplete: "email", class: "form-input" %>
+          </div>
 
-      <div>
-        <%= form.label :role, "Rolle", class: "form-label" %>
-        <%= form.select :role, role_options, {}, class: "form-input", disabled: role_locked %>
-        <% if role_locked %>
-          <p>Die eigene Rolle kann nicht geändert werden.</p>
-        <% end %>
+          <div>
+            <%= form.label :role, "Rolle", class: "form-label" %>
+            <%= form.select :role, role_options, {}, class: "form-input", disabled: role_locked %>
+            <% if role_locked %>
+              <p>Die eigene Rolle kann nicht geändert werden.</p>
+            <% end %>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
-    <div class="editor-grid">
-      <div>
-        <%= form.label :password, user.persisted? ? "Neues Passwort" : "Passwort", class: "form-label" %>
-        <%= form.password_field :password,
-                                required: user.new_record?,
-                                autocomplete: "new-password",
-                                maxlength: 72,
-                                class: "form-input" %>
-        <p>Passwort muss <%= User::PASSWORD_REQUIREMENTS_TEXT %> enthalten.</p>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Zugang</h3>
       </div>
+      <div class="backend-section-body">
+        <div class="editor-grid">
+          <div>
+            <%= form.label :password, user.persisted? ? "Neues Passwort" : "Passwort", class: "form-label" %>
+            <%= form.password_field :password,
+                                    required: user.new_record?,
+                                    autocomplete: "new-password",
+                                    maxlength: 72,
+                                    class: "form-input" %>
+            <p>Passwort muss <%= User::PASSWORD_REQUIREMENTS_TEXT %> enthalten.</p>
+          </div>
 
-      <div>
-        <%= form.label :password_confirmation, "Passwort bestätigen", class: "form-label" %>
-        <%= form.password_field :password_confirmation,
-                                required: user.new_record?,
-                                autocomplete: "new-password",
-                                maxlength: 72,
-                                class: "form-input" %>
+          <div>
+            <%= form.label :password_confirmation, "Passwort bestätigen", class: "form-label" %>
+            <%= form.password_field :password_confirmation,
+                                    required: user.new_record?,
+                                    autocomplete: "new-password",
+                                    maxlength: 72,
+                                    class: "form-input" %>
+          </div>
+        </div>
       </div>
-    </div>
+    </section>
 
     <% if user.persisted? %>
       <p>Passwortfelder leer lassen, wenn das Passwort unverändert bleiben soll.</p>
