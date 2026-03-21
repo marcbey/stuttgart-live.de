@@ -1,17 +1,19 @@
-<section class="backend-section backend-section-form">
-  <div class="backend-section-header">
-    <h3>Event-Daten</h3>
-  </div>
-  <div class="backend-section-body">
-    <%= render "backend/events/editor_form",
-               event: event,
-               all_genres: all_genres,
-               next_event_enabled: next_event_enabled,
-               filter_status: filter_status,
-               active_editor_tab: local_assigns[:active_editor_tab] %>
-  </div>
-</section>
+<div class="backend-section-stack">
+  <section class="backend-section backend-section-form">
+    <div class="backend-section-header">
+      <h3>Event-Daten</h3>
+    </div>
+    <div class="backend-section-body">
+      <%= render "backend/events/editor_form",
+                 event: event,
+                 all_genres: all_genres,
+                 next_event_enabled: next_event_enabled,
+                 filter_status: filter_status,
+                 active_editor_tab: local_assigns[:active_editor_tab] %>
+    </div>
+  </section>
 
-<%= render "backend/events/import_images_section", event: event %>
-<%= render "backend/events/payload_section", event: event %>
-<%= render "backend/events/completeness_bar", event: event %>
+  <%= render "backend/events/import_images_section", event: event %>
+  <%= render "backend/events/payload_section", event: event %>
+  <%= render "backend/events/completeness_bar", event: event %>
+</div>

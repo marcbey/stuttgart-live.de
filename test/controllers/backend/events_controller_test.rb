@@ -75,7 +75,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
     assert_select "input[name='event_image[files][]'][required]", count: 0
-    assert_select "input[type='checkbox'][name='event[genre_ids][]'][value='#{genres(:schlager).id}']"
+    assert_select ".editor-genre-section", count: 0
   end
 
   test "show populates ticket url with the frontend ticket url" do
@@ -743,15 +743,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ "Rock" ], @published_event.reload.genres.order(:name).pluck(:name)
   end
 
-  test "editor renders genre checkboxes with selected genres" do
+  test "editor does not render genre section" do
     sign_in_as(@user)
 
     get backend_event_url(@published_event)
 
     assert_response :success
-    assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
-    assert_select "input[type='checkbox'][name='event[genre_ids][]'][value='#{genres(:rock).id}'][checked='checked']"
-    assert_select "input[type='checkbox'][name='event[genre_ids][]'][value='#{genres(:pop).id}']", count: 1
+    assert_select ".editor-genre-section", count: 0
+    assert_select "input[type='checkbox'][name='event[genre_ids][]']", count: 0
   end
 
   test "update stores selected genres from editor checkboxes" do

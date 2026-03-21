@@ -3,6 +3,7 @@
 <% display_promoter_id = show_promoter_id ? (local_assigns[:display_promoter_id] || event_display_promoter_id(event)) : nil %>
 <% editable_promoter_id = local_assigns.fetch(:editable_promoter_id, false) %>
 <% manual_ticket_url = local_assigns.fetch(:manual_ticket_url, event_display_ticket_url(event)) %>
+<% show_genre_section = local_assigns.fetch(:show_genre_section, true) %>
 
 <div class="editor-grid">
   <div>
@@ -123,20 +124,22 @@
   </div>
 </section>
 
-<section class="backend-section backend-section-compact editor-subsection editor-genre-section">
-  <div class="backend-section-header">
-    <h3>Genres</h3>
-  </div>
-  <div class="backend-section-body">
-    <%= form.label :genre_ids, "Genres", class: "form-label sr-only" %>
-    <%= hidden_field_tag "event[genre_ids][]", "" %>
-    <div class="genre-checks">
-      <% all_genres.each do |genre| %>
-        <label>
-          <%= check_box_tag "event[genre_ids][]", genre.id, selected_genre_ids.include?(genre.id) %>
-          <span><%= genre.name %></span>
-        </label>
-      <% end %>
+<% if show_genre_section %>
+  <section class="backend-section backend-section-compact editor-subsection editor-genre-section">
+    <div class="backend-section-header">
+      <h3>Genres</h3>
     </div>
-  </div>
-</section>
+    <div class="backend-section-body">
+      <%= form.label :genre_ids, "Genres", class: "form-label sr-only" %>
+      <%= hidden_field_tag "event[genre_ids][]", "" %>
+      <div class="genre-checks">
+        <% all_genres.each do |genre| %>
+          <label>
+            <%= check_box_tag "event[genre_ids][]", genre.id, selected_genre_ids.include?(genre.id) %>
+            <span><%= genre.name %></span>
+          </label>
+        <% end %>
+      </div>
+    </div>
+  </section>
+<% end %>
