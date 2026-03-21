@@ -49,9 +49,6 @@ application.register("flash", FlashController)
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
 
-import HistoryBackController from "./history_back_controller"
-application.register("history-back", HistoryBackController)
-
 import HighlightsSliderController from "./highlights_slider_controller"
 application.register("highlights-slider", HighlightsSliderController)
 
