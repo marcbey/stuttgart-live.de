@@ -2,7 +2,7 @@ module Backend
   class ImportSourcesController < BaseController
     before_action :ensure_supported_sources
     before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
-    before_action :set_active_section, only: [ :index, :sync_imported_events, :stop_merge_run, :run_llm_enrichment, :stop_llm_enrichment_run, :run_llm_genre_grouping, :stop_llm_genre_grouping_run, :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
+    before_action :set_active_section, only: [ :index, :sync_imported_events, :stop_merge_run, :run_llm_enrichment, :rerun_llm_enrichment, :stop_llm_enrichment_run, :run_llm_genre_grouping, :stop_llm_genre_grouping_run, :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
 
     def index
       run_maintenance.release_stale_running_runs!
@@ -47,39 +47,11 @@ module Backend
     end
 
     def run_llm_enrichment
-      source = llm_enrichment_run_source
-      feedback = nil
-      broadcast = false
+      respond_with_importer_feedback(**start_llm_enrichment_run)
+    end
 
-      source.with_lock do
-        active_run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
-        if active_run.present?
-          feedback = { alert: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{active_run.id})." }
-          next
-        end
-
-        run = source.import_runs.create!(
-          status: "running",
-          source_type: "llm_enrichment",
-          started_at: Time.current,
-          metadata: { "triggered_at" => Time.current.iso8601 }
-        )
-        job = Importing::LlmEnrichment::RunJob.perform_later(run.id)
-        run.update!(
-          metadata: run.metadata.merge(
-            "job_id" => job.job_id,
-            "provider_job_id" => job.provider_job_id,
-            "job_attempt" => 1,
-            "job_retries_used" => 0,
-            "max_retries" => 0
-          )
-        )
-        feedback = { notice: "LLM-Enrichment wurde gestartet." }
-        broadcast = true
-      end
-
-      Backend::ImportRunsBroadcaster.broadcast! if broadcast
-      respond_with_importer_feedback(**feedback)
+    def rerun_llm_enrichment
+      respond_with_importer_feedback(**start_llm_enrichment_run(refresh_existing: true))
     end
 
     def stop_llm_enrichment_run
@@ -211,6 +183,51 @@ module Backend
 
     def llm_enrichment_run_source
       llm_run_source
+    end
+
+    def start_llm_enrichment_run(refresh_existing: false)
+      source = llm_enrichment_run_source
+      feedback = nil
+      broadcast = false
+
+      source.with_lock do
+        active_run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
+        if active_run.present?
+          feedback = { alert: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{active_run.id})." }
+          next
+        end
+
+        run = source.import_runs.create!(
+          status: "running",
+          source_type: "llm_enrichment",
+          started_at: Time.current,
+          metadata: llm_enrichment_run_metadata(refresh_existing:)
+        )
+        job = Importing::LlmEnrichment::RunJob.perform_later(run.id)
+        run.update!(
+          metadata: run.metadata.merge(
+            "job_id" => job.job_id,
+            "provider_job_id" => job.provider_job_id,
+            "job_attempt" => 1,
+            "job_retries_used" => 0,
+            "max_retries" => 0
+          )
+        )
+        feedback = {
+          notice: refresh_existing ? "LLM-Enrichment-Re-Run für zukünftige Events wurde gestartet." : "LLM-Enrichment wurde gestartet."
+        }
+        broadcast = true
+      end
+
+      Backend::ImportRunsBroadcaster.broadcast! if broadcast
+      feedback
+    end
+
+    def llm_enrichment_run_metadata(refresh_existing: false)
+      {
+        "triggered_at" => Time.current.iso8601,
+        "refresh_existing" => refresh_existing
+      }
     end
 
     def llm_run_source

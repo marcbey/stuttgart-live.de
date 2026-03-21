@@ -33,8 +33,8 @@ module Importing
         selection_time = Time.current
         selected_events = future_events_scope(selection_time)
         selected_count = selected_events.count
-        skipped_count = already_enriched_count(selected_events)
-        pending_events = selected_events.where.missing(:llm_enrichment).order(:start_at, :id).to_a
+        skipped_count = refresh_existing? ? 0 : already_enriched_count(selected_events)
+        pending_events = pending_events_scope(selected_events).order(:start_at, :id).to_a
         batches = pending_events.each_slice(BATCH_SIZE).to_a
         enriched_count = 0
         batches_processed = 0
@@ -111,6 +111,12 @@ module Importing
 
       def already_enriched_count(scope)
         scope.joins(:llm_enrichment).distinct.count
+      end
+
+      def pending_events_scope(scope)
+        return scope if refresh_existing?
+
+        scope.where.missing(:llm_enrichment)
       end
 
       def item_for(event)
@@ -264,21 +270,21 @@ module Importing
 
             seen_event_ids[event_id] = true
 
-            EventLlmEnrichment.find_or_create_by!(event_id: event_id) do |enrichment|
-              enrichment.source_run = run
-              enrichment.genre = attributes[:genre]
-              enrichment.venue = attributes[:venue]
-              enrichment.artist_description = attributes[:artist_description]
-              enrichment.event_description = attributes[:event_description]
-              enrichment.venue_description = attributes[:venue_description]
-              enrichment.youtube_link = attributes[:youtube_link]
-              enrichment.instagram_link = attributes[:instagram_link]
-              enrichment.homepage_link = attributes[:homepage_link]
-              enrichment.facebook_link = attributes[:facebook_link]
-              enrichment.model = client_model
-              enrichment.prompt_version = PROMPT_VERSION
-              enrichment.raw_response = item.is_a?(Hash) ? item.deep_stringify_keys : {}
-            end
+            enrichment = EventLlmEnrichment.find_or_initialize_by(event_id: event_id)
+            enrichment.source_run = run
+            enrichment.genre = attributes[:genre]
+            enrichment.venue = attributes[:venue]
+            enrichment.artist_description = attributes[:artist_description]
+            enrichment.event_description = attributes[:event_description]
+            enrichment.venue_description = attributes[:venue_description]
+            enrichment.youtube_link = attributes[:youtube_link]
+            enrichment.instagram_link = attributes[:instagram_link]
+            enrichment.homepage_link = attributes[:homepage_link]
+            enrichment.facebook_link = attributes[:facebook_link]
+            enrichment.model = client_model
+            enrichment.prompt_version = PROMPT_VERSION
+            enrichment.raw_response = item.is_a?(Hash) ? item.deep_stringify_keys : {}
+            enrichment.save!
           end
         end
 
@@ -369,6 +375,10 @@ module Importing
 
       def client_model
         client.model
+      end
+
+      def refresh_existing?
+        ActiveModel::Type::Boolean.new.cast(current_run_metadata["refresh_existing"])
       end
     end
   end

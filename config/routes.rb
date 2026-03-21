@@ -32,6 +32,7 @@ Rails.application.routes.draw do
       post :sync_imported_events, on: :collection
       post :stop_merge_run, on: :collection
       post :run_llm_enrichment, on: :collection
+      post :rerun_llm_enrichment, on: :collection
       post :stop_llm_enrichment_run, on: :collection
       post :run_llm_genre_grouping, on: :collection
       post :stop_llm_genre_grouping_run, on: :collection

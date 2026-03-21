@@ -9,6 +9,10 @@
                     run_llm_enrichment_backend_import_sources_path(section: section_key),
                     method: :post,
                     class: "button button-compact" %>
+      <%= button_to "Zukünftige Events neu anreichern",
+                    rerun_llm_enrichment_backend_import_sources_path(section: section_key),
+                    method: :post,
+                    class: "button button-save-primary button-compact" %>
     </div>
   </div>
   <p class="import-runs-note">

@@ -427,8 +427,10 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "LLM-Enrichment starten"
+    assert_includes response.body, "Zukünftige Events neu anreichern"
     assert_includes response.body, "Bearbeiten"
     assert_select "a[href='#{edit_backend_settings_path(section: :llm_enrichment)}']", text: "Bearbeiten"
+    assert_select "form[action='#{rerun_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}'] .button-save-primary", text: "Zukünftige Events neu anreichern"
   end
 
   test "should render llm genre grouping button on index" do
@@ -446,6 +448,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
     assert_equal "running", run.status
+    assert_equal false, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
 
     assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
     follow_redirect!
@@ -459,8 +462,36 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
     assert_equal "running", run.status
+    assert_equal false, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
 
     assert_import_sources_turbo_feedback(message: "LLM-Enrichment wurde gestartet.")
+    assert_import_run_row_in_response(run)
+  end
+
+  test "should enqueue llm enrichment rerun from import sources page" do
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      post rerun_llm_enrichment_backend_import_sources_url(section: :llm_enrichment)
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+    assert_equal "running", run.status
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+
+    assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
+    follow_redirect!
+    assert_includes response.body, "LLM-Enrichment-Re-Run für zukünftige Events wurde gestartet."
+  end
+
+  test "should respond with turbo stream when enqueueing llm enrichment rerun from import sources page" do
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      post rerun_llm_enrichment_backend_import_sources_url(section: :llm_enrichment), as: :turbo_stream
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+    assert_equal "running", run.status
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+
+    assert_import_sources_turbo_feedback(message: "LLM-Enrichment-Re-Run für zukünftige Events wurde gestartet.")
     assert_import_run_row_in_response(run)
   end
 
@@ -482,6 +513,24 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "LLM-Enrichment-Lauf läuft bereits"
   end
 
+  test "should not enqueue llm enrichment rerun when another llm run is active" do
+    existing_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
+      post rerun_llm_enrichment_backend_import_sources_url(section: :llm_enrichment)
+    end
+
+    assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
+    follow_redirect!
+    assert_includes response.body, "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{existing_run.id})."
+  end
+
   test "should respond with turbo stream when another llm run is active" do
     existing_run = ImportRun.create!(
       import_source: @eventim_source,
@@ -493,6 +542,23 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
       post run_llm_enrichment_backend_import_sources_url, as: :turbo_stream
+    end
+
+    assert_import_sources_turbo_feedback(message: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{existing_run.id}).")
+    assert_import_run_row_in_response(existing_run)
+  end
+
+  test "should not enqueue llm enrichment run when a rerun is active" do
+    existing_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: { "refresh_existing" => true }
+    )
+
+    assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
+      post run_llm_enrichment_backend_import_sources_url(section: :llm_enrichment), as: :turbo_stream
     end
 
     assert_import_sources_turbo_feedback(message: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{existing_run.id}).")

@@ -14,6 +14,7 @@ module Importing
       end
 
       test "marks run as succeeded and stores metrics" do
+        @run.update!(metadata: @run.metadata.merge("refresh_existing" => true))
         fake_result = Importing::LlmEnrichment::Importer::Result.new(
           selected_count: 5,
           skipped_count: 2,
@@ -39,6 +40,7 @@ module Importing
         assert_equal 1, @run.upserted_count
         assert_nil @run.metadata["merge_run_id"]
         assert_equal "gpt-5-mini", @run.metadata["model"]
+        assert_equal true, ActiveModel::Type::Boolean.new.cast(@run.metadata["refresh_existing"])
       ensure
         importer_class.alias_method :new, :__original_new_for_test
         importer_class.remove_method :__original_new_for_test

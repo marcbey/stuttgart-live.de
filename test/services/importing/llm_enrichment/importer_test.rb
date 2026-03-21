@@ -155,7 +155,143 @@ module Importing
         end
       end
 
+      test "refresh mode processes all future events and updates existing enrichments" do
+        existing_enrichment = EventLlmEnrichment.create!(
+          event: events(:needs_review_one),
+          source_run: import_runs(:one),
+          genre: [ "Pop" ],
+          venue: "Alte Venue",
+          artist_description: "Alt",
+          event_description: "Alt",
+          venue_description: "Alt",
+          youtube_link: nil,
+          instagram_link: nil,
+          homepage_link: nil,
+          facebook_link: nil,
+          model: "existing-model",
+          prompt_version: "v1",
+          raw_response: { "event_id" => events(:needs_review_one).id, "genre" => [ "Pop" ] }
+        )
+        @run.update!(metadata: @run.metadata.merge("refresh_existing" => true))
+
+        freeze_time do
+          client = FakeClient.new(
+            model: "gpt-5-mini",
+            responses: [
+              {
+                "output_text" => {
+                  events: [
+                    {
+                      event_id: events(:published_one).id,
+                      genre: [ "Indie", "Pop" ],
+                      venue: "LKA Longhorn",
+                      artist_description: "Artist eins",
+                      event_description: "Event eins",
+                      venue_description: "Venue eins",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: "https://example.com/one-refresh",
+                      facebook_link: nil
+                    },
+                    {
+                      event_id: events(:needs_review_one).id,
+                      genre: [ "Rock" ],
+                      venue: "Im Wizemann",
+                      artist_description: "Artist neu",
+                      event_description: "Event neu",
+                      venue_description: "Venue neu",
+                      youtube_link: "https://youtube.example/updated",
+                      instagram_link: nil,
+                      homepage_link: "https://example.com/updated",
+                      facebook_link: nil
+                    },
+                    {
+                      event_id: events(:needs_review_two).id,
+                      genre: [ "Show" ],
+                      venue: "Im Wizemann",
+                      artist_description: "Artist drei",
+                      event_description: "Event drei",
+                      venue_description: "Venue drei",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: nil,
+                      facebook_link: nil
+                    }
+                  ]
+                }.to_json
+              }
+            ]
+          )
+
+          result = Importer.new(run: @run, client: client).call
+
+          assert_equal 3, result.selected_count
+          assert_equal 0, result.skipped_count
+          assert_equal 3, result.enriched_count
+          assert_equal 1, result.batches_count
+
+          updated_enrichment = events(:needs_review_one).reload.llm_enrichment
+          assert_equal existing_enrichment.id, updated_enrichment.id
+          assert_equal [ "Rock" ], updated_enrichment.genre
+          assert_equal "Im Wizemann", updated_enrichment.venue
+          assert_equal "Artist neu", updated_enrichment.artist_description
+          assert_equal "https://example.com/updated", updated_enrichment.homepage_link
+          assert_equal "gpt-5-mini", updated_enrichment.model
+          assert_equal @run, updated_enrichment.source_run
+        end
+      end
+
       test "does not process past events even when they are missing an enrichment" do
+        travel_to(Time.zone.parse("2026-06-15 12:00:00")) do
+          client = FakeClient.new(
+            model: "gpt-5-mini",
+            responses: [
+              {
+                "output_text" => {
+                  events: [
+                    {
+                      event_id: events(:needs_review_one).id,
+                      genre: [ "Rock" ],
+                      venue: "Im Wizemann",
+                      artist_description: "Artist eins",
+                      event_description: "Event eins",
+                      venue_description: "Venue eins",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: nil,
+                      facebook_link: nil
+                    },
+                    {
+                      event_id: events(:needs_review_two).id,
+                      genre: [ "Show" ],
+                      venue: "Im Wizemann",
+                      artist_description: "Artist zwei",
+                      event_description: "Event zwei",
+                      venue_description: "Venue zwei",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: nil,
+                      facebook_link: nil
+                    }
+                  ]
+                }.to_json
+              }
+            ]
+          )
+
+          result = Importer.new(run: @run, client: client).call
+
+          assert_equal 2, result.selected_count
+          assert_equal 0, result.skipped_count
+          assert_equal 2, result.enriched_count
+          assert_nil events(:published_one).reload.llm_enrichment
+          assert_nil events(:published_past_one).reload.llm_enrichment
+        end
+      end
+
+      test "refresh mode does not process past events" do
+        @run.update!(metadata: @run.metadata.merge("refresh_existing" => true))
+
         travel_to(Time.zone.parse("2026-06-15 12:00:00")) do
           client = FakeClient.new(
             model: "gpt-5-mini",
