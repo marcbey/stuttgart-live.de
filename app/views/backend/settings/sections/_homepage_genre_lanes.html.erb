@@ -2,8 +2,25 @@
 
 <section class="settings-group">
   <div class="settings-group-header">
-    <h2>Homepage Genre-Lanes</h2>
-    <p>Wählt den global verwendeten Genre-Snapshot und steuert pro Snapshot, welche Obergruppen als zusätzliche Slider-Lanes auf der Startseite erscheinen.</p>
+    <div class="settings-group-header-main">
+      <h2>Homepage Genre-Lanes</h2>
+      <p>Wählt den global verwendeten Genre-Snapshot und steuert pro Snapshot, welche Obergruppen als zusätzliche Slider-Lanes auf der Startseite erscheinen.</p>
+    </div>
+    <% if @homepage_distinct_llm_genres_text.present? %>
+      <div class="settings-group-header-actions"
+           data-controller="clipboard">
+        <button type="button"
+                class="button button-ghost button-compact settings-reference-list-copy-button"
+                data-action="click->clipboard#copy"
+                data-clipboard-target="copyButton"
+                aria-label="Distinct LLM-Genres in Zwischenablage kopieren"
+                title="Distinct LLM-Genres kopieren">
+          <%= "#{@homepage_distinct_llm_genres.size} LLM-Genres kopieren" %>
+        </button>
+        <p class="sr-only" role="status" aria-live="polite" data-clipboard-target="status"></p>
+        <span class="sr-only" data-clipboard-target="source"><%= @homepage_distinct_llm_genres_text %></span>
+      </div>
+    <% end %>
   </div>
   <div class="settings-group-body">
     <%= form_with url: edit_backend_settings_path,

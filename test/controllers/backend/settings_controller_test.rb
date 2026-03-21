@@ -161,6 +161,63 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-clipboard-target='source']", text: "Rock & Alternative: Alternative, Rock", count: 1
   end
 
+  test "homepage genre lanes section renders copy button for distinct llm genres" do
+    sign_in_as(@admin)
+    snapshot = create_homepage_genre_snapshot(selected: true)
+
+    first_event = Event.create!(
+      slug: "homepage-genre-lanes-copy-source-1",
+      source_fingerprint: "test::settings::homepage-genre-lanes-copy-source-1",
+      title: "Homepage Genre Copy Source 1",
+      artist_name: "Homepage Genre Copy Artist 1",
+      start_at: 5.days.from_now.change(hour: 20),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    second_event = Event.create!(
+      slug: "homepage-genre-lanes-copy-source-2",
+      source_fingerprint: "test::settings::homepage-genre-lanes-copy-source-2",
+      title: "Homepage Genre Copy Source 2",
+      artist_name: "Homepage Genre Copy Artist 2",
+      start_at: 6.days.from_now.change(hour: 20),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    EventLlmEnrichment.create!(
+      event: first_event,
+      source_run: import_runs(:one),
+      genre: [ "Rock", " Alternative ", "", "Rock" ],
+      model: "gpt-5-mini",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+    EventLlmEnrichment.create!(
+      event: second_event,
+      source_run: import_runs(:one),
+      genre: [ "Pop", "Alternative" ],
+      model: "gpt-5-mini",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+
+    get edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot.id)
+
+    assert_response :success
+    assert_select ".settings-group-header-actions[data-controller='clipboard'] .button",
+                  text: "3 LLM-Genres kopieren",
+                  count: 1
+    assert_select ".settings-group-header-actions [data-clipboard-target='source']",
+                  text: "Alternative, Pop, Rock",
+                  count: 1
+  end
+
   test "admin can enable similarity matching in settings" do
     sign_in_as(@admin)
 

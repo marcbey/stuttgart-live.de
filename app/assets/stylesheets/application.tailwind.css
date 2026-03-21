@@ -5196,8 +5196,16 @@ trix-editor.blog-rich-text:focus {
 }
 
 .settings-group-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.9rem;
   padding: 0.9rem 1rem 0.65rem;
   border-bottom: 1px solid #e3ddd3;
+}
+
+.settings-group-header-main {
+  min-width: 0;
 }
 
 .settings-group-header h2 {
@@ -5212,6 +5220,12 @@ trix-editor.blog-rich-text:focus {
   margin: 0.35rem 0 0;
   color: #645d52;
   font-size: 0.92rem;
+}
+
+.settings-group-header-actions {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .settings-group-body {
@@ -5238,6 +5252,18 @@ trix-editor.blog-rich-text:focus {
   font-size: 0.9rem;
   line-height: 1.2;
   text-transform: uppercase;
+}
+
+.settings-reference-list-copy-button {
+  border-color: rgba(17, 17, 17, 0.08);
+  background: rgba(255, 255, 255, 0.58);
+  color: #645d52;
+}
+
+.settings-reference-list-copy-button:hover {
+  border-color: rgba(17, 17, 17, 0.14);
+  background: rgba(255, 255, 255, 0.82);
+  color: #3d372f;
 }
 
 .settings-reference-items {

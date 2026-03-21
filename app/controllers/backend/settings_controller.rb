@@ -112,6 +112,8 @@ module Backend
         @public_genre_grouping_snapshot_id_setting = AppSetting.public_genre_grouping_snapshot_id_record
         @homepage_genre_lane_snapshots = LlmGenreGroupingSnapshot.recent_first.includes(:groups, :homepage_genre_lane_configuration).to_a
         @homepage_selected_snapshot = homepage_selected_snapshot
+        @homepage_distinct_llm_genres = homepage_distinct_llm_genres
+        @homepage_distinct_llm_genres_text = @homepage_distinct_llm_genres.join(", ")
         @homepage_genre_lane_configuration =
           @homepage_selected_snapshot&.homepage_genre_lane_configuration || @homepage_selected_snapshot&.build_homepage_genre_lane_configuration
         @homepage_genre_lane_reference_groups =
@@ -264,6 +266,17 @@ module Backend
       return if member_genres.empty?
 
       "Enthaltene Genres: #{member_genres.join(', ')}"
+    end
+
+    def homepage_distinct_llm_genres
+      EventLlmEnrichment.pluck(:genre)
+        .flatten
+        .compact
+        .map(&:to_s)
+        .map(&:strip)
+        .reject(&:blank?)
+        .uniq
+        .sort
     end
   end
 end
