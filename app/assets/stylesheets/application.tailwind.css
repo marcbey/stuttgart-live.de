@@ -4990,6 +4990,17 @@ trix-editor.blog-rich-text:focus {
   min-width: 0;
 }
 
+#event_editor_panel.editor-panel.backend-panel {
+  border: 0;
+}
+
+#event_editor_panel .settings-tab-panel,
+#event_editor_panel .backend-tab-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 .editor-header {
   display: flex;
   justify-content: space-between;
