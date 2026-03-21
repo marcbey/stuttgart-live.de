@@ -14,6 +14,7 @@ class AppSetting < ApplicationRecord
   LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER = "{{group_count}}".freeze
   DEFAULT_LLM_GENRE_GROUPING_GROUP_COUNT = 30
   AVAILABLE_LLM_ENRICHMENT_MODELS = [
+    [ "GPT-5.4", "gpt-5.4" ],
     [ "GPT-5.1", "gpt-5.1" ],
     [ "GPT-5 mini", "gpt-5-mini" ],
     [ "GPT-5 nano", "gpt-5-nano" ]

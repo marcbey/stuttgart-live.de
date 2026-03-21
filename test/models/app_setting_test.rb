@@ -105,6 +105,14 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal "gpt-5-mini", AppSetting.llm_enrichment_model
   end
 
+  test "supports gpt-5.4 for llm settings" do
+    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5.4")
+    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5.4")
+
+    assert_equal "gpt-5.4", AppSetting.llm_enrichment_model
+    assert_equal "gpt-5.4", AppSetting.llm_genre_grouping_model
+  end
+
   test "requires llm enrichment model to be supported" do
     setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-4.1")
 
@@ -139,11 +147,11 @@ class AppSettingTest < ActiveSupport::TestCase
   end
 
   test "returns configured llm genre grouping settings" do
-    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5-mini")
+    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5.4")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Gruppiere\n{{group_count}}\n{{input_json}}")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 42)
 
-    assert_equal "gpt-5-mini", AppSetting.llm_genre_grouping_model
+    assert_equal "gpt-5.4", AppSetting.llm_genre_grouping_model
     assert_equal "Gruppiere\n{{group_count}}\n{{input_json}}", AppSetting.llm_genre_grouping_prompt_template
     assert_equal 42, AppSetting.llm_genre_grouping_group_count
   end

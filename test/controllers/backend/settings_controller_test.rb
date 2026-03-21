@@ -36,6 +36,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#settings-tab-llm-genre-grouping[aria-selected='true']", count: 1
     assert_select "form[action='#{backend_settings_path(section: :llm_genre_grouping)}'] select[name='app_setting[llm_genre_grouping_model]']", count: 1
+    assert_select "option[value='gpt-5.4']", text: "GPT-5.4", count: 1
     assert_select "textarea[name='app_setting[sks_promoter_ids_text]']", count: 0
   end
 
@@ -96,6 +97,23 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to edit_backend_settings_url(section: :llm_enrichment)
     assert_equal "gpt-5-mini", AppSetting.llm_enrichment_model
     assert_equal "Bitte recherchiere\n{{input_json}}", AppSetting.llm_enrichment_prompt_template
+  end
+
+  test "admin can update llm genre grouping section with gpt-5.4" do
+    sign_in_as(@admin)
+
+    patch backend_settings_url(section: :llm_genre_grouping), params: {
+      app_setting: {
+        llm_genre_grouping_model: "gpt-5.4",
+        llm_genre_grouping_prompt_template_text: "Gruppiere sauber\n{{group_count}}\n{{input_json}}",
+        llm_genre_grouping_group_count: "35"
+      }
+    }
+
+    assert_redirected_to edit_backend_settings_url(section: :llm_genre_grouping)
+    assert_equal "gpt-5.4", AppSetting.llm_genre_grouping_model
+    assert_equal "Gruppiere sauber\n{{group_count}}\n{{input_json}}", AppSetting.llm_genre_grouping_prompt_template
+    assert_equal 35, AppSetting.llm_genre_grouping_group_count
   end
 
   test "admin can update homepage genre lanes section" do
