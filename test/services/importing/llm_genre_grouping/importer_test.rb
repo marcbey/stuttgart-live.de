@@ -114,6 +114,41 @@ module Importing
         assert_equal [ "Rock", "Pop" ].sort, snapshot.groups.find_by!(position: 1).member_genres.sort
       end
 
+      test "reloads app settings before building the grouping prompt" do
+        EventLlmEnrichment.create!(
+          event: events(:published_one),
+          source_run: import_runs(:one),
+          genre: [ "Rock", "Pop", "Indie", "Jazz" ],
+          model: "gpt-5-mini",
+          prompt_version: "v1",
+          raw_response: {}
+        )
+
+        assert_equal 3, AppSetting.llm_genre_grouping_group_count
+        AppSetting.find_by!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY).update_columns(value: 4)
+
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "output_text" => {
+                groups: [
+                  { position: 1, name: "Rock", genres: [ "Rock" ] },
+                  { position: 2, name: "Pop", genres: [ "Pop" ] },
+                  { position: 3, name: "Indie", genres: [ "Indie" ] },
+                  { position: 4, name: "Jazz", genres: [ "Jazz" ] }
+                ]
+              }.to_json
+            }
+          ]
+        )
+
+        result = Importer.new(run: @run, client: client).call
+
+        assert_equal 4, result.requested_group_count
+        assert_includes client.calls.first.fetch(:input), "Gruppiere 4"
+      end
+
       test "uses fallback chunking and consolidation when single request is too large" do
         fallback_events = Array.new(4) { |index| create_grouping_event!(suffix: "fallback-error-#{index}") }
 

@@ -34,12 +34,13 @@ module Importing
 
       def initialize(
         run:,
-        client: OpenAi::ResponsesClient.new(model: AppSetting.llm_genre_grouping_model),
+        client: nil,
         logger: Importing::Logging.logger,
         snapshot_model: LlmGenreGroupingSnapshot
       )
+        AppSetting.reset_cache!
         @run = run
-        @client = client
+        @client = client || OpenAi::ResponsesClient.new(model: AppSetting.llm_genre_grouping_model)
         @logger = logger
         @snapshot_model = snapshot_model
       end
