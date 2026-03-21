@@ -2188,10 +2188,6 @@ trix-editor.blog-rich-text:focus {
   color: #f4fbff;
 }
 
-.genre-lane-section--editorial .genre-lane-summary {
-  color: rgba(223, 236, 243, 0.76);
-}
-
 .genre-lane-section--editorial .genre-lane-toggle,
 .genre-lane-section--editorial .genre-lane-arrow {
   background: rgba(244, 251, 255, 0.12);
@@ -2210,10 +2206,6 @@ trix-editor.blog-rich-text:focus {
 .genre-lane-section--spotlight .genre-lane-kicker,
 .genre-lane-section--spotlight .genre-lane-heading h2 {
   color: #fff3da;
-}
-
-.genre-lane-section--spotlight .genre-lane-summary {
-  color: rgba(255, 243, 218, 0.76);
 }
 
 .genre-lane-section--spotlight .genre-lane-toggle,
@@ -2249,12 +2241,6 @@ trix-editor.blog-rich-text:focus {
   font-size: clamp(1.35rem, 2vw, 1.8rem);
   line-height: 0.98;
   text-transform: uppercase;
-}
-
-.genre-lane-summary {
-  margin: 0;
-  color: rgba(17, 17, 17, 0.62);
-  font-size: 0.84rem;
 }
 
 .genre-lane-nav {

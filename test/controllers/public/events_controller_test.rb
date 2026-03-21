@@ -1279,7 +1279,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "section.genre-lane-section h2", text: "Mehr aus diesem Genre"
-    assert_select "section.genre-lane-section .genre-lane-summary", text: rock_group.name
+    assert_select "section.genre-lane-section .genre-lane-summary", count: 0
     assert_select "section.genre-lane-section .genre-lane-card-name", text: related_event.artist_name
     assert_select "section.genre-lane-section .genre-lane-card-name", text: @published_event.artist_name, count: 0
     assert_select "section.genre-lane-section .genre-lane-card-name", text: unpublished_event.artist_name, count: 0

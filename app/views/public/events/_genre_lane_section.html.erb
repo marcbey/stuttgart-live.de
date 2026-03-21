@@ -1,5 +1,4 @@
 <% title = local_assigns[:title] || group&.name %>
-<% summary = local_assigns[:summary] || "#{pluralize(events.size, "Event", "Events")} im kommenden Programm" %>
 <% kicker = local_assigns[:kicker] %>
 <% section_variant = local_assigns[:section_variant] %>
 <% card_variant = local_assigns[:card_variant] %>
@@ -12,7 +11,6 @@
         <p class="genre-lane-kicker"><%= kicker %></p>
       <% end %>
       <h2><%= title %></h2>
-      <p class="genre-lane-summary"><%= summary %></p>
     </div>
 
     <div class="genre-lane-nav">
