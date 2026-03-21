@@ -98,7 +98,7 @@ module Importing
               process_feed_payload.call(feed_payload)
             end
           end
-        rescue FeedFetcher::StopRequested
+        rescue Importing::StopRequested
           state[:canceled] = true
         end
 

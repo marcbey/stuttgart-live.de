@@ -38,78 +38,83 @@ module Importing
         changed_since_flush = 0
         last_flush_at = Time.current
 
-        catch(:stop_import) do
-          event_fetcher.fetch_pages(
-            lastupdate: checkpoint_query_value(checkpoint),
-            heartbeat: -> { touch_run_heartbeat!(run) }
-          ) do |events, server_time:, **_page_context|
-            advance_checkpoint_tracker!(state[:checkpoint_tracker], modified_at: server_time)
+        begin
+          catch(:stop_import) do
+            event_fetcher.fetch_pages(
+              lastupdate: checkpoint_query_value(checkpoint),
+              heartbeat: -> { touch_run_heartbeat!(run) },
+              stop_requested: -> { run_canceled?(run) || stop_requested?(run) }
+            ) do |events, server_time:, **_page_context|
+              advance_checkpoint_tracker!(state[:checkpoint_tracker], modified_at: server_time)
 
-            events.each do |event_payload|
-              if run_canceled?(run) || stop_requested?(run)
-                state[:canceled] = true
-                throw :stop_import
+              events.each do |event_payload|
+                if run_canceled?(run) || stop_requested?(run)
+                  state[:canceled] = true
+                  throw :stop_import
+                end
+
+                progress_changed = false
+                payload = normalize_payload(event_payload)
+                projection = PayloadProjection.new(event_payload: payload)
+                modified_at = projection.modified_at
+                external_event_id = payload["id"].to_s.strip
+                next if external_event_id.blank?
+
+                advance_checkpoint_tracker!(
+                  state[:checkpoint_tracker],
+                  modified_at: modified_at,
+                  event_id: external_event_id
+                )
+
+                state[:fetched_count] += 1
+                progress_changed = true
+
+                if already_processed_for_checkpoint?(checkpoint, modified_at: modified_at, event_id: external_event_id)
+                  next
+                end
+
+                unless matcher.match?(payload)
+                  add_filtered_out_city!(state[:filtered_out_cities], filtered_out_city_from_payload(payload))
+                  next
+                end
+
+                next unless projection.bookable?
+
+                state[:filtered_count] += 1
+
+                RawEventImport.create!(
+                  import_source: import_source,
+                  import_event_type: import_source.source_type,
+                  source_identifier: external_event_id,
+                  payload: payload
+                )
+
+                state[:imported_count] += 1
+                state[:upserted_count] += 1
+              rescue StandardError => e
+                state[:failed_count] += 1
+                progress_changed = true
+                logger.error("[ReservixImporter] event_id=#{external_event_id} failed: #{e.class}: #{e.message}")
+                create_import_run_error!(
+                  run: run,
+                  error: e,
+                  external_event_id: external_event_id,
+                  payload: payload
+                )
+              ensure
+                next unless progress_changed
+
+                changed_since_flush += 1
+                next unless should_flush_progress?(changed_since_flush, last_flush_at)
+
+                persist_progress_from_state!(run, state)
+                changed_since_flush = 0
+                last_flush_at = Time.current
               end
-
-              progress_changed = false
-              payload = normalize_payload(event_payload)
-              projection = PayloadProjection.new(event_payload: payload)
-              modified_at = projection.modified_at
-              external_event_id = payload["id"].to_s.strip
-              next if external_event_id.blank?
-
-              advance_checkpoint_tracker!(
-                state[:checkpoint_tracker],
-                modified_at: modified_at,
-                event_id: external_event_id
-              )
-
-              state[:fetched_count] += 1
-              progress_changed = true
-
-              if already_processed_for_checkpoint?(checkpoint, modified_at: modified_at, event_id: external_event_id)
-                next
-              end
-
-              unless matcher.match?(payload)
-                add_filtered_out_city!(state[:filtered_out_cities], filtered_out_city_from_payload(payload))
-                next
-              end
-
-              next unless projection.bookable?
-
-              state[:filtered_count] += 1
-
-              RawEventImport.create!(
-                import_source: import_source,
-                import_event_type: import_source.source_type,
-                source_identifier: external_event_id,
-                payload: payload
-              )
-
-              state[:imported_count] += 1
-              state[:upserted_count] += 1
-            rescue StandardError => e
-              state[:failed_count] += 1
-              progress_changed = true
-              logger.error("[ReservixImporter] event_id=#{external_event_id} failed: #{e.class}: #{e.message}")
-              create_import_run_error!(
-                run: run,
-                error: e,
-                external_event_id: external_event_id,
-                payload: payload
-              )
-            ensure
-              next unless progress_changed
-
-              changed_since_flush += 1
-              next unless should_flush_progress?(changed_since_flush, last_flush_at)
-
-              persist_progress_from_state!(run, state)
-              changed_since_flush = 0
-              last_flush_at = Time.current
             end
           end
+        rescue Importing::StopRequested
+          state[:canceled] = true
         end
 
         persist_progress_from_state!(run, state)

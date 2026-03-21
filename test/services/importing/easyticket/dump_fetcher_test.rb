@@ -115,6 +115,18 @@ module Importing
           events.map { |event| event.dig("data", "images", event["event_id"], 0, "url") }
         )
       end
+
+      test "stops before fetching when stop was requested" do
+        client = FakeHttpClient.new({})
+
+        assert_raises(Importing::StopRequested) do
+          DumpFetcher.new(http_client: client, events_api_url: "https://dump.example/events").fetch_events(
+            stop_requested: -> { true }
+          )
+        end
+
+        assert_equal [], client.requested_urls
+      end
     end
   end
 end

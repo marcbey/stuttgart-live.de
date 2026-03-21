@@ -117,7 +117,7 @@ module Importing
         stop_aware_fetcher = Class.new do
           def fetch_events(heartbeat: nil, stop_requested: nil)
             heartbeat&.call
-            raise Importing::Eventim::FeedFetcher::StopRequested if stop_requested&.call
+            raise Importing::StopRequested if stop_requested&.call
 
             []
           end

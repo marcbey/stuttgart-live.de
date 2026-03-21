@@ -276,6 +276,51 @@ module Importing
         end
       end
 
+      test "returns canceled result when stop was requested after response before persist" do
+        target_event_id = events(:published_one).id
+
+        client = Class.new do
+          attr_reader :model
+
+          def initialize(run, target_event_id)
+            @run = run
+            @model = "gpt-5-mini"
+            @target_event_id = target_event_id
+          end
+
+          def create!(input:, text_format:)
+            raise "missing input" if input.blank?
+            raise "missing schema" if text_format.blank?
+
+            @run.update!(metadata: @run.metadata.merge("stop_requested" => true, "stop_requested_at" => Time.current.iso8601))
+            {
+              "output_text" => {
+                events: [
+                  {
+                    event_id: @target_event_id,
+                    genre: [ "Indie" ],
+                    venue: "LKA Longhorn",
+                    artist_description: "Artist eins",
+                    event_description: "Event eins",
+                    venue_description: "Venue eins",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: nil,
+                    facebook_link: nil
+                  }
+                ]
+              }.to_json
+            }
+          end
+        end.new(@run, target_event_id)
+
+        result = Importer.new(run: @run, client: client).call
+
+        assert_equal true, result.canceled
+        assert_equal 0, result.enriched_count
+        assert_nil events(:published_one).reload.llm_enrichment
+      end
+
       private
 
       def stub_const(constant_name, value)

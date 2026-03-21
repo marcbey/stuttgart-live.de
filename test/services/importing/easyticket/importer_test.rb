@@ -8,7 +8,7 @@ module Importing
         @events = events
       end
 
-      def fetch_events
+      def fetch_events(heartbeat: nil, stop_requested: nil)
         @events
       end
     end
@@ -21,7 +21,7 @@ module Importing
         @calls = []
       end
 
-      def fetch(event_id)
+      def fetch(event_id, heartbeat: nil, stop_requested: nil)
         @calls << event_id
         @payload_by_event_id.fetch(event_id.to_s, {})
       end
@@ -201,6 +201,36 @@ module Importing
         assert_equal "https://img.example/no-image-1-detail.jpg",
           without_image.detail_payload.dig("data", "images", 0, "paths", 0, "url")
         assert_equal({}, with_image.detail_payload)
+      end
+
+      test "cancels run when stop is requested during dump fetching" do
+        canceling_dump_fetcher = Class.new do
+          def fetch_events(heartbeat: nil, stop_requested: nil)
+            heartbeat&.call
+            raise Importing::StopRequested if stop_requested&.call
+          end
+        end.new
+
+        run = @source.import_runs.create!(
+          status: "running",
+          source_type: "easyticket",
+          started_at: 1.minute.ago,
+          metadata: {
+            "execution_started_at" => 1.minute.ago.iso8601,
+            "stop_requested" => true,
+            "stop_requested_at" => 30.seconds.ago.iso8601
+          }
+        )
+
+        result = Importer.new(
+          import_source: @source,
+          dump_fetcher: canceling_dump_fetcher,
+          detail_fetcher: StubDetailFetcher.new({}),
+          preexisting_run_id: run.id
+        ).call
+
+        assert_equal "canceled", result.reload.status
+        assert result.finished_at.present?
       end
     end
   end

@@ -12,10 +12,14 @@ module Importing
         @events_api_url = events_api_url.to_s
       end
 
-      def fetch_events
+      def fetch_events(heartbeat: nil, stop_requested: nil)
         raise Error, "EASYTICKET_EVENTS_API is not configured" if events_api_urls.empty?
 
-        events_api_urls.flat_map { |url| fetch_events_for_url(url) }
+        events_api_urls.flat_map do |url|
+          Importing::CooperativeStop.check!(stop_requested)
+          heartbeat&.call
+          fetch_events_for_url(url, heartbeat:, stop_requested:)
+        end
       end
 
       private
@@ -27,20 +31,25 @@ module Importing
           .reject(&:blank?)
       end
 
-      def fetch_events_for_url(url)
+      def fetch_events_for_url(url, heartbeat:, stop_requested:)
         first_page_url = url_for_page(url, 1)
-        parsed = fetch_and_parse(first_page_url)
+        parsed = fetch_and_parse(first_page_url, heartbeat:, stop_requested:)
         events = parsed.fetch(:events)
         last_page = parsed.fetch(:last_page)
         return events if last_page <= 1
 
         (2..last_page).each_with_object(events.dup) do |page, all_events|
-          all_events.concat(fetch_and_parse(url_for_page(url, page)).fetch(:events))
+          Importing::CooperativeStop.check!(stop_requested)
+          heartbeat&.call
+          all_events.concat(fetch_and_parse(url_for_page(url, page), heartbeat:, stop_requested:).fetch(:events))
         end
       end
 
-      def fetch_and_parse(url)
+      def fetch_and_parse(url, heartbeat:, stop_requested:)
+        Importing::CooperativeStop.check!(stop_requested)
         body = @http_client.get(url, accept: "application/json")
+        heartbeat&.call
+        Importing::CooperativeStop.check!(stop_requested)
         parse_events(body)
       end
 

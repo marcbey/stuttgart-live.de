@@ -53,18 +53,22 @@ module Importing
         )
 
         batches.each_with_index do |batch_events, index|
-          if stop_requested?
-            logger.info("[LlmEnrichmentImporter] run_id=#{run.id} stop requested before batch=#{index + 1}")
-            return canceled_result(selected_count:, skipped_count:, enriched_count:, batches_count: batches.count)
-          end
+          check_stop_requested!(message: "before batch", current_batch: index + 1)
 
           touch_run_heartbeat!("current_batch" => index + 1)
           logger.info("[LlmEnrichmentImporter] run_id=#{run.id} requesting batch=#{index + 1}/#{batches.count} size=#{batch_events.size}")
 
           items = batch_events.map { |event| item_for(event) }
           response = client.create!(input: request_input(items), text_format: output_format)
+          check_stop_requested!(message: "after response", current_batch: index + 1)
           payload = extract_payload!(response)
-          enriched_count += persist_batch!(payload:, run:, batch_event_ids: batch_events.map(&:id))
+          check_stop_requested!(message: "before persist", current_batch: index + 1)
+          enriched_count += persist_batch!(
+            payload:,
+            run:,
+            batch_event_ids: batch_events.map(&:id),
+            stop_requested: -> { stop_requested? }
+          )
           batches_processed += 1
           logger.info("[LlmEnrichmentImporter] run_id=#{run.id} completed batch=#{batches_processed}/#{batches.count} enriched_total=#{enriched_count}")
 
@@ -87,6 +91,9 @@ module Importing
           model: client_model,
           canceled: false
         )
+      rescue Importing::StopRequested
+        logger.info("[LlmEnrichmentImporter] run_id=#{run.id} stopped cooperatively")
+        canceled_result(selected_count:, skipped_count:, enriched_count:, batches_count: batches.count)
       rescue StandardError => e
         logger.error("[LlmEnrichmentImporter] run_id=#{run.id} failed: #{e.class}: #{e.message}")
         raise
@@ -236,12 +243,14 @@ module Importing
         response.inspect
       end
 
-      def persist_batch!(payload:, run:, batch_event_ids:)
+      def persist_batch!(payload:, run:, batch_event_ids:, stop_requested: nil)
         allowed_event_ids = batch_event_ids.map(&:to_i)
         seen_event_ids = {}
+        Importing::CooperativeStop.check!(stop_requested)
 
         ActiveRecord::Base.transaction do
           payload.each do |item|
+            Importing::CooperativeStop.check!(stop_requested)
             attributes = normalize_payload_item(item)
             event_id = attributes.fetch(:event_id)
 
@@ -328,6 +337,10 @@ module Importing
 
       def stop_requested?
         ActiveModel::Type::Boolean.new.cast(current_run_metadata["stop_requested"])
+      end
+
+      def check_stop_requested!(message:, **details)
+        Importing::CooperativeStop.check!(-> { stop_requested? }, message:, **details)
       end
 
       def run_running?

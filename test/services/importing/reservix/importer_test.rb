@@ -11,7 +11,7 @@ module Importing
           @lastupdate_arguments = []
         end
 
-        def fetch_pages(lastupdate:, heartbeat:)
+        def fetch_pages(lastupdate:, heartbeat:, stop_requested: nil)
           @lastupdate_arguments << lastupdate
           @pages.each do |page|
             heartbeat&.call
@@ -90,6 +90,35 @@ module Importing
         checkpoint = @source.reload.import_source_config.reservix_checkpoint
         assert_equal "2026-03-14T10:05:00+01:00", checkpoint["lastupdate"]
         assert_nil checkpoint["last_processed_event_id"]
+      end
+
+      test "cancels run when stop is requested during page fetching" do
+        canceling_fetcher = Class.new do
+          def fetch_pages(lastupdate:, heartbeat:, stop_requested: nil)
+            heartbeat&.call
+            raise Importing::StopRequested if stop_requested&.call
+          end
+        end.new
+
+        run = @source.import_runs.create!(
+          status: "running",
+          source_type: "reservix",
+          started_at: 1.minute.ago,
+          metadata: {
+            "execution_started_at" => 1.minute.ago.iso8601,
+            "stop_requested" => true,
+            "stop_requested_at" => 30.seconds.ago.iso8601
+          }
+        )
+
+        result = Importer.new(
+          import_source: @source,
+          event_fetcher: canceling_fetcher,
+          preexisting_run_id: run.id
+        ).call
+
+        assert_equal "canceled", result.reload.status
+        assert result.finished_at.present?
       end
     end
   end

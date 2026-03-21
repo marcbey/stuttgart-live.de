@@ -83,28 +83,11 @@ module Importing
           )
         end
 
-        if stop_requested?
-          logger.info("[LlmGenreGroupingImporter] run_id=#{run.id} stop requested before request")
-          return canceled_result(
-            selected_count: selected_count,
-            skipped_count: skipped_count,
-            requested_group_count: requested_group_count,
-            effective_group_count: effective_group_count
-          )
-        end
+        check_stop_requested!(requests_count: 0)
 
         request_result = request_groups_with_fallback!(selected_genres, effective_group_count)
 
-        if stop_requested?
-          logger.info("[LlmGenreGroupingImporter] run_id=#{run.id} stop requested after request")
-          return canceled_result(
-            selected_count: selected_count,
-            skipped_count: skipped_count,
-            requested_group_count: requested_group_count,
-            effective_group_count: effective_group_count,
-            requests_count: request_result.requests_count
-          )
-        end
+        check_stop_requested!(requests_count: request_result.requests_count)
 
         snapshot = persist_snapshot!(
           groups: request_result.groups,
@@ -143,14 +126,14 @@ module Importing
           model: client_model,
           canceled: false
         )
-      rescue StopRequested => e
-        logger.info("[LlmGenreGroupingImporter] run_id=#{run.id} stopped cooperatively during fallback after requests=#{e.requests_count}")
+      rescue Importing::StopRequested => e
+        logger.info("[LlmGenreGroupingImporter] run_id=#{run.id} stopped cooperatively during fallback after requests=#{e.detail(:requests_count, 0)}")
         canceled_result(
           selected_count: selected_count,
           skipped_count: skipped_count,
           requested_group_count: requested_group_count,
           effective_group_count: effective_group_count,
-          requests_count: e.requests_count
+          requests_count: e.detail(:requests_count, 0)
         )
       rescue StandardError => e
         logger.error("[LlmGenreGroupingImporter] run_id=#{run.id} failed: #{e.class}: #{e.message}")
@@ -160,15 +143,6 @@ module Importing
       private
 
       Error = Class.new(StandardError)
-      StopRequested = Class.new(StandardError) do
-        attr_reader :requests_count
-
-        def initialize(requests_count)
-          @requests_count = requests_count
-          super("Lauf wurde gestoppt.")
-        end
-      end
-
       attr_reader :client, :logger, :run, :snapshot_model
 
       def raw_distinct_genres
@@ -235,7 +209,7 @@ module Importing
         requests_count = 0
 
         genres.each_slice(FALLBACK_CHUNK_SIZE).with_index(1) do |chunk, chunk_index|
-          raise StopRequested.new(requests_count) if stop_requested?
+          check_stop_requested!(requests_count:)
 
           request_index += 1
           chunk_group_count = [ group_count, chunk.size ].min
@@ -261,7 +235,7 @@ module Importing
           )
         end
 
-        raise StopRequested.new(requests_count) if stop_requested?
+        check_stop_requested!(requests_count:)
 
         request_index += 1
         final_groups, payload_entry, response_entry, attempts_count = request_groups_for_provisional_groups!(
@@ -335,7 +309,9 @@ module Importing
             "current_request_attempt" => attempt
           )
 
+          check_stop_requested!(requests_count: attempts.size)
           response = client.create!(input: current_prompt, text_format: consolidation_output_format)
+          check_stop_requested!(requests_count: attempts.size + 1)
           response_dump = safe_response_dump(response)
           extracted_groups = extract_payload!(response)
           assignment_groups = normalize_consolidation_groups(
@@ -412,7 +388,9 @@ module Importing
             "current_request_attempt" => attempt
           )
 
+          check_stop_requested!(requests_count: attempts.size)
           response = client.create!(input: current_prompt, text_format: output_format)
+          check_stop_requested!(requests_count: attempts.size + 1)
           response_dump = safe_response_dump(response)
           extracted_groups = extract_payload!(response)
           groups = normalize_payload_groups(
@@ -516,7 +494,9 @@ module Importing
             "current_request_attempt" => attempt_number
           )
 
+          check_stop_requested!(requests_count: attempts.count { |entry| entry.fetch("stage", "initial") != "heuristic_repair" })
           response = client.create!(input: repair_prompt, text_format: output_format)
+          check_stop_requested!(requests_count: attempts.count { |entry| entry.fetch("stage", "initial") != "heuristic_repair" } + 1)
           response_dump = safe_response_dump(response)
           extracted_groups = extract_payload!(response)
           groups = normalize_payload_groups(
@@ -1059,7 +1039,9 @@ module Importing
             "current_request_attempt" => attempt_number
           )
 
+          check_stop_requested!(requests_count: attempts.count { |entry| entry.fetch("stage", "initial") != "heuristic_repair" })
           response = client.create!(input: repair_prompt, text_format: consolidation_output_format)
+          check_stop_requested!(requests_count: attempts.count { |entry| entry.fetch("stage", "initial") != "heuristic_repair" } + 1)
           response_dump = safe_response_dump(response)
           extracted_groups = extract_payload!(response)
           assignment_groups = normalize_consolidation_groups(
@@ -1174,6 +1156,10 @@ module Importing
 
       def stop_requested?
         ActiveModel::Type::Boolean.new.cast(current_run_metadata["stop_requested"])
+      end
+
+      def check_stop_requested!(requests_count:)
+        Importing::CooperativeStop.check!(-> { stop_requested? }, requests_count:)
       end
 
       def run_running?

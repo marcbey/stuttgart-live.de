@@ -82,7 +82,7 @@ module Importing
         XML
         client = FakeHttpClient.new(gzip(xml))
 
-        assert_raises(FeedFetcher::StopRequested) do
+        assert_raises(Importing::StopRequested) do
           FeedFetcher.new(http_client: client, feed_url: "https://example.test/feed.xml.gz").fetch_events(
             stop_requested: -> { true }
           )

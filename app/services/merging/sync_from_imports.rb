@@ -44,8 +44,6 @@ module Merging
       :position
     )
 
-    StopRequested = Class.new(StandardError)
-
     def initialize(merge_run_id: nil, last_run_at: nil, logger: Rails.logger, progress_callback: nil, stop_requested_callback: nil)
       @merge_run_id = merge_run_id
       @last_run_at = normalize_last_run_at(last_run_at)
@@ -115,7 +113,7 @@ module Merging
         offers_upserted_count: offers_upserted,
         canceled: false
       )
-    rescue StopRequested
+    rescue Importing::StopRequested
       Result.new(
         import_records_count: records.size,
         groups_count: groups.count,
@@ -166,7 +164,7 @@ module Merging
     end
 
     def stop_if_requested!
-      raise StopRequested if stop_requested_callback&.call
+      Importing::CooperativeStop.check!(stop_requested_callback)
     end
   end
 end

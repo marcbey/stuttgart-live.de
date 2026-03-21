@@ -384,6 +384,40 @@ module Importing
         assert_nil result.snapshot_id
       end
 
+      test "returns canceled result when stop was requested after a response" do
+        EventLlmEnrichment.create!(
+          event: events(:published_one),
+          source_run: import_runs(:one),
+          genre: [ "Rock" ],
+          model: "gpt-5-mini",
+          prompt_version: "v1",
+          raw_response: {}
+        )
+
+        client = Class.new do
+          attr_reader :model
+
+          def initialize(run)
+            @run = run
+            @model = "gpt-5-mini"
+          end
+
+          def create!(input:, text_format:)
+            raise "missing input" if input.blank?
+            raise "missing schema" if text_format.blank?
+
+            @run.update!(metadata: @run.metadata.merge("stop_requested" => true, "stop_requested_at" => Time.current.iso8601))
+            { "output_text" => { groups: [ { position: 1, name: "Rock", genres: [ "Rock" ] } ] }.to_json }
+          end
+        end.new(@run)
+
+        result = Importer.new(run: @run, client: client).call
+
+        assert_equal true, result.canceled
+        assert_equal 1, result.requests_count
+        assert_nil result.snapshot_id
+      end
+
       test "succeeds without snapshot when no genres exist" do
         result = Importer.new(run: @run, client: FakeClient.new(model: "gpt-5-mini", responses: [])).call
 

@@ -33,9 +33,13 @@ module Importing
         return prepared_run.run unless prepared_run.process
 
         run = prepared_run.run
+        @current_run = run
         state = initial_run_state(run:)
         matcher = LocationMatcher.new(state[:location_whitelist])
-        events = dump_fetcher.fetch_events
+        events = dump_fetcher.fetch_events(
+          heartbeat: -> { touch_run_heartbeat!(run) },
+          stop_requested: -> { run_canceled?(run) || stop_requested?(run) }
+        )
         state[:fetched_count] = events.size
         return run.reload if run_canceled?(run)
 
@@ -119,6 +123,18 @@ module Importing
             filtered_out_cities: state[:filtered_out_cities]
           )
         )
+      rescue Importing::StopRequested
+        state[:canceled] = true
+        persist_progress_from_state!(run, state)
+        finalize_canceled_run!(
+          run,
+          state,
+          metadata: run_completion_metadata(
+            run: run,
+            location_whitelist: state[:location_whitelist],
+            filtered_out_cities: state[:filtered_out_cities]
+          )
+        )
       rescue StandardError => e
         handle_import_failure!(
           run,
@@ -131,6 +147,8 @@ module Importing
           )
         )
         raise
+      ensure
+        @current_run = nil
       end
 
       private
@@ -188,7 +206,13 @@ module Importing
       end
 
       def fetch_detail_payload(detail_event_id, event_id:)
-        normalize_payload(detail_fetcher.fetch(detail_event_id))
+        normalize_payload(
+          detail_fetcher.fetch(
+            detail_event_id,
+            heartbeat: -> { touch_run_heartbeat!(@current_run) },
+            stop_requested: -> { @current_run.present? && (run_canceled?(@current_run) || stop_requested?(@current_run)) }
+          )
+        )
       rescue RequestError => e
         raise unless detail_request_not_found?(e)
 

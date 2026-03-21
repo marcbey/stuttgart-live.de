@@ -5,8 +5,6 @@ require "zlib"
 module Importing
   module Eventim
     class FeedFetcher
-      class StopRequested < StandardError; end
-
       EVENT_NODE_KEYS = %w[event eventserie performance show item].freeze
 
       def initialize(http_client: HttpClient.new, feed_url: AppConfig.eventim_feed_url)
@@ -34,7 +32,7 @@ module Importing
             parse_event_nodes_from_xml(xml_path, heartbeat: heartbeat, stop_requested: stop_requested)
           end
         end
-      rescue StopRequested
+      rescue Importing::StopRequested
         raise
       rescue RequestError
         raise
@@ -243,7 +241,7 @@ module Importing
       end
 
       def check_stop_requested!(stop_requested)
-        raise StopRequested if stop_requested&.call
+        Importing::CooperativeStop.check!(stop_requested)
       end
     end
   end

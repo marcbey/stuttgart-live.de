@@ -43,6 +43,20 @@ module Importing
 
         assert_equal "https://api.example.test/events/99", client.last_url
       end
+
+      test "stops before detail request when stop was requested" do
+        client = FakeHttpClient.new('{"data":{}}')
+        fetcher = DetailFetcher.new(
+          http_client: client,
+          event_detail_api: "https://api.example.test/events"
+        )
+
+        assert_raises(Importing::StopRequested) do
+          fetcher.fetch("99", stop_requested: -> { true })
+        end
+
+        assert_nil client.last_url
+      end
     end
   end
 end

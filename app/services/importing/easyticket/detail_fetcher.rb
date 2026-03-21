@@ -14,8 +14,11 @@ module Importing
         @partner_shop_id = partner_shop_id.to_s
       end
 
-      def fetch(event_id)
+      def fetch(event_id, heartbeat: nil, stop_requested: nil)
+        Importing::CooperativeStop.check!(stop_requested)
         body = @http_client.get(build_detail_url(event_id), accept: "application/json")
+        heartbeat&.call
+        Importing::CooperativeStop.check!(stop_requested)
         parsed = JSON.parse(body)
         parsed.is_a?(Hash) ? parsed.deep_stringify_keys : { "data" => parsed }
       rescue JSON::ParserError => e
