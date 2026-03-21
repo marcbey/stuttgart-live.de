@@ -1201,6 +1201,19 @@ trix-editor.blog-rich-text:focus {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .newsletter-signup-inner {
+    max-width: 66rem;
+    margin: 0 auto;
+    align-items: center;
+    gap: clamp(1.6rem, 3vw, 2.4rem);
+    grid-template-columns: minmax(0, 1.08fr) minmax(18rem, 0.92fr);
+  }
+
+  .newsletter-signup-copy h2 {
+    max-width: 8.5ch;
+    font-size: clamp(2.7rem, 4.9vw, 4.1rem);
+  }
+
   .news-list-item {
     grid-template-columns: minmax(220px, 320px) minmax(0, 1fr);
     gap: 1.1rem;
@@ -2957,6 +2970,7 @@ trix-editor.blog-rich-text:focus {
   z-index: 1;
   display: grid;
   gap: 1.2rem;
+  min-width: 0;
 }
 
 .newsletter-signup-motion {
@@ -3126,11 +3140,13 @@ trix-editor.blog-rich-text:focus {
 .newsletter-signup-copy {
   display: grid;
   align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
 }
 
 .newsletter-signup-lead {
   margin: 0.7rem 0 0;
-  max-width: 33rem;
+  max-width: 30rem;
   font-size: 1.04rem;
   line-height: 1.5;
   color: rgba(17, 17, 17, 0.76);
@@ -3177,6 +3193,7 @@ trix-editor.blog-rich-text:focus {
   display: grid;
   gap: 0.85rem;
   align-content: start;
+  min-width: 0;
   padding: 1rem;
   border: 1px solid rgba(17, 17, 17, 0.12);
   border-radius: 1.15rem;
@@ -3261,6 +3278,19 @@ trix-editor.blog-rich-text:focus {
 
 .newsletter-signup-section .newsletter-signup-button:hover {
   background: linear-gradient(180deg, #2b2b2b 0%, #111111 100%);
+}
+
+@media (min-width: 540px) {
+  .newsletter-signup-section .newsletter-signup-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.8rem;
+  }
+
+  .newsletter-signup-section .newsletter-signup-button {
+    width: auto;
+    min-width: clamp(12rem, 24vw, 15rem);
+    padding-inline: 1.1rem;
+  }
 }
 
 .event-card {
@@ -6436,37 +6466,9 @@ trix-editor.blog-rich-text:focus {
     padding: 1.6rem;
   }
 
-  .newsletter-signup-inner {
-    max-width: 68rem;
-    margin: 0 auto;
-    grid-template-columns: minmax(0, 36rem) minmax(22rem, 32rem);
-    align-items: center;
-    justify-content: space-between;
-    gap: 2rem;
-  }
-
-  .newsletter-signup-copy h2 {
-    white-space: nowrap;
-  }
-
-  .newsletter-signup-panel {
-    width: 100%;
-    transform: translateX(-0.75rem);
-  }
-
   .newsletter-signup-particle::after {
     width: 4rem;
     left: -3rem;
-  }
-
-  .newsletter-signup-section .newsletter-signup-form {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 0.8rem;
-  }
-
-  .newsletter-signup-section .newsletter-signup-button {
-    width: fit-content;
-    padding-inline: 1rem;
   }
 
   .newsletter-signup-panel {
@@ -6632,6 +6634,7 @@ trix-editor.blog-rich-text:focus {
   .backend-split {
     grid-template-columns: minmax(334px, 0.626fr) minmax(0, 1.690fr);
   }
+
 }
 
 @media (min-width: 1500px) {
