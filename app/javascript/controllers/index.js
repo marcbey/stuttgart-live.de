@@ -84,3 +84,6 @@ application.register("section-view", SectionViewController)
 
 import SettingsSortableController from "./settings_sortable_controller"
 application.register("settings-sortable", SettingsSortableController)
+
+import SettingsTabsController from "./settings_tabs_controller"
+application.register("settings-tabs", SettingsTabsController)

@@ -1,0 +1,25 @@
+<%= render "backend/settings/sections/section_errors", settings_records: settings_records %>
+
+<section class="settings-group">
+  <div class="settings-group-header">
+    <h2>SKS Promoter IDs</h2>
+    <p>Eine Zeile pro ID oder komma-separiert.</p>
+  </div>
+  <div class="settings-group-body">
+    <%= form_with model: @sks_promoter_ids_setting,
+                  url: backend_settings_path(section: section_key),
+                  method: :patch,
+                  class: "editor-form" do |form| %>
+      <%= form.label :sks_promoter_ids_text, "SKS Promoter IDs (eine Zeile pro ID oder komma-separiert)", class: "form-label" %>
+      <%= form.text_area :sks_promoter_ids_text,
+                         value: @sks_promoter_ids_setting.sks_promoter_ids_text,
+                         rows: 8,
+                         class: "form-textarea",
+                         aria: { describedby: "sks-promoter-ids-help" } %>
+      <p id="sks-promoter-ids-help" class="form-hint">Diese IDs steuern den SKS-Filter, die Tagestipp-Sortierung und automatische SKS-spezifische Hinweise bei Events.</p>
+      <div class="settings-group-footer">
+        <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+      </div>
+    <% end %>
+  </div>
+</section>

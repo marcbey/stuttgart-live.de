@@ -1,66 +1,78 @@
 module Backend
   class SettingsController < BaseController
+    DEFAULT_SECTION = "sks_promoter_ids".freeze
+
+    SECTIONS = [
+      {
+        key: "sks_promoter_ids",
+        label: "SKS Promoter IDs",
+        panel_id: "settings-panel-sks-promoter-ids",
+        tab_id: "settings-tab-sks-promoter-ids",
+        partial: "backend/settings/sections/sks_promoter_ids"
+      },
+      {
+        key: "sks_organizer_notes",
+        label: "SKS Standard-Veranstalterhinweise",
+        panel_id: "settings-panel-sks-organizer-notes",
+        tab_id: "settings-tab-sks-organizer-notes",
+        partial: "backend/settings/sections/sks_organizer_notes"
+      },
+      {
+        key: "homepage_genre_lanes",
+        label: "Homepage Genre-Lanes",
+        panel_id: "settings-panel-homepage-genre-lanes",
+        tab_id: "settings-tab-homepage-genre-lanes",
+        partial: "backend/settings/sections/homepage_genre_lanes"
+      },
+      {
+        key: "llm_enrichment",
+        label: "LLM-Enrichment",
+        panel_id: "settings-panel-llm-enrichment",
+        tab_id: "settings-tab-llm-enrichment",
+        partial: "backend/settings/sections/llm_enrichment"
+      },
+      {
+        key: "llm_genre_grouping",
+        label: "LLM-Genre-Gruppierung",
+        panel_id: "settings-panel-llm-genre-grouping",
+        tab_id: "settings-tab-llm-genre-grouping",
+        partial: "backend/settings/sections/llm_genre_grouping"
+      },
+      {
+        key: "merge_artist_similarity_matching",
+        label: "Ähnlichkeits-Matching",
+        panel_id: "settings-panel-merge-artist-similarity-matching",
+        tab_id: "settings-tab-merge-artist-similarity-matching",
+        partial: "backend/settings/sections/merge_artist_similarity_matching"
+      }
+    ].freeze
+
     before_action :require_admin!
+    before_action :set_active_section
+    before_action :load_active_section, only: [ :edit, :section ]
+
+    helper_method :settings_sections, :active_settings_section, :active_section_records, :section_loaded?
 
     def edit
-      @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
-      @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
-      @homepage_genre_lane_slugs_setting = AppSetting.homepage_genre_lane_slugs_record
-      @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
-      @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
-      @llm_genre_grouping_model_setting = AppSetting.llm_genre_grouping_model_record
-      @llm_genre_grouping_prompt_template_setting = AppSetting.llm_genre_grouping_prompt_template_record
-      @llm_genre_grouping_group_count_setting = AppSetting.llm_genre_grouping_group_count_record
-      @merge_artist_similarity_matching_setting = AppSetting.merge_artist_similarity_matching_enabled_record
-      @homepage_genre_lane_reference_groups = homepage_genre_lane_reference_groups(@homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs)
+    end
+
+    def section
+      render partial: active_settings_section.fetch(:partial), locals: section_render_locals
     end
 
     def update
-      @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
-      @sks_promoter_ids_setting.sks_promoter_ids_text = settings_params[:sks_promoter_ids_text]
-      @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
-      @sks_organizer_notes_setting.sks_organizer_notes_text = settings_params[:sks_organizer_notes_text]
-      @homepage_genre_lane_slugs_setting = AppSetting.homepage_genre_lane_slugs_record
-      @homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs = settings_params.fetch(:homepage_genre_lane_slugs, [])
-      @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
-      @llm_enrichment_model_setting.llm_enrichment_model = settings_params[:llm_enrichment_model]
-      @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
-      @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text =
-        settings_params[:llm_enrichment_prompt_template_text]
-      @llm_genre_grouping_model_setting = AppSetting.llm_genre_grouping_model_record
-      @llm_genre_grouping_model_setting.llm_genre_grouping_model = settings_params[:llm_genre_grouping_model]
-      @llm_genre_grouping_prompt_template_setting = AppSetting.llm_genre_grouping_prompt_template_record
-      @llm_genre_grouping_prompt_template_setting.llm_genre_grouping_prompt_template_text =
-        settings_params[:llm_genre_grouping_prompt_template_text]
-      @llm_genre_grouping_group_count_setting = AppSetting.llm_genre_grouping_group_count_record
-      @llm_genre_grouping_group_count_setting.llm_genre_grouping_group_count =
-        settings_params[:llm_genre_grouping_group_count]
-      @merge_artist_similarity_matching_setting = AppSetting.merge_artist_similarity_matching_enabled_record
-      @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled =
-        settings_params[:merge_artist_similarity_matching_enabled]
+      load_active_section
+      assign_active_section_attributes
 
-      settings_records = [
-        @sks_promoter_ids_setting,
-        @sks_organizer_notes_setting,
-        @homepage_genre_lane_slugs_setting,
-        @llm_enrichment_model_setting,
-        @llm_enrichment_prompt_template_setting,
-        @llm_genre_grouping_model_setting,
-        @llm_genre_grouping_prompt_template_setting,
-        @llm_genre_grouping_group_count_setting,
-        @merge_artist_similarity_matching_setting
-      ]
+      section_is_valid = active_section_records.map(&:valid?).all?
 
-      settings_are_valid = settings_records.map(&:valid?).all?
-
-      if settings_are_valid
+      if section_is_valid
         AppSetting.transaction do
-          settings_records.each(&:save!)
+          active_section_records.each(&:save!)
         end
 
-        redirect_to edit_backend_settings_path, notice: "Einstellungen wurden gespeichert."
+        redirect_to edit_backend_settings_path(section: @active_section_key), notice: "Einstellungen wurden gespeichert."
       else
-        @homepage_genre_lane_reference_groups = homepage_genre_lane_reference_groups(@homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs)
         flash.now[:alert] = "Einstellungen konnten nicht gespeichert werden."
         render :edit, status: :unprocessable_entity
       end
@@ -68,18 +80,126 @@ module Backend
 
     private
 
-    def settings_params
-      params.require(:app_setting).permit(
-        :sks_promoter_ids_text,
-        :sks_organizer_notes_text,
-        :llm_enrichment_model,
-        :llm_enrichment_prompt_template_text,
-        :llm_genre_grouping_model,
-        :llm_genre_grouping_prompt_template_text,
-        :llm_genre_grouping_group_count,
-        :merge_artist_similarity_matching_enabled,
-        homepage_genre_lane_slugs: []
-      )
+    def settings_sections
+      SECTIONS
+    end
+
+    def active_settings_section
+      @active_settings_section
+    end
+
+    def section_loaded?(section_key)
+      section_key.to_s == @active_section_key
+    end
+
+    def set_active_section
+      @active_section_key = normalized_section_key(params[:section])
+      @active_settings_section = settings_sections.find { |section| section.fetch(:key) == @active_section_key }
+    end
+
+    def normalized_section_key(raw_key)
+      key = raw_key.to_s
+      settings_sections.any? { |section| section.fetch(:key) == key } ? key : DEFAULT_SECTION
+    end
+
+    def load_active_section
+      case @active_section_key
+      when "sks_promoter_ids"
+        @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
+      when "sks_organizer_notes"
+        @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
+      when "homepage_genre_lanes"
+        @homepage_genre_lane_slugs_setting = AppSetting.homepage_genre_lane_slugs_record
+        @homepage_genre_lane_reference_groups =
+          homepage_genre_lane_reference_groups(@homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs)
+      when "llm_enrichment"
+        @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
+        @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
+      when "llm_genre_grouping"
+        @llm_genre_grouping_model_setting = AppSetting.llm_genre_grouping_model_record
+        @llm_genre_grouping_prompt_template_setting = AppSetting.llm_genre_grouping_prompt_template_record
+        @llm_genre_grouping_group_count_setting = AppSetting.llm_genre_grouping_group_count_record
+      when "merge_artist_similarity_matching"
+        @merge_artist_similarity_matching_setting = AppSetting.merge_artist_similarity_matching_enabled_record
+      end
+    end
+
+    def assign_active_section_attributes
+      case @active_section_key
+      when "sks_promoter_ids"
+        @sks_promoter_ids_setting.sks_promoter_ids_text = active_settings_params[:sks_promoter_ids_text]
+      when "sks_organizer_notes"
+        @sks_organizer_notes_setting.sks_organizer_notes_text = active_settings_params[:sks_organizer_notes_text]
+      when "homepage_genre_lanes"
+        @homepage_genre_lane_slugs_setting.homepage_genre_lane_slugs = active_settings_params.fetch(:homepage_genre_lane_slugs, [])
+      when "llm_enrichment"
+        @llm_enrichment_model_setting.llm_enrichment_model = active_settings_params[:llm_enrichment_model]
+        @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text =
+          active_settings_params[:llm_enrichment_prompt_template_text]
+      when "llm_genre_grouping"
+        @llm_genre_grouping_model_setting.llm_genre_grouping_model = active_settings_params[:llm_genre_grouping_model]
+        @llm_genre_grouping_prompt_template_setting.llm_genre_grouping_prompt_template_text =
+          active_settings_params[:llm_genre_grouping_prompt_template_text]
+        @llm_genre_grouping_group_count_setting.llm_genre_grouping_group_count =
+          active_settings_params[:llm_genre_grouping_group_count]
+      when "merge_artist_similarity_matching"
+        @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled =
+          active_settings_params[:merge_artist_similarity_matching_enabled]
+      end
+    end
+
+    def active_section_records
+      case @active_section_key
+      when "sks_promoter_ids"
+        [ @sks_promoter_ids_setting ]
+      when "sks_organizer_notes"
+        [ @sks_organizer_notes_setting ]
+      when "homepage_genre_lanes"
+        [ @homepage_genre_lane_slugs_setting ]
+      when "llm_enrichment"
+        [ @llm_enrichment_model_setting, @llm_enrichment_prompt_template_setting ]
+      when "llm_genre_grouping"
+        [
+          @llm_genre_grouping_model_setting,
+          @llm_genre_grouping_prompt_template_setting,
+          @llm_genre_grouping_group_count_setting
+        ]
+      when "merge_artist_similarity_matching"
+        [ @merge_artist_similarity_matching_setting ]
+      else
+        []
+      end
+    end
+
+    def active_settings_params
+      case @active_section_key
+      when "sks_promoter_ids"
+        params.require(:app_setting).permit(:sks_promoter_ids_text)
+      when "sks_organizer_notes"
+        params.require(:app_setting).permit(:sks_organizer_notes_text)
+      when "homepage_genre_lanes"
+        params.require(:app_setting).permit(homepage_genre_lane_slugs: [])
+      when "llm_enrichment"
+        params.require(:app_setting).permit(:llm_enrichment_model, :llm_enrichment_prompt_template_text)
+      when "llm_genre_grouping"
+        params.require(:app_setting).permit(
+          :llm_genre_grouping_model,
+          :llm_genre_grouping_prompt_template_text,
+          :llm_genre_grouping_group_count
+        )
+      when "merge_artist_similarity_matching"
+        params.require(:app_setting).permit(:merge_artist_similarity_matching_enabled)
+      else
+        ActionController::Parameters.new.permit!
+      end
+    end
+
+    def section_render_locals
+      {
+        section_key: @active_section_key,
+        section_definition: active_settings_section,
+        settings_records: active_section_records
+      }
     end
 
     def homepage_genre_lane_reference_groups(selected_slugs = [])

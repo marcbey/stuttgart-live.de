@@ -158,7 +158,7 @@
       <h3>LLM-Enrichment Jobs</h3>
       <div class="action-cell">
         <%= link_to "Bearbeiten",
-                    edit_backend_settings_path(anchor: "llm-enrichment-prompt"),
+                    edit_backend_settings_path(section: :llm_enrichment),
                     class: "button button-ghost button-compact" %>
         <%= button_to "LLM-Enrichment starten",
                       run_llm_enrichment_backend_import_sources_path,
@@ -216,7 +216,7 @@
       <h3>LLM-Genre-Gruppierung Jobs</h3>
       <div class="action-cell">
         <%= link_to "Bearbeiten",
-                    edit_backend_settings_path(anchor: "llm-genre-grouping"),
+                    edit_backend_settings_path(section: :llm_genre_grouping),
                     class: "button button-ghost button-compact" %>
         <%= button_to "LLM-Genre-Gruppierung starten",
                       run_llm_genre_grouping_backend_import_sources_path,

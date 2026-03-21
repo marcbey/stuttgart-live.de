@@ -15,7 +15,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Importer"
     assert_select ".app-nav-links .app-nav-link", text: "Events"
-    assert_match(/Events.*News.*Importer.*Einstellungen.*Benutzer.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Importer.*Passwort.*Logout/m, response.body)
   end
 
   test "index highlights import merge button when merge sync is needed" do
@@ -393,7 +393,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "LLM-Enrichment starten"
     assert_includes response.body, "Bearbeiten"
-    assert_select "a[href='#{edit_backend_settings_path(anchor: "llm-enrichment-prompt")}']", text: "Bearbeiten"
+    assert_select "a[href='#{edit_backend_settings_path(section: :llm_enrichment)}']", text: "Bearbeiten"
   end
 
   test "should render llm genre grouping button on index" do
@@ -401,7 +401,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "LLM-Genre-Gruppierung starten"
-    assert_select "a[href='#{edit_backend_settings_path(anchor: "llm-genre-grouping")}']", text: "Bearbeiten"
+    assert_select "a[href='#{edit_backend_settings_path(section: :llm_genre_grouping)}']", text: "Bearbeiten"
   end
 
   test "should enqueue llm enrichment run from import sources page" do

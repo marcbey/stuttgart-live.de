@@ -1,0 +1,42 @@
+<%= render "backend/settings/sections/section_errors", settings_records: settings_records %>
+
+<section class="settings-group">
+  <div class="settings-group-header">
+    <h2>LLM-Genre-Gruppierung</h2>
+    <p>Modell, Zielanzahl und Prompt für die Gruppierung der eindeutigen `llm_enrichment.genre`-Werte. <code>{{input_json}}</code> und <code>{{group_count}}</code> müssen im Prompt enthalten bleiben.</p>
+  </div>
+  <div class="settings-group-body">
+    <%= form_with model: @llm_genre_grouping_model_setting,
+                  url: backend_settings_path(section: section_key),
+                  method: :patch,
+                  class: "editor-form" do |form| %>
+      <%= form.label :llm_genre_grouping_model, "LLM-Modell", class: "form-label" %>
+      <%= form.select :llm_genre_grouping_model,
+                      options_for_select(AppSetting::AVAILABLE_LLM_ENRICHMENT_MODELS, @llm_genre_grouping_model_setting.llm_genre_grouping_model),
+                      {},
+                      class: "form-input",
+                      aria: { describedby: "llm-genre-grouping-model-help" } %>
+      <p id="llm-genre-grouping-model-help" class="form-hint">Dieses Modell wird für neue LLM-Genre-Gruppierungs-Läufe verwendet.</p>
+
+      <%= form.label :llm_genre_grouping_group_count, "Anzahl gewünschter Obergruppen", class: "form-label" %>
+      <%= form.number_field :llm_genre_grouping_group_count,
+                            value: @llm_genre_grouping_group_count_setting.llm_genre_grouping_group_count,
+                            min: 1,
+                            step: 1,
+                            class: "form-input",
+                            aria: { describedby: "llm-genre-grouping-count-help" } %>
+      <p id="llm-genre-grouping-count-help" class="form-hint">Wenn weniger eindeutige Genres vorhanden sind als gewünscht, verwendet der Job automatisch die verfügbare Genre-Anzahl.</p>
+
+      <%= form.label :llm_genre_grouping_prompt_template_text, "LLM-Genre-Gruppierungs-Prompt", class: "form-label" %>
+      <%= form.text_area :llm_genre_grouping_prompt_template_text,
+                         value: @llm_genre_grouping_prompt_template_setting.llm_genre_grouping_prompt_template_text,
+                         rows: 18,
+                         class: "form-textarea",
+                         aria: { describedby: "llm-genre-grouping-prompt-help" } %>
+      <p id="llm-genre-grouping-prompt-help" class="form-hint">Dieses Template steuert den Prompt für den LLM-Genre-Gruppierungs-Importer. Die Platzhalter <code>{{input_json}}</code> und <code>{{group_count}}</code> müssen enthalten bleiben.</p>
+      <div class="settings-group-footer">
+        <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+      </div>
+    <% end %>
+  </div>
+</section>

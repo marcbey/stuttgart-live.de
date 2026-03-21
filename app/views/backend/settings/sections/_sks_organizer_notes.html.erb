@@ -1,0 +1,25 @@
+<%= render "backend/settings/sections/section_errors", settings_records: settings_records %>
+
+<section class="settings-group">
+  <div class="settings-group-header">
+    <h2>SKS Standard-Veranstalterhinweise</h2>
+    <p>Wird für SKS-Events ohne eigene Hinweise als Fallback verwendet.</p>
+  </div>
+  <div class="settings-group-body">
+    <%= form_with model: @sks_organizer_notes_setting,
+                  url: backend_settings_path(section: section_key),
+                  method: :patch,
+                  class: "editor-form" do |form| %>
+      <%= form.label :sks_organizer_notes_text, "SKS Standard-Veranstalterhinweise", class: "form-label" %>
+      <%= form.text_area :sks_organizer_notes_text,
+                         value: @sks_organizer_notes_setting.sks_organizer_notes_text,
+                         rows: 14,
+                         class: "form-textarea",
+                         aria: { describedby: "sks-organizer-notes-help" } %>
+      <p id="sks-organizer-notes-help" class="form-hint">Dieser Text wird bei SKS-Events ohne eigene Veranstalterhinweise öffentlich angezeigt.</p>
+      <div class="settings-group-footer">
+        <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+      </div>
+    <% end %>
+  </div>
+</section>

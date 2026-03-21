@@ -1,0 +1,27 @@
+<%= render "backend/settings/sections/section_errors", settings_records: settings_records %>
+
+<section class="settings-group">
+  <div class="settings-group-header">
+    <h2>Ähnlichkeits-Matching für Artist-Dubletten</h2>
+    <p>Steuert, ob der Merge-Importer ähnliche Artist-Namen bei gleicher Startzeit zusammenführen darf.</p>
+  </div>
+  <div class="settings-group-body">
+    <%= form_with model: @merge_artist_similarity_matching_setting,
+                  url: backend_settings_path(section: section_key),
+                  method: :patch,
+                  class: "editor-form" do |form| %>
+      <%= form.label :merge_artist_similarity_matching_enabled, "Ähnlichkeits-Matching für Artist-Dubletten", class: "form-label" %>
+      <label class="check-inline">
+        <%= form.check_box :merge_artist_similarity_matching_enabled,
+                           { checked: @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled },
+                           true,
+                           false %>
+        <span>Aktiviert</span>
+      </label>
+      <p class="form-hint">Wenn aktiviert, vergleicht der Merge-Importer bei exakt gleicher Startzeit auch ähnliche Artist-Namen und kann sie als denselben Termin zusammenführen. Dadurch werden zum Beispiel Varianten wie „Vier Pianisten - Ein Konzert“ und „Vier Pianisten“ oder „Gregory Porter &amp; Orchestra“ und „Gregory Porter“ als Dublette erkannt. Unterschiedliche Uhrzeiten bleiben trotz ähnlichem Namen weiterhin getrennte Events.</p>
+      <div class="settings-group-footer">
+        <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+      </div>
+    <% end %>
+  </div>
+</section>
