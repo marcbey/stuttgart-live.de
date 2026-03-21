@@ -237,7 +237,8 @@ module Backend
           position: group.position,
           name: group.name,
           slug: group.slug,
-          upcoming_events_count: LlmGenreGrouping::Lookup.events_for_group(group, relation: upcoming_relation).count
+          upcoming_events_count: LlmGenreGrouping::Lookup.events_for_group(group, relation: upcoming_relation).count,
+          member_genres_tooltip: homepage_genre_group_member_genres_tooltip(group)
         }
       end.sort_by do |group|
         selection_index = selected_positions[group[:slug]]
@@ -247,6 +248,16 @@ module Backend
           group[:position]
         ]
       end
+    end
+
+    def homepage_genre_group_member_genres_tooltip(group)
+      genres = Array(group.member_genres).filter_map do |entry|
+        value = entry.to_s.strip
+        value.presence
+      end.uniq
+      return if genres.empty?
+
+      "Enthaltene Genres: #{genres.join(', ')}"
     end
   end
 end

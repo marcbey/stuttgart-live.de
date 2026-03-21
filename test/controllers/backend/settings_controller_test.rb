@@ -132,6 +132,19 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='pop-mainstream'][checked='checked']", count: 0
   end
 
+  test "homepage genre lanes section shows member genres as hover tooltip" do
+    sign_in_as(@admin)
+    snapshot = create_homepage_genre_snapshot(selected: true)
+    snapshot.groups.find_by!(slug: "rock-alternative").update!(member_genres: [ "Rock", " Alternative ", "", "Rock" ])
+
+    get edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot.id)
+
+    assert_response :success
+    assert_select ".settings-reference-checkbox-copy[title='Enthaltene Genres: Alternative, Rock'] strong",
+                  text: "Rock & Alternative",
+                  count: 1
+  end
+
   test "admin can enable similarity matching in settings" do
     sign_in_as(@admin)
 

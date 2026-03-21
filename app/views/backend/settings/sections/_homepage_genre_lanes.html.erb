@@ -53,7 +53,8 @@
                                     group[:slug],
                                     @homepage_genre_lane_configuration&.lane_slugs.to_a.include?(group[:slug]),
                                     data: { action: "change->settings-sortable#syncSelectionState" } %>
-                  <span class="settings-reference-checkbox-copy">
+                  <span class="settings-reference-checkbox-copy"
+                        <% if group[:member_genres_tooltip].present? %>title="<%= group[:member_genres_tooltip] %>"<% end %>>
                     <strong><%= group[:name] %></strong>
                     <span><%= group[:upcoming_events_count] %> kommende Events</span>
                   </span>
