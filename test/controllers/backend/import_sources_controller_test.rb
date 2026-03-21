@@ -20,7 +20,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='settings-tabs']", count: 1
     assert_select "#import-runs-tabs [role='tab']", count: 4
     assert_select "#import-runs-tab-raw-importer[aria-selected='true']", count: 1
-    assert_match(/Events.*Präsentatoren.*News.*Importer.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Importer.*Präsentatoren.*Passwort.*Logout/m, response.body)
   end
 
   test "should activate requested importer tab on index" do
