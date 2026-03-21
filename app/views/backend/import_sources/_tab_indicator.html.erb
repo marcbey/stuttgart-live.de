@@ -1,0 +1,9 @@
+<span id="<%= indicator_id %>" class="import-runs-tab-indicator-slot">
+  <% if indicator.fetch(:status) != "idle" %>
+    <span class="import-runs-tab-indicator import-runs-tab-indicator-<%= indicator.fetch(:status) %>"
+          aria-label="<%= indicator.fetch(:sr_label) %>"
+          title="<%= indicator.fetch(:label) %>">
+      <span aria-hidden="true"><%= indicator.fetch(:count) %></span>
+    </span>
+  <% end %>
+</span>

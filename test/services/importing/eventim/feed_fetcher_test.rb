@@ -73,6 +73,22 @@ module Importing
         assert_equal [ "evt-1", "evt-2" ], yielded
       end
 
+      test "aborts parsing when stop is requested" do
+        xml = <<~XML
+          <root>
+            #{("<meta><value>x</value></meta>" * 300)}
+            <event><eventId>evt-1</eventId><date>2026-06-17</date></event>
+          </root>
+        XML
+        client = FakeHttpClient.new(gzip(xml))
+
+        assert_raises(FeedFetcher::StopRequested) do
+          FeedFetcher.new(http_client: client, feed_url: "https://example.test/feed.xml.gz").fetch_events(
+            stop_requested: -> { true }
+          )
+        end
+      end
+
       test "includes xml attributes in parsed payload" do
         xml = <<~XML
           <root>

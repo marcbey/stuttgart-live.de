@@ -5007,6 +5007,7 @@ trix-editor.blog-rich-text:focus {
 .settings-tabs-link {
   display: inline-flex;
   align-items: center;
+  gap: 0.5rem;
   min-height: 2.6rem;
   padding: 0.65rem 0.9rem;
   border: 1px solid #d7d1c7;
@@ -5048,6 +5049,29 @@ trix-editor.blog-rich-text:focus {
 
 .settings-tab-panel.is-active {
   display: block;
+}
+
+.import-runs-tab-indicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  min-height: 1.35rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.import-runs-tab-indicator-running {
+  background: #1f5f3a;
+  color: #fff;
+}
+
+.import-runs-tab-indicator-stopping {
+  background: #8d1320;
+  color: #fff;
 }
 
 .settings-group {

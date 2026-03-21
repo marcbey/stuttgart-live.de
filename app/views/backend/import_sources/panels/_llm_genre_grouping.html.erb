@@ -1,0 +1,59 @@
+<section class="import-runs-panel">
+  <div class="import-runs-group-header">
+    <h3>LLM-Genre-Gruppierung Jobs</h3>
+    <div class="action-cell">
+      <%= link_to "Bearbeiten",
+                  edit_backend_settings_path(section: :llm_genre_grouping),
+                  class: "button button-ghost button-compact" %>
+      <%= button_to "LLM-Genre-Gruppierung starten",
+                    run_llm_genre_grouping_backend_import_sources_path(section: section_key),
+                    method: :post,
+                    class: "button button-compact" %>
+    </div>
+  </div>
+  <p class="import-runs-note">
+    Diese Jobs analysieren die im System vorhandenen Rohgenre-Werte und fassen sie zu stabilen redaktionellen Obergruppen zusammen.
+    Das reduziert Genre-Varianten aus unterschiedlichen Quellen und verbessert Filter, Zuordnung und thematische Übersichten.
+  </p>
+  <% if runs.any? %>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>Gestartet</th>
+            <th>Status</th>
+            <th><span title="<%= import_run_column_description(:raw_imports) %>">Genres</span></th>
+            <th><span title="<%= import_run_column_description(:filtered) %>">Skipped</span></th>
+            <th><span title="<%= import_run_column_description(:inserts) %>">Groups</span></th>
+            <th><span title="<%= import_run_column_description(:collapsed_records) %>">Requests</span></th>
+            <th>Failed</th>
+            <th class="actions-column">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% runs.each do |run| %>
+            <tr data-run-id="<%= run.id %>">
+              <td><code><%= run.id %></code></td>
+              <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+              <td><%= import_run_status_label(run) %></td>
+              <td><%= import_run_raw_imports_label(run) %></td>
+              <td><%= import_run_filtered_label(run) %></td>
+              <td><%= import_run_inserts_label(run) %></td>
+              <td><%= import_run_collapsed_records_label(run) %></td>
+              <td><%= run.failed_count %></td>
+              <td class="action-cell">
+                <%= link_to "Details", backend_import_run_path(run, section: section_key), class: "button button-ghost button-compact" %>
+                <% if import_run_can_stop?(run, section: section_key) %>
+                  <%= button_to "Stoppen", import_run_stop_path(run, section: section_key), method: :post, class: "button button-secondary button-compact" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p>Keine LLM-Genre-Gruppierungs-Jobs vorhanden.</p>
+  <% end %>
+</section>

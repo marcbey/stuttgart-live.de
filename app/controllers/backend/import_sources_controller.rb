@@ -2,12 +2,14 @@ module Backend
   class ImportSourcesController < BaseController
     before_action :ensure_supported_sources
     before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
+    before_action :set_active_section, only: [ :index, :sync_imported_events, :stop_merge_run, :run_llm_enrichment, :stop_llm_enrichment_run, :run_llm_genre_grouping, :stop_llm_genre_grouping_run, :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
 
     def index
       run_maintenance.release_stale_running_runs!
-      @import_sources = ImportSource.includes(:import_source_config).order(:source_type)
-      @recent_runs = recent_runs_for_list
-      @merge_sync_needed = merge_sync_needed?
+      @overview_state = overview_state
+      @import_sources = @overview_state.import_sources
+      @recent_runs = @overview_state.recent_runs
+      @active_section = @overview_state.section(@active_section_key)
 
       respond_to do |format|
         format.html
@@ -18,6 +20,7 @@ module Backend
     end
 
     def edit
+      @return_section = @active_section_key
     end
 
     def sync_imported_events
@@ -169,7 +172,7 @@ module Backend
           config.save!
         end
 
-        redirect_to backend_import_sources_path, notice: "Importer-Konfiguration gespeichert."
+        redirect_to import_sources_redirect_path, notice: "Importer-Konfiguration gespeichert."
       else
         flash.now[:alert] = "Konfiguration konnte nicht gespeichert werden."
         render :edit, status: :unprocessable_entity
@@ -228,6 +231,14 @@ module Backend
       params.require(:import_source).permit(:active, :location_whitelist_text)
     end
 
+    def set_active_section
+      @active_section_key = Backend::ImportSources::OverviewState.normalized_section_key(params[:section])
+    end
+
+    def overview_state
+      @overview_state ||= Backend::ImportSources::OverviewState.new
+    end
+
     def importer_registry
       @importer_registry ||= Backend::ImportSources::ImporterRegistry.new
     end
@@ -256,40 +267,34 @@ module Backend
       Backend::ImportRunsBroadcaster.recent_runs_for_list
     end
 
-    def merge_sync_needed?
-      latest_import_success_at = latest_successful_run_finished_at_for(source_types: %w[easyticket reservix eventim])
-      return false if latest_import_success_at.blank?
-
-      latest_merge_success_at = latest_successful_run_finished_at_for(source_types: [ "merge" ])
-      latest_merge_success_at.blank? || latest_import_success_at > latest_merge_success_at
-    end
-
-    def latest_successful_run_finished_at_for(source_types:)
-      ImportRun.where(source_type: source_types, status: "succeeded").maximum(:finished_at)
-    end
-
     def respond_with_importer_feedback(notice: nil, alert: nil)
       respond_to do |format|
         format.html do
           if alert.present?
-            redirect_to backend_import_sources_path, alert: alert
+            redirect_to import_sources_redirect_path, alert: alert
           elsif notice.present?
-            redirect_to backend_import_sources_path, notice: notice
+            redirect_to import_sources_redirect_path, notice: notice
           else
-            redirect_to backend_import_sources_path
+            redirect_to import_sources_redirect_path
           end
         end
 
         format.turbo_stream do
           flash.now[:notice] = notice if notice.present?
           flash.now[:alert] = alert if alert.present?
+          state = overview_state
 
           render turbo_stream: [
             turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
             turbo_stream.replace(
-              "import-runs-table",
-              partial: "backend/import_sources/recent_runs_table",
-              locals: { recent_runs: recent_runs_for_list }
+              "import-runs-live-shell",
+              partial: "backend/import_sources/live_shell",
+              locals: {
+                sections: state.sections,
+                active_section_key: @active_section_key,
+                overview_state: state,
+                import_sources: state.import_sources
+              }
             )
           ]
         end
@@ -314,7 +319,16 @@ module Backend
           started_at: Time.current,
           metadata: { "triggered_at" => Time.current.iso8601 }
         )
-        Merging::SyncImportedEventsJob.perform_later(import_run_id: run.id)
+        job = Merging::SyncImportedEventsJob.perform_later(import_run_id: run.id)
+        run.update!(
+          metadata: run.metadata.merge(
+            "job_id" => job.job_id,
+            "provider_job_id" => job.provider_job_id,
+            "job_attempt" => 1,
+            "job_retries_used" => 0,
+            "max_retries" => 0
+          )
+        )
         Backend::ImportRunsBroadcaster.broadcast!
         result = { notice: "Merge-Sync wurde gestartet." }
       end
@@ -338,6 +352,13 @@ module Backend
       end
 
       respond_with_importer_feedback(**run_manager.request_stop(source_type, run_id: params[:run_id]))
+    end
+    def import_sources_redirect_path
+      if @active_section_key == Backend::ImportSources::OverviewState::DEFAULT_SECTION && params[:section].blank?
+        return backend_import_sources_path
+      end
+
+      backend_import_sources_path(section: @active_section_key)
     end
   end
 end

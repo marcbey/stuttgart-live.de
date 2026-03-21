@@ -1,0 +1,27 @@
+<div id="import-runs-tabs"
+     class="settings-tabs-nav"
+     role="tablist"
+     aria-label="Importer-Bereiche">
+  <% sections.each do |section| %>
+    <% active = section.fetch(:key) == active_section_key %>
+    <%= link_to backend_import_sources_path(section: section.fetch(:key)),
+                id: section.fetch(:tab_id),
+                class: [ "settings-tabs-link", ("is-active" if active) ].compact.join(" "),
+                role: "tab",
+                aria: {
+                  selected: active,
+                  controls: section.fetch(:panel_id)
+                },
+                tabindex: (active ? 0 : -1),
+                data: {
+                  settings_tabs_target: "tab",
+                  settings_tabs_section_key: section.fetch(:key),
+                  action: "click->settings-tabs#activate keydown->settings-tabs#keydown"
+                } do %>
+      <span><%= section.fetch(:label) %></span>
+      <%= render "backend/import_sources/tab_indicator",
+                 indicator: section.fetch(:indicator),
+                 indicator_id: section.fetch(:indicator_id) %>
+    <% end %>
+  <% end %>
+</div>

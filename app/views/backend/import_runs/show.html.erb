@@ -10,7 +10,7 @@
       </p>
     </div>
     <div class="backend-topbar-actions">
-      <%= link_to "Zurück", backend_import_sources_path, class: "button button-secondary button-compact" %>
+      <%= link_to "Zurück", backend_import_sources_path(section: params[:section]), class: "button button-secondary button-compact" %>
     </div>
   </header>
 
@@ -22,6 +22,7 @@
         <table class="data-table">
           <thead>
             <tr>
+              <th>Run ID</th>
               <th>Gestartet</th>
               <th>Importer</th>
               <th>Status</th>
@@ -33,6 +34,7 @@
           </thead>
           <tbody>
             <tr>
+              <td><code><%= @import_run.id %></code></td>
               <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
               <td><%= import_run_type_label(@import_run) %></td>
               <td><%= import_run_status_label(@import_run) %></td>
@@ -47,6 +49,7 @@
         <table class="data-table">
           <thead>
             <tr>
+              <th>Run ID</th>
               <th>Gestartet</th>
               <th>Status</th>
               <th><span title="<%= import_run_column_description(:raw_imports) %>">Raw Imports</span></th>
@@ -60,6 +63,7 @@
           </thead>
           <tbody>
             <tr>
+              <td><code><%= @import_run.id %></code></td>
               <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
               <td><%= import_run_status_label(@import_run) %></td>
               <td><%= import_run_raw_imports_label(@import_run) %></td>
@@ -76,6 +80,7 @@
         <table class="data-table">
           <thead>
             <tr>
+              <th>Run ID</th>
               <th>Gestartet</th>
               <th>Status</th>
               <th><span title="<%= import_run_column_description(:raw_imports) %>">Selected Events</span></th>
@@ -87,6 +92,7 @@
           </thead>
           <tbody>
             <tr>
+              <td><code><%= @import_run.id %></code></td>
               <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
               <td><%= import_run_status_label(@import_run) %></td>
               <td><%= import_run_raw_imports_label(@import_run) %></td>
@@ -101,6 +107,7 @@
         <table class="data-table">
           <thead>
             <tr>
+              <th>Run ID</th>
               <th>Gestartet</th>
               <th>Status</th>
               <th><span title="<%= import_run_column_description(:raw_imports) %>">Genres</span></th>
@@ -112,6 +119,7 @@
           </thead>
           <tbody>
             <tr>
+              <td><code><%= @import_run.id %></code></td>
               <td><%= @import_run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
               <td><%= import_run_status_label(@import_run) %></td>
               <td><%= import_run_raw_imports_label(@import_run) %></td>

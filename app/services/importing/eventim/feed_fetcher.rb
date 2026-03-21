@@ -5,6 +5,8 @@ require "zlib"
 module Importing
   module Eventim
     class FeedFetcher
+      class StopRequested < StandardError; end
+
       EVENT_NODE_KEYS = %w[event eventserie performance show item].freeze
 
       def initialize(http_client: HttpClient.new, feed_url: AppConfig.eventim_feed_url)
@@ -12,23 +14,28 @@ module Importing
         @feed_url = feed_url.to_s.strip
       end
 
-      def fetch_events(heartbeat: nil)
+      def fetch_events(heartbeat: nil, stop_requested: nil)
         raise Error, "EVENTIM_USER, EVENTIM_PASS or EVENTIM_FEED_KEY is missing" if @feed_url.blank?
 
+        check_stop_requested!(stop_requested)
         body = @http_client.get(@feed_url, accept: "application/xml,text/xml")
         heartbeat&.call
+        check_stop_requested!(stop_requested)
         with_xml_file(body) do |xml_path|
           heartbeat&.call
+          check_stop_requested!(stop_requested)
           status_info_error = extract_status_info_error_from_xml(xml_path)
           raise RequestError, status_info_error if status_info_error.present?
 
           if block_given?
-            parse_event_nodes_from_xml(xml_path, heartbeat: heartbeat) { |row| yield row }
+            parse_event_nodes_from_xml(xml_path, heartbeat: heartbeat, stop_requested: stop_requested) { |row| yield row }
             []
           else
-            parse_event_nodes_from_xml(xml_path, heartbeat: heartbeat)
+            parse_event_nodes_from_xml(xml_path, heartbeat: heartbeat, stop_requested: stop_requested)
           end
         end
+      rescue StopRequested
+        raise
       rescue RequestError
         raise
       rescue StandardError => e
@@ -62,7 +69,7 @@ module Importing
         xml_tmp&.close!
       end
 
-      def parse_event_nodes_from_xml(xml_path, heartbeat: nil)
+      def parse_event_nodes_from_xml(xml_path, heartbeat: nil, stop_requested: nil)
         rows = []
         node_count = 0
         File.open(xml_path, "rb") do |file|
@@ -70,7 +77,12 @@ module Importing
 
           reader.each do |node|
             node_count += 1
-            heartbeat&.call if (node_count % 250).zero?
+            if (node_count % 250).zero?
+              heartbeat&.call
+              check_stop_requested!(stop_requested)
+            end
+
+            check_stop_requested!(stop_requested)
             next unless node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
 
             node_name = node.name.to_s.downcase
@@ -81,6 +93,7 @@ module Importing
             next unless payload.is_a?(Hash) && payload.present?
 
             expand_payload_rows(node_name, payload.deep_stringify_keys).each do |normalized_payload|
+              check_stop_requested!(stop_requested)
               if block_given?
                 yield normalized_payload
               else
@@ -227,6 +240,10 @@ module Importing
 
       def normalize_key(value)
         I18n.transliterate(value.to_s).downcase.gsub(/[^a-z0-9]/, "")
+      end
+
+      def check_stop_requested!(stop_requested)
+        raise StopRequested if stop_requested&.call
       end
     end
   end

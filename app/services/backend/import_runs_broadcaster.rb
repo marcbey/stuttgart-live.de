@@ -1,7 +1,6 @@
 module Backend
   class ImportRunsBroadcaster
     STREAM = [ :backend, :import_runs ].freeze
-    TARGET = "import-runs-table".freeze
     LISTED_SOURCE_TYPES = %w[easyticket eventim reservix merge llm_enrichment llm_genre_grouping].freeze
     RECENT_RUNS_LIMIT_PER_BLOCK = 10
     RUN_SOURCE_TYPE_BLOCKS = {
@@ -12,13 +11,18 @@ module Backend
     }.freeze
 
     def self.broadcast!
-      recent_runs = recent_runs_for_list
+      state = Backend::ImportSources::OverviewState.new(recent_runs: recent_runs_for_list)
 
       Turbo::StreamsChannel.broadcast_replace_to(
         STREAM,
-        target: TARGET,
-        partial: "backend/import_sources/recent_runs_table",
-        locals: { recent_runs: recent_runs }
+        target: "import-runs-live-shell",
+        partial: "backend/import_sources/live_shell",
+        locals: {
+          sections: state.sections,
+          active_section_key: state.class::DEFAULT_SECTION,
+          overview_state: state,
+          import_sources: state.import_sources
+        }
       )
     end
 

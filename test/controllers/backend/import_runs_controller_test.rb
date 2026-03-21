@@ -9,7 +9,9 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
       source_type: "easyticket",
       started_at: 2.minutes.ago,
       finished_at: 1.minute.ago,
-      metadata: { "filtered_out_cities" => [ "Berlin", "Stuttgart" ] }
+      metadata: {
+        "filtered_out_cities" => [ "Berlin", "Stuttgart" ]
+      }
     )
   end
 
@@ -111,12 +113,13 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
 
     get backend_import_run_url(merge_run)
     assert_response :success
-    assert_select "table.data-table tbody tr td:nth-child(3)", text: "5"
+    assert_select "table.data-table tbody tr td:nth-child(1) code", text: merge_run.id.to_s
     assert_select "table.data-table tbody tr td:nth-child(4)", text: "5"
-    assert_select "table.data-table tbody tr td:nth-child(5)", text: "1"
-    assert_select "table.data-table tbody tr td:nth-child(6)", text: "4"
-    assert_select "table.data-table tbody tr td:nth-child(7)", text: "2"
-    assert_select "table.data-table tbody tr td:nth-child(8)", text: "0"
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "5"
+    assert_select "table.data-table tbody tr td:nth-child(6)", text: "1"
+    assert_select "table.data-table tbody tr td:nth-child(7)", text: "4"
+    assert_select "table.data-table tbody tr td:nth-child(8)", text: "2"
+    assert_select "table.data-table tbody tr td:nth-child(9)", text: "0"
   end
 
   test "shows source importer runs with raw imports and no merge-only metrics on detail page" do
@@ -130,9 +133,10 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
 
     get backend_import_run_url(run)
     assert_response :success
-    assert_select "table.data-table tbody tr td:nth-child(4)", text: "3"
-    assert_select "table.data-table tbody tr td:nth-child(5)", text: "0"
-    assert_select "table.data-table tbody tr td:nth-child(6)", text: "3"
+    assert_select "table.data-table tbody tr td:nth-child(1) code", text: run.id.to_s
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "3"
+    assert_select "table.data-table tbody tr td:nth-child(6)", text: "0"
+    assert_select "table.data-table tbody tr td:nth-child(7)", text: "3"
   end
 
   test "shows llm run with dedicated columns on detail page" do
@@ -150,11 +154,12 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
 
     get backend_import_run_url(run)
     assert_response :success
-    assert_select "table.data-table tbody tr td:nth-child(3)", text: "200"
-    assert_select "table.data-table tbody tr td:nth-child(4)", text: "25"
-    assert_select "table.data-table tbody tr td:nth-child(5)", text: "140"
-    assert_select "table.data-table tbody tr td:nth-child(6)", text: "8"
-    assert_select "table.data-table tbody tr td:nth-child(7)", text: "3"
+    assert_select "table.data-table tbody tr td:nth-child(1) code", text: run.id.to_s
+    assert_select "table.data-table tbody tr td:nth-child(4)", text: "200"
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "25"
+    assert_select "table.data-table tbody tr td:nth-child(6)", text: "140"
+    assert_select "table.data-table tbody tr td:nth-child(7)", text: "8"
+    assert_select "table.data-table tbody tr td:nth-child(8)", text: "3"
   end
 
   test "shows llm genre grouping run with snapshot details on detail page" do
@@ -190,10 +195,11 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
 
     get backend_import_run_url(run)
     assert_response :success
-    assert_select "table.data-table tbody tr td:nth-child(3)", text: "120"
-    assert_select "table.data-table tbody tr td:nth-child(4)", text: "3"
-    assert_select "table.data-table tbody tr td:nth-child(5)", text: "30"
-    assert_select "table.data-table tbody tr td:nth-child(6)", text: "2"
+    assert_select "table.data-table tbody tr td:nth-child(1) code", text: run.id.to_s
+    assert_select "table.data-table tbody tr td:nth-child(4)", text: "120"
+    assert_select "table.data-table tbody tr td:nth-child(5)", text: "3"
+    assert_select "table.data-table tbody tr td:nth-child(6)", text: "30"
+    assert_select "table.data-table tbody tr td:nth-child(7)", text: "2"
     assert_includes response.body, "Gruppierungs-Snapshot"
     assert_select "td", text: "Rock & Pop"
     assert_includes response.body, snapshot.snapshot_key

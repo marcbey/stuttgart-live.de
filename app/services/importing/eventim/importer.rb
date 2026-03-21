@@ -81,36 +81,32 @@ module Importing
           last_flush_at = Time.current
         end
 
-        catch(:stop_import) do
-          streamed_rows = false
-          returned_rows = feed_fetcher.fetch_events(heartbeat: -> { touch_run_heartbeat!(run) }) do |feed_payload|
-            streamed_rows = true
-            process_feed_payload.call(feed_payload)
-          end
+        begin
+          catch(:stop_import) do
+            streamed_rows = false
+            returned_rows = feed_fetcher.fetch_events(
+              heartbeat: -> { touch_run_heartbeat!(run) },
+              stop_requested: -> { run_canceled?(run) || stop_requested?(run) }
+            ) do |feed_payload|
+              streamed_rows = true
+              process_feed_payload.call(feed_payload)
+            end
 
-          next if streamed_rows
+            next if streamed_rows
 
-          Array(returned_rows).each do |feed_payload|
-            process_feed_payload.call(feed_payload)
+            Array(returned_rows).each do |feed_payload|
+              process_feed_payload.call(feed_payload)
+            end
           end
+        rescue FeedFetcher::StopRequested
+          state[:canceled] = true
         end
 
-        persist_progress_from_state!(run, state)
-        state[:canceled] ||= run_canceled?(run)
+      persist_progress_from_state!(run, state)
+      state[:canceled] ||= run_canceled?(run)
 
-        if state[:canceled]
-          return finalize_canceled_run!(
-            run,
-            state,
-            metadata: run_completion_metadata(
-              run: run,
-              location_whitelist: state[:location_whitelist],
-              filtered_out_cities: state[:filtered_out_cities]
-            )
-          )
-        end
-
-        finalize_succeeded_run!(
+      if state[:canceled]
+        return finalize_canceled_run!(
           run,
           state,
           metadata: run_completion_metadata(
@@ -119,6 +115,17 @@ module Importing
             filtered_out_cities: state[:filtered_out_cities]
           )
         )
+      end
+
+      finalize_succeeded_run!(
+        run,
+        state,
+        metadata: run_completion_metadata(
+          run: run,
+          location_whitelist: state[:location_whitelist],
+          filtered_out_cities: state[:filtered_out_cities]
+        )
+      )
       rescue StandardError => e
         handle_import_failure!(
           run,

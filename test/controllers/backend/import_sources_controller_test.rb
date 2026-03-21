@@ -15,7 +15,34 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Importer"
     assert_select ".app-nav-links .app-nav-link", text: "Events"
+    assert_select "[data-controller='settings-tabs']", count: 1
+    assert_select "#import-runs-tabs [role='tab']", count: 4
+    assert_select "#import-runs-tab-raw-importer[aria-selected='true']", count: 1
     assert_match(/Events.*News.*Importer.*Passwort.*Logout/m, response.body)
+  end
+
+  test "should activate requested importer tab on index" do
+    get backend_import_sources_url(section: :llm_enrichment)
+
+    assert_response :success
+    assert_select "#import-runs-tab-llm-enrichment[aria-selected='true']", count: 1
+    assert_select "#import-runs-panel-llm-enrichment", count: 1
+    assert_select "#import-runs-panel-raw-importer[hidden]", count: 1
+  end
+
+  test "should render live indicator for running tab" do
+    ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    get backend_import_sources_url
+
+    assert_response :success
+    assert_select "#import-runs-tab-llm-enrichment .import-runs-tab-indicator-running", text: "1"
   end
 
   test "index highlights import merge button when merge sync is needed" do
@@ -89,6 +116,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child a", text: "Details"
     assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child form button", text: "Stoppen"
     assert_select "tr[data-run-id='#{merge_run.id}'] td:last-child", text: /Stop angefordert/, count: 0
+    assert_select "#import-runs-tab-merge-importer .import-runs-tab-indicator-running", text: "1"
   end
 
   test "should request stop for a running merge run" do
@@ -138,8 +166,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
     assert_response :success
 
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(2)", text: "stopping"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(3)", text: "stopping"
     assert_select "tr[data-run-id='#{run.id}'] td:last-child", text: /Stop angefordert/, count: 0
+    assert_select "#import-runs-tab-llm-enrichment .import-runs-tab-indicator-stopping", text: "1"
   end
 
   test "should show merge raw imports groups and similarity duplicates in recent runs table" do
@@ -165,12 +194,13 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h3", text: "Merge Importer Jobs"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(3)", text: "5"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(4)", text: "3"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(5)", text: "1"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(6)", text: "2"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(7)", text: "1"
-    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(8)", text: "2"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(1) code", text: merge_run.id.to_s
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(4)", text: "5"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(5)", text: "3"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(6)", text: "1"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(7)", text: "2"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(8)", text: "1"
+    assert_select "tr[data-run-id='#{merge_run.id}'] td:nth-child(9)", text: "2"
   end
 
   test "should show source importer runs with raw imports and no merge-only metrics in recent runs table" do
@@ -186,9 +216,10 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h3", text: "Raw Importer"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "7"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "0"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "7"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(1) code", text: run.id.to_s
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "7"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "0"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "7"
   end
 
   test "should show llm enrichment runs in dedicated llm jobs table" do
@@ -210,11 +241,12 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h3", text: "LLM-Enrichment Jobs"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(3)", text: "120"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "15"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "40"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "5"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "2"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(1) code", text: run.id.to_s
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "120"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "15"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "40"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "5"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(8)", text: "2"
   end
 
   test "should show llm genre grouping runs in dedicated jobs table" do
@@ -235,11 +267,12 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "h3", text: "LLM-Genre-Gruppierung Jobs"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(3)", text: "320"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "4"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "30"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "2"
-    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "1"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(1) code", text: run.id.to_s
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(4)", text: "320"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(5)", text: "4"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(6)", text: "30"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(7)", text: "2"
+    assert_select "tr[data-run-id='#{run.id}'] td:nth-child(8)", text: "1"
   end
 
   test "should render explanatory text for each importer block" do
@@ -354,6 +387,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     run = ImportRun.where(source_type: "merge").order(:created_at).last
     assert_equal "running", run.status
+    assert run.metadata["job_id"].present?
     assert_redirected_to backend_import_sources_url
     follow_redirect!
     assert_includes response.body, "Merge-Sync wurde gestartet."
@@ -366,6 +400,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     run = ImportRun.where(source_type: "merge").order(:created_at).last
     assert_equal "running", run.status
+    assert run.metadata["job_id"].present?
 
     assert_import_sources_turbo_feedback(message: "Merge-Sync wurde gestartet.")
     assert_import_run_row_in_response(run)
@@ -406,20 +441,20 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
   test "should enqueue llm enrichment run from import sources page" do
     assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
-      post run_llm_enrichment_backend_import_sources_url
+      post run_llm_enrichment_backend_import_sources_url(section: :llm_enrichment)
     end
 
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
     assert_equal "running", run.status
 
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
     follow_redirect!
     assert_includes response.body, "LLM-Enrichment wurde gestartet."
   end
 
   test "should respond with turbo stream when enqueueing llm enrichment run from import sources page" do
     assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
-      post run_llm_enrichment_backend_import_sources_url, as: :turbo_stream
+      post run_llm_enrichment_backend_import_sources_url(section: :llm_enrichment), as: :turbo_stream
     end
 
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
@@ -473,9 +508,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_llm_enrichment_run_backend_import_sources_url(run_id: run.id)
+    post stop_llm_enrichment_run_backend_import_sources_url(run_id: run.id, section: :llm_enrichment)
 
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
     follow_redirect!
@@ -491,7 +526,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_llm_enrichment_run_backend_import_sources_url(run_id: run.id), as: :turbo_stream
+    post stop_llm_enrichment_run_backend_import_sources_url(run_id: run.id, section: :llm_enrichment), as: :turbo_stream
 
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
@@ -538,20 +573,20 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
   test "should enqueue llm genre grouping run from import sources page" do
     assert_enqueued_jobs 1, only: Importing::LlmGenreGrouping::RunJob do
-      post run_llm_genre_grouping_backend_import_sources_url
+      post run_llm_genre_grouping_backend_import_sources_url(section: :llm_genre_grouping)
     end
 
     run = ImportRun.where(source_type: "llm_genre_grouping").order(:created_at).last
     assert_equal "running", run.status
 
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :llm_genre_grouping)
     follow_redirect!
     assert_includes response.body, "LLM-Genre-Gruppierung wurde gestartet."
   end
 
   test "should respond with turbo stream when enqueueing llm genre grouping run from import sources page" do
     assert_enqueued_jobs 1, only: Importing::LlmGenreGrouping::RunJob do
-      post run_llm_genre_grouping_backend_import_sources_url, as: :turbo_stream
+      post run_llm_genre_grouping_backend_import_sources_url(section: :llm_genre_grouping), as: :turbo_stream
     end
 
     run = ImportRun.where(source_type: "llm_genre_grouping").order(:created_at).last
@@ -587,9 +622,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_llm_genre_grouping_run_backend_import_sources_url(run_id: run.id)
+    post stop_llm_genre_grouping_run_backend_import_sources_url(run_id: run.id, section: :llm_genre_grouping)
 
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :llm_genre_grouping)
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
     follow_redirect!
@@ -619,9 +654,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
   test "should enqueue easyticket run" do
     assert_enqueued_jobs 1 do
-      post run_easyticket_backend_import_source_url(@source)
+      post run_easyticket_backend_import_source_url(@source, section: :raw_importer)
     end
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :raw_importer)
     follow_redirect!
     assert_includes response.body, "Easyticket-Import wurde gestartet."
     assert_equal "running", @source.import_runs.order(:created_at).last.status
@@ -629,7 +664,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
   test "should respond with turbo stream when enqueueing easyticket run" do
     assert_enqueued_jobs 1 do
-      post run_easyticket_backend_import_source_url(@source), as: :turbo_stream
+      post run_easyticket_backend_import_source_url(@source, section: :raw_importer), as: :turbo_stream
     end
 
     run = @source.import_runs.order(:created_at).last
@@ -715,9 +750,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_easyticket_run_backend_import_source_url(@source), params: { run_id: run.id }
+    post stop_easyticket_run_backend_import_source_url(@source, section: :raw_importer), params: { run_id: run.id }
 
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :raw_importer)
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
   end
@@ -730,7 +765,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_easyticket_run_backend_import_source_url(@source), params: { run_id: run.id }, as: :turbo_stream
+    post stop_easyticket_run_backend_import_source_url(@source, section: :raw_importer), params: { run_id: run.id }, as: :turbo_stream
 
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
@@ -747,10 +782,10 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
   test "should enqueue eventim run" do
     assert_enqueued_jobs 1 do
-      post run_eventim_backend_import_source_url(@eventim_source)
+      post run_eventim_backend_import_source_url(@eventim_source, section: :raw_importer)
     end
 
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :raw_importer)
     follow_redirect!
     assert_includes response.body, "Eventim-Import wurde gestartet."
     assert_equal "running", @eventim_source.import_runs.order(:created_at).last.status
@@ -758,7 +793,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
   test "should respond with turbo stream when enqueueing eventim run" do
     assert_enqueued_jobs 1 do
-      post run_eventim_backend_import_source_url(@eventim_source), as: :turbo_stream
+      post run_eventim_backend_import_source_url(@eventim_source, section: :raw_importer), as: :turbo_stream
     end
 
     run = @eventim_source.import_runs.order(:created_at).last
@@ -820,7 +855,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
   test "should respond with turbo stream when enqueueing reservix run" do
     assert_enqueued_jobs 1 do
-      post run_reservix_backend_import_source_url(@reservix_source), as: :turbo_stream
+      post run_reservix_backend_import_source_url(@reservix_source, section: :raw_importer), as: :turbo_stream
     end
 
     run = @reservix_source.import_runs.order(:created_at).last
@@ -854,9 +889,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_eventim_run_backend_import_source_url(@eventim_source), params: { run_id: run.id }
+    post stop_eventim_run_backend_import_source_url(@eventim_source, section: :raw_importer), params: { run_id: run.id }
 
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :raw_importer)
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
   end
@@ -869,7 +904,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_eventim_run_backend_import_source_url(@eventim_source), params: { run_id: run.id }, as: :turbo_stream
+    post stop_eventim_run_backend_import_source_url(@eventim_source, section: :raw_importer), params: { run_id: run.id }, as: :turbo_stream
 
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
@@ -886,9 +921,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_reservix_run_backend_import_source_url(@reservix_source), params: { run_id: run.id }
+    post stop_reservix_run_backend_import_source_url(@reservix_source, section: :raw_importer), params: { run_id: run.id }
 
-    assert_redirected_to backend_import_sources_url
+    assert_redirected_to backend_import_sources_url(section: :raw_importer)
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
   end
@@ -901,7 +936,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       metadata: {}
     )
 
-    post stop_reservix_run_backend_import_source_url(@reservix_source), params: { run_id: run.id }, as: :turbo_stream
+    post stop_reservix_run_backend_import_source_url(@reservix_source, section: :raw_importer), params: { run_id: run.id }, as: :turbo_stream
 
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.reload.metadata["stop_requested"])
     assert_equal "running", run.status
@@ -917,7 +952,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.media_type, "turbo-stream"
     assert_includes response.body, "action=\"update\" target=\"flash-messages\""
     assert_includes response.body, "target=\"flash-messages\""
-    assert_includes response.body, "target=\"import-runs-table\""
+    assert_includes response.body, "target=\"import-runs-live-shell\""
     assert_includes response.body, message
   end
 

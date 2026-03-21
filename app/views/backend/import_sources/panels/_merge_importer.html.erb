@@ -1,0 +1,59 @@
+<section class="import-runs-panel">
+  <div class="import-runs-group-header">
+    <h3>Merge Importer Jobs</h3>
+    <%= button_to "Import-Merge starten",
+                  sync_imported_events_backend_import_sources_path(section: section_key),
+                  method: :post,
+                  class: [ "button", "button-compact", (merge_sync_needed ? "button-attention" : nil) ].compact.join(" "),
+                  title: (merge_sync_needed ? "Seit dem letzten Merge wurden neue Importdaten gefunden." : nil) %>
+  </div>
+  <p class="import-runs-note">
+    Diese Jobs lesen die aktuellen Rohimporte aller Quellen, erkennen Dubletten providerübergreifend und schreiben daraus die zusammengeführten `events`, `event_offers` und Importbilder.
+    Damit entsteht aus mehreren externen Quellen ein konsolidierter Event-Bestand. Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Job gestartet, sofern nicht bereits einer läuft.
+  </p>
+  <% if runs.any? %>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Run ID</th>
+            <th>Gestartet</th>
+            <th>Status</th>
+            <th><span title="<%= import_run_column_description(:raw_imports) %>">Raw Imports</span></th>
+            <th><span title="<%= import_run_column_description(:merge_groups) %>">Merge Groups</span></th>
+            <th><span title="<%= import_run_column_description(:inserts) %>">Inserts</span></th>
+            <th><span title="<%= import_run_column_description(:updates) %>">Updates</span></th>
+            <th><span title="<%= import_run_column_description(:similarity_duplicates) %>">Similarity Duplicates</span></th>
+            <th><span title="<%= import_run_column_description(:collapsed_records) %>">Collapsed Records</span></th>
+            <th>Failed</th>
+            <th class="actions-column">Aktionen</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% runs.each do |run| %>
+            <tr data-run-id="<%= run.id %>">
+              <td><code><%= run.id %></code></td>
+              <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
+              <td><%= import_run_status_label(run) %></td>
+              <td><%= import_run_raw_imports_label(run) %></td>
+              <td><%= import_run_merge_groups_label(run) %></td>
+              <td><%= import_run_inserts_label(run) %></td>
+              <td><%= import_run_updates_label(run) %></td>
+              <td><%= import_run_duplicates_label(run) %></td>
+              <td><%= import_run_collapsed_records_label(run) %></td>
+              <td><%= run.failed_count %></td>
+              <td class="action-cell">
+                <%= link_to "Details", backend_import_run_path(run, section: section_key), class: "button button-ghost button-compact" %>
+                <% if import_run_can_stop?(run, section: section_key) %>
+                  <%= button_to "Stoppen", import_run_stop_path(run, section: section_key), method: :post, class: "button button-secondary button-compact" %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <p>Keine Merge Importer Jobs vorhanden.</p>
+  <% end %>
+</section>

@@ -8,7 +8,7 @@ module Importing
           @events = events
         end
 
-        def fetch_events(heartbeat: nil)
+        def fetch_events(heartbeat: nil, stop_requested: nil)
           @events
         end
       end
@@ -111,6 +111,38 @@ module Importing
         assert_equal "evt-error-1", error.external_event_id
         assert_equal "RuntimeError", error.error_class
         assert_includes error.message, "cannot persist feed row for evt-error-1"
+      end
+
+      test "cancels run when stop is requested during feed fetching" do
+        stop_aware_fetcher = Class.new do
+          def fetch_events(heartbeat: nil, stop_requested: nil)
+            heartbeat&.call
+            raise Importing::Eventim::FeedFetcher::StopRequested if stop_requested&.call
+
+            []
+          end
+        end.new
+
+        run = @source.import_runs.create!(
+          status: "running",
+          source_type: "eventim",
+          started_at: 1.minute.ago,
+          metadata: {
+            "execution_started_at" => 1.minute.ago.iso8601,
+            "stop_requested" => true,
+            "stop_requested_at" => 30.seconds.ago.iso8601
+          }
+        )
+
+        result = Importer.new(
+          import_source: @source,
+          feed_fetcher: stop_aware_fetcher,
+          preexisting_run_id: run.id
+        ).call
+
+        assert_equal run.id, result.id
+        assert_equal "canceled", result.reload.status
+        assert result.finished_at.present?
       end
     end
   end

@@ -62,24 +62,24 @@ module Backend::ImportSourcesHelper
     run.status
   end
 
-  def import_run_can_stop?(run)
-    run.status == "running" && !import_run_stop_requested?(run) && import_run_stop_path(run).present?
+  def import_run_can_stop?(run, section: nil)
+    run.status == "running" && !import_run_stop_requested?(run) && import_run_stop_path(run, section: section).present?
   end
 
-  def import_run_stop_path(run)
+  def import_run_stop_path(run, section: nil)
     case run.source_type
     when "merge"
-      stop_merge_run_backend_import_sources_path(run_id: run.id)
+      stop_merge_run_backend_import_sources_path(run_id: run.id, section: section)
     when "easyticket"
-      stop_easyticket_run_backend_import_source_path(run.import_source_id, run_id: run.id)
+      stop_easyticket_run_backend_import_source_path(run.import_source_id, run_id: run.id, section: section)
     when "eventim"
-      stop_eventim_run_backend_import_source_path(run.import_source_id, run_id: run.id)
+      stop_eventim_run_backend_import_source_path(run.import_source_id, run_id: run.id, section: section)
     when "reservix"
-      stop_reservix_run_backend_import_source_path(run.import_source_id, run_id: run.id)
+      stop_reservix_run_backend_import_source_path(run.import_source_id, run_id: run.id, section: section)
     when "llm_enrichment"
-      stop_llm_enrichment_run_backend_import_sources_path(run_id: run.id)
+      stop_llm_enrichment_run_backend_import_sources_path(run_id: run.id, section: section)
     when "llm_genre_grouping"
-      stop_llm_genre_grouping_run_backend_import_sources_path(run_id: run.id)
+      stop_llm_genre_grouping_run_backend_import_sources_path(run_id: run.id, section: section)
     end
   end
 

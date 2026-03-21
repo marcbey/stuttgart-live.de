@@ -9,6 +9,10 @@
 
   <section class="import-sources-runs-section">
     <%= turbo_stream_from [ :backend, :import_runs ] %>
-    <%= render "recent_runs_table", recent_runs: @recent_runs %>
+    <%= render "live_shell",
+               sections: @overview_state.sections,
+               active_section_key: @active_section.fetch(:key),
+               overview_state: @overview_state,
+               import_sources: @import_sources %>
   </section>
 </section>

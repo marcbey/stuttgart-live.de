@@ -1,0 +1,27 @@
+<div id="import-runs-live-shell"
+     class="settings-tabs"
+     data-controller="settings-tabs"
+     data-settings-tabs-initial-section-value="<%= active_section_key %>">
+  <%= render "backend/import_sources/tabs", sections: sections, active_section_key: active_section_key %>
+
+  <div class="settings-tabs-panels">
+    <% sections.each do |section| %>
+      <% active = section.fetch(:key) == active_section_key %>
+      <section id="<%= section.fetch(:panel_id) %>"
+               class="settings-tab-panel<%= " is-active" if active %>"
+               role="tabpanel"
+               aria-labelledby="<%= section.fetch(:tab_id) %>"
+               tabindex="0"
+               <%= "hidden" unless active %>
+               data-settings-tabs-target="panel"
+               data-settings-tabs-section-key="<%= section.fetch(:key) %>"
+               data-loaded="true">
+        <%= render section.fetch(:partial),
+                   section_key: section.fetch(:key),
+                   runs: overview_state.runs_for(section.fetch(:key)),
+                   import_sources: import_sources,
+                   merge_sync_needed: overview_state.merge_sync_needed? %>
+      </section>
+    <% end %>
+  </div>
+</div>

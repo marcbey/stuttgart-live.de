@@ -10,8 +10,10 @@
 - Ruby 4.x umstellen
 
 ## Importer
+- Wie verhalten sich die Genres, wenn es einen neuen erfolgreichen Lauf des LLM-Genre-Gruppierung Jobs gibt ?
+- Wie gehen wir mit falschen Event Daten aus den LLM-Enrichment Jobs um?
 
-## Redaktion
+## Events Backend
 - Promoter ID mapping (SKS, Music Circus, ...)
 - Presenter
 - Events gruppieren
