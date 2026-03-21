@@ -1,5 +1,7 @@
 module LlmGenreGrouping
   class Lookup
+    DEFAULT_GROUP_EVENTS_LIMIT = 100
+
     class << self
       def selected_snapshot
         snapshot_id = AppSetting.public_genre_grouping_snapshot_id
@@ -34,6 +36,16 @@ module LlmGenreGrouping
           .distinct
       end
 
+      def prioritized_events_for_group(group, relation: Event.all, limit: DEFAULT_GROUP_EVENTS_LIMIT, exclude_event_id: nil)
+        scoped_relation = events_for_group(group, relation:)
+        scoped_relation = scoped_relation.where.not(id: exclude_event_id) if exclude_event_id.present?
+
+        scoped_relation
+          .select("events.*, #{group_event_priority_order_sql} AS genre_group_event_priority")
+          .reorder(Arel.sql("genre_group_event_priority ASC"), :start_at, :id)
+          .limit(limit)
+      end
+
       private
 
       def normalized_event_genres(event)
@@ -56,6 +68,13 @@ module LlmGenreGrouping
           ")",
           genres
         )
+      end
+
+      def group_event_priority_order_sql
+        quoted_ids = Event.sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
+        sks_clause = quoted_ids.present? ? "WHEN events.promoter_id IN (#{quoted_ids}) THEN 1 " : ""
+
+        "CASE WHEN events.highlighted = TRUE THEN 0 #{sks_clause}ELSE 2 END"
       end
     end
   end

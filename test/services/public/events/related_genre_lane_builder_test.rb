@@ -90,6 +90,27 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     ], lane.events.map(&:id)
   end
 
+  test "uses 100 as the default limit for related lane events" do
+    current_event = build_lane_event(slug: "related-limit-current", artist_name: "Current Event", start_at: 2.days.from_now.change(hour: 20))
+    build_lane_enrichment(event: current_event, genres: [ "Rock" ])
+
+    105.times do |index|
+      event = build_lane_event(
+        slug: "related-limit-#{index}",
+        artist_name: "Related Limit #{index}",
+        start_at: (index + 3).days.from_now.change(hour: 20)
+      )
+      build_lane_enrichment(event: event, genres: [ "Rock" ])
+    end
+
+    lane = build_builder(event: current_event).call
+
+    assert_equal 100, lane.events.size
+    assert_equal "related-limit-0", lane.events.first.slug
+    assert_equal "related-limit-99", lane.events.last.slug
+    assert_not_includes lane.events.map(&:id), current_event.id
+  end
+
   private
 
   def build_builder(event:)

@@ -88,6 +88,27 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal [ @rock_group.slug, @pop_group.slug ], lanes.map { |lane| lane.group.slug }
   end
 
+  test "uses 100 as the default limit for lane events" do
+    105.times do |index|
+      event = build_lane_event(
+        slug: "lane-limit-#{index}",
+        artist_name: "Lane Limit #{index}",
+        start_at: (index + 1).days.from_now.change(hour: 20)
+      )
+      build_lane_enrichment(event: event, genres: [ "Rock" ])
+    end
+
+    lanes = Public::Events::HomepageGenreLanesBuilder.new(
+      relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
+      slugs: [ @rock_group.slug ],
+      snapshot: @snapshot
+    ).call
+
+    assert_equal 100, lanes.first.events.size
+    assert_equal "lane-limit-0", lanes.first.events.first.slug
+    assert_equal "lane-limit-99", lanes.first.events.last.slug
+  end
+
   private
 
   def build_lane_event(slug:, artist_name:, start_at:, highlighted: false, promoter_id: nil)

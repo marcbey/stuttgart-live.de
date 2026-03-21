@@ -3,7 +3,7 @@ module Public
     class HomepageGenreLanesBuilder
       Lane = Data.define(:group, :events)
 
-      DEFAULT_LIMIT = 24
+      DEFAULT_LIMIT = 100
 
       def initialize(relation:, slugs: nil, snapshot: LlmGenreGrouping::Lookup.selected_snapshot, limit: DEFAULT_LIMIT)
         @relation = relation
@@ -41,18 +41,8 @@ module Public
 
       def prioritized_group_events(group)
         LlmGenreGrouping::Lookup
-          .events_for_group(group, relation:)
-          .select("events.*, #{priority_order_sql} AS homepage_genre_lane_priority")
-          .reorder(Arel.sql("homepage_genre_lane_priority ASC"), :start_at, :id)
-          .limit(limit)
+          .prioritized_events_for_group(group, relation:, limit:)
           .to_a
-      end
-
-      def priority_order_sql
-        quoted_ids = Event.sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
-        sks_clause = quoted_ids.present? ? "WHEN events.promoter_id IN (#{quoted_ids}) THEN 1 " : ""
-
-        "CASE WHEN events.highlighted = TRUE THEN 0 #{sks_clause}ELSE 2 END"
       end
     end
   end
