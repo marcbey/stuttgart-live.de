@@ -1,11 +1,11 @@
-<% content_for :title, "Blog" %>
+<% content_for :title, "News" %>
 
 <section class="backend-shell"
          data-controller="editor-inbox"
          data-action="turbo:frame-load@document->editor-inbox#syncActiveFromEditor turbo:submit-end@document->editor-inbox#syncActiveAfterSubmit">
   <header class="backend-topbar backend-topbar-sticky blog-topbar">
     <div class="backend-topbar-title">
-      <h1>Blog-Inbox</h1>
+      <h1>News-Inbox</h1>
       <span id="blog_topbar_context"
             class="backend-topbar-context"
             data-editor-inbox-target="selectedContext"><%= render "topbar_context", blog_post: @selected_blog_post if @selected_blog_post.present? %></span>

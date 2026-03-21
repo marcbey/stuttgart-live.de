@@ -19,9 +19,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     get backend_blog_posts_url
 
     assert_response :success
-    assert_select ".app-nav-links .app-nav-link-active", text: "Blog"
+    assert_select ".app-nav-links .app-nav-link-active", text: "News"
     assert_includes response.body, blog_post.title
-    assert_includes response.body, "Blog-Inbox"
+    assert_includes response.body, "News-Inbox"
     assert_select "turbo-frame#blog_editor"
     assert_select "#blog_posts_list"
     assert_select "#blog_topbar_editor_actions a.button", text: "Open", count: 0
@@ -225,7 +225,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".blog-editor-section-promotion"
     assert_select "input[name='blog_post[promotion_banner_kicker_text]']"
     assert_select "input[name='blog_post[promotion_banner_cta_text]']"
-    assert_no_match(/Blog-Inbox/, response.body)
+    assert_no_match(/News-Inbox/, response.body)
   end
 
   test "editor can delete a blog post" do
