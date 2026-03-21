@@ -16,6 +16,19 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     end
   end
 
+  class BrowseStateStub
+    attr_reader :page
+
+    def initialize(page: 1, route_params: {})
+      @page = page
+      @stored_route_params = route_params
+    end
+
+    def route_params(page: nil, format: nil)
+      @stored_route_params.merge(page: page, format: format).compact
+    end
+  end
+
   class ViewContextStub
     def event_image_source(image)
       image&.image_url || image&.source
@@ -29,8 +42,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       [ { label: "Published", css_class: "status-badge-published" } ]
     end
 
-    def root_path
-      "/"
+    def root_path(**params)
+      return "/" if params.empty?
+
+      "/?#{params.to_query}"
     end
 
     def event_source_label(source)
@@ -257,13 +272,29 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal 0, queries
   end
 
+  test "builds back path from browse state" do
+    event = build_event(artist_name: "Band", title: "Live")
+    browse_state = BrowseStateStub.new(
+      page: 3,
+      route_params: {
+        event_date: "2026-06-17",
+        q: "Indie Night",
+        page: 7
+      }
+    )
+
+    presenter = build_presenter(event, browse_state: browse_state)
+
+    assert_equal "/?event_date=2026-06-17&page=3&q=Indie+Night", presenter.back_path
+  end
+
   private
 
-  def build_presenter(event, primary_offer: nil)
+  def build_presenter(event, primary_offer: nil, browse_state: nil)
     Public::Events::ShowPresenter.new(
       event,
       primary_offer: primary_offer,
-      browse_state: Object.new,
+      browse_state: browse_state || BrowseStateStub.new,
       view_context: ViewContextStub.new
     )
   end

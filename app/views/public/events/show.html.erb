@@ -3,7 +3,16 @@
 
 <article class="event-detail">
   <div class="event-detail-topbar">
-    <p class="event-detail-back"><%= link_to "← alle events", presenter.back_path %></p>
+    <p class="event-detail-back">
+      <%= link_to "← alle events",
+                  presenter.back_path,
+                  data: {
+                    controller: "history-back",
+                    action: "click->history-back#navigate",
+                    history_back_fallback_url_value: presenter.back_path,
+                    history_back_same_path_only_value: true
+                  } %>
+    </p>
     <% if authenticated? %>
       <div class="event-detail-topbar-actions">
         <%= link_to "Edit",

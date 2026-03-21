@@ -1,4 +1,5 @@
 require "test_helper"
+require "uri"
 
 class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   setup do
@@ -1229,6 +1230,34 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-tag", text: "Pop"
     assert_select ".event-detail-tag", text: "Rock"
     assert_select "script[type='application/ld+json']", /Published Artist/
+
+    back_link = Nokogiri::HTML.parse(response.body).at_css(".event-detail-back a")
+
+    assert_equal "/", back_link["href"]
+    assert_equal "history-back", back_link["data-controller"]
+    assert_equal "click->history-back#navigate", back_link["data-action"]
+    assert_equal "/", back_link["data-history-back-fallback-url-value"]
+  end
+
+  test "show keeps browse state in the back link fallback" do
+    selected_date = Date.new(2026, 6, 17)
+
+    get event_url(@published_event.slug, page: 3, q: "Indie", event_date: selected_date.iso8601)
+
+    assert_response :success
+
+    back_link = Nokogiri::HTML.parse(response.body).at_css(".event-detail-back a")
+    uri = URI.parse(back_link["href"])
+
+    assert_equal "/", uri.path
+    assert_equal(
+      {
+        "event_date" => selected_date.iso8601,
+        "q" => "Indie",
+        "page" => "3"
+      },
+      Rack::Utils.parse_nested_query(uri.query)
+    )
   end
 
   test "show renders related genre lane with future published matches" do

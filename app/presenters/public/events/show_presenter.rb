@@ -44,7 +44,8 @@ module Public
       end
 
       def back_path
-        view_context.root_path
+        page = @browse_state.page.to_i
+        view_context.root_path(**@browse_state.route_params(page: page > 1 ? page : nil))
       end
 
       def primary_source_label

@@ -6,13 +6,13 @@
 - OWASP checks initial & evtl. als bin/ci ?
 - Plan f체r Data Rentention
 - Logfile Rotation
-- Ruby 4.x umstellen
+- Ruby 4 upgrade_
+- Monitoring/Alerting : uptimekuma.org
 
 ## Importer
 
 ## Events Backend
 - Promoter ID mapping (SKS, Music Circus, ...)
-- Presenter Domainobject
 - Events gruppieren
 
 ## Frontend
@@ -41,20 +41,6 @@ Im aside backend-list-column 체ber die Filter in filter-form werden zusammengeh�
 Der dropdown bulk_action soll mit eine Option "Als Event-Reihe zusammenfassen" hinzugef체gt werden.
 Diese zus채tzliche Aktion/Option "Als Event-Reihe zusammenfassen" legt die Event-Reihe mit den ausgew채hlten Events an.
 
-
 Frontend:
 Im Frontend zeigen die Event-Reihen an folgenden Stellen Auswirkung:
 In den Teaser Slider Lanes: Dort soll ...
-
-
-## Presenter Domainobject
-Es soll ein Presenter Domainobject enstehen:
-Ein Presenter besteht aus
-- Name
-- Logo (image)
-- Beschreibung (optional)
-- Link
-Ein Event kann viele Presenter haben.
-Presenter werden 체ber eine neue backend Navi verlinkt
-
-Am 
