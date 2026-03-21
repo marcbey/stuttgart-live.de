@@ -235,10 +235,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-backend-menu[data-controller='backend-nav-menu']", count: 1
     assert_select ".app-nav-backend-toggle[aria-controls='app-nav-backend-menu']", text: /Backend/
-    assert_select "#app-nav-backend-menu .app-nav-link", text: "Redaktion"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Events"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "News"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Importer"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Einstellungen"
+    assert_select "#app-nav-backend-menu .app-nav-link", text: "Benutzer"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Passwort"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Logout"
+    assert_match(/Events.*News.*Importer.*Einstellungen.*Benutzer.*Passwort.*Logout/m, response.body)
     assert_select ".app-nav-links-group-separated", count: 0
   end
 

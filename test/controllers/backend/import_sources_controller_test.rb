@@ -14,7 +14,8 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     get backend_import_sources_url
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Importer"
-    assert_select ".app-nav-links .app-nav-link", text: "Redaktion"
+    assert_select ".app-nav-links .app-nav-link", text: "Events"
+    assert_match(/Events.*News.*Importer.*Einstellungen.*Benutzer.*Passwort.*Logout/m, response.body)
   end
 
   test "index highlights import merge button when merge sync is needed" do

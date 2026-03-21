@@ -28,9 +28,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url
 
     assert_response :success
-    assert_select ".app-nav-links-group-separated .app-nav-link", text: "Redaktion"
+    assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
     assert_select ".app-nav-backend-menu", count: 0
-    assert_select ".app-nav-links .app-nav-link-active", text: "Redaktion"
+    assert_select ".app-nav-links .app-nav-link-active", text: "Events"
+    assert_match(/Events.*News.*Importer.*Einstellungen.*Benutzer.*Passwort.*Logout/m, response.body)
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "auto-next"
     assert_includes response.body, "name=\"status\""
