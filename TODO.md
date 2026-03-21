@@ -2,17 +2,24 @@
 
 ## Infra
 - DB Backup & File Backup Strategie
-- Mailchimp ID fehlt / Newsletter integration
 - Rollbacks inkl. migration rollbacks ausprobieren
 - OWASP checks initial & evtl. als bin/ci ?
-- wie mit Data rentention umgehen?
-- Logfile rotation vorhanden?
+- Plan für Data Rentention
+- Logfile Rotation
+- Deprecation für actions/setup-node@v4 wegen Node 20
+- Ruby 4.x umstellen
 
 ## Importer
 
 ## Redaktion
-- Promoter ID mapping
+- Promoter ID mapping (SKS, Music Circus, ...)
+- Presenter
+- Events gruppieren
 
 ## Frontend
-- Banderole?
+- Feld Banderole unklar:
+    - Ausverkauft, Neue Tickets vorhanden, Zusatztermin, Neu im Vorverkauf, 
+    - Exlusive Deutschlandshow, Abgesagt, Jetzt Tickets sichern
+    - Neuer Termin - Karten bleiben gültig, Verlegt auf ..., 
 - Newsletter/Mailchimp
+- Google Analytics
