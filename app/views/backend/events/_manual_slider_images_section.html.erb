@@ -1,0 +1,40 @@
+<section class="offer-section backend-section backend-section-media">
+  <div class="backend-section-header">
+    <h3>Slider-Bilder</h3>
+  </div>
+  <div class="backend-section-body">
+    <div class="event-image-upload-grid">
+      <div class="event-image-upload-form">
+        <h4>Slider-Bilder hochladen</h4>
+        <p>Werden vorab hochgeladen und direkt im Formular angezeigt. Weitere Auswahl ergänzt die Vorschau.</p>
+        <%= file_field_tag "event_image[slider_files][]",
+                           multiple: true,
+                           accept: "image/*",
+                           class: "form-input",
+                           data: {
+                             event_image_preupload_target: "sliderInput",
+                             action: "change->event-image-preupload#selectSlider"
+                           } %>
+        <%= text_field_tag "event_image[slider_alt_text]",
+                           slider_alt_text,
+                           placeholder: "Alt-Text (optional)",
+                           class: "form-input" %>
+        <%= text_field_tag "event_image[slider_sub_text]",
+                           slider_sub_text,
+                           placeholder: "Sub-Text unter dem Bild (optional)",
+                           class: "form-input" %>
+        <div class="preuploaded-image-list" data-event-image-preupload-target="sliderPreview">
+          <% slider_signed_ids.each do |signed_id| %>
+            <% blob = preuploaded_blob_from_signed_id(signed_id) %>
+            <% next if blob.blank? %>
+            <%= render "backend/events/preuploaded_image_preview",
+                       kind: "slider",
+                       blob: blob,
+                       signed_id: signed_id,
+                       field_name: "event_image[slider_signed_ids][]" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

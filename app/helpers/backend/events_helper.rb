@@ -104,8 +104,13 @@ module Backend::EventsHelper
     nil
   end
 
-  def event_presenter_reference_items(event:, all_presenters:)
-    selected_ids = event.ordered_presenters.map(&:id)
+  def event_presenter_reference_items(event:, all_presenters:, selected_presenter_ids: nil)
+    selected_ids =
+      if selected_presenter_ids.nil?
+        event.ordered_presenters.map(&:id)
+      else
+        Array(selected_presenter_ids).reject(&:blank?).map(&:to_i)
+      end
     selected_positions = selected_ids.each_with_index.to_h
 
     all_presenters.sort_by do |presenter|

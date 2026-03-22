@@ -4,7 +4,7 @@ module Backend
     before_action :set_inbox_state
     before_action :set_next_event_enabled, only: [ :index, :show, :update, :publish, :unpublish ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish ]
-    before_action :load_all_presenters, only: [ :index, :show, :update, :unpublish ]
+    before_action :load_all_presenters, only: [ :index, :show, :new, :create, :update, :unpublish ]
 
     def index
       @latest_successful_merge_run = latest_successful_merge_run
@@ -35,15 +35,19 @@ module Backend
     def new
       @event = Event.new(start_at: Time.current.change(hour: 20, min: 0), status: "needs_review")
       @selected_genre_ids = []
+      @selected_presenter_ids = []
       @manual_image_form_values = {}
       @manual_ticket_url = nil
+      @active_editor_tab = new_editor_tab
     end
 
     def create
-      @event = Event.new(event_params)
+      @event = Event.new(event_attribute_params)
       @selected_genre_ids = genre_ids_from_params
+      @selected_presenter_ids = presenter_ids_from_params
       @manual_image_form_values = manual_image_form_values
       @manual_ticket_url = manual_ticket_url
+      @active_editor_tab = new_editor_tab
       created_images = []
       creation_alert = nil
 
@@ -56,6 +60,7 @@ module Backend
         end
 
         assign_genres!(@event)
+        sync_presenters!(@event)
         create_manual_ticket_offer!(@event)
         created_images = attach_manual_event_images!
         refresh_completeness!(@event)
@@ -296,6 +301,10 @@ module Backend
       params[:editor_tab].to_s.presence_in(allowed_editor_tabs_for(event)) || "event"
     end
 
+    def new_editor_tab
+      params[:editor_tab].to_s.presence_in(allowed_new_editor_tabs) || "event"
+    end
+
     def editor_tab_for_success(target_event:)
       return "event" if target_event.blank? || target_event.id != @event.id
 
@@ -307,6 +316,10 @@ module Backend
       tabs << "presenters"
       tabs << "llm_enrichment" if event.present? && event.llm_enrichment.present?
       tabs
+    end
+
+    def allowed_new_editor_tabs
+      %w[event event_image slider_images presenters]
     end
 
     def manual_ticket_url

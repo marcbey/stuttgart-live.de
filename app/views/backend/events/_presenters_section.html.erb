@@ -1,4 +1,6 @@
 <div class="backend-section-stack">
+  <% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
+  <% selected_presenter_ids = local_assigns[:selected_presenter_ids] %>
   <section class="backend-section backend-section-form">
     <div class="backend-section-header backend-section-header-with-actions">
       <div>
@@ -11,10 +13,10 @@
     </div>
     <div class="backend-section-body">
       <% if all_presenters.any? %>
-        <%= hidden_field_tag "event[presenter_ids][]", "", form: dom_id(event, :editor_form) %>
+        <%= hidden_field_tag "event[presenter_ids][]", "", form: editor_form_id %>
         <ul class="settings-reference-items presenter-reference-items"
             data-controller="settings-sortable">
-          <% event_presenter_reference_items(event: event, all_presenters: all_presenters).each do |item| %>
+          <% event_presenter_reference_items(event: event, all_presenters: all_presenters, selected_presenter_ids: selected_presenter_ids).each do |item| %>
             <% presenter = item.fetch(:presenter) %>
             <li class="settings-reference-item"
                 data-settings-sortable-target="item"
@@ -27,7 +29,7 @@
                 <%= check_box_tag "event[presenter_ids][]",
                                   presenter.id,
                                   item.fetch(:selected),
-                                  form: dom_id(event, :editor_form),
+                                  form: editor_form_id,
                                   data: { action: "change->settings-sortable#syncSelectionState" } %>
                 <span class="settings-reference-checkbox-copy presenter-reference-copy">
                   <span class="presenter-reference-logo">

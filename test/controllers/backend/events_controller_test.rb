@@ -93,6 +93,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get new_backend_event_url
 
     assert_response :success
+    assert_select "#event-editor-tab-event[aria-selected='true']", count: 1
+    assert_select "#event-editor-tab-event-image[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-presenters[aria-selected='false']", count: 1
+    assert_select "#event-editor-panel-event:not([hidden])", count: 1
+    assert_select "#event-editor-panel-event-image[hidden]", count: 1
+    assert_select "#event-editor-panel-slider-images[hidden]", count: 1
+    assert_select "#event-editor-panel-presenters[hidden]", count: 1
+    assert_select "input[name='editor_tab'][value='event']", count: 1
     assert_select "input[name='event[doors_at]']"
     assert_select "input[name='event[homepage_url]']"
     assert_select "input[name='event[instagram_url]']"
@@ -115,6 +124,21 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='event-image-preupload']"
     assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
+  end
+
+  test "new keeps requested presenters tab active" do
+    sign_in_as(@user)
+    create_presenter(name: "Alpha Presenter")
+
+    get new_backend_event_url(editor_tab: "presenters")
+
+    assert_response :success
+    assert_select "#event-editor-tab-event[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-presenters[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-event[hidden]", count: 1
+    assert_select "#event-editor-panel-presenters:not([hidden])", count: 1
+    assert_select "input[name='editor_tab'][value='presenters']", count: 1
+    assert_select ".presenter-reference-items[data-controller='settings-sortable']", count: 1
   end
 
   test "slider image meta actions keep delete separate from meta form" do
@@ -396,6 +420,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     hero_blob = direct_uploaded_blob(filename: "hero.png")
     slider_blob_one = direct_uploaded_blob(filename: "slider-1.png")
     slider_blob_two = direct_uploaded_blob(filename: "slider-2.png")
+    presenter_one = create_presenter(name: "Alpha Presenter")
+    presenter_two = create_presenter(name: "Beta Presenter")
 
     assert_difference("Event.count", 1) do
       assert_difference("EventImage.count", 3) do
@@ -422,7 +448,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
             event_info: "Lange Beschreibung",
             editor_notes: "Interne Notiz",
             status: "needs_review",
-            genre_ids: [ genres(:pop).id.to_s ]
+            genre_ids: [ genres(:pop).id.to_s ],
+            presenter_ids: [ presenter_two.id.to_s, presenter_one.id.to_s ]
           },
           event_image: {
             detail_hero_signed_ids: [ hero_blob.signed_id ],
@@ -453,6 +480,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate created, :highlighted?
     assert_equal "ready_for_publish", created.status
     assert_equal [ "Pop" ], created.genres.order(:name).pluck(:name)
+    assert_equal [ presenter_two.id, presenter_one.id ], created.event_presenters.order(:position).pluck(:presenter_id)
     assert_equal "https://tickets.example/manual-tour", created.preferred_ticket_offer&.resolved_ticket_url
     assert_equal "manual", created.preferred_ticket_offer&.source
     assert_equal 1, created.event_images.detail_hero.count
@@ -491,6 +519,35 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "temporäre Upload ist ungültig oder abgelaufen"
+  end
+
+  test "create validation error keeps presenters tab active and preserves presenter order" do
+    sign_in_as(@user)
+    presenter_one = create_presenter(name: "Alpha Presenter")
+    presenter_two = create_presenter(name: "Beta Presenter")
+
+    assert_no_difference("Event.count") do
+      post backend_events_url, params: {
+        editor_tab: "presenters",
+        event: {
+          artist_name: "",
+          title: "Manual Tour",
+          start_at: Time.zone.parse("2026-08-18 20:00:00"),
+          venue: "Im Wizemann",
+          city: "Stuttgart",
+          status: "needs_review",
+          presenter_ids: [ presenter_two.id.to_s, presenter_one.id.to_s ]
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "#event-editor-tab-presenters[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-presenters:not([hidden])", count: 1
+    assert_select "input[name='editor_tab'][value='presenters']", count: 1
+    assert_select "input[name='event[presenter_ids][]'][value='#{presenter_two.id}'][checked]", count: 1
+    assert_select "input[name='event[presenter_ids][]'][value='#{presenter_one.id}'][checked]", count: 1
+    assert_operator response.body.index("value=\"#{presenter_two.id}\""), :<, response.body.index("value=\"#{presenter_one.id}\"")
   end
 
   test "updates event with blank city" do

@@ -1,0 +1,168 @@
+<% form_errors = event_editor_errors(event) %>
+<% active_editor_tab = local_assigns.fetch(:active_editor_tab, "event") %>
+<% event_tab_active = active_editor_tab == "event" %>
+<% event_image_tab_active = active_editor_tab == "event_image" %>
+<% slider_images_tab_active = active_editor_tab == "slider_images" %>
+<% presenters_tab_active = active_editor_tab == "presenters" %>
+
+<div class="editor-panel backend-panel"
+     id="event_editor_panel"
+     data-controller="event-image-preupload"
+     data-event-image-preupload-direct-upload-url-value="<%= rails_direct_uploads_path %>">
+  <%= form_with model: event,
+                url: backend_events_path,
+                method: :post,
+                class: "editor-form",
+                html: { multipart: true, id: editor_form_id },
+                data: { action: "submit->event-image-preupload#beforeSubmit" } do |form| %>
+    <% if form_errors.any? %>
+      <div class="flash flash-alert">
+        <strong>Bitte Eingaben prüfen.</strong>
+        <ul>
+          <% form_errors.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <section class="event-editor-tabs"
+             data-controller="event-editor-tabs"
+             data-event-editor-tabs-initial-tab-value="<%= active_editor_tab %>">
+      <%= hidden_field_tag :editor_tab,
+                           active_editor_tab,
+                           data: { event_editor_tabs_target: "stateInput" } %>
+
+      <div class="settings-tabs-nav event-editor-tabs-nav" role="tablist" aria-label="Event-Editor Ansichten">
+        <button type="button"
+                id="event-editor-tab-event"
+                class="settings-tabs-link<%= " is-active" if event_tab_active %>"
+                role="tab"
+                aria-controls="event-editor-panel-event"
+                aria-selected="<%= event_tab_active %>"
+                tabindex="<%= event_tab_active ? 0 : -1 %>"
+                data-event-editor-tabs-target="tab"
+                data-event-editor-tabs-tab-key-param="event"
+                data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+          Event
+        </button>
+        <button type="button"
+                id="event-editor-tab-event-image"
+                class="settings-tabs-link<%= " is-active" if event_image_tab_active %>"
+                role="tab"
+                aria-controls="event-editor-panel-event-image"
+                aria-selected="<%= event_image_tab_active %>"
+                tabindex="<%= event_image_tab_active ? 0 : -1 %>"
+                data-event-editor-tabs-target="tab"
+                data-event-editor-tabs-tab-key-param="event_image"
+                data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+          Eventbild
+        </button>
+        <button type="button"
+                id="event-editor-tab-slider-images"
+                class="settings-tabs-link<%= " is-active" if slider_images_tab_active %>"
+                role="tab"
+                aria-controls="event-editor-panel-slider-images"
+                aria-selected="<%= slider_images_tab_active %>"
+                tabindex="<%= slider_images_tab_active ? 0 : -1 %>"
+                data-event-editor-tabs-target="tab"
+                data-event-editor-tabs-tab-key-param="slider_images"
+                data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+          Slider-Bilder
+        </button>
+        <button type="button"
+                id="event-editor-tab-presenters"
+                class="settings-tabs-link<%= " is-active" if presenters_tab_active %>"
+                role="tab"
+                aria-controls="event-editor-panel-presenters"
+                aria-selected="<%= presenters_tab_active %>"
+                tabindex="<%= presenters_tab_active ? 0 : -1 %>"
+                data-event-editor-tabs-target="tab"
+                data-event-editor-tabs-tab-key-param="presenters"
+                data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+          Präsentatoren
+        </button>
+      </div>
+
+      <div class="settings-tabs-panels backend-tabs-panels">
+        <section id="event-editor-panel-event"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if event_tab_active %>"
+                 role="tabpanel"
+                 aria-labelledby="event-editor-tab-event"
+                 tabindex="0"
+                 <%= "hidden" unless event_tab_active %>
+                 data-event-editor-tabs-target="panel"
+                 data-event-editor-tabs-panel-key="event">
+          <div class="backend-section-stack">
+            <section class="backend-section backend-section-form">
+              <div class="backend-section-header">
+                <h3>Event-Daten</h3>
+              </div>
+              <div class="backend-section-body">
+                <%= render "backend/events/form_fields",
+                           form: form,
+                           event: event,
+                           all_genres: all_genres,
+                           selected_genre_ids: selected_genre_ids,
+                           editable_promoter_id: true,
+                           manual_ticket_url: manual_ticket_url %>
+              </div>
+            </section>
+          </div>
+        </section>
+
+        <section id="event-editor-panel-event-image"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if event_image_tab_active %>"
+                 role="tabpanel"
+                 aria-labelledby="event-editor-tab-event-image"
+                 tabindex="0"
+                 <%= "hidden" unless event_image_tab_active %>
+                 data-event-editor-tabs-target="panel"
+                 data-event-editor-tabs-panel-key="event_image">
+          <%= render "backend/events/event_image_section",
+                     event: event,
+                     editor_form_id: editor_form_id,
+                     form_mode: :new,
+                     manual_event_image: manual_event_image,
+                     manual_event_image_blob: manual_event_image_blob,
+                     manual_event_image_signed_id: manual_event_image_signed_id %>
+        </section>
+
+        <section id="event-editor-panel-slider-images"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if slider_images_tab_active %>"
+                 role="tabpanel"
+                 aria-labelledby="event-editor-tab-slider-images"
+                 tabindex="0"
+                 <%= "hidden" unless slider_images_tab_active %>
+                 data-event-editor-tabs-target="panel"
+                 data-event-editor-tabs-panel-key="slider_images">
+        <%= render "backend/events/manual_slider_images_section",
+                     slider_alt_text: slider_alt_text,
+                     slider_sub_text: slider_sub_text,
+                     slider_signed_ids: slider_signed_ids %>
+        </section>
+
+        <section id="event-editor-panel-presenters"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if presenters_tab_active %>"
+                 role="tabpanel"
+                 aria-labelledby="event-editor-tab-presenters"
+                 tabindex="0"
+                 <%= "hidden" unless presenters_tab_active %>
+                 data-event-editor-tabs-target="panel"
+                 data-event-editor-tabs-panel-key="presenters">
+          <%= render "backend/events/presenters_section",
+                     event: event,
+                     all_presenters: all_presenters,
+                     editor_form_id: editor_form_id,
+                     selected_presenter_ids: selected_presenter_ids %>
+        </section>
+      </div>
+    </section>
+
+    <p class="preuploaded-image-live-region" data-event-image-preupload-target="status" role="status" aria-live="polite"></p>
+
+    <div class="editor-footer">
+      <%= form.submit "Event erstellen", class: "button button-compact", data: { event_image_preupload_target: "submitButton" } %>
+    </div>
+  <% end %>
+</div>
