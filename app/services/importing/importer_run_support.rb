@@ -1,6 +1,6 @@
 module Importing
   module ImporterRunSupport
-    RUN_STATE_CACHE_TTL_SECONDS = 0.01
+    RUN_STATE_CACHE_TTL_SECONDS = 0.001
 
     private
 
