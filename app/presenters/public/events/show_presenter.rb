@@ -6,6 +6,11 @@ module Public
       FactItem = Data.define(:label, :value)
       PresenterItem = Data.define(:name, :external_url, :logo_source)
 
+      IMPORT_HERO_CREDIT_LABELS = {
+        "easyticket" => "Easy Ticket Service",
+        "eventim" => "Eventim",
+        "reservix" => "Reservix"
+      }.freeze
       WEEKDAY_LABELS = [ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag" ].freeze
 
       attr_reader :event
@@ -94,9 +99,10 @@ module Public
 
       def hero_image_credit
         return editorial_hero_credit if editorial_hero_credit.present?
-        return unless easyticket_import_hero_image?
+        source_label = import_hero_credit_label
+        return if source_label.blank?
 
-        "Bildquelle: Easy Ticket Service / Veranstalter"
+        "Bildquelle: #{source_label} / Veranstalter"
       end
 
       def fact_items
@@ -293,10 +299,11 @@ module Public
         credit.start_with?("©") ? credit : "© #{credit}"
       end
 
-      def easyticket_import_hero_image?
-        hero_desktop_image.respond_to?(:source) &&
-          !hero_desktop_image.is_a?(EventImage) &&
-          hero_desktop_image.source.to_s.casecmp("easyticket").zero?
+      def import_hero_credit_label
+        return unless hero_desktop_image.respond_to?(:source)
+        return if hero_desktop_image.is_a?(EventImage)
+
+        IMPORT_HERO_CREDIT_LABELS[hero_desktop_image.source.to_s.downcase]
       end
 
       def doors_at

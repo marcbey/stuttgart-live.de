@@ -307,6 +307,29 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "© Foto Max Mustermann", presenter.hero_image_credit
   end
 
+  test "uses source-specific default credit for import images" do
+    {
+      "easyticket" => "Bildquelle: Easy Ticket Service / Veranstalter",
+      "eventim" => "Bildquelle: Eventim / Veranstalter",
+      "reservix" => "Bildquelle: Reservix / Veranstalter"
+    }.each do |source, expected_credit|
+      event = build_event(artist_name: "Band", title: "Live")
+
+      event.define_singleton_method(:image_for) do |slot:, breakpoint:|
+        case [ slot, breakpoint ]
+        when [ :social_card, :desktop ]
+          OpenStruct.new(image_url: "https://cdn.example.test/social.jpg")
+        when [ :detail_hero, :desktop ], [ :grid_default, :mobile ]
+          OpenStruct.new(source: source, image_url: "/hero.jpg", alt: "Hero Alt")
+        end
+      end
+
+      presenter = build_presenter(event)
+
+      assert_equal expected_credit, presenter.hero_image_credit
+    end
+  end
+
   def build_event(**attributes)
     event = Event.new(attributes)
 
