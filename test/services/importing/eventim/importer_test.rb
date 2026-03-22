@@ -144,6 +144,39 @@ module Importing
         assert_equal "canceled", result.reload.status
         assert result.finished_at.present?
       end
+
+      test "does not reload import run state for every feed row" do
+        feed_events = 500.times.map do |index|
+          {
+            "eventid" => "evt-bench-#{index}",
+            "eventdate" => "2026-06-17",
+            "eventplace" => "Stuttgart",
+            "eventvenue" => "Im Wizemann",
+            "eventname" => "Band #{index}"
+          }
+        end
+
+        import_run_selects = 0
+        callback = lambda do |_name, _start, _finish, _id, payload|
+          sql = payload[:sql].to_s
+          next unless sql.start_with?("SELECT")
+          next unless sql.include?(%("import_runs"))
+
+          import_run_selects += 1
+        end
+
+        run = nil
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+          run = Importer.new(
+            import_source: @source,
+            feed_fetcher: StubFeedFetcher.new(feed_events)
+          ).call
+        end
+
+        assert_equal "succeeded", run.status
+        assert_equal 500, run.imported_count
+        assert_operator import_run_selects, :<, 100
+      end
     end
   end
 end

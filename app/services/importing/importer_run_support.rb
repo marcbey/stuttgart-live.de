@@ -1,5 +1,7 @@
 module Importing
   module ImporterRunSupport
+    RUN_STATE_CACHE_TTL_SECONDS = 0.01
+
     private
 
     def active_running_run(excluding_run_id: nil)
@@ -59,19 +61,20 @@ module Importing
         failed_count: failed_count,
         updated_at: Time.current
       )
+      refresh_run_state_cache!(run)
       broadcast_runs_update!
     end
 
     def stop_requested?(run)
-      ActiveModel::Type::Boolean.new.cast(normalized_metadata(run.reload.metadata)["stop_requested"])
+      ActiveModel::Type::Boolean.new.cast(cached_run_state(run).fetch(:metadata, {})["stop_requested"])
     end
 
     def run_running?(run)
-      run.reload.status == "running"
+      cached_run_state(run)[:status] == "running"
     end
 
     def run_canceled?(run)
-      run.reload.status == "canceled"
+      cached_run_state(run)[:status] == "canceled"
     end
 
     def normalized_metadata(metadata)
@@ -95,6 +98,7 @@ module Importing
       else
         run.update_columns(updated_at: Time.current, metadata: merged_metadata)
       end
+      refresh_run_state_cache!(run)
     end
 
     def execution_started_at_for(run)
@@ -151,6 +155,34 @@ module Importing
 
     def filtered_out_cities_limit
       self.class::FILTERED_OUT_CITIES_LIMIT
+    end
+
+    def cached_run_state(run)
+      @cached_run_states ||= {}
+
+      cached_state = @cached_run_states[run.id]
+      now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+
+      if cached_state.nil? || (now - cached_state[:fetched_at]) >= RUN_STATE_CACHE_TTL_SECONDS
+        run.reload
+        cached_state = {
+          fetched_at: now,
+          status: run.status,
+          metadata: normalized_metadata(run.metadata)
+        }
+        @cached_run_states[run.id] = cached_state
+      end
+
+      cached_state
+    end
+
+    def refresh_run_state_cache!(run)
+      @cached_run_states ||= {}
+      @cached_run_states[run.id] = {
+        fetched_at: Process.clock_gettime(Process::CLOCK_MONOTONIC),
+        status: run.status,
+        metadata: normalized_metadata(run.metadata)
+      }
     end
   end
 end
