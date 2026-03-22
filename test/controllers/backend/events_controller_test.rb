@@ -547,7 +547,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='editor_tab'][value='presenters']", count: 1
     assert_select "input[name='event[presenter_ids][]'][value='#{presenter_two.id}'][checked]", count: 1
     assert_select "input[name='event[presenter_ids][]'][value='#{presenter_one.id}'][checked]", count: 1
-    assert_operator response.body.index("value=\"#{presenter_two.id}\""), :<, response.body.index("value=\"#{presenter_one.id}\"")
+    assert_select "#event-editor-panel-presenters input[name='event[presenter_ids][]'][type='checkbox']", count: 2 do |inputs|
+      assert_equal [ presenter_two.id.to_s, presenter_one.id.to_s ], inputs.map { |input| input["value"] }
+    end
   end
 
   test "updates event with blank city" do
