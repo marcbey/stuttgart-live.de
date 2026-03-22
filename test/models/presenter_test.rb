@@ -27,6 +27,20 @@ class PresenterTest < ActiveSupport::TestCase
     assert_includes presenter.errors[:external_url], "muss mit http:// oder https:// beginnen"
   end
 
+  test "uses the original logo for svg previews" do
+    presenter = Presenter.new(name: "SVG Presenter")
+    presenter.logo.attach(create_svg_blob(filename: "presenter.svg"))
+
+    assert presenter.valid?
+    assert_same presenter.logo, presenter.thumbnail_logo_variant
+    assert_same presenter.logo, presenter.detail_logo_variant
+  end
+
+  test "serves svg logos inline" do
+    assert_includes Rails.application.config.active_storage.content_types_allowed_inline, "image/svg+xml"
+    assert_not_includes Rails.application.config.active_storage.content_types_to_serve_as_binary, "image/svg+xml"
+  end
+
   test "prevents deleting presenters that are still assigned to events" do
     presenter = create_presenter(name: "Bound Presenter")
     event = events(:published_one)
@@ -49,5 +63,17 @@ class PresenterTest < ActiveSupport::TestCase
     presenter.logo.attach(create_uploaded_blob(filename: "#{name.parameterize}.png"))
     presenter.save!
     presenter
+  end
+
+  def create_svg_blob(filename:)
+    ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new(<<~SVG),
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+          <rect width="16" height="16" fill="#000"/>
+        </svg>
+      SVG
+      filename:,
+      content_type: "image/svg+xml"
+    )
   end
 end

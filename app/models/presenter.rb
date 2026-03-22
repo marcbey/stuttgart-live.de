@@ -14,18 +14,21 @@ class Presenter < ApplicationRecord
   scope :ordered_by_name, -> { order(Arel.sql("LOWER(presenters.name) ASC"), :id) }
 
   def thumbnail_logo_variant
-    return unless logo.attached?
-
-    logo.variant(resize_to_limit: [ 160, 160 ])
+    logo_representation(resize_to_limit: [ 160, 160 ])
   end
 
   def detail_logo_variant
-    return unless logo.attached?
-
-    logo.variant(resize_to_limit: [ 320, 320 ])
+    logo_representation(resize_to_limit: [ 320, 320 ])
   end
 
   private
+
+  def logo_representation(resize_to_limit:)
+    return unless logo.attached?
+    return logo unless logo.blob.variable?
+
+    logo.variant(resize_to_limit:)
+  end
 
   def normalize_attributes
     self.name = name.to_s.strip

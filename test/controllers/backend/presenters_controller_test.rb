@@ -17,6 +17,27 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @presenter.external_url
   end
 
+  test "backend user can render presenter pages with svg logos" do
+    presenter = Presenter.new(
+      name: "SVG Nation",
+      external_url: "https://example.com/svg-nation"
+    )
+    presenter.logo.attach(create_svg_blob(filename: "svg-nation.svg"))
+    presenter.save!
+
+    sign_in_as(@editor)
+
+    get backend_presenters_url
+
+    assert_response :success
+    assert_includes response.body, "SVG Nation"
+
+    get edit_backend_presenter_url(presenter)
+
+    assert_response :success
+    assert_includes response.body, "SVG Nation"
+  end
+
   test "backend user can create presenter" do
     sign_in_as(@editor)
 
@@ -108,5 +129,17 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     presenter.logo.attach(create_uploaded_blob(filename: "#{name.parameterize}.png"))
     presenter.save!
     presenter
+  end
+
+  def create_svg_blob(filename:)
+    ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new(<<~SVG),
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+          <rect width="16" height="16" fill="#000"/>
+        </svg>
+      SVG
+      filename:,
+      content_type: "image/svg+xml"
+    )
   end
 end
