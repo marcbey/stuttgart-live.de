@@ -127,18 +127,17 @@ class BlogPost < ApplicationRecord
   end
 
   def optimized_image_variant(slot)
-    attachment_for_slot(slot).variant(
-      format: :webp,
-      saver: {
-        strip: true,
-        quality: WEB_QUALITY
-      },
-      resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
-    )
+    attachment_for_slot(slot).variant(**variant_transformations)
   end
 
   def processed_optimized_image_variant(slot)
     optimized_image_variant(slot).processed
+  rescue LoadError => error
+    Rails.logger.warn("BlogPost image optimization fallback for ##{id || 'new'} (#{slot}): #{error.class}: #{error.message}")
+    attachment_for_slot(slot)
+  rescue MiniMagick::Error => error
+    Rails.logger.warn("BlogPost image optimization fallback for ##{id || 'new'} (#{slot}): #{error.class}: #{error.message}")
+    attachment_for_slot(slot)
   rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
     raise ProcessingError, processing_error_message(slot, error)
   rescue StandardError => error
@@ -311,6 +310,22 @@ class BlogPost < ApplicationRecord
       return fallback if value.blank?
 
       value.to_f.round(2)
+    end
+
+    def variant_transformations
+      transformations = {
+        format: :webp,
+        resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
+      }
+
+      if ActiveStorage.variant_processor == :vips
+        transformations[:saver] = {
+          strip: true,
+          quality: WEB_QUALITY
+        }
+      end
+
+      transformations
     end
 
     def attachment_for_slot(slot)

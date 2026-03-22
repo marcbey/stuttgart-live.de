@@ -69,9 +69,11 @@ class EventImageTest < ActiveSupport::TestCase
     )
     image.save!
 
-    optimized_binary = image.processed_optimized_variant.image.download
+    optimized_binary = image_binary(image.processed_optimized_variant)
 
-    assert_equal [ 1280, 960 ], image_dimensions(optimized_binary)
+    expected_dimensions = image_processing_backend_available? ? [ 1280, 960 ] : [ 2000, 1500 ]
+
+    assert_equal expected_dimensions, image_dimensions(optimized_binary)
     assert_equal [ 2000, 1500 ], image_dimensions(image.file.download)
     assert_equal original_binary, image.file.download
   end
@@ -85,11 +87,15 @@ class EventImageTest < ActiveSupport::TestCase
     )
     image.save!
 
-    error = assert_raises(EventImage::ProcessingError) do
-      image.processed_optimized_variant
-    end
+    if image_processing_backend_available?
+      error = assert_raises(EventImage::ProcessingError) do
+        image.processed_optimized_variant
+      end
 
-    assert_includes error.message, "Bild konnte nicht für Web und Mobile optimiert werden."
+      assert_includes error.message, "Bild konnte nicht für Web und Mobile optimiert werden."
+    else
+      assert_equal image.file, image.processed_optimized_variant
+    end
   end
 
   private

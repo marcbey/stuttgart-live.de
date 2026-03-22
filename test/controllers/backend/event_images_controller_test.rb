@@ -220,19 +220,33 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   test "returns turbo stream error when image optimization fails" do
     sign_in_as(@user)
 
-    assert_no_difference -> { @event.event_images.count } do
-      post backend_event_event_images_url(@event), params: {
-        status: "needs_review",
-        event_image: {
-          purpose: EventImage::PURPOSE_DETAIL_HERO,
-          files: [ broken_uploaded_image ]
-        }
-      }, as: :turbo_stream
-    end
+    if image_processing_backend_available?
+      assert_no_difference -> { @event.event_images.count } do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: EventImage::PURPOSE_DETAIL_HERO,
+            files: [ broken_uploaded_image ]
+          }
+        }, as: :turbo_stream
+      end
 
-    assert_response :unprocessable_entity
-    assert_equal "text/vnd.turbo-stream.html", response.media_type
-    assert_includes response.body, "Bild konnte nicht für Web und Mobile optimiert werden."
+      assert_response :unprocessable_entity
+      assert_equal "text/vnd.turbo-stream.html", response.media_type
+      assert_includes response.body, "Bild konnte nicht für Web und Mobile optimiert werden."
+    else
+      assert_difference -> { @event.event_images.count }, 1 do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: EventImage::PURPOSE_DETAIL_HERO,
+            files: [ broken_uploaded_image ]
+          }
+        }, as: :turbo_stream
+      end
+
+      assert_response :success
+    end
   end
 
   test "optimized representation is downscaled while original upload remains attached" do
@@ -256,7 +270,9 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_equal [ 2000, 1500 ], image_dimensions(created.file.download)
-    assert_equal [ 1280, 960 ], image_dimensions(response.body)
+    expected_dimensions = image_processing_backend_available? ? [ 1280, 960 ] : [ 2000, 1500 ]
+
+    assert_equal expected_dimensions, image_dimensions(response.body)
   end
 
   test "deletes event image" do

@@ -79,7 +79,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     get news_url(@live_post.slug)
 
     assert_response :success
-    assert_select "img[src*=?]", "/rails/active_storage/representations/redirect/"
+    assert_includes response.body, URI.parse(url_for(@live_post.processed_optimized_image_variant(:cover_image))).path
   end
 
   test "show renders seo tags and article schema" do

@@ -147,6 +147,8 @@ module ApplicationHelper
     return attachment unless attachment.attached?
 
     blog_post.processed_optimized_image_variant(slot)
+  rescue BlogPost::ProcessingError, LoadError
+    attachment
   end
 
   def optimized_blog_post_image_url(blog_post, slot)

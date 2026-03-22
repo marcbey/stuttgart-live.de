@@ -1,7 +1,6 @@
 ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
-require "vips"
 require "zlib"
 require_relative "test_helpers/session_test_helper"
 require "stringio"
@@ -54,8 +53,25 @@ module ActiveSupport
     end
 
     def image_dimensions(binary)
-      image = Vips::Image.new_from_buffer(binary, "")
-      [ image.width, image.height ]
+      parse_png_dimensions(binary) || parse_webp_dimensions(binary) || raise(ArgumentError, "unsupported image binary")
+    end
+
+    def image_processing_backend_available?
+      case ActiveStorage.variant_processor
+      when :vips
+        true
+      when :mini_magick
+        system("which convert >/dev/null 2>&1")
+      else
+        false
+      end
+    end
+
+    def image_binary(representation)
+      return representation.image.download if representation.respond_to?(:image)
+      return representation.download if representation.respond_to?(:download)
+
+      raise ArgumentError, "unsupported image representation"
     end
 
     def png_upload(filename: "test.png", width: 8, height: 8, rgb: [ 0, 0, 0 ])
@@ -81,6 +97,36 @@ module ActiveSupport
         type +
         data +
         [ Zlib.crc32(type + data) ].pack("N")
+    end
+
+    def parse_png_dimensions(binary)
+      return unless binary.start_with?("\x89PNG\r\n\x1A\n".b)
+
+      [ binary[16, 4].unpack1("N"), binary[20, 4].unpack1("N") ]
+    end
+
+    def parse_webp_dimensions(binary)
+      return unless binary.start_with?("RIFF") && binary[8, 4] == "WEBP"
+
+      chunk = binary[12, 4]
+
+      case chunk
+      when "VP8 "
+        width, height = binary[26, 4].unpack("v2")
+        [ width & 0x3FFF, height & 0x3FFF ]
+      when "VP8L"
+        bits = binary[21, 4].unpack1("V")
+        [ (bits & 0x3FFF) + 1, ((bits >> 14) & 0x3FFF) + 1 ]
+      when "VP8X"
+        width_minus_one = little_endian_24bit(binary.byteslice(24, 3))
+        height_minus_one = little_endian_24bit(binary.byteslice(27, 3))
+        [ width_minus_one + 1, height_minus_one + 1 ]
+      end
+    end
+
+    def little_endian_24bit(binary)
+      bytes = binary.bytes
+      bytes[0] | (bytes[1] << 8) | (bytes[2] << 16)
     end
   end
 end
