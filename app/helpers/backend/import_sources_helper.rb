@@ -157,6 +157,29 @@ module Backend::ImportSourcesHelper
     IMPORT_RUN_COLUMN_DESCRIPTIONS.fetch(key)
   end
 
+  def import_run_single_event_llm?(run)
+    llm_import_run?(run) && import_run_metadata(run)["trigger_scope"] == "single_event"
+  end
+
+  def import_run_single_event_label(run)
+    return unless import_run_single_event_llm?(run)
+
+    event_id = import_run_single_event_id(run)
+    return "Einzel-Event" if event_id.blank?
+
+    "Einzel-Event · ##{event_id}"
+  end
+
+  def import_run_single_event_context(run)
+    return unless import_run_single_event_llm?(run)
+
+    import_run_metadata(run)["target_event_context"].to_s.strip.presence
+  end
+
+  def import_run_single_event_id(run)
+    Integer(import_run_metadata(run)["target_event_id"], exception: false)
+  end
+
   def import_run_retries_label(run)
     retries_used = import_run_retry_metadata_integer(run, "job_retries_used")
     max_retries = import_run_retry_metadata_integer(run, "max_retries")

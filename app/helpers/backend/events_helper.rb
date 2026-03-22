@@ -1,4 +1,6 @@
 module Backend::EventsHelper
+  GERMAN_DAY_NAMES = %w[Sonntag Montag Dienstag Mittwoch Donnerstag Freitag Samstag].freeze
+
   def event_payload_presenter(event)
     unless defined?(Backend::Events::SourcePayloadPresenter)
       presenter_path = Rails.root.join("app/presenters/backend/events/source_payload_presenter.rb").to_s
@@ -96,6 +98,17 @@ module Backend::EventsHelper
     raw_response.to_json
   end
 
+  def event_llm_last_successful_run_hint(event)
+    run = event.llm_enrichment&.source_run
+    return if run.blank? || run.status != "succeeded"
+
+    timestamp = run.finished_at || run.started_at || run.created_at
+    return if timestamp.blank?
+
+    day_name = localized_day_name(timestamp.to_date)
+    "Letzter LLM-Enrichment-Run: #{day_name}, #{l(timestamp, format: "%d.%m.%Y %H:%M")}"
+  end
+
   def preuploaded_blob_from_signed_id(signed_id)
     return if signed_id.blank?
 
@@ -132,6 +145,15 @@ module Backend::EventsHelper
   end
 
   private
+
+  def localized_day_name(date)
+    translated_day_names = I18n.t("date.day_names", default: nil)
+    if translated_day_names.is_a?(Array) && translated_day_names[date.wday].present?
+      return translated_day_names[date.wday]
+    end
+
+    GERMAN_DAY_NAMES.fetch(date.wday)
+  end
 
   def import_change_actions_for(event, merge_run_id)
     association = event.event_change_logs

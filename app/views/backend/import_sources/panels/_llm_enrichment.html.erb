@@ -38,7 +38,12 @@
         <tbody>
           <% runs.each do |run| %>
             <tr data-run-id="<%= run.id %>">
-              <td><code><%= run.id %></code></td>
+              <td>
+                <code><%= run.id %></code>
+                <% if (run_scope_label = import_run_single_event_label(run)).present? %>
+                  <div class="form-hint"><%= run_scope_label %></div>
+                <% end %>
+              </td>
               <td><%= run.started_at&.strftime("%d.%m.%Y %H:%M:%S") %></td>
               <td><%= import_run_status_label(run) %></td>
               <td><%= import_run_raw_imports_label(run) %></td>

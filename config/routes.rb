@@ -52,6 +52,7 @@ Rails.application.routes.draw do
     resources :events, only: [ :index, :show, :new, :create, :update ] do
       patch :publish, on: :member
       patch :unpublish, on: :member
+      post :run_llm_enrichment, on: :member
       patch :bulk, on: :collection
       post :apply_filters, on: :collection
       post :next_event_preference, on: :collection

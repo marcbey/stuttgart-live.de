@@ -1,10 +1,10 @@
 module Backend
   class EventsController < BaseController
-    before_action :set_event, only: [ :show, :update, :publish, :unpublish ]
+    before_action :set_event, only: [ :show, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :set_inbox_state
-    before_action :set_next_event_enabled, only: [ :index, :show, :update, :publish, :unpublish ]
-    before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish ]
-    before_action :load_all_presenters, only: [ :index, :show, :new, :create, :update, :unpublish ]
+    before_action :set_next_event_enabled, only: [ :index, :show, :update, :publish, :unpublish, :run_llm_enrichment ]
+    before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
+    before_action :load_all_presenters, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
 
     def index
       @latest_successful_merge_run = latest_successful_merge_run
@@ -170,6 +170,28 @@ module Backend
       )
     end
 
+    def run_llm_enrichment
+      result = llm_run_enqueuer.call(
+        source_type: "llm_enrichment",
+        import_source: llm_enrichment_run_source,
+        run_metadata: single_event_llm_enrichment_run_metadata(@event)
+      )
+
+      if result.alert.present?
+        respond_with_llm_enrichment_feedback(alert: result.alert)
+        return
+      end
+
+      notice =
+        if result.dispatched
+          "LLM-Enrichment für dieses Event wurde gestartet."
+        else
+          llm_enrichment_queue_notice(queue_position: result.queue_position)
+        end
+
+      respond_with_llm_enrichment_feedback(notice:)
+    end
+
     def bulk
       event_ids = Array(params[:event_ids]).map(&:to_i).uniq
       action = params[:bulk_action].to_s
@@ -314,7 +336,7 @@ module Backend
     def allowed_editor_tabs_for(event)
       tabs = %w[event event_image slider_images]
       tabs << "presenters"
-      tabs << "llm_enrichment" if event.present? && event.llm_enrichment.present?
+      tabs << "llm_enrichment" if event.present? && event.persisted?
       tabs
     end
 
@@ -324,6 +346,92 @@ module Backend
 
     def manual_ticket_url
       params.dig(:event, :ticket_url).to_s.strip.presence
+    end
+
+    def llm_enrichment_run_source
+      llm_importer_registry.resolve_run_source("llm_enrichment")
+    end
+
+    def llm_importer_registry
+      @llm_importer_registry ||= Backend::ImportSources::ImporterRegistry.new
+    end
+
+    def llm_run_maintenance
+      @llm_run_maintenance ||= Backend::ImportSources::RunMaintenance.new(registry: llm_importer_registry)
+    end
+
+    def llm_run_dispatcher
+      @llm_run_dispatcher ||= Backend::ImportSources::RunDispatcher.new(registry: llm_importer_registry)
+    end
+
+    def llm_run_enqueuer
+      @llm_run_enqueuer ||= Backend::ImportSources::RunEnqueuer.new(
+        registry: llm_importer_registry,
+        maintenance: llm_run_maintenance,
+        dispatcher: llm_run_dispatcher
+      )
+    end
+
+    def single_event_llm_enrichment_run_metadata(event)
+      {
+        "trigger_scope" => "single_event",
+        "target_event_id" => event.id,
+        "target_event_context" => single_event_llm_enrichment_context(event),
+        "refresh_existing" => true,
+        "triggered_at" => Time.current.iso8601
+      }
+    end
+
+    def single_event_llm_enrichment_context(event)
+      [
+        event.artist_name.to_s.strip.presence,
+        event.title.to_s.strip.presence,
+        (event.start_at.present? ? I18n.l(event.start_at, format: "%d.%m.%Y %H:%M") : nil)
+      ].compact.join(" · ")
+    end
+
+    def llm_enrichment_queue_notice(queue_position:)
+      return "LLM-Enrichment für dieses Event wurde zur Warteschlange hinzugefügt." if queue_position.blank?
+
+      "LLM-Enrichment für dieses Event wurde zur Warteschlange hinzugefügt (Position #{queue_position})."
+    end
+
+    def respond_with_llm_enrichment_feedback(notice: nil, alert: nil)
+      redirect_path = backend_events_path(
+        status: event_editor_filter_status,
+        event_id: @event.id,
+        editor_tab: "llm_enrichment"
+      )
+
+      respond_to do |format|
+        format.html do
+          redirect_to redirect_path, notice:, alert:
+        end
+
+        format.turbo_stream do
+          flash.now[:notice] = notice if notice.present?
+          flash.now[:alert] = alert if alert.present?
+          render turbo_stream: [
+            turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
+            turbo_stream.replace(
+              "event_editor",
+              partial: "backend/events/editor_frame",
+              locals: {
+                event: @event,
+                all_genres: @all_genres,
+                all_presenters: @all_presenters,
+                next_event_enabled: @next_event_enabled,
+                filter_status: event_editor_filter_status,
+                active_editor_tab: "llm_enrichment"
+              }
+            )
+          ]
+        end
+      end
+    end
+
+    def event_editor_filter_status
+      @inbox_state.navigation_status || params[:status].to_s.presence_in(status_filters) || @event.status
     end
 
     def genre_ids_from_params

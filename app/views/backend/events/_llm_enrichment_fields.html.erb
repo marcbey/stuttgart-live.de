@@ -1,93 +1,127 @@
 <section class="offer-section backend-section llm-enrichment-section">
-  <div class="backend-section-header">
-    <h3>LLM-Enrichment</h3>
+  <% llm_run_hint = event_llm_last_successful_run_hint(event) %>
+  <div class="backend-section-header backend-section-header-with-actions">
+    <div>
+      <h3>LLM-Enrichment</h3>
+    </div>
+    <div class="backend-section-header-actions">
+      <div class="action-cell">
+        <%= button_to "LLM-Enrichment für dieses Event starten",
+                      run_llm_enrichment_backend_event_path(event),
+                      method: :post,
+                      params: {
+                        status: filter_status,
+                        editor_tab: "llm_enrichment"
+                      },
+                      form: { data: { turbo_stream: true } },
+                      class: "button button-save-primary button-compact" %>
+      </div>
+    </div>
   </div>
 
-  <%= fields_for :event, event do |event_fields| %>
-    <%= event_fields.fields_for :llm_enrichment, llm_enrichment do |form| %>
-      <%= form.hidden_field :id, form: editor_form_id %>
-
-      <div class="backend-section-stack">
-        <section class="backend-section backend-section-compact">
-          <div class="backend-section-header">
-            <h3>Metadaten</h3>
-          </div>
-          <div class="backend-section-body">
-            <div class="editor-grid">
-              <div>
-                <%= form.label :venue, "Venue", class: "form-label" %>
-                <%= form.text_field :venue, class: "form-input", form: editor_form_id %>
-              </div>
-              <div>
-                <%= form.label :genre_list, "Genres", class: "form-label" %>
-                <%= form.text_area :genre_list, rows: 4, class: "form-textarea", form: editor_form_id %>
-                <p class="form-hint">Ein Genre pro Zeile oder durch Komma getrennt.</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="backend-section backend-section-compact">
-          <div class="backend-section-header">
-            <h3>Beschreibungen</h3>
-          </div>
-          <div class="backend-section-body llm-enrichment-copy-grid">
-            <div>
-              <%= form.label :artist_description, "Artist-Beschreibung", class: "form-label" %>
-              <%= form.text_area :artist_description, rows: 6, class: "form-textarea", form: editor_form_id %>
-            </div>
-
-            <div>
-              <%= form.label :event_description, "Event-Beschreibung", class: "form-label" %>
-              <%= form.text_area :event_description, rows: 6, class: "form-textarea", form: editor_form_id %>
-            </div>
-
-            <div>
-              <%= form.label :venue_description, "Venue-Beschreibung", class: "form-label" %>
-              <%= form.text_area :venue_description, rows: 6, class: "form-textarea", form: editor_form_id %>
-            </div>
-          </div>
-        </section>
-
-        <section class="backend-section backend-section-compact">
-          <div class="backend-section-header">
-            <h3>Links</h3>
-          </div>
-          <div class="backend-section-body">
-            <div class="editor-grid">
-              <div>
-                <%= form.label :youtube_link, "YouTube-Link", class: "form-label" %>
-                <%= form.url_field :youtube_link, class: "form-input", form: editor_form_id %>
-              </div>
-              <div>
-                <%= form.label :instagram_link, "Instagram-Link", class: "form-label" %>
-                <%= form.url_field :instagram_link, class: "form-input", form: editor_form_id %>
-              </div>
-              <div>
-                <%= form.label :homepage_link, "Homepage-Link", class: "form-label" %>
-                <%= form.url_field :homepage_link, class: "form-input", form: editor_form_id %>
-              </div>
-              <div>
-                <%= form.label :facebook_link, "Facebook-Link", class: "form-label" %>
-                <%= form.url_field :facebook_link, class: "form-input", form: editor_form_id %>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
+  <p class="form-hint">
+    Dieser Lauf verarbeitet nur dieses Event, überschreibt ein vorhandenes Enrichment und erscheint unter den LLM-Enrichment Jobs.
+    <% if llm_run_hint.present? %>
+      <br>
+      <%= llm_run_hint %>
     <% end %>
-  <% end %>
+  </p>
 
-  <section class="backend-section backend-section-compact llm-enrichment-raw-response">
-    <div class="backend-section-header">
-      <h3>Raw Response</h3>
-    </div>
-    <div class="backend-section-body">
-      <% if (raw_response = event_llm_raw_response(event)).present? %>
-        <pre class="payload-json llm-enrichment-raw-response-pre"><%= raw_response %></pre>
-      <% else %>
-        <p class="form-hint">Keine Raw Response für dieses Enrichment vorhanden.</p>
+  <% if llm_enrichment.present? %>
+    <%= fields_for :event, event do |event_fields| %>
+      <%= event_fields.fields_for :llm_enrichment, llm_enrichment do |form| %>
+        <%= form.hidden_field :id, form: editor_form_id %>
+
+        <div class="backend-section-stack">
+          <section class="backend-section backend-section-compact">
+            <div class="backend-section-header">
+              <h3>Metadaten</h3>
+            </div>
+            <div class="backend-section-body">
+              <div class="editor-grid">
+                <div>
+                  <%= form.label :venue, "Venue", class: "form-label" %>
+                  <%= form.text_field :venue, class: "form-input", form: editor_form_id %>
+                </div>
+                <div>
+                  <%= form.label :genre_list, "Genres", class: "form-label" %>
+                  <%= form.text_area :genre_list, rows: 4, class: "form-textarea", form: editor_form_id %>
+                  <p class="form-hint">Ein Genre pro Zeile oder durch Komma getrennt.</p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="backend-section backend-section-compact">
+            <div class="backend-section-header">
+              <h3>Beschreibungen</h3>
+            </div>
+            <div class="backend-section-body llm-enrichment-copy-grid">
+              <div>
+                <%= form.label :artist_description, "Artist-Beschreibung", class: "form-label" %>
+                <%= form.text_area :artist_description, rows: 6, class: "form-textarea", form: editor_form_id %>
+              </div>
+
+              <div>
+                <%= form.label :event_description, "Event-Beschreibung", class: "form-label" %>
+                <%= form.text_area :event_description, rows: 6, class: "form-textarea", form: editor_form_id %>
+              </div>
+
+              <div>
+                <%= form.label :venue_description, "Venue-Beschreibung", class: "form-label" %>
+                <%= form.text_area :venue_description, rows: 6, class: "form-textarea", form: editor_form_id %>
+              </div>
+            </div>
+          </section>
+
+          <section class="backend-section backend-section-compact">
+            <div class="backend-section-header">
+              <h3>Links</h3>
+            </div>
+            <div class="backend-section-body">
+              <div class="editor-grid">
+                <div>
+                  <%= form.label :youtube_link, "YouTube-Link", class: "form-label" %>
+                  <%= form.url_field :youtube_link, class: "form-input", form: editor_form_id %>
+                </div>
+                <div>
+                  <%= form.label :instagram_link, "Instagram-Link", class: "form-label" %>
+                  <%= form.url_field :instagram_link, class: "form-input", form: editor_form_id %>
+                </div>
+                <div>
+                  <%= form.label :homepage_link, "Homepage-Link", class: "form-label" %>
+                  <%= form.url_field :homepage_link, class: "form-input", form: editor_form_id %>
+                </div>
+                <div>
+                  <%= form.label :facebook_link, "Facebook-Link", class: "form-label" %>
+                  <%= form.url_field :facebook_link, class: "form-input", form: editor_form_id %>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
       <% end %>
-    </div>
-  </section>
+    <% end %>
+
+    <section class="backend-section backend-section-compact llm-enrichment-raw-response">
+      <div class="backend-section-header">
+        <h3>Raw Response</h3>
+      </div>
+      <div class="backend-section-body">
+        <% if (raw_response = event_llm_raw_response(event)).present? %>
+          <pre class="payload-json llm-enrichment-raw-response-pre"><%= raw_response %></pre>
+        <% else %>
+          <p class="form-hint">Keine Raw Response für dieses Enrichment vorhanden.</p>
+        <% end %>
+      </div>
+    </section>
+  <% else %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-body">
+        <p class="form-hint">
+          Für dieses Event gibt es noch kein LLM-Enrichment. Der manuelle Lauf legt beim Abschluss ein neues Enrichment an.
+        </p>
+      </div>
+    </section>
+  <% end %>
 </section>

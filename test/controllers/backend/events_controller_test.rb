@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     @event = events(:needs_review_one)
     @next_event = events(:needs_review_two)
@@ -843,7 +845,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-tab-event-image[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-presenters[aria-selected='false']", count: 1
-    assert_select "#event-editor-tab-llm-enrichment", count: 0
+    assert_select "#event-editor-tab-llm-enrichment[aria-selected='false']", count: 1
+    assert_no_match(/Letzter LLM-Enrichment-Run:/, response.body)
+    assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button", text: "LLM-Enrichment für dieses Event starten"
     assert_no_match(/LLM enriched/i, response.body)
   end
 
@@ -864,6 +868,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-slider-images[hidden]", count: 1
     assert_select "#event-editor-panel-presenters[hidden]", count: 1
     assert_select "#event-editor-panel-llm-enrichment[hidden]", count: 1
+    assert_includes response.body, "Letzter LLM-Enrichment-Run: Montag, 02.03.2026 12:11"
+    assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button", text: "LLM-Enrichment für dieses Event starten"
     assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 1
     assert_select "textarea[name='event[llm_enrichment_attributes][raw_response_json]']", count: 0
     assert_includes response.body, "&quot;artist_description&quot;: &quot;LLM Artist Beschreibung&quot;"
@@ -880,12 +886,72 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-tab-event-image[aria-selected='true']", count: 1
     assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-presenters[aria-selected='false']", count: 1
-    assert_select "#event-editor-tab-llm-enrichment", count: 0
+    assert_select "#event-editor-tab-llm-enrichment[aria-selected='false']", count: 1
     assert_select "#event-editor-panel-event[hidden]", count: 1
     assert_select "#event-editor-panel-event-image:not([hidden])", count: 1
     assert_select "#event-editor-panel-slider-images[hidden]", count: 1
     assert_select "#event-editor-panel-presenters[hidden]", count: 1
     assert_select "input[name='editor_tab'][value='event_image']", count: 1
+  end
+
+  test "llm enrichment tab shows empty state when no enrichment exists" do
+    sign_in_as(@user)
+
+    get backend_event_url(@published_event, editor_tab: "llm_enrichment")
+
+    assert_response :success
+    assert_select "#event-editor-tab-llm-enrichment[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-llm-enrichment:not([hidden])", count: 1
+    assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button", text: "LLM-Enrichment für dieses Event starten"
+    assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 0
+    assert_includes response.body, "Für dieses Event gibt es noch kein LLM-Enrichment."
+  end
+
+  test "run llm enrichment starts a single event run" do
+    sign_in_as(@user)
+
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      post run_llm_enrichment_backend_event_url(@published_event), params: {
+        status: "published",
+        editor_tab: "llm_enrichment"
+      }
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+
+    assert_equal "queued", run.status
+    assert_equal "single_event", run.metadata["trigger_scope"]
+    assert_equal @published_event.id, run.metadata["target_event_id"]
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "llm_enrichment")
+    follow_redirect!
+    assert_includes response.body, "LLM-Enrichment für dieses Event wurde gestartet."
+  end
+
+  test "run llm enrichment queues behind an active run and keeps llm tab active in turbo" do
+    sign_in_as(@user)
+    ImportRun.create!(
+      import_source: import_sources(:two),
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: { "execution_started_at" => 1.minute.ago.iso8601 }
+    )
+
+    assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
+      post run_llm_enrichment_backend_event_url(@published_event), params: {
+        status: "published",
+        editor_tab: "llm_enrichment"
+      }, as: :turbo_stream
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+
+    assert_equal "queued", run.status
+    assert_equal "single_event", run.metadata["trigger_scope"]
+    assert_includes response.body, "LLM-Enrichment für dieses Event wurde zur Warteschlange hinzugefügt"
+    assert_includes response.body, 'id="event-editor-tab-llm-enrichment"'
+    assert_includes response.body, 'aria-selected="true"'
   end
 
   test "editor shows presenters tab with sortable selection list" do

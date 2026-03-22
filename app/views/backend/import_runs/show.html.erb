@@ -17,6 +17,14 @@
   <section class="import-run-section backend-section backend-table-section">
     <h2>Run Daten</h2>
     <p>Retries genutzt: <strong><%= import_run_retries_label(@import_run) %></strong></p>
+    <% if import_run_single_event_llm?(@import_run) %>
+      <p>
+        Lauf-Typ: <strong><%= import_run_single_event_label(@import_run) %></strong>
+        <% if (context = import_run_single_event_context(@import_run)).present? %>
+          · Zielkontext: <strong><%= context %></strong>
+        <% end %>
+      </p>
+    <% end %>
     <div class="table-wrap">
       <% if raw_import_run?(@import_run) %>
         <table class="data-table">

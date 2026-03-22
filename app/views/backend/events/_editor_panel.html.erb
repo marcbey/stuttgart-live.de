@@ -9,6 +9,7 @@
 <% slider_images_tab_active = active_editor_tab == "slider_images" %>
 <% presenters_tab_active = active_editor_tab == "presenters" %>
 <% llm_tab_active = active_editor_tab == "llm_enrichment" %>
+<% llm_tab_available = event.persisted? %>
 
 <div class="editor-panel backend-panel"
      id="event_editor_panel"
@@ -94,7 +95,7 @@
               data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
         Präsentatoren
       </button>
-      <% if llm_enrichment.present? %>
+      <% if llm_tab_available %>
         <button type="button"
                 id="event-editor-tab-llm-enrichment"
                 class="settings-tabs-link<%= " is-active" if llm_tab_active %>"
@@ -160,7 +161,7 @@
         <%= render "backend/events/presenters_section", event: event, all_presenters: all_presenters %>
       </section>
 
-      <% if llm_enrichment.present? %>
+      <% if llm_tab_available %>
         <section id="event-editor-panel-llm-enrichment"
                  class="settings-tab-panel backend-tab-panel<%= " is-active" if llm_tab_active %>"
                  role="tabpanel"
@@ -172,7 +173,8 @@
           <%= render "backend/events/llm_enrichment_fields",
                      event: event,
                      llm_enrichment: llm_enrichment,
-                     editor_form_id: dom_id(event, :editor_form) %>
+                     editor_form_id: dom_id(event, :editor_form),
+                     filter_status: filter_status %>
         </section>
       <% end %>
     </div>

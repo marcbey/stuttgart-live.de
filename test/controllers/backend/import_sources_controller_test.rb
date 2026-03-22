@@ -251,6 +251,25 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-run-id='#{run.id}'] td:nth-child(8)", text: "2"
   end
 
+  test "should label single event llm enrichment runs in jobs table" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "queued",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {
+        "trigger_scope" => "single_event",
+        "target_event_id" => events(:published_one).id,
+        "target_event_context" => "Published Artist · Published Event · 01.06.2026 22:00"
+      }
+    )
+
+    get backend_import_sources_url(section: :llm_enrichment)
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{run.id}'] td:first-child", text: /Einzel-Event · ##{events(:published_one).id}/
+  end
+
   test "should show llm genre grouping runs in dedicated jobs table" do
     run = ImportRun.create!(
       import_source: @eventim_source,
@@ -319,6 +338,26 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Aussortierte Städte"
     assert_includes response.body, "Berlin"
     assert_includes response.body, "Hamburg"
+  end
+
+  test "should show single event llm enrichment context on detail page" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "queued",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {
+        "trigger_scope" => "single_event",
+        "target_event_id" => events(:published_one).id,
+        "target_event_context" => "Published Artist · Published Event · 01.06.2026 22:00"
+      }
+    )
+
+    get backend_import_run_url(run, section: :llm_enrichment)
+    assert_response :success
+
+    assert_includes response.body, "Einzel-Event"
+    assert_includes response.body, "Published Artist · Published Event · 01.06.2026 22:00"
   end
 
   test "should limit recent runs json to configured size" do

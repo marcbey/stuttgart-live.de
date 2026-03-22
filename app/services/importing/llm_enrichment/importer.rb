@@ -31,9 +31,9 @@ module Importing
 
       def call
         selection_time = Time.current
-        selected_events = future_events_scope(selection_time)
+        selected_events = selected_events_scope(selection_time)
         selected_count = selected_events.count
-        skipped_count = refresh_existing? ? 0 : already_enriched_count(selected_events)
+        skipped_count = skip_existing_enrichments? ? already_enriched_count(selected_events) : 0
         pending_events = pending_events_scope(selected_events).order(:start_at, :id).to_a
         batches = pending_events.each_slice(BATCH_SIZE).to_a
         enriched_count = 0
@@ -105,7 +105,9 @@ module Importing
 
       attr_reader :client, :logger, :run
 
-      def future_events_scope(selection_time)
+      def selected_events_scope(selection_time)
+        return Event.where(id: target_event_id) if single_event_run?
+
         Event.where("start_at >= ?", selection_time)
       end
 
@@ -114,7 +116,7 @@ module Importing
       end
 
       def pending_events_scope(scope)
-        return scope if refresh_existing?
+        return scope unless skip_existing_enrichments?
 
         scope.where.missing(:llm_enrichment)
       end
@@ -379,6 +381,18 @@ module Importing
 
       def refresh_existing?
         ActiveModel::Type::Boolean.new.cast(current_run_metadata["refresh_existing"])
+      end
+
+      def single_event_run?
+        target_event_id.present?
+      end
+
+      def skip_existing_enrichments?
+        !refresh_existing? && !single_event_run?
+      end
+
+      def target_event_id
+        Integer(current_run_metadata["target_event_id"], exception: false)
       end
     end
   end

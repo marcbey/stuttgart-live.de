@@ -378,6 +378,113 @@ module Importing
         end
       end
 
+      test "single event run overwrites an existing enrichment for a past event" do
+        event = events(:published_past_one)
+        existing_enrichment = EventLlmEnrichment.create!(
+          event: event,
+          source_run: import_runs(:one),
+          genre: [ "Alt" ],
+          venue: "Alte Venue",
+          artist_description: "Alt",
+          event_description: "Alt",
+          venue_description: "Alt",
+          youtube_link: nil,
+          instagram_link: nil,
+          homepage_link: nil,
+          facebook_link: nil,
+          model: "existing-model",
+          prompt_version: "v1",
+          raw_response: { "event_id" => event.id }
+        )
+        @run.update!(
+          metadata: @run.metadata.merge(
+            "trigger_scope" => "single_event",
+            "target_event_id" => event.id,
+            "refresh_existing" => true
+          )
+        )
+
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "output_text" => {
+                events: [
+                  {
+                    event_id: event.id,
+                    genre: [ "Jazz" ],
+                    venue: "Neue Venue",
+                    artist_description: "Neu",
+                    event_description: "Neu",
+                    venue_description: "Neu",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: "https://example.com/past",
+                    facebook_link: nil
+                  }
+                ]
+              }.to_json
+            }
+          ]
+        )
+
+        result = Importer.new(run: @run, client: client).call
+
+        assert_equal 1, result.selected_count
+        assert_equal 0, result.skipped_count
+        assert_equal 1, result.enriched_count
+        assert_equal 1, result.batches_count
+
+        updated_enrichment = event.reload.llm_enrichment
+        assert_equal existing_enrichment.id, updated_enrichment.id
+        assert_equal [ "Jazz" ], updated_enrichment.genre
+        assert_equal "Neue Venue", updated_enrichment.venue
+        assert_equal "https://example.com/past", updated_enrichment.homepage_link
+        assert_equal @run, updated_enrichment.source_run
+      end
+
+      test "single event run creates a new enrichment when none exists" do
+        event = events(:published_past_one)
+        @run.update!(
+          metadata: @run.metadata.merge(
+            "trigger_scope" => "single_event",
+            "target_event_id" => event.id,
+            "refresh_existing" => true
+          )
+        )
+
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "output_text" => {
+                events: [
+                  {
+                    event_id: event.id,
+                    genre: [ "Jazz" ],
+                    venue: "Jazzclub",
+                    artist_description: "Artist",
+                    event_description: "Event",
+                    venue_description: "Venue",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: nil,
+                    facebook_link: nil
+                  }
+                ]
+              }.to_json
+            }
+          ]
+        )
+
+        result = Importer.new(run: @run, client: client).call
+
+        assert_equal 1, result.selected_count
+        assert_equal 0, result.skipped_count
+        assert_equal 1, result.enriched_count
+        assert_equal [ "Jazz" ], event.reload.llm_enrichment.genre
+      end
+
       test "raises when openai response contains unexpected event ids" do
         freeze_time do
           client = FakeClient.new(
