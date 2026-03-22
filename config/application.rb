@@ -24,6 +24,13 @@ module StuttgartLiveDe
     config.time_zone = "Europe/Berlin"
     config.i18n.default_locale = :de
     config.exceptions_app = routes
+    config.active_storage.variant_processor =
+      begin
+        require "vips"
+        :vips
+      rescue LoadError
+        :mini_magick
+      end
     config.x.google_analytics_measurement_id = "G-103580617"
     config.x.mailer_from = "Stuttgart Live <no-reply@stuttgart-live.schopp3r.de>"
     config.x.openai.llm_enrichment_model = ENV["OPENAI_LLM_ENRICHMENT_MODEL"].to_s.strip.presence || "gpt-5.1"

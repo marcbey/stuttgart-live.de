@@ -92,6 +92,8 @@ module ApplicationHelper
     return image unless image.is_a?(EventImage)
 
     image.processed_optimized_variant
+  rescue EventImage::ProcessingError, LoadError
+    image.file
   end
 
   def optimized_event_image_source(image)

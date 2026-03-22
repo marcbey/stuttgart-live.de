@@ -64,10 +64,10 @@
           <% end %>
           <%= image_tag presenter.hero_desktop_image_source, alt: presenter.hero_alt_text, class: "event-detail-image" %>
         </picture>
-        <% if presenter.hero_image_credit.present? %>
-          <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
-        <% end %>
       </div>
+      <% if presenter.hero_image_credit.present? %>
+        <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
+      <% end %>
     </div>
   <% end %>
 </header>

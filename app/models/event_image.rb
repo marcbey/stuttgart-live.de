@@ -72,18 +72,17 @@ class EventImage < ApplicationRecord
   end
 
   def optimized_variant
-    file.variant(
-      format: :webp,
-      saver: {
-        strip: true,
-        quality: WEB_QUALITY
-      },
-      resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
-    )
+    file.variant(**variant_transformations)
   end
 
   def processed_optimized_variant
     optimized_variant.processed
+  rescue LoadError => error
+    Rails.logger.warn("EventImage optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    file
+  rescue MiniMagick::Error => error
+    Rails.logger.warn("EventImage optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    file
   rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
     raise ProcessingError, processing_error_message(error)
   rescue StandardError => error
@@ -102,6 +101,22 @@ class EventImage < ApplicationRecord
     self.card_focus_x = normalize_percentage(card_focus_x, fallback: DEFAULT_CARD_FOCUS_X)
     self.card_focus_y = normalize_percentage(card_focus_y, fallback: DEFAULT_CARD_FOCUS_Y)
     self.card_zoom = normalize_percentage(card_zoom, fallback: DEFAULT_CARD_ZOOM)
+  end
+
+  def variant_transformations
+    transformations = {
+      format: :webp,
+      resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
+    }
+
+    if ActiveStorage.variant_processor == :vips
+      transformations[:saver] = {
+        strip: true,
+        quality: WEB_QUALITY
+      }
+    end
+
+    transformations
   end
 
   def normalize_percentage(value, fallback:)
