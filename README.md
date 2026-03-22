@@ -64,6 +64,8 @@ Easyticket, Eventim und Reservix folgen demselben Grundmuster:
 - Pro Quelldatensatz wird ein `RawEventImport` angelegt. Das ist absichtlich append-only: Die Rohhistorie bleibt erhalten, statt ältere Zeilen zu überschreiben.
 - Fehler einzelner Datensätze landen in `import_run_errors`, ohne den kompletten Lauf sofort abzubrechen.
 
+Die Run-Koordination ist bewusst generisch über `ImportRun`, `source_type` und Registry-Konfiguration aufgebaut. Je nach Jobtyp laufen Jobs exklusiv oder als serielle Warteschlange. Das LLM-Enrichment nutzt diese Infrastruktur bereits: Es gibt dort immer höchstens einen aktiven Lauf, weitere Anforderungen werden als `queued` eingereiht.
+
 Für den täglichen Betrieb startet `Importing::DailyRunJob` die aktiven Provider standardmäßig über `config/recurring.yml` jeden Tag um `03:05` Uhr. Manuell lassen sich die Läufe im Backend unter den Importquellen oder per Rake-Task starten:
 
 ```bash
@@ -96,7 +98,7 @@ Der Ablauf ist:
 4. Innerhalb einer Gruppe gilt eine Provider-Priorität. Höher priorisierte Quellen liefern bevorzugt die führenden Feldwerte; zusätzliche Ticketangebote und Bilder aus den anderen Quellen bleiben trotzdem erhalten.
 5. `EventUpserter` sucht zuerst ein bestehendes `Event` über `source_fingerprint` oder den gespeicherten `source_snapshot`. Falls nichts passt, wird ein neues Event angelegt.
 6. Danach werden `event_offers`, Genres und Bilder synchronisiert und ein Änderungslog mit `merged_create` oder `merged_update` geschrieben.
-7. Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Lauf gestartet, sofern nicht bereits ein Enrichment-Run aktiv ist.
+7. Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Lauf eingereiht. Läuft bereits ein Enrichment, wartet der neue Lauf als `queued` in derselben seriellen Queue.
 
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen bei exakt gleicher Startzeit. Damit kann der Merge-Import auch Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten` oder `Gregory Porter & Orchestra` und `Gregory Porter` als denselben Termin erkennen. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Artist-Dubletten` ein- oder ausschalten.
 
@@ -106,7 +108,7 @@ Wichtig für das Verhalten im Backend:
 - Fehlen dafür wichtige Informationen, landet das Event stattdessen in `needs_review`.
 - Bereits automatisch veröffentlichte Events fallen ebenfalls zurück auf `needs_review`, wenn sie nach einem späteren Merge nicht mehr vollständig genug sind.
 - Der Button zum Starten des Merge-Imports wird im Backend hervorgehoben, sobald seit dem letzten erfolgreichen Merge neue erfolgreiche Provider-Imports vorliegen.
-- Ein erfolgreicher Merge stößt standardmäßig direkt das LLM-Enrichment an, damit neue oder geänderte Events ohne zusätzlichen manuellen Schritt für die nächste Qualitätsstufe bereitstehen.
+- Ein erfolgreicher Merge reiht standardmäßig direkt das LLM-Enrichment ein, damit neue oder geänderte Events ohne zusätzlichen manuellen Schritt für die nächste Qualitätsstufe bereitstehen.
 
 Wichtig für Updates bestehender Events:
 
@@ -134,10 +136,20 @@ Der Ablauf ist:
 Fachlich ist wichtig:
 
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
-- Erfolgreiche Merge-Läufe starten den Enrichment-Job automatisch, solange nicht bereits ein Enrichment-Lauf aktiv ist.
+- Erfolgreiche Merge-Läufe reihen immer einen Enrichment-Run ein. Wenn bereits ein Enrichment läuft oder schon wartet, wird der neue Lauf seriell hinten angehängt.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.
 - Fehlerhafte Einzelantworten sollen im Laufprotokoll sichtbar sein, ohne zwangsläufig den kompletten Prozess unbrauchbar zu machen.
+
+Im Backend spiegeln die Run-Status dabei die fachliche Koordination wider:
+
+- `queued`: Der Lauf ist angelegt und wartet auf seinen Platz in der seriellen Queue.
+- `running`: Der Worker hat den Lauf übernommen und verarbeitet ihn aktiv.
+- `stopping`: Für einen laufenden Run wurde ein kooperativer Stop angefordert.
+- `canceled`: Der Lauf wurde vor oder während der Verarbeitung beendet.
+- `failed`: Der Lauf ist mit einem Fehler oder Timeout beendet worden.
+
+Queued LLM-Enrichment-Runs lassen sich im Backend abbrechen, bevor sie gestartet werden. Der nächste wartende Run rückt dann automatisch nach.
 
 ### Wie die LLM-Genre-Gruppierung funktioniert
 
@@ -177,6 +189,7 @@ Wichtig für die Interpretation:
 - Die Summen der Provider-Läufe sind nicht direkt mit `Inserts + Updates` aus dem Merge vergleichbar.
 - Gründe dafür sind erstens mehrere Rohimporte derselben Quelle mit identischem `source_identifier`, von denen im Merge nur die jeweils neueste Version berücksichtigt wird, und zweitens die providerübergreifende Gruppierung mehrerer Quellen auf denselben Termin.
 - `Similarity Duplicates` sind bereits in `Updates` enthalten und dürfen deshalb nicht zusätzlich aufaddiert werden.
+- Der angezeigte Status eines Jobs ist nicht nur ein Active-Job-Snapshot, sondern Teil der fachlichen Run-Koordination. Besonders bei LLM-Enrichment zeigen `queued`, `running` und `stopping`, wie mehrere Anforderungen seriell über dieselbe Import-Queue abgearbeitet werden.
 
 ## Wo man im Code typischerweise hinschaut
 

@@ -7,7 +7,7 @@ module Importing
         @source = import_sources(:two)
         @run = @source.import_runs.create!(
           source_type: "llm_enrichment",
-          status: "running",
+          status: "queued",
           started_at: 1.minute.ago,
           metadata: {}
         )
@@ -41,6 +41,7 @@ module Importing
         assert_nil @run.metadata["merge_run_id"]
         assert_equal "gpt-5-mini", @run.metadata["model"]
         assert_equal true, ActiveModel::Type::Boolean.new.cast(@run.metadata["refresh_existing"])
+        assert @run.metadata["execution_started_at"].present?
       ensure
         importer_class.alias_method :new, :__original_new_for_test
         importer_class.remove_method :__original_new_for_test
@@ -93,6 +94,53 @@ module Importing
         assert_equal 1, @run.filtered_count
         assert_equal 2, @run.imported_count
         assert_equal "Stopped by user", @run.metadata["stop_release_reason"]
+      ensure
+        importer_class.alias_method :new, :__original_new_for_test
+        importer_class.remove_method :__original_new_for_test
+      end
+
+      test "does not process a queued run that was canceled before claim" do
+        @run.update!(status: "canceled", finished_at: Time.current)
+
+        importer_class = Importing::LlmEnrichment::Importer.singleton_class
+        importer_class.alias_method :__original_new_for_test, :new
+        importer_class.define_method(:new) { raise "should not build importer" }
+
+        RunJob.perform_now(@run.id)
+        assert_equal "canceled", @run.reload.status
+      ensure
+        importer_class.alias_method :new, :__original_new_for_test
+        importer_class.remove_method :__original_new_for_test
+      end
+
+      test "dispatches the next queued run after finishing" do
+        next_run = @source.import_runs.create!(
+          source_type: "llm_enrichment",
+          status: "queued",
+          started_at: Time.current,
+          metadata: {}
+        )
+
+        fake_result = Importing::LlmEnrichment::Importer::Result.new(
+          selected_count: 1,
+          skipped_count: 0,
+          enriched_count: 1,
+          batches_count: 1,
+          merge_run_id: nil,
+          model: "gpt-5-mini",
+          canceled: false
+        )
+        fake_importer = Struct.new(:call).new(fake_result)
+
+        importer_class = Importing::LlmEnrichment::Importer.singleton_class
+        importer_class.alias_method :__original_new_for_test, :new
+        importer_class.define_method(:new) { |*| fake_importer }
+
+        assert_enqueued_jobs 1, only: RunJob do
+          RunJob.perform_now(@run.id)
+        end
+
+        assert next_run.reload.metadata["job_id"].present?
       ensure
         importer_class.alias_method :new, :__original_new_for_test
         importer_class.remove_method :__original_new_for_test

@@ -17,7 +17,7 @@
   </div>
   <p class="import-runs-note">
     Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten wie Genre-Vorschläge, Beschreibungen und weitere strukturierte Felder.
-    Sie verbessern die Qualität des bestehenden Event-Bestands, ohne neue Rohdaten einzulesen. Erfolgreiche Merge-Importer-Jobs starten dieses Enrichment standardmäßig automatisch als nächsten Schritt.
+    Sie verbessern die Qualität des bestehenden Event-Bestands, ohne neue Rohdaten einzulesen. Erfolgreiche Merge-Importer-Jobs reihen dieses Enrichment standardmäßig automatisch als nächsten Schritt in die Warteschlange ein.
   </p>
   <% if runs.any? %>
     <div class="table-wrap">
@@ -49,7 +49,7 @@
               <td class="action-cell">
                 <%= link_to "Details", backend_import_run_path(run, section: section_key), class: "button button-ghost button-compact" %>
                 <% if import_run_can_stop?(run, section: section_key) %>
-                  <%= button_to "Stoppen", import_run_stop_path(run, section: section_key), method: :post, class: "button button-secondary button-compact" %>
+                  <%= button_to import_run_stop_action_label(run), import_run_stop_path(run, section: section_key), method: :post, class: "button button-secondary button-compact" %>
                 <% end %>
               </td>
             </tr>

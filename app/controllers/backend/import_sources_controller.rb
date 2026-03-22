@@ -55,79 +55,34 @@ module Backend
     end
 
     def stop_llm_enrichment_run
-      source = llm_run_source
-      run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc)
-      run = run.find_by(id: params[:run_id]) if params[:run_id].present?
-      run ||= source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
+      result = llm_run_stopper.call(
+        source_type: "llm_enrichment",
+        import_source: llm_enrichment_run_source,
+        run_id: params[:run_id]
+      )
 
-      if run.blank?
-        respond_with_importer_feedback(alert: "Kein laufender LLM-Enrichment-Run gefunden.")
+      if result.alert.present?
+        respond_with_importer_feedback(alert: "Kein aktiver LLM-Enrichment-Run gefunden.")
         return
       end
 
-      metadata = run.metadata.is_a?(Hash) ? run.metadata.deep_stringify_keys : {}
-      metadata["stop_requested"] = true
-      metadata["stop_requested_at"] = Time.current.iso8601
-      run.update!(metadata: metadata)
+      notice =
+        case result.action
+        when :canceled_queue
+          "LLM-Enrichment (Run ##{result.run.id}) wurde aus der Warteschlange entfernt."
+        else
+          "Stop für LLM-Enrichment (Run ##{result.run.id}) wurde angefordert."
+        end
 
-      Backend::ImportRunsBroadcaster.broadcast!
-      respond_with_importer_feedback(notice: "Stop für LLM-Enrichment (Run ##{run.id}) wurde angefordert.")
+      respond_with_importer_feedback(notice:)
     end
 
     def run_llm_genre_grouping
-      source = llm_run_source
-      feedback = nil
-      broadcast = false
-
-      source.with_lock do
-        active_run = source.import_runs.where(source_type: "llm_genre_grouping", status: "running").order(started_at: :desc).first
-        if active_run.present?
-          feedback = { alert: "Ein LLM-Genre-Gruppierungs-Lauf läuft bereits (Run ##{active_run.id})." }
-          next
-        end
-
-        run = source.import_runs.create!(
-          status: "running",
-          source_type: "llm_genre_grouping",
-          started_at: Time.current,
-          metadata: { "triggered_at" => Time.current.iso8601 }
-        )
-        job = Importing::LlmGenreGrouping::RunJob.perform_later(run.id)
-        run.update!(
-          metadata: run.metadata.merge(
-            "job_id" => job.job_id,
-            "provider_job_id" => job.provider_job_id,
-            "job_attempt" => 1,
-            "job_retries_used" => 0,
-            "max_retries" => 0
-          )
-        )
-        feedback = { notice: "LLM-Genre-Gruppierung wurde gestartet." }
-        broadcast = true
-      end
-
-      Backend::ImportRunsBroadcaster.broadcast! if broadcast
-      respond_with_importer_feedback(**feedback)
+      respond_with_importer_feedback(**run_manager_for(llm_run_source).trigger("llm_genre_grouping"))
     end
 
     def stop_llm_genre_grouping_run
-      source = llm_run_source
-      run = source.import_runs.where(source_type: "llm_genre_grouping", status: "running").order(started_at: :desc)
-      run = run.find_by(id: params[:run_id]) if params[:run_id].present?
-      run ||= source.import_runs.where(source_type: "llm_genre_grouping", status: "running").order(started_at: :desc).first
-
-      if run.blank?
-        respond_with_importer_feedback(alert: "Kein laufender LLM-Genre-Gruppierungs-Run gefunden.")
-        return
-      end
-
-      metadata = run.metadata.is_a?(Hash) ? run.metadata.deep_stringify_keys : {}
-      metadata["stop_requested"] = true
-      metadata["stop_requested_at"] = Time.current.iso8601
-      run.update!(metadata: metadata)
-
-      Backend::ImportRunsBroadcaster.broadcast!
-      respond_with_importer_feedback(notice: "Stop für LLM-Genre-Gruppierung (Run ##{run.id}) wurde angefordert.")
+      respond_with_importer_feedback(**run_manager_for(llm_run_source).request_stop("llm_genre_grouping", run_id: params[:run_id]))
     end
 
     def update
@@ -186,41 +141,23 @@ module Backend
     end
 
     def start_llm_enrichment_run(refresh_existing: false)
-      source = llm_enrichment_run_source
-      feedback = nil
-      broadcast = false
+      result = llm_run_enqueuer.call(
+        source_type: "llm_enrichment",
+        import_source: llm_enrichment_run_source,
+        run_metadata: llm_enrichment_run_metadata(refresh_existing:)
+      )
 
-      source.with_lock do
-        active_run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
-        if active_run.present?
-          feedback = { alert: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{active_run.id})." }
-          next
-        end
+      return { alert: result.alert } if result.alert.present?
 
-        run = source.import_runs.create!(
-          status: "running",
-          source_type: "llm_enrichment",
-          started_at: Time.current,
-          metadata: llm_enrichment_run_metadata(refresh_existing:)
-        )
-        job = Importing::LlmEnrichment::RunJob.perform_later(run.id)
-        run.update!(
-          metadata: run.metadata.merge(
-            "job_id" => job.job_id,
-            "provider_job_id" => job.provider_job_id,
-            "job_attempt" => 1,
-            "job_retries_used" => 0,
-            "max_retries" => 0
-          )
-        )
-        feedback = {
+      if result.dispatched
+        return {
           notice: refresh_existing ? "LLM-Enrichment-Re-Run für zukünftige Events wurde gestartet." : "LLM-Enrichment wurde gestartet."
         }
-        broadcast = true
       end
 
-      Backend::ImportRunsBroadcaster.broadcast! if broadcast
-      feedback
+      {
+        notice: llm_enrichment_queue_notice(refresh_existing:, queue_position: result.queue_position)
+      }
     end
 
     def llm_enrichment_run_metadata(refresh_existing: false)
@@ -231,9 +168,7 @@ module Backend
     end
 
     def llm_run_source
-      ImportSource.find_by(source_type: "eventim") ||
-        ImportSource.find_by(source_type: "easyticket") ||
-        ImportSource.ensure_eventim_source!
+      importer_registry.resolve_run_source("llm_enrichment")
     end
 
     def merge_run_source
@@ -265,10 +200,33 @@ module Backend
     end
 
     def run_manager
-      @run_manager ||= Backend::ImportSources::RunManager.new(
-        import_source: @import_source,
+      @run_manager ||= run_manager_for(@import_source)
+    end
+
+    def run_manager_for(import_source)
+      Backend::ImportSources::RunManager.new(
+        import_source: import_source,
         registry: importer_registry,
         maintenance: run_maintenance
+      )
+    end
+
+    def llm_run_dispatcher
+      @llm_run_dispatcher ||= Backend::ImportSources::RunDispatcher.new(registry: importer_registry)
+    end
+
+    def llm_run_enqueuer
+      @llm_run_enqueuer ||= Backend::ImportSources::RunEnqueuer.new(
+        registry: importer_registry,
+        maintenance: run_maintenance,
+        dispatcher: llm_run_dispatcher
+      )
+    end
+
+    def llm_run_stopper
+      @llm_run_stopper ||= Backend::ImportSources::RunStopper.new(
+        registry: importer_registry,
+        dispatcher: llm_run_dispatcher
       )
     end
 
@@ -370,6 +328,20 @@ module Backend
 
       respond_with_importer_feedback(**run_manager.request_stop(source_type, run_id: params[:run_id]))
     end
+
+    def llm_enrichment_queue_notice(refresh_existing:, queue_position:)
+      base_message =
+        if refresh_existing
+          "LLM-Enrichment-Re-Run für zukünftige Events wurde zur Warteschlange hinzugefügt"
+        else
+          "LLM-Enrichment wurde zur Warteschlange hinzugefügt"
+        end
+
+      return "#{base_message}." if queue_position.blank?
+
+      "#{base_message} (Position #{queue_position})."
+    end
+
     def import_sources_redirect_path
       if @active_section_key == Backend::ImportSources::OverviewState::DEFAULT_SECTION && params[:section].blank?
         return backend_import_sources_path

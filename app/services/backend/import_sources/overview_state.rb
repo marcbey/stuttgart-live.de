@@ -95,6 +95,7 @@ module Backend
         runs = runs_for(section_key)
         stopping_count = runs.count { |run| run.status == "running" && stop_requested?(run) }
         running_count = runs.count { |run| run.status == "running" && !stop_requested?(run) }
+        queued_count = runs.count { |run| run.status == "queued" }
 
         if stopping_count.positive?
           {
@@ -109,6 +110,13 @@ module Backend
             count: running_count,
             label: "Läuft",
             sr_label: "#{running_count} laufende Jobs"
+          }
+        elsif queued_count.positive?
+          {
+            status: "queued",
+            count: queued_count,
+            label: "Wartet",
+            sr_label: "#{queued_count} wartende Jobs"
           }
         else
           {

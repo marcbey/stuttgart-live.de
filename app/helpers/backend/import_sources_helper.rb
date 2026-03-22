@@ -63,7 +63,14 @@ module Backend::ImportSourcesHelper
   end
 
   def import_run_can_stop?(run, section: nil)
-    run.status == "running" && !import_run_stop_requested?(run) && import_run_stop_path(run, section: section).present?
+    return false if import_run_stop_path(run, section: section).blank?
+    return true if run.status == "queued"
+
+    run.status == "running" && !import_run_stop_requested?(run)
+  end
+
+  def import_run_stop_action_label(run)
+    run.status == "queued" ? "Abbrechen" : "Stoppen"
   end
 
   def import_run_stop_path(run, section: nil)

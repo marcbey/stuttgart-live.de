@@ -10,7 +10,7 @@ module Backend
       def as_json(run)
         stop_requested = maintenance.stop_requested?(run)
         stop_url = stop_url_for(run)
-        can_stop = run.status == "running" && !stop_requested && stop_url.present?
+        can_stop = stoppable?(run, stop_requested:, stop_url:)
 
         {
           id: run.id,
@@ -32,6 +32,13 @@ module Backend
       private
 
       attr_reader :controller, :maintenance, :registry
+
+      def stoppable?(run, stop_requested:, stop_url:)
+        return false if stop_url.blank?
+        return true if run.status == "queued"
+
+        run.status == "running" && !stop_requested
+      end
 
       def stop_url_for(run)
         return controller.stop_merge_run_backend_import_sources_path(run_id: run.id) if run.source_type == "merge"

@@ -5,6 +5,9 @@ module Importing
 
       def perform(import_run_id)
         run = ImportRun.find(import_run_id)
+        run = claim_run(run)
+        return if run.blank?
+
         logger.info("[LlmEnrichmentRunJob] run_id=#{run.id} perform started")
         importer = Importing::LlmEnrichment::Importer.new(run: run)
         result = importer.call
@@ -64,12 +67,37 @@ module Importing
         raise
       ensure
         Backend::ImportRunsBroadcaster.broadcast!
+        dispatch_next_queued_run(run)
       end
 
       private
 
       def logger
         @logger ||= Importing::Logging.logger
+      end
+
+      def claim_run(run)
+        run_dispatcher.claim_run!(
+          source_type: "llm_enrichment",
+          import_source: run.import_source,
+          run_id: run.id
+        )
+      end
+
+      def dispatch_next_queued_run(run)
+        return unless run&.persisted?
+        return unless %w[succeeded failed canceled].include?(run.reload.status)
+
+        run_dispatcher.dispatch_next(
+          source_type: "llm_enrichment",
+          import_source: run.import_source
+        )
+      end
+
+      def run_dispatcher
+        @run_dispatcher ||= Backend::ImportSources::RunDispatcher.new(
+          registry: Backend::ImportSources::ImporterRegistry.new
+        )
       end
 
       def create_import_run_error!(run:, error:)

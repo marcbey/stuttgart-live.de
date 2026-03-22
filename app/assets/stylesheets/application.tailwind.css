@@ -5345,6 +5345,11 @@ trix-editor.blog-rich-text:focus {
   color: #fff;
 }
 
+.import-runs-tab-indicator-queued {
+  background: #1654a6;
+  color: #fff;
+}
+
 .backend-section,
 .offer-section,
 .import-runs-panel,

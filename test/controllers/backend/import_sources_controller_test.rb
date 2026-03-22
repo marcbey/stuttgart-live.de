@@ -283,7 +283,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_includes response.body, "Diese Jobs holen Rohdaten direkt von Easyticket, Eventim und Reservix ab"
     assert_includes response.body, "Diese Jobs lesen die aktuellen Rohimporte aller Quellen"
-    assert_includes response.body, "Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Job gestartet"
+    assert_includes response.body, "Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Run in die serielle Warteschlange eingereiht"
     assert_includes response.body, "Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten"
     assert_includes response.body, "Diese Jobs analysieren die im System vorhandenen Rohgenre-Werte"
   end
@@ -449,8 +449,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     end
 
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
-    assert_equal "running", run.status
+    assert_equal "queued", run.status
     assert_equal false, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert run.metadata["job_id"].present?
 
     assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
     follow_redirect!
@@ -463,8 +464,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     end
 
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
-    assert_equal "running", run.status
+    assert_equal "queued", run.status
     assert_equal false, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert run.metadata["job_id"].present?
 
     assert_import_sources_turbo_feedback(message: "LLM-Enrichment wurde gestartet.")
     assert_import_run_row_in_response(run)
@@ -476,8 +478,9 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     end
 
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
-    assert_equal "running", run.status
+    assert_equal "queued", run.status
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert run.metadata["job_id"].present?
 
     assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
     follow_redirect!
@@ -490,14 +493,15 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     end
 
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
-    assert_equal "running", run.status
+    assert_equal "queued", run.status
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert run.metadata["job_id"].present?
 
     assert_import_sources_turbo_feedback(message: "LLM-Enrichment-Re-Run für zukünftige Events wurde gestartet.")
     assert_import_run_row_in_response(run)
   end
 
-  test "should not enqueue llm enrichment run when another llm run is active" do
+  test "should queue llm enrichment run when another llm run is active" do
     ImportRun.create!(
       import_source: @eventim_source,
       status: "running",
@@ -510,13 +514,17 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       post run_llm_enrichment_backend_import_sources_url
     end
 
+    queued_run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+
+    assert_equal "queued", queued_run.status
+    assert_equal false, ActiveModel::Type::Boolean.new.cast(queued_run.metadata["refresh_existing"])
     assert_redirected_to backend_import_sources_url
     follow_redirect!
-    assert_includes response.body, "LLM-Enrichment-Lauf läuft bereits"
+    assert_includes response.body, "LLM-Enrichment wurde zur Warteschlange hinzugefügt (Position 1)."
   end
 
-  test "should not enqueue llm enrichment rerun when another llm run is active" do
-    existing_run = ImportRun.create!(
+  test "should queue llm enrichment rerun when another llm run is active" do
+    ImportRun.create!(
       import_source: @eventim_source,
       status: "running",
       source_type: "llm_enrichment",
@@ -528,13 +536,17 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       post rerun_llm_enrichment_backend_import_sources_url(section: :llm_enrichment)
     end
 
+    queued_run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+
+    assert_equal "queued", queued_run.status
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(queued_run.metadata["refresh_existing"])
     assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
     follow_redirect!
-    assert_includes response.body, "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{existing_run.id})."
+    assert_includes response.body, "LLM-Enrichment-Re-Run für zukünftige Events wurde zur Warteschlange hinzugefügt (Position 1)."
   end
 
-  test "should respond with turbo stream when another llm run is active" do
-    existing_run = ImportRun.create!(
+  test "should respond with turbo stream when queueing llm enrichment behind an active run" do
+    ImportRun.create!(
       import_source: @eventim_source,
       status: "running",
       source_type: "llm_enrichment",
@@ -546,12 +558,15 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       post run_llm_enrichment_backend_import_sources_url, as: :turbo_stream
     end
 
-    assert_import_sources_turbo_feedback(message: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{existing_run.id}).")
-    assert_import_run_row_in_response(existing_run)
+    queued_run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+
+    assert_equal "queued", queued_run.status
+    assert_import_sources_turbo_feedback(message: "LLM-Enrichment wurde zur Warteschlange hinzugefügt (Position 1).")
+    assert_import_run_row_in_response(queued_run)
   end
 
-  test "should not enqueue llm enrichment run when a rerun is active" do
-    existing_run = ImportRun.create!(
+  test "should queue llm enrichment run when a rerun is active" do
+    ImportRun.create!(
       import_source: @eventim_source,
       status: "running",
       source_type: "llm_enrichment",
@@ -563,8 +578,11 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       post run_llm_enrichment_backend_import_sources_url(section: :llm_enrichment), as: :turbo_stream
     end
 
-    assert_import_sources_turbo_feedback(message: "Ein LLM-Enrichment-Lauf läuft bereits (Run ##{existing_run.id}).")
-    assert_import_run_row_in_response(existing_run)
+    queued_run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+
+    assert_equal "queued", queued_run.status
+    assert_import_sources_turbo_feedback(message: "LLM-Enrichment wurde zur Warteschlange hinzugefügt (Position 1).")
+    assert_import_run_row_in_response(queued_run)
   end
 
   test "should request stop for a running llm enrichment run" do
@@ -618,10 +636,25 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_select "tr[data-run-id='#{run.id}'] td:last-child form button", text: "Stoppen"
   end
 
+  test "should render cancel action for queued llm enrichment jobs" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "queued",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    get backend_import_sources_url(section: :llm_enrichment)
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{run.id}'] td:last-child form button", text: "Abbrechen"
+  end
+
   test "should include llm enrichment runs in recent runs json" do
     llm_run = ImportRun.create!(
       import_source: @eventim_source,
-      status: "running",
+      status: "queued",
       source_type: "llm_enrichment",
       started_at: 1.minute.ago,
       metadata: {}
@@ -637,6 +670,38 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "llm_enrichment", run_payload["source_type"]
     assert_equal true, run_payload["can_stop"]
     assert_includes run_payload["stop_url"], "stop_llm_enrichment_run"
+  end
+
+  test "should render queued indicator for llm enrichment tab" do
+    ImportRun.create!(
+      import_source: @eventim_source,
+      status: "queued",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    get backend_import_sources_url
+    assert_response :success
+
+    assert_select "#import-runs-tab-llm-enrichment .import-runs-tab-indicator-queued", text: "1"
+  end
+
+  test "should cancel queued llm enrichment run" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "queued",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+
+    post stop_llm_enrichment_run_backend_import_sources_url(run_id: run.id, section: :llm_enrichment)
+
+    assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
+    assert_equal "canceled", run.reload.status
+    follow_redirect!
+    assert_includes response.body, "wurde aus der Warteschlange entfernt"
   end
 
   test "should enqueue llm genre grouping run from import sources page" do

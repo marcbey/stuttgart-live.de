@@ -27,9 +27,10 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     assert_equal "2026-03-14T09:00:00+01:00", run.metadata["last_run_at"]
 
     llm_run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
-    assert_equal "running", llm_run.status
+    assert_equal "queued", llm_run.status
     assert_equal run.id, llm_run.metadata["merge_run_id"]
     assert_equal "merge_success", llm_run.metadata["triggered_by"]
+    assert llm_run.metadata["job_id"].present?
   end
 
   test "stores import_run_error when merge sync fails" do
@@ -282,19 +283,23 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     sync_class.remove_method :__original_new_for_test
   end
 
-  test "does not enqueue llm enrichment when another llm run is already active" do
+  test "queues llm enrichment when another llm run is already active" do
     ImportRun.create!(
       import_source: import_sources(:two),
       source_type: "llm_enrichment",
       status: "running",
-      started_at: Time.zone.parse("2026-03-14 08:55:00"),
+      started_at: 1.minute.ago,
       metadata: {}
     )
 
-    assert_no_difference -> { ImportRun.where(source_type: "llm_enrichment").count } do
+    assert_difference -> { ImportRun.where(source_type: "llm_enrichment").count }, 1 do
       assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
         Merging::SyncImportedEventsJob.perform_now(last_run_at: Time.zone.parse("2026-03-14 09:00:00"))
       end
     end
+
+    queued_run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+    assert_equal "queued", queued_run.status
+    assert_equal "merge_success", queued_run.metadata["triggered_by"]
   end
 end

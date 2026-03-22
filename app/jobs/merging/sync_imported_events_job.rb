@@ -179,43 +179,21 @@ module Merging
     end
 
     def enqueue_llm_enrichment_run!(merge_run:)
-      source = llm_enrichment_run_source
-      created_run = nil
-
-      source.with_lock do
-        active_run = source.import_runs.where(source_type: "llm_enrichment", status: "running").order(started_at: :desc).first
-        return if active_run.present?
-
-        created_run = source.import_runs.create!(
-          status: "running",
-          source_type: "llm_enrichment",
-          started_at: Time.current,
-          metadata: {
-            "triggered_at" => Time.current.iso8601,
-            "triggered_by" => "merge_success",
-            "merge_run_id" => merge_run.id
-          }
-        )
-
-        job = Importing::LlmEnrichment::RunJob.perform_later(created_run.id)
-        created_run.update!(
-          metadata: created_run.metadata.merge(
-            "job_id" => job.job_id,
-            "provider_job_id" => job.provider_job_id,
-            "job_attempt" => 1,
-            "job_retries_used" => 0,
-            "max_retries" => 0
-          )
-        )
-      end
-
-      broadcast_runs_update! if created_run.present?
-    end
-
-    def llm_enrichment_run_source
-      ImportSource.find_by(source_type: "eventim") ||
-        ImportSource.find_by(source_type: "easyticket") ||
-        ImportSource.ensure_eventim_source!
+      importer_registry = Backend::ImportSources::ImporterRegistry.new
+      dispatcher = Backend::ImportSources::RunDispatcher.new(registry: importer_registry)
+      Backend::ImportSources::RunEnqueuer.new(
+        registry: importer_registry,
+        maintenance: Backend::ImportSources::RunMaintenance.new(registry: importer_registry),
+        dispatcher: dispatcher
+      ).call(
+        source_type: "llm_enrichment",
+        import_source: importer_registry.resolve_run_source("llm_enrichment"),
+        run_metadata: {
+          "triggered_at" => Time.current.iso8601,
+          "triggered_by" => "merge_success",
+          "merge_run_id" => merge_run.id
+        }
+      )
     end
 
     def create_import_run_error!(run:, error:, message: nil, payload: {})
