@@ -108,6 +108,24 @@ module ApplicationHelper
     rails_storage_proxy_url(optimized_event_image_representation(image))
   end
 
+  def presenter_logo_representation(presenter, size: :detail)
+    return if presenter.blank? || !presenter.logo.attached?
+
+    case size.to_sym
+    when :thumbnail
+      presenter.thumbnail_logo_variant
+    else
+      presenter.detail_logo_variant
+    end
+  end
+
+  def presenter_logo_source(presenter, size: :detail)
+    representation = presenter_logo_representation(presenter, size:)
+    return if representation.blank?
+
+    rails_storage_proxy_path(representation, only_path: true)
+  end
+
   def blog_post_image_style(blog_post, slot)
     focus_x = blog_post.public_send("#{slot}_focus_x_value")
     focus_y = blog_post.public_send("#{slot}_focus_y_value")

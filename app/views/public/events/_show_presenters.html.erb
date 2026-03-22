@@ -8,13 +8,13 @@
                     target: "_blank",
                     rel: "noopener" do %>
           <span class="event-presenter-logo">
-            <%= image_tag item.logo_variant, alt: item.name %>
+            <%= image_tag item.logo_source, alt: item.name %>
           </span>
         <% end %>
       <% else %>
         <div class="event-presenter-item">
           <span class="event-presenter-logo">
-            <%= image_tag item.logo_variant, alt: item.name %>
+            <%= image_tag item.logo_source, alt: item.name %>
           </span>
         </div>
       <% end %>

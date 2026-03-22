@@ -4653,13 +4653,15 @@ trix-editor.blog-rich-text:focus {
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 8rem;
+  max-width: 100%;
   min-height: 5rem;
 }
 
 .event-presenter-logo img {
-  max-width: 8rem;
+  max-width: 100%;
   max-height: 4.5rem;
-  width: auto;
+  width: 100%;
   height: auto;
   object-fit: contain;
 }

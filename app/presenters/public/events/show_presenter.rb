@@ -4,7 +4,7 @@ module Public
       Link = Data.define(:label, :url)
       Slide = Data.define(:source, :alt_text, :caption)
       FactItem = Data.define(:label, :value)
-      PresenterItem = Data.define(:name, :external_url, :logo_variant)
+      PresenterItem = Data.define(:name, :external_url, :logo_source)
 
       WEEKDAY_LABELS = [ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag" ].freeze
 
@@ -205,12 +205,13 @@ module Public
 
       def presenters
         @presenters ||= event.ordered_presenters.filter_map do |presenter|
-          next unless presenter.logo.attached?
+          logo_source = view_context.presenter_logo_source(presenter, size: :detail)
+          next if logo_source.blank?
 
           PresenterItem.new(
             name: presenter.name,
             external_url: presenter.external_url,
-            logo_variant: presenter.detail_logo_variant
+            logo_source:
           )
         end
       end

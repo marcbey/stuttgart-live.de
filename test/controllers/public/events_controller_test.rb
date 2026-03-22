@@ -1614,6 +1614,21 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-presenter-name", count: 0
     assert_select ".event-presenter-item[href='#{presenter_one.external_url}']", count: 1
     assert_select ".event-presenter-item[href='#{presenter_two.external_url}']", count: 1
+    assert_includes response.body, rails_storage_proxy_path(presenter_one.detail_logo_variant, only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(presenter_two.detail_logo_variant, only_path: true)
+    refute_includes response.body, "/rails/active_storage/blobs/redirect/"
+  end
+
+  test "show renders svg presenter logos via proxy path" do
+    svg_presenter = create_presenter(name: "SVG Presenter", svg: true)
+    @published_event.event_presenters.create!(presenter: svg_presenter, position: 1)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-presenters img[alt='SVG Presenter']", count: 1
+    assert_includes response.body, rails_storage_proxy_path(svg_presenter.detail_logo_variant, only_path: true)
+    refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
   test "show returns not found for unpublished events" do
@@ -2064,13 +2079,25 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  def create_presenter(name:)
+  def create_presenter(name:, svg: false)
     presenter = Presenter.new(
       name: name,
       external_url: "https://example.com/#{name.parameterize}"
     )
-    presenter.logo.attach(create_uploaded_blob(filename: "#{name.parameterize}.png"))
+    presenter.logo.attach(svg ? create_svg_blob(filename: "#{name.parameterize}.svg") : create_uploaded_blob(filename: "#{name.parameterize}.png"))
     presenter.save!
     presenter
+  end
+
+  def create_svg_blob(filename:)
+    ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new(<<~SVG),
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+          <rect width="16" height="16" fill="#000"/>
+        </svg>
+      SVG
+      filename:,
+      content_type: "image/svg+xml"
+    )
   end
 end

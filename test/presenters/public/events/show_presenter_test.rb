@@ -49,6 +49,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       "https://cdn.example.test/optimized/#{image.object_id}"
     end
 
+    def presenter_logo_source(presenter, size: :detail)
+      "/rails/active_storage/presenters/#{presenter.id}-#{size}"
+    end
+
     def event_url(slug)
       "https://stuttgart-live.de/events/#{slug}"
     end
@@ -121,6 +125,18 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "/slide-1.jpg", presenter.slider_items.first.source
     assert_equal "Slide 1 Alt", presenter.slider_items.first.alt_text
     assert_equal "Live auf der Bühne", presenter.slider_items.first.caption
+  end
+
+  test "exposes presenter logo source urls" do
+    event = build_event(artist_name: "Band", title: "Live")
+    presenter_record = Presenter.new(name: "SVG Presenter")
+    presenter_record.id = 123
+    presenter_record.logo.attach(create_svg_blob(filename: "presenter.svg"))
+    event.define_singleton_method(:ordered_presenters) { [ presenter_record ] }
+
+    presenter = build_presenter(event)
+
+    assert_equal [ "/rails/active_storage/presenters/123-detail" ], presenter.presenters.map(&:logo_source)
   end
 
   test "uses llm enrichment as fallback for detail content" do
@@ -335,5 +351,17 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     end
 
     queries
+  end
+
+  def create_svg_blob(filename:)
+    ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new(<<~SVG),
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+          <rect width="16" height="16" fill="#000"/>
+        </svg>
+      SVG
+      filename:,
+      content_type: "image/svg+xml"
+    )
   end
 end
