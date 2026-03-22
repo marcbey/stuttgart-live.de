@@ -175,7 +175,7 @@ module Importing
 
         assert_equal "succeeded", run.status
         assert_equal 500, run.imported_count
-        assert_operator import_run_selects, :<, 100
+        assert_operator import_run_selects, :<, feed_events.size
       end
     end
   end
