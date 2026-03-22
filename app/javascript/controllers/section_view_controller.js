@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "slider", "list", "button" ]
+  static targets = [ "slider", "list", "button", "label" ]
 
   connect() {
     this.showSlider()
@@ -24,6 +24,7 @@ export default class extends Controller {
       this.buttonTarget.setAttribute("aria-pressed", "false")
       this.buttonTarget.setAttribute("title", "Listenansicht")
     }
+    if (this.hasLabelTarget) this.labelTarget.textContent = "Listenansicht"
   }
 
   showList() {
@@ -33,5 +34,6 @@ export default class extends Controller {
       this.buttonTarget.setAttribute("aria-pressed", "true")
       this.buttonTarget.setAttribute("title", "Kachelansicht")
     }
+    if (this.hasLabelTarget) this.labelTarget.textContent = "Kachelansicht"
   }
 }

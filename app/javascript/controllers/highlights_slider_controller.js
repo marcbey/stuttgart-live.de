@@ -64,6 +64,11 @@ export default class extends Controller {
     const items = this.sliderItems()
     if (items.length === 0) return
 
+    if (direction > 0 && this.atEnd()) {
+      this.trackTarget.scrollTo({ left: 0, behavior: "smooth" })
+      return
+    }
+
     const currentIndex = this.leadingVisibleIndex(items)
     const pageSize = this.visibleItemCount(items)
     const targetIndex = this.clampIndex(currentIndex + (pageSize * direction), items)
@@ -82,7 +87,7 @@ export default class extends Controller {
     }
 
     if (this.hasNextButtonTarget) {
-      this.nextButtonTarget.disabled = currentScroll >= maxScrollLeft - 4
+      this.nextButtonTarget.disabled = maxScrollLeft <= 4
     }
   }
 
@@ -153,6 +158,13 @@ export default class extends Controller {
     if (!(item instanceof HTMLElement)) return
 
     this.trackTarget.scrollTo({ left: item.offsetLeft, behavior: "smooth" })
+  }
+
+  atEnd() {
+    if (!this.hasTrackTarget) return false
+
+    const maxScrollLeft = this.trackTarget.scrollWidth - this.trackTarget.clientWidth
+    return this.trackTarget.scrollLeft >= maxScrollLeft - 4
   }
 
   stopAutoplay() {

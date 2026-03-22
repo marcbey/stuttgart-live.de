@@ -21,6 +21,7 @@
               title="Listenansicht"
               aria-label="<%= list_aria_label %>"
               aria-pressed="false">
+        <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
         <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
           <span></span><span></span><span></span>
         </span>
@@ -28,16 +29,30 @@
           <span></span><span></span><span></span><span></span>
         </span>
       </button>
-      <button type="button" class="highlights-slider-arrow genre-lane-arrow" data-highlights-slider-target="previousButton" data-action="click->highlights-slider#previous" aria-label="Zurück">‹</button>
-      <button type="button" class="highlights-slider-arrow genre-lane-arrow" data-highlights-slider-target="nextButton" data-action="click->highlights-slider#next" aria-label="Weiter">›</button>
     </div>
   </div>
 
   <div data-section-view-target="slider">
-    <div class="genre-lane-track" data-highlights-slider-target="track">
-      <% events.each do |event| %>
-        <%= render "genre_lane_card", event: event, browse_state: browse_state, card_variant: card_variant %>
-      <% end %>
+    <div class="highlights-slider-viewport">
+      <button type="button"
+              class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev genre-lane-arrow"
+              data-highlights-slider-target="previousButton"
+              data-action="click->highlights-slider#previous"
+              aria-label="Zurück">
+        ‹
+      </button>
+      <div class="genre-lane-track" data-highlights-slider-target="track">
+        <% events.each do |event| %>
+          <%= render "genre_lane_card", event: event, browse_state: browse_state, card_variant: card_variant %>
+        <% end %>
+      </div>
+      <button type="button"
+              class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next genre-lane-arrow"
+              data-highlights-slider-target="nextButton"
+              data-action="click->highlights-slider#next"
+              aria-label="Weiter">
+        ›
+      </button>
     </div>
   </div>
 
