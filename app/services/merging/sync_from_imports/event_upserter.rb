@@ -18,6 +18,7 @@ module Merging
         event = resolve_event_for_fingerprint(match_result&.event || Event.new, fingerprint)
         created_now = event.new_record?
         duplicate_now = similarity_duplicate?(match_result)
+        previous_event_series = event.event_series
 
         assign_event_attributes(event, records, fingerprint:, created_now:)
 
@@ -32,6 +33,7 @@ module Merging
         updated_now = event.changed? && !created_now
 
         event.save! if created_now || event.changed?
+        cleanup_orphaned_event_series!(previous_event_series, current_series: event.event_series)
 
         offers_upserted = sync_offers!(event, offers)
         images_changed = sync_event_images!(event, merged_images)
@@ -60,6 +62,7 @@ module Merging
         event.source_fingerprint = fingerprint
         event.source_snapshot = build_source_snapshot(event, records)
         event.primary_source = prioritized_primary_source(event.source_snapshot, fallback: records.first.source)
+        assign_event_series(event, records)
 
         if created_now
           event.title = first_present(records, &:title)
@@ -79,6 +82,19 @@ module Merging
         event.badge_text = first_present_or_nil(records, &:badge_text)
         event.min_price = first_present_decimal(records, &:min_price)
         event.max_price = first_present_decimal(records, &:max_price)
+      end
+
+      def assign_event_series(event, records)
+        return if event.event_series_locked_by_editor?
+
+        series = imported_event_series_for(records)
+        event.event_series_assignment = "auto"
+
+        if series.present?
+          event.event_series = series
+        elsif event.event_series&.imported?
+          event.event_series = nil
+        end
       end
 
       def apply_status_rules(event, created_now:, images_present:)
@@ -225,7 +241,7 @@ module Merging
       end
 
       def build_source_snapshot_source(record)
-        {
+        snapshot = {
           "source" => record.source,
           "source_identifier" => record.source_identifier,
           "external_event_id" => record.external_event_id,
@@ -257,12 +273,27 @@ module Merging
             end,
           "raw_payload" => record.raw_payload
         }
+
+        if record.series_reference.present?
+          snapshot["event_series"] = {
+            "source_type" => record.series_reference.source_type,
+            "source_key" => record.series_reference.source_key,
+            "name" => record.series_reference.name
+          }.compact
+        end
+
+        snapshot
       end
 
       def prioritized_primary_source(source_snapshot, fallback:)
         sources = source_snapshot.is_a?(Hash) ? Array(source_snapshot["sources"]) : []
         best_source = sources.min_by { |source| [ priority_for(source["source"]), source["source"].to_s ] }
         best_source&.fetch("source", nil).presence || fallback
+      end
+
+      def imported_event_series_for(records)
+        reference = records.filter_map(&:series_reference).first
+        EventSeriesResolver.ensure_imported!(reference)
       end
 
       def source_snapshot_key(source)
@@ -355,6 +386,13 @@ module Merging
           external_event_ids: records.map(&:external_event_id),
           merge_run_id: merge_run_id
         }.compact
+      end
+
+      def cleanup_orphaned_event_series!(previous_series, current_series:)
+        return if previous_series.blank?
+        return if current_series.present? && previous_series.id == current_series.id
+
+        previous_series.destroy_if_orphaned!
       end
     end
   end

@@ -168,6 +168,134 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".genre-lane-section", count: 0
   end
 
+  test "index does not mark a singleton series as event series in public lanes" do
+    create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    visible_event = Event.create!(
+      slug: "singleton-series-visible",
+      source_fingerprint: "test::public::singleton-series::visible",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+    hidden_event = Event.create!(
+      slug: "singleton-series-hidden",
+      source_fingerprint: "test::public::singleton-series::hidden",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: visible_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: hidden_event, genres: [ "Rock" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_includes response.body, visible_event.artist_name
+    assert_select ".event-series-badge", count: 0
+  end
+
+  test "index keeps the event series badge on deduplicated teaser lane representatives" do
+    create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    earlier_event = Event.create!(
+      slug: "dedup-series-earlier-visible",
+      source_fingerprint: "test::public::dedup-series::earlier",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 8.days.from_now.change(hour: 18, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+    later_event = Event.create!(
+      slug: "dedup-series-later-visible",
+      source_fingerprint: "test::public::dedup-series::later",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: earlier_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: later_event, genres: [ "Rock" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_includes response.body, earlier_event.artist_name
+    assert_select ".event-series-badge", minimum: 1
+  end
+
+  test "index does not render event series badges in list view rows" do
+    create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    first_event = Event.create!(
+      slug: "list-view-series-first",
+      source_fingerprint: "test::public::list-view-series::first",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 8.days.from_now.change(hour: 18, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+    second_event = Event.create!(
+      slug: "list-view-series-second",
+      source_fingerprint: "test::public::list-view-series::second",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: first_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: second_event, genres: [ "Rock" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".genre-lane-card .event-series-badge", minimum: 1
+    assert_select ".section-slider-list .event-series-badge", count: 0
+  end
+
   test "index hides future unpublished events for guests" do
     hidden_event = Event.create!(
       slug: "guest-hidden-draft-event",
@@ -739,6 +867,76 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes names, excluded_event_name
   end
 
+  test "index keeps the event series badge in all events slider when the second series event is outside the limit" do
+    future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
+    series = EventSeries.create!(origin: "manual", name: "Wiener Klassik")
+
+    target_event = Event.create!(
+      slug: "reservix-limited-series-target",
+      source_fingerprint: "test::homepage::reservix::limited-series::target",
+      title: "Lyrische Welten",
+      artist_name: "David Aaron Carpenter - Viola; Vladimir Fanshil - Leitung",
+      start_at: future_start,
+      venue: "Liederhalle Beethoven-Saal",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    99.times do |index|
+      Event.create!(
+        slug: "reservix-limited-series-filler-#{index}",
+        source_fingerprint: "test::homepage::reservix::limited-series::filler::#{index}",
+        title: "Reservix Filler #{index}",
+        artist_name: "Reservix Filler Artist #{index}",
+        start_at: future_start + (index + 1).minutes,
+        venue: "Venue #{index}",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        primary_source: "reservix",
+        source_snapshot: {}
+      )
+    end
+
+    Event.create!(
+      slug: "reservix-limited-series-outside-limit",
+      source_fingerprint: "test::homepage::reservix::limited-series::outside-limit",
+      title: "Lyrische Welten",
+      artist_name: "Wang Wie - Klavier; Raphael Merlin - Leitung",
+      start_at: future_start + 100.minutes,
+      venue: "Liederhalle Beethoven-Saal",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    slider_section = document.css("section.genre-lane-section").find do |section|
+      section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+    end
+
+    assert slider_section.present?, "expected all events slider section to be rendered"
+
+    target_card = slider_section.css("article.genre-lane-card").find do |card|
+      card.at_css(".genre-lane-card-name")&.text == target_event.artist_name
+    end
+
+    assert target_card.present?, "expected the target event card to be rendered in the all events slider"
+    assert_equal "Event-Reihe", target_card.at_css(".event-series-badge")&.text.to_s.strip
+  end
+
   test "index does not limit highlights fallback when no sks events exist for the selected date" do
     selected_date = 20.days.from_now.to_date
 
@@ -888,6 +1086,59 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes names, late_today_event.artist_name
     assert_not_includes names, reservix_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
+  end
+
+  test "tagestipp shows event series badge when the series is globally visible via a past event" do
+    today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
+    series = EventSeries.create!(origin: "manual", name: "Marvel Reihe")
+    today_event = Event.create!(
+      slug: "tagestipp-series-today",
+      source_fingerprint: "test::homepage::tagestipp::series::today",
+      title: "Marvel heute",
+      artist_name: "Marvel Reihe",
+      start_at: today_start,
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "tagestipp-series-past",
+      source_fingerprint: "test::homepage::tagestipp::series::past",
+      title: "Marvel gestern",
+      artist_name: "Marvel Reihe",
+      start_at: 1.day.ago.change(hour: 20),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 3.days.ago,
+      primary_source: "eventim",
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    tagestipp_section = document.css("section.genre-lane-section").find do |section|
+      section.at_css("h2")&.text == "Tagestipp"
+    end
+
+    assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
+
+    target_card = tagestipp_section.css("article.genre-lane-card").find do |card|
+      card.at_css(".genre-lane-card-name")&.text == today_event.artist_name
+    end
+
+    assert target_card.present?, "expected the series event to be rendered in Tagestipp"
+    assert_equal "Event-Reihe", target_card.at_css(".event-series-badge")&.text.to_s.strip
   end
 
   test "index can be filtered to SKS events" do
@@ -1302,6 +1553,99 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "section.genre-lane-section", count: 0
+  end
+
+  test "show renders the full event series lane before the related genre lane" do
+    create_homepage_genre_snapshot
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
+
+    related_event = Event.create!(
+      slug: "show-related-genre-series-neighbor",
+      source_fingerprint: "test::public::show-related-genre::series-neighbor",
+      title: "Related Genre Neighbor",
+      artist_name: "Related Genre Neighbor",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    build_homepage_genre_enrichment(event: related_event, genres: [ "Rock" ])
+
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    @published_event.update!(event_series: series, event_series_assignment: "manual")
+    past_event = Event.create!(
+      slug: "show-series-past",
+      source_fingerprint: "test::public::show-series::past",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 4.days.ago.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 10.days.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+    future_event = Event.create!(
+      slug: "show-series-future",
+      source_fingerprint: "test::public::show-series::future",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 6.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    series_section = css_select("section.genre-lane-section").find do |section|
+      section.at_css(".genre-lane-kicker")&.text.to_s.include?("Event-Reihe")
+    end
+    assert_not_nil series_section
+    assert_equal series.name, series_section.at_css("h2")&.text.to_s.strip
+    assert_equal 3, series_section.css(".genre-lane-card-name").size
+    assert_equal 0, series_section.css(".event-series-badge").size
+    assert_includes series_section.text, I18n.l(future_event.start_at.to_date, format: "%d.%m.%Y")
+    assert_includes series_section.text, I18n.l(past_event.start_at.to_date, format: "%d.%m.%Y")
+
+    series_index = response.body.index(@published_event.title)
+    genre_index = response.body.index("Mehr aus diesem Genre")
+    assert_operator series_index, :<, genre_index
+  end
+
+  test "show does not render the event series lane when only one public event is visible" do
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    @published_event.update!(event_series: series, event_series_assignment: "manual")
+    Event.create!(
+      slug: "show-series-hidden-draft",
+      source_fingerprint: "test::public::show-series::hidden-draft",
+      title: "A Tribute to Frida Kahlo",
+      artist_name: "Viva la Vida",
+      start_at: 6.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    series_section = css_select("section.genre-lane-section").find do |section|
+      section.at_css(".genre-lane-kicker")&.text.to_s.include?("Event-Reihe")
+    end
+    assert_nil series_section
   end
 
   test "show gates youtube embeds behind consent placeholder" do

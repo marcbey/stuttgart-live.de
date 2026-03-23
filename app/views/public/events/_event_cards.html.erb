@@ -3,6 +3,7 @@
 <% offset = local_assigns.fetch(:offset, 0) %>
 <% card_dom_id_prefix = local_assigns[:card_dom_id_prefix] %>
 <% wrap = local_assigns.fetch(:wrap, true) %>
+<% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 
 <% if wrap && container_id.present? %>
   <div id="<%= container_id %>" class="<%= container_class %>">
@@ -16,6 +17,7 @@
     <%= render "event_card",
                event: event,
                browse_state: browse_state,
+               effective_series_ids: effective_series_ids,
                tile_variant: tile_variant,
                card_slot: card_slot,
                card_dom_id: (card_dom_id_prefix.present? ? dom_id(event, card_dom_id_prefix) : nil) %>

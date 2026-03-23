@@ -2,6 +2,8 @@
 <% kicker = local_assigns[:kicker] %>
 <% section_variant = local_assigns[:section_variant] %>
 <% card_variant = local_assigns[:card_variant] %>
+<% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
+<% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
 
 <section class="<%= ["genre-lane-section", local_assigns.fetch(:tone_class, "genre-lane-section--tone-1"), ("genre-lane-section--#{section_variant}" if section_variant.present?)].compact.join(" ") %>"
          data-controller="highlights-slider section-view">
@@ -43,7 +45,12 @@
       </button>
       <div class="genre-lane-track" data-highlights-slider-target="track">
         <% events.each do |event| %>
-          <%= render "genre_lane_card", event: event, browse_state: browse_state, card_variant: card_variant %>
+          <%= render "genre_lane_card",
+                     event: event,
+                     browse_state: browse_state,
+                     card_variant: card_variant,
+                     effective_series_ids: effective_series_ids,
+                     show_series_badge: show_series_badge %>
         <% end %>
       </div>
       <button type="button"
@@ -57,6 +64,6 @@
   </div>
 
   <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
-    <%= render "event_rows", events: events, browse_state: browse_state %>
+    <%= render "event_rows", events: events, browse_state: browse_state, effective_series_ids: effective_series_ids %>
   </div>
 </section>

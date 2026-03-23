@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_21_121000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_22_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -184,6 +184,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_121000) do
     t.index ["presenter_id"], name: "index_event_presenters_on_presenter_id"
   end
 
+  create_table "event_series", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "name"
+    t.string "origin", null: false
+    t.string "source_key"
+    t.string "source_type"
+    t.datetime "updated_at", null: false
+    t.index ["source_type", "source_key"], name: "index_event_series_on_source_type_and_source_key", unique: true, where: "(source_key IS NOT NULL)"
+  end
+
   create_table "events", force: :cascade do |t|
     t.string "artist_name", null: false
     t.boolean "auto_published", default: false, null: false
@@ -195,6 +205,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_121000) do
     t.datetime "doors_at"
     t.text "editor_notes"
     t.text "event_info"
+    t.string "event_series_assignment", default: "auto", null: false
+    t.bigint "event_series_id"
     t.string "facebook_url"
     t.boolean "highlighted", default: false, null: false
     t.string "homepage_url"
@@ -218,6 +230,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_121000) do
     t.datetime "updated_at", null: false
     t.string "venue", null: false
     t.string "youtube_url"
+    t.index ["event_series_assignment"], name: "index_events_on_event_series_assignment"
+    t.index ["event_series_id"], name: "index_events_on_event_series_id"
     t.index ["promoter_id", "start_at", "id"], name: "index_events_on_published_promoter_id_start_at_and_id", where: "((status)::text = 'published'::text)"
     t.index ["promoter_id"], name: "index_events_on_promoter_id"
     t.index ["published_at", "start_at"], name: "index_events_on_published_at_and_start_at"
@@ -442,6 +456,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_21_121000) do
   add_foreign_key "event_offers", "events"
   add_foreign_key "event_presenters", "events"
   add_foreign_key "event_presenters", "presenters"
+  add_foreign_key "events", "event_series"
   add_foreign_key "events", "users", column: "published_by_id"
   add_foreign_key "homepage_genre_lane_configurations", "llm_genre_grouping_snapshots", column: "snapshot_id"
   add_foreign_key "import_run_errors", "import_runs"

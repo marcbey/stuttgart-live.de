@@ -25,6 +25,9 @@
       <p><%= event.title %></p>
     </div>
     <div class="editor-header-badges">
+      <% if backend_event_series_effective?(event) %>
+        <span class="status-badge status-badge-series">Event-Reihe</span>
+      <% end %>
       <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
       <% if event.primary_source.present? %>
         <span class="status-badge status-badge-default"><%= event.primary_source %></span>

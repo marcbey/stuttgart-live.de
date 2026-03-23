@@ -50,6 +50,7 @@ class Merging::SyncFromImports::MatchStrategyTest < ActiveSupport::TestCase
       source: "eventim",
       source_identifier: "#{artist_name.parameterize}:#{external_event_id}",
       external_event_id: external_event_id,
+      series_reference: nil,
       artist_name: artist_name,
       title: artist_name,
       start_at: start_at,

@@ -12,6 +12,7 @@ module Importing
       PROGRESS_FLUSH_AFTER_SECONDS = 2
       FILTERED_OUT_CITIES_LIMIT = 500
       CHECKPOINT_OVERLAP = 5.minutes
+      PROCESSING_HEARTBEAT_EVERY_N_ROWS = 50
 
       def initialize(import_source:, event_fetcher: EventFetcher.new, preexisting_run_id: nil, run_metadata: {}, logger: Importing::Logging.logger)
         @import_source = import_source
@@ -37,6 +38,7 @@ module Importing
 
         changed_since_flush = 0
         last_flush_at = Time.current
+        processed_events = 0
 
         begin
           catch(:stop_import) do
@@ -81,6 +83,7 @@ module Importing
                 next unless projection.bookable?
 
                 state[:filtered_count] += 1
+                ensure_imported_event_series!(payload)
 
                 RawEventImport.create!(
                   import_source: import_source,
@@ -102,6 +105,9 @@ module Importing
                   payload: payload
                 )
               ensure
+                processed_events += 1
+                touch_processing_heartbeat!(run, processed_events)
+
                 next unless progress_changed
 
                 changed_since_flush += 1
@@ -174,6 +180,18 @@ module Importing
         venue = Array(references["venue"]).find { |entry| entry.is_a?(Hash) }&.deep_stringify_keys || {}
 
         venue["city"].to_s.strip
+      end
+
+      def ensure_imported_event_series!(payload)
+        reference = Importing::EventSeriesReference.from_payload(source_type: import_source.source_type, payload: payload)
+        return if reference.blank?
+
+        cache_key = [ reference.source_type, reference.source_key ]
+        @resolved_event_series_keys ||= Set.new
+        return if @resolved_event_series_keys.include?(cache_key)
+
+        EventSeriesResolver.ensure_imported!(reference)
+        @resolved_event_series_keys << cache_key
       end
 
       def load_checkpoint
@@ -258,6 +276,17 @@ module Importing
             "last_processed_event_id" => checkpoint_tracker[:last_processed_event_id].to_s
           }
         )
+      end
+
+      def touch_processing_heartbeat!(run, processed_events)
+        return unless processed_events.positive?
+        return unless (processed_events % processing_heartbeat_every_n_rows).zero?
+
+        touch_run_heartbeat!(run)
+      end
+
+      def processing_heartbeat_every_n_rows
+        self.class::PROCESSING_HEARTBEAT_EVERY_N_ROWS
       end
     end
   end

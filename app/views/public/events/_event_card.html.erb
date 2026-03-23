@@ -8,6 +8,7 @@
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
 <% card_dom_id = local_assigns[:card_dom_id].presence || dom_id(event, :card) %>
+<% effective_series_ids = local_assigns[:effective_series_ids] %>
 
 <article id="<%= card_dom_id %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
   <div class="event-card-image-wrap">
@@ -23,6 +24,9 @@
         <div class="event-card-image event-card-placeholder"></div>
       <% end %>
       <div class="event-card-overlay"></div>
+      <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
+        <span class="event-series-badge">Event-Reihe</span>
+      <% end %>
       <% if event.badge_text.present? %>
         <span class="event-card-badge"><%= event.badge_text %></span>
       <% end %>

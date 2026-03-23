@@ -2,5 +2,6 @@
            event: event,
            tile_variant: local_assigns.fetch(:tile_variant),
            card_slot: local_assigns.fetch(:card_slot),
+           effective_series_ids: local_assigns[:effective_series_ids],
            browse_state: local_assigns.fetch(:browse_state),
            card_dom_id: dom_id(event, :home_card) %>

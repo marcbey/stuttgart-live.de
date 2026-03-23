@@ -122,6 +122,102 @@ Wichtig für Updates bestehender Events:
 
 Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In diesem Fall werden nur Fingerprints neu gebaut, die seit `last_run_at` von neuen Rohimporten berührt wurden; für diese Gruppen wird aber jeweils wieder der aktuelle Gesamtstand aller Quellen zusammengeführt.
 
+### Wie Event-Reihen funktionieren
+
+Zusätzlich zum eigentlichen Termin-Merge kennt die Anwendung das separate fachliche Konzept `EventSeries`. Eine Event-Reihe gruppiert mehrere logisch zusammengehörige Events, ohne sie zu einem einzelnen Termin zusammenzuführen. Das ist bewusst unabhängig vom Dubletten-Merge: Der Merge beantwortet die Frage "Sind das dieselben Termine aus verschiedenen Quellen?", die Event-Reihe beantwortet die Frage "Gehören mehrere unterschiedliche Termine inhaltlich zusammen?".
+
+Technisch besteht das Modell aus:
+
+- `event_series` als eigene Tabelle mit `origin`, optionalem `name` sowie bei importierten Reihen `source_type` und `source_key`
+- `events.event_series_id` als optionale Zuordnung eines Events zu genau einer Event-Reihe
+- `events.event_series_assignment` zur Unterscheidung zwischen automatischer Import-Zuordnung (`auto`) und redaktionellen Entscheidungen (`manual`, `manual_none`)
+
+Fachlich wichtig:
+
+- Eine Event-Reihe kann importiert oder manuell angelegt sein.
+- Ein Event kann höchstens einer Event-Reihe gleichzeitig zugeordnet sein.
+- Event-Reihen werden gelöscht, wenn ihnen nach einer Änderung gar kein Event mehr zugeordnet ist.
+- Die Existenz einer gespeicherten Event-Reihe und ihre öffentliche Wirkung sind bewusst nicht dasselbe.
+
+### Wie Importer Event-Reihen erkennen
+
+Die automatische Erkennung passiert schon beim Rohimport. Der Importer versucht dabei nicht, freie Heuristiken über Titel oder Artist-Namen abzuleiten, sondern übernimmt nur explizite Provider-Signale.
+
+Aktuell gilt:
+
+- `Eventim`: Wenn der Feed `esid` liefert, wird dieser Wert als stabiler Reihen-Schlüssel verwendet. `esname` dient als Reihenname. Der `eventserie`-Kontext aus dem Feed wird beim Expandieren auf die einzelnen Termine mitgenommen.
+- `Reservix`: Wenn im Payload `references.eventgroup[].id` vorhanden ist, wird diese ID als Reihen-Schlüssel verwendet. `references.eventgroup[].name` wird als Reihenname übernommen.
+- `Easyticket`: Der Importer legt derzeit keine automatischen Event-Reihen an, weil dort noch kein gleichwertiges explizites Gruppenfeld genutzt wird.
+
+Die Provider-Signale werden zunächst als `Importing::EventSeriesReference` normalisiert. `EventSeriesResolver` sorgt dann dafür, dass für einen gegebenen provider-spezifischen Schlüssel genau eine importierte `EventSeries` existiert.
+
+Wichtig für die Einordnung:
+
+- Eventim-Signale sind derzeit meist sehr stabil, aber in der Praxis sehr häufig vorhanden. Nicht jedes so erkannte Bündel ist automatisch eine redaktionell sinnvolle "Reihe" im engeren Sinn.
+- Reservix-`eventgroup` ist fachlich unzuverlässiger. In manchen Fällen verhält sich dieses Feld eher wie ein Veranstalter- oder Container-Schlüssel als wie eine echte Reihe. Die Zuordnung bleibt deshalb technisch nachvollziehbar, muss redaktionell aber kritisch betrachtet werden.
+
+### Wie der Merge Event-Reihen persistiert
+
+Beim Merge wird die Serien-Referenz aus den aktuellen Rohimporten erneut gelesen und an das kanonische `Event` gehängt. Die Event-Reihe ist damit Teil des regulären Merge-Stands, ähnlich wie `source_snapshot`, `primary_source` oder Ticket-Offers.
+
+Die Regeln dafür sind:
+
+- Ist in den aktuellen Import-Records eine Reihen-Referenz vorhanden, wird das Event dieser `EventSeries` zugeordnet.
+- Ist keine Reihen-Referenz mehr vorhanden und das Event hing bisher an einer importierten Reihe, wird die Zuordnung entfernt.
+- Manuelle redaktionelle Entscheidungen haben Vorrang: Sobald ein Event `event_series_assignment = manual` oder `manual_none` hat, überschreibt der Merge diese Serien-Entscheidung nicht mehr.
+- Im `source_snapshot` wird die aktuelle Serien-Herkunft mitgespeichert, damit später nachvollziehbar bleibt, aus welchem Provider-Signal die Zuordnung stammt.
+
+Dadurch bleiben folgende Fälle sauber getrennt:
+
+- automatische Import-Zuordnung zu einer erkannten Reihe
+- manuelle redaktionelle Umgruppierung in eine andere Reihe
+- manuelles bewusstes Herauslösen aus einer importierten Reihe
+
+### Wie die Redaktion Event-Reihen im Backend verwaltet
+
+Im Backend lassen sich Event-Reihen über die Event-Liste manuell pflegen. Die bestehende Filterung und Mehrfachauswahl ist dabei der primäre Arbeitsweg.
+
+Die wichtigsten Abläufe sind:
+
+- Bulk-Aktion `Als Event-Reihe zusammenfassen`: legt eine neue manuelle `EventSeries` an und ordnet alle ausgewählten Events dieser Reihe zu
+- Bulk-Aktion `Aus Event-Reihe lösen`: entfernt die ausgewählten Events wieder aus ihrer aktuellen Reihe
+- leere Reihen werden bei solchen Änderungen automatisch bereinigt
+
+Die Herkunft einer Reihe bleibt sichtbar:
+
+- importierte Reihen kommen aus den Provider-Signalen
+- manuelle Reihen stammen aus der redaktionellen Bulk-Aktion
+
+Für die Badge-Logik im Backend gilt bewusst eine redaktionelle Regel:
+
+- In `events_list` und im Event-Editor wird `Event-Reihe` angezeigt, wenn zur `event_series_id` insgesamt mindestens zwei Events im Datenbestand existieren.
+- Dabei wird nicht nach `published`, `published_at` oder Vergangenheit/Zukunft gefiltert.
+- Das Backend bewertet also die gespeicherte redaktionelle Struktur, nicht die öffentliche Sichtbarkeit.
+
+### Wie Event-Reihen im Frontend wirken
+
+Im öffentlichen Frontend gilt eine strengere, sichtbarkeitsbezogene Regel als im Backend. Eine Event-Reihe ist dort nur wirksam, wenn sie in der gesamten öffentlich sichtbaren Event-Menge tatsächlich mindestens zwei Events hat.
+
+Öffentlich sichtbar bedeutet:
+
+- `status = published`
+- `published_at <= jetzt`
+
+Dabei zählen ausdrücklich auch vergangene veröffentlichte Events mit. Die Frontend-Regel ist also global über den öffentlichen Bestand und nicht mehr auf die lokale Quellmenge einer einzelnen Lane beschränkt.
+
+Die konkreten Auswirkungen sind:
+
+- Karten und Listen-Items bekommen die Banderole `Event-Reihe`, wenn ihre `event_series_id` öffentlich wirksam ist.
+- Homepage-Lanes wie Highlights, `Alle Veranstaltungen in Stuttgart`, `Tagestipp` und die Genre-Lanes deduplizieren Event-Reihen auf einen Repräsentanten, verwenden für die Badge-Entscheidung aber die globale öffentliche Wirksamkeit der Reihe.
+- Die Related-Genre-Lane auf der Event-Detailseite folgt derselben globalen Frontend-Regel.
+- Die dedizierte Event-Reihen-Lane auf der Event-Detailseite zeigt alle veröffentlichten sichtbaren Events derselben Reihe, inklusive vergangener Termine, chronologisch sortiert.
+
+Wichtig ist der Unterschied zwischen gespeicherter Zuordnung und öffentlicher Wirkung:
+
+- Eine importierte oder manuell angelegte Event-Reihe kann im Datenmodell existieren, obwohl öffentlich aktuell nur ein einziges sichtbares Event dazugehört.
+- In diesem Fall bleibt die Zuordnung im Backend sichtbar, im Frontend erscheint aber keine `Event-Reihe`-Banderole.
+- Sobald ein zweites veröffentlichtes sichtbares Event derselben Reihe vorhanden ist, wird die Reihe ohne weitere Redaktion automatisch auch öffentlich wirksam.
+
 ### Wie das LLM-Enrichment funktioniert
 
 Das LLM-Enrichment läuft auf bereits gemergten `events` und ist damit bewusst ein nachgelagerter Qualitätsschritt. Es erzeugt keine neuen Events und verändert keine Rohimporte, sondern ergänzt vorhandene Datensätze um zusätzliche redaktionelle Informationen.

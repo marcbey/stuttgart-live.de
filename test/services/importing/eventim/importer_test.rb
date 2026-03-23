@@ -25,6 +25,8 @@ module Importing
             "eventplace" => "Stuttgart",
             "eventvenue" => "Im Wizemann",
             "eventname" => "Band Eventim",
+            "esid" => "es-900",
+            "esname" => "Eventim Reihe",
             "sideArtistNames" => "Band Eventim",
             "promoterid" => "36",
             "eventlink" => "https://tickets.example/evt-900"
@@ -57,6 +59,7 @@ module Importing
         assert_equal 0, run.failed_count
         assert_includes run.metadata.fetch("filtered_out_cities", []), "Berlin"
         assert_equal "evt-900", imported.payload["eventid"]
+        assert_equal "Eventim Reihe", EventSeries.imported.find_by!(source_type: "eventim", source_key: "es-900").name
       end
 
       test "does not start a second run while one is already active" do
@@ -176,6 +179,48 @@ module Importing
         assert_equal "succeeded", run.status
         assert_equal 500, run.imported_count
         assert_operator import_run_selects, :<, (feed_events.size * 2) - 50
+      end
+
+      test "touches heartbeat while processing feed rows" do
+        feed_events = 5.times.map do |index|
+          {
+            "eventid" => "evt-heartbeat-#{index}",
+            "eventdate" => "2026-06-17",
+            "eventplace" => "Stuttgart",
+            "eventvenue" => "Im Wizemann",
+            "eventname" => "Heartbeat #{index}"
+          }
+        end
+
+        importer_class = Class.new(Importer) do
+          attr_reader :heartbeat_calls
+
+          def initialize(...)
+            super
+            @heartbeat_calls = 0
+          end
+
+          private
+
+          def touch_run_heartbeat!(run, extra_metadata: nil)
+            @heartbeat_calls += 1
+            super
+          end
+
+          def processing_heartbeat_every_n_rows
+            2
+          end
+        end
+
+        importer = importer_class.new(
+          import_source: @source,
+          feed_fetcher: StubFeedFetcher.new(feed_events)
+        )
+
+        run = importer.call
+
+        assert_equal "succeeded", run.status
+        assert_operator importer.heartbeat_calls, :>=, 2
       end
     end
   end

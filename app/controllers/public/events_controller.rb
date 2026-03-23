@@ -46,6 +46,10 @@ module Public
     def show
       @event = show_events_relation.find_by!(slug: params[:slug])
       @primary_offer = @event.preferred_ticket_offer
+      @event_series_lane = Public::Events::EventSeriesLaneBuilder.new(
+        event: @event,
+        relation: show_event_series_lane_relation
+      ).call
       @related_genre_lane = Public::Events::RelatedGenreLaneBuilder.new(
         event: @event,
         relation: show_related_genre_lane_events_relation
@@ -181,11 +185,21 @@ module Public
       )
       scoped_reservix = scoped_all.where(primary_source: "reservix")
 
-      @home_featured_events = scoped_highlights.to_a
-      @home_featured_events = current_relation.reorder(:start_at, :id).to_a if @home_featured_events.empty?
+      @home_featured_effective_series_ids = effective_public_series_ids_for_relation(scoped_highlights)
+      @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.to_a)
+
+      if @home_featured_events.empty?
+        fallback_relation = current_relation.reorder(:start_at, :id)
+        @home_featured_effective_series_ids = effective_public_series_ids_for_relation(fallback_relation)
+        @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.to_a)
+      end
+
+      @home_highlight_effective_series_ids = effective_public_series_ids_for_relation(scoped_reservix)
       @home_genre_lanes = Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
-      @home_highlight_events = scoped_reservix.limit(HOME_HIGHLIGHT_LIMIT).to_a
-      @home_tagestipp_events = tagestipp_relation.to_a
+      @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_reservix.limit(HOME_HIGHLIGHT_LIMIT).to_a)
+      tagestipp_scope = tagestipp_relation
+      @home_tagestipp_effective_series_ids = effective_public_series_ids_for_relation(tagestipp_scope)
+      @home_tagestipp_events = Public::Events::SeriesRepresentativeSelector.call(tagestipp_scope.to_a)
     end
 
     def should_redirect_search_result?(relation)
@@ -247,6 +261,17 @@ module Public
       ).published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
+    def show_event_series_lane_relation
+      relation = Event.includes(
+        :event_offers,
+        :import_event_images,
+        event_images: [ file_attachment: :blob ],
+        event_presenters: { presenter: [ logo_attachment: :blob ] }
+      )
+
+      authenticated? ? relation : relation.published_live
+    end
+
     def all_events_relation
       Event.includes(
         :llm_enrichment,
@@ -284,6 +309,10 @@ module Public
       event.save!
       after_values = event.attributes.slice("status", "published_at", "published_by_id", "auto_published")
       before_values != after_values
+    end
+
+    def effective_public_series_ids_for_relation(relation)
+      Public::Events::EffectiveSeriesIdsQuery.call(relation)
     end
 
     def render_not_found

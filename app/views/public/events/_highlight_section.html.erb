@@ -1,6 +1,7 @@
 <% featured = local_assigns.fetch(:featured, false) %>
 <% nav_class = featured ? "home-featured-nav" : "highlights-slider-nav" %>
 <% track_class = featured ? "home-featured-track" : "home-slider-track" %>
+<% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 
 <section class="<%= featured ? 'home-featured-section' : 'home-slider-section' %>"
          data-controller="highlights-slider section-view"
@@ -42,10 +43,14 @@
             <%= render "home_feature_card",
                        event: event,
                        browse_state: browse_state,
+                       effective_series_ids: effective_series_ids,
                        tile_variant: tile_variant,
                        card_slot: card_slot %>
           <% else %>
-            <%= render "home_slider_card", event: event, browse_state: browse_state %>
+            <%= render "home_slider_card",
+                       event: event,
+                       browse_state: browse_state,
+                       effective_series_ids: effective_series_ids %>
           <% end %>
         <% end %>
       </div>
@@ -59,6 +64,6 @@
     </div>
   </div>
   <div class="section-slider-list" data-section-view-target="list" hidden>
-    <%= render "event_rows", events: events, browse_state: browse_state %>
+    <%= render "event_rows", events: events, browse_state: browse_state, effective_series_ids: effective_series_ids %>
   </div>
 </section>

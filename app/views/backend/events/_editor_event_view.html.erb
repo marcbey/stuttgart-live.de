@@ -13,6 +13,22 @@
     </div>
   </section>
 
+  <% if event.event_series? %>
+    <section class="backend-section backend-section-form">
+      <div class="backend-section-header">
+        <h3>Event-Reihe</h3>
+      </div>
+      <div class="backend-section-body">
+        <p>
+          Dieses Event gehört zur Event-Reihe
+          <strong><%= event.event_series.display_name %></strong>
+          (<%= event_series_origin_label(event) %>).
+        </p>
+        <p>Alle zusammenhängenden Termine können über die Bulk-Aktionen der Event-Liste verwaltet werden.</p>
+      </div>
+    </section>
+  <% end %>
+
   <%= render "backend/events/import_images_section", event: event %>
   <%= render "backend/events/payload_section", event: event %>
   <%= render "backend/events/completeness_bar", event: event %>

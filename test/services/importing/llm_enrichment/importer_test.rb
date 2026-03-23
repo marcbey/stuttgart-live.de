@@ -519,6 +519,81 @@ module Importing
         end
       end
 
+      test "ignores duplicate event ids in the same response batch" do
+        freeze_time do
+          event = events(:published_one)
+
+          client = FakeClient.new(
+            model: "gpt-5-mini",
+            responses: [
+              {
+                "output_text" => {
+                  events: [
+                    {
+                      event_id: event.id,
+                      genre: [ "Indie" ],
+                      venue: "Erste Venue",
+                      artist_description: "Erste Artist-Beschreibung",
+                      event_description: "Erste Event-Beschreibung",
+                      venue_description: "Erste Venue-Beschreibung",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: "https://example.com/first",
+                      facebook_link: nil
+                    },
+                    {
+                      event_id: event.id,
+                      genre: [ "Rock" ],
+                      venue: "Zweite Venue",
+                      artist_description: "Zweite Artist-Beschreibung",
+                      event_description: "Zweite Event-Beschreibung",
+                      venue_description: "Zweite Venue-Beschreibung",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: "https://example.com/second",
+                      facebook_link: nil
+                    },
+                    {
+                      event_id: events(:needs_review_one).id,
+                      genre: [ "Pop" ],
+                      venue: "Im Wizemann",
+                      artist_description: "Artist zwei",
+                      event_description: "Event zwei",
+                      venue_description: "Venue zwei",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: nil,
+                      facebook_link: nil
+                    },
+                    {
+                      event_id: events(:needs_review_two).id,
+                      genre: [ "Show" ],
+                      venue: "Im Wizemann",
+                      artist_description: "Artist drei",
+                      event_description: "Event drei",
+                      venue_description: "Venue drei",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: nil,
+                      facebook_link: nil
+                    }
+                  ]
+                }.to_json
+              }
+            ]
+          )
+
+          result = Importer.new(run: @run, client: client).call
+
+          assert_equal 3, result.enriched_count
+
+          enrichment = event.reload.llm_enrichment
+          assert_equal [ "Indie" ], enrichment.genre
+          assert_equal "Erste Venue", enrichment.venue
+          assert_equal "https://example.com/first", enrichment.homepage_link
+        end
+      end
+
       test "returns canceled result when stop was requested after response before persist" do
         target_event_id = events(:published_one).id
 

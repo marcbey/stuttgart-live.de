@@ -19,10 +19,10 @@ module Importing
         body = @http_client.get(@feed_url, accept: "application/xml,text/xml")
         heartbeat&.call
         check_stop_requested!(stop_requested)
-        with_xml_file(body) do |xml_path|
+        with_xml_file(body, heartbeat:, stop_requested:) do |xml_path|
           heartbeat&.call
           check_stop_requested!(stop_requested)
-          status_info_error = extract_status_info_error_from_xml(xml_path)
+          status_info_error = extract_status_info_error_from_xml(xml_path, heartbeat:, stop_requested:)
           raise RequestError, status_info_error if status_info_error.present?
 
           if block_given?
@@ -42,7 +42,7 @@ module Importing
 
       private
 
-      def with_xml_file(body)
+      def with_xml_file(body, heartbeat: nil, stop_requested: nil)
         source_tmp = Tempfile.new([ "eventim-source", ".bin" ])
         source_tmp.binmode
         source_tmp.write(body.to_s.dup.force_encoding(Encoding::BINARY))
@@ -53,11 +53,11 @@ module Importing
 
         if gzip_payload?(source_tmp.path)
           Zlib::GzipReader.open(source_tmp.path) do |gz|
-            IO.copy_stream(gz, xml_tmp)
+            copy_stream_with_heartbeat(gz, xml_tmp, heartbeat:, stop_requested:)
           end
         else
           source_tmp.rewind
-          IO.copy_stream(source_tmp, xml_tmp)
+          copy_stream_with_heartbeat(source_tmp, xml_tmp, heartbeat:, stop_requested:)
         end
         xml_tmp.flush
 
@@ -118,11 +118,18 @@ module Importing
         payload
       end
 
-      def extract_status_info_error_from_xml(xml_path)
+      def extract_status_info_error_from_xml(xml_path, heartbeat: nil, stop_requested: nil)
+        node_count = 0
         File.open(xml_path, "rb") do |file|
           reader = Nokogiri::XML::Reader(file, nil, "UTF-8")
 
           reader.each do |node|
+            node_count += 1
+            if (node_count % 250).zero?
+              heartbeat&.call
+              check_stop_requested!(stop_requested)
+            end
+
             next unless node.node_type == Nokogiri::XML::Reader::TYPE_ELEMENT
             next unless normalize_key(node.name) == "statusinfo"
 
@@ -131,6 +138,20 @@ module Importing
         end
 
         ""
+      end
+
+      def copy_stream_with_heartbeat(source, target, heartbeat: nil, stop_requested: nil)
+        chunk_index = 0
+
+        while (chunk = source.read(64 * 1024))
+          target.write(chunk)
+          chunk_index += 1
+
+          next unless (chunk_index % 32).zero?
+
+          heartbeat&.call
+          check_stop_requested!(stop_requested)
+        end
       end
 
       def node_value(node)

@@ -267,7 +267,10 @@ module Importing
             end
 
             if seen_event_ids[event_id]
-              raise Error, "OpenAI-Antwort enthält event_id=#{event_id} mehrfach."
+              logger.warn(
+                "[LlmEnrichmentImporter] run_id=#{run.id} skipping duplicate response item for event_id=#{event_id}"
+              )
+              next
             end
 
             seen_event_ids[event_id] = true

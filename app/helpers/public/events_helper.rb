@@ -1,4 +1,14 @@
 module Public::EventsHelper
+  def effective_public_event_series_ids(events)
+    Public::Events::EffectiveSeriesIdsQuery.call(events)
+  end
+
+  def public_event_series_effective?(event, effective_series_ids: nil)
+    return false if event.event_series_id.blank?
+
+    Array(effective_series_ids).include?(event.event_series_id)
+  end
+
   def public_event_visibility_badges(event)
     badges = []
 
@@ -106,6 +116,10 @@ module Public::EventsHelper
   end
 
   private
+
+  def public_frontend_visible?(event)
+    event.published? && event.published_at.present? && event.published_at <= Time.current
+  end
 
   def editorial_event_image_for(event)
     images = event.event_images

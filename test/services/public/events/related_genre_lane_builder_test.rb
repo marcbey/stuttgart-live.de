@@ -111,6 +111,29 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     assert_not_includes lane.events.map(&:id), current_event.id
   end
 
+  test "marks a related lane event as event series when another published event exists only in the past" do
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    current_event = build_lane_event(slug: "related-series-current", artist_name: "Current Event", start_at: 4.days.from_now.change(hour: 20))
+    related_future = build_lane_event(slug: "related-series-future", artist_name: "Viva la Vida", start_at: 5.days.from_now.change(hour: 20))
+    related_past = build_lane_event(
+      slug: "related-series-past",
+      artist_name: "Viva la Vida",
+      start_at: 2.days.ago.change(hour: 20),
+      published_at: 5.days.ago
+    )
+
+    build_lane_enrichment(event: current_event, genres: [ "Rock" ])
+    [ related_future, related_past ].each do |event|
+      event.update!(event_series: series, event_series_assignment: "manual")
+      build_lane_enrichment(event: event, genres: [ "Rock" ])
+    end
+
+    lane = build_builder(event: current_event).call
+
+    assert_equal [ related_future.id ], lane.events.map(&:id)
+    assert_equal [ series.id ], lane.effective_series_ids
+  end
+
   private
 
   def build_builder(event:)

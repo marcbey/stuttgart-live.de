@@ -6,6 +6,8 @@
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
 <% card_variant = local_assigns[:card_variant] %>
+<% effective_series_ids = local_assigns[:effective_series_ids] %>
+<% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
 
 <article class="<%= ["genre-lane-card", ("genre-lane-card--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
   <%= link_to public_event_detail_path(event, browse_state), class: ["genre-lane-card-link", ("genre-lane-card-link--#{card_variant}" if card_variant.present?)].compact.join(" ") do %>
@@ -19,6 +21,9 @@
         </picture>
       <% else %>
         <div class="genre-lane-card-image event-card-placeholder"></div>
+      <% end %>
+      <% if show_series_badge && public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
+        <span class="event-series-badge">Event-Reihe</span>
       <% end %>
 
     </div>

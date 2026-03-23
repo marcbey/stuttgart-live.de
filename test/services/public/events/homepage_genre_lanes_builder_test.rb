@@ -109,9 +109,67 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal "lane-limit-99", lanes.first.events.last.slug
   end
 
+  test "deduplicates event series to the next upcoming event per lane" do
+    series = EventSeries.create!(origin: "manual", name: "Frida Reihe")
+    later_highlighted = build_lane_event(
+      slug: "lane-series-later",
+      artist_name: "Viva la Vida",
+      start_at: 7.days.from_now.change(hour: 22),
+      highlighted: true
+    )
+    earlier_regular = build_lane_event(
+      slug: "lane-series-earlier",
+      artist_name: "Viva la Vida",
+      start_at: 7.days.from_now.change(hour: 18)
+    )
+
+    [ later_highlighted, earlier_regular ].each do |event|
+      event.update!(event_series: series, event_series_assignment: "manual")
+      build_lane_enrichment(event: event, genres: [ "Rock" ])
+    end
+
+    lanes = Public::Events::HomepageGenreLanesBuilder.new(
+      relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
+      slugs: [ @rock_group.slug ],
+      snapshot: @snapshot
+    ).call
+
+    assert_equal [ earlier_regular.id ], lanes.first.events.map(&:id)
+    assert_equal [ series.id ], lanes.first.effective_series_ids
+  end
+
+  test "marks a lane event as event series when another published event exists only in the past" do
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    future_event = build_lane_event(
+      slug: "lane-series-future-only-visible",
+      artist_name: "Viva la Vida",
+      start_at: 7.days.from_now.change(hour: 18)
+    )
+    past_event = build_lane_event(
+      slug: "lane-series-past-outside-relation",
+      artist_name: "Viva la Vida",
+      start_at: 2.days.ago.change(hour: 18),
+      published_at: 5.days.ago
+    )
+
+    [ future_event, past_event ].each do |event|
+      event.update!(event_series: series, event_series_assignment: "manual")
+      build_lane_enrichment(event: event, genres: [ "Rock" ])
+    end
+
+    lanes = Public::Events::HomepageGenreLanesBuilder.new(
+      relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
+      slugs: [ @rock_group.slug ],
+      snapshot: @snapshot
+    ).call
+
+    assert_equal [ future_event.id ], lanes.first.events.map(&:id)
+    assert_equal [ series.id ], lanes.first.effective_series_ids
+  end
+
   private
 
-  def build_lane_event(slug:, artist_name:, start_at:, highlighted: false, promoter_id: nil)
+  def build_lane_event(slug:, artist_name:, start_at:, highlighted: false, promoter_id: nil, published_at: 1.day.ago)
     Event.create!(
       slug: slug,
       source_fingerprint: "test::service::homepage-genre-lanes::#{slug}",
@@ -123,7 +181,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
       promoter_id: promoter_id,
       highlighted: highlighted,
       status: "published",
-      published_at: 1.day.ago,
+      published_at: published_at,
       source_snapshot: {}
     )
   end

@@ -1,6 +1,30 @@
 module Backend::EventsHelper
   GERMAN_DAY_NAMES = %w[Sonntag Montag Dienstag Mittwoch Donnerstag Freitag Samstag].freeze
 
+  def effective_backend_event_series_ids(events)
+    series_ids =
+      Array(events)
+        .filter_map { |event| event.event_series_id }
+        .uniq
+
+    return [] if series_ids.empty?
+
+    Event.where(event_series_id: series_ids)
+      .group(:event_series_id)
+      .having("COUNT(DISTINCT events.id) >= 2")
+      .pluck(:event_series_id)
+  end
+
+  def backend_event_series_effective?(event, effective_series_ids: nil)
+    return false if event.event_series_id.blank?
+
+    if effective_series_ids.present?
+      Array(effective_series_ids).include?(event.event_series_id)
+    else
+      Event.where(event_series_id: event.event_series_id).distinct.count(:id) >= 2
+    end
+  end
+
   def event_payload_presenter(event)
     unless defined?(Backend::Events::SourcePayloadPresenter)
       presenter_path = Rails.root.join("app/presenters/backend/events/source_payload_presenter.rb").to_s
@@ -14,11 +38,13 @@ module Backend::EventsHelper
   def backend_event_context(event)
     return if event.blank?
 
-    [
+    context = [
       event.artist_name.to_s.strip.presence,
       event.title.to_s.strip.presence,
       (event.start_at.present? ? l(event.start_at, format: "%d.%m.%Y %H:%M") : nil)
-    ].compact.join(" · ")
+    ].compact
+    context << "Event-Reihe (#{event_series_origin_label(event)})" if event.event_series?
+    context.join(" · ")
   end
 
   def event_display_promoter_id(event)
@@ -141,6 +167,14 @@ module Backend::EventsHelper
         selected: selection_index.present?,
         selected_index: selection_index&.+(1)
       }
+    end
+  end
+
+  def event_series_origin_label(event)
+    case event.event_series_origin
+    when "manual" then "manuell"
+    when "imported" then "importiert"
+    else "unbekannt"
     end
   end
 

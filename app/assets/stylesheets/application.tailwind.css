@@ -2355,6 +2355,39 @@ trix-editor.blog-rich-text:focus {
   transform: scale(1.03);
 }
 
+.event-series-badge {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.3rem 0.52rem;
+  background: rgba(13, 33, 28, 0.96);
+  border: 1px solid rgba(228, 245, 234, 0.18);
+  color: #f7fff8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(13, 33, 28, 0.18);
+}
+
+.event-series-badge-inline {
+  position: static;
+  width: fit-content;
+  margin-bottom: 0.16rem;
+  padding: 0.26rem 0.5rem 0.24rem;
+  border-radius: 999px;
+  background: #15352e;
+  border-color: rgba(21, 53, 46, 0.94);
+  color: #f7fff8;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  box-shadow: none;
+}
+
 .genre-lane-card-date {
   margin: 0;
   color: rgba(17, 17, 17, 0.62);
@@ -3854,6 +3887,16 @@ trix-editor.blog-rich-text:focus {
   overflow: hidden;
 }
 
+.event-listing-link .event-series-badge-inline {
+  display: inline-flex;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
+  overflow: visible;
+  color: #f7fff8;
+  font-size: 0.7rem;
+  line-height: 1;
+}
+
 @media (min-width: 900px) {
   .event-listing-card {
     grid-template-columns: 4rem 5.6rem minmax(0, 1fr);
@@ -5205,6 +5248,7 @@ trix-editor.blog-rich-text:focus {
 .status-badge-rejected { background: #ffe5ea; border-color: #cd7f8e; }
 .status-badge-import-new { background: #ffeccf; border-color: #d39a3a; }
 .status-badge-import-updated { background: #e8f0ff; border-color: #8ea6d8; }
+.status-badge-series { background: #edf8f1; border-color: #6ea587; }
 
 .status-badge-link {
   text-decoration: none;

@@ -11,6 +11,7 @@ module Importing
       PROGRESS_FLUSH_EVERY_N_CHANGES = 1000
       PROGRESS_FLUSH_AFTER_SECONDS = 2
       FILTERED_OUT_CITIES_LIMIT = 500
+      PROCESSING_HEARTBEAT_EVERY_N_ROWS = 100
 
       def initialize(import_source:, feed_fetcher: FeedFetcher.new, preexisting_run_id: nil, run_metadata: {}, logger: Importing::Logging.logger)
         @import_source = import_source
@@ -31,6 +32,7 @@ module Importing
 
         changed_since_flush = 0
         last_flush_at = Time.current
+        processed_feed_rows = 0
 
         process_feed_payload = lambda do |feed_payload|
           if run_canceled?(run) || stop_requested?(run)
@@ -50,12 +52,14 @@ module Importing
           end
 
           state[:filtered_count] += 1
+          normalized_payload = normalize_payload(feed_payload)
+          ensure_imported_event_series!(normalized_payload)
 
           RawEventImport.create!(
             import_source: import_source,
             import_event_type: import_source.source_type,
             source_identifier: source_identifier_for(feed_payload, external_event_id: external_event_id),
-            payload: normalize_payload(feed_payload)
+            payload: normalized_payload
           )
 
           state[:imported_count] += 1
@@ -71,6 +75,9 @@ module Importing
             payload: feed_payload
           )
         ensure
+          processed_feed_rows += 1
+          touch_processing_heartbeat!(run, processed_feed_rows)
+
           next unless progress_changed
 
           changed_since_flush += 1
@@ -197,11 +204,34 @@ module Importing
         payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
       end
 
+      def ensure_imported_event_series!(payload)
+        reference = Importing::EventSeriesReference.from_payload(source_type: import_source.source_type, payload: payload)
+        return if reference.blank?
+
+        cache_key = [ reference.source_type, reference.source_key ]
+        @resolved_event_series_keys ||= Set.new
+        return if @resolved_event_series_keys.include?(cache_key)
+
+        EventSeriesResolver.ensure_imported!(reference)
+        @resolved_event_series_keys << cache_key
+      end
+
       def run_completion_metadata(run:, location_whitelist:, filtered_out_cities:)
         normalized_metadata(run.metadata).merge(
           "location_whitelist" => Array(location_whitelist),
           "filtered_out_cities" => filtered_out_cities.to_a.sort
         )
+      end
+
+      def touch_processing_heartbeat!(run, processed_feed_rows)
+        return unless processed_feed_rows.positive?
+        return unless (processed_feed_rows % processing_heartbeat_every_n_rows).zero?
+
+        touch_run_heartbeat!(run)
+      end
+
+      def processing_heartbeat_every_n_rows
+        self.class::PROCESSING_HEARTBEAT_EVERY_N_ROWS
       end
     end
   end

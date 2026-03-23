@@ -14,6 +14,7 @@ module Merging
       :source,
       :source_identifier,
       :external_event_id,
+      :series_reference,
       :artist_name,
       :title,
       :start_at,

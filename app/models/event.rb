@@ -1,5 +1,6 @@
 class Event < ApplicationRecord
   STATUSES = %w[imported needs_review ready_for_publish published rejected].freeze
+  EVENT_SERIES_ASSIGNMENTS = %w[auto manual manual_none].freeze
   IMAGE_SLOT_PREFERENCES = {
     [ :grid_default, :desktop ] => [
       [ "cover", %w[landscape square portrait unknown] ],
@@ -35,6 +36,7 @@ class Event < ApplicationRecord
   }.freeze
 
   belongs_to :published_by, class_name: "User", optional: true
+  belongs_to :event_series, optional: true
 
   has_many :event_offers, dependent: :destroy
   has_many :event_genres, dependent: :destroy
@@ -55,6 +57,7 @@ class Event < ApplicationRecord
 
   validates :slug, :title, :artist_name, :normalized_artist_name, :start_at, :venue, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
+  validates :event_series_assignment, inclusion: { in: EVENT_SERIES_ASSIGNMENTS }
   validates :slug, uniqueness: true
   validates :source_fingerprint, uniqueness: true, allow_nil: true
   validates :completeness_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100, only_integer: true }
@@ -92,6 +95,30 @@ class Event < ApplicationRecord
 
   def published?
     status == "published"
+  end
+
+  def event_series?
+    event_series_id.present?
+  end
+
+  def event_series_auto_assignment?
+    event_series_assignment == "auto"
+  end
+
+  def event_series_manual_assignment?
+    event_series_assignment == "manual"
+  end
+
+  def event_series_manually_excluded?
+    event_series_assignment == "manual_none"
+  end
+
+  def event_series_locked_by_editor?
+    event_series_manual_assignment? || event_series_manually_excluded?
+  end
+
+  def event_series_origin
+    event_series&.origin.to_s.presence
   end
 
   def sync_publication_fields(user: nil)
@@ -280,6 +307,7 @@ class Event < ApplicationRecord
     self.youtube_url = youtube_url.to_s.strip.presence
     self.promoter_id = promoter_id.to_s.strip.presence
     self.primary_source = primary_source.to_s.strip.presence
+    self.event_series_assignment = event_series_assignment.to_s.strip.presence || "auto"
     self.source_snapshot = {} unless source_snapshot.is_a?(Hash)
     self.completeness_flags = Array(completeness_flags).map(&:to_s)
 

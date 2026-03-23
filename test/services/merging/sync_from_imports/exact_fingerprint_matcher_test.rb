@@ -8,6 +8,7 @@ class Merging::SyncFromImports::ExactFingerprintMatcherTest < ActiveSupport::Tes
       source: "eventim",
       source_identifier: "record-1",
       external_event_id: "ext-1",
+      series_reference: nil,
       artist_name: "Published Artist",
       title: "Published Event",
       start_at: event.start_at,

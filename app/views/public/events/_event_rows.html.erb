@@ -1,5 +1,6 @@
 <% container_id = local_assigns[:container_id] %>
 <% wrap = local_assigns.fetch(:wrap, true) %>
+<% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 
 <% if wrap && container_id.present? %>
   <div class="event-listing-grid" id="<%= container_id %>">
@@ -7,7 +8,10 @@
   <div class="event-listing-grid">
 <% end %>
   <% events.each do |event| %>
-    <%= render "event_list_row", event: event, browse_state: browse_state %>
+    <%= render "event_list_row",
+               event: event,
+               browse_state: browse_state,
+               effective_series_ids: effective_series_ids %>
   <% end %>
 <% if wrap %>
   </div>

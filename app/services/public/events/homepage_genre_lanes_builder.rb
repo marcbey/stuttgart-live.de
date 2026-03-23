@@ -1,7 +1,7 @@
 module Public
   module Events
     class HomepageGenreLanesBuilder
-      Lane = Data.define(:group, :events)
+      Lane = Data.define(:group, :events, :effective_series_ids)
 
       DEFAULT_LIMIT = 100
 
@@ -22,10 +22,10 @@ module Public
           group = groups_by_slug[slug]
           next if group.blank?
 
-          events = prioritized_group_events(group)
+          events, effective_series_ids = prioritized_group_events(group)
           next if events.empty?
 
-          Lane.new(group:, events:)
+          Lane.new(group:, events:, effective_series_ids:)
         end
       end
 
@@ -40,9 +40,19 @@ module Public
       end
 
       def prioritized_group_events(group)
-        LlmGenreGrouping::Lookup
-          .prioritized_events_for_group(group, relation:, limit:)
-          .to_a
+        selected_events =
+          LlmGenreGrouping::Lookup
+            .prioritized_events_for_group(group, relation:, limit: nil)
+            .to_a
+
+        effective_series_ids = effective_series_ids_for(selected_events)
+        events = SeriesRepresentativeSelector.call(selected_events).first(limit)
+
+        [ events, effective_series_ids ]
+      end
+
+      def effective_series_ids_for(events)
+        EffectiveSeriesIdsQuery.call(events)
       end
     end
   end

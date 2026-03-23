@@ -644,4 +644,144 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal "published", event.status
     assert_equal [ "https://example.com/easy-detail-image.jpg" ], event.import_event_images.ordered.pluck(:image_url)
   end
+
+  test "assigns imported event series from explicit provider metadata" do
+    source_eventim = import_sources(:two)
+
+    RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: "series-a:2026-12-20",
+      payload: {
+        "eventid" => "series-a",
+        "eventdate" => "2026-12-20",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Im Wizemann",
+        "eventname" => "Frida Night I",
+        "artist" => { "artistname" => "Viva la Vida" },
+        "esid" => "eventim-series-42",
+        "esname" => "Viva la Vida"
+      }
+    )
+    RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: "series-b:2026-12-21",
+      payload: {
+        "eventid" => "series-b",
+        "eventdate" => "2026-12-21",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Im Wizemann",
+        "eventname" => "Frida Night II",
+        "artist" => { "artistname" => "Viva la Vida" },
+        "esid" => "eventim-series-42",
+        "esname" => "Viva la Vida"
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    first_event = Event.find_by!(artist_name: "Viva la Vida", start_at: Time.zone.local(2026, 12, 20, 0, 0, 0))
+    second_event = Event.find_by!(artist_name: "Viva la Vida", start_at: Time.zone.local(2026, 12, 21, 0, 0, 0))
+
+    assert first_event.event_series.imported?
+    assert_equal first_event.event_series_id, second_event.event_series_id
+    assert_equal "eventim-series-42", first_event.event_series.source_key
+    assert_equal "eventim-series-42", first_event.source_snapshot.dig("sources", 0, "event_series", "source_key")
+  end
+
+  test "keeps manual event series overrides on later merges" do
+    source_eventim = import_sources(:two)
+    source_identifier = "manual-series-keep:2026-12-24"
+
+    RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: source_identifier,
+      payload: {
+        "eventid" => "manual-series-keep",
+        "eventdate" => "2026-12-24",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Im Wizemann",
+        "eventname" => "Frida Night",
+        "artist" => { "artistname" => "Viva la Vida" },
+        "esid" => "eventim-series-imported",
+        "esname" => "Imported Reihe"
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(artist_name: "Viva la Vida", start_at: Time.zone.local(2026, 12, 24, 0, 0, 0))
+    manual_series = EventSeries.create!(origin: "manual", name: "Manuelle Reihe")
+    event.update!(event_series: manual_series, event_series_assignment: "manual")
+
+    RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: source_identifier,
+      payload: {
+        "eventid" => "manual-series-keep",
+        "eventdate" => "2026-12-24",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Im Wizemann",
+        "eventname" => "Frida Night Update",
+        "artist" => { "artistname" => "Viva la Vida" },
+        "esid" => "eventim-series-imported",
+        "esname" => "Imported Reihe"
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    assert_equal manual_series.id, event.reload.event_series_id
+    assert_equal "manual", event.event_series_assignment
+  end
+
+  test "does not reassign event series after an editor manually removed the event from a series" do
+    source_eventim = import_sources(:two)
+    source_identifier = "manual-series-none:2026-12-25"
+
+    RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: source_identifier,
+      payload: {
+        "eventid" => "manual-series-none",
+        "eventdate" => "2026-12-25",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Im Wizemann",
+        "eventname" => "Frida Night",
+        "artist" => { "artistname" => "Viva la Vida" },
+        "esid" => "eventim-series-none",
+        "esname" => "Imported Reihe"
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(artist_name: "Viva la Vida", start_at: Time.zone.local(2026, 12, 25, 0, 0, 0))
+    event.update!(event_series: nil, event_series_assignment: "manual_none")
+
+    RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: source_identifier,
+      payload: {
+        "eventid" => "manual-series-none",
+        "eventdate" => "2026-12-25",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Im Wizemann",
+        "eventname" => "Frida Night Update",
+        "artist" => { "artistname" => "Viva la Vida" },
+        "esid" => "eventim-series-none",
+        "esname" => "Imported Reihe"
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    assert_nil event.reload.event_series_id
+    assert_equal "manual_none", event.event_series_assignment
+  end
 end

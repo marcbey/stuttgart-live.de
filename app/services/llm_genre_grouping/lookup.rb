@@ -40,10 +40,13 @@ module LlmGenreGrouping
         scoped_relation = events_for_group(group, relation:)
         scoped_relation = scoped_relation.where.not(id: exclude_event_id) if exclude_event_id.present?
 
-        scoped_relation
+        ordered_relation = scoped_relation
           .select("events.*, #{group_event_priority_order_sql} AS genre_group_event_priority")
           .reorder(Arel.sql("genre_group_event_priority ASC"), :start_at, :id)
-          .limit(limit)
+
+        return ordered_relation if limit.nil?
+
+        ordered_relation.limit(limit)
       end
 
       private

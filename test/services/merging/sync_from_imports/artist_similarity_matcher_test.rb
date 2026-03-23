@@ -50,6 +50,7 @@ class Merging::SyncFromImports::ArtistSimilarityMatcherTest < ActiveSupport::Tes
       source: "eventim",
       source_identifier: "#{artist_name.parameterize}:#{start_at.to_i}",
       external_event_id: SecureRandom.uuid,
+      series_reference: nil,
       artist_name: artist_name,
       title: artist_name,
       start_at: start_at,

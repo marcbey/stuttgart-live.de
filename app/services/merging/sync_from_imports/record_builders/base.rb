@@ -27,6 +27,7 @@ module Merging
             source: source,
             source_identifier: source_identifier,
             external_event_id: external_event_id,
+            series_reference: series_reference,
             artist_name: artist_value,
             title: title_value,
             start_at: start_at,
@@ -57,8 +58,16 @@ module Merging
           raw_event_import.import_event_type
         end
 
+        def source_type
+          source
+        end
+
         def source_identifier
           raw_event_import.source_identifier.to_s.strip
+        end
+
+        def series_reference
+          Importing::EventSeriesReference.from_payload(source_type:, payload:)
         end
 
         def first_value_for_keys(keys)

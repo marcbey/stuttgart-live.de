@@ -1305,6 +1305,66 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert @event.published_at.present?
   end
 
+  test "bulk group action assigns a manual event series" do
+    sign_in_as(@user)
+
+    patch bulk_backend_events_url, params: {
+      status: "needs_review",
+      bulk_action: "group_as_series",
+      event_ids: [ @event.id, @next_event.id ]
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review")
+    assert @event.reload.event_series.manual?
+    assert_equal @event.event_series_id, @next_event.reload.event_series_id
+  end
+
+  test "index shows event series badge for grouped events" do
+    sign_in_as(@user)
+    series = EventSeries.create!(origin: "manual", name: "Backend Reihe")
+    @event.update!(event_series: series, event_series_assignment: "manual")
+    @next_event.update!(event_series: series, event_series_assignment: "manual")
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_select "#events_list .status-badge-series", text: "Event-Reihe"
+  end
+
+  test "editor shows event series badge in header badges" do
+    sign_in_as(@user)
+    series = EventSeries.create!(origin: "manual", name: "Backend Reihe")
+    @event.update!(event_series: series, event_series_assignment: "manual")
+    @next_event.update!(event_series: series, event_series_assignment: "manual")
+
+    get backend_events_url(status: "needs_review", event_id: @event.id)
+
+    assert_response :success
+    assert_select "#event_editor_panel .editor-header-badges .status-badge-series", text: "Event-Reihe"
+  end
+
+  test "editor does not show event series badge for single-event series" do
+    sign_in_as(@user)
+    series = EventSeries.create!(origin: "manual", name: "Singleton Reihe")
+    @event.update!(event_series: series, event_series_assignment: "manual")
+
+    get backend_events_url(status: "needs_review", event_id: @event.id)
+
+    assert_response :success
+    assert_select "#event_editor_panel .editor-header-badges .status-badge-series", count: 0
+  end
+
+  test "index does not show event series badge for single-event series" do
+    sign_in_as(@user)
+    series = EventSeries.create!(origin: "manual", name: "Singleton Reihe")
+    @event.update!(event_series: series, event_series_assignment: "manual")
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_select "#events_list .status-badge-series", count: 0
+  end
+
   private
 
   def uploaded_image

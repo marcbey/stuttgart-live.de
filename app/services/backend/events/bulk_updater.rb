@@ -8,6 +8,9 @@ module Backend
       end
 
       def call
+        return assign_series! if action == "group_as_series"
+        return remove_from_series! if action == "remove_from_series"
+
         processed = 0
 
         Event.transaction do
@@ -42,6 +45,14 @@ module Backend
         when "reject"
           event.update!(status: "rejected", auto_published: false)
         end
+      end
+
+      def assign_series!
+        SeriesBulkAssignment.new(events:, user: user).assign!
+      end
+
+      def remove_from_series!
+        SeriesBulkAssignment.new(events:, user: user).remove!
       end
     end
   end

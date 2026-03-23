@@ -1,6 +1,7 @@
 <div id="events_list">
   <% merge_run_id = local_assigns[:merge_run_id] %>
   <% filtered_events_count = local_assigns.fetch(:filtered_events_count, events.except(:limit).count) %>
+  <% effective_series_ids = effective_backend_event_series_ids(events) %>
   <%= form_with url: bulk_backend_events_path(status: status), method: :patch, class: "bulk-form", data: { controller: "bulk-select" } do |form| %>
     <p class="event-list-count"><strong><%= filtered_events_count %></strong> gefilterte Events</p>
     <div class="bulk-actions">
@@ -11,7 +12,9 @@
                         ["Depublizieren", "unpublish"],
                         ["Als vollständig markieren", "mark_complete"],
                         ["Als unvollständig markieren", "mark_incomplete"],
-                        ["Ablehnen", "reject"]
+                        ["Ablehnen", "reject"],
+                        ["Als Event-Reihe zusammenfassen", "group_as_series"],
+                        ["Aus Event-Reihe lösen", "remove_from_series"]
                       ]),
                       {},
                       class: "form-input" %>
@@ -47,6 +50,11 @@
                 <small><%= l(event.start_at.to_date, format: "%d.%m.%Y") %> · <%= event.venue %></small>
               </div>
               <span class="event-list-badges">
+                <% if backend_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
+                  <span class="status-badge status-badge-series">
+                    Event-Reihe
+                  </span>
+                <% end %>
                 <% if import_change_badge.present? %>
                   <span class="<%= import_change_badge[:css_class] %>"><%= import_change_badge[:label] %></span>
                 <% end %>

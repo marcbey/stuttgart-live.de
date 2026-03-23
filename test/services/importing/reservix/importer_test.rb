@@ -42,7 +42,8 @@ module Importing
                   "modified" => "2026-03-14T09:00:00+01:00",
                   "startdate" => "2026-04-20",
                   "references" => {
-                    "venue" => [ { "name" => "Im Wizemann", "city" => "Stuttgart" } ]
+                    "venue" => [ { "name" => "Im Wizemann", "city" => "Stuttgart" } ],
+                    "eventgroup" => [ { "id" => "group-1", "name" => "Reservix Reihe" } ]
                   }
                 }
               ]
@@ -86,6 +87,8 @@ module Importing
         assert_nil fetcher.lastupdate_arguments.first
         assert_equal "rvx-1", imported.payload["id"]
         assert_equal "Berlin", run.metadata.fetch("filtered_out_cities").first
+        assert_equal "Reservix Reihe",
+          EventSeries.imported.find_by!(source_type: "reservix", source_key: "group-1").name
 
         checkpoint = @source.reload.import_source_config.reservix_checkpoint
         assert_equal "2026-03-14T10:05:00+01:00", checkpoint["lastupdate"]
@@ -119,6 +122,63 @@ module Importing
 
         assert_equal "canceled", result.reload.status
         assert result.finished_at.present?
+      end
+
+      test "touches heartbeat while processing page events" do
+        heartbeatless_fetcher = Class.new do
+          def initialize(page)
+            @page = page
+          end
+
+          def fetch_pages(lastupdate:, heartbeat:, stop_requested: nil)
+            yield(@page.fetch(:events), server_time: @page.fetch(:server_time))
+          end
+        end.new(
+          server_time: Time.zone.parse("2026-03-14 10:00:00"),
+          events: 5.times.map do |index|
+            {
+              "id" => "rvx-heartbeat-#{index}",
+              "name" => "Reservix #{index}",
+              "artist" => "Artist #{index}",
+              "bookable" => true,
+              "modified" => "2026-03-14T09:00:00+01:00",
+              "startdate" => "2026-04-20",
+              "references" => {
+                "venue" => [ { "name" => "Im Wizemann", "city" => "Stuttgart" } ]
+              }
+            }
+          end
+        )
+
+        importer_class = Class.new(Importer) do
+          attr_reader :heartbeat_calls
+
+          def initialize(...)
+            super
+            @heartbeat_calls = 0
+          end
+
+          private
+
+          def touch_run_heartbeat!(run, extra_metadata: nil)
+            @heartbeat_calls += 1
+            super
+          end
+
+          def processing_heartbeat_every_n_rows
+            2
+          end
+        end
+
+        importer = importer_class.new(
+          import_source: @source,
+          event_fetcher: heartbeatless_fetcher
+        )
+
+        run = importer.call
+
+        assert_equal "succeeded", run.status
+        assert_operator importer.heartbeat_calls, :>=, 2
       end
     end
   end
