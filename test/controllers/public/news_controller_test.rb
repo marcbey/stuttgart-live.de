@@ -82,6 +82,24 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, URI.parse(url_for(@live_post.processed_optimized_image_variant(:cover_image))).path
   end
 
+  test "show renders hero image with shared event detail figure markup and without crop inline styles" do
+    @live_post.update!(cover_image_focus_x: 20, cover_image_focus_y: 80, cover_image_zoom: 180)
+    @live_post.cover_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
+      filename: "news-cover.png",
+      content_type: "image/png"
+    )
+
+    get news_url(@live_post.slug)
+
+    assert_response :success
+    assert_select ".event-detail-image-wrap .event-detail-image-figure", count: 1
+    assert_select ".event-detail-image-wrap .event-detail-image-frame", count: 0
+    assert_select ".event-detail-image-wrap img.event-detail-image:not([style])", count: 1
+    assert_no_match(/object-position:/, response.body)
+    assert_no_match(/transform: scale/, response.body)
+  end
+
   test "show renders seo tags and article schema" do
     @live_post.cover_image.attach(
       io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),

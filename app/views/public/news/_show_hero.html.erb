@@ -23,11 +23,10 @@
 
   <% if presenter.hero_image? %>
     <div class="event-detail-image-wrap">
-      <div class="event-detail-image-frame">
+      <div class="event-detail-image-figure">
         <%= image_tag presenter.hero_image_source,
                       alt: presenter.hero_alt_text,
-                      class: "event-detail-image",
-                      style: blog_post_image_style(presenter.blog_post, :cover_image) %>
+                      class: "event-detail-image" %>
         <% if presenter.hero_image_credit.present? %>
           <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
         <% end %>
