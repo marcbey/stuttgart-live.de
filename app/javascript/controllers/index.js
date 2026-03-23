@@ -40,9 +40,6 @@ application.register("event-image-editor-upload", EventImageEditorUploadControll
 import EventEditorTabsController from "./event_editor_tabs_controller"
 application.register("event-editor-tabs", EventEditorTabsController)
 
-import EventEditorSettingsController from "./event_editor_settings_controller"
-application.register("event-editor-settings", EventEditorSettingsController)
-
 import FilterStateController from "./filter_state_controller"
 application.register("filter-state", FilterStateController)
 

@@ -9,18 +9,6 @@
   <%= hidden_field_tag :editor_tab,
                        local_assigns.fetch(:active_editor_tab, "event"),
                        data: { event_editor_tabs_target: "stateInput" } %>
-  <%= hidden_field_tag "event[promotion_banner]",
-                       (event.promotion_banner? ? "1" : "0"),
-                       id: nil,
-                       data: { event_editor_settings_target: "mirror", event_editor_settings_key: "promotion_banner" } %>
-  <%= hidden_field_tag "event[promotion_banner_kicker_text]",
-                       event.promotion_banner_kicker_text,
-                       id: nil,
-                       data: { event_editor_settings_target: "mirror", event_editor_settings_key: "promotion_banner_kicker_text" } %>
-  <%= hidden_field_tag "event[promotion_banner_cta_text]",
-                       event.promotion_banner_cta_text,
-                       id: nil,
-                       data: { event_editor_settings_target: "mirror", event_editor_settings_key: "promotion_banner_cta_text" } %>
   <%= render "backend/events/form_fields",
              form: form,
              event: event,

@@ -1,5 +1,5 @@
 <% selected_genre_ids = Array(local_assigns.fetch(:selected_genre_ids, event.genre_ids)).map(&:to_i) %>
-<% editor_form_id = local_assigns[:editor_form_id] %>
+<% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
 
 <section class="backend-section backend-section-compact editor-subsection editor-genre-section">
   <div class="backend-section-header">

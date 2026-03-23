@@ -1,4 +1,4 @@
-<% editor_form_id = local_assigns[:editor_form_id] %>
+<% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
 
 <div class="backend-section-stack">
   <section class="backend-section backend-section-compact editor-subsection">
@@ -21,14 +21,11 @@
     </div>
     <div class="backend-section-body">
       <label class="form-checkbox form-checkbox-after-textarea">
+        <%= hidden_field_tag "event[promotion_banner]", "0", form: editor_form_id, id: nil %>
         <%= check_box_tag "event[promotion_banner]",
                           "1",
                           event.promotion_banner?,
-                          data: {
-                            action: "change->event-editor-settings#sync",
-                            event_editor_settings_target: "source",
-                            event_editor_settings_key: "promotion_banner"
-                          } %>
+                          form: editor_form_id %>
         <span>Als Promotion Banner markieren</span>
       </label>
       <p class="form-hint">Es kann immer nur ein Event gleichzeitig als Promotion Banner aktiv sein. Verwendet wird das Eventbild aus dem Tab „Eventbild“.</p>
@@ -42,11 +39,7 @@
                              class: "form-input",
                              maxlength: 80,
                              placeholder: Event::DEFAULT_PROMOTION_BANNER_KICKER_TEXT,
-                             data: {
-                               action: "input->event-editor-settings#sync change->event-editor-settings#sync",
-                               event_editor_settings_target: "source",
-                               event_editor_settings_key: "promotion_banner_kicker_text"
-                             } %>
+                             form: editor_form_id %>
         </div>
 
         <div>
@@ -57,11 +50,7 @@
                              class: "form-input",
                              maxlength: 80,
                              placeholder: Event::DEFAULT_PROMOTION_BANNER_CTA_TEXT,
-                             data: {
-                               action: "input->event-editor-settings#sync change->event-editor-settings#sync",
-                               event_editor_settings_target: "source",
-                               event_editor_settings_key: "promotion_banner_cta_text"
-                             } %>
+                             form: editor_form_id %>
         </div>
       </div>
 

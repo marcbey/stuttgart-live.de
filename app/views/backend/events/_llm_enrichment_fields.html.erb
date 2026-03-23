@@ -1,4 +1,5 @@
 <section class="offer-section backend-section llm-enrichment-section">
+  <% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
   <% llm_run_hint = event_llm_last_successful_run_hint(event) %>
   <div class="backend-section-header backend-section-header-with-actions">
     <div>

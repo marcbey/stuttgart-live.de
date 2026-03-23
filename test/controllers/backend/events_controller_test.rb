@@ -72,10 +72,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='inbox_status'][value='needs_review']"
     assert_select "input[name='event[promoter_id]'][value='#{@event.promoter_id}']"
     assert_select "input[readonly]#event_#{@event.id}_promoter_id_display", count: 0
+    assert_select ".event-editor-tabs[data-controller='event-editor-tabs']", count: 1
+    assert_select ".event-editor-tabs[data-controller='event-editor-tabs event-editor-settings']", count: 0
     assert_select "#event-editor-tab-settings[aria-selected='false']", count: 1
     assert_select "#event-editor-panel-settings[hidden]", count: 1
     assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event_#{@event.id}']", count: 1
-    assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@event.id}']", count: 1
+    assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner]']", count: 0
+    assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
+    assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
     assert_select "input[name='event[support]']", count: 1
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
@@ -121,7 +126,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
     assert_select "input[name='event_image[detail_hero_files][]'][type='file']"
     assert_select "input[name='event_image[sub_text]']"
-    assert_select "select[name='event_image[grid_variant]']"
+    assert_select "select#event_image_grid_variant", count: 1
+    assert_select "select#event_image_grid_variant[name]", count: 0
     assert_select "input[name='event_image[card_focus_x]'][value='50.0']"
     assert_select "input[name='event_image[card_focus_y]'][value='50.0']"
     assert_select "input[name='event_image[card_zoom]'][value='100.0']"
@@ -172,10 +178,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "label[for='event_image_grid_variant']", text: "Grid-Variante"
     assert_select "input[name='event_image[sub_text]'][form='editor_form_event_#{@event.id}'][value='#{image.sub_text}']"
     assert_select "input[name='event_image[grid_variant]'][form='editor_form_event_#{@event.id}'][value='#{image.grid_variant}']"
-    assert_select "select[name='event_image[grid_variant]'] option[value='']", count: 0
+    assert_select "select#event_image_grid_variant", count: 1
+    assert_select "select#event_image_grid_variant[name]", count: 0
     assert_select "input[name='event_image[card_focus_x]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_x_value}']"
     assert_select "input[name='event_image[card_focus_y]'][form='editor_form_event_#{@event.id}'][value='#{image.card_focus_y_value}']"
     assert_select "input[name='event_image[card_zoom]'][form='editor_form_event_#{@event.id}'][value='#{image.card_zoom_value}']"
+    assert_select "input#event_image_#{image.id}_card_focus_x[name]", count: 0
+    assert_select "input#event_image_#{image.id}_card_focus_y[name]", count: 0
+    assert_select "input#event_image_#{image.id}_card_zoom[name]", count: 0
     assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
     assert_includes response.body, "<code>1x1</code> ist der Standard"
   end
@@ -937,9 +947,12 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings .editor-subsection", count: 2
     assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings h3", text: "Promotion Banner", count: 1
-    assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox']", count: 1
-    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]']", count: 1
-    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "form#editor_form_event_#{@published_event.id} input[type='hidden'][name='event[promotion_banner]']", count: 0
+    assert_select "form#editor_form_event_#{@published_event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
+    assert_select "form#editor_form_event_#{@published_event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
     assert_select "#event-editor-panel-settings .editor-genre-section", count: 0
   end
 

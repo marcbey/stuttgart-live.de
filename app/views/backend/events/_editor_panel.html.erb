@@ -11,6 +11,7 @@
 <% llm_tab_active = active_editor_tab == "llm_enrichment" %>
 <% settings_tab_active = active_editor_tab == "settings" %>
 <% llm_tab_available = event.persisted? %>
+<% editor_form_id = dom_id(event, :editor_form) %>
 
 <div class="editor-panel backend-panel"
      id="event_editor_panel"
@@ -48,7 +49,7 @@
   <% end %>
 
   <section class="event-editor-tabs"
-           data-controller="event-editor-tabs event-editor-settings"
+           data-controller="event-editor-tabs"
            data-event-editor-tabs-initial-tab-value="<%= active_editor_tab %>">
     <div class="settings-tabs-nav event-editor-tabs-nav" role="tablist" aria-label="Event-Editor Ansichten">
       <button type="button"
@@ -152,7 +153,10 @@
                <%= "hidden" unless event_image_tab_active %>
                data-event-editor-tabs-target="panel"
                data-event-editor-tabs-panel-key="event_image">
-        <%= render "backend/events/event_image_section", event: event, editor_status: editor_status %>
+        <%= render "backend/events/event_image_section",
+                   event: event,
+                   editor_status: editor_status,
+                   editor_form_id: editor_form_id %>
       </section>
 
       <section id="event-editor-panel-slider-images"
@@ -174,7 +178,10 @@
                <%= "hidden" unless presenters_tab_active %>
                data-event-editor-tabs-target="panel"
                data-event-editor-tabs-panel-key="presenters">
-        <%= render "backend/events/presenters_section", event: event, all_presenters: all_presenters %>
+        <%= render "backend/events/presenters_section",
+                   event: event,
+                   all_presenters: all_presenters,
+                   editor_form_id: editor_form_id %>
       </section>
 
       <% if llm_tab_available %>
@@ -189,7 +196,7 @@
           <%= render "backend/events/llm_enrichment_fields",
                      event: event,
                      llm_enrichment: llm_enrichment,
-                     editor_form_id: dom_id(event, :editor_form),
+                     editor_form_id: editor_form_id,
                      filter_status: filter_status %>
         </section>
       <% end %>
@@ -205,7 +212,7 @@
         <%= render "backend/events/settings_fields",
                    event: event,
                    all_genres: all_genres,
-                   editor_form_id: dom_id(event, :editor_form) %>
+                   editor_form_id: editor_form_id %>
       </section>
     </div>
   </section>
