@@ -1,9 +1,9 @@
-<% selected_genre_ids = Array(local_assigns.fetch(:selected_genre_ids, event.genre_ids)).map(&:to_i) %>
 <% show_promoter_id = local_assigns.fetch(:show_promoter_id, false) %>
 <% display_promoter_id = show_promoter_id ? (local_assigns[:display_promoter_id] || event_display_promoter_id(event)) : nil %>
 <% editable_promoter_id = local_assigns.fetch(:editable_promoter_id, false) %>
 <% manual_ticket_url = local_assigns.fetch(:manual_ticket_url, event_display_ticket_url(event)) %>
-<% show_genre_section = local_assigns.fetch(:show_genre_section, true) %>
+<% show_settings_section = local_assigns.fetch(:show_settings_section, true) %>
+<% selected_genre_ids = Array(local_assigns.fetch(:selected_genre_ids, event.genre_ids)).map(&:to_i) %>
 
 <div class="editor-grid">
   <div>
@@ -99,11 +99,11 @@
 
 <div>
   <%= form.label :organizer_notes, "Veranstalterhinweise", class: "form-label" %>
-  <label class="form-checkbox">
+  <%= form.text_area :organizer_notes, rows: 12, class: "form-textarea" %>
+  <label class="form-checkbox form-checkbox-after-textarea">
     <%= form.check_box :show_organizer_notes %>
     <span>Veranstalterhinweise auf der Detailseite anzeigen</span>
   </label>
-  <%= form.text_area :organizer_notes, rows: 12, class: "form-textarea" %>
 </div>
 
 <div>
@@ -111,35 +111,12 @@
   <%= form.text_area :editor_notes, rows: 3, class: "form-textarea" %>
 </div>
 
-<section class="backend-section backend-section-compact editor-subsection">
-  <div class="backend-section-header">
-    <h3>Highlights-Teaser</h3>
-  </div>
-  <div class="backend-section-body">
-    <label class="form-checkbox">
-      <%= form.check_box :highlighted %>
-      <span>Im Highlights-Teaser anzeigen</span>
-    </label>
-    <p class="form-hint">Zeigt das Event auf der Startseite unter „Highlights“ an, auch ohne SKS Promoter-ID.</p>
-  </div>
-</section>
-
-<% if show_genre_section %>
-  <section class="backend-section backend-section-compact editor-subsection editor-genre-section">
-    <div class="backend-section-header">
-      <h3>Genres</h3>
-    </div>
-    <div class="backend-section-body">
-      <%= form.label :genre_ids, "Genres", class: "form-label sr-only" %>
-      <%= hidden_field_tag "event[genre_ids][]", "" %>
-      <div class="genre-checks">
-        <% all_genres.each do |genre| %>
-          <label>
-            <%= check_box_tag "event[genre_ids][]", genre.id, selected_genre_ids.include?(genre.id) %>
-            <span><%= genre.name %></span>
-          </label>
-        <% end %>
-      </div>
-    </div>
-  </section>
+<% if show_settings_section %>
+  <%= render "backend/events/settings_fields",
+             event: event,
+             all_genres: all_genres %>
+  <%= render "backend/events/genre_fields",
+             event: event,
+             all_genres: all_genres,
+             selected_genre_ids: selected_genre_ids %>
 <% end %>

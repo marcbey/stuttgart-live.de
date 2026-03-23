@@ -2519,6 +2519,13 @@ trix-editor.blog-rich-text:focus {
   transform: translateY(-1px);
 }
 
+.promotion-banner-event .promotion-banner-link {
+  border-color: rgba(125, 66, 28, 0.22);
+  background:
+    radial-gradient(circle at top left, rgba(255, 214, 153, 0.28) 0%, rgba(255, 214, 153, 0) 26%),
+    linear-gradient(135deg, rgba(255, 244, 224, 0.97) 0%, rgba(245, 214, 176, 0.93) 42%, rgba(255, 249, 241, 0.98) 100%);
+}
+
 .promotion-banner-media {
   position: relative;
   aspect-ratio: 16 / 9;
@@ -2573,6 +2580,13 @@ trix-editor.blog-rich-text:focus {
   padding-top: 0.14em;
   overflow: visible;
   text-transform: uppercase;
+}
+
+.promotion-banner-event-title {
+  margin: -0.35rem 0 0;
+  color: rgba(17, 17, 17, 0.74);
+  font-size: 1rem;
+  line-height: 1.35;
 }
 
 .promotion-banner-cta {
@@ -5761,6 +5775,13 @@ trix-editor.blog-rich-text:focus {
   margin: 0.28rem 0 0;
   color: #645d52;
   font-size: 0.92rem;
+}
+
+.form-checkbox-after-textarea {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.6rem;
 }
 
 .form-input,

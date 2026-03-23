@@ -295,6 +295,9 @@ module Backend
         :youtube_url,
         :promoter_id,
         :highlighted,
+        :promotion_banner,
+        :promotion_banner_kicker_text,
+        :promotion_banner_cta_text,
         :status,
         :editor_notes,
         presenter_ids: [],
@@ -337,6 +340,7 @@ module Backend
       tabs = %w[event event_image slider_images]
       tabs << "presenters"
       tabs << "llm_enrichment" if event.present? && event.persisted?
+      tabs << "settings"
       tabs
     end
 

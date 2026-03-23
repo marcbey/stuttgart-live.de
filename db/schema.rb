@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_22_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_23_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -217,6 +217,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_22_100000) do
     t.text "organizer_notes", default: "Wir bitten um Beachtung verstärkter Sicherheitsmaßnahmen\nVerbot von Handtaschen, Rucksäcken und Helmen\nZusätzliche verschärfte Kontrollen und Bodychecks\nSämtliche Besucher werden Bodychecks unterzogen. Taschen, Rucksäcke und Handtaschen sowie Helme und Behältnisse aller Art sind verboten.\nDie Zuschauer werden ausdrücklich gebeten, auf deren Mitbringen zu verzichten, und sich ausschließlich auf wirklich notwendige Utensilien wie Handys, Schlüsselbund und Portemonnaies sowie Medikamente oder Kosmetika in Gürteltaschen oder Kosmetiktäschchen bis zu einer maximalen Größe von Din A4 zu beschränken.\nDie Einhaltung dieser Regeln und Hinweise sowie ein rechtzeitiges Eintreffen helfen dabei, den Einlass so zügig wie möglich zu organisieren.\n\nWir danken für Ihr Verständnis!\n\nAltersfreigabe:\nkein Zutritt: unter 6 Jahren\nnur in Begleitung: bis 14 Jahren (Das Begleitformular findest Du HIER)\nfrei ab 14 Jahren\n\nTelefonischer Ticketkauf:\n\nBei dieser Veranstaltung gibt es auch die Möglichkeit des telefonischen Ticketkaufes. Sie erreichen unsere Tickethotline in der Regel von Montag bis Freitag zwischen 10 und 18 Uhr unter Telefon 0711-550 660 77\n", null: false
     t.string "primary_source"
     t.string "promoter_id"
+    t.boolean "promotion_banner", default: false, null: false
+    t.string "promotion_banner_cta_text"
+    t.string "promotion_banner_kicker_text"
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.boolean "show_organizer_notes", default: false, null: false
@@ -234,6 +237,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_22_100000) do
     t.index ["event_series_id"], name: "index_events_on_event_series_id"
     t.index ["promoter_id", "start_at", "id"], name: "index_events_on_published_promoter_id_start_at_and_id", where: "((status)::text = 'published'::text)"
     t.index ["promoter_id"], name: "index_events_on_promoter_id"
+    t.index ["promotion_banner"], name: "index_events_on_unique_promotion_banner", unique: true, where: "promotion_banner"
     t.index ["published_at", "start_at"], name: "index_events_on_published_at_and_start_at"
     t.index ["published_by_id"], name: "index_events_on_published_by_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true

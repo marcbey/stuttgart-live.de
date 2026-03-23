@@ -190,6 +190,67 @@ class EventTest < ActiveSupport::TestCase
     )
   end
 
+  test "promotion banner requires detail hero image" do
+    event = Event.new(
+      artist_name: "Promo Artist",
+      title: "Promo Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.hour.ago,
+      promotion_banner: true
+    )
+
+    assert_not event.valid?
+    assert_includes event.errors[:promotion_banner], "benötigt ein Eventbild im Tab Eventbild"
+  end
+
+  test "promotion banner clears previous banner event" do
+    first = events(:published_one)
+    second = Event.create!(
+      slug: "second-promotion-banner-event",
+      source_fingerprint: "test::event::second-promotion-banner",
+      title: "Zweiter Promotion Banner",
+      artist_name: "Zweiter Banner Artist",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    create_event_image(event: first, purpose: EventImage::PURPOSE_DETAIL_HERO)
+    create_event_image(event: second, purpose: EventImage::PURPOSE_DETAIL_HERO)
+
+    first.update!(promotion_banner: true)
+    second.update!(promotion_banner: true)
+
+    assert_predicate second.reload, :promotion_banner?
+    assert_not first.reload.promotion_banner?
+  end
+
+  test "promotion banner texts fall back to defaults" do
+    event = events(:published_one)
+
+    assert_equal "Promotion", event.promotion_banner_kicker_text_value
+    assert_equal "Zum Event", event.promotion_banner_cta_text_value
+  end
+
+  test "promotion banner texts are normalized" do
+    event = events(:published_one)
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO)
+
+    event.update!(
+      promotion_banner: true,
+      promotion_banner_kicker_text: "  Szene Tipp  ",
+      promotion_banner_cta_text: "  Jetzt ansehen  "
+    )
+
+    assert_equal "Szene Tipp", event.promotion_banner_kicker_text
+    assert_equal "Jetzt ansehen", event.promotion_banner_cta_text
+  end
+
   private
 
   def create_event_image(event:, purpose:)

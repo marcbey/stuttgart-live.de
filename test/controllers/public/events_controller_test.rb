@@ -571,6 +571,70 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal highlights_index + 1, promotion_index
   end
 
+  test "homepage renders event promotion banner below highlights and before news banner" do
+    Event.create!(
+      slug: "homepage-event-promotion-highlight",
+      source_fingerprint: "test::homepage::event-promotion-highlight",
+      title: "Promotion Highlight",
+      artist_name: "Promotion Highlight Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event = Event.create!(
+      slug: "homepage-event-promotion-banner",
+      source_fingerprint: "test::homepage::event-promotion-banner",
+      title: "Promotion Banner Event",
+      artist_name: "Promotion Banner Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner_kicker_text: "Event Tipp",
+      promotion_banner_cta_text: "Zum Event",
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+    event.update!(promotion_banner: true)
+
+    blog_post = BlogPost.create!(
+      title: "Großer Promo-Post",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user
+    )
+    blog_post.promotion_banner_image.attach(png_upload(filename: "homepage-banner.png"))
+    blog_post.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner-event h2", text: "Promotion Banner Artist"
+    assert_select ".promotion-banner-event .promotion-banner-event-title", text: "Promotion Banner Event"
+    assert_select ".promotion-banner-event .promotion-banner-kicker", text: "Event Tipp"
+    assert_select ".promotion-banner-event .promotion-banner-cta", text: "Zum Event"
+    assert_select ".promotion-banner-event a[href='#{event_path(event.slug)}']"
+    assert_select ".promotion-banner:not(.promotion-banner-event) a[href='#{news_path(blog_post.slug)}']"
+
+    document = Nokogiri::HTML.parse(response.body)
+    shell_children = document.css("section.public-shell > *")
+    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
+    event_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner-event") }
+    news_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") && !node["class"].to_s.include?("promotion-banner-event") }
+
+    assert_equal highlights_index + 1, event_banner_index
+    assert_equal event_banner_index + 1, news_banner_index
+  end
+
   test "homepage renders custom promotion banner texts from blog post" do
     Event.create!(
       slug: "promotion-banner-copy-event",
@@ -646,6 +710,30 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, url_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
+  end
+
+  test "homepage renders event promotion banner defaults and optimized event image" do
+    event = Event.create!(
+      slug: "homepage-event-promotion-banner-defaults",
+      source_fingerprint: "test::homepage::event-promotion-banner-defaults",
+      title: "Default Banner Event",
+      artist_name: "Default Banner Artist",
+      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    image = create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+    event.update!(promotion_banner: true)
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".promotion-banner-event .promotion-banner-kicker", text: "Promotion"
+    assert_select ".promotion-banner-event .promotion-banner-cta", text: "Zum Event"
+    assert_includes response.body, Rails.application.routes.url_helpers.rails_storage_proxy_path(image.processed_optimized_variant, only_path: true)
   end
 
   test "index includes promoter 10136 in homepage highlights" do

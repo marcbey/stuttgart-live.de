@@ -1,0 +1,71 @@
+<% editor_form_id = local_assigns[:editor_form_id] %>
+
+<div class="backend-section-stack">
+  <section class="backend-section backend-section-compact editor-subsection">
+    <div class="backend-section-header">
+      <h3>Highlights-Teaser</h3>
+    </div>
+    <div class="backend-section-body">
+      <label class="form-checkbox">
+        <%= hidden_field_tag "event[highlighted]", "0", form: editor_form_id, id: nil %>
+        <%= check_box_tag "event[highlighted]", "1", event.highlighted?, form: editor_form_id %>
+        <span>Im Highlights-Teaser anzeigen</span>
+      </label>
+      <p class="form-hint">Zeigt das Event auf der Startseite unter „Highlights“ an, auch ohne SKS Promoter-ID.</p>
+    </div>
+  </section>
+
+  <section class="backend-section backend-section-compact editor-subsection">
+    <div class="backend-section-header">
+      <h3>Promotion Banner</h3>
+    </div>
+    <div class="backend-section-body">
+      <label class="form-checkbox form-checkbox-after-textarea">
+        <%= check_box_tag "event[promotion_banner]",
+                          "1",
+                          event.promotion_banner?,
+                          data: {
+                            action: "change->event-editor-settings#sync",
+                            event_editor_settings_target: "source",
+                            event_editor_settings_key: "promotion_banner"
+                          } %>
+        <span>Als Promotion Banner markieren</span>
+      </label>
+      <p class="form-hint">Es kann immer nur ein Event gleichzeitig als Promotion Banner aktiv sein. Verwendet wird das Eventbild aus dem Tab „Eventbild“.</p>
+
+      <div class="editor-grid promotion-banner-settings-grid">
+        <div>
+          <%= label_tag "event_promotion_banner_kicker_text", "Kicker", class: "form-label" %>
+          <%= text_field_tag "event[promotion_banner_kicker_text]",
+                             event.promotion_banner_kicker_text,
+                             id: "event_promotion_banner_kicker_text",
+                             class: "form-input",
+                             maxlength: 80,
+                             placeholder: Event::DEFAULT_PROMOTION_BANNER_KICKER_TEXT,
+                             data: {
+                               action: "input->event-editor-settings#sync change->event-editor-settings#sync",
+                               event_editor_settings_target: "source",
+                               event_editor_settings_key: "promotion_banner_kicker_text"
+                             } %>
+        </div>
+
+        <div>
+          <%= label_tag "event_promotion_banner_cta_text", "CTA-Text", class: "form-label" %>
+          <%= text_field_tag "event[promotion_banner_cta_text]",
+                             event.promotion_banner_cta_text,
+                             id: "event_promotion_banner_cta_text",
+                             class: "form-input",
+                             maxlength: 80,
+                             placeholder: Event::DEFAULT_PROMOTION_BANNER_CTA_TEXT,
+                             data: {
+                               action: "input->event-editor-settings#sync change->event-editor-settings#sync",
+                               event_editor_settings_target: "source",
+                               event_editor_settings_key: "promotion_banner_cta_text"
+                             } %>
+        </div>
+      </div>
+
+      <p class="form-hint">Leer gelassene Texte fallen automatisch auf die Standardwerte zurück.</p>
+    </div>
+  </section>
+</div>

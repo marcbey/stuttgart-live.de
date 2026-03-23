@@ -1,6 +1,8 @@
 class Event < ApplicationRecord
   STATUSES = %w[imported needs_review ready_for_publish published rejected].freeze
   EVENT_SERIES_ASSIGNMENTS = %w[auto manual manual_none].freeze
+  DEFAULT_PROMOTION_BANNER_KICKER_TEXT = "Promotion"
+  DEFAULT_PROMOTION_BANNER_CTA_TEXT = "Zum Event"
   IMAGE_SLOT_PREFERENCES = {
     [ :grid_default, :desktop ] => [
       [ "cover", %w[landscape square portrait unknown] ],
@@ -62,9 +64,13 @@ class Event < ApplicationRecord
   validates :source_fingerprint, uniqueness: true, allow_nil: true
   validates :completeness_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100, only_integer: true }
   validates :min_price, :max_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
+  validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
+  validate :promotion_banner_requires_detail_hero
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
+  before_save :clear_other_promotion_banners, if: :promotion_banner?
 
   scope :chronological, -> { order(start_at: :asc, id: :asc) }
   scope :reverse_chronological, -> { order(start_at: :desc, id: :desc) }
@@ -74,6 +80,7 @@ class Event < ApplicationRecord
   scope :highlighted_first, -> { reorder(Arel.sql("CASE WHEN events.highlighted = TRUE THEN 0 ELSE 1 END"), :start_at, :id) }
   scope :sks_first, -> { reorder(Arel.sql(sks_first_order_sql), :start_at, :id) }
   scope :search_priority_first, -> { reorder(Arel.sql(search_priority_order_sql), :start_at, :id) }
+  scope :promotion_banner_live, -> { published_live.where(promotion_banner: true).includes(event_images: [ file_attachment: :blob ]) }
 
   def self.sks_promoter_ids
     AppSetting.sks_promoter_ids
@@ -198,6 +205,14 @@ class Event < ApplicationRecord
     show_organizer_notes? || sks_promoter?
   end
 
+  def promotion_banner_kicker_text_value
+    promotion_banner_kicker_text.presence || DEFAULT_PROMOTION_BANNER_KICKER_TEXT
+  end
+
+  def promotion_banner_cta_text_value
+    promotion_banner_cta_text.presence || DEFAULT_PROMOTION_BANNER_CTA_TEXT
+  end
+
   def youtube_embed_url
     return "" if youtube_url.blank?
 
@@ -299,6 +314,8 @@ class Event < ApplicationRecord
     normalized_city = city.to_s.strip
     self.city = normalized_city.casecmp("Unbekannt").zero? ? nil : normalized_city.presence
     self.badge_text = badge_text.to_s.strip.presence
+    self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
+    self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
     normalized_organizer_notes = organizer_notes.to_s.strip.presence
     self.organizer_notes = normalized_organizer_notes.presence || (sks_promoter? ? AppSetting.sks_organizer_notes : nil)
     self.homepage_url = homepage_url.to_s.strip.presence
@@ -313,6 +330,17 @@ class Event < ApplicationRecord
 
     self.min_price = nil if min_price.blank?
     self.max_price = nil if max_price.blank?
+  end
+
+  def promotion_banner_requires_detail_hero
+    return unless promotion_banner?
+    return if event_image.present?
+
+    errors.add(:promotion_banner, "benötigt ein Eventbild im Tab Eventbild")
+  end
+
+  def clear_other_promotion_banners
+    self.class.where.not(id: id).where(promotion_banner: true).update_all(promotion_banner: false, updated_at: Time.current)
   end
 
   def split_artist_and_tour_from_title!
