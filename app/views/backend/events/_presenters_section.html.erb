@@ -2,13 +2,10 @@
   <% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
   <% selected_presenter_ids = local_assigns[:selected_presenter_ids] %>
   <section class="backend-section backend-section-form">
-    <div class="backend-section-header backend-section-header-with-actions">
+    <div class="backend-section-header">
       <div>
         <h3>Präsentatoren</h3>
         <p>Auswahl per Checkbox. Reihenfolge per Drag & Drop.</p>
-      </div>
-      <div class="backend-section-header-actions">
-        <%= link_to "Präsentatoren verwalten", backend_presenters_path, class: "button button-secondary button-compact" %>
       </div>
     </div>
     <div class="backend-section-body">
