@@ -49,6 +49,9 @@ application.register("flash", FlashController)
 import HelloController from "./hello_controller"
 application.register("hello", HelloController)
 
+import HeroRotatorController from "./hero_rotator_controller"
+application.register("hero-rotator", HeroRotatorController)
+
 import HighlightsSliderController from "./highlights_slider_controller"
 application.register("highlights-slider", HighlightsSliderController)
 

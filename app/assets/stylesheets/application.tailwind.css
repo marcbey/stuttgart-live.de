@@ -4735,18 +4735,131 @@ trix-editor.blog-rich-text:focus {
 .event-detail-image-wrap {
   min-width: 0;
   display: grid;
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
 }
 
 .event-detail-image-figure {
-  display: inline-grid;
-  justify-items: center;
+  display: grid;
+  width: 100%;
+  max-width: 46rem;
+  justify-self: center;
   gap: calc(0.08rem + 5px);
 }
 
-.event-detail-image {
+.event-detail-image-figure-rotator {
+  justify-items: stretch;
+}
+
+.event-detail-image-stage {
+  position: relative;
+  display: grid;
+  width: 100%;
   height: auto;
-  max-height: 500px;
+  aspect-ratio: var(--event-detail-image-stage-ratio, 1 / 1);
+  max-height: 32rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(17, 17, 17, 0.035);
+  border-radius: 0;
+  background:
+    linear-gradient(180deg, rgba(252, 251, 247, 0.24), rgba(238, 236, 229, 0.28));
+  box-shadow:
+    0 14px 24px rgba(17, 17, 17, 0.03),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  isolation: isolate;
+}
+
+.event-detail-image-slide {
+  --event-detail-image-stage-padding: clamp(0.15rem, 0.55vw, 0.35rem);
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+
+.event-detail-image-slide[hidden] {
+  display: none;
+}
+
+.event-detail-image {
+  position: relative;
+  z-index: 2;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.event-detail-image-stage-static {
+  --event-detail-image-stage-padding: clamp(0.15rem, 0.55vw, 0.35rem);
+}
+
+.event-detail-image-stage-glow,
+.event-detail-image-backdrop,
+.event-detail-image-picture {
+  position: absolute;
+}
+
+.event-detail-image-stage-glow {
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.08), transparent 48%),
+    radial-gradient(circle at 15% 18%, rgba(227, 27, 46, 0.025), transparent 34%),
+    radial-gradient(circle at 84% 82%, rgba(17, 17, 17, 0.018), transparent 32%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.015), rgba(17, 17, 17, 0.015));
+}
+
+.event-detail-image-backdrop {
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.event-detail-image-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(248, 246, 240, 0.025), rgba(245, 242, 234, 0.1));
+}
+
+.event-detail-image-backdrop-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.12);
+  filter: blur(30px) saturate(0.84) brightness(1.04);
+  opacity: 0.16;
+}
+
+.event-detail-image-picture {
+  inset: var(--event-detail-image-stage-padding);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.event-detail-image-meta {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+}
+
+.event-detail-image-caption {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.76);
+  font-size: 0.84rem;
+  line-height: 1.35;
+  text-align: center;
 }
 
 .event-detail-image-credit {
@@ -4755,6 +4868,56 @@ trix-editor.blog-rich-text:focus {
   font-size: 0.72rem;
   line-height: 1.2;
   text-align: center;
+}
+
+.event-detail-image-dots {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.38rem;
+}
+
+.event-detail-image-dot {
+  width: 0.72rem;
+  height: 0.72rem;
+  padding: 0;
+  border: 1px solid rgba(17, 17, 17, 0.18);
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.12);
+  cursor: pointer;
+}
+
+.event-detail-image-dot[aria-current="true"] {
+  background: #111;
+  border-color: #111;
+}
+
+.event-detail-image-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(17, 17, 17, 0.58);
+  color: #fff;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.event-detail-image-nav:hover {
+  background: rgba(17, 17, 17, 0.78);
+}
+
+.event-detail-image-nav-prev {
+  left: 0.7rem;
+}
+
+.event-detail-image-nav-next {
+  right: 0.7rem;
 }
 
 .event-detail-body {
@@ -4926,6 +5089,30 @@ trix-editor.blog-rich-text:focus {
 
   .event-detail-organizer-strip-image {
     max-height: 3.1rem;
+  }
+
+  .event-detail-image-stage {
+    height: clamp(15rem, 76vw, 21rem);
+    border-radius: 0;
+  }
+
+  .event-detail-image-slide,
+  .event-detail-image-stage-static {
+    --event-detail-image-stage-padding: 0.55rem;
+  }
+
+  .event-detail-image-nav {
+    width: 2.35rem;
+    height: 2.35rem;
+    font-size: 1.65rem;
+  }
+
+  .event-detail-image-nav-prev {
+    left: 0.35rem;
+  }
+
+  .event-detail-image-nav-next {
+    right: 0.35rem;
   }
 }
 

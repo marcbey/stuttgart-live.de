@@ -50,19 +50,116 @@
     <%= render "show_ticket_cta", presenter: presenter %>
   </div>
 
-  <% if presenter.hero_image? %>
+  <% if presenter.has_hero_gallery? %>
+    <% hero_slides = presenter.hero_gallery_slides %>
+    <% hero_stage_style = presenter.hero_stage_aspect_ratio.present? ? "--event-detail-image-stage-ratio: #{presenter.hero_stage_aspect_ratio};" : nil %>
     <div class="event-detail-image-wrap">
-      <div class="event-detail-image-figure">
-        <picture>
-          <% if presenter.hero_mobile_image_source.present? %>
-            <source media="(max-width: 699px)" srcset="<%= presenter.hero_mobile_image_source %>">
+      <% if presenter.hero_gallery_rotates? %>
+        <div class="event-detail-image-figure event-detail-image-figure-rotator"
+             data-controller="hero-rotator lightbox"
+             data-hero-rotator-delay-value="3000"
+             data-hero-rotator-interval-value="5000">
+          <div class="event-detail-image-stage"
+               data-hero-rotator-target="stage"
+               <%= %(style="#{hero_stage_style}") if hero_stage_style.present? %>>
+            <% hero_slides.each_with_index do |slide, index| %>
+              <button type="button"
+                      class="event-detail-image-slide"
+                      data-hero-rotator-target="slide"
+                      data-lightbox-target="item"
+                      data-action="click->lightbox#open"
+                      data-lightbox-src-value="<%= slide.lightbox_source %>"
+                      data-lightbox-alt-value="<%= slide.alt_text %>"
+                      data-lightbox-caption-value="<%= slide.caption %>"
+                      data-hero-rotator-caption="<%= slide.caption %>"
+                      data-hero-rotator-credit="<%= slide.credit %>"
+                      aria-label="<%= "Bild #{index + 1} von #{hero_slides.size} vergrößern" %>"
+                      <%= "hidden" if index.positive? %>>
+                <span class="event-detail-image-stage-glow" aria-hidden="true"></span>
+                <span class="event-detail-image-backdrop" aria-hidden="true">
+                  <%= image_tag slide.desktop_source, alt: "", class: "event-detail-image-backdrop-image" %>
+                </span>
+                <picture class="event-detail-image-picture">
+                  <% if slide.mobile_source.present? && slide.mobile_source != slide.desktop_source %>
+                    <source media="(max-width: 699px)" srcset="<%= slide.mobile_source %>">
+                  <% end %>
+                  <%= image_tag slide.desktop_source, alt: slide.alt_text, class: "event-detail-image" %>
+                </picture>
+              </button>
+            <% end %>
+
+            <button type="button"
+                    class="event-detail-image-nav event-detail-image-nav-prev"
+                    data-hero-rotator-target="previousButton"
+                    data-action="hero-rotator#previous"
+                    aria-label="Vorheriges Bild">
+              ‹
+            </button>
+            <button type="button"
+                    class="event-detail-image-nav event-detail-image-nav-next"
+                    data-hero-rotator-target="nextButton"
+                    data-action="hero-rotator#next"
+                    aria-label="Nächstes Bild">
+              ›
+            </button>
+          </div>
+
+          <div class="event-detail-image-meta">
+            <div class="event-detail-image-dots" aria-label="Bildauswahl">
+              <% hero_slides.each_with_index do |_slide, index| %>
+                <button type="button"
+                        class="event-detail-image-dot"
+                        data-hero-rotator-target="dot"
+                        data-hero-rotator-index-param="<%= index %>"
+                        data-action="hero-rotator#select"
+                        aria-label="<%= "Bild #{index + 1} anzeigen" %>"
+                        aria-current="<%= index.zero? %>">
+                </button>
+              <% end %>
+            </div>
+            <p class="event-detail-image-caption" data-hero-rotator-target="caption" hidden></p>
+            <p class="event-detail-image-credit"
+               data-hero-rotator-target="credit"
+               <%= "hidden" if hero_slides.first.credit.blank? %>><%= hero_slides.first.credit %></p>
+          </div>
+
+          <div class="event-lightbox"
+               data-lightbox-target="dialog"
+               data-action="click->lightbox#backdropClose"
+               role="dialog"
+               aria-modal="true"
+               aria-label="Bildansicht"
+               tabindex="-1"
+               hidden>
+            <button type="button" class="event-lightbox-nav event-lightbox-nav-prev" data-lightbox-target="previousButton" data-action="click->lightbox#previous" aria-label="Vorheriges Bild">‹</button>
+            <button type="button" class="event-lightbox-nav event-lightbox-nav-next" data-lightbox-target="nextButton" data-action="click->lightbox#next" aria-label="Nächstes Bild">›</button>
+            <button type="button" class="event-lightbox-close" data-lightbox-target="closeButton" data-action="click->lightbox#close" aria-label="Lightbox schließen">×</button>
+            <div class="event-lightbox-inner">
+              <img src="" alt="" class="event-lightbox-image" data-lightbox-target="image">
+              <p class="event-lightbox-caption" data-lightbox-target="caption" hidden></p>
+            </div>
+          </div>
+        </div>
+      <% else %>
+        <% slide = hero_slides.first %>
+        <div class="event-detail-image-figure">
+          <div class="event-detail-image-stage event-detail-image-stage-static"<%= %( style="#{hero_stage_style}") if hero_stage_style.present? %>>
+            <span class="event-detail-image-stage-glow" aria-hidden="true"></span>
+            <span class="event-detail-image-backdrop" aria-hidden="true">
+              <%= image_tag slide.desktop_source, alt: "", class: "event-detail-image-backdrop-image" %>
+            </span>
+            <picture class="event-detail-image-picture">
+              <% if slide.mobile_source.present? && slide.mobile_source != slide.desktop_source %>
+                <source media="(max-width: 699px)" srcset="<%= slide.mobile_source %>">
+              <% end %>
+              <%= image_tag slide.desktop_source, alt: slide.alt_text, class: "event-detail-image" %>
+            </picture>
+          </div>
+          <% if slide.credit.present? %>
+            <p class="event-detail-image-credit"><%= slide.credit %></p>
           <% end %>
-          <%= image_tag presenter.hero_desktop_image_source, alt: presenter.hero_alt_text, class: "event-detail-image" %>
-        </picture>
-        <% if presenter.hero_image_credit.present? %>
-          <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
-        <% end %>
-      </div>
+        </div>
+      <% end %>
     </div>
   <% end %>
 </header>

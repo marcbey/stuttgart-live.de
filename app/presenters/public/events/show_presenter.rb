@@ -3,6 +3,7 @@ module Public
     class ShowPresenter
       Link = Data.define(:label, :url)
       Slide = Data.define(:source, :alt_text, :caption)
+      HeroGallerySlide = Data.define(:desktop_source, :mobile_source, :alt_text, :caption, :credit, :lightbox_source)
       FactItem = Data.define(:label, :value)
       PresenterItem = Data.define(:name, :external_url, :logo_source)
 
@@ -61,12 +62,16 @@ module Public
 
       def header_classes
         classes = [ "event-detail-header" ]
-        classes << "event-detail-header-with-image" if hero_image?
+        classes << "event-detail-header-with-image" if has_hero_gallery?
         classes.join(" ")
       end
 
       def hero_image?
         hero_desktop_image_source.present?
+      end
+
+      def has_hero_gallery?
+        hero_gallery_slides.any?
       end
 
       def hero_desktop_image_source
@@ -103,6 +108,54 @@ module Public
         return if source_label.blank?
 
         "Bildquelle: #{source_label} / Veranstalter"
+      end
+
+      def hero_gallery_slides
+        @hero_gallery_slides ||= begin
+          slides = []
+
+          if hero_image?
+            slides << HeroGallerySlide.new(
+              desktop_source: hero_desktop_image_source,
+              mobile_source: hero_mobile_image_source,
+              alt_text: hero_alt_text,
+              caption: nil,
+              credit: hero_image_credit,
+              lightbox_source: hero_desktop_image_source
+            )
+          end
+
+          slides.concat(
+            slider_items.map do |item|
+              HeroGallerySlide.new(
+                desktop_source: item.source,
+                mobile_source: nil,
+                alt_text: item.alt_text,
+                caption: item.caption.to_s.strip.presence,
+                credit: nil,
+                lightbox_source: item.source
+              )
+            end
+          )
+
+          slides
+        end
+      end
+
+      def hero_gallery_rotates?
+        hero_gallery_slides.size > 1
+      end
+
+      def hero_stage_aspect_ratio
+        return unless hero_desktop_image.is_a?(EventImage)
+
+        blob = hero_desktop_image.file.blob if hero_desktop_image.file.attached?
+        metadata = blob&.metadata || {}
+        width = metadata[:width] || metadata["width"]
+        height = metadata[:height] || metadata["height"]
+        return if width.to_i <= 0 || height.to_i <= 0
+
+        "#{width.to_i} / #{height.to_i}"
       end
 
       def fact_items
@@ -202,7 +255,7 @@ module Public
       end
 
       def has_media_block?
-        youtube_embed_url.present? || slider_items.any?
+        youtube_embed_url.present?
       end
 
       def presenters

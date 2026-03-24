@@ -90,7 +90,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ { label: "Published", css_class: "status-badge-published" } ], presenter.visibility_badges
   end
 
-  test "collects cta, links, genres and slider items" do
+  test "collects cta, links, genres and hero gallery items" do
     event = build_event(
       artist_name: "Band",
       title: "Live",
@@ -125,6 +125,39 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "/slide-1.jpg", presenter.slider_items.first.source
     assert_equal "Slide 1 Alt", presenter.slider_items.first.alt_text
     assert_equal "Live auf der Bühne", presenter.slider_items.first.caption
+    assert_equal 2, presenter.hero_gallery_slides.size
+    assert presenter.hero_gallery_rotates?
+    assert_equal "/hero-desktop.jpg", presenter.hero_gallery_slides.first.desktop_source
+    assert_equal "/hero-mobile.jpg", presenter.hero_gallery_slides.first.mobile_source
+    assert_equal "Bildquelle: Easy Ticket Service / Veranstalter", presenter.hero_gallery_slides.first.credit
+    assert_equal "/slide-1.jpg", presenter.hero_gallery_slides.second.desktop_source
+    assert_equal "Live auf der Bühne", presenter.hero_gallery_slides.second.caption
+  end
+
+  test "exposes hero stage aspect ratio for editorial hero images" do
+    event = build_event(artist_name: "Band", title: "Live")
+    hero_image = EventImage.new(purpose: EventImage::PURPOSE_DETAIL_HERO)
+    hero_image.define_singleton_method(:file) do
+      OpenStruct.new(
+        attached?: true,
+        blob: OpenStruct.new(metadata: { "width" => 1200, "height" => 900 })
+      )
+    end
+
+    event.define_singleton_method(:image_for) do |slot:, breakpoint:|
+      case [ slot, breakpoint ]
+      when [ :detail_hero, :desktop ]
+        hero_image
+      when [ :grid_default, :mobile ]
+        OpenStruct.new(source: "easyticket", image_url: "/hero-mobile.jpg", alt: "Hero Mobile Alt")
+      when [ :social_card, :desktop ]
+        OpenStruct.new(image_url: "https://cdn.example.test/social.jpg")
+      end
+    end
+
+    presenter = build_presenter(event)
+
+    assert_equal "1200 / 900", presenter.hero_stage_aspect_ratio
   end
 
   test "exposes presenter logo source urls" do
@@ -192,6 +225,17 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "YouTube" ], presenter.external_links.map(&:label)
     assert_equal "https://www.youtube.com/@BandChannel", presenter.external_links.first.url
     assert_not presenter.has_media_block?
+  end
+
+  test "builds static hero gallery when no slider images exist" do
+    event = build_event(artist_name: "Band", title: "Live")
+    event.define_singleton_method(:slider_images) { [] }
+
+    presenter = build_presenter(event)
+
+    assert_equal 1, presenter.hero_gallery_slides.size
+    assert_not presenter.hero_gallery_rotates?
+    assert_equal "/hero-desktop.jpg", presenter.hero_gallery_slides.first.desktop_source
   end
 
   test "hides duplicate title lines and deduplicates repeated paragraphs" do
