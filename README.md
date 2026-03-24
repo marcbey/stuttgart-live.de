@@ -461,6 +461,10 @@ bin/kamal app logs --since 15m -d hetzner
 bin/kamal app logs --since 30m --grep ERROR -d hetzner
 ```
 
+Der Produktions-Logpfad für App und Jobs ist bewusst zentral über Docker/Kamal organisiert. Rails schreibt in Production nach `STDOUT`, daher sind `bin/kamal app logs ...` und auf dem Host `docker logs ...` die primären Werkzeuge auch für Import- und LLM-Läufe.
+
+Es gibt in Produktion absichtlich keinen separaten persistenten App-Dateilog unter `log/production.log` oder `log/importers.log`. Wenn später Sentry dazukommt, ergänzt es Fehlererfassung und Alerting, ersetzt aber nicht diese zentralen Laufzeit-Logs.
+
 Rails-Konsole, Shell und Tasks im laufenden Container:
 
 ```bash
