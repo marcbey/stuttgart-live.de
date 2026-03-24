@@ -6,7 +6,6 @@
 - OWASP checks initial & evtl. als bin/ci ?
 - Plan für Data Rentention
 - Logfile Rotation
-- Ruby 4 upgrade_
 - Monitoring/Alerting : uptimekuma.org
 
 ## Importer
