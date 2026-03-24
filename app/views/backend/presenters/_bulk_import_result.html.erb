@@ -1,0 +1,18 @@
+<% return if bulk_import_result.blank? %>
+
+<div class="flash <%= bulk_import_result.any_errors? ? "flash-alert" : "flash-notice" %>">
+  <strong>Import-Ergebnis</strong>
+  <p>
+    <%= bulk_import_result.created %> neu angelegt,
+    <%= bulk_import_result.updated %> aktualisiert,
+    <%= bulk_import_result.failed %> fehlgeschlagen.
+  </p>
+
+  <% if bulk_import_result.errors.any? %>
+    <ul>
+      <% bulk_import_result.errors.each do |message| %>
+        <li><%= message %></li>
+      <% end %>
+    </ul>
+  <% end %>
+</div>

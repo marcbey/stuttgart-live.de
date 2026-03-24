@@ -1,0 +1,63 @@
+<% content_for :title, "Präsentatoren importieren" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Präsentatoren gesammelt importieren</h1>
+      <p>Mehrere Logos auf einmal hochladen oder ein ganzes Verzeichnis auswählen.</p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zur Präsentatoren-Liste", backend_presenters_path, class: "button button-secondary button-compact" %>
+    </div>
+  </header>
+
+  <div class="editor-panel backend-panel">
+    <%= render "bulk_import_result", bulk_import_result: @bulk_import_result %>
+
+    <%= form_with url: bulk_create_backend_presenters_path, class: "editor-form", multipart: true do |form| %>
+      <section class="backend-section backend-section-compact">
+        <div class="backend-section-header">
+          <h3>Upload</h3>
+        </div>
+        <div class="backend-section-body">
+          <div class="editor-grid">
+            <div>
+              <%= form.label :presenter_logos, "Mehrere Logos auswählen", class: "form-label" %>
+              <%= file_field_tag "presenter_logos[]", multiple: true, accept: "image/*", class: "form-input" %>
+              <p class="form-hint">Browserübergreifender Standard für mehrere einzelne Bilddateien.</p>
+            </div>
+
+            <div>
+              <%= label_tag :presenter_directory_logos, "Verzeichnis auswählen", class: "form-label" %>
+              <%= file_field_tag "presenter_directory_logos[]",
+                                 multiple: true,
+                                 accept: "image/*",
+                                 webkitdirectory: true,
+                                 directory: true,
+                                 class: "form-input" %>
+              <p class="form-hint">Progressive Erweiterung: In unterstützten Browsern kann ein komplettes Verzeichnis gewählt werden.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="backend-section backend-section-compact">
+        <div class="backend-section-header">
+          <h3>Regeln</h3>
+        </div>
+        <div class="backend-section-body">
+          <ul class="form-hint">
+            <li>Der Präsentator-Name wird aus dem Dateinamen ohne Erweiterung abgeleitet.</li>
+            <li>Unterstriche und Bindestriche werden in Leerzeichen umgewandelt, Mehrfachleerzeichen werden bereinigt.</li>
+            <li>Wenn ein Präsentator mit gleichem Namen bereits existiert, wird nur das Logo ersetzt.</li>
+            <li>Beschreibung und externe URL bleiben bei neuen Datensätzen leer.</li>
+          </ul>
+        </div>
+      </section>
+
+      <div class="editor-footer">
+        <%= form.submit "Logos importieren", class: "button" %>
+      </div>
+    <% end %>
+  </div>
+</section>

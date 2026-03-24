@@ -10,6 +10,10 @@ module Backend
       @presenter = Presenter.new
     end
 
+    def bulk_new
+      @bulk_import_result = nil
+    end
+
     def create
       @presenter = Presenter.new(presenter_params)
 
@@ -18,6 +22,20 @@ module Backend
       else
         flash.now[:alert] = "Präsentator konnte nicht angelegt werden."
         render :new, status: :unprocessable_entity
+      end
+    end
+
+    def bulk_create
+      @bulk_import_result = Backend::Presenters::BulkImporter.new(files: bulk_upload_files).call
+
+      if @bulk_import_result.total_processed.zero?
+        flash.now[:alert] = "Bitte mindestens eine Datei auswählen."
+        render :bulk_new, status: :unprocessable_entity
+      elsif @bulk_import_result.any_errors?
+        flash.now[:alert] = "Einige Logos konnten nicht importiert werden."
+        render :bulk_new, status: :unprocessable_entity
+      else
+        redirect_to backend_presenters_path, notice: bulk_import_notice
       end
     end
 
@@ -54,6 +72,17 @@ module Backend
 
     def presenter_params
       params.require(:presenter).permit(:name, :description, :external_url, :logo)
+    end
+
+    def bulk_upload_files
+      params.permit(presenter_logos: [], presenter_directory_logos: []).values.flatten.compact_blank
+    end
+
+    def bulk_import_notice
+      parts = []
+      parts << "#{@bulk_import_result.created} neu angelegt" if @bulk_import_result.created.positive?
+      parts << "#{@bulk_import_result.updated} aktualisiert" if @bulk_import_result.updated.positive?
+      "Logo-Import abgeschlossen: #{parts.to_sentence}."
     end
   end
 end

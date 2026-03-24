@@ -73,6 +73,78 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     assert_nil Presenter.order(:id).last.external_url
   end
 
+  test "backend user can render bulk upload page" do
+    sign_in_as(@editor)
+
+    get bulk_new_backend_presenters_url
+
+    assert_response :success
+    assert_includes response.body, "Präsentatoren gesammelt importieren"
+    assert_includes response.body, "Mehrere Logos auswählen"
+    assert_includes response.body, "Verzeichnis auswählen"
+  end
+
+  test "backend user can bulk create presenters from multiple logos" do
+    sign_in_as(@editor)
+
+    assert_difference -> { Presenter.count }, 2 do
+      post bulk_create_backend_presenters_url, params: {
+        presenter_logos: [
+          png_upload(filename: "foo-bar.png"),
+          png_upload(filename: "ACME_Booking.png")
+        ]
+      }
+    end
+
+    assert_redirected_to backend_presenters_url
+    assert_equal [ "ACME Booking", "foo bar" ].sort, Presenter.order(:id).last(2).map(&:name).sort
+  end
+
+  test "bulk upload updates existing presenter logo and keeps metadata" do
+    sign_in_as(@editor)
+    @presenter.update!(description: "Bestehende Beschreibung")
+    original_blob_id = @presenter.logo.blob.id
+
+    assert_no_difference -> { Presenter.count } do
+      post bulk_create_backend_presenters_url, params: {
+        presenter_logos: [ png_upload(filename: "live_nation.png", rgb: [ 12, 34, 56 ]) ]
+      }
+    end
+
+    assert_redirected_to backend_presenters_url
+    @presenter.reload
+    assert_equal "https://example.com/live-nation", @presenter.external_url
+    assert_equal "Bestehende Beschreibung", @presenter.description
+    assert_not_equal original_blob_id, @presenter.logo.blob.id
+  end
+
+  test "bulk upload rerenders when no files were selected" do
+    sign_in_as(@editor)
+
+    assert_no_difference -> { Presenter.count } do
+      post bulk_create_backend_presenters_url
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Bitte mindestens eine Datei auswählen."
+  end
+
+  test "bulk upload rerenders when existing presenter name is ambiguous" do
+    sign_in_as(@editor)
+    duplicate_presenter = Presenter.new(name: "live nation")
+    duplicate_presenter.logo.attach(create_uploaded_blob(filename: "live-nation-duplicate.png"))
+    duplicate_presenter.save!
+
+    assert_no_difference -> { Presenter.count } do
+      post bulk_create_backend_presenters_url, params: {
+        presenter_logos: [ png_upload(filename: "live_nation.png") ]
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Mehrdeutiger vorhandener Präsentator-Name"
+  end
+
   test "create rerenders form when logo is missing" do
     sign_in_as(@editor)
 

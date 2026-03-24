@@ -26,7 +26,10 @@ Rails.application.routes.draw do
       get :section, on: :collection
     end
     resources :blog_posts, path: "blog", except: [ :show ]
-    resources :presenters, except: [ :show ]
+    resources :presenters, except: [ :show ] do
+      get :bulk_new, on: :collection
+      post :bulk_create, on: :collection
+    end
     resources :users, only: [ :index, :new, :create, :edit, :update ]
 
     resources :import_sources, only: [ :index, :edit, :update ] do
