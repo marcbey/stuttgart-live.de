@@ -113,6 +113,7 @@ module Backend
       if @event.save
         begin
           update_detail_hero_crop!
+          update_slider_image_metadata!
           sync_presenters!(@event)
         rescue ActiveRecord::RecordInvalid => e
           @event.errors.add(:base, e.record.errors.full_messages.to_sentence)
@@ -624,6 +625,31 @@ module Backend
       return unless detail_hero.present?
 
       detail_hero.update!(detail_hero_crop_params)
+    end
+
+    def slider_image_update_params
+      raw_updates = params.fetch(:event_image_updates, ActionController::Parameters.new)
+      raw_updates.to_unsafe_h.each_with_object({}) do |(id, attributes), permitted|
+        next unless id.to_s.match?(/\A\d+\z/)
+        next unless attributes.respond_to?(:to_h)
+
+        normalized = ActionController::Parameters.new(attributes).permit(:alt_text, :sub_text).to_h
+        permitted[id.to_i] = normalized
+      end
+    end
+
+    def update_slider_image_metadata!
+      updates = slider_image_update_params
+      return if updates.empty?
+
+      slider_images = @event.event_images.slider.where(id: updates.keys).index_by(&:id)
+
+      updates.each do |image_id, attributes|
+        image = slider_images[image_id]
+        next if image.blank?
+
+        image.update!(attributes)
+      end
     end
 
     def create_manual_ticket_offer!(event)

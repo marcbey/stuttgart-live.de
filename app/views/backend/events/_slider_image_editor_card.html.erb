@@ -1,4 +1,5 @@
 <% optimized_image_source = optimized_event_image_source(image) %>
+<% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
 
 <li id="<%= dom_id(image, :slider_card) %>" class="slider-image-editor-card">
   <div class="action-cell slider-image-editor-thumb">
@@ -8,14 +9,18 @@
   </div>
 
   <div class="slider-image-editor-meta">
-    <%= form_with model: [ :backend, event, image ],
-                  method: :patch,
-                  class: "slider-image-meta-form",
-                  data: { turbo_stream: true } do |form| %>
-      <%= hidden_field_tag :status, editor_status %>
-      <%= form.text_field :alt_text, placeholder: "Alt-Text (optional)", class: "form-input" %>
-      <%= form.text_field :sub_text, placeholder: "Sub-Text (optional)", class: "form-input" %>
-    <% end %>
+    <div class="slider-image-meta-form">
+      <%= text_field_tag "event_image_updates[#{image.id}][alt_text]",
+                         image.alt_text,
+                         placeholder: "Alt-Text (optional)",
+                         class: "form-input",
+                         form: editor_form_id %>
+      <%= text_field_tag "event_image_updates[#{image.id}][sub_text]",
+                         image.sub_text,
+                         placeholder: "Sub-Text (optional)",
+                         class: "form-input",
+                         form: editor_form_id %>
+    </div>
 
     <div class="slider-image-meta-actions">
       <%= button_to "Delete Image",

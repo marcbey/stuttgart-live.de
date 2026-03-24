@@ -1,4 +1,5 @@
 <% slider_images = event.event_images.slider.ordered.to_a %>
+<% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
 
 <section id="<%= dom_id(event, :slider_images_section) %>" class="offer-section backend-section backend-section-media">
   <div class="backend-section-header">
@@ -8,7 +9,11 @@
     <% if slider_images.any? %>
       <ul class="slider-image-editor-grid">
         <% slider_images.each do |image| %>
-          <%= render "backend/events/slider_image_editor_card", event: event, image: image, editor_status: editor_status %>
+          <%= render "backend/events/slider_image_editor_card",
+                     event: event,
+                     image: image,
+                     editor_status: editor_status,
+                     editor_form_id: editor_form_id %>
         <% end %>
       </ul>
     <% else %>

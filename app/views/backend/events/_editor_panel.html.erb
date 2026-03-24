@@ -167,7 +167,10 @@
                <%= "hidden" unless slider_images_tab_active %>
                data-event-editor-tabs-target="panel"
                data-event-editor-tabs-panel-key="slider_images">
-        <%= render "backend/events/slider_images_section", event: event, editor_status: editor_status %>
+        <%= render "backend/events/slider_images_section",
+                   event: event,
+                   editor_status: editor_status,
+                   editor_form_id: editor_form_id %>
       </section>
 
       <section id="event-editor-panel-presenters"

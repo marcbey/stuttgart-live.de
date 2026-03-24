@@ -220,10 +220,42 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".slider-image-editor-card .slider-image-meta-form", count: 1
+    assert_select ".slider-image-editor-card .slider-image-meta-form[data-controller='autosave']", count: 0
+    assert_select ".slider-image-editor-card .slider-image-meta-form input[name='event_image_updates[#{image.id}][alt_text]'][form='editor_form_event_#{@event.id}']", count: 1
+    assert_select ".slider-image-editor-card .slider-image-meta-form input[name='event_image_updates[#{image.id}][sub_text]'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select ".slider-image-editor-card .slider-image-meta-actions .button_to", count: 1
-    assert_select "input[value='Save Meta']", count: 0
-    assert_select "button", text: "Save Meta", count: 0
+    assert_select ".slider-image-editor-card .slider-image-meta-form button", count: 0
+    assert_select ".slider-image-editor-card .slider-image-meta-form input[type='submit']", count: 0
     assert_select ".slider-image-editor-card .slider-image-meta-form form", count: 0
+  end
+
+  test "top save persists slider image metadata from slider images tab" do
+    sign_in_as(@user)
+    image = create_event_image(event: @event, purpose: EventImage::PURPOSE_SLIDER, alt_text: "Alt", sub_text: "Sub")
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: @event.title,
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review"
+      },
+      event_image_updates: {
+        image.id.to_s => {
+          alt_text: "Neuer Alt-Text",
+          sub_text: "Neue Subline"
+        }
+      },
+      editor_tab: "slider_images",
+      next_event_enabled: "0"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "Neuer Alt-Text", image.reload.alt_text
+    assert_equal "Neue Subline", image.reload.sub_text
+    assert_includes response.body, "Event wurde gespeichert."
   end
 
   test "show includes event image crop fields in the main editor form" do
