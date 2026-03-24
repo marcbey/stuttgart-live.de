@@ -68,6 +68,7 @@
              data-hero-rotator-delay-value="3000"
              data-hero-rotator-interval-value="5000">
           <div class="event-detail-image-stage highlights-slider-viewport"
+          <div class="event-detail-image-stage highlights-slider-viewport"
                data-hero-rotator-target="stage">
             <% hero_slides.each_with_index do |slide, index| %>
               <button type="button"
@@ -157,6 +158,7 @@
         </div>
       <% else %>
         <% slide = hero_slides.first %>
+        <div class="event-detail-image-figure"<%= %( style="#{hero_stage_style}") if hero_stage_style.present? %>>
         <div class="event-detail-image-figure"<%= %( style="#{hero_stage_style}") if hero_stage_style.present? %>>
           <div class="event-detail-image-stage event-detail-image-stage-static">
             <span class="event-detail-image-stage-glow" aria-hidden="true"></span>

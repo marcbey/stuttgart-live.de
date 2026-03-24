@@ -2458,6 +2458,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
+  test "show renders single event hero image in the shared stage with attached credit" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
+      sub_text: "Foto Max Mustermann",
+      grid_variant: EventImage::GRID_VARIANT_1X1
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-image-figure .event-detail-image-stage.event-detail-image-stage-static", count: 1
+    assert_select ".event-detail-image-stage .event-detail-image-picture img.event-detail-image", count: 1
+    assert_select ".event-detail-image-figure > .event-detail-image-credit", text: "© Foto Max Mustermann"
+  end
+
   test "show falls back to import image when no event image exists" do
     get event_url(@published_event.slug)
 
