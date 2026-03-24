@@ -2089,6 +2089,24 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
+  test "show renders a single presenter without flyover animation" do
+    presenter = create_presenter(name: "Solo Presenter")
+    @published_event.update!(
+      organizer_notes: "Sichtbare Veranstalterhinweise",
+      show_organizer_notes: true
+    )
+    @published_event.event_presenters.create!(presenter:, position: 1)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-organizer-presenters", count: 1
+    assert_select ".event-detail-organizer-strip.event-detail-organizer-strip-single", count: 1
+    assert_select ".event-detail-organizer-strip-logo[href='#{presenter.external_url}'][style]", count: 0
+    refute_includes response.body, "--event-organizer-strip-delay"
+    refute_includes response.body, "--event-organizer-strip-duration"
+  end
+
   test "show returns not found for unpublished events" do
     get event_url(events(:needs_review_one).slug)
 
@@ -2423,10 +2441,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "© Foto Max Mustermann"
     assert_includes response.body, "Slider Subline"
     assert_select ".event-detail-image-figure-rotator[data-controller='hero-rotator lightbox'][data-hero-rotator-delay-value='3000']", count: 1
-    assert_select ".event-detail-image-stage", count: 1
+    assert_select ".event-detail-image-stage.highlights-slider-viewport", count: 1
     assert_select ".event-detail-image-slide", count: 2
     assert_select ".event-detail-image-backdrop", count: 2
-    assert_select ".event-detail-image-nav", count: 2
+    assert_select ".event-detail-image-stage .highlights-slider-arrow.highlights-slider-arrow-overlay", count: 2
+    assert_select ".event-detail-image-stage .highlights-slider-arrow-prev[data-action='hero-rotator#previous']", count: 1
+    assert_select ".event-detail-image-stage .highlights-slider-arrow-next[data-action='hero-rotator#next']", count: 1
+    assert_select ".event-lightbox .highlights-slider-arrow.highlights-slider-arrow-overlay", count: 2
+    assert_select ".event-lightbox .highlights-slider-arrow-prev[data-action='click->lightbox#previous']", count: 1
+    assert_select ".event-lightbox .highlights-slider-arrow-next[data-action='click->lightbox#next']", count: 1
     assert_select ".event-detail-image-dot", count: 2
     assert_select ".event-detail-slider", count: 0
     assert_select ".event-lightbox", count: 1

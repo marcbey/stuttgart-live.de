@@ -52,16 +52,23 @@
 
   <% if presenter.has_hero_gallery? %>
     <% hero_slides = presenter.hero_gallery_slides %>
-    <% hero_stage_style = presenter.hero_stage_aspect_ratio.present? ? "--event-detail-image-stage-ratio: #{presenter.hero_stage_aspect_ratio};" : nil %>
+    <% hero_stage_style_parts = [] %>
+    <% if presenter.hero_stage_aspect_ratio.present? %>
+      <% hero_stage_style_parts << "--event-detail-image-stage-ratio: #{presenter.hero_stage_aspect_ratio}" %>
+    <% end %>
+    <% if presenter.hero_stage_max_width.present? %>
+      <% hero_stage_style_parts << "--event-detail-image-stage-max-width: #{presenter.hero_stage_max_width}" %>
+    <% end %>
+    <% hero_stage_style = hero_stage_style_parts.join("; ").presence %>
     <div class="event-detail-image-wrap">
       <% if presenter.hero_gallery_rotates? %>
         <div class="event-detail-image-figure event-detail-image-figure-rotator"
+             <%= %(style="#{hero_stage_style}") if hero_stage_style.present? %>
              data-controller="hero-rotator lightbox"
              data-hero-rotator-delay-value="3000"
              data-hero-rotator-interval-value="5000">
-          <div class="event-detail-image-stage"
-               data-hero-rotator-target="stage"
-               <%= %(style="#{hero_stage_style}") if hero_stage_style.present? %>>
+          <div class="event-detail-image-stage highlights-slider-viewport"
+               data-hero-rotator-target="stage">
             <% hero_slides.each_with_index do |slide, index| %>
               <button type="button"
                       class="event-detail-image-slide"
@@ -89,17 +96,17 @@
             <% end %>
 
             <button type="button"
-                    class="event-detail-image-nav event-detail-image-nav-prev"
+                    class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev"
                     data-hero-rotator-target="previousButton"
                     data-action="hero-rotator#previous"
-                    aria-label="Vorheriges Bild">
+                    aria-label="Zurück">
               ‹
             </button>
             <button type="button"
-                    class="event-detail-image-nav event-detail-image-nav-next"
+                    class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next"
                     data-hero-rotator-target="nextButton"
                     data-action="hero-rotator#next"
-                    aria-label="Nächstes Bild">
+                    aria-label="Weiter">
               ›
             </button>
           </div>
@@ -131,8 +138,16 @@
                aria-label="Bildansicht"
                tabindex="-1"
                hidden>
-            <button type="button" class="event-lightbox-nav event-lightbox-nav-prev" data-lightbox-target="previousButton" data-action="click->lightbox#previous" aria-label="Vorheriges Bild">‹</button>
-            <button type="button" class="event-lightbox-nav event-lightbox-nav-next" data-lightbox-target="nextButton" data-action="click->lightbox#next" aria-label="Nächstes Bild">›</button>
+            <button type="button"
+                    class="event-lightbox-nav event-lightbox-nav-prev highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev"
+                    data-lightbox-target="previousButton"
+                    data-action="click->lightbox#previous"
+                    aria-label="Vorheriges Bild">‹</button>
+            <button type="button"
+                    class="event-lightbox-nav event-lightbox-nav-next highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next"
+                    data-lightbox-target="nextButton"
+                    data-action="click->lightbox#next"
+                    aria-label="Nächstes Bild">›</button>
             <button type="button" class="event-lightbox-close" data-lightbox-target="closeButton" data-action="click->lightbox#close" aria-label="Lightbox schließen">×</button>
             <div class="event-lightbox-inner">
               <img src="" alt="" class="event-lightbox-image" data-lightbox-target="image">
@@ -142,8 +157,8 @@
         </div>
       <% else %>
         <% slide = hero_slides.first %>
-        <div class="event-detail-image-figure">
-          <div class="event-detail-image-stage event-detail-image-stage-static"<%= %( style="#{hero_stage_style}") if hero_stage_style.present? %>>
+        <div class="event-detail-image-figure"<%= %( style="#{hero_stage_style}") if hero_stage_style.present? %>>
+          <div class="event-detail-image-stage event-detail-image-stage-static">
             <span class="event-detail-image-stage-glow" aria-hidden="true"></span>
             <span class="event-detail-image-backdrop" aria-hidden="true">
               <%= image_tag slide.desktop_source, alt: "", class: "event-detail-image-backdrop-image" %>

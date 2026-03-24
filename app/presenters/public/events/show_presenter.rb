@@ -147,6 +147,22 @@ module Public
       end
 
       def hero_stage_aspect_ratio
+        width, height = hero_stage_dimensions
+        return unless width && height
+
+        "#{width} / #{height}"
+      end
+
+      def hero_stage_max_width
+        width, height = hero_stage_dimensions
+        return unless width && height
+
+        "#{(32.0 * width / height).round(4)}rem"
+      end
+
+      private
+
+      def hero_stage_dimensions
         return unless hero_desktop_image.is_a?(EventImage)
 
         blob = hero_desktop_image.file.blob if hero_desktop_image.file.attached?
@@ -155,8 +171,10 @@ module Public
         height = metadata[:height] || metadata["height"]
         return if width.to_i <= 0 || height.to_i <= 0
 
-        "#{width.to_i} / #{height.to_i}"
+        [ width.to_i, height.to_i ]
       end
+
+      public
 
       def fact_items
         @fact_items ||= [

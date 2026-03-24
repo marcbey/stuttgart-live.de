@@ -158,6 +158,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     presenter = build_presenter(event)
 
     assert_equal "1200 / 900", presenter.hero_stage_aspect_ratio
+    assert_equal "42.6667rem", presenter.hero_stage_max_width
   end
 
   test "exposes presenter logo source urls" do

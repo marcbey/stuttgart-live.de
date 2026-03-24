@@ -1,16 +1,20 @@
 <% presenters = Array(local_assigns.fetch(:presenters, [])) %>
 <% if presenters.any? %>
-  <% duration_seconds = [ presenters.size * 3.2, 12.8 ].max %>
-  <% interval_seconds = duration_seconds / presenters.size %>
+  <% rotating_presenters = presenters.many? %>
+  <% duration_seconds = [ presenters.size * 3.2, 12.8 ].max if rotating_presenters %>
+  <% interval_seconds = duration_seconds / presenters.size if rotating_presenters %>
 
   <div class="event-detail-organizer-presenters" aria-label="Präsentatoren">
-    <div class="event-detail-organizer-strip" role="list">
+    <div class="event-detail-organizer-strip<%= " event-detail-organizer-strip-single" unless rotating_presenters %>" role="list">
       <% presenters.each_with_index do |item, index| %>
-        <% animation_style = "--event-organizer-strip-delay: #{format('%.2f', index * interval_seconds)}s; --event-organizer-strip-duration: #{format('%.2f', duration_seconds)}s;" %>
+        <% animation_style =
+             if rotating_presenters
+               "--event-organizer-strip-delay: #{format('%.2f', index * interval_seconds)}s; --event-organizer-strip-duration: #{format('%.2f', duration_seconds)}s;"
+             end %>
         <% if item.external_url.present? %>
           <%= link_to item.external_url,
                       class: "event-detail-organizer-strip-logo",
-                      style: animation_style,
+                      style: animation_style.presence,
                       role: "listitem",
                       target: "_blank",
                       rel: "noopener",
