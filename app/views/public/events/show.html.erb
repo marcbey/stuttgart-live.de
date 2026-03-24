@@ -19,37 +19,97 @@
   <div class="event-detail-body">
     <div class="event-detail-main">
       <% if presenter.primary_description.present? %>
+        <% description_columns = event_detail_text_columns(presenter.primary_description) %>
         <section class="event-detail-panel event-detail-copy event-detail-copy-primary">
           <h2>Beschreibung</h2>
-          <%= simple_format(presenter.primary_description) %>
+          <div class="event-detail-copy-body">
+            <div class="event-detail-copy-grid">
+              <div class="event-detail-copy-column">
+                <%= simple_format(description_columns.left) %>
+              </div>
+              <% if description_columns.right.present? %>
+                <div class="event-detail-copy-column">
+                  <%= simple_format(description_columns.right) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </section>
       <% end %>
 
       <% if presenter.artist_description.present? %>
+        <% artist_columns = event_detail_text_columns(presenter.artist_description) %>
         <section class="event-detail-panel event-detail-copy">
           <h2>Über den Act</h2>
-          <%= simple_format(presenter.artist_description) %>
+          <div class="event-detail-copy-body">
+            <div class="event-detail-copy-grid">
+              <div class="event-detail-copy-column">
+                <%= simple_format(artist_columns.left) %>
+              </div>
+              <% if artist_columns.right.present? %>
+                <div class="event-detail-copy-column">
+                  <%= simple_format(artist_columns.right) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </section>
       <% end %>
 
       <% if presenter.venue_description.present? %>
+        <% venue_columns = event_detail_text_columns(presenter.venue_description) %>
         <section class="event-detail-panel event-detail-copy">
           <h2>Über die Venue</h2>
-          <%= simple_format(presenter.venue_description) %>
+          <div class="event-detail-copy-body">
+            <div class="event-detail-copy-grid">
+              <div class="event-detail-copy-column">
+                <%= simple_format(venue_columns.left) %>
+              </div>
+              <% if venue_columns.right.present? %>
+                <div class="event-detail-copy-column">
+                  <%= simple_format(venue_columns.right) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </section>
       <% end %>
 
       <% if presenter.support_text.present? %>
+        <% support_columns = event_detail_text_columns(presenter.support_text) %>
         <section class="event-detail-panel event-detail-copy">
           <h2>Support</h2>
-          <%= simple_format(presenter.support_text) %>
+          <div class="event-detail-copy-body">
+            <div class="event-detail-copy-grid">
+              <div class="event-detail-copy-column">
+                <%= simple_format(support_columns.left) %>
+              </div>
+              <% if support_columns.right.present? %>
+                <div class="event-detail-copy-column">
+                  <%= simple_format(support_columns.right) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </section>
       <% end %>
 
       <% if @event.editor_notes.present? %>
+        <% editor_note_columns = event_detail_text_columns(@event.editor_notes) %>
         <section class="event-detail-panel event-detail-copy">
           <h2>Redaktionsnotiz</h2>
-          <%= simple_format(@event.editor_notes) %>
+          <div class="event-detail-copy-body">
+            <div class="event-detail-copy-grid">
+              <div class="event-detail-copy-column">
+                <%= simple_format(editor_note_columns.left) %>
+              </div>
+              <% if editor_note_columns.right.present? %>
+                <div class="event-detail-copy-column">
+                  <%= simple_format(editor_note_columns.right) %>
+                </div>
+              <% end %>
+            </div>
+          </div>
         </section>
       <% end %>
 
@@ -70,6 +130,7 @@
         </div>
         <div class="event-detail-organizer-sidebar">
           <div class="event-detail-organizer-brand">
+            <h3 class="event-detail-organizer-sidebar-heading">Veranstalter:</h3>
             <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "event-detail-organizer-logo" %>
           </div>
           <% if presenter.has_presenters? %>

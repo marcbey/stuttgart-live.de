@@ -1959,6 +1959,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='canonical'][href=?]", event_url(@published_event.slug)
   end
 
+  test "show wraps event detail copy into hero-aligned text columns" do
+    @published_event.update!(event_info: "Erster Absatz.\n\nZweiter Absatz.\n\nDritter Absatz.")
+    @published_event.create_llm_enrichment!(
+      artist_description: "Act links.\n\nAct rechts.",
+      event_description: "Fallback Event Beschreibung",
+      venue_description: "Venue links.\n\nVenue rechts.",
+      source_run: import_runs(:one),
+      model: "gpt-test",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-copy-body .event-detail-copy-grid", minimum: 2
+    assert_select ".event-detail-copy-grid .event-detail-copy-column", minimum: 3
+    assert_includes response.body, "Erster Absatz."
+    assert_includes response.body, "Dritter Absatz."
+    assert_includes response.body, "Act links."
+    assert_includes response.body, "Act rechts."
+  end
+
   test "show hides organizer notes unless explicitly enabled" do
     event = Event.create!(
       slug: "published-event-with-hidden-organizer-notes",
@@ -2063,10 +2086,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-presenters", count: 0
     assert_select ".event-detail-organizer-presenters", count: 1
-    assert_select ".event-detail-organizer-strip-logo[href='#{presenter_one.external_url}']", count: 1
-    assert_select ".event-detail-organizer-strip-logo[href='#{presenter_two.external_url}']", count: 1
-    assert_select ".event-detail-organizer-strip-image[alt='Alpha Presenter']", count: 1
-    assert_select ".event-detail-organizer-strip-image[alt='Beta Presenter']", count: 1
+    assert_select ".event-detail-organizer-partner-grid", count: 1
+    assert_select ".event-detail-organizer-partner[href='#{presenter_one.external_url}']", count: 1
+    assert_select ".event-detail-organizer-partner[href='#{presenter_two.external_url}']", count: 1
+    assert_select ".event-detail-organizer-partner-image[alt='Alpha Presenter']", count: 1
+    assert_select ".event-detail-organizer-partner-image[alt='Beta Presenter']", count: 1
     assert_includes response.body, rails_storage_proxy_path(presenter_one.detail_logo_variant, only_path: true)
     assert_includes response.body, rails_storage_proxy_path(presenter_two.detail_logo_variant, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
@@ -2084,12 +2108,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-presenters", count: 0
-    assert_select ".event-detail-organizer-strip-image[alt='SVG Presenter']", count: 1
+    assert_select ".event-detail-organizer-partner-image[alt='SVG Presenter']", count: 1
     assert_includes response.body, rails_storage_proxy_path(svg_presenter.detail_logo_variant, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
-  test "show renders a single presenter without flyover animation" do
+  test "show renders a single presenter in the organizer partner grid" do
     presenter = create_presenter(name: "Solo Presenter")
     @published_event.update!(
       organizer_notes: "Sichtbare Veranstalterhinweise",
@@ -2101,10 +2125,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-organizer-presenters", count: 1
-    assert_select ".event-detail-organizer-strip.event-detail-organizer-strip-single", count: 1
-    assert_select ".event-detail-organizer-strip-logo[href='#{presenter.external_url}'][style]", count: 0
-    refute_includes response.body, "--event-organizer-strip-delay"
-    refute_includes response.body, "--event-organizer-strip-duration"
+    assert_select ".event-detail-organizer-partner-grid", count: 1
+    assert_select ".event-detail-organizer-partner[href='#{presenter.external_url}']", count: 1
+    assert_select ".event-detail-organizer-partner-image[alt='Solo Presenter']", count: 1
   end
 
   test "show returns not found for unpublished events" do

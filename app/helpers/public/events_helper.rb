@@ -1,4 +1,6 @@
 module Public::EventsHelper
+  EventDetailTextColumns = Data.define(:left, :right)
+
   def effective_public_event_series_ids(events)
     Public::Events::EffectiveSeriesIdsQuery.call(events)
   end
@@ -86,6 +88,23 @@ module Public::EventsHelper
     )
   end
 
+  def event_detail_text_columns(text)
+    normalized = text.to_s.gsub("\r\n", "\n").strip
+    return EventDetailTextColumns.new(left: nil, right: nil) if normalized.blank?
+
+    units, separator = event_detail_text_units(normalized)
+    return EventDetailTextColumns.new(left: normalized, right: nil) if units.length <= 1
+
+    split_index = balanced_text_split_index(units)
+    left = units.first(split_index).join(separator).strip
+    right = units.drop(split_index).join(separator).strip
+
+    EventDetailTextColumns.new(
+      left: left.presence || normalized,
+      right: right.presence
+    )
+  end
+
   def effective_public_grid_variant_for(event, _index)
     editorial_image = editorial_event_image_for(event)
     editorial_image&.grid_variant.presence || EventImage::GRID_VARIANT_1X1
@@ -116,6 +135,33 @@ module Public::EventsHelper
   end
 
   private
+
+  def event_detail_text_units(text)
+    paragraphs = text.split(/\n{2,}/).map(&:strip).reject(&:blank?)
+    return [ paragraphs, "\n\n" ] if paragraphs.length > 1
+
+    lines = text.lines.map(&:strip).reject(&:blank?)
+    return [ lines, "\n" ] if lines.length > 2
+
+    sentences = text.split(/(?<=[.!?])\s+/).map(&:strip).reject(&:blank?)
+    return [ sentences, " " ] if sentences.length > 1
+
+    [ [ text ], "\n\n" ]
+  end
+
+  def balanced_text_split_index(units)
+    total_length = units.sum { |unit| unit.length }
+    running_length = 0
+
+    units.each_with_index do |unit, index|
+      next if index.zero?
+
+      running_length += units[index - 1].length
+      return index if running_length >= (total_length / 2.0)
+    end
+
+    1
+  end
 
   def public_frontend_visible?(event)
     event.published? && event.published_at.present? && event.published_at <= Time.current
