@@ -4950,24 +4950,15 @@ trix-editor.blog-rich-text:focus {
   width: 0.72rem;
   height: 0.72rem;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(17, 17, 17, 0.18);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.48);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(6px);
+  background: rgba(17, 17, 17, 0.12);
   cursor: pointer;
 }
 
 .event-detail-image-dot[aria-current="true"] {
-  background: #fff;
-  border-color: rgba(17, 17, 17, 0.16);
-}
-
-.event-detail-image-dots-overlay {
-  position: absolute;
-  inset-inline: 0;
-  bottom: 10px;
-  z-index: 6;
+  background: #111;
+  border-color: #111;
 }
 
 .event-detail-image-stage-shell .highlights-slider-arrow-prev {

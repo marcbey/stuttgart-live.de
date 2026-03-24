@@ -111,8 +111,10 @@
                     aria-label="Weiter">
               ›
             </button>
+          </div>
 
-            <div class="event-detail-image-dots event-detail-image-dots-overlay" aria-label="Bildauswahl">
+          <div class="event-detail-image-meta">
+            <div class="event-detail-image-dots" aria-label="Bildauswahl">
               <% hero_slides.each_with_index do |_slide, index| %>
                 <button type="button"
                         class="event-detail-image-dot"
@@ -124,9 +126,6 @@
                 </button>
               <% end %>
             </div>
-          </div>
-
-          <div class="event-detail-image-meta">
             <p class="event-detail-image-caption" data-hero-rotator-target="caption" hidden></p>
             <p class="event-detail-image-credit"
                data-hero-rotator-target="credit"
