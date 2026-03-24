@@ -6,6 +6,7 @@ Das Repository enthält die komplette Anwendung: öffentliche Website, redaktion
 
 ## Kurzüberblick
 
+- Ruby 4.0.2
 - Ruby on Rails 8.1
 - PostgreSQL
 - Hotwire mit Turbo und Stimulus
@@ -303,9 +304,11 @@ Wichtig für die Interpretation:
 
 ### Voraussetzungen
 
-- Ruby in der Projektversion
+- Ruby 4.0.2 in der Projektversion
 - PostgreSQL
 - Node.js und npm
+
+Für die lokale Entwicklung und für den Produktionscontainer gilt dieselbe Ruby-Version. Kamal rollt die App als Docker-Image aus; der Produktionshost selbst braucht deshalb kein separates systemweites Ruby 4.
 
 ### Schnellstart
 
@@ -420,6 +423,7 @@ GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit
 ### Automatischer Deploy über GitHub
 
 Der GitHub-Workflow liest `APP_HOST`, `KAMAL_WEB_HOST` und `KAMAL_SSH_HOST_KEY` direkt aus der versionierten Datei `config/deploy.hetzner.shared.yml`.
+Ruby wird in CI und Deploy explizit aus `.ruby-version` geladen; aktuell ist das `4.0.2`.
 Vor dem eigentlichen App-Deploy prüft der Workflow außerdem die Version von `kamal-proxy` auf dem Zielhost und führt bei Bedarf automatisch `bin/kamal proxy reboot -d hetzner` aus.
 Hintergrund: Seit `kamal 2.11.0` ist `kamal-proxy v0.9.2` oder neuer für Deployments erforderlich.
 
