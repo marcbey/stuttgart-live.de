@@ -4772,6 +4772,11 @@ trix-editor.blog-rich-text:focus {
   justify-items: center;
 }
 
+.event-detail-image-stage-shell {
+  position: relative;
+  width: 100%;
+}
+
 .event-detail-image-stage {
   --event-detail-image-stage-padding: clamp(0.15rem, 0.55vw, 0.35rem);
   position: relative;
@@ -4945,29 +4950,32 @@ trix-editor.blog-rich-text:focus {
   width: 0.72rem;
   height: 0.72rem;
   padding: 0;
-  border: 1px solid rgba(17, 17, 17, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.92);
   border-radius: 999px;
-  background: rgba(17, 17, 17, 0.12);
+  background: rgba(255, 255, 255, 0.48);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(6px);
   cursor: pointer;
 }
 
 .event-detail-image-dot[aria-current="true"] {
-  background: #111;
-  border-color: #111;
+  background: #fff;
+  border-color: rgba(17, 17, 17, 0.16);
 }
 
-.event-detail-image-stage.highlights-slider-viewport .highlights-slider-arrow-overlay {
-  opacity: 1;
-  pointer-events: auto;
+.event-detail-image-dots-overlay {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 10px;
   z-index: 6;
 }
 
-.event-detail-image-stage .highlights-slider-arrow-prev {
-  left: 0.55rem;
+.event-detail-image-stage-shell .highlights-slider-arrow-prev {
+  left: -0.95rem;
 }
 
-.event-detail-image-stage .highlights-slider-arrow-next {
-  right: 0.55rem;
+.event-detail-image-stage-shell .highlights-slider-arrow-next {
+  right: -0.95rem;
 }
 
 .event-detail-body {

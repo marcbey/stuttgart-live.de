@@ -2441,12 +2441,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "© Foto Max Mustermann"
     assert_includes response.body, "Slider Subline"
     assert_select ".event-detail-image-figure-rotator[data-controller='hero-rotator lightbox'][data-hero-rotator-delay-value='3000']", count: 1
-    assert_select ".event-detail-image-stage.highlights-slider-viewport", count: 1
+    assert_select ".event-detail-image-stage-shell.highlights-slider-viewport", count: 1
+    assert_select ".event-detail-image-stage", count: 1
     assert_select ".event-detail-image-slide", count: 2
     assert_select ".event-detail-image-backdrop", count: 2
-    assert_select ".event-detail-image-stage .highlights-slider-arrow.highlights-slider-arrow-overlay", count: 2
-    assert_select ".event-detail-image-stage .highlights-slider-arrow-prev[data-action='hero-rotator#previous']", count: 1
-    assert_select ".event-detail-image-stage .highlights-slider-arrow-next[data-action='hero-rotator#next']", count: 1
+    assert_select ".event-detail-image-stage-shell .highlights-slider-arrow.highlights-slider-arrow-overlay", count: 2
+    assert_select ".event-detail-image-stage-shell .highlights-slider-arrow-prev[data-action='hero-rotator#previous']", count: 1
+    assert_select ".event-detail-image-stage-shell .highlights-slider-arrow-next[data-action='hero-rotator#next']", count: 1
     assert_select ".event-lightbox .highlights-slider-arrow.highlights-slider-arrow-overlay", count: 2
     assert_select ".event-lightbox .highlights-slider-arrow-prev[data-action='click->lightbox#previous']", count: 1
     assert_select ".event-lightbox .highlights-slider-arrow-next[data-action='click->lightbox#next']", count: 1
