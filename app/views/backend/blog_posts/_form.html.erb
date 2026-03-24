@@ -1,122 +1,100 @@
-<div class="blog-editor-layout">
-  <aside class="blog-editor-aside">
-    <div class="blog-editor-note">
-      <p>Autor: <strong><%= blog_post.display_author_name.presence || current_user.name.presence || current_user.email_address %></strong></p>
-      <p>Slug: <code><%= blog_post.slug.presence || "wird automatisch erzeugt" %></code></p>
-      <% if blog_post.published_at.present? %>
-        <p>Veröffentlichung: <strong><%= l(blog_post.published_at, format: "%d.%m.%Y %H:%M") %></strong></p>
-      <% else %>
-        <p>Veröffentlichung: <strong>noch nicht gesetzt</strong></p>
-      <% end %>
-    </div>
-  </aside>
+<% active_editor_tab = local_assigns.fetch(:active_editor_tab, "news") %>
+<% news_tab_active = active_editor_tab == "news" %>
+<% news_image_tab_active = active_editor_tab == "news_image" %>
+<% settings_tab_active = active_editor_tab == "settings" %>
 
-  <div>
-    <% if blog_post.errors.any? %>
-      <div class="flash flash-alert">
-        <strong>Bitte Eingaben prüfen.</strong>
-        <ul>
-          <% blog_post.errors.full_messages.each do |message| %>
-            <li><%= message %></li>
-          <% end %>
-        </ul>
-      </div>
-    <% end %>
+<section class="event-editor-tabs"
+         data-controller="event-editor-tabs"
+         data-event-editor-tabs-initial-tab-value="<%= active_editor_tab %>">
+  <div class="settings-tabs-nav event-editor-tabs-nav" role="tablist" aria-label="News-Editor Ansichten">
+    <button type="button"
+            id="blog-editor-tab-news"
+            class="settings-tabs-link<%= " is-active" if news_tab_active %>"
+            role="tab"
+            aria-controls="blog-editor-panel-news"
+            aria-selected="<%= news_tab_active %>"
+            tabindex="<%= news_tab_active ? 0 : -1 %>"
+            data-event-editor-tabs-target="tab"
+            data-event-editor-tabs-tab-key-param="news"
+            data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+      News
+    </button>
+    <button type="button"
+            id="blog-editor-tab-news-image"
+            class="settings-tabs-link<%= " is-active" if news_image_tab_active %>"
+            role="tab"
+            aria-controls="blog-editor-panel-news-image"
+            aria-selected="<%= news_image_tab_active %>"
+            tabindex="<%= news_image_tab_active ? 0 : -1 %>"
+            data-event-editor-tabs-target="tab"
+            data-event-editor-tabs-tab-key-param="news_image"
+            data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+      Newsbild
+    </button>
+    <button type="button"
+            id="blog-editor-tab-settings"
+            class="settings-tabs-link<%= " is-active" if settings_tab_active %>"
+            role="tab"
+            aria-controls="blog-editor-panel-settings"
+            aria-selected="<%= settings_tab_active %>"
+            tabindex="<%= settings_tab_active ? 0 : -1 %>"
+            data-event-editor-tabs-target="tab"
+            data-event-editor-tabs-tab-key-param="settings"
+            data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+      Einstellungen
+    </button>
+  </div>
 
-    <%= form_with model: [ :backend, blog_post ], class: "editor-form", id: form_id do |form| %>
-      <%= hidden_field_tag :status, (status_filter == "all" ? nil : status_filter) %>
-      <%= hidden_field_tag :query, query_filter if query_filter.present? %>
-      <div class="editor-grid">
-        <div>
-          <%= form.label :title, "Titel", class: "form-label" %>
-          <%= form.text_field :title, class: "form-input", maxlength: 180, required: true %>
-        </div>
-
-        <div>
-          <%= form.label :slug, "Slug", class: "form-label" %>
-          <%= form.text_field :slug, class: "form-input", placeholder: "wird-aus-dem-titel-abgeleitet" %>
-        </div>
-      </div>
-
-      <div>
-        <%= form.label :author_name, "Autor / Byline", class: "form-label" %>
-        <%= form.text_field :author_name, class: "form-input", placeholder: current_user.name.presence || current_user.email_address %>
-      </div>
-
-      <div>
-        <%= form.label :teaser, "Teaser", class: "form-label" %>
-        <%= form.text_area :teaser, rows: 4, class: "form-input form-textarea", maxlength: 320, required: true %>
-      </div>
-
-      <div>
-        <%= form.label :published_at, "Veröffentlichungsdatum", class: "form-label" %>
-        <%= form.datetime_local_field :published_at,
-                                      value: blog_post.published_at&.in_time_zone&.strftime("%Y-%m-%dT%H:%M"),
-                                      class: "form-input" %>
-      </div>
-
-      <%= render "backend/blog_posts/image_editor",
-                 form: form,
-                 form_id: form_id,
+  <div class="settings-tabs-panels backend-tabs-panels">
+    <section id="blog-editor-panel-news"
+             class="settings-tab-panel backend-tab-panel<%= " is-active" if news_tab_active %>"
+             role="tabpanel"
+             aria-labelledby="blog-editor-tab-news"
+             tabindex="0"
+             <%= "hidden" unless news_tab_active %>
+             data-event-editor-tabs-target="panel"
+             data-event-editor-tabs-panel-key="news">
+      <%= render "backend/blog_posts/editor_news_view",
                  blog_post: blog_post,
-                 title: "Titelbild",
-                 description: "Wird auf der News-Übersicht und im Beitrag verwendet.",
-                 image_slot: :cover_image,
-                 copyright_attribute: :cover_image_copyright,
-                 image_alt: blog_post.title,
-                 preview_variant: "blog-cover" %>
+                 form_id: form_id,
+                 status_filter: status_filter,
+                 query_filter: query_filter,
+                 active_editor_tab: active_editor_tab %>
+    </section>
 
-      <section class="blog-editor-section blog-editor-section-promotion" aria-labelledby="promotion-banner-section-title">
-        <div class="blog-editor-section-header">
-          <h3 id="promotion-banner-section-title">Promotion Banner</h3>
-          <p>Diese Inhalte erscheinen auf der Startseite direkt unter den Highlights.</p>
-        </div>
-
-        <div class="editor-grid blog-editor-section-grid">
-          <div>
-            <label class="blog-editor-checkbox">
-              <%= form.check_box :promotion_banner %>
-              <span>Als Promotion Banner markieren</span>
-            </label>
-            <p class="blog-editor-hint">Es kann immer nur ein Beitrag gleichzeitig als Promotion Banner aktiv sein.</p>
-          </div>
-
-          <div>
-            <%= form.label :promotion_banner_kicker_text, "Kicker", class: "form-label" %>
-            <%= form.text_field :promotion_banner_kicker_text,
-                                class: "form-input",
-                                maxlength: 80,
-                                placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_KICKER_TEXT %>
-          </div>
-
-          <div>
-            <%= form.label :promotion_banner_cta_text, "CTA-Text", class: "form-label" %>
-            <%= form.text_field :promotion_banner_cta_text,
-                                class: "form-input",
-                                maxlength: 80,
-                                placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_CTA_TEXT %>
-          </div>
-        </div>
-
-        <p class="blog-editor-hint">Leer gelassene Texte fallen automatisch auf die Standardwerte zurück.</p>
-
+    <section id="blog-editor-panel-news-image"
+             class="settings-tab-panel backend-tab-panel<%= " is-active" if news_image_tab_active %>"
+             role="tabpanel"
+             aria-labelledby="blog-editor-tab-news-image"
+             tabindex="0"
+             <%= "hidden" unless news_image_tab_active %>
+             data-event-editor-tabs-target="panel"
+             data-event-editor-tabs-panel-key="news_image">
+      <%= fields_for :blog_post, blog_post do |form| %>
         <%= render "backend/blog_posts/image_editor",
                    form: form,
                    form_id: form_id,
                    blog_post: blog_post,
-                   title: "Promotion-Banner-Bild",
-                   description: "Wird auf der Startseite unter den Highlights in voller Breite angezeigt.",
-                   image_slot: :promotion_banner_image,
-                   copyright_attribute: :promotion_banner_image_copyright,
-                   image_alt: "#{blog_post.title} Promotion Banner",
-                   preview_variant: "blog-promotion-banner" %>
-      </section>
+                   title: "Titelbild",
+                   description: "Wird auf der News-Übersicht und im Beitrag verwendet.",
+                   image_slot: :cover_image,
+                   copyright_attribute: :cover_image_copyright,
+                   image_alt: blog_post.title,
+                   preview_variant: "blog-cover" %>
+      <% end %>
+    </section>
 
-      <div>
-        <%= form.label :body, "Inhalt", class: "form-label" %>
-        <p class="blog-editor-hint">Bilder können direkt über die Toolbar in den Text eingefügt werden.</p>
-        <%= form.rich_textarea :body, class: "blog-rich-text" %>
-      </div>
-    <% end %>
+    <section id="blog-editor-panel-settings"
+             class="settings-tab-panel backend-tab-panel<%= " is-active" if settings_tab_active %>"
+             role="tabpanel"
+             aria-labelledby="blog-editor-tab-settings"
+             tabindex="0"
+             <%= "hidden" unless settings_tab_active %>
+             data-event-editor-tabs-target="panel"
+             data-event-editor-tabs-panel-key="settings">
+      <%= render "backend/blog_posts/settings_fields",
+                 blog_post: blog_post,
+                 form_id: form_id %>
+    </section>
   </div>
-</div>
+</section>

@@ -1,0 +1,8 @@
+<%= form_with model: [ :backend, blog_post ], class: "editor-form", id: form_id do |form| %>
+  <%= hidden_field_tag :status, (status_filter == "all" ? nil : status_filter) %>
+  <%= hidden_field_tag :query, query_filter if query_filter.present? %>
+  <%= hidden_field_tag :editor_tab,
+                       local_assigns.fetch(:active_editor_tab, "news"),
+                       data: { event_editor_tabs_target: "stateInput" } %>
+  <%= render "backend/blog_posts/news_fields", form: form, blog_post: blog_post %>
+<% end %>

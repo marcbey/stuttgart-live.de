@@ -16,7 +16,7 @@
 
       <div class="backend-topbar-actions">
         <%= link_to "New",
-                    new_backend_blog_post_path(status: @status_filter, query: @query_filter.presence),
+                    new_backend_blog_post_path(status: @status_filter, query: @query_filter.presence, editor_tab: (@active_editor_tab unless @active_editor_tab == "news")),
                     data: { turbo_frame: "blog_editor" },
                     class: "button button-secondary button-compact" %>
       </div>
@@ -62,7 +62,8 @@
                  blog_posts: @blog_posts,
                  selected_blog_post: @selected_blog_post,
                  status_filter: @status_filter,
-                 query_filter: @query_filter %>
+                 query_filter: @query_filter,
+                 active_editor_tab: @active_editor_tab %>
     </aside>
 
     <section class="backend-editor-column">
@@ -70,7 +71,8 @@
         <%= render "editor_frame",
                    blog_post: @selected_blog_post,
                    status_filter: @status_filter,
-                   query_filter: @query_filter %>
+                   query_filter: @query_filter,
+                   active_editor_tab: @active_editor_tab %>
       <% else %>
         <%= turbo_frame_tag "blog_editor" do %>
           <div class="empty-state">Keine Beiträge zur aktuellen Filterung.</div>

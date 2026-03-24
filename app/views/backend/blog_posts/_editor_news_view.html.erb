@@ -1,0 +1,15 @@
+<div class="backend-section-stack">
+  <section class="backend-section backend-section-form">
+    <div class="backend-section-header">
+      <h3>News</h3>
+    </div>
+    <div class="backend-section-body">
+      <%= render "backend/blog_posts/editor_form",
+                 blog_post: blog_post,
+                 form_id: form_id,
+                 status_filter: status_filter,
+                 query_filter: query_filter,
+                 active_editor_tab: local_assigns[:active_editor_tab] %>
+    </div>
+  </section>
+</div>

@@ -5,103 +5,114 @@
 <% copyright_method = "#{image_slot}_copyright" %>
 <% image_source = image_blob.present? ? url_for(image_blob) : nil %>
 
-<section class="offer-section event-image-section blog-post-image-section">
-  <h3><%= title %></h3>
-  <% if description.present? %>
-    <p class="event-image-crop-hint"><%= description %></p>
-  <% end %>
+<section class="offer-section backend-section backend-section-media event-image-section blog-post-image-section">
+  <div class="backend-section-header">
+    <h3><%= title %></h3>
+  </div>
 
-  <div class="event-image-crop-shell">
-    <div class="event-image-crop-editor"
-         data-controller="event-image-crop-preview blog-post-image-preupload"
-         data-blog-post-image-preupload-direct-upload-url-value="<%= rails_direct_uploads_path %>">
-      <%= tag.input type: "hidden",
-                    value: preview_variant,
-                    data: { event_image_crop_preview_target: "gridVariant" } %>
-      <%= hidden_field_tag "blog_post_images[#{image_slot}_signed_id]",
-                           blog_post.public_send("pending_#{image_slot}_blob")&.signed_id,
-                           data: { blog_post_image_preupload_target: "signedInput" } %>
-      <%= hidden_field_tag "blog_post_images[remove_#{image_slot}]",
-                           (blog_post.public_send("remove_#{image_slot}?") ? "1" : "0"),
-                           data: { blog_post_image_preupload_target: "removeInput" } %>
-      <%= form.hidden_field "#{image_slot}_focus_x",
-                            value: blog_post.public_send(crop_focus_x_method),
-                            data: { event_image_crop_preview_target: "saveFocusX" } %>
-      <%= form.hidden_field "#{image_slot}_focus_y",
-                            value: blog_post.public_send(crop_focus_y_method),
-                            data: { event_image_crop_preview_target: "saveFocusY" } %>
-      <%= form.hidden_field "#{image_slot}_zoom",
-                            value: blog_post.public_send(crop_zoom_method),
-                            data: { event_image_crop_preview_target: "saveZoom" } %>
+  <div class="backend-section-body">
+    <% if description.present? %>
+      <p class="event-image-crop-hint"><%= description %></p>
+    <% end %>
 
-      <div class="event-image-crop-frame"
-           data-event-image-crop-preview-target="previewFrame"
-           data-action="pointerdown->event-image-crop-preview#startDrag"
-           data-grid-variant="<%= preview_variant %>">
-        <%= image_tag image_source.presence || "",
-                      alt: image_alt,
-                      class: class_names("event-image-crop-preview-image", "is-hidden": image_source.blank?),
-                      data: {
-                        event_image_crop_preview_target: "previewImage",
-                        blog_post_image_preupload_target: "previewImage"
-                      } %>
-        <p class="event-image-crop-placeholder<%= " is-hidden" if image_source.present? %>"
-           data-role="event-image-crop-placeholder"
-           data-blog-post-image-preupload-target="placeholder">
-          Noch kein Bild ausgewählt.
-        </p>
-        <div class="event-image-crop-box is-hidden"
-             data-event-image-crop-preview-target="previewBox"
-             data-blog-post-image-preupload-target="previewBox"></div>
-      </div>
+    <div class="event-image-crop-shell">
+      <div class="event-image-crop-editor"
+           data-controller="event-image-crop-preview blog-post-image-preupload"
+           data-blog-post-image-preupload-direct-upload-url-value="<%= rails_direct_uploads_path %>">
+        <%= tag.input type: "hidden",
+                      value: preview_variant,
+                      data: { event_image_crop_preview_target: "gridVariant" } %>
+        <%= hidden_field_tag "blog_post_images[#{image_slot}_signed_id]",
+                             blog_post.public_send("pending_#{image_slot}_blob")&.signed_id,
+                             form: form_id,
+                             data: { blog_post_image_preupload_target: "signedInput" } %>
+        <%= hidden_field_tag "blog_post_images[remove_#{image_slot}]",
+                             (blog_post.public_send("remove_#{image_slot}?") ? "1" : "0"),
+                             form: form_id,
+                             data: { blog_post_image_preupload_target: "removeInput" } %>
+        <%= form.hidden_field "#{image_slot}_focus_x",
+                              value: blog_post.public_send(crop_focus_x_method),
+                              form: form_id,
+                              data: { event_image_crop_preview_target: "saveFocusX" } %>
+        <%= form.hidden_field "#{image_slot}_focus_y",
+                              value: blog_post.public_send(crop_focus_y_method),
+                              form: form_id,
+                              data: { event_image_crop_preview_target: "saveFocusY" } %>
+        <%= form.hidden_field "#{image_slot}_zoom",
+                              value: blog_post.public_send(crop_zoom_method),
+                              form: form_id,
+                              data: { event_image_crop_preview_target: "saveZoom" } %>
 
-      <div class="event-image-crop-sidebar">
-        <div class="slider-image-editor-meta">
-          <div class="event-image-meta-inline-form">
-            <%= form.label copyright_attribute, "Copyright", class: "form-label" %>
-            <%= form.text_field copyright_attribute,
-                                value: blog_post.public_send(copyright_method),
-                                placeholder: "Copyright unter dem Bild (optional)",
-                                class: "form-input" %>
-          </div>
-
-          <div class="slider-image-meta-actions">
-            <%= file_field_tag nil,
-                               accept: "image/*",
-                               class: "event-image-inline-file-input",
-                               id: "#{form_id}_#{image_slot}_upload",
-                               data: {
-                                 blog_post_image_preupload_target: "input",
-                                 action: "change->blog-post-image-preupload#select"
-                               } %>
-            <button type="button"
-                    class="button button-secondary button-compact"
-                    onclick="document.getElementById('<%= "#{form_id}_#{image_slot}_upload" %>')?.click();">
-              Bild auswählen
-            </button>
-            <button type="button"
-                    class="button button-ghost button-compact"
-                    data-blog-post-image-preupload-target="removeButton"
-                    data-action="click->blog-post-image-preupload#remove"
-                    <%= "hidden" if image_blob.blank? %>>
-              Bild entfernen
-            </button>
-          </div>
-          <p class="preuploaded-image-live-region"
-             data-blog-post-image-preupload-target="status"
-             role="status"
-             aria-live="polite"></p>
+        <div class="event-image-crop-frame"
+             data-event-image-crop-preview-target="previewFrame"
+             data-action="pointerdown->event-image-crop-preview#startDrag"
+             data-grid-variant="<%= preview_variant %>">
+          <%= image_tag image_source.presence || "",
+                        alt: image_alt,
+                        class: class_names("event-image-crop-preview-image", "is-hidden": image_source.blank?),
+                        data: {
+                          event_image_crop_preview_target: "previewImage",
+                          blog_post_image_preupload_target: "previewImage"
+                        } %>
+          <p class="event-image-crop-placeholder<%= " is-hidden" if image_source.present? %>"
+             data-role="event-image-crop-placeholder"
+             data-blog-post-image-preupload-target="placeholder">
+            Noch kein Bild ausgewählt.
+          </p>
+          <div class="event-image-crop-box is-hidden"
+               data-event-image-crop-preview-target="previewBox"
+               data-blog-post-image-preupload-target="previewBox"></div>
         </div>
 
-        <%= render "backend/blog_posts/image_crop_controls",
-                   blog_post: blog_post,
-                   focus_x_attribute: "#{image_slot}_focus_x",
-                   focus_y_attribute: "#{image_slot}_focus_y",
-                   zoom_attribute: "#{image_slot}_zoom",
-                   focus_x_value: blog_post.public_send(crop_focus_x_method),
-                   focus_y_value: blog_post.public_send(crop_focus_y_method),
-                   zoom_value: blog_post.public_send(crop_zoom_method),
-                   preview_variant: preview_variant %>
+        <div class="event-image-crop-sidebar">
+          <div class="slider-image-editor-meta">
+            <div class="event-image-meta-inline-form">
+              <%= form.label copyright_attribute, "Copyright", class: "form-label" %>
+              <%= form.text_field copyright_attribute,
+                                  value: blog_post.public_send(copyright_method),
+                                  placeholder: "Copyright unter dem Bild (optional)",
+                                  class: "form-input",
+                                  form: form_id %>
+            </div>
+
+            <div class="slider-image-meta-actions">
+              <%= file_field_tag nil,
+                                 accept: "image/*",
+                                 class: "event-image-inline-file-input",
+                                 id: "#{form_id}_#{image_slot}_upload",
+                                 data: {
+                                   blog_post_image_preupload_target: "input",
+                                   action: "change->blog-post-image-preupload#select"
+                                 } %>
+              <button type="button"
+                      class="button button-secondary button-compact"
+                      onclick="document.getElementById('<%= "#{form_id}_#{image_slot}_upload" %>')?.click();">
+                Bild auswählen
+              </button>
+              <button type="button"
+                      class="button button-ghost button-compact"
+                      data-blog-post-image-preupload-target="removeButton"
+                      data-action="click->blog-post-image-preupload#remove"
+                      <%= "hidden" if image_blob.blank? %>>
+                Bild entfernen
+              </button>
+            </div>
+            <p class="preuploaded-image-live-region"
+               data-blog-post-image-preupload-target="status"
+               role="status"
+               aria-live="polite"></p>
+          </div>
+
+          <%= render "backend/blog_posts/image_crop_controls",
+                     blog_post: blog_post,
+                     focus_x_attribute: "#{image_slot}_focus_x",
+                     focus_y_attribute: "#{image_slot}_focus_y",
+                     zoom_attribute: "#{image_slot}_zoom",
+                     focus_x_value: blog_post.public_send(crop_focus_x_method),
+                     focus_y_value: blog_post.public_send(crop_focus_y_method),
+                     zoom_value: blog_post.public_send(crop_zoom_method),
+                     preview_variant: preview_variant %>
+        </div>
       </div>
     </div>
   </div>

@@ -5,7 +5,10 @@
     <ul class="event-list blog-list">
       <% blog_posts.each do |blog_post| %>
         <li class="event-list-item blog-list-item <%= 'event-list-item-active' if selected_blog_post&.id == blog_post.id %>">
-          <%= link_to edit_backend_blog_post_path(blog_post, status: status_filter, query: query_filter.presence),
+          <%= link_to edit_backend_blog_post_path(blog_post,
+                                                 status: status_filter,
+                                                 query: query_filter.presence,
+                                                 editor_tab: local_assigns[:active_editor_tab]),
                       data: {
                         turbo_frame: "blog_editor",
                         action: "click->editor-inbox#itemLinkClicked",

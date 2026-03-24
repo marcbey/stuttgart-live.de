@@ -5290,6 +5290,10 @@ trix-editor.blog-rich-text:focus {
   border: 0;
 }
 
+#blog_editor_panel.editor-panel.backend-panel {
+  border: 0;
+}
+
 #event_editor_panel .settings-tab-panel,
 #event_editor_panel .backend-tab-panel {
   padding: 0;

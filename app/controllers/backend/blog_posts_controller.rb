@@ -8,6 +8,7 @@ module Backend
     before_action :set_filters, only: %i[index new create edit update]
 
     def index
+      @active_editor_tab = editor_tab
       @blog_posts = filtered_blog_posts_for(status: @status_filter, query: @query_filter)
       @selected_blog_post = selected_blog_post_from(@blog_posts)
     end
@@ -17,7 +18,12 @@ module Backend
 
       return render_editor_panel(@blog_post, status: @status_filter, query: @query_filter) if turbo_frame_request?
 
-      redirect_to backend_blog_posts_path(status: status_param(@status_filter), query: @query_filter.presence, new: "1")
+      redirect_to backend_blog_posts_path(
+        status: status_param(@status_filter),
+        query: @query_filter.presence,
+        new: "1",
+        editor_tab: editor_tab_param
+      )
     end
 
     def create
@@ -40,7 +46,12 @@ module Backend
     def edit
       return render_editor_panel(@blog_post, status: @status_filter, query: @query_filter) if turbo_frame_request?
 
-      redirect_to backend_blog_posts_path(status: status_param(@status_filter), query: @query_filter.presence, blog_post_id: @blog_post.id)
+      redirect_to backend_blog_posts_path(
+        status: status_param(@status_filter),
+        query: @query_filter.presence,
+        blog_post_id: @blog_post.id,
+        editor_tab: editor_tab_param
+      )
     end
 
     def update
@@ -124,6 +135,18 @@ module Backend
         )
       end
 
+      def editor_tab
+        params[:editor_tab].to_s.presence_in(allowed_editor_tabs) || "news"
+      end
+
+      def allowed_editor_tabs
+        %w[news news_image settings]
+      end
+
+      def editor_tab_param
+        editor_tab == "news" ? nil : editor_tab
+      end
+
       def publication_action
         value = params[:publication_action].to_s
         %w[save publish depublish].include?(value) ? value : "save"
@@ -204,6 +227,7 @@ module Backend
       def render_invalid_state(blog_post)
         respond_to do |format|
           format.html do
+            @active_editor_tab = editor_tab
             @selected_blog_post = blog_post
             @blog_posts = filtered_blog_posts_for(status: @status_filter, query: @query_filter)
             render :index, status: :unprocessable_entity
@@ -232,7 +256,8 @@ module Backend
             redirect_to backend_blog_posts_path(
               status: status_param(editor_state.target_status),
               query: @query_filter.presence,
-              blog_post_id: editor_state.selected_blog_post&.id
+              blog_post_id: editor_state.selected_blog_post&.id,
+              editor_tab: editor_tab_param
             ), notice: notice
           end
           format.turbo_stream do
@@ -262,7 +287,8 @@ module Backend
               blog_posts: editor_state.sidebar_posts,
               selected_blog_post: editor_state.selected_blog_post,
               status_filter: editor_state.target_status,
-              query_filter: @query_filter
+              query_filter: @query_filter,
+              active_editor_tab: editor_tab_param
             }
           ),
           turbo_stream.replace(
@@ -277,7 +303,8 @@ module Backend
         {
           blog_post: blog_post,
           status_filter: status,
-          query_filter: query
+          query_filter: query,
+          active_editor_tab: editor_tab
         }
       end
 

@@ -1,0 +1,34 @@
+<div class="editor-grid">
+  <div>
+    <%= form.label :title, "Titel", class: "form-label" %>
+    <%= form.text_field :title, class: "form-input", maxlength: 180, required: true %>
+  </div>
+
+  <div>
+    <%= form.label :slug, "Slug", class: "form-label" %>
+    <%= form.text_field :slug, class: "form-input", placeholder: "wird-aus-dem-titel-abgeleitet" %>
+  </div>
+</div>
+
+<div>
+  <%= form.label :author_name, "Autor / Byline", class: "form-label" %>
+  <%= form.text_field :author_name, class: "form-input", placeholder: current_user.name.presence || current_user.email_address %>
+</div>
+
+<div>
+  <%= form.label :teaser, "Teaser", class: "form-label" %>
+  <%= form.text_area :teaser, rows: 4, class: "form-input form-textarea", maxlength: 320, required: true %>
+</div>
+
+<div>
+  <%= form.label :published_at, "Veröffentlichungsdatum", class: "form-label" %>
+  <%= form.datetime_local_field :published_at,
+                                value: blog_post.published_at&.in_time_zone&.strftime("%Y-%m-%dT%H:%M"),
+                                class: "form-input" %>
+</div>
+
+<div>
+  <%= form.label :body, "Inhalt", class: "form-label" %>
+  <p class="blog-editor-hint">Bilder können direkt über die Toolbar in den Text eingefügt werden.</p>
+  <%= form.rich_textarea :body, class: "blog-rich-text" %>
+</div>

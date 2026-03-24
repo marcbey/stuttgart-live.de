@@ -3,7 +3,8 @@
     <%= render "backend/blog_posts/editor_panel",
                blog_post: blog_post,
                status_filter: status_filter,
-               query_filter: query_filter %>
+               query_filter: query_filter,
+               active_editor_tab: local_assigns[:active_editor_tab] %>
   <% else %>
     <div class="empty-state">Keine Beiträge zur aktuellen Filterung.</div>
   <% end %>

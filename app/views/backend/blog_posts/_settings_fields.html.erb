@@ -1,0 +1,60 @@
+<div class="backend-section-stack">
+  <section class="backend-section backend-section-form blog-editor-section-promotion" aria-labelledby="promotion-banner-section-title">
+    <div class="backend-section-header">
+      <div>
+        <h3 id="promotion-banner-section-title">Promotion Banner</h3>
+        <p>Diese Inhalte erscheinen auf der Startseite direkt unter den Highlights.</p>
+      </div>
+    </div>
+
+    <div class="backend-section-body">
+      <div class="editor-grid blog-editor-section-grid">
+        <div>
+          <label class="blog-editor-checkbox">
+            <%= hidden_field_tag "blog_post[promotion_banner]", "0", form: form_id, id: nil %>
+            <%= check_box_tag "blog_post[promotion_banner]", "1", blog_post.promotion_banner?, form: form_id %>
+            <span>Als Promotion Banner markieren</span>
+          </label>
+          <p class="blog-editor-hint">Es kann immer nur ein Beitrag gleichzeitig als Promotion Banner aktiv sein.</p>
+        </div>
+
+        <div>
+          <%= label_tag "blog_post_promotion_banner_kicker_text", "Kicker", class: "form-label" %>
+          <%= text_field_tag "blog_post[promotion_banner_kicker_text]",
+                             blog_post.promotion_banner_kicker_text,
+                             id: "blog_post_promotion_banner_kicker_text",
+                             class: "form-input",
+                             maxlength: 80,
+                             placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_KICKER_TEXT,
+                             form: form_id %>
+        </div>
+
+        <div>
+          <%= label_tag "blog_post_promotion_banner_cta_text", "CTA-Text", class: "form-label" %>
+          <%= text_field_tag "blog_post[promotion_banner_cta_text]",
+                             blog_post.promotion_banner_cta_text,
+                             id: "blog_post_promotion_banner_cta_text",
+                             class: "form-input",
+                             maxlength: 80,
+                             placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_CTA_TEXT,
+                             form: form_id %>
+        </div>
+      </div>
+
+      <p class="blog-editor-hint">Leer gelassene Texte fallen automatisch auf die Standardwerte zurück.</p>
+    </div>
+  </section>
+
+  <%= fields_for :blog_post, blog_post do |form| %>
+    <%= render "backend/blog_posts/image_editor",
+               form: form,
+               form_id: form_id,
+               blog_post: blog_post,
+               title: "Promotion-Banner-Bild",
+               description: "Wird auf der Startseite unter den Highlights in voller Breite angezeigt.",
+               image_slot: :promotion_banner_image,
+               copyright_attribute: :promotion_banner_image_copyright,
+               image_alt: "#{blog_post.title} Promotion Banner",
+               preview_variant: "blog-promotion-banner" %>
+  <% end %>
+</div>
