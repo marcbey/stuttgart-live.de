@@ -1,14 +1,47 @@
 <% form_errors = event_editor_errors(event) %>
 <% active_editor_tab = local_assigns.fetch(:active_editor_tab, "event") %>
+<% manual_image_form_values = local_assigns.fetch(:manual_image_form_values, {}) %>
+<% hero_signed_ids = Array(manual_image_form_values[:detail_hero_signed_ids]).reject(&:blank?) %>
+<% hero_signed_id_candidate = hero_signed_ids.first %>
+<% manual_event_image_blob = local_assigns.fetch(:manual_event_image_blob, preuploaded_blob_from_signed_id(hero_signed_id_candidate)) %>
+<% manual_event_image_signed_id = local_assigns.fetch(:manual_event_image_signed_id, manual_event_image_blob.present? ? hero_signed_id_candidate : nil) %>
+<% manual_event_image = local_assigns[:manual_event_image] || EventImage.new(
+     sub_text: manual_image_form_values[:sub_text],
+     grid_variant: manual_image_form_values[:grid_variant],
+     card_focus_x: manual_image_form_values[:card_focus_x],
+     card_focus_y: manual_image_form_values[:card_focus_y],
+     card_zoom: manual_image_form_values[:card_zoom]
+   ) %>
+<% slider_alt_text = local_assigns.fetch(:slider_alt_text, manual_image_form_values[:slider_alt_text]) %>
+<% slider_sub_text = local_assigns.fetch(:slider_sub_text, manual_image_form_values[:slider_sub_text]) %>
+<% slider_signed_ids = local_assigns.fetch(:slider_signed_ids, Array(manual_image_form_values[:slider_signed_ids]).reject(&:blank?)) %>
 <% event_tab_active = active_editor_tab == "event" %>
 <% event_image_tab_active = active_editor_tab == "event_image" %>
 <% slider_images_tab_active = active_editor_tab == "slider_images" %>
 <% presenters_tab_active = active_editor_tab == "presenters" %>
+<% llm_tab_active = active_editor_tab == "llm_enrichment" %>
+<% settings_tab_active = active_editor_tab == "settings" %>
 
 <div class="editor-panel backend-panel"
      id="event_editor_panel"
+     data-selected-context="<%= backend_event_context(event) %>"
      data-controller="event-image-preupload"
      data-event-image-preupload-direct-upload-url-value="<%= rails_direct_uploads_path %>">
+  <template class="editor-actions-template">
+    <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled, filter_status: nil %>
+  </template>
+
+  <header class="editor-header">
+    <div>
+      <p class="eyebrow">New</p>
+      <h2><%= event.artist_name.presence || "Neues Event" %></h2>
+      <p><%= event.title.presence || "Manuell anlegen" %></p>
+    </div>
+    <div class="editor-header-badges">
+      <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
+    </div>
+  </header>
+
   <%= form_with model: event,
                 url: backend_events_path,
                 method: :post,
@@ -82,6 +115,30 @@
                 data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
           Präsentatoren
         </button>
+        <button type="button"
+                id="event-editor-tab-llm-enrichment"
+                class="settings-tabs-link<%= " is-active" if llm_tab_active %>"
+                role="tab"
+                aria-controls="event-editor-panel-llm-enrichment"
+                aria-selected="<%= llm_tab_active %>"
+                tabindex="<%= llm_tab_active ? 0 : -1 %>"
+                data-event-editor-tabs-target="tab"
+                data-event-editor-tabs-tab-key-param="llm_enrichment"
+                data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+          LLM-Enrichment
+        </button>
+        <button type="button"
+                id="event-editor-tab-settings"
+                class="settings-tabs-link<%= " is-active" if settings_tab_active %>"
+                role="tab"
+                aria-controls="event-editor-panel-settings"
+                aria-selected="<%= settings_tab_active %>"
+                tabindex="<%= settings_tab_active ? 0 : -1 %>"
+                data-event-editor-tabs-target="tab"
+                data-event-editor-tabs-tab-key-param="settings"
+                data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+          Einstellungen
+        </button>
       </div>
 
       <div class="settings-tabs-panels backend-tabs-panels">
@@ -105,7 +162,8 @@
                            all_genres: all_genres,
                            selected_genre_ids: selected_genre_ids,
                            editable_promoter_id: true,
-                           manual_ticket_url: manual_ticket_url %>
+                           manual_ticket_url: manual_ticket_url,
+                           show_settings_section: false %>
               </div>
             </section>
           </div>
@@ -156,13 +214,44 @@
                      editor_form_id: editor_form_id,
                      selected_presenter_ids: selected_presenter_ids %>
         </section>
+
+        <section id="event-editor-panel-llm-enrichment"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if llm_tab_active %>"
+                 role="tabpanel"
+                 aria-labelledby="event-editor-tab-llm-enrichment"
+                 tabindex="0"
+                 <%= "hidden" unless llm_tab_active %>
+                 data-event-editor-tabs-target="panel"
+                 data-event-editor-tabs-panel-key="llm_enrichment">
+          <%= render "backend/events/llm_enrichment_fields",
+                     event: event,
+                     llm_enrichment: nil,
+                     editor_form_id: editor_form_id,
+                     filter_status: nil,
+                     allow_run: false,
+                     empty_state_message: "LLM-Enrichment ist für neue Events erst nach dem ersten Speichern verfügbar." %>
+        </section>
+
+        <section id="event-editor-panel-settings"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if settings_tab_active %>"
+                 role="tabpanel"
+                 aria-labelledby="event-editor-tab-settings"
+                 tabindex="0"
+                 <%= "hidden" unless settings_tab_active %>
+                 data-event-editor-tabs-target="panel"
+                 data-event-editor-tabs-panel-key="settings">
+          <%= render "backend/events/settings_fields",
+                     event: event,
+                     editor_form_id: editor_form_id %>
+        </section>
       </div>
     </section>
 
     <p class="preuploaded-image-live-region" data-event-image-preupload-target="status" role="status" aria-live="polite"></p>
 
-    <div class="editor-footer">
-      <%= form.submit "Event erstellen", class: "button button-compact", data: { event_image_preupload_target: "submitButton" } %>
-    </div>
+    <%= form.submit "Event erstellen",
+                    class: "button button-compact editor-footer",
+                    data: { event_image_preupload_target: "submitButton" },
+                    hidden: true %>
   <% end %>
 </div>

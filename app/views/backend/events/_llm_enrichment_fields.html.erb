@@ -1,30 +1,38 @@
 <section class="offer-section backend-section llm-enrichment-section">
   <% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
   <% llm_run_hint = event_llm_last_successful_run_hint(event) %>
+  <% allow_run = local_assigns.fetch(:allow_run, event.persisted?) %>
+  <% empty_state_message = local_assigns.fetch(:empty_state_message, "Für dieses Event gibt es noch kein LLM-Enrichment. Der manuelle Lauf legt beim Abschluss ein neues Enrichment an.") %>
   <div class="backend-section-header backend-section-header-with-actions">
     <div>
       <h3>LLM-Enrichment</h3>
     </div>
-    <div class="backend-section-header-actions">
-      <div class="action-cell">
-        <%= button_to "LLM-Enrichment für dieses Event starten",
-                      run_llm_enrichment_backend_event_path(event),
-                      method: :post,
-                      params: {
-                        status: filter_status,
-                        editor_tab: "llm_enrichment"
-                      },
-                      form: { data: { turbo_stream: true } },
-                      class: "button button-save-primary button-compact" %>
+    <% if allow_run %>
+      <div class="backend-section-header-actions">
+        <div class="action-cell">
+          <%= button_to "LLM-Enrichment für dieses Event starten",
+                        run_llm_enrichment_backend_event_path(event),
+                        method: :post,
+                        params: {
+                          status: filter_status,
+                          editor_tab: "llm_enrichment"
+                        },
+                        form: { data: { turbo_stream: true } },
+                        class: "button button-save-primary button-compact" %>
+        </div>
       </div>
-    </div>
+    <% end %>
   </div>
 
   <p class="form-hint">
-    Dieser Lauf verarbeitet nur dieses Event, überschreibt ein vorhandenes Enrichment und erscheint unter den LLM-Enrichment Jobs.
-    <% if llm_run_hint.present? %>
-      <br>
-      <%= llm_run_hint %>
+    <% if allow_run %>
+      Dieser Lauf verarbeitet nur dieses Event, überschreibt ein vorhandenes Enrichment und erscheint unter den LLM-Enrichment Jobs.
+      <% if llm_run_hint.present? %>
+        <br>
+        <%= llm_run_hint %>
+      <% end %>
+    <% else %>
+      Dieses Panel folgt derselben Struktur wie im Edit-Editor. LLM-Enrichment ist für neue Events erst verfügbar, sobald das Event gespeichert wurde.
     <% end %>
   </p>
 
@@ -119,9 +127,7 @@
   <% else %>
     <section class="backend-section backend-section-compact">
       <div class="backend-section-body">
-        <p class="form-hint">
-          Für dieses Event gibt es noch kein LLM-Enrichment. Der manuelle Lauf legt beim Abschluss ein neues Enrichment an.
-        </p>
+        <p class="form-hint"><%= empty_state_message %></p>
       </div>
     </section>
   <% end %>

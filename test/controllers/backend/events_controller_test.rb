@@ -97,20 +97,45 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[ticket_url]'][value='https://example.com/tickets/published']"
   end
 
-  test "new shows the same editable fields as the event editor" do
+  test "new redirects to inbox split layout" do
     sign_in_as(@user)
 
     get new_backend_event_url
 
+    assert_response :redirect
+    assert_includes response.redirect_url, "new=1"
+
+    follow_redirect!
+
     assert_response :success
+    assert_select ".backend-split", count: 1
+    assert_select "turbo-frame#event_editor", count: 1
+    assert_select "div#event_editor_panel", count: 1
+    assert_select "#event_topbar_context", text: /Neues Event anlegen/
+    assert_select "#event_topbar_editor_actions button[form='editor_form_event']", text: "Event erstellen", count: 1
+    assert_select "#event_topbar_editor_actions a.button", text: "Open", count: 0
+  end
+
+  test "turbo frame new shows the same editable fields as the event editor" do
+    sign_in_as(@user)
+
+    get new_backend_event_url, headers: { "Turbo-Frame" => "event_editor" }
+
+    assert_response :success
+    assert_select "turbo-frame#event_editor", count: 1
+    assert_no_match(/Event-Inbox/, response.body)
     assert_select "#event-editor-tab-event[aria-selected='true']", count: 1
     assert_select "#event-editor-tab-event-image[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-presenters[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-llm-enrichment[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-settings[aria-selected='false']", count: 1
     assert_select "#event-editor-panel-event:not([hidden])", count: 1
     assert_select "#event-editor-panel-event-image[hidden]", count: 1
     assert_select "#event-editor-panel-slider-images[hidden]", count: 1
     assert_select "#event-editor-panel-presenters[hidden]", count: 1
+    assert_select "#event-editor-panel-llm-enrichment[hidden]", count: 1
+    assert_select "#event-editor-panel-settings[hidden]", count: 1
     assert_select "input[name='editor_tab'][value='event']", count: 1
     assert_select "input[name='event[doors_at]']"
     assert_select "input[name='event[homepage_url]']"
@@ -118,12 +143,18 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[facebook_url]']"
     assert_select "input[name='event[promoter_id]']"
     assert_select "input[name='event[ticket_url]']"
-    assert_select "input[name='event[highlighted]'][type='checkbox']"
     assert_select "input[name='event[support]']"
     assert_select "textarea[name='event[organizer_notes]']"
     assert_select "input[name='event[show_organizer_notes]'][type='checkbox']"
     assert_operator response.body.index('name="event[organizer_notes]"'), :<, response.body.index('name="event[show_organizer_notes]"')
-    assert_select "input[type='hidden'][name='event[genre_ids][]'][value='']"
+    assert_select "#event-editor-panel-event input[name='event[highlighted]']", count: 0
+    assert_select "#event-editor-panel-event input[name='event[promotion_banner]']", count: 0
+    assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-event .editor-genre-section", count: 0
+    assert_select "#event-editor-panel-event input[name='event[genre_ids][]']", count: 0
     assert_select "input[name='event_image[detail_hero_files][]'][type='file']"
     assert_select "input[name='event_image[sub_text]']"
     assert_select "select#event_image_grid_variant", count: 1
@@ -136,13 +167,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='event-image-preupload']"
     assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
+    assert_includes response.body, "LLM-Enrichment ist für neue Events erst nach dem ersten Speichern verfügbar."
   end
 
-  test "new keeps requested presenters tab active" do
+  test "turbo frame new keeps requested presenters tab active" do
     sign_in_as(@user)
     create_presenter(name: "Alpha Presenter")
 
-    get new_backend_event_url(editor_tab: "presenters")
+    get new_backend_event_url(editor_tab: "presenters"), headers: { "Turbo-Frame" => "event_editor" }
 
     assert_response :success
     assert_select "#event-editor-tab-event[aria-selected='false']", count: 1
@@ -151,6 +183,33 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-presenters:not([hidden])", count: 1
     assert_select "input[name='editor_tab'][value='presenters']", count: 1
     assert_select ".presenter-reference-items[data-controller='settings-sortable']", count: 1
+  end
+
+  test "turbo frame new keeps requested settings tab active" do
+    sign_in_as(@user)
+
+    get new_backend_event_url(editor_tab: "settings"), headers: { "Turbo-Frame" => "event_editor" }
+
+    assert_response :success
+    assert_select "#event-editor-tab-settings[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-settings:not([hidden])", count: 1
+    assert_select "#event-editor-panel-event[hidden]", count: 1
+    assert_select "input[name='editor_tab'][value='settings']", count: 1
+    assert_select "#event-editor-panel-settings .editor-subsection", count: 2
+  end
+
+  test "turbo frame new keeps requested llm enrichment tab active" do
+    sign_in_as(@user)
+
+    get new_backend_event_url(editor_tab: "llm_enrichment"), headers: { "Turbo-Frame" => "event_editor" }
+
+    assert_response :success
+    assert_select "#event-editor-tab-llm-enrichment[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-llm-enrichment:not([hidden])", count: 1
+    assert_select "#event-editor-panel-event[hidden]", count: 1
+    assert_select "input[name='editor_tab'][value='llm_enrichment']", count: 1
+    assert_select "button", text: "LLM-Enrichment für dieses Event starten", count: 0
+    assert_includes response.body, "LLM-Enrichment ist für neue Events erst nach dem ersten Speichern verfügbar."
   end
 
   test "slider image meta actions keep delete separate from meta form" do
@@ -566,6 +625,85 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-presenters input[name='event[presenter_ids][]'][type='checkbox']", count: 2 do |inputs|
       assert_equal [ presenter_two.id.to_s, presenter_one.id.to_s ], inputs.map { |input| input["value"] }
     end
+  end
+
+  test "create stores settings fields from settings tab" do
+    sign_in_as(@user)
+    start_at = Time.zone.parse("2026-08-18 20:00:00")
+
+    assert_difference("Event.count", 1) do
+      post backend_events_url, params: {
+        editor_tab: "settings",
+        event: {
+          artist_name: "Manual Artist",
+          title: "Manual Tour",
+          start_at: start_at,
+          venue: "Im Wizemann",
+          city: "Stuttgart",
+          status: "needs_review",
+          highlighted: "1",
+          promotion_banner: "1",
+          promotion_banner_kicker_text: "Szene Tipp",
+          promotion_banner_cta_text: "Jetzt ansehen"
+        }
+      }
+    end
+
+    created = Event.order(:id).last
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: created.id)
+    assert_predicate created, :highlighted?
+    assert_predicate created, :promotion_banner?
+    assert_equal "Szene Tipp", created.promotion_banner_kicker_text
+    assert_equal "Jetzt ansehen", created.promotion_banner_cta_text
+  end
+
+  test "create validation error keeps settings tab active" do
+    sign_in_as(@user)
+
+    assert_no_difference("Event.count") do
+      post backend_events_url, params: {
+        editor_tab: "settings",
+        event: {
+          artist_name: "",
+          title: "Manual Tour",
+          start_at: Time.zone.parse("2026-08-18 20:00:00"),
+          venue: "Im Wizemann",
+          city: "Stuttgart",
+          status: "needs_review",
+          highlighted: "1",
+          promotion_banner: "1"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "#event-editor-tab-settings[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-settings:not([hidden])", count: 1
+    assert_select "input[name='editor_tab'][value='settings']", count: 1
+  end
+
+  test "create validation error keeps llm enrichment tab active" do
+    sign_in_as(@user)
+
+    assert_no_difference("Event.count") do
+      post backend_events_url, params: {
+        editor_tab: "llm_enrichment",
+        event: {
+          artist_name: "",
+          title: "Manual Tour",
+          start_at: Time.zone.parse("2026-08-18 20:00:00"),
+          venue: "Im Wizemann",
+          city: "Stuttgart",
+          status: "needs_review"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_select "#event-editor-tab-llm-enrichment[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-llm-enrichment:not([hidden])", count: 1
+    assert_select "input[name='editor_tab'][value='llm_enrichment']", count: 1
+    assert_includes response.body, "LLM-Enrichment ist für neue Events erst nach dem ersten Speichern verfügbar."
   end
 
   test "updates event with blank city" do
@@ -1158,7 +1296,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'id="event-editor-tab-settings"'
     assert_includes response.body, 'value="settings"'
     assert_match(/id="event-editor-tab-settings"[^>]*aria-selected="true"/, response.body)
-    assert_includes response.body, "Promotion banner benötigt ein Eventbild im Tab Eventbild"
+    assert_includes response.body, "Artist name darf nicht leer sein"
   end
 
   test "update stores nested llm enrichment fields from editor" do

@@ -38,13 +38,15 @@ module Backend::EventsHelper
   def backend_event_context(event)
     return if event.blank?
 
-    context = [
+    context_parts = [
       event.artist_name.to_s.strip.presence,
       event.title.to_s.strip.presence,
       (event.start_at.present? ? l(event.start_at, format: "%d.%m.%Y %H:%M") : nil)
     ].compact
-    context << "Event-Reihe (#{event_series_origin_label(event)})" if event.event_series?
-    context.join(" · ")
+    return ([ "Neues Event anlegen" ] + context_parts).join(" · ") unless event.persisted?
+
+    context_parts << "Event-Reihe (#{event_series_origin_label(event)})" if event.event_series?
+    context_parts.join(" · ")
   end
 
   def event_display_promoter_id(event)

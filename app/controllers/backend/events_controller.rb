@@ -2,18 +2,13 @@ module Backend
   class EventsController < BaseController
     before_action :set_event, only: [ :show, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :set_inbox_state
-    before_action :set_next_event_enabled, only: [ :index, :show, :update, :publish, :unpublish, :run_llm_enrichment ]
+    before_action :set_next_event_enabled, only: [ :index, :show, :new, :create, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
     before_action :load_all_presenters, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
 
     def index
-      @latest_successful_merge_run = latest_successful_merge_run
-      @editor_state_builder = build_editor_state_builder
-      @filters = @inbox_state.filters
-      @selected_merge_run_id = @editor_state_builder.selected_merge_run_id_for_status(@filters[:status])
-      @events = @editor_state_builder.events_for_status(@filters[:status])
-      @filtered_events_count = @editor_state_builder.filtered_events_count(@events)
-      @status_filters = status_filters
+      prepare_index_state!
+      @active_editor_tab = new_panel_requested? ? new_editor_tab : "event"
       @selected_event = selected_event_from(@events)
     end
 
@@ -33,12 +28,15 @@ module Backend
     end
 
     def new
-      @event = Event.new(start_at: Time.current.change(hour: 20, min: 0), status: "needs_review")
-      @selected_genre_ids = []
-      @selected_presenter_ids = []
-      @manual_image_form_values = {}
-      @manual_ticket_url = nil
-      @active_editor_tab = new_editor_tab
+      prepare_new_event_state!
+
+      return render_new_editor_frame if turbo_frame_request?
+
+      redirect_to backend_events_path(
+        status: @inbox_state.current_status,
+        new: "1",
+        editor_tab: new_editor_tab_param
+      )
     end
 
     def create
@@ -96,7 +94,9 @@ module Backend
 
       if !created_successfully
         flash.now[:alert] = creation_alert || "Event konnte nicht erstellt werden."
-        render :new, status: :unprocessable_entity
+        prepare_index_state!
+        @selected_event = @event
+        render :index, status: :unprocessable_entity
       else
         redirect_to backend_events_path(status: @event.status, event_id: @event.id), notice: "Event wurde erstellt."
       end
@@ -256,6 +256,8 @@ module Backend
     end
 
     def selected_event_from(events)
+      return prepare_new_event_state! if new_panel_requested?
+
       if params[:event_id].present?
         return Event.includes(
           :llm_enrichment,
@@ -266,6 +268,16 @@ module Backend
       end
 
       events.first
+    end
+
+    def prepare_index_state!
+      @latest_successful_merge_run = latest_successful_merge_run
+      @editor_state_builder = build_editor_state_builder
+      @filters = @inbox_state.filters
+      @selected_merge_run_id = @editor_state_builder.selected_merge_run_id_for_status(@filters[:status])
+      @events = @editor_state_builder.events_for_status(@filters[:status])
+      @filtered_events_count = @editor_state_builder.filtered_events_count(@events)
+      @status_filters = status_filters
     end
 
     def status_filters
@@ -330,6 +342,10 @@ module Backend
       params[:editor_tab].to_s.presence_in(allowed_new_editor_tabs) || "event"
     end
 
+    def new_editor_tab_param
+      new_editor_tab == "event" ? nil : new_editor_tab
+    end
+
     def editor_tab_for_success(target_event:)
       return "event" if target_event.blank? || target_event.id != @event.id
 
@@ -345,7 +361,7 @@ module Backend
     end
 
     def allowed_new_editor_tabs
-      %w[event event_image slider_images presenters]
+      %w[event event_image slider_images presenters llm_enrichment settings]
     end
 
     def manual_ticket_url
@@ -354,6 +370,36 @@ module Backend
 
     def llm_enrichment_run_source
       llm_importer_registry.resolve_run_source("llm_enrichment")
+    end
+
+    def new_panel_requested?
+      ActiveModel::Type::Boolean.new.cast(params[:new])
+    end
+
+    def prepare_new_event_state!
+      @event ||= Event.new(start_at: Time.current.change(hour: 20, min: 0), status: "needs_review")
+      @selected_genre_ids ||= []
+      @selected_presenter_ids ||= []
+      @manual_image_form_values ||= {}
+      @manual_ticket_url ||= nil
+      @active_editor_tab = new_editor_tab
+      @event
+    end
+
+    def render_new_editor_frame
+      render partial: "backend/events/editor_frame",
+             locals: {
+               event: @event,
+               all_genres: @all_genres,
+               all_presenters: @all_presenters,
+               next_event_enabled: @next_event_enabled,
+               filter_status: @inbox_state.current_status,
+               active_editor_tab: @active_editor_tab,
+               selected_genre_ids: @selected_genre_ids,
+               selected_presenter_ids: @selected_presenter_ids,
+               manual_ticket_url: @manual_ticket_url,
+               manual_image_form_values: @manual_image_form_values
+             }
     end
 
     def llm_importer_registry

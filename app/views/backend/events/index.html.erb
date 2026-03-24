@@ -18,7 +18,10 @@
                  next_event_enabled: @next_event_enabled,
                  filter_status: @filters[:status] %>
       <div class="backend-topbar-actions">
-        <%= link_to "New", new_backend_event_path, class: "button button-secondary button-compact" %>
+        <%= link_to "New",
+                    new_backend_event_path(status: @filters[:status], editor_tab: (@active_editor_tab unless @active_editor_tab == "event")),
+                    data: { turbo_frame: "event_editor" },
+                    class: "button button-secondary button-compact" %>
       </div>
     </div>
   </header>
@@ -155,7 +158,11 @@
                  all_presenters: @all_presenters,
                  next_event_enabled: @next_event_enabled,
                  filter_status: @filters[:status],
-                 active_editor_tab: "event" %>
+                 active_editor_tab: @active_editor_tab,
+                 selected_genre_ids: @selected_genre_ids,
+                 selected_presenter_ids: @selected_presenter_ids,
+                 manual_ticket_url: @manual_ticket_url,
+                 manual_image_form_values: @manual_image_form_values %>
     </section>
   </div>
 </section>

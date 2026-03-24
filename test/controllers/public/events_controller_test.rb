@@ -736,6 +736,27 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, Rails.application.routes.url_helpers.rails_storage_proxy_path(image.processed_optimized_variant, only_path: true)
   end
 
+  test "homepage skips event promotion banner without event image" do
+    event = Event.create!(
+      slug: "homepage-event-promotion-banner-without-image",
+      source_fingerprint: "test::homepage::event-promotion-banner-without-image",
+      title: "Banner ohne Bild",
+      artist_name: "Banner ohne Bild Artist",
+      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner: true,
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".promotion-banner-event a[href='#{event_path(event.slug)}']", count: 0
+  end
+
   test "index includes promoter 10136 in homepage highlights" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 

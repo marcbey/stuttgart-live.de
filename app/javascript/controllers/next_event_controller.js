@@ -76,7 +76,10 @@ export default class extends Controller {
     }
 
     const eventId = this.eventIdFromEditorForm(form)
-    if (eventId === null) return
+    if (eventId === null) {
+      this.highlightEventById(null)
+      return
+    }
 
     this.highlightEventById(eventId)
   }

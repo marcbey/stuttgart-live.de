@@ -1,12 +1,26 @@
 <%= turbo_frame_tag "event_editor" do %>
   <% if event.present? %>
-    <%= render "backend/events/editor_panel",
-               event: event,
-               all_genres: all_genres,
-               all_presenters: all_presenters,
-               next_event_enabled: next_event_enabled,
-               filter_status: filter_status,
-               active_editor_tab: local_assigns[:active_editor_tab] %>
+    <% if event.persisted? %>
+      <%= render "backend/events/editor_panel",
+                 event: event,
+                 all_genres: all_genres,
+                 all_presenters: all_presenters,
+                 next_event_enabled: next_event_enabled,
+                 filter_status: filter_status,
+                 active_editor_tab: local_assigns[:active_editor_tab] %>
+    <% else %>
+      <%= render "backend/events/new_editor_panel",
+                 event: event,
+                 all_genres: all_genres,
+                 all_presenters: all_presenters,
+                 next_event_enabled: next_event_enabled,
+                 selected_genre_ids: local_assigns.fetch(:selected_genre_ids, []),
+                 selected_presenter_ids: local_assigns.fetch(:selected_presenter_ids, []),
+                 manual_ticket_url: local_assigns[:manual_ticket_url],
+                 editor_form_id: dom_id(event, :editor_form),
+                 active_editor_tab: local_assigns.fetch(:active_editor_tab, "event"),
+                 manual_image_form_values: local_assigns.fetch(:manual_image_form_values, {}) %>
+    <% end %>
   <% else %>
     <div class="empty-state">Keine Events zur aktuellen Filterung.</div>
   <% end %>

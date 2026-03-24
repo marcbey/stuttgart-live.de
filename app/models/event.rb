@@ -66,7 +66,6 @@ class Event < ApplicationRecord
   validates :min_price, :max_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
-  validate :promotion_banner_requires_detail_hero
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
@@ -80,7 +79,14 @@ class Event < ApplicationRecord
   scope :highlighted_first, -> { reorder(Arel.sql("CASE WHEN events.highlighted = TRUE THEN 0 ELSE 1 END"), :start_at, :id) }
   scope :sks_first, -> { reorder(Arel.sql(sks_first_order_sql), :start_at, :id) }
   scope :search_priority_first, -> { reorder(Arel.sql(search_priority_order_sql), :start_at, :id) }
-  scope :promotion_banner_live, -> { published_live.where(promotion_banner: true).includes(event_images: [ file_attachment: :blob ]) }
+  scope :promotion_banner_live, lambda {
+    published_live
+      .where(promotion_banner: true)
+      .joins(:event_images)
+      .merge(EventImage.detail_hero)
+      .distinct
+      .includes(event_images: [ file_attachment: :blob ])
+  }
 
   def self.sks_promoter_ids
     AppSetting.sks_promoter_ids
@@ -330,13 +336,6 @@ class Event < ApplicationRecord
 
     self.min_price = nil if min_price.blank?
     self.max_price = nil if max_price.blank?
-  end
-
-  def promotion_banner_requires_detail_hero
-    return unless promotion_banner?
-    return if event_image.present?
-
-    errors.add(:promotion_banner, "benötigt ein Eventbild im Tab Eventbild")
   end
 
   def clear_other_promotion_banners

@@ -190,7 +190,7 @@ class EventTest < ActiveSupport::TestCase
     )
   end
 
-  test "promotion banner requires detail hero image" do
+  test "promotion banner does not require detail hero image" do
     event = Event.new(
       artist_name: "Promo Artist",
       title: "Promo Tour",
@@ -202,8 +202,7 @@ class EventTest < ActiveSupport::TestCase
       promotion_banner: true
     )
 
-    assert_not event.valid?
-    assert_includes event.errors[:promotion_banner], "benötigt ein Eventbild im Tab Eventbild"
+    assert event.valid?
   end
 
   test "promotion banner clears previous banner event" do
