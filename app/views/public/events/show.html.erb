@@ -53,10 +53,6 @@
         </section>
       <% end %>
 
-      <% if presenter.has_presenters? %>
-        <%= render "show_presenters", presenter: presenter %>
-      <% end %>
-
       <% if presenter.has_media_block? %>
         <%= render "show_media", presenter: presenter %>
       <% end %>
@@ -72,8 +68,13 @@
             <%= formatted_organizer_notes_with_link(@event.public_organizer_notes, event: @event) %>
           </div>
         </div>
-        <div class="event-detail-organizer-brand">
-          <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "event-detail-organizer-logo" %>
+        <div class="event-detail-organizer-sidebar">
+          <div class="event-detail-organizer-brand">
+            <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "event-detail-organizer-logo" %>
+          </div>
+          <% if presenter.has_presenters? %>
+            <%= render "organizer_presenters_strip", presenters: presenter.presenters %>
+          <% end %>
         </div>
       </div>
     </section>

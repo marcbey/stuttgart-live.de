@@ -1,0 +1,31 @@
+<% presenters = Array(local_assigns.fetch(:presenters, [])) %>
+<% if presenters.any? %>
+  <% duration_seconds = [ presenters.size * 3.2, 12.8 ].max %>
+  <% interval_seconds = duration_seconds / presenters.size %>
+
+  <div class="event-detail-organizer-presenters" aria-label="Präsentatoren">
+    <div class="event-detail-organizer-strip" role="list">
+      <% presenters.each_with_index do |item, index| %>
+        <% animation_style = "--event-organizer-strip-delay: #{format('%.2f', index * interval_seconds)}s; --event-organizer-strip-duration: #{format('%.2f', duration_seconds)}s;" %>
+        <% if item.external_url.present? %>
+          <%= link_to item.external_url,
+                      class: "event-detail-organizer-strip-logo",
+                      style: animation_style,
+                      role: "listitem",
+                      target: "_blank",
+                      rel: "noopener",
+                      aria: { label: item.name } do %>
+            <%= image_tag item.logo_source, alt: item.name, class: "event-detail-organizer-strip-image" %>
+          <% end %>
+        <% else %>
+          <div class="event-detail-organizer-strip-logo"
+               style="<%= animation_style %>"
+               role="listitem"
+               aria-label="<%= item.name %>">
+            <%= image_tag item.logo_source, alt: item.name, class: "event-detail-organizer-strip-image" %>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

@@ -4376,9 +4376,13 @@ trix-editor.blog-rich-text:focus {
   margin-top: 1rem;
   border-top: 1px solid #111;
   padding-top: 0.85rem;
+  display: grid;
+  gap: 1rem;
+  align-items: start;
 }
 
 .event-detail-notes-copy {
+  min-width: 0;
   max-width: 52rem;
 }
 
@@ -4402,19 +4406,102 @@ trix-editor.blog-rich-text:focus {
   margin: 0;
 }
 
-.event-detail-organizer-brand {
-  position: absolute;
-  top: 1rem;
-  right: 1.05rem;
-  display: flex;
-  align-items: start;
-  justify-content: flex-end;
-}
-
 .event-detail-organizer-logo {
   display: block;
   width: clamp(7rem, 14vw, 10.5rem);
   height: auto;
+}
+
+.event-detail-organizer-sidebar {
+  display: grid;
+  gap: 0.85rem;
+  min-width: 0;
+  align-content: start;
+}
+
+.event-detail-organizer-brand,
+.event-detail-organizer-presenters {
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.event-detail-organizer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 6.4rem;
+  padding: 1rem;
+}
+
+.event-detail-organizer-presenters {
+  padding: 0.75rem 0.9rem;
+}
+
+.event-detail-organizer-strip {
+  position: relative;
+  min-height: 4.6rem;
+  overflow: hidden;
+}
+
+.event-detail-organizer-strip-logo {
+  position: absolute;
+  inset: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.35rem 0.5rem;
+  text-decoration: none;
+  opacity: 0;
+  transform: translate3d(110%, 0, 0) scale(0.94);
+  animation: event-organizer-strip-flyby var(--event-organizer-strip-duration, 12.8s) infinite;
+  animation-delay: var(--event-organizer-strip-delay, 0s);
+  will-change: transform, opacity;
+}
+
+.event-detail-organizer-strip-image {
+  display: block;
+  max-width: 100%;
+  width: 100%;
+  height: auto;
+  max-height: 3.8rem;
+  object-fit: contain;
+}
+
+@keyframes event-organizer-strip-flyby {
+  0% {
+    opacity: 0;
+    transform: translate3d(110%, 0, 0) scale(0.94);
+  }
+
+  11.99% {
+    opacity: 0;
+    transform: translate3d(110%, 0, 0) scale(0.94);
+  }
+
+  12% {
+    opacity: 0;
+    transform: translate3d(18%, 0, 0) scale(0.96);
+  }
+
+  20% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  31% {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  42% {
+    opacity: 0;
+    transform: translate3d(-110%, 0, 0) scale(0.96);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate3d(-110%, 0, 0) scale(0.96);
+  }
 }
 
 .event-detail {
@@ -4786,9 +4873,7 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-detail-notes-panel {
-  position: relative;
   margin-top: 1rem;
-  padding-right: clamp(8.5rem, 18vw, 13rem);
   background:
     linear-gradient(145deg, rgba(227, 27, 46, 0.04), rgba(255, 255, 255, 0.98) 52%);
 }
@@ -4830,20 +4915,30 @@ trix-editor.blog-rich-text:focus {
     min-width: 0;
   }
 
-  .event-detail-notes-panel {
-    padding-right: 1.05rem;
-    padding-top: 4.9rem;
+  .event-detail-organizer-brand {
+    justify-content: flex-start;
+    min-height: 0;
   }
 
-  .event-detail-organizer-brand {
-    top: 1rem;
-    left: 1.05rem;
-    right: auto;
-    justify-content: flex-start;
+  .event-detail-organizer-strip {
+    min-height: 3.9rem;
+  }
+
+  .event-detail-organizer-strip-image {
+    max-height: 3.1rem;
   }
 }
 
 @media (min-width: 900px) {
+  .event-detail-notes {
+    grid-template-columns: minmax(0, 1.35fr) minmax(15rem, 0.65fr);
+    gap: 1.15rem 1.3rem;
+  }
+
+  .event-detail-notes-copy {
+    max-width: none;
+  }
+
   .event-detail-header {
     grid-template-columns: minmax(0, 0.9fr) minmax(22rem, 1.1fr);
     gap: 1.5rem;
@@ -4852,6 +4947,25 @@ trix-editor.blog-rich-text:focus {
 
   .event-detail-header-panel {
     align-content: start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-detail-organizer-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(6.5rem, 1fr));
+    gap: 0.5rem;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .event-detail-organizer-strip-logo {
+    position: static;
+    opacity: 1;
+    transform: none;
+    animation: none;
+    border: 1px solid rgba(17, 17, 17, 0.08);
+    background: rgba(255, 255, 255, 0.86);
   }
 }
 

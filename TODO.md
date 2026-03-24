@@ -9,6 +9,7 @@
 - Monitoring/Alerting : uptimekuma.org
 
 ## Importer
+- kann man erkennen ob die Tickets zu einem Event Ausverkauft sind oder evtl. noch andere Statues
 
 ## Events Backend
 - Promoter ID mapping (SKS, Music Circus, ...)

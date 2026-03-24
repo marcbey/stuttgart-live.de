@@ -32,11 +32,6 @@
 
       <% if presenter.genre_tags.any? %>
         <div class="event-detail-tags" aria-label="Genres">
-          <% if presenter.genre_group_label.present? %>
-            <span class="event-detail-tag event-detail-tag-group"><%= presenter.genre_group_label %></span>
-            <span class="event-detail-tag-arrow" aria-hidden="true">→</span>
-          <% end %>
-
           <% presenter.genre_tags.each do |genre| %>
             <span class="event-detail-tag"><%= genre %></span>
           <% end %>

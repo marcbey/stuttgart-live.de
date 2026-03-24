@@ -176,42 +176,6 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "https://www.youtube.com/embed/fallback", presenter.youtube_embed_url
     assert_equal [ "Pop", "Rock", "Indie" ], presenter.genre_tags
     assert_equal [ "Indie", "Rock" ], presenter.enrichment_genres
-    assert_nil presenter.genre_group_label
-  end
-
-  test "exposes the matching genre group label for the event" do
-    event = build_event(artist_name: "Band", title: "Live")
-
-    run = ImportRun.create!(
-      import_source: import_sources(:two),
-      source_type: "llm_genre_grouping",
-      status: "succeeded",
-      started_at: Time.current,
-      finished_at: Time.current
-    )
-    snapshot = run.create_llm_genre_grouping_snapshot!(
-      active: true,
-      requested_group_count: 30,
-      effective_group_count: 1,
-      source_genres_count: 2,
-      model: "gpt-5-mini",
-      prompt_template_digest: "digest",
-      request_payload: {},
-      raw_response: {}
-    )
-    snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
-    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: snapshot.id)
-
-    event.build_llm_enrichment(
-      genre: [ "Rock" ],
-      model: "gpt-test",
-      prompt_version: "v1",
-      raw_response: {}
-    )
-
-    presenter = build_presenter(event)
-
-    assert_equal "Rock & Alternative", presenter.genre_group_label
   end
 
   test "adds youtube fallback link when url is not embeddable" do

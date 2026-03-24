@@ -2005,6 +2005,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Veranstalterhinweise"
     assert_includes response.body, "Sichtbare Veranstalterhinweise"
+    assert_select ".event-detail-organizer-brand img[alt='Russ Live']", count: 1
+    assert_select ".event-detail-organizer-presenters", count: 0
   end
 
   test "show renders organizer notes for sks events by default" do
@@ -2045,9 +2047,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Bearbeiten/, response.body)
   end
 
-  test "show renders presenter block before media block" do
+  test "show renders presenter logos inside organizer notes when presenters exist" do
     presenter_one = create_presenter(name: "Alpha Presenter")
     presenter_two = create_presenter(name: "Beta Presenter")
+    @published_event.update!(
+      organizer_notes: "Sichtbare Veranstalterhinweise",
+      show_organizer_notes: true
+    )
     @published_event.event_presenters.create!(presenter: presenter_two, position: 2)
     @published_event.event_presenters.create!(presenter: presenter_one, position: 1)
     create_event_image(event: @published_event, purpose: EventImage::PURPOSE_SLIDER)
@@ -2055,18 +2061,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-
-    document = Nokogiri::HTML.parse(response.body)
-    main_children = document.css(".event-detail-main > *")
-    presenter_section_index = main_children.index { |node| node["class"].to_s.include?("event-detail-presenters") }
-    media_section_index = main_children.index { |node| node["class"].to_s.include?("event-detail-video") || node["class"].to_s.include?("event-detail-slider") }
-    assert presenter_section_index.present?
-    assert media_section_index.present?
-    assert_operator presenter_section_index, :<, media_section_index
-    assert_select ".event-detail-presenters h2", text: "Präsentatoren", count: 1
-    assert_select ".event-presenter-name", count: 0
-    assert_select ".event-presenter-item[href='#{presenter_one.external_url}']", count: 1
-    assert_select ".event-presenter-item[href='#{presenter_two.external_url}']", count: 1
+    assert_select ".event-detail-presenters", count: 0
+    assert_select ".event-detail-organizer-presenters", count: 1
+    assert_select ".event-detail-organizer-strip-logo[href='#{presenter_one.external_url}']", count: 1
+    assert_select ".event-detail-organizer-strip-logo[href='#{presenter_two.external_url}']", count: 1
+    assert_select ".event-detail-organizer-strip-image[alt='Alpha Presenter']", count: 1
+    assert_select ".event-detail-organizer-strip-image[alt='Beta Presenter']", count: 1
     assert_includes response.body, rails_storage_proxy_path(presenter_one.detail_logo_variant, only_path: true)
     assert_includes response.body, rails_storage_proxy_path(presenter_two.detail_logo_variant, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
@@ -2074,12 +2074,17 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "show renders svg presenter logos via proxy path" do
     svg_presenter = create_presenter(name: "SVG Presenter", svg: true)
+    @published_event.update!(
+      organizer_notes: "Sichtbare Veranstalterhinweise",
+      show_organizer_notes: true
+    )
     @published_event.event_presenters.create!(presenter: svg_presenter, position: 1)
 
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".event-detail-presenters img[alt='SVG Presenter']", count: 1
+    assert_select ".event-detail-presenters", count: 0
+    assert_select ".event-detail-organizer-strip-image[alt='SVG Presenter']", count: 1
     assert_includes response.body, rails_storage_proxy_path(svg_presenter.detail_logo_variant, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
