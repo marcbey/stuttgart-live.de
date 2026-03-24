@@ -368,7 +368,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Importer"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Passwort"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Logout"
-    assert_match(/Events.*News.*Importer.*Präsentatoren.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Präsentatoren.*Importer.*Passwort.*Logout/m, response.body)
     assert_select ".app-nav-links-group-separated", count: 0
   end
 

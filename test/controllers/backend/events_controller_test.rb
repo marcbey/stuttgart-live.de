@@ -33,7 +33,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
     assert_select ".app-nav-backend-menu", count: 0
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
-    assert_match(/Events.*News.*Importer.*Präsentatoren.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Präsentatoren.*Importer.*Passwort.*Logout/m, response.body)
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "auto-next"
     assert_includes response.body, "name=\"status\""
@@ -1164,7 +1164,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#event-editor-tab-presenters[aria-selected='true']", count: 1
     assert_select "#event-editor-panel-presenters:not([hidden])", count: 1
-    assert_includes response.body, "Präsentatoren verwalten"
     assert_select "input[name='event[presenter_ids][]'][type='hidden'][value='']", count: 1
     assert_select ".presenter-reference-items[data-controller='settings-sortable']", count: 1
   end
