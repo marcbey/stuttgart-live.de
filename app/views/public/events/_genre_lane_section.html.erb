@@ -4,8 +4,9 @@
 <% card_variant = local_assigns[:card_variant] %>
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 <% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
+<% hover_lift_cards = local_assigns.fetch(:hover_lift_cards, false) %>
 
-<section class="<%= ["genre-lane-section", local_assigns.fetch(:tone_class, "genre-lane-section--tone-1"), ("genre-lane-section--#{section_variant}" if section_variant.present?)].compact.join(" ") %>"
+<section class="<%= ["genre-lane-section", local_assigns.fetch(:tone_class, "genre-lane-section--tone-1"), ("genre-lane-section--#{section_variant}" if section_variant.present?), ("genre-lane-section--hover-lift" if hover_lift_cards)].compact.join(" ") %>"
          data-controller="highlights-slider section-view">
   <div class="genre-lane-header">
     <div class="genre-lane-heading">
