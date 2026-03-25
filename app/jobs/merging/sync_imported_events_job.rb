@@ -1,12 +1,15 @@
 module Merging
   class SyncImportedEventsJob < ApplicationJob
     queue_as :default
+    RUN_STALE_AFTER = 4.hours
+    RUN_HEARTBEAT_STALE_AFTER = 5.minutes
     PROGRESS_FLUSH_EVERY_N_GROUPS = 25
     PROGRESS_FLUSH_AFTER = 2.seconds
 
     def perform(last_run_at: nil, import_run_id: nil)
       normalized_last_run_at = normalize_last_run_at(last_run_at)
       run = prepare_run!(import_run_id:, last_run_at: normalized_last_run_at)
+      mark_execution_started!(run)
       broadcast_runs_update!
 
       progress_state = {
@@ -97,6 +100,13 @@ module Merging
         started_at: Time.current,
         metadata: merge_run_metadata(last_run_at:)
       )
+    end
+
+    def mark_execution_started!(run)
+      metadata = current_run_metadata(run)
+      return if metadata["execution_started_at"].present?
+
+      run.update!(metadata: metadata.merge("execution_started_at" => Time.current.iso8601))
     end
 
     def run_source

@@ -35,6 +35,18 @@ module Backend
           run_job_arguments_builder: ->(import_source, run) { [ import_source.id, run.id ] },
           run_source_resolver: -> { ImportSource.ensure_reservix_source! }
         },
+        "merge" => {
+          label: "Merge",
+          importer_class: Merging::SyncImportedEventsJob,
+          stop_route_helper: :stop_merge_run_backend_import_sources_path,
+          run_mode: :exclusive,
+          max_retries: 0,
+          run_source_resolver: lambda {
+            ImportSource.find_by(source_type: "eventim") ||
+              ImportSource.find_by(source_type: "easyticket") ||
+              ImportSource.ensure_eventim_source!
+          }
+        },
         "llm_enrichment" => {
           label: "LLM-Enrichment",
           started_notice: "LLM-Enrichment wurde gestartet.",

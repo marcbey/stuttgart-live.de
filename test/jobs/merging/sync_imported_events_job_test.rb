@@ -170,6 +170,40 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
     assert_equal "succeeded", run.reload.status
     assert_equal 2, run.fetched_count
     assert_equal 1, run.imported_count
+    assert run.metadata["execution_started_at"].present?
+  ensure
+    sync_class.alias_method :new, :__original_new_for_test
+    sync_class.remove_method :__original_new_for_test
+  end
+
+  test "marks execution as started before merge processing begins" do
+    observed_execution_started_at = nil
+    fake_result = Merging::SyncFromImports::Result.new(
+      import_records_count: 0,
+      groups_count: 0,
+      events_created_count: 0,
+      events_updated_count: 0,
+      duplicate_matches_count: 0,
+      offers_upserted_count: 0,
+      canceled: false
+    )
+
+    sync_class = Merging::SyncFromImports.singleton_class
+    sync_class.alias_method :__original_new_for_test, :new
+    sync_class.define_method(:new) do |*args, **kwargs|
+      merge_run_id = kwargs.fetch(:merge_run_id)
+
+      Class.new do
+        define_method(:call) do
+          observed_execution_started_at = ImportRun.find(merge_run_id).metadata["execution_started_at"]
+          fake_result
+        end
+      end.new
+    end
+
+    Merging::SyncImportedEventsJob.perform_now(last_run_at: Time.zone.parse("2026-03-14 10:15:00"))
+
+    assert observed_execution_started_at.present?
   ensure
     sync_class.alias_method :new, :__original_new_for_test
     sync_class.remove_method :__original_new_for_test

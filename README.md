@@ -249,6 +249,8 @@ Im Backend spiegeln die Run-Status dabei die fachliche Koordination wider:
 
 Queued LLM-Enrichment-Runs lassen sich im Backend abbrechen, bevor sie gestartet werden. Der nächste wartende Run rückt dann automatisch nach.
 
+Für Merge-, Provider- und LLM-Läufe gilt außerdem: Wenn ein Run nach einem Stop-Wunsch oder allgemein nach Start über seine Heartbeat-/Stale-Timeouts hinaus keine Fortschrittsupdates mehr schreibt, wird er beim nächsten Aufruf der Importer-Übersicht automatisch freigegeben statt dauerhaft auf `running` oder `stopping` zu hängen.
+
 ### Wie die LLM-Genre-Gruppierung funktioniert
 
 Die LLM-Genre-Gruppierung ist ein eigener Schritt zur Vereinheitlichung der Genre-Landschaft im System. Sie betrachtet nicht einzelne Event-Beschreibungen, sondern die bereits vorhandenen Genre-Werte und ordnet ähnliche oder doppelte Begriffe zu größeren, konsistenten Gruppen.

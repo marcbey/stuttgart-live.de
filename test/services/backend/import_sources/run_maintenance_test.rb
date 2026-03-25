@@ -52,4 +52,23 @@ class Backend::ImportSources::RunMaintenanceTest < ActiveSupport::TestCase
     assert_equal false, @maintenance.release_stale_running_run!(run)
     assert_equal "running", run.reload.status
   end
+
+  test "marks stop-requested merge run canceled after heartbeat timeout" do
+    run = @source.import_runs.create!(
+      status: "running",
+      source_type: "merge",
+      started_at: 20.minutes.ago,
+      metadata: {
+        "triggered_at" => 20.minutes.ago.iso8601,
+        "execution_started_at" => 19.minutes.ago.iso8601,
+        "stop_requested" => true,
+        "stop_requested_at" => 10.minutes.ago.iso8601
+      }
+    )
+    run.update_columns(updated_at: (Merging::SyncImportedEventsJob::RUN_HEARTBEAT_STALE_AFTER + 10.seconds).ago)
+
+    assert_equal true, @maintenance.release_stale_running_run!(run)
+    assert_equal "canceled", run.reload.status
+    assert_equal "No progress update after stop request", run.metadata["stop_release_reason"]
+  end
 end

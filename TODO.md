@@ -5,7 +5,6 @@
 - Rollbacks inkl. migration rollbacks ausprobieren
 - OWASP checks initial & evtl. als bin/ci ?
 - Plan für Data Rentention
-- Logfile Rotation
 - Monitoring/Alerting : uptimekuma.org
 
 ## Importer
