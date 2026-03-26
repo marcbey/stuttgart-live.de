@@ -2382,16 +2382,56 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_operator response.body.index(highlighted_event.artist_name), :<, response.body.index(regular_event.artist_name)
   end
 
-  test "search overlay renders highlighted events without query" do
+  test "search overlay renders prioritized recommendations without query" do
+    promotion_event = Event.create!(
+      slug: "search-overlay-initial-promotion",
+      source_fingerprint: "test::public::search-overlay::initial-promotion",
+      title: "Initial Search Promotion",
+      artist_name: "Initial Promotion Artist",
+      start_at: 6.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      promotion_banner: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
     highlighted_event = Event.create!(
       slug: "search-overlay-initial-highlighted",
       source_fingerprint: "test::public::search-overlay::initial-highlighted",
       title: "Initial Search Highlight",
       artist_name: "Initial Highlight Artist",
-      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
+      start_at: 5.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
       highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    highlighted_sks_event = Event.create!(
+      slug: "search-overlay-initial-highlighted-sks",
+      source_fingerprint: "test::public::search-overlay::initial-highlighted-sks",
+      title: "Initial Search Highlighted SKS",
+      artist_name: "Initial Highlighted SKS Artist",
+      start_at: 4.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    sks_event = Event.create!(
+      slug: "search-overlay-initial-sks",
+      source_fingerprint: "test::public::search-overlay::initial-sks",
+      title: "Initial Search SKS",
+      artist_name: "Initial SKS Artist",
+      start_at: 3.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.last,
       status: "published",
       published_at: 1.day.ago,
       source_snapshot: {}
@@ -2412,9 +2452,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_overlay_events_url
 
     assert_response :success
-    assert_includes response.body, "Unsere Highlights"
+    assert_includes response.body, "Empfohlen für dich"
+    assert_includes response.body, promotion_event.artist_name
     assert_includes response.body, highlighted_event.artist_name
+    assert_includes response.body, highlighted_sks_event.artist_name
+    assert_includes response.body, sks_event.artist_name
     assert_not_includes response.body, "Initial Regular Artist"
+
+    document = Nokogiri::HTML.parse(response.body)
+    artists = document.css(".public-search-result-artist").map(&:text)
+
+    assert_equal promotion_event.artist_name, artists.first
+    assert_operator artists.index(highlighted_event.artist_name), :<, artists.index(sks_event.artist_name)
+    assert_operator artists.index(highlighted_sks_event.artist_name), :<, artists.index(sks_event.artist_name)
+    assert_equal 1, artists.count { |artist_name| artist_name == highlighted_sks_event.artist_name }
   end
 
   test "search overlay falls back to highlights for punctuation only query" do
@@ -2447,13 +2498,69 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_overlay_events_url(q: " ... !!! ")
 
     assert_response :success
-    assert_includes response.body, "Unsere Highlights"
+    assert_includes response.body, "Empfohlen für dich"
     assert_includes response.body, highlighted_event.artist_name
     assert_not_includes response.body, "Initial Regular Artist"
     assert_not_includes response.body, "Keine Treffer"
   end
 
-  test "search overlay filters initial highlights by selected date" do
+  test "search overlay limits initial recommendations to ten events" do
+    promotion_event = Event.create!(
+      slug: "search-overlay-initial-limit-promotion",
+      source_fingerprint: "test::public::search-overlay::initial-limit::promotion",
+      title: "Initial Limit Promotion",
+      artist_name: "Initial Limit Promotion Artist",
+      start_at: 3.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Venue Promotion",
+      city: "Stuttgart",
+      promotion_banner: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    4.times do |index|
+      Event.create!(
+        slug: "search-overlay-initial-highlight-limit-#{index}",
+        source_fingerprint: "test::public::search-overlay::initial-highlight-limit::#{index}",
+        title: "Initial Highlight Limit #{index}",
+        artist_name: "Initial Highlight Limit Artist #{index}",
+        start_at: (10 + index).days.from_now.change(hour: 20, min: 0, sec: 0),
+        venue: "Highlight Venue #{index}",
+        city: "Stuttgart",
+        highlighted: true,
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+    end
+
+    7.times do |index|
+      Event.create!(
+        slug: "search-overlay-initial-sks-limit-#{index}",
+        source_fingerprint: "test::public::search-overlay::initial-sks-limit::#{index}",
+        title: "Initial SKS Limit #{index}",
+        artist_name: "Initial SKS Limit Artist #{index}",
+        start_at: (20 + index).days.from_now.change(hour: 20, min: 0, sec: 0),
+        venue: "SKS Venue #{index}",
+        city: "Stuttgart",
+        promoter_id: AppSetting.sks_promoter_ids.first,
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+    end
+
+    get search_overlay_events_url
+
+    assert_response :success
+    assert_select ".public-search-overlay-list li", count: 10
+    assert_includes response.body, promotion_event.artist_name
+    assert_not_includes response.body, "Initial SKS Limit Artist 5"
+    assert_not_includes response.body, "Initial SKS Limit Artist 6"
+  end
+
+  test "search overlay filters initial recommendations by selected date" do
     selected_date = 11.days.from_now.to_date
     matching_event = Event.create!(
       slug: "search-overlay-initial-date-match",
@@ -2485,7 +2592,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_overlay_events_url(event_date: selected_date.iso8601)
 
     assert_response :success
-    assert_includes response.body, "Unsere Highlights"
+    assert_includes response.body, "Empfohlen für dich"
     assert_includes response.body, matching_event.artist_name
     assert_not_includes response.body, "Date Other Artist"
   end

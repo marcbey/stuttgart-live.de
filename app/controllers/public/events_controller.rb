@@ -6,6 +6,7 @@ module Public
     PER_PAGE = 12
     HOME_HIGHLIGHT_LIMIT = 100
     SEARCH_OVERLAY_LIMIT = 6
+    SEARCH_OVERLAY_IDLE_LIMIT = 10
 
     before_action :set_browse_state, only: [ :index, :show, :search_overlay ]
 
@@ -233,12 +234,34 @@ module Public
     end
 
     def initial_search_overlay_events
-      published_visible_events_relation(
-        scope: search_events_relation.where(highlighted: true),
+      promotion_events = initial_search_overlay_events_for(search_overlay_idle_relation.where(promotion_banner: true))
+      highlighted_events = initial_search_overlay_events_for(search_overlay_idle_relation.where(highlighted: true))
+      sks_events = initial_search_overlay_events_for(search_overlay_idle_relation.where(promoter_id: Event.sks_promoter_ids))
+
+      deduplicate_priority_events(promotion_events, highlighted_events, sks_events).first(SEARCH_OVERLAY_IDLE_LIMIT)
+    end
+
+    def initial_search_overlay_events_for(scope)
+      visible_events_relation(
+        scope: scope,
         filter: Public::Events::BrowseState::FILTER_ALL,
         event_date: @browse_state.event_date,
         query: nil
-      ).limit(SEARCH_OVERLAY_LIMIT).to_a
+      ).limit(SEARCH_OVERLAY_IDLE_LIMIT).to_a
+    end
+
+    def search_overlay_idle_relation
+      search_events_relation
+        .where(status: "published")
+        .where("published_at <= ?", Time.current)
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+        .chronological
+    end
+
+    def deduplicate_priority_events(*groups)
+      groups.flatten.each_with_object({}) do |event, deduplicated_events|
+        deduplicated_events[event.id] ||= event
+      end.values
     end
 
     def search_filter
