@@ -25,7 +25,7 @@
       <% end %>
       <div class="event-card-overlay"></div>
       <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-        <span class="event-series-badge">Event-Reihe</span>
+        <%= render "event_series_corner_badge" %>
       <% end %>
       <% if event.badge_text.present? %>
         <span class="event-card-badge"><%= event.badge_text %></span>

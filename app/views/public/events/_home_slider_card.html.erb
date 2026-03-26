@@ -35,7 +35,7 @@
       </div>
     <% end %>
     <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-      <span class="event-series-badge">Event-Reihe</span>
+      <%= render "event_series_corner_badge" %>
     <% end %>
   </div>
 
