@@ -10,7 +10,7 @@ module Editorial
     end
 
     def call
-      relation = scope.includes(
+      relation = scope.with_attached_promotion_banner_image.includes(
         :llm_enrichment,
         :genres,
         :event_offers,

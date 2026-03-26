@@ -2,7 +2,7 @@ module Backend
   module Events
     class BulkUpdater
       def initialize(events:, action:, user:)
-        @events = events
+        @events = preload_events(events)
         @action = action.to_s
         @user = user
       end
@@ -31,6 +31,12 @@ module Backend
       private
 
       attr_reader :action, :events, :user
+
+      def preload_events(events)
+        return events unless events.respond_to?(:with_attached_promotion_banner_image)
+
+        events.with_attached_promotion_banner_image
+      end
 
       def apply_action(event)
         case action
