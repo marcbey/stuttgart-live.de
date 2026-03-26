@@ -109,7 +109,7 @@
               <%= link_to "News", news_index_path, class: app_nav_link_class(active: news_nav_active?), aria: { current: ("page" if news_nav_active?) } %>
               <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?), aria: { current: ("page" if contact_nav_active?) } %>
               <div class="app-nav-socials" aria-label="Soziale Medien">
-                <%= link_to "https://www.instagram.com/stuttgartlive/",
+                <%= link_to "https://www.instagram.com/stuttgart.live.concert/",
                             class: "app-nav-social-link",
                             target: "_blank",
                             rel: "noopener",
@@ -119,6 +119,16 @@
                     <rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect>
                     <circle cx="12" cy="12" r="4"></circle>
                     <circle cx="17.4" cy="6.7" r="1.2" class="app-nav-social-fill"></circle>
+                  </svg>
+                <% end %>
+                <%= link_to "https://www.tiktok.com/@stuttgart.live.concert",
+                            class: "app-nav-social-link",
+                            target: "_blank",
+                            rel: "noopener",
+                            title: "TikTok",
+                            aria: { label: "TikTok" } do %>
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M14.2 4.2c.36 1.82 1.44 3.18 3.26 4.06.63.3 1.3.48 2.04.55v2.56a8.18 8.18 0 0 1-3.01-.67v5.06c0 3.1-2.48 5.53-5.74 5.53-3.05 0-5.56-2.3-5.56-5.27 0-3.1 2.72-5.5 5.91-5.22v2.66a2.67 2.67 0 0 0-3.21 2.56c0 1.47 1.2 2.66 2.72 2.66 1.66 0 2.74-1.26 2.74-3.02V4.2h2.85Z" class="app-nav-social-fill"></path>
                   </svg>
                 <% end %>
                 <%= link_to "https://www.facebook.com/stuttgartlive",
