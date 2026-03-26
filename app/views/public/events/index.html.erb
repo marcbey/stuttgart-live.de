@@ -1,7 +1,7 @@
 <% content_for :title, "Stuttgart Live - Konzerte" %>
 
 <section class="public-shell">
-  <% if @browse_state.query.present? %>
+  <% if @browse_state.search_query_present? %>
     <%= render "search_results_section", events: @events, browse_state: @browse_state %>
   <% end %>
 

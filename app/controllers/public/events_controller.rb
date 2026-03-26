@@ -10,7 +10,7 @@ module Public
     before_action :set_browse_state, only: [ :index, :show, :search_overlay ]
 
     def index
-      if @browse_state.query.present?
+      if @browse_state.search_query_present?
         relation = visible_events_relation(
           scope: searchable_index_events_relation,
           filter: search_filter,
@@ -59,7 +59,7 @@ module Public
 
     def search_overlay
       @events =
-        if @browse_state.query.present?
+        if @browse_state.search_query_present?
           visible_events_relation(
             scope: searchable_index_events_relation,
             filter: Public::Events::BrowseState::FILTER_ALL,
@@ -74,7 +74,7 @@ module Public
              locals: {
                browse_state: @browse_state,
                events: @events,
-               query: @browse_state.query
+               query: @browse_state.search_query_present? ? @browse_state.query : nil
              }
     end
 
@@ -204,7 +204,7 @@ module Public
     end
 
     def should_redirect_search_result?(relation)
-      return false if @browse_state.query.blank?
+      return false unless @browse_state.search_query_present?
       return false unless @browse_state.page == 1
 
       relation.limit(2).count == 1
@@ -242,7 +242,7 @@ module Public
     end
 
     def search_filter
-      return Public::Events::BrowseState::FILTER_ALL if @browse_state.query.present?
+      return Public::Events::BrowseState::FILTER_ALL if @browse_state.search_query_present?
 
       @browse_state.filter
     end

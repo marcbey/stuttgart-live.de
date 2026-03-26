@@ -7,30 +7,56 @@ module Public
       @scope = scope
       @filter = filter
       @event_date = event_date
-      @query = query.to_s.strip.presence
+      @raw_query = query.to_s.strip.presence
+      @normalized_query = Public::Events::SearchQueryNormalizer.normalize(query).presence
     end
 
     def call
       relation = scope
       relation = relation.where(start_at: event_date.beginning_of_day..event_date.end_of_day) if event_date.present?
-      relation = apply_query(relation) if query.present?
+      relation = apply_query(relation) if normalized_query.present?
       relation = relation.homepage_highlights if filter == FILTER_SKS
-      relation = relation.search_priority_first if query.present?
+      relation = relation.search_priority_first if normalized_query.present?
 
       relation
     end
 
     private
 
-    attr_reader :scope, :filter, :event_date, :query
+    attr_reader :scope, :filter, :event_date, :raw_query, :normalized_query
 
     def apply_query(relation)
-      token = "%#{ActiveRecord::Base.sanitize_sql_like(query)}%"
+      patterns = Public::Events::SearchQueryNormalizer.wildcard_patterns(raw_query)
+      return relation if patterns.empty?
+
+      binds = {}
+      conditions = patterns.each_with_index.map do |pattern, index|
+        binds[:"pattern_#{index}"] = pattern
+        "#{searchable_text_sql} ILIKE :pattern_#{index}"
+      end
+
+      raw_token = "%#{ActiveRecord::Base.sanitize_sql_like(raw_query)}%"
+      binds[:raw_token] = raw_token
 
       relation.where(
-        "events.artist_name ILIKE :token OR events.title ILIKE :token OR events.venue ILIKE :token OR events.city ILIKE :token",
-        token: token
+        [
+          *conditions,
+          "events.artist_name ILIKE :raw_token",
+          "events.title ILIKE :raw_token",
+          "events.venue ILIKE :raw_token",
+          "events.city ILIKE :raw_token"
+        ].join(" OR "),
+        binds
       )
+    end
+
+    def searchable_text_sql
+      <<~SQL.squish
+        COALESCE(events.artist_name, '') || ' ' ||
+        COALESCE(events.title, '') || ' ' ||
+        COALESCE(events.venue, '') || ' ' ||
+        COALESCE(events.city, '')
+      SQL
     end
   end
 end

@@ -9,7 +9,7 @@ export default class extends Controller {
 
   connect() {
     this.abortController = null
-    this.lastRequestUrl = null
+    this.lastRequestKey = null
     this.searchTimeout = null
     this.boundHandlePointerDown = this.handlePointerDown.bind(this)
     this.boundHandleDocumentKeydown = this.handleDocumentKeydown.bind(this)
@@ -160,12 +160,15 @@ export default class extends Controller {
 
   async fetchResults() {
     const requestUrl = this.buildRequestUrl()
-    if (requestUrl === this.lastRequestUrl) {
+    const requestKey = this.buildRequestKey()
+
+    if (requestKey === this.lastRequestKey) {
       return
     }
 
     this.abortPendingRequest()
     this.abortController = new AbortController()
+    const currentAbortController = this.abortController
 
     try {
       const response = await fetch(requestUrl, {
@@ -178,21 +181,15 @@ export default class extends Controller {
       }
 
       this.resultsTarget.innerHTML = await response.text()
-      this.lastRequestUrl = requestUrl
+      this.lastRequestKey = requestKey
     } catch (error) {
       if (error.name === "AbortError") {
         return
       }
-
-      this.resultsTarget.innerHTML = `
-        <div class="public-search-overlay-empty">
-          <h2>Suche gerade nicht verfügbar</h2>
-          <p>Bitte versuche es in einem Moment erneut.</p>
-        </div>
-      `
-      this.lastRequestUrl = null
     } finally {
-      this.abortController = null
+      if (this.abortController === currentAbortController) {
+        this.abortController = null
+      }
     }
   }
 
@@ -203,7 +200,7 @@ export default class extends Controller {
 
   renderIdleState() {
     this.resultsTarget.innerHTML = this.idleTemplateTarget.innerHTML
-    this.lastRequestUrl = null
+    this.lastRequestKey = null
   }
 
   loadIdleResults() {
@@ -217,7 +214,7 @@ export default class extends Controller {
   }
 
   syncControls() {
-    this.clearTarget.classList.toggle("public-search-clear-visible", this.query.present)
+    this.clearTarget.classList.toggle("public-search-clear-visible", this.query.hasValue)
   }
 
   buildRequestUrl() {
@@ -225,6 +222,17 @@ export default class extends Controller {
     const params = new URLSearchParams(new FormData(this.element))
 
     params.set("q", this.query.value)
+    params.delete("page")
+    url.search = params.toString()
+
+    return url.toString()
+  }
+
+  buildRequestKey() {
+    const url = new URL(this.searchUrlValue, window.location.origin)
+    const params = new URLSearchParams(new FormData(this.element))
+
+    params.set("q", this.query.normalizedValue)
     params.delete("page")
     url.search = params.toString()
 
@@ -264,10 +272,30 @@ export default class extends Controller {
 
   get query() {
     const value = this.inputTarget.value.toString().trim()
+    const normalizedValue = this.normalizeQueryValue(value)
 
     return {
       value,
-      present: value.length > 0
+      normalizedValue,
+      hasValue: value.length > 0,
+      present: normalizedValue.length > 0
     }
+  }
+
+  normalizeQueryValue(value) {
+    return value
+      .replace(/Ä/g, "Ae")
+      .replace(/Ö/g, "Oe")
+      .replace(/Ü/g, "Ue")
+      .replace(/ä/g, "ae")
+      .replace(/ö/g, "oe")
+      .replace(/ü/g, "ue")
+      .replace(/ß/g, "ss")
+      .normalize("NFKD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, " ")
+      .trim()
+      .replace(/\s+/g, " ")
   }
 }

@@ -78,6 +78,57 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     assert_equal [ matching_event ], result.to_a
   end
 
+  test "matches german umlaut spellings via normalized query variants" do
+    matching_event = create_visible_event(
+      title: "Die Ärzte live",
+      artist_name: "Die Ärzte"
+    )
+    create_visible_event(
+      title: "Anderer Abend",
+      artist_name: "Andere Band"
+    )
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_ALL,
+      query: "Die Aerzte"
+    ).call
+
+    assert_equal [ matching_event ], result.to_a
+  end
+
+  test "matches punctuation and repeated whitespace via normalized query variants" do
+    matching_event = create_visible_event(
+      title: "Live in Stuttgart",
+      artist_name: "AC/DC"
+    )
+    create_visible_event(
+      title: "Live in Stuttgart",
+      artist_name: "AC and Friends"
+    )
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_ALL,
+      query: " AC   DC   Live "
+    ).call
+
+    assert_equal [ matching_event ], result.to_a
+  end
+
+  test "ignores punctuation only queries" do
+    create_visible_event(title: "First Event", artist_name: "First Artist")
+    create_visible_event(title: "Second Event", artist_name: "Second Artist", start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0))
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_ALL,
+      query: " ... !!! "
+    ).call
+
+    assert_equal Event.published_live.to_a, result.to_a
+  end
+
   test "prioritizes sks events in search results" do
     regular_event = create_visible_event(
       title: "Search Priority Night",

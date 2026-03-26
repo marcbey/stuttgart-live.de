@@ -1377,6 +1377,25 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to event_url(@published_event.slug)
   end
 
+  test "index redirects to detail page for normalized umlaut queries" do
+    event = Event.create!(
+      slug: "search-normalized-umlaut",
+      source_fingerprint: "test::search::normalized::umlaut",
+      title: "Die Ärzte live",
+      artist_name: "Die Ärzte",
+      start_at: 18.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all", q: "Die Aerzte")
+
+    assert_redirected_to event_url(event.slug)
+  end
+
   test "index search ignores the default sks filter for a single result" do
     non_sks_event = Event.create!(
       slug: "search-single-non-sks",
@@ -1489,6 +1508,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#event-grid article.event-card", count: 13
     assert_select "#events-pagination", count: 0
+  end
+
+  test "index treats punctuation only query as no search" do
+    highlighted_event = Event.create!(
+      slug: "search-punctuation-highlighted",
+      source_fingerprint: "test::search::punctuation::highlighted",
+      title: "Highlighted Night",
+      artist_name: "Highlight Artist",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get events_url(q: " ... !!! ")
+
+    assert_response :success
+    assert_select "h2", text: "Suchergebnisse", count: 0
+    assert_includes response.body, "Unsere Highlights"
+    assert_includes response.body, highlighted_event.artist_name
   end
 
   test "highlight list rows do not render ticket links" do
@@ -2270,6 +2312,27 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Search Overlay Artist Draft"
   end
 
+  test "search overlay matches normalized punctuation and whitespace variants" do
+    matching_event = Event.create!(
+      slug: "search-overlay-normalized-match",
+      source_fingerprint: "test::public::search-overlay::normalized-match",
+      title: "Live in Stuttgart",
+      artist_name: "AC/DC",
+      start_at: 17.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: " AC   DC   Live ")
+
+    assert_response :success
+    assert_includes response.body, matching_event.artist_name
+    assert_includes response.body, event_path(matching_event.slug, q: "AC   DC   Live")
+  end
+
   test "search overlay prioritizes sks and highlighted matches before regular matches" do
     regular_event = Event.create!(
       slug: "search-overlay-priority-regular",
@@ -2352,6 +2415,42 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Unsere Highlights"
     assert_includes response.body, highlighted_event.artist_name
     assert_not_includes response.body, "Initial Regular Artist"
+  end
+
+  test "search overlay falls back to highlights for punctuation only query" do
+    highlighted_event = Event.create!(
+      slug: "search-overlay-punctuation-highlighted",
+      source_fingerprint: "test::public::search-overlay::punctuation-highlighted",
+      title: "Initial Search Highlight",
+      artist_name: "Initial Highlight Artist",
+      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "search-overlay-punctuation-regular",
+      source_fingerprint: "test::public::search-overlay::punctuation-regular",
+      title: "Initial Search Regular",
+      artist_name: "Initial Regular Artist",
+      start_at: 5.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: " ... !!! ")
+
+    assert_response :success
+    assert_includes response.body, "Unsere Highlights"
+    assert_includes response.body, highlighted_event.artist_name
+    assert_not_includes response.body, "Initial Regular Artist"
+    assert_not_includes response.body, "Keine Treffer"
   end
 
   test "search overlay filters initial highlights by selected date" do

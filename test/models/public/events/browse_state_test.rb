@@ -42,4 +42,13 @@ class Public::Events::BrowseStateTest < ActiveSupport::TestCase
       state.route_params(page: 2, format: :turbo_stream)
     )
   end
+
+  test "punctuation only query is not treated as a search query" do
+    state = Public::Events::BrowseState.new({ "q" => " ... !!! " })
+
+    assert_equal "... !!!", state.query
+    assert_nil state.normalized_query
+    assert_not state.search_query_present?
+    assert_equal({}, state.route_params)
+  end
 end
