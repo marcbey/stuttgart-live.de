@@ -1,0 +1,23 @@
+<div class="event-image-crop-controls">
+  <p class="event-image-crop-hint">Den Ausschnitt direkt im Bild per Drag verschieben.</p>
+  <%= hidden_field_tag nil,
+                       focus_x_value,
+                       id: focus_x_attribute,
+                       data: { event_image_crop_preview_target: "focusX" } %>
+  <%= hidden_field_tag nil,
+                       focus_y_value,
+                       id: focus_y_attribute,
+                       data: { event_image_crop_preview_target: "focusY" } %>
+
+  <label class="form-label" for="<%= zoom_attribute %>">
+    Zoom <span data-event-image-crop-preview-target="zoomOutput"><%= zoom_value.round %>%</span>
+  </label>
+  <%= range_field_tag nil,
+                      zoom_value,
+                      min: 100,
+                      max: 300,
+                      step: 5,
+                      id: zoom_attribute,
+                      class: "form-range",
+                      data: { event_image_crop_preview_target: "zoom", action: "input->event-image-crop-preview#update" } %>
+</div>

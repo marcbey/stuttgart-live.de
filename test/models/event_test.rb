@@ -205,6 +205,30 @@ class EventTest < ActiveSupport::TestCase
     assert event.valid?
   end
 
+  test "pending promotion banner blob satisfies image validation" do
+    event = Event.new(
+      artist_name: "Promo Artist",
+      title: "Promo Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.hour.ago,
+      promotion_banner: true
+    )
+    event.pending_promotion_banner_image_blob = create_uploaded_blob(filename: "pending-event-banner.png")
+
+    assert_predicate event, :valid?
+  end
+
+  test "promotion banner image crop values fall back to defaults" do
+    event = events(:published_one)
+
+    assert_equal Event::DEFAULT_IMAGE_FOCUS_X, event.promotion_banner_image_focus_x_value
+    assert_equal Event::DEFAULT_IMAGE_FOCUS_Y, event.promotion_banner_image_focus_y_value
+    assert_equal Event::DEFAULT_IMAGE_ZOOM, event.promotion_banner_image_zoom_value
+  end
+
   test "promotion banner clears previous banner event" do
     first = events(:published_one)
     second = Event.create!(

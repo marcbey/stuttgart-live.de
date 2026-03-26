@@ -55,6 +55,31 @@
       </div>
 
       <p class="form-hint">Leer gelassene Texte fallen automatisch auf die Standardwerte zurück.</p>
+
+      <%= fields_for :event, event do |form| %>
+        <%= render "backend/shared/promotion_banner_image_editor",
+                   form: form,
+                   form_id: editor_form_id,
+                   title: "Promotion-Banner-Bild",
+                   description: "Wird auf der Startseite unter den Highlights in voller Breite angezeigt.",
+                   section_classes: "promotion-banner-image-section",
+                   image_blob: event.promotion_banner_image_blob_for_editor,
+                   signed_input_name: "event_promotion_banner_image[promotion_banner_image_signed_id]",
+                   signed_input_value: event.pending_promotion_banner_image_blob&.signed_id,
+                   remove_input_name: "event_promotion_banner_image[remove_promotion_banner_image]",
+                   remove_value: (event.remove_promotion_banner_image? ? "1" : "0"),
+                   upload_input_id: "#{editor_form_id}_promotion_banner_image_upload",
+                   copyright_attribute: :promotion_banner_image_copyright,
+                   copyright_value: event.promotion_banner_image_copyright,
+                   focus_x_attribute: :promotion_banner_image_focus_x,
+                   focus_y_attribute: :promotion_banner_image_focus_y,
+                   zoom_attribute: :promotion_banner_image_zoom,
+                   focus_x_value: event.promotion_banner_image_focus_x_value,
+                   focus_y_value: event.promotion_banner_image_focus_y_value,
+                   zoom_value: event.promotion_banner_image_zoom_value,
+                   image_alt: "#{event.artist_name} Promotion Banner",
+                   preview_variant: "promotion-banner" %>
+      <% end %>
     </div>
   </section>
 </div>

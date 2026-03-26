@@ -35,7 +35,7 @@ module Public
           query: nil
         )
         assign_homepage_sections(homepage_relation)
-        @promotion_banner_event = Event.promotion_banner_live.first
+        @promotion_banner_event = Event.promotion_banner_live.find(&:promotion_banner_display_image_present?)
         @promotion_banner_blog_post = BlogPost.promotion_banner_live.first
       end
 

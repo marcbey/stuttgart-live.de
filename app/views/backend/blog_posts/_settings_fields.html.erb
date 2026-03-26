@@ -42,19 +42,31 @@
       </div>
 
       <p class="blog-editor-hint">Leer gelassene Texte fallen automatisch auf die Standardwerte zurück.</p>
+
+      <%= fields_for :blog_post, blog_post do |form| %>
+        <%= render "backend/shared/promotion_banner_image_editor",
+                   form: form,
+                   form_id: form_id,
+                   title: "Promotion-Banner-Bild",
+                   description: "Wird auf der Startseite unter den Highlights in voller Breite angezeigt.",
+                   section_classes: "blog-post-image-section promotion-banner-image-section",
+                   image_blob: blog_post.promotion_banner_image_blob_for_editor,
+                   signed_input_name: "blog_post_images[promotion_banner_image_signed_id]",
+                   signed_input_value: blog_post.pending_promotion_banner_image_blob&.signed_id,
+                   remove_input_name: "blog_post_images[remove_promotion_banner_image]",
+                   remove_value: (blog_post.remove_promotion_banner_image? ? "1" : "0"),
+                   upload_input_id: "#{form_id}_promotion_banner_image_upload",
+                   copyright_attribute: :promotion_banner_image_copyright,
+                   copyright_value: blog_post.promotion_banner_image_copyright,
+                   focus_x_attribute: :promotion_banner_image_focus_x,
+                   focus_y_attribute: :promotion_banner_image_focus_y,
+                   zoom_attribute: :promotion_banner_image_zoom,
+                   focus_x_value: blog_post.promotion_banner_image_focus_x_value,
+                   focus_y_value: blog_post.promotion_banner_image_focus_y_value,
+                   zoom_value: blog_post.promotion_banner_image_zoom_value,
+                   image_alt: "#{blog_post.title} Promotion Banner",
+                   preview_variant: "promotion-banner" %>
+      <% end %>
     </div>
   </section>
-
-  <%= fields_for :blog_post, blog_post do |form| %>
-    <%= render "backend/blog_posts/image_editor",
-               form: form,
-               form_id: form_id,
-               blog_post: blog_post,
-               title: "Promotion-Banner-Bild",
-               description: "Wird auf der Startseite unter den Highlights in voller Breite angezeigt.",
-               image_slot: :promotion_banner_image,
-               copyright_attribute: :promotion_banner_image_copyright,
-               image_alt: "#{blog_post.title} Promotion Banner",
-               preview_variant: "blog-promotion-banner" %>
-  <% end %>
 </div>

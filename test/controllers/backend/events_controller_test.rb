@@ -78,6 +78,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings[hidden]", count: 1
     assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event_#{@event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner]']", count: 0
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
@@ -153,6 +155,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_copyright]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_focus_x]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_focus_y]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_zoom]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings .event-image-crop-frame[data-grid-variant='promotion-banner']", count: 1
+    assert_select "#event-editor-panel-settings select#event_image_grid_variant", count: 0
     assert_select "#event-editor-panel-event .editor-genre-section", count: 0
     assert_select "#event-editor-panel-event input[name='event[genre_ids][]']", count: 0
     assert_select "input[name='event_image[detail_hero_files][]'][type='file']"
@@ -165,7 +175,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event_image[slider_files][]'][type='file']"
     assert_select "input[name='event_image[slider_alt_text]']"
     assert_select "[data-controller='event-image-preupload']"
-    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
+    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 2
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_includes response.body, "LLM-Enrichment ist für neue Events erst nach dem ersten Speichern verfügbar."
   end
@@ -196,6 +206,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-event[hidden]", count: 1
     assert_select "input[name='editor_tab'][value='settings']", count: 1
     assert_select "#event-editor-panel-settings .editor-subsection", count: 2
+    assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event']", count: 1
   end
 
   test "turbo frame new keeps requested llm enrichment tab active" do
@@ -277,7 +288,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#event_image_#{image.id}_card_focus_x[name]", count: 0
     assert_select "input#event_image_#{image.id}_card_focus_y[name]", count: 0
     assert_select "input#event_image_#{image.id}_card_zoom[name]", count: 0
-    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
+    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 2
     assert_includes response.body, "<code>1x1</code> ist der Standard"
   end
 
@@ -1120,10 +1131,55 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_copyright]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_focus_x]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_focus_y]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_zoom]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings .event-image-crop-frame[data-grid-variant='promotion-banner']", count: 1
+    assert_select "#event-editor-panel-settings select#event_image_grid_variant", count: 0
     assert_select "form#editor_form_event_#{@published_event.id} input[type='hidden'][name='event[promotion_banner]']", count: 0
     assert_select "form#editor_form_event_#{@published_event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
     assert_select "form#editor_form_event_#{@published_event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
     assert_select "#event-editor-panel-settings .editor-genre-section", count: 0
+  end
+
+  test "editor can save an event promotion banner image from settings" do
+    sign_in_as(@user)
+    promotion_blob = create_uploaded_blob(filename: "event-promotion-banner.png", width: 1600, height: 900)
+
+    patch backend_event_url(@published_event), params: {
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: @published_event.status,
+        promotion_banner: "1",
+        promotion_banner_kicker_text: "Empfehlung",
+        promotion_banner_cta_text: "Jetzt ansehen",
+        promotion_banner_image_copyright: "Foto: Haus",
+        promotion_banner_image_focus_x: "18",
+        promotion_banner_image_focus_y: "72",
+        promotion_banner_image_zoom: "145"
+      },
+      event_promotion_banner_image: {
+        promotion_banner_image_signed_id: promotion_blob.signed_id,
+        remove_promotion_banner_image: "0"
+      },
+      editor_tab: "settings",
+      next_event_enabled: "0"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_predicate @published_event.reload.promotion_banner_image, :attached?
+    assert_equal "Foto: Haus", @published_event.promotion_banner_image_copyright
+    assert_equal 18.0, @published_event.promotion_banner_image_focus_x_value
+    assert_equal 72.0, @published_event.promotion_banner_image_focus_y_value
+    assert_equal 145.0, @published_event.promotion_banner_image_zoom_value
+    assert_includes response.body, 'value="settings"'
   end
 
   test "llm enrichment tab shows empty state when no enrichment exists" do

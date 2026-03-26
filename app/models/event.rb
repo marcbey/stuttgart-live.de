@@ -3,6 +3,12 @@ class Event < ApplicationRecord
   EVENT_SERIES_ASSIGNMENTS = %w[auto manual manual_none].freeze
   DEFAULT_PROMOTION_BANNER_KICKER_TEXT = "Promotion"
   DEFAULT_PROMOTION_BANNER_CTA_TEXT = "Zum Event"
+  DEFAULT_IMAGE_FOCUS_X = EventImage::DEFAULT_CARD_FOCUS_X
+  DEFAULT_IMAGE_FOCUS_Y = EventImage::DEFAULT_CARD_FOCUS_Y
+  DEFAULT_IMAGE_ZOOM = EventImage::DEFAULT_CARD_ZOOM
+  WEB_MAX_DIMENSION = EventImage::WEB_MAX_DIMENSION
+  WEB_QUALITY = EventImage::WEB_QUALITY
+  ProcessingError = Class.new(StandardError)
   IMAGE_SLOT_PREFERENCES = {
     [ :grid_default, :desktop ] => [
       [ "cover", %w[landscape square portrait unknown] ],
@@ -48,12 +54,16 @@ class Event < ApplicationRecord
   has_many :event_presenters, -> { order(:position, :id) }, dependent: :destroy
   has_many :presenters, -> { order("event_presenters.position ASC", "event_presenters.id ASC") }, through: :event_presenters
   has_one :llm_enrichment, class_name: "EventLlmEnrichment", dependent: :destroy
+  has_one_attached :promotion_banner_image
   has_many :import_event_images,
     as: :import_event,
     foreign_key: :import_event_id,
     foreign_type: :import_class,
     dependent: :delete_all,
     inverse_of: :import_event
+
+  attr_accessor :pending_promotion_banner_image_blob,
+                :remove_promotion_banner_image
 
   accepts_nested_attributes_for :llm_enrichment, update_only: true
 
@@ -66,6 +76,11 @@ class Event < ApplicationRecord
   validates :min_price, :max_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
+  validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
+  validates :promotion_banner_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :promotion_banner_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :promotion_banner_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
+  validate :promotion_banner_image_must_be_image
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
@@ -82,10 +97,7 @@ class Event < ApplicationRecord
   scope :promotion_banner_live, lambda {
     published_live
       .where(promotion_banner: true)
-      .joins(:event_images)
-      .merge(EventImage.detail_hero)
-      .distinct
-      .includes(event_images: [ file_attachment: :blob ])
+      .includes(promotion_banner_image_attachment: :blob, event_images: [ file_attachment: :blob ])
   }
 
   def self.sks_promoter_ids
@@ -219,6 +231,50 @@ class Event < ApplicationRecord
     promotion_banner_cta_text.presence || DEFAULT_PROMOTION_BANNER_CTA_TEXT
   end
 
+  def promotion_banner_image_blob_for_editor
+    pending_blob = pending_promotion_banner_image_blob
+    return pending_blob if pending_blob.present?
+    return if remove_promotion_banner_image?
+
+    promotion_banner_image.blob if promotion_banner_image.attached?
+  end
+
+  def remove_promotion_banner_image?
+    ActiveModel::Type::Boolean.new.cast(remove_promotion_banner_image)
+  end
+
+  def promotion_banner_image_focus_x_value
+    image_focus_value(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+  end
+
+  def promotion_banner_image_focus_y_value
+    image_focus_value(promotion_banner_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+  end
+
+  def promotion_banner_image_zoom_value
+    image_focus_value(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
+  end
+
+  def promotion_banner_display_image_present?
+    promotion_banner_image.attached? || event_image.present?
+  end
+
+  def processed_optimized_promotion_banner_image_variant
+    promotion_banner_image.variant(**variant_transformations).processed
+  rescue LoadError => error
+    Rails.logger.warn("Event promotion banner optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    promotion_banner_image
+  rescue MiniMagick::Error => error
+    Rails.logger.warn("Event promotion banner optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    promotion_banner_image
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
+    raise ProcessingError, processing_error_message(error)
+  end
+
   def youtube_embed_url
     return "" if youtube_url.blank?
 
@@ -322,6 +378,10 @@ class Event < ApplicationRecord
     self.badge_text = badge_text.to_s.strip.presence
     self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
     self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
+    self.promotion_banner_image_copyright = promotion_banner_image_copyright.to_s.strip.presence
+    self.promotion_banner_image_focus_x = normalize_percentage(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+    self.promotion_banner_image_focus_y = normalize_percentage(promotion_banner_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+    self.promotion_banner_image_zoom = normalize_percentage(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
     normalized_organizer_notes = organizer_notes.to_s.strip.presence
     self.organizer_notes = normalized_organizer_notes.presence || (sks_promoter? ? AppSetting.sks_organizer_notes : nil)
     self.homepage_url = homepage_url.to_s.strip.presence
@@ -340,6 +400,14 @@ class Event < ApplicationRecord
 
   def clear_other_promotion_banners
     self.class.where.not(id: id).where(promotion_banner: true).update_all(promotion_banner: false, updated_at: Time.current)
+  end
+
+  def promotion_banner_image_must_be_image
+    image_blob = promotion_banner_image_blob_for_editor
+    return unless image_blob.present?
+    return if image_blob.content_type.to_s.start_with?("image/")
+
+    errors.add(:promotion_banner_image, "muss ein Bild sein")
   end
 
   def split_artist_and_tour_from_title!
@@ -378,6 +446,42 @@ class Event < ApplicationRecord
     end
 
     self.slug = candidate
+  end
+
+  def image_focus_value(value, fallback:)
+    normalized = value.to_f
+    normalized.positive? ? normalized : fallback
+  end
+
+  def normalize_percentage(value, fallback:)
+    return fallback if value.blank?
+
+    value.to_f.round(2)
+  end
+
+  def variant_transformations
+    transformations = {
+      format: :webp,
+      resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
+    }
+
+    if ActiveStorage.variant_processor == :vips
+      transformations[:saver] = {
+        strip: true,
+        quality: WEB_QUALITY
+      }
+    end
+
+    transformations
+  end
+
+  def processing_error_message(error)
+    Rails.logger.warn("Event promotion banner optimization failed for ##{id || 'new'}: #{error.class}: #{error.message}")
+    "Bild konnte nicht für Web und Mobile optimiert werden."
+  end
+
+  def vips_processing_error?(error)
+    defined?(Vips::Error) && error.is_a?(Vips::Error)
   end
 
   def normalize_comparison_token(value)

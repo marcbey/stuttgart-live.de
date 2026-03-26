@@ -110,6 +110,49 @@ module ApplicationHelper
     rails_storage_proxy_url(optimized_event_image_representation(image))
   end
 
+  def event_cropped_image_style(image, frame_ratio:)
+    return event_card_image_style(image) unless image.is_a?(EventImage)
+
+    cropped_attachment_style(
+      attachment: image.file,
+      focus_x: image.card_focus_x_value,
+      focus_y: image.card_focus_y_value,
+      zoom: image.card_zoom_value,
+      frame_ratio: frame_ratio,
+      fallback_style: event_card_image_style(image)
+    )
+  end
+
+  def optimized_event_promotion_banner_image_representation(event)
+    return unless event.promotion_banner_image.attached?
+
+    event.processed_optimized_promotion_banner_image_variant
+  rescue Event::ProcessingError, LoadError
+    event.promotion_banner_image
+  end
+
+  def optimized_event_promotion_banner_image_source(event)
+    representation = optimized_event_promotion_banner_image_representation(event)
+    return if representation.blank?
+
+    rails_storage_proxy_path(representation, only_path: true)
+  end
+
+  def event_promotion_banner_image_style(event, frame_ratio:)
+    cropped_attachment_style(
+      attachment: event.promotion_banner_image,
+      focus_x: event.promotion_banner_image_focus_x_value,
+      focus_y: event.promotion_banner_image_focus_y_value,
+      zoom: event.promotion_banner_image_zoom_value,
+      frame_ratio: frame_ratio,
+      fallback_style: focused_image_style(
+        focus_x: event.promotion_banner_image_focus_x_value,
+        focus_y: event.promotion_banner_image_focus_y_value,
+        zoom: event.promotion_banner_image_zoom_value
+      )
+    )
+  end
+
   def presenter_logo_representation(presenter, size: :detail)
     return if presenter.blank? || !presenter.logo.attached?
 
@@ -129,15 +172,11 @@ module ApplicationHelper
   end
 
   def blog_post_image_style(blog_post, slot)
-    focus_x = blog_post.public_send("#{slot}_focus_x_value")
-    focus_y = blog_post.public_send("#{slot}_focus_y_value")
-    zoom = blog_post.public_send("#{slot}_zoom_value")
-
-    [
-      "object-position: #{focus_x}% #{focus_y}%",
-      "transform: scale(#{(zoom / 100.0).round(3)})",
-      "transform-origin: #{focus_x}% #{focus_y}%"
-    ].join("; ")
+    focused_image_style(
+      focus_x: blog_post.public_send("#{slot}_focus_x_value"),
+      focus_y: blog_post.public_send("#{slot}_focus_y_value"),
+      zoom: blog_post.public_send("#{slot}_zoom_value")
+    )
   end
 
   def optimized_blog_post_image_representation(blog_post, slot)
@@ -159,16 +198,44 @@ module ApplicationHelper
   end
 
   def blog_post_cropped_image_style(blog_post, slot, frame_ratio:)
-    image = blog_post.public_send(slot)
-    metadata = image&.attached? ? image.blob.metadata : {}
-    image_width = metadata["width"].to_f
-    image_height = metadata["height"].to_f
+    cropped_attachment_style(
+      attachment: blog_post.public_send(slot),
+      focus_x: blog_post.public_send("#{slot}_focus_x_value"),
+      focus_y: blog_post.public_send("#{slot}_focus_y_value"),
+      zoom: blog_post.public_send("#{slot}_zoom_value"),
+      frame_ratio: frame_ratio,
+      fallback_style: blog_post_image_style(blog_post, slot)
+    )
+  end
 
-    return blog_post_image_style(blog_post, slot) unless image_width.positive? && image_height.positive?
+  def blog_post_image_copyright(blog_post, slot)
+    blog_post.public_send("#{slot}_copyright")
+  end
 
-    focus_x = blog_post.public_send("#{slot}_focus_x_value") / 100.0
-    focus_y = blog_post.public_send("#{slot}_focus_y_value") / 100.0
-    zoom_scale = blog_post.public_send("#{slot}_zoom_value") / 100.0
+  def formatted_organizer_notes(notes)
+    formatted_organizer_notes_with_link(notes)
+  end
+
+  private
+
+  def focused_image_style(focus_x:, focus_y:, zoom:)
+    [
+      "object-position: #{focus_x}% #{focus_y}%",
+      "transform: scale(#{(zoom.to_f / 100.0).round(3)})",
+      "transform-origin: #{focus_x}% #{focus_y}%"
+    ].join("; ")
+  end
+
+  def cropped_attachment_style(attachment:, focus_x:, focus_y:, zoom:, frame_ratio:, fallback_style:)
+    metadata = analyzed_attachment_metadata(attachment)
+    image_width = metadata_value(metadata, :width).to_f
+    image_height = metadata_value(metadata, :height).to_f
+
+    return fallback_style unless image_width.positive? && image_height.positive?
+
+    focus_x = focus_x.to_f / 100.0
+    focus_y = focus_y.to_f / 100.0
+    zoom_scale = zoom.to_f / 100.0
     image_ratio = image_width / image_height
 
     width_factor, height_factor =
@@ -193,15 +260,27 @@ module ApplicationHelper
     ].join("; ")
   end
 
-  def blog_post_image_copyright(blog_post, slot)
-    blog_post.public_send("#{slot}_copyright")
+  def analyzed_attachment_metadata(attachment)
+    return {} unless attachment.respond_to?(:attached?) && attachment.attached?
+
+    blob = attachment.blob
+    metadata = blob.metadata || {}
+    return metadata if metadata_dimensions_present?(metadata)
+    return metadata if blob.analyzed?
+
+    blob.analyze
+    blob.reload.metadata || metadata
+  rescue StandardError
+    metadata || {}
   end
 
-  def formatted_organizer_notes(notes)
-    formatted_organizer_notes_with_link(notes)
+  def metadata_dimensions_present?(metadata)
+    metadata_value(metadata, :width).to_i.positive? && metadata_value(metadata, :height).to_i.positive?
   end
 
-  private
+  def metadata_value(metadata, key)
+    metadata[key.to_s] || metadata[key.to_sym]
+  end
 
   def clamp_crop_offset(offset, size_factor)
     [ [ offset, 0 ].min, 1 - size_factor ].max

@@ -41,6 +41,7 @@ module Backend
 
     def create
       @event = Event.new(event_attribute_params)
+      prepare_promotion_banner_image(@event)
       @selected_genre_ids = genre_ids_from_params
       @selected_presenter_ids = presenter_ids_from_params
       @manual_image_form_values = manual_image_form_values
@@ -56,6 +57,8 @@ module Backend
           creation_alert = "Event konnte nicht erstellt werden."
           raise ActiveRecord::Rollback
         end
+
+        persist_promotion_banner_image!(@event)
 
         assign_genres!(@event)
         sync_presenters!(@event)
@@ -107,10 +110,18 @@ module Backend
       navigation_status = @inbox_state.navigation_status
 
       @event.assign_attributes(event_attribute_params)
+      prepare_promotion_banner_image(@event)
       @event.status = "published" if save_and_publish_requested?
       set_publishing_fields!(@event)
 
-      if @event.save
+      if @event.errors.any?
+        editor_response.validation_error(
+          event: @event,
+          filter_status: navigation_status || @event.status,
+          active_editor_tab: editor_tab_for(@event)
+        )
+      elsif @event.save
+        persist_promotion_banner_image!(@event)
         begin
           update_detail_hero_crop!
           update_slider_image_metadata!
@@ -222,6 +233,7 @@ module Backend
       @event = Event.includes(
         :llm_enrichment,
         :import_event_images,
+        promotion_banner_image_attachment: :blob,
         event_images: [ file_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
       ).find(params[:id])
@@ -263,6 +275,7 @@ module Backend
         return Event.includes(
           :llm_enrichment,
           :import_event_images,
+          promotion_banner_image_attachment: :blob,
           event_images: [ file_attachment: :blob ],
           event_presenters: { presenter: [ logo_attachment: :blob ] }
         ).find_by(id: params[:event_id])
@@ -311,6 +324,10 @@ module Backend
         :promotion_banner,
         :promotion_banner_kicker_text,
         :promotion_banner_cta_text,
+        :promotion_banner_image_copyright,
+        :promotion_banner_image_focus_x,
+        :promotion_banner_image_focus_y,
+        :promotion_banner_image_zoom,
         :status,
         :editor_notes,
         presenter_ids: [],
@@ -510,6 +527,13 @@ module Backend
       )
     end
 
+    def promotion_banner_image_params
+      params.fetch(:event_promotion_banner_image, ActionController::Parameters.new).permit(
+        :promotion_banner_image_signed_id,
+        :remove_promotion_banner_image
+      )
+    end
+
     def manual_image_form_values
       permitted = manual_image_params.to_h.deep_symbolize_keys
 
@@ -625,6 +649,33 @@ module Backend
       return unless detail_hero.present?
 
       detail_hero.update!(detail_hero_crop_params)
+    end
+
+    def prepare_promotion_banner_image(event)
+      image_params = promotion_banner_image_params
+
+      event.pending_promotion_banner_image_blob = resolve_promotion_banner_signed_blob(
+        image_params[:promotion_banner_image_signed_id],
+        event: event
+      )
+      event.remove_promotion_banner_image = ActiveModel::Type::Boolean.new.cast(image_params[:remove_promotion_banner_image])
+    end
+
+    def persist_promotion_banner_image!(event)
+      if event.pending_promotion_banner_image_blob.present?
+        event.promotion_banner_image.attach(event.pending_promotion_banner_image_blob)
+      elsif event.remove_promotion_banner_image? && event.promotion_banner_image.attached?
+        event.promotion_banner_image.purge_later
+      end
+    end
+
+    def resolve_promotion_banner_signed_blob(signed_id, event:)
+      return if signed_id.blank?
+
+      ActiveStorage::Blob.find_signed!(signed_id)
+    rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
+      event.errors.add(:base, "Promotion-Banner-Bild: Der temporäre Upload ist ungültig oder abgelaufen.")
+      nil
     end
 
     def slider_image_update_params

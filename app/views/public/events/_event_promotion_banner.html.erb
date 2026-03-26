@@ -1,6 +1,9 @@
 <% event_image = event.event_image %>
-<% event_image_source = event_image_source(event_image) %>
-<% event_image_style = event_card_image_style(event_image) %>
+<% uses_promotion_banner_image = event.promotion_banner_image.attached? %>
+<% event_image_source = uses_promotion_banner_image ? optimized_event_promotion_banner_image_source(event) : event_image_source(event_image) %>
+<% event_image_style = uses_promotion_banner_image ? event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0) : event_cropped_image_style(event_image, frame_ratio: 16.0 / 9.0) %>
+<% event_image_credit = uses_promotion_banner_image ? event.promotion_banner_image_copyright : event_image&.sub_text %>
+<% image_alt = uses_promotion_banner_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(event_image, event) %>
 
 <article class="promotion-banner promotion-banner-event">
   <% if authenticated? %>
@@ -15,11 +18,11 @@
   <%= link_to public_event_detail_path(event, browse_state), class: "promotion-banner-link" do %>
     <div class="promotion-banner-media">
       <%= image_tag event_image_source,
-                    alt: event_image_alt(event_image, event),
+                    alt: image_alt,
                     class: "promotion-banner-image",
                     style: event_image_style %>
-      <% if event_image&.sub_text.present? %>
-        <p class="promotion-banner-credit"><%= event_image.sub_text %></p>
+      <% if event_image_credit.present? %>
+        <p class="promotion-banner-credit"><%= event_image_credit %></p>
       <% end %>
     </div>
 

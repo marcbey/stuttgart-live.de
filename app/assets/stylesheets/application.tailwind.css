@@ -6971,6 +6971,11 @@ trix-editor.blog-rich-text:focus {
   aspect-ratio: 16 / 9;
 }
 
+.event-image-crop-frame[data-grid-variant="promotion-banner"] {
+  width: min(100%, 24rem);
+  aspect-ratio: 16 / 9;
+}
+
 .event-image-crop-preview-image {
   display: block;
   width: auto;

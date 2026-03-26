@@ -34,8 +34,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog_editor_panel .editor-header", count: 1
     assert_select "#blog_editor_panel > .flash.flash-alert", count: 0
     assert_select "input[name='editor_tab'][value='news']", count: 1
-    assert_select "section.blog-post-image-section", count: 2
-    assert_select "[data-controller='event-image-crop-preview blog-post-image-preupload']", count: 2
+    assert_select "section.blog-post-image-section", count: 1
+    assert_select "[data-controller='event-image-crop-preview blog-post-image-preupload']", count: 1
+    assert_select "[data-controller='event-image-crop-preview promotion-banner-image-preupload']", count: 1
   end
 
   test "live blog post shows open button in topbar and keeps editor header" do
@@ -315,6 +316,8 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_image_focus_x]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_image_focus_y]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_image_zoom]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
+    assert_select "#blog-editor-panel-settings .event-image-crop-frame[data-grid-variant='promotion-banner']", count: 1
+    assert_select "#blog-editor-panel-settings select#event_image_grid_variant", count: 0
     assert_select "#blog-editor-panel-settings input#promotion_banner_image_focus_x[name]", count: 0
     assert_select "#blog-editor-panel-settings input#promotion_banner_image_focus_y[name]", count: 0
     assert_select "#blog-editor-panel-settings input#promotion_banner_image_zoom[name]", count: 0

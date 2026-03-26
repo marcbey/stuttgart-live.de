@@ -710,6 +710,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, url_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
+    document = Nokogiri::HTML.parse(response.body)
+    promotion_banner_image = document.at_css(".promotion-banner:not(.promotion-banner-event) .promotion-banner-image")
+    assert_not_nil promotion_banner_image
+    assert_includes promotion_banner_image["style"], "left:"
+    assert_includes promotion_banner_image["style"], "top:"
+    assert_includes promotion_banner_image["style"], "width:"
+    assert_includes promotion_banner_image["style"], "height:"
   end
 
   test "homepage renders event promotion banner defaults and optimized event image" do
@@ -734,6 +741,46 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner-event .promotion-banner-kicker", text: "Promotion"
     assert_select ".promotion-banner-event .promotion-banner-cta", text: "Zum Event"
     assert_includes response.body, Rails.application.routes.url_helpers.rails_storage_proxy_path(image.processed_optimized_variant, only_path: true)
+  end
+
+  test "homepage prefers dedicated event promotion banner image when present" do
+    event = Event.create!(
+      slug: "homepage-event-promotion-banner-dedicated-image",
+      source_fingerprint: "test::homepage::event-promotion-banner-dedicated-image",
+      title: "Dedicated Banner Event",
+      artist_name: "Dedicated Banner Artist",
+      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner: true,
+      promotion_banner_image_copyright: "Foto: Banner",
+      promotion_banner_image_focus_x: 18,
+      promotion_banner_image_focus_y: 72,
+      promotion_banner_image_zoom: 145,
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1, sub_text: "Fallback Credit")
+    event.promotion_banner_image.attach(
+      io: StringIO.new(solid_png_binary(width: 1600, height: 900)),
+      filename: "event-promotion-banner.png",
+      content_type: "image/png"
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_includes response.body, rails_storage_proxy_path(event.processed_optimized_promotion_banner_image_variant, only_path: true)
+    assert_select ".promotion-banner-event .promotion-banner-credit", text: "Foto: Banner"
+    refute_includes response.body, "Fallback Credit"
+    document = Nokogiri::HTML.parse(response.body)
+    promotion_banner_image = document.at_css(".promotion-banner-event .promotion-banner-image")
+    assert_not_nil promotion_banner_image
+    assert_includes promotion_banner_image["style"], "left:"
+    assert_includes promotion_banner_image["style"], "top:"
+    assert_includes promotion_banner_image["style"], "width:"
+    assert_includes promotion_banner_image["style"], "height:"
   end
 
   test "homepage skips event promotion banner without event image" do

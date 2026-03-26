@@ -1,0 +1,106 @@
+<% image_source = image_blob.present? ? url_for(image_blob) : nil %>
+
+<div class="<%= class_names("event-image-section", section_classes) %>">
+  <% if description.present? %>
+    <p class="event-image-crop-hint"><%= description %></p>
+  <% end %>
+
+  <div class="event-image-crop-shell">
+    <div class="event-image-crop-editor"
+         data-controller="event-image-crop-preview promotion-banner-image-preupload"
+         data-promotion-banner-image-preupload-direct-upload-url-value="<%= rails_direct_uploads_path %>">
+      <%= tag.input type: "hidden",
+                    value: preview_variant,
+                    data: { event_image_crop_preview_target: "gridVariant" } %>
+      <%= hidden_field_tag signed_input_name,
+                           signed_input_value,
+                           form: form_id,
+                           data: { promotion_banner_image_preupload_target: "signedInput" } %>
+      <%= hidden_field_tag remove_input_name,
+                           remove_value,
+                           form: form_id,
+                           data: { promotion_banner_image_preupload_target: "removeInput" } %>
+      <%= form.hidden_field focus_x_attribute,
+                            value: focus_x_value,
+                            form: form_id,
+                            data: { event_image_crop_preview_target: "saveFocusX" } %>
+      <%= form.hidden_field focus_y_attribute,
+                            value: focus_y_value,
+                            form: form_id,
+                            data: { event_image_crop_preview_target: "saveFocusY" } %>
+      <%= form.hidden_field zoom_attribute,
+                            value: zoom_value,
+                            form: form_id,
+                            data: { event_image_crop_preview_target: "saveZoom" } %>
+
+      <div class="event-image-crop-frame"
+           data-event-image-crop-preview-target="previewFrame"
+           data-action="pointerdown->event-image-crop-preview#startDrag"
+           data-grid-variant="<%= preview_variant %>">
+        <%= image_tag image_source.presence || "",
+                      alt: image_alt,
+                      class: class_names("event-image-crop-preview-image", "is-hidden": image_source.blank?),
+                      data: {
+                        event_image_crop_preview_target: "previewImage",
+                        promotion_banner_image_preupload_target: "previewImage"
+                      } %>
+        <p class="event-image-crop-placeholder<%= " is-hidden" if image_source.present? %>"
+           data-role="event-image-crop-placeholder"
+           data-promotion-banner-image-preupload-target="placeholder">
+          Noch kein Bild ausgewählt.
+        </p>
+        <div class="event-image-crop-box is-hidden"
+             data-event-image-crop-preview-target="previewBox"
+             data-promotion-banner-image-preupload-target="previewBox"></div>
+      </div>
+
+      <div class="event-image-crop-sidebar">
+        <div class="slider-image-editor-meta">
+          <div class="event-image-meta-inline-form">
+            <%= form.label copyright_attribute, "Copyright", class: "form-label" %>
+            <%= form.text_field copyright_attribute,
+                                value: copyright_value,
+                                placeholder: "Copyright unter dem Bild (optional)",
+                                class: "form-input",
+                                form: form_id %>
+          </div>
+
+          <div class="slider-image-meta-actions">
+            <%= file_field_tag nil,
+                               accept: "image/*",
+                               class: "event-image-inline-file-input",
+                               id: upload_input_id,
+                               data: {
+                                 promotion_banner_image_preupload_target: "input",
+                                 action: "change->promotion-banner-image-preupload#select"
+                               } %>
+            <button type="button"
+                    class="button button-secondary button-compact"
+                    onclick="document.getElementById('<%= upload_input_id %>')?.click();">
+              Bild auswählen
+            </button>
+            <button type="button"
+                    class="button button-ghost button-compact"
+                    data-promotion-banner-image-preupload-target="removeButton"
+                    data-action="click->promotion-banner-image-preupload#remove"
+                    <%= "hidden" if image_blob.blank? %>>
+              Bild entfernen
+            </button>
+          </div>
+          <p class="preuploaded-image-live-region"
+             data-promotion-banner-image-preupload-target="status"
+             role="status"
+             aria-live="polite"></p>
+        </div>
+
+        <%= render "backend/shared/image_crop_controls",
+                   focus_x_attribute: focus_x_attribute,
+                   focus_y_attribute: focus_y_attribute,
+                   zoom_attribute: zoom_attribute,
+                   focus_x_value: focus_x_value,
+                   focus_y_value: focus_y_value,
+                   zoom_value: zoom_value %>
+      </div>
+    </div>
+  </div>
+</div>
