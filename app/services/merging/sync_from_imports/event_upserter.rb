@@ -29,7 +29,7 @@ module Merging
         event.completeness_score = completeness.score
         event.completeness_flags = completeness.flags
 
-        apply_status_rules(event, created_now:, images_present:)
+        apply_status_rules(event, created_now:, images_present:, ready_for_publish: completeness.ready_for_publish?)
         updated_now = event.changed? && !created_now
 
         event.save! if created_now || event.changed?
@@ -97,7 +97,7 @@ module Merging
         end
       end
 
-      def apply_status_rules(event, created_now:, images_present:)
+      def apply_status_rules(event, created_now:, images_present:, ready_for_publish:)
         return if event.status == "rejected"
 
         if created_now
@@ -113,12 +113,19 @@ module Merging
           return
         end
 
-        return unless event.published? && event.auto_published?
-        return if auto_publishable?(event, images_present:)
+        if event.published? && event.auto_published?
+          return if auto_publishable?(event, images_present:)
 
-        event.status = "needs_review"
+          event.status = "needs_review"
+          event.auto_published = false
+          event.published_at = nil if event.published_by_id.nil?
+          return
+        end
+
+        return unless event.status == "needs_review" && ready_for_publish
+
+        event.status = "ready_for_publish"
         event.auto_published = false
-        event.published_at = nil if event.published_by_id.nil?
       end
 
       def auto_publishable?(event, images_present:)

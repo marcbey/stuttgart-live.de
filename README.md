@@ -107,9 +107,20 @@ Wichtig für das Verhalten im Backend:
 
 - Neue oder aktualisierte automatisch gemergte Events werden nur dann direkt veröffentlicht, wenn die Pflichtfelder inklusive Bild vorhanden sind.
 - Fehlen dafür wichtige Informationen, landet das Event stattdessen in `needs_review`.
+- Erhält ein bestehendes `needs_review`-Event in einem späteren Merge nun alle Pflichtdaten, wechselt es automatisch nach `ready_for_publish`, aber nicht direkt nach `published`.
 - Bereits automatisch veröffentlichte Events fallen ebenfalls zurück auf `needs_review`, wenn sie nach einem späteren Merge nicht mehr vollständig genug sind.
 - Der Button zum Starten des Merge-Imports wird im Backend hervorgehoben, sobald seit dem letzten erfolgreichen Merge neue erfolgreiche Provider-Imports vorliegen.
 - Ein erfolgreicher Merge reiht standardmäßig direkt das LLM-Enrichment ein, damit neue oder geänderte Events ohne zusätzlichen manuellen Schritt für die nächste Qualitätsstufe bereitstehen.
+
+Die Event-Status und ihre sichtbaren Labels sind dabei:
+
+| Technischer Status | Sichtbares Label | Bedeutung |
+| --- | --- | --- |
+| `imported` | `importiert` | Interner Ausgangszustand des Modells. Im regulären redaktionellen Workflow spielt dieser Status normalerweise keine aktive Rolle mehr. |
+| `needs_review` | `Draft` beziehungsweise `Drafts` in Filtern | Das Event ist noch nicht veröffentlichungsreif. Es fehlen Pflichtangaben, es braucht redaktionelle Prüfung oder beides. |
+| `ready_for_publish` | `Unpublished` | Das Event ist fachlich vollständig, aber noch nicht veröffentlicht. |
+| `published` | `Published` | Das Event ist veröffentlicht und öffentlich sichtbar, sobald `published_at` erreicht ist. |
+| `rejected` | `Rejected` | Das Event wurde bewusst verworfen und soll nicht veröffentlicht werden. |
 
 Wichtig für Updates bestehender Events:
 

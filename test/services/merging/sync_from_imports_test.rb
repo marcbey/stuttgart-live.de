@@ -108,6 +108,49 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_includes event.completeness_flags, "missing_image"
   end
 
+  test "promotes existing needs_review event to ready_for_publish when a later merge provides the missing image" do
+    raw_import = RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "merge-review-to-ready:2026-12-03",
+      payload: {
+        "event_id" => "merge-review-to-ready",
+        "date_time" => "2026-12-03 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band Review Ready",
+        "title_2" => "Late Image Night",
+        "ticket_url" => "https://example.com/review-ready"
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(artist_name: "Band Review Ready")
+    assert_equal "needs_review", event.status
+    assert_equal [ "missing_image" ], event.completeness_flags
+
+    raw_import.update!(
+      payload: raw_import.payload.merge(
+        "data" => {
+          "images" => {
+            "merge-review-to-ready" => {
+              "large" => "https://example.com/review-ready.jpg"
+            }
+          }
+        }
+      )
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event.reload
+    assert_equal "ready_for_publish", event.status
+    assert_equal false, event.auto_published
+    assert_empty event.completeness_flags
+    assert_equal 1, event.import_event_images.count
+  end
+
   test "leaves doors_at empty when import does not provide a valid doors time" do
     RawEventImport.create!(
       import_source: import_sources(:one),

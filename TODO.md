@@ -53,3 +53,27 @@ Homepage:
 
 Event Detail Page:
 - überhalb der Event Teaser Lane "Mehr aus diesem Genre" gibt es weitere Lane mit allen zukünftigen Events dieser Event-Reihe mit dem Event Title als Überschrift.
+
+# Bugs
+- DONE: Suche: robuster machen, zB Leerzeichen
+- DONE: Suche: default Suchergebnis soll auch Promotion Events zeigen + SKS Events, max ~5 Events
+- DONE: Promotion Banner: Dort das Event Image mit crop anzeigen
+- DONE: Main Nav: Tiktok Icon + Link
+- DONE: Main Nav: Insta Link falsch
+- Listenansicht: einschränken: desktop 6 rows, mobile 10 events
+- Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
+- Suchergebnis Seite: mit Kachel / Listenansicht, generell anderes Layout
+- Prompt verbessern: Social Links überprüfen
+- Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps,  überschreibt die LLM Venue
+- Data Rentention: Events mit Status draft, unpublished & rejected entfernen wenn älter als ~1 Monat
+- DONE: Importer: Event Updates die später erst die Images bringen, ändert das beim update dann den Status von draft => published ?
+- Importer: Merge Import auch automatisch jede Nacht, triggert dann das LLM-Enrichment
+- Event Backend: Import-Änderungen je Merge nach Datum auswählen lassen
+- Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?
+- Events: wenn ausverkauft, kein Ticket Link anzeigen
+- Events: wenn in der Vergangenheit, kein Ticket Link - deutlich kennzeichnen
+- Event Editor: Promoter-ID fix - read-only
+- New Event: Veröffentlichungs Datum einführen und auch erst dann veröffentlichen
+- New Event: Promoter-ID fix - read-only
+- Event: merken in local storage, gemerkte Events irgendwie, irgendwo anzeigen
+- Event: Event Promotion Banner ganz nach oben
