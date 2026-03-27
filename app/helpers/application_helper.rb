@@ -82,7 +82,7 @@ module ApplicationHelper
 
     [
       "object-position: #{image.card_focus_x_value}% #{image.card_focus_y_value}%",
-      "transform: scale(#{(image.card_zoom_value / 100.0).round(3)})",
+      "--event-card-base-scale: #{(image.card_zoom_value / 100.0).round(3)}",
       "transform-origin: #{image.card_focus_x_value}% #{image.card_focus_y_value}%"
     ].join("; ")
   end

@@ -24,6 +24,10 @@
         <div class="event-card-image event-card-placeholder"></div>
       <% end %>
       <div class="event-card-overlay"></div>
+      <span class="event-card-ticket-overlay" aria-hidden="true">
+        <span class="event-card-ticket-arrow">↓</span>
+        <span class="event-card-ticket-label">TICKETS</span>
+      </span>
       <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
         <%= render "event_series_corner_badge" %>
       <% end %>

@@ -2342,6 +2342,8 @@ trix-editor.blog-rich-text:focus {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  --event-card-base-scale: 1;
+  transform: scale(var(--event-card-base-scale));
   transition: transform 220ms ease, opacity 220ms ease, filter 220ms ease;
 }
 
@@ -2384,7 +2386,7 @@ trix-editor.blog-rich-text:focus {
 }
 
 .genre-lane-card-link:hover .genre-lane-card-image {
-  transform: scale(1.03);
+  transform: scale(calc(var(--event-card-base-scale) * 1.03));
 }
 
 .genre-lane-card-link:hover .genre-lane-card-image,
@@ -2919,7 +2921,9 @@ trix-editor.blog-rich-text:focus {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: opacity 220ms ease, filter 220ms ease;
+  --event-card-base-scale: 1;
+  transform: scale(var(--event-card-base-scale));
+  transition: transform 220ms ease, opacity 220ms ease, filter 220ms ease;
 }
 
 .home-slider-card-ticket-overlay {
@@ -2962,6 +2966,7 @@ trix-editor.blog-rich-text:focus {
 
 .home-slider-card-thumb:hover .home-slider-card-image,
 .home-slider-card-thumb:focus-visible .home-slider-card-image {
+  transform: scale(calc(var(--event-card-base-scale) * 1.03));
   opacity: 0.52;
   filter: saturate(0.8);
 }
@@ -2987,6 +2992,9 @@ trix-editor.blog-rich-text:focus {
   .genre-lane-card-ticket-overlay,
   .genre-lane-card-ticket-arrow,
   .genre-lane-card-ticket-label,
+  .event-card-ticket-overlay,
+  .event-card-ticket-arrow,
+  .event-card-ticket-label,
   .home-slider-card-ticket-overlay,
   .home-slider-card-ticket-arrow,
   .home-slider-card-ticket-label {
@@ -3747,6 +3755,7 @@ trix-editor.blog-rich-text:focus {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transform-origin: center;
   animation: reveal-up 420ms ease both;
+  transition: transform 180ms ease, box-shadow 180ms ease;
 }
 
 .event-card-link {
@@ -3805,6 +3814,9 @@ trix-editor.blog-rich-text:focus {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  --event-card-base-scale: 1;
+  transform: scale(var(--event-card-base-scale));
+  transition: transform 220ms ease, opacity 220ms ease, filter 220ms ease;
 }
 
 .event-card-placeholder {
@@ -3818,6 +3830,43 @@ trix-editor.blog-rich-text:focus {
   position: absolute;
   inset: 0;
   background: linear-gradient(0deg, rgba(0, 0, 0, 0.86) 0%, rgba(0, 0, 0, 0.33) 46%, transparent 80%);
+}
+
+.event-card-ticket-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  align-content: start;
+  gap: 0.58rem;
+  padding-top: 4.2rem;
+  color: #fff;
+  opacity: 0;
+  pointer-events: none;
+  text-align: center;
+}
+
+.event-card-ticket-arrow {
+  display: block;
+  font-size: 2rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transform: translateY(-0.42rem);
+  transition: opacity 180ms ease 120ms, transform 260ms ease 120ms;
+}
+
+.event-card-ticket-label {
+  display: block;
+  font-size: 1.55rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transform: translateY(0.18rem);
+  transition: opacity 180ms ease, transform 220ms ease;
 }
 
 .event-card-admin-link {
@@ -3930,6 +3979,45 @@ trix-editor.blog-rich-text:focus {
 .event-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.18);
+}
+
+.home-featured-track .event-card-link:hover .event-card-image,
+.home-featured-track .event-card-link:focus-visible .event-card-image {
+  transform: scale(calc(var(--event-card-base-scale) * 1.03));
+  opacity: 0.52;
+  filter: saturate(0.8);
+}
+
+.home-featured-track .event-card-link:hover .event-card-overlay,
+.home-featured-track .event-card-link:focus-visible .event-card-overlay {
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.56) 52%, rgba(0, 0, 0, 0.18) 100%);
+}
+
+.home-featured-track .event-card-link:hover .event-card-ticket-overlay,
+.home-featured-track .event-card-link:focus-visible .event-card-ticket-overlay {
+  opacity: 1;
+}
+
+.home-featured-track .event-card-link:hover .event-card-ticket-arrow,
+.home-featured-track .event-card-link:focus-visible .event-card-ticket-arrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.home-featured-track .event-card-link:hover .event-card-ticket-label,
+.home-featured-track .event-card-link:focus-visible .event-card-ticket-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.home-featured-track .event-card {
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.home-featured-track .event-card:hover,
+.home-featured-track .event-card:focus-within {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.22);
 }
 
 .highlights-slider-section {
