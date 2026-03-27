@@ -36,6 +36,21 @@ class PresenterTest < ActiveSupport::TestCase
     assert_same presenter.logo, presenter.detail_logo_variant
   end
 
+  test "falls back to the original logo when variant processing is unavailable" do
+    presenter = create_presenter(name: "Fallback Presenter")
+    failing_representation = Object.new
+    failing_representation.define_singleton_method(:processed) do
+      raise MiniMagick::Error, "executable not found: convert"
+    end
+
+    presenter.define_singleton_method(:logo_representation) do |resize_to_limit:|
+      failing_representation
+    end
+
+    assert_same presenter.logo, presenter.thumbnail_logo_variant
+    assert_same presenter.logo, presenter.detail_logo_variant
+  end
+
   test "serves svg logos inline" do
     assert_includes Rails.application.config.active_storage.content_types_allowed_inline, "image/svg+xml"
     assert_not_includes Rails.application.config.active_storage.content_types_to_serve_as_binary, "image/svg+xml"

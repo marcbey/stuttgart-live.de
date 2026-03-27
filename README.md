@@ -320,8 +320,11 @@ Wichtig für die Interpretation:
 - Ruby 4.0.2 in der Projektversion
 - PostgreSQL
 - Node.js und npm
+- ein lokales Bildverarbeitungs-Backend für Active Storage, bevorzugt `libvips`, alternativ ImageMagick
 
 Für die lokale Entwicklung und für den Produktionscontainer gilt dieselbe Ruby-Version. Kamal rollt die App als Docker-Image aus; der Produktionshost selbst braucht deshalb kein separates systemweites Ruby 4.
+
+Wenn beim Laden von Bildvarianten Fehler wie `executable not found: "convert"` auftreten, fehlt lokal meist das ImageMagick-Kommandozeilenwerkzeug. In diesem Projekt ist `libvips` die bevorzugte Option; ohne `libvips` oder ImageMagick können verkleinerte Vorschaubilder und Web-Varianten nicht erzeugt werden.
 
 ### Schnellstart
 
