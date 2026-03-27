@@ -14,9 +14,9 @@ module Public::EventsHelper
   def public_event_visibility_badges(event)
     badges = []
 
-    unless event.published? && event.published_at.present? && event.published_at <= Time.current
+    unless event.live?
       badges << {
-        label: public_event_status_label(event.status),
+        label: (event.scheduled? ? "Geplant" : public_event_status_label(event.status)),
         css_class: public_event_status_badge_class(event.status)
       }
     end
@@ -174,7 +174,7 @@ module Public::EventsHelper
   end
 
   def public_frontend_visible?(event)
-    event.published? && event.published_at.present? && event.published_at <= Time.current
+    event.live?
   end
 
   def editorial_event_image_for(event)

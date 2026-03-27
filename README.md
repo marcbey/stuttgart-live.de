@@ -119,7 +119,7 @@ Die Event-Status und ihre sichtbaren Labels sind dabei:
 | `imported` | `importiert` | Interner Ausgangszustand des Modells. Im regulären redaktionellen Workflow spielt dieser Status normalerweise keine aktive Rolle mehr. |
 | `needs_review` | `Draft` beziehungsweise `Drafts` in Filtern | Das Event ist noch nicht veröffentlichungsreif. Es fehlen Pflichtangaben, es braucht redaktionelle Prüfung oder beides. |
 | `ready_for_publish` | `Unpublished` | Das Event ist fachlich vollständig, aber noch nicht veröffentlicht. |
-| `published` | `Published` | Das Event ist veröffentlicht und öffentlich sichtbar, sobald `published_at` erreicht ist. |
+| `published` | `Published` | Das Event ist veröffentlicht und öffentlich sichtbar, sobald `published_at` erreicht ist. Liegt `published_at` in der Zukunft, ist das Event bis dahin geplant, aber noch nicht öffentlich live. |
 | `rejected` | `Rejected` | Das Event wurde bewusst verworfen und soll nicht veröffentlicht werden. |
 
 Wichtig für Updates bestehender Events:
@@ -131,6 +131,11 @@ Wichtig für Updates bestehender Events:
 - Bilder werden ebenfalls quellenweise auf den aktuellen Merge-Stand synchronisiert.
 - `title`, `artist_name`, `city`, `promoter_id`, `youtube_url`, `homepage_url`, `facebook_url` und `event_info` werden bei einem bestehenden Event durch den Merge nicht überschrieben. Diese Felder werden nur beim erstmaligen Anlegen aus den Importdaten vorbelegt.
 - Manuelle redaktionelle Änderungen an genau diesen nicht überschriebenen Feldern bleiben bei späteren Merge-Läufen deshalb erhalten.
+
+Für die öffentliche Sichtbarkeit gilt zusätzlich:
+
+- Gäste sehen ein `published`-Event erst ab `published_at`.
+- Eingeloggte Redaktionsnutzer können die Event-Detailseite auch vor diesem Zeitpunkt öffnen, um geplante Veröffentlichungen zu prüfen.
 
 Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In diesem Fall werden nur Fingerprints neu gebaut, die seit `last_run_at` von neuen Rohimporten berührt wurden; für diese Gruppen wird aber jeweils wieder der aktuelle Gesamtstand aller Quellen zusammengeführt.
 

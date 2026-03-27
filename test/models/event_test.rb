@@ -128,6 +128,18 @@ class EventTest < ActiveSupport::TestCase
     end
   end
 
+  test "publish preserves an explicitly scheduled publication time" do
+    event = events(:needs_review_one)
+    scheduled_time = 2.days.from_now.change(usec: 0)
+    event.published_at = scheduled_time
+
+    event.publish!(user: users(:one), auto_published: false)
+
+    assert_equal "published", event.status
+    assert_equal scheduled_time, event.published_at
+    assert_equal users(:one), event.published_by
+  end
+
   test "unpublish clears persisted publication fields" do
     event = events(:published_one)
 
@@ -146,6 +158,18 @@ class EventTest < ActiveSupport::TestCase
 
       assert_predicate past_event, :past?
       assert_not_predicate future_event, :past?
+    end
+  end
+
+  test "scheduled? and live? distinguish future and current publication windows" do
+    freeze_time do
+      scheduled_event = Event.new(status: "published", published_at: 2.hours.from_now)
+      live_event = Event.new(status: "published", published_at: 2.hours.ago)
+
+      assert_predicate scheduled_event, :scheduled?
+      assert_not_predicate scheduled_event, :live?
+      assert_not_predicate live_event, :scheduled?
+      assert_predicate live_event, :live?
     end
   end
 

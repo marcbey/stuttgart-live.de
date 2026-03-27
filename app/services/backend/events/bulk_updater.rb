@@ -41,7 +41,7 @@ module Backend
       def apply_action(event)
         case action
         when "publish"
-          event.publish_now!(user: user, auto_published: false)
+          event.publish!(user: user, auto_published: false)
         when "unpublish"
           event.unpublish!(status: "needs_review", auto_published: false)
         when "mark_complete"

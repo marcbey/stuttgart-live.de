@@ -19,6 +19,20 @@ class Backend::Events::BulkUpdaterTest < ActiveSupport::TestCase
     assert_equal "bulk_publish", @event.event_change_logs.order(:created_at, :id).last.action
   end
 
+  test "bulk publish preserves an explicitly scheduled publication time" do
+    scheduled_time = 3.days.from_now.change(usec: 0)
+    @event.update!(published_at: scheduled_time)
+
+    Backend::Events::BulkUpdater.new(
+      events: Event.where(id: @event.id),
+      action: "publish",
+      user: @user
+    ).call
+
+    assert_equal "published", @event.reload.status
+    assert_equal scheduled_time, @event.published_at
+  end
+
   test "rejects events" do
     processed = Backend::Events::BulkUpdater.new(
       events: Event.where(id: @event.id),

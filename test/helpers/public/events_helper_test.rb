@@ -22,4 +22,12 @@ class Public::EventsHelperTest < ActionView::TestCase
 
     assert_equal "45 EUR", public_event_ticket_price(event, offer)
   end
+
+  test "public_event_visibility_badges labels scheduled published events as geplant" do
+    event = events(:published_one)
+    event.published_at = 2.hours.from_now
+
+    assert_equal [ { label: "Geplant", css_class: "status-badge-published" } ], public_event_visibility_badges(event)
+    assert_not public_frontend_visible?(event)
+  end
 end

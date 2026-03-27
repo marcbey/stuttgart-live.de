@@ -164,7 +164,7 @@ module Backend
     end
 
     def publish
-      @event.publish_now!(user: current_user, auto_published: false)
+      @event.publish!(user: current_user, auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "published", user: current_user)
       redirect_to backend_events_path(status: "published", event_id: @event.id), notice: "Event wurde veröffentlicht."
     end
@@ -340,6 +340,7 @@ module Backend
         :promotion_banner_image_focus_x,
         :promotion_banner_image_focus_y,
         :promotion_banner_image_zoom,
+        :published_at,
         :status,
         :editor_notes,
         presenter_ids: [],

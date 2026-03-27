@@ -354,6 +354,32 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "/backend/events?event_id=#{hidden_event.id}&amp;status=#{hidden_event.status}"
   end
 
+  test "index hides scheduled published events in search results for authenticated users" do
+    scheduled_event = Event.create!(
+      slug: "auth-hidden-scheduled-search-event",
+      source_fingerprint: "test::public::auth-hidden-scheduled-search",
+      title: "Scheduled Search Event",
+      artist_name: "Scheduled Search Artist",
+      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 2.days.from_now,
+      source_snapshot: {}
+    )
+
+    sign_in_as(@user)
+
+    get events_url(filter: "all", q: "Scheduled Search Artist")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    search_results = document.css("#event-grid .event-card-copy h2, #event-grid .event-listing-link strong").map(&:text)
+
+    assert_not_includes search_results, scheduled_event.artist_name
+  end
+
   test "index groups backend navigation links into a burger menu for authenticated users" do
     sign_in_as(@user)
 
@@ -486,6 +512,33 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes all_event_names, unpublished_slider.artist_name
     assert_includes tagestipp_names, published_tagestipp.artist_name
     assert_not_includes tagestipp_names, unpublished_tagestipp.artist_name
+  end
+
+  test "index hides scheduled published events in homepage sections for authenticated users" do
+    sign_in_as(@user)
+
+    scheduled_highlight = Event.create!(
+      slug: "auth-homepage-scheduled-highlight",
+      source_fingerprint: "test::public::auth-homepage::scheduled-highlight",
+      title: "Auth Homepage Scheduled Highlight",
+      artist_name: "Auth Homepage Scheduled Highlight Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 2.days.from_now,
+      source_snapshot: {}
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    highlights_section = document.at_css("section.home-featured-section")
+    highlight_names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
+
+    assert_not_includes highlight_names, scheduled_highlight.artist_name
   end
 
   test "index defaults to SKS filter" do
@@ -2246,6 +2299,26 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Dieses Event ist nicht mehr da."
   end
 
+  test "show returns not found for scheduled published events for guests" do
+    event = Event.create!(
+      slug: "scheduled-public-detail",
+      source_fingerprint: "test::public::scheduled::detail",
+      title: "Scheduled Public Detail",
+      artist_name: "Scheduled Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 2.days.from_now,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :not_found
+    assert_includes response.body, "Dieses Event ist nicht mehr da."
+  end
+
   test "show renders unpublished events for authenticated users with status badge" do
     sign_in_as(@user)
 
@@ -2275,6 +2348,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Unpublished"
+  end
+
+  test "show renders scheduled published events for authenticated users with geplant badge" do
+    sign_in_as(@user)
+
+    event = Event.create!(
+      slug: "scheduled-auth-detail",
+      source_fingerprint: "test::public::scheduled::auth-detail",
+      title: "Scheduled Auth Detail",
+      artist_name: "Scheduled Auth Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 2.days.from_now,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Geplant"
+    assert_select ".event-detail-badges-row .status-badge", text: "Geplant"
   end
 
   test "show renders rejected events for authenticated users with abgelehnt badge" do
@@ -2709,6 +2805,28 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, unpublished_event.artist_name
     assert_includes response.body, event_path(unpublished_event.slug, q: "Members Only Draft")
+  end
+
+  test "search overlay hides scheduled published matching events for authenticated users" do
+    sign_in_as(@user)
+
+    scheduled_event = Event.create!(
+      slug: "search-overlay-auth-scheduled",
+      source_fingerprint: "test::public::search-overlay::auth-scheduled",
+      title: "Members Only Scheduled Tour",
+      artist_name: "Search Overlay Scheduled Artist",
+      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 2.days.from_now,
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: "Members Only Scheduled")
+
+    assert_response :success
+    assert_not_includes response.body, scheduled_event.artist_name
   end
 
   test "status update requires authentication" do

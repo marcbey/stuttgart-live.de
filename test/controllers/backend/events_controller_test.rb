@@ -84,6 +84,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
     assert_select "input[name='event[support]']", count: 1
+    assert_select "#event-editor-panel-event input[name='event[published_at]'][type='datetime-local']", count: 1
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
     assert_select "input[name='event_image[files][]'][required]", count: 0
@@ -906,6 +907,29 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes flash[:notice], "gespeichert und publiziert"
   end
 
+  test "save and publish preserves an explicitly scheduled publication date" do
+    sign_in_as(@user)
+    scheduled_time = 2.days.from_now.change(min: 30, sec: 0)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: "Neu und geplant publiziert",
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review",
+        published_at: scheduled_time.strftime("%Y-%m-%dT%H:%M")
+      },
+      save_and_publish: "1"
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @event.id)
+    assert_equal "published", @event.reload.status
+    assert_equal scheduled_time.change(usec: 0), @event.published_at
+    assert_equal @user, @event.published_by
+  end
+
   test "save and publish via turbo stream updates nav flash" do
     sign_in_as(@user)
 
@@ -1202,6 +1226,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings:not([hidden])", count: 1
     assert_select "#event-editor-panel-event[hidden]", count: 1
     assert_select "#event-editor-panel-settings .editor-subsection", count: 2
+    assert_select "#event-editor-panel-settings input[name='event[published_at]'][type='datetime-local']", count: 0
     assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings h3", text: "Promotion Banner", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
@@ -1434,6 +1459,27 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate @published_event, :promotion_banner?
     assert_equal "Szene Tipp", @published_event.promotion_banner_kicker_text
     assert_equal "Jetzt ansehen", @published_event.promotion_banner_cta_text
+  end
+
+  test "update stores a scheduled publication date" do
+    sign_in_as(@user)
+    scheduled_time = 2.days.from_now.change(min: 15, sec: 0)
+
+    patch backend_event_url(@published_event), params: {
+      editor_tab: "settings",
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        published_at: scheduled_time.strftime("%Y-%m-%dT%H:%M")
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+    assert_equal scheduled_time.change(usec: 0), @published_event.reload.published_at
   end
 
   test "validation error keeps settings tab active" do
@@ -1724,6 +1770,21 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_events_url(status: "published")
     assert_equal "published", @event.reload.status
     assert @event.published_at.present?
+  end
+
+  test "bulk publish preserves a scheduled publication date" do
+    sign_in_as(@user)
+    scheduled_time = 4.days.from_now.change(usec: 0)
+    @event.update!(published_at: scheduled_time)
+
+    patch bulk_backend_events_url, params: {
+      bulk_action: "publish",
+      event_ids: [ @event.id ]
+    }
+
+    assert_redirected_to backend_events_url(status: "published")
+    assert_equal "published", @event.reload.status
+    assert_equal scheduled_time, @event.published_at
   end
 
   test "bulk group action assigns a manual event series" do

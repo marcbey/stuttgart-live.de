@@ -122,6 +122,14 @@ class Event < ApplicationRecord
     status == "published"
   end
 
+  def scheduled?
+    published? && published_at.present? && published_at.future?
+  end
+
+  def live?
+    published? && published_at.present? && published_at <= Time.current
+  end
+
   def past?
     start_at.present? && start_at < Time.current
   end
@@ -165,6 +173,13 @@ class Event < ApplicationRecord
     self.auto_published = auto_published
     self.published_at = Time.current
     self.published_by = user
+    save!
+  end
+
+  def publish!(user:, auto_published: false)
+    self.status = "published"
+    self.auto_published = auto_published
+    sync_publication_fields(user: user)
     save!
   end
 

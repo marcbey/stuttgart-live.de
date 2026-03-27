@@ -102,7 +102,7 @@ module Public
           streams = []
           card_id = helpers.dom_id(@event, :card)
 
-          if @event.published? && @event.published_at.present? && @event.published_at <= Time.current
+          if @event.live?
             streams << turbo_stream.replace(
               card_id,
               partial: "public/events/event_card",
@@ -156,9 +156,11 @@ module Public
 
     def searchable_index_events_relation
       relation = search_events_relation
-      return relation.where(status: "published").where("published_at <= ?", Time.current).where("start_at >= ?", Time.zone.today.beginning_of_day) unless authenticated?
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+        .chronological
+      return relation.where(status: "published").where("published_at <= ?", Time.current) unless authenticated?
 
-      relation.where("start_at >= ?", Time.zone.today.beginning_of_day).chronological
+      exclude_scheduled_published_events(relation)
     end
 
     def future_events_relation
@@ -315,6 +317,13 @@ module Public
       )
         .where.not(primary_source: "reservix")
         .reorder(Arel.sql(sks_first_order_sql), :start_at, :id)
+    end
+
+    def exclude_scheduled_published_events(relation)
+      events = Event.arel_table
+      publicly_live = events[:status].eq("published").and(events[:published_at].lteq(Time.current))
+
+      relation.where(events[:status].not_eq("published").or(publicly_live))
     end
 
     def sks_first_order_sql

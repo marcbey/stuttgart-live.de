@@ -92,9 +92,19 @@
   <%= form.text_area :event_info, rows: 5, class: "form-textarea" %>
 </div>
 
-<div>
-  <%= form.label :support, "Support", class: "form-label" %>
-  <%= form.text_field :support, class: "form-input" %>
+<div class="editor-grid">
+  <div>
+    <%= form.label :support, "Support", class: "form-label" %>
+    <%= form.text_field :support, class: "form-input" %>
+  </div>
+
+  <div>
+    <%= form.label :published_at, "Veröffentlichungsdatum", class: "form-label" %>
+    <%= form.datetime_local_field :published_at,
+                                  value: event.published_at&.in_time_zone&.strftime("%Y-%m-%dT%H:%M"),
+                                  class: "form-input" %>
+    <p class="form-hint">Leer bedeutet sofort sichtbar, sobald das Event publiziert wird. Mit Datum bleibt das Event bis dahin im Frontend verborgen.</p>
+  </div>
 </div>
 
 <div>
