@@ -124,8 +124,9 @@ module Merging
 
         return unless event.status == "needs_review" && ready_for_publish
 
-        event.status = "ready_for_publish"
-        event.auto_published = false
+        event.status = "published"
+        event.auto_published = true
+        event.sync_publication_fields
       end
 
       def auto_publishable?(event, images_present:)

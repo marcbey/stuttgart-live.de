@@ -107,7 +107,7 @@ Wichtig für das Verhalten im Backend:
 
 - Neue oder aktualisierte automatisch gemergte Events werden nur dann direkt veröffentlicht, wenn die Pflichtfelder inklusive Bild vorhanden sind.
 - Fehlen dafür wichtige Informationen, landet das Event stattdessen in `needs_review`.
-- Erhält ein bestehendes `needs_review`-Event in einem späteren Merge nun alle Pflichtdaten, wechselt es automatisch nach `ready_for_publish`, aber nicht direkt nach `published`.
+- Erhält ein bestehendes `needs_review`-Event in einem späteren Merge nun alle Pflichtdaten, wird es automatisch nach `published` gehoben.
 - Bereits automatisch veröffentlichte Events fallen ebenfalls zurück auf `needs_review`, wenn sie nach einem späteren Merge nicht mehr vollständig genug sind.
 - Der Button zum Starten des Merge-Imports wird im Backend hervorgehoben, sobald seit dem letzten erfolgreichen Merge neue erfolgreiche Provider-Imports vorliegen.
 - Ein erfolgreicher Merge reiht standardmäßig direkt das LLM-Enrichment ein, damit neue oder geänderte Events ohne zusätzlichen manuellen Schritt für die nächste Qualitätsstufe bereitstehen.

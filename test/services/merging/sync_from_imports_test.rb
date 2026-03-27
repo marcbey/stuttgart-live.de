@@ -108,7 +108,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_includes event.completeness_flags, "missing_image"
   end
 
-  test "promotes existing needs_review event to ready_for_publish when a later merge provides the missing image" do
+  test "publishes existing needs_review event when a later merge provides the missing image and completeness is restored" do
     raw_import = RawEventImport.create!(
       import_source: import_sources(:one),
       import_event_type: "easyticket",
@@ -145,8 +145,9 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     Merging::SyncFromImports.new.call
 
     event.reload
-    assert_equal "ready_for_publish", event.status
-    assert_equal false, event.auto_published
+    assert_equal "published", event.status
+    assert_equal true, event.auto_published
+    assert_not_nil event.published_at
     assert_empty event.completeness_flags
     assert_equal 1, event.import_event_images.count
   end
