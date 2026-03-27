@@ -13,14 +13,14 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
   test "should get index" do
     get backend_import_sources_url
     assert_response :success
-    assert_select ".app-nav-links .app-nav-link-active", text: "Importer"
+    assert_select ".app-nav-links .app-nav-link-active", text: "Queue"
     assert_select ".app-nav-links .app-nav-link", text: "Events"
     assert_select ".import-sources-runs-section.backend-section", count: 1
     assert_select "#import-runs-live-shell.backend-tabs", count: 1
     assert_select "[data-controller='settings-tabs']", count: 1
     assert_select "#import-runs-tabs [role='tab']", count: 4
     assert_select "#import-runs-tab-raw-importer[aria-selected='true']", count: 1
-    assert_match(/Events.*News.*Präsentatoren.*Importer.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Präsentatoren.*Queue.*Passwort.*Logout/m, response.body)
   end
 
   test "should activate requested importer tab on index" do
@@ -301,8 +301,11 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_includes response.body, "Diese Jobs holen Rohdaten direkt von Easyticket, Eventim und Reservix ab"
+    assert_includes response.body, "Automatischer Lauf täglich um 03:05 Uhr (Europe/Berlin)."
     assert_includes response.body, "Diese Jobs lesen die aktuellen Rohimporte aller Quellen"
+    assert_includes response.body, "Automatischer Lauf täglich um 04:05 Uhr (Europe/Berlin)."
     assert_includes response.body, "Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten"
+    assert_includes response.body, "Automatischer Lauf täglich um 06:05 Uhr (Europe/Berlin)."
     assert_includes response.body, "Diese Jobs analysieren die im System vorhandenen Rohgenre-Werte"
   end
 

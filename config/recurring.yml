@@ -6,3 +6,11 @@ production:
   daily_import_runs:
     command: "Importing::DailyRunJob.perform_later"
     schedule: every day at 3:05am
+
+  daily_merge_run:
+    command: "Merging::DailyRunJob.perform_later"
+    schedule: every day at 4:05am
+
+  daily_llm_enrichment_run:
+    command: "Importing::LlmEnrichment::DailyRunJob.perform_later"
+    schedule: every day at 6:05am

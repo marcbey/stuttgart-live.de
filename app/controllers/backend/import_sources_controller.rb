@@ -171,10 +171,6 @@ module Backend
       importer_registry.resolve_run_source("llm_enrichment")
     end
 
-    def merge_run_source
-      llm_enrichment_run_source
-    end
-
     def set_import_source
       @import_source = ImportSource.includes(:import_source_config).find(params[:id])
     end
@@ -277,38 +273,8 @@ module Backend
     end
 
     def trigger_merge_sync
-      result = nil
-      run_source = merge_run_source
-
-      run_source.with_lock do
-        active_run = ImportRun.where(source_type: "merge", status: "running").order(started_at: :desc).first
-        if active_run.present?
-          result = { alert: "Ein Merge-Run läuft bereits (Run ##{active_run.id})." }
-          next
-        end
-
-        run = ImportRun.create!(
-          import_source: run_source,
-          source_type: "merge",
-          status: "running",
-          started_at: Time.current,
-          metadata: { "triggered_at" => Time.current.iso8601 }
-        )
-        job = Merging::SyncImportedEventsJob.perform_later(import_run_id: run.id)
-        run.update!(
-          metadata: run.metadata.merge(
-            "job_id" => job.job_id,
-            "provider_job_id" => job.provider_job_id,
-            "job_attempt" => 1,
-            "job_retries_used" => 0,
-            "max_retries" => 0
-          )
-        )
-        Backend::ImportRunsBroadcaster.broadcast!
-        result = { notice: "Merge-Sync wurde gestartet." }
-      end
-
-      result
+      result = Backend::ImportSources::MergeRunStarter.new.call
+      { notice: result.notice, alert: result.alert }
     end
 
     def run_import_for(source_type)

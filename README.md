@@ -67,7 +67,7 @@ Easyticket, Eventim und Reservix folgen demselben Grundmuster:
 
 Die Run-Koordination ist bewusst generisch über `ImportRun`, `source_type` und Registry-Konfiguration aufgebaut. Je nach Jobtyp laufen Jobs exklusiv oder als serielle Warteschlange. Das LLM-Enrichment nutzt diese Infrastruktur bereits: Es gibt dort immer höchstens einen aktiven Lauf, weitere Anforderungen werden als `queued` eingereiht.
 
-Für den täglichen Betrieb startet `Importing::DailyRunJob` die aktiven Provider standardmäßig über `config/recurring.yml` jeden Tag um `03:05` Uhr. Manuell lassen sich die Läufe im Backend unter den Importquellen oder per Rake-Task starten:
+Für den täglichen Betrieb startet `Importing::DailyRunJob` die aktiven Provider standardmäßig über `config/recurring.yml` jeden Tag um `03:05` Uhr. Der tägliche Merge läuft anschließend über `Merging::DailyRunJob` standardmäßig um `04:05` Uhr. Das tägliche LLM-Enrichment wird danach über `Importing::LlmEnrichment::DailyRunJob` standardmäßig um `06:05` Uhr eingereiht. Manuell lassen sich die Provider-Läufe im Backend unter den Importquellen oder per Rake-Task starten:
 
 ```bash
 bin/rake importing:easyticket:run
@@ -89,7 +89,7 @@ Der Reservix-Importer arbeitet inkrementell. Er merkt sich in der `ImportSourceC
 
 ### Wie der Merge-Import funktioniert
 
-Der Merge-Import ist der zweite Schritt nach den Provider-Läufen. Er wird im Backend über "Importierte Events synchronisieren" gestartet und läuft technisch als eigener `ImportRun` mit `source_type = "merge"`.
+Der Merge-Import ist der zweite Schritt nach den Provider-Läufen. Er wird im Backend über "Importierte Events synchronisieren" gestartet und läuft technisch als eigener `ImportRun` mit `source_type = "merge"`. Zusätzlich ist standardmäßig ein täglicher automatischer Lauf um `04:05` Uhr (`Europe/Berlin`) konfiguriert.
 
 Der Ablauf ist:
 
@@ -233,6 +233,7 @@ Wichtig ist der Unterschied zwischen gespeicherter Zuordnung und öffentlicher W
 ### Wie das LLM-Enrichment funktioniert
 
 Das LLM-Enrichment läuft auf bereits gemergten `events` und ist damit bewusst ein nachgelagerter Qualitätsschritt. Es erzeugt keine neuen Events und verändert keine Rohimporte, sondern ergänzt vorhandene Datensätze um zusätzliche redaktionelle Informationen.
+Zusätzlich ist standardmäßig ein täglicher automatischer Lauf um `06:05` Uhr (`Europe/Berlin`) konfiguriert.
 
 Der Ablauf ist:
 
