@@ -23,6 +23,10 @@
       <% else %>
         <div class="genre-lane-card-image event-card-placeholder"></div>
       <% end %>
+      <span class="genre-lane-card-ticket-overlay" aria-hidden="true">
+        <span class="genre-lane-card-ticket-arrow">↓</span>
+        <span class="genre-lane-card-ticket-label">TICKETS</span>
+      </span>
       <% if show_series_badge && public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
         <%= render "event_series_corner_badge" %>
       <% end %>

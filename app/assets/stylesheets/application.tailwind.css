@@ -2342,11 +2342,72 @@ trix-editor.blog-rich-text:focus {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 220ms ease;
+  transition: transform 220ms ease, opacity 220ms ease, filter 220ms ease;
+}
+
+.genre-lane-card-ticket-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.5rem;
+  background: rgba(17, 17, 17, 0.18);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 220ms ease, background-color 220ms ease;
+  pointer-events: none;
+  text-align: center;
+}
+
+.genre-lane-card-ticket-arrow {
+  display: block;
+  font-size: 1.8rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transform: translateY(-0.4rem);
+  transition: opacity 180ms ease 120ms, transform 260ms ease 120ms;
+}
+
+.genre-lane-card-ticket-label {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transform: translateY(0.18rem);
+  transition: opacity 180ms ease, transform 220ms ease;
 }
 
 .genre-lane-card-link:hover .genre-lane-card-image {
   transform: scale(1.03);
+}
+
+.genre-lane-card-link:hover .genre-lane-card-image,
+.genre-lane-card-link:focus-visible .genre-lane-card-image {
+  opacity: 0.52;
+  filter: saturate(0.8);
+}
+
+.genre-lane-card-link:hover .genre-lane-card-ticket-overlay,
+.genre-lane-card-link:focus-visible .genre-lane-card-ticket-overlay {
+  opacity: 1;
+}
+
+.genre-lane-card-link:hover .genre-lane-card-ticket-arrow,
+.genre-lane-card-link:focus-visible .genre-lane-card-ticket-arrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.genre-lane-card-link:hover .genre-lane-card-ticket-label,
+.genre-lane-card-link:focus-visible .genre-lane-card-ticket-label {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -2858,6 +2919,81 @@ trix-editor.blog-rich-text:focus {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: opacity 220ms ease, filter 220ms ease;
+}
+
+.home-slider-card-ticket-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 0.42rem;
+  background: rgba(17, 17, 17, 0.18);
+  color: #fff;
+  opacity: 0;
+  transition: opacity 220ms ease, background-color 220ms ease;
+  pointer-events: none;
+  text-align: center;
+}
+
+.home-slider-card-ticket-arrow {
+  display: block;
+  font-size: 1.45rem;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transform: translateY(-0.32rem);
+  transition: opacity 180ms ease 120ms, transform 260ms ease 120ms;
+}
+
+.home-slider-card-ticket-label {
+  display: block;
+  font-size: 1.22rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0;
+  transform: translateY(0.16rem);
+  transition: opacity 180ms ease, transform 220ms ease;
+}
+
+.home-slider-card-thumb:hover .home-slider-card-image,
+.home-slider-card-thumb:focus-visible .home-slider-card-image {
+  opacity: 0.52;
+  filter: saturate(0.8);
+}
+
+.home-slider-card-thumb:hover .home-slider-card-ticket-overlay,
+.home-slider-card-thumb:focus-visible .home-slider-card-ticket-overlay {
+  opacity: 1;
+}
+
+.home-slider-card-thumb:hover .home-slider-card-ticket-arrow,
+.home-slider-card-thumb:focus-visible .home-slider-card-ticket-arrow {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.home-slider-card-thumb:hover .home-slider-card-ticket-label,
+.home-slider-card-thumb:focus-visible .home-slider-card-ticket-label {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .genre-lane-card-ticket-overlay,
+  .genre-lane-card-ticket-arrow,
+  .genre-lane-card-ticket-label,
+  .home-slider-card-ticket-overlay,
+  .home-slider-card-ticket-arrow,
+  .home-slider-card-ticket-label {
+    transition-duration: 0.01ms;
+    transition-delay: 0ms;
+    transform: none;
+  }
 }
 
 .home-slider-card-copy {
