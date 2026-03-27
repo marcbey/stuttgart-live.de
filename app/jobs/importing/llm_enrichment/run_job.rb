@@ -30,6 +30,9 @@ module Importing
               "batches_count" => result.batches_count,
               "batch_size" => Importing::LlmEnrichment::Importer::BATCH_SIZE,
               "model" => result.model,
+              "links_checked_count" => result.links_checked_count,
+              "links_rejected_count" => result.links_rejected_count,
+              "links_unverifiable_count" => result.links_unverifiable_count,
               "stop_released_at" => Time.current.iso8601,
               "stop_release_reason" => "Stopped by user"
             )
@@ -53,7 +56,10 @@ module Importing
             "events_enriched_count" => result.enriched_count,
             "batches_count" => result.batches_count,
             "batch_size" => Importing::LlmEnrichment::Importer::BATCH_SIZE,
-            "model" => result.model
+            "model" => result.model,
+            "links_checked_count" => result.links_checked_count,
+            "links_rejected_count" => result.links_rejected_count,
+            "links_unverifiable_count" => result.links_unverifiable_count
           )
         )
       rescue StandardError => e

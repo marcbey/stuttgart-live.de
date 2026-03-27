@@ -9,6 +9,7 @@ module Importing
       PROMPT_VERSION = "v1"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment_batch".freeze
       OUTPUT_ITEMS_KEY = "events".freeze
+      LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
 
       Item = Data.define(:event_id, :artist_name, :event_name, :venue) do
         def as_json(*)
@@ -21,15 +22,28 @@ module Importing
         end
       end
 
-      Result = Data.define(:selected_count, :skipped_count, :enriched_count, :batches_count, :merge_run_id, :model, :canceled)
+      Result = Data.define(
+        :selected_count,
+        :skipped_count,
+        :enriched_count,
+        :batches_count,
+        :merge_run_id,
+        :model,
+        :links_checked_count,
+        :links_rejected_count,
+        :links_unverifiable_count,
+        :canceled
+      )
 
-      def initialize(run:, client: OpenAi::ResponsesClient.new, logger: Importing::Logging.logger)
+      def initialize(run:, client: OpenAi::ResponsesClient.new, logger: Importing::Logging.logger, link_validator: nil)
         @run = run
         @client = client
         @logger = logger
+        @link_validator = link_validator || LinkValidator.new
       end
 
       def call
+        reset_link_validation_counts!
         selection_time = Time.current
         selected_events = selected_events_scope(selection_time)
         selected_count = selected_events.count
@@ -49,7 +63,10 @@ module Importing
           batches_processed: batches_processed,
           "merge_run_id" => nil,
           "batch_size" => BATCH_SIZE,
-          "model" => client_model
+          "model" => client_model,
+          "links_checked_count" => links_checked_count,
+          "links_rejected_count" => links_rejected_count,
+          "links_unverifiable_count" => links_unverifiable_count
         )
 
         batches.each_with_index do |batch_events, index|
@@ -78,7 +95,10 @@ module Importing
             enriched_count: enriched_count,
             batches_count: batches.count,
             batches_processed: batches_processed,
-            "current_batch" => batches_processed
+            "current_batch" => batches_processed,
+            "links_checked_count" => links_checked_count,
+            "links_rejected_count" => links_rejected_count,
+            "links_unverifiable_count" => links_unverifiable_count
           )
         end
 
@@ -89,6 +109,9 @@ module Importing
           batches_count: batches.count,
           merge_run_id: nil,
           model: client_model,
+          links_checked_count: links_checked_count,
+          links_rejected_count: links_rejected_count,
+          links_unverifiable_count: links_unverifiable_count,
           canceled: false
         )
       rescue Importing::StopRequested
@@ -103,7 +126,7 @@ module Importing
 
       Error = Class.new(StandardError)
 
-      attr_reader :client, :logger, :run
+      attr_reader :client, :link_validator, :logger, :run
 
       def selected_events_scope(selection_time)
         return Event.where(id: target_event_id) if single_event_run?
@@ -274,21 +297,24 @@ module Importing
             end
 
             seen_event_ids[event_id] = true
+            validated_attributes, validation_payload = validate_link_attributes(attributes)
+            raw_response = item.is_a?(Hash) ? item.deep_stringify_keys : {}
+            raw_response["link_validation"] = validation_payload if validation_payload.present?
 
             enrichment = EventLlmEnrichment.find_or_initialize_by(event_id: event_id)
             enrichment.source_run = run
-            enrichment.genre = attributes[:genre]
-            enrichment.venue = attributes[:venue]
-            enrichment.artist_description = attributes[:artist_description]
-            enrichment.event_description = attributes[:event_description]
-            enrichment.venue_description = attributes[:venue_description]
-            enrichment.youtube_link = attributes[:youtube_link]
-            enrichment.instagram_link = attributes[:instagram_link]
-            enrichment.homepage_link = attributes[:homepage_link]
-            enrichment.facebook_link = attributes[:facebook_link]
+            enrichment.genre = validated_attributes[:genre]
+            enrichment.venue = validated_attributes[:venue]
+            enrichment.artist_description = validated_attributes[:artist_description]
+            enrichment.event_description = validated_attributes[:event_description]
+            enrichment.venue_description = validated_attributes[:venue_description]
+            enrichment.youtube_link = validated_attributes[:youtube_link]
+            enrichment.instagram_link = validated_attributes[:instagram_link]
+            enrichment.homepage_link = validated_attributes[:homepage_link]
+            enrichment.facebook_link = validated_attributes[:facebook_link]
             enrichment.model = client_model
             enrichment.prompt_version = PROMPT_VERSION
-            enrichment.raw_response = item.is_a?(Hash) ? item.deep_stringify_keys : {}
+            enrichment.raw_response = raw_response
             enrichment.save!
           end
         end
@@ -315,6 +341,42 @@ module Importing
         }.tap do |attributes|
           raise Error, "OpenAI-Antwort enthält keine gültige event_id." if attributes[:event_id].blank?
         end
+      end
+
+      def validate_link_attributes(attributes)
+        validated_attributes = attributes.deep_dup
+        validation_payload = {}
+
+        LINK_FIELDS.each do |field_name|
+          url = attributes[field_name].to_s.strip
+          next if url.blank?
+
+          result = link_validator.call(url:, field_name:)
+          validation_payload[field_name.to_s] = result.as_json
+          increment_link_validation_counts!(result)
+          validated_attributes[field_name] = result.sanitized_url
+        rescue StandardError => e
+          increment_link_validation_counts!(
+            LinkValidator::Result.new(
+              accepted: true,
+              sanitized_url: url,
+              status: "kept_unverifiable",
+              final_url: nil,
+              http_status: nil,
+              error_class: e.class.to_s,
+              matched_phrase: nil,
+              checked_at: Time.current
+            )
+          )
+          validation_payload[field_name.to_s] = {
+            status: "kept_unverifiable",
+            error_class: e.class.to_s,
+            checked_at: Time.current.iso8601
+          }
+          validated_attributes[field_name] = url
+        end
+
+        [ validated_attributes, validation_payload ]
       end
 
       def touch_run_heartbeat!(extra_metadata = {})
@@ -366,8 +428,35 @@ module Importing
           batches_count: batches_count,
           merge_run_id: nil,
           model: client_model,
+          links_checked_count: links_checked_count,
+          links_rejected_count: links_rejected_count,
+          links_unverifiable_count: links_unverifiable_count,
           canceled: true
         )
+      end
+
+      def increment_link_validation_counts!(result)
+        @links_checked_count += 1
+        @links_rejected_count += 1 if result.rejected?
+        @links_unverifiable_count += 1 if result.unverifiable?
+      end
+
+      def reset_link_validation_counts!
+        @links_checked_count = 0
+        @links_rejected_count = 0
+        @links_unverifiable_count = 0
+      end
+
+      def links_checked_count
+        @links_checked_count || 0
+      end
+
+      def links_rejected_count
+        @links_rejected_count || 0
+      end
+
+      def links_unverifiable_count
+        @links_unverifiable_count || 0
       end
 
       def normalized_metadata(metadata)

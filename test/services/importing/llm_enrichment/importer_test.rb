@@ -12,6 +12,50 @@ module Importing
         end
       end
 
+      FakeLinkValidationResult = Struct.new(
+        :accepted,
+        :sanitized_url,
+        :status,
+        :final_url,
+        :http_status,
+        :error_class,
+        :matched_phrase,
+        :checked_at,
+        keyword_init: true
+      ) do
+        def accepted? = accepted
+        def unverifiable? = status == "kept_unverifiable"
+        def rejected? = status.to_s.start_with?("rejected_")
+
+        def as_json(*)
+          {
+            status: status,
+            final_url: final_url,
+            http_status: http_status,
+            error_class: error_class,
+            matched_phrase: matched_phrase,
+            checked_at: checked_at&.iso8601
+          }.compact
+        end
+      end
+
+      FakeLinkValidator = Struct.new(:results_by_url) do
+        def call(url:, field_name:)
+          result = results_by_url.fetch(url) do
+            FakeLinkValidationResult.new(
+              accepted: true,
+              sanitized_url: url,
+              status: "ok",
+              final_url: url,
+              http_status: 200,
+              checked_at: Time.current
+            )
+          end
+
+          result
+        end
+      end
+
       setup do
         @source = import_sources(:two)
         @run = @source.import_runs.create!(
@@ -72,7 +116,7 @@ module Importing
             ]
           )
 
-          result = Importer.new(run: @run, client: client).call
+          result = build_importer(client: client).call
 
           assert_equal 3, result.selected_count
           assert_equal 0, result.skipped_count
@@ -88,6 +132,106 @@ module Importing
           assert_equal [ "Rock" ], events(:needs_review_one).reload.llm_enrichment.genre
           assert_equal [ "Show" ], events(:needs_review_two).reload.llm_enrichment.genre
           assert_nil events(:published_past_one).reload.llm_enrichment
+        end
+      end
+
+      test "validates links before persisting and stores validation details" do
+        freeze_time do
+          client = FakeClient.new(
+            model: "gpt-5-mini",
+            responses: [
+              {
+                "output_text" => {
+                  events: [
+                    {
+                      event_id: events(:published_one).id,
+                      genre: [ "Indie" ],
+                      venue: "LKA Longhorn",
+                      artist_description: "Artist eins",
+                      event_description: "Event eins",
+                      venue_description: "Venue eins",
+                      youtube_link: "https://youtube.example/blocked",
+                      instagram_link: "https://instagram.example/private",
+                      homepage_link: "https://example.com/missing",
+                      facebook_link: "https://facebook.example/final"
+                    },
+                    {
+                      event_id: events(:needs_review_one).id,
+                      genre: [ "Rock" ],
+                      venue: "Im Wizemann",
+                      artist_description: "Artist zwei",
+                      event_description: "Event zwei",
+                      venue_description: "Venue zwei",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: nil,
+                      facebook_link: nil
+                    },
+                    {
+                      event_id: events(:needs_review_two).id,
+                      genre: [ "Show" ],
+                      venue: "Im Wizemann",
+                      artist_description: "Artist drei",
+                      event_description: "Event drei",
+                      venue_description: "Venue drei",
+                      youtube_link: nil,
+                      instagram_link: nil,
+                      homepage_link: nil,
+                      facebook_link: nil
+                    }
+                  ]
+                }.to_json
+              }
+            ]
+          )
+          link_validator = FakeLinkValidator.new(
+            {
+              "https://youtube.example/blocked" => FakeLinkValidationResult.new(
+                accepted: true,
+                sanitized_url: "https://youtube.example/blocked",
+                status: "kept_unverifiable",
+                http_status: 429,
+                checked_at: Time.current
+              ),
+              "https://instagram.example/private" => FakeLinkValidationResult.new(
+                accepted: true,
+                sanitized_url: "https://instagram.example/private",
+                status: "kept_unverifiable",
+                http_status: 403,
+                checked_at: Time.current
+              ),
+              "https://example.com/missing" => FakeLinkValidationResult.new(
+                accepted: false,
+                sanitized_url: nil,
+                status: "rejected_http_error",
+                http_status: 404,
+                checked_at: Time.current
+              ),
+              "https://facebook.example/final" => FakeLinkValidationResult.new(
+                accepted: true,
+                sanitized_url: "https://facebook.example/final",
+                status: "ok",
+                final_url: "https://facebook.example/final",
+                http_status: 200,
+                checked_at: Time.current
+              )
+            }
+          )
+
+          result = Importer.new(run: @run, client: client, link_validator: link_validator).call
+
+          assert_equal 4, result.links_checked_count
+          assert_equal 1, result.links_rejected_count
+          assert_equal 2, result.links_unverifiable_count
+
+          enrichment = events(:published_one).reload.llm_enrichment
+          assert_equal "https://youtube.example/blocked", enrichment.youtube_link
+          assert_equal "https://instagram.example/private", enrichment.instagram_link
+          assert_nil enrichment.homepage_link
+          assert_equal "https://facebook.example/final", enrichment.facebook_link
+          assert_equal "rejected_http_error", enrichment.raw_response.dig("link_validation", "homepage_link", "status")
+          assert_equal 404, enrichment.raw_response.dig("link_validation", "homepage_link", "http_status")
+          assert_equal "kept_unverifiable", enrichment.raw_response.dig("link_validation", "youtube_link", "status")
         end
       end
 
@@ -145,7 +289,7 @@ module Importing
               ]
             )
 
-            result = Importer.new(run: @run, client: client).call
+            result = build_importer(client: client).call
 
             assert_equal 3, result.selected_count
             assert_equal 1, result.skipped_count
@@ -223,7 +367,7 @@ module Importing
             ]
           )
 
-          result = Importer.new(run: @run, client: client).call
+          result = build_importer(client: client).call
 
           assert_equal 3, result.selected_count
           assert_equal 0, result.skipped_count
@@ -279,7 +423,7 @@ module Importing
             ]
           )
 
-          result = Importer.new(run: @run, client: client).call
+          result = build_importer(client: client).call
 
           assert_equal 2, result.selected_count
           assert_equal 0, result.skipped_count
@@ -329,7 +473,7 @@ module Importing
             ]
           )
 
-          result = Importer.new(run: @run, client: client).call
+          result = build_importer(client: client).call
 
           assert_equal 2, result.selected_count
           assert_equal 0, result.skipped_count
@@ -354,7 +498,7 @@ module Importing
         freeze_time do
           client = FakeClient.new(model: "gpt-5-mini", responses: [])
 
-          result = Importer.new(run: @run, client: client).call
+          result = build_importer(client: client).call
 
           assert_equal 3, result.selected_count
           assert_equal 3, result.skipped_count
@@ -368,7 +512,7 @@ module Importing
         travel_to(Time.zone.parse("2026-08-01 12:00:00")) do
           client = FakeClient.new(model: "gpt-5-mini", responses: [])
 
-          result = Importer.new(run: @run, client: client).call
+          result = build_importer(client: client).call
 
           assert_equal 0, result.selected_count
           assert_equal 0, result.skipped_count
@@ -428,7 +572,7 @@ module Importing
           ]
         )
 
-        result = Importer.new(run: @run, client: client).call
+        result = build_importer(client: client).call
 
         assert_equal 1, result.selected_count
         assert_equal 0, result.skipped_count
@@ -477,7 +621,7 @@ module Importing
           ]
         )
 
-        result = Importer.new(run: @run, client: client).call
+        result = build_importer(client: client).call
 
         assert_equal 1, result.selected_count
         assert_equal 0, result.skipped_count
@@ -512,7 +656,7 @@ module Importing
           )
 
           error = assert_raises(Importer::Error) do
-            Importer.new(run: @run, client: client).call
+            build_importer(client: client).call
           end
 
           assert_includes error.message, "nicht im aktuellen Batch"
@@ -583,7 +727,7 @@ module Importing
             ]
           )
 
-          result = Importer.new(run: @run, client: client).call
+          result = build_importer(client: client).call
 
           assert_equal 3, result.enriched_count
 
@@ -632,7 +776,7 @@ module Importing
           end
         end.new(@run, target_event_id)
 
-        result = Importer.new(run: @run, client: client).call
+        result = build_importer(client: client).call
 
         assert_equal true, result.canceled
         assert_equal 0, result.enriched_count
@@ -651,6 +795,10 @@ module Importing
       ensure
         parent.send(:remove_const, const_name) if parent.const_defined?(const_name, false)
         parent.const_set(const_name, original)
+      end
+
+      def build_importer(client:, link_validator: FakeLinkValidator.new({}))
+        Importer.new(run: @run, client: client, link_validator: link_validator)
       end
     end
   end
