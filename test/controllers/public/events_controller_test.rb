@@ -624,7 +624,55 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal highlights_index + 1, promotion_index
   end
 
-  test "homepage renders event promotion banner below highlights and before news banner" do
+  test "homepage renders event promotion banner above highlights when no news banner is configured" do
+    Event.create!(
+      slug: "homepage-event-promotion-only-highlight",
+      source_fingerprint: "test::homepage::event-promotion-only-highlight",
+      title: "Promotion Only Highlight",
+      artist_name: "Promotion Only Highlight Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event = Event.create!(
+      slug: "homepage-event-promotion-only-banner",
+      source_fingerprint: "test::homepage::event-promotion-only-banner",
+      title: "Promotion Only Banner Event",
+      artist_name: "Promotion Only Banner Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner_kicker_text: "Event Tipp",
+      promotion_banner_cta_text: "Zum Event",
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+    event.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner-event h2", text: "Promotion Only Banner Artist"
+
+    document = Nokogiri::HTML.parse(response.body)
+    shell_children = document.css("section.public-shell > *")
+    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
+    event_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner-event") }
+    news_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") && !node["class"].to_s.include?("promotion-banner-event") }
+
+    assert_equal 0, event_banner_index
+    assert_equal event_banner_index + 1, highlights_index
+    assert_nil news_banner_index
+  end
+
+  test "homepage renders event promotion banner above highlights and before news banner" do
     Event.create!(
       slug: "homepage-event-promotion-highlight",
       source_fingerprint: "test::homepage::event-promotion-highlight",
@@ -684,8 +732,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     event_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner-event") }
     news_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") && !node["class"].to_s.include?("promotion-banner-event") }
 
-    assert_equal highlights_index + 1, event_banner_index
-    assert_equal event_banner_index + 1, news_banner_index
+    assert_equal 0, event_banner_index
+    assert_equal event_banner_index + 1, highlights_index
+    assert_equal highlights_index + 1, news_banner_index
   end
 
   test "homepage renders custom promotion banner texts from blog post" do

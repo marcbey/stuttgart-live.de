@@ -5,6 +5,10 @@
     <%= render "search_results_section", events: @events, browse_state: @browse_state %>
   <% end %>
 
+  <% if @browse_state.page == 1 && @promotion_banner_event.present? %>
+    <%= render "event_promotion_banner", event: @promotion_banner_event, browse_state: @browse_state %>
+  <% end %>
+
   <% if @browse_state.page == 1 && @home_featured_events.present? %>
     <%= render "highlight_section",
                title: "Unsere Highlights",
@@ -13,10 +17,6 @@
                browse_state: @browse_state,
                featured: true,
                list_aria_label: "Listenansicht für Highlights" %>
-  <% end %>
-
-  <% if @browse_state.page == 1 && @promotion_banner_event.present? %>
-    <%= render "event_promotion_banner", event: @promotion_banner_event, browse_state: @browse_state %>
   <% end %>
 
   <% if @browse_state.page == 1 && @promotion_banner_blog_post.present? %>
