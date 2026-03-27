@@ -6015,6 +6015,27 @@ trix-editor.blog-rich-text:focus {
   background: transparent;
 }
 
+#blog_editor_panel .settings-tab-panel,
+#blog_editor_panel .backend-tab-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#backend_settings_panel .settings-tab-panel,
+#backend_settings_panel .backend-tab-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#import-runs-live-shell .settings-tab-panel,
+#import-runs-live-shell .backend-tab-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
 .editor-header {
   display: flex;
   justify-content: space-between;
