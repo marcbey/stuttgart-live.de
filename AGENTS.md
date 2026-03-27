@@ -4,6 +4,7 @@
 
 - Before every `git push`, all relevant linters and tests must complete successfully.
 - By default, `bin/ci` must be run, as this project uses it to bundle linting, security checks, and tests.
+- Ruby commands for this project must always be run through `mise` so that the version pinned in `mise.toml` is used; currently that is Ruby `4.0.2` (for example `mise exec -- bin/rails test` or `mise exec -- ruby -v`).
 - Before every `git push`, the current remote state of the target branch must be fetched, and the local branch must be updated via fast-forward or rebase.
 - After a pull, fast-forward, or rebase, `bin/ci` must be run successfully again before pushing.
 - A `git push` must not be performed if updating the branch fails or if `bin/ci` or any individual check is failing.

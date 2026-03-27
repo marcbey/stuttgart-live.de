@@ -67,11 +67,11 @@ Event Detail Page:
 - Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps,  überschreibt die LLM Venue
 - Data Rentention: Events mit Status draft, unpublished & rejected entfernen wenn älter als ~1 Monat
 - DONE: Importer: Event Updates die später erst die Images bringen, ändert das beim update dann den Status von draft => published ?
-- Importer: Merge Import auch automatisch jede Nacht, triggert dann das LLM-Enrichment
-- Event Backend: Import-Änderungen je Merge nach Datum auswählen lassen
+- DONE: Importer: Merge Import auch automatisch jede Nacht, triggert dann das LLM-Enrichment
+- DONE: Event Backend: Import-Änderungen je Merge nach Datum auswählen lassen
 - Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?
 - Events: wenn ausverkauft, kein Ticket Link anzeigen? Was ist das Signal für ausverkauft?
-- Events: wenn in der Vergangenheit, kein Ticket Link - deutlich kennzeichnen
+- DONE: Events: wenn in der Vergangenheit, kein Ticket Link - deutlich kennzeichnen
 - Event Editor: Promoter-ID fix - read-only
 - New Event: Veröffentlichungs Datum einführen und auch erst dann veröffentlichen
 - New Event: Promoter-ID fix - read-only
