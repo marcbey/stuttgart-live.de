@@ -6008,6 +6008,13 @@ trix-editor.blog-rich-text:focus {
   border: 0;
 }
 
+#backend_account_password_panel.editor-panel.backend-panel {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
 #event_editor_panel .settings-tab-panel,
 #event_editor_panel .backend-tab-panel {
   padding: 0;

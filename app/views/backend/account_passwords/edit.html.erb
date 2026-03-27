@@ -13,7 +13,7 @@
     </div>
   </header>
 
-  <div class="editor-panel backend-panel" style="max-width: 620px;">
+  <div class="editor-panel backend-panel" id="backend_account_password_panel" style="max-width: 620px;">
     <%= form_with model: current_user, url: backend_account_password_path, method: :patch, class: "editor-form" do |form| %>
       <section class="backend-section backend-section-compact">
         <div class="backend-section-header">

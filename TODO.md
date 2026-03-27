@@ -41,7 +41,7 @@
 - DONE: New Event: Promoter-ID fix - read-only
 - DONE: Event: Event Promotion Banner ganz nach oben
 - DONE: New Event: Veröffentlichungs Datum einführen und auch erst dann veröffentlichen
-
+- 
 - Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?
 - Event: merken in local storage, gemerkte Events irgendwie, irgendwo anzeigen
 
