@@ -134,6 +134,16 @@ module Public::EventsHelper
     image.alt_text.presence || default_alt
   end
 
+  def public_event_ticket_price(event, offer = event.preferred_ticket_offer)
+    return unless offer.present?
+
+    if event.min_price.present? && event.max_price.present? && event.min_price < event.max_price
+      "ab #{number_to_currency(event.min_price, unit: "€", separator: ",", delimiter: ".", format: "%n%u")}"
+    else
+      offer.ticket_price_text.to_s.presence
+    end
+  end
+
   private
 
   def event_detail_text_units(text)

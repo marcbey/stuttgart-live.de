@@ -17,15 +17,20 @@
     <% end %>
   </div>
 
-  <div class="event-listing-meta">
-    <p class="event-listing-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></p>
-    <p class="event-listing-time"><%= l(event.start_at, format: "%H:%M") %> Uhr</p>
-    <% if primary_offer&.ticket_price_text.present? %>
-      <p class="event-listing-price"><%= primary_offer.ticket_price_text %></p>
-    <% end %>
-  </div>
-
   <div class="event-listing-body">
+    <div class="event-listing-meta">
+      <div class="event-listing-meta-primary">
+        <p class="event-listing-date">
+          <span class="event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+          <% if event.venue.present? %>
+            <span class="event-listing-venue"><%= event.venue %></span>
+          <% end %>
+        </p>
+      </div>
+      <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
+        <p class="event-listing-price"><%= display_price %></p>
+      <% end %>
+    </div>
     <div class="event-listing-link">
       <strong><%= event.artist_name %></strong>
       <% if event.title.present? %>

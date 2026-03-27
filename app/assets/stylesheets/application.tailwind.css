@@ -2510,13 +2510,16 @@ trix-editor.blog-rich-text:focus {
 
 .genre-lane-card-meta {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.5rem;
+  align-items: baseline;
+  gap: 0.3rem;
   margin: 0;
+  min-width: 0;
+  overflow: hidden;
   color: rgba(17, 17, 17, 0.56);
   font-size: 0.73rem;
   line-height: 1.2;
   text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .genre-lane-card-meta--editorial {
@@ -2561,6 +2564,24 @@ trix-editor.blog-rich-text:focus {
   color: rgba(17, 17, 17, 0.7);
   font-size: 0.82rem;
   line-height: 1.16;
+}
+
+.genre-lane-card-price {
+  margin: 0;
+  font-weight: 600;
+  color: rgba(17, 17, 17, 0.86);
+  font-size: 0.78rem;
+  line-height: 1.16;
+}
+
+.genre-lane-card-meta-date {
+  flex: 0 0 auto;
+}
+
+.genre-lane-card-meta-venue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .genre-lane-card-title--editorial {
@@ -2895,7 +2916,7 @@ trix-editor.blog-rich-text:focus {
   }
 
   .section-slider-list .event-listing-card {
-    grid-template-columns: 4.6rem 5.6rem minmax(0, 1fr);
+    grid-template-columns: 4.6rem minmax(0, 1fr);
     gap: 0.9rem;
     padding: 0.7rem 0.75rem;
     border: 1px solid rgba(17, 17, 17, 0.08);
@@ -3885,7 +3906,7 @@ trix-editor.blog-rich-text:focus {
 .event-listing-card {
   position: relative;
   display: grid;
-  grid-template-columns: 3.6rem 5.2rem minmax(0, 1fr);
+  grid-template-columns: 3.6rem minmax(0, 1fr);
   align-items: start;
   gap: 0.75rem;
   padding: 0.75rem;
@@ -3932,30 +3953,48 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-listing-date {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
   margin: 0;
-  font-size: 0.95rem;
+  min-width: 0;
+  font-size: 0.9rem;
   line-height: 1.15;
 }
 
 .event-listing-meta {
   display: grid;
-  align-content: start;
-  gap: 0.08rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.9rem;
   min-width: 0;
 }
 
-.event-listing-time,
 .event-listing-price {
   margin: 0;
-  font-size: 0.84rem;
+  font-size: 0.9rem;
   line-height: 1.2;
-  color: var(--ink-soft);
-}
-
-.event-listing-price {
-  margin-top: 0.15rem;
+  flex: 0 0 auto;
   font-weight: 600;
   color: rgba(17, 17, 17, 0.76);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.event-listing-meta-primary {
+  min-width: 0;
+}
+
+.event-listing-date-value {
+  flex: 0 0 auto;
+}
+
+.event-listing-venue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink-soft);
 }
 
 .event-listing-body {
@@ -4001,7 +4040,7 @@ trix-editor.blog-rich-text:focus {
 
 @media (min-width: 900px) {
   .event-listing-card {
-    grid-template-columns: 4rem 5.6rem minmax(0, 1fr);
+    grid-template-columns: 4rem minmax(0, 1fr);
   }
 }
 

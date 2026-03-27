@@ -8,6 +8,7 @@
 <% card_variant = local_assigns[:card_variant] %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
 <% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
+<% primary_offer = event.preferred_ticket_offer %>
 
 <article class="<%= ["genre-lane-card", ("genre-lane-card--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
   <%= link_to public_event_detail_path(event, browse_state), class: ["genre-lane-card-link", ("genre-lane-card-link--#{card_variant}" if card_variant.present?)].compact.join(" ") do %>
@@ -30,15 +31,20 @@
 
     <div class="<%= ["genre-lane-card-copy", ("genre-lane-card-copy--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
       <p class="<%= ["genre-lane-card-meta", ("genre-lane-card-meta--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
+        <span class="genre-lane-card-meta-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
         <% if event.venue.present? %>
-          <span><%= event.venue %></span>
+          <span class="genre-lane-card-meta-venue"><%= event.venue %></span>
         <% end %>
       </p>
       <h3 class="<%= ["genre-lane-card-name", ("genre-lane-card-name--#{card_variant}" if card_variant.present?)].compact.join(" ") %>"><%= event.artist_name %></h3>
       <% if event.title.present? %>
-        <p class="<%= ["genre-lane-card-title", ("genre-lane-card-title--#{card_variant}" if card_variant.present?)].compact.join(" ") %>"><%= event.title %></p>
+        <p class="<%= ["genre-lane-card-title", ("genre-lane-card-title--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
+          <span><%= event.title %></span>
+        </p>
       <% end %>
-      <p class="<%= ["genre-lane-card-date", ("genre-lane-card-date--#{card_variant}" if card_variant.present?)].compact.join(" ") %>"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></p>
+      <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
+        <p class="genre-lane-card-price"><%= display_price %></p>
+      <% end %>
     </div>
   <% end %>
 </article>
