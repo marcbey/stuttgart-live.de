@@ -71,7 +71,14 @@ class AppSetting < ApplicationRecord
       - `facebook_link`: bevorzugt offizielle Facebook-Seite von Artist, Projekt, Venue oder Tour; ersatzweise belastbare Veranstalter-/Promoter-Seite
       - `youtube_link`: bevorzugt offizieller Kanal; ersatzweise klar zuordenbarer Topic-/Projekt-/Venue-Kanal oder ein belastbares einzelnes Video, wenn kein besserer Kanal auffindbar ist
 
-    9. Beschreibungen sollen nüchtern, präzise und faktennah sein, aber deutlich ausführlicher als bisher:
+    9. Prüfe jeden ausgewählten Link für `youtube_link`, `instagram_link`, `homepage_link` und `facebook_link` zusätzlich auf technische und inhaltliche Erreichbarkeit:
+      - verwende einen Link nur, wenn die Zielseite erreichbar ist und kein HTTP-Fehler vorliegt, insbesondere kein `404` und kein sonstiger HTTP-Statuscode-Fehler
+      - folge Redirects gedanklich bis zur tatsächlichen Zielseite; maßgeblich ist die letztlich geladene Seite, nicht nur die Ausgangs-URL
+      - verwende keinen Link, wenn die Zielseite Hinweise auf Nichtverfügbarkeit enthält, insbesondere `Diese Seite ist leider nicht verfügbar` oder `Dieser Inhalt ist momentan nicht verfügbar`
+      - wenn ein fachlich plausibler Kandidat technisch nicht erreichbar ist oder auf eine Fehler-/Nichtverfügbarkeitsseite führt, verwerfe ihn und prüfe den nächsten plausiblen Kandidaten
+      - wenn kein belastbarer und zugleich erreichbarer Kandidat gefunden wird, setze das jeweilige Linkfeld auf `null`
+
+    10. Beschreibungen sollen nüchtern, präzise und faktennah sein, aber deutlich ausführlicher als bisher:
       - `artist_description`: beschreibt Artist, Projekt oder Produktion
       - `event_description`: beschreibt das konkrete Event bzw. Tour-/Show-Format
       - `venue_description`: beschreibt den Veranstaltungsort
@@ -82,11 +89,11 @@ class AppSetting < ApplicationRecord
       - nenne bei `venue_description` nach Möglichkeit Ort, Profil, Größe/Atmosphäre, Nutzungsschwerpunkt und Relevanz für das lokale Kulturleben
       - wenn nur wenig belastbare Information verfügbar ist, schreibe lieber einen vorsichtigen, aber immer noch substanziellen Text statt nur einen sehr kurzen Satz
 
-    10. Ziehe auch den Eventtitel, die Venue und den wahrscheinlichen lokalen Kontext heran, um korrekte Projekt-, Tour- oder Venue-Treffer besser zu identifizieren.
+    11. Ziehe auch den Eventtitel, die Venue und den wahrscheinlichen lokalen Kontext heran, um korrekte Projekt-, Tour- oder Venue-Treffer besser zu identifizieren.
 
-    11. Wenn Artist-Name oder Event-Name mehrdeutig sind, gleiche immer mit Venue, Ort, Tourtitel oder Projektkontext ab, bevor du einen Link wählst.
+    12. Wenn Artist-Name oder Event-Name mehrdeutig sind, gleiche immer mit Venue, Ort, Tourtitel oder Projektkontext ab, bevor du einen Link wählst.
 
-    12. Falls du für einen Link keinen ausreichend belastbaren Treffer findest, gib für das Linkfeld `null` zurück.
+    13. Falls du für einen Link keinen ausreichend belastbaren Treffer findest, gib für das Linkfeld `null` zurück.
 
     Antwort nur als JSON.
 

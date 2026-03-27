@@ -93,6 +93,9 @@ class AppSettingTest < ActiveSupport::TestCase
 
   test "returns default llm enrichment prompt template when no setting exists" do
     assert_includes AppSetting.llm_enrichment_prompt_template, "{{input_json}}"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "kein `404`"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "Diese Seite ist leider nicht verfügbar"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "Dieser Inhalt ist momentan nicht verfügbar"
   end
 
   test "returns default llm enrichment model when no setting exists" do
