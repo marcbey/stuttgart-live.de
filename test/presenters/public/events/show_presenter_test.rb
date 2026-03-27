@@ -134,6 +134,24 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Live auf der Bühne", presenter.hero_gallery_slides.second.caption
   end
 
+  test "hides ticket cta for past events" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      start_at: 2.hours.ago
+    )
+    primary_offer = OpenStruct.new(
+      resolved_ticket_url: "https://tickets.example/band",
+      ticket_price_text: "39,00 €"
+    )
+
+    presenter = build_presenter(event, primary_offer: primary_offer)
+
+    assert_not presenter.show_ticket_cta?
+    assert_nil presenter.ticket_url
+    assert_nil presenter.ticket_price_text
+  end
+
   test "exposes hero stage aspect ratio for editorial hero images" do
     event = build_event(artist_name: "Band", title: "Live")
     hero_image = EventImage.new(purpose: EventImage::PURPOSE_DETAIL_HERO)

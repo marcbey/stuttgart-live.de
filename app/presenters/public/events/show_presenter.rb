@@ -192,7 +192,7 @@ module Public
       end
 
       def show_ticket_cta?
-        primary_offer.present?
+        primary_offer.present? && !event.past?
       end
 
       def ticket_badge_text
@@ -200,10 +200,14 @@ module Public
       end
 
       def ticket_url
+        return unless show_ticket_cta?
+
         primary_offer&.resolved_ticket_url
       end
 
       def ticket_price_text
+        return unless show_ticket_cta?
+
         primary_offer&.ticket_price_text.to_s.presence
       end
 

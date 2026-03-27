@@ -139,6 +139,16 @@ class EventTest < ActiveSupport::TestCase
     assert_nil event.published_by
   end
 
+  test "past? is true only after the event start time" do
+    freeze_time do
+      past_event = Event.new(start_at: 5.minutes.ago)
+      future_event = Event.new(start_at: 5.minutes.from_now)
+
+      assert_predicate past_event, :past?
+      assert_not_predicate future_event, :past?
+    end
+  end
+
   test "preferred_ticket_offer uses loaded offers without extra queries" do
     event = Event.includes(:event_offers).find(events(:published_one).id)
     expected_offer = event_offers(:published_one_offer)

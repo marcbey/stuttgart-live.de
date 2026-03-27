@@ -122,6 +122,10 @@ class Event < ApplicationRecord
     status == "published"
   end
 
+  def past?
+    start_at.present? && start_at < Time.current
+  end
+
   def event_series?
     event_series_id.present?
   end
