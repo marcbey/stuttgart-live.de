@@ -62,12 +62,12 @@ Easyticket, Eventim und Reservix folgen demselben Grundmuster:
 - Vor dem eigentlichen Start werden hängengebliebene alte Läufe derselben Quelle automatisch als fehlgeschlagen oder abgebrochen markiert.
 - Jeder Importer prüft eine konfigurierbare Orts-Whitelist aus der jeweiligen `ImportSource`.
 - Treffer außerhalb der Whitelist werden nicht importiert; die dabei gesehenen Städte werden im Run-Metadatenblock als `filtered_out_cities` festgehalten.
-- Pro Quelldatensatz wird ein `RawEventImport` angelegt. Das ist absichtlich append-only: Die Rohhistorie bleibt erhalten, statt ältere Zeilen zu überschreiben.
+- Pro Quelldatensatz wird ein `RawEventImport` angelegt. Innerhalb der aktiven Retention bleibt diese Rohhistorie append-only; ältere Rohimporte für vergangene Events werden später über tägliche Retention-Jobs bereinigt, statt beim nächsten Import überschrieben zu werden.
 - Fehler einzelner Datensätze landen in `import_run_errors`, ohne den kompletten Lauf sofort abzubrechen.
 
 Die Run-Koordination ist bewusst generisch über `ImportRun`, `source_type` und Registry-Konfiguration aufgebaut. Je nach Jobtyp laufen Jobs exklusiv oder als serielle Warteschlange. Das LLM-Enrichment nutzt diese Infrastruktur bereits: Es gibt dort immer höchstens einen aktiven Lauf, weitere Anforderungen werden als `queued` eingereiht.
 
-Für den täglichen Betrieb startet `Importing::DailyRunJob` die aktiven Provider standardmäßig über `config/recurring.yml` jeden Tag um `03:05` Uhr. Der tägliche Merge läuft anschließend über `Merging::DailyRunJob` standardmäßig um `04:05` Uhr. Das tägliche LLM-Enrichment wird danach über `Importing::LlmEnrichment::DailyRunJob` standardmäßig um `06:05` Uhr eingereiht. Manuell lassen sich die Provider-Läufe im Backend unter den Importquellen oder per Rake-Task starten:
+Für den täglichen Betrieb startet `Importing::DailyRunJob` die aktiven Provider standardmäßig über `config/recurring.yml` jeden Tag um `03:05` Uhr. Der tägliche Merge läuft anschließend über `Merging::DailyRunJob` standardmäßig um `04:05` Uhr. Das tägliche LLM-Enrichment wird danach über `Importing::LlmEnrichment::DailyRunJob` standardmäßig um `06:05` Uhr eingereiht. Danach räumt `Events::Retention::PruneStaleUnpublishedEventsJob` um `07:05` Uhr nicht veröffentlichte Events auf, deren `start_at` länger als einen Monat zurückliegt; `Events::Retention::PrunePastRawEventImportsJob` löscht anschließend um `07:20` Uhr alte `raw_event_imports` für Events, deren normalisiertes Eventdatum länger als einen Monat vorbei ist. Historische Event-Detailseiten bleiben dabei erhalten, weil die Public-Seite aus `events` liest und der Merge die relevanten Quellinformationen in `events.source_snapshot` ablegt. Manuell lassen sich die Provider-Läufe im Backend unter den Importquellen oder per Rake-Task starten:
 
 ```bash
 bin/rake importing:easyticket:run

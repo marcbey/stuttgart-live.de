@@ -14,3 +14,11 @@ production:
   daily_llm_enrichment_run:
     command: "Importing::LlmEnrichment::DailyRunJob.perform_later"
     schedule: every day at 6:05am
+
+  daily_event_retention_cleanup:
+    command: "Events::Retention::PruneStaleUnpublishedEventsJob.perform_later"
+    schedule: every day at 7:05am
+
+  daily_raw_event_import_retention_cleanup:
+    command: "Events::Retention::PrunePastRawEventImportsJob.perform_later"
+    schedule: every day at 7:20am

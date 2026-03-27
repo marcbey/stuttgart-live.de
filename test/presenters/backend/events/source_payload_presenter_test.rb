@@ -56,4 +56,32 @@ class Backend::Events::SourcePayloadPresenterTest < ActiveSupport::TestCase
 
     assert_equal "10135", presenter.display_promoter_id
   end
+
+  test "keeps payload sources available without raw event imports" do
+    raw_import = RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "evt-2:2026-06-10",
+      payload: { "event_id" => "evt-2", "title_2" => "Snapshot Event" },
+      detail_payload: {}
+    )
+    event = Event.new(
+      source_snapshot: {
+        "sources" => [
+          {
+            "source" => "easyticket",
+            "external_event_id" => "evt-2",
+            "raw_payload" => { "event_id" => "evt-2", "title_2" => "Snapshot Event" }
+          }
+        ]
+      }
+    )
+
+    presenter = Backend::Events::SourcePayloadPresenter.new(event)
+
+    raw_import.destroy!
+
+    assert_equal 1, presenter.payload_sources.size
+    assert_includes presenter.payload_sources.first.formatted_payload, "\"title_2\": \"Snapshot Event\""
+  end
 end

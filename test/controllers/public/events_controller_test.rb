@@ -2305,6 +2305,51 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Past Artist"
   end
 
+  test "show keeps working for published events after matching raw imports are deleted" do
+    @past_published_event.update!(
+      source_snapshot: {
+        "sources" => [
+          {
+            "source" => "easyticket",
+            "source_identifier" => "published-past-event:2026-01-10",
+            "external_event_id" => "published-past-event",
+            "raw_payload" => {
+              "event_id" => "published-past-event",
+              "date" => "2026-01-10",
+              "title_1" => "Past Artist",
+              "title_2" => "Past Published Event"
+            }
+          }
+        ]
+      }
+    )
+    raw_import = RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "published-past-event:2026-01-10",
+      payload: {
+        "event_id" => "published-past-event",
+        "date" => "2026-01-10",
+        "title_1" => "Past Artist",
+        "title_2" => "Past Published Event",
+        "loc_name" => "LKA Longhorn",
+        "loc_city" => "Stuttgart"
+      },
+      detail_payload: {}
+    )
+
+    travel_to(Time.zone.parse("2026-04-15 10:00:00")) do
+      Events::Retention::PrunePastRawEventImports.call
+    end
+
+    assert_not RawEventImport.exists?(raw_import.id)
+
+    get event_url(@past_published_event.slug)
+
+    assert_response :success
+    assert_includes response.body, "Past Artist"
+  end
+
   test "show renders past events for authenticated users with vergangen badge" do
     sign_in_as(@user)
 
