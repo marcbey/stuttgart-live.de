@@ -77,16 +77,13 @@
           </div>
           <div class="filter-merge-row">
             <div class="filter-merge-field">
-              <%= form.label :merge_scope, "Import-Änderungen", class: "form-label" %>
-              <%= form.select :merge_scope,
-                              options_for_select([
-                                ["Alle", "all"],
-                                ["Letzter Merge", "last_merge"]
-                              ], @filters[:merge_scope]),
+              <%= form.label :merge_run_id, "Import-Änderungen", class: "form-label" %>
+              <%= form.select :merge_run_id,
+                              options_for_select(@merge_run_filter_options, @filters[:merge_run_id]),
                               {},
                               class: "form-input",
                               data: {
-                                merge_change_filter_target: "scope",
+                                merge_change_filter_target: "mergeRun",
                                 action: "change->merge-change-filter#submit"
                               } %>
             </div>
@@ -100,7 +97,7 @@
                               ], @filters[:merge_change_type]),
                               {},
                               class: "form-input",
-                              disabled: @filters[:merge_scope] != "last_merge",
+                              disabled: @filters[:merge_run_id] == "all",
                               data: {
                                 merge_change_filter_target: "changeType",
                                 action: "change->merge-change-filter#submit"

@@ -12,13 +12,14 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
     inbox_state = Backend::Events::InboxState.new(
       params: { "query" => "Review Event", "status" => "needs_review" },
       session: @session,
-      status_filters: @status_filters
+      status_filters: @status_filters,
+      available_merge_run_ids: [],
+      latest_successful_merge_run_id: nil
     )
     inbox_state.persist_filters!
 
     builder = Backend::Events::EditorStateBuilder.new(
       inbox_state: inbox_state,
-      latest_successful_merge_run: nil,
       next_event_enabled: true
     )
 
@@ -28,7 +29,7 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
     assert_equal @next_event.id, result.target_event.id
   end
 
-  test "selected merge run id is returned for last merge scope" do
+  test "selected merge run id is returned for explicit merge run filter" do
     merge_run = ImportRun.create!(
       import_source: import_sources(:one),
       source_type: "merge",
@@ -39,17 +40,18 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
     inbox_state = Backend::Events::InboxState.new(
       params: {
         "status" => "needs_review",
-        "merge_scope" => "last_merge",
+        "merge_run_id" => merge_run.id.to_s,
         "merge_change_type" => "updated"
       },
       session: @session,
-      status_filters: @status_filters
+      status_filters: @status_filters,
+      available_merge_run_ids: [ merge_run.id ],
+      latest_successful_merge_run_id: merge_run.id
     )
     inbox_state.persist_filters!
 
     builder = Backend::Events::EditorStateBuilder.new(
       inbox_state: inbox_state,
-      latest_successful_merge_run: merge_run,
       next_event_enabled: false
     )
 
@@ -61,13 +63,14 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
     inbox_state = Backend::Events::InboxState.new(
       params: { "query" => "definitely-no-match", "status" => "published" },
       session: @session,
-      status_filters: @status_filters
+      status_filters: @status_filters,
+      available_merge_run_ids: [],
+      latest_successful_merge_run_id: nil
     )
     inbox_state.persist_filters!
 
     builder = Backend::Events::EditorStateBuilder.new(
       inbox_state: inbox_state,
-      latest_successful_merge_run: nil,
       next_event_enabled: false
     )
 

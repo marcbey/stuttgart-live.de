@@ -4,16 +4,17 @@ module Backend
       SESSION_FILTERS_KEY = "backend_events_inbox_filters".freeze
       SESSION_STATUS_KEY = "backend_events_inbox_status".freeze
       SESSION_NEXT_EVENT_KEY = "backend_events_next_event_enabled".freeze
-      MERGE_SCOPES = %w[all last_merge].freeze
       MERGE_CHANGE_TYPES = %w[all created updated].freeze
       DEFAULT_STATUS = "published".freeze
 
       attr_reader :status_filters
 
-      def initialize(params:, session:, status_filters:)
+      def initialize(params:, session:, status_filters:, available_merge_run_ids: [], latest_successful_merge_run_id: nil)
         @params = params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params.to_h
         @session = session
         @status_filters = status_filters
+        @available_merge_run_ids = Array(available_merge_run_ids).filter_map { |value| Integer(value, exception: false) }.uniq
+        @latest_successful_merge_run_id = Integer(latest_successful_merge_run_id, exception: false)
       end
 
       def current_status
@@ -46,13 +47,14 @@ module Backend
         if clear_filters_requested?
           session.delete(SESSION_FILTERS_KEY)
         else
+          merge_run_id = normalize_merge_run_id(params["merge_run_id"])
           session[SESSION_FILTERS_KEY] = {
             "query" => params["query"].to_s.strip.presence,
             "promoter_id" => params["promoter_id"].to_s.strip.presence,
             "starts_after" => params["starts_after"].to_s.strip.presence,
             "starts_before" => params["starts_before"].to_s.strip.presence,
-            "merge_scope" => normalize_merge_scope(params["merge_scope"]),
-            "merge_change_type" => normalize_merge_change_type(params["merge_change_type"])
+            "merge_run_id" => merge_run_id,
+            "merge_change_type" => merge_run_id == "all" ? "all" : normalize_merge_change_type(params["merge_change_type"])
           }
         end
 
@@ -79,7 +81,7 @@ module Backend
 
       private
 
-      attr_reader :params, :session
+      attr_reader :available_merge_run_ids, :latest_successful_merge_run_id, :params, :session
 
       def clear_filters_requested?
         boolean(params["clear_filters"])
@@ -90,6 +92,7 @@ module Backend
 
         stored = session[SESSION_FILTERS_KEY]
         normalized = stored.is_a?(Hash) ? stored.stringify_keys : {}
+        merge_run_id = normalize_merge_run_id(normalized["merge_run_id"], legacy_merge_scope: normalized["merge_scope"])
         starts_after_value =
           if normalized.key?("starts_after")
             normalized["starts_after"].to_s.strip.presence
@@ -102,8 +105,8 @@ module Backend
           promoter_id: normalized["promoter_id"].to_s.strip.presence,
           starts_after: starts_after_value,
           starts_before: normalized["starts_before"].to_s.strip.presence,
-          merge_scope: normalize_merge_scope(normalized["merge_scope"]),
-          merge_change_type: normalize_merge_change_type(normalized["merge_change_type"])
+          merge_run_id: merge_run_id,
+          merge_change_type: merge_run_id == "all" ? "all" : normalize_merge_change_type(normalized["merge_change_type"])
         }
       end
 
@@ -115,9 +118,19 @@ module Backend
         status_filters.include?(status.to_s)
       end
 
-      def normalize_merge_scope(value)
+      def normalize_merge_run_id(value, legacy_merge_scope: nil)
         normalized = value.to_s.strip
-        MERGE_SCOPES.include?(normalized) ? normalized : "all"
+        if normalized.blank?
+          return latest_successful_merge_run_id.to_s if legacy_merge_scope.to_s.strip == "last_merge" && latest_successful_merge_run_id.present?
+
+          return "all"
+        end
+        return "all" if normalized == "all"
+
+        merge_run_id = Integer(normalized, exception: false)
+        return merge_run_id.to_s if merge_run_id.present? && available_merge_run_ids.include?(merge_run_id)
+
+        "all"
       end
 
       def normalize_merge_change_type(value)

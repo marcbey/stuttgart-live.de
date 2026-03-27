@@ -107,6 +107,11 @@ module Backend::EventsHelper
     end
   end
 
+  def merge_run_filter_option_label(run)
+    timestamp = run.started_at || run.finished_at || run.created_at
+    "Run ID ##{run.id}: #{timestamp.strftime("%d.%m.%Y %H:%M:%S")}"
+  end
+
   def event_editor_errors(event)
     [
       *event.errors.full_messages,

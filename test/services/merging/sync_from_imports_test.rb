@@ -270,6 +270,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
   test "similarity-matches artist variants when enabled" do
     AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
     AppSetting.reset_cache!
+    merge_run_id = 101
 
     RawEventImport.create!(
       import_source: import_sources(:one),
@@ -300,12 +301,18 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
       }
     )
 
-    result = Merging::SyncFromImports.new.call
+    result = Merging::SyncFromImports.new(merge_run_id: merge_run_id).call
 
     assert_equal 2, result.import_records_count
     assert_equal 2, result.groups_count
     assert_equal 1, result.duplicate_matches_count
+    event = Event.find_by!(start_at: Time.zone.local(2026, 12, 19, 20, 0, 0))
+
     assert_equal 1, Event.where(start_at: Time.zone.local(2026, 12, 19, 20, 0, 0)).count
+    assert_equal [ "merged_create" ], EventChangeLog.where(
+      event_id: event.id,
+      action: [ "merged_create", "merged_update" ]
+    ).where("metadata ->> 'merge_run_id' = ?", merge_run_id.to_s).order(:id).pluck(:action)
   end
 
   test "similarity match keeps easyticket as primary source over existing eventim event" do
@@ -372,6 +379,8 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     source = import_sources(:one)
     initial_time = Time.zone.parse("2026-03-14 09:00:00")
     incremental_time = Time.zone.parse("2026-03-14 11:00:00")
+    initial_merge_run_id = 201
+    incremental_merge_run_id = 202
 
     first_raw = RawEventImport.create!(
       import_source: source,
@@ -397,7 +406,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     )
     first_raw.update_columns(created_at: initial_time, updated_at: initial_time)
 
-    Merging::SyncFromImports.new.call
+    Merging::SyncFromImports.new(merge_run_id: initial_merge_run_id).call
 
     event = Event.find_by!(artist_name: "Band Update")
     event_id = event.id
@@ -427,7 +436,10 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     )
     second_raw.update_columns(created_at: incremental_time, updated_at: incremental_time)
 
-    result = Merging::SyncFromImports.new(last_run_at: Time.zone.parse("2026-03-14 10:00:00")).call
+    result = Merging::SyncFromImports.new(
+      merge_run_id: incremental_merge_run_id,
+      last_run_at: Time.zone.parse("2026-03-14 10:00:00")
+    ).call
 
     updated_event = Event.find(event_id)
     assert_equal 1, result.events_updated_count
@@ -436,6 +448,99 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal "Ausverkauft fast", updated_event.badge_text
     assert_equal BigDecimal("45"), updated_event.min_price
     assert_equal BigDecimal("55"), updated_event.max_price
+    assert_equal [ "merged_update" ], EventChangeLog.where(
+      event_id: updated_event.id,
+      action: [ "merged_create", "merged_update" ]
+    ).where("metadata ->> 'merge_run_id' = ?", incremental_merge_run_id.to_s).order(:id).pluck(:action)
+  end
+
+  test "existing events can still log multiple merged_update entries within the same run" do
+    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+    AppSetting.reset_cache!
+
+    source_easyticket = import_sources(:one)
+    source_eventim = import_sources(:two)
+    initial_time = Time.zone.parse("2026-03-18 09:00:00")
+    incremental_time = Time.zone.parse("2026-03-18 11:00:00")
+
+    initial_raw = RawEventImport.create!(
+      import_source: source_easyticket,
+      import_event_type: "easyticket",
+      source_identifier: "multi-update-easy:2026-12-26",
+      payload: {
+        "event_id" => "multi-update-easy",
+        "date_time" => "2026-12-26 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Gregory Porter",
+        "title_2" => "Soul Night",
+        "data" => {
+          "images" => {
+            "multi-update-easy" => {
+              "large" => "https://example.com/multi-update-easy.jpg"
+            }
+          }
+        }
+      }
+    )
+    initial_raw.update_columns(created_at: initial_time, updated_at: initial_time)
+
+    Merging::SyncFromImports.new(merge_run_id: 301).call
+
+    incremental_easy = RawEventImport.create!(
+      import_source: source_easyticket,
+      import_event_type: "easyticket",
+      source_identifier: "multi-update-easy:2026-12-26",
+      payload: {
+        "event_id" => "multi-update-easy",
+        "date_time" => "2026-12-26 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Porsche Arena",
+        "title_1" => "Gregory Porter",
+        "title_2" => "Soul Night",
+        "badge_text" => "Fast ausverkauft",
+        "data" => {
+          "images" => {
+            "multi-update-easy" => {
+              "large" => "https://example.com/multi-update-easy.jpg"
+            }
+          }
+        }
+      }
+    )
+    incremental_easy.update_columns(created_at: incremental_time, updated_at: incremental_time)
+
+    incremental_eventim = RawEventImport.create!(
+      import_source: source_eventim,
+      import_event_type: "eventim",
+      source_identifier: "multi-update-eventim:2026-12-26",
+      payload: {
+        "eventid" => "multi-update-eventim",
+        "eventdate" => "2026-12-26",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Porsche Arena",
+        "eventname" => "Soul Night",
+        "artistname" => "Gregory Porter & Orchestra",
+        "eventlink" => "https://example.com/multi-update-eventim",
+        "espicture_big" => "https://example.com/multi-update-eventim.jpg"
+      }
+    )
+    incremental_eventim.update_columns(created_at: incremental_time + 1.minute, updated_at: incremental_time + 1.minute)
+
+    Merging::SyncFromImports.new(
+      merge_run_id: 302,
+      last_run_at: Time.zone.parse("2026-03-18 10:00:00")
+    ).call
+
+    event = Event.find_by!(artist_name: "Gregory Porter", start_at: Time.zone.local(2026, 12, 26, 20, 0, 0))
+    logs = EventChangeLog.where(
+      event_id: event.id,
+      action: [ "merged_create", "merged_update" ]
+    ).where("metadata ->> 'merge_run_id' = ?", "302")
+
+    assert_equal 2, logs.count
+    assert_equal [ "merged_update" ], logs.distinct.order(:action).pluck(:action)
   end
 
   test "incremental merge updates doors_at from current import data" do

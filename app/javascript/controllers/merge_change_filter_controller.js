@@ -1,17 +1,17 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "scope", "changeType" ]
+  static targets = [ "mergeRun", "changeType" ]
 
   connect() {
     this.sync()
   }
 
   sync() {
-    const isLastMerge = this.scopeTarget.value === "last_merge"
+    const mergeRunSelected = this.mergeRunTarget.value !== "all"
 
-    this.changeTypeTarget.disabled = !isLastMerge
-    if (!isLastMerge) {
+    this.changeTypeTarget.disabled = !mergeRunSelected
+    if (!mergeRunSelected) {
       this.changeTypeTarget.value = "all"
     }
   }

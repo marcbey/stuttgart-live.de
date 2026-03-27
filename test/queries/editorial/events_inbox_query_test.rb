@@ -30,7 +30,6 @@ class Editorial::EventsInboxQueryTest < ActiveSupport::TestCase
     result = Editorial::EventsInboxQuery.new(
       params: {
         status: "needs_review",
-        merge_scope: "last_merge",
         merge_change_type: "created",
         merge_run_id: @merge_run.id
       }
@@ -43,7 +42,6 @@ class Editorial::EventsInboxQueryTest < ActiveSupport::TestCase
     result = Editorial::EventsInboxQuery.new(
       params: {
         status: "needs_review",
-        merge_scope: "last_merge",
         merge_change_type: "updated",
         merge_run_id: @merge_run.id
       }
@@ -52,11 +50,24 @@ class Editorial::EventsInboxQueryTest < ActiveSupport::TestCase
     assert_equal [ @updated_event.id ], result.pluck(:id)
   end
 
-  test "returns none for last merge filter when merge run id is missing" do
+  test "returns unfiltered results when merge run filter is all" do
     result = Editorial::EventsInboxQuery.new(
       params: {
         status: "needs_review",
-        merge_scope: "last_merge",
+        merge_run_id: "all",
+        merge_change_type: "all"
+      }
+    ).call
+
+    assert_includes result.pluck(:id), @created_event.id
+    assert_includes result.pluck(:id), @updated_event.id
+  end
+
+  test "returns none when an invalid merge run id is forced" do
+    result = Editorial::EventsInboxQuery.new(
+      params: {
+        status: "needs_review",
+        merge_run_id: "invalid",
         merge_change_type: "all"
       }
     ).call

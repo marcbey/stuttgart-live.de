@@ -70,7 +70,7 @@ Event Detail Page:
 - Importer: Merge Import auch automatisch jede Nacht, triggert dann das LLM-Enrichment
 - Event Backend: Import-Änderungen je Merge nach Datum auswählen lassen
 - Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?
-- Events: wenn ausverkauft, kein Ticket Link anzeigen
+- Events: wenn ausverkauft, kein Ticket Link anzeigen? Was ist das Signal für ausverkauft?
 - Events: wenn in der Vergangenheit, kein Ticket Link - deutlich kennzeichnen
 - Event Editor: Promoter-ID fix - read-only
 - New Event: Veröffentlichungs Datum einführen und auch erst dann veröffentlichen

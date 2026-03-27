@@ -8,6 +8,7 @@ module Merging
         @logger = logger
         @priority_map = priority_map
         @match_strategy = match_strategy
+        @created_event_ids_in_run = Set.new
       end
 
       def call(records)
@@ -40,7 +41,9 @@ module Merging
 
         effective_updated = (updated_now || images_changed) && !created_now
 
-        if created_now || effective_updated
+        created_during_current_run = created_in_current_run?(event)
+
+        if created_now || (effective_updated && !created_during_current_run)
           Editorial::EventChangeLogger.log!(
             event: event,
             action: created_now ? "merged_create" : "merged_update",
@@ -48,6 +51,7 @@ module Merging
             metadata: merge_change_metadata(records)
           )
         end
+        remember_created_event!(event) if created_now
 
         logger.info("[Merging::SyncFromImports] synced event ##{event.id} with #{records.size} source records")
 
@@ -56,7 +60,7 @@ module Merging
 
       private
 
-      attr_reader :logger, :match_strategy, :merge_run_id, :priority_map
+      attr_reader :created_event_ids_in_run, :logger, :match_strategy, :merge_run_id, :priority_map
 
       def assign_event_attributes(event, records, fingerprint:, created_now:)
         event.source_fingerprint = fingerprint
@@ -154,6 +158,16 @@ module Merging
         return false if match_result.nil?
 
         !%w[source_snapshot exact_fingerprint].include?(match_result.reason.to_s)
+      end
+
+      def created_in_current_run?(event)
+        event.persisted? && created_event_ids_in_run.include?(event.id)
+      end
+
+      def remember_created_event!(event)
+        return unless event.persisted?
+
+        created_event_ids_in_run << event.id
       end
 
       def sync_offers!(event, offers)

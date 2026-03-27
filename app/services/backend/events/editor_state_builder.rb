@@ -9,9 +9,8 @@ module Backend
         :merge_run_id
       )
 
-      def initialize(inbox_state:, latest_successful_merge_run:, next_event_enabled:)
+      def initialize(inbox_state:, next_event_enabled:)
         @inbox_state = inbox_state
-        @latest_successful_merge_run = latest_successful_merge_run
         @next_event_enabled = next_event_enabled
       end
 
@@ -26,7 +25,7 @@ module Backend
 
       def selected_merge_run_id_for_status(status)
         filters = filters_for(status)
-        filters[:merge_scope] == "last_merge" ? latest_successful_merge_run&.id : nil
+        Integer(filters[:merge_run_id], exception: false)
       end
 
       def build(preferred_event:, navigation_status:)
@@ -50,12 +49,10 @@ module Backend
 
       private
 
-      attr_reader :inbox_state, :latest_successful_merge_run, :next_event_enabled
+      attr_reader :inbox_state, :next_event_enabled
 
       def filters_for(status)
-        filters = inbox_state.filters_for(status: status)
-        filters[:merge_run_id] = latest_successful_merge_run&.id if filters[:merge_scope] == "last_merge"
-        filters
+        inbox_state.filters_for(status: status)
       end
 
       def next_filtered_event_after(event_id, status:)

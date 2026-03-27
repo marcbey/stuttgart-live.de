@@ -1,7 +1,6 @@
 module Editorial
   class EventsInboxQuery
     DEFAULT_LIMIT = 120
-    MERGE_SCOPES = %w[all last_merge].freeze
     MERGE_CHANGE_TYPES = %w[all created updated].freeze
 
     def initialize(scope: Event.all, params: {})
@@ -64,7 +63,7 @@ module Editorial
     end
 
     def apply_merge_change_filter(relation)
-      return relation unless merge_scope == "last_merge"
+      return relation if merge_run_filter_disabled?
       return relation.none if merge_run_id.blank?
 
       relation.where(
@@ -75,11 +74,9 @@ module Editorial
       )
     end
 
-    def merge_scope
-      raw_value = params[:merge_scope].to_s.strip
-      return raw_value if MERGE_SCOPES.include?(raw_value)
-
-      "all"
+    def merge_run_filter_disabled?
+      raw_value = params[:merge_run_id].to_s.strip
+      raw_value.blank? || raw_value == "all"
     end
 
     def merge_change_type

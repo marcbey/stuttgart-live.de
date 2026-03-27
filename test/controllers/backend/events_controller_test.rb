@@ -33,7 +33,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
     assert_select ".app-nav-backend-menu", count: 0
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
-    assert_match(/Events.*News.*Präsentatoren.*Importer.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Präsentatoren.*Queue.*Passwort.*Logout/m, response.body)
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "auto-next"
     assert_includes response.body, "name=\"status\""
@@ -302,6 +302,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".filter-merge-row .filter-merge-field", count: 2
     assert_select ".event-list-count", text: /gefilterte Events/
     assert_select "select[name='merge_change_type'][disabled]"
+    assert_select "select[name='merge_run_id'] option[value='all'][selected]", text: "Alle"
   end
 
   test "index shows empty state in event list when filters match no events" do
@@ -320,20 +321,68 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#events_list .event-list-item", count: 0
   end
 
-  test "change type filter is enabled when merge scope is last merge" do
+  test "change type filter is enabled when a merge run is selected" do
     sign_in_as(@user)
+
+    merge_run = ImportRun.create!(
+      import_source: import_sources(:one),
+      source_type: "merge",
+      status: "succeeded",
+      started_at: Time.zone.parse("2026-03-27 10:35:10"),
+      finished_at: Time.zone.parse("2026-03-27 10:36:10")
+    )
 
     post apply_filters_backend_events_url, params: {
       status: "needs_review",
-      merge_scope: "last_merge",
+      merge_run_id: merge_run.id,
       merge_change_type: "updated"
     }
 
     get backend_events_url(status: "needs_review")
 
     assert_response :success
-    assert_select "select[name='merge_scope'] option[selected][value='last_merge']"
+    assert_select "select[name='merge_run_id'] option[selected][value='#{merge_run.id}']"
     assert_select "select[name='merge_change_type']:not([disabled])"
+  end
+
+  test "index shows only the five newest successful merge runs in the filter" do
+    sign_in_as(@user)
+
+    successful_runs = 6.times.map do |index|
+      ImportRun.create!(
+        import_source: import_sources(:one),
+        source_type: "merge",
+        status: "succeeded",
+        started_at: Time.zone.parse("2026-03-27 10:00:00") + index.minutes,
+        finished_at: Time.zone.parse("2026-03-27 10:00:30") + index.minutes
+      )
+    end
+    failed_run = ImportRun.create!(
+      import_source: import_sources(:one),
+      source_type: "merge",
+      status: "failed",
+      started_at: Time.zone.parse("2026-03-27 09:00:00"),
+      finished_at: Time.zone.parse("2026-03-27 09:00:30")
+    )
+    running_run = ImportRun.create!(
+      import_source: import_sources(:one),
+      source_type: "merge",
+      status: "running",
+      started_at: Time.zone.parse("2026-03-27 11:00:00")
+    )
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_select "select[name='merge_run_id'] option", count: 6
+
+    successful_runs.last(5).reverse_each do |run|
+      assert_select "select[name='merge_run_id'] option[value='#{run.id}']", text: "Run ID ##{run.id}: #{run.started_at.strftime("%d.%m.%Y %H:%M:%S")}"
+    end
+
+    assert_select "select[name='merge_run_id'] option[value='#{successful_runs.first.id}']", count: 0
+    assert_select "select[name='merge_run_id'] option[value='#{failed_run.id}']", count: 0
+    assert_select "select[name='merge_run_id'] option[value='#{running_run.id}']", count: 0
   end
 
   test "index does not show import merge button" do
@@ -364,7 +413,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='starts_before'][value='2026-07-31']"
   end
 
-  test "applies merge filters and shows import change badge for created events in latest merge" do
+  test "applies merge filters and shows import change badge for created events in selected merge run" do
     sign_in_as(@user)
 
     merge_run = ImportRun.create!(
@@ -389,7 +438,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     post apply_filters_backend_events_url, params: {
       status: "needs_review",
-      merge_scope: "last_merge",
+      merge_run_id: merge_run.id,
       merge_change_type: "created"
     }
 
@@ -400,6 +449,33 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".status-badge-import-updated", count: 0
     assert_includes response.body, "Review Artist"
     assert_not_includes response.body, "Review Artist Two"
+  end
+
+  test "stale merge run selections fall back to all and disable change type" do
+    sign_in_as(@user)
+
+    runs = 6.times.map do |index|
+      ImportRun.create!(
+        import_source: import_sources(:one),
+        source_type: "merge",
+        status: "succeeded",
+        started_at: Time.zone.parse("2026-03-27 08:00:00") + index.minutes,
+        finished_at: Time.zone.parse("2026-03-27 08:00:30") + index.minutes
+      )
+    end
+
+    post apply_filters_backend_events_url, params: {
+      status: "needs_review",
+      merge_run_id: runs.first.id,
+      merge_change_type: "updated"
+    }
+
+    get backend_events_url(status: "needs_review")
+
+    assert_response :success
+    assert_select "select[name='merge_run_id'] option[selected][value='all']"
+    assert_select "select[name='merge_change_type'][disabled]"
+    assert_select "select[name='merge_change_type'] option[selected][value='all']"
   end
 
   test "next event preference endpoint stores value in session" do

@@ -1,6 +1,7 @@
 module Backend
   class EventsController < BaseController
     before_action :set_event, only: [ :show, :update, :publish, :unpublish, :run_llm_enrichment ]
+    before_action :set_available_merge_runs
     before_action :set_inbox_state
     before_action :set_next_event_enabled, only: [ :index, :show, :new, :create, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
@@ -225,8 +226,14 @@ module Backend
       @inbox_state = Backend::Events::InboxState.new(
         params: params,
         session: session,
-        status_filters: status_filters
+        status_filters: status_filters,
+        available_merge_run_ids: @available_merge_runs.map(&:id),
+        latest_successful_merge_run_id: @available_merge_runs.first&.id
       )
+    end
+
+    def set_available_merge_runs
+      @available_merge_runs = available_merge_runs
     end
 
     def set_event
@@ -254,7 +261,6 @@ module Backend
     def build_editor_state_builder
       Backend::Events::EditorStateBuilder.new(
         inbox_state: @inbox_state,
-        latest_successful_merge_run: @latest_successful_merge_run || latest_successful_merge_run,
         next_event_enabled: @next_event_enabled
       )
     end
@@ -285,9 +291,9 @@ module Backend
     end
 
     def prepare_index_state!
-      @latest_successful_merge_run = latest_successful_merge_run
       @editor_state_builder = build_editor_state_builder
       @filters = @inbox_state.filters
+      @merge_run_filter_options = merge_run_filter_options
       @selected_merge_run_id = @editor_state_builder.selected_merge_run_id_for_status(@filters[:status])
       @events = @editor_state_builder.events_for_status(@filters[:status])
       @filtered_events_count = @editor_state_builder.filtered_events_count(@events)
@@ -298,8 +304,14 @@ module Backend
       @status_filters ||= Event::STATUSES.reject { |status| status == "imported" }
     end
 
-    def latest_successful_merge_run
-      ImportRun.where(source_type: "merge", status: "succeeded").order(finished_at: :desc, id: :desc).first
+    def available_merge_runs
+      ImportRun.where(source_type: "merge", status: "succeeded").order(finished_at: :desc, id: :desc).limit(5)
+    end
+
+    def merge_run_filter_options
+      [ [ "Alle", "all" ] ] + @available_merge_runs.map do |run|
+        [ helpers.merge_run_filter_option_label(run), run.id.to_s ]
+      end
     end
 
     def event_params
