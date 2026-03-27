@@ -58,6 +58,7 @@ class Merging::SyncFromImports::ArtistSimilarityMatcherTest < ActiveSupport::Tes
       city: nil,
       venue: "Im Wizemann",
       promoter_id: nil,
+      promoter_name: nil,
       badge_text: nil,
       youtube_url: nil,
       homepage_url: nil,

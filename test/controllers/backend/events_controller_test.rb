@@ -70,8 +70,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div#event_editor", count: 0
     assert_select "div#event_editor_panel", count: 1
     assert_select "input[name='inbox_status'][value='needs_review']"
-    assert_select "input[name='event[promoter_id]'][value='#{@event.promoter_id}']"
-    assert_select "input[readonly]#event_#{@event.id}_promoter_id_display", count: 0
+    assert_select "input[name='event[promoter_id]']", count: 0
+    assert_select "input[readonly]#promoter_display_event_#{@event.id}[value='#{@event.promoter_id}']"
     assert_select ".event-editor-tabs[data-controller='event-editor-tabs']", count: 1
     assert_select ".event-editor-tabs[data-controller='event-editor-tabs event-editor-settings']", count: 0
     assert_select "#event-editor-tab-settings[aria-selected='false']", count: 1
@@ -119,7 +119,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event_topbar_editor_actions a.button", text: "Open", count: 0
   end
 
-  test "turbo frame new shows the same editable fields as the event editor" do
+  test "turbo frame new shows the same event fields with read only promoter display" do
     sign_in_as(@user)
 
     get new_backend_event_url, headers: { "Turbo-Frame" => "event_editor" }
@@ -144,7 +144,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[homepage_url]']"
     assert_select "input[name='event[instagram_url]']"
     assert_select "input[name='event[facebook_url]']"
-    assert_select "input[name='event[promoter_id]']"
+    assert_select "input[name='event[promoter_id]']", count: 0
+    assert_select "label.form-label", text: "Promoter"
+    assert_select "input[readonly]#promoter_display_event[value='RUSS Live']", count: 1
     assert_select "input[name='event[ticket_url]']"
     assert_select "input[name='event[support]']"
     assert_select "textarea[name='event[organizer_notes]']"
@@ -671,7 +673,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com", created.homepage_url
     assert_equal "https://instagram.com/manual", created.instagram_url
     assert_equal "https://facebook.com/manual", created.facebook_url
-    assert_equal "10135", created.promoter_id
+    assert_equal "382", created.promoter_id
+    assert_equal "RUSS Live", created.promoter_name
     assert_predicate created, :highlighted?
     assert_equal "ready_for_publish", created.status
     assert_equal [ "Pop" ], created.genres.order(:name).pluck(:name)
@@ -714,6 +717,21 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :unprocessable_entity
     assert_includes response.body, "temporäre Upload ist ungültig oder abgelaufen"
+  end
+
+  test "update ignores submitted promoter id changes" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        promoter_id: "99999",
+        title: "Review Event aktualisiert"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal @event.promoter_id, @event.reload.promoter_id
+    assert_equal "Review Event aktualisiert", @event.title
   end
 
   test "create validation error keeps presenters tab active and preserves presenter order" do

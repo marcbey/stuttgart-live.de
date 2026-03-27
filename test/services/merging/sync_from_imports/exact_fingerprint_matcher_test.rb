@@ -16,6 +16,7 @@ class Merging::SyncFromImports::ExactFingerprintMatcherTest < ActiveSupport::Tes
       city: nil,
       venue: "Other Venue",
       promoter_id: nil,
+      promoter_name: nil,
       badge_text: nil,
       youtube_url: nil,
       homepage_url: nil,

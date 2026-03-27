@@ -49,8 +49,8 @@ module Backend::EventsHelper
     context_parts.join(" · ")
   end
 
-  def event_display_promoter_id(event)
-    event_payload_presenter(event).display_promoter_id
+  def event_display_promoter(event)
+    event_payload_presenter(event).display_promoter
   end
 
   def event_display_ticket_url(event)

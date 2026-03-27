@@ -129,8 +129,9 @@ Wichtig für Updates bestehender Events:
 - `source_snapshot` wird quellenübergreifend zusammengeführt, statt bei späteren Merges nur noch den zuletzt verarbeiteten Provider zu enthalten.
 - `event_offers` werden quellenweise auf den aktuellen Importstand synchronisiert: bestehende passende Offers werden aktualisiert, neue angelegt und nur Offers derselben gerade verarbeiteten Quelle entfernt, wenn sie dort nicht mehr vorkommen.
 - Bilder werden ebenfalls quellenweise auf den aktuellen Merge-Stand synchronisiert.
-- `title`, `artist_name`, `city`, `promoter_id`, `youtube_url`, `homepage_url`, `facebook_url` und `event_info` werden bei einem bestehenden Event durch den Merge nicht überschrieben. Diese Felder werden nur beim erstmaligen Anlegen aus den Importdaten vorbelegt.
+- `title`, `artist_name`, `city`, `promoter_id`, `promoter_name`, `youtube_url`, `homepage_url`, `facebook_url` und `event_info` werden bei einem bestehenden Event durch den Merge nicht überschrieben. Diese Felder werden nur beim erstmaligen Anlegen aus den Importdaten vorbelegt.
 - Manuelle redaktionelle Änderungen an genau diesen nicht überschriebenen Feldern bleiben bei späteren Merge-Läufen deshalb erhalten.
+- Aktuell liefert nur `Reservix` einen lesbaren Veranstalternamen für `promoter_name`; `Eventim` und `Easyticket` liefern im aktuellen Rohdatenmodell weiterhin nur IDs.
 
 Für die öffentliche Sichtbarkeit gilt zusätzlich:
 

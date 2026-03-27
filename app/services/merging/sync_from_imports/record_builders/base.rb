@@ -35,6 +35,7 @@ module Merging
             city: city.to_s.strip.presence,
             venue: venue_value,
             promoter_id: promoter_id.to_s.strip.presence,
+            promoter_name: promoter_name.to_s.strip.presence,
             badge_text: badge_text.to_s.strip.presence,
             youtube_url: youtube_url.to_s.strip.presence,
             homepage_url: homepage_url.to_s.strip.presence,
@@ -60,6 +61,10 @@ module Merging
 
         def source_type
           source
+        end
+
+        def promoter_name
+          nil
         end
 
         def source_identifier

@@ -23,9 +23,10 @@ class Backend::Events::SourcePayloadPresenterTest < ActiveSupport::TestCase
     assert_includes payload_source.formatted_payload, "\"promoterid\": \"36\""
   end
 
-  test "uses eventim payload projection to derive promoter id" do
+  test "prefers promoter name over promoter id" do
     event = Event.new(
-      promoter_id: "",
+      promoter_id: "36",
+      promoter_name: "Reservix Veranstalter",
       source_snapshot: {
         "sources" => [
           {
@@ -46,15 +47,15 @@ class Backend::Events::SourcePayloadPresenterTest < ActiveSupport::TestCase
 
     presenter = Backend::Events::SourcePayloadPresenter.new(event)
 
-    assert_equal "36", presenter.display_promoter_id
+    assert_equal "Reservix Veranstalter", presenter.display_promoter
   end
 
-  test "prefers direct event promoter id" do
+  test "falls back to promoter id when no promoter name is present" do
     event = Event.new(promoter_id: "10135", source_snapshot: {})
 
     presenter = Backend::Events::SourcePayloadPresenter.new(event)
 
-    assert_equal "10135", presenter.display_promoter_id
+    assert_equal "10135", presenter.display_promoter
   end
 
   test "keeps payload sources available without raw event imports" do

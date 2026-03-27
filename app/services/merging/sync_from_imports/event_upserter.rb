@@ -73,6 +73,7 @@ module Merging
           event.artist_name = first_present(records, &:artist_name)
           event.city = first_present_or_nil(records, &:city)
           event.promoter_id = first_present_or_nil(records, &:promoter_id)
+          event.promoter_name = first_present_or_nil(records, &:promoter_name)
           event.youtube_url = first_present_or_nil(records, &:youtube_url)
           event.homepage_url = first_present_or_nil(records, &:homepage_url)
           event.facebook_url = first_present_or_nil(records, &:facebook_url)
@@ -274,6 +275,7 @@ module Merging
           "city" => record.city,
           "venue" => record.venue,
           "promoter_id" => record.promoter_id,
+          "promoter_name" => record.promoter_name,
           "badge_text" => record.badge_text,
           "youtube_url" => record.youtube_url,
           "homepage_url" => record.homepage_url,

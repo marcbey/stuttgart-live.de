@@ -408,6 +408,7 @@ class Event < ApplicationRecord
     self.facebook_url = facebook_url.to_s.strip.presence
     self.youtube_url = youtube_url.to_s.strip.presence
     self.promoter_id = promoter_id.to_s.strip.presence
+    self.promoter_name = promoter_name.to_s.strip.presence
     self.primary_source = primary_source.to_s.strip.presence
     self.event_series_assignment = event_series_assignment.to_s.strip.presence || "auto"
     self.source_snapshot = {} unless source_snapshot.is_a?(Hash)

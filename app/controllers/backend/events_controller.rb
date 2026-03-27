@@ -1,5 +1,8 @@
 module Backend
   class EventsController < BaseController
+    MANUAL_EVENT_PROMOTER_ID = "382".freeze
+    MANUAL_EVENT_PROMOTER_NAME = "RUSS Live".freeze
+
     before_action :set_event, only: [ :show, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :set_available_merge_runs
     before_action :set_inbox_state
@@ -41,7 +44,7 @@ module Backend
     end
 
     def create
-      @event = Event.new(event_attribute_params)
+      @event = Event.new(event_attribute_params.merge(manual_event_promoter_attributes))
       prepare_promotion_banner_image(@event)
       @selected_genre_ids = genre_ids_from_params
       @selected_presenter_ids = presenter_ids_from_params
@@ -91,7 +94,7 @@ module Backend
         rescue EventImage::ProcessingError => e
           creation_alert = e.message
           @event.destroy! if @event.persisted?
-          @event = Event.new(event_params)
+          @event = Event.new(event_attribute_params.merge(manual_event_promoter_attributes))
           created_successfully = false
         end
       end
@@ -331,7 +334,6 @@ module Backend
         :instagram_url,
         :facebook_url,
         :youtube_url,
-        :promoter_id,
         :highlighted,
         :promotion_banner,
         :promotion_banner_kicker_text,
@@ -408,7 +410,11 @@ module Backend
     end
 
     def prepare_new_event_state!
-      @event ||= Event.new(start_at: Time.current.change(hour: 20, min: 0), status: "needs_review")
+      @event ||= Event.new(
+        start_at: Time.current.change(hour: 20, min: 0),
+        status: "needs_review",
+        **manual_event_promoter_attributes
+      )
       @selected_genre_ids ||= []
       @selected_presenter_ids ||= []
       @manual_image_form_values ||= {}
@@ -517,6 +523,21 @@ module Backend
 
     def genre_ids_from_params
       Array(params.dig(:event, :genre_ids)).reject(&:blank?).map(&:to_i)
+    end
+
+    def manual_event_promoter_id
+      MANUAL_EVENT_PROMOTER_ID
+    end
+
+    def manual_event_promoter_name
+      MANUAL_EVENT_PROMOTER_NAME
+    end
+
+    def manual_event_promoter_attributes
+      {
+        promoter_id: manual_event_promoter_id,
+        promoter_name: manual_event_promoter_name
+      }
     end
 
     def presenter_ids_from_params

@@ -75,6 +75,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     event = Event.find_by!(artist_name: "Band A", start_at: Time.zone.local(2026, 11, 10, 20, 0, 0))
     assert_equal "easyticket", event.primary_source
     assert_equal "382", event.promoter_id
+    assert_nil event.promoter_name
     assert_equal "published", event.status
     assert_equal true, event.auto_published
     assert_equal "Easy Headline\nEasy Line", event.event_info
@@ -106,6 +107,115 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal "needs_review", event.status
     assert_equal false, event.auto_published
     assert_includes event.completeness_flags, "missing_image"
+  end
+
+  test "uses reservix public organizer name for promoter_name while keeping promoter_id from the prioritized source" do
+    source_reservix = ImportSource.ensure_reservix_source!
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "merge-name-easy:2026-12-08",
+      payload: {
+        "event_id" => "merge-name-easy",
+        "date_time" => "2026-12-08 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Im Wizemann",
+        "title_1" => "Band Named",
+        "title_2" => "Named Night",
+        "organizer_id" => "382",
+        "ticket_url" => "https://example.com/easy-name",
+        "data" => {
+          "images" => {
+            "merge-name-easy" => {
+              "large" => "https://example.com/easy-name.jpg"
+            }
+          }
+        }
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: source_reservix,
+      import_event_type: "reservix",
+      source_identifier: "merge-name-reservix",
+      payload: {
+        "id" => "merge-name-reservix",
+        "name" => "Named Night",
+        "artist" => "Band Named",
+        "bookable" => true,
+        "startdate" => "2026-12-08",
+        "starttime" => "20:00",
+        "affiliateSaleUrl" => "https://example.com/reservix-name",
+        "publicOrganizerName" => "Reservix Veranstalter",
+        "references" => {
+          "venue" => [ { "name" => "Im Wizemann", "city" => "Stuttgart" } ],
+          "organizer" => [ { "id" => 7295, "name" => "Abweichender Organizer" } ],
+          "image" => [
+            {
+              "url" => "https://example.com/reservix-name.jpg",
+              "type" => 1
+            }
+          ]
+        }
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(artist_name: "Band Named", start_at: Time.zone.local(2026, 12, 8, 20, 0, 0))
+    assert_equal "382", event.promoter_id
+    assert_equal "Reservix Veranstalter", event.promoter_name
+
+    reservix_snapshot = event.source_snapshot.fetch("sources").find { |source| source["source"] == "reservix" }
+    assert_equal "Reservix Veranstalter", reservix_snapshot["promoter_name"]
+  end
+
+  test "does not overwrite promoter_name on later merges" do
+    source_reservix = ImportSource.ensure_reservix_source!
+    source_identifier = "merge-promoter-name-stable"
+
+    raw_import = RawEventImport.create!(
+      import_source: source_reservix,
+      import_event_type: "reservix",
+      source_identifier: source_identifier,
+      payload: {
+        "id" => "merge-promoter-name-stable",
+        "name" => "Stable Night",
+        "artist" => "Stable Artist",
+        "bookable" => true,
+        "startdate" => "2026-12-09",
+        "starttime" => "20:00",
+        "affiliateSaleUrl" => "https://example.com/reservix-stable",
+        "publicOrganizerName" => "Erster Veranstalter",
+        "references" => {
+          "venue" => [ { "name" => "Im Wizemann", "city" => "Stuttgart" } ],
+          "image" => [
+            {
+              "url" => "https://example.com/reservix-stable.jpg",
+              "type" => 1
+            }
+          ]
+        }
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(artist_name: "Stable Artist")
+    assert_equal "Erster Veranstalter", event.promoter_name
+
+    raw_import.update!(
+      payload: raw_import.payload.merge(
+        "publicOrganizerName" => "Zweiter Veranstalter"
+      )
+    )
+
+    Merging::SyncFromImports.new.call
+
+    assert_equal "Erster Veranstalter", event.reload.promoter_name
+    reservix_snapshot = event.source_snapshot.fetch("sources").find { |source| source["source"] == "reservix" }
+    assert_equal "Zweiter Veranstalter", reservix_snapshot["promoter_name"]
   end
 
   test "publishes existing needs_review event when a later merge provides the missing image and completeness is restored" do

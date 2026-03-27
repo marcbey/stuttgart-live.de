@@ -128,14 +128,14 @@ Canonical event lookup key is `events.source_fingerprint`.
 
 ### 5) Field resolution
 
-For merged fields, the first non-blank value from the ordered provider list wins:
+For imported create defaults, the first non-blank value from the ordered provider list wins:
 
 - `title`
 - `artist_name`
 - `city`
 - `venue`
-- `organizer_name`
 - `promoter_id`
+- `promoter_name`
 
 Also set:
 
@@ -219,11 +219,18 @@ These are merge-controlled and may be overwritten on the next merge:
 - `city`
 - `venue`
 - `start_at`
-- `organizer_name`
-- `promoter_id`
 - `primary_source`
 - `source_snapshot`
 - status (subject to protection rules above)
+
+### Create-only imported defaults
+
+These are populated from imports when a canonical event is first created and are not overwritten on later merges:
+
+- `promoter_id`
+- `promoter_name`
+
+`promoter_name` is currently sourced only from Reservix via `publicOrganizerName`. Eventim and Easyticket do not provide a reliable readable organizer name in the current raw payload shape.
 
 ### Editor-owned fields
 

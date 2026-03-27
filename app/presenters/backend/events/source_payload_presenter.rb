@@ -24,19 +24,9 @@ module Backend
         @event = event
       end
 
-      def display_promoter_id
-        promoter_id = event.promoter_id.to_s.strip
-        return promoter_id if promoter_id.present?
-
-        payload_sources.each do |payload_source|
-          next unless payload_source.source == "eventim"
-
-          attributes = Importing::Eventim::PayloadProjection.new(feed_payload: payload_source.payload).to_attributes
-          candidate = attributes&.dig(:promoter_id).to_s.strip
-          return candidate if candidate.present?
-        end
-
-        nil
+      def display_promoter
+        event.promoter_name.to_s.strip.presence ||
+          event.promoter_id.to_s.strip.presence
       end
 
       def payload_sources
@@ -61,6 +51,8 @@ module Backend
       private
 
       attr_reader :event
+
+      alias_method :display_promoter_id, :display_promoter
     end
   end
 end

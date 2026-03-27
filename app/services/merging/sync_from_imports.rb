@@ -22,6 +22,7 @@ module Merging
       :city,
       :venue,
       :promoter_id,
+      :promoter_name,
       :badge_text,
       :youtube_url,
       :homepage_url,

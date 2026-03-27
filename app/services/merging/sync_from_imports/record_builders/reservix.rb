@@ -53,6 +53,10 @@ module Merging
           first_value_for_keys(%w[promoterid promoter_id organizerid organizer_id organizer])
         end
 
+        def promoter_name
+          payload["publicOrganizerName"].to_s.strip
+        end
+
         def badge_text
           first_value_for_keys(%w[badge badge_text label tag])
         end
