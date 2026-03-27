@@ -302,7 +302,6 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_includes response.body, "Diese Jobs holen Rohdaten direkt von Easyticket, Eventim und Reservix ab"
     assert_includes response.body, "Diese Jobs lesen die aktuellen Rohimporte aller Quellen"
-    assert_includes response.body, "Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Run in die serielle Warteschlange eingereiht"
     assert_includes response.body, "Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten"
     assert_includes response.body, "Diese Jobs analysieren die im System vorhandenen Rohgenre-Werte"
   end

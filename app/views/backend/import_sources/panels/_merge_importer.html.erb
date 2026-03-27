@@ -9,7 +9,7 @@
   </div>
   <p class="import-runs-note">
     Diese Jobs lesen die aktuellen Rohimporte aller Quellen, erkennen Dubletten providerübergreifend und schreiben daraus die zusammengeführten `events`, `event_offers` und Importbilder.
-    Damit entsteht aus mehreren externen Quellen ein konsolidierter Event-Bestand. Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Run in die serielle Warteschlange eingereiht.
+    Damit entsteht aus mehreren externen Quellen ein konsolidierter Event-Bestand.
   </p>
   <% if runs.any? %>
     <div class="table-wrap">
