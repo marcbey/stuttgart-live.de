@@ -13,5 +13,8 @@
     "esbuild": "^0.27.3",
     "tailwindcss": "^4.2.1",
     "trix": "^2.1.17"
+  },
+  "resolutions": {
+    "picomatch": "^4.0.4"
   }
 }

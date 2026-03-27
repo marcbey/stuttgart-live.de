@@ -29,34 +29,30 @@ module Public
       patterns = Public::Events::SearchQueryNormalizer.wildcard_patterns(raw_query)
       return relation if patterns.empty?
 
-      binds = {}
-      conditions = patterns.each_with_index.map do |pattern, index|
-        binds[:"pattern_#{index}"] = pattern
-        "#{searchable_text_sql} ILIKE :pattern_#{index}"
-      end
-
       raw_token = "%#{ActiveRecord::Base.sanitize_sql_like(raw_query)}%"
-      binds[:raw_token] = raw_token
+      searchable_text = searchable_text_node
+      columns = searchable_columns
 
-      relation.where(
-        [
-          *conditions,
-          "events.artist_name ILIKE :raw_token",
-          "events.title ILIKE :raw_token",
-          "events.venue ILIKE :raw_token",
-          "events.city ILIKE :raw_token"
-        ].join(" OR "),
-        binds
-      )
+      wildcard_matches = patterns.map { |pattern| searchable_text.matches(pattern) }
+      raw_matches = columns.map { |column| column.matches(raw_token) }
+      predicate = (wildcard_matches + raw_matches).reduce { |combined, condition| combined.or(condition) }
+
+      relation.where(predicate)
     end
 
-    def searchable_text_sql
-      <<~SQL.squish
-        COALESCE(events.artist_name, '') || ' ' ||
-        COALESCE(events.title, '') || ' ' ||
-        COALESCE(events.venue, '') || ' ' ||
-        COALESCE(events.city, '')
-      SQL
+    def searchable_columns
+      events = Event.arel_table
+      [ events[:artist_name], events[:title], events[:venue], events[:city] ]
+    end
+
+    def searchable_text_node
+      searchable_columns.map do |column|
+        Arel::Nodes::NamedFunction.new("COALESCE", [ column, Arel::Nodes.build_quoted("") ])
+      end.reduce do |combined, column|
+        combined
+          .concat(Arel::Nodes.build_quoted(" "))
+          .concat(column)
+      end
     end
   end
 end

@@ -119,7 +119,11 @@ module ApplicationHelper
       focus_y: image.card_focus_y_value,
       zoom: image.card_zoom_value,
       frame_ratio: frame_ratio,
-      fallback_style: event_card_image_style(image)
+      fallback_style: focused_cropped_fallback_style(
+        focus_x: image.card_focus_x_value,
+        focus_y: image.card_focus_y_value,
+        zoom: image.card_zoom_value
+      )
     )
   end
 
@@ -145,7 +149,7 @@ module ApplicationHelper
       focus_y: event.promotion_banner_image_focus_y_value,
       zoom: event.promotion_banner_image_zoom_value,
       frame_ratio: frame_ratio,
-      fallback_style: focused_image_style(
+      fallback_style: focused_cropped_fallback_style(
         focus_x: event.promotion_banner_image_focus_x_value,
         focus_y: event.promotion_banner_image_focus_y_value,
         zoom: event.promotion_banner_image_zoom_value
@@ -204,7 +208,11 @@ module ApplicationHelper
       focus_y: blog_post.public_send("#{slot}_focus_y_value"),
       zoom: blog_post.public_send("#{slot}_zoom_value"),
       frame_ratio: frame_ratio,
-      fallback_style: blog_post_image_style(blog_post, slot)
+      fallback_style: focused_cropped_fallback_style(
+        focus_x: blog_post.public_send("#{slot}_focus_x_value"),
+        focus_y: blog_post.public_send("#{slot}_focus_y_value"),
+        zoom: blog_post.public_send("#{slot}_zoom_value")
+      )
     )
   end
 
@@ -223,6 +231,23 @@ module ApplicationHelper
       "object-position: #{focus_x}% #{focus_y}%",
       "transform: scale(#{(zoom.to_f / 100.0).round(3)})",
       "transform-origin: #{focus_x}% #{focus_y}%"
+    ].join("; ")
+  end
+
+  def focused_cropped_fallback_style(focus_x:, focus_y:, zoom:)
+    zoom_scale = zoom.to_f / 100.0
+    offset_x = 0.5 - ((focus_x.to_f / 100.0) * zoom_scale)
+    offset_y = 0.5 - ((focus_y.to_f / 100.0) * zoom_scale)
+
+    [
+      "position: absolute",
+      "left: #{(offset_x * 100).round(3)}%",
+      "top: #{(offset_y * 100).round(3)}%",
+      "width: #{(zoom_scale * 100).round(3)}%",
+      "height: #{(zoom_scale * 100).round(3)}%",
+      "object-fit: fill",
+      "max-width: none",
+      "max-height: none"
     ].join("; ")
   end
 
