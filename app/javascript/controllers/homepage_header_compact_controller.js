@@ -28,7 +28,7 @@ export default class extends Controller {
 
   handleResize() {
     if (!this.isDesktop()) {
-      this.deactivateCompactMode()
+      this.activateCompactMode()
       return
     }
 
@@ -38,7 +38,7 @@ export default class extends Controller {
 
   update() {
     if (!this.isDesktop()) {
-      this.deactivateCompactMode()
+      this.activateCompactMode()
       return
     }
 
@@ -71,6 +71,10 @@ export default class extends Controller {
 
     this.element.classList.remove("is-compact")
     this.closeMenu()
+  }
+
+  activateCompactMode() {
+    this.element.classList.add("is-compact")
   }
 
   closeMenu() {
