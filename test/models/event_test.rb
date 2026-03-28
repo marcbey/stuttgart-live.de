@@ -182,6 +182,154 @@ class EventTest < ActiveSupport::TestCase
     assert_equal 0, queries
   end
 
+  test "editor_ticket_offer prefers imported offers over manual offers" do
+    event = Event.create!(
+      slug: "editor-ticket-offer-priority",
+      source_fingerprint: "test::event::editor-ticket-offer-priority",
+      artist_name: "Editor Artist",
+      title: "Editor Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+    manual_offer = event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/tickets",
+      sold_out: false,
+      priority_rank: 0
+    )
+    imported_offer = event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "eventim-1",
+      ticket_url: "https://eventim.example/tickets",
+      sold_out: true,
+      priority_rank: 50
+    )
+
+    assert_equal imported_offer, event.editor_ticket_offer
+    assert_equal manual_offer, event.manual_ticket_offer
+  end
+
+  test "public_ticket_offer blocks manual fallback when imported primary offer is unavailable" do
+    event = Event.create!(
+      slug: "public-ticket-offer-blocks-manual",
+      source_fingerprint: "test::event::public-ticket-offer-blocks-manual",
+      artist_name: "Public Artist",
+      title: "Public Tour",
+      start_at: Time.zone.local(2026, 10, 11, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.hour.ago
+    )
+    imported_offer = event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-1",
+      ticket_url: "https://easyticket.example/tickets",
+      sold_out: true,
+      priority_rank: 0
+    )
+    manual_offer = event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/tickets",
+      sold_out: false,
+      priority_rank: 0
+    )
+
+    assert_equal imported_offer, event.editor_ticket_offer
+    assert_nil event.public_ticket_offer
+    assert_equal manual_offer, event.manual_ticket_offer
+  end
+
+  test "public_ticket_offer falls back to manual when no imported offer exists" do
+    event = Event.create!(
+      slug: "public-ticket-offer-manual-fallback",
+      source_fingerprint: "test::event::public-ticket-offer-manual-fallback",
+      artist_name: "Manual Artist",
+      title: "Manual Tour",
+      start_at: Time.zone.local(2026, 10, 12, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.hour.ago
+    )
+    manual_offer = event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/fallback",
+      sold_out: false,
+      priority_rank: 0
+    )
+
+    assert_equal manual_offer, event.editor_ticket_offer
+    assert_equal manual_offer, event.public_ticket_offer
+  end
+
+  test "public_ticket_status_offer prefers imported offers over manual offers" do
+    event = Event.create!(
+      slug: "public-ticket-status-offer-priority",
+      source_fingerprint: "test::event::public-ticket-status-offer-priority",
+      artist_name: "Status Artist",
+      title: "Status Tour",
+      start_at: Time.zone.local(2026, 10, 13, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.hour.ago
+    )
+    manual_offer = event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/status",
+      sold_out: false,
+      priority_rank: 0
+    )
+    imported_offer = event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-status-1",
+      ticket_url: "https://easyticket.example/status",
+      sold_out: true,
+      priority_rank: 10
+    )
+
+    assert_equal imported_offer, event.public_ticket_status_offer
+    assert_not_equal manual_offer, event.public_ticket_status_offer
+  end
+
+  test "public_sold_out? follows the leading public ticket status offer" do
+    event = Event.create!(
+      slug: "public-sold-out-leading-offer",
+      source_fingerprint: "test::event::public-sold-out-leading-offer",
+      artist_name: "Sold Out Artist",
+      title: "Sold Out Tour",
+      start_at: Time.zone.local(2026, 10, 14, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.hour.ago
+    )
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-sold-out-1",
+      ticket_url: "https://easyticket.example/sold-out",
+      sold_out: true,
+      priority_rank: 0
+    )
+    event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/available",
+      sold_out: false,
+      priority_rank: 0
+    )
+
+    assert_predicate event, :public_sold_out?
+    assert_nil event.public_ticket_offer
+  end
+
   test "primary_genre uses loaded genres without extra queries" do
     event = Event.includes(:genres).find(events(:published_one).id)
     expected_genre = genres(:rock)

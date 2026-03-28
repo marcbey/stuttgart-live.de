@@ -28,6 +28,9 @@
         <span class="event-card-ticket-arrow">↓</span>
         <span class="event-card-ticket-label">TICKETS</span>
       </span>
+      <% if event.public_sold_out? %>
+        <%= render "sold_out_corner_ribbon" %>
+      <% end %>
       <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
         <%= render "event_series_corner_badge" %>
       <% end %>

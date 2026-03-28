@@ -134,7 +134,7 @@ module Public::EventsHelper
     image.alt_text.presence || default_alt
   end
 
-  def public_event_ticket_price(event, offer = event.preferred_ticket_offer)
+  def public_event_ticket_price(event, offer = event.public_ticket_offer)
     return unless offer.present?
 
     if event.min_price.present? && event.max_price.present? && event.min_price < event.max_price

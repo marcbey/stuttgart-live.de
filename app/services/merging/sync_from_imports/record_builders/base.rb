@@ -47,6 +47,7 @@ module Merging
             genre: normalized_genre(genre),
             ticket_url: ticket_url.to_s.strip.presence,
             ticket_price_text: ticket_price_text.to_s.strip.presence,
+            sold_out: sold_out,
             raw_payload: payload
           )
         end
@@ -161,6 +162,10 @@ module Merging
           return nil if raw_value.blank?
 
           raw_value.split(/[;,]/).first.to_s.strip.presence
+        end
+
+        def sold_out
+          false
         end
 
         def parse_date(value)

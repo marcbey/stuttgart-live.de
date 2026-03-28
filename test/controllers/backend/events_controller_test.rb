@@ -97,7 +97,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_event_url(@published_event, status: "published")
 
     assert_response :success
-    assert_select "input[name='event[ticket_url]'][value='https://example.com/tickets/published']"
+    assert_select "h3", text: "Ticket"
+    assert_select "input#ticket_sold_out_event_#{@published_event.id}[type='checkbox'][disabled]", count: 1
+    assert_select "input#ticket_url_event_#{@published_event.id}[readonly][value='https://example.com/tickets/published']"
+    assert_select "input[name='event[ticket_url]']", count: 0
+    assert_includes response.body, "Quelle: easyticket"
   end
 
   test "new redirects to inbox split layout" do
@@ -148,6 +152,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "label.form-label", text: "Promoter"
     assert_select "input[readonly]#promoter_display_event[value='RUSS Live']", count: 1
     assert_select "input[name='event[ticket_url]']"
+    assert_select "input[name='event[ticket_sold_out]'][type='hidden'][value='0']"
+    assert_select "input[name='event[ticket_sold_out]'][type='checkbox'][value='1']"
     assert_select "input[name='event[support]']"
     assert_select "textarea[name='event[organizer_notes]']"
     assert_select "input[name='event[show_organizer_notes]'][type='checkbox']"
@@ -694,6 +700,80 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     created.event_images.slider.each do |image|
       assert_nothing_raised { image.processed_optimized_variant }
     end
+  end
+
+  test "creates manual sold out offer without ticket url" do
+    sign_in_as(@user)
+
+    assert_difference("Event.count", 1) do
+      assert_difference("EventOffer.count", 1) do
+        post backend_events_url, params: {
+          event: {
+            artist_name: "Sold Out Artist",
+            title: "Sold Out Tour",
+            start_at: Time.zone.parse("2026-09-01 20:00:00"),
+            venue: "Im Wizemann",
+            city: "Stuttgart",
+            promoter_id: "10135",
+            ticket_sold_out: "1",
+            status: "needs_review"
+          }
+        }
+      end
+    end
+
+    created = Event.order(:id).last
+    offer = created.manual_ticket_offer
+
+    assert_equal "manual", offer.source
+    assert_nil offer.ticket_url
+    assert_equal true, offer.sold_out
+    assert_nil created.public_ticket_offer
+    assert_equal offer, created.editor_ticket_offer
+  end
+
+  test "create rejects invalid manual ticket url" do
+    sign_in_as(@user)
+
+    assert_no_difference("Event.count") do
+      post backend_events_url, params: {
+        event: {
+          artist_name: "Invalid URL Artist",
+          title: "Invalid URL Tour",
+          start_at: Time.zone.parse("2026-09-02 20:00:00"),
+          venue: "Im Wizemann",
+          city: "Stuttgart",
+          promoter_id: "10135",
+          ticket_url: "not-a-url",
+          status: "needs_review"
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Ticket-URL muss mit http:// oder https:// beginnen."
+    assert_select "input#ticket_url_event[value='not-a-url']"
+  end
+
+  test "update rejects invalid manual ticket url" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: @event.title,
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue: @event.venue,
+        city: @event.city,
+        ticket_url: "tickets-without-scheme",
+        status: @event.status
+      }
+    }, as: :turbo_stream
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, "Ticket-URL muss mit http:// oder https:// beginnen."
+    assert_select "input#ticket_url_event_#{@event.id}[value='tickets-without-scheme']"
+    assert_nil @event.reload.manual_ticket_offer
   end
 
   test "rerenders new form when a preuploaded image signed id is invalid" do

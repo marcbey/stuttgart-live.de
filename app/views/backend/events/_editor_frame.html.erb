@@ -7,7 +7,9 @@
                  all_presenters: all_presenters,
                  next_event_enabled: next_event_enabled,
                  filter_status: filter_status,
-                 active_editor_tab: local_assigns[:active_editor_tab] %>
+                 active_editor_tab: local_assigns[:active_editor_tab],
+                 manual_ticket_url: local_assigns[:manual_ticket_url],
+                 manual_ticket_sold_out: local_assigns[:manual_ticket_sold_out] %>
     <% else %>
       <%= render "backend/events/new_editor_panel",
                  event: event,
@@ -17,6 +19,7 @@
                  selected_genre_ids: local_assigns.fetch(:selected_genre_ids, []),
                  selected_presenter_ids: local_assigns.fetch(:selected_presenter_ids, []),
                  manual_ticket_url: local_assigns[:manual_ticket_url],
+                 manual_ticket_sold_out: local_assigns[:manual_ticket_sold_out],
                  editor_form_id: dom_id(event, :editor_form),
                  active_editor_tab: local_assigns.fetch(:active_editor_tab, "event"),
                  manual_image_form_values: local_assigns.fetch(:manual_image_form_values, {}) %>

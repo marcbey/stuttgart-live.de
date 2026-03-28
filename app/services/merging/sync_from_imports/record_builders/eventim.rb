@@ -108,6 +108,15 @@ module Merging
           format_price_range(min_price, max_price)
         end
 
+        def sold_out
+          categories = eventim_price_categories
+          return false if categories.empty?
+
+          !categories.any? do |entry|
+            inventory_label(entry) == "buchbar"
+          end
+        end
+
         def prices
           @prices ||= eventim_price_categories.filter_map { |entry| parse_decimal(entry["price"] || entry[:price]) }
         end
@@ -122,6 +131,10 @@ module Merging
           else
             []
           end
+        end
+
+        def inventory_label(entry)
+          entry["inventory"].to_s.strip.downcase
         end
       end
     end

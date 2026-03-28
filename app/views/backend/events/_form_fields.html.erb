@@ -1,6 +1,5 @@
 <% show_promoter_id = local_assigns.fetch(:show_promoter_id, false) %>
 <% display_promoter = show_promoter_id ? (local_assigns[:display_promoter] || event_display_promoter(event)) : nil %>
-<% manual_ticket_url = local_assigns.fetch(:manual_ticket_url, event_display_ticket_url(event)) %>
 <% show_settings_section = local_assigns.fetch(:show_settings_section, true) %>
 <% selected_genre_ids = Array(local_assigns.fetch(:selected_genre_ids, event.genre_ids)).map(&:to_i) %>
 
@@ -73,12 +72,6 @@
     <%= form.label :facebook_url, "Facebook URL", class: "form-label" %>
     <%= form.url_field :facebook_url, class: "form-input" %>
   </div>
-  <% if manual_ticket_url.present? || !event.persisted? %>
-    <div>
-      <%= label_tag "event_ticket_url", "Ticket-URL", class: "form-label" %>
-      <%= url_field_tag "event[ticket_url]", manual_ticket_url, id: "event_ticket_url", class: "form-input" %>
-    </div>
-  <% end %>
 </div>
 
 <div>

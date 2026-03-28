@@ -47,7 +47,7 @@ module Public
 
     def show
       @event = show_events_relation.find_by!(slug: params[:slug])
-      @primary_offer = @event.preferred_ticket_offer
+      @primary_offer = @event.public_ticket_offer
       @event_series_lane = Public::Events::EventSeriesLaneBuilder.new(
         event: @event,
         relation: show_event_series_lane_relation

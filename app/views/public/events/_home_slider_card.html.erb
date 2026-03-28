@@ -24,6 +24,9 @@
         <span class="home-slider-card-ticket-arrow">↓</span>
         <span class="home-slider-card-ticket-label">TICKETS</span>
       </span>
+      <% if event.public_sold_out? %>
+        <%= render "sold_out_corner_ribbon" %>
+      <% end %>
     <% end %>
 
     <% if authenticated? %>

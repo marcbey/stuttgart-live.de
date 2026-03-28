@@ -1722,6 +1722,108 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "https://eventim.example/tickets"
   end
 
+  test "search result event cards show an ausverkauft ribbon for sold out leading offers" do
+    event = Event.create!(
+      slug: "search-sold-out-ribbon",
+      source_fingerprint: "test::public::search::sold-out-ribbon",
+      title: "Search Ribbon Tour",
+      artist_name: "Search Ribbon Artist",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-search-ribbon-1",
+      ticket_url: "https://easyticket.example/search-ribbon",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/search-ribbon",
+      sold_out: false,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    Event.create!(
+      slug: "search-sold-out-ribbon-companion",
+      source_fingerprint: "test::public::search::sold-out-ribbon-companion",
+      title: "Search Ribbon Companion",
+      artist_name: "Search Ribbon Collective",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get events_url(q: "Search Ribbon")
+
+    assert_response :success
+    assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", text: "Ausverkauft"
+  end
+
+  test "search result event cards do not show an ausverkauft ribbon when the leading imported offer is available" do
+    event = Event.create!(
+      slug: "search-available-no-ribbon",
+      source_fingerprint: "test::public::search::available-no-ribbon",
+      title: "Available Ribbon Tour",
+      artist_name: "Available Ribbon Artist",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-search-ribbon-2",
+      ticket_url: "https://easyticket.example/search-available",
+      sold_out: false,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/search-sold-out",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    Event.create!(
+      slug: "search-available-no-ribbon-companion",
+      source_fingerprint: "test::public::search::available-no-ribbon-companion",
+      title: "Available Ribbon Companion",
+      artist_name: "Available Ribbon Collective",
+      start_at: 13.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get events_url(q: "Available Ribbon")
+
+    assert_response :success
+    assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", count: 0
+  end
+
   test "show prefers easyticket offer for primary ticket cta" do
     event = Event.create!(
       slug: "show-ticket-priority",
@@ -1760,6 +1862,107 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "https://easyticket.example/show-tickets"
     assert_not_includes response.body, "https://eventim.example/show-tickets"
     assert_select ".event-detail-cta .status-badge", text: "easyticket"
+  end
+
+  test "show hides ticket cta when imported primary offer is sold out even if a manual offer exists" do
+    event = Event.create!(
+      slug: "show-imported-sold-out-blocks-manual",
+      source_fingerprint: "test::public::show::imported-sold-out-blocks-manual",
+      title: "Sold Out Priority",
+      artist_name: "Sold Out Artist",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-sold-out-123",
+      ticket_url: "https://easyticket.example/sold-out",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/still-open",
+      sold_out: false,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-cta", count: 0
+    assert_not_includes response.body, "https://manual.example/still-open"
+    assert_not_includes response.body, "https://easyticket.example/sold-out"
+    assert_not_includes response.body, "Tickets sichern"
+  end
+
+  test "genre lane cards render sold out ribbon above the event series badge while list rows stay unchanged" do
+    create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    series = EventSeries.create!(origin: "manual", name: "Ribbon Reihe")
+    event = Event.create!(
+      slug: "genre-lane-sold-out-ribbon",
+      source_fingerprint: "test::public::genre-lane::sold-out-ribbon",
+      title: "Genre Ribbon Tour",
+      artist_name: "Genre Ribbon Artist",
+      start_at: 13.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+    companion_event = Event.create!(
+      slug: "genre-lane-sold-out-ribbon-companion",
+      source_fingerprint: "test::public::genre-lane::sold-out-ribbon-companion",
+      title: "Genre Ribbon Tour II",
+      artist_name: "Genre Ribbon Artist",
+      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: companion_event, genres: [ "Rock" ])
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-genre-ribbon-1",
+      ticket_url: "https://easyticket.example/genre-ribbon",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    card = document.css("article.genre-lane-card").find do |node|
+      node.at_css(".genre-lane-card-name")&.text == event.artist_name
+    end
+
+    assert card.present?, "expected sold out genre lane card to be rendered"
+    assert_equal 1, card.css(".event-sold-out-ribbon").size
+    assert_equal 1, card.css(".event-series-badge").size
+    assert_select ".event-listing-card .event-sold-out-ribbon", count: 0
   end
 
   test "show renders published event by slug" do

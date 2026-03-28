@@ -140,6 +140,18 @@ module Merging
           payload["price_text"].to_s.strip.presence || format_price_range(min_price, max_price)
         end
 
+        def sold_out
+          return true if ActiveModel::Type::Boolean.new.cast(payload["not_bookable"])
+
+          availability = payload["structured_data_availability"].to_s.strip.downcase
+          return false if availability.blank?
+
+          availability.include?("soldout") ||
+            availability.include?("sold_out") ||
+            availability.include?("outofstock") ||
+            availability.include?("out_of_stock")
+        end
+
         def detail_payload
           raw_event_import.detail_payload.is_a?(Hash) ? raw_event_import.detail_payload.deep_stringify_keys : {}
         end

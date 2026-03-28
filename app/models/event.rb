@@ -212,6 +212,52 @@ class Event < ApplicationRecord
       .first
   end
 
+  def imported_primary_ticket_offer
+    if association(:event_offers).loaded?
+      return loaded_imported_ticket_offers.min_by do |offer|
+        [ offer_source_priority(offer.source), offer.priority_rank.to_i, offer.id.to_i ]
+      end
+    end
+
+    event_offers
+      .where.not(source: "manual")
+      .order(Arel.sql(ticket_offer_source_priority_sql), :priority_rank, :id)
+      .first
+  end
+
+  def manual_ticket_offer
+    if association(:event_offers).loaded?
+      return event_offers
+        .select { |offer| offer.source.to_s == "manual" }
+        .min_by { |offer| [ offer.priority_rank.to_i, offer.id.to_i ] }
+    end
+
+    event_offers.where(source: "manual").order(:priority_rank, :id).first
+  end
+
+  def editor_ticket_offer
+    imported_primary_ticket_offer || manual_ticket_offer
+  end
+
+  def public_ticket_status_offer
+    imported_primary_ticket_offer || manual_ticket_offer
+  end
+
+  def public_ticket_offer
+    imported_offer = imported_primary_ticket_offer
+    return imported_offer if ticket_offer_active?(imported_offer)
+    return nil if imported_offer.present?
+
+    manual_offer = manual_ticket_offer
+    return manual_offer if ticket_offer_active?(manual_offer)
+
+    nil
+  end
+
+  def public_sold_out?
+    public_ticket_status_offer&.sold_out? == true
+  end
+
   def primary_genre
     if association(:genres).loaded?
       return genres.min_by { |genre| [ genre.name.to_s, genre.id.to_i ] }
@@ -375,8 +421,32 @@ class Event < ApplicationRecord
 
   def loaded_active_ticket_offers
     event_offers.select do |offer|
-      !offer.sold_out? && offer.ticket_url.present?
+      ticket_offer_active?(offer)
     end
+  end
+
+  def loaded_imported_ticket_offers
+    event_offers.select { |offer| offer.source.to_s != "manual" }
+  end
+
+  def ticket_offer_active?(offer)
+    offer.present? && !offer.sold_out? && offer.ticket_url.present?
+  end
+
+  def offer_source_priority(source)
+    provider_priority_map.fetch(source.to_s, 1_000)
+  end
+
+  def ticket_offer_source_priority_sql
+    cases = provider_priority_map.sort_by { |source, rank| [ rank, source ] }.map do |source, rank|
+      "WHEN #{ActiveRecord::Base.connection.quote(source)} THEN #{Integer(rank)}"
+    end.join(" ")
+
+    "CASE source #{cases} ELSE 1000 END"
+  end
+
+  def provider_priority_map
+    @provider_priority_map ||= Merging::ProviderPriorityMap.call
   end
 
   def editorial_image_for(slot:, breakpoint:)

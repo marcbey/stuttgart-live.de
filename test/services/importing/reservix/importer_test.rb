@@ -180,6 +180,45 @@ module Importing
         assert_equal "succeeded", run.status
         assert_operator importer.heartbeat_calls, :>=, 2
       end
+
+      test "imports non bookable rows for whitelisted cities" do
+        fetcher = StubEventFetcher.new(
+          [
+            {
+              server_time: Time.zone.parse("2026-03-14 10:00:00"),
+              events: [
+                {
+                  "id" => "rvx-sold-out-1",
+                  "name" => "Reservix Sold Out",
+                  "artist" => "Reservix Artist",
+                  "bookable" => false,
+                  "modified" => "2026-03-14T09:00:00+01:00",
+                  "startdate" => "2026-04-20",
+                  "references" => {
+                    "venue" => [ { "name" => "Im Wizemann", "city" => "Stuttgart" } ]
+                  }
+                }
+              ]
+            }
+          ]
+        )
+
+        run = Importer.new(
+          import_source: @source,
+          event_fetcher: fetcher
+        ).call
+
+        imported = RawEventImport.find_by!(
+          import_source: @source,
+          import_event_type: "reservix",
+          source_identifier: "rvx-sold-out-1"
+        )
+
+        assert_equal "succeeded", run.status
+        assert_equal 1, run.imported_count
+        assert_equal 1, run.upserted_count
+        assert_equal false, imported.payload["bookable"]
+      end
     end
   end
 end

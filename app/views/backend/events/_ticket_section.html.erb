@@ -1,0 +1,60 @@
+<% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
+<% editor_offer = event.editor_ticket_offer %>
+<% read_only_import_offer = editor_offer.present? && editor_offer.source.to_s != "manual" %>
+<% display_ticket_url = local_assigns.fetch(:manual_ticket_url, event_display_ticket_url(event)) %>
+<% display_ticket_sold_out = local_assigns.fetch(:manual_ticket_sold_out, event_display_ticket_sold_out(event)) %>
+<% source_label = event_editor_ticket_offer_source(event) %>
+
+<section class="backend-section backend-section-form">
+  <div class="backend-section-header">
+    <h3>Ticket</h3>
+  </div>
+  <div class="backend-section-body">
+    <div class="editor-grid">
+      <div>
+        <label class="form-label" for="<%= dom_id(event, :ticket_sold_out) %>">Ticket Verfügbarkeit</label>
+        <% if read_only_import_offer %>
+          <label class="form-checkbox">
+            <%= check_box_tag nil,
+                              "1",
+                              editor_offer.sold_out?,
+                              id: dom_id(event, :ticket_sold_out),
+                              disabled: true %>
+            <span>Ausverkauft</span>
+          </label>
+        <% else %>
+          <%= hidden_field_tag "event[ticket_sold_out]", "0", form: editor_form_id, id: nil %>
+          <label class="form-checkbox">
+            <%= check_box_tag "event[ticket_sold_out]",
+                              "1",
+                              display_ticket_sold_out,
+                              id: dom_id(event, :ticket_sold_out),
+                              form: editor_form_id %>
+            <span>Ausverkauft</span>
+          </label>
+        <% end %>
+      </div>
+
+      <div>
+        <label class="form-label" for="<%= dom_id(event, :ticket_url) %>">Ticket-URL</label>
+        <% if read_only_import_offer %>
+          <%= url_field_tag nil,
+                            event_display_ticket_url(event),
+                            id: dom_id(event, :ticket_url),
+                            class: "form-input",
+                            readonly: true %>
+        <% else %>
+          <%= url_field_tag "event[ticket_url]",
+                            display_ticket_url,
+                            id: dom_id(event, :ticket_url),
+                            form: editor_form_id,
+                            class: "form-input" %>
+        <% end %>
+      </div>
+    </div>
+
+    <% if source_label.present? %>
+      <p class="form-hint">Quelle: <%= source_label %></p>
+    <% end %>
+  </div>
+</section>

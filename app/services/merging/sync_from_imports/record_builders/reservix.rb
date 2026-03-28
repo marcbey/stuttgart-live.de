@@ -105,6 +105,22 @@ module Merging
         def ticket_price_text
           format_price_range(min_price, max_price)
         end
+
+        def sold_out
+          return true unless projection.bookable?
+
+          availability = available_ticket_entries
+          return false if availability.empty?
+
+          availability.all? { |entry| Integer(entry["available"], exception: false).to_i <= 0 }
+        end
+
+        def available_ticket_entries
+          entries = payload.dig("references", "availableTickets")
+          return [] unless entries.is_a?(Array)
+
+          entries.filter_map { |entry| entry.is_a?(Hash) ? entry : nil }
+        end
       end
     end
   end

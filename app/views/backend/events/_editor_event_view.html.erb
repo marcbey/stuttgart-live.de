@@ -3,15 +3,20 @@
     <div class="backend-section-header">
       <h3>Event-Daten</h3>
     </div>
-    <div class="backend-section-body">
-      <%= render "backend/events/editor_form",
-                 event: event,
-                 all_genres: all_genres,
-                 next_event_enabled: next_event_enabled,
-                 filter_status: filter_status,
-                 active_editor_tab: local_assigns[:active_editor_tab] %>
-    </div>
-  </section>
+      <div class="backend-section-body">
+        <%= render "backend/events/editor_form",
+                   event: event,
+                   all_genres: all_genres,
+                   next_event_enabled: next_event_enabled,
+                   filter_status: filter_status,
+                   active_editor_tab: local_assigns[:active_editor_tab] %>
+      </div>
+    </section>
+
+    <%= render "backend/events/ticket_section",
+               event: event,
+               manual_ticket_url: local_assigns[:manual_ticket_url],
+               manual_ticket_sold_out: local_assigns[:manual_ticket_sold_out] %>
 
   <% if event.event_series? %>
     <section class="backend-section backend-section-form">

@@ -8,7 +8,7 @@
 <% card_variant = local_assigns[:card_variant] %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
 <% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
-<% primary_offer = event.preferred_ticket_offer %>
+<% primary_offer = event.public_ticket_offer %>
 
 <article class="<%= ["genre-lane-card", ("genre-lane-card--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
   <%= link_to public_event_detail_path(event, browse_state), class: ["genre-lane-card-link", ("genre-lane-card-link--#{card_variant}" if card_variant.present?)].compact.join(" ") do %>
@@ -27,6 +27,9 @@
         <span class="genre-lane-card-ticket-arrow">↓</span>
         <span class="genre-lane-card-ticket-label">TICKETS</span>
       </span>
+      <% if event.public_sold_out? %>
+        <%= render "sold_out_corner_ribbon" %>
+      <% end %>
       <% if show_series_badge && public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
         <%= render "event_series_corner_badge" %>
       <% end %>

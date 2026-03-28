@@ -201,7 +201,7 @@ module Merging
             source_event_id: record.external_event_id,
             ticket_url: record.ticket_url,
             ticket_price_text: record.ticket_price_text,
-            sold_out: false,
+            sold_out: record.sold_out,
             priority_rank: priority_for(record.source),
             metadata: build_offer_metadata(record)
           }

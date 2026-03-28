@@ -80,8 +80,6 @@ module Importing
                   next
                 end
 
-                next unless projection.bookable?
-
                 state[:filtered_count] += 1
                 ensure_imported_event_series!(payload)
 

@@ -50,14 +50,16 @@ module Backend
       @selected_presenter_ids = presenter_ids_from_params
       @manual_image_form_values = manual_image_form_values
       @manual_ticket_url = manual_ticket_url
+      @manual_ticket_sold_out = manual_ticket_sold_out
       @active_editor_tab = new_editor_tab
       created_images = []
       creation_alert = nil
 
       set_publishing_fields!(@event)
+      validate_manual_ticket_url!(@event)
 
       Event.transaction do
-        unless @event.save
+        unless @event.errors.empty? && @event.save
           creation_alert = "Event konnte nicht erstellt werden."
           raise ActiveRecord::Rollback
         end
@@ -112,11 +114,14 @@ module Backend
     def update
       @next_event_enabled = @inbox_state.persist_next_event_preference!(params[:next_event_enabled]) if params.key?(:next_event_enabled)
       navigation_status = @inbox_state.navigation_status
+      @manual_ticket_url = manual_ticket_url
+      @manual_ticket_sold_out = manual_ticket_sold_out
 
       @event.assign_attributes(event_attribute_params)
       prepare_promotion_banner_image(@event)
       @event.status = "published" if save_and_publish_requested?
       set_publishing_fields!(@event)
+      validate_manual_ticket_url!(@event)
 
       if @event.errors.any?
         editor_response.validation_error(
@@ -401,6 +406,25 @@ module Backend
       params.dig(:event, :ticket_url).to_s.strip.presence
     end
 
+    def manual_ticket_sold_out
+      ActiveModel::Type::Boolean.new.cast(params.dig(:event, :ticket_sold_out)) == true
+    end
+
+    def manual_ticket_fields_submitted?
+      params[:event].respond_to?(:key?) && (params[:event].key?(:ticket_url) || params[:event].key?(:ticket_sold_out))
+    end
+
+    def validate_manual_ticket_url!(event)
+      return if manual_ticket_url.blank?
+
+      uri = URI.parse(manual_ticket_url)
+      return if uri.is_a?(URI::HTTP) && uri.host.present?
+
+      event.errors.add(:base, "Ticket-URL muss mit http:// oder https:// beginnen.")
+    rescue URI::InvalidURIError
+      event.errors.add(:base, "Ticket-URL ist ungültig.")
+    end
+
     def llm_enrichment_run_source
       llm_importer_registry.resolve_run_source("llm_enrichment")
     end
@@ -419,6 +443,7 @@ module Backend
       @selected_presenter_ids ||= []
       @manual_image_form_values ||= {}
       @manual_ticket_url ||= nil
+      @manual_ticket_sold_out = false if @manual_ticket_sold_out.nil?
       @active_editor_tab = new_editor_tab
       @event
     end
@@ -435,6 +460,7 @@ module Backend
                selected_genre_ids: @selected_genre_ids,
                selected_presenter_ids: @selected_presenter_ids,
                manual_ticket_url: @manual_ticket_url,
+               manual_ticket_sold_out: @manual_ticket_sold_out,
                manual_image_form_values: @manual_image_form_values
              }
     end
@@ -738,32 +764,38 @@ module Backend
     end
 
     def create_manual_ticket_offer!(event)
-      return if manual_ticket_url.blank?
+      return unless should_persist_manual_ticket_offer?
 
       event.event_offers.create!(
         source: "manual",
         source_event_id: event.id.to_s,
         ticket_url: manual_ticket_url,
         priority_rank: 0,
-        sold_out: false
+        sold_out: manual_ticket_sold_out
       )
     end
 
     def sync_ticket_offer!(event)
-      preferred_offer = event.preferred_ticket_offer
+      return unless manual_ticket_fields_submitted?
 
-      if manual_ticket_url.present?
-        offer = preferred_offer || event.event_offers.build(
+      offer = event.manual_ticket_offer
+
+      if should_persist_manual_ticket_offer?
+        offer ||= event.event_offers.build(
           source: "manual",
           source_event_id: event.id.to_s,
-          priority_rank: 0,
-          sold_out: false
+          priority_rank: 0
         )
         offer.ticket_url = manual_ticket_url
+        offer.sold_out = manual_ticket_sold_out
         offer.save!
-      elsif preferred_offer.present?
-        preferred_offer.update!(ticket_url: nil)
+      elsif offer.present?
+        offer.destroy!
       end
+    end
+
+    def should_persist_manual_ticket_offer?
+      manual_ticket_url.present? || manual_ticket_sold_out
     end
 
     def uploaded_files_from(values, label:)

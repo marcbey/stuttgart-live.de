@@ -54,7 +54,15 @@ module Backend::EventsHelper
   end
 
   def event_display_ticket_url(event)
-    event.preferred_ticket_offer&.resolved_ticket_url.to_s.strip.presence
+    event.editor_ticket_offer&.resolved_ticket_url.to_s.strip.presence
+  end
+
+  def event_display_ticket_sold_out(event)
+    ActiveModel::Type::Boolean.new.cast(event.editor_ticket_offer&.sold_out?)
+  end
+
+  def event_editor_ticket_offer_source(event)
+    event.editor_ticket_offer&.source.to_s.strip.presence
   end
 
   def event_status_label(status)

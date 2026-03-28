@@ -99,7 +99,9 @@ module Backend
           all_presenters: all_presenters,
           next_event_enabled: next_event_enabled,
           filter_status: filter_status,
-          active_editor_tab: active_editor_tab
+          active_editor_tab: active_editor_tab,
+          manual_ticket_url: controller.instance_variable_get(:@manual_ticket_url),
+          manual_ticket_sold_out: controller.instance_variable_get(:@manual_ticket_sold_out)
         }
       end
     end
