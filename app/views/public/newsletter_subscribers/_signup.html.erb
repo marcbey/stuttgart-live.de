@@ -13,6 +13,15 @@
       required: true,
       class: "form-input newsletter-signup-input"
     } %>
+    <% homepage_signup = signup[:context].to_s == "events_index" %>
+    <% submit_label = homepage_signup ? "→" : signup[:submit_label] %>
+    <% submit_options = {
+      class: ["button newsletter-signup-button", ("newsletter-signup-button-arrow" if homepage_signup)].compact.join(" ")
+    } %>
+    <% if homepage_signup %>
+      <% submit_options[:aria] = { label: signup[:submit_label] } %>
+      <% submit_options[:title] = signup[:submit_label] %>
+    <% end %>
     <% if subscriber.errors[:email].any? %>
       <% email_field_options[:aria] = { invalid: true, describedby: "#{signup[:frame_id]}-errors" } %>
     <% end %>
@@ -33,7 +42,7 @@
 
       <%= form.label :email, signup[:label], class: "sr-only" %>
       <%= form.email_field :email, **email_field_options %>
-      <%= form.submit signup[:submit_label], class: "button newsletter-signup-button" %>
+      <%= form.submit submit_label, **submit_options %>
     <% end %>
   <% end %>
 <% end %>

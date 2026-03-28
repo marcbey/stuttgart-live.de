@@ -9,7 +9,6 @@
     <div class="newsletter-signup-copy">
       <div class="newsletter-signup-copy-intro">
         <h2 id="newsletter-signup-title">Nichts verpassen</h2>
-        <p class="newsletter-signup-lead">Konzerte, Highlights und Vorverkäufe. Direkt im Postfach.</p>
       </div>
 
       <ul class="newsletter-signup-highlights" aria-label="Vorteile des Newsletters">
@@ -21,6 +20,8 @@
 
     <div class="newsletter-signup-panel">
       <div class="newsletter-signup-panel-content">
+        <p class="newsletter-signup-lead">Konzerte, Highlights und Vorverkäufe. Direkt im Postfach.</p>
+
         <%= render "public/newsletter_subscribers/signup",
                    subscriber: subscriber,
                    signup: signup %>

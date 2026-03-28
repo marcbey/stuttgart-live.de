@@ -5,7 +5,7 @@ module Public
         frame_id: "events-newsletter-signup",
         form_class: "newsletter-signup-form",
         label: "E-Mail-Adresse",
-        placeholder: "E-Mail-Adresse",
+        placeholder: "Email-Adresse eingeben",
         submit_label: "Newsletter abonnieren",
         source: "homepage"
       },

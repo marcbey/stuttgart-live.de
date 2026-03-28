@@ -3,6 +3,9 @@
 <% content_for :page_newsletter do %>
   <%= render "newsletter_signup", browse_state: @browse_state %>
 <% end %>
+<% content_for :page_partner_strip do %>
+  <%= render "partner_strip" %>
+<% end %>
 
 <article class="event-detail">
   <div class="event-detail-topbar">
@@ -181,5 +184,3 @@
                list_aria_label: "Listenansicht für #{@related_genre_lane.group.name}" %>
   <% end %>
 </article>
-
-<%= render "partner_strip" %>

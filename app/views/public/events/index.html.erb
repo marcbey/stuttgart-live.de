@@ -2,6 +2,9 @@
 <% content_for :page_newsletter do %>
   <%= render "newsletter_signup", browse_state: @browse_state %>
 <% end %>
+<% content_for :page_partner_strip do %>
+  <%= render "partner_strip" %>
+<% end %>
 
 <section class="public-shell">
   <% if @browse_state.page == 1 && @promotion_banner_event.present? %>
@@ -30,7 +33,7 @@
 
     <% if @home_highlight_events.present? %>
       <%= render "genre_lane_section",
-                 title: "Alle Veranstaltungen in Stuttgart",
+                 title: "alles aus stuttgart",
                  events: @home_highlight_events,
                  effective_series_ids: @home_highlight_effective_series_ids,
                  browse_state: @browse_state,
@@ -39,7 +42,7 @@
                  tone_class: "genre-lane-section--tone-2",
                  section_variant: "editorial",
                  card_variant: "editorial",
-                 list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
+                 list_aria_label: "Listenansicht für alles aus stuttgart" %>
     <% end %>
 
     <% if genre_lanes.first.present? %>
@@ -78,6 +81,4 @@
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>
     <% end %>
   <% end %>
-
-  <%= render "partner_strip" %>
 </section>

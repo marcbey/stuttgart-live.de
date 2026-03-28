@@ -278,6 +278,7 @@
                    subscriber: NewsletterSubscriber.new,
                    signup: newsletter_signup_config("events_index", return_to: request.fullpath) %>
       <% end %>
+      <%= yield :page_partner_strip %>
 
       <footer class="site-footer">
         <div class="site-footer-shell">
