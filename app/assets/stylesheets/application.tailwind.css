@@ -5025,7 +5025,7 @@ trix-editor.blog-rich-text:focus {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  min-height: 3.75rem;
+  min-height: 7.5rem;
   text-decoration: none;
 }
 
@@ -5033,7 +5033,7 @@ trix-editor.blog-rich-text:focus {
   display: block;
   max-width: 100%;
   width: 100%;
-  max-height: 3.25rem;
+  max-height: 6.5rem;
   height: auto;
   object-fit: contain;
 }
