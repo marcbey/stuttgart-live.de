@@ -1,5 +1,8 @@
 <% presenter = public_event_show_presenter(@event, primary_offer: @primary_offer, browse_state: @browse_state) %>
 <%= render "show_meta", presenter: presenter %>
+<% content_for :page_newsletter do %>
+  <%= render "newsletter_signup", browse_state: @browse_state %>
+<% end %>
 
 <article class="event-detail">
   <div class="event-detail-topbar">
@@ -179,5 +182,4 @@
   <% end %>
 </article>
 
-<%= render "newsletter_signup", browse_state: @browse_state %>
 <%= render "partner_strip" %>

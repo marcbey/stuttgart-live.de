@@ -15,9 +15,6 @@ class ApplicationController < ActionController::Base
   end
 
   def header_search_enabled?
-    return true if controller_path == "public/events" && action_name == "index"
-    return true if controller_path == "public/news" && action_name == "index"
-
-    controller_path == "public/pages" && %w[contact imprint terms accessibility].include?(action_name)
+    controller_path.start_with?("public/")
   end
 end

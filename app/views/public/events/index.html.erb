@@ -1,4 +1,7 @@
 <% content_for :title, "Stuttgart Live - Konzerte" %>
+<% content_for :page_newsletter do %>
+  <%= render "newsletter_signup", browse_state: @browse_state %>
+<% end %>
 
 <section class="public-shell">
   <% if @browse_state.page == 1 && @promotion_banner_event.present? %>
@@ -76,6 +79,5 @@
     <% end %>
   <% end %>
 
-  <%= render "newsletter_signup", browse_state: @browse_state %>
   <%= render "partner_strip" %>
 </section>
