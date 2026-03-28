@@ -186,6 +186,20 @@ module Public
         ].compact
       end
 
+      def hero_meta_line
+        [
+          meta_schedule_label,
+          venue_location
+        ].compact.join(", ")
+      end
+
+      def hero_time_line
+        [
+          (formatted_start_time.present? ? "Beginn: #{formatted_start_time} Uhr" : nil),
+          (formatted_doors_time.present? ? "Einlass #{formatted_doors_time} Uhr" : nil)
+        ].compact.join(", ")
+      end
+
       def schedule_line
         return if event.start_at.blank? || doors_at.blank?
 

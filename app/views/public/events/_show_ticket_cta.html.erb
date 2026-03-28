@@ -2,16 +2,12 @@
   <section class="event-detail-cta event-detail-cta-card" aria-label="Ticketinformationen">
     <div class="event-detail-cta-layout <%= "event-detail-cta-layout-single" unless presenter.external_links.any? %>">
       <div class="event-detail-cta-copy">
-        <% if presenter.primary_source_label.present? %>
-          <span class="status-badge status-badge-default"><%= presenter.primary_source_label %></span>
-        <% end %>
         <div class="event-detail-cta-meta">
-          <p class="event-detail-cta-label">Tickets</p>
-          <% if presenter.ticket_price_text.present? %>
-            <p class="event-detail-cta-price">Preis: <%= presenter.ticket_price_text %></p>
-          <% end %>
           <% if presenter.ticket_badge_text.present? %>
             <p class="event-detail-badge-inline"><%= presenter.ticket_badge_text %></p>
+          <% end %>
+          <% if presenter.ticket_price_text.present? %>
+            <p class="event-detail-cta-price">Preis: <%= presenter.ticket_price_text %></p>
           <% end %>
           <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
         </div>

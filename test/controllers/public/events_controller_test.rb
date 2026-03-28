@@ -136,7 +136,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     promotion_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") }
     first_genre_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("genre-lane-section") }
     all_events_index = shell_children.index do |node|
-      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "alles aus stuttgart"
     end
 
     assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
@@ -559,7 +559,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     document = Nokogiri::HTML.parse(response.body)
     highlights_section = document.at_css("section.home-featured-section")
     all_events_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+      section.at_css("h2")&.text == "alles aus stuttgart"
     end
     tagestipp_section = document.css("section.genre-lane-section").find do |section|
       section.at_css("h2")&.text == "Tagestipp"
@@ -1144,7 +1144,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select "section.genre-lane-section", text: /Alle Veranstaltungen in Stuttgart/ do
+    assert_select "section.genre-lane-section", text: /alles aus stuttgart/ do
       assert_select ".genre-lane-card-name", text: reservix_event.artist_name
       assert_select ".genre-lane-card-name", text: late_reservix_event.artist_name
       assert_select ".genre-lane-card-name", text: eventim_event.artist_name, count: 0
@@ -1181,7 +1181,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     document = Nokogiri::HTML.parse(response.body)
     slider_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+      section.at_css("h2")&.text == "alles aus stuttgart"
     end
 
     assert slider_section.present?, "expected all events slider section to be rendered"
@@ -1251,7 +1251,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     document = Nokogiri::HTML.parse(response.body)
     slider_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "Alle Veranstaltungen in Stuttgart"
+      section.at_css("h2")&.text == "alles aus stuttgart"
     end
 
     assert slider_section.present?, "expected all events slider section to be rendered"
@@ -1696,7 +1696,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-grid .event-card-grid-1-1", count: 2
     assert_includes response.body, first_event.title
     assert_includes response.body, second_event.title
-    assert_includes response.body, "Alle Veranstaltungen in Stuttgart"
+    assert_includes response.body, "alles aus stuttgart"
     assert_includes response.body, reservix_slider_event.artist_name
     assert_includes response.body, "Tagestipp"
     assert_includes response.body, tagestipp_event.artist_name
@@ -2044,9 +2044,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_includes response.body, "Published Artist"
-    assert_select ".event-detail-fact-card dt", text: "Beginn"
-    assert_select ".event-detail-fact-card dd", text: /\d{2}:\d{2}\s*Uhr/
-    assert_select ".event-detail-fact-card dt", text: "Einlass", count: 0
+    assert_select ".event-detail-time-line", text: /Beginn:\s*\d{2}:\d{2}\s*Uhr/
+    assert_select ".event-detail-meta-line", text: /Published Venue/
+    assert_select ".event-detail-time-line", text: /Einlass/, count: 0
     assert_includes response.body, "Preis: 45 EUR"
     assert_select ".event-detail-tag", text: "Jazz"
     assert_select ".event-detail-tag", text: "Pop"
@@ -2102,19 +2102,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select "section.genre-lane-section h2", text: "Mehr aus diesem Genre"
-    assert_select "section.genre-lane-section .genre-lane-summary", count: 0
-    assert_select "section.genre-lane-section .genre-lane-card-name", text: related_event.artist_name
-    assert_select "section.genre-lane-section .genre-lane-card-name", text: @published_event.artist_name, count: 0
-    assert_select "section.genre-lane-section .genre-lane-card-name", text: unpublished_event.artist_name, count: 0
-    assert_select "section.genre-lane-section .genre-lane-card-name", text: past_event.artist_name, count: 0
+    assert_select ".event-detail-related-list h2", text: "Das könnte dir auch gefallen"
+    assert_select ".event-detail-related-list .event-listing-link strong", text: related_event.artist_name
+    assert_select ".event-detail-related-list .event-listing-link strong", text: @published_event.artist_name, count: 0
+    assert_select ".event-detail-related-list .event-listing-link strong", text: unpublished_event.artist_name, count: 0
+    assert_select ".event-detail-related-list .event-listing-link strong", text: past_event.artist_name, count: 0
   end
 
   test "show does not render related genre lane without selected snapshot or additional matches" do
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select "section.genre-lane-section", count: 0
+    assert_select ".event-detail-related-list", count: 0
 
     snapshot, = create_homepage_genre_snapshot
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
@@ -2124,7 +2123,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select "section.genre-lane-section", count: 0
+    assert_select ".event-detail-related-list", count: 0
   end
 
   test "show renders the full event series lane before the related genre lane" do
@@ -2190,7 +2189,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes series_section.text, I18n.l(past_event.start_at.to_date, format: "%d.%m.%Y")
 
     series_index = response.body.index(@published_event.title)
-    genre_index = response.body.index("Mehr aus diesem Genre")
+    genre_index = response.body.index("Das könnte dir auch gefallen")
     assert_operator series_index, :<, genre_index
   end
 
@@ -2283,8 +2282,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_select ".event-detail-fact-card dt", text: "Einlass"
-    assert_select ".event-detail-fact-card dd", text: "18:30 Uhr"
+    assert_select ".event-detail-time-line", text: /Einlass 18:30 Uhr/
   end
 
   test "show renders redaktionsnotiz section when editor notes are present" do
@@ -2329,8 +2327,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_includes response.body, "Support"
-    assert_includes response.body, "Support Act"
+    assert_select ".event-detail-support-line", text: "Support: Support Act"
+    assert_select "section.event-detail-panel h2", text: "Support", count: 0
   end
 
   test "show renders llm enrichment fallbacks and extra sections" do
@@ -2415,7 +2413,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-tag", text: "Pop"
     assert_select ".event-detail-tag", text: "Deutschpop"
     assert_select "h2", text: "Genres", count: 0
-    assert_select ".event-detail-copy-primary p", text: "Fallschirmvertrauen - Tour 2026", count: 1
+    assert_select ".event-detail-copy-block-primary p", text: "Fallschirmvertrauen - Tour 2026", count: 1
   end
 
   test "show renders meta description and canonical seo tags" do
@@ -2441,8 +2439,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".event-detail-copy-body .event-detail-copy-grid", minimum: 2
-    assert_select ".event-detail-copy-grid .event-detail-copy-column", minimum: 3
+    assert_select ".event-detail-copy-block", minimum: 2
+    assert_select ".event-detail-copy-grid", count: 0
     assert_includes response.body, "Erster Absatz."
     assert_includes response.body, "Dritter Absatz."
     assert_includes response.body, "Rockclub in Stuttgart-Wangen."

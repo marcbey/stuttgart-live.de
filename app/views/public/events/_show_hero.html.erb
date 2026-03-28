@@ -2,9 +2,18 @@
   <div class="event-detail-header-panel">
     <div class="event-detail-header-copy">
       <div class="event-detail-header-intro">
-        <h1><%= presenter.display_headline %></h1>
         <% if presenter.show_distinct_title? %>
           <p class="event-detail-title"><%= presenter.title_line %></p>
+        <% end %>
+        <h1><%= presenter.display_headline %></h1>
+        <% if presenter.support_text.present? %>
+          <p class="event-detail-support-line">Support: <%= presenter.support_text %></p>
+        <% end %>
+        <% if presenter.hero_meta_line.present? %>
+          <p class="event-detail-meta-line"><%= presenter.hero_meta_line %></p>
+        <% end %>
+        <% if presenter.hero_time_line.present? %>
+          <p class="event-detail-time-line"><%= presenter.hero_time_line %></p>
         <% end %>
 
         <% if authenticated? %>
@@ -18,17 +27,6 @@
           <% end %>
         <% end %>
       </div>
-
-      <% if presenter.fact_items.any? %>
-        <dl class="event-detail-facts" aria-label="Eventdetails">
-          <% presenter.fact_items.each do |item| %>
-            <div class="event-detail-fact-card">
-              <dt><%= item.label %></dt>
-              <dd><%= item.value %></dd>
-            </div>
-          <% end %>
-        </dl>
-      <% end %>
 
       <% if presenter.genre_tags.any? %>
         <div class="event-detail-tags" aria-label="Genres">
@@ -127,9 +125,6 @@
               <% end %>
             </div>
             <p class="event-detail-image-caption" data-hero-rotator-target="caption" hidden></p>
-            <p class="event-detail-image-credit"
-               data-hero-rotator-target="credit"
-               <%= "hidden" if hero_slides.first.credit.blank? %>><%= hero_slides.first.credit %></p>
           </div>
 
           <div class="event-lightbox"
@@ -157,7 +152,7 @@
             </div>
           </div>
         </div>
-        <% else %>
+      <% else %>
         <% slide = hero_slides.first %>
         <div class="event-detail-image-figure"<%= %( style="#{hero_stage_style}") if hero_stage_style.present? %>>
           <div class="event-detail-image-stage-shell">
@@ -174,10 +169,10 @@
               </picture>
             </div>
           </div>
-          <% if slide.credit.present? %>
-            <p class="event-detail-image-credit"><%= slide.credit %></p>
-          <% end %>
         </div>
+      <% end %>
+      <% if presenter.hero_image_credit.present? %>
+        <p class="event-detail-side-credit"><%= presenter.hero_image_credit %></p>
       <% end %>
     </div>
   <% end %>
