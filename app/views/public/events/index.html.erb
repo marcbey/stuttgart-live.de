@@ -1,12 +1,16 @@
 <% content_for :title, "Stuttgart Live - Konzerte" %>
 
 <section class="public-shell">
-  <% if @browse_state.search_query_present? %>
-    <%= render "search_results_section", events: @events, browse_state: @browse_state %>
-  <% end %>
-
   <% if @browse_state.page == 1 && @promotion_banner_event.present? %>
     <%= render "event_promotion_banner", event: @promotion_banner_event, browse_state: @browse_state %>
+  <% end %>
+
+  <% if @browse_state.page == 1 && @promotion_banner_blog_post.present? %>
+    <%= render "promotion_banner", blog_post: @promotion_banner_blog_post %>
+  <% end %>
+
+  <% if @browse_state.search_query_present? %>
+    <%= render "search_results_section", events: @events, browse_state: @browse_state %>
   <% end %>
 
   <% if @browse_state.page == 1 && @home_featured_events.present? %>
@@ -18,66 +22,16 @@
                featured: true,
                list_aria_label: "Listenansicht für Highlights" %>
   <% end %>
-
-  <% if @browse_state.page == 1 && @promotion_banner_blog_post.present? %>
-    <%= render "promotion_banner", blog_post: @promotion_banner_blog_post %>
-  <% end %>
-
   <% if @browse_state.page == 1 %>
-    <% inserted_all_events = false %>
-    <% inserted_tagestipp = false %>
+    <% genre_lanes = Array(@home_genre_lanes) %>
 
-    <% Array(@home_genre_lanes).each_with_index do |lane, index| %>
-      <%= render "genre_lane_section",
-                 group: lane.group,
-                 events: lane.events,
-                 effective_series_ids: lane.effective_series_ids,
-                 browse_state: @browse_state,
-                 hover_lift_cards: true,
-                 tone_class: "genre-lane-section--tone-#{(index % 4) + 1}",
-                 list_aria_label: "Listenansicht für #{lane.group.name}" %>
-
-      <% if !inserted_all_events && @home_highlight_events.present? && index >= 0 %>
-        <% inserted_all_events = true %>
-        <%= render "genre_lane_section",
-                   title: "Alle Veranstaltungen in Stuttgart",
-                   events: @home_highlight_events,
-                   effective_series_ids: @home_highlight_effective_series_ids,
-                   browse_state: @browse_state,
-                   hover_lift_cards: true,
-                   kicker: "Programmübersicht",
-                   summary: "#{pluralize(@home_highlight_events.size, "Event", "Events")} aus dem aktuellen Feed",
-                   tone_class: "genre-lane-section--tone-2",
-                   section_variant: "editorial",
-                   card_variant: "editorial",
-                   list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
-      <% end %>
-
-      <% if !inserted_tagestipp && @home_tagestipp_events.present? && index >= 1 %>
-        <% inserted_tagestipp = true %>
-        <%= render "genre_lane_section",
-                   title: "Tagestipp",
-                   events: @home_tagestipp_events,
-                   effective_series_ids: @home_tagestipp_effective_series_ids,
-                   browse_state: @browse_state,
-                   hover_lift_cards: true,
-                   kicker: "Heute empfohlen",
-                   summary: "#{pluralize(@home_tagestipp_events.size, "Event", "Events")} in der heutigen Auswahl",
-                   tone_class: "genre-lane-section--tone-3",
-                   section_variant: "spotlight",
-                   card_variant: "spotlight",
-                   list_aria_label: "Listenansicht für Tagestipp" %>
-      <% end %>
-    <% end %>
-
-    <% if !inserted_all_events && @home_highlight_events.present? %>
+    <% if @home_highlight_events.present? %>
       <%= render "genre_lane_section",
                  title: "Alle Veranstaltungen in Stuttgart",
                  events: @home_highlight_events,
                  effective_series_ids: @home_highlight_effective_series_ids,
                  browse_state: @browse_state,
                  hover_lift_cards: true,
-                 kicker: "Programmübersicht",
                  summary: "#{pluralize(@home_highlight_events.size, "Event", "Events")} aus dem aktuellen Feed",
                  tone_class: "genre-lane-section--tone-2",
                  section_variant: "editorial",
@@ -85,19 +39,40 @@
                  list_aria_label: "Listenansicht für Alle Veranstaltungen in Stuttgart" %>
     <% end %>
 
-    <% if !inserted_tagestipp && @home_tagestipp_events.present? %>
+    <% if genre_lanes.first.present? %>
+      <%= render "genre_lane_section",
+                 group: genre_lanes.first.group,
+                 events: genre_lanes.first.events,
+                 effective_series_ids: genre_lanes.first.effective_series_ids,
+                 browse_state: @browse_state,
+                 hover_lift_cards: true,
+                 tone_class: "genre-lane-section--tone-1",
+                 list_aria_label: "Listenansicht für #{genre_lanes.first.group.name}" %>
+    <% end %>
+
+    <% if @home_tagestipp_events.present? %>
       <%= render "genre_lane_section",
                  title: "Tagestipp",
                  events: @home_tagestipp_events,
                  effective_series_ids: @home_tagestipp_effective_series_ids,
                  browse_state: @browse_state,
                  hover_lift_cards: true,
-                 kicker: "Heute empfohlen",
                  summary: "#{pluralize(@home_tagestipp_events.size, "Event", "Events")} in der heutigen Auswahl",
                  tone_class: "genre-lane-section--tone-3",
                  section_variant: "spotlight",
                  card_variant: "spotlight",
                  list_aria_label: "Listenansicht für Tagestipp" %>
+    <% end %>
+
+    <% genre_lanes.drop(1).each_with_index do |lane, index| %>
+      <%= render "genre_lane_section",
+                 group: lane.group,
+                 events: lane.events,
+                 effective_series_ids: lane.effective_series_ids,
+                 browse_state: @browse_state,
+                 hover_lift_cards: true,
+                 tone_class: "genre-lane-section--tone-#{((index + 1) % 4) + 1}",
+                 list_aria_label: "Listenansicht für #{lane.group.name}" %>
     <% end %>
   <% end %>
 

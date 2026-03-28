@@ -55,6 +55,9 @@ application.register("hero-rotator", HeroRotatorController)
 import HighlightsSliderController from "./highlights_slider_controller"
 application.register("highlights-slider", HighlightsSliderController)
 
+import HomepageHeaderCompactController from "./homepage_header_compact_controller"
+application.register("homepage-header-compact", HomepageHeaderCompactController)
+
 import InfiniteScrollController from "./infinite_scroll_controller"
 application.register("infinite-scroll", InfiniteScrollController)
 

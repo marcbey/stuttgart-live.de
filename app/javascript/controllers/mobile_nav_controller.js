@@ -44,6 +44,8 @@ export default class extends Controller {
   }
 
   isDesktop() {
+    if (this.element.classList.contains("is-compact")) return false
+
     return window.matchMedia("(min-width: 761px)").matches
   }
 }

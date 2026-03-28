@@ -30,7 +30,12 @@
     <% end %>
   </head>
 
+  <% homepage_header = controller_path == "public/events" && action_name == "index" %>
+  <% body_classes = [] %>
+  <% body_classes << "page-public-events-index" if homepage_header %>
+
   <body
+    class="<%= body_classes.join(" ") %>"
     <% body_controllers = [] %>
     <% unless controller_path.start_with?("backend/") %>
       <% body_controllers << "consent" %>
@@ -43,6 +48,7 @@
     <% backend_context = controller_path.start_with?("backend/") %>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if backend_context %>
+    <% nav_inner_classes << "app-nav-inner-homepage-poster" if homepage_header %>
     <% nav_browse_state = @browse_state || @header_browse_state %>
     <% public_events_search_visible = nav_browse_state.present? %>
     <% backend_nav_links = capture do %>
@@ -75,15 +81,31 @@
       <% end %>
     <% end %>
     <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
-    <nav class="app-nav" data-controller="nav-offset mobile-nav">
+    <nav class="app-nav" data-controller="nav-offset mobile-nav<%= ' homepage-header-compact' if homepage_header %>">
       <div class="<%= nav_inner_classes.join(" ") %>">
         <%= link_to root_path, class: "app-brand" do %>
-          <span class="brand-wordmark" aria-label="Stuttgart Live">
-            <span class="brand-wordmark-city">STUTTGART</span><span class="brand-wordmark-live">LIVE</span>
-          </span>
+          <% if homepage_header %>
+            <span class="brand-wordmark brand-wordmark-poster" aria-label="Stuttgart Live">
+              <span class="brand-wordmark-city"><span class="brand-wordmark-city-initial">S</span>TUTTGART</span><span class="brand-wordmark-live">LIVE</span>
+            </span>
+          <% else %>
+            <span class="brand-wordmark" aria-label="Stuttgart Live">
+              <span class="brand-wordmark-city">STUTTGART</span><span class="brand-wordmark-live">LIVE</span>
+            </span>
+          <% end %>
         <% end %>
 
-        <% if public_events_search_visible %>
+        <% if homepage_header && public_events_search_visible %>
+          <div class="app-nav-homepage-center">
+            <div class="app-nav-search">
+              <%= render "public/events/toolbar", browse_state: nav_browse_state %>
+            </div>
+            <div class="app-nav-hotline">
+              <span class="app-nav-hotline-label">Tickethotline:</span>
+              <a href="tel:+4971155066077" class="app-nav-hotline-link">0711 550 660 77</a>
+            </div>
+          </div>
+        <% elsif public_events_search_visible %>
           <div class="app-nav-search">
             <%= render "public/events/toolbar", browse_state: nav_browse_state %>
           </div>
@@ -108,43 +130,87 @@
         <div id="app-nav-menu" class="app-nav-meta" data-mobile-nav-target="panel">
           <div class="app-nav-links">
             <div class="app-nav-links-group">
+              <% if homepage_header %>
+                <div class="app-nav-poster-links-wrap">
+                  <div class="app-nav-socials app-nav-socials-poster" aria-label="Soziale Medien">
+                    <%= link_to "https://www.instagram.com/stuttgart.live.concert/",
+                                class: "app-nav-social-link",
+                                target: "_blank",
+                                rel: "noopener",
+                                title: "Instagram",
+                                aria: { label: "Instagram" } do %>
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect>
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <circle cx="17.4" cy="6.7" r="1.2" class="app-nav-social-fill"></circle>
+                      </svg>
+                    <% end %>
+                    <%= link_to "https://www.tiktok.com/@stuttgart.live.concert",
+                                class: "app-nav-social-link",
+                                target: "_blank",
+                                rel: "noopener",
+                                title: "TikTok",
+                                aria: { label: "TikTok" } do %>
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M14.2 4.2c.36 1.82 1.44 3.18 3.26 4.06.63.3 1.3.48 2.04.55v2.56a8.18 8.18 0 0 1-3.01-.67v5.06c0 3.1-2.48 5.53-5.74 5.53-3.05 0-5.56-2.3-5.56-5.27 0-3.1 2.72-5.5 5.91-5.22v2.66a2.67 2.67 0 0 0-3.21 2.56c0 1.47 1.2 2.66 2.72 2.66 1.66 0 2.74-1.26 2.74-3.02V4.2h2.85Z" class="app-nav-social-fill"></path>
+                      </svg>
+                    <% end %>
+                    <%= link_to "https://www.facebook.com/stuttgartlive",
+                                class: "app-nav-social-link",
+                                target: "_blank",
+                                rel: "noopener",
+                                title: "Facebook",
+                                aria: { label: "Facebook" } do %>
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M13.4 20.5v-7h2.3l.35-2.75H13.4V9c0-.8.22-1.35 1.37-1.35h1.46V5.2c-.25-.03-1.1-.1-2.1-.1-2.08 0-3.5 1.27-3.5 3.62v2.03H8.3v2.75h2.37v7h2.73Z" class="app-nav-social-fill"></path>
+                      </svg>
+                    <% end %>
+                  </div>
+                  <div class="app-nav-poster-links-stack">
+              <% end %>
               <%= link_to "Events", root_path, class: app_nav_link_class(active: events_nav_active?), aria: { current: ("page" if events_nav_active?) } %>
               <%= link_to "News", news_index_path, class: app_nav_link_class(active: news_nav_active?), aria: { current: ("page" if news_nav_active?) } %>
-              <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?), aria: { current: ("page" if contact_nav_active?) } %>
-              <div class="app-nav-socials" aria-label="Soziale Medien">
-                <%= link_to "https://www.instagram.com/stuttgart.live.concert/",
-                            class: "app-nav-social-link",
-                            target: "_blank",
-                            rel: "noopener",
-                            title: "Instagram",
-                            aria: { label: "Instagram" } do %>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect>
-                    <circle cx="12" cy="12" r="4"></circle>
-                    <circle cx="17.4" cy="6.7" r="1.2" class="app-nav-social-fill"></circle>
-                  </svg>
-                <% end %>
-                <%= link_to "https://www.tiktok.com/@stuttgart.live.concert",
-                            class: "app-nav-social-link",
-                            target: "_blank",
-                            rel: "noopener",
-                            title: "TikTok",
-                            aria: { label: "TikTok" } do %>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M14.2 4.2c.36 1.82 1.44 3.18 3.26 4.06.63.3 1.3.48 2.04.55v2.56a8.18 8.18 0 0 1-3.01-.67v5.06c0 3.1-2.48 5.53-5.74 5.53-3.05 0-5.56-2.3-5.56-5.27 0-3.1 2.72-5.5 5.91-5.22v2.66a2.67 2.67 0 0 0-3.21 2.56c0 1.47 1.2 2.66 2.72 2.66 1.66 0 2.74-1.26 2.74-3.02V4.2h2.85Z" class="app-nav-social-fill"></path>
-                  </svg>
-                <% end %>
-                <%= link_to "https://www.facebook.com/stuttgartlive",
-                            class: "app-nav-social-link",
-                            target: "_blank",
-                            rel: "noopener",
-                            title: "Facebook",
-                            aria: { label: "Facebook" } do %>
-                  <svg viewBox="0 0 24 24" aria-hidden="true">
-                    <path d="M13.4 20.5v-7h2.3l.35-2.75H13.4V9c0-.8.22-1.35 1.37-1.35h1.46V5.2c-.25-.03-1.1-.1-2.1-.1-2.08 0-3.5 1.27-3.5 3.62v2.03H8.3v2.75h2.37v7h2.73Z" class="app-nav-social-fill"></path>
-                  </svg>
-                <% end %>
-              </div>
+              <% if homepage_header %>
+                <%= link_to "Tickets", root_path, class: app_nav_link_class(active: false) %>
+                  </div>
+                </div>
+              <% else %>
+                <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?), aria: { current: ("page" if contact_nav_active?) } %>
+                <div class="app-nav-socials" aria-label="Soziale Medien">
+                  <%= link_to "https://www.instagram.com/stuttgart.live.concert/",
+                              class: "app-nav-social-link",
+                              target: "_blank",
+                              rel: "noopener",
+                              title: "Instagram",
+                              aria: { label: "Instagram" } do %>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect>
+                      <circle cx="12" cy="12" r="4"></circle>
+                      <circle cx="17.4" cy="6.7" r="1.2" class="app-nav-social-fill"></circle>
+                    </svg>
+                  <% end %>
+                  <%= link_to "https://www.tiktok.com/@stuttgart.live.concert",
+                              class: "app-nav-social-link",
+                              target: "_blank",
+                              rel: "noopener",
+                              title: "TikTok",
+                              aria: { label: "TikTok" } do %>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M14.2 4.2c.36 1.82 1.44 3.18 3.26 4.06.63.3 1.3.48 2.04.55v2.56a8.18 8.18 0 0 1-3.01-.67v5.06c0 3.1-2.48 5.53-5.74 5.53-3.05 0-5.56-2.3-5.56-5.27 0-3.1 2.72-5.5 5.91-5.22v2.66a2.67 2.67 0 0 0-3.21 2.56c0 1.47 1.2 2.66 2.72 2.66 1.66 0 2.74-1.26 2.74-3.02V4.2h2.85Z" class="app-nav-social-fill"></path>
+                    </svg>
+                  <% end %>
+                  <%= link_to "https://www.facebook.com/stuttgartlive",
+                              class: "app-nav-social-link",
+                              target: "_blank",
+                              rel: "noopener",
+                              title: "Facebook",
+                              aria: { label: "Facebook" } do %>
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M13.4 20.5v-7h2.3l.35-2.75H13.4V9c0-.8.22-1.35 1.37-1.35h1.46V5.2c-.25-.03-1.1-.1-2.1-.1-2.08 0-3.5 1.27-3.5 3.62v2.03H8.3v2.75h2.37v7h2.73Z" class="app-nav-social-fill"></path>
+                    </svg>
+                  <% end %>
+                </div>
+              <% end %>
             </div>
 
             <% if authenticated? || backend_context %>

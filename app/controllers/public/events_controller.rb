@@ -199,7 +199,7 @@ module Public
       end
 
       @home_highlight_effective_series_ids = effective_public_series_ids_for_relation(scoped_reservix)
-      @home_genre_lanes = Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
+      @home_genre_lanes = homepage_genre_lanes
       @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_reservix.limit(HOME_HIGHLIGHT_LIMIT).to_a)
       tagestipp_scope = tagestipp_relation
       @home_tagestipp_effective_series_ids = effective_public_series_ids_for_relation(tagestipp_scope)
@@ -235,6 +235,57 @@ module Public
         event_images: [ file_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
       )
+    end
+
+    def homepage_genre_lanes
+      lanes = Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
+      pop_lane = explicit_pop_homepage_lane(existing_lanes: lanes)
+      return lanes if pop_lane.blank?
+
+      lanes + [ pop_lane ]
+    end
+
+    def explicit_pop_homepage_lane(existing_lanes:)
+      return if existing_lanes.any? { |lane| lane.group.slug == "pop" || lane.group.name == "Pop" }
+
+      snapshot = LlmGenreGrouping::Lookup.selected_snapshot
+      pop_group = snapshot&.groups&.find { |group| group.member_genres.include?("Pop") }
+
+      selected_events = pop_homepage_events
+      return if selected_events.empty?
+
+      effective_series_ids = effective_public_series_ids_for_relation(Event.where(id: selected_events.map(&:id)))
+      events = Public::Events::SeriesRepresentativeSelector.call(selected_events).first(Public::Events::HomepageGenreLanesBuilder::DEFAULT_LIMIT)
+      return if events.empty?
+
+      Public::Events::HomepageGenreLanesBuilder::Lane.new(
+        group: pop_group || Public::Events::HomepageGenreLanesBuilder::LaneGroup.new(name: "Pop", slug: "pop"),
+        events:,
+        effective_series_ids:
+      )
+    end
+
+    def pop_homepage_events
+      homepage_events_relation
+        .joins(:llm_enrichment)
+        .where(
+          "EXISTS (" \
+            "SELECT 1 FROM jsonb_array_elements_text(event_llm_enrichments.genre) AS event_genre(value) " \
+            "WHERE event_genre.value = ?" \
+          ")",
+          "Pop"
+        )
+        .select("events.*, #{homepage_lane_priority_order_sql} AS homepage_lane_priority")
+        .reorder(Arel.sql("homepage_lane_priority ASC"), :start_at, :id)
+        .distinct
+        .to_a
+    end
+
+    def homepage_lane_priority_order_sql
+      quoted_ids = Event.sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
+      sks_clause = quoted_ids.present? ? "WHEN events.promoter_id IN (#{quoted_ids}) THEN 1 " : ""
+
+      "CASE WHEN events.highlighted = TRUE THEN 0 #{sks_clause}ELSE 2 END"
     end
 
     def initial_search_overlay_events

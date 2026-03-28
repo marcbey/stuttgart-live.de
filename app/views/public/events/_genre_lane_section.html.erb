@@ -9,6 +9,9 @@
 <section class="<%= ["genre-lane-section", local_assigns.fetch(:tone_class, "genre-lane-section--tone-1"), ("genre-lane-section--#{section_variant}" if section_variant.present?), ("genre-lane-section--hover-lift" if hover_lift_cards)].compact.join(" ") %>"
          data-controller="highlights-slider section-view">
   <div class="genre-lane-header">
+    <div class="slider-window-bar" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
     <div class="genre-lane-heading">
       <% if kicker.present? %>
         <p class="genre-lane-kicker"><%= kicker %></p>

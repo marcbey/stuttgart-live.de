@@ -2,6 +2,7 @@ module Public
   module Events
     class HomepageGenreLanesBuilder
       Lane = Data.define(:group, :events, :effective_series_ids)
+      LaneGroup = Data.define(:name, :slug)
 
       DEFAULT_LIMIT = 100
 

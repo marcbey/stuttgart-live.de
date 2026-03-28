@@ -36,10 +36,15 @@
                      public_search_target: "clear",
                      action: "public-search#clear"
                    } %>
-    <%= button_tag "⌕",
-                   type: "submit",
+    <%= button_tag type: "submit",
                    class: "public-search-icon",
-                   aria: { label: "Suche ausführen" } %>
+                   aria: { label: "Suche ausführen" } do %>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="10.5" cy="10.5" r="5.75"></circle>
+        <path d="M15 15l4.5 4.5"></path>
+      </svg>
+      <span class="sr-only">Suche ausführen</span>
+    <% end %>
 
     <div id="public-search-overlay"
          class="public-search-overlay"

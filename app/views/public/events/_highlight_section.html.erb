@@ -7,6 +7,9 @@
          data-controller="highlights-slider section-view"
          <% if featured %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
   <div class="home-slider-header">
+    <div class="slider-window-bar" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
     <h2><%= title %></h2>
     <div class="<%= nav_class %>">
       <button type="button"

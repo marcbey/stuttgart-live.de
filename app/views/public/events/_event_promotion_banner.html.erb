@@ -5,7 +5,7 @@
 <% event_image_credit = uses_promotion_banner_image ? event.promotion_banner_image_copyright : event_image&.sub_text %>
 <% image_alt = uses_promotion_banner_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(event_image, event) %>
 
-<article class="promotion-banner promotion-banner-event">
+<article class="promotion-banner promotion-banner-event promotion-banner-poster">
   <% if authenticated? %>
     <div class="promotion-banner-admin-controls">
       <%= link_to "Bearbeiten",

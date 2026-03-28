@@ -168,6 +168,76 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".genre-lane-section", count: 0
   end
 
+  test "index renders a pop lane on the homepage even when it is not selected in the lane configuration" do
+    snapshot, rock_group, pop_group = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    rock_event = Event.create!(
+      slug: "genre-lane-rock-fallback",
+      source_fingerprint: "test::public::genre-lane::rock-fallback",
+      title: "Genre Lane Rock Fallback",
+      artist_name: "Rock Lane Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    pop_event = Event.create!(
+      slug: "genre-lane-pop-fallback",
+      source_fingerprint: "test::public::genre-lane::pop-fallback",
+      title: "Genre Lane Pop Fallback",
+      artist_name: "Pop Lane Fallback Artist",
+      start_at: 9.days.from_now.change(hour: 19, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: rock_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: pop_event, genres: [ "Pop" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
+
+    sections = Nokogiri::HTML.parse(response.body).css("section.genre-lane-section")
+    rendered_titles = sections.filter_map { |section| section.at_css("h2")&.text }
+
+    assert_includes rendered_titles, rock_group.name
+    assert_includes rendered_titles, pop_group.name
+    assert_equal 1, rendered_titles.count { |title| title == pop_group.name }
+  end
+
+  test "index renders a pop lane on the homepage without any selected snapshot" do
+    AppSetting.where(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY).delete_all
+    AppSetting.reset_cache!
+
+    pop_event = Event.create!(
+      slug: "genre-lane-pop-no-snapshot",
+      source_fingerprint: "test::public::genre-lane::pop-no-snapshot",
+      title: "Genre Lane Pop No Snapshot",
+      artist_name: "Pop Lane Without Snapshot",
+      start_at: 9.days.from_now.change(hour: 19, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: pop_event, genres: [ "Pop" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".genre-lane-section h2", text: "Pop"
+    assert_select ".genre-lane-card-name", text: pop_event.artist_name
+  end
+
   test "index does not mark a singleton series as event series in public lanes" do
     create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 
@@ -577,7 +647,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
   end
 
-  test "homepage renders promotion banner below highlights when configured" do
+  test "homepage renders promotion banner at the top when configured" do
     Event.create!(
       slug: "promotion-banner-highlight-event",
       source_fingerprint: "test::homepage::promotion-banner-highlight",
@@ -618,7 +688,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert highlights_index.present?, "expected Highlights section to be rendered"
     assert promotion_index.present?, "expected Promotion Banner to be rendered"
-    assert_equal highlights_index + 1, promotion_index
+    assert_equal 0, promotion_index
+    assert_operator promotion_index, :<, highlights_index
   end
 
   test "homepage renders event promotion banner above highlights when no news banner is configured" do
@@ -669,7 +740,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_nil news_banner_index
   end
 
-  test "homepage renders event promotion banner above highlights and before news banner" do
+  test "homepage renders event promotion banner before news banner at the top" do
     Event.create!(
       slug: "homepage-event-promotion-highlight",
       source_fingerprint: "test::homepage::event-promotion-highlight",
@@ -730,8 +801,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     news_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") && !node["class"].to_s.include?("promotion-banner-event") }
 
     assert_equal 0, event_banner_index
-    assert_equal event_banner_index + 1, highlights_index
-    assert_equal highlights_index + 1, news_banner_index
+    assert_equal event_banner_index + 1, news_banner_index
+    assert_operator event_banner_index, :<, highlights_index
+    assert_operator news_banner_index, :<, highlights_index
   end
 
   test "homepage renders custom promotion banner texts from blog post" do
