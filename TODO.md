@@ -21,16 +21,17 @@
 - Google Analytics
 
 # Bugs
+- Listenansicht: einschränken: desktop 6 rows, mobile 10 events
+- Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
+- Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps,  überschreibt die LLM Venue
+- Suchergebnis Seite: mit Kachel / Listenansicht, generell anderes Layout
+
 - DONE: Suche: robuster machen, zB Leerzeichen
 - DONE: Suche: default Suchergebnis soll auch Promotion Events zeigen + SKS Events, max ~5 Events
 - DONE: Promotion Banner: Dort das Event Image mit crop anzeigen
 - DONE: Main Nav: Tiktok Icon + Link
 - DONE: Main Nav: Insta Link falsch
-- Listenansicht: einschränken: desktop 6 rows, mobile 10 events
-- Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
-- Suchergebnis Seite: mit Kachel / Listenansicht, generell anderes Layout
 - DONE: Prompt verbessern: Social Links überprüfen
-- Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps,  überschreibt die LLM Venue
 - DONE: Data Rentention: Events mit Status draft, unpublished & rejected entfernen wenn älter als ~1 Monat
 - DONE: Importer: Event Updates die später erst die Images bringen, ändert das beim update dann den Status von draft => published ?
 - DONE: Importer: Merge Import auch automatisch jede Nacht, triggert dann das LLM-Enrichment

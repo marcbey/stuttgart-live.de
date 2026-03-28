@@ -10,7 +10,7 @@ class RecurringConfigTest < ActiveSupport::TestCase
       production.fetch("daily_event_retention_cleanup").fetch("command")
     )
     assert_equal(
-      "every day at 7:05am",
+      "every day at 6:05am",
       production.fetch("daily_event_retention_cleanup").fetch("schedule")
     )
     assert_equal(
@@ -18,7 +18,7 @@ class RecurringConfigTest < ActiveSupport::TestCase
       production.fetch("daily_raw_event_import_retention_cleanup").fetch("command")
     )
     assert_equal(
-      "every day at 7:20am",
+      "every day at 6:35am",
       production.fetch("daily_raw_event_import_retention_cleanup").fetch("schedule")
     )
   end

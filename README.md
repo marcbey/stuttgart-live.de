@@ -67,7 +67,7 @@ Easyticket, Eventim und Reservix folgen demselben Grundmuster:
 
 Die Run-Koordination ist bewusst generisch über `ImportRun`, `source_type` und Registry-Konfiguration aufgebaut. Je nach Jobtyp laufen Jobs exklusiv oder als serielle Warteschlange. Das LLM-Enrichment nutzt diese Infrastruktur bereits: Es gibt dort immer höchstens einen aktiven Lauf, weitere Anforderungen werden als `queued` eingereiht.
 
-Für den täglichen Betrieb startet `Importing::DailyRunJob` die aktiven Provider standardmäßig über `config/recurring.yml` jeden Tag um `03:05` Uhr. Der tägliche Merge läuft anschließend über `Merging::DailyRunJob` standardmäßig um `04:05` Uhr. Das tägliche LLM-Enrichment wird danach über `Importing::LlmEnrichment::DailyRunJob` standardmäßig um `06:05` Uhr eingereiht. Danach räumt `Events::Retention::PruneStaleUnpublishedEventsJob` um `07:05` Uhr nicht veröffentlichte Events auf, deren `start_at` länger als einen Monat zurückliegt; `Events::Retention::PrunePastRawEventImportsJob` löscht anschließend um `07:20` Uhr alte `raw_event_imports` für Events, deren normalisiertes Eventdatum länger als einen Monat vorbei ist. Historische Event-Detailseiten bleiben dabei erhalten, weil die Public-Seite aus `events` liest und der Merge die relevanten Quellinformationen in `events.source_snapshot` ablegt. Manuell lassen sich die Provider-Läufe im Backend unter den Importquellen oder per Rake-Task starten:
+Für den täglichen Betrieb startet `Importing::DailyRunJob` die aktiven Provider standardmäßig über `config/recurring.yml` jeden Tag um `03:05` Uhr. Der tägliche Merge läuft anschließend über `Merging::DailyRunJob` standardmäßig um `04:05` Uhr. Das tägliche LLM-Enrichment wird separat über `Importing::LlmEnrichment::DailyRunJob` standardmäßig um `05:05` Uhr eingereiht. Danach räumt `Events::Retention::PruneStaleUnpublishedEventsJob` um `06:05` Uhr nicht veröffentlichte Events auf, deren `start_at` länger als einen Monat zurückliegt; `Events::Retention::PrunePastRawEventImportsJob` löscht anschließend um `06:35` Uhr alte `raw_event_imports` für Events, deren normalisiertes Eventdatum länger als einen Monat vorbei ist. Historische Event-Detailseiten bleiben dabei erhalten, weil die Public-Seite aus `events` liest und der Merge die relevanten Quellinformationen in `events.source_snapshot` ablegt. Manuell lassen sich die Provider-Läufe im Backend unter den Importquellen oder per Rake-Task starten:
 
 ```bash
 bin/rake importing:easyticket:run
@@ -99,7 +99,6 @@ Der Ablauf ist:
 4. Innerhalb einer Gruppe gilt eine Provider-Priorität. Höher priorisierte Quellen liefern bevorzugt die führenden Feldwerte; zusätzliche Ticketangebote und Bilder aus den anderen Quellen bleiben trotzdem erhalten.
 5. `EventUpserter` sucht zuerst ein bestehendes `Event` über `source_fingerprint` oder den gespeicherten `source_snapshot`. Falls nichts passt, wird ein neues Event angelegt.
 6. Danach werden `event_offers`, Genres und Bilder synchronisiert und ein Änderungslog mit `merged_create` oder `merged_update` geschrieben.
-7. Nach einem erfolgreichen Merge wird automatisch ein LLM-Enrichment-Lauf eingereiht. Läuft bereits ein Enrichment, wartet der neue Lauf als `queued` in derselben seriellen Queue.
 
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen bei exakt gleicher Startzeit. Damit kann der Merge-Import auch Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten` oder `Gregory Porter & Orchestra` und `Gregory Porter` als denselben Termin erkennen. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Artist-Dubletten` ein- oder ausschalten.
 
@@ -110,7 +109,6 @@ Wichtig für das Verhalten im Backend:
 - Erhält ein bestehendes `needs_review`-Event in einem späteren Merge nun alle Pflichtdaten, wird es automatisch nach `published` gehoben.
 - Bereits automatisch veröffentlichte Events fallen ebenfalls zurück auf `needs_review`, wenn sie nach einem späteren Merge nicht mehr vollständig genug sind.
 - Der Button zum Starten des Merge-Imports wird im Backend hervorgehoben, sobald seit dem letzten erfolgreichen Merge neue erfolgreiche Provider-Imports vorliegen.
-- Ein erfolgreicher Merge reiht standardmäßig direkt das LLM-Enrichment ein, damit neue oder geänderte Events ohne zusätzlichen manuellen Schritt für die nächste Qualitätsstufe bereitstehen.
 
 Die Event-Status und ihre sichtbaren Labels sind dabei:
 
@@ -239,7 +237,7 @@ Wichtig ist der Unterschied zwischen gespeicherter Zuordnung und öffentlicher W
 ### Wie das LLM-Enrichment funktioniert
 
 Das LLM-Enrichment läuft auf bereits gemergten `events` und ist damit bewusst ein nachgelagerter Qualitätsschritt. Es erzeugt keine neuen Events und verändert keine Rohimporte, sondern ergänzt vorhandene Datensätze um zusätzliche redaktionelle Informationen.
-Zusätzlich ist standardmäßig ein täglicher automatischer Lauf um `06:05` Uhr (`Europe/Berlin`) konfiguriert.
+Zusätzlich ist standardmäßig ein täglicher automatischer Lauf um `05:05` Uhr (`Europe/Berlin`) konfiguriert.
 
 Der Ablauf ist:
 
@@ -251,7 +249,6 @@ Der Ablauf ist:
 Fachlich ist wichtig:
 
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
-- Erfolgreiche Merge-Läufe reihen immer einen Enrichment-Run ein. Wenn bereits ein Enrichment läuft oder schon wartet, wird der neue Lauf seriell hinten angehängt.
 - Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.

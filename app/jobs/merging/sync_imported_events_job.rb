@@ -64,7 +64,6 @@ module Merging
           "offers_upserted_count" => result.offers_upserted_count
         )
       )
-      enqueue_llm_enrichment_run!(merge_run: run)
     rescue StandardError => e
       formatted_error_message = format_error_message(e)
       run&.update!(
@@ -186,24 +185,6 @@ module Merging
 
     def broadcast_runs_update!
       Backend::ImportRunsBroadcaster.broadcast!
-    end
-
-    def enqueue_llm_enrichment_run!(merge_run:)
-      importer_registry = Backend::ImportSources::ImporterRegistry.new
-      dispatcher = Backend::ImportSources::RunDispatcher.new(registry: importer_registry)
-      Backend::ImportSources::RunEnqueuer.new(
-        registry: importer_registry,
-        maintenance: Backend::ImportSources::RunMaintenance.new(registry: importer_registry),
-        dispatcher: dispatcher
-      ).call(
-        source_type: "llm_enrichment",
-        import_source: importer_registry.resolve_run_source("llm_enrichment"),
-        run_metadata: {
-          "triggered_at" => Time.current.iso8601,
-          "triggered_by" => "merge_success",
-          "merge_run_id" => merge_run.id
-        }
-      )
     end
 
     def create_import_run_error!(run:, error:, message: nil, payload: {})

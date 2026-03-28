@@ -305,7 +305,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Diese Jobs lesen die aktuellen Rohimporte aller Quellen"
     assert_includes response.body, "Automatischer Lauf täglich um 04:05 Uhr (Europe/Berlin)."
     assert_includes response.body, "Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten"
-    assert_includes response.body, "Automatischer Lauf täglich um 06:05 Uhr (Europe/Berlin)."
+    assert_includes response.body, "Automatischer Lauf täglich um 05:05 Uhr (Europe/Berlin)."
     assert_includes response.body, "Diese Jobs analysieren die im System vorhandenen Rohgenre-Werte"
   end
 
