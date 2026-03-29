@@ -70,6 +70,7 @@ class Merging::SyncFromImports::ArtistSimilarityMatcherTest < ActiveSupport::Tes
       genre: nil,
       ticket_url: nil,
       ticket_price_text: nil,
+      sold_out: false,
       raw_payload: {}
     )
   end
