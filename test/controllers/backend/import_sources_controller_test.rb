@@ -471,8 +471,8 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "LLM-Enrichment starten"
     assert_includes response.body, "Zukünftige Events neu anreichern"
-    assert_includes response.body, "Bearbeiten"
-    assert_select "a[href='#{edit_backend_settings_path(section: :llm_enrichment)}']", text: "Bearbeiten"
+    assert_includes response.body, "Edit"
+    assert_select "a[href='#{edit_backend_settings_path(section: :llm_enrichment)}']", text: "Edit"
     assert_select "form[action='#{rerun_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}'] .button-save-primary", text: "Zukünftige Events neu anreichern"
   end
 
@@ -481,7 +481,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "LLM-Genre-Gruppierung starten"
-    assert_select "a[href='#{edit_backend_settings_path(section: :llm_genre_grouping)}']", text: "Bearbeiten"
+    assert_select "a[href='#{edit_backend_settings_path(section: :llm_genre_grouping)}']", text: "Edit"
   end
 
   test "should enqueue llm enrichment run from import sources page" do

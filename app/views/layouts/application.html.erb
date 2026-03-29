@@ -102,14 +102,16 @@
             <div class="app-nav-search">
               <%= render "public/events/toolbar", browse_state: nav_browse_state %>
             </div>
-            <div class="app-nav-hotline">
-              <span class="app-nav-hotline-label">Tickethotline:</span>
-              <a href="tel:+4971155066077" class="app-nav-hotline-link">0711 550 660 77</a>
-            </div>
           </div>
         <% elsif public_events_search_visible %>
           <div class="app-nav-search">
             <%= render "public/events/toolbar", browse_state: nav_browse_state %>
+          </div>
+        <% end %>
+
+        <% if public_homepage_chrome && public_events_search_visible %>
+          <div class="app-nav-hotline">
+            <span class="app-nav-hotline-copy">Dein Ticketportal für Stuttgart und Region - 0711 550 660 77</span>
           </div>
         <% end %>
 

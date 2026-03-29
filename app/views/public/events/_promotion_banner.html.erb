@@ -1,7 +1,7 @@
 <article class="promotion-banner promotion-banner-poster">
   <% if authenticated? && current_user.blog_access? %>
     <div class="promotion-banner-admin-controls">
-      <%= link_to "Bearbeiten",
+      <%= link_to "Edit",
                   edit_backend_blog_post_path(blog_post),
                   class: "event-card-admin-link event-card-admin-link-attention",
                   data: { turbo: false } %>

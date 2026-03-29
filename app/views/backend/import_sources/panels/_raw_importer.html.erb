@@ -35,7 +35,7 @@
               <% elsif source.reservix? %>
                 <%= button_to "Reservix Import starten", run_reservix_backend_import_source_path(source, section: section_key), method: :post, class: "button button-compact" %>
               <% end %>
-              <%= link_to "Bearbeiten", edit_backend_import_source_path(source, section: section_key), class: "button button-ghost button-compact" %>
+              <%= link_to "Edit", edit_backend_import_source_path(source, section: section_key), class: "button button-ghost button-compact" %>
             </td>
           </tr>
         <% end %>

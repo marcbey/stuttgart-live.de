@@ -8,7 +8,7 @@
 <article class="promotion-banner promotion-banner-event promotion-banner-poster">
   <% if authenticated? %>
     <div class="promotion-banner-admin-controls">
-      <%= link_to "Bearbeiten",
+      <%= link_to "Edit",
                   backend_events_path(status: event.status, event_id: event.id),
                   class: "event-card-admin-link event-card-admin-link-attention",
                   data: { turbo: false } %>
