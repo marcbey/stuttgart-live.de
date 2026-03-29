@@ -23,7 +23,7 @@
 # Bugs
 - Listenansicht: einschränken: desktop 6 rows, mobile 10 events
 - Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
-- Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps,  überschreibt die LLM Venue
+- Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps, überschreibt die LLM Venue
 - Suchergebnis Seite: mit Kachel / Listenansicht, generell anderes Layout
 
 - DONE: Suche: robuster machen, zB Leerzeichen
@@ -36,7 +36,7 @@
 - DONE: Importer: Event Updates die später erst die Images bringen, ändert das beim update dann den Status von draft => published ?
 - DONE: Importer: Merge Import auch automatisch jede Nacht, triggert dann das LLM-Enrichment
 - DONE: Event Backend: Import-Änderungen je Merge nach Datum auswählen lassen
-- Events: wenn ausverkauft, kein Ticket Link anzeigen? Was ist das Signal für ausverkauft?
+- DONE: Events: wenn ausverkauft, kein Ticket Link anzeigen? Was ist das Signal für ausverkauft?
 - DONE: Events: wenn in der Vergangenheit, kein Ticket Link - deutlich kennzeichnen
 - DONE: Event Editor: Promoter-ID fix - read-only
 - DONE: New Event: Promoter-ID fix - read-only

@@ -12,6 +12,16 @@ module Importing
         end
       end
 
+      CapturingClient = Struct.new(:response, :model, :captured_input, keyword_init: true) do
+        def create!(input:, text_format:)
+          raise "missing input" if input.blank?
+          raise "missing schema" if text_format.blank?
+
+          self.captured_input = input
+          response || raise("missing response")
+        end
+      end
+
       FakeLinkValidationResult = Struct.new(
         :accepted,
         :sanitized_url,
@@ -64,6 +74,10 @@ module Importing
           started_at: 1.minute.ago,
           metadata: {}
         )
+      end
+
+      teardown do
+        AppSetting.reset_cache!
       end
 
       test "selects all future events without enrichment and persists enrichments" do
@@ -133,6 +147,74 @@ module Importing
           assert_equal [ "Show" ], events(:needs_review_two).reload.llm_enrichment.genre
           assert_nil events(:published_past_one).reload.llm_enrichment
         end
+      end
+
+      test "includes truncated event_info in input_json" do
+        AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "{{input_json}}")
+        AppSetting.reset_cache!
+
+        long_event_info = "ä" * 1005
+        events(:published_one).update!(event_info: long_event_info)
+        events(:needs_review_one).update!(event_info: "Kurze Beschreibung")
+        events(:needs_review_two).update!(event_info: nil)
+
+        client = CapturingClient.new(
+          model: "gpt-5-mini",
+          response: {
+            "output_text" => {
+              events: [
+                {
+                  event_id: events(:published_one).id,
+                  genre: [ "Indie" ],
+                  venue: "LKA Longhorn",
+                  artist_description: "Artist eins",
+                  event_description: "Event eins",
+                  venue_description: "Venue eins",
+                  youtube_link: nil,
+                  instagram_link: nil,
+                  homepage_link: nil,
+                  facebook_link: nil
+                },
+                {
+                  event_id: events(:needs_review_one).id,
+                  genre: [ "Rock" ],
+                  venue: "Im Wizemann",
+                  artist_description: "Artist zwei",
+                  event_description: "Event zwei",
+                  venue_description: "Venue zwei",
+                  youtube_link: nil,
+                  instagram_link: nil,
+                  homepage_link: nil,
+                  facebook_link: nil
+                },
+                {
+                  event_id: events(:needs_review_two).id,
+                  genre: [ "Show" ],
+                  venue: "Im Wizemann",
+                  artist_description: "Artist drei",
+                  event_description: "Event drei",
+                  venue_description: "Venue drei",
+                  youtube_link: nil,
+                  instagram_link: nil,
+                  homepage_link: nil,
+                  facebook_link: nil
+                }
+              ]
+            }.to_json
+          }
+        )
+
+        build_importer(client: client).call
+
+        input_payload = JSON.parse(client.captured_input)
+        published_payload = input_payload.find { |item| item.fetch("event_id") == events(:published_one).id }
+        review_payload = input_payload.find { |item| item.fetch("event_id") == events(:needs_review_one).id }
+        empty_payload = input_payload.find { |item| item.fetch("event_id") == events(:needs_review_two).id }
+
+        assert_equal long_event_info[0, 1000], published_payload.fetch("event_info")
+        assert_equal 1000, published_payload.fetch("event_info").length
+        assert_equal "Kurze Beschreibung", review_payload.fetch("event_info")
+        assert_equal "", empty_payload.fetch("event_info")
       end
 
       test "validates links before persisting and stores validation details" do

@@ -6,18 +6,20 @@ module Importing
       RUN_STALE_AFTER = 4.hours
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       BATCH_SIZE = 25
+      EVENT_INFO_MAX_LENGTH = 1000
       PROMPT_VERSION = "v1"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment_batch".freeze
       OUTPUT_ITEMS_KEY = "events".freeze
       LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
 
-      Item = Data.define(:event_id, :artist_name, :event_name, :venue) do
+      Item = Data.define(:event_id, :artist_name, :event_name, :venue, :event_info) do
         def as_json(*)
           {
             event_id: event_id,
             artist_name: artist_name,
             event_name: event_name,
-            venue: venue
+            venue: venue,
+            event_info: event_info
           }
         end
       end
@@ -149,12 +151,17 @@ module Importing
           event_id: event.id,
           artist_name: event.artist_name.to_s,
           event_name: event.title.to_s,
-          venue: event.venue.to_s
+          venue: event.venue.to_s,
+          event_info: truncated_event_info(event)
         )
       end
 
       def request_input(items)
         AppSetting.llm_enrichment_prompt_template.gsub("{{input_json}}", JSON.pretty_generate(items.map(&:as_json)))
+      end
+
+      def truncated_event_info(event)
+        event.event_info.to_s[0, EVENT_INFO_MAX_LENGTH]
       end
 
       def output_format
