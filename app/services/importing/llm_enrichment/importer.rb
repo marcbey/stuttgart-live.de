@@ -7,10 +7,28 @@ module Importing
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       BATCH_SIZE = 25
       EVENT_INFO_MAX_LENGTH = 1000
-      PROMPT_VERSION = "v2"
+      PROMPT_VERSION = "v3"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment_batch".freeze
       OUTPUT_ITEMS_KEY = "events".freeze
       LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link venue_external_url].freeze
+      META_GENRE_TERMS = [
+        "show",
+        "shows",
+        "concert",
+        "concerts",
+        "event",
+        "events",
+        "live event",
+        "live-event",
+        "veranstaltung",
+        "veranstaltungen",
+        "konzert",
+        "konzerte",
+        "live"
+      ].freeze
+      NORMALIZED_META_GENRE_TERMS = META_GENRE_TERMS.map do |term|
+        term.to_s.strip.downcase.gsub(/[-\s]+/, " ")
+      end.freeze
 
       Item = Data.define(:event_id, :artist_name, :event_name, :venue, :event_info) do
         def as_json(*)
@@ -305,8 +323,10 @@ module Importing
             end
 
             seen_event_ids[event_id] = true
-            validated_attributes, validation_payload = validate_link_attributes(attributes)
+            filtered_attributes, genre_filter_payload = filter_meta_genres(attributes)
+            validated_attributes, validation_payload = validate_link_attributes(filtered_attributes)
             raw_response = item.is_a?(Hash) ? item.deep_stringify_keys : {}
+            raw_response["genre_filter"] = genre_filter_payload if genre_filter_payload.present?
             raw_response["link_validation"] = validation_payload if validation_payload.present?
 
             enrichment = EventLlmEnrichment.find_or_initialize_by(event_id: event_id)
@@ -390,6 +410,30 @@ module Importing
         end
 
         [ validated_attributes, validation_payload ]
+      end
+
+      def filter_meta_genres(attributes)
+        filtered_attributes = attributes.deep_dup
+        filtered_genres = []
+        rejected_terms = []
+
+        Array(attributes[:genre]).each do |entry|
+          genre = entry.to_s.strip
+          next if genre.blank?
+
+          if meta_genre?(genre)
+            rejected_terms << genre
+          else
+            filtered_genres << genre
+          end
+        end
+
+        filtered_attributes[:genre] = filtered_genres.uniq
+
+        [
+          filtered_attributes,
+          rejected_terms.any? ? { "rejected_terms" => rejected_terms.uniq } : nil
+        ]
       end
 
       def touch_run_heartbeat!(extra_metadata = {})
@@ -482,6 +526,18 @@ module Importing
 
       def client_model
         client.model
+      end
+
+      def meta_genre?(genre)
+        NORMALIZED_META_GENRE_TERMS.include?(normalize_meta_genre_term(genre))
+      end
+
+      def self.normalize_meta_genre_term(value)
+        value.to_s.strip.downcase.gsub(/[-\s]+/, " ")
+      end
+
+      def normalize_meta_genre_term(value)
+        self.class.normalize_meta_genre_term(value)
       end
 
       def refresh_existing?

@@ -62,7 +62,11 @@ class AppSetting < ApplicationRecord
 
     5. Erfinde keine Links, Genres oder Beschreibungen.
 
-    6. Wenn ein Event kein Musik-Act ist, sondern z. B. Theater, Schauspiel, Show oder Lesung, dann modelliere es fachlich korrekt und verwende passende Genres statt Musikgenres.
+    6. `genre` meint immer eine fachliche stilistische oder spartenbezogene Einordnung, nicht den bloßen Eventtyp oder einen Containerbegriff:
+      - verwende nur belastbare fachliche Genres oder Sparten
+      - verboten sind generische Meta-Begriffe wie `show`, `concert`, `event`, `live`, `veranstaltung`, `konzert` oder sinngleiche Containerlabels
+      - wenn ein Event kein Musik-Act ist, verwende stattdessen passende fachliche Sparten wie z. B. `Theater`, `Comedy`, `Kabarett`, `Lesung`, `Tanz`, `Musical` oder `Oper`, sofern belastbar
+      - wenn kein belastbares fachliches Genre ermittelbar ist, gib lieber ein leeres Genre-Array zurück, statt ein generisches Meta-Genre zu erfinden oder zu raten
 
     7. Bei Projekt- oder Tour-Formaten wie z. B. Ensemble-, Tribute-, Jubiläums- oder Mehrkünstler-Events dürfen auch projektbezogene oder promoterbezogene Links verwendet werden, wenn keine klaren offiziellen Artist-Accounts existieren.
 

@@ -145,7 +145,7 @@ module Importing
           assert_equal @run, enrichment.source_run
 
           assert_equal [ "Rock" ], events(:needs_review_one).reload.llm_enrichment.genre
-          assert_equal [ "Show" ], events(:needs_review_two).reload.llm_enrichment.genre
+          assert_equal [], events(:needs_review_two).reload.llm_enrichment.genre
           assert_nil events(:published_past_one).reload.llm_enrichment
         end
       end
@@ -452,7 +452,7 @@ module Importing
           assert_equal "Event neu", updated_enrichment.event_description
           assert_equal "https://example.com/updated", updated_enrichment.homepage_link
           assert_equal "gpt-5-mini", updated_enrichment.model
-          assert_equal "v2", updated_enrichment.prompt_version
+          assert_equal "v3", updated_enrichment.prompt_version
           assert_equal @run, updated_enrichment.source_run
         end
       end
@@ -692,6 +692,71 @@ module Importing
         assert_equal 0, result.skipped_count
         assert_equal 1, result.enriched_count
         assert_equal [ "Jazz" ], event.reload.llm_enrichment.genre
+      end
+
+      test "filters meta genres and stores rejected terms in raw_response" do
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "output_text" => {
+                events: [
+                  {
+                    event_id: events(:published_one).id,
+                    genre: [ "Show", "Indie" ],
+                    venue: "LKA Longhorn",
+                    event_description: "Event eins",
+                    venue_description: "Venue eins",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: nil,
+                    facebook_link: nil
+                  },
+                  {
+                    event_id: events(:needs_review_one).id,
+                    genre: [ "Concert", "Live Event", "Konzert", " Veranstaltungen " ],
+                    venue: "Im Wizemann",
+                    event_description: "Event zwei",
+                    venue_description: "Venue zwei",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: nil,
+                    facebook_link: nil
+                  },
+                  {
+                    event_id: events(:needs_review_two).id,
+                    genre: [ "Comedy" ],
+                    venue: "Im Wizemann",
+                    event_description: "Event drei",
+                    venue_description: "Venue drei",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: nil,
+                    facebook_link: nil
+                  }
+                ]
+              }.to_json
+            }
+          ]
+        )
+
+        result = build_importer(client: client).call
+
+        assert_equal 3, result.enriched_count
+
+        first_enrichment = events(:published_one).reload.llm_enrichment
+        assert_equal [ "Indie" ], first_enrichment.genre
+        assert_equal [ "Show", "Indie" ], first_enrichment.raw_response.fetch("genre")
+        assert_equal [ "Show" ], first_enrichment.raw_response.dig("genre_filter", "rejected_terms")
+        assert_equal "v3", first_enrichment.prompt_version
+
+        second_enrichment = events(:needs_review_one).reload.llm_enrichment
+        assert_equal [], second_enrichment.genre
+        assert_equal [ "Concert", "Live Event", "Konzert", " Veranstaltungen " ], second_enrichment.raw_response.fetch("genre")
+        assert_equal [ "Concert", "Live Event", "Konzert", "Veranstaltungen" ],
+          second_enrichment.raw_response.dig("genre_filter", "rejected_terms")
+
+        assert_equal [ "Comedy" ], events(:needs_review_two).reload.llm_enrichment.genre
       end
 
       test "does not overwrite an existing venue from llm enrichment data" do

@@ -97,6 +97,9 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_includes AppSetting.llm_enrichment_prompt_template, "Diese Seite ist leider nicht verfügbar"
     assert_includes AppSetting.llm_enrichment_prompt_template, "Dieser Inhalt ist momentan nicht verfügbar"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`event_info`"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "nicht den bloßen Eventtyp oder einen Containerbegriff"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "`show`, `concert`, `event`, `live`, `veranstaltung`, `konzert`"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "gib lieber ein leeres Genre-Array zurück"
     assert_includes AppSetting.llm_enrichment_prompt_template, "ohne Wiederholungen"
     assert_not_includes AppSetting.llm_enrichment_prompt_template, "`artist_description`"
   end
