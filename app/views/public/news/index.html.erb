@@ -1,10 +1,6 @@
 <% content_for :title, "Stuttgart Live - News" %>
 <% newsletter_signup = newsletter_signup_config("news_index", return_to: request.fullpath) %>
-<% content_for :page_newsletter do %>
-  <%= render "public/events/newsletter_signup",
-             subscriber: NewsletterSubscriber.new,
-             signup: newsletter_signup %>
-<% end %>
+<% content_for :page_newsletter, "" if @blog_posts.size > 4 %>
 <section class="news-shell news-index-shell">
   <header class="news-hero news-index-hero">
     <p class="news-kicker">Redaktion</p>
@@ -36,6 +32,13 @@
           <% end %>
         </article>
 
+        <% if index == 3 && @blog_posts.size > 4 %>
+          <div class="news-index-newsletter-slot">
+            <%= render "public/events/newsletter_signup",
+                       subscriber: NewsletterSubscriber.new,
+                       signup: newsletter_signup %>
+          </div>
+        <% end %>
       <% end %>
     </div>
   <% else %>

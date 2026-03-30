@@ -34,6 +34,7 @@
   <% public_homepage_chrome = public_frontend %>
   <% body_classes = [] %>
   <% body_classes << "page-public" if public_frontend %>
+  <% body_classes << "page-public-newsletter-poster" if public_frontend %>
   <% body_classes << "page-public-events-index" if public_homepage_chrome %>
 
   <body
@@ -180,11 +181,10 @@
                 <%= link_to "Events", root_path, class: app_nav_link_class(active: events_nav_active?), aria: { current: ("page" if events_nav_active?) } %>
                 <%= link_to "News", news_index_path, class: app_nav_link_class(active: news_nav_active?), aria: { current: ("page" if news_nav_active?) } %>
                 <% if public_homepage_chrome %>
-                  <%= link_to "Tickets", root_path, class: app_nav_link_class(active: false) %>
+                  <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?), aria: { current: ("page" if contact_nav_active?) } %>
                     </div>
                   </div>
                 <% else %>
-                  <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?), aria: { current: ("page" if contact_nav_active?) } %>
                   <div class="app-nav-socials" aria-label="Soziale Medien">
                     <%= link_to "https://www.instagram.com/stuttgart.live.concert/",
                                 class: "app-nav-social-link",
@@ -237,7 +237,7 @@
                     data-action="click->backend-nav-menu#toggle"
                     data-backend-nav-menu-target="button"
                     aria-expanded="false"
-                    aria-controls="public-backend-menu"
+                    aria-controls="app-nav-backend-menu"
                     aria-label="Backend-Menü öffnen">
               <span class="app-nav-backend-toggle-label">Backend</span>
               <span class="app-nav-backend-toggle-icon" aria-hidden="true">
@@ -247,7 +247,7 @@
               </span>
             </button>
 
-            <div id="public-backend-menu"
+            <div id="app-nav-backend-menu"
                  class="app-nav-backend-panel app-nav-links-group"
                  data-backend-nav-menu-target="panel"
                  hidden>

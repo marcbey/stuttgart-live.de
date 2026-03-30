@@ -169,10 +169,10 @@
               </picture>
             </div>
           </div>
+          <% if presenter.hero_image_credit.present? %>
+            <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
+          <% end %>
         </div>
-      <% end %>
-      <% if presenter.hero_image_credit.present? %>
-        <p class="event-detail-side-credit"><%= presenter.hero_image_credit %></p>
       <% end %>
     </div>
   <% end %>

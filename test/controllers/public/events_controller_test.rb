@@ -2045,7 +2045,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_includes response.body, "Published Artist"
     assert_select ".event-detail-time-line", text: /Beginn:\s*\d{2}:\d{2}\s*Uhr/
-    assert_select ".event-detail-meta-line", text: /Published Venue/
+    assert_select ".event-detail-meta-line", text: /LKA Longhorn/
     assert_select ".event-detail-time-line", text: /Einlass/, count: 0
     assert_includes response.body, "Preis: 45 EUR"
     assert_select ".event-detail-tag", text: "Jazz"
