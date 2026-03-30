@@ -1,7 +1,7 @@
 module Merging
   class SyncImportedEventsJob < ApplicationJob
     queue_as :default
-    RUN_STALE_AFTER = 4.hours
+    RUN_STALE_AFTER = 12.hours
     RUN_HEARTBEAT_STALE_AFTER = 5.minutes
     PROGRESS_FLUSH_EVERY_N_GROUPS = 25
     PROGRESS_FLUSH_AFTER = 2.seconds
