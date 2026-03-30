@@ -394,7 +394,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Queue"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Passwort"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Logout"
-    assert_match(/Events.*News.*Präsentatoren.*Queue.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Präsentatoren.*Venues.*Queue.*Passwort.*Logout/m, response.body)
     assert_select ".app-nav-links-group-separated", count: 0
   end
 
@@ -2296,13 +2296,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       prompt_version: "v1",
       raw_response: {}
     )
+    event.venue_record.update!(
+      description: "Venue Modell Beschreibung",
+      external_url: "https://venue.example/im-wizemann",
+      address: "Quellenstraße 7, 70376 Stuttgart"
+    )
 
     get event_url(event.slug)
 
     assert_response :success
     assert_includes response.body, "LLM Event Beschreibung"
     assert_includes response.body, "LLM Artist Beschreibung"
-    assert_includes response.body, "LLM Venue Beschreibung"
+    assert_includes response.body, "Venue Modell Beschreibung"
+    assert_includes response.body, "https://venue.example/im-wizemann"
+    assert_includes response.body, "Quellenstraße 7, 70376 Stuttgart"
     assert_includes response.body, "https://llm-homepage.example"
     assert_includes response.body, "https://instagram.example/llm-band"
     assert_includes response.body, "https://facebook.example/llm-band"

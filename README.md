@@ -21,7 +21,7 @@ Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität n
 ## Was die Anwendung abdeckt
 
 - Öffentliche Website mit Event-Listen, Event-Detailseiten, News und statischen Inhaltsseiten
-- Redaktionelles Backend für Events, Bilder, Blog, Benutzer und Importquellen
+- Redaktionelles Backend für Events, Venues, Bilder, Blog, Benutzer und Importquellen
 - Import-Pipeline für externe Anbieter wie Easyticket, Eventim und Reservix
 - Redaktionelle Qualitätssicherung mit Inbox, Änderungsprotokollen und Vollständigkeitsprüfungen
 - Newsletter-Anmeldung mit optionalem Mailchimp-Sync
@@ -39,6 +39,7 @@ Ein typischer Ablauf für Events sieht so aus:
 Wichtige fachliche Bausteine sind dabei:
 
 - `Event` als zentrales Veröffentlichungsmodell
+- `Venue` als eigener Veranstaltungsort mit Name, Beschreibung, Logo, Link und Adresse
 - `EventImage`, `EventOffer` und `EventChangeLog` für ergänzende Event-Daten
 - `ImportSource`, `ImportRun` und `RawEventImport` für Rohdaten, Importläufe und Laufprotokolle
 - `EventLlmEnrichment` und `LlmGenreGroupingSnapshot` für nachgelagerte LLM-basierte Qualitäts- und Strukturierungsschritte
@@ -100,6 +101,10 @@ Der Ablauf ist:
 5. `EventUpserter` sucht zuerst ein bestehendes `Event` über `source_fingerprint` oder den gespeicherten `source_snapshot`. Falls nichts passt, wird ein neues Event angelegt.
 6. Danach werden `event_offers`, Genres und Bilder synchronisiert und ein Änderungslog mit `merged_create` oder `merged_update` geschrieben.
 
+`Venue` ist dabei ein eigenes Domänenmodell. Der Merge arbeitet weiterhin mit Venue-Namen aus den Rohimporten, löst diese Namen beim Schreiben aber auf bestehende `venues` auf oder legt fehlende Venues automatisch neu an. Wenn sich der Venue-Name in späteren Rohdaten ändert, wird die Venue-Zuordnung des Events entsprechend auf die passende Venue umgehängt.
+
+Im Backend gibt es für Venues einen eigenen Verwaltungsbereich unter `/backend/venues`. Die Liste startet dort bewusst leer und zeigt erst nach einer Suche Treffer an. Die Suche läuft bereits während des Tippens und aktualisiert die Trefferliste per Turbo, ohne dass die komplette Seite neu geladen werden muss. Gesucht wird nach Venue-Name, Adresse, Beschreibung und externer URL.
+
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen bei exakt gleicher Startzeit. Damit kann der Merge-Import auch Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten` oder `Gregory Porter & Orchestra` und `Gregory Porter` als denselben Termin erkennen. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Artist-Dubletten` ein- oder ausschalten.
 
 Wichtig für das Verhalten im Backend:
@@ -123,6 +128,7 @@ Die Event-Status und ihre sichtbaren Labels sind dabei:
 Wichtig für Updates bestehender Events:
 
 - Bei jedem Merge-Update werden `start_at`, `doors_at`, `venue`, `badge_text`, `min_price`, `max_price`, `primary_source`, `source_fingerprint` und `source_snapshot` neu aus den aktuellen Importdaten gesetzt.
+- Das sichtbare Event-Feld `venue` verweist intern auf eine `Venue`. Im Editor gibt es dafür ein Search-as-you-type-Feld mit Vorschlägen aus den vorhandenen Venues; freie Eingaben legen beim Speichern bei Bedarf automatisch eine neue Venue an.
 - `primary_source` bleibt bei bereits zusammengeführten Events auf der höchst priorisierten vorhandenen Quelle. Standardmäßig gilt dabei `easyticket` vor `eventim` vor `reservix`.
 - `source_snapshot` wird quellenübergreifend zusammengeführt, statt bei späteren Merges nur noch den zuletzt verarbeiteten Provider zu enthalten.
 - `event_offers` werden quellenweise auf den aktuellen Importstand synchronisiert: bestehende passende Offers werden aktualisiert, neue angelegt und nur Offers derselben gerade verarbeiteten Quelle entfernt, wenn sie dort nicht mehr vorkommen.
@@ -249,6 +255,12 @@ Der Ablauf ist:
 Fachlich ist wichtig:
 
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
+- `EventLlmEnrichment.venue`, `venue_description`, `venue_external_url` und `venue_address` bleiben als Rohdaten erhalten.
+- Hat ein Event bereits eine zugeordnete `Venue`, ändert ein LLM-Lauf weder die Venue-Zuordnung noch `Venue.name`.
+- Passt `EventLlmEnrichment.venue` zu der bereits zugeordneten `Venue`, dürfen `Venue.description`, `Venue.external_url` und `Venue.address` aus dem Enrichment nur dann ergänzt werden, wenn das jeweilige Venue-Feld noch leer ist. Bereits gepflegte Werte werden nicht überschrieben.
+- Weicht `EventLlmEnrichment.venue` von der bereits zugeordneten `Venue` ab, bleibt die bestehende Venue vollständig unverändert.
+- Hat ein Event noch keine zugeordnete `Venue`, darf aus `EventLlmEnrichment.venue` eine passende Venue gesucht oder neu angelegt und dem Event zugeordnet werden.
+- In genau diesem Fallback-Fall dürfen zusätzlich `Venue.description`, `Venue.external_url` und `Venue.address` aus `EventLlmEnrichment.venue_description`, `venue_external_url` und `venue_address` gesetzt werden; auch hier werden bereits vorhandene Werte der gefundenen oder neu angelegten Venue nicht überschrieben.
 - Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.

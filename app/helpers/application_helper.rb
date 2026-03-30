@@ -39,6 +39,10 @@ module ApplicationHelper
     controller_path == "backend/presenters"
   end
 
+  def venue_nav_active?
+    controller_path == "backend/venues"
+  end
+
   def importer_nav_active?
     controller_path == "backend/import_sources" || controller_path == "backend/import_runs"
   end
@@ -170,6 +174,24 @@ module ApplicationHelper
 
   def presenter_logo_source(presenter, size: :detail)
     representation = presenter_logo_representation(presenter, size:)
+    return if representation.blank?
+
+    rails_storage_proxy_path(representation, only_path: true)
+  end
+
+  def venue_logo_representation(venue, size: :detail)
+    return if venue.blank? || !venue.logo.attached?
+
+    case size.to_sym
+    when :thumbnail
+      venue.thumbnail_logo_variant
+    else
+      venue.detail_logo_variant
+    end
+  end
+
+  def venue_logo_source(venue, size: :detail)
+    representation = venue_logo_representation(venue, size:)
     return if representation.blank?
 
     rails_storage_proxy_path(representation, only_path: true)

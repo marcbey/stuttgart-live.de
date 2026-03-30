@@ -12,7 +12,7 @@ module Public
     end
 
     def call
-      relation = scope
+      relation = scope.left_outer_joins(:venue_record)
       relation = relation.where(start_at: event_date.beginning_of_day..event_date.end_of_day) if event_date.present?
       relation = apply_query(relation) if normalized_query.present?
       relation = relation.homepage_highlights if filter == FILTER_SKS
@@ -42,7 +42,8 @@ module Public
 
     def searchable_columns
       events = Event.arel_table
-      [ events[:artist_name], events[:title], events[:venue], events[:city] ]
+      venues = Venue.arel_table
+      [ events[:artist_name], events[:title], venues[:name], events[:city] ]
     end
 
     def searchable_text_node

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_03_29_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_03_30_202000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -148,7 +148,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_29_103000) do
     t.bigint "source_run_id", null: false
     t.datetime "updated_at", null: false
     t.string "venue"
+    t.text "venue_address"
     t.text "venue_description"
+    t.string "venue_external_url"
     t.string "youtube_link"
     t.index ["event_id"], name: "index_event_llm_enrichments_on_event_id", unique: true
     t.index ["genre"], name: "index_event_llm_enrichments_on_genre", using: :gin
@@ -236,7 +238,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_29_103000) do
     t.string "support"
     t.string "title", null: false
     t.datetime "updated_at", null: false
-    t.string "venue", null: false
+    t.bigint "venue_id", null: false
     t.string "youtube_url"
     t.index ["event_series_assignment"], name: "index_events_on_event_series_assignment"
     t.index ["event_series_id"], name: "index_events_on_event_series_id"
@@ -251,6 +253,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_29_103000) do
     t.index ["start_at", "id"], name: "index_events_on_published_reservix_start_at_and_id", where: "(((status)::text = 'published'::text) AND ((primary_source)::text = 'reservix'::text))"
     t.index ["start_at", "normalized_artist_name"], name: "index_events_on_start_at_and_normalized_artist_name"
     t.index ["status", "start_at"], name: "index_events_on_status_and_start_at"
+    t.index ["venue_id"], name: "index_events_on_venue_id"
   end
 
   create_table "genres", force: :cascade do |t|
@@ -451,6 +454,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_29_103000) do
     t.index ["role"], name: "index_users_on_role"
   end
 
+  create_table "venues", force: :cascade do |t|
+    t.text "address"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "external_url"
+    t.string "name", null: false
+    t.datetime "updated_at", null: false
+    t.index "lower((name)::text)", name: "index_venues_on_lower_name", unique: true
+  end
+
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "blog_posts", "users", column: "author_id"
@@ -467,6 +480,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_03_29_103000) do
   add_foreign_key "event_presenters", "presenters"
   add_foreign_key "events", "event_series"
   add_foreign_key "events", "users", column: "published_by_id"
+  add_foreign_key "events", "venues"
   add_foreign_key "homepage_genre_lane_configurations", "llm_genre_grouping_snapshots", column: "snapshot_id"
   add_foreign_key "import_run_errors", "import_runs"
   add_foreign_key "import_runs", "import_sources"

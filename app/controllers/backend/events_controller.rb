@@ -64,6 +64,7 @@ module Backend
           raise ActiveRecord::Rollback
         end
 
+        sync_venue_from_llm_fallback!(@event)
         persist_promotion_banner_image!(@event)
 
         assign_genres!(@event)
@@ -116,6 +117,7 @@ module Backend
       navigation_status = @inbox_state.navigation_status
       @manual_ticket_url = manual_ticket_url
       @manual_ticket_sold_out = manual_ticket_sold_out
+      previous_venue_id = @event.venue_id
 
       @event.assign_attributes(event_attribute_params)
       prepare_promotion_banner_image(@event)
@@ -130,6 +132,7 @@ module Backend
           active_editor_tab: editor_tab_for(@event)
         )
       elsif @event.save
+        sync_venue_from_llm_fallback!(@event)
         persist_promotion_banner_image!(@event)
         begin
           update_detail_hero_crop!
@@ -159,7 +162,7 @@ module Backend
 
         editor_response.success(
           editor_state: editor_state,
-          notice: update_success_message,
+          notice: update_success_message(previous_venue_id: previous_venue_id),
           active_editor_tab: editor_tab_for_success(target_event: editor_state.target_event)
         )
       else
@@ -248,6 +251,7 @@ module Backend
       @event = Event.includes(
         :llm_enrichment,
         :import_event_images,
+        :venue_record,
         promotion_banner_image_attachment: :blob,
         event_images: [ file_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
@@ -289,6 +293,7 @@ module Backend
         return Event.includes(
           :llm_enrichment,
           :import_event_images,
+          :venue_record,
           promotion_banner_image_attachment: :blob,
           event_images: [ file_attachment: :blob ],
           event_presenters: { presenter: [ logo_attachment: :blob ] }
@@ -328,6 +333,8 @@ module Backend
         :artist_name,
         :start_at,
         :doors_at,
+        :venue_id,
+        :venue_name,
         :venue,
         :city,
         :event_info,
@@ -358,6 +365,8 @@ module Backend
           :artist_description,
           :event_description,
           :venue_description,
+          :venue_external_url,
+          :venue_address,
           :youtube_link,
           :instagram_link,
           :homepage_link,
@@ -367,7 +376,12 @@ module Backend
     end
 
     def event_attribute_params
-      event_params.except(:presenter_ids)
+      attributes = event_params.except(:presenter_ids)
+      if attributes[:venue_name].blank? && attributes[:venue].present?
+        attributes[:venue_name] = attributes[:venue]
+      end
+
+      attributes.except(:venue)
     end
 
     def editor_tab_for(event)
@@ -507,6 +521,10 @@ module Backend
       return "LLM-Enrichment für dieses Event wurde zur Warteschlange hinzugefügt." if queue_position.blank?
 
       "LLM-Enrichment für dieses Event wurde zur Warteschlange hinzugefügt (Position #{queue_position})."
+    end
+
+    def sync_venue_from_llm_fallback!(event)
+      Venues::LlmFallbackAssignment.call(event: event, enrichment: event.llm_enrichment)
     end
 
     def respond_with_llm_enrichment_feedback(notice: nil, alert: nil)
@@ -842,8 +860,18 @@ module Backend
       ActiveModel::Type::Boolean.new.cast(params[:save_and_publish])
     end
 
-    def update_success_message
+    def update_success_message(previous_venue_id:)
+      return venue_success_message if venue_saved?(previous_venue_id:)
+
       save_and_publish_requested? ? "Event wurde gespeichert und publiziert." : "Event wurde gespeichert."
+    end
+
+    def venue_saved?(previous_venue_id:)
+      @event.venue_id.present? && previous_venue_id != @event.venue_id
+    end
+
+    def venue_success_message
+      save_and_publish_requested? ? "Venue wurde gespeichert und Event publiziert." : "Venue wurde gespeichert."
     end
   end
 end

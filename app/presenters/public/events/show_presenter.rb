@@ -6,6 +6,7 @@ module Public
       HeroGallerySlide = Data.define(:desktop_source, :mobile_source, :alt_text, :caption, :credit, :lightbox_source)
       FactItem = Data.define(:label, :value)
       PresenterItem = Data.define(:name, :external_url, :logo_source)
+      VenueInfo = Data.define(:name, :address, :external_url, :logo_source)
 
       IMPORT_HERO_CREDIT_LABELS = {
         "easyticket" => "Easy Ticket Service",
@@ -269,7 +270,7 @@ module Public
       end
 
       def venue_description
-        @venue_description ||= normalized_copy(llm_enrichment&.venue_description.to_s.strip.presence)
+        @venue_description ||= normalized_copy(event.venue_description)
       end
 
       def support_text
@@ -295,6 +296,20 @@ module Public
 
       def has_presenters?
         presenters.any?
+      end
+
+      def venue_info
+        return @venue_info if defined?(@venue_info)
+
+        venue = event.venue_record
+        return @venue_info = nil if venue.blank?
+
+        @venue_info = VenueInfo.new(
+          name: venue.name,
+          address: venue.address.to_s.strip.presence,
+          external_url: venue.external_url.to_s.strip.presence,
+          logo_source: view_context.venue_logo_source(venue, size: :detail)
+        )
       end
 
       def has_secondary_content?
@@ -482,12 +497,12 @@ module Public
       end
 
       def schema_location
-        return if event.venue.blank? && event.city.blank?
+        return if event.venue.blank? && event.city.blank? && event.venue_address.blank?
 
         {
           "@type" => "Place",
           name: event.venue.to_s.strip.presence,
-          address: event.city.to_s.strip.presence
+          address: event.venue_address.to_s.strip.presence || event.city.to_s.strip.presence
         }.compact
       end
 

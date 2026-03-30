@@ -64,6 +64,9 @@ application.register("keyboard-shortcuts", KeyboardShortcutsController)
 import LightboxController from "./lightbox_controller"
 application.register("lightbox", LightboxController)
 
+import LiveSearchController from "./live_search_controller"
+application.register("live-search", LiveSearchController)
+
 import NextEventController from "./next_event_controller"
 application.register("next-event", NextEventController)
 
@@ -96,3 +99,6 @@ application.register("settings-sortable", SettingsSortableController)
 
 import SettingsTabsController from "./settings_tabs_controller"
 application.register("settings-tabs", SettingsTabsController)
+
+import VenueAutocompleteController from "./venue_autocomplete_controller"
+application.register("venue-autocomplete", VenueAutocompleteController)

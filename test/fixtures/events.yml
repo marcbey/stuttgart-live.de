@@ -5,7 +5,7 @@ published_one:
   artist_name: Published Artist
   normalized_artist_name: publishedartist
   start_at: 2026-06-01 20:00:00
-  venue: LKA Longhorn
+  venue_record: lka_longhorn
   city: Stuttgart
   event_info: Infos
   support: Support Act
@@ -28,7 +28,7 @@ published_past_one:
   artist_name: Past Artist
   normalized_artist_name: pastartist
   start_at: 2026-01-10 20:00:00
-  venue: LKA Longhorn
+  venue_record: lka_longhorn
   city: Stuttgart
   event_info: Infos
   badge_text:
@@ -50,7 +50,7 @@ needs_review_one:
   artist_name: Review Artist
   normalized_artist_name: reviewartist
   start_at: 2026-07-10 20:00:00
-  venue: Im Wizemann
+  venue_record: im_wizemann
   city: Stuttgart
   event_info:
   support:
@@ -76,7 +76,7 @@ needs_review_two:
   artist_name: Review Artist Two
   normalized_artist_name: reviewartisttwo
   start_at: 2026-07-12 20:00:00
-  venue: Im Wizemann
+  venue_record: im_wizemann
   city: Stuttgart
   event_info:
   support:

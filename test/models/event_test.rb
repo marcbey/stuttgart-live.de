@@ -64,6 +64,38 @@ class EventTest < ActiveSupport::TestCase
     assert_equal "Kulturquartier", event.venue
   end
 
+  test "reuses an existing venue by name" do
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue_name: " im wizemann ",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venues(:im_wizemann), event.venue_record
+  end
+
+  test "creates a new venue from venue_name on save" do
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue_name: "Neue Test Venue",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert_difference -> { Venue.count }, 1 do
+      event.save!
+    end
+
+    assert_equal "Neue Test Venue", event.reload.venue
+    assert_equal "Neue Test Venue", event.venue_record.name
+  end
+
   test "allows blank city and normalizes it to nil" do
     event = Event.new(
       artist_name: "Test Artist",

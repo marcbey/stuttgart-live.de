@@ -1,0 +1,11 @@
+lka_longhorn:
+  name: LKA Longhorn
+  description: Rockclub in Stuttgart-Wangen.
+  external_url: https://example.com/lka
+  address: Heiligenwiesen 6, 70327 Stuttgart
+
+im_wizemann:
+  name: Im Wizemann
+  description: Kultur- und Konzertlocation in Bad Cannstatt.
+  external_url: https://example.com/wizemann
+  address: Quellenstraße 7, 70376 Stuttgart

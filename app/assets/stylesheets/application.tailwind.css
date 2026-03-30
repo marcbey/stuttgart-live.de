@@ -7015,6 +7015,161 @@ trix-editor.blog-rich-text:focus {
   display: inline-flex;
 }
 
+.venue-grid {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+}
+
+.venue-card {
+  display: grid;
+  gap: 1rem;
+  align-content: start;
+  padding: 1.1rem;
+  border: 1px solid #ece7dd;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 245, 239, 0.94)),
+    repeating-linear-gradient(135deg, rgba(227, 27, 46, 0.025) 0, rgba(227, 27, 46, 0.025) 10px, transparent 10px, transparent 20px);
+  box-shadow: 0 10px 26px rgba(41, 32, 17, 0.06);
+}
+
+.venue-card-header {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.venue-card-title {
+  min-width: 0;
+}
+
+.venue-card-title h4 {
+  margin: 0;
+  font-size: 1.15rem;
+  line-height: 1.2;
+  color: #171717;
+  text-wrap: balance;
+}
+
+.venue-card-kicker {
+  margin: 0.35rem 0 0;
+  color: #6d665d;
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.venue-card-stats {
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.55rem;
+}
+
+.venue-stat {
+  min-width: 4.9rem;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(255, 255, 255, 0.84);
+  text-align: right;
+}
+
+.venue-stat strong {
+  display: block;
+  font-size: 1.05rem;
+  line-height: 1.05;
+  color: #171717;
+}
+
+.venue-stat-label {
+  display: block;
+  margin-bottom: 0.1rem;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7a7266;
+}
+
+.venue-card-main {
+  display: grid;
+  gap: 1rem;
+}
+
+.venue-card-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 8rem;
+  padding: 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.08);
+  background: rgba(255, 255, 255, 0.88);
+}
+
+.venue-card-logo img {
+  max-width: 100%;
+  max-height: 6rem;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+}
+
+.venue-card-body {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.venue-card-summary {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.72);
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.venue-card-meta-grid {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.venue-card-meta {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.venue-card-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #7a7266;
+}
+
+.venue-card-copy,
+.venue-card-link {
+  color: rgba(17, 17, 17, 0.72);
+  overflow-wrap: anywhere;
+}
+
+.venue-card-link {
+  display: inline-block;
+}
+
+.venue-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: auto;
+}
+
+.venue-card-actions .button_to {
+  display: inline-flex;
+}
+
 .presenter-form-logo-grid {
   align-items: start;
 }
@@ -7113,6 +7268,19 @@ trix-editor.blog-rich-text:focus {
 
   .presenter-card-header {
     grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .venue-card-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .venue-card-main-with-logo {
+    grid-template-columns: minmax(8.5rem, 10rem) minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .venue-card-meta-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
@@ -7992,4 +8160,62 @@ trix-editor.blog-rich-text:focus {
   .consent-media-actions .button {
     width: 100%;
   }
+}
+
+.venue-autocomplete {
+  position: relative;
+}
+
+.venue-autocomplete-panel {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+.venue-autocomplete-results {
+  display: grid;
+}
+
+.venue-autocomplete-item {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  border: 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  cursor: pointer;
+  background: transparent;
+}
+
+.venue-autocomplete-item:first-child {
+  border-top: 0;
+}
+
+.venue-autocomplete-item:hover,
+.venue-autocomplete-item.is-active {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.venue-autocomplete-item-name {
+  font-weight: 600;
+}
+
+.venue-autocomplete-item-meta,
+.venue-autocomplete-empty {
+  color: rgba(30, 41, 59, 0.78);
+  font-size: 0.93rem;
+  line-height: 1.4;
+}
+
+.venue-autocomplete-empty {
+  padding: 0.75rem 0.9rem;
 }

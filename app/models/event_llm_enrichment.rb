@@ -31,6 +31,8 @@ class EventLlmEnrichment < ApplicationRecord
     self.artist_description = artist_description.to_s.strip.presence
     self.event_description = event_description.to_s.strip.presence
     self.venue_description = venue_description.to_s.strip.presence
+    self.venue_external_url = venue_external_url.to_s.strip.presence
+    self.venue_address = venue_address.to_s.strip.presence
     self.youtube_link = youtube_link.to_s.strip.presence
     self.instagram_link = instagram_link.to_s.strip.presence
     self.homepage_link = homepage_link.to_s.strip.presence

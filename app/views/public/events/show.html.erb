@@ -37,6 +37,38 @@
         </section>
       <% end %>
 
+      <% if presenter.venue_info.present? %>
+        <section class="event-detail-panel event-detail-copy">
+          <h2>Venue</h2>
+          <div class="event-detail-copy-body">
+            <% if presenter.venue_info.logo_source.present? %>
+              <p>
+                <%= image_tag presenter.venue_info.logo_source,
+                              alt: presenter.venue_info.name,
+                              style: "max-width: 14rem; max-height: 5rem; object-fit: contain;" %>
+              </p>
+            <% end %>
+
+            <% if presenter.venue_info.address.present? %>
+              <div>
+                <p><strong>Adresse:</strong></p>
+                <%= simple_format(presenter.venue_info.address) %>
+              </div>
+            <% end %>
+
+            <% if presenter.venue_info.external_url.present? %>
+              <p>
+                <strong>Website:</strong><br>
+                <%= link_to presenter.venue_info.external_url,
+                            presenter.venue_info.external_url,
+                            target: "_blank",
+                            rel: "noopener" %>
+              </p>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+
       <% if presenter.artist_description.present? %>
         <% artist_columns = event_detail_text_columns(presenter.artist_description) %>
         <section class="event-detail-panel event-detail-copy">

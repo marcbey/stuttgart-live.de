@@ -220,6 +220,7 @@ module Public
 
     def homepage_events_relation
       Event.includes(
+        :venue_record,
         :event_offers,
         :import_event_images,
         event_images: [ file_attachment: :blob ],
@@ -229,6 +230,7 @@ module Public
 
     def search_events_relation
       Event.includes(
+        :venue_record,
         :import_event_images,
         event_images: [ file_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
@@ -280,6 +282,7 @@ module Public
 
     def show_related_genre_lane_events_relation
       Event.includes(
+        :venue_record,
         :event_offers,
         :import_event_images,
         event_images: [ file_attachment: :blob ],
@@ -289,6 +292,7 @@ module Public
 
     def show_event_series_lane_relation
       relation = Event.includes(
+        :venue_record,
         :event_offers,
         :import_event_images,
         event_images: [ file_attachment: :blob ],
@@ -302,6 +306,7 @@ module Public
       Event.includes(
         :llm_enrichment,
         :genres,
+        :venue_record,
         :event_offers,
         :import_event_images,
         event_images: [ file_attachment: :blob ],

@@ -85,6 +85,24 @@
 
           <section class="backend-section backend-section-compact">
             <div class="backend-section-header">
+              <h3>Venue-Daten</h3>
+            </div>
+            <div class="backend-section-body">
+              <div class="editor-grid">
+                <div>
+                  <%= form.label :venue_external_url, "Venue-Link", class: "form-label" %>
+                  <%= form.url_field :venue_external_url, class: "form-input", form: editor_form_id %>
+                </div>
+                <div>
+                  <%= form.label :venue_address, "Venue-Adresse", class: "form-label" %>
+                  <%= form.text_field :venue_address, class: "form-input", form: editor_form_id %>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="backend-section backend-section-compact">
+            <div class="backend-section-header">
               <h3>Links</h3>
             </div>
             <div class="backend-section-body">

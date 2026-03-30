@@ -45,6 +45,7 @@ class Event < ApplicationRecord
 
   belongs_to :published_by, class_name: "User", optional: true
   belongs_to :event_series, optional: true
+  belongs_to :venue_record, class_name: "Venue", foreign_key: :venue_id, inverse_of: :events, autosave: true, optional: true
 
   has_many :event_offers, dependent: :destroy
   has_many :event_genres, dependent: :destroy
@@ -63,11 +64,12 @@ class Event < ApplicationRecord
     inverse_of: :import_event
 
   attr_accessor :pending_promotion_banner_image_blob,
-                :remove_promotion_banner_image
+                :remove_promotion_banner_image,
+                :venue_name
 
   accepts_nested_attributes_for :llm_enrichment, update_only: true
 
-  validates :slug, :title, :artist_name, :normalized_artist_name, :start_at, :venue, :status, presence: true
+  validates :slug, :title, :artist_name, :normalized_artist_name, :start_at, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
   validates :event_series_assignment, inclusion: { in: EVENT_SERIES_ASSIGNMENTS }
   validates :slug, uniqueness: true
@@ -80,6 +82,7 @@ class Event < ApplicationRecord
   validates :promotion_banner_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
+  validates :venue_record, presence: true
   validate :promotion_banner_image_must_be_image
 
   before_validation :normalize_attributes
@@ -97,7 +100,7 @@ class Event < ApplicationRecord
   scope :promotion_banner_live, lambda {
     published_live
       .where(promotion_banner: true)
-      .includes(promotion_banner_image_attachment: :blob, event_images: [ file_attachment: :blob ])
+      .includes(:venue_record, promotion_banner_image_attachment: :blob, event_images: [ file_attachment: :blob ])
   }
 
   def self.sks_promoter_ids
@@ -120,6 +123,42 @@ class Event < ApplicationRecord
 
   def published?
     status == "published"
+  end
+
+  def venue
+    venue_name.to_s.presence || venue_record&.name.to_s.presence
+  end
+
+  def venue=(value)
+    if value.is_a?(Venue)
+      self.venue_record = value
+      @venue_name = normalize_venue_name(value.name)
+      return value
+    end
+
+    self.venue_name = normalize_venue_name(value)
+    self.venue_record = Venues::Resolver.call(name: @venue_name, venue_id: venue_id)
+  end
+
+  def venue_name
+    @venue_name.to_s.presence || venue_record&.name.to_s.presence
+  end
+
+  def venue_name=(value)
+    @venue_name = normalize_venue_name(value)
+    self.venue_record = Venues::Resolver.call(name: @venue_name, venue_id: venue_id)
+  end
+
+  def venue_description
+    venue_record&.description.to_s.presence
+  end
+
+  def venue_external_url
+    venue_record&.external_url.to_s.presence
+  end
+
+  def venue_address
+    venue_record&.address.to_s.presence
   end
 
   def scheduled?
@@ -461,7 +500,7 @@ class Event < ApplicationRecord
     self.artist_name = artist_name.to_s.strip
     split_artist_and_tour_from_title!
     self.normalized_artist_name = Merging::ArtistNameNormalizer.normalize_with_fallback(artist_name, title)
-    self.venue = normalize_venue_name(venue)
+    sync_venue_record
     normalized_city = city.to_s.strip
     self.city = normalized_city.casecmp("Unbekannt").zero? ? nil : normalized_city.presence
     self.badge_text = badge_text.to_s.strip.presence
@@ -579,10 +618,13 @@ class Event < ApplicationRecord
   end
 
   def normalize_venue_name(value)
-    normalized = value.to_s.strip
-    return normalized unless normalized.match?(/kulturquartier/i)
+    Venue.normalize_name(value)
+  end
 
-    normalized.gsub(/\s*[-,]?\s*proton\b/i, "").strip
+  def sync_venue_record
+    resolved_venue = Venues::Resolver.call(name: @venue_name, venue_id: venue_id)
+    self.venue_record = resolved_venue
+    self.venue_name = resolved_venue&.name || @venue_name
   end
 
   def extract_youtube_id(url)

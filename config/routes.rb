@@ -30,6 +30,9 @@ Rails.application.routes.draw do
       get :bulk_new, on: :collection
       post :bulk_create, on: :collection
     end
+    resources :venues, except: [ :show ] do
+      get :autocomplete, on: :collection
+    end
     resources :users, only: [ :index, :new, :create, :edit, :update ]
 
     resources :import_sources, only: [ :index, :edit, :update ] do

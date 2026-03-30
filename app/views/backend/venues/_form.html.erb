@@ -1,0 +1,74 @@
+<div class="editor-panel backend-panel">
+  <% if venue.errors.any? %>
+    <div class="flash flash-alert">
+      <strong>Bitte Eingaben prüfen.</strong>
+      <ul>
+        <% venue.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: [ :backend, venue ], class: "editor-form" do |form| %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Stammdaten</h3>
+      </div>
+      <div class="backend-section-body">
+        <div class="editor-grid">
+          <div>
+            <%= form.label :name, "Name", class: "form-label" %>
+            <%= form.text_field :name, class: "form-input", required: true, maxlength: 180 %>
+          </div>
+
+          <div>
+            <%= form.label :external_url, "Externe URL", class: "form-label" %>
+            <%= form.url_field :external_url, class: "form-input", placeholder: "https://…" %>
+          </div>
+
+          <div class="editor-grid-span-full">
+            <%= form.label :address, "Adresse", class: "form-label" %>
+            <%= form.text_area :address, class: "form-input", rows: 3 %>
+            <p class="form-hint">Freitext, z. B. Straße, Hausnummer, PLZ und Ort.</p>
+          </div>
+
+          <div class="editor-grid-span-full">
+            <%= form.label :description, "Beschreibung", class: "form-label" %>
+            <%= form.text_area :description, class: "form-input", rows: 6 %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Logo</h3>
+      </div>
+      <div class="backend-section-body">
+        <div class="editor-grid presenter-form-logo-grid">
+          <div>
+            <%= form.label :logo, "Logo hochladen", class: "form-label" %>
+            <%= form.file_field :logo, class: "form-input", accept: "image/*" %>
+            <p class="form-hint">Optional. Ersetzt beim Bearbeiten das bestehende Logo.</p>
+          </div>
+
+          <div>
+            <p class="form-label">Vorschau</p>
+            <div class="presenter-form-logo-preview">
+              <% if venue.logo.attached? %>
+                <%= image_tag venue.detail_logo_variant, alt: venue.name %>
+              <% else %>
+                <span>Noch kein Logo hochgeladen.</span>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="editor-footer">
+      <%= form.submit submit_label, class: "button" %>
+    </div>
+  <% end %>
+</div>

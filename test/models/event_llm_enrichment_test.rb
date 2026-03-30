@@ -10,6 +10,8 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
       artist_description: " Artist ",
       event_description: " Event ",
       venue_description: " Venue ",
+      venue_external_url: " https://venue.example/demo ",
+      venue_address: " Venue Straße 1, Stuttgart ",
       youtube_link: " https://youtube.example/demo ",
       instagram_link: " https://instagram.example/demo ",
       homepage_link: " https://homepage.example/demo ",
@@ -21,6 +23,8 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
 
     assert_equal [ "Jazz" ], enrichment.genre
     assert_equal "LKA Longhorn", enrichment.venue
+    assert_equal "https://venue.example/demo", enrichment.venue_external_url
+    assert_equal "Venue Straße 1, Stuttgart", enrichment.venue_address
     assert_equal "gpt-5-mini", enrichment.model
     assert_equal "v1", enrichment.prompt_version
 

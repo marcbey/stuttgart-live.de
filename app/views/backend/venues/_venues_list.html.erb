@@ -1,0 +1,83 @@
+<div id="venues_results">
+  <% if query_filter.blank? %>
+    <p class="form-hint">Suche nach Name, Adresse, Beschreibung oder URL, um Venues anzuzeigen.</p>
+  <% elsif venues.any? %>
+    <ul class="venue-grid" role="list">
+      <% venues.each do |venue| %>
+        <li class="venue-card">
+          <div class="venue-card-header">
+            <div class="venue-card-title">
+              <div>
+                <h4><%= venue.name %></h4>
+                <% if venue.address.present? %>
+                  <p class="venue-card-kicker"><%= venue.address %></p>
+                <% end %>
+              </div>
+            </div>
+            <div class="venue-card-stats" aria-label="Event-Zahlen">
+              <div class="venue-stat">
+                <span class="venue-stat-label">Gesamt</span>
+                <strong><%= venue.events_count %></strong>
+              </div>
+              <div class="venue-stat">
+                <span class="venue-stat-label">Kommend</span>
+                <strong><%= venue.upcoming_events_count %></strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="venue-card-main <%= "venue-card-main-with-logo" if venue.logo.attached? %>">
+            <% if venue.logo.attached? %>
+              <div class="venue-card-logo">
+                <%= image_tag venue.thumbnail_logo_variant, alt: venue.name %>
+              </div>
+            <% end %>
+
+            <div class="venue-card-body">
+              <% if venue.description.present? %>
+                <p class="venue-card-summary"><%= truncate(venue.description, length: 220) %></p>
+              <% elsif venue.address.present? %>
+                <p class="venue-card-summary"><%= truncate(venue.address, length: 220) %></p>
+              <% end %>
+
+              <div class="venue-card-meta-grid">
+                <div class="venue-card-meta">
+                  <span class="venue-card-label">Adresse</span>
+                  <span class="venue-card-copy"><%= venue.address.presence || "Keine Adresse hinterlegt" %></span>
+                </div>
+
+                <div class="venue-card-meta">
+                  <span class="venue-card-label">Externe URL</span>
+                  <% if venue.external_url.present? %>
+                    <%= link_to venue.external_url,
+                                venue.external_url,
+                                target: "_blank",
+                                rel: "noopener",
+                                class: "venue-card-link" %>
+                  <% else %>
+                    <span class="venue-card-copy">Keine URL hinterlegt</span>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="venue-card-actions">
+            <%= link_to "Bearbeiten", edit_backend_venue_path(venue), class: "button button-ghost button-compact" %>
+            <%= button_to "Löschen",
+                          backend_venue_path(venue),
+                          method: :delete,
+                          class: "button button-secondary button-compact",
+                          form: {
+                            data: {
+                              turbo_confirm: "Venue wirklich löschen?"
+                            }
+                          } %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="form-hint">Keine Venues für „<%= query_filter %>“ gefunden.</p>
+  <% end %>
+</div>

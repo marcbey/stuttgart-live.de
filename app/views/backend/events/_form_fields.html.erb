@@ -39,8 +39,31 @@
     <%= form.text_field :city, class: "form-input" %>
   </div>
   <div>
-    <%= form.label :venue, "Venue", class: "form-label" %>
-    <%= form.text_field :venue, class: "form-input" %>
+    <%= form.label :venue_name, "Venue", class: "form-label" %>
+    <div class="venue-autocomplete"
+         data-controller="venue-autocomplete"
+         data-venue-autocomplete-url-value="<%= autocomplete_backend_venues_path %>">
+      <%= form.hidden_field :venue_id, data: { venue_autocomplete_target: "hidden" } %>
+      <%= form.text_field :venue_name,
+                          class: "form-input",
+                          autocomplete: "off",
+                          data: {
+                            venue_autocomplete_target: "input",
+                            action: "focus->venue-autocomplete#open input->venue-autocomplete#search keydown->venue-autocomplete#keydown"
+                          },
+                          aria: {
+                            autocomplete: "list",
+                            expanded: "false",
+                            controls: dom_id(event, :venue_autocomplete_results)
+                          } %>
+      <div id="<%= dom_id(event, :venue_autocomplete_results) %>"
+           class="venue-autocomplete-panel"
+           hidden
+           data-venue-autocomplete-target="panel">
+        <div class="venue-autocomplete-results" data-venue-autocomplete-target="results"></div>
+      </div>
+      <p class="sr-only" role="status" aria-live="polite" data-venue-autocomplete-target="status"></p>
+    </div>
   </div>
   <% if show_promoter_id %>
     <div>

@@ -19,6 +19,7 @@
     - Neuer Termin - Karten bleiben gültig, Verlegt auf ..., 
 - Newsletter/Mailchimp
 - Google Analytics
+- getrennte css files frontend/backend
 
 # Bugs
 - Listenansicht: einschränken: desktop 6 rows, mobile 10 events
@@ -47,3 +48,12 @@
 - Event: merken in local storage, gemerkte Events irgendwie, irgendwo anzeigen
 
 # Konzepte
+
+
+- LLM Beschreibung + über den act + über die venue zusammen legen
+- noch nicht veröffentlichte Events, sollen unpublished sein, ein job published sie je nach veröffentlicht sie dann
+- Genre Gruppierung tunen
+- Veröffentlichunsdatum wird nicht gespeichert
+- Suche: zielgerichet mit Datum (heute, morgen, Wochenende), Genre
+- Suchergebnisseite
+- alle statische Seiten sollen pflegbar sein (CMS)

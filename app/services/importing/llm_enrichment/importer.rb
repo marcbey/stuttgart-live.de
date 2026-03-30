@@ -10,7 +10,7 @@ module Importing
       PROMPT_VERSION = "v1"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment_batch".freeze
       OUTPUT_ITEMS_KEY = "events".freeze
-      LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
+      LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link venue_external_url].freeze
 
       Item = Data.define(:event_id, :artist_name, :event_name, :venue, :event_info) do
         def as_json(*)
@@ -179,7 +179,7 @@ module Importing
                 items: {
                   type: "object",
                   additionalProperties: false,
-                  required: %w[event_id genre venue artist_description event_description venue_description youtube_link instagram_link homepage_link facebook_link],
+                  required: %w[event_id genre venue artist_description event_description venue_description venue_external_url venue_address youtube_link instagram_link homepage_link facebook_link],
                   properties: {
                     event_id: { type: "integer" },
                     genre: {
@@ -190,6 +190,8 @@ module Importing
                     artist_description: { type: [ "string", "null" ] },
                     event_description: { type: [ "string", "null" ] },
                     venue_description: { type: [ "string", "null" ] },
+                    venue_external_url: { type: [ "string", "null" ] },
+                    venue_address: { type: [ "string", "null" ] },
                     youtube_link: { type: [ "string", "null" ] },
                     instagram_link: { type: [ "string", "null" ] },
                     homepage_link: { type: [ "string", "null" ] },
@@ -315,6 +317,8 @@ module Importing
             enrichment.artist_description = validated_attributes[:artist_description]
             enrichment.event_description = validated_attributes[:event_description]
             enrichment.venue_description = validated_attributes[:venue_description]
+            enrichment.venue_external_url = validated_attributes[:venue_external_url]
+            enrichment.venue_address = validated_attributes[:venue_address]
             enrichment.youtube_link = validated_attributes[:youtube_link]
             enrichment.instagram_link = validated_attributes[:instagram_link]
             enrichment.homepage_link = validated_attributes[:homepage_link]
@@ -323,6 +327,9 @@ module Importing
             enrichment.prompt_version = PROMPT_VERSION
             enrichment.raw_response = raw_response
             enrichment.save!
+
+            event = Event.find(event_id)
+            Venues::LlmFallbackAssignment.call(event: event, enrichment: enrichment)
           end
         end
 
@@ -341,6 +348,8 @@ module Importing
           artist_description: item["artist_description"] || item[:artist_description],
           event_description: item["event_description"] || item[:event_description],
           venue_description: item["venue_description"] || item[:venue_description],
+          venue_external_url: item["venue_external_url"] || item[:venue_external_url],
+          venue_address: item["venue_address"] || item[:venue_address],
           youtube_link: item["youtube_link"] || item[:youtube_link],
           instagram_link: item["instagram_link"] || item[:instagram_link],
           homepage_link: item["homepage_link"] || item[:homepage_link],

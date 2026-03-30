@@ -53,6 +53,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       "/rails/active_storage/presenters/#{presenter.id}-#{size}"
     end
 
+    def venue_logo_source(venue, size: :detail)
+      "/rails/active_storage/venues/#{venue.id || 'new'}-#{size}"
+    end
+
     def event_url(slug)
       "https://stuttgart-live.de/events/#{slug}"
     end
@@ -199,7 +203,8 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       homepage_url: "",
       instagram_url: "",
       facebook_url: "",
-      youtube_url: ""
+      youtube_url: "",
+      venue: "Im Wizemann"
     )
 
     event.build_llm_enrichment(
@@ -215,6 +220,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       prompt_version: "v1",
       raw_response: {}
     )
+    event.venue_record.description = "Venue Modell Beschreibung"
 
     presenter = build_presenter(event)
 
@@ -222,12 +228,13 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Band", presenter.display_headline
     assert_equal "LLM Event Beschreibung", presenter.primary_description
     assert_equal "LLM Artist Beschreibung", presenter.artist_description
-    assert_equal "LLM Venue Beschreibung", presenter.venue_description
+    assert_equal "Venue Modell Beschreibung", presenter.venue_description
     assert_equal [ "Homepage", "Instagram", "Facebook" ], presenter.external_links.map(&:label)
     assert_equal [ "https://llm-homepage.example", "https://instagram.example/llm-band", "https://facebook.example/llm-band" ], presenter.external_links.map(&:url)
     assert_equal "https://www.youtube.com/embed/fallback", presenter.youtube_embed_url
     assert_equal [ "Pop", "Rock", "Indie" ], presenter.genre_tags
     assert_equal [ "Indie", "Rock" ], presenter.enrichment_genres
+    assert_equal "Im Wizemann", presenter.venue_info.name
   end
 
   test "adds youtube fallback link when url is not embeddable" do

@@ -33,7 +33,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
     assert_select ".app-nav-backend-menu", count: 0
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
-    assert_match(/Events.*News.*Präsentatoren.*Queue.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Präsentatoren.*Venues.*Queue.*Passwort.*Logout/m, response.body)
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "auto-next"
     assert_includes response.body, "name=\"status\""
@@ -89,6 +89,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button", text: "Upload", count: 0
     assert_select "input[name='event_image[files][]'][required]", count: 0
     assert_select "#event-editor-panel-event .editor-genre-section", count: 0
+    assert_select "input[name='event[venue_name]'][data-venue-autocomplete-target='input']", count: 1
+    assert_select "input[name='event[venue_id]'][data-venue-autocomplete-target='hidden']", count: 1
+    assert_select ".venue-autocomplete[data-controller='venue-autocomplete']", count: 1
   end
 
   test "show populates ticket url with the frontend ticket url" do
@@ -984,6 +987,46 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neu per Turbo", @event.reload.title
   end
 
+  test "updates event venue and shows venue notice" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: @event.title,
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue_name: "LKA Longhorn",
+        city: @event.city,
+        status: "needs_review"
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+    assert_equal venues(:lka_longhorn), @event.reload.venue_record
+    assert_equal "Venue wurde gespeichert.", flash[:notice]
+  end
+
+  test "updates event venue via turbo stream and renders venue flash message" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: {
+      event: {
+        title: @event.title,
+        artist_name: @event.artist_name,
+        start_at: @event.start_at,
+        venue_name: "LKA Longhorn",
+        city: @event.city,
+        status: "needs_review"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_includes response.body, "target=\"flash-messages\""
+    assert_includes response.body, "Venue wurde gespeichert."
+    assert_equal venues(:lka_longhorn), @event.reload.venue_record
+  end
+
   test "save and publish updates event and publishes it" do
     sign_in_as(@user)
 
@@ -1626,6 +1669,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
           artist_description: "Aktualisierte Artist-Beschreibung",
           event_description: "Aktualisierte Event-Beschreibung",
           venue_description: "Aktualisierte Venue-Beschreibung",
+          venue_external_url: "https://venue.example/updated",
+          venue_address: "Venue Straße 12, Stuttgart",
           youtube_link: "https://youtube.example/updated",
           instagram_link: "https://instagram.example/updated",
           homepage_link: "https://homepage.example/updated",
@@ -1642,6 +1687,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Aktualisierte Artist-Beschreibung", enrichment.artist_description
     assert_equal "Aktualisierte Event-Beschreibung", enrichment.event_description
     assert_equal "Aktualisierte Venue-Beschreibung", enrichment.venue_description
+    assert_equal "https://venue.example/updated", enrichment.venue_external_url
+    assert_equal "Venue Straße 12, Stuttgart", enrichment.venue_address
     assert_equal "https://youtube.example/updated", enrichment.youtube_link
     assert_equal "https://instagram.example/updated", enrichment.instagram_link
     assert_equal "https://homepage.example/updated", enrichment.homepage_link

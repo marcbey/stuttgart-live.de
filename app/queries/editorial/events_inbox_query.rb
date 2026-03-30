@@ -15,8 +15,9 @@ module Editorial
         :event_offers,
         :import_event_images,
         :event_change_logs,
+        :venue_record,
         event_images: [ file_attachment: :blob ]
-      )
+      ).left_outer_joins(:venue_record)
       relation = relation.where(status: status_filter) if status_filter.present?
       relation = relation.where("start_at >= ?", starts_after.beginning_of_day) if starts_after.present?
       relation = relation.where("start_at <= ?", starts_before.end_of_day) if starts_before.present?
@@ -29,7 +30,7 @@ module Editorial
       if query.present?
         token = "%#{query.downcase}%"
         relation = relation.where(
-          "LOWER(title) LIKE :q OR LOWER(artist_name) LIKE :q OR LOWER(city) LIKE :q OR LOWER(venue) LIKE :q",
+          "LOWER(events.title) LIKE :q OR LOWER(events.artist_name) LIKE :q OR LOWER(events.city) LIKE :q OR LOWER(COALESCE(venues.name, '')) LIKE :q",
           q: token
         )
       end

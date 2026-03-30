@@ -95,6 +95,8 @@ module Importing
                       artist_description: "Artist eins",
                       event_description: "Event eins",
                       venue_description: "Venue eins",
+                      venue_external_url: "https://venue.example/one",
+                      venue_address: "Venueweg 1, Stuttgart",
                       youtube_link: "https://youtube.example/one",
                       instagram_link: "https://instagram.example/one",
                       homepage_link: "https://example.com/one",
@@ -140,6 +142,8 @@ module Importing
 
           enrichment = events(:published_one).reload.llm_enrichment
           assert_equal [ "Indie", "Pop" ], enrichment.genre
+          assert_equal "https://venue.example/one", enrichment.venue_external_url
+          assert_equal "Venueweg 1, Stuttgart", enrichment.venue_address
           assert_equal "https://example.com/one", enrichment.homepage_link
           assert_equal @run, enrichment.source_run
 
@@ -709,6 +713,85 @@ module Importing
         assert_equal 0, result.skipped_count
         assert_equal 1, result.enriched_count
         assert_equal [ "Jazz" ], event.reload.llm_enrichment.genre
+      end
+
+      test "does not overwrite an existing venue from llm enrichment data" do
+        event = events(:published_one)
+        event.venue_record.update!(description: "Bestehende Venue-Beschreibung")
+
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "output_text" => {
+                events: [
+                  {
+                    event_id: event.id,
+                    genre: [ "Indie" ],
+                    venue: "Komplett Andere Venue",
+                    artist_description: "Artist",
+                    event_description: "Event",
+                    venue_description: "Neue LLM Venue-Beschreibung",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: nil,
+                    facebook_link: nil
+                  }
+                ]
+              }.to_json
+            }
+          ]
+        )
+
+        build_importer(client: client).call
+
+        event.reload
+        assert_equal "LKA Longhorn", event.venue
+        assert_equal "Bestehende Venue-Beschreibung", event.venue_record.description
+        assert_equal "Komplett Andere Venue", event.llm_enrichment.venue
+        assert_equal "Neue LLM Venue-Beschreibung", event.llm_enrichment.venue_description
+      end
+
+      test "fills blank venue metadata from matching llm enrichment data without overwriting present values" do
+        event = events(:published_one)
+        event.venue_record.update!(
+          description: nil,
+          external_url: "https://bestehend.example",
+          address: nil
+        )
+
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "output_text" => {
+                events: [
+                  {
+                    event_id: event.id,
+                    genre: [ "Indie" ],
+                    venue: "LKA Longhorn",
+                    artist_description: "Artist",
+                    event_description: "Event",
+                    venue_description: "Neue LLM Venue-Beschreibung",
+                    venue_external_url: "https://neu.example",
+                    venue_address: "Neue Adresse 7, Stuttgart",
+                    youtube_link: nil,
+                    instagram_link: nil,
+                    homepage_link: nil,
+                    facebook_link: nil
+                  }
+                ]
+              }.to_json
+            }
+          ]
+        )
+
+        build_importer(client: client).call
+
+        event.reload
+        assert_equal "Neue LLM Venue-Beschreibung", event.venue_record.description
+        assert_equal "https://bestehend.example", event.venue_record.external_url
+        assert_equal "Neue Adresse 7, Stuttgart", event.venue_record.address
       end
 
       test "raises when openai response contains unexpected event ids" do

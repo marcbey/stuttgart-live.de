@@ -1,0 +1,14 @@
+<% content_for :title, "Venue anlegen" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Venue anlegen</h1>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zur Venue-Liste", backend_venues_path, class: "button button-secondary button-compact" %>
+    </div>
+  </header>
+
+  <%= render "form", venue: @venue, submit_label: "Venue anlegen" %>
+</section>

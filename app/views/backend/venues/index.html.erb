@@ -1,0 +1,54 @@
+<% content_for :title, "Venues" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Venues</h1>
+      <p>Veranstaltungsorte mit Beschreibung, Logo, Link und Adresse.</p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Venue anlegen", new_backend_venue_path, class: "button button-compact" %>
+    </div>
+  </header>
+
+  <section class="backend-section backend-table-section">
+    <div class="backend-section-header">
+      <h3>Venues durchsuchen</h3>
+    </div>
+    <%= form_with url: backend_venues_path,
+                  method: :get,
+                  class: "filter-form",
+                  data: {
+                    controller: "live-search",
+                    turbo_stream: true,
+                    live_search_delay_value: 180
+                  } do |form| %>
+      <div class="filter-grid">
+        <div class="filter-search-field filter-search-field-full">
+          <%= form.label :query, "Suche", class: "form-label" %>
+          <div class="filter-date-wrap">
+            <%= form.text_field :query,
+                                value: @query_filter,
+                                placeholder: "Name, Adresse, Beschreibung oder URL",
+                                autocomplete: "off",
+                                class: "form-input filter-input-with-clear",
+                                data: {
+                                  live_search_target: "query",
+                                  action: "input->live-search#queueSubmit keydown.enter->live-search#submitNow"
+                                } %>
+            <%= button_tag "×",
+                           type: "button",
+                           class: "filter-date-clear filter-input-clear #{'filter-date-clear-visible' if @query_filter.present?}",
+                           aria: { label: "Suche löschen" },
+                           data: {
+                             live_search_target: "clear",
+                             action: "live-search#clear"
+                           } %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render "venues_list", venues: @venues, query_filter: @query_filter %>
+  </section>
+</section>

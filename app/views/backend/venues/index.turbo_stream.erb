@@ -1,0 +1,7 @@
+<%= turbo_stream.update "flash-messages" do %>
+  <%= render "layouts/flash_messages" %>
+<% end %>
+
+<%= turbo_stream.replace "venues_results" do %>
+  <%= render "venues_list", venues: @venues, query_filter: @query_filter %>
+<% end %>
