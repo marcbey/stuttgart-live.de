@@ -27,6 +27,9 @@
       <% if event.public_sold_out? %>
         <%= render "sold_out_corner_ribbon" %>
       <% end %>
+      <% if event.badge_text.present? %>
+        <span class="event-card-badge event-card-badge-home-slider"><%= event.badge_text %></span>
+      <% end %>
     <% end %>
 
     <% if authenticated? %>

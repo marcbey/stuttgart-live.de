@@ -4149,19 +4149,47 @@ trix-editor.blog-rich-text:focus {
   position: absolute;
   top: calc(20px + 0.55rem);
   left: calc(20px + 0.55rem);
-  display: inline-block;
-  border: 1px solid #fff;
-  background: var(--accent);
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  width: fit-content;
+  max-width: calc(100% - 3rem);
+  margin: 0;
+  padding: 0.26rem 2rem 0.22rem 1.55rem;
+  border: 0;
+  border-radius: 0;
+  background: #00c5cc;
+  clip-path: polygon(1.2rem 0, calc(100% - 1.2rem) 0, 100% 50%, calc(100% - 1.2rem) 100%, 1.2rem 100%, 0 50%);
   color: #fff;
-  font-size: 0.84rem;
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1.28rem;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  padding: 0.2rem 0.4rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .event-card-badge-with-admin-link,
 .event-card-badge-with-top-overlay {
   top: calc(20px + 2.05rem);
+}
+
+.event-card-badge-home-slider {
+  top: 0.7rem;
+  left: 0.7rem;
+  max-width: calc(100% - 1.4rem);
+  font-size: 1.02rem;
+  padding: 0.22rem 1.6rem 0.2rem 1.18rem;
+}
+
+.event-card-badge-genre-lane {
+  top: 0.7rem;
+  left: 0.7rem;
+  max-width: calc(100% - 1.4rem);
+  font-size: 1rem;
+  padding: 0.22rem 1.45rem 0.19rem 1.12rem;
 }
 
 .event-card:hover {
@@ -5332,6 +5360,7 @@ trix-editor.blog-rich-text:focus {
 .event-detail-cta-links a {
   width: 100%;
   justify-content: center;
+  color: #000;
 }
 
 .event-detail-image-wrap {
