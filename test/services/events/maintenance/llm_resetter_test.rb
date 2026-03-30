@@ -126,7 +126,6 @@ class Events::Maintenance::LlmResetterTest < ActiveSupport::TestCase
       source_run: @llm_run,
       genre: [ "Jazz" ],
       venue: events(:published_one).venue,
-      artist_description: "Beschreibung",
       event_description: "Event-Beschreibung",
       venue_description: "Venue-Beschreibung",
       model: "gpt-5-mini",

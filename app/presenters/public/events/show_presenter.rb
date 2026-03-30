@@ -33,7 +33,7 @@ module Public
       end
 
       def meta_description
-        summary = primary_description.presence || artist_description.presence || venue_description.presence
+        summary = primary_description.presence || venue_description.presence
         return summary.to_s.truncate(160) if summary.present?
 
         [ schema_name, meta_schedule_label, venue_location.presence ].compact.join(" · ").truncate(160)
@@ -265,10 +265,6 @@ module Public
         primary_description
       end
 
-      def artist_description
-        @artist_description ||= normalized_copy(llm_enrichment&.artist_description.to_s.strip.presence)
-      end
-
       def venue_description
         @venue_description ||= normalized_copy(event.venue_description)
       end
@@ -313,7 +309,7 @@ module Public
       end
 
       def has_secondary_content?
-        has_media_block? || artist_description.present? || venue_description.present? || support_text.present?
+        has_media_block? || venue_description.present? || support_text.present?
       end
 
       def slider_items

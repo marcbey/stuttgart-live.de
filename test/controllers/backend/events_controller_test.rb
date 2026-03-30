@@ -1333,7 +1333,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button", text: "LLM-Enrichment für dieses Event starten"
     assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 1
     assert_select "textarea[name='event[llm_enrichment_attributes][raw_response_json]']", count: 0
-    assert_includes response.body, "&quot;artist_description&quot;: &quot;LLM Artist Beschreibung&quot;"
+    assert_select "textarea[name='event[llm_enrichment_attributes][artist_description]']", count: 0
+    assert_includes response.body, "&quot;event_description&quot;: &quot;LLM Event Beschreibung&quot;"
     assert_includes response.body, "&quot;genre&quot;: ["
   end
 
@@ -1666,8 +1667,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
           id: @published_event.llm_enrichment.id,
           venue: "Neues LLM Venue",
           genre_list: "Indie\nRock",
-          artist_description: "Aktualisierte Artist-Beschreibung",
-          event_description: "Aktualisierte Event-Beschreibung",
+          event_description: "Aktualisierte kombinierte Event-Beschreibung",
           venue_description: "Aktualisierte Venue-Beschreibung",
           venue_external_url: "https://venue.example/updated",
           venue_address: "Venue Straße 12, Stuttgart",
@@ -1684,8 +1684,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     enrichment = @published_event.reload.llm_enrichment
     assert_equal "Neues LLM Venue", enrichment.venue
     assert_equal [ "Indie", "Rock" ], enrichment.genre
-    assert_equal "Aktualisierte Artist-Beschreibung", enrichment.artist_description
-    assert_equal "Aktualisierte Event-Beschreibung", enrichment.event_description
+    assert_equal "Aktualisierte kombinierte Event-Beschreibung", enrichment.event_description
     assert_equal "Aktualisierte Venue-Beschreibung", enrichment.venue_description
     assert_equal "https://venue.example/updated", enrichment.venue_external_url
     assert_equal "Venue Straße 12, Stuttgart", enrichment.venue_address
@@ -2034,14 +2033,13 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   def create_llm_enrichment(event:, event_description: "LLM Event Beschreibung")
     event.create_llm_enrichment!(
       source_run: import_runs(:one),
-      artist_description: "LLM Artist Beschreibung",
       event_description: event_description,
       venue_description: "LLM Venue Beschreibung",
       genre: [ "Indie" ],
       model: "gpt-test",
       prompt_version: "v1",
       raw_response: {
-        "artist_description" => "LLM Artist Beschreibung",
+        "event_description" => event_description,
         "genre" => [ "Indie" ]
       }
     )

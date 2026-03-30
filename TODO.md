@@ -24,7 +24,11 @@
 # Bugs
 - Listenansicht: einschränken: desktop 6 rows, mobile 10 events
 - Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
-- Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps, überschreibt die LLM Venue
+
+- Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps Link, überschreibt die LLM Venue
+- LLM Beschreibung + über den act + über die venue zusammen legen
+- Genre Gruppierung tunen
+
 - Suchergebnis Seite: mit Kachel / Listenansicht, generell anderes Layout
 
 - DONE: Suche: robuster machen, zB Leerzeichen
@@ -48,7 +52,6 @@
 - Event: merken in local storage, gemerkte Events irgendwie, irgendwo anzeigen
 
 # Konzepte
-
 
 - LLM Beschreibung + über den act + über die venue zusammen legen
 - noch nicht veröffentlichte Events, sollen unpublished sein, ein job published sie je nach veröffentlicht sie dann

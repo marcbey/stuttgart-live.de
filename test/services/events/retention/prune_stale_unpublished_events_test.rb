@@ -45,7 +45,6 @@ class Events::Retention::PruneStaleUnpublishedEventsTest < ActiveSupport::TestCa
       source_run: import_runs(:one),
       genre: [ "Rock" ],
       venue: stale_event.venue,
-      artist_description: "Beschreibung",
       event_description: "Event-Beschreibung",
       venue_description: "Venue-Beschreibung",
       model: "gpt-5-mini",

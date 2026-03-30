@@ -362,7 +362,6 @@ module Backend
           :id,
           :venue,
           :genre_list,
-          :artist_description,
           :event_description,
           :venue_description,
           :venue_external_url,

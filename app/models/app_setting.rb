@@ -28,7 +28,6 @@ class AppSetting < ApplicationRecord
     - `instagram_link`
     - `homepage_link`
     - `facebook_link`
-    - `artist_description`
     - `event_description`
     - `venue_description`
     - `venue_external_url`
@@ -85,13 +84,13 @@ class AppSetting < ApplicationRecord
       - `venue_address`: möglichst vollständige öffentlich belastbare Adresse des Veranstaltungsorts
 
     11. Beschreibungen sollen nüchtern, präzise und faktennah sein, aber deutlich ausführlicher als bisher:
-      - `artist_description`: beschreibt Artist, Projekt oder Produktion
-      - `event_description`: beschreibt das konkrete Event bzw. Tour-/Show-Format
+      - `event_description`: beschreibt Artist, Projekt oder Produktion sowie das konkrete Event bzw. Tour-/Show-Format in einem zusammenhängenden Text ohne Wiederholungen
       - `venue_description`: beschreibt den Veranstaltungsort
       - schreibe in vollständigen deutschen Sätzen
       - liefere nach Möglichkeit 3 bis 6 Sätze pro Feld
       - nenne musikalische, stilistische, historische oder programmatische Einordnung, wenn belastbar
-      - nenne bei `event_description` nach Möglichkeit Inhalt, Format, Tour-Kontext, typische Erwartung des Publikums und Besonderheiten
+      - nenne bei `event_description` nach Möglichkeit Artist-/Projektprofil, Inhalt, Format, Tour-Kontext, typische Erwartung des Publikums und Besonderheiten
+      - fasse überlappende Informationen zu Artist und Event zusammen, statt dieselben Fakten doppelt zu nennen
       - nenne bei `venue_description` nach Möglichkeit Ort, Profil, Größe/Atmosphäre, Nutzungsschwerpunkt und Relevanz für das lokale Kulturleben
       - wenn nur wenig belastbare Information verfügbar ist, schreibe lieber einen vorsichtigen, aber immer noch substanziellen Text statt nur einen sehr kurzen Satz
 

@@ -69,25 +69,6 @@
         </section>
       <% end %>
 
-      <% if presenter.artist_description.present? %>
-        <% artist_columns = event_detail_text_columns(presenter.artist_description) %>
-        <section class="event-detail-panel event-detail-copy">
-          <h2>Über den Act</h2>
-          <div class="event-detail-copy-body">
-            <div class="event-detail-copy-grid">
-              <div class="event-detail-copy-column">
-                <%= simple_format(artist_columns.left) %>
-              </div>
-              <% if artist_columns.right.present? %>
-                <div class="event-detail-copy-column">
-                  <%= simple_format(artist_columns.right) %>
-                </div>
-              <% end %>
-            </div>
-          </div>
-        </section>
-      <% end %>
-
       <% if presenter.venue_description.present? %>
         <% venue_columns = event_detail_text_columns(presenter.venue_description) %>
         <section class="event-detail-panel event-detail-copy">

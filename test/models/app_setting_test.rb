@@ -97,6 +97,8 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_includes AppSetting.llm_enrichment_prompt_template, "Diese Seite ist leider nicht verfügbar"
     assert_includes AppSetting.llm_enrichment_prompt_template, "Dieser Inhalt ist momentan nicht verfügbar"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`event_info`"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "ohne Wiederholungen"
+    assert_not_includes AppSetting.llm_enrichment_prompt_template, "`artist_description`"
   end
 
   test "returns default llm enrichment model when no setting exists" do

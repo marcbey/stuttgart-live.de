@@ -39,7 +39,6 @@ class Events::Maintenance::PurgerTest < ActiveSupport::TestCase
       source_run: import_runs(:one),
       genre: [ "Jazz" ],
       venue: events(:published_one).venue,
-      artist_description: "Beschreibung",
       event_description: "Event-Beschreibung",
       venue_description: "Venue-Beschreibung",
       model: "gpt-5-mini",

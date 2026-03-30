@@ -2283,8 +2283,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
     event.create_llm_enrichment!(
-      artist_description: "LLM Artist Beschreibung",
-      event_description: "LLM Event Beschreibung",
+      event_description: "LLM Event- und Artist-Beschreibung",
       venue_description: "LLM Venue Beschreibung",
       homepage_link: "https://llm-homepage.example",
       instagram_link: "https://instagram.example/llm-band",
@@ -2305,8 +2304,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_includes response.body, "LLM Event Beschreibung"
-    assert_includes response.body, "LLM Artist Beschreibung"
+    assert_includes response.body, "LLM Event- und Artist-Beschreibung"
     assert_includes response.body, "Venue Modell Beschreibung"
     assert_includes response.body, "https://venue.example/im-wizemann"
     assert_includes response.body, "Quellenstraße 7, 70376 Stuttgart"
@@ -2363,7 +2361,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   test "show wraps event detail copy into hero-aligned text columns" do
     @published_event.update!(event_info: "Erster Absatz.\n\nZweiter Absatz.\n\nDritter Absatz.")
     @published_event.create_llm_enrichment!(
-      artist_description: "Act links.\n\nAct rechts.",
       event_description: "Fallback Event Beschreibung",
       venue_description: "Venue links.\n\nVenue rechts.",
       source_run: import_runs(:one),
@@ -2379,8 +2376,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-copy-grid .event-detail-copy-column", minimum: 3
     assert_includes response.body, "Erster Absatz."
     assert_includes response.body, "Dritter Absatz."
-    assert_includes response.body, "Act links."
-    assert_includes response.body, "Act rechts."
+    assert_includes response.body, "Rockclub in Stuttgart-Wangen."
   end
 
   test "show hides organizer notes unless explicitly enabled" do

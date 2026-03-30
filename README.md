@@ -255,6 +255,7 @@ Der Ablauf ist:
 Fachlich ist wichtig:
 
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
+- `event_description` bündelt die belastbaren Informationen zu Artist, Projekt/Produktion und konkretem Eventformat in einem einzigen zusammenhängenden Beschreibungstext.
 - `EventLlmEnrichment.venue`, `venue_description`, `venue_external_url` und `venue_address` bleiben als Rohdaten erhalten.
 - Hat ein Event bereits eine zugeordnete `Venue`, ändert ein LLM-Lauf weder die Venue-Zuordnung noch `Venue.name`.
 - Passt `EventLlmEnrichment.venue` zu der bereits zugeordneten `Venue`, dürfen `Venue.description`, `Venue.external_url` und `Venue.address` aus dem Enrichment nur dann ergänzt werden, wenn das jeweilige Venue-Feld noch leer ist. Bereits gepflegte Werte werden nicht überschrieben.

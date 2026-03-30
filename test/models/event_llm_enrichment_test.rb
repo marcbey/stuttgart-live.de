@@ -7,7 +7,6 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
       source_run: import_runs(:one),
       genre: [ " Jazz ", "", "Jazz" ],
       venue: " LKA Longhorn ",
-      artist_description: " Artist ",
       event_description: " Event ",
       venue_description: " Venue ",
       venue_external_url: " https://venue.example/demo ",
@@ -23,10 +22,12 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
 
     assert_equal [ "Jazz" ], enrichment.genre
     assert_equal "LKA Longhorn", enrichment.venue
+    assert_equal "Event", enrichment.event_description
     assert_equal "https://venue.example/demo", enrichment.venue_external_url
     assert_equal "Venue Straße 1, Stuttgart", enrichment.venue_address
     assert_equal "gpt-5-mini", enrichment.model
     assert_equal "v1", enrichment.prompt_version
+    assert_not_includes EventLlmEnrichment.column_names, "artist_description"
 
     duplicate = enrichment.dup
     duplicate.source_run = import_runs(:two)

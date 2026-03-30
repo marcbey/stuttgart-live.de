@@ -28,7 +28,6 @@ class EventLlmEnrichment < ApplicationRecord
       value.presence
     end.uniq
     self.venue = venue.to_s.strip.presence
-    self.artist_description = artist_description.to_s.strip.presence
     self.event_description = event_description.to_s.strip.presence
     self.venue_description = venue_description.to_s.strip.presence
     self.venue_external_url = venue_external_url.to_s.strip.presence

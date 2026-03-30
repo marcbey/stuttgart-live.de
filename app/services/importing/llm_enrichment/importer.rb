@@ -7,7 +7,7 @@ module Importing
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       BATCH_SIZE = 25
       EVENT_INFO_MAX_LENGTH = 1000
-      PROMPT_VERSION = "v1"
+      PROMPT_VERSION = "v2"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment_batch".freeze
       OUTPUT_ITEMS_KEY = "events".freeze
       LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link venue_external_url].freeze
@@ -179,7 +179,7 @@ module Importing
                 items: {
                   type: "object",
                   additionalProperties: false,
-                  required: %w[event_id genre venue artist_description event_description venue_description venue_external_url venue_address youtube_link instagram_link homepage_link facebook_link],
+                  required: %w[event_id genre venue event_description venue_description venue_external_url venue_address youtube_link instagram_link homepage_link facebook_link],
                   properties: {
                     event_id: { type: "integer" },
                     genre: {
@@ -187,7 +187,6 @@ module Importing
                       items: { type: "string" }
                     },
                     venue: { type: [ "string", "null" ] },
-                    artist_description: { type: [ "string", "null" ] },
                     event_description: { type: [ "string", "null" ] },
                     venue_description: { type: [ "string", "null" ] },
                     venue_external_url: { type: [ "string", "null" ] },
@@ -314,7 +313,6 @@ module Importing
             enrichment.source_run = run
             enrichment.genre = validated_attributes[:genre]
             enrichment.venue = validated_attributes[:venue]
-            enrichment.artist_description = validated_attributes[:artist_description]
             enrichment.event_description = validated_attributes[:event_description]
             enrichment.venue_description = validated_attributes[:venue_description]
             enrichment.venue_external_url = validated_attributes[:venue_external_url]
@@ -345,7 +343,6 @@ module Importing
           event_id: Integer(item["event_id"] || item[:event_id], exception: false),
           genre: Array(item["genre"] || item[:genre]),
           venue: item["venue"] || item[:venue],
-          artist_description: item["artist_description"] || item[:artist_description],
           event_description: item["event_description"] || item[:event_description],
           venue_description: item["venue_description"] || item[:venue_description],
           venue_external_url: item["venue_external_url"] || item[:venue_external_url],

@@ -208,8 +208,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     )
 
     event.build_llm_enrichment(
-      event_description: "LLM Event Beschreibung",
-      artist_description: "LLM Artist Beschreibung",
+      event_description: "LLM Event- und Artist-Beschreibung",
       venue_description: "LLM Venue Beschreibung",
       homepage_link: "https://llm-homepage.example",
       instagram_link: "https://instagram.example/llm-band",
@@ -226,8 +225,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     assert_nil presenter.display_title
     assert_equal "Band", presenter.display_headline
-    assert_equal "LLM Event Beschreibung", presenter.primary_description
-    assert_equal "LLM Artist Beschreibung", presenter.artist_description
+    assert_equal "LLM Event- und Artist-Beschreibung", presenter.primary_description
     assert_equal "Venue Modell Beschreibung", presenter.venue_description
     assert_equal [ "Homepage", "Instagram", "Facebook" ], presenter.external_links.map(&:label)
     assert_equal [ "https://llm-homepage.example", "https://instagram.example/llm-band", "https://facebook.example/llm-band" ], presenter.external_links.map(&:url)
