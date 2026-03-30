@@ -1,4 +1,58 @@
 ENV["RAILS_ENV"] ||= "test"
+require "json"
+require "fileutils"
+
+TEST_WARNING_FILTER_MASTER_PID = Process.pid
+TEST_WARNING_FILTER_COUNTS_DIR = File.expand_path("../tmp/test_warning_filter_counts", __dir__)
+FileUtils.rm_rf(TEST_WARNING_FILTER_COUNTS_DIR) if Process.pid == TEST_WARNING_FILTER_MASTER_PID
+FileUtils.mkdir_p(TEST_WARNING_FILTER_COUNTS_DIR)
+
+module TestWarningFilter
+  MARCEL_WARNING_PATTERN = %r{/gems/marcel-[^/]+/lib/marcel/magic\.rb:120: warning: literal string will be frozen in the future}.freeze
+  CSSBUNDLING_WARNING_PATTERN = %r{/gems/cssbundling-rails-[^/]+/lib/tasks/cssbundling/build\.rake:24: warning: (already initialized constant Cssbundling::Tasks::LOCK_FILES|previous definition of LOCK_FILES was here)}.freeze
+  COUNTS = Hash.new(0)
+
+  FILTERS = {
+    "marcel literal string will be frozen in the future" => MARCEL_WARNING_PATTERN,
+    "cssbundling LOCK_FILES constant redefined" => CSSBUNDLING_WARNING_PATTERN
+  }.freeze
+
+  def warn(message, category: nil, **kwargs)
+    text = message.to_s
+
+    FILTERS.each do |label, pattern|
+      next unless text.match?(pattern)
+
+      COUNTS[label] += 1
+      return
+    end
+
+    super
+  end
+end
+
+Warning.singleton_class.prepend(TestWarningFilter)
+
+at_exit do
+  counts_path = File.join(TEST_WARNING_FILTER_COUNTS_DIR, "#{Process.pid}.json")
+  File.write(counts_path, JSON.generate(TestWarningFilter::COUNTS)) unless TestWarningFilter::COUNTS.empty?
+  next unless Process.pid == TEST_WARNING_FILTER_MASTER_PID
+
+  combined_counts =
+    Dir.glob(File.join(TEST_WARNING_FILTER_COUNTS_DIR, "*.json")).each_with_object(Hash.new(0)) do |path, totals|
+      JSON.parse(File.read(path)).each do |label, count|
+        totals[label] += count.to_i
+      end
+    end
+
+  next if combined_counts.empty?
+
+  $stderr.puts("\nSuppressed test warnings:")
+  combined_counts.sort.each do |label, count|
+    $stderr.puts("  #{count}x #{label}")
+  end
+end
+
 require_relative "../config/environment"
 require "rails/test_help"
 require "zlib"
