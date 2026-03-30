@@ -2,6 +2,9 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [ "button", "panel" ]
+  static values = {
+    desktopMinWidth: { type: Number, default: 761 }
+  }
 
   connect() {
     this.close = this.close.bind(this)
@@ -44,8 +47,6 @@ export default class extends Controller {
   }
 
   isDesktop() {
-    if (this.element.classList.contains("is-compact")) return false
-
-    return window.matchMedia("(min-width: 761px)").matches
+    return window.innerWidth >= this.desktopMinWidthValue
   }
 }

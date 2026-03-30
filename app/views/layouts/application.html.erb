@@ -84,7 +84,11 @@
       <% end %>
     <% end %>
     <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
-    <nav class="app-nav" data-controller="nav-offset mobile-nav<%= ' homepage-header-compact' if public_homepage_chrome %>">
+    <nav class="app-nav"
+         data-controller="nav-offset mobile-nav"
+         <% if public_homepage_chrome %>
+         data-mobile-nav-desktop-min-width-value="1024"
+         <% end %>>
       <div class="<%= nav_inner_classes.join(" ") %>">
         <%= link_to root_path, class: "app-brand" do %>
           <% if public_homepage_chrome || backend_context %>
@@ -230,6 +234,7 @@
     <% if public_frontend && authenticated? %>
       <aside class="public-backend-float" aria-label="Backend-Navigation">
         <div class="public-backend-float-inner">
+          <%= yield :public_backend_actions %>
           <div class="app-nav-backend-menu"
                data-controller="backend-nav-menu">
             <button type="button"
