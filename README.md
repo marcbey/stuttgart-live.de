@@ -101,7 +101,7 @@ Der Ablauf ist:
 5. `EventUpserter` sucht zuerst ein bestehendes `Event` über `source_fingerprint` oder den gespeicherten `source_snapshot`. Falls nichts passt, wird ein neues Event angelegt.
 6. Danach werden `event_offers`, Genres und Bilder synchronisiert und ein Änderungslog mit `merged_create` oder `merged_update` geschrieben.
 
-`Venue` ist dabei ein eigenes Domänenmodell. Der Merge arbeitet weiterhin mit Venue-Namen aus den Rohimporten, löst diese Namen beim Schreiben aber auf bestehende `venues` auf oder legt fehlende Venues automatisch neu an. Wenn sich der Venue-Name in späteren Rohdaten ändert, wird die Venue-Zuordnung des Events entsprechend auf die passende Venue umgehängt.
+`Venue` ist dabei ein eigenes Domänenmodell. Der Merge arbeitet weiterhin mit Venue-Namen aus den Rohimporten, löst diese Namen beim Schreiben aber auf bestehende `venues` auf oder legt fehlende Venues automatisch neu an. Das Matching ist dabei bewusst flexibler als ein reiner Exaktvergleich: Varianten wie `Porsche Arena Stuttgart`, `Porsche-Arena` und `Porsche-Arena Stuttgart` werden als dieselbe Venue erkannt, während fachlich unterschiedliche Unterorte wie `Im Wizemann` und `Im Wizemann (Halle)` getrennt bleiben. Wenn sich der Venue-Name in späteren Rohdaten ändert, wird die Venue-Zuordnung des Events entsprechend auf die passende Venue umgehängt.
 
 Im Backend gibt es für Venues einen eigenen Verwaltungsbereich unter `/backend/venues`. Die Liste startet dort bewusst leer und zeigt erst nach einer Suche Treffer an. Die Suche läuft bereits während des Tippens und aktualisiert die Trefferliste per Turbo, ohne dass die komplette Seite neu geladen werden muss. Gesucht wird nach Venue-Name, Adresse, Beschreibung und externer URL.
 
@@ -582,6 +582,14 @@ bin/rails events:maintenance:reset_llm_enrichment
 ```
 
 Der Task löscht alle Einträge aus `event_llm_enrichments`, `llm_genre_grouping_snapshots` und `llm_genre_grouping_groups`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` oder `source_type = "llm_genre_grouping"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
+
+Bestehende Venue-Dubletten anhand des flexiblen Venue-Matchings zusammenführen:
+
+```bash
+mise exec -- bin/rails venues:maintenance:backfill_duplicates
+```
+
+Der Task gruppiert bestehende Venues über denselben Match-Key wie der Merge-Import, hängt Events auf eine kanonische Venue um, übernimmt fehlende Metadaten und ein vorhandenes Logo und löscht anschließend redundante Dubletten wie `LKA-Longhorn Stuttgart` neben `LKA-Longhorn`.
 
 ### Produktionsdatenbank neu aufsetzen
 

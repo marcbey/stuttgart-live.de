@@ -16,6 +16,20 @@ class VenueTest < ActiveSupport::TestCase
     assert_equal "Kulturquartier", venue.name
   end
 
+  test "builds the same match key for redundant stuttgart suffix variants" do
+    assert_equal Venue.match_key("Porsche-Arena"), Venue.match_key("Porsche Arena Stuttgart")
+    assert_equal Venue.match_key("LKA-Longhorn"), Venue.match_key("LKA-Longhorn Stuttgart")
+    assert_equal Venue.match_key("Im Wizemann (Halle)"), Venue.match_key("Im Wizemann (Halle) Stuttgart")
+  end
+
+  test "distinguishes venue variants with meaningful qualifiers" do
+    assert_not Venue.same_name?("Im Wizemann", "Im Wizemann (Halle)")
+  end
+
+  test "matches kulturquartier proton variants through the match key" do
+    assert Venue.same_name?("Kulturquartier - PROTON", "Kulturquartier Stuttgart")
+  end
+
   test "allows blank logo but validates uploaded images" do
     venue = Venue.new(name: "Neue Venue")
 

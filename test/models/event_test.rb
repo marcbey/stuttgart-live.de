@@ -78,6 +78,20 @@ class EventTest < ActiveSupport::TestCase
     assert_equal venues(:im_wizemann), event.venue_record
   end
 
+  test "reuses an existing venue by flexible match name" do
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 11, 20, 0, 0),
+      venue_name: "LKA-Longhorn Stuttgart",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venues(:lka_longhorn), event.venue_record
+  end
+
   test "creates a new venue from venue_name on save" do
     event = Event.new(
       artist_name: "Test Artist",

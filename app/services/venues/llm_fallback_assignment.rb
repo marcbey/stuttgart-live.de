@@ -25,7 +25,7 @@ module Venues
       venue_name = Venue.normalize_name(enrichment.venue)
       return if venue_name.blank?
 
-      Venue.find_by_normalized_name(venue_name) || Venue.create!(name: venue_name)
+      Venue.find_by_match_name(venue_name) || Venue.create!(name: venue_name)
     end
 
     def self.fill_blank_metadata(venue:, enrichment:)

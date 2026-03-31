@@ -1,5 +1,6 @@
 class Venue < ApplicationRecord
   ProcessingError = Class.new(StandardError)
+  MATCH_KEY_REMOVABLE_CITY_TOKENS = %w[stuttgart].freeze
 
   attr_accessor :remove_logo
 
@@ -23,8 +24,24 @@ class Venue < ApplicationRecord
     normalized.gsub(/\s*[-,]?\s*proton\b/i, "").strip
   end
 
+  def self.match_key(value)
+    normalized = normalize_name(value)
+    return "" if normalized.blank?
+
+    tokens = ActiveSupport::Inflector.transliterate(normalized)
+      .downcase
+      .gsub(/[’'`]/, "")
+      .gsub(/[()]/, " ")
+      .gsub(/[^[:alnum:]\s]/, " ")
+      .split
+
+    tokens.pop while tokens.size > 1 && MATCH_KEY_REMOVABLE_CITY_TOKENS.include?(tokens.last)
+    tokens.join(" ")
+  end
+
   def self.same_name?(left, right)
-    normalize_name(left).casecmp?(normalize_name(right))
+    left_key = match_key(left)
+    left_key.present? && left_key == match_key(right)
   end
 
   def self.find_by_normalized_name(value)
@@ -32,6 +49,44 @@ class Venue < ApplicationRecord
     return if normalized.blank?
 
     where("LOWER(venues.name) = ?", normalized.downcase).first
+  end
+
+  def self.find_by_match_name(value)
+    key = match_key(value)
+    return if key.blank?
+
+    all
+      .select { |venue| match_key(venue.name) == key }
+      .min_by { |venue| lookup_sort_key(venue) }
+  end
+
+  def self.lookup_sort_key(venue)
+    [
+      stuttgart_suffix?(venue.name) ? 1 : 0,
+      venue.id.to_i
+    ]
+  end
+
+  def self.stuttgart_suffix?(value)
+    normalized = normalize_name(value)
+    return false if normalized.blank?
+
+    tokens = ActiveSupport::Inflector.transliterate(normalized)
+      .downcase
+      .gsub(/[’'`]/, "")
+      .gsub(/[()]/, " ")
+      .gsub(/[^[:alnum:]\s]/, " ")
+      .split
+
+    tokens.size > 1 && MATCH_KEY_REMOVABLE_CITY_TOKENS.include?(tokens.last)
+  end
+
+  def self.metadata_presence_count(venue)
+    [
+      venue.description,
+      venue.external_url,
+      venue.address
+    ].count(&:present?) + (venue.logo.attached? ? 1 : 0)
   end
 
   def self.search_by_query(query, limit: 8)

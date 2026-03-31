@@ -74,5 +74,27 @@ module Venues
       assert_equal "https://llm-club.example", event.venue_record.external_url
       assert_equal "LLM Straße 5, Stuttgart", event.venue_record.address
     end
+
+    test "reuses an existing venue through flexible name matching" do
+      venues(:lka_longhorn).update!(description: nil, external_url: nil, address: nil)
+      event = Event.new(
+        artist_name: "Neue Band",
+        title: "Neues Konzert",
+        start_at: Time.zone.local(2026, 7, 2, 20, 0),
+        status: "needs_review"
+      )
+      enrichment = EventLlmEnrichment.new(
+        venue: "LKA-Longhorn Stuttgart",
+        venue_description: "Neue Beschreibung"
+      )
+
+      assert_no_difference("Venue.count") do
+        LlmFallbackAssignment.call(event:, enrichment:)
+      end
+
+      event.reload
+      assert_equal venues(:lka_longhorn), event.venue_record
+      assert_equal "Neue Beschreibung", event.venue_record.description
+    end
   end
 end
