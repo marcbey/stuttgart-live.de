@@ -1,4 +1,4 @@
-<% if presenter.show_ticket_cta? %>
+<% if presenter.show_ticket_panel? %>
   <section class="event-detail-cta event-detail-cta-card" aria-label="Ticketinformationen">
     <div class="event-detail-cta-layout event-detail-cta-layout-single">
       <div class="event-detail-cta-copy">
@@ -9,7 +9,11 @@
           <% if presenter.ticket_price_text.present? %>
             <p class="event-detail-cta-price">Preis: <%= presenter.ticket_price_text %></p>
           <% end %>
-          <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
+          <% if presenter.show_ticket_link? %>
+            <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
+          <% elsif presenter.show_sks_sold_out_message? %>
+            <p class="event-detail-meta-strong"><%= presenter.sks_sold_out_message %></p>
+          <% end %>
         </div>
       </div>
     </div>

@@ -101,7 +101,7 @@
                     aria-label="Weiter">
               ›
             </button>
-            <% if presenter.show_ticket_cta? && presenter.ticket_badge_text.present? %>
+            <% if presenter.show_ticket_panel? && presenter.ticket_badge_text.present? %>
               <p class="event-detail-image-badge"><%= presenter.ticket_badge_text %></p>
             <% end %>
           </div>
@@ -163,7 +163,7 @@
                 <%= image_tag slide.desktop_source, alt: slide.alt_text, class: "event-detail-image" %>
               </picture>
             </div>
-            <% if presenter.show_ticket_cta? && presenter.ticket_badge_text.present? %>
+            <% if presenter.show_ticket_panel? && presenter.ticket_badge_text.present? %>
               <p class="event-detail-image-badge"><%= presenter.ticket_badge_text %></p>
             <% end %>
             <% if presenter.hero_image_credit.present? %>

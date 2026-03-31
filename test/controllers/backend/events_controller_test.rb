@@ -102,8 +102,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h3", text: "Ticket"
-    assert_select "input#ticket_sold_out_event_#{@published_event.id}[type='checkbox'][disabled]", count: 1
+    assert_select "input#ticket_sold_out_event_#{@published_event.id}", count: 0
+    assert_includes response.body, "Ist nicht ausverkauft"
     assert_select "input#ticket_url_event_#{@published_event.id}[readonly][value='https://example.com/tickets/published']"
+    assert_select "input#sks_sold_out_message_event_#{@published_event.id}[name='event[sks_sold_out_message]']"
     assert_select "input[name='event[ticket_url]']", count: 0
     assert_includes response.body, "Quelle: easyticket"
   end
@@ -158,6 +160,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[ticket_url]']"
     assert_select "input[name='event[ticket_sold_out]'][type='hidden'][value='0']"
     assert_select "input[name='event[ticket_sold_out]'][type='checkbox'][value='1']"
+    assert_select "input[name='event[sks_sold_out_message]']"
     assert_select "input[name='event[support]']"
     assert_select "textarea[name='event[organizer_notes]']"
     assert_select "input[name='event[show_organizer_notes]'][type='checkbox']"
@@ -599,6 +602,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         homepage_url: "https://example.com",
         instagram_url: "https://instagram.com/example",
         facebook_url: "https://facebook.com/example",
+        sks_sold_out_message: "Bitte beim Veranstalter nach Restkarten fragen",
         highlighted: "1",
         ticket_url: "https://tickets.example/updated",
         status: "needs_review"
@@ -615,6 +619,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com", @event.homepage_url
     assert_equal "https://instagram.com/example", @event.instagram_url
     assert_equal "https://facebook.com/example", @event.facebook_url
+    assert_equal "Bitte beim Veranstalter nach Restkarten fragen", @event.sks_sold_out_message
     assert_predicate @event, :highlighted?
     assert_equal "https://tickets.example/updated", offer.reload.resolved_ticket_url
     assert_equal "https://tickets.example/updated", @event.preferred_ticket_offer&.resolved_ticket_url
@@ -649,6 +654,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
             instagram_url: "https://instagram.com/manual",
             facebook_url: "https://facebook.com/manual",
             youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+            sks_sold_out_message: "Bitte beim Veranstalter melden",
             promoter_id: "10135",
             highlighted: "1",
             ticket_url: "https://tickets.example/manual-tour",
@@ -683,6 +689,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://example.com", created.homepage_url
     assert_equal "https://instagram.com/manual", created.instagram_url
     assert_equal "https://facebook.com/manual", created.facebook_url
+    assert_equal "Bitte beim Veranstalter melden", created.sks_sold_out_message
     assert_equal "382", created.promoter_id
     assert_equal "RUSS Live", created.promoter_name
     assert_predicate created, :highlighted?

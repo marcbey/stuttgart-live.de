@@ -2170,6 +2170,105 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Tickets sichern"
   end
 
+  test "show renders sks sold out message instead of ticket link for sold out sks events" do
+    event = Event.create!(
+      slug: "show-sks-sold-out-message",
+      source_fingerprint: "test::public::show::sks-sold-out-message",
+      title: "SKS Sold Out Message",
+      artist_name: "SKS Sold Out Artist",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      sks_sold_out_message: "Bitte bei SKS nach Restkarten fragen",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "easy-sold-out-message-123",
+      ticket_url: "https://easyticket.example/sold-out-message",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-cta", count: 1
+    assert_includes response.body, "Bitte bei SKS nach Restkarten fragen"
+    assert_not_includes response.body, "Tickets sichern"
+    assert_not_includes response.body, "https://easyticket.example/sold-out-message"
+  end
+
+  test "show does not render sks sold out message for non sks events" do
+    event = Event.create!(
+      slug: "show-non-sks-sold-out-message",
+      source_fingerprint: "test::public::show::non-sks-sold-out-message",
+      title: "Non SKS Sold Out Message",
+      artist_name: "Non SKS Sold Out Artist",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: "99999",
+      sks_sold_out_message: "Bitte bei SKS nach Restkarten fragen",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "non-sks-sold-out-message-123",
+      ticket_url: "https://easyticket.example/non-sks-sold-out-message",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-cta", count: 0
+    assert_not_includes response.body, "Bitte bei SKS nach Restkarten fragen"
+    assert_not_includes response.body, "Tickets sichern"
+  end
+
+  test "show keeps sold out sks events without message unchanged" do
+    event = Event.create!(
+      slug: "show-sks-sold-out-without-message",
+      source_fingerprint: "test::public::show::sks-sold-out-without-message",
+      title: "SKS Sold Out Without Message",
+      artist_name: "SKS Sold Out Without Message Artist",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "sks-sold-out-without-message-123",
+      ticket_url: "https://easyticket.example/sks-sold-out-without-message",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-cta", count: 0
+    assert_not_includes response.body, "Tickets sichern"
+    assert_not_includes response.body, "https://easyticket.example/sks-sold-out-without-message"
+  end
+
   test "genre lane cards render sold out ribbon above the event series badge while list rows stay unchanged" do
     create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 

@@ -206,8 +206,23 @@ module Public
         "Beginn: #{formatted_start_time} Uhr · Einlass: #{formatted_doors_time} Uhr"
       end
 
+      def show_ticket_panel?
+        show_ticket_link? || show_sks_sold_out_message?
+      end
+
       def show_ticket_cta?
-        primary_offer.present? && !event.past?
+        show_ticket_panel?
+      end
+
+      def show_ticket_link?
+        !event.past? && raw_ticket_url.present?
+      end
+
+      def show_sks_sold_out_message?
+        !event.past? &&
+          event.sks_promoter? &&
+          event.public_sold_out? &&
+          sks_sold_out_message.present?
       end
 
       def ticket_badge_text
@@ -215,15 +230,19 @@ module Public
       end
 
       def ticket_url
-        return unless show_ticket_cta?
+        return unless show_ticket_link?
 
-        primary_offer&.resolved_ticket_url
+        raw_ticket_url
       end
 
       def ticket_price_text
-        return unless show_ticket_cta?
+        return unless show_ticket_link?
 
         primary_offer&.ticket_price_text.to_s.presence
+      end
+
+      def sks_sold_out_message
+        event.sks_sold_out_message.to_s.presence
       end
 
       def visibility_badges
@@ -373,6 +392,12 @@ module Public
       private
 
       attr_reader :primary_offer, :browse_state, :view_context
+
+      def raw_ticket_url
+        return unless primary_offer.present?
+
+        primary_offer.resolved_ticket_url.to_s.presence
+      end
 
       def llm_enrichment
         @llm_enrichment ||= event.llm_enrichment

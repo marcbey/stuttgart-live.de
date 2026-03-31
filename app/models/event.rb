@@ -85,6 +85,7 @@ class Event < ApplicationRecord
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_background_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
   validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
+  validates :sks_sold_out_message, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
@@ -578,6 +579,7 @@ class Event < ApplicationRecord
     self.instagram_url = instagram_url.to_s.strip.presence
     self.facebook_url = facebook_url.to_s.strip.presence
     self.youtube_url = youtube_url.to_s.strip.presence
+    self.sks_sold_out_message = sks_sold_out_message.to_s.strip.presence
     self.promoter_id = promoter_id.to_s.strip.presence
     self.promoter_name = promoter_name.to_s.strip.presence
     self.primary_source = primary_source.to_s.strip.presence

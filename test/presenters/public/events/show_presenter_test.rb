@@ -113,7 +113,9 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event, primary_offer: primary_offer)
 
-    assert presenter.show_ticket_cta?
+    assert presenter.show_ticket_panel?
+    assert presenter.show_ticket_link?
+    assert_not presenter.show_sks_sold_out_message?
     assert_equal "Fast ausverkauft", presenter.ticket_badge_text
     assert_equal "https://tickets.example/band", presenter.ticket_url
     assert_equal "39,00 €", presenter.ticket_price_text
@@ -151,7 +153,28 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event, primary_offer: primary_offer)
 
-    assert_not presenter.show_ticket_cta?
+    assert_not presenter.show_ticket_panel?
+    assert_nil presenter.ticket_url
+    assert_nil presenter.ticket_price_text
+  end
+
+  test "shows sks sold out message without ticket link for sold out sks events" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      start_at: Time.zone.local(2026, 6, 17, 20, 0),
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      sks_sold_out_message: "Bitte beim Veranstalter nach Restkarten fragen"
+    )
+    event.define_singleton_method(:public_sold_out?) { true }
+    event.define_singleton_method(:sks_promoter?) { true }
+
+    presenter = build_presenter(event, primary_offer: nil)
+
+    assert presenter.show_ticket_panel?
+    assert_not presenter.show_ticket_link?
+    assert presenter.show_sks_sold_out_message?
+    assert_equal "Bitte beim Veranstalter nach Restkarten fragen", presenter.sks_sold_out_message
     assert_nil presenter.ticket_url
     assert_nil presenter.ticket_price_text
   end
