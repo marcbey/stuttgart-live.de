@@ -116,7 +116,16 @@
 
         <% if public_homepage_chrome && public_events_search_visible %>
           <div class="app-nav-hotline">
-            <span class="app-nav-hotline-copy">Dein Ticketportal für Stuttgart und Region - 0711 550 660 77</span>
+            <span class="app-nav-hotline-copy">
+              Dein Ticketportal für Stuttgart und Region -
+              <%= link_to "0711 550 660 77", "tel:+4971155066077", class: "app-nav-hotline-phone" %>
+            </span>
+            <div class="app-nav-hotline-contact">
+              <%= link_to "Kontakt",
+                          contact_path,
+                          class: app_nav_link_class(active: contact_nav_active?),
+                          aria: { current: ("page" if contact_nav_active?) } %>
+            </div>
           </div>
         <% end %>
 
@@ -185,7 +194,10 @@
                 <%= link_to "Events", root_path, class: app_nav_link_class(active: events_nav_active?), aria: { current: ("page" if events_nav_active?) } %>
                 <%= link_to "News", news_index_path, class: app_nav_link_class(active: news_nav_active?), aria: { current: ("page" if news_nav_active?) } %>
                 <% if public_homepage_chrome %>
-                  <%= link_to "Kontakt", contact_path, class: app_nav_link_class(active: contact_nav_active?), aria: { current: ("page" if contact_nav_active?) } %>
+                  <%= link_to "Kontakt",
+                              contact_path,
+                              class: [ app_nav_link_class(active: contact_nav_active?), "app-nav-link-poster-contact" ].join(" "),
+                              aria: { current: ("page" if contact_nav_active?) } %>
                     </div>
                   </div>
                 <% else %>
