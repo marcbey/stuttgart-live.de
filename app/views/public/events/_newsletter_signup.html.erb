@@ -1,7 +1,8 @@
 <% signup = local_assigns[:signup] || newsletter_signup_config("events_index", return_to: request.fullpath) %>
 <% subscriber = local_assigns[:subscriber] || NewsletterSubscriber.new %>
+<% section_id = local_assigns[:section_id] %>
 
-<section class="newsletter-signup-section" aria-labelledby="newsletter-signup-title">
+<section class="newsletter-signup-section" <%= %(id="#{section_id}") if section_id.present? %> aria-labelledby="newsletter-signup-title">
   <div class="slider-window-bar newsletter-signup-window-bar" aria-hidden="true">
     <span></span><span></span><span></span>
   </div>

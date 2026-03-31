@@ -1,12 +1,14 @@
 <% content_for :title, "Login" %>
 
-<section class="backend-shell">
-  <div class="editor-panel" style="max-width: 520px; margin: 2rem auto;">
-    <header>
-      <h1 style="margin: 0; text-transform: uppercase;">Login Redaktion</h1>
+<section class="public-shell auth-shell">
+  <div class="auth-card">
+    <header class="auth-card-header">
+      <p class="news-kicker">Redaktion</p>
+      <h1>Login</h1>
+      <p class="auth-card-lead">Zugang fuerr Redaktion, Pflege und interne Arbeitsbereiche.</p>
     </header>
 
-    <%= form_with url: session_path, class: "editor-form" do |form| %>
+    <%= form_with url: session_path, class: "editor-form auth-form" do |form| %>
       <div>
         <%= form.label :email_address, "E-Mail", class: "form-label" %>
         <%= form.email_field :email_address,

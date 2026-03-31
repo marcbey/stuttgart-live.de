@@ -30,8 +30,8 @@
     <% end %>
   </head>
 
-  <% public_frontend = controller_path.start_with?("public/") %>
-  <% public_homepage_chrome = public_frontend %>
+  <% public_frontend = controller_path.start_with?("public/") || controller_path == "sessions" %>
+  <% public_homepage_chrome = controller_path.start_with?("public/") %>
   <% body_classes = [] %>
   <% body_classes << "page-public" if public_frontend %>
   <% body_classes << "page-public-newsletter-poster" if public_frontend %>
@@ -295,6 +295,7 @@
       <% unless content_for?(:page_newsletter) %>
         <%= render "public/events/newsletter_signup",
                    subscriber: NewsletterSubscriber.new,
+                   section_id: "site-newsletter-signup",
                    signup: newsletter_signup_config("events_index", return_to: request.fullpath) %>
       <% end %>
       <%= yield :page_partner_strip %>
@@ -309,7 +310,7 @@
         </svg>
       </button>
 
-      <footer class="site-footer">
+      <footer id="site-footer" class="site-footer">
         <div class="site-footer-shell">
           <nav class="site-footer-nav" aria-label="Footer">
             <%= link_to "Datenschutz", datenschutz_path %>

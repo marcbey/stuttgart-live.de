@@ -7,7 +7,7 @@
 
   <% if @blog_posts.any? %>
     <div class="news-grid news-index-grid">
-      <% @blog_posts.each do |blog_post| %>
+      <% @blog_posts.each_with_index do |blog_post, index| %>
         <article class="news-card news-index-card">
           <%= link_to news_path(blog_post.slug), class: "news-index-card-link" do %>
             <div class="news-card-body news-index-card-body">
@@ -17,6 +17,34 @@
               </p>
               <h2><%= blog_post.title %></h2>
               <p class="news-index-card-teaser"><%= blog_post.teaser %></p>
+            </div>
+          <% end %>
+        </article>
+
+        <% if index == 4 %>
+          <article class="news-card news-index-card news-index-card-newsletter">
+            <%= link_to news_index_path(anchor: "site-footer"),
+                        class: "news-index-card-link news-index-newsletter-card-link",
+                        data: { turbo: false } do %>
+              <div class="news-index-newsletter-promo">
+                <h2 class="news-index-newsletter-title">Nichts verpassen</h2>
+                <p class="news-index-newsletter-copy">Konzerte, Highlights und Vorverkaeufe. Direkt im Postfach.</p>
+                <span class="news-index-newsletter-jump">Zum Newsletter</span>
+              </div>
+            <% end %>
+          </article>
+        <% end %>
+      <% end %>
+
+      <% if @blog_posts.size < 5 %>
+        <article class="news-card news-index-card news-index-card-newsletter">
+          <%= link_to news_index_path(anchor: "site-footer"),
+                      class: "news-index-card-link news-index-newsletter-card-link",
+                      data: { turbo: false } do %>
+            <div class="news-index-newsletter-promo">
+              <h2 class="news-index-newsletter-title">Nichts verpassen</h2>
+              <p class="news-index-newsletter-copy">Konzerte, Highlights und Vorverkaeufe. Direkt im Postfach.</p>
+              <span class="news-index-newsletter-jump">Zum Newsletter</span>
             </div>
           <% end %>
         </article>

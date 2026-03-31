@@ -746,7 +746,14 @@ body:has(.app-nav-inner-backend) .app-nav-links-group-separated .app-nav-link-ac
   width: 2.4rem;
   height: 3px;
   margin-bottom: 1rem;
-  background: linear-gradient(90deg, #2bd7cf, #59e8de);
+  background: linear-gradient(90deg, #ff7ac4, #ffd5eb);
+  transform-origin: left center;
+  transition: width 420ms ease, transform 420ms ease;
+}
+
+.news-index-card:hover .news-index-accent,
+.news-index-card:focus-within .news-index-accent {
+  width: 100%;
 }
 
 .news-index-card h2 {
@@ -757,6 +764,95 @@ body:has(.app-nav-inner-backend) .app-nav-links-group-separated .app-nav-link-ac
   color: rgba(17, 17, 17, 0.68);
   font-size: 0.84rem;
   letter-spacing: 0.01em;
+}
+
+.news-index-card-newsletter .news-index-accent {
+  background: linear-gradient(90deg, #ff7ac4, #ffd5eb);
+}
+
+.news-index-newsletter-card-link {
+  display: grid;
+  min-height: 100%;
+  align-items: stretch;
+  padding: clamp(1.2rem, 2vw, 1.55rem);
+  border-radius: 1.4rem;
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 20%),
+    linear-gradient(180deg, #82124e 0%, #a61d66 48%, #da4a98 100%);
+  color: #fff8fc;
+  box-shadow: 0 18px 34px rgba(118, 21, 71, 0.24);
+}
+
+.news-index-card:hover .news-index-newsletter-card-link,
+.news-index-card:focus-within .news-index-newsletter-card-link {
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.34), transparent 22%),
+    linear-gradient(180deg, #8f1757 0%, #b62470 48%, #e354a3 100%);
+  box-shadow: 0 22px 38px rgba(118, 21, 71, 0.3);
+}
+
+.news-index-newsletter-card-body {
+  min-height: 12.5rem;
+  display: grid;
+  align-content: start;
+  gap: 0.8rem;
+}
+
+.news-index-newsletter-promo {
+  min-height: 16.2rem;
+  display: grid;
+  align-content: space-between;
+  gap: 0.8rem;
+  width: 100%;
+}
+
+.news-card.news-index-card-newsletter .news-index-newsletter-title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(3.1rem, 5.2vw, 4.9rem);
+  line-height: 0.82;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  max-width: none;
+  text-shadow: 0 4px 0 rgba(104, 15, 63, 0.2);
+}
+
+.news-index-newsletter-copy {
+  margin: 0;
+  max-width: none;
+  color: rgba(255, 244, 249, 0.96);
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: clamp(1.02rem, 1.45vw, 1.45rem);
+  line-height: 0.96;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+}
+
+.news-index-newsletter-jump {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  min-height: 3.25rem;
+  padding: 0.42rem 1.3rem 0.38rem;
+  border: 2px solid rgba(255, 228, 240, 0.78);
+  border-radius: 999px;
+  color: #fff;
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.035em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+#site-newsletter-signup,
+#site-footer {
+  scroll-margin-top: 7rem;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 .info-page-hero h1 {
@@ -1530,6 +1626,49 @@ trix-editor.blog-rich-text:focus {
   max-width: 1360px;
   margin: 0 auto;
   padding: 1.2rem 0.75rem 3rem;
+}
+
+.auth-shell {
+  min-height: calc(100vh - 13rem);
+  display: grid;
+  place-items: center;
+  padding-top: 2rem;
+}
+
+.auth-card {
+  width: min(100%, 34rem);
+  display: grid;
+  gap: 1.2rem;
+  padding: clamp(1.2rem, 3vw, 2rem);
+  border: 1px solid rgba(17, 17, 17, 0.12);
+  background:
+    radial-gradient(circle at top left, rgba(255, 165, 220, 0.14), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 245, 239, 0.98));
+  box-shadow: 0 18px 40px rgba(17, 17, 17, 0.08);
+}
+
+.auth-card-header {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.auth-card-header h1 {
+  margin: 0;
+  font-size: clamp(2.4rem, 6vw, 4rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
+.auth-card-lead {
+  margin: 0;
+  color: rgba(17, 17, 17, 0.68);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.auth-form {
+  display: grid;
+  gap: 1rem;
 }
 
 .static-page {
@@ -9040,7 +9179,7 @@ trix-editor.blog-rich-text:focus {
 
 @media (min-width: 1100px) {
   .news-index-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .home-featured-track {
