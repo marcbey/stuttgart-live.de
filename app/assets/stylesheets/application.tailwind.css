@@ -1682,37 +1682,91 @@ trix-editor.blog-rich-text:focus {
 .site-footer-shell {
   max-width: 1360px;
   margin: 0 auto;
-  padding: 1rem 0.75rem;
+  padding: 1rem 0.75rem 1.2rem;
 }
 
 .site-footer-nav {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 0.6rem 1.3rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.65rem;
 }
 
 .site-footer-nav a,
 .site-footer-button {
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 1.04rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.9rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
   text-decoration: none;
+  text-align: center;
+  padding: 0.7rem 0.9rem;
+  transition:
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease,
+    transform 140ms ease;
 }
 
 .site-footer-button {
-  border: 0;
-  padding: 0;
-  background: transparent;
   cursor: pointer;
 }
 
 .site-footer-nav a:hover,
 .site-footer-button:hover {
+  border-color: rgba(89, 232, 222, 0.7);
+  background: rgba(89, 232, 222, 0.13);
   color: #59e8de;
   text-decoration: none;
+}
+
+.site-footer-nav a:focus-visible,
+.site-footer-button:focus-visible {
+  outline: 2px solid #59e8de;
+  outline-offset: 2px;
+  border-color: rgba(89, 232, 222, 0.7);
+}
+
+@media (min-width: 768px) {
+  .site-footer-shell {
+    padding: 1rem 0.75rem;
+  }
+
+  .site-footer-nav {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.6rem 1.3rem;
+  }
+
+  .site-footer-nav a,
+  .site-footer-button {
+    min-height: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    font-size: 1.04rem;
+    letter-spacing: 0.08em;
+    padding: 0;
+  }
+
+  .site-footer-nav a:hover,
+  .site-footer-button:hover {
+    background: transparent;
+  }
+
+  .site-footer-nav a:focus-visible,
+  .site-footer-button:focus-visible {
+    outline-offset: 3px;
+    border-color: transparent;
+  }
 }
 
 .scroll-top-button {
@@ -3387,6 +3441,10 @@ trix-editor.blog-rich-text:focus {
   height: 2rem;
 }
 
+.partner-strip-image-russlive {
+  height: 1.94rem;
+}
+
 .partner-strip-image-easyticket,
 .partner-strip-image-eventim,
 .partner-strip-image-reservix {
@@ -3770,6 +3828,13 @@ trix-editor.blog-rich-text:focus {
   gap: 0.65rem;
   align-items: stretch;
   justify-items: stretch;
+}
+
+.newsletter-signup-field {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  width: 100%;
 }
 
 .newsletter-signup-frame {
@@ -8417,20 +8482,33 @@ trix-editor.blog-rich-text:focus {
   }
 
   .partner-strip {
-    display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 0.8rem;
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+    gap: 0;
     justify-content: space-between;
+    padding-inline: 1.4rem;
     min-height: 0;
     overflow: visible;
   }
 
   .partner-strip-logo {
     position: static;
+    flex: 0 0 auto;
+    min-width: 0;
+    padding-inline: 0;
     opacity: 1;
     transform: none;
     animation: none;
     transition: transform 180ms ease, opacity 180ms ease;
+  }
+
+  .partner-strip-image-russlive {
+    height: 2.02rem;
+  }
+
+  .partner-strip-image-musiccircus {
+    height: 3.05rem;
   }
 
   .flyer-grid {
@@ -8487,7 +8565,25 @@ trix-editor.blog-rich-text:focus {
   }
 }
 
-@media (max-width: 1023px) {
+@media (min-width: 1024px) {
+  .partner-strip {
+    padding-inline: 1.8rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .partner-strip {
+    padding-inline: 2.1rem;
+  }
+}
+
+@media (min-width: 1440px) {
+  .partner-strip {
+    padding-inline: 2.55rem;
+  }
+}
+
+@media (max-width: 699px) {
   .partner-strip {
     position: relative;
     justify-content: center;
@@ -8523,7 +8619,7 @@ trix-editor.blog-rich-text:focus {
   }
 }
 
-@media (max-width: 1023px) and (prefers-reduced-motion: reduce) {
+@media (max-width: 699px) and (prefers-reduced-motion: reduce) {
   .partner-strip {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -9551,8 +9647,8 @@ body.page-public-newsletter-poster .newsletter-signup-section {
   padding: 40px 0.35rem;
   gap: 0.9rem;
   background:
-    radial-gradient(circle at 72% 24%, rgba(255, 255, 255, 0.2), transparent 16%),
-    linear-gradient(135deg, #2bd7cf 0%, #59e8de 100%);
+    radial-gradient(circle at 78% 18%, rgba(143, 255, 249, 0.18), transparent 18%),
+    linear-gradient(135deg, #085f63 0%, #0c7b80 52%, #16979b 100%);
   box-shadow: none;
 }
 
@@ -9595,7 +9691,7 @@ body.page-public-newsletter-poster .newsletter-signup-copy h2 {
 body.page-public-events-index .newsletter-signup-lead,
 body.page-public-newsletter-poster .newsletter-signup-lead {
   max-width: 100%;
-  color: #111;
+  color: rgba(255, 255, 255, 0.9);
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.32rem;
   line-height: 1.02;
@@ -9614,7 +9710,7 @@ body.page-public-events-index .newsletter-signup-highlights li,
 body.page-public-newsletter-poster .newsletter-signup-highlights li {
   padding: 0.24rem 0;
   border-bottom: 0;
-  color: #111;
+  color: rgba(255, 255, 255, 0.94);
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.14rem;
   letter-spacing: 0.05em;
@@ -9627,7 +9723,7 @@ body.page-public-newsletter-poster .newsletter-signup-highlights li::before {
   width: 0.9rem;
   height: 0.9rem;
   margin-top: 0.08rem;
-  background: #111;
+  background: rgba(255, 255, 255, 0.9);
   clip-path: polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
 }
 
@@ -9657,9 +9753,14 @@ body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup
   align-items: center;
 }
 
+body.page-public-events-index .newsletter-signup-section .newsletter-signup-form-inline,
+body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-form-inline {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 body.page-public-events-index .newsletter-signup-note,
 body.page-public-newsletter-poster .newsletter-signup-note {
-  color: rgba(17, 17, 17, 0.8);
+  color: rgba(255, 255, 255, 0.72);
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.96rem;
   line-height: 1.25;
@@ -9673,7 +9774,7 @@ body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup
   border: 2px solid #111;
   border-radius: 1.45rem;
   background: #fff;
-  padding-inline: 1.65rem;
+  padding-inline: 1.4rem 4.8rem;
   box-shadow: none;
   color: #111;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
@@ -9706,26 +9807,30 @@ body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button-arrow,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-button-arrow {
-  justify-self: center;
-  align-self: center;
-  display: inline-flex;
+  position: absolute;
+  top: -0.1rem;
+  right: 0.35rem;
+  bottom: 0.3rem;
+  z-index: 1;
+  justify-self: auto;
+  align-self: auto;
+  display: flex;
   align-items: center;
   justify-content: center;
-  width: auto;
+  width: 3.8rem;
   min-width: 0;
-  min-height: 4.1rem;
+  min-height: 0;
   border: 0;
-  border-radius: 0;
+  border-radius: 1.1rem;
   background: transparent;
-  padding: 0 0.05rem;
+  padding: 0;
   color: #111;
   font-family: "Oswald", "Arial Narrow", sans-serif;
-  font-size: clamp(4.25rem, 6.2vw, 6.2rem);
+  font-size: clamp(2.2rem, 7vw, 2.8rem);
   font-weight: 900;
-  line-height: 1;
+  line-height: 0.8;
   letter-spacing: -0.05em;
   text-shadow: 0 0 0 currentColor;
-  transform: translateY(-21px);
 }
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button:hover,
@@ -9806,9 +9911,14 @@ body.page-public-newsletter-poster .newsletter-signup-glow {
     align-items: center;
   }
 
+  body.page-public-events-index .newsletter-signup-section .newsletter-signup-form-inline,
+  body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-form-inline {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   body.page-public-events-index .newsletter-signup-section .newsletter-signup-input,
   body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input {
-    padding-inline: 1.1rem 1.35rem;
+    padding-inline: 1.1rem 4.9rem;
   }
 
   body.page-public-events-index .newsletter-signup-note,
@@ -9846,5 +9956,11 @@ body.page-public-newsletter-poster .newsletter-signup-glow {
   body.page-public-events-index .newsletter-signup-section .newsletter-signup-input,
   body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input {
     min-width: 0;
+  }
+
+  body.page-public-events-index .newsletter-signup-section .newsletter-signup-button-arrow,
+  body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-button-arrow {
+    width: 3.5rem;
+    font-size: 2.3rem;
   }
 }

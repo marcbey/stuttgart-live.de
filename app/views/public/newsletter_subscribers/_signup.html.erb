@@ -26,10 +26,13 @@
       <% email_field_options[:aria] = { invalid: true, describedby: "#{signup[:frame_id]}-errors" } %>
     <% end %>
 
+    <% form_classes = [signup[:form_class]] %>
+    <% form_classes << "newsletter-signup-form-inline" if homepage_signup %>
+
     <%= form_with model: subscriber,
                   url: newsletter_subscribers_path,
                   method: :post,
-                  class: signup[:form_class] do |form| %>
+                  class: form_classes.join(" ") do |form| %>
       <%= hidden_field_tag :context, signup[:context] %>
       <%= hidden_field_tag :return_to, signup[:return_to] %>
       <%= hidden_field_tag :source, signup[:source] %>
@@ -41,8 +44,15 @@
       <% end %>
 
       <%= form.label :email, signup[:label], class: "sr-only" %>
-      <%= form.email_field :email, **email_field_options %>
-      <%= form.submit submit_label, **submit_options %>
+      <% if homepage_signup %>
+        <div class="newsletter-signup-field">
+          <%= form.email_field :email, **email_field_options %>
+          <%= form.submit submit_label, **submit_options %>
+        </div>
+      <% else %>
+        <%= form.email_field :email, **email_field_options %>
+        <%= form.submit submit_label, **submit_options %>
+      <% end %>
     <% end %>
   <% end %>
 <% end %>

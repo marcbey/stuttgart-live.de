@@ -4,7 +4,7 @@ export default class extends Controller {
   static targets = [ "logo" ]
   static values = {
     interval: { type: Number, default: 3200 },
-    mobileMaxWidth: { type: Number, default: 1023 }
+    mobileMaxWidth: { type: Number, default: 699 }
   }
 
   connect() {
