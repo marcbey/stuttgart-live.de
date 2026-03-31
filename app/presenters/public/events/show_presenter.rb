@@ -279,6 +279,10 @@ module Public
         primary_description
       end
 
+      def artist_description
+        nil
+      end
+
       def venue_description
         @venue_description ||= normalized_copy(event.venue_description)
       end
