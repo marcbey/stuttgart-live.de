@@ -51,7 +51,8 @@
 
 - Listenansicht: einschränken: desktop 6 rows, mobile 10 events
 - Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
-
+- SKS & Highlight Events nur in der Highlight Lane nach vorne schieben, nicht in den anderen Lanes
+- Ticket ausverkauft Checkbox im Event-Editor soll nur Text sein, plus ein Text-Input für SKS Events bei ausverkauften Events + darstellung auf der Event Detail
 
 # POSTPONE:
 - Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?
