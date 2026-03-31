@@ -69,7 +69,7 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     assert_equal [ published_future.id ], lane.events.map(&:id)
   end
 
-  test "prioritizes highlighted events before sks events before the rest" do
+  test "orders related lane events chronologically" do
     current_event = build_lane_event(slug: "related-priority-current", artist_name: "Current Event", start_at: 4.days.from_now.change(hour: 20))
     normal_earlier = build_lane_event(slug: "related-priority-normal-earlier", artist_name: "Normal Earlier", start_at: 5.days.from_now.change(hour: 18))
     highlighted_later = build_lane_event(slug: "related-priority-highlighted", artist_name: "Highlighted Later", start_at: 5.days.from_now.change(hour: 22), highlighted: true)
@@ -83,9 +83,9 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     lane = build_builder(event: current_event).call
 
     assert_equal [
-      highlighted_later.id,
-      sks_middle.id,
       normal_earlier.id,
+      sks_middle.id,
+      highlighted_later.id,
       normal_latest.id
     ], lane.events.map(&:id)
   end
