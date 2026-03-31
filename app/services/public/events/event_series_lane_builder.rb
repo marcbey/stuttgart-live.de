@@ -15,7 +15,7 @@ module Public
           relation
             .where(event_series_id: event.event_series_id)
             .where(status: "published")
-            .where("published_at <= ?", Time.current)
+            .where("published_at IS NULL OR published_at <= ?", Time.current)
             .reorder(:start_at, :id)
             .to_a
         return if events.size < 2

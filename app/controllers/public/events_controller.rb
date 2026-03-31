@@ -158,7 +158,7 @@ module Public
       relation = search_events_relation
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .chronological
-      return relation.where(status: "published").where("published_at <= ?", Time.current) unless authenticated?
+      return relation.where(status: "published").where("published_at IS NULL OR published_at <= ?", Time.current) unless authenticated?
 
       exclude_scheduled_published_events(relation)
     end
@@ -257,7 +257,7 @@ module Public
     def search_overlay_idle_relation
       search_events_relation
         .where(status: "published")
-        .where("published_at <= ?", Time.current)
+        .where("published_at IS NULL OR published_at <= ?", Time.current)
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .chronological
     end
@@ -326,7 +326,7 @@ module Public
 
     def exclude_scheduled_published_events(relation)
       events = Event.arel_table
-      publicly_live = events[:status].eq("published").and(events[:published_at].lteq(Time.current))
+      publicly_live = events[:status].eq("published").and(events[:published_at].eq(nil).or(events[:published_at].lteq(Time.current)))
 
       relation.where(events[:status].not_eq("published").or(publicly_live))
     end

@@ -25,10 +25,9 @@
 - Listenansicht: einschränken: desktop 6 rows, mobile 10 events
 - Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
 
-- Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps Link, überschreibt die LLM Venue
-- LLM Beschreibung + über den act + über die venue zusammen legen
-- Genre Gruppierung tunen
-
+- DONE: Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps Link, überschreibt die LLM Venue
+- DONE: LLM Beschreibung + über den act + über die venue zusammen legen
+- DONE: Genre Gruppierung tunen
 - Suchergebnis Seite: mit Kachel / Listenansicht, generell anderes Layout
 
 - DONE: Suche: robuster machen, zB Leerzeichen
@@ -53,10 +52,8 @@
 
 # Konzepte
 
-- LLM Beschreibung + über den act + über die venue zusammen legen
-- noch nicht veröffentlichte Events, sollen unpublished sein, ein job published sie je nach veröffentlicht sie dann
-- Genre Gruppierung tunen
-- Veröffentlichunsdatum wird nicht gespeichert
-- Suche: zielgerichet mit Datum (heute, morgen, Wochenende), Genre
-- Suchergebnisseite
-- alle statische Seiten sollen pflegbar sein (CMS)
+- Noch nicht veröffentlichte Events, sollen automatisch "unpublished" sein, ein Job "published" sie wenn Veröffentlichungs Datum >= now()
+- Bug: Veröffentlichunsdatum wird nicht gespeichert
+- Suche erweitern: zielgerichet mit Datum (heute, morgen, Wochenende), Genre
+- Suchergebnis-Seite Aufbau, Design, etc...
+- Slle statische Seiten sollen pflegbar sein (CMS)

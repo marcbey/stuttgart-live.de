@@ -664,7 +664,21 @@ module Backend
     end
 
     def set_publishing_fields!(event)
-      event.sync_publication_fields(user: current_user)
+      if event.published?
+        if publication_date_cleared_for_existing_published_event?(event)
+          event.published_by ||= current_user if current_user.present?
+        else
+          event.sync_publication_fields(user: current_user)
+        end
+      else
+        event.published_by = nil
+      end
+    end
+
+    def publication_date_cleared_for_existing_published_event?(event)
+      event.attribute_in_database("status") == "published" &&
+        params[:event].respond_to?(:key?) &&
+        params[:event][:published_at].blank?
     end
 
     def attach_manual_event_images!

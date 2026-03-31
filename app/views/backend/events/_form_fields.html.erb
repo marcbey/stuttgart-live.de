@@ -110,6 +110,7 @@
 
   <div>
     <%= form.label :published_at, "Veröffentlichungsdatum", class: "form-label" %>
+    <%= form.hidden_field :published_at, value: "" %>
     <%= form.datetime_local_field :published_at,
                                   value: event.published_at&.in_time_zone&.strftime("%Y-%m-%dT%H:%M"),
                                   class: "form-input" %>

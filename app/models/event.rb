@@ -92,7 +92,11 @@ class Event < ApplicationRecord
   scope :chronological, -> { order(start_at: :asc, id: :asc) }
   scope :reverse_chronological, -> { order(start_at: :desc, id: :desc) }
   scope :by_status, ->(status) { where(status: status) }
-  scope :published_live, -> { where(status: "published").where("published_at <= ?", Time.current).chronological }
+  scope :published_live, lambda {
+    where(status: "published")
+      .where("published_at IS NULL OR published_at <= ?", Time.current)
+      .chronological
+  }
   scope :homepage_highlights, -> { where(promoter_id: sks_promoter_ids).or(where(highlighted: true)) }
   scope :highlighted_first, -> { reorder(Arel.sql("CASE WHEN events.highlighted = TRUE THEN 0 ELSE 1 END"), :start_at, :id) }
   scope :sks_first, -> { reorder(Arel.sql(sks_first_order_sql), :start_at, :id) }
@@ -166,7 +170,7 @@ class Event < ApplicationRecord
   end
 
   def live?
-    published? && published_at.present? && published_at <= Time.current
+    published? && (published_at.blank? || published_at <= Time.current)
   end
 
   def past?

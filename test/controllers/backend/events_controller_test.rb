@@ -84,6 +84,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
     assert_select "input[name='event[support]']", count: 1
+    assert_select "#event-editor-panel-event input[name='event[published_at]'][type='hidden'][value='']", count: 1
     assert_select "#event-editor-panel-event input[name='event[published_at]'][type='datetime-local']", count: 1
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
@@ -987,6 +988,54 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neu per Turbo", @event.reload.title
   end
 
+  test "save preserves a scheduled publication date for unpublished events" do
+    sign_in_as(@user)
+    scheduled_time = 2.days.from_now.change(min: 45, sec: 0)
+
+    patch backend_event_url(@event), params: {
+      inbox_status: "needs_review",
+      next_event_enabled: "0",
+      event: {
+        title: @event.title,
+        artist_name: @event.artist_name,
+        start_at: @event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review",
+        published_at: scheduled_time.strftime("%Y-%m-%dT%H:%M")
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_equal scheduled_time.change(usec: 0), @event.reload.published_at
+    assert_nil @event.published_by
+    assert_includes response.body, "Event wurde gespeichert."
+  end
+
+  test "save clears a scheduled publication date for unpublished events" do
+    sign_in_as(@user)
+    @event.update!(published_at: 2.days.from_now.change(min: 45, sec: 0))
+
+    patch backend_event_url(@event), params: {
+      inbox_status: "needs_review",
+      next_event_enabled: "0",
+      event: {
+        title: @event.title,
+        artist_name: @event.artist_name,
+        start_at: @event.start_at.strftime("%Y-%m-%dT%H:%M"),
+        venue: @event.venue,
+        city: @event.city,
+        status: "needs_review",
+        published_at: ""
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_nil @event.reload.published_at
+    assert_nil @event.published_by
+    assert_includes response.body, "Event wurde gespeichert."
+  end
+
   test "updates event venue and shows venue notice" do
     sign_in_as(@user)
 
@@ -1622,6 +1671,28 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
     assert_equal scheduled_time.change(usec: 0), @published_event.reload.published_at
+  end
+
+  test "update clears a scheduled publication date for published events" do
+    sign_in_as(@user)
+    @published_event.update!(published_at: 2.days.from_now.change(min: 15, sec: 0))
+
+    patch backend_event_url(@published_event), params: {
+      editor_tab: "settings",
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: "published",
+        published_at: ""
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+    assert_nil @published_event.reload.published_at
+    assert_equal @user, @published_event.published_by
   end
 
   test "validation error keeps settings tab active" do

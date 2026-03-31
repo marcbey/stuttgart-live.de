@@ -211,11 +211,14 @@ class EventTest < ActiveSupport::TestCase
     freeze_time do
       scheduled_event = Event.new(status: "published", published_at: 2.hours.from_now)
       live_event = Event.new(status: "published", published_at: 2.hours.ago)
+      immediate_event = Event.new(status: "published", published_at: nil)
 
       assert_predicate scheduled_event, :scheduled?
       assert_not_predicate scheduled_event, :live?
       assert_not_predicate live_event, :scheduled?
       assert_predicate live_event, :live?
+      assert_not_predicate immediate_event, :scheduled?
+      assert_predicate immediate_event, :live?
     end
   end
 
