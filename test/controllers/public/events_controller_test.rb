@@ -152,11 +152,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     rock_names = rock_section.css(".genre-lane-card-name").map(&:text)
 
     assert_equal [ pop_event.artist_name ], pop_names
-    assert_equal [
-      highlighted_event.artist_name,
-      sks_event.artist_name,
-      regular_event.artist_name
-    ], rock_names
+    assert_equal [ regular_event.artist_name, sks_event.artist_name, highlighted_event.artist_name ], rock_names
     assert_not_includes rock_names, unpublished_event.artist_name
     assert_not_includes rock_names, past_event.artist_name
   end
@@ -212,6 +208,70 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes rendered_titles, rock_group.name
     assert_includes rendered_titles, pop_group.name
     assert_equal 1, rendered_titles.count { |title| title == pop_group.name }
+  end
+
+  test "index orders the explicit pop lane chronologically without sks or highlight promotion" do
+    snapshot, _, pop_group = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    earlier_pop_event = Event.create!(
+      slug: "genre-lane-pop-chronological-earlier",
+      source_fingerprint: "test::public::genre-lane::pop-chronological::earlier",
+      title: "Genre Lane Pop Chronological Earlier",
+      artist_name: "Pop Earlier Artist",
+      start_at: 9.days.from_now.change(hour: 18, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    sks_pop_event = Event.create!(
+      slug: "genre-lane-pop-chronological-sks",
+      source_fingerprint: "test::public::genre-lane::pop-chronological::sks",
+      title: "Genre Lane Pop Chronological SKS",
+      artist_name: "Pop SKS Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Schleyer-Halle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    highlighted_pop_event = Event.create!(
+      slug: "genre-lane-pop-chronological-highlighted",
+      source_fingerprint: "test::public::genre-lane::pop-chronological::highlighted",
+      title: "Genre Lane Pop Chronological Highlighted",
+      artist_name: "Pop Highlighted Artist",
+      start_at: 9.days.from_now.change(hour: 22, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: earlier_pop_event, genres: [ "Pop" ])
+    build_homepage_genre_enrichment(event: sks_pop_event, genres: [ "Pop" ])
+    build_homepage_genre_enrichment(event: highlighted_pop_event, genres: [ "Pop" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
+
+    pop_section = Nokogiri::HTML.parse(response.body).css("section.genre-lane-section").find do |section|
+      section.at_css("h2")&.text == pop_group.name
+    end
+
+    assert pop_section.present?, "expected pop lane to be rendered"
+
+    assert_equal [
+      earlier_pop_event.artist_name,
+      sks_pop_event.artist_name,
+      highlighted_pop_event.artist_name
+    ], pop_section.css(".genre-lane-card-name").map(&:text)
   end
 
   test "index renders a pop lane on the homepage without any selected snapshot" do
@@ -1543,8 +1603,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     names = tagestipp_section.css(".genre-lane-card-name").map(&:text)
 
-    assert_equal sks_today_event.artist_name, names.first
+    assert_equal "Tagestipp Filler Artist 9", names.first
     assert_includes names, today_event.artist_name
+    assert_includes names, sks_today_event.artist_name
     assert_includes names, late_today_event.artist_name
     assert_not_includes names, reservix_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
@@ -2189,16 +2250,42 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[type='application/ld+json']", /Published Artist/
   end
 
-  test "show renders related genre lane with future published matches" do
+  test "show renders related genre lane in chronological order without sks or highlight promotion" do
     snapshot, rock_group, = create_homepage_genre_snapshot
-    related_event = Event.create!(
-      slug: "show-related-genre-match",
-      source_fingerprint: "test::public::show-related-genre::match",
-      title: "Show Related Match",
-      artist_name: "Related Match Artist",
+    regular_event = Event.create!(
+      slug: "show-related-genre-regular",
+      source_fingerprint: "test::public::show-related-genre::regular",
+      title: "Show Related Regular",
+      artist_name: "Related Regular Artist",
+      start_at: 8.days.from_now.change(hour: 18, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    sks_event = Event.create!(
+      slug: "show-related-genre-sks",
+      source_fingerprint: "test::public::show-related-genre::sks",
+      title: "Show Related SKS",
+      artist_name: "Related SKS Artist",
       start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    highlighted_event = Event.create!(
+      slug: "show-related-genre-highlighted",
+      source_fingerprint: "test::public::show-related-genre::highlighted",
+      title: "Show Related Highlighted",
+      artist_name: "Related Highlighted Artist",
+      start_at: 8.days.from_now.change(hour: 22, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
       status: "published",
       published_at: 1.day.ago,
       source_snapshot: {}
@@ -2230,7 +2317,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
 
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
-    build_homepage_genre_enrichment(event: related_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: regular_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: sks_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: highlighted_event, genres: [ "Rock" ])
     build_homepage_genre_enrichment(event: unpublished_event, genres: [ "Rock" ])
     build_homepage_genre_enrichment(event: past_event, genres: [ "Rock" ])
 
@@ -2238,10 +2327,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-related-list h2", text: "Das könnte dir auch gefallen"
-    assert_select ".event-detail-related-list .event-listing-link strong", text: related_event.artist_name
+    assert_select ".event-detail-related-list .event-listing-link strong", text: regular_event.artist_name
+    assert_select ".event-detail-related-list .event-listing-link strong", text: sks_event.artist_name
+    assert_select ".event-detail-related-list .event-listing-link strong", text: highlighted_event.artist_name
     assert_select ".event-detail-related-list .event-listing-link strong", text: @published_event.artist_name, count: 0
     assert_select ".event-detail-related-list .event-listing-link strong", text: unpublished_event.artist_name, count: 0
     assert_select ".event-detail-related-list .event-listing-link strong", text: past_event.artist_name, count: 0
+
+    related_names = Nokogiri::HTML.parse(response.body).css(".event-detail-related-list .event-listing-link strong").map(&:text)
+
+    assert_equal [
+      regular_event.artist_name,
+      sks_event.artist_name,
+      highlighted_event.artist_name
+    ], related_names.first(3)
   end
 
   test "show does not render related genre lane without selected snapshot or additional matches" do

@@ -65,7 +65,7 @@ class LlmGenreGrouping::LookupTest < ActiveSupport::TestCase
     assert_equal [ events(:needs_review_one).id ], events.pluck(:id)
   end
 
-  test "prioritizes highlighted then sks then regular events chronologically" do
+  test "orders group events chronologically" do
     normal_earlier = build_group_event(slug: "lookup-normal-earlier", artist_name: "Normal Earlier", start_at: 5.days.from_now.change(hour: 18))
     highlighted_later = build_group_event(slug: "lookup-highlighted-later", artist_name: "Highlighted Later", start_at: 5.days.from_now.change(hour: 22), highlighted: true)
     sks_middle = build_group_event(slug: "lookup-sks-middle", artist_name: "SKS Middle", start_at: 5.days.from_now.change(hour: 20), promoter_id: "10135")
@@ -76,20 +76,20 @@ class LlmGenreGrouping::LookupTest < ActiveSupport::TestCase
       build_group_enrichment(event:, genres: [ "Rock" ])
     end
 
-    events = LlmGenreGrouping::Lookup.prioritized_events_for_group(
+    events = LlmGenreGrouping::Lookup.chronological_events_for_group(
       @rock_group,
       relation: relation
     )
 
     assert_equal [
-      highlighted_later.id,
-      sks_middle.id,
       normal_earlier.id,
+      sks_middle.id,
+      highlighted_later.id,
       normal_latest.id
     ], events.map(&:id)
   end
 
-  test "excludes a given event id from prioritized group events" do
+  test "excludes a given event id from chronological group events" do
     excluded_event = build_group_event(slug: "lookup-excluded", artist_name: "Excluded", start_at: 5.days.from_now.change(hour: 18))
     remaining_event = build_group_event(slug: "lookup-remaining", artist_name: "Remaining", start_at: 5.days.from_now.change(hour: 20))
     relation = Event.where(id: [ excluded_event.id, remaining_event.id ])
@@ -98,7 +98,7 @@ class LlmGenreGrouping::LookupTest < ActiveSupport::TestCase
       build_group_enrichment(event:, genres: [ "Rock" ])
     end
 
-    events = LlmGenreGrouping::Lookup.prioritized_events_for_group(
+    events = LlmGenreGrouping::Lookup.chronological_events_for_group(
       @rock_group,
       relation: relation,
       exclude_event_id: excluded_event.id
@@ -107,7 +107,7 @@ class LlmGenreGrouping::LookupTest < ActiveSupport::TestCase
     assert_equal [ remaining_event.id ], events.map(&:id)
   end
 
-  test "uses 100 as the default limit for prioritized group events" do
+  test "uses 100 as the default limit for chronological group events" do
     event_ids = []
 
     105.times do |index|
@@ -120,7 +120,7 @@ class LlmGenreGrouping::LookupTest < ActiveSupport::TestCase
       build_group_enrichment(event:, genres: [ "Rock" ])
     end
 
-    events = LlmGenreGrouping::Lookup.prioritized_events_for_group(
+    events = LlmGenreGrouping::Lookup.chronological_events_for_group(
       @rock_group,
       relation: Event.where(id: event_ids)
     )

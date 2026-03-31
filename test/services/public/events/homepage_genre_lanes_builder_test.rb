@@ -50,7 +50,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal [ rock_event.id ], lanes.first.events.map(&:id)
   end
 
-  test "prioritizes highlighted events before sks events before the rest" do
+  test "orders lane events chronologically" do
     normal_earlier = build_lane_event(slug: "lane-normal-earlier", artist_name: "Normal Earlier", start_at: 5.days.from_now.change(hour: 18))
     highlighted_later = build_lane_event(slug: "lane-highlighted-later", artist_name: "Highlighted Later", start_at: 5.days.from_now.change(hour: 22), highlighted: true)
     sks_middle = build_lane_event(slug: "lane-sks-middle", artist_name: "SKS Middle", start_at: 5.days.from_now.change(hour: 20), promoter_id: "10135")
@@ -67,9 +67,9 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     ).call
 
     assert_equal [
-      highlighted_later.id,
-      sks_middle.id,
       normal_earlier.id,
+      sks_middle.id,
+      highlighted_later.id,
       normal_latest.id
     ], lanes.first.events.map(&:id)
   end

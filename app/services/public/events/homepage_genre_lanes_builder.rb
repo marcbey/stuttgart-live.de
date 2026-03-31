@@ -23,7 +23,7 @@ module Public
           group = groups_by_slug[slug]
           next if group.blank?
 
-          events, effective_series_ids = prioritized_group_events(group)
+          events, effective_series_ids = chronological_group_events(group)
           next if events.empty?
 
           Lane.new(group:, events:, effective_series_ids:)
@@ -40,10 +40,10 @@ module Public
         )
       end
 
-      def prioritized_group_events(group)
+      def chronological_group_events(group)
         selected_events =
           LlmGenreGrouping::Lookup
-            .prioritized_events_for_group(group, relation:, limit: nil)
+            .chronological_events_for_group(group, relation:, limit: nil)
             .to_a
 
         effective_series_ids = effective_series_ids_for(selected_events)

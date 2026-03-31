@@ -275,17 +275,9 @@ module Public
           ")",
           "Pop"
         )
-        .select("events.*, #{homepage_lane_priority_order_sql} AS homepage_lane_priority")
-        .reorder(Arel.sql("homepage_lane_priority ASC"), :start_at, :id)
+        .reorder(:start_at, :id)
         .distinct
         .to_a
-    end
-
-    def homepage_lane_priority_order_sql
-      quoted_ids = Event.sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
-      sks_clause = quoted_ids.present? ? "WHEN events.promoter_id IN (#{quoted_ids}) THEN 1 " : ""
-
-      "CASE WHEN events.highlighted = TRUE THEN 0 #{sks_clause}ELSE 2 END"
     end
 
     def initial_search_overlay_events
@@ -372,21 +364,7 @@ module Public
         query: nil
       )
         .where.not(primary_source: "reservix")
-        .reorder(Arel.sql(sks_first_order_sql), :start_at, :id)
-    end
-
-    def exclude_scheduled_published_events(relation)
-      events = Event.arel_table
-      publicly_live = events[:status].eq("published").and(events[:published_at].eq(nil).or(events[:published_at].lteq(Time.current)))
-
-      relation.where(events[:status].not_eq("published").or(publicly_live))
-    end
-
-    def sks_first_order_sql
-      quoted_ids = Event.sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
-      return "1" if quoted_ids.blank?
-
-      "CASE WHEN events.promoter_id IN (#{quoted_ids}) THEN 0 ELSE 1 END"
+        .reorder(:start_at, :id)
     end
 
     def apply_status!(event, status)
@@ -402,6 +380,13 @@ module Public
 
     def effective_public_series_ids_for_relation(relation)
       Public::Events::EffectiveSeriesIdsQuery.call(relation)
+    end
+
+    def exclude_scheduled_published_events(relation)
+      events = Event.arel_table
+      publicly_live = events[:status].eq("published").and(events[:published_at].eq(nil).or(events[:published_at].lteq(Time.current)))
+
+      relation.where(events[:status].not_eq("published").or(publicly_live))
     end
 
     def render_not_found

@@ -14,7 +14,7 @@ module Public
       def call
         return if group.blank?
 
-        events, effective_series_ids = prioritized_group_events
+        events, effective_series_ids = chronological_group_events
         return if events.empty?
 
         Lane.new(group:, events:, effective_series_ids:)
@@ -28,10 +28,10 @@ module Public
         @group ||= LlmGenreGrouping::Lookup.groups_for_event(event).first
       end
 
-      def prioritized_group_events
+      def chronological_group_events
         selected_events =
           LlmGenreGrouping::Lookup
-            .prioritized_events_for_group(group, relation:, limit: nil, exclude_event_id: event.id)
+            .chronological_events_for_group(group, relation:, limit: nil, exclude_event_id: event.id)
             .to_a
 
         effective_series_ids = effective_series_ids_for(selected_events)
