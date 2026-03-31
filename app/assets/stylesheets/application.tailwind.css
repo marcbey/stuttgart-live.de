@@ -3049,10 +3049,6 @@ trix-editor.blog-rich-text:focus {
   text-decoration: none;
 }
 
-.promotion-banner-link-news {
-  background: var(--promotion-banner-background);
-}
-
 .promotion-banner-link-dark {
   color: #111;
 }
@@ -9718,15 +9714,16 @@ body.page-public-events-index .app-nav-toggle[aria-expanded="true"] span:nth-chi
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
+    position: relative;
     display: block;
     margin: 0;
     padding: 0;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-image {
     display: block;
-    width: 100% !important;
-    max-width: 100%;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
@@ -10047,27 +10044,21 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  position: relative;
+  display: block;
   margin: 1rem;
   background: transparent;
-  overflow: visible;
-  padding: 0.8rem;
-  aspect-ratio: auto;
+  overflow: hidden;
+  padding: 0;
+  aspect-ratio: 16 / 9;
   min-height: 0;
   align-self: center;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-image {
+  display: block;
   border: 0;
   background: transparent;
-  width: 100% !important;
-  height: auto !important;
-  max-height: 100%;
-  object-fit: contain;
-  position: static !important;
-  inset: auto !important;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
@@ -10155,16 +10146,16 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link-li
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
+    position: relative;
     display: block;
     margin: 0;
     padding: 0;
-    aspect-ratio: auto;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-image {
     display: block;
-    width: 100% !important;
-    max-width: 100%;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
@@ -10191,15 +10182,16 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link-li
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
+    position: relative;
     display: block;
     margin: 0;
     padding: 0;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-image {
     display: block;
-    width: 100% !important;
-    max-width: 100%;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {

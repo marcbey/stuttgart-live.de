@@ -1425,6 +1425,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_background_color]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[type='color']#event_promotion_banner_background_color_picker[form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings button[data-promotion-banner-color-target='eyedropper']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_copyright]'][form='editor_form_event_#{@published_event.id}']", count: 1
@@ -1454,6 +1457,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         promotion_banner: "1",
         promotion_banner_kicker_text: "Empfehlung",
         promotion_banner_cta_text: "Jetzt ansehen",
+        promotion_banner_background_color: "#18333A",
         promotion_banner_image_copyright: "Foto: Haus",
         promotion_banner_image_focus_x: "18",
         promotion_banner_image_focus_y: "72",
@@ -1473,6 +1477,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 18.0, @published_event.promotion_banner_image_focus_x_value
     assert_equal 72.0, @published_event.promotion_banner_image_focus_y_value
     assert_equal 145.0, @published_event.promotion_banner_image_zoom_value
+    assert_equal "#18333A", @published_event.promotion_banner_background_color
     assert_includes response.body, 'value="settings"'
   end
 
@@ -1640,7 +1645,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         highlighted: "1",
         promotion_banner: "1",
         promotion_banner_kicker_text: "Szene Tipp",
-        promotion_banner_cta_text: "Jetzt ansehen"
+        promotion_banner_cta_text: "Jetzt ansehen",
+        promotion_banner_background_color: "18333a"
       }
     }, as: :turbo_stream
 
@@ -1652,6 +1658,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate @published_event, :promotion_banner?
     assert_equal "Szene Tipp", @published_event.promotion_banner_kicker_text
     assert_equal "Jetzt ansehen", @published_event.promotion_banner_cta_text
+    assert_equal "#18333A", @published_event.promotion_banner_background_color
   end
 
   test "update stores a scheduled publication date" do

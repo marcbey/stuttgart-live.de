@@ -1,0 +1,34 @@
+<% article_options = { class: article_classes } %>
+<% article_options[:style] = article_style if article_style.present? %>
+
+<%= content_tag :article, **article_options do %>
+  <% if admin_link_path.present? %>
+    <div class="promotion-banner-admin-controls">
+      <%= link_to admin_link_label,
+                  admin_link_path,
+                  class: "event-card-admin-link event-card-admin-link-attention",
+                  data: { turbo: false } %>
+    </div>
+  <% end %>
+
+  <%= link_to href, class: link_classes, style: link_style do %>
+    <div class="promotion-banner-media">
+      <%= image_tag image_source,
+                    alt: image_alt,
+                    class: "promotion-banner-image",
+                    style: image_style %>
+      <% if credit.present? %>
+        <p class="promotion-banner-credit"><%= credit %></p>
+      <% end %>
+    </div>
+
+    <div class="promotion-banner-copy">
+      <p class="promotion-banner-kicker"><%= kicker_text %></p>
+      <h2><%= heading %></h2>
+      <% if subheading.present? %>
+        <p class="promotion-banner-event-title"><%= subheading %></p>
+      <% end %>
+      <span class="promotion-banner-cta"><%= cta_text %></span>
+    </div>
+  <% end %>
+<% end %>

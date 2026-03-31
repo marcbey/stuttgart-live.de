@@ -516,6 +516,8 @@ class EventTest < ActiveSupport::TestCase
 
     assert_equal "Promotion", event.promotion_banner_kicker_text_value
     assert_equal "Zum Event", event.promotion_banner_cta_text_value
+    assert_equal "#E0F7F2", event.promotion_banner_background_color_value
+    assert_equal "dark", event.promotion_banner_text_color_scheme
   end
 
   test "promotion banner texts are normalized" do
@@ -530,6 +532,37 @@ class EventTest < ActiveSupport::TestCase
 
     assert_equal "Szene Tipp", event.promotion_banner_kicker_text
     assert_equal "Jetzt ansehen", event.promotion_banner_cta_text
+  end
+
+  test "promotion banner background color is normalized" do
+    event = events(:published_one)
+
+    event.update!(promotion_banner_background_color: "  18333a ")
+
+    assert_equal "#18333A", event.promotion_banner_background_color
+    assert_equal "#18333A", event.promotion_banner_background_color_value
+  end
+
+  test "promotion banner background color rejects invalid values" do
+    event = events(:published_one)
+
+    event.promotion_banner_background_color = "#ABC"
+
+    assert_not event.valid?
+    assert_includes event.errors[:promotion_banner_background_color], "ist ungültig"
+  end
+
+  test "promotion banner background color detects light and dark contrast schemes" do
+    light_event = events(:published_one)
+    dark_event = events(:published_one).dup
+
+    light_event.promotion_banner_background_color = "#F2F7E0"
+    dark_event.promotion_banner_background_color = "#18333A"
+
+    assert_predicate light_event, :promotion_banner_background_bright?
+    assert_equal "dark", light_event.promotion_banner_text_color_scheme
+    assert_not dark_event.promotion_banner_background_bright?
+    assert_equal "light", dark_event.promotion_banner_text_color_scheme
   end
 
   private

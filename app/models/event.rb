@@ -3,6 +3,10 @@ class Event < ApplicationRecord
   EVENT_SERIES_ASSIGNMENTS = %w[auto manual manual_none].freeze
   DEFAULT_PROMOTION_BANNER_KICKER_TEXT = "Promotion"
   DEFAULT_PROMOTION_BANNER_CTA_TEXT = "Zum Event"
+  DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR = "#E0F7F2"
+  PROMOTION_BANNER_TEXT_COLOR_LIGHT = "light"
+  PROMOTION_BANNER_TEXT_COLOR_DARK = "dark"
+  HEX_COLOR_FORMAT = /\A#[0-9A-F]{6}\z/.freeze
   DEFAULT_IMAGE_FOCUS_X = EventImage::DEFAULT_CARD_FOCUS_X
   DEFAULT_IMAGE_FOCUS_Y = EventImage::DEFAULT_CARD_FOCUS_Y
   DEFAULT_IMAGE_ZOOM = EventImage::DEFAULT_CARD_ZOOM
@@ -79,6 +83,7 @@ class Event < ApplicationRecord
   validates :min_price, :max_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
+  validates :promotion_banner_background_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
   validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
@@ -376,6 +381,21 @@ class Event < ApplicationRecord
     promotion_banner_cta_text.presence || DEFAULT_PROMOTION_BANNER_CTA_TEXT
   end
 
+  def promotion_banner_background_color_value
+    promotion_banner_background_color.presence || DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR
+  end
+
+  def promotion_banner_text_color_scheme
+    promotion_banner_background_bright? ? PROMOTION_BANNER_TEXT_COLOR_DARK : PROMOTION_BANNER_TEXT_COLOR_LIGHT
+  end
+
+  def promotion_banner_background_bright?
+    red, green, blue = promotion_banner_background_color_value.delete_prefix("#").scan(/../).map { |channel| channel.to_i(16) }
+    brightness = ((red * 299) + (green * 587) + (blue * 114)) / 1000.0
+
+    brightness >= 160
+  end
+
   def promotion_banner_image_blob_for_editor
     pending_blob = pending_promotion_banner_image_blob
     return pending_blob if pending_blob.present?
@@ -547,6 +567,7 @@ class Event < ApplicationRecord
     self.badge_text = badge_text.to_s.strip.presence
     self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
     self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
+    self.promotion_banner_background_color = normalize_hex_color(promotion_banner_background_color)
     self.promotion_banner_image_copyright = promotion_banner_image_copyright.to_s.strip.presence
     self.promotion_banner_image_focus_x = normalize_percentage(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
     self.promotion_banner_image_focus_y = normalize_percentage(promotion_banner_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
@@ -616,6 +637,14 @@ class Event < ApplicationRecord
     end
 
     self.slug = candidate
+  end
+
+  def normalize_hex_color(value)
+    normalized = value.to_s.strip.upcase
+    return if normalized.blank?
+
+    normalized = "##{normalized}" unless normalized.start_with?("#")
+    normalized
   end
 
   def image_focus_value(value, fallback:)

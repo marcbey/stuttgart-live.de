@@ -845,7 +845,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner-kicker", text: "Lesetipp"
     assert_select ".promotion-banner-cta", text: "Beitrag öffnen"
     assert_select ".promotion-banner-news[style*='--promotion-banner-background: #18333A']"
-    assert_select ".promotion-banner-link-news.promotion-banner-link-light"
+    assert_select ".promotion-banner-link-light[style='background: var(--promotion-banner-background)']"
   end
 
   test "homepage falls back to the default news promotion banner background color" do
@@ -897,8 +897,85 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".promotion-banner-news[style*='--promotion-banner-background: #E0F7F2']"
-    assert_select ".promotion-banner-link-news.promotion-banner-link-dark"
-    assert_select ".promotion-banner-event .promotion-banner-link:not(.promotion-banner-link-news)", count: 1
+    assert_select ".promotion-banner-link-dark[style='background: var(--promotion-banner-background)']"
+    assert_select ".promotion-banner-event .promotion-banner-link-dark[style='background: var(--promotion-banner-background)']", count: 1
+  end
+
+  test "homepage renders custom promotion banner background color from event" do
+    Event.create!(
+      slug: "promotion-banner-event-color-highlight",
+      source_fingerprint: "test::homepage::promotion-banner-event-color-highlight",
+      title: "Promotion Banner Event Color Highlight",
+      artist_name: "Promotion Banner Event Color Highlight Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event = Event.create!(
+      slug: "promotion-banner-event-color",
+      source_fingerprint: "test::homepage::promotion-banner-event-color",
+      title: "Promotion Banner Event Color",
+      artist_name: "Promotion Banner Event Color Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner_kicker_text: "Event Tipp",
+      promotion_banner_cta_text: "Zum Event",
+      promotion_banner_background_color: "#18333A",
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+    event.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner-event[style*='--promotion-banner-background: #18333A']"
+    assert_select ".promotion-banner-event .promotion-banner-link-light[style='background: var(--promotion-banner-background)']"
+  end
+
+  test "homepage falls back to the default event promotion banner background color" do
+    Event.create!(
+      slug: "promotion-banner-event-default-highlight",
+      source_fingerprint: "test::homepage::promotion-banner-event-default-highlight",
+      title: "Promotion Banner Event Default Highlight",
+      artist_name: "Promotion Banner Event Default Highlight Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event = Event.create!(
+      slug: "promotion-banner-event-default",
+      source_fingerprint: "test::homepage::promotion-banner-event-default",
+      title: "Promotion Banner Event Default",
+      artist_name: "Promotion Banner Event Default Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+    event.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner-event[style*='--promotion-banner-background: #E0F7F2']"
+    assert_select ".promotion-banner-event .promotion-banner-link-dark[style='background: var(--promotion-banner-background)']"
   end
 
   test "homepage renders optimized promotion banner image" do

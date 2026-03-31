@@ -1,29 +1,16 @@
-<article class="promotion-banner promotion-banner-poster promotion-banner-news"
-         style="--promotion-banner-background: <%= blog_post.promotion_banner_background_color_value %>">
-  <% if authenticated? && current_user.blog_access? %>
-    <div class="promotion-banner-admin-controls">
-      <%= link_to "Edit",
-                  edit_backend_blog_post_path(blog_post),
-                  class: "event-card-admin-link event-card-admin-link-attention",
-                  data: { turbo: false } %>
-    </div>
-  <% end %>
-  <%= link_to news_path(blog_post.slug),
-              class: "promotion-banner-link promotion-banner-link-news promotion-banner-link-#{blog_post.promotion_banner_text_color_scheme}" do %>
-    <div class="promotion-banner-media">
-      <%= image_tag optimized_blog_post_image_representation(blog_post, :promotion_banner_image),
-                    alt: blog_post.title,
-                    class: "promotion-banner-image",
-                    style: blog_post_cropped_image_style(blog_post, :promotion_banner_image, frame_ratio: 16.0 / 9.0) %>
-      <% if blog_post_image_copyright(blog_post, :promotion_banner_image).present? %>
-        <p class="promotion-banner-credit"><%= blog_post_image_copyright(blog_post, :promotion_banner_image) %></p>
-      <% end %>
-    </div>
-
-    <div class="promotion-banner-copy">
-      <p class="promotion-banner-kicker"><%= blog_post.promotion_banner_kicker_text_value %></p>
-      <h2><%= blog_post.title %></h2>
-      <span class="promotion-banner-cta"><%= blog_post.promotion_banner_cta_text_value %></span>
-    </div>
-  <% end %>
-</article>
+<%= render "public/events/promotion_banner_component",
+           article_classes: "promotion-banner promotion-banner-poster promotion-banner-news",
+           article_style: "--promotion-banner-background: #{blog_post.promotion_banner_background_color_value}",
+           admin_link_path: (authenticated? && current_user.blog_access? ? edit_backend_blog_post_path(blog_post) : nil),
+           admin_link_label: "Edit",
+           href: news_path(blog_post.slug),
+           link_classes: "promotion-banner-link promotion-banner-link-#{blog_post.promotion_banner_text_color_scheme}",
+           link_style: "background: var(--promotion-banner-background)",
+           image_source: optimized_blog_post_image_representation(blog_post, :promotion_banner_image),
+           image_alt: blog_post.title,
+           image_style: blog_post_cropped_image_style(blog_post, :promotion_banner_image, frame_ratio: 16.0 / 9.0),
+           credit: blog_post_image_copyright(blog_post, :promotion_banner_image),
+           kicker_text: blog_post.promotion_banner_kicker_text_value,
+           heading: blog_post.title,
+           subheading: nil,
+           cta_text: blog_post.promotion_banner_cta_text_value %>

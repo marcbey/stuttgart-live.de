@@ -5,34 +5,19 @@
 <% event_image_credit = uses_promotion_banner_image ? event.promotion_banner_image_copyright : event_image&.sub_text %>
 <% image_alt = uses_promotion_banner_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(event_image, event) %>
 
-<article class="promotion-banner promotion-banner-event promotion-banner-poster">
-  <% if authenticated? %>
-    <div class="promotion-banner-admin-controls">
-      <%= link_to "Edit",
-                  backend_events_path(status: event.status, event_id: event.id),
-                  class: "event-card-admin-link event-card-admin-link-attention",
-                  data: { turbo: false } %>
-    </div>
-  <% end %>
-
-  <%= link_to public_event_detail_path(event, browse_state), class: "promotion-banner-link" do %>
-    <div class="promotion-banner-media">
-      <%= image_tag event_image_source,
-                    alt: image_alt,
-                    class: "promotion-banner-image",
-                    style: event_image_style %>
-      <% if event_image_credit.present? %>
-        <p class="promotion-banner-credit"><%= event_image_credit %></p>
-      <% end %>
-    </div>
-
-    <div class="promotion-banner-copy">
-      <p class="promotion-banner-kicker"><%= event.promotion_banner_kicker_text_value %></p>
-      <h2><%= event.artist_name %></h2>
-      <% if event.title.present? && event.title != event.artist_name %>
-        <p class="promotion-banner-event-title"><%= event.title %></p>
-      <% end %>
-      <span class="promotion-banner-cta"><%= event.promotion_banner_cta_text_value %></span>
-    </div>
-  <% end %>
-</article>
+<%= render "public/events/promotion_banner_component",
+           article_classes: "promotion-banner promotion-banner-event promotion-banner-poster",
+           article_style: "--promotion-banner-background: #{event.promotion_banner_background_color_value}",
+           admin_link_path: (authenticated? ? backend_events_path(status: event.status, event_id: event.id) : nil),
+           admin_link_label: "Edit",
+           href: public_event_detail_path(event, browse_state),
+           link_classes: "promotion-banner-link promotion-banner-link-#{event.promotion_banner_text_color_scheme}",
+           link_style: "background: var(--promotion-banner-background)",
+           image_source: event_image_source,
+           image_alt: image_alt,
+           image_style: event_image_style,
+           credit: event_image_credit,
+           kicker_text: event.promotion_banner_kicker_text_value,
+           heading: event.artist_name,
+           subheading: (event.title if event.title.present? && event.title != event.artist_name),
+           cta_text: event.promotion_banner_cta_text_value %>
