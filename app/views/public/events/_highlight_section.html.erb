@@ -3,7 +3,10 @@
 <% track_class = featured ? "home-featured-track" : "home-slider-track" %>
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 
-<section class="<%= featured ? 'home-featured-section' : 'home-slider-section' %>"
+<% section_classes = [featured ? "home-featured-section" : "home-slider-section"] %>
+<% section_classes << "home-slider-section--turquoise-title" if title.to_s.casecmp("Alle Veranstaltungen").zero? %>
+
+<section class="<%= section_classes.join(" ") %>"
          data-controller="highlights-slider section-view"
          <% if featured %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
   <div class="home-slider-header">

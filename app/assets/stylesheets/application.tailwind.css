@@ -1780,9 +1780,9 @@ trix-editor.blog-rich-text:focus {
   }
 }
 
+.privacy-settings-button,
 .scroll-top-button {
   position: fixed;
-  right: 1rem;
   bottom: 1rem;
   z-index: 35;
   display: inline-flex;
@@ -1799,8 +1799,32 @@ trix-editor.blog-rich-text:focus {
   line-height: 1;
   cursor: pointer;
   backdrop-filter: blur(8px);
+  transition: transform 140ms ease;
 }
 
+.privacy-settings-button {
+  left: 1rem;
+  padding: 0;
+  background: rgba(89, 232, 222, 0.5);
+  border-color: rgba(89, 232, 222, 0.8);
+  box-shadow:
+    0 12px 28px rgba(17, 17, 17, 0.18),
+    0 0 0 1px rgba(255, 255, 255, 0.28) inset;
+}
+
+.privacy-settings-button svg {
+  display: block;
+  width: 2.15rem;
+  height: 2.15rem;
+  opacity: 1;
+  fill: rgba(6, 47, 49, 1);
+}
+
+.scroll-top-button {
+  right: 1rem;
+}
+
+.privacy-settings-button:hover,
 .scroll-top-button:hover {
   transform: translateY(-1px);
 }
@@ -2437,7 +2461,7 @@ trix-editor.blog-rich-text:focus {
 
 .genre-lane-heading h2 {
   margin: 0;
-  color: #fff;
+  color: #6fd0ca;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: clamp(2rem, 4vw, 3.15rem);
   font-weight: 400;
@@ -2492,6 +2516,10 @@ trix-editor.blog-rich-text:focus {
   font-size: clamp(2rem, 4vw, 3.15rem);
   line-height: 0.92;
   transform: translateY(0.03em);
+}
+
+.home-slider-section--turquoise-title .home-slider-header h2 {
+  color: #6fd0ca;
 }
 
 .genre-lane-section .genre-lane-heading {
@@ -5539,7 +5567,7 @@ trix-editor.blog-rich-text:focus {
   overflow: hidden;
   border: 0;
   border-radius: 0;
-  background: #fff;
+  background: #eee;
   box-shadow: 0 14px 28px rgba(17, 17, 17, 0.035);
   isolation: isolate;
 }
@@ -5791,7 +5819,7 @@ trix-editor.blog-rich-text:focus {
 .event-detail-related-list {
   display: grid;
   gap: 1rem;
-  width: min(100%, var(--event-detail-right-column-width, 46rem));
+  width: 100%;
   max-width: none;
   justify-self: start;
 }
@@ -5828,14 +5856,14 @@ trix-editor.blog-rich-text:focus {
 .event-detail-side-credit {
   position: absolute;
   top: 0;
-  right: 0;
+  right: -15px;
   bottom: 0;
   margin: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 0 0.35rem;
-  background: rgba(255, 255, 255, 0.92);
+  background: transparent;
   color: rgba(17, 17, 17, 0.55);
   font-size: 0.76rem;
   line-height: 1;
@@ -6128,7 +6156,7 @@ trix-editor.blog-rich-text:focus {
     height: auto;
     min-height: 0;
     aspect-ratio: var(--event-detail-image-stage-ratio, 16 / 10);
-    background: transparent;
+    background: #eee;
     box-shadow: none;
   }
 
@@ -6153,7 +6181,39 @@ trix-editor.blog-rich-text:focus {
   }
 }
 
-@media (min-width: 1200px) {
+@media (min-width: 1180px) {
+  .event-detail-side-credit {
+    left: -15px;
+    right: auto;
+  }
+
+  .event-detail-header {
+    grid-template-columns: minmax(18rem, 0.86fr) minmax(0, 1.14fr);
+    grid-template-areas: "media copy";
+    gap: 1.5rem;
+    justify-content: space-between;
+  }
+
+  .event-detail-header-panel {
+    grid-area: copy;
+    align-content: start;
+  }
+
+  .event-detail-image-wrap {
+    grid-area: media;
+    inline-size: min(100%, 34rem);
+    width: min(100%, 34rem);
+    max-width: 100%;
+    justify-self: start;
+  }
+}
+
+@media (min-width: 1500px) {
+  .event-detail-side-credit {
+    left: -15px;
+    right: auto;
+  }
+
   .event-detail-header-copy {
     gap: 0.9rem;
   }
@@ -7865,7 +7925,18 @@ trix-editor.blog-rich-text:focus {
   .presenter-card-header {
     grid-template-columns: minmax(0, 1fr) auto;
   }
+}
 
+@media (min-width: 820px) {
+  .event-detail-related-list .event-listing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1180px) {
+  .event-detail-related-list .event-listing-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .event-image-inline-upload {
@@ -8644,10 +8715,6 @@ trix-editor.blog-rich-text:focus {
   .event-card-grid-2-1,
   .event-card-grid-2-2 {
     grid-column: span 2;
-  }
-
-  .event-detail-header {
-    grid-template-columns: 1.05fr 0.95fr;
   }
 
   .filter-grid {
