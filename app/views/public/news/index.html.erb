@@ -10,17 +10,8 @@
   <% if @blog_posts.any? %>
     <div class="news-grid news-index-grid">
       <% @blog_posts.each_with_index do |blog_post, index| %>
-        <article class="news-card news-index-card <%= 'news-index-card-no-image' unless blog_post.cover_image.attached? %>">
+        <article class="news-card news-index-card">
           <%= link_to news_path(blog_post.slug), class: "news-index-card-link" do %>
-            <% if blog_post.cover_image.attached? %>
-              <div class="news-card-media news-index-card-media">
-                <%= image_tag optimized_blog_post_image_representation(blog_post, :cover_image),
-                              alt: blog_post.title,
-                              class: "news-list-item-image",
-                              style: blog_post_image_style(blog_post, :cover_image) %>
-              </div>
-            <% end %>
-
             <div class="news-card-body news-index-card-body">
               <span class="news-index-accent" aria-hidden="true"></span>
               <p class="news-card-meta">
