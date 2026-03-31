@@ -2530,8 +2530,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
     assert_includes response.body, expected_link
-    assert_select ".event-detail-topbar-actions .button", text: "Edit"
-    assert_no_match(/Bearbeiten/, response.body)
+    assert_select ".event-detail-admin-link .button.event-detail-edit-link", text: "Backend"
+    assert_select ".event-detail-topbar-actions .button", count: 0
   end
 
   test "show renders presenter logos inside organizer notes when presenters exist" do
@@ -3235,7 +3235,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-image-figure .event-detail-image-stage.event-detail-image-stage-static", count: 1
     assert_select ".event-detail-image-stage .event-detail-image-picture img.event-detail-image", count: 1
-    assert_select ".event-detail-image-figure > .event-detail-image-credit", text: "© Foto Max Mustermann"
+    assert_select ".event-detail-image-stage-shell > .event-detail-image-credit.event-detail-side-credit", text: "© Foto Max Mustermann"
   end
 
   test "show falls back to import image when no event image exists" do

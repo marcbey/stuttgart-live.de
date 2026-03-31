@@ -15,7 +15,6 @@
         <% if presenter.hero_time_line.present? %>
           <p class="event-detail-time-line"><%= presenter.hero_time_line %></p>
         <% end %>
-
         <% if authenticated? %>
           <% visibility_badges = presenter.visibility_badges %>
           <% if visibility_badges.any? %>
@@ -109,6 +108,9 @@
                     aria-label="Weiter">
               ›
             </button>
+            <% if presenter.show_ticket_cta? && presenter.ticket_badge_text.present? %>
+              <p class="event-detail-image-badge"><%= presenter.ticket_badge_text %></p>
+            <% end %>
           </div>
 
           <div class="event-detail-image-meta">
@@ -168,10 +170,13 @@
                 <%= image_tag slide.desktop_source, alt: slide.alt_text, class: "event-detail-image" %>
               </picture>
             </div>
+            <% if presenter.show_ticket_cta? && presenter.ticket_badge_text.present? %>
+              <p class="event-detail-image-badge"><%= presenter.ticket_badge_text %></p>
+            <% end %>
+            <% if presenter.hero_image_credit.present? %>
+              <p class="event-detail-image-credit event-detail-side-credit"><%= presenter.hero_image_credit %></p>
+            <% end %>
           </div>
-          <% if presenter.hero_image_credit.present? %>
-            <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
-          <% end %>
         </div>
       <% end %>
     </div>

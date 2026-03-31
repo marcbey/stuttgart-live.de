@@ -88,6 +88,9 @@ application.register("public-card-status", PublicCardStatusController)
 import PublicSearchController from "./public_search_controller"
 application.register("public-search", PublicSearchController)
 
+import PartnerStripController from "./partner_strip_controller"
+application.register("partner-strip", PartnerStripController)
+
 import PromotionBannerImagePreuploadController from "./promotion_banner_image_preupload_controller"
 application.register("promotion-banner-image-preupload", PromotionBannerImagePreuploadController)
 
