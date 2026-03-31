@@ -1,6 +1,6 @@
 <% if presenter.show_ticket_cta? %>
   <section class="event-detail-cta event-detail-cta-card" aria-label="Ticketinformationen">
-    <div class="event-detail-cta-layout <%= "event-detail-cta-layout-single" unless presenter.external_links.any? %>">
+    <div class="event-detail-cta-layout event-detail-cta-layout-single">
       <div class="event-detail-cta-copy">
         <div class="event-detail-cta-meta">
           <% if presenter.ticket_badge_text.present? %>
@@ -12,15 +12,6 @@
           <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
         </div>
       </div>
-      <% if presenter.external_links.any? %>
-        <div class="event-detail-cta-actions">
-          <div class="event-detail-links event-detail-cta-links" aria-label="Externe Links">
-            <% presenter.external_links.each do |link| %>
-              <%= link_to link.label, link.url, target: "_blank", rel: "noopener", title: link.url %>
-            <% end %>
-          </div>
-        </div>
-      <% end %>
     </div>
   </section>
 <% end %>
