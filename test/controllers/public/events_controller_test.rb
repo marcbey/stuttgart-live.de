@@ -2530,7 +2530,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
     assert_includes response.body, expected_link
-    assert_select ".event-detail-admin-link .button.event-detail-edit-link", text: "Backend"
+    assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit"
     assert_select ".event-detail-topbar-actions .button", count: 0
   end
 
