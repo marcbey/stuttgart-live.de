@@ -1297,8 +1297,10 @@ trix-editor.blog-rich-text:focus {
   color: #f8f8f8;
   padding: 0.5rem 0.78rem;
   text-decoration: none;
+  text-align: center;
   text-transform: uppercase;
   font-size: 1rem;
+  line-height: 1;
   letter-spacing: 0.08em;
   cursor: pointer;
   transition: transform 160ms ease, background-color 160ms ease;
@@ -7026,7 +7028,7 @@ trix-editor.blog-rich-text:focus {
 
 .venue-card {
   display: grid;
-  gap: 1rem;
+  gap: 0.7rem;
   align-content: start;
   padding: 1.1rem;
   border: 1px solid #ece7dd;
@@ -7036,18 +7038,19 @@ trix-editor.blog-rich-text:focus {
   box-shadow: 0 10px 26px rgba(41, 32, 17, 0.06);
 }
 
-.venue-card-header {
-  display: flex;
-  align-items: start;
-  justify-content: space-between;
-  gap: 1rem;
+.venue-card-with-logo-bg {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.68), rgba(248, 245, 239, 0.58)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(248, 245, 239, 0.06)),
+    var(--venue-card-logo) right 1rem top 1rem/72% no-repeat,
+    repeating-linear-gradient(135deg, rgba(227, 27, 46, 0.025) 0, rgba(227, 27, 46, 0.025) 10px, transparent 10px, transparent 20px);
 }
 
-.venue-card-title {
+.venue-card-header {
   min-width: 0;
 }
 
-.venue-card-title h4 {
+.venue-card-header h4 {
   margin: 0;
   font-size: 1.15rem;
   line-height: 1.2;
@@ -7056,107 +7059,29 @@ trix-editor.blog-rich-text:focus {
 }
 
 .venue-card-kicker {
-  margin: 0.35rem 0 0;
+  margin: 0;
   color: #6d665d;
   font-size: 0.95rem;
   line-height: 1.35;
-}
-
-.venue-card-stats {
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  gap: 0.55rem;
-}
-
-.venue-stat {
-  min-width: 4.9rem;
-  padding: 0.45rem 0.6rem;
-  border: 1px solid rgba(17, 17, 17, 0.08);
-  background: rgba(255, 255, 255, 0.84);
-  text-align: right;
-}
-
-.venue-stat strong {
-  display: block;
-  font-size: 1.05rem;
-  line-height: 1.05;
-  color: #171717;
-}
-
-.venue-stat-label {
-  display: block;
-  margin-bottom: 0.1rem;
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #7a7266;
-}
-
-.venue-card-main {
-  display: grid;
-  gap: 1rem;
-}
-
-.venue-card-logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 8rem;
-  padding: 1rem;
-  border: 1px solid rgba(17, 17, 17, 0.08);
-  background: rgba(255, 255, 255, 0.88);
-}
-
-.venue-card-logo img {
-  max-width: 100%;
-  max-height: 6rem;
-  width: auto;
-  height: auto;
-  object-fit: contain;
-}
-
-.venue-card-body {
-  display: grid;
-  gap: 0.9rem;
-  min-width: 0;
 }
 
 .venue-card-summary {
   margin: 0;
   color: rgba(17, 17, 17, 0.72);
   line-height: 1.55;
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 4;
-  overflow: hidden;
-}
-
-.venue-card-meta-grid {
-  display: grid;
-  gap: 0.8rem;
-}
-
-.venue-card-meta {
-  display: grid;
-  gap: 0.22rem;
-}
-
-.venue-card-label {
-  font-size: 0.74rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #7a7266;
-}
-
-.venue-card-copy,
-.venue-card-link {
-  color: rgba(17, 17, 17, 0.72);
-  overflow-wrap: anywhere;
 }
 
 .venue-card-link {
   display: inline-block;
+  color: rgba(17, 17, 17, 0.72);
+  overflow-wrap: anywhere;
+}
+
+.venue-card-stats {
+  margin: 0;
+  color: #4a443d;
+  font-size: 0.88rem;
+  line-height: 1.4;
 }
 
 .venue-card-actions {
@@ -7270,18 +7195,6 @@ trix-editor.blog-rich-text:focus {
     grid-template-columns: minmax(0, 1fr) auto;
   }
 
-  .venue-card-main {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .venue-card-main-with-logo {
-    grid-template-columns: minmax(8.5rem, 10rem) minmax(0, 1fr);
-    align-items: start;
-  }
-
-  .venue-card-meta-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 .event-image-inline-upload {

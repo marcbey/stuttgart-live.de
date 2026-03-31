@@ -11,6 +11,7 @@
   <% end %>
 
   <%= form_with model: [ :backend, venue ], class: "editor-form" do |form| %>
+    <%= hidden_field_tag :query, params[:query] if params[:query].present? %>
     <section class="backend-section backend-section-compact">
       <div class="backend-section-header">
         <h3>Stammdaten</h3>
@@ -51,6 +52,12 @@
             <%= form.label :logo, "Logo hochladen", class: "form-label" %>
             <%= form.file_field :logo, class: "form-input", accept: "image/*" %>
             <p class="form-hint">Optional. Ersetzt beim Bearbeiten das bestehende Logo.</p>
+            <% if venue.logo.attached? %>
+              <label class="form-hint">
+                <%= form.check_box :remove_logo %>
+                Logo löschen
+              </label>
+            <% end %>
           </div>
 
           <div>
@@ -68,7 +75,7 @@
     </section>
 
     <div class="editor-footer">
-      <%= form.submit submit_label, class: "button" %>
+      <%= form.submit submit_label, class: "button button-compact" %>
     </div>
   <% end %>
 </div>

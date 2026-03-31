@@ -55,8 +55,9 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to backend_venues_url
-    assert_equal "Porsche Arena", Venue.order(:id).last.name
+    created_venue = Venue.order(:id).last
+    assert_redirected_to edit_backend_venue_url(created_venue)
+    assert_equal "Porsche Arena", created_venue.name
   end
 
   test "backend user can update venue" do
@@ -71,11 +72,30 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to backend_venues_url
+    assert_redirected_to edit_backend_venue_url(@venue)
     @venue.reload
     assert_equal "Im Wizemann Club", @venue.name
     assert_equal "Neue Adresse", @venue.address
     assert_equal "Venue wurde gespeichert.", flash[:notice]
+  end
+
+  test "backend user can remove venue logo" do
+    sign_in_as(@editor)
+    @venue.logo.attach(
+      io: file_fixture("test_image.png").open,
+      filename: "test_image.png",
+      content_type: "image/png"
+    )
+
+    patch backend_venue_url(@venue), params: {
+      venue: {
+        remove_logo: "1"
+      }
+    }
+
+    assert_redirected_to edit_backend_venue_url(@venue)
+    @venue.reload
+    assert_not @venue.logo.attached?
   end
 
   test "autocomplete returns matching venues" do

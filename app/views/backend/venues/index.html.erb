@@ -7,7 +7,7 @@
       <p>Veranstaltungsorte mit Beschreibung, Logo, Link und Adresse.</p>
     </div>
     <div class="backend-topbar-actions">
-      <%= link_to "Venue anlegen", new_backend_venue_path, class: "button button-compact" %>
+      <%= link_to "New", new_backend_venue_path(query: @query_filter), class: "button button-compact" %>
     </div>
   </header>
 

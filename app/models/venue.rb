@@ -1,6 +1,8 @@
 class Venue < ApplicationRecord
   ProcessingError = Class.new(StandardError)
 
+  attr_accessor :remove_logo
+
   has_one_attached :logo
 
   has_many :events, class_name: "Event", foreign_key: :venue_id, inverse_of: :venue_record, dependent: :restrict_with_error
@@ -10,6 +12,7 @@ class Venue < ApplicationRecord
   validate :logo_must_be_image
 
   before_validation :normalize_attributes
+  before_save :purge_logo_if_requested
 
   scope :ordered_by_name, -> { order(Arel.sql("LOWER(venues.name) ASC"), :id) }
 
@@ -145,6 +148,13 @@ class Venue < ApplicationRecord
     self.description = description.to_s.strip.presence
     self.external_url = external_url.to_s.strip.presence
     self.address = address.to_s.strip.presence
+  end
+
+  def purge_logo_if_requested
+    return unless ActiveModel::Type::Boolean.new.cast(remove_logo)
+    return unless logo.attached?
+
+    logo.purge
   end
 
   def external_url_must_be_http_url

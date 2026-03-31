@@ -8,7 +8,7 @@
     </div>
     <div class="backend-topbar-actions">
       <%= link_to "Präsentator anlegen", new_backend_presenter_path, class: "button button-compact" %>
-      <%= link_to "Logos gesammelt importieren", bulk_new_backend_presenters_path, class: "button button-secondary button-compact" %>
+      <%= link_to "Import Logos", bulk_new_backend_presenters_path, class: "button button-secondary button-compact" %>
     </div>
   </header>
 
@@ -52,8 +52,8 @@
             </div>
 
             <div class="presenter-card-actions">
-              <%= link_to "Bearbeiten", edit_backend_presenter_path(presenter), class: "button button-ghost button-compact" %>
-              <%= button_to "Löschen",
+              <%= link_to "Edit", edit_backend_presenter_path(presenter), class: "button button-ghost button-compact" %>
+              <%= button_to "Delete",
                             backend_presenter_path(presenter),
                             method: :delete,
                             class: "button button-secondary button-compact",
