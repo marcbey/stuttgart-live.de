@@ -14,7 +14,6 @@
       class: "form-input newsletter-signup-input"
     } %>
     <% homepage_signup = signup[:context].to_s == "events_index" %>
-    <% submit_label = homepage_signup ? "→" : signup[:submit_label] %>
     <% submit_options = {
       class: ["button newsletter-signup-button", ("newsletter-signup-button-arrow" if homepage_signup)].compact.join(" ")
     } %>
@@ -47,9 +46,16 @@
       <% if homepage_signup %>
         <div class="newsletter-signup-field">
           <%= form.email_field :email, **email_field_options %>
-          <%= form.submit submit_label, **submit_options %>
+          <%= form.button type: :submit, **submit_options do %>
+            <span class="sr-only"><%= signup[:submit_label] %></span>
+            <svg class="newsletter-signup-button-arrow-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <path d="M6 16h18" />
+              <path d="m18 8 8 8-8 8" />
+            </svg>
+          <% end %>
         </div>
       <% else %>
+        <% submit_label = signup[:submit_label] %>
         <%= form.email_field :email, **email_field_options %>
         <%= form.submit submit_label, **submit_options %>
       <% end %>
