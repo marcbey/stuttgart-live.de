@@ -28,6 +28,7 @@
     <% if compiled_asset_exists?("application.js") %>
       <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
     <% end %>
+    <%= Sentry.get_trace_propagation_meta.html_safe %>
   </head>
 
   <% public_frontend = controller_path.start_with?("public/") || controller_path == "sessions" %>
