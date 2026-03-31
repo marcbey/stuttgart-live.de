@@ -2093,6 +2093,18 @@ trix-editor.blog-rich-text:focus {
   width: 100%;
 }
 
+.public-search-field:focus-within .public-search-input {
+  border-color: transparent;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 243, 249, 0.96) 46%, rgba(255, 255, 255, 0.98) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 0 0 1px rgba(255, 214, 235, 0.94),
+    0 0 0 3px rgba(255, 255, 255, 0.14),
+    0 0 24px rgba(255, 184, 221, 0.42);
+  outline: none;
+}
+
 .public-search-input {
   width: 100%;
   min-width: 16rem;
@@ -9249,7 +9261,14 @@ body.page-public-events-index .public-search-field {
 }
 
 body.page-public-events-index .public-search-field:focus-within {
-  border-color: #ffa5dc;
+  border-color: transparent;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(255, 241, 248, 0.98) 45%, rgba(255, 255, 255, 1) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 0 0 1px rgba(255, 214, 235, 0.98),
+    0 0 0 4px rgba(255, 255, 255, 0.16),
+    0 0 28px rgba(255, 184, 221, 0.48);
 }
 
 body.page-public-events-index .public-search-input {
@@ -9876,7 +9895,7 @@ body.page-public-events-index .promotion-banner-poster {
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
   align-items: stretch;
   gap: 0;
-  grid-template-columns: minmax(0, 1.1fr) minmax(22rem, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(26rem, 1.18fr);
   background: transparent;
 }
 
@@ -9933,7 +9952,7 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-copy h2
   color: var(--ink);
   font-size: clamp(2.6rem, 5vw, 4.8rem);
   line-height: 0.9;
-  max-width: 8ch;
+  max-width: none;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-event-title {
