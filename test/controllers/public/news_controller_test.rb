@@ -19,7 +19,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, @scheduled_post.title
   end
 
-  test "index inserts newsletter signup only once after the first four live posts" do
+  test "index does not render an inline newsletter signup slot" do
     8.times do |index|
       create_blog_post(
         title: "Weitere News #{index}",
@@ -31,7 +31,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     get news_index_url
 
     assert_response :success
-    assert_select ".news-index-newsletter-slot", count: 1
+    assert_select ".news-index-newsletter-slot", count: 0
   end
 
   test "show renders a published post" do
@@ -56,7 +56,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Bearbeiten/, response.body)
   end
 
-  test "index renders optimized cover images" do
+  test "index does not render cover images" do
     @live_post.cover_image.attach(
       io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
       filename: "news-cover.png",
@@ -66,7 +66,8 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     get news_index_url
 
     assert_response :success
-    assert_includes response.body, url_for(@live_post.processed_optimized_image_variant(:cover_image))
+    assert_no_match(/news-cover\.png/, response.body)
+    assert_select ".news-card-media", count: 0
   end
 
   test "show renders optimized cover images" do
