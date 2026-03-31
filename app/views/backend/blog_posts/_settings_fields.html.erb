@@ -39,6 +39,44 @@
                              placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_CTA_TEXT,
                              form: form_id %>
         </div>
+
+        <div data-controller="promotion-banner-color"
+             data-promotion-banner-color-default-color-value="<%= blog_post.promotion_banner_background_color_value %>">
+          <%= label_tag "blog_post_promotion_banner_background_color", "Hintergrundfarbe", class: "form-label" %>
+          <div class="promotion-banner-color-inputs">
+            <%= text_field_tag "blog_post[promotion_banner_background_color]",
+                               blog_post.promotion_banner_background_color,
+                               id: "blog_post_promotion_banner_background_color",
+                               class: "form-input",
+                               inputmode: "text",
+                               maxlength: 7,
+                               placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR,
+                               form: form_id,
+                               data: {
+                                 action: "input->promotion-banner-color#syncFromHex blur->promotion-banner-color#normalizeHex",
+                                 promotion_banner_color_target: "hex"
+                               } %>
+            <%= color_field_tag "blog_post_promotion_banner_background_color_picker",
+                                blog_post.promotion_banner_background_color_value,
+                                id: "blog_post_promotion_banner_background_color_picker",
+                                class: "promotion-banner-color-picker",
+                                form: form_id,
+                                data: {
+                                  action: "input->promotion-banner-color#syncFromPicker change->promotion-banner-color#syncFromPicker",
+                                  promotion_banner_color_target: "picker"
+                                } %>
+            <button type="button"
+                    class="promotion-banner-color-eyedropper"
+                    hidden
+                    title="Farbe aus dem Browserfenster aufnehmen"
+                    aria-label="Farbe aus dem Browserfenster aufnehmen"
+                    data-action="click->promotion-banner-color#pickFromScreen"
+                    data-promotion-banner-color-target="eyedropper">
+              Pipette
+            </button>
+          </div>
+          <p class="form-hint">Optional. Leer nutzt <%= BlogPost::DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR %>.</p>
+        </div>
       </div>
 
       <p class="blog-editor-hint">Leer gelassene Texte fallen automatisch auf die Standardwerte zurück.</p>

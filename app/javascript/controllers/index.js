@@ -94,6 +94,9 @@ application.register("partner-strip", PartnerStripController)
 import PromotionBannerImagePreuploadController from "./promotion_banner_image_preupload_controller"
 application.register("promotion-banner-image-preupload", PromotionBannerImagePreuploadController)
 
+import PromotionBannerColorController from "./promotion_banner_color_controller"
+application.register("promotion-banner-color", PromotionBannerColorController)
+
 import ScrollTopController from "./scroll_top_controller"
 application.register("scroll-top", ScrollTopController)
 

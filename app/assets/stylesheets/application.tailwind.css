@@ -3022,6 +3022,10 @@ trix-editor.blog-rich-text:focus {
   position: relative;
 }
 
+.promotion-banner-news {
+  --promotion-banner-background: #E0F7F2;
+}
+
 .promotion-banner-admin-controls {
   position: absolute;
   top: 1rem;
@@ -3043,6 +3047,18 @@ trix-editor.blog-rich-text:focus {
     linear-gradient(135deg, rgba(224, 247, 242, 0.96) 0%, rgba(199, 236, 230, 0.92) 42%, rgba(247, 252, 251, 0.98) 100%);
   box-shadow: 0 18px 44px rgba(17, 17, 17, 0.08);
   text-decoration: none;
+}
+
+.promotion-banner-link-news {
+  background: var(--promotion-banner-background);
+}
+
+.promotion-banner-link-dark {
+  color: #111;
+}
+
+.promotion-banner-link-light {
+  color: #f8faf9;
 }
 
 .promotion-banner-link:hover {
@@ -3100,6 +3116,24 @@ trix-editor.blog-rich-text:focus {
   overflow: visible;
 }
 
+.promotion-banner-link-dark .promotion-banner-kicker,
+.promotion-banner-link-dark .promotion-banner-event-title {
+  color: rgba(17, 17, 17, 0.64);
+}
+
+.promotion-banner-link-light .promotion-banner-kicker,
+.promotion-banner-link-light .promotion-banner-event-title {
+  color: rgba(248, 250, 249, 0.82);
+}
+
+.promotion-banner-link-dark .promotion-banner-copy h2 {
+  color: #111;
+}
+
+.promotion-banner-link-light .promotion-banner-copy h2 {
+  color: #f8faf9;
+}
+
 .promotion-banner-kicker {
   margin: 0;
   color: rgba(17, 17, 17, 0.58);
@@ -3148,6 +3182,54 @@ trix-editor.blog-rich-text:focus {
 .promotion-banner-cta::before,
 .promotion-banner-cta::after {
   content: none;
+}
+
+.promotion-banner-link-dark .promotion-banner-cta {
+  border-color: #111;
+  background: #111;
+  color: #f8f8f8;
+}
+
+.promotion-banner-link-light .promotion-banner-cta {
+  border-color: #f8faf9;
+  background: #f8faf9;
+  color: #111;
+}
+
+.promotion-banner-color-inputs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.promotion-banner-color-picker {
+  width: 3.2rem;
+  min-width: 3.2rem;
+  height: 2.35rem;
+  padding: 0.15rem;
+  border: 1px solid #d0d0d0;
+  background: #fcfcfc;
+}
+
+.promotion-banner-color-eyedropper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.8rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #d0d0d0;
+  background: #fcfcfc;
+  color: #111;
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 0.96rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.promotion-banner-color-eyedropper:hover {
+  border-color: #666;
+  background: #fff;
 }
 
 .home-slider-header {
@@ -9494,6 +9576,19 @@ body.page-public-events-index .app-nav-hotline-copy {
   text-wrap: balance;
 }
 
+body.page-public-events-index .app-nav-hotline-phone {
+  color: inherit;
+  text-decoration: none;
+}
+
+body.page-public-events-index .app-nav-hotline-phone:hover {
+  color: var(--ink);
+}
+
+body.page-public-events-index .app-nav-hotline-contact {
+  display: none;
+}
+
 body.page-public-events-index .app-nav-toggle {
   display: inline-flex;
   grid-area: meta;
@@ -9794,9 +9889,10 @@ body.page-public-events-index .app-nav-toggle[aria-expanded="true"] span:nth-chi
 
   body.page-public-events-index .app-nav-hotline {
     grid-area: hotline;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-content: stretch;
+    align-items: baseline;
     width: 100%;
     min-height: 0;
     margin-top: 0.1rem;
@@ -9809,7 +9905,47 @@ body.page-public-events-index .app-nav-toggle[aria-expanded="true"] span:nth-chi
     letter-spacing: 0.12em;
     line-height: 0.96;
     text-transform: uppercase;
-    white-space: normal;
+    white-space: nowrap;
+    gap: 1rem;
+  }
+
+  body.page-public-events-index .app-nav-hotline-copy {
+    min-width: 0;
+    white-space: nowrap;
+    align-self: baseline;
+  }
+
+  body.page-public-events-index .app-nav-hotline-contact {
+    display: flex;
+    justify-content: flex-end;
+    align-items: baseline;
+    align-self: baseline;
+  }
+
+  body.page-public-events-index .app-nav-hotline-contact .app-nav-link {
+    min-height: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.96);
+    font-family: "Bebas Neue", "Impact", sans-serif;
+    font-size: clamp(3.1rem, 3.4vw, 4rem);
+    line-height: 0.82;
+    letter-spacing: -0.01em;
+    box-shadow: none;
+  }
+
+  body.page-public-events-index .app-nav-hotline-contact .app-nav-link::after {
+    display: none;
+  }
+
+  body.page-public-events-index .app-nav-hotline-contact .app-nav-link:hover,
+  body.page-public-events-index .app-nav-hotline-contact .app-nav-link-active {
+    color: var(--ink);
+  }
+
+  body.page-public-events-index .app-nav-link-poster-contact {
+    display: none;
   }
 }
 
@@ -9866,6 +10002,10 @@ body.page-public-events-index .app-nav-toggle[aria-expanded="true"] span:nth-chi
     font-size: clamp(3.2rem, 3.5vw, 4.35rem);
   }
 
+  body.page-public-events-index .app-nav-hotline-contact .app-nav-link {
+    font-size: clamp(3.2rem, 3.5vw, 4.35rem);
+  }
+
   body.page-public-events-index .app-nav-hotline {
     font-size: clamp(1.35rem, 1.55vw, 1.65rem);
     letter-spacing: 0.14em;
@@ -9890,6 +10030,10 @@ body.page-public-events-index .promotion-banner-poster {
   border: 0;
   background: #ffa5dc;
   box-shadow: none;
+}
+
+body.page-public-events-index .promotion-banner-poster.promotion-banner-news {
+  background: var(--promotion-banner-background);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
@@ -9939,6 +10083,16 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-copy {
   background: transparent;
 }
 
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-kicker,
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-event-title {
+  color: rgba(17, 17, 17, 0.72);
+}
+
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-kicker,
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-event-title {
+  color: rgba(248, 250, 249, 0.82);
+}
+
 body.page-public-events-index .promotion-banner-poster .promotion-banner-kicker {
   color: rgba(17, 17, 17, 0.72);
   font-family: "Oswald", "Arial Narrow", sans-serif;
@@ -9955,6 +10109,14 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-copy h2
   max-width: none;
 }
 
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-copy h2 {
+  color: #111;
+}
+
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-copy h2 {
+  color: #f8faf9;
+}
+
 body.page-public-events-index .promotion-banner-poster .promotion-banner-event-title {
   color: rgba(var(--ink-rgb), 0.8);
   font-size: 1rem;
@@ -9968,6 +10130,18 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-cta {
   background: var(--ink);
   color: #fff;
   box-shadow: none;
+}
+
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-cta {
+  border-color: #111;
+  background: #111;
+  color: #fff;
+}
+
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-cta {
+  border-color: #f8faf9;
+  background: #f8faf9;
+  color: #111;
 }
 
 @media (max-width: 720px) {

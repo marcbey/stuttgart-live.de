@@ -1,4 +1,5 @@
-<article class="promotion-banner promotion-banner-poster">
+<article class="promotion-banner promotion-banner-poster promotion-banner-news"
+         style="--promotion-banner-background: <%= blog_post.promotion_banner_background_color_value %>">
   <% if authenticated? && current_user.blog_access? %>
     <div class="promotion-banner-admin-controls">
       <%= link_to "Edit",
@@ -7,7 +8,8 @@
                   data: { turbo: false } %>
     </div>
   <% end %>
-  <%= link_to news_path(blog_post.slug), class: "promotion-banner-link" do %>
+  <%= link_to news_path(blog_post.slug),
+              class: "promotion-banner-link promotion-banner-link-news promotion-banner-link-#{blog_post.promotion_banner_text_color_scheme}" do %>
     <div class="promotion-banner-media">
       <%= image_tag optimized_blog_post_image_representation(blog_post, :promotion_banner_image),
                     alt: blog_post.title,

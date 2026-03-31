@@ -190,6 +190,8 @@ class BlogPostTest < ActiveSupport::TestCase
 
     assert_equal "Promotion", blog_post.promotion_banner_kicker_text_value
     assert_equal "Zum Beitrag", blog_post.promotion_banner_cta_text_value
+    assert_equal "#E0F7F2", blog_post.promotion_banner_background_color_value
+    assert_equal "dark", blog_post.promotion_banner_text_color_scheme
   end
 
   test "promotion banner texts are normalized" do
@@ -205,6 +207,58 @@ class BlogPostTest < ActiveSupport::TestCase
 
     assert_equal "Szene Tipp", blog_post.promotion_banner_kicker_text
     assert_equal "Mehr lesen", blog_post.promotion_banner_cta_text
+  end
+
+  test "promotion banner background color is normalized" do
+    blog_post = BlogPost.create!(
+      title: "Banner Farbe",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      promotion_banner_background_color: "  a1b2c3  "
+    )
+
+    assert_equal "#A1B2C3", blog_post.promotion_banner_background_color
+    assert_equal "#A1B2C3", blog_post.promotion_banner_background_color_value
+  end
+
+  test "promotion banner background color rejects invalid values" do
+    blog_post = BlogPost.new(
+      title: "Banner Farbe",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      promotion_banner_background_color: "#ABC"
+    )
+
+    assert_not blog_post.valid?
+    assert_includes blog_post.errors[:promotion_banner_background_color], "ist ungültig"
+  end
+
+  test "promotion banner background color detects light and dark contrast schemes" do
+    light_blog_post = BlogPost.new(
+      title: "Helles Banner",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      promotion_banner_background_color: "#F2F7E0"
+    )
+    dark_blog_post = BlogPost.new(
+      title: "Dunkles Banner",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      promotion_banner_background_color: "#18333A"
+    )
+
+    assert_predicate light_blog_post, :promotion_banner_background_bright?
+    assert_equal "dark", light_blog_post.promotion_banner_text_color_scheme
+    assert_not dark_blog_post.promotion_banner_background_bright?
+    assert_equal "light", dark_blog_post.promotion_banner_text_color_scheme
   end
 
   test "optimized cover image variant scales down to web size and keeps original blob" do

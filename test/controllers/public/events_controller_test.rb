@@ -25,6 +25,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
+    assert_select ".app-nav-hotline", text: /Dein Ticketportal für Stuttgart und Region -\s*0711 550 660 77/
+    assert_select ".app-nav-hotline-contact .app-nav-link", text: "Kontakt"
     assert_includes response.body, "Published Artist"
     assert_not_includes response.body, "Past Artist"
     assert_not_includes response.body, "Review Artist"
@@ -831,7 +833,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       published_at: 1.hour.ago,
       published_by: @user,
       promotion_banner_kicker_text: "Lesetipp",
-      promotion_banner_cta_text: "Beitrag öffnen"
+      promotion_banner_cta_text: "Beitrag öffnen",
+      promotion_banner_background_color: "#18333A"
     )
     blog_post.promotion_banner_image.attach(png_upload(filename: "homepage-banner-copy.png"))
     blog_post.update!(promotion_banner: true)
@@ -841,6 +844,61 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".promotion-banner-kicker", text: "Lesetipp"
     assert_select ".promotion-banner-cta", text: "Beitrag öffnen"
+    assert_select ".promotion-banner-news[style*='--promotion-banner-background: #18333A']"
+    assert_select ".promotion-banner-link-news.promotion-banner-link-light"
+  end
+
+  test "homepage falls back to the default news promotion banner background color" do
+    Event.create!(
+      slug: "promotion-banner-default-color-highlight-event",
+      source_fingerprint: "test::homepage::promotion-banner-default-color-highlight",
+      title: "Promotion Banner Default Color Highlight",
+      artist_name: "Promotion Banner Default Color Highlight Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      primary_source: "eventim",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event = Event.create!(
+      slug: "promotion-banner-default-color-event",
+      source_fingerprint: "test::homepage::promotion-banner-default-color-event",
+      title: "Promotion Banner Default Color Event",
+      artist_name: "Promotion Banner Default Color Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner_kicker_text: "Event Tipp",
+      promotion_banner_cta_text: "Zum Event",
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+    event.update!(promotion_banner: true)
+
+    blog_post = BlogPost.create!(
+      title: "Promo mit Defaultfarbe",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user
+    )
+    blog_post.promotion_banner_image.attach(png_upload(filename: "homepage-banner-default-color.png"))
+    blog_post.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner-news[style*='--promotion-banner-background: #E0F7F2']"
+    assert_select ".promotion-banner-link-news.promotion-banner-link-dark"
+    assert_select ".promotion-banner-event .promotion-banner-link:not(.promotion-banner-link-news)", count: 1
   end
 
   test "homepage renders optimized promotion banner image" do
