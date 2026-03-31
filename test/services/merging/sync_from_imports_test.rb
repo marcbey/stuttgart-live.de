@@ -257,7 +257,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     event.reload
     assert_equal "published", event.status
     assert_equal true, event.auto_published
-    assert_not_nil event.published_at
+    assert_nil event.published_at
     assert_empty event.completeness_flags
     assert_equal 1, event.import_event_images.count
   end

@@ -109,29 +109,29 @@ module Merging
           if auto_publishable?(event, images_present:)
             event.status = "published"
             event.auto_published = true
-            event.sync_publication_fields
           else
             event.status = "needs_review"
             event.auto_published = false
-            event.published_at = nil if event.published_by_id.nil?
           end
           return
         end
+
+        return if event.scheduled?
 
         if event.published? && event.auto_published?
           return if auto_publishable?(event, images_present:)
 
           event.status = "needs_review"
           event.auto_published = false
-          event.published_at = nil if event.published_by_id.nil?
           return
         end
+
+        return if event.published_at.present? && event.published_at.future?
 
         return unless event.status == "needs_review" && ready_for_publish
 
         event.status = "published"
         event.auto_published = true
-        event.sync_publication_fields
       end
 
       def auto_publishable?(event, images_present:)

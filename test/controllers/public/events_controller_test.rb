@@ -354,7 +354,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "/backend/events?event_id=#{hidden_event.id}&amp;status=#{hidden_event.status}"
   end
 
-  test "index hides scheduled published events in search results for authenticated users" do
+  test "index redirects authenticated users to a scheduled unpublished search result" do
     scheduled_event = Event.create!(
       slug: "auth-hidden-scheduled-search-event",
       source_fingerprint: "test::public::auth-hidden-scheduled-search",
@@ -373,11 +373,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     get events_url(filter: "all", q: "Scheduled Search Artist")
 
-    assert_response :success
-    document = Nokogiri::HTML.parse(response.body)
-    search_results = document.css("#event-grid .event-card-copy h2, #event-grid .event-listing-link strong").map(&:text)
-
-    assert_not_includes search_results, scheduled_event.artist_name
+    assert_redirected_to event_url(scheduled_event.slug)
+    assert_equal "ready_for_publish", scheduled_event.reload.status
   end
 
   test "index groups backend navigation links into a burger menu for authenticated users" do
@@ -3062,7 +3059,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, event_path(unpublished_event.slug, q: "Members Only Draft")
   end
 
-  test "search overlay hides scheduled published matching events for authenticated users" do
+  test "search overlay shows scheduled unpublished matching events for authenticated users" do
     sign_in_as(@user)
 
     scheduled_event = Event.create!(
@@ -3081,7 +3078,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_overlay_events_url(q: "Members Only Scheduled")
 
     assert_response :success
-    assert_not_includes response.body, scheduled_event.artist_name
+    assert_includes response.body, scheduled_event.artist_name
+    assert_equal "ready_for_publish", scheduled_event.reload.status
   end
 
   test "status update requires authentication" do
@@ -3092,12 +3090,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "authenticated user can update event status from public cards" do
     sign_in_as(@user)
+    previous_published_at = @published_event.published_at
 
     patch status_event_url(@published_event.slug), params: { status: "needs_review", page: "1", filter: "all", event_date: "2026-06-01" }
 
     assert_redirected_to events_url(page: "1", event_date: "2026-06-01")
     assert_equal "needs_review", @published_event.reload.status
-    assert_nil @published_event.published_at
+    assert_equal previous_published_at, @published_event.published_at
     assert_nil @published_event.published_by_id
   end
 

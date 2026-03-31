@@ -1008,6 +1008,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal scheduled_time.change(usec: 0), @event.reload.published_at
+    assert_equal "needs_review", @event.status
     assert_nil @event.published_by
     assert_includes response.body, "Event wurde gespeichert."
   end
@@ -1093,11 +1094,12 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_events_url(status: "published", event_id: @event.id)
     assert_equal "published", @event.reload.status
-    assert @event.published_at.present?
+    assert_nil @event.published_at
+    assert_equal @user, @event.published_by
     assert_includes flash[:notice], "gespeichert und publiziert"
   end
 
-  test "save and publish preserves an explicitly scheduled publication date" do
+  test "save and publish rejects an explicitly scheduled publication date" do
     sign_in_as(@user)
     scheduled_time = 2.days.from_now.change(min: 30, sec: 0)
 
@@ -1114,10 +1116,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       save_and_publish: "1"
     }
 
-    assert_redirected_to backend_events_url(status: "published", event_id: @event.id)
-    assert_equal "published", @event.reload.status
-    assert_equal scheduled_time.change(usec: 0), @event.published_at
-    assert_equal @user, @event.published_by
+    assert_response :unprocessable_entity
+    assert_equal "needs_review", @event.reload.status
+    assert_nil @event.published_at
+    assert_includes response.body, "liegt in der Zukunft"
   end
 
   test "save and publish via turbo stream updates nav flash" do
@@ -1669,7 +1671,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+    assert_redirected_to backend_events_url(status: "ready_for_publish", event_id: @published_event.id)
+    assert_equal "ready_for_publish", @published_event.reload.status
     assert_equal scheduled_time.change(usec: 0), @published_event.reload.published_at
   end
 
@@ -1692,7 +1695,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
     assert_nil @published_event.reload.published_at
-    assert_equal @user, @published_event.published_by
+    assert_equal users(:one), @published_event.published_by
   end
 
   test "validation error keeps settings tab active" do
@@ -1889,6 +1892,17 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "button", text: "Unpublish", count: 0
   end
 
+  test "publish rejects events with a future publication date" do
+    sign_in_as(@user)
+    @event.update!(status: "ready_for_publish", published_at: 2.days.from_now.change(usec: 0))
+
+    patch publish_backend_event_url(@event)
+
+    assert_redirected_to backend_events_url(status: "ready_for_publish", event_id: @event.id)
+    assert_equal "ready_for_publish", @event.reload.status
+    assert_includes flash[:alert], "liegt in der Zukunft"
+  end
+
   test "unpublish moves published event to ready_for_publish" do
     sign_in_as(@user)
 
@@ -1984,10 +1998,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_events_url(status: "published")
     assert_equal "published", @event.reload.status
-    assert @event.published_at.present?
+    assert_nil @event.published_at
   end
 
-  test "bulk publish preserves a scheduled publication date" do
+  test "bulk publish rejects a scheduled publication date" do
     sign_in_as(@user)
     scheduled_time = 4.days.from_now.change(usec: 0)
     @event.update!(published_at: scheduled_time)
@@ -1998,8 +2012,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to backend_events_url(status: "published")
-    assert_equal "published", @event.reload.status
+    assert_equal "needs_review", @event.reload.status
     assert_equal scheduled_time, @event.published_at
+    assert_includes flash[:alert], "liegt in der Zukunft"
   end
 
   test "bulk group action assigns a manual event series" do

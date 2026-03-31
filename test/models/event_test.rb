@@ -138,52 +138,79 @@ class EventTest < ActiveSupport::TestCase
     assert_equal "bandx", event.normalized_artist_name
   end
 
-  test "syncs publication fields for published events without overriding existing values" do
-    publisher = users(:one)
-    published_at = 2.days.ago.change(usec: 0)
+  test "normal save downgrades published events with a future publication date to ready_for_publish" do
     event = events(:published_one)
-    event.published_at = published_at
-    event.published_by = publisher
+    scheduled_time = 2.days.from_now.change(usec: 0)
+
+    event.update!(published_at: scheduled_time)
+
+    assert_equal "ready_for_publish", event.reload.status
+    assert_equal scheduled_time, event.published_at
+  end
+
+  test "normal save keeps needs_review events with a future publication date in needs_review" do
+    event = events(:needs_review_one)
+    scheduled_time = 2.days.from_now.change(usec: 0)
+
+    event.update!(published_at: scheduled_time)
+
+    assert_equal "needs_review", event.reload.status
+    assert_equal scheduled_time, event.published_at
+  end
+
+  test "normal save publishes ready_for_publish events when the publication date is due" do
+    event = events(:needs_review_one)
+    event.update!(status: "ready_for_publish")
+
+    due_time = 2.hours.ago.change(usec: 0)
+    event.update!(published_at: due_time)
+
+    assert_equal "published", event.reload.status
+    assert_equal due_time, event.published_at
+  end
+
+  test "normal save leaves the status unchanged when no publication date is present" do
+    event = events(:needs_review_one)
+
+    event.update!(title: "Updated Without Publication Date")
+
+    assert_equal "needs_review", event.reload.status
+    assert_nil event.published_at
+  end
+
+  test "syncs publication fields without setting published_at automatically" do
+    event = events(:published_one)
+    event.published_at = nil
+    event.published_by = nil
 
     event.sync_publication_fields(user: users(:blogger))
 
-    assert_equal published_at, event.published_at
-    assert_equal publisher, event.published_by
-  end
-
-  test "syncs publication fields by clearing them for unpublished events" do
-    event = events(:published_one)
-    event.status = "needs_review"
-
-    event.sync_publication_fields(user: users(:one))
-
     assert_nil event.published_at
-    assert_nil event.published_by
+    assert_equal users(:blogger), event.published_by
   end
 
   test "publish_now persists a manual publication state" do
     event = events(:needs_review_one)
 
-    freeze_time do
-      event.publish_now!(user: users(:one), auto_published: false)
+    event.publish_now!(user: users(:one), auto_published: false)
 
-      assert_equal "published", event.status
-      assert_equal false, event.auto_published
-      assert_equal Time.current, event.published_at
-      assert_equal users(:one), event.published_by
-    end
+    assert_equal "published", event.status
+    assert_equal false, event.auto_published
+    assert_nil event.published_at
+    assert_equal users(:one), event.published_by
   end
 
-  test "publish preserves an explicitly scheduled publication time" do
+  test "publish rejects an explicitly scheduled publication time" do
     event = events(:needs_review_one)
     scheduled_time = 2.days.from_now.change(usec: 0)
     event.published_at = scheduled_time
 
-    event.publish!(user: users(:one), auto_published: false)
+    error = assert_raises(ActiveRecord::RecordInvalid) do
+      event.publish!(user: users(:one), auto_published: false)
+    end
 
-    assert_equal "published", event.status
+    assert_includes error.record.errors.full_messages.to_sentence, "liegt in der Zukunft"
     assert_equal scheduled_time, event.published_at
-    assert_equal users(:one), event.published_by
   end
 
   test "unpublish clears persisted publication fields" do
@@ -209,7 +236,7 @@ class EventTest < ActiveSupport::TestCase
 
   test "scheduled? and live? distinguish future and current publication windows" do
     freeze_time do
-      scheduled_event = Event.new(status: "published", published_at: 2.hours.from_now)
+      scheduled_event = Event.new(status: "ready_for_publish", published_at: 2.hours.from_now)
       live_event = Event.new(status: "published", published_at: 2.hours.ago)
       immediate_event = Event.new(status: "published", published_at: nil)
 

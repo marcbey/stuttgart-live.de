@@ -40,7 +40,7 @@
       <p><%= event.title.presence || "Manuell anlegen" %></p>
     </div>
     <div class="editor-header-badges">
-      <span class="<%= event_status_badge_class(event.status) %>"><%= event_status_label(event.status) %></span>
+      <span class="<%= event_display_status_badge_class(event) %>"><%= event_display_status_label(event) %></span>
     </div>
   </header>
 

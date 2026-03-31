@@ -65,7 +65,8 @@ class Event < ApplicationRecord
 
   attr_accessor :pending_promotion_banner_image_blob,
                 :remove_promotion_banner_image,
-                :venue_name
+                :venue_name,
+                :validate_immediate_publication
 
   accepts_nested_attributes_for :llm_enrichment, update_only: true
 
@@ -87,7 +88,9 @@ class Event < ApplicationRecord
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
+  before_validation :apply_publication_schedule_rules
   before_save :clear_other_promotion_banners, if: :promotion_banner?
+  validate :future_publication_must_not_be_published_immediately, if: :validate_immediate_publication?
 
   scope :chronological, -> { order(start_at: :asc, id: :asc) }
   scope :reverse_chronological, -> { order(start_at: :desc, id: :desc) }
@@ -129,6 +132,18 @@ class Event < ApplicationRecord
     status == "published"
   end
 
+  def needs_review?
+    status == "needs_review"
+  end
+
+  def ready_for_publish?
+    status == "ready_for_publish"
+  end
+
+  def rejected?
+    status == "rejected"
+  end
+
   def venue
     venue_name.to_s.presence || venue_record&.name.to_s.presence
   end
@@ -166,7 +181,7 @@ class Event < ApplicationRecord
   end
 
   def scheduled?
-    published? && published_at.present? && published_at.future?
+    ready_for_publish? && published_at.present? && published_at.future?
   end
 
   def live?
@@ -202,28 +217,22 @@ class Event < ApplicationRecord
   end
 
   def sync_publication_fields(user: nil)
-    if published?
-      self.published_at ||= Time.current
-      self.published_by ||= user if user.present?
-    else
-      self.published_at = nil
-      self.published_by = nil
-    end
+    self.published_by ||= user if published? && user.present?
+    self.published_by = nil unless published?
   end
 
   def publish_now!(user:, auto_published: false)
-    self.status = "published"
-    self.auto_published = auto_published
-    self.published_at = Time.current
-    self.published_by = user
-    save!
+    publish!(user:, auto_published:)
   end
 
   def publish!(user:, auto_published: false)
     self.status = "published"
     self.auto_published = auto_published
-    sync_publication_fields(user: user)
+    self.published_by ||= user if user.present?
+    self.validate_immediate_publication = true
     save!
+  ensure
+    self.validate_immediate_publication = false
   end
 
   def unpublish!(status: "ready_for_publish", auto_published: false)
@@ -233,6 +242,34 @@ class Event < ApplicationRecord
     self.published_by = nil
     save!
   end
+
+  private
+
+  def apply_publication_schedule_rules
+    return if validate_immediate_publication?
+    return if published_at.blank?
+
+    if published_at.future?
+      return if rejected? || needs_review?
+
+      self.status = "ready_for_publish"
+      return
+    end
+
+    self.status = "published" if ready_for_publish?
+  end
+
+  def future_publication_must_not_be_published_immediately
+    return unless published_at.present? && published_at.future?
+
+    errors.add(:published_at, "liegt in der Zukunft und kann nicht sofort veröffentlicht werden.")
+  end
+
+  def validate_immediate_publication?
+    ActiveModel::Type::Boolean.new.cast(@validate_immediate_publication)
+  end
+
+  public
 
   def primary_offer
     if association(:event_offers).loaded?

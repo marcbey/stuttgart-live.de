@@ -6,6 +6,7 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
     Rails.application.load_tasks unless Rake::Task.task_defined?("events:maintenance:purge_all_with_imports")
     Rake::Task["events:maintenance:purge_all_with_imports"].reenable
     Rake::Task["events:maintenance:reset_llm_enrichment"].reenable
+    Rake::Task["events:maintenance:reset_published_at"].reenable
   end
 
   test "purge_all_with_imports delegates to the full purger mode" do
@@ -64,5 +65,21 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
     assert_includes output, "solid_queue_jobs=0"
   ensure
     Events::Maintenance::LlmResetter.singleton_class.define_method(:call, original_call)
+  end
+
+  test "reset_published_at clears publication dates for all events" do
+    published_event = events(:published_one)
+    review_event = events(:needs_review_one)
+    review_event.update!(published_at: 2.days.from_now.change(usec: 0))
+    expected_updated_count = Event.where.not(published_at: nil).count
+
+    output = capture_io do
+      Rake::Task["events:maintenance:reset_published_at"].invoke
+    end.first
+
+    assert_nil published_event.reload.published_at
+    assert_nil review_event.reload.published_at
+    assert_includes output, "Event-Veröffentlichungsdaten zurückgesetzt."
+    assert_includes output, "events_updated=#{expected_updated_count}"
   end
 end

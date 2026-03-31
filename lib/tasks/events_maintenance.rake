@@ -17,6 +17,16 @@ namespace :events do
       result = Events::Maintenance::LlmResetter.call
       print_events_llm_maintenance_result(result, success_message: "LLM-Enrichment-Daten zurückgesetzt.")
     end
+
+    desc "Reset published_at for all events"
+    task reset_published_at: :environment do
+      relation = Event.where.not(published_at: nil)
+      updated_count = relation.count
+      relation.update_all(published_at: nil, updated_at: Time.current)
+
+      puts "Event-Veröffentlichungsdaten zurückgesetzt."
+      puts "events_updated=#{updated_count}"
+    end
   end
 end
 

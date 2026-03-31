@@ -6,6 +6,14 @@ class RecurringConfigTest < ActiveSupport::TestCase
     production = config.fetch("production")
 
     assert_equal(
+      "Events::Publication::PublishScheduledEventsJob.perform_later",
+      production.fetch("hourly_publish_scheduled_events").fetch("command")
+    )
+    assert_equal(
+      "every hour at minute 22",
+      production.fetch("hourly_publish_scheduled_events").fetch("schedule")
+    )
+    assert_equal(
       "Events::Retention::PruneStaleUnpublishedEventsJob.perform_later",
       production.fetch("daily_event_retention_cleanup").fetch("command")
     )

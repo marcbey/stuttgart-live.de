@@ -3,6 +3,10 @@ production:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
     schedule: every hour at minute 12
 
+  hourly_publish_scheduled_events:
+    command: "Events::Publication::PublishScheduledEventsJob.perform_later"
+    schedule: every hour at minute 22
+
   daily_import_runs:
     command: "Importing::DailyRunJob.perform_later"
     schedule: every day at 3:05am

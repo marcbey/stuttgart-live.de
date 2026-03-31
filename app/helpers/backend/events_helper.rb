@@ -76,6 +76,16 @@ module Backend::EventsHelper
     end
   end
 
+  def event_display_status_label(event)
+    return "Unpublished/Geplant" if event&.scheduled?
+
+    event_status_label(event&.status)
+  end
+
+  def event_display_status_badge_class(event)
+    event_status_badge_class(event&.status)
+  end
+
   def event_status_filter_label(status)
     return "Drafts" if status.to_s == "needs_review"
 

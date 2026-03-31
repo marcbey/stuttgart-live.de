@@ -55,12 +55,12 @@ module Backend
       created_images = []
       creation_alert = nil
 
-      set_publishing_fields!(@event)
+      prepare_publication_intent!(@event)
       validate_manual_ticket_url!(@event)
 
       Event.transaction do
         unless @event.errors.empty? && @event.save
-          creation_alert = "Event konnte nicht erstellt werden."
+          creation_alert = @event.errors.full_messages.to_sentence.presence || "Event konnte nicht erstellt werden."
           raise ActiveRecord::Rollback
         end
 
@@ -121,8 +121,7 @@ module Backend
 
       @event.assign_attributes(event_attribute_params)
       prepare_promotion_banner_image(@event)
-      @event.status = "published" if save_and_publish_requested?
-      set_publishing_fields!(@event)
+      prepare_publication_intent!(@event)
       validate_manual_ticket_url!(@event)
 
       if @event.errors.any?
@@ -178,6 +177,11 @@ module Backend
       @event.publish!(user: current_user, auto_published: false)
       Editorial::EventChangeLogger.log!(event: @event, action: "published", user: current_user)
       redirect_to backend_events_path(status: "published", event_id: @event.id), notice: "Event wurde veröffentlicht."
+    rescue ActiveRecord::RecordInvalid
+      redirect_to(
+        backend_events_path(status: @inbox_state.navigation_status || @event.attribute_in_database("status") || @event.status, event_id: @event.id),
+        alert: publish_error_message(@event)
+      )
     end
 
     def unpublish
@@ -229,6 +233,8 @@ module Backend
       processed = Backend::Events::BulkUpdater.new(events: events, action: action, user: current_user).call
 
       redirect_to backend_events_path(status: @inbox_state.current_status), notice: "Bulk-Aktion abgeschlossen (#{processed} Events)."
+    rescue ActiveRecord::RecordInvalid => e
+      redirect_to backend_events_path(status: @inbox_state.current_status), alert: publish_error_message(e.record)
     end
 
     private
@@ -659,26 +665,22 @@ module Backend
 
     def normalized_status_for(event, completeness_result)
       return event.status if event.published? || event.status == "rejected"
+      return event.status if event.published_at.present? && event.published_at.future?
 
       completeness_result.ready_for_publish? ? "ready_for_publish" : "needs_review"
     end
 
-    def set_publishing_fields!(event)
-      if event.published?
-        if publication_date_cleared_for_existing_published_event?(event)
-          event.published_by ||= current_user if current_user.present?
-        else
-          event.sync_publication_fields(user: current_user)
-        end
-      else
-        event.published_by = nil
-      end
+    def prepare_publication_intent!(event)
+      return unless save_and_publish_requested?
+
+      event.status = "published"
+      event.auto_published = false
+      event.published_by ||= current_user if current_user.present?
+      event.validate_immediate_publication = true
     end
 
-    def publication_date_cleared_for_existing_published_event?(event)
-      event.attribute_in_database("status") == "published" &&
-        params[:event].respond_to?(:key?) &&
-        params[:event][:published_at].blank?
+    def publish_error_message(event)
+      event.errors.full_messages.to_sentence.presence || "Event konnte nicht veröffentlicht werden."
     end
 
     def attach_manual_event_images!
