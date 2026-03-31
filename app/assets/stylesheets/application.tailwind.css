@@ -5819,6 +5819,7 @@ trix-editor.blog-rich-text:focus {
 .event-detail-related-list {
   display: grid;
   gap: 1rem;
+  margin-top: 1.2rem;
   width: 100%;
   max-width: none;
   justify-self: start;
@@ -5856,7 +5857,7 @@ trix-editor.blog-rich-text:focus {
 .event-detail-side-credit {
   position: absolute;
   top: 0;
-  right: -15px;
+  right: -20px;
   bottom: 0;
   margin: 0;
   display: flex;
@@ -6183,7 +6184,7 @@ trix-editor.blog-rich-text:focus {
 
 @media (min-width: 1180px) {
   .event-detail-side-credit {
-    left: -15px;
+    left: -20px;
     right: auto;
   }
 
@@ -6210,7 +6211,7 @@ trix-editor.blog-rich-text:focus {
 
 @media (min-width: 1500px) {
   .event-detail-side-credit {
-    left: -15px;
+    left: -20px;
     right: auto;
   }
 
@@ -7933,7 +7934,7 @@ trix-editor.blog-rich-text:focus {
   }
 }
 
-@media (min-width: 1180px) {
+@media (min-width: 1280px) and (max-width: 1499px) {
   .event-detail-related-list .event-listing-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
