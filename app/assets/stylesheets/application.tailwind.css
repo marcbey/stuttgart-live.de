@@ -147,12 +147,19 @@ body:has(.app-nav-inner-backend) .brand-wordmark-poster .brand-wordmark-city {
 
 body:has(.app-nav-inner-backend) .brand-wordmark-poster .brand-wordmark-city-initial,
 body:has(.app-nav-inner-backend) .brand-wordmark-poster .brand-wordmark-live {
-  color: #111;
   font-family: "Oswald", "Arial Narrow", sans-serif;
   font-size: clamp(2.4rem, 3.4vw, 3.5rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 0.84;
+}
+
+body:has(.app-nav-inner-backend) .brand-wordmark-poster .brand-wordmark-city-initial {
+  color: #fff;
+}
+
+body:has(.app-nav-inner-backend) .brand-wordmark-poster .brand-wordmark-live {
+  color: #111;
 }
 
 body:has(.app-nav-inner-backend) .app-nav-links-group-separated {
@@ -9121,7 +9128,7 @@ body.page-public-events-index .brand-wordmark-poster .brand-wordmark-city {
 }
 
 body.page-public-events-index .brand-wordmark-poster .brand-wordmark-city-initial {
-  color: var(--ink);
+  color: #fff;
 }
 
 body.page-public-events-index .brand-wordmark-poster .brand-wordmark-live {
