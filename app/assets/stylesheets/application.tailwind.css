@@ -6273,7 +6273,7 @@ trix-editor.blog-rich-text:focus {
   gap: 1.8rem 2.4rem;
   align-items: end;
   padding: 1.35rem 1.45rem 1.5rem;
-  border: 2px solid #111;
+  border: 2px solid #eee;
 }
 
 .event-detail-venue-layout > h2 {
