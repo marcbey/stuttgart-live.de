@@ -115,7 +115,8 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     assert presenter.show_ticket_panel?
     assert presenter.show_ticket_link?
-    assert_not presenter.show_sks_sold_out_message?
+    assert_not presenter.show_sold_out_note?
+    assert_not presenter.show_sks_sold_out_hint?
     assert_equal "Fast ausverkauft", presenter.ticket_badge_text
     assert_equal "https://tickets.example/band", presenter.ticket_url
     assert_equal "39,00 €", presenter.ticket_price_text
@@ -158,7 +159,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_nil presenter.ticket_price_text
   end
 
-  test "shows sks sold out message without ticket link for sold out sks events" do
+  test "shows sold out badge and sks hint without ticket link for sold out sks events" do
     event = build_event(
       artist_name: "Band",
       title: "Live",
@@ -173,7 +174,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     assert presenter.show_ticket_panel?
     assert_not presenter.show_ticket_link?
-    assert presenter.show_sks_sold_out_message?
+    assert presenter.show_sold_out_note?
+    assert presenter.show_sks_sold_out_hint?
+    assert_equal "Ausverkauft", presenter.sold_out_note_text
+    assert_equal "Bitte beim Veranstalter nach Restkarten fragen", presenter.sks_sold_out_hint_text
     assert_equal "Bitte beim Veranstalter nach Restkarten fragen", presenter.sks_sold_out_message
     assert_nil presenter.ticket_url
     assert_nil presenter.ticket_price_text
