@@ -5939,6 +5939,15 @@ trix-editor.blog-rich-text:focus {
   text-shadow: 0 1px 2px rgba(17, 17, 17, 0.22);
 }
 
+.event-detail-sold-out-hint {
+  max-width: 34rem;
+  margin: 0.7rem 0 0;
+  color: rgba(var(--ink-rgb), 0.82);
+  font-size: 1rem;
+  line-height: 1.45;
+  font-weight: 500;
+}
+
 .event-detail-badge-inline {
   display: inline-flex;
   justify-self: start;

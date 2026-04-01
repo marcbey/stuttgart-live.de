@@ -2129,7 +2129,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
   end
 
-  test "show hides ticket cta when imported primary offer is sold out even if a manual offer exists" do
+  test "show renders sold out note when imported primary offer is sold out even if a manual offer exists" do
     event = Event.create!(
       slug: "show-imported-sold-out-blocks-manual",
       source_fingerprint: "test::public::show::imported-sold-out-blocks-manual",
@@ -2164,13 +2164,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_select ".event-detail-cta", count: 0
+    assert_select ".event-detail-cta", count: 1
+    assert_includes response.body, "Ausverkauft"
     assert_not_includes response.body, "https://manual.example/still-open"
     assert_not_includes response.body, "https://easyticket.example/sold-out"
     assert_not_includes response.body, "Tickets sichern"
   end
 
-  test "show renders sks sold out message instead of ticket link for sold out sks events" do
+  test "show renders sold out note and sks hint for sold out sks events" do
     event = Event.create!(
       slug: "show-sks-sold-out-message",
       source_fingerprint: "test::public::show::sks-sold-out-message",
@@ -2199,12 +2200,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-cta", count: 1
+    assert_includes response.body, "Ausverkauft"
     assert_includes response.body, "Bitte bei SKS nach Restkarten fragen"
     assert_not_includes response.body, "Tickets sichern"
     assert_not_includes response.body, "https://easyticket.example/sold-out-message"
   end
 
-  test "show does not render sks sold out message for non sks events" do
+  test "show renders generic sold out note for non sks events" do
     event = Event.create!(
       slug: "show-non-sks-sold-out-message",
       source_fingerprint: "test::public::show::non-sks-sold-out-message",
@@ -2232,12 +2234,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_select ".event-detail-cta", count: 0
+    assert_select ".event-detail-cta", count: 1
+    assert_includes response.body, "Ausverkauft"
     assert_not_includes response.body, "Bitte bei SKS nach Restkarten fragen"
     assert_not_includes response.body, "Tickets sichern"
   end
 
-  test "show keeps sold out sks events without message unchanged" do
+  test "show renders generic sold out note for sold out sks events without message" do
     event = Event.create!(
       slug: "show-sks-sold-out-without-message",
       source_fingerprint: "test::public::show::sks-sold-out-without-message",
@@ -2264,7 +2267,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_select ".event-detail-cta", count: 0
+    assert_select ".event-detail-cta", count: 1
+    assert_includes response.body, "Ausverkauft"
     assert_not_includes response.body, "Tickets sichern"
     assert_not_includes response.body, "https://easyticket.example/sks-sold-out-without-message"
   end

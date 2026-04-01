@@ -207,7 +207,7 @@ module Public
       end
 
       def show_ticket_panel?
-        show_ticket_link? || show_sks_sold_out_message?
+        show_ticket_link? || show_sold_out_note? || show_sks_sold_out_hint?
       end
 
       def show_ticket_cta?
@@ -215,14 +215,11 @@ module Public
       end
 
       def show_ticket_link?
-        !event.past? && raw_ticket_url.present?
+        !event.past? && !event.public_sold_out? && raw_ticket_url.present?
       end
 
-      def show_sks_sold_out_message?
-        !event.past? &&
-          event.sks_promoter? &&
-          event.public_sold_out? &&
-          sks_sold_out_message.present?
+      def show_sold_out_note?
+        !event.past? && event.public_sold_out?
       end
 
       def ticket_badge_text
@@ -253,6 +250,22 @@ module Public
 
       def sks_sold_out_message
         event.sks_sold_out_message.to_s.presence
+      end
+
+      def sold_out_note_text
+        return unless show_sold_out_note?
+
+        "Ausverkauft"
+      end
+
+      def show_sks_sold_out_hint?
+        show_sold_out_note? && event.sks_promoter? && sks_sold_out_message.present?
+      end
+
+      def sks_sold_out_hint_text
+        return unless show_sks_sold_out_hint?
+
+        sks_sold_out_message
       end
 
       def visibility_badges
