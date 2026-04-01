@@ -1919,6 +1919,7 @@ trix-editor.blog-rich-text:focus {
 }
 
 .site-footer {
+  position: relative;
   border-top: 1px solid rgba(255, 255, 255, 0.14);
   background: var(--ink-deep);
 }
@@ -1930,11 +1931,9 @@ trix-editor.blog-rich-text:focus {
 }
 
 .site-footer-nav {
-  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
-  overflow: visible;
 }
 
 .site-footer-nav a,
@@ -1982,7 +1981,6 @@ trix-editor.blog-rich-text:focus {
 
 @media (min-width: 768px) {
   .site-footer-shell {
-    position: relative;
     padding: 1rem 0.75rem;
   }
 
@@ -2021,7 +2019,7 @@ trix-editor.blog-rich-text:focus {
   .privacy-settings-button {
     position: absolute;
     top: 50%;
-    left: 1.2rem;
+    left: 2rem;
     z-index: 2;
     transform: translateY(-50%);
   }
@@ -2049,7 +2047,7 @@ trix-editor.blog-rich-text:focus {
 .privacy-settings-button {
   position: absolute;
   top: 1.1rem;
-  left: 0;
+  left: 2rem;
   z-index: 2;
   transform: translateX(-28%);
   padding: 0;
