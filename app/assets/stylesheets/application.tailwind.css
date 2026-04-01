@@ -4727,7 +4727,7 @@ trix-editor.blog-rich-text:focus {
   width: fit-content;
   max-width: min(100%, 18rem);
   margin: 0 0 0.55rem;
-  padding: 0.3rem 1.15rem 0.16rem 0.72rem;
+  padding: 0.3rem 1.15rem 0.16rem 0.3rem;
   border: 0;
   border-radius: 0;
   background: #00c5cc;
@@ -5814,7 +5814,7 @@ trix-editor.blog-rich-text:focus {
   display: inline-flex;
   align-items: center;
   min-height: 2rem;
-  padding: 0.28rem 0.58rem;
+  padding: 0.1rem 0.58rem 0.12rem 0.58rem;
   border: 1px solid rgba(0, 150, 156, 0.42);
   border-radius: 999px;
   background: rgba(0, 181, 188, 0.22);
@@ -5915,7 +5915,7 @@ trix-editor.blog-rich-text:focus {
   align-items: center;
   width: fit-content;
   margin-top: 0.1rem;
-  padding: 0.62rem 1.25rem 0.56rem;
+  padding: 0.8rem 1.25rem 0.56rem;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(243, 140, 227, 0.98) 0%, rgba(222, 120, 207, 0.98) 48%, rgba(184, 66, 167, 0.98) 100%);
@@ -5994,7 +5994,7 @@ trix-editor.blog-rich-text:focus {
 .event-detail-image-badge {
   display: none;
   position: absolute;
-  top: 0.8rem;
+  top: 0.35rem;
   left: 50%;
   transform: translateX(-50%);
   z-index: 4;
@@ -6270,7 +6270,7 @@ trix-editor.blog-rich-text:focus {
 .event-detail-venue-layout {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(12rem, 0.8fr);
-  gap: 1.8rem 2.4rem;
+  gap: 0.9rem 2.4rem;
   align-items: end;
   padding: 1.35rem 1.45rem 1.5rem;
   border: 2px solid #eee;
@@ -6806,7 +6806,7 @@ trix-editor.blog-rich-text:focus {
   }
 
   .event-detail-image-badge {
-    top: 1.35rem;
+    top: 0.35rem;
   }
 
   .event-detail-content {

@@ -128,7 +128,7 @@
           <h2>Das könnte dir auch gefallen</h2>
         </div>
         <%= render "event_rows",
-                   events: @related_genre_lane.events.first(6),
+                   events: @related_genre_lane.events.first(10),
                    browse_state: @browse_state,
                    wrap: true,
                    effective_series_ids: @related_genre_lane.effective_series_ids %>

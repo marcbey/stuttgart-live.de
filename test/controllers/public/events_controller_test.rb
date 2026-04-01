@@ -2446,6 +2446,42 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     ], related_names.first(3)
   end
 
+  test "show limits related genre lane to ten events" do
+    snapshot, = create_homepage_genre_snapshot
+
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
+
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
+
+    related_events = 12.times.map do |index|
+      event = Event.create!(
+        slug: "show-related-genre-limit-#{index}",
+        source_fingerprint: "test::public::show-related-genre::limit::#{index}",
+        title: "Show Related Limit #{index}",
+        artist_name: "Related Limit Artist #{index}",
+        start_at: (index + 2).days.from_now.change(hour: 20, min: 0, sec: 0),
+        venue: "Im Wizemann",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+      build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+      event
+    end
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+
+    related_names = Nokogiri::HTML.parse(response.body).css(".event-detail-related-list .event-listing-link strong").map(&:text)
+
+    assert_equal 10, related_names.size
+    assert_equal related_events.first(10).map(&:artist_name), related_names
+    assert_not_includes related_names, related_events.last(2).first.artist_name
+    assert_not_includes related_names, related_events.last.artist_name
+  end
+
   test "show does not render related genre lane without selected snapshot or additional matches" do
     get event_url(@published_event.slug)
 
