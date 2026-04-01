@@ -57,43 +57,56 @@
         </section>
       <% end %>
 
-      <% if presenter.venue_info.present? %>
-        <section class="event-detail-panel event-detail-copy">
-          <h2>Venue</h2>
-          <div class="event-detail-copy-body">
-            <% if presenter.venue_info.logo_source.present? %>
-              <p>
+      <% if presenter.show_venue_section? %>
+        <section class="event-detail-copy-block event-detail-venue-block">
+          <h2>Über die Venue</h2>
+          <div class="event-detail-venue-layout">
+            <div class="event-detail-venue-main">
+              <% if presenter.venue_description.present? %>
+                <div class="event-detail-copy-flow event-detail-venue-description">
+                  <%= simple_format(presenter.venue_description) %>
+                </div>
+              <% end %>
+
+              <% if presenter.venue_info&.external_url.present? %>
+                <div class="event-detail-venue-actions">
+                  <%= link_to "Homepage",
+                              presenter.venue_info.external_url,
+                              target: "_blank",
+                              rel: "noopener",
+                              class: "event-detail-venue-button" %>
+                </div>
+              <% end %>
+
+              <% if presenter.venue_info.present? && (presenter.venue_info.address.present? || presenter.venue_info.map_url.present?) %>
+                <div class="event-detail-venue-meta">
+                  <% if presenter.venue_info.address.present? %>
+                    <div class="event-detail-venue-address">
+                      <p class="event-detail-venue-label">Adresse:</p>
+                      <p><%= presenter.venue_info.address %></p>
+                    </div>
+                  <% end %>
+
+                  <% if presenter.venue_info.map_url.present? %>
+                    <%= link_to presenter.venue_info.map_url,
+                                target: "_blank",
+                                rel: "noopener",
+                                class: "event-detail-venue-map-link" do %>
+                      <span class="event-detail-venue-map-pin" aria-hidden="true">📍</span>
+                      <span>Auf Google Maps öffnen</span>
+                    <% end %>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+
+            <% if presenter.venue_info&.logo_source.present? %>
+              <div class="event-detail-venue-brand">
                 <%= image_tag presenter.venue_info.logo_source,
                               alt: presenter.venue_info.name,
-                              style: "max-width: 14rem; max-height: 5rem; object-fit: contain;" %>
-              </p>
-            <% end %>
-
-            <% if presenter.venue_info.address.present? %>
-              <div>
-                <p><strong>Adresse:</strong></p>
-                <%= simple_format(presenter.venue_info.address) %>
+                              class: "event-detail-venue-logo" %>
               </div>
             <% end %>
-
-            <% if presenter.venue_info.external_url.present? %>
-              <p>
-                <strong>Website:</strong><br>
-                <%= link_to presenter.venue_info.external_url,
-                            presenter.venue_info.external_url,
-                            target: "_blank",
-                            rel: "noopener" %>
-              </p>
-            <% end %>
-          </div>
-        </section>
-      <% end %>
-
-      <% if presenter.venue_description.present? %>
-        <section class="event-detail-copy-block">
-          <h2>Über die Venue</h2>
-          <div class="event-detail-copy-flow">
-            <%= simple_format(presenter.venue_description) %>
           </div>
         </section>
       <% end %>

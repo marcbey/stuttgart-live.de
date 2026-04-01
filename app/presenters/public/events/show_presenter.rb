@@ -6,7 +6,7 @@ module Public
       HeroGallerySlide = Data.define(:desktop_source, :mobile_source, :alt_text, :caption, :credit, :lightbox_source)
       FactItem = Data.define(:label, :value)
       PresenterItem = Data.define(:name, :external_url, :logo_source)
-      VenueInfo = Data.define(:name, :address, :external_url, :logo_source)
+      VenueInfo = Data.define(:name, :address, :external_url, :logo_source, :map_url)
 
       IMPORT_HERO_CREDIT_LABELS = {
         "easyticket" => "Easy Ticket Service",
@@ -360,12 +360,18 @@ module Public
         venue = event.venue_record
         return @venue_info = nil if venue.blank?
 
+        address = venue.address.to_s.strip.presence
         @venue_info = VenueInfo.new(
           name: venue.name,
-          address: venue.address.to_s.strip.presence,
+          address: address,
           external_url: venue.external_url.to_s.strip.presence,
-          logo_source: view_context.venue_logo_source(venue, size: :detail)
+          logo_source: view_context.venue_logo_source(venue, size: :detail),
+          map_url: venue_map_url_for(address)
         )
+      end
+
+      def show_venue_section?
+        venue_description.present? || venue_info.present?
       end
 
       def has_secondary_content?
@@ -420,6 +426,12 @@ module Public
         return unless primary_offer.present?
 
         primary_offer.resolved_ticket_url.to_s.presence
+      end
+
+      def venue_map_url_for(address)
+        return if address.blank?
+
+        "https://www.google.com/maps/search/?api=1&query=#{ERB::Util.url_encode(address)}"
       end
 
       def llm_enrichment
