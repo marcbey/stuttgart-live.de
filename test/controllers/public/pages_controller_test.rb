@@ -59,7 +59,7 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".site-footer-nav a", text: "Impressum"
     assert_select ".site-footer-nav a", text: "AGB"
     assert_select ".site-footer-nav a", text: "Barrierefreiheit"
-    assert_select ".site-footer-nav button.privacy-settings-button[aria-label='Datenschutzeinstellungen öffnen']", count: 1
+    assert_select "#site-footer > .privacy-settings-button[aria-label='Datenschutzeinstellungen öffnen']", count: 1
     assert_includes response.body, "Google Analytics"
   end
 
