@@ -110,6 +110,17 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Quelle: easyticket"
   end
 
+  test "show renders sold out label from event sold_out" do
+    sign_in_as(@user)
+    event_offers(:published_one_offer).update!(sold_out: true)
+
+    get backend_event_url(@published_event, status: "published")
+
+    assert_response :success
+    assert_includes response.body, "Ist ausverkauft"
+    assert_not_includes response.body, "Ist nicht ausverkauft"
+  end
+
   test "new redirects to inbox split layout" do
     sign_in_as(@user)
 
@@ -1390,6 +1401,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Letzter LLM-Enrichment-Run: Montag, 02.03.2026 12:11"
     assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button", text: "LLM-Enrichment für dieses Event starten"
     assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 1
+    assert_select "textarea[name='event[llm_enrichment_attributes][venue_description]']", count: 0
     assert_select "textarea[name='event[llm_enrichment_attributes][raw_response_json]']", count: 0
     assert_select "textarea[name='event[llm_enrichment_attributes][artist_description]']", count: 0
     assert_includes response.body, "&quot;event_description&quot;: &quot;LLM Event Beschreibung&quot;"
@@ -1738,7 +1750,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Artist name darf nicht leer sein"
   end
 
-  test "update stores nested llm enrichment fields from editor" do
+  test "update stores editable nested llm enrichment fields from editor" do
     sign_in_as(@user)
     create_llm_enrichment(event: @published_event)
 
@@ -1756,7 +1768,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
           venue: "Neues LLM Venue",
           genre_list: "Indie\nRock",
           event_description: "Aktualisierte kombinierte Event-Beschreibung",
-          venue_description: "Aktualisierte Venue-Beschreibung",
           venue_external_url: "https://venue.example/updated",
           venue_address: "Venue Straße 12, Stuttgart",
           youtube_link: "https://youtube.example/updated",
@@ -1773,7 +1784,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Neues LLM Venue", enrichment.venue
     assert_equal [ "Indie", "Rock" ], enrichment.genre
     assert_equal "Aktualisierte kombinierte Event-Beschreibung", enrichment.event_description
-    assert_equal "Aktualisierte Venue-Beschreibung", enrichment.venue_description
+    assert_equal "LLM Venue Beschreibung", enrichment.venue_description
     assert_equal "https://venue.example/updated", enrichment.venue_external_url
     assert_equal "Venue Straße 12, Stuttgart", enrichment.venue_address
     assert_equal "https://youtube.example/updated", enrichment.youtube_link

@@ -13,3 +13,9 @@ variable "environment_name" {
   type        = string
   default     = "production"
 }
+
+variable "environment_variables" {
+  description = "Nicht-geheime GitHub-Environment-Variablen."
+  type        = map(string)
+  default     = {}
+}

@@ -365,12 +365,13 @@ bin/ci
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`
 - statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
-- lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform
+- lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
 - lokale Datei `config/master.key`: Schlüssel für `config/credentials.yml.enc`
-- GitHub-Secrets für Deployments: `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD`, `KAMAL_SSH_PRIVATE_KEY`
+- GitHub-Secrets für Deployments: `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD`, `KAMAL_SSH_PRIVATE_KEY`, `SENTRY_AUTH_TOKEN`
+- GitHub-Variablen für Sentry-Releases: `SENTRY_ORG`, `SENTRY_PROJECT`
 
 Ohne Mailchimp-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus.
 
@@ -408,6 +409,13 @@ Mit der aktuellen Struktur gibt es vier übliche Betriebsmodi:
 - lokale Hetzner-Infrastruktur: Terraform nutzt lokal `HCLOUD_TOKEN`, typischerweise aus `.env` oder der Shell
 - lokaler Produktions-Deploy: Kamal nutzt lokal `DB_PASSWORD` und `KAMAL_REGISTRY_PULL_PASSWORD` aus `.env` sowie `config/master.key`
 - GitHub-Produktions-Deploy: GitHub Actions nutzt `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD` und `KAMAL_SSH_PRIVATE_KEY` aus GitHub-Secrets
+
+Für Sentry gilt zusätzlich:
+
+- die Laufzeit-App liest die `dsn` aus `config/credentials.yml.enc`
+- der Produktions-Container bekommt `SENTRY_ENVIRONMENT=production`
+- der Produktions-Deploy setzt `SENTRY_RELEASE` automatisch auf die deployte Git-SHA
+- nach erfolgreichem GitHub-Deploy meldet der Workflow denselben Release per `sentry-cli` an Sentry und verknüpft automatisch die Commits
 
 Wenn du lokal sowohl entwickelst als auch Hetzner-Infrastruktur steuerst und manuell nach Produktion deployen willst, reicht aktuell in `.env` in der Regel:
 
@@ -456,6 +464,11 @@ Für manuelle Produktions-Kommandos brauchst du lokal:
 - optional den SSH-Key `~/.ssh/stgt-live-hetzner-admin` für Host-Administration als `admin`
 - eine `.env` mit `DB_PASSWORD` und `KAMAL_REGISTRY_PULL_PASSWORD`
 
+Für lokale Sentry-Release-Meldungen zusätzlich:
+
+- `SENTRY_AUTH_TOKEN` in `.env` oder in der Shell
+- optional `SENTRY_ORG` und `SENTRY_PROJECT`; Default im Repo ist aktuell `self-employed-gi` und `stuttgart-live`
+
 Der aktuell konfigurierte Zielhost ist `46.225.224.194`.
 
 Vor manuellen Kamal-Eingriffen sollte immer dieser Check laufen:
@@ -483,6 +496,12 @@ In GitHub müssen deshalb nur diese Secrets gepflegt sein:
 - `RAILS_MASTER_KEY`
 - `KAMAL_REGISTRY_PULL_PASSWORD`
 - `KAMAL_SSH_PRIVATE_KEY`
+- `SENTRY_AUTH_TOKEN`
+
+Zusätzlich werden diese GitHub-Variablen verwendet:
+
+- `SENTRY_ORG`
+- `SENTRY_PROJECT`
 
 Nicht-geheime Zielwerte für Domain, Server-IP und gepinnten SSH-Host-Key werden nicht mehr als GitHub-Variablen gepflegt.
 
@@ -493,11 +512,15 @@ Deployment von lokal:
 ```bash
 bin/hetzner-check
 bin/kamal deploy -d hetzner
+bin/sentry-release
 bin/hetzner-check
 bin/kamal redeploy -d hetzner
+bin/sentry-release
 bin/hetzner-check
 bin/kamal rollback <VERSION> -d hetzner
 ```
+
+`bin/sentry-release` meldet den aktuellen Git-Commit als Release an Sentry, verknüpft automatisch die Commits, finalisiert den Release und markiert einen Deploy für `production`.
 
 Status und Logs:
 

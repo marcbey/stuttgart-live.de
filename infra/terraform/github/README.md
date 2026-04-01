@@ -5,6 +5,7 @@ Dieser Stack verwaltet das GitHub-Environment `production` für `marcbey/stuttga
 Verwaltet wird:
 
 - GitHub Environment
+- nicht-geheime GitHub-Environment-Variablen
 
 ## Voraussetzungen
 
@@ -23,8 +24,11 @@ terraform apply
 Die sensiblen GitHub-Environment-Secrets werden bewusst nicht per Terraform verwaltet.
 Sie werden separat mit `gh secret set` gesetzt, damit sie nicht im Terraform-State landen.
 
+Nicht-geheime Werte wie `SENTRY_ORG` und `SENTRY_PROJECT` werden dagegen bewusst per Terraform verwaltet.
+
 Nicht-geheime Hetzner-Zielwerte wie `APP_HOST`, `KAMAL_WEB_HOST` und `KAMAL_SSH_HOST_KEY`
-kommen aus der versionierten Datei [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
+kommen aus der versionierten Datei [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml)
+und werden nicht als GitHub-Environment-Variablen dupliziert.
 
 Dafür gibt es das Skript:
 
@@ -37,5 +41,5 @@ Dieser Token sollte nur `read:packages` für den Host-Pull auf `ghcr.io` haben.
 
 ## Wichtige Hinweise
 
-- Terraform verwaltet hier nur das GitHub-Environment selbst.
+- Terraform verwaltet hier das GitHub-Environment und ausgewählte nicht-geheime Environment-Variablen.
 - GitHub Actions liest die Hetzner-Zieldaten direkt aus der versionierten Repo-Konfiguration.

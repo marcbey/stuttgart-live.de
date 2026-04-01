@@ -27,6 +27,8 @@ env:
   clear:
     SOLID_QUEUE_IN_PUMA: true
     APP_HOST: <%= HetznerDeployConfig.app_host %>
+    SENTRY_ENVIRONMENT: production
+    SENTRY_RELEASE: <%= ENV.fetch("SENTRY_RELEASE") { `git rev-parse HEAD`.strip } %>
     DB_HOST: 172.18.0.1
     DB_PORT: 5432
     DB_NAME: <%= ENV.fetch("DB_NAME", "stuttgart_live_de_production") %>

@@ -1,3 +1,7 @@
 github_owner      = "marcbey"
 repository        = "stuttgart-live.de"
 environment_name  = "production"
+environment_variables = {
+  SENTRY_ORG     = "self-employed-gi"
+  SENTRY_PROJECT = "stuttgart-live"
+}

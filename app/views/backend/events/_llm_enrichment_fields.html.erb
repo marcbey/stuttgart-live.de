@@ -70,11 +70,6 @@
                 <%= form.label :event_description, "Event-Beschreibung", class: "form-label" %>
                 <%= form.text_area :event_description, rows: 6, class: "form-textarea", form: editor_form_id %>
               </div>
-
-              <div>
-                <%= form.label :venue_description, "Venue-Beschreibung", class: "form-label" %>
-                <%= form.text_area :venue_description, rows: 6, class: "form-textarea", form: editor_form_id %>
-              </div>
             </div>
           </section>
 
@@ -125,18 +120,16 @@
       <% end %>
     <% end %>
 
-    <section class="backend-section backend-section-compact llm-enrichment-raw-response">
-      <div class="backend-section-header">
-        <h3>Raw Response</h3>
-      </div>
-      <div class="backend-section-body">
-        <% if (raw_response = event_llm_raw_response(event)).present? %>
-          <pre class="payload-json llm-enrichment-raw-response-pre"><%= raw_response %></pre>
-        <% else %>
-          <p class="form-hint">Keine Raw Response für dieses Enrichment vorhanden.</p>
-        <% end %>
-      </div>
-    </section>
+    <div class="backend-section-header llm-enrichment-raw-response">
+      <h3>Raw Response</h3>
+    </div>
+    <div class="backend-section-body">
+      <% if (raw_response = event_llm_raw_response(event)).present? %>
+        <pre class="payload-json llm-enrichment-raw-response-pre"><%= raw_response %></pre>
+      <% else %>
+        <p class="form-hint">Keine Raw Response für dieses Enrichment vorhanden.</p>
+      <% end %>
+    </div>
   <% else %>
     <section class="backend-section backend-section-compact">
       <div class="backend-section-body">

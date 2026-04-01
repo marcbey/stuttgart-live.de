@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+DOTENV_FILE="$ROOT_DIR/.env"
+DEFAULT_ENVIRONMENT="production"
+DEFAULT_ORG="self-employed-gi"
+DEFAULT_PROJECT="stuttgart-live"
+
+SENTRY_RELEASE_VALUE="${SENTRY_RELEASE:-}"
+SENTRY_ENVIRONMENT_VALUE="${SENTRY_ENVIRONMENT:-$DEFAULT_ENVIRONMENT}"
+SENTRY_ORG_VALUE="${SENTRY_ORG:-}"
+SENTRY_PROJECT_VALUE="${SENTRY_PROJECT:-}"
+
+usage() {
+  cat <<'EOF'
+Meldet einen Release und Deploy an Sentry.
+
+Nutzung:
+  bin/sentry-release [optionen]
+
+Optionen:
+  --release VALUE         Release-ID, Default: aktuelle Git-SHA
+  --environment VALUE     Environment, Default: production
+  --org VALUE             Sentry-Organisation, Default: self-employed-gi
+  --project VALUE         Sentry-Projekt, Default: stuttgart-live
+  --dotenv PATH           Pfad zur .env-Datei, Default: .env im Repo
+  -h, --help              Diese Hilfe anzeigen
+EOF
+}
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --release)
+      SENTRY_RELEASE_VALUE="$2"
+      shift 2
+      ;;
+    --environment)
+      SENTRY_ENVIRONMENT_VALUE="$2"
+      shift 2
+      ;;
+    --org)
+      SENTRY_ORG_VALUE="$2"
+      shift 2
+      ;;
+    --project)
+      SENTRY_PROJECT_VALUE="$2"
+      shift 2
+      ;;
+    --dotenv)
+      DOTENV_FILE="$2"
+      shift 2
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Unbekannte Option: $1" >&2
+      usage >&2
+      exit 1
+      ;;
+  esac
+done
+
+read_dotenv_value() {
+  local key="$1"
+  local dotenv_file="$2"
+
+  ruby - "$dotenv_file" "$key" <<'RUBY'
+dotenv_file, key = ARGV
+exit 0 unless File.exist?(dotenv_file)
+
+File.readlines(dotenv_file, chomp: true).each do |line|
+  stripped = line.strip
+  next if stripped.empty? || stripped.start_with?("#")
+
+  normalized = line.sub(/\Aexport\s+/, "")
+  current_key, current_value = normalized.split("=", 2)
+  next unless current_key == key
+  next if current_value.nil?
+
+  if current_value.length >= 2
+    quoted_with_double = current_value.start_with?("\"") && current_value.end_with?("\"")
+    quoted_with_single = current_value.start_with?("'") && current_value.end_with?("'")
+    current_value = current_value[1..-2] if quoted_with_double || quoted_with_single
+  end
+
+  print current_value
+  exit 0
+end
+RUBY
+}
+
+if ! command -v sentry-cli >/dev/null 2>&1; then
+  echo "sentry-cli ist erforderlich und nicht installiert." >&2
+  exit 1
+fi
+
+if ! command -v git >/dev/null 2>&1; then
+  echo "git ist erforderlich." >&2
+  exit 1
+fi
+
+SENTRY_AUTH_TOKEN_VALUE="${SENTRY_AUTH_TOKEN:-$(read_dotenv_value "SENTRY_AUTH_TOKEN" "$DOTENV_FILE")}"
+SENTRY_RELEASE_VALUE="${SENTRY_RELEASE_VALUE:-$(git -C "$ROOT_DIR" rev-parse HEAD)}"
+SENTRY_ORG_VALUE="${SENTRY_ORG_VALUE:-$DEFAULT_ORG}"
+SENTRY_PROJECT_VALUE="${SENTRY_PROJECT_VALUE:-$DEFAULT_PROJECT}"
+
+if [[ -z "$SENTRY_AUTH_TOKEN_VALUE" ]]; then
+  echo "SENTRY_AUTH_TOKEN fehlt. Setze ihn in der Umgebung oder in $DOTENV_FILE." >&2
+  exit 1
+fi
+
+export SENTRY_AUTH_TOKEN="$SENTRY_AUTH_TOKEN_VALUE"
+export SENTRY_ORG="$SENTRY_ORG_VALUE"
+export SENTRY_PROJECT="$SENTRY_PROJECT_VALUE"
+export SENTRY_RELEASE="$SENTRY_RELEASE_VALUE"
+export SENTRY_ENVIRONMENT="$SENTRY_ENVIRONMENT_VALUE"
+
+if ! sentry-cli releases info "$SENTRY_RELEASE" >/dev/null 2>&1; then
+  sentry-cli releases new "$SENTRY_RELEASE"
+fi
+
+sentry-cli releases set-commits --auto "$SENTRY_RELEASE"
+sentry-cli releases finalize "$SENTRY_RELEASE"
+sentry-cli releases deploys "$SENTRY_RELEASE" new -e "$SENTRY_ENVIRONMENT"
+
+printf 'Sentry-Release gemeldet: %s (%s, %s/%s)\n' \
+  "$SENTRY_RELEASE" "$SENTRY_ENVIRONMENT" "$SENTRY_ORG" "$SENTRY_PROJECT"
