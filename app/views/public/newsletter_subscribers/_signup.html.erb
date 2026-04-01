@@ -1,11 +1,28 @@
 <% subscribed = local_assigns.fetch(:subscribed, false) %>
+<% homepage_signup = signup[:context].to_s == "events_index" %>
 
 <%= turbo_frame_tag signup[:frame_id], class: "newsletter-signup-frame" do %>
   <% if subscribed %>
-    <div class="newsletter-signup-feedback newsletter-signup-confirmation" role="status" aria-live="polite">
-      <p class="eyebrow">Danke!</p>
-      <p>Du bist jetzt für den Newsletter eingetragen.</p>
-    </div>
+    <% if homepage_signup %>
+      <div class="newsletter-signup-feedback newsletter-signup-confirmation newsletter-signup-confirmation-home" role="status" aria-live="polite">
+        <div class="newsletter-signup-confirmation-copy">
+          <p class="eyebrow">Danke!</p>
+          <p>Du bist jetzt eingetragen!</p>
+        </div>
+        <div class="newsletter-signup-confirmation-icon" aria-hidden="true">
+          <svg class="newsletter-signup-confirmation-check" viewBox="0 0 40 40" focusable="false">
+            <path d="M8 21.5 16 29.5 32 12.5" />
+          </svg>
+        </div>
+      </div>
+    <% else %>
+      <div class="newsletter-signup-feedback newsletter-signup-confirmation" role="status" aria-live="polite">
+        <div class="newsletter-signup-confirmation-copy">
+          <p class="eyebrow">Danke!</p>
+          <p>Du bist jetzt für den Newsletter eingetragen.</p>
+        </div>
+      </div>
+    <% end %>
   <% else %>
     <% email_field_options = {
       autocomplete: "email",
@@ -13,7 +30,6 @@
       required: true,
       class: "form-input newsletter-signup-input"
     } %>
-    <% homepage_signup = signup[:context].to_s == "events_index" %>
     <% submit_options = {
       class: ["button newsletter-signup-button", ("newsletter-signup-button-arrow" if homepage_signup)].compact.join(" ")
     } %>
@@ -23,6 +39,7 @@
     <% end %>
     <% if subscriber.errors[:email].any? %>
       <% email_field_options[:aria] = { invalid: true, describedby: "#{signup[:frame_id]}-errors" } %>
+      <% email_field_options[:class] = [email_field_options[:class], "newsletter-signup-input-invalid"].join(" ") %>
     <% end %>
 
     <% form_classes = [signup[:form_class]] %>
@@ -36,14 +53,15 @@
       <%= hidden_field_tag :return_to, signup[:return_to] %>
       <%= hidden_field_tag :source, signup[:source] %>
 
-      <% if subscriber.errors.any? %>
-        <div id="<%= "#{signup[:frame_id]}-errors" %>" class="newsletter-signup-feedback flash flash-alert" role="alert">
-          <%= subscriber.errors.full_messages.to_sentence %>
-        </div>
-      <% end %>
-
       <%= form.label :email, signup[:label], class: "sr-only" %>
-      <% if homepage_signup %>
+      <% if homepage_signup && subscriber.errors[:email].any? %>
+        <div id="<%= "#{signup[:frame_id]}-errors" %>" class="newsletter-signup-feedback newsletter-signup-confirmation newsletter-signup-confirmation-home newsletter-signup-confirmation-error" role="alert">
+          <div class="newsletter-signup-confirmation-copy">
+            <p class="eyebrow">Diese Mailadresse ist schon vorhanden.</p>
+            <p><%= subscriber.email %></p>
+          </div>
+        </div>
+      <% elsif homepage_signup %>
         <div class="newsletter-signup-field">
           <%= form.email_field :email, **email_field_options %>
           <%= form.button type: :submit, **submit_options do %>
@@ -56,6 +74,11 @@
         </div>
       <% else %>
         <% submit_label = signup[:submit_label] %>
+        <% if subscriber.errors.any? %>
+          <div id="<%= "#{signup[:frame_id]}-errors" %>" class="newsletter-signup-feedback flash flash-alert" role="alert">
+            <%= subscriber.errors.full_messages.to_sentence %>
+          </div>
+        <% end %>
         <%= form.email_field :email, **email_field_options %>
         <%= form.submit submit_label, **submit_options %>
       <% end %>
