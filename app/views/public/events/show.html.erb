@@ -59,15 +59,15 @@
 
       <% if presenter.show_venue_section? %>
         <section class="event-detail-copy-block event-detail-venue-block">
-          <h2>Über die Venue</h2>
           <div class="event-detail-venue-layout">
-            <div class="event-detail-venue-main">
-              <% if presenter.venue_description.present? %>
-                <div class="event-detail-copy-flow event-detail-venue-description">
-                  <%= simple_format(presenter.venue_description) %>
-                </div>
-              <% end %>
+            <h2>Über die Venue</h2>
+            <% if presenter.venue_description.present? %>
+              <div class="event-detail-copy-flow event-detail-venue-description">
+                <%= simple_format(presenter.venue_description) %>
+              </div>
+            <% end %>
 
+            <div class="event-detail-venue-main">
               <% if presenter.venue_info&.external_url.present? %>
                 <div class="event-detail-venue-actions">
                   <%= link_to "Homepage",
@@ -92,7 +92,7 @@
                                 target: "_blank",
                                 rel: "noopener",
                                 class: "event-detail-venue-map-link" do %>
-                      <span class="event-detail-venue-map-pin" aria-hidden="true">📍</span>
+                      <%= image_tag "venue-pin.svg", alt: "", class: "event-detail-venue-map-pin", "aria-hidden": "true" %>
                       <span>Auf Google Maps öffnen</span>
                     <% end %>
                   <% end %>
