@@ -2126,7 +2126,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "https://easyticket.example/show-tickets"
     assert_not_includes response.body, "https://eventim.example/show-tickets"
-    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
+    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
   end
 
   test "show hides ticket cta when imported primary offer is sold out even if a manual offer exists" do
@@ -2861,7 +2861,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
-    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
+    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
     assert_includes response.body, expected_link
     assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit"
     assert_select ".event-detail-topbar-actions .button", count: 0
