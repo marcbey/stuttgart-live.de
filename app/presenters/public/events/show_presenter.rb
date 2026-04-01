@@ -235,6 +235,16 @@ module Public
         raw_ticket_url
       end
 
+      def ticket_provider_label
+        return unless show_ticket_link?
+
+        case primary_offer&.source.to_s.strip.downcase
+        when "easyticket" then "Easy Ticket"
+        when "eventim" then "Eventim"
+        when "reservix" then "Reservix"
+        end
+      end
+
       def ticket_price_text
         return unless show_ticket_link?
 
