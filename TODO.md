@@ -3,8 +3,8 @@
 ## Infra
 - DB Backup & File Backup Strategie
 - Rollbacks inkl. migration rollbacks ausprobieren
-- OWASP checks initial & evtl. als bin/ci ?
-- Monitoring/Alerting : uptimekuma.org
+- OWASP checks
+- Monitoring/Alerting : uptimekuma.org, sentry
 
 ## Importer
 
@@ -36,9 +36,10 @@
 - New Event: Promoter-ID fix - read-only
 - Event: Event Promotion Banner ganz nach oben
 - New Event: Veröffentlichungs Datum einführen und auch erst dann veröffentlichen
-
 - Noch nicht veröffentlichte Events, sollen automatisch "unpublished" sein, ein Job "published" sie wenn Veröffentlichungs Datum >= now()
 - Bug: Veröffentlichunsdatum wird nicht gespeichert
+- SKS & Highlight Events nur in der Highlight Lane nach vorne schieben, nicht in den anderen Lanes
+- Ticket ausverkauft Checkbox im Event-Editor soll nur Text sein, plus ein Text-Input für SKS Events bei ausverkauften Events + darstellung auf der Event Detail
 
 # TODO:
 - Genre: Obergruppen fix definieren und im LLM-Enrichment mit geben, macht einen LLM-entrichmenr re-run notwendig
@@ -51,8 +52,6 @@
 
 - Listenansicht: einschränken: desktop 6 rows, mobile 10 events
 - Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
-- SKS & Highlight Events nur in der Highlight Lane nach vorne schieben, nicht in den anderen Lanes
-- Ticket ausverkauft Checkbox im Event-Editor soll nur Text sein, plus ein Text-Input für SKS Events bei ausverkauften Events + darstellung auf der Event Detail
 
 # POSTPONE:
 - Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?

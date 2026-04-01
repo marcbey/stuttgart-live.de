@@ -374,6 +374,23 @@ Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese
 
 Ohne Mailchimp-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus.
 
+### Credentials bearbeiten
+
+Zum Hinzufügen oder Ändern von Einträgen in `config/credentials.yml.enc` öffnest du die Rails-Credentials mit dem im Projekt verwendeten Ruby über `mise`:
+
+```bash
+EDITOR="code --wait" mise exec -- bin/rails credentials:edit
+```
+
+Dann ergänzt du den gewünschten Schlüssel im YAML, zum Beispiel:
+
+```yml
+openai:
+  api_key: sk-...
+```
+
+Nach dem Speichern und Schließen des Editors schreibt Rails die verschlüsselte Datei automatisch zurück. Voraussetzung ist eine vorhandene lokale `config/master.key`.
+
 Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`. Diese Werte werden im Admin-Bereich unter `Einstellungen` gepflegt und sind bewusst nicht in Credentials oder Umgebungsvariablen abgelegt. Aktuell liegen dort unter anderem:
 
 - `sks_promoter_ids` für SKS-Filter und Sortierung
