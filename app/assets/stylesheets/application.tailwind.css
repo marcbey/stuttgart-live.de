@@ -3149,6 +3149,7 @@ trix-editor.blog-rich-text:focus {
   display: grid;
   gap: 0.26rem;
   min-width: 0;
+  padding-top: 0.42rem;
 }
 
 .genre-lane-card-copy--editorial {
@@ -3728,6 +3729,7 @@ trix-editor.blog-rich-text:focus {
   gap: 0.12rem;
   min-height: 4.1rem;
   align-content: start;
+  padding-top: 0.42rem;
 }
 
 .home-slider-card-name {
@@ -4671,7 +4673,7 @@ trix-editor.blog-rich-text:focus {
 .event-card-copy {
   position: absolute;
   inset: auto 0 0;
-  padding: 0.68rem calc(20px + 0.68rem) calc(20px + 0.68rem);
+  padding: 1.1rem calc(20px + 0.68rem) calc(20px + 0.68rem);
   color: #f4f4f4;
 }
 
@@ -4718,50 +4720,39 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-card-badge {
-  position: absolute;
-  top: calc(20px + 0.55rem);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 3;
+  position: static;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: fit-content;
-  max-width: calc(100% - 3rem);
-  margin: 0;
-  padding: 0.26rem 1.8rem 0.22rem;
+  max-width: min(100%, 18rem);
+  margin: 0 0 0.55rem;
+  padding: 0.3rem 1.15rem 0.16rem 0.72rem;
   border: 0;
   border-radius: 0;
   background: #00c5cc;
-  clip-path: polygon(1.2rem 0, calc(100% - 1.2rem) 0, 100% 50%, calc(100% - 1.2rem) 100%, 1.2rem 100%, 0 50%);
+  clip-path: polygon(0 0, calc(100% - 0.92rem) 0, 100% 50%, calc(100% - 0.92rem) 100%, 0 100%);
   color: #fff;
   font-family: "Bebas Neue", "Impact", sans-serif;
-  font-size: 1.28rem;
+  font-size: 0.98rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   line-height: 1;
   white-space: nowrap;
-  text-align: center;
-}
-
-.event-card-badge-with-admin-link,
-.event-card-badge-with-top-overlay {
-  top: calc(20px + 2.05rem);
+  text-align: left;
 }
 
 .event-card-badge-home-slider {
-  top: 0.7rem;
-  max-width: calc(100% - 1.4rem);
-  font-size: 1.02rem;
-  padding: 0.22rem 1.6rem 0.2rem;
+  max-width: min(100%, 16rem);
+  font-size: 0.88rem;
+  padding: 0.16rem 1rem 0.14rem 0.66rem;
 }
 
 .event-card-badge-genre-lane {
-  top: 0.7rem;
-  max-width: calc(100% - 1.4rem);
-  font-size: 1rem;
-  padding: 0.22rem 1.45rem 0.19rem;
+  max-width: min(100%, 16rem);
+  font-size: 0.86rem;
+  padding: 0.16rem 0.96rem 0.14rem 0.62rem;
 }
 
 .event-card:hover {

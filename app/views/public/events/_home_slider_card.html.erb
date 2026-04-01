@@ -27,9 +27,6 @@
       <% if event.public_sold_out? %>
         <%= render "sold_out_corner_ribbon" %>
       <% end %>
-      <% if event.badge_text.present? %>
-        <span class="event-card-badge event-card-badge-home-slider"><%= event.badge_text %></span>
-      <% end %>
     <% end %>
 
     <% if authenticated? %>
@@ -50,6 +47,9 @@
   </div>
 
   <div class="home-slider-card-copy">
+    <% if event.badge_text.present? %>
+      <span class="event-card-badge event-card-badge-home-slider"><%= event.badge_text %></span>
+    <% end %>
     <%= link_to event.artist_name, public_event_detail_path(event, browse_state), class: "home-slider-card-name" %>
     <% if event.title.present? %>
       <p class="home-slider-card-title"><%= event.title %></p>

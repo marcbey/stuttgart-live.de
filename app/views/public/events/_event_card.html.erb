@@ -34,10 +34,10 @@
       <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
         <%= render "event_series_corner_badge" %>
       <% end %>
-      <% if event.badge_text.present? %>
-        <span class="event-card-badge"><%= event.badge_text %></span>
-      <% end %>
       <div class="event-card-copy">
+        <% if event.badge_text.present? %>
+          <span class="event-card-badge"><%= event.badge_text %></span>
+        <% end %>
         <h2><%= event.artist_name %></h2>
         <p class="event-card-title"><%= event.title %></p>
         <p class="event-card-meta">
