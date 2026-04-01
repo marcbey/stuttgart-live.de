@@ -1,8 +1,6 @@
 module Public
   module News
     class ShowPresenter
-      FactItem = Data.define(:label, :value)
-
       attr_reader :blog_post
 
       def initialize(blog_post, view_context:)
@@ -52,11 +50,8 @@ module Public
         blog_post.teaser.to_s.strip.presence
       end
 
-      def fact_items
-        @fact_items ||= [
-          FactItem.new(label: "Datum", value: published_on_label),
-          FactItem.new(label: "Autor", value: author_label)
-        ].compact
+      def meta_line
+        [ published_on_label, author_meta_label ].compact.join(" ")
       end
 
       def author_label
@@ -123,6 +118,10 @@ module Public
 
       def summary_text
         teaser.presence || blog_post.body.to_plain_text.squish.presence || headline.to_s
+      end
+
+      def author_meta_label
+        "von #{author_label}"
       end
     end
   end

@@ -43,6 +43,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @live_post.display_author_name
     assert_includes response.body, "alle news"
     assert_select "h2", text: "Artikel"
+    assert_select ".event-detail-meta-line", text: /\d{2}\.\d{2}\.\d{4} von #{@live_post.display_author_name}/
   end
 
   test "show includes edit link for authenticated blog users" do

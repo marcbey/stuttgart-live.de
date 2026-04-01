@@ -2,22 +2,14 @@
   <div class="event-detail-header-panel">
     <div class="event-detail-header-copy">
       <div class="event-detail-header-intro">
+        <% if presenter.meta_line.present? %>
+          <p class="event-detail-meta-line"><%= presenter.meta_line %></p>
+        <% end %>
         <h1><%= presenter.headline %></h1>
         <% if presenter.teaser.present? %>
           <p class="event-detail-title"><%= presenter.teaser %></p>
         <% end %>
       </div>
-
-      <% if presenter.fact_items.any? %>
-        <dl class="event-detail-facts" aria-label="Artikeldetails">
-          <% presenter.fact_items.each do |item| %>
-            <div class="event-detail-fact-card">
-              <dt><%= item.label %></dt>
-              <dd><%= item.value %></dd>
-            </div>
-          <% end %>
-        </dl>
-      <% end %>
     </div>
   </div>
 

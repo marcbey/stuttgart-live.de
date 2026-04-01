@@ -48,8 +48,7 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "event-detail-header news-detail-header event-detail-header-with-image news-detail-header-with-image", presenter.header_classes
     assert_equal "Neue Headline", presenter.headline
     assert_equal "Kurzbeschreibung", presenter.teaser
-    assert_equal [ "Datum", "Autor" ], presenter.fact_items.map(&:label)
-    assert_equal [ "17.03.2026", "Autor Eins" ], presenter.fact_items.map(&:value)
+    assert_equal "17.03.2026 von Autor Eins", presenter.meta_line
     assert_equal "https://cdn.example.test/news-cover.webp", presenter.hero_image_source
     assert_equal "Neue Headline", presenter.hero_alt_text
     assert_equal "Foto: Agentur", presenter.hero_image_credit
