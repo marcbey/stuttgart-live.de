@@ -1801,7 +1801,6 @@ trix-editor.blog-rich-text:focus {
 }
 
 .guardian-form-header-copy {
-  flex: 1 1 32rem;
 }
 
 .guardian-form-header-actions {
@@ -1825,6 +1824,7 @@ trix-editor.blog-rich-text:focus {
 .guardian-form-card {
   border-top: 1px solid rgba(17, 17, 17, 0.14);
   padding-top: 0.75rem;
+  position: relative;
 }
 
 .guardian-form-page-panel + .guardian-form-page-panel {
@@ -1880,6 +1880,27 @@ trix-editor.blog-rich-text:focus {
   color: rgba(17, 17, 17, 0.72);
 }
 
+.guardian-form-second-page .guardian-form-footnote,
+.guardian-form-second-page .guardian-form-footnote p,
+.guardian-form-second-page .guardian-form-footnote ul,
+.guardian-form-second-page .guardian-form-footnote li {
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 0.98rem;
+  line-height: 1.45;
+  color: rgba(17, 17, 17, 0.86);
+}
+
+.guardian-form-second-page .guardian-form-footnote-group {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.guardian-form-second-page .guardian-form-footnote ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  list-style-type: disc;
+}
+
 .guardian-form-subheader {
   display: flex;
   align-items: start;
@@ -1901,7 +1922,6 @@ trix-editor.blog-rich-text:focus {
 }
 
 .guardian-form-subheader-copy {
-  flex: 1 1 34rem;
 }
 
 .guardian-form-subheader-copy p {
@@ -3024,7 +3044,7 @@ trix-editor.blog-rich-text:focus {
   align-items: center;
   justify-content: center;
   width: 12.8rem;
-  padding: 0.5rem 0 0.44rem;
+  padding: 0.6rem 0 0.44rem;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background:
     linear-gradient(135deg, rgba(243, 140, 227, 0.98) 0%, rgba(222, 120, 207, 0.98) 48%, rgba(184, 66, 167, 0.98) 100%);
@@ -4882,12 +4902,12 @@ trix-editor.blog-rich-text:focus {
 }
 
 .highlights-slider-arrow-prev {
-  left: -0.95rem;
+  left: -0.15rem;
   box-shadow: -3px 3px 0 rgba(0, 0, 0, 0.85);
 }
 
 .highlights-slider-arrow-next {
-  right: -0.95rem;
+  right: -0.15rem;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
 }
 
@@ -5570,6 +5590,49 @@ trix-editor.blog-rich-text:focus {
   margin: 0;
 }
 
+.event-detail-notes-heading {
+  margin: 0.5rem 0 0;
+  font-size: 1.02rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.event-detail-notes-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.event-detail-notes-list-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.55rem;
+  align-items: start;
+}
+
+.event-detail-notes-list-marker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  line-height: 1.2;
+}
+
+.event-detail-notes-list-text {
+  min-width: 0;
+}
+
+.event-detail-notes-list-positive .event-detail-notes-list-marker,
+.event-detail-notes-list-negative .event-detail-notes-list-marker {
+  font-size: 1rem;
+}
+
+.event-detail-notes-list-neutral .event-detail-notes-list-marker {
+  color: rgba(17, 17, 17, 0.58);
+}
+
 .event-detail-organizer-logo {
   display: block;
   width: 100%;
@@ -6201,11 +6264,11 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-detail-image-stage-shell .highlights-slider-arrow-prev {
-  left: -0.95rem;
+  left: -0.15rem;
 }
 
 .event-detail-image-stage-shell .highlights-slider-arrow-next {
-  right: -0.95rem;
+  right: -0.15rem;
 }
 
 .event-detail-content {
@@ -6419,26 +6482,6 @@ trix-editor.blog-rich-text:focus {
 
 .event-detail-video {
   padding-inline: 1rem;
-}
-
-.event-detail-side-credit {
-  position: absolute;
-  top: 0;
-  right: -20px;
-  bottom: 0;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 0.35rem;
-  background: transparent;
-  color: rgba(17, 17, 17, 0.55);
-  font-size: 0.76rem;
-  line-height: 1;
-  writing-mode: vertical-rl;
-  text-orientation: mixed;
-  transform: rotate(180deg);
-  transform-origin: center;
 }
 
 .event-detail-related-list .event-listing-date {
@@ -6747,11 +6790,6 @@ trix-editor.blog-rich-text:focus {
 }
 
 @media (min-width: 1180px) {
-  .event-detail-side-credit {
-    left: -20px;
-    right: auto;
-  }
-
   .event-detail-header {
     grid-template-columns: minmax(18rem, 0.86fr) minmax(0, 1.14fr);
     grid-template-areas: "media copy";
@@ -6774,11 +6812,6 @@ trix-editor.blog-rich-text:focus {
 }
 
 @media (min-width: 1500px) {
-  .event-detail-side-credit {
-    left: -20px;
-    right: auto;
-  }
-
   .event-detail-header-copy {
     gap: 0.9rem;
   }
@@ -9344,7 +9377,53 @@ trix-editor.blog-rich-text:focus {
   }
 }
 
+@media (max-width: 920px) {
+  .guardian-form-page-panel {
+    padding-top: 3.25rem;
+  }
+
+  .guardian-form-header,
+  .guardian-form-subheader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
+    padding-top: 0;
+  }
+
+  .guardian-form-header-actions {
+    order: -1;
+    width: 100%;
+    justify-items: start;
+    padding-top: 0;
+    margin-bottom: 0.4rem;
+  }
+
+  .guardian-form-subheader > .guardian-form-logo {
+    order: -1;
+    margin-bottom: 0.55rem;
+  }
+
+  .guardian-form-header-copy,
+  .guardian-form-subheader-copy {
+    width: 100%;
+  }
+
+  .guardian-form-header-actions .guardian-form-print-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    z-index: 2;
+  }
+
+  .guardian-form-logo {
+    width: clamp(8.25rem, 48vw, 10.5rem);
+  }
+}
+
 @media (max-width: 699px) {
+
   .partner-strip {
     position: relative;
     justify-content: center;
@@ -9415,7 +9494,8 @@ trix-editor.blog-rich-text:focus {
 
   .app-nav,
   .site-footer,
-  .guardian-form-print-button {
+  .guardian-form-print-button,
+  .newsletter-signup-section {
     display: none !important;
   }
 
@@ -9431,9 +9511,35 @@ trix-editor.blog-rich-text:focus {
     padding-top: 0;
   }
 
+  .guardian-form-page-panel {
+    position: relative;
+  }
+
   .guardian-form-header,
   .guardian-form-subheader {
     padding-top: 22mm;
+    position: relative;
+    display: block;
+  }
+
+  .guardian-form-header-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: block;
+    padding-top: 0;
+    margin: 0;
+  }
+
+  .guardian-form-subheader > .guardian-form-logo {
+    position: absolute;
+    top: 22mm;
+    right: 0;
+    margin: 0;
+  }
+
+  .guardian-form-logo {
+    width: 10.5rem;
   }
 
   .guardian-form-shell {

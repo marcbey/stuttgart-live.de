@@ -334,9 +334,88 @@ module ApplicationHelper
   end
 
   def formatted_organizer_notes_with_link(notes, event: nil)
-    escaped = ERB::Util.html_escape(notes.to_s)
-    phrase = "(Das Begleitformular findest Du HIER)"
-    begleitformular_link = link_to(
+    lines = notes.to_s.lines.map(&:rstrip)
+    blocks = []
+    paragraph_lines = []
+    current_list = nil
+
+    flush_paragraph = lambda do
+      next if paragraph_lines.empty?
+
+      blocks << content_tag(:p, safe_join(paragraph_lines.map { |line| organizer_notes_inline_content(line, event:) }, tag.br))
+      paragraph_lines = []
+    end
+
+    flush_list = lambda do
+      next unless current_list
+
+      items = current_list.fetch(:items).map do |item|
+        content_tag(:li, class: "event-detail-notes-list-item #{current_list[:item_class]}".strip) do
+          marker = content_tag(:span, item.fetch(:marker), class: "event-detail-notes-list-marker", aria: { hidden: true })
+          text = content_tag(:span, organizer_notes_inline_content(item.fetch(:text), event:), class: "event-detail-notes-list-text")
+          safe_join([ marker, text ])
+        end
+      end
+
+      blocks << content_tag(:ul, safe_join(items), class: "event-detail-notes-list #{current_list[:list_class]}".strip)
+      current_list = nil
+    end
+
+    lines.each_with_index do |raw_line, index|
+      line = raw_line.strip
+
+      if line.blank?
+        flush_paragraph.call
+        flush_list.call
+        next
+      end
+
+      list_item = organizer_notes_list_item(line)
+
+      if list_item
+        flush_paragraph.call
+
+        if current_list && current_list[:list_class] != list_item[:list_class]
+          flush_list.call
+        end
+
+        current_list ||= {
+          list_class: list_item.fetch(:list_class),
+          item_class: list_item.fetch(:item_class),
+          items: []
+        }
+        current_list[:items] << list_item
+        next
+      end
+
+      flush_list.call
+
+      if organizer_notes_heading?(line, lines[(index + 1)..])
+        flush_paragraph.call
+        blocks << content_tag(:h3, line.delete_suffix(":"), class: "event-detail-notes-heading")
+      else
+        paragraph_lines << line
+      end
+    end
+
+    flush_paragraph.call
+    flush_list.call
+
+    safe_join(blocks)
+  end
+
+  private
+
+  def organizer_notes_inline_content(text, event:)
+    escaped = ERB::Util.html_escape(text.to_s)
+    escaped
+      .gsub("(Das Begleitformular findest Du HIER)", organizer_notes_begleitformular_link(event:))
+      .gsub("→ Begleitformular PDF", organizer_notes_begleitformular_link(event:))
+      .html_safe
+  end
+
+  def organizer_notes_begleitformular_link(event:)
+    link_to(
       "<span class=\"inline-arrow\">→</span> Begleitformular <span class=\"inline-file-badge\">PDF</span>".html_safe,
       begleitformular_path(
         event: [ event&.artist_name, event&.title ].compact.join(" - ").presence,
@@ -344,7 +423,25 @@ module ApplicationHelper
         date: event&.start_at&.to_date&.iso8601
       )
     )
+  end
 
-    simple_format(escaped.gsub(phrase, begleitformular_link).html_safe)
+  def organizer_notes_heading?(line, following_lines)
+    return true if line.end_with?(":") && !line.include?(",")
+    return false if line.match?(/[.,:;!?]\z/)
+
+    following_lines.to_a.lazy.map(&:strip).reject(&:blank?).first.then do |next_line|
+      next_line.present? && organizer_notes_list_item(next_line).present?
+    end
+  end
+
+  def organizer_notes_list_item(line)
+    case line
+    when /\A✅\s+(.+)\z/
+      { marker: "✅", text: Regexp.last_match(1), list_class: "event-detail-notes-list-positive", item_class: "event-detail-notes-list-item-positive" }
+    when /\A❌\s+(.+)\z/
+      { marker: "❌", text: Regexp.last_match(1), list_class: "event-detail-notes-list-negative", item_class: "event-detail-notes-list-item-negative" }
+    when /\A-\s+(.+)\z/
+      { marker: "•", text: Regexp.last_match(1), list_class: "event-detail-notes-list-neutral", item_class: "event-detail-notes-list-item-neutral" }
+    end
   end
 end

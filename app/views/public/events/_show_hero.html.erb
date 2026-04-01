@@ -120,6 +120,7 @@
               <% end %>
             </div>
             <p class="event-detail-image-caption" data-hero-rotator-target="caption" hidden></p>
+            <p class="event-detail-image-credit" data-hero-rotator-target="credit" hidden></p>
           </div>
 
           <div class="event-lightbox"
@@ -166,10 +167,10 @@
             <% if presenter.show_ticket_panel? && presenter.ticket_badge_text.present? %>
               <p class="event-detail-image-badge"><%= presenter.ticket_badge_text %></p>
             <% end %>
-            <% if presenter.hero_image_credit.present? %>
-              <p class="event-detail-image-credit event-detail-side-credit"><%= presenter.hero_image_credit %></p>
-            <% end %>
           </div>
+          <% if presenter.hero_image_credit.present? %>
+            <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
+          <% end %>
         </div>
       <% end %>
     </div>
