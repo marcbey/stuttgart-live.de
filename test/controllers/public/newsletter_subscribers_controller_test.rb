@@ -49,7 +49,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     assert_response :success
     assert_includes response.body, 'id="events-newsletter-signup"'
     assert_includes response.body, "Danke!"
-    assert_includes response.body, "Du bist jetzt für den Newsletter eingetragen."
+    assert_includes response.body, "Du bist jetzt eingetragen!"
     refute_includes response.body, "<form"
   end
 
@@ -73,8 +73,6 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
   end
 
   test "shows inline validation errors in the turbo frame" do
-    expected_message = expected_invalid_email_message("ungültig")
-
     assert_no_difference("NewsletterSubscriber.count") do
       post newsletter_subscribers_url,
            params: {
@@ -88,7 +86,8 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
 
     assert_response :unprocessable_entity
     assert_includes response.body, 'id="events-newsletter-signup"'
-    assert_includes response.body, expected_message
+    assert_includes response.body, "Diese Mailadresse ist schon vorhanden."
+    assert_includes response.body, "ungültig"
     assert_includes response.body, "<form"
   end
 end
