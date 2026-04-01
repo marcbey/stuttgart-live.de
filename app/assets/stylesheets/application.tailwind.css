@@ -1930,9 +1930,11 @@ trix-editor.blog-rich-text:focus {
 }
 
 .site-footer-nav {
+  position: relative;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.65rem;
+  overflow: visible;
 }
 
 .site-footer-nav a,
@@ -1980,13 +1982,17 @@ trix-editor.blog-rich-text:focus {
 
 @media (min-width: 768px) {
   .site-footer-shell {
+    position: relative;
     padding: 1rem 0.75rem;
   }
 
   .site-footer-nav {
+    position: static;
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
+    min-height: 3.1rem;
     gap: 0.6rem 1.3rem;
   }
 
@@ -2011,13 +2017,18 @@ trix-editor.blog-rich-text:focus {
     outline-offset: 3px;
     border-color: transparent;
   }
+
+  .privacy-settings-button {
+    position: absolute;
+    top: 50%;
+    left: 1.2rem;
+    z-index: 2;
+    transform: translateY(-50%);
+  }
 }
 
 .privacy-settings-button,
 .scroll-top-button {
-  position: fixed;
-  bottom: 1rem;
-  z-index: 35;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2036,7 +2047,11 @@ trix-editor.blog-rich-text:focus {
 }
 
 .privacy-settings-button {
-  left: 1rem;
+  position: absolute;
+  top: 1.1rem;
+  left: 0;
+  z-index: 2;
+  transform: translateX(-28%);
   padding: 0;
   background: rgba(89, 232, 222, 0.5);
   border-color: rgba(89, 232, 222, 0.8);
@@ -2054,7 +2069,18 @@ trix-editor.blog-rich-text:focus {
 }
 
 .scroll-top-button {
+  position: fixed;
   right: 1rem;
+  bottom: 1rem;
+  z-index: 35;
+  width: 3.1rem;
+  height: 3.1rem;
+  border: 2px solid #111;
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+  font-size: 1.65rem;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  backdrop-filter: none;
 }
 
 .privacy-settings-button:hover,
@@ -2543,7 +2569,7 @@ trix-editor.blog-rich-text:focus {
   --section-banner-button-bg: linear-gradient(135deg, #0b5b5f 0%, #11767a 100%);
   --section-banner-button-color: #fff;
   margin-bottom: var(--homepage-section-gap, 1.35rem);
-  padding: 1rem;
+  padding: 0;
   border: none;
   background: transparent;
   box-shadow: none;
@@ -2590,7 +2616,8 @@ trix-editor.blog-rich-text:focus {
 
 .home-featured-track .event-card {
   scroll-snap-align: start;
-  border-radius: 10px;
+  --event-card-radius: 1rem;
+  border-radius: var(--event-card-radius);
   border: 1px solid rgba(93, 42, 16, 0.1);
   background: rgba(255, 252, 248, 0.74);
 }
@@ -2743,8 +2770,8 @@ trix-editor.blog-rich-text:focus {
   align-items: center;
   gap: 0.9rem 1rem;
   margin-bottom: 1.1rem;
-  padding: 0.9rem 1rem;
-  border-radius: 0;
+  padding: 0.9rem 2rem;
+  border-radius: 50px;
   background: var(--section-banner-bg);
   box-shadow: none;
 }
@@ -3008,9 +3035,9 @@ trix-editor.blog-rich-text:focus {
   padding: 0.5rem 0 0.44rem;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background:
-    linear-gradient(135deg, rgba(31, 18, 18, 0.96) 0%, rgba(126, 24, 19, 0.98) 44%, rgba(224, 111, 51, 0.96) 100%);
+    linear-gradient(135deg, rgba(255, 74, 180, 0.98) 0%, rgba(244, 62, 166, 0.98) 48%, rgba(214, 33, 129, 0.98) 100%);
   box-shadow: 0 0.85rem 1.9rem rgba(17, 17, 17, 0.3);
-  color: #fff9f2;
+  color: #fff;
   font-family: "Bebas Neue", "Oswald", sans-serif;
   font-size: 0.98rem;
   line-height: 1;
@@ -3226,6 +3253,8 @@ trix-editor.blog-rich-text:focus {
 .promotion-banner {
   margin: 1.4rem 0 1.6rem;
   position: relative;
+  border-radius: 1.4rem;
+  overflow: hidden;
 }
 
 .promotion-banner-news {
@@ -3248,6 +3277,7 @@ trix-editor.blog-rich-text:focus {
   align-items: stretch;
   min-height: 20rem;
   border: 1px solid rgba(33, 96, 98, 0.18);
+  border-radius: inherit;
   background:
     radial-gradient(circle at top right, rgba(145, 233, 212, 0.28) 0%, rgba(145, 233, 212, 0) 24%),
     linear-gradient(135deg, rgba(224, 247, 242, 0.96) 0%, rgba(199, 236, 230, 0.92) 42%, rgba(247, 252, 251, 0.98) 100%);
@@ -3280,6 +3310,7 @@ trix-editor.blog-rich-text:focus {
   min-height: 100%;
   background: #111;
   overflow: hidden;
+  border-radius: inherit;
   padding: 1rem 1rem 1rem 2.6rem;
   box-sizing: border-box;
 }
@@ -3289,6 +3320,7 @@ trix-editor.blog-rich-text:focus {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  border-radius: inherit;
 }
 
 .promotion-banner-credit {
@@ -3815,6 +3847,9 @@ trix-editor.blog-rich-text:focus {
   width: auto;
   height: auto;
   filter: grayscale(1) brightness(0);
+  transform: scale(1);
+  transform-origin: center;
+  transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .partner-strip-image-russlive,
@@ -4468,7 +4503,8 @@ trix-editor.blog-rich-text:focus {
   position: relative;
   align-self: start;
   overflow: hidden;
-  border-radius: 10px;
+  --event-card-radius: 10px;
+  border-radius: var(--event-card-radius);
   background: transparent;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   transform-origin: center;
@@ -4507,6 +4543,7 @@ trix-editor.blog-rich-text:focus {
   position: absolute;
   inset: 20px;
   border: 1px solid rgba(255, 255, 255, 0.96);
+  border-radius: 0.75rem;
   pointer-events: none;
   z-index: 2;
 }
@@ -4810,6 +4847,7 @@ trix-editor.blog-rich-text:focus {
 
 .highlights-slider-viewport {
   position: relative;
+  padding: 1.2rem;
 }
 
 .highlights-slider-arrow {
@@ -5075,7 +5113,7 @@ trix-editor.blog-rich-text:focus {
 .event-detail {
   max-width: 1220px;
   margin: 0 auto;
-  padding: 1.2rem 1rem 3.5rem;
+  padding: 1.2rem 2rem 3.5rem;
 }
 
 .event-not-found {
@@ -5661,6 +5699,7 @@ trix-editor.blog-rich-text:focus {
 .event-detail {
   max-width: 1280px;
   position: relative;
+  padding: 1.2rem 2rem 3.5rem;
   padding-bottom: 4rem;
 }
 
@@ -6379,7 +6418,7 @@ trix-editor.blog-rich-text:focus {
   margin-top: 3.125rem;
   border-top: 0.1875rem solid #111;
   background: #eee;
-  padding: 3.125rem;
+  padding: 1rem;
 }
 
 .event-detail-notes-panel .event-detail-notes {
@@ -8982,7 +9021,7 @@ trix-editor.blog-rich-text:focus {
   .genre-lane-section .genre-lane-header {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    padding: 0.85rem 0.9rem;
+    padding: 0.9rem 2rem;
   }
 
   .genre-lane-header {
@@ -9173,12 +9212,12 @@ trix-editor.blog-rich-text:focus {
   .partner-strip {
     position: relative;
     justify-content: center;
-    min-height: 2.6rem;
+    min-height: 4rem;
   }
 
   .partner-strip.is-animated {
     display: block;
-    overflow: hidden;
+    overflow: visible;
   }
 
   .partner-strip.is-animated .partner-strip-logo {
@@ -9197,6 +9236,10 @@ trix-editor.blog-rich-text:focus {
     opacity: 1;
     transform: translate3d(0, 0, 0) scale(1);
     pointer-events: auto;
+  }
+
+  .partner-strip.is-animated .partner-strip-logo.is-active .partner-strip-image {
+    transform: scale(1.5);
   }
 
   .partner-strip.is-animated .partner-strip-logo.is-exit {
@@ -9510,6 +9553,7 @@ body.page-public-events-index .app-brand {
 body.page-public-events-index .brand-wordmark-poster {
   display: inline-flex;
   align-items: baseline;
+  margin-left: 1.2rem;
   gap: 0;
   color: #fff;
 }
@@ -9694,12 +9738,14 @@ body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-
 
 body.page-public-events-index .app-nav-meta {
   position: absolute;
-  top: calc(100% - 0.2rem);
-  right: 0.8rem;
+  top: calc(100% - 2px);
+  right: 0;
   z-index: 35;
-  width: min(16rem, calc(100vw - 1.6rem));
+  width: max-content;
+  max-width: calc(100vw - 1.6rem);
   padding: 0.95rem 1rem 1rem;
-  border-radius: 1rem;
+  border-top: 0;
+  border-radius: 0 0 1rem 1rem;
   background:
     radial-gradient(circle at 62% 32%, rgba(255, 255, 255, 0.28), transparent 16%),
     linear-gradient(180deg, #59e8de 0%, #2bd7cf 100%);
@@ -9724,6 +9770,8 @@ body.page-public-events-index .app-nav-links {
   display: grid;
   gap: 1rem;
   align-items: start;
+  justify-items: start;
+  width: max-content;
 }
 
 body.page-public-events-index .app-nav-links-group {
@@ -9732,7 +9780,7 @@ body.page-public-events-index .app-nav-links-group {
   justify-items: start;
   gap: 0.15rem;
   height: auto;
-  width: 100%;
+  width: max-content;
 }
 
 body.page-public-events-index .app-nav-poster-links-wrap {
@@ -9805,6 +9853,7 @@ body.page-public-events-index .app-nav-hotline {
 }
 
 body.page-public-events-index .app-nav-hotline-copy {
+  margin-left: 1.2rem;
   color: inherit;
   text-decoration: none;
   text-wrap: balance;
@@ -9980,7 +10029,7 @@ body.page-public-events-index .app-nav-toggle[aria-expanded="true"] span:nth-chi
 
   .home-featured-section .home-slider-header,
   .genre-lane-section .genre-lane-header {
-    padding: 0.82rem 0.9rem;
+    padding: 0.9rem 2rem;
   }
 
   .home-featured-track {
@@ -10147,6 +10196,7 @@ body.page-public-events-index .app-nav-toggle[aria-expanded="true"] span:nth-chi
   }
 
   body.page-public-events-index .app-nav-hotline-copy {
+    margin-left: 1.2rem;
     min-width: 0;
     white-space: nowrap;
     align-self: baseline;
@@ -10262,11 +10312,13 @@ body.page-public-events-index .app-nav-toggle[aria-expanded="true"] span:nth-chi
 body.page-public-events-index .public-shell > .promotion-banner-poster:first-child,
 body.page-public-events-index .public-shell > .promotion-banner-poster:nth-child(2) {
   margin-top: 0;
+  padding: 0 1.2rem;
 }
 
 body.page-public-events-index .promotion-banner-poster {
   border: 0;
-  background: #ffa5dc;
+  border-radius: 1.4rem;
+  background: none;
   box-shadow: none;
 }
 
@@ -10278,6 +10330,7 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
   align-items: stretch;
   gap: 0;
   grid-template-columns: minmax(0, 1fr) minmax(26rem, 1.18fr);
+  border-radius: inherit;
   background: transparent;
 }
 
@@ -10287,6 +10340,7 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
   margin: 1rem;
   background: transparent;
   overflow: hidden;
+  border-radius: calc(1.4rem - 1rem);
   padding: 0;
   aspect-ratio: 16 / 9;
   min-height: 0;
@@ -10296,6 +10350,7 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
 body.page-public-events-index .promotion-banner-poster .promotion-banner-image {
   display: block;
   border: 0;
+  border-radius: inherit;
   background: transparent;
 }
 
