@@ -29,6 +29,17 @@ body.page-public {
   --ink-banner: linear-gradient(135deg, #062f31 0%, #0a484b 58%, #116266 100%);
 }
 
+body.page-auth-backoffice {
+  --ink: #062f31;
+  --ink-soft: #0b4346;
+  --ink-deep: #031d1f;
+  --ink-rgb: 6, 47, 49;
+  --ink-banner: linear-gradient(135deg, #062f31 0%, #0a484b 58%, #116266 100%);
+  background:
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.68), transparent 18%),
+    linear-gradient(180deg, #f7f2ec 0%, #f1ebe5 100%);
+}
+
 .sr-only {
   position: absolute;
   width: 1px;
@@ -114,6 +125,19 @@ a {
 
 .app-nav-inner-backend {
   max-width: 1400px;
+}
+
+body.page-auth-backoffice .backend-shell {
+  max-width: 1080px;
+  padding: 1.35rem 1rem 3rem;
+}
+
+body.page-auth-backoffice .backend-topbar {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+body.page-auth-backoffice .editor-panel.backend-panel {
+  box-shadow: 0 10px 28px rgba(17, 17, 17, 0.08);
 }
 
 body:has(.app-nav-inner-backend) .app-nav {

@@ -33,11 +33,12 @@
     <% end %>
   </head>
 
-  <% public_frontend = controller_path.start_with?("public/") ||
-                       controller_path == "sessions" ||
-                       (controller_path == "passwords" && action_name == "new") %>
+  <% auth_chrome = controller_path == "sessions" ||
+                   (controller_path == "passwords" && action_name == "new") %>
+  <% public_frontend = controller_path.start_with?("public/") %>
   <% public_homepage_chrome = controller_path.start_with?("public/") %>
   <% body_classes = [] %>
+  <% body_classes << "page-auth-backoffice" if auth_chrome %>
   <% body_classes << "page-public" if public_frontend %>
   <% body_classes << "page-public-newsletter-poster" if public_frontend %>
   <% body_classes << "page-public-events-index" if public_homepage_chrome %>
@@ -56,6 +57,8 @@
     <% backend_context = controller_path.start_with?("backend/") %>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if backend_context %>
+    <% nav_inner_classes << "app-nav-inner-backend" if auth_chrome %>
+    <% nav_inner_classes << "app-nav-inner-auth-backoffice" if auth_chrome %>
     <% nav_inner_classes << "app-nav-inner-homepage-poster" if public_homepage_chrome %>
     <% nav_browse_state = @browse_state || @header_browse_state %>
     <% public_events_search_visible = nav_browse_state.present? %>
@@ -85,7 +88,8 @@
                       class: app_nav_link_class,
                       form: { class: "app-nav-link-form" } %>
       <% else %>
-        <%= link_to "Login", new_session_path, class: app_nav_link_class(active: controller_path == "sessions"), aria: { current: ("page" if controller_path == "sessions") } %>
+        <% auth_nav_active = controller_path == "sessions" || auth_chrome %>
+        <%= link_to "Login", new_session_path, class: app_nav_link_class(active: auth_nav_active), aria: { current: ("page" if auth_nav_active) } %>
       <% end %>
     <% end %>
     <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
@@ -96,7 +100,7 @@
          <% end %>>
       <div class="<%= nav_inner_classes.join(" ") %>">
         <%= link_to root_path, class: "app-brand" do %>
-          <% if public_homepage_chrome || backend_context %>
+          <% if public_homepage_chrome || backend_context || auth_chrome %>
             <span class="brand-wordmark brand-wordmark-poster" aria-label="Stuttgart Live">
               <span class="brand-wordmark-city"><span class="brand-wordmark-city-initial">S</span>TUTTGART</span><span class="brand-wordmark-live">LIVE</span>
             </span>
@@ -152,7 +156,7 @@
 
         <div id="app-nav-menu" class="app-nav-meta" data-mobile-nav-target="panel">
           <div class="app-nav-links">
-            <% if backend_context %>
+            <% if backend_context || auth_chrome %>
               <div class="app-nav-links-group app-nav-links-group-separated">
                 <%= backend_nav_links %>
               </div>

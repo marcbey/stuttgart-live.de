@@ -1,50 +1,71 @@
 <% content_for :title, "Login" %>
 
-<%= render "public/pages/info_page",
-           kicker: "Redaktion",
-           title: "Login",
-           intro: "Zugang für Redaktion, Pflege und interne Arbeitsbereiche." do %>
-  <%= render "public/pages/info_page_card", title: "Anmelden", wide: true do %>
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Login</h1>
+      <p>Zugang für Redaktion, Pflege und interne Arbeitsbereiche.</p>
+    </div>
+  </header>
+
+  <div class="editor-panel backend-panel" style="max-width: 680px;">
     <%= form_with url: session_path, class: "editor-form" do |form| %>
-      <div>
-        <%= form.label :email_address, "E-Mail", class: "form-label" %>
-        <%= form.email_field :email_address,
-                             required: true,
-                             autofocus: true,
-                             autocomplete: "username",
-                             placeholder: "name@example.com",
-                             value: params[:email_address],
-                             class: "form-input" %>
-      </div>
+      <section class="backend-section backend-section-compact">
+        <div class="backend-section-header">
+          <h3>Anmelden</h3>
+        </div>
+        <div class="backend-section-body">
+          <div>
+            <%= form.label :email_address, "E-Mail", class: "form-label" %>
+            <%= form.email_field :email_address,
+                                 required: true,
+                                 autofocus: true,
+                                 autocomplete: "username",
+                                 placeholder: "name@example.com",
+                                 value: params[:email_address],
+                                 class: "form-input" %>
+          </div>
 
-      <div>
-        <%= form.label :password, "Passwort", class: "form-label" %>
-        <%= form.password_field :password,
-                                required: true,
-                                autocomplete: "current-password",
-                                placeholder: "Passwort",
-                                maxlength: 72,
-                                class: "form-input" %>
-      </div>
+          <div>
+            <%= form.label :password, "Passwort", class: "form-label" %>
+            <%= form.password_field :password,
+                                    required: true,
+                                    autocomplete: "current-password",
+                                    placeholder: "Passwort",
+                                    maxlength: 72,
+                                    class: "form-input" %>
+          </div>
+        </div>
+      </section>
 
-      <div class="auth-actions">
+      <div class="editor-footer">
         <%= form.submit "Einloggen", class: "button" %>
         <%= link_to "Passwort vergessen", new_password_path, class: "button button-secondary" %>
       </div>
     <% end %>
-  <% end %>
 
-  <%= render "public/pages/info_page_card", title: "Zugang verlegt?" do %>
-    <p>Wenn dein Passwort gerade fehlt, schicken wir dir einen Magic-Link für den nächsten Login.</p>
-    <div class="info-page-links">
-      <%= link_to "Reset-Link anfordern", new_password_path %>
-    </div>
-  <% end %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Zugang verlegt?</h3>
+      </div>
+      <div class="backend-section-body">
+        <p>Wenn dein Passwort gerade fehlt, schicken wir dir einen Magic-Link für den nächsten Login.</p>
+        <div class="info-page-links">
+          <%= link_to "Reset-Link anfordern", new_password_path %>
+        </div>
+      </div>
+    </section>
 
-  <%= render "public/pages/info_page_card", title: "Technische Probleme?" do %>
-    <p>Wenn dein Zugang nicht funktioniert oder dir noch ein Konto fehlt, helfen wir dir direkt weiter.</p>
-    <div class="info-page-links">
-      <%= mail_to "info@stuttgart-live.de", "info@stuttgart-live.de" %>
-    </div>
-  <% end %>
-<% end %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Technische Probleme?</h3>
+      </div>
+      <div class="backend-section-body">
+        <p>Wenn dein Zugang nicht funktioniert oder dir noch ein Konto fehlt, helfen wir dir direkt weiter.</p>
+        <div class="info-page-links">
+          <%= mail_to "info@stuttgart-live.de", "info@stuttgart-live.de" %>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>

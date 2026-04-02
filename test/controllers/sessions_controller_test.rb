@@ -9,7 +9,11 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   test "new" do
     get new_session_path
     assert_response :success
-    assert_select "section.info-page-shell h1", text: "Login"
+    assert_select "body.page-auth-backoffice"
+    assert_select ".app-nav-inner.app-nav-inner-backend.app-nav-inner-auth-backoffice", count: 1
+    assert_select ".app-nav-links .app-nav-link-active", text: "Login"
+    assert_select "section.backend-shell h1", text: "Login"
+    assert_select "section.backend-section", minimum: 2
     assert_select "a[href='#{new_password_path}']", text: "Passwort vergessen"
   end
 

@@ -1,38 +1,59 @@
 <% content_for :title, "Passwort vergessen" %>
 
-<%= render "public/pages/info_page",
-           kicker: "Zugang",
-           title: "Passwort vergessen",
-           intro: "Wir schicken dir einen Magic-Link an deine hinterlegte E-Mail-Adresse." do %>
-  <%= render "public/pages/info_page_card", title: "Magic-Link anfordern", wide: true do %>
-    <%= form_with url: passwords_path, class: "editor-form" do |form| %>
-      <div>
-        <%= form.label :email_address, "E-Mail", class: "form-label" %>
-        <%= form.email_field :email_address,
-                             required: true,
-                             autofocus: true,
-                             autocomplete: "username",
-                             placeholder: "name@example.com",
-                             value: params[:email_address],
-                             class: "form-input" %>
-        <p class="form-hint">Wir senden dir einen sicheren Link, mit dem du dich anmelden und danach ein neues Passwort setzen kannst.</p>
-      </div>
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Passwort vergessen</h1>
+      <p>Wir schicken dir einen Magic-Link an deine hinterlegte E-Mail-Adresse.</p>
+    </div>
+  </header>
 
-      <div class="auth-actions">
+  <div class="editor-panel backend-panel" style="max-width: 680px;">
+    <%= form_with url: passwords_path, class: "editor-form" do |form| %>
+      <section class="backend-section backend-section-compact">
+        <div class="backend-section-header">
+          <h3>Magic-Link anfordern</h3>
+        </div>
+        <div class="backend-section-body">
+          <div>
+            <%= form.label :email_address, "E-Mail", class: "form-label" %>
+            <%= form.email_field :email_address,
+                                 required: true,
+                                 autofocus: true,
+                                 autocomplete: "username",
+                                 placeholder: "name@example.com",
+                                 value: params[:email_address],
+                                 class: "form-input" %>
+            <p class="form-hint">Wir senden dir einen sicheren Link, mit dem du dich anmelden und danach ein neues Passwort setzen kannst.</p>
+          </div>
+        </div>
+      </section>
+
+      <div class="editor-footer">
         <%= form.submit "Reset-Link senden", class: "button" %>
         <%= link_to "Zurück zum Login", new_session_path, class: "button button-secondary" %>
       </div>
     <% end %>
-  <% end %>
 
-  <%= render "public/pages/info_page_card", title: "Hinweis" do %>
-    <p>Wenn die Adresse bei uns hinterlegt ist, bekommst du in wenigen Minuten eine E-Mail mit deinem Login-Link.</p>
-  <% end %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Hinweis</h3>
+      </div>
+      <div class="backend-section-body">
+        <p>Wenn die Adresse bei uns hinterlegt ist, bekommst du in wenigen Minuten eine E-Mail mit deinem Login-Link.</p>
+      </div>
+    </section>
 
-  <%= render "public/pages/info_page_card", title: "Kein Zugriff auf dein Postfach?" do %>
-    <p>Wenn sich deine Mailadresse geändert hat oder du keinen Zugriff mehr hast, melde dich direkt bei uns.</p>
-    <div class="info-page-links">
-      <%= mail_to "info@stuttgart-live.de", "info@stuttgart-live.de" %>
-    </div>
-  <% end %>
-<% end %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Kein Zugriff auf dein Postfach?</h3>
+      </div>
+      <div class="backend-section-body">
+        <p>Wenn sich deine Mailadresse geändert hat oder du keinen Zugriff mehr hast, melde dich direkt bei uns.</p>
+        <div class="info-page-links">
+          <%= mail_to "info@stuttgart-live.de", "info@stuttgart-live.de" %>
+        </div>
+      </div>
+    </section>
+  </div>
+</section>
