@@ -24,6 +24,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+    assert_select ".lane-header.lane-header--highlights", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_select ".app-nav-hotline", text: /Dein Ticketportal für Stuttgart und Region -\s*0711 550 660 77/
     assert_select ".app-nav-hotline-contact .app-nav-link", text: "Kontakt"
@@ -144,6 +145,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
     assert pop_section.present?, "expected configured pop lane to be rendered"
     assert rock_section.present?, "expected configured rock lane to be rendered"
+    assert document.at_css(".lane-header.lane-header--genre").present?, "expected standard genre header variant"
     expected_first_genre_index = promotion_index.present? ? promotion_index + 1 : highlights_index + 1
     assert_equal expected_first_genre_index, first_genre_index
     assert_operator all_events_index, :>, first_genre_index
@@ -448,7 +450,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, hidden_event.artist_name
   end
 
-  test "index shows future unpublished events in search results for authenticated users" do
+  test "search shows future unpublished events for authenticated users" do
     hidden_event = Event.create!(
       slug: "auth-visible-draft-event",
       source_fingerprint: "test::public::auth-visible-draft",
@@ -477,7 +479,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     sign_in_as(@user)
 
-    get events_url(filter: "all", q: "Auth Visible Draft Search")
+    get search_url(filter: "all", q: "Auth Visible Draft Search")
 
     assert_response :success
     assert_includes response.body, hidden_event.artist_name
@@ -486,7 +488,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "/backend/events?event_id=#{hidden_event.id}&amp;status=#{hidden_event.status}"
   end
 
-  test "index redirects authenticated users to a scheduled unpublished search result" do
+  test "search redirects authenticated users to a scheduled unpublished search result" do
     scheduled_event = Event.create!(
       slug: "auth-hidden-scheduled-search-event",
       source_fingerprint: "test::public::auth-hidden-scheduled-search",
@@ -503,7 +505,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     sign_in_as(@user)
 
-    get events_url(filter: "all", q: "Scheduled Search Artist")
+    get search_url(filter: "all", q: "Scheduled Search Artist")
 
     assert_redirected_to event_url(scheduled_event.slug)
     assert_equal "ready_for_publish", scheduled_event.reload.status
@@ -1339,6 +1341,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+    assert_select ".lane-header.lane-header--editorial", count: 1
     assert_select "section.genre-lane-section", text: /alles aus stuttgart/ do
       assert_select ".genre-lane-card-name", text: reservix_event.artist_name
       assert_select ".genre-lane-card-name", text: late_reservix_event.artist_name
@@ -1600,6 +1603,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
+    assert tagestipp_section.at_css(".lane-header.lane-header--tagestipp").present?, "expected Tagestipp header variant"
 
     names = tagestipp_section.css(".genre-lane-card-name").map(&:text)
 
@@ -1780,18 +1784,25 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".app-nav-search .public-search-filter", count: 1
+    assert_select ".app-nav-search .public-search-filter[action='#{search_path}']"
     assert_select ".public-filter-row", count: 0
     assert_select ".public-view-toggle", count: 0
     assert_select "input[name='view']", count: 0
   end
 
-  test "index redirects to detail page when search has a single result" do
+  test "index redirects old search links to the dedicated search page" do
     get events_url(filter: "all", q: @published_event.artist_name)
+
+    assert_redirected_to search_url(q: @published_event.artist_name)
+  end
+
+  test "search redirects to detail page when search has a single result" do
+    get search_url(filter: "all", q: @published_event.artist_name)
 
     assert_redirected_to event_url(@published_event.slug)
   end
 
-  test "index redirects to detail page for normalized umlaut queries" do
+  test "search redirects to detail page for normalized umlaut queries" do
     event = Event.create!(
       slug: "search-normalized-umlaut",
       source_fingerprint: "test::search::normalized::umlaut",
@@ -1805,12 +1816,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
-    get events_url(filter: "all", q: "Die Aerzte")
+    get search_url(filter: "all", q: "Die Aerzte")
 
     assert_redirected_to event_url(event.slug)
   end
 
-  test "index search ignores the default sks filter for a single result" do
+  test "search ignores the default sks filter for a single result" do
     non_sks_event = Event.create!(
       slug: "search-single-non-sks",
       source_fingerprint: "test::search::single::non-sks",
@@ -1826,12 +1837,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
-    get events_url(q: non_sks_event.artist_name)
+    get search_url(q: non_sks_event.artist_name)
 
     assert_redirected_to event_url(non_sks_event.slug)
   end
 
-  test "index renders flat search results and keeps homepage sliders for multiple matches" do
+  test "search renders flat search results without homepage sliders for multiple matches" do
     first_event = Event.create!(
       slug: "search-multi-first",
       source_fingerprint: "test::search::multi::first",
@@ -1886,22 +1897,25 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
-    get events_url(filter: "all", q: "Search Cluster")
+    get search_url(filter: "all", q: "Search Cluster")
 
     assert_response :success
+    assert_select ".lane-header.lane-header--search", count: 1
     assert_select "#event-grid .event-card-grid-1-1", count: 2
     assert_includes response.body, first_event.title
     assert_includes response.body, second_event.title
-    assert_includes response.body, "alles aus stuttgart"
-    assert_includes response.body, reservix_slider_event.artist_name
-    assert_includes response.body, "Tagestipp"
-    assert_includes response.body, tagestipp_event.artist_name
-    assert_includes response.body, @published_event.artist_name
+    assert_includes response.body, "Suchergebnisse"
+    assert_not_includes response.body, "alles aus stuttgart"
+    assert_not_includes response.body, reservix_slider_event.artist_name
+    assert_not_includes response.body, "Tagestipp"
+    assert_not_includes response.body, tagestipp_event.artist_name
+    assert_not_includes response.body, @published_event.artist_name
     assert_not_includes response.body, "Mehr Events laden"
     assert_select "#events-pagination", count: 0
+    assert_select ".newsletter-signup-section", count: 1
   end
 
-  test "index search renders all matching results without pagination" do
+  test "search renders all matching results without pagination" do
     13.times do |index|
       Event.create!(
         slug: "search-all-results-#{index}",
@@ -1917,34 +1931,23 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       )
     end
 
-    get events_url(q: "Search All Results")
+    get search_url(q: "Search All Results")
 
     assert_response :success
     assert_select "#event-grid article.event-card", count: 13
     assert_select "#events-pagination", count: 0
   end
 
-  test "index treats punctuation only query as no search" do
-    highlighted_event = Event.create!(
-      slug: "search-punctuation-highlighted",
-      source_fingerprint: "test::search::punctuation::highlighted",
-      title: "Highlighted Night",
-      artist_name: "Highlight Artist",
-      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      highlighted: true,
-      status: "published",
-      published_at: 1.day.ago,
-      source_snapshot: {}
-    )
+  test "search redirects to homepage for punctuation only query" do
+    get search_url(q: " ... !!! ")
 
+    assert_redirected_to events_url
+  end
+
+  test "index redirects punctuation only old search links back to homepage" do
     get events_url(q: " ... !!! ")
 
-    assert_response :success
-    assert_select "h2", text: "Suchergebnisse", count: 0
-    assert_includes response.body, "Unsere Highlights"
-    assert_includes response.body, highlighted_event.artist_name
+    assert_redirected_to events_url
   end
 
   test "highlight list rows do not render ticket links" do
@@ -2032,7 +2035,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
-    get events_url(q: "Search Ribbon")
+    get search_url(q: "Search Ribbon")
 
     assert_response :success
     assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", text: "Ausverkauft"
@@ -2083,7 +2086,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
-    get events_url(q: "Available Ribbon")
+    get search_url(q: "Available Ribbon")
 
     assert_response :success
     assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", count: 0
@@ -2552,7 +2555,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     series_section = css_select("section.genre-lane-section").find do |section|
-      section.at_css(".genre-lane-kicker")&.text.to_s.include?("Event-Reihe")
+      section.at_css(".lane-header-kicker")&.text.to_s.include?("Event-Reihe")
     end
     assert_not_nil series_section
     assert_equal series.name, series_section.at_css("h2")&.text.to_s.strip
@@ -2587,7 +2590,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     series_section = css_select("section.genre-lane-section").find do |section|
-      section.at_css(".genre-lane-kicker")&.text.to_s.include?("Event-Reihe")
+      section.at_css(".lane-header-kicker")&.text.to_s.include?("Event-Reihe")
     end
     assert_nil series_section
   end

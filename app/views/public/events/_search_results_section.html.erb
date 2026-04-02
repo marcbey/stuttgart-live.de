@@ -1,14 +1,36 @@
-<section class="home-slider-section">
-  <div class="home-slider-header">
-    <div class="slider-window-bar" aria-hidden="true">
+<% nav_content = capture do %>
+  <button type="button"
+          class="slider-view-toggle"
+          data-section-view-target="button"
+          data-action="click->section-view#toggle"
+          title="Listenansicht"
+          aria-label="Listenansicht für Suchergebnisse"
+          aria-pressed="false">
+    <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
+    <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
       <span></span><span></span><span></span>
-    </div>
-    <h2>Suchergebnisse</h2>
+    </span>
+    <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+    </span>
+  </button>
+<% end %>
+
+<section class="home-slider-section search-results-section" data-controller="section-view">
+  <%= render "home_slider_header",
+             title: "Suchergebnisse",
+             variant: :search,
+             nav_content: nav_content,
+             show_window_bar: false %>
+  <div data-section-view-target="slider">
+    <%= render "event_cards",
+               events: events,
+               browse_state: browse_state,
+               container_id: "event-grid",
+               container_class: "flyer-grid flyer-grid-flat",
+               card_dom_id_prefix: :search_card %>
   </div>
-  <%= render "event_cards",
-             events: events,
-             browse_state: browse_state,
-             container_id: "event-grid",
-             container_class: "flyer-grid flyer-grid-flat",
-             card_dom_id_prefix: :search_card %>
+  <div class="section-slider-list" data-section-view-target="list" hidden>
+    <%= render "event_rows", events: events, browse_state: browse_state %>
+  </div>
 </section>

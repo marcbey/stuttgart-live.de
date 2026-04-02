@@ -51,6 +51,8 @@ module Public
       end
 
       def back_path
+        return view_context.search_path(**@browse_state.route_params) if @browse_state.search_query_present?
+
         view_context.root_path
       end
 

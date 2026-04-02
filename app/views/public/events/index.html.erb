@@ -15,10 +15,6 @@
     <%= render "promotion_banner", blog_post: @promotion_banner_blog_post %>
   <% end %>
 
-  <% if @browse_state.search_query_present? %>
-    <%= render "search_results_section", events: @events, browse_state: @browse_state %>
-  <% end %>
-
   <% if @browse_state.page == 1 && @home_featured_events.present? %>
     <%= render "highlight_section",
                title: "Unsere Highlights",
@@ -37,6 +33,7 @@
                  events: genre_lanes.first.events,
                  effective_series_ids: genre_lanes.first.effective_series_ids,
                  browse_state: @browse_state,
+                 header_variant: :genre,
                  hover_lift_cards: true,
                  tone_class: "genre-lane-section--tone-1",
                  list_aria_label: "Listenansicht für #{genre_lanes.first.group.name}" %>
@@ -48,6 +45,7 @@
                  events: @home_tagestipp_events,
                  effective_series_ids: @home_tagestipp_effective_series_ids,
                  browse_state: @browse_state,
+                 header_variant: :tagestipp,
                  hover_lift_cards: true,
                  summary: "#{pluralize(@home_tagestipp_events.size, "Event", "Events")} in der heutigen Auswahl",
                  tone_class: "genre-lane-section--tone-3",
@@ -62,6 +60,7 @@
                  events: @home_highlight_events,
                  effective_series_ids: @home_highlight_effective_series_ids,
                  browse_state: @browse_state,
+                 header_variant: :editorial,
                  hover_lift_cards: true,
                  summary: "#{pluralize(@home_highlight_events.size, "Event", "Events")} aus dem aktuellen Feed",
                  tone_class: "genre-lane-section--tone-2",
@@ -76,6 +75,7 @@
                  events: lane.events,
                  effective_series_ids: lane.effective_series_ids,
                  browse_state: @browse_state,
+                 header_variant: :genre,
                  hover_lift_cards: true,
                  tone_class: "genre-lane-section--tone-#{((index + 1) % 4) + 1}",
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>

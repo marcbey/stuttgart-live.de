@@ -1,0 +1,27 @@
+<%
+  variant = local_assigns.fetch(:variant).to_s
+  show_window_bar = local_assigns.fetch(:show_window_bar, true)
+  header_classes = [ "lane-header", "lane-header--#{variant}", local_assigns[:header_class] ].compact
+  heading_classes = [ "lane-header-heading", local_assigns[:heading_class] ].compact
+%>
+
+<div class="<%= header_classes.join(" ") %>">
+  <% if show_window_bar %>
+    <div class="slider-window-bar" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+  <% end %>
+
+  <div class="<%= heading_classes.join(" ") %>">
+    <% if local_assigns[:kicker].present? %>
+      <p class="lane-header-kicker"><%= kicker %></p>
+    <% end %>
+    <h2 class="lane-header-title"><%= title %></h2>
+  </div>
+
+  <% if local_assigns[:nav_content].present? %>
+    <div class="lane-header-nav">
+      <%= nav_content %>
+    </div>
+  <% end %>
+</div>

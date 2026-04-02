@@ -1,0 +1,8 @@
+<% content_for :title, "Stuttgart Live - Suche" %>
+<% content_for :page_newsletter do %>
+  <%= render "newsletter_signup", browse_state: @browse_state %>
+<% end %>
+
+<section class="public-shell">
+  <%= render "search_results_section", events: @events, browse_state: @browse_state %>
+</section>

@@ -5,38 +5,33 @@
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 <% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
 <% hover_lift_cards = local_assigns.fetch(:hover_lift_cards, false) %>
+<% header_variant = local_assigns.fetch(:header_variant, :genre) %>
+<% nav_content = capture do %>
+  <button type="button"
+          class="slider-view-toggle"
+          data-section-view-target="button"
+          data-action="click->section-view#toggle"
+          title="Listenansicht"
+          aria-label="<%= list_aria_label %>"
+          aria-pressed="false">
+    <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
+    <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </span>
+    <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+    </span>
+  </button>
+<% end %>
 
 <section class="<%= ["genre-lane-section", local_assigns.fetch(:tone_class, "genre-lane-section--tone-1"), ("genre-lane-section--#{section_variant}" if section_variant.present?), ("genre-lane-section--hover-lift" if hover_lift_cards)].compact.join(" ") %>"
          data-controller="highlights-slider section-view">
-  <div class="genre-lane-header">
-    <div class="slider-window-bar" aria-hidden="true">
-      <span></span><span></span><span></span>
-    </div>
-    <div class="genre-lane-heading">
-      <% if kicker.present? %>
-        <p class="genre-lane-kicker"><%= kicker %></p>
-      <% end %>
-      <h2><%= title %></h2>
-    </div>
-
-    <div class="genre-lane-nav">
-      <button type="button"
-              class="slider-view-toggle genre-lane-toggle"
-              data-section-view-target="button"
-              data-action="click->section-view#toggle"
-              title="Listenansicht"
-              aria-label="<%= list_aria_label %>"
-              aria-pressed="false">
-        <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
-        <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-        </span>
-      </button>
-    </div>
-  </div>
+  <%= render "home_slider_header",
+             title: title,
+             kicker: kicker,
+             variant: header_variant,
+             nav_content: nav_content,
+             show_window_bar: false %>
 
   <div data-section-view-target="slider">
     <div class="highlights-slider-viewport">

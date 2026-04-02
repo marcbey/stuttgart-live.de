@@ -70,7 +70,10 @@ module Public::EventsHelper
   end
 
   def public_events_index_path(browse_state, page: nil, format: nil)
-    events_path(**browse_state.route_params(page: page, format: format))
+    route_params = browse_state.route_params(page: page, format: format)
+    return search_path(**route_params) if browse_state.search_query_present?
+
+    events_path(**route_params)
   end
 
   def public_event_show_presenter(event, primary_offer:, browse_state:)

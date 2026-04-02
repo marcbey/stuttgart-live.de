@@ -65,4 +65,16 @@ class Public::EventsHelperTest < ActionView::TestCase
     assert_equal [ { label: "Geplant", css_class: "status-badge-ready" } ], public_event_visibility_badges(event)
     assert_not public_frontend_visible?(event)
   end
+
+  test "public_events_index_path points to search for active search queries" do
+    browse_state = Public::Events::BrowseState.new({ "q" => "Search Artist", "event_date" => "2026-07-10" })
+
+    assert_equal "/search?event_date=2026-07-10&q=Search+Artist", public_events_index_path(browse_state)
+  end
+
+  test "public_events_index_path points to events index without search query" do
+    browse_state = Public::Events::BrowseState.new({ "event_date" => "2026-07-10" })
+
+    assert_equal "/events?event_date=2026-07-10", public_events_index_path(browse_state)
+  end
 end

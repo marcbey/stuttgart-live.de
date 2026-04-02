@@ -1,6 +1,6 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :show, :search_overlay ]
+    allow_unauthenticated_access only: [ :index, :search, :show, :search_overlay ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
@@ -8,23 +8,12 @@ module Public
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
 
-    before_action :set_browse_state, only: [ :index, :show, :search_overlay ]
+    before_action :set_browse_state, only: [ :index, :search, :show, :search_overlay ]
 
     def index
-      if @browse_state.search_query_present?
-        relation = visible_events_relation(
-          scope: searchable_index_events_relation,
-          filter: search_filter,
-          event_date: @browse_state.event_date,
-          query: @browse_state.query
-        )
-        if should_redirect_search_result?(relation)
-          event = relation.limit(1).first
-          redirect_to event_path(event.slug, **@browse_state.route_params.except(:q))
-          return
-        end
-
-        @events = relation.to_a
+      if params[:q].present?
+        redirect_to(search_redirect_path, allow_other_host: false)
+        return
       end
 
       if @browse_state.page == 1
@@ -43,6 +32,22 @@ module Public
         format.html
         format.turbo_stream
       end
+    end
+
+    def search
+      unless @browse_state.search_query_present?
+        redirect_to events_path(event_date: @browse_state.event_date_param)
+        return
+      end
+
+      relation = search_results_relation
+      if should_redirect_search_result?(relation)
+        event = relation.limit(1).first
+        redirect_to event_path(event.slug, **@browse_state.route_params.except(:q))
+        return
+      end
+
+      @events = relation.to_a
     end
 
     def show
@@ -85,7 +90,7 @@ module Public
       desired_status = params[:status].to_s
 
       unless Event::STATUSES.include?(desired_status)
-        redirect_back fallback_location: events_path(**browse_state.route_params(page: browse_state.page))
+        redirect_back fallback_location: helpers.public_events_index_path(browse_state, page: browse_state.page)
         return
       end
 
@@ -119,7 +124,7 @@ module Public
           render turbo_stream: streams
         end
         format.html do
-          redirect_back fallback_location: events_path(**browse_state.route_params(page: browse_state.page))
+          redirect_back fallback_location: helpers.public_events_index_path(browse_state, page: browse_state.page)
         end
       end
     end
@@ -211,6 +216,21 @@ module Public
       return false unless @browse_state.page == 1
 
       relation.limit(2).count == 1
+    end
+
+    def search_results_relation
+      visible_events_relation(
+        scope: searchable_index_events_relation,
+        filter: search_filter,
+        event_date: @browse_state.event_date,
+        query: @browse_state.query
+      )
+    end
+
+    def search_redirect_path
+      return search_path(**@browse_state.route_params) if @browse_state.search_query_present?
+
+      events_path(event_date: @browse_state.event_date_param)
     end
 
     def published_events_relation

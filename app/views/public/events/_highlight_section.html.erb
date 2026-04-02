@@ -1,37 +1,36 @@
 <% featured = local_assigns.fetch(:featured, false) %>
-<% nav_class = featured ? "home-featured-nav" : "highlights-slider-nav" %>
 <% track_class = featured ? "home-featured-track" : "home-slider-track" %>
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 
 <% section_classes = [featured ? "home-featured-section" : "home-slider-section"] %>
 <% section_classes << "home-slider-section--turquoise-title" if title.to_s.casecmp("Alle Veranstaltungen").zero? %>
+<% nav_content = capture do %>
+  <button type="button"
+          class="slider-view-toggle"
+          data-section-view-target="button"
+          data-action="click->section-view#toggle"
+          title="Listenansicht"
+          aria-label="<%= list_aria_label %>"
+          aria-pressed="false">
+    <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
+    <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </span>
+    <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+    </span>
+  </button>
+<% end %>
 
 <section class="<%= section_classes.join(" ") %>"
          data-controller="highlights-slider section-view"
          <% if featured %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
-  <div class="home-slider-header">
-    <div class="slider-window-bar" aria-hidden="true">
-      <span></span><span></span><span></span>
-    </div>
-    <h2><%= title %></h2>
-    <div class="<%= nav_class %>">
-      <button type="button"
-              class="slider-view-toggle"
-              data-section-view-target="button"
-              data-action="click->section-view#toggle"
-              title="Listenansicht"
-              aria-label="<%= list_aria_label %>"
-              aria-pressed="false">
-        <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
-        <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
-          <span></span><span></span><span></span>
-        </span>
-        <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-        </span>
-      </button>
-    </div>
-  </div>
+  <%= render "home_slider_header",
+             title: title,
+             variant: :highlights,
+             nav_content: nav_content,
+             show_window_bar: false,
+             header_class: ("lane-header--turquoise-title" if title.to_s.casecmp("Alle Veranstaltungen").zero?) %>
   <div data-section-view-target="slider">
     <div class="highlights-slider-viewport">
       <button type="button"

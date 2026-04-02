@@ -74,6 +74,7 @@ Rails.application.routes.draw do
     get :search_overlay, on: :collection
     patch :status, on: :member
   end
+  get "search", to: "public/events#search", as: :search
   resources :newsletter_subscribers, only: [ :create ], module: :public
   get "kontakt", to: "public/pages#contact", as: :contact
   get "impressum", to: "public/pages#imprint", as: :imprint

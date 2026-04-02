@@ -33,6 +33,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       "/"
     end
 
+    def search_path(q:, **)
+      "/search?q=#{q.tr(" ", "+")}"
+    end
+
     def event_source_label(source)
       source.to_s
     end
@@ -92,6 +96,19 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "Mittwoch, 17.06.2026", "20:00 Uhr", "Im Wizemann, Stuttgart" ], presenter.fact_items.map(&:value)
     assert_nil presenter.schedule_line
     assert_equal [ { label: "Published", css_class: "status-badge-published" } ], presenter.visibility_badges
+  end
+
+  test "back path points to search results when the event was opened from search" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      slug: "band-live"
+    )
+    browse_state = Public::Events::BrowseState.new({ "q" => "Band Live" })
+
+    presenter = build_presenter(event, browse_state: browse_state)
+
+    assert_equal "/search?q=Band+Live", presenter.back_path
   end
 
   test "collects cta, links, genres and hero gallery items" do
@@ -323,7 +340,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     presenter = Public::Events::ShowPresenter.new(
       loaded_event,
       primary_offer: nil,
-      browse_state: Object.new,
+      browse_state: Public::Events::BrowseState.new({}),
       view_context: ViewContextStub.new
     )
 
@@ -334,11 +351,11 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
   private
 
-  def build_presenter(event, primary_offer: nil)
+  def build_presenter(event, primary_offer: nil, browse_state: Public::Events::BrowseState.new({}))
     Public::Events::ShowPresenter.new(
       event,
       primary_offer: primary_offer,
-      browse_state: Object.new,
+      browse_state: browse_state,
       view_context: ViewContextStub.new
     )
   end
