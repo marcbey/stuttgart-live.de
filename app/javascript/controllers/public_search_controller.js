@@ -105,7 +105,7 @@ export default class extends Controller {
 
   handleInputKeydown(event) {
     if (event.key === "ArrowDown") {
-      const firstResult = this.resultLinks[0]
+      const firstResult = this.resultElements[0]
       if (!firstResult) {
         return
       }
@@ -123,13 +123,13 @@ export default class extends Controller {
   }
 
   handleResultKeydown(event) {
-    const currentIndex = this.resultLinks.indexOf(event.currentTarget)
+    const currentIndex = this.resultElements.indexOf(event.currentTarget)
     if (currentIndex === -1) {
       return
     }
 
     if (event.key === "ArrowDown") {
-      const nextResult = this.resultLinks[currentIndex + 1]
+      const nextResult = this.resultElements[currentIndex + 1]
       if (!nextResult) {
         return
       }
@@ -142,7 +142,7 @@ export default class extends Controller {
     if (event.key === "ArrowUp") {
       event.preventDefault()
 
-      const previousResult = this.resultLinks[currentIndex - 1]
+      const previousResult = this.resultElements[currentIndex - 1]
       if (previousResult) {
         previousResult.focus()
       } else {
@@ -156,6 +156,23 @@ export default class extends Controller {
       this.close()
       this.inputTarget.focus()
     }
+  }
+
+  applySuggestion(event) {
+    event.preventDefault()
+
+    this.inputTarget.value = event.currentTarget.dataset.query || ""
+    this.syncControls()
+
+    if (event.currentTarget.dataset.submit === "true") {
+      this.close()
+      this.element.requestSubmit()
+      return
+    }
+
+    this.showPanel()
+    this.inputTarget.focus()
+    this.search()
   }
 
   async fetchResults() {
@@ -266,8 +283,8 @@ export default class extends Controller {
     return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT"
   }
 
-  get resultLinks() {
-    return Array.from(this.resultsTarget.querySelectorAll("a.public-search-result"))
+  get resultElements() {
+    return Array.from(this.resultsTarget.querySelectorAll("[data-public-search-result='true'], a.public-search-result"))
   }
 
   get query() {

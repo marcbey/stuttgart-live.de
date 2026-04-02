@@ -54,12 +54,12 @@
            data-public-search-target="results"
            aria-live="polite"
            aria-label="Live-Suchergebnisse">
-        <%= render "public/events/search_overlay", browse_state: browse_state, events: [], query: nil %>
+        <%= render "public/events/search_overlay", browse_state: browse_state, overlay: nil %>
       </div>
     </div>
 
     <template data-public-search-target="idleTemplate">
-      <%= render "public/events/search_overlay", browse_state: browse_state, events: [], query: nil %>
+      <%= render "public/events/search_overlay", browse_state: browse_state, overlay: nil %>
     </template>
   </div>
 <% end %>

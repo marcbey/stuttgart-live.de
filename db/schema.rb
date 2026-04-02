@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_01_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_02_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+  enable_extension "pg_trgm"
 
   create_table "action_text_rich_texts", force: :cascade do |t|
     t.text "body"
@@ -463,6 +464,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_01_140000) do
     t.string "external_url"
     t.string "name", null: false
     t.datetime "updated_at", null: false
+    t.index "lower((name)::text) gin_trgm_ops", name: "index_venues_on_lower_name_trgm", using: :gin
     t.index "lower((name)::text)", name: "index_venues_on_lower_name", unique: true
   end
 

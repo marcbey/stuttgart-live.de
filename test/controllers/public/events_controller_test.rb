@@ -3194,8 +3194,149 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Search Overlay Artist"
     assert_includes response.body, event_path(matching_event.slug, q: "Electric Skyline")
-    assert_includes response.body, "Beginn"
+    assert_includes response.body, "Electric Skyline Tour"
     assert_not_includes response.body, "Search Overlay Artist Draft"
+  end
+
+  test "search overlay renders phrase suggestions for incomplete structured queries" do
+    Event.create!(
+      slug: "search-overlay-suggestion-fallback",
+      source_fingerprint: "test::public::search-overlay::suggestion-fallback",
+      title: "Diesen Montag Special",
+      artist_name: "Fallback Artist",
+      start_at: 15.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: "diesen Mo")
+
+    assert_response :success
+    assert_includes response.body, "Diesen Montag"
+    assert_includes response.body, "Event-Treffer"
+    assert_includes response.body, "Fallback Artist"
+    assert_not_includes response.body, "passende zukünftige Events"
+  end
+
+  test "search overlay renders venue suggestions for structured venue fragments" do
+    Venue.create!(name: "Porsche-Arena")
+    Event.create!(
+      slug: "search-overlay-venue-fallback",
+      source_fingerprint: "test::public::search-overlay::venue-fallback",
+      title: "Heute in der Porsche-Arena",
+      artist_name: "Venue Fallback Artist",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: "heute in der Po")
+
+    assert_response :success
+    assert_includes response.body, "Porsche-Arena"
+    assert_includes response.body, "Event-Treffer"
+    assert_includes response.body, "Venue Fallback Artist"
+  end
+
+  test "search overlay renders these week venue suggestions" do
+    Venue.create!(name: "Goldmark's")
+    Event.create!(
+      slug: "search-overlay-diese-woche-goldmarks",
+      source_fingerprint: "test::public::search-overlay::diese-woche-goldmarks",
+      title: "Diese Woche Goldmarks",
+      artist_name: "Diese Woche Fallback Artist",
+      start_at: 3.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Goldmark's",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_overlay_events_url(q: "diese Woche im Goldmarks")
+
+    assert_response :success
+    assert_includes response.body, "Goldmark&#39;s"
+  end
+
+  test "strict structured venue filtering excludes unrelated venues on the search page" do
+    travel_to(Time.zone.parse("2026-04-07 10:00:00")) do
+      matching_event = Event.create!(
+        slug: "search-overlay-goldmarks-match",
+        source_fingerprint: "test::public::search-overlay::goldmarks-match",
+        title: "Goldmark's Weekend",
+        artist_name: "Goldmark Overlay Artist",
+        start_at: Time.zone.parse("2026-04-11 20:00:00"),
+        venue: "Goldmark´s Stuttgart",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+      Event.create!(
+        slug: "search-overlay-goldmarks-other",
+        source_fingerprint: "test::public::search-overlay::goldmarks-other",
+        title: "Other Stuttgart Weekend",
+        artist_name: "Other Stuttgart Overlay Artist",
+        start_at: Time.zone.parse("2026-04-11 21:00:00"),
+        venue: "Stuttgart Arena",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+
+      get search_overlay_events_url(q: "Dieses Wochenende im Goldmark")
+
+      assert_response :success
+      assert_includes response.body, "Goldmark´s Stuttgart"
+      assert_not_includes response.body, "Goldmark Overlay Artist"
+
+      get search_url(q: "Dieses Wochenende im Goldmark´s Stuttgart")
+
+      assert_redirected_to event_url(matching_event.slug)
+    end
+  end
+
+  test "search overlay renders structured event previews for complete time phrases" do
+    travel_to(Time.zone.parse("2026-04-07 10:00:00")) do
+      Event.create!(
+        slug: "search-overlay-heute",
+        source_fingerprint: "test::public::search-overlay::heute",
+        title: "Heute Konzert",
+        artist_name: "Heute Artist",
+        start_at: Time.zone.parse("2026-04-07 20:00:00"),
+        venue: "Im Wizemann",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+      Event.create!(
+        slug: "search-overlay-morgen",
+        source_fingerprint: "test::public::search-overlay::morgen",
+        title: "Morgen Konzert",
+        artist_name: "Morgen Artist",
+        start_at: Time.zone.parse("2026-04-08 20:00:00"),
+        venue: "Im Wizemann",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+
+      get search_overlay_events_url(q: "heute")
+
+      assert_response :success
+      assert_includes response.body, "Heute Artist"
+      assert_not_includes response.body, "Morgen Artist"
+    end
   end
 
   test "search overlay matches normalized punctuation and whitespace variants" do
@@ -3338,7 +3479,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_overlay_events_url
 
     assert_response :success
-    assert_includes response.body, "Empfohlen für dich"
     assert_includes response.body, promotion_event.artist_name
     assert_includes response.body, highlighted_event.artist_name
     assert_includes response.body, highlighted_sks_event.artist_name
@@ -3384,7 +3524,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_overlay_events_url(q: " ... !!! ")
 
     assert_response :success
-    assert_includes response.body, "Empfohlen für dich"
     assert_includes response.body, highlighted_event.artist_name
     assert_not_includes response.body, "Initial Regular Artist"
     assert_not_includes response.body, "Keine Treffer"
@@ -3478,7 +3617,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_overlay_events_url(event_date: selected_date.iso8601)
 
     assert_response :success
-    assert_includes response.body, "Empfohlen für dich"
     assert_includes response.body, matching_event.artist_name
     assert_not_includes response.body, "Date Other Artist"
   end

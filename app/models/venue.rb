@@ -90,31 +90,109 @@ class Venue < ApplicationRecord
   end
 
   def self.search_by_query(query, limit: 8)
-    normalized_query = query.to_s.strip
-    return none if normalized_query.blank?
+    matching_query(query).limit(limit)
+  end
 
-    token = ActiveRecord::Base.sanitize_sql_like(normalized_query.downcase)
+  def self.strict_matching_query(query)
+    normalized_query = query.to_s.strip.downcase
+    compact_query = Public::Events::Search::Normalizer.compact_normalize(query)
+    return none if normalized_query.blank? && compact_query.blank?
+
+    token = ActiveRecord::Base.sanitize_sql_like(normalized_query)
+    compact_token = ActiveRecord::Base.sanitize_sql_like(compact_query)
     prefix = "#{token}%"
-    infix = "%#{token}%"
+    compact_prefix = "#{compact_token}%"
+    compact_infix = "%#{compact_token}%"
+    compact_name_sql = compact_name_sql_fragment
+
     order_sql = sanitize_sql_array(
       [
         <<~SQL.squish,
           CASE
-            WHEN LOWER(venues.name) LIKE ? THEN 0
-            WHEN LOWER(venues.name) LIKE ? THEN 1
-            ELSE 2
+            WHEN #{compact_name_sql} = ? THEN 0
+            WHEN #{compact_name_sql} LIKE ? THEN 1
+            WHEN LOWER(venues.name) = ? THEN 2
+            WHEN LOWER(venues.name) LIKE ? THEN 3
+            WHEN #{compact_name_sql} LIKE ? THEN 4
+            ELSE 5
           END,
+          LENGTH(#{compact_name_sql}) ASC,
           LOWER(venues.name) ASC,
           venues.id ASC
         SQL
+        compact_query,
+        compact_prefix,
+        normalized_query,
         prefix,
-        infix
+        compact_infix
       ]
     )
 
-    where("LOWER(venues.name) LIKE ?", infix)
-      .order(Arel.sql(order_sql))
-      .limit(limit)
+    where(
+      "#{compact_name_sql} = :compact_query OR #{compact_name_sql} LIKE :compact_prefix OR #{compact_name_sql} LIKE :compact_infix OR LOWER(venues.name) = :normalized_query OR LOWER(venues.name) LIKE :prefix",
+      compact_query:,
+      compact_prefix:,
+      compact_infix:,
+      normalized_query:,
+      prefix:
+    ).order(Arel.sql(order_sql))
+  end
+
+  def self.matching_query(query)
+    normalized_query = query.to_s.strip.downcase
+    compact_query = Public::Events::Search::Normalizer.compact_normalize(query)
+    return none if normalized_query.blank? && compact_query.blank?
+
+    token = ActiveRecord::Base.sanitize_sql_like(normalized_query)
+    compact_token = ActiveRecord::Base.sanitize_sql_like(compact_query)
+    prefix = "#{token}%"
+    infix = "%#{token}%"
+    compact_prefix = "#{compact_token}%"
+    compact_infix = "%#{compact_token}%"
+    spaced_prefix = "% #{token}%"
+    hyphen_prefix = "%-#{token}%"
+    compact_name_sql = compact_name_sql_fragment
+
+    order_sql = sanitize_sql_array(
+      [
+        <<~SQL.squish,
+          CASE
+            WHEN #{compact_name_sql} = ? THEN 0
+            WHEN #{compact_name_sql} LIKE ? THEN 1
+            WHEN LOWER(venues.name) = ? THEN 2
+            WHEN LOWER(venues.name) LIKE ? THEN 3
+            WHEN #{compact_name_sql} LIKE ? THEN 4
+            WHEN LOWER(venues.name) LIKE ? OR LOWER(venues.name) LIKE ? THEN 5
+            ELSE 6
+          END,
+          similarity(LOWER(venues.name), ?) DESC,
+          LOWER(venues.name) ASC,
+          venues.id ASC
+        SQL
+        compact_query,
+        compact_prefix,
+        normalized_query,
+        prefix,
+        compact_infix,
+        spaced_prefix,
+        hyphen_prefix,
+        normalized_query
+      ]
+    )
+
+    relation =
+      if normalized_query.length < 3
+        where("LOWER(venues.name) LIKE :infix OR #{compact_name_sql} LIKE :compact_infix", infix:, compact_infix:)
+      else
+        where(
+          "LOWER(venues.name) LIKE :infix OR LOWER(venues.name) % :query OR #{compact_name_sql} LIKE :compact_infix",
+          infix:,
+          query: normalized_query,
+          compact_infix:
+        )
+      end
+
+    relation.order(Arel.sql(order_sql))
   end
 
   def self.filter_by_query(query)
@@ -151,6 +229,10 @@ class Venue < ApplicationRecord
       SQL
       infix:
     ).order(Arel.sql(order_sql))
+  end
+
+  def self.compact_name_sql_fragment
+    "REGEXP_REPLACE(LOWER(COALESCE(venues.name, '')), '[^a-z0-9]+', '', 'g')"
   end
 
   def thumbnail_logo_variant

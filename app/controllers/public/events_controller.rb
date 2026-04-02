@@ -64,23 +64,32 @@ module Public
     end
 
     def search_overlay
-      @events =
-        if @browse_state.search_query_present?
+      @overlay = Public::Events::Search::OverlayBuilder.build(
+        query: @browse_state.query,
+        idle_loader: -> { initial_search_overlay_events },
+        event_loader: lambda {
           visible_events_relation(
             scope: searchable_index_events_relation,
             filter: Public::Events::BrowseState::FILTER_ALL,
             event_date: @browse_state.event_date,
             query: @browse_state.query
           ).limit(SEARCH_OVERLAY_LIMIT).to_a
-        else
-          initial_search_overlay_events
-        end
+        },
+        standard_event_loader: lambda {
+          visible_events_relation(
+            scope: searchable_index_events_relation,
+            filter: Public::Events::BrowseState::FILTER_ALL,
+            event_date: @browse_state.event_date,
+            query: @browse_state.query,
+            structured: false
+          ).limit(SEARCH_OVERLAY_LIMIT).to_a
+        }
+      )
 
       render partial: "public/events/search_overlay",
              locals: {
                browse_state: @browse_state,
-               events: @events,
-               query: @browse_state.search_query_present? ? @browse_state.query : nil
+               overlay: @overlay
              }
     end
 
@@ -135,21 +144,23 @@ module Public
       @browse_state = Public::Events::BrowseState.new(params)
     end
 
-    def visible_events_relation(scope: index_events_relation, filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
+    def visible_events_relation(scope: index_events_relation, filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil, structured: true)
       Public::VisibleEventsQuery.new(
         scope: scope,
         filter: filter,
         event_date: event_date,
-        query: query
+        query: query,
+        structured: structured
       ).call
     end
 
-    def published_visible_events_relation(scope: published_future_events_relation, filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil)
+    def published_visible_events_relation(scope: published_future_events_relation, filter: Public::Events::BrowseState::FILTER_ALL, event_date: nil, query: nil, structured: true)
       Public::VisibleEventsQuery.new(
         scope: scope,
         filter: filter,
         event_date: event_date,
-        query: query
+        query: query,
+        structured: structured
       ).call
     end
 

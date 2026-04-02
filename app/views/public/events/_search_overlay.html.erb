@@ -1,12 +1,71 @@
-<% if query.present? %>
-  <% if events.any? %>
-    <div class="public-search-overlay-summary">
-      <p class="public-search-overlay-eyebrow">Live-Suche</p>
-      <p class="public-search-overlay-count"><%= events.size %> passende zukünftige Events</p>
+<% overlay ||= Public::Events::Search::OverlayBuilder::Result.new(mode: :idle, query: nil, events: [], suggestions: [], venues: []) %>
+
+<% if overlay.parser_suggestions? %>
+  <% if overlay.suggestions? && overlay.suggestions.any? %>
+    <ul class="public-search-overlay-list" role="list">
+      <% overlay.suggestions.each do |suggestion| %>
+        <li>
+          <button type="button"
+                  class="public-search-result public-search-result-compact"
+                  data-public-search-result="true"
+                  data-query="<%= suggestion.query %>"
+                  data-submit="<%= suggestion.submit %>"
+                  data-action="click->public-search#applySuggestion keydown->public-search#handleResultKeydown">
+            <span class="public-search-result-copy">
+              <strong class="public-search-result-artist"><%= suggestion.label %></strong>
+            </span>
+            <span class="public-search-result-arrow" aria-hidden="true">→</span>
+          </button>
+        </li>
+      <% end %>
+    </ul>
+  <% elsif overlay.venues? && overlay.venues.any? %>
+    <ul class="public-search-overlay-list" role="list">
+      <% overlay.venues.each do |venue| %>
+        <li>
+          <button type="button"
+                  class="public-search-result public-search-result-compact"
+                  data-public-search-result="true"
+                  data-query="<%= venue.query %>"
+                  data-submit="<%= venue.submit %>"
+                  data-action="click->public-search#applySuggestion keydown->public-search#handleResultKeydown">
+            <span class="public-search-result-copy">
+              <strong class="public-search-result-artist"><%= venue.name %></strong>
+            </span>
+            <span class="public-search-result-arrow" aria-hidden="true">→</span>
+          </button>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="public-search-overlay-empty">
+      <% if overlay.suggestions? %>
+        <h2>Vervollständige die Zeitangabe</h2>
+        <p>Tippe zum Beispiel „Heute“, „Im April“ oder „Am 1.4.“.</p>
+      <% else %>
+        <h2>Keine Venue gefunden</h2>
+        <p>Für „<%= overlay.query %>“ wurden aktuell keine passenden Venues gefunden.</p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if overlay.standard_events? %>
+    <div class="public-search-overlay-separator" role="presentation">
+      <span>Event-Treffer</span>
     </div>
 
     <ul class="public-search-overlay-list" role="list">
-      <% events.each do |event| %>
+      <% overlay.events.each do |event| %>
+        <li>
+          <%= render "search_overlay_event", event: event, browse_state: browse_state %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+<% elsif overlay.query.present? %>
+  <% if overlay.events.any? %>
+    <ul class="public-search-overlay-list" role="list">
+      <% overlay.events.each do |event| %>
         <li>
           <%= render "search_overlay_event", event: event, browse_state: browse_state %>
         </li>
@@ -15,17 +74,13 @@
   <% else %>
     <div class="public-search-overlay-empty">
       <h2>Keine Treffer</h2>
-      <p>Für „<%= query %>“ wurden aktuell keine zukünftigen Events gefunden.</p>
+      <p>Für „<%= overlay.query %>“ wurden aktuell keine zukünftigen Events gefunden.</p>
     </div>
   <% end %>
 <% else %>
-  <% if events.any? %>
-    <div class="public-search-overlay-summary">
-      <h2>Empfohlen für dich</h2>
-    </div>
-
+  <% if overlay.events.any? %>
     <ul class="public-search-overlay-list" role="list">
-      <% events.each do |event| %>
+      <% overlay.events.each do |event| %>
         <li>
           <%= render "search_overlay_event", event: event, browse_state: browse_state %>
         </li>

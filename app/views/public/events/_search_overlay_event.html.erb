@@ -24,16 +24,6 @@
     <% if event.title.present? %>
       <span class="public-search-result-title"><%= event.title %></span>
     <% end %>
-
-    <span class="public-search-result-meta">
-      <time datetime="<%= event.start_at.iso8601 %>">
-        Beginn <%= l(event.start_at, format: "%d.%m.%Y, %H:%M Uhr") %>
-      </time>
-
-      <% if event.venue.present? %>
-        <span><%= event.venue %></span>
-      <% end %>
-    </span>
   </span>
 
   <span class="public-search-result-arrow" aria-hidden="true">→</span>

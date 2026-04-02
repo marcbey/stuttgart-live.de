@@ -108,4 +108,16 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ @venue.id ], payload.map { |item| item.fetch("id") }
     assert_equal "Im Wizemann", payload.first.fetch("name")
   end
+
+  test "autocomplete ignores punctuation differences in venue names" do
+    sign_in_as(@editor)
+    first = Venue.create!(name: "Goldmark's")
+    second = Venue.create!(name: "Goldmark´s Stuttgart")
+
+    get autocomplete_backend_venues_url(q: "goldmarks")
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal [ first.id, second.id ], payload.map { |item| item.fetch("id") }
+  end
 end
