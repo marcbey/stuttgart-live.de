@@ -3557,17 +3557,17 @@ trix-editor.blog-rich-text:focus {
 }
 
 .lane-header--genre {
-  --lane-header-accent: #bf6f5a;
-  --lane-header-title-color: #bf6f5a;
-  --lane-header-kicker-color: color-mix(in srgb, #bf6f5a 72%, white 28%);
-  --lane-header-button-bg: #bf6f5a;
+  --lane-header-accent: #d97757;
+  --lane-header-title-color: #d97757;
+  --lane-header-kicker-color: color-mix(in srgb, #d97757 72%, white 28%);
+  --lane-header-button-bg: #d97757;
   --lane-header-button-color: #fff;
-  --lane-header-button-border: #bf6f5a;
-  --lane-header-button-hover-bg: #a95f4c;
-  --lane-header-button-hover-border: #a95f4c;
+  --lane-header-button-border: #d97757;
+  --lane-header-button-hover-bg: #c56546;
+  --lane-header-button-hover-border: #c56546;
   --lane-header-button-active-bg: #fff;
-  --lane-header-button-active-color: #bf6f5a;
-  --lane-header-button-active-border: #bf6f5a;
+  --lane-header-button-active-color: #d97757;
+  --lane-header-button-active-border: #d97757;
 }
 
 .lane-header--tagestipp {
