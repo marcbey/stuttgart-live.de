@@ -1055,6 +1055,12 @@ html {
   border-bottom: 1px solid rgba(17, 17, 17, 0.28);
 }
 
+.info-page-card a.button,
+.info-page-card a.button-secondary,
+.info-page-card a.button-ghost {
+  border-bottom: 0;
+}
+
 .info-page-links a:focus-visible,
 .info-page-card a:focus-visible,
 .inline-link-button:focus-visible {
@@ -1080,6 +1086,40 @@ html {
 
 .inline-link-button:hover {
   border-color: #111;
+}
+
+.app-error-hero {
+  max-width: 52rem;
+}
+
+.app-error-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.app-error-status {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0;
+}
+
+.app-error-status strong {
+  color: var(--ink);
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: clamp(3.8rem, 8vw, 6rem);
+  font-weight: 400;
+  line-height: 0.85;
+  letter-spacing: 0.04em;
+}
+
+.app-error-status span {
+  color: rgba(17, 17, 17, 0.56);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .blog-admin-filter-row {

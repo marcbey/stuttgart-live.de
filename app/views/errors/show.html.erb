@@ -1,19 +1,56 @@
 <% content_for :title, "#{@status_code} | Stuttgart Live" %>
+<% content_for :head do %>
+  <meta name="robots" content="noindex, nofollow">
+<% end %>
 
-<article class="app-error-page">
-  <div class="event-detail-topbar">
-    <p class="event-detail-back"><%= link_to "← zurück", request.referer.presence || root_path %></p>
+<%
+  recovery_copy =
+    case @status_code
+    when 400
+      "Prüf die Angaben noch einmal und öffne die gewünschte Seite danach neu."
+    when 404
+      "Prüf die Adresse oder spring direkt zurück zu den aktuellen Events, News oder Kontaktinfos."
+    when 422
+      "Kontrollier die Eingaben und versuch die Aktion danach noch einmal."
+    else
+      "Wenn die Störung bleibt, versuch es in ein paar Minuten noch einmal."
+    end
+%>
+
+<section class="info-page-shell app-error-page">
+  <header class="info-page-hero app-error-hero">
+    <p class="news-kicker"><%= @error_copy[:eyebrow] %></p>
+    <h1><%= @error_copy[:title] %></h1>
+    <p><%= @error_copy[:message] %></p>
+  </header>
+
+  <div class="info-page-content">
+    <div class="info-page-grid">
+      <%= render "public/pages/info_page_card", title: "So geht es weiter", wide: true do %>
+        <div class="app-error-actions">
+          <%= link_to "Zur Startseite", root_path, class: "button" %>
+          <% if request.referer.present? %>
+            <%= link_to "Zurück", request.referer, class: "button button-secondary" %>
+          <% end %>
+        </div>
+        <p><%= recovery_copy %></p>
+      <% end %>
+
+      <%= render "public/pages/info_page_card", title: "Fehlercode" do %>
+        <p class="app-error-status" aria-label="Fehlercode <%= @status_code %>">
+          <strong><%= @status_code %></strong>
+          <span>HTTP</span>
+        </p>
+        <p>Die Anfrage wurde mit dem Status <%= @status_code %> beantwortet.</p>
+      <% end %>
+
+      <%= render "public/pages/info_page_card", title: "Direkt weiter" do %>
+        <div class="info-page-links">
+          <%= link_to "Events", root_path %>
+          <%= link_to "News", news_index_path %>
+          <%= link_to "Kontakt", contact_path %>
+        </div>
+      <% end %>
+    </div>
   </div>
-
-  <section class="app-error-shell">
-    <p class="app-error-code"><%= @status_code %></p>
-    <div class="app-error-copy">
-      <p class="eyebrow"><%= @error_copy[:eyebrow] %></p>
-      <h1><%= @error_copy[:title] %></h1>
-      <p><%= @error_copy[:message] %></p>
-    </div>
-    <div class="app-error-actions">
-      <%= link_to "Zur Startseite", root_path, class: "button" %>
-    </div>
-  </section>
-</article>
+</section>

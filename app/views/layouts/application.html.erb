@@ -35,8 +35,8 @@
 
   <% auth_chrome = controller_path == "sessions" ||
                    (controller_path == "passwords" && action_name == "new") %>
-  <% public_frontend = controller_path.start_with?("public/") %>
-  <% public_homepage_chrome = controller_path.start_with?("public/") %>
+  <% public_frontend = controller_path.start_with?("public/") || controller_path == "errors" %>
+  <% public_homepage_chrome = controller_path.start_with?("public/") || controller_path == "errors" %>
   <% body_classes = [] %>
   <% body_classes << "page-auth-backoffice" if auth_chrome %>
   <% body_classes << "page-public" if public_frontend %>
