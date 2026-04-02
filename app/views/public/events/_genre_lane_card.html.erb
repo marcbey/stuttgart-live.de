@@ -36,18 +36,6 @@
       <% if show_series_badge && public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
         <%= render "event_series_corner_badge" %>
       <% end %>
-      <% if authenticated? %>
-        <div class="event-card-admin-controls">
-          <%= link_to "Edit",
-                      backend_events_path(status: event.status, event_id: event.id),
-                      class: "event-card-admin-link event-card-admin-link-attention",
-                      data: { turbo: false } %>
-
-          <% if event.primary_source.present? %>
-            <span class="status-badge event-card-admin-link"><%= event_source_label(event.primary_source) %></span>
-          <% end %>
-        </div>
-      <% end %>
     </div>
 
     <div class="<%= ["genre-lane-card-copy", ("genre-lane-card-copy--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
@@ -68,6 +56,18 @@
       <% end %>
       <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
         <p class="genre-lane-card-price event-listing-price"><%= display_price %></p>
+      <% end %>
+    </div>
+  <% end %>
+  <% if authenticated? %>
+    <div class="event-card-admin-controls genre-lane-card-admin-controls">
+      <%= link_to "Edit",
+                  backend_events_path(status: event.status, event_id: event.id),
+                  class: "event-card-admin-link event-card-admin-link-attention",
+                  data: { turbo: false } %>
+
+      <% if event.primary_source.present? %>
+        <span class="status-badge event-card-admin-link"><%= event_source_label(event.primary_source) %></span>
       <% end %>
     </div>
   <% end %>

@@ -2769,6 +2769,7 @@ trix-editor.blog-rich-text:focus {
 }
 
 .genre-lane-card {
+  position: relative;
   scroll-snap-align: start;
   background: #fff;
   border: none;
@@ -3169,6 +3170,11 @@ trix-editor.blog-rich-text:focus {
 
 .genre-lane-card-title--spotlight {
   color: rgba(17, 17, 17, 0.7);
+}
+
+.genre-lane-card-admin-controls {
+  top: 1.05rem;
+  right: 1.05rem;
 }
 
 .genre-lane-list {
@@ -9982,6 +9988,13 @@ body.page-public-events-index .app-nav-backend-menu {
 
 body.page-public-events-index .public-backend-float .app-nav-backend-menu {
   display: block;
+}
+
+body.page-public-events-index .public-backend-float {
+  position: absolute;
+  top: var(--app-nav-height, 0px);
+  left: 0;
+  right: 0;
 }
 
 body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link,
