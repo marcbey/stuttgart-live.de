@@ -233,6 +233,10 @@ module Importing
       def processing_heartbeat_every_n_rows
         self.class::PROCESSING_HEARTBEAT_EVERY_N_ROWS
       end
+
+      def run_state_cache_ttl_seconds
+        0.05
+      end
     end
   end
 end

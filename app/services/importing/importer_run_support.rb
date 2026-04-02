@@ -1,8 +1,5 @@
 module Importing
   module ImporterRunSupport
-    # Keep stop/cancel checks responsive without reloading the run state on nearly every processed row.
-    RUN_STATE_CACHE_TTL_SECONDS = 0.05
-
     private
 
     def active_running_run(excluding_run_id: nil)
@@ -158,13 +155,17 @@ module Importing
       self.class::FILTERED_OUT_CITIES_LIMIT
     end
 
+    def run_state_cache_ttl_seconds
+      0.001
+    end
+
     def cached_run_state(run)
       @cached_run_states ||= {}
 
       cached_state = @cached_run_states[run.id]
       now = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
-      if cached_state.nil? || (now - cached_state[:fetched_at]) >= RUN_STATE_CACHE_TTL_SECONDS
+      if cached_state.nil? || (now - cached_state[:fetched_at]) >= run_state_cache_ttl_seconds
         run.reload
         cached_state = {
           fetched_at: now,
