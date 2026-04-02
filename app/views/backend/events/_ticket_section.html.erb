@@ -1,8 +1,8 @@
 <% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
 <% editor_offer = event.editor_ticket_offer %>
 <% read_only_import_offer = editor_offer.present? && editor_offer.source.to_s != "manual" %>
-<% display_ticket_url = local_assigns.fetch(:manual_ticket_url, event_display_ticket_url(event)) %>
-<% display_ticket_sold_out = local_assigns.fetch(:manual_ticket_sold_out, event_display_ticket_sold_out(event)) %>
+<% display_ticket_url = local_assigns[:manual_ticket_url].nil? ? event_display_ticket_url(event) : local_assigns[:manual_ticket_url] %>
+<% display_ticket_sold_out = local_assigns[:manual_ticket_sold_out].nil? ? event_display_ticket_sold_out(event) : local_assigns[:manual_ticket_sold_out] %>
 <% source_label = event_editor_ticket_offer_source(event) %>
 
 <section class="backend-section backend-section-form">
