@@ -80,5 +80,11 @@
                  tone_class: "genre-lane-section--tone-#{((index + 1) % 4) + 1}",
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>
     <% end %>
+
+    <div id="saved-events-lane-slot"
+         class="saved-events-lane-slot"
+         data-controller="saved-events-lane"
+         data-saved-events-lane-url-value="<%= saved_lane_events_path %>"
+         hidden></div>
   <% end %>
 </section>

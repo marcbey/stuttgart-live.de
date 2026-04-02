@@ -1,6 +1,6 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :search, :show, :search_overlay ]
+    allow_unauthenticated_access only: [ :index, :saved_lane, :search, :show, :search_overlay ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
@@ -8,7 +8,7 @@ module Public
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
 
-    before_action :set_browse_state, only: [ :index, :search, :show, :search_overlay ]
+    before_action :set_browse_state, only: [ :index, :saved_lane, :search, :show, :search_overlay ]
 
     def index
       if params[:q].present?
@@ -48,6 +48,26 @@ module Public
       end
 
       @events = relation.to_a
+    end
+
+    def saved_lane
+      slugs = normalized_saved_lane_slugs
+      if slugs.empty?
+        render plain: ""
+        return
+      end
+
+      @saved_lane_events = homepage_events_relation.where(slug: slugs).reorder(:start_at, :id).to_a
+      if @saved_lane_events.empty?
+        render plain: ""
+        return
+      end
+
+      render partial: "public/events/saved_events_lane",
+             locals: {
+               browse_state: @browse_state,
+               events: @saved_lane_events
+             }
     end
 
     def show
@@ -340,6 +360,13 @@ module Public
       groups.flatten.each_with_object({}) do |event, deduplicated_events|
         deduplicated_events[event.id] ||= event
       end.values
+    end
+
+    def normalized_saved_lane_slugs
+      Array(params[:slugs]).filter_map do |slug|
+        normalized_slug = slug.to_s.strip
+        normalized_slug if normalized_slug.present?
+      end.uniq.first(Public::Events::HomepageGenreLanesBuilder::DEFAULT_LIMIT)
     end
 
     def search_filter

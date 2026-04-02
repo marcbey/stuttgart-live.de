@@ -10,6 +10,7 @@
 
 <article class="home-slider-card">
   <div class="home-slider-card-media">
+    <%= render "public/events/saved_event_button", event: event %>
     <%= link_to public_event_detail_path(event, browse_state), class: "home-slider-card-thumb" do %>
       <% if desktop_image_source.present? %>
         <picture>

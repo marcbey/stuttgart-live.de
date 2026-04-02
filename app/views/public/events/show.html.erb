@@ -18,6 +18,17 @@
 <article class="event-detail"<%= %( style="--event-detail-right-column-width: #{presenter.hero_stage_max_width || "46rem"};") %>>
   <div class="event-detail-topbar">
     <p class="event-detail-back"><%= link_to "← alle events", presenter.back_path %></p>
+    <div class="event-detail-topbar-actions">
+      <%= render "public/events/saved_event_button",
+                 event: @event,
+                 button_class: "saved-event-button-detail" %>
+      <% if authenticated? %>
+        <%= link_to "Edit",
+                    backend_events_path(status: @event.status, event_id: @event.id),
+                    class: "button button-secondary button-compact event-detail-edit-link public-backend-shortcut",
+                    data: { turbo: false } %>
+      <% end %>
+    </div>
   </div>
 
   <%= render "show_hero", presenter: presenter %>

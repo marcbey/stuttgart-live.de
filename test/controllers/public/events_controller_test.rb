@@ -131,24 +131,28 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.parse(response.body)
-    shell_children = document.css("section.public-shell > *")
+    shell_children = document.css("section.public-shell > *").to_a
     genre_sections = document.css("section.genre-lane-section")
     pop_section = genre_sections.find { |section| section.at_css("h2")&.text == pop_group.name }
     rock_section = genre_sections.find { |section| section.at_css("h2")&.text == rock_group.name }
     highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
-    promotion_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") }
+    saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
     first_genre_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("genre-lane-section") }
     all_events_index = shell_children.index do |node|
       node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "alles aus stuttgart"
+    end
+    last_homepage_lane_index = shell_children.rindex do |node|
+      next true if node.name == "section" && node["class"].to_s.include?("genre-lane-section")
+      node.name == "section" && node["class"].to_s.include?("home-featured-section")
     end
 
     assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
     assert pop_section.present?, "expected configured pop lane to be rendered"
     assert rock_section.present?, "expected configured rock lane to be rendered"
     assert document.at_css(".lane-header.lane-header--genre").present?, "expected standard genre header variant"
-    expected_first_genre_index = promotion_index.present? ? promotion_index + 1 : highlights_index + 1
-    assert_equal expected_first_genre_index, first_genre_index
+    assert_equal highlights_index + 1, first_genre_index
     assert_operator all_events_index, :>, first_genre_index
+    assert_equal last_homepage_lane_index + 1, saved_lane_slot_index
 
     pop_names = pop_section.css(".genre-lane-card-name").map(&:text)
     rock_names = rock_section.css(".genre-lane-card-name").map(&:text)
@@ -2928,7 +2932,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
     assert_includes response.body, expected_link
     assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit"
-    assert_select ".event-detail-topbar-actions .button", count: 0
+    assert_select ".event-detail-topbar-actions .event-detail-edit-link", count: 1
+    assert_select ".event-detail-topbar-actions .saved-event-button.saved-event-button-detail[data-controller='saved-event-toggle']", count: 1
   end
 
   test "show renders presenter logos inside organizer notes when presenters exist" do
@@ -3780,6 +3785,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "https://example.com/published.jpg"
   end
 
+  test "show renders the saved event toggle button in the detail topbar" do
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-topbar-actions .saved-event-button.saved-event-button-detail[data-controller='saved-event-toggle']", count: 1
+    assert_includes response.body, @published_event.slug
+  end
+
   test "index uses event image crop variant for grid tile size" do
     image = create_event_image(
       event: @published_event,
@@ -3826,6 +3839,84 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Eventbild Default Alt"
   end
 
+  test "index renders the saved events lane slot on the homepage first page" do
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select "#saved-events-lane-slot[data-controller='saved-events-lane'][data-saved-events-lane-url-value='#{saved_lane_events_path}'][hidden]", count: 1
+  end
+
+  test "saved lane renders only valid future published events in chronological order" do
+    later_event = create_public_event(
+      slug: "saved-lane-later",
+      artist_name: "Saved Lane Later",
+      start_at: 9.days.from_now.change(hour: 21, min: 0, sec: 0)
+    )
+    earlier_event = create_public_event(
+      slug: "saved-lane-earlier",
+      artist_name: "Saved Lane Earlier",
+      start_at: 5.days.from_now.change(hour: 19, min: 0, sec: 0)
+    )
+    unpublished_event = create_public_event(
+      slug: "saved-lane-unpublished",
+      artist_name: "Saved Lane Unpublished",
+      start_at: 6.days.from_now.change(hour: 20, min: 0, sec: 0),
+      status: "needs_review",
+      published_at: nil
+    )
+    past_event = create_public_event(
+      slug: "saved-lane-past",
+      artist_name: "Saved Lane Past",
+      start_at: 2.days.ago.change(hour: 20, min: 0, sec: 0)
+    )
+
+    get saved_lane_events_url, params: {
+      slugs: [ later_event.slug, past_event.slug, "missing-event", earlier_event.slug, unpublished_event.slug ]
+    }
+
+    assert_response :success
+    assert_includes response.body, "Deine Events"
+
+    document = Nokogiri::HTML.fragment(response.body)
+    rendered_names = document.css(".genre-lane-card-name").map(&:text)
+
+    assert_equal [ earlier_event.artist_name, later_event.artist_name ], rendered_names
+    assert_not_includes rendered_names, unpublished_event.artist_name
+    assert_not_includes rendered_names, past_event.artist_name
+  end
+
+  test "saved lane returns an empty response when no valid saved events remain" do
+    unpublished_event = create_public_event(
+      slug: "saved-lane-empty-unpublished",
+      artist_name: "Saved Lane Empty Unpublished",
+      start_at: 6.days.from_now.change(hour: 20, min: 0, sec: 0),
+      status: "needs_review",
+      published_at: nil
+    )
+    past_event = create_public_event(
+      slug: "saved-lane-empty-past",
+      artist_name: "Saved Lane Empty Past",
+      start_at: 2.days.ago.change(hour: 20, min: 0, sec: 0)
+    )
+
+    get saved_lane_events_url, params: { slugs: [ unpublished_event.slug, past_event.slug ] }
+
+    assert_response :success
+    assert_empty response.body.strip
+  end
+
+  test "index renders saved event toggle buttons for public event cards" do
+    create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".event-card .saved-event-button[data-controller='saved-event-toggle']", minimum: 1
+    assert_select ".genre-lane-card .saved-event-button[data-controller='saved-event-toggle']", minimum: 1
+    assert_includes response.body, @published_event.slug
+  end
+
   private
 
   def create_event_image(event:, purpose:, grid_variant: nil, alt_text: nil, sub_text: nil)
@@ -3843,6 +3934,21 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     )
     image.save!
     image
+  end
+
+  def create_public_event(slug:, artist_name:, start_at:, status: "published", published_at: 1.day.ago)
+    Event.create!(
+      slug: slug,
+      source_fingerprint: "test::public::events-controller::#{slug}",
+      title: "#{artist_name} Title",
+      artist_name: artist_name,
+      start_at: start_at,
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: status,
+      published_at: published_at,
+      source_snapshot: {}
+    )
   end
 
   def create_homepage_genre_snapshot(selected: true, lane_slugs: [ "rock-alternative", "pop-mainstream" ])

@@ -1,0 +1,19 @@
+<% accessible_event_name = [ event.artist_name, event.title ].compact.join(" - ") %>
+<% button_classes = ["saved-event-button", local_assigns[:button_class]].compact.join(" ") %>
+
+<button type="button"
+        class="<%= button_classes %>"
+        data-controller="saved-event-toggle"
+        data-action="click->saved-event-toggle#toggle"
+        data-saved-event-toggle-slug-value="<%= event.slug %>"
+        data-saved-event-toggle-event-name-value="<%= accessible_event_name %>"
+        data-saved-event-toggle-unsaved-label-value="merken"
+        data-saved-event-toggle-saved-label-value="nicht mehr merken"
+        aria-pressed="false"
+        aria-label="<%= "#{accessible_event_name} merken" %>"
+        title="<%= "#{accessible_event_name} merken" %>">
+  <svg viewBox="0 0 24 24" class="saved-event-button-icon" aria-hidden="true">
+    <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z" />
+  </svg>
+  <span class="sr-only" data-saved-event-toggle-target="label"><%= "#{accessible_event_name} merken" %></span>
+</button>

@@ -71,6 +71,7 @@ Rails.application.routes.draw do
   end
 
   resources :events, only: [ :index, :show ], module: :public, param: :slug do
+    get :saved_lane, on: :collection
     get :search_overlay, on: :collection
     patch :status, on: :member
   end

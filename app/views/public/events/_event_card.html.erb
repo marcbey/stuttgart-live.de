@@ -12,6 +12,7 @@
 
 <article id="<%= card_dom_id %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
   <div class="event-card-image-wrap">
+    <%= render "public/events/saved_event_button", event: event %>
     <%= link_to public_event_detail_path(event, browse_state), class: "event-card-link" do %>
       <% if desktop_image_source.present? %>
         <picture>

@@ -14,6 +14,7 @@
 <% article_attributes[:id] = card_dom_id if card_dom_id.present? %>
 
 <article <%= tag.attributes(article_attributes) %>>
+  <%= render "public/events/saved_event_button", event: event %>
   <%= link_to public_event_detail_path(event, browse_state), class: ["genre-lane-card-link", ("genre-lane-card-link--#{card_variant}" if card_variant.present?)].compact.join(" ") do %>
     <div class="<%= ["genre-lane-card-media", ("genre-lane-card-media--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
       <% if desktop_image_source.present? %>

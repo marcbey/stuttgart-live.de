@@ -97,6 +97,12 @@ application.register("promotion-banner-image-preupload", PromotionBannerImagePre
 import PromotionBannerColorController from "./promotion_banner_color_controller"
 application.register("promotion-banner-color", PromotionBannerColorController)
 
+import SavedEventToggleController from "./saved_event_toggle_controller"
+application.register("saved-event-toggle", SavedEventToggleController)
+
+import SavedEventsLaneController from "./saved_events_lane_controller"
+application.register("saved-events-lane", SavedEventsLaneController)
+
 import ScrollTopController from "./scroll_top_controller"
 application.register("scroll-top", ScrollTopController)
 
