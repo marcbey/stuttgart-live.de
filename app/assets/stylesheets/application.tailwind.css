@@ -2505,6 +2505,7 @@ trix-editor.blog-rich-text:focus {
   gap: 0.35rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
+  padding-left: 2.2rem;
 }
 
 .search-results-empty h2,

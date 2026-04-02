@@ -20,8 +20,7 @@
   <%= render "home_slider_header",
              title: "Suchergebnisse",
              variant: :search,
-             nav_content: nav_content,
-             show_window_bar: false %>
+             nav_content: nav_content %>
   <% if events.any? %>
     <div data-section-view-target="slider">
       <%= render "event_cards",

@@ -1901,6 +1901,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".lane-header.lane-header--search", count: 1
+    assert_select ".lane-header.lane-header--search .slider-window-bar", count: 1
     assert_select "#event-grid .event-card-grid-1-1", count: 2
     assert_includes response.body, first_event.title
     assert_includes response.body, second_event.title
