@@ -33,7 +33,9 @@
     <% end %>
   </head>
 
-  <% public_frontend = controller_path.start_with?("public/") || controller_path == "sessions" %>
+  <% public_frontend = controller_path.start_with?("public/") ||
+                       controller_path == "sessions" ||
+                       (controller_path == "passwords" && action_name == "new") %>
   <% public_homepage_chrome = controller_path.start_with?("public/") %>
   <% body_classes = [] %>
   <% body_classes << "page-public" if public_frontend %>

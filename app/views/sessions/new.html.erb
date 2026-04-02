@@ -1,14 +1,11 @@
 <% content_for :title, "Login" %>
 
-<section class="public-shell auth-shell">
-  <div class="auth-card">
-    <header class="auth-card-header">
-      <p class="news-kicker">Redaktion</p>
-      <h1>Login</h1>
-      <p class="auth-card-lead">Zugang fuerr Redaktion, Pflege und interne Arbeitsbereiche.</p>
-    </header>
-
-    <%= form_with url: session_path, class: "editor-form auth-form" do |form| %>
+<%= render "public/pages/info_page",
+           kicker: "Redaktion",
+           title: "Login",
+           intro: "Zugang für Redaktion, Pflege und interne Arbeitsbereiche." do %>
+  <%= render "public/pages/info_page_card", title: "Anmelden", wide: true do %>
+    <%= form_with url: session_path, class: "editor-form" do |form| %>
       <div>
         <%= form.label :email_address, "E-Mail", class: "form-label" %>
         <%= form.email_field :email_address,
@@ -35,5 +32,19 @@
         <%= link_to "Passwort vergessen", new_password_path, class: "button button-secondary" %>
       </div>
     <% end %>
-  </div>
-</section>
+  <% end %>
+
+  <%= render "public/pages/info_page_card", title: "Zugang verlegt?" do %>
+    <p>Wenn dein Passwort gerade fehlt, schicken wir dir einen Magic-Link für den nächsten Login.</p>
+    <div class="info-page-links">
+      <%= link_to "Reset-Link anfordern", new_password_path %>
+    </div>
+  <% end %>
+
+  <%= render "public/pages/info_page_card", title: "Technische Probleme?" do %>
+    <p>Wenn dein Zugang nicht funktioniert oder dir noch ein Konto fehlt, helfen wir dir direkt weiter.</p>
+    <div class="info-page-links">
+      <%= mail_to "info@stuttgart-live.de", "info@stuttgart-live.de" %>
+    </div>
+  <% end %>
+<% end %>

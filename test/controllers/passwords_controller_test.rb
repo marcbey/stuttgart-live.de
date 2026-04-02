@@ -8,6 +8,9 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   test "new" do
     get new_password_path
     assert_response :success
+    assert_select "body.page-public"
+    assert_select "section.info-page-shell h1", text: "Passwort vergessen"
+    assert_select "a[href='#{new_session_path}']", text: "Zurück zum Login"
   end
 
   test "create" do
