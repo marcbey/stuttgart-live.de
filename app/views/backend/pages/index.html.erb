@@ -1,0 +1,22 @@
+<% content_for :title, "Seiten" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Seiten</h1>
+      <p>Statische Inhalte wie Impressum, Datenschutz oder eigene Landingpages direkt im Backend pflegen.</p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Neue Seite", new_backend_page_path, class: "button button-compact" %>
+    </div>
+  </header>
+
+  <section class="backend-section backend-section-compact">
+    <div class="backend-section-header">
+      <p>Alle Seiten werden hier zentral gepflegt. Neue Seiten sind sofort live unter ihrem Root-Slug veröffentlicht, zum Beispiel <code>/sommer-faq</code>.</p>
+    </div>
+    <div class="backend-section-body">
+      <%= render "pages_list", pages: @pages, empty_message: "Noch keine Seiten angelegt." %>
+    </div>
+  </section>
+</section>

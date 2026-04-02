@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_02_154707) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_02_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -440,6 +440,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_02_154707) do
     t.string "user_agent"
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "static_pages", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "intro"
+    t.string "kicker"
+    t.string "slug", null: false
+    t.string "system_key"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_static_pages_on_slug", unique: true
+    t.index ["system_key"], name: "index_static_pages_on_system_key", unique: true
   end
 
   create_table "users", force: :cascade do |t|

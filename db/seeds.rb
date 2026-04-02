@@ -39,3 +39,5 @@ if admin.new_record? || default_admin_password != "PleaseChangeMe123!"
   admin.password_confirmation = default_admin_password
 end
 admin.save!
+
+StaticPageDefaults.ensure! if defined?(StaticPage)

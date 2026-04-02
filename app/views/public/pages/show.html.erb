@@ -1,0 +1,16 @@
+<% content_for :title, "#{@page.title} | Stuttgart Live" %>
+
+<%= render "public/pages/info_page",
+           kicker: @page.kicker.presence || "Service",
+           title: @page.title,
+           intro: @page.intro.to_s do %>
+  <% if @page.card_layout? %>
+    <%= @page.body %>
+  <% else %>
+    <article class="info-page-card info-page-card-wide">
+      <div class="info-page-card-body static-page-rich-copy">
+        <%= @page.body %>
+      </div>
+    </article>
+  <% end %>
+<% end %>

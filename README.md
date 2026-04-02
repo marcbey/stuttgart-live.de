@@ -21,7 +21,7 @@ Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität n
 ## Was die Anwendung abdeckt
 
 - Öffentliche Website mit Event-Listen, Event-Detailseiten, News und statischen Inhaltsseiten
-- Redaktionelles Backend für Events, Venues, Bilder, Blog, Benutzer und Importquellen
+- Redaktionelles Backend für Events, Venues, statische Seiten, Bilder, Blog, Benutzer und Importquellen
 - Import-Pipeline für externe Anbieter wie Easyticket, Eventim und Reservix
 - Redaktionelle Qualitätssicherung mit Inbox, Änderungsprotokollen und Vollständigkeitsprüfungen
 - Newsletter-Anmeldung mit optionalem Mailchimp-Sync

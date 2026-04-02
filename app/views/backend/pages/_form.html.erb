@@ -1,0 +1,63 @@
+<div class="editor-panel backend-panel">
+  <% if page.errors.any? %>
+    <div class="flash flash-alert">
+      <strong>Bitte Eingaben prüfen.</strong>
+      <ul>
+        <% page.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: page,
+                url: (page.persisted? ? backend_page_path(page) : backend_pages_path),
+                class: "editor-form" do |form| %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Seitendaten</h3>
+      </div>
+      <div class="backend-section-body">
+        <div class="editor-grid">
+          <div>
+            <%= form.label :title, "Titel", class: "form-label" %>
+            <%= form.text_field :title, class: "form-input", required: true, maxlength: 180 %>
+          </div>
+
+          <div>
+            <%= form.label :slug, "Slug", class: "form-label" %>
+            <%= form.text_field :slug,
+                                class: "form-input",
+                                placeholder: "wird-aus-dem-titel-abgeleitet",
+                                disabled: page.system_page? %>
+            <% if page.system_page? %>
+              <p class="form-hint">Systemseiten behalten ihren festen Slug.</p>
+            <% else %>
+              <p class="form-hint">Die Seite ist direkt unter <code>/<%= page.slug.presence || "slug" %></code> erreichbar.</p>
+            <% end %>
+          </div>
+
+          <div>
+            <%= form.label :kicker, "Kicker", class: "form-label" %>
+            <%= form.text_field :kicker, class: "form-input", maxlength: 80, placeholder: "z. B. Service" %>
+          </div>
+
+          <div class="editor-grid-span-full">
+            <%= form.label :intro, "Intro", class: "form-label" %>
+            <%= form.text_area :intro, class: "form-input form-textarea", rows: 3, maxlength: 500 %>
+          </div>
+
+          <div class="editor-grid-span-full">
+            <%= form.label :body, "Inhalt", class: "form-label" %>
+            <p class="blog-editor-hint">Jedes Speichern ist sofort öffentlich sichtbar. Bilder und Links können direkt über die Toolbar eingefügt werden.</p>
+            <%= form.rich_textarea :body, class: "blog-rich-text" %>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="editor-footer">
+      <%= form.submit submit_label, class: "button button-compact" %>
+    </div>
+  <% end %>
+</div>

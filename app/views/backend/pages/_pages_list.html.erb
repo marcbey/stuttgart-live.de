@@ -1,0 +1,42 @@
+<% if pages.any? %>
+  <ul class="backend-page-grid" role="list">
+    <% pages.each do |page| %>
+      <li class="backend-page-card">
+        <div class="backend-page-card-header">
+          <div>
+            <h4><%= page.title %></h4>
+            <p class="backend-page-card-slug">/<%= page.slug %></p>
+          </div>
+        </div>
+
+        <% if page.kicker.present? %>
+          <p class="backend-page-card-kicker"><%= page.kicker %></p>
+        <% end %>
+
+        <% if page.intro.present? %>
+          <p class="backend-page-card-copy"><%= truncate(page.intro, length: 180) %></p>
+        <% else %>
+          <p class="backend-page-card-copy"><%= truncate(page.body.to_plain_text, length: 180) %></p>
+        <% end %>
+
+        <div class="backend-page-card-actions">
+          <%= link_to "Bearbeiten", edit_backend_page_path(page), class: "button button-ghost button-compact" %>
+          <%= link_to "Öffnen", "/#{page.slug}", class: "button button-secondary button-compact", target: "_blank", rel: "noopener" %>
+          <% unless page.system_page? %>
+            <%= button_to "Löschen",
+                          backend_page_path(page),
+                          method: :delete,
+                          class: "button button-secondary button-compact",
+                          form: {
+                            data: {
+                              turbo_confirm: "Seite wirklich löschen?"
+                            }
+                          } %>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p class="form-hint"><%= empty_message %></p>
+<% end %>

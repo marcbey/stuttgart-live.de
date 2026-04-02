@@ -20,11 +20,11 @@ module ApplicationHelper
   end
 
   def contact_nav_active?
-    controller_path == "public/pages" && action_name == "contact"
+    controller_path == "public/pages" && public_page_slug == "kontakt"
   end
 
   def imprint_nav_active?
-    controller_path == "public/pages" && action_name == "imprint"
+    controller_path == "public/pages" && public_page_slug == "impressum"
   end
 
   def backend_nav_active?
@@ -33,6 +33,10 @@ module ApplicationHelper
 
   def blog_nav_active?
     controller_path == "backend/blog_posts"
+  end
+
+  def pages_nav_active?
+    controller_path == "backend/pages"
   end
 
   def presenter_nav_active?
@@ -444,4 +448,9 @@ module ApplicationHelper
       { marker: "•", text: Regexp.last_match(1), list_class: "event-detail-notes-list-neutral", item_class: "event-detail-notes-list-item-neutral" }
     end
   end
+
+  private
+    def public_page_slug
+      params[:slug].to_s.presence
+    end
 end

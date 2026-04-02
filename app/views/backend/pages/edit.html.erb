@@ -1,0 +1,16 @@
+<% content_for :title, "Seite bearbeiten" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Seite bearbeiten</h1>
+      <p>/<%= @page.slug %></p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Öffnen", "/#{@page.slug}", class: "button button-compact", target: "_blank", rel: "noopener" %>
+      <%= link_to "Zurück zur Liste", backend_pages_path, class: "button button-secondary button-compact" %>
+    </div>
+  </header>
+
+  <%= render "form", page: @page, submit_label: "Seite speichern" %>
+</section>

@@ -1,16 +1,10 @@
 module Public
   class PagesController < ApplicationController
-    allow_unauthenticated_access only: %i[privacy imprint terms contact accessibility guardian_form]
+    allow_unauthenticated_access only: %i[show guardian_form]
 
-    def privacy; end
-
-    def imprint; end
-
-    def terms; end
-
-    def contact; end
-
-    def accessibility; end
+    def show
+      @page = StaticPage.with_page_content.find_by!(slug: params[:slug])
+    end
 
     def guardian_form; end
   end

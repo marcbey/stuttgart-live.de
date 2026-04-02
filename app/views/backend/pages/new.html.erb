@@ -1,0 +1,15 @@
+<% content_for :title, "Neue Seite" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div>
+      <h1>Neue Seite</h1>
+      <p>Neue Seiten werden nach dem Speichern sofort unter ihrem Slug veröffentlicht.</p>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zurück zur Liste", backend_pages_path, class: "button button-secondary button-compact" %>
+    </div>
+  </header>
+
+  <%= render "form", page: @page, submit_label: "Seite anlegen" %>
+</section>

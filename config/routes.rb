@@ -10,6 +10,15 @@ Rails.application.routes.draw do
     framework_prefixes.none? { |prefix| request.path.start_with?(prefix) }
   end
 
+  static_page_route = lambda do |request|
+    slug = request.path_parameters[:slug].to_s
+    next false unless slug.match?(/\A[a-z0-9]+(?:-[a-z0-9]+)*\z/)
+
+    StaticPage.where(slug: slug).exists?
+  rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
+    false
+  end
+
   match "/400", to: "errors#show", via: :all, defaults: { code: 400 }
   match "/404", to: "errors#show", via: :all, defaults: { code: 404 }
   match "/422", to: "errors#show", via: :all, defaults: { code: 422 }
@@ -26,6 +35,7 @@ Rails.application.routes.draw do
       get :section, on: :collection
     end
     resources :blog_posts, path: "blog", except: [ :show ]
+    resources :pages, except: [ :show ]
     resources :presenters, except: [ :show ] do
       get :bulk_new, on: :collection
       post :bulk_create, on: :collection
@@ -77,13 +87,13 @@ Rails.application.routes.draw do
   end
   get "search", to: "public/events#search", as: :search
   resources :newsletter_subscribers, only: [ :create ], module: :public
-  get "kontakt", to: "public/pages#contact", as: :contact
-  get "impressum", to: "public/pages#imprint", as: :imprint
+  get "kontakt", to: "public/pages#show", defaults: { slug: "kontakt" }, as: :contact
+  get "impressum", to: "public/pages#show", defaults: { slug: "impressum" }, as: :imprint
   get "blog/:slug", to: "public/legacy_blog_redirects#show", as: :legacy_blog_redirect
   resources :news, only: [ :index, :show ], module: :public, param: :slug
-  get "datenschutz", to: "public/pages#privacy", as: :datenschutz
-  get "agb", to: "public/pages#terms", as: :agb
-  get "barrierefreiheit", to: "public/pages#accessibility", as: :barrierefreiheit
+  get "datenschutz", to: "public/pages#show", defaults: { slug: "datenschutz" }, as: :datenschutz
+  get "agb", to: "public/pages#show", defaults: { slug: "agb" }, as: :agb
+  get "barrierefreiheit", to: "public/pages#show", defaults: { slug: "barrierefreiheit" }, as: :barrierefreiheit
   get "begleitformular", to: "public/pages#guardian_form", as: :begleitformular
 
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
@@ -99,6 +109,8 @@ Rails.application.routes.draw do
   get "backend", to: "backend/events#index", as: :backend_root
 
   root "public/events#index"
+
+  get ":slug", to: "public/pages#show", as: :static_page, constraints: static_page_route
 
   match "*unmatched", to: "errors#show", via: :all, defaults: { code: 404 }, constraints: internal_framework_path
 end

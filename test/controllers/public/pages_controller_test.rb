@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Public::PagesControllerTest < ActionDispatch::IntegrationTest
+  setup do
+    StaticPageDefaults.ensure!
+  end
+
   test "contact page is publicly accessible" do
     get contact_url
 
@@ -8,6 +12,8 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links .app-nav-link-active", text: "Kontakt"
     assert_includes response.body, "Bestell-Hotline"
     assert_includes response.body, "arnulfwoock@russ-live.de"
+    assert_select ".info-page-card", count: 4
+    assert_select ".info-page-card.info-page-card-wide", count: 2
   end
 
   test "imprint page is publicly accessible" do
@@ -16,6 +22,8 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "SKS Erwin Russ GmbH"
     assert_includes response.body, "DE 147867476"
+    assert_select ".info-page-card", count: 5
+    assert_select ".info-page-list", minimum: 2
   end
 
   test "footer pages are publicly accessible" do
@@ -24,6 +32,7 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Datenschutz"
     assert_includes response.body, "stuttgart-live.de/datenschutz"
+    assert_select ".info-page-card", count: 8
 
     get imprint_url
 
@@ -48,6 +57,30 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Barrierefreiheit"
     assert_includes response.body, "digitale Barrierefreiheit"
+    assert_select ".info-page-card", count: 6
+  end
+
+  test "custom static page is publicly accessible by root slug" do
+    page = StaticPage.create!(
+      slug: "sommer-faq",
+      title: "Sommer FAQ",
+      kicker: "FAQ",
+      intro: "Alles zum Sommerprogramm.",
+      body: "<div><h2>Anreise</h2><p>Mit der Bahn.</p></div>"
+    )
+
+    get static_page_url(page.slug)
+
+    assert_response :success
+    assert_includes response.body, "Sommer FAQ"
+    assert_includes response.body, "Anreise"
+    assert_includes response.body, "Mit der Bahn."
+  end
+
+  test "unknown static page returns not found" do
+    get "/nicht-vorhanden"
+
+    assert_response :not_found
   end
 
   test "footer navigation is rendered on public pages" do
