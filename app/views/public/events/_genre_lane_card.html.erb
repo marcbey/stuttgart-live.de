@@ -9,8 +9,11 @@
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
 <% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
 <% primary_offer = event.public_ticket_offer %>
+<% card_dom_id = local_assigns[:card_dom_id] %>
+<% article_attributes = { class: ["genre-lane-card", ("genre-lane-card--#{card_variant}" if card_variant.present?)].compact.join(" ") } %>
+<% article_attributes[:id] = card_dom_id if card_dom_id.present? %>
 
-<article class="<%= ["genre-lane-card", ("genre-lane-card--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
+<article <%= tag.attributes(article_attributes) %>>
   <%= link_to public_event_detail_path(event, browse_state), class: ["genre-lane-card-link", ("genre-lane-card-link--#{card_variant}" if card_variant.present?)].compact.join(" ") do %>
     <div class="<%= ["genre-lane-card-media", ("genre-lane-card-media--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
       <% if desktop_image_source.present? %>
@@ -32,6 +35,18 @@
       <% end %>
       <% if show_series_badge && public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
         <%= render "event_series_corner_badge" %>
+      <% end %>
+      <% if authenticated? %>
+        <div class="event-card-admin-controls">
+          <%= link_to "Edit",
+                      backend_events_path(status: event.status, event_id: event.id),
+                      class: "event-card-admin-link event-card-admin-link-attention",
+                      data: { turbo: false } %>
+
+          <% if event.primary_source.present? %>
+            <span class="status-badge event-card-admin-link"><%= event_source_label(event.primary_source) %></span>
+          <% end %>
+        </div>
       <% end %>
     </div>
 

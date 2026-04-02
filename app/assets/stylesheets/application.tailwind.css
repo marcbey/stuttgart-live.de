@@ -9628,7 +9628,7 @@ trix-editor.blog-rich-text:focus {
   }
 
   .search-results-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .flyer-grid-flat .event-card-grid-1-2,
@@ -9680,10 +9680,6 @@ trix-editor.blog-rich-text:focus {
 
   .flyer-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
-  .search-results-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .news-index-grid {
