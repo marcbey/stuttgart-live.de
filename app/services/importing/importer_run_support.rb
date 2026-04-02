@@ -1,6 +1,7 @@
 module Importing
   module ImporterRunSupport
-    RUN_STATE_CACHE_TTL_SECONDS = 0.001
+    # Keep stop/cancel checks responsive without reloading the run state on nearly every processed row.
+    RUN_STATE_CACHE_TTL_SECONDS = 0.05
 
     private
 

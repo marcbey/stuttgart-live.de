@@ -104,6 +104,8 @@ class Venue < ApplicationRecord
     compact_prefix = "#{compact_token}%"
     compact_infix = "%#{compact_token}%"
     compact_name_sql = compact_name_sql_fragment
+    compact_name = compact_name_arel_node
+    lower_name = lower_name_arel_node
 
     order_sql = sanitize_sql_array(
       [
@@ -129,12 +131,11 @@ class Venue < ApplicationRecord
     )
 
     where(
-      "#{compact_name_sql} = :compact_query OR #{compact_name_sql} LIKE :compact_prefix OR #{compact_name_sql} LIKE :compact_infix OR LOWER(venues.name) = :normalized_query OR LOWER(venues.name) LIKE :prefix",
-      compact_query:,
-      compact_prefix:,
-      compact_infix:,
-      normalized_query:,
-      prefix:
+      compact_name.eq(compact_query)
+        .or(compact_name.matches(compact_prefix))
+        .or(compact_name.matches(compact_infix))
+        .or(lower_name.eq(normalized_query))
+        .or(lower_name.matches(prefix))
     ).order(Arel.sql(order_sql))
   end
 
@@ -152,6 +153,8 @@ class Venue < ApplicationRecord
     spaced_prefix = "% #{token}%"
     hyphen_prefix = "%-#{token}%"
     compact_name_sql = compact_name_sql_fragment
+    compact_name = compact_name_arel_node
+    lower_name = lower_name_arel_node
 
     order_sql = sanitize_sql_array(
       [
@@ -182,13 +185,12 @@ class Venue < ApplicationRecord
 
     relation =
       if normalized_query.length < 3
-        where("LOWER(venues.name) LIKE :infix OR #{compact_name_sql} LIKE :compact_infix", infix:, compact_infix:)
+        where(lower_name.matches(infix).or(compact_name.matches(compact_infix)))
       else
         where(
-          "LOWER(venues.name) LIKE :infix OR LOWER(venues.name) % :query OR #{compact_name_sql} LIKE :compact_infix",
-          infix:,
-          query: normalized_query,
-          compact_infix:
+          lower_name.matches(infix)
+            .or(Arel::Nodes::InfixOperation.new("%", lower_name, Arel::Nodes.build_quoted(normalized_query)))
+            .or(compact_name.matches(compact_infix))
         )
       end
 
@@ -233,6 +235,27 @@ class Venue < ApplicationRecord
 
   def self.compact_name_sql_fragment
     "REGEXP_REPLACE(LOWER(COALESCE(venues.name, '')), '[^a-z0-9]+', '', 'g')"
+  end
+
+  def self.lower_name_arel_node
+    Arel::Nodes::NamedFunction.new(
+      "LOWER",
+      [
+        Arel::Nodes::NamedFunction.new("COALESCE", [ arel_table[:name], Arel::Nodes.build_quoted("") ])
+      ]
+    )
+  end
+
+  def self.compact_name_arel_node
+    Arel::Nodes::NamedFunction.new(
+      "REGEXP_REPLACE",
+      [
+        lower_name_arel_node,
+        Arel::Nodes.build_quoted("[^a-z0-9]+"),
+        Arel::Nodes.build_quoted(""),
+        Arel::Nodes.build_quoted("g")
+      ]
+    )
   end
 
   def thumbnail_logo_variant
