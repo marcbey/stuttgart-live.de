@@ -1780,11 +1780,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index renders the search filter in the app nav" do
+    placeholder_phrases = Public::EventsHelper::PUBLIC_SEARCH_PLACEHOLDER_PHRASES
+
     get events_url(filter: "all", view: "list")
 
     assert_response :success
     assert_select ".app-nav-search .public-search-filter", count: 1
     assert_select ".app-nav-search .public-search-filter[action='#{search_path}']"
+    form = css_select(".app-nav-search .public-search-filter").first
+    input = css_select(".app-nav-search .public-search-input").first
+
+    assert_equal placeholder_phrases.to_json, form["data-public-search-placeholder-phrases-value"]
+    assert_equal placeholder_phrases.first, input["placeholder"]
+
     assert_select ".public-filter-row", count: 0
     assert_select ".public-view-toggle", count: 0
     assert_select "input[name='view']", count: 0

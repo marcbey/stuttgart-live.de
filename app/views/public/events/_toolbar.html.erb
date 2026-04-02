@@ -1,10 +1,13 @@
+<% placeholder_phrases = Public::EventsHelper::PUBLIC_SEARCH_PLACEHOLDER_PHRASES %>
+
 <%= form_with url: search_path,
               method: :get,
               local: true,
               class: "public-search-filter",
               data: {
                 controller: "public-search",
-                public_search_search_url_value: search_overlay_events_path
+                public_search_search_url_value: search_overlay_events_path,
+                public_search_placeholder_phrases_value: placeholder_phrases.to_json
               } do %>
   <%= hidden_field_tag :event_date, browse_state.event_date_param %>
   <div class="public-search-field">
@@ -15,7 +18,7 @@
                        browse_state.query,
                        type: "search",
                        class: "form-input public-search-input",
-                       placeholder: "Suche nach Künstlern und Events",
+                       placeholder: placeholder_phrases.first,
                        autocomplete: "off",
                        spellcheck: false,
                        data: {

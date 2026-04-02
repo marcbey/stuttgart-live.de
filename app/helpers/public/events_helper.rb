@@ -1,4 +1,19 @@
 module Public::EventsHelper
+  PUBLIC_SEARCH_PLACEHOLDER_PHRASES = [
+    "Diesen Freitag im Wizemann",
+    "Heute im Goldmark's",
+    "Diese Woche in der Porsche-Arena",
+    "Übermorgen im LKA Longhorn",
+    "Morgen in der Liederhalle",
+    "Dieses Wochenende im Club Zentral",
+    "Am 12.04.",
+    "Nächsten Monat im Theaterhaus",
+    "Nächste Woche in der Schleyer-Halle",
+    "Im Juni im Kulturquartier",
+    "Am Wochenende in der Staatsoper",
+    "Im April in der Wagenhallen"
+  ].freeze
+
   EventDetailTextColumns = Data.define(:left, :right)
 
   def effective_public_event_series_ids(events)

@@ -2377,6 +2377,7 @@ trix-editor.blog-rich-text:focus {
 }
 
 .public-search-input {
+  --public-search-placeholder-opacity: 1;
   width: 100%;
   min-width: 16rem;
   min-height: 3rem;
@@ -2389,7 +2390,9 @@ trix-editor.blog-rich-text:focus {
 }
 
 .public-search-input::placeholder {
-  color: rgba(17, 17, 17, 0.52);
+  color: rgb(17 17 17 / calc(0.12 * var(--public-search-placeholder-opacity)));
+  opacity: var(--public-search-placeholder-opacity);
+  transition: color 180ms ease, opacity 180ms ease;
 }
 
 .public-search-input::-webkit-search-decoration,
@@ -2505,7 +2508,7 @@ trix-editor.blog-rich-text:focus {
   gap: 0.35rem;
   padding-top: 1rem;
   padding-bottom: 1rem;
-  padding-left: 2.2rem;
+  padding-left: 0;
 }
 
 .search-results-empty h2,
@@ -9916,7 +9919,9 @@ body.page-public-events-index .public-search-input {
 }
 
 body.page-public-events-index .public-search-input::placeholder {
-  color: rgba(var(--ink-rgb), 0.92);
+  color: rgb(var(--ink-rgb) / calc(0.22 * var(--public-search-placeholder-opacity)));
+  opacity: var(--public-search-placeholder-opacity);
+  transition: color 180ms ease, opacity 180ms ease;
 }
 
 body.page-public-events-index .public-search-clear,
