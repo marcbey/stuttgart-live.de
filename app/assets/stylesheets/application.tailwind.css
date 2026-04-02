@@ -2500,6 +2500,23 @@ trix-editor.blog-rich-text:focus {
   line-height: 1.4;
 }
 
+.search-results-empty {
+  display: grid;
+  gap: 0.35rem;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.search-results-empty h2,
+.search-results-empty p {
+  margin: 0;
+}
+
+.search-results-empty p {
+  color: var(--ink-soft);
+  line-height: 1.4;
+}
+
 .public-search-result {
   display: grid;
   grid-template-columns: 4rem minmax(0, 1fr) auto;

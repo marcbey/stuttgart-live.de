@@ -1938,6 +1938,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#events-pagination", count: 0
   end
 
+  test "search renders a friendly empty state without matches" do
+    get search_url(q: "Absolut Unfindbarer Suchbegriff")
+
+    assert_response :success
+    assert_includes response.body, "Sorry, nix gefunden"
+    assert_includes response.body, "Zu „Absolut Unfindbarer Suchbegriff“ haben wir aktuell keine Events gefunden."
+  end
+
   test "search redirects to homepage for punctuation only query" do
     get search_url(q: " ... !!! ")
 

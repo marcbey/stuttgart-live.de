@@ -20,16 +20,24 @@
   <%= render "home_slider_header",
              title: "Suchergebnisse",
              variant: :search,
-             nav_content: nav_content %>
-  <div data-section-view-target="slider">
-    <%= render "event_cards",
-               events: events,
-               browse_state: browse_state,
-               container_id: "event-grid",
-               container_class: "flyer-grid flyer-grid-flat",
-               card_dom_id_prefix: :search_card %>
-  </div>
-  <div class="section-slider-list" data-section-view-target="list" hidden>
-    <%= render "event_rows", events: events, browse_state: browse_state %>
-  </div>
+             nav_content: nav_content,
+             show_window_bar: false %>
+  <% if events.any? %>
+    <div data-section-view-target="slider">
+      <%= render "event_cards",
+                 events: events,
+                 browse_state: browse_state,
+                 container_id: "event-grid",
+                 container_class: "flyer-grid flyer-grid-flat",
+                 card_dom_id_prefix: :search_card %>
+    </div>
+    <div class="section-slider-list" data-section-view-target="list" hidden>
+      <%= render "event_rows", events: events, browse_state: browse_state %>
+    </div>
+  <% else %>
+    <div class="search-results-empty">
+      <h2>Sorry, nix gefunden</h2>
+      <p>Zu „<%= browse_state.query %>“ haben wir aktuell keine Events gefunden.</p>
+    </div>
+  <% end %>
 </section>
