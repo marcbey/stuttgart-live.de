@@ -1,5 +1,6 @@
 require "test_helper"
 require "ostruct"
+require "action_view/helpers/number_helper"
 
 class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
   class FakeGenres
@@ -17,6 +18,8 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
   end
 
   class ViewContextStub
+    include ActionView::Helpers::NumberHelper
+
     def event_image_source(image)
       image&.image_url || image&.source
     end
@@ -39,6 +42,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     def event_source_label(source)
       source.to_s
+    end
+
+    def public_event_ticket_price(event, offer, format: :card)
+      Public::EventsHelper.instance_method(:public_event_ticket_price).bind_call(self, event, offer, format:)
     end
 
     def l(value, format:)
@@ -156,6 +163,24 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Bildquelle: Easy Ticket Service / Veranstalter", presenter.hero_gallery_slides.first.credit
     assert_equal "/slide-1.jpg", presenter.hero_gallery_slides.second.desktop_source
     assert_equal "Live auf der Bühne", presenter.hero_gallery_slides.second.caption
+  end
+
+  test "writes out price ranges in the ticket cta" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      start_at: Time.zone.local(2026, 6, 17, 20, 0),
+      min_price: BigDecimal("35.96"),
+      max_price: BigDecimal("59.90")
+    )
+    primary_offer = OpenStruct.new(
+      resolved_ticket_url: "https://tickets.example/band",
+      ticket_price_text: "ab 35,96€"
+    )
+
+    presenter = build_presenter(event, primary_offer: primary_offer)
+
+    assert_equal "35,96€ bis 59,90€", presenter.ticket_price_text
   end
 
   test "hides ticket cta for past events" do

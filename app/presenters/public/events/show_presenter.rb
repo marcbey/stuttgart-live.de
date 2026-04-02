@@ -247,7 +247,7 @@ module Public
       def ticket_price_text
         return unless show_ticket_link?
 
-        primary_offer&.ticket_price_text.to_s.presence
+        view_context.public_event_ticket_price(event, primary_offer, format: :detail)
       end
 
       def sks_sold_out_message

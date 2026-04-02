@@ -2610,7 +2610,7 @@ trix-editor.blog-rich-text:focus {
 
 .home-featured-track .event-card {
   scroll-snap-align: start;
-  --event-card-radius: 1rem;
+  --event-card-radius: 0;
   border-radius: var(--event-card-radius);
   border: 1px solid rgba(93, 42, 16, 0.1);
   background: rgba(255, 252, 248, 0.74);
@@ -2981,41 +2981,38 @@ trix-editor.blog-rich-text:focus {
 
 .genre-lane-card-copy {
   display: grid;
-  gap: 0.26rem;
+  gap: 0.16rem;
   min-width: 0;
-  padding-top: 0.42rem;
+  padding-top: 0rem;
 }
 
 .genre-lane-card-copy--editorial {
-  gap: 0.2rem;
+  gap: 0.14rem;
 }
 
 .genre-lane-card-copy--spotlight {
-  gap: 0.32rem;
+  gap: 0.18rem;
 }
 
 .genre-lane-card-meta {
   display: flex;
   align-items: baseline;
-  gap: 0.3rem;
+  gap: 0.45rem;
   margin: 0;
   min-width: 0;
   overflow: hidden;
-  color: rgba(17, 17, 17, 0.56);
-  font-size: 0.73rem;
-  line-height: 1.2;
-  text-transform: uppercase;
+  color: rgba(17, 17, 17, 0.82);
+  font-size: 0.9rem;
+  line-height: 1.15;
   white-space: nowrap;
 }
 
 .genre-lane-card-meta--editorial {
-  font-size: 0.69rem;
-  letter-spacing: 0.04em;
-  color: rgba(41, 70, 86, 0.72);
+  color: rgba(17, 17, 17, 0.82);
 }
 
 .genre-lane-card-meta--spotlight {
-  color: rgba(17, 17, 17, 0.56);
+  color: rgba(17, 17, 17, 0.82);
 }
 
 .genre-lane-card-name {
@@ -3049,15 +3046,14 @@ trix-editor.blog-rich-text:focus {
   margin: 0;
   color: rgba(17, 17, 17, 0.7);
   font-size: 0.82rem;
-  line-height: 1.16;
+  line-height: 1;
 }
 
 .genre-lane-card-price {
-  margin: 0;
-  font-weight: 600;
-  color: rgba(17, 17, 17, 0.86);
-  font-size: 0.78rem;
-  line-height: 1.16;
+  margin: 0.26rem 0 0;
+  padding-right: 0;
+  color: rgba(17, 17, 17, 0.82);
+  text-align: left;
 }
 
 .genre-lane-card-meta-date {
@@ -3068,6 +3064,7 @@ trix-editor.blog-rich-text:focus {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .genre-lane-card-title--editorial {
@@ -3643,10 +3640,10 @@ trix-editor.blog-rich-text:focus {
 
 .home-slider-card-copy {
   display: grid;
-  gap: 0.12rem;
+  gap: 0.08rem;
   min-height: 4.1rem;
   align-content: start;
-  padding-top: 0.42rem;
+  padding-top: 0.28rem;
 }
 
 .home-slider-card-name {
@@ -3673,18 +3670,29 @@ trix-editor.blog-rich-text:focus {
 }
 
 .home-slider-card-meta {
-  display: -webkit-box;
-  -webkit-line-clamp: 1;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
   margin: 0;
-  color: var(--ink-soft);
-  font-size: 0.7rem;
-  line-height: 1.18;
+  min-width: 0;
+  color: rgba(17, 17, 17, 0.82);
+  font-size: 0.9rem;
+  line-height: 1.15;
 }
 
-.home-slider-card-meta span {
-  display: inline;
+.home-slider-card-meta-date {
+  flex: 0 0 auto;
+}
+
+.home-slider-card-meta-venue {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-slider-card-price {
+  margin: 0.26rem 0 0;
+  padding-right: 0;
+  color: rgba(17, 17, 17, 0.82);
+  text-align: left;
 }
 
 .section-slider-list {
@@ -4453,6 +4461,10 @@ trix-editor.blog-rich-text:focus {
 
 .home-featured-section .event-card-image-wrap {
   border-radius: inherit;
+}
+
+.home-featured-section .event-card-image-wrap::after {
+  border-radius: 0;
 }
 
 .event-card-image-wrap::after {

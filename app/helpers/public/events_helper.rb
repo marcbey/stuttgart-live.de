@@ -137,11 +137,14 @@ module Public::EventsHelper
     image.alt_text.presence || default_alt
   end
 
-  def public_event_ticket_price(event, offer = event.public_ticket_offer)
+  def public_event_ticket_price(event, offer = event.public_ticket_offer, format: :card)
     return unless offer.present?
 
     if event.min_price.present? && event.max_price.present? && event.min_price < event.max_price
-      "ab #{number_to_currency(event.min_price, unit: "€", separator: ",", delimiter: ".", format: "%n%u")}"
+      min_price = number_to_currency(event.min_price, unit: "€", separator: ",", delimiter: ".", format: "%n%u")
+      return "#{min_price} bis #{number_to_currency(event.max_price, unit: "€", separator: ",", delimiter: ".", format: "%n%u")}" if format == :detail
+
+      "ab #{min_price}"
     else
       offer.ticket_price_text.to_s.presence
     end

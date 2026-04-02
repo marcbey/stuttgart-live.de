@@ -6,6 +6,7 @@
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
+<% primary_offer = event.public_ticket_offer %>
 
 <article class="home-slider-card">
   <div class="home-slider-card-media">
@@ -54,11 +55,14 @@
     <% if event.title.present? %>
       <p class="home-slider-card-title"><%= event.title %></p>
     <% end %>
-    <p class="home-slider-card-meta">
-      <span><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+    <p class="home-slider-card-meta event-listing-date">
+      <span class="home-slider-card-meta-date event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
       <% if event.venue.present? %>
-        <span><%= event.venue %></span>
+        <span class="home-slider-card-meta-venue event-listing-venue"><%= event.venue %></span>
       <% end %>
     </p>
+    <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
+      <p class="home-slider-card-price event-listing-price"><%= display_price %></p>
+    <% end %>
   </div>
 </article>
