@@ -1,6 +1,7 @@
 class Venue < ApplicationRecord
   ProcessingError = Class.new(StandardError)
   MATCH_KEY_REMOVABLE_CITY_TOKENS = %w[stuttgart].freeze
+  MATCH_KEY_APOSTROPHE_VARIANTS = /['’`´ʼʹʽꞌ՚＇]/.freeze
 
   attr_accessor :remove_logo
 
@@ -25,15 +26,8 @@ class Venue < ApplicationRecord
   end
 
   def self.match_key(value)
-    normalized = normalize_name(value)
-    return "" if normalized.blank?
-
-    tokens = ActiveSupport::Inflector.transliterate(normalized)
-      .downcase
-      .gsub(/[’'`]/, "")
-      .gsub(/[()]/, " ")
-      .gsub(/[^[:alnum:]\s]/, " ")
-      .split
+    tokens = match_key_tokens(value)
+    return "" if tokens.empty?
 
     tokens.pop while tokens.size > 1 && MATCH_KEY_REMOVABLE_CITY_TOKENS.include?(tokens.last)
     tokens.join(" ")
@@ -68,15 +62,7 @@ class Venue < ApplicationRecord
   end
 
   def self.stuttgart_suffix?(value)
-    normalized = normalize_name(value)
-    return false if normalized.blank?
-
-    tokens = ActiveSupport::Inflector.transliterate(normalized)
-      .downcase
-      .gsub(/[’'`]/, "")
-      .gsub(/[()]/, " ")
-      .gsub(/[^[:alnum:]\s]/, " ")
-      .split
+    tokens = match_key_tokens(value)
 
     tokens.size > 1 && MATCH_KEY_REMOVABLE_CITY_TOKENS.include?(tokens.last)
   end
@@ -236,6 +222,20 @@ class Venue < ApplicationRecord
   def self.compact_name_sql_fragment
     "REGEXP_REPLACE(LOWER(COALESCE(venues.name, '')), '[^a-z0-9]+', '', 'g')"
   end
+
+  def self.match_key_tokens(value)
+    normalized = normalize_name(value)
+    return [] if normalized.blank?
+
+    normalized = normalized.gsub(MATCH_KEY_APOSTROPHE_VARIANTS, "")
+
+    ActiveSupport::Inflector.transliterate(normalized)
+      .downcase
+      .gsub(/[()]/, " ")
+      .gsub(/[^[:alnum:]\s]/, " ")
+      .split
+  end
+  private_class_method :match_key_tokens
 
   def self.lower_name_arel_node
     Arel::Nodes::NamedFunction.new(

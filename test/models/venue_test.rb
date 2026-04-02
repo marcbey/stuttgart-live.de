@@ -22,6 +22,10 @@ class VenueTest < ActiveSupport::TestCase
     assert_equal Venue.match_key("Im Wizemann (Halle)"), Venue.match_key("Im Wizemann (Halle) Stuttgart")
   end
 
+  test "builds the same match key for apostrophe variants with stuttgart suffix" do
+    assert_equal Venue.match_key("Goldmark's"), Venue.match_key("Goldmark´s Stuttgart")
+  end
+
   test "distinguishes venue variants with meaningful qualifiers" do
     assert_not Venue.same_name?("Im Wizemann", "Im Wizemann (Halle)")
   end

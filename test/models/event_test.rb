@@ -92,6 +92,21 @@ class EventTest < ActiveSupport::TestCase
     assert_equal venues(:lka_longhorn), event.venue_record
   end
 
+  test "reuses an existing venue despite apostrophe variant and stuttgart suffix" do
+    venue = Venue.create!(name: "Goldmark's")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 11, 20, 0, 0),
+      venue_name: "Goldmark´s Stuttgart",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+  end
+
   test "creates a new venue from venue_name on save" do
     event = Event.new(
       artist_name: "Test Artist",
