@@ -674,16 +674,43 @@ body:has(.app-nav-inner-backend) .app-nav-links-group-separated .app-nav-link-ac
 }
 
 .news-index-shell {
+  --news-header-accent: #cc4d8f;
   max-width: 1180px;
 }
 
 .news-index-hero {
-  text-align: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.8rem;
   margin-bottom: 1.6rem;
+  padding-inline: 1rem;
+  text-align: left;
+}
+
+.news-index-hero-bar {
+  display: block;
+  width: 100%;
+  height: 10px;
+  background: var(--news-header-accent);
+}
+
+.news-index-hero h1 {
+  margin: 1rem 0 0;
+  color: var(--news-header-accent);
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 2.5rem;
+  font-weight: 400;
+  line-height: 0.92;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
 .news-index-hero p {
-  margin-inline: auto;
+  display: none;
+}
+
+.news-index-hero {
+  margin-bottom: 1.6rem;
 }
 
 .news-index-subscribe-form {
@@ -2575,11 +2602,15 @@ trix-editor.blog-rich-text:focus {
 }
 
 .home-featured-section {
-  --section-banner-bg:
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.24), transparent 18%),
-    linear-gradient(135deg, #17858a 0%, #29a7aa 55%, #6fd0ca 100%);
-  --section-banner-button-bg: linear-gradient(135deg, #0b5b5f 0%, #11767a 100%);
-  --section-banner-button-color: #fff;
+  --section-header-accent: #178f9c;
+  --section-button-bg: #178f9c;
+  --section-button-color: #fff;
+  --section-button-border: #178f9c;
+  --section-button-hover-bg: #117883;
+  --section-button-hover-border: #117883;
+  --section-button-active-bg: #fff;
+  --section-button-active-color: #178f9c;
+  --section-button-active-border: #178f9c;
   margin-bottom: var(--homepage-section-gap, 1.35rem);
   padding: 0;
   border: none;
@@ -2617,10 +2648,28 @@ trix-editor.blog-rich-text:focus {
 }
 
 .home-slider-section {
+  --section-header-accent: #1d6d74;
+  --section-button-bg: #1d6d74;
+  --section-button-color: #fff;
+  --section-button-border: #1d6d74;
+  --section-button-hover-bg: #185a60;
+  --section-button-hover-border: #185a60;
+  --section-button-active-bg: #fff;
+  --section-button-active-color: #1d6d74;
+  --section-button-active-border: #1d6d74;
   margin-top: var(--homepage-section-gap, 1.35rem);
 }
 
 .genre-lane-section {
+  --section-header-accent: #1d6d74;
+  --section-button-bg: #1d6d74;
+  --section-button-color: #fff;
+  --section-button-border: #1d6d74;
+  --section-button-hover-bg: #185a60;
+  --section-button-hover-border: #185a60;
+  --section-button-active-bg: #fff;
+  --section-button-active-color: #1d6d74;
+  --section-button-active-border: #1d6d74;
   margin-top: var(--homepage-section-gap, 1.35rem);
   padding: 1rem 0;
   border: 0;
@@ -2632,27 +2681,62 @@ trix-editor.blog-rich-text:focus {
   --genre-lane-accent: rgba(227, 27, 46, 0.08);
   --genre-lane-start: rgba(255, 248, 239, 0.98);
   --genre-lane-end: rgba(255, 255, 255, 0.98);
+  --section-header-accent: #bf6f5a;
+  --section-button-bg: #bf6f5a;
+  --section-button-border: #bf6f5a;
+  --section-button-hover-bg: #a95f4c;
+  --section-button-hover-border: #a95f4c;
+  --section-button-active-color: #bf6f5a;
+  --section-button-active-border: #bf6f5a;
 }
 
 .genre-lane-section--tone-2 {
   --genre-lane-accent: rgba(18, 126, 140, 0.09);
   --genre-lane-start: rgba(242, 250, 249, 0.98);
   --genre-lane-end: rgba(255, 255, 255, 0.99);
+  --section-header-accent: #1a8c94;
+  --section-button-bg: #1a8c94;
+  --section-button-border: #1a8c94;
+  --section-button-hover-bg: #15767d;
+  --section-button-hover-border: #15767d;
+  --section-button-active-color: #1a8c94;
+  --section-button-active-border: #1a8c94;
 }
 
 .genre-lane-section--tone-3 {
   --genre-lane-accent: rgba(201, 137, 32, 0.1);
   --genre-lane-start: rgba(255, 249, 237, 0.98);
   --genre-lane-end: rgba(255, 255, 255, 0.99);
+  --section-header-accent: #b78d57;
+  --section-button-bg: #b78d57;
+  --section-button-border: #b78d57;
+  --section-button-hover-bg: #9e7947;
+  --section-button-hover-border: #9e7947;
+  --section-button-active-color: #9e7947;
+  --section-button-active-border: #b78d57;
 }
 
 .genre-lane-section--tone-4 {
   --genre-lane-accent: rgba(79, 89, 168, 0.08);
   --genre-lane-start: rgba(244, 245, 255, 0.98);
   --genre-lane-end: rgba(255, 255, 255, 0.99);
+  --section-header-accent: #5f7f96;
+  --section-button-bg: #5f7f96;
+  --section-button-border: #5f7f96;
+  --section-button-hover-bg: #506c81;
+  --section-button-hover-border: #506c81;
+  --section-button-active-color: #5f7f96;
+  --section-button-active-border: #5f7f96;
 }
 
 .genre-lane-section--spotlight {
+  --section-header-accent: #1f7f86;
+  --section-button-bg: #1f7f86;
+  --section-button-border: #1f7f86;
+  --section-button-hover-bg: #196a70;
+  --section-button-hover-border: #196a70;
+  --section-button-active-color: #1f7f86;
+  --section-button-active-border: #1f7f86;
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -3297,22 +3381,23 @@ trix-editor.blog-rich-text:focus {
 }
 
 .lane-header {
-  --lane-header-bg:
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.24), transparent 18%),
-    linear-gradient(135deg, #17858a 0%, #29a7aa 55%, #6fd0ca 100%);
-  --lane-header-title-color: #fff;
-  --lane-header-kicker-color: rgba(255, 255, 255, 0.82);
-  --lane-header-button-bg: linear-gradient(135deg, #0b5b5f 0%, #11767a 100%);
+  --lane-header-accent: #178f9c;
+  --lane-header-title-color: var(--lane-header-accent);
+  --lane-header-kicker-color: color-mix(in srgb, var(--lane-header-accent) 72%, white 28%);
+  --lane-header-button-bg: #178f9c;
   --lane-header-button-color: #fff;
-  --lane-header-button-border: transparent;
+  --lane-header-button-border: #178f9c;
+  --lane-header-button-hover-bg: #117883;
+  --lane-header-button-hover-border: #117883;
+  --lane-header-button-active-bg: #fff;
+  --lane-header-button-active-color: #178f9c;
+  --lane-header-button-active-border: #178f9c;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
+  align-items: end;
   gap: 0.9rem 1rem;
   margin-bottom: 1.1rem;
-  padding: 0.9rem 2rem;
-  border-radius: 50px;
-  background: var(--lane-header-bg);
+  padding: 0;
   box-shadow: none;
 }
 
@@ -3336,7 +3421,7 @@ trix-editor.blog-rich-text:focus {
   margin: 0;
   color: var(--lane-header-title-color);
   font-family: "Bebas Neue", "Impact", sans-serif;
-  font-size: clamp(2rem, 4vw, 3.15rem);
+  font-size: 2.5rem;
   font-weight: 400;
   line-height: 0.92;
   letter-spacing: 0.04em;
@@ -3354,20 +3439,15 @@ trix-editor.blog-rich-text:focus {
 
 .slider-window-bar {
   grid-column: 1 / -1;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
+  display: block;
   width: 100%;
-  min-height: 1.6rem;
-  padding: 0.35rem 0.65rem;
-  background: var(--ink);
+  height: 10px;
+  margin-bottom: 0.35rem;
+  background: var(--lane-header-accent);
 }
 
 .slider-window-bar span {
-  width: 0.34rem;
-  height: 0.34rem;
-  border-radius: 999px;
-  background: #fff;
+  display: none;
 }
 
 .slider-view-icon {
@@ -3402,8 +3482,9 @@ trix-editor.blog-rich-text:focus {
 
 .slider-view-toggle:hover {
   transform: translateY(-1px);
-  border-color: transparent;
-  filter: brightness(0.96);
+  border-color: var(--lane-header-button-hover-border);
+  background: var(--lane-header-button-hover-bg);
+  filter: none;
 }
 
 .slider-view-toggle-label {
@@ -3442,60 +3523,96 @@ trix-editor.blog-rich-text:focus {
 }
 
 .slider-view-toggle[aria-pressed="true"] {
-  color: var(--ink);
-  border-color: var(--ink);
-  background: #fff;
+  color: var(--lane-header-button-active-color);
+  border-color: var(--lane-header-button-active-border);
+  background: var(--lane-header-button-active-bg);
 }
 
 .lane-header--highlights {
-  --lane-header-bg:
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.24), transparent 18%),
-    linear-gradient(135deg, #17858a 0%, #29a7aa 55%, #6fd0ca 100%);
-  --lane-header-title-color: #fff;
-  --lane-header-kicker-color: rgba(255, 255, 255, 0.82);
-  --lane-header-button-bg: linear-gradient(135deg, #0b5b5f 0%, #11767a 100%);
+  --lane-header-accent: #178f9c;
+  --lane-header-title-color: #178f9c;
+  --lane-header-kicker-color: color-mix(in srgb, #178f9c 72%, white 28%);
+  --lane-header-button-bg: #178f9c;
   --lane-header-button-color: #fff;
+  --lane-header-button-border: #178f9c;
+  --lane-header-button-hover-bg: #117883;
+  --lane-header-button-hover-border: #117883;
+  --lane-header-button-active-bg: #fff;
+  --lane-header-button-active-color: #178f9c;
+  --lane-header-button-active-border: #178f9c;
 }
 
 .lane-header--search {
-  --lane-header-bg:
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.28), transparent 18%),
-    linear-gradient(135deg, #15777d 0%, #259fa4 56%, #60cbbd 100%);
-  --lane-header-title-color: #fff;
-  --lane-header-button-bg: linear-gradient(135deg, #0b5b5f 0%, #11767a 100%);
+  --lane-header-accent: #1d6d74;
+  --lane-header-title-color: #1d6d74;
+  --lane-header-kicker-color: color-mix(in srgb, #1d6d74 72%, white 28%);
+  --lane-header-button-bg: #1d6d74;
   --lane-header-button-color: #fff;
+  --lane-header-button-border: #1d6d74;
+  --lane-header-button-hover-bg: #185a60;
+  --lane-header-button-hover-border: #185a60;
+  --lane-header-button-active-bg: #fff;
+  --lane-header-button-active-color: #1d6d74;
+  --lane-header-button-active-border: #1d6d74;
 }
 
 .lane-header--genre {
-  --lane-header-bg: var(--ink-banner);
-  --lane-header-title-color: #6fd0ca;
-  --lane-header-kicker-color: rgba(255, 255, 255, 0.82);
-  --lane-header-button-bg: linear-gradient(135deg, #2bd7cf 0%, #59e8de 100%);
-  --lane-header-button-color: var(--ink);
+  --lane-header-accent: #bf6f5a;
+  --lane-header-title-color: #bf6f5a;
+  --lane-header-kicker-color: color-mix(in srgb, #bf6f5a 72%, white 28%);
+  --lane-header-button-bg: #bf6f5a;
+  --lane-header-button-color: #fff;
+  --lane-header-button-border: #bf6f5a;
+  --lane-header-button-hover-bg: #a95f4c;
+  --lane-header-button-hover-border: #a95f4c;
+  --lane-header-button-active-bg: #fff;
+  --lane-header-button-active-color: #bf6f5a;
+  --lane-header-button-active-border: #bf6f5a;
 }
 
 .lane-header--tagestipp {
-  --lane-header-bg:
-    radial-gradient(circle at 80% 16%, rgba(255, 255, 255, 0.22), transparent 18%),
-    linear-gradient(135deg, #127476 0%, #20999c 52%, #59c4b5 100%);
-  --lane-header-title-color: #fff;
-  --lane-header-kicker-color: rgba(255, 255, 255, 0.82);
-  --lane-header-button-bg: linear-gradient(135deg, #0b5b5f 0%, #11767a 100%);
+  --lane-header-accent: #b78d57;
+  --lane-header-title-color: #b78d57;
+  --lane-header-kicker-color: color-mix(in srgb, #b78d57 72%, white 28%);
+  --lane-header-button-bg: #b78d57;
   --lane-header-button-color: #fff;
+  --lane-header-button-border: #b78d57;
+  --lane-header-button-hover-bg: #9e7947;
+  --lane-header-button-hover-border: #9e7947;
+  --lane-header-button-active-bg: #fff;
+  --lane-header-button-active-color: #9e7947;
+  --lane-header-button-active-border: #b78d57;
 }
 
 .lane-header--editorial {
-  --lane-header-bg:
-    radial-gradient(circle at 82% 18%, rgba(255, 255, 255, 0.24), transparent 18%),
-    linear-gradient(135deg, #17858a 0%, #29a7aa 55%, #6fd0ca 100%);
-  --lane-header-title-color: #fff;
-  --lane-header-kicker-color: rgba(255, 255, 255, 0.82);
-  --lane-header-button-bg: linear-gradient(135deg, #0b5b5f 0%, #11767a 100%);
+  --lane-header-accent: #1a8c94;
+  --lane-header-title-color: #1a8c94;
+  --lane-header-kicker-color: color-mix(in srgb, #1a8c94 72%, white 28%);
+  --lane-header-button-bg: #1a8c94;
   --lane-header-button-color: #fff;
+  --lane-header-button-border: #1a8c94;
+  --lane-header-button-hover-bg: #15767d;
+  --lane-header-button-hover-border: #15767d;
+  --lane-header-button-active-bg: #fff;
+  --lane-header-button-active-color: #1a8c94;
+  --lane-header-button-active-border: #1a8c94;
 }
 
 .lane-header--turquoise-title .lane-header-title {
-  color: #6fd0ca;
+  color: #69c7c2;
+}
+
+.lane-header--turquoise-title {
+  --lane-header-accent: #69c7c2;
+  --lane-header-title-color: #69c7c2;
+  --lane-header-button-bg: #69c7c2;
+  --lane-header-button-color: var(--ink);
+  --lane-header-button-border: #69c7c2;
+  --lane-header-button-hover-bg: #56b4af;
+  --lane-header-button-hover-border: #56b4af;
+  --lane-header-button-active-bg: #fff;
+  --lane-header-button-active-color: #178f9c;
+  --lane-header-button-active-border: #69c7c2;
 }
 
 .home-slider-track {
@@ -9084,12 +9201,12 @@ trix-editor.blog-rich-text:focus {
 
   .lane-header {
     grid-template-columns: minmax(0, 1fr) auto;
-    align-items: center;
-    padding: 0.9rem 2rem;
+    align-items: end;
+    padding: 0;
   }
 
   .lane-header-title {
-    font-size: clamp(2rem, 4vw, 3.15rem);
+    font-size: 2.5rem;
     line-height: 0.87;
   }
 
@@ -9142,6 +9259,12 @@ trix-editor.blog-rich-text:focus {
 
   .lane-header .slider-view-toggle-label {
     display: none;
+  }
+
+  .slider-window-bar {
+    width: 100%;
+    height: 10px;
+    margin-bottom: 0.28rem;
   }
 }
 
@@ -10451,7 +10574,6 @@ body.page-public-events-index .app-nav-toggle[aria-expanded="true"] span:nth-chi
 body.page-public-events-index .public-shell > .promotion-banner-poster:first-child,
 body.page-public-events-index .public-shell > .promotion-banner-poster:nth-child(2) {
   margin-top: 0;
-  margin-inline: 1.2rem;
   padding: 0;
 }
 
