@@ -2194,7 +2194,10 @@ trix-editor.blog-rich-text:focus {
   backdrop-filter: none;
 }
 
-.privacy-settings-button:hover,
+.privacy-settings-button:hover {
+  transform: translateX(-28%) translateY(-1px);
+}
+
 .scroll-top-button:hover {
   transform: translateY(-1px);
 }
@@ -9446,7 +9449,7 @@ trix-editor.blog-rich-text:focus {
   .lane-header {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: end;
-    padding: 0;
+    padding: 1rem 0;
   }
 
   .lane-header-title {
@@ -10064,7 +10067,7 @@ body.page-public-events-index .app-brand {
 body.page-public-events-index .brand-wordmark-poster {
   display: inline-flex;
   align-items: baseline;
-  margin-left: 1.2rem;
+  margin-left: 0;
   gap: 0;
   color: #fff;
 }
