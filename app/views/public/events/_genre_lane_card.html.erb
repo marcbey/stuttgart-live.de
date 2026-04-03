@@ -43,18 +43,20 @@
       <% if event.badge_text.present? %>
         <span class="event-card-badge event-card-badge-genre-lane"><%= event.badge_text %></span>
       <% end %>
-      <p class="<%= ["genre-lane-card-meta", "event-listing-date", ("genre-lane-card-meta--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
-        <span class="genre-lane-card-meta-date event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
-        <% if event.venue.present? %>
-          <span class="genre-lane-card-meta-venue event-listing-venue"><%= event.venue %></span>
-        <% end %>
-      </p>
-      <h3 class="<%= ["genre-lane-card-name", ("genre-lane-card-name--#{card_variant}" if card_variant.present?)].compact.join(" ") %>"><%= event.artist_name %></h3>
-      <% if event.title.present? %>
-        <p class="<%= ["genre-lane-card-title", ("genre-lane-card-title--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
-          <span><%= event.title %></span>
+      <div class="event-listing-body">
+        <p class="event-listing-date">
+          <span class="event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+          <% if event.venue.present? %>
+            <span class="event-listing-venue"><%= event.venue %></span>
+          <% end %>
         </p>
-      <% end %>
+        <div class="event-listing-link">
+          <strong><%= event.artist_name %></strong>
+          <% if event.title.present? %>
+            <span><%= event.title %></span>
+          <% end %>
+        </div>
+      </div>
       <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
         <p class="genre-lane-card-price event-listing-price"><%= display_price %></p>
       <% end %>

@@ -52,16 +52,20 @@
     <% if event.badge_text.present? %>
       <span class="event-card-badge event-card-badge-home-slider"><%= event.badge_text %></span>
     <% end %>
-    <%= link_to event.artist_name, public_event_detail_path(event, browse_state), class: "home-slider-card-name" %>
-    <% if event.title.present? %>
-      <p class="home-slider-card-title"><%= event.title %></p>
-    <% end %>
-    <p class="home-slider-card-meta event-listing-date">
-      <span class="home-slider-card-meta-date event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
-      <% if event.venue.present? %>
-        <span class="home-slider-card-meta-venue event-listing-venue"><%= event.venue %></span>
-      <% end %>
-    </p>
+    <div class="event-listing-body">
+      <p class="event-listing-date">
+        <span class="event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+        <% if event.venue.present? %>
+          <span class="event-listing-venue"><%= event.venue %></span>
+        <% end %>
+      </p>
+      <div class="event-listing-link">
+        <strong><%= event.artist_name %></strong>
+        <% if event.title.present? %>
+          <span><%= event.title %></span>
+        <% end %>
+      </div>
+    </div>
     <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
       <p class="home-slider-card-price event-listing-price"><%= display_price %></p>
     <% end %>
