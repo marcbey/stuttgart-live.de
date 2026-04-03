@@ -1,4 +1,5 @@
 <% placeholder_phrases = Public::EventsHelper::PUBLIC_SEARCH_PLACEHOLDER_PHRASES %>
+<% placeholder_sequence = Public::EventsHelper::PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE %>
 
 <%= form_with url: search_path,
               method: :get,
@@ -7,7 +8,7 @@
               data: {
                 controller: "public-search",
                 public_search_search_url_value: search_overlay_events_path,
-                public_search_placeholder_phrases_value: placeholder_phrases.to_json
+                public_search_placeholder_sequence_value: placeholder_sequence.to_json
               } do %>
   <%= hidden_field_tag :event_date, browse_state.event_date_param %>
   <div class="public-search-field">
@@ -23,7 +24,7 @@
                        spellcheck: false,
                        data: {
                          public_search_target: "input",
-                         action: "focus->public-search#open input->public-search#search keydown->public-search#handleInputKeydown"
+                         action: "focus->public-search#handleInputFocus blur->public-search#handleInputBlur input->public-search#search keydown->public-search#handleInputKeydown"
                        },
                        aria: {
                          label: "Events durchsuchen",
@@ -31,6 +32,12 @@
                          expanded: "false",
                          describedby: "public-search-help"
                        } %>
+    <div class="public-search-placeholder"
+         data-public-search-target="placeholder"
+         aria-hidden="true">
+      <span class="public-search-placeholder-text" data-public-search-target="placeholderText"><%= placeholder_phrases.first %></span>
+      <span class="public-search-placeholder-cursor" data-public-search-target="placeholderCursor"></span>
+    </div>
     <%= button_tag "×",
                    type: "button",
                    class: "public-search-clear #{'public-search-clear-visible' if browse_state.query.present?}",

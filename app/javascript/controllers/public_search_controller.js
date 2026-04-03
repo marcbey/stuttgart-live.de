@@ -1,19 +1,16 @@
 import { Controller } from "@hotwired/stimulus"
 
-const PLACEHOLDER_TYPING_DELAY = 70
-const PLACEHOLDER_HOLD_DELAY = 3000
-const PLACEHOLDER_BLINK_DELAY = 180
-const PLACEHOLDER_BLINK_CYCLES = 3
-const PLACEHOLDER_CLEAR_DELAY = 300
-const PLACEHOLDER_VISIBLE_OPACITY = 1
-const PLACEHOLDER_HIDDEN_OPACITY = 0
+const PLACEHOLDER_TYPING_BASE_DELAY = 92
+const PLACEHOLDER_ENTRY_GAP_BASE_DELAY = 360
+const PLACEHOLDER_CURSOR_BLINK_DELAY = 180
+const PLACEHOLDER_TYPING_CADENCE = [-18, 14, -6, 20, -12, 10, 4, -4]
 
 export default class extends Controller {
-  static targets = ["input", "clear", "panel", "results", "idleTemplate"]
+  static targets = ["input", "clear", "panel", "results", "idleTemplate", "placeholder", "placeholderText", "placeholderCursor"]
   static values = {
     searchUrl: String,
     debounce: { type: Number, default: 180 },
-    placeholderPhrases: Array
+    placeholderSequence: Array
   }
 
   connect() {
@@ -23,7 +20,7 @@ export default class extends Controller {
     this.placeholderTimeout = null
     this.placeholderAnimationActive = false
     this.currentPlaceholderIndex = 0
-    this.activePlaceholderIndex = 0
+    this.hasShownInitialPlaceholder = false
     this.boundHandlePointerDown = this.handlePointerDown.bind(this)
     this.boundHandleDocumentKeydown = this.handleDocumentKeydown.bind(this)
     this.boundHandleReducedMotionChange = this.handleReducedMotionChange.bind(this)
@@ -32,6 +29,7 @@ export default class extends Controller {
     document.addEventListener("pointerdown", this.boundHandlePointerDown)
     document.addEventListener("keydown", this.boundHandleDocumentKeydown)
     this.observeReducedMotionPreference()
+    this.inputTarget.setAttribute("placeholder", this.defaultPlaceholder)
     this.syncControls()
     this.syncPlaceholderAnimation()
   }
@@ -53,6 +51,25 @@ export default class extends Controller {
     } else {
       this.loadIdleResults()
     }
+  }
+
+  handleInputFocus() {
+    if (!this.query.hasValue) {
+      this.stopPlaceholderAnimation({ reset: true })
+      this.renderPlaceholder("")
+      this.setPlaceholderVisibility(false)
+      this.inputTarget.value = ""
+    }
+
+    this.open()
+  }
+
+  handleInputBlur() {
+    if (this.query.hasValue) {
+      return
+    }
+
+    this.syncPlaceholderAnimation()
   }
 
   search() {
@@ -257,14 +274,17 @@ export default class extends Controller {
 
   syncPlaceholderAnimation() {
     if (this.query.hasValue) {
-      this.stopPlaceholderAnimation({ advance: true })
+      this.stopPlaceholderAnimation({ reset: true })
+      this.setPlaceholderVisibility(false)
       return
     }
 
-    if (this.prefersReducedMotion || this.placeholderPhrases.length < 2) {
+    this.setPlaceholderVisibility(true)
+
+    if (this.prefersReducedMotion || this.placeholderSequence.length <= 1) {
       this.stopPlaceholderAnimation()
-      this.setPlaceholder(this.defaultPlaceholder)
-      this.setPlaceholderOpacity(PLACEHOLDER_VISIBLE_OPACITY)
+      this.renderPlaceholder(this.defaultPlaceholder)
+      this.setCursorVisibility(true)
       return
     }
 
@@ -308,24 +328,23 @@ export default class extends Controller {
   }
 
   startPlaceholderAnimation() {
-    if (!this.placeholderPhrases.length) {
+    if (!this.placeholderSequence.length) {
       return
     }
 
     this.stopPlaceholderAnimation()
     this.placeholderAnimationActive = true
-    this.setPlaceholderOpacity(PLACEHOLDER_VISIBLE_OPACITY)
     this.runPlaceholderSequence()
   }
 
-  stopPlaceholderAnimation({ advance = false } = {}) {
-    if (advance && this.placeholderPhrases.length) {
-      this.currentPlaceholderIndex = this.nextPlaceholderIndex(this.activePlaceholderIndex)
+  stopPlaceholderAnimation({ reset = false } = {}) {
+    if (reset) {
+      this.currentPlaceholderIndex = 0
+      this.hasShownInitialPlaceholder = false
     }
 
     this.placeholderAnimationActive = false
     this.clearPlaceholderTimer()
-    this.setPlaceholderOpacity(PLACEHOLDER_VISIBLE_OPACITY)
   }
 
   runPlaceholderSequence() {
@@ -333,51 +352,51 @@ export default class extends Controller {
       return
     }
 
-    const phrase = this.currentPlaceholderPhrase
-    this.activePlaceholderIndex = this.currentPlaceholderIndex
-    this.setPlaceholder("")
-    this.setPlaceholderOpacity(PLACEHOLDER_VISIBLE_OPACITY)
-    this.typePlaceholderPhrase(phrase, 1)
+    const entry = this.currentPlaceholderEntry
+
+    if (entry.instant) {
+      this.renderPlaceholder(entry.text)
+      this.runCursorHold(entry, 0)
+      return
+    }
+
+    this.renderPlaceholder("")
+    this.setCursorVisibility(true)
+    this.typePlaceholderEntry(entry, 1)
   }
 
-  typePlaceholderPhrase(phrase, length) {
+  typePlaceholderEntry(entry, length) {
     if (!this.shouldAnimatePlaceholder()) {
       return
     }
 
-    if (length > phrase.length) {
-      this.schedulePlaceholderStep(() => this.fadePlaceholderOut(phrase, 0), PLACEHOLDER_HOLD_DELAY)
+    if (length > entry.text.length) {
+      this.runCursorHold(entry, 0)
       return
     }
 
-    this.setPlaceholder(phrase.slice(0, length))
-    this.schedulePlaceholderStep(() => this.typePlaceholderPhrase(phrase, length + 1), PLACEHOLDER_TYPING_DELAY)
+    this.renderPlaceholder(entry.text.slice(0, length))
+    this.schedulePlaceholderStep(
+      () => this.typePlaceholderEntry(entry, length + 1),
+      this.typingDelayFor(entry.text, length)
+    )
   }
 
-  fadePlaceholderOut(phrase, cycle) {
+  runCursorHold(entry, blinkStep) {
     if (!this.shouldAnimatePlaceholder()) {
       return
     }
 
-    this.setPlaceholder(phrase)
-    this.setPlaceholderOpacity(PLACEHOLDER_HIDDEN_OPACITY)
+    const totalBlinkSteps = this.cursorBlinkSteps(entry)
 
-    if (cycle >= PLACEHOLDER_BLINK_CYCLES) {
-      this.schedulePlaceholderStep(() => this.finishPlaceholderCycle(), PLACEHOLDER_BLINK_DELAY)
+    if (blinkStep >= totalBlinkSteps) {
+      this.setCursorVisibility(true)
+      this.finishPlaceholderCycle()
       return
     }
 
-    this.schedulePlaceholderStep(() => this.fadePlaceholderIn(phrase, cycle), PLACEHOLDER_BLINK_DELAY)
-  }
-
-  fadePlaceholderIn(phrase, cycle) {
-    if (!this.shouldAnimatePlaceholder()) {
-      return
-    }
-
-    this.setPlaceholder(phrase)
-    this.setPlaceholderOpacity(PLACEHOLDER_VISIBLE_OPACITY)
-    this.schedulePlaceholderStep(() => this.fadePlaceholderOut(phrase, cycle + 1), PLACEHOLDER_BLINK_DELAY)
+    this.setCursorVisibility(blinkStep % 2 === 0)
+    this.schedulePlaceholderStep(() => this.runCursorHold(entry, blinkStep + 1), PLACEHOLDER_CURSOR_BLINK_DELAY)
   }
 
   finishPlaceholderCycle() {
@@ -385,13 +404,15 @@ export default class extends Controller {
       return
     }
 
-    this.setPlaceholder("")
-    this.setPlaceholderOpacity(PLACEHOLDER_VISIBLE_OPACITY)
-    if (this.placeholderPhrases.length) {
-      this.currentPlaceholderIndex = this.nextPlaceholderIndex(this.activePlaceholderIndex)
+    if (!this.hasShownInitialPlaceholder && this.initialPlaceholderEntry) {
+      this.hasShownInitialPlaceholder = true
+      this.currentPlaceholderIndex = 0
+      this.schedulePlaceholderStep(() => this.runPlaceholderSequence(), this.entryGapDelayFor(this.currentPlaceholderIndex))
+      return
     }
 
-    this.schedulePlaceholderStep(() => this.runPlaceholderSequence(), PLACEHOLDER_CLEAR_DELAY)
+    this.currentPlaceholderIndex = this.nextPlaceholderIndex(this.currentPlaceholderIndex)
+    this.schedulePlaceholderStep(() => this.runPlaceholderSequence(), this.entryGapDelayFor(this.currentPlaceholderIndex))
   }
 
   schedulePlaceholderStep(callback, delay) {
@@ -430,19 +451,56 @@ export default class extends Controller {
   }
 
   shouldAnimatePlaceholder() {
-    return this.placeholderAnimationActive && !this.query.hasValue && !this.prefersReducedMotion && this.placeholderPhrases.length > 1
+    return this.placeholderAnimationActive && !this.query.hasValue && !this.prefersReducedMotion && this.placeholderSequence.length > 1
   }
 
-  setPlaceholder(value) {
-    this.inputTarget.setAttribute("placeholder", value)
+  renderPlaceholder(value) {
+    this.placeholderTextTarget.textContent = value
   }
 
-  setPlaceholderOpacity(value) {
-    this.inputTarget.style.setProperty("--public-search-placeholder-opacity", value)
+  setPlaceholderVisibility(visible) {
+    this.placeholderTarget.classList.toggle("public-search-placeholder-hidden", !visible)
+  }
+
+  setCursorVisibility(visible) {
+    this.placeholderCursorTarget.classList.toggle("public-search-placeholder-cursor-hidden", !visible)
+  }
+
+  cursorBlinkSteps(entry) {
+    if (entry.holdMs > 0) {
+      return Math.max(Math.round(entry.holdMs / PLACEHOLDER_CURSOR_BLINK_DELAY), 0)
+    }
+
+    const blinkCount = Number(entry.cursorBlinks || 0)
+    return Math.max(blinkCount * 2, 0)
+  }
+
+  typingDelayFor(text, length) {
+    const character = text[length - 1] || ""
+    const cadence = PLACEHOLDER_TYPING_CADENCE[(length - 1) % PLACEHOLDER_TYPING_CADENCE.length]
+
+    if (/[.,:;!?]/.test(character)) {
+      return PLACEHOLDER_TYPING_BASE_DELAY + 150 + cadence
+    }
+
+    if (character === " ") {
+      return PLACEHOLDER_TYPING_BASE_DELAY + 75 + cadence
+    }
+
+    if (length <= 3) {
+      return PLACEHOLDER_TYPING_BASE_DELAY + 28 + cadence
+    }
+
+    return PLACEHOLDER_TYPING_BASE_DELAY + cadence
+  }
+
+  entryGapDelayFor(index) {
+    const cadence = [40, 120, 0, 70, 25, 95][index % 6]
+    return PLACEHOLDER_ENTRY_GAP_BASE_DELAY + cadence
   }
 
   nextPlaceholderIndex(index) {
-    return (index + 1) % this.placeholderPhrases.length
+    return (index + 1) % this.loopingPlaceholderSequence.length
   }
 
   currentLocationHasQuery() {
@@ -495,17 +553,37 @@ export default class extends Controller {
       .replace(/\s+/g, " ")
   }
 
-  get placeholderPhrases() {
-    return (this.hasPlaceholderPhrasesValue ? this.placeholderPhrasesValue : [])
-      .filter((phrase) => typeof phrase === "string" && phrase.length > 0)
+  get placeholderSequence() {
+    return (this.hasPlaceholderSequenceValue ? this.placeholderSequenceValue : [])
+      .map((entry) => ({
+        text: typeof entry?.text === "string" ? entry.text : "",
+        cursorBlinks: Number(entry?.cursor_blinks ?? entry?.cursorBlinks ?? 0),
+        holdMs: Number(entry?.hold_ms ?? entry?.holdMs ?? 0),
+        instant: entry?.instant === true,
+        repeat: entry?.repeat !== false
+      }))
+      .filter((entry) => entry.text.length > 0)
   }
 
-  get currentPlaceholderPhrase() {
-    return this.placeholderPhrases[this.currentPlaceholderIndex] || this.defaultPlaceholder
+  get currentPlaceholderEntry() {
+    if (!this.hasShownInitialPlaceholder && this.initialPlaceholderEntry) {
+      return this.initialPlaceholderEntry
+    }
+
+    return this.loopingPlaceholderSequence[this.currentPlaceholderIndex] || { text: this.defaultPlaceholder, cursorBlinks: 0, holdMs: 0, instant: false, repeat: true }
   }
 
   get defaultPlaceholder() {
-    return this.placeholderPhrases[0] || ""
+    return this.placeholderSequence[0]?.text || ""
+  }
+
+  get initialPlaceholderEntry() {
+    return this.placeholderSequence.find((entry) => entry.repeat === false) || null
+  }
+
+  get loopingPlaceholderSequence() {
+    const loopEntries = this.placeholderSequence.filter((entry) => entry.repeat !== false)
+    return loopEntries.length > 0 ? loopEntries : this.placeholderSequence
   }
 
   get prefersReducedMotion() {

@@ -1,17 +1,26 @@
 module Public::EventsHelper
+  PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE = [
+    { text: "Suche nach Künstlern und Events in Stuttgart", cursor_blinks: 2, hold_ms: 5000, instant: true, repeat: false },
+    { text: "Pop", cursor_blinks: 4 },
+    { text: "Diesen Freitag im Wizemann", cursor_blinks: 6 },
+    { text: "Heute im Goldmark's", cursor_blinks: 0 },
+    { text: "Diese Woche in der Porsche-Arena", cursor_blinks: 0 },
+    { text: "Rock", cursor_blinks: 2 },
+    { text: "Übermorgen im LKA Longhorn", cursor_blinks: 2 },
+    { text: "Morgen in der Liederhalle", cursor_blinks: 0 },
+    { text: "Theater", cursor_blinks: 4 },
+    { text: "Am 12.04. in der Schleyer-Halle", cursor_blinks: 8 },
+    { text: "Dieses Wochenende im Club Zentral", cursor_blinks: 4 },
+    { text: "Am 12.04.", cursor_blinks: 2 },
+    { text: "Nächsten Monat im Theaterhaus", cursor_blinks: 4 },
+    { text: "Nächste Woche in der Schleyer-Halle", cursor_blinks: 5 },
+    { text: "Im Juni im Kulturquartier", cursor_blinks: 3 },
+    { text: "Am Wochenende in der Staatsoper", cursor_blinks: 4 },
+    { text: "Im April in der Wagenhallen", cursor_blinks: 3 }
+  ].freeze
+
   PUBLIC_SEARCH_PLACEHOLDER_PHRASES = [
-    "Diesen Freitag im Wizemann",
-    "Heute im Goldmark's",
-    "Diese Woche in der Porsche-Arena",
-    "Übermorgen im LKA Longhorn",
-    "Morgen in der Liederhalle",
-    "Dieses Wochenende im Club Zentral",
-    "Am 12.04.",
-    "Nächsten Monat im Theaterhaus",
-    "Nächste Woche in der Schleyer-Halle",
-    "Im Juni im Kulturquartier",
-    "Am Wochenende in der Staatsoper",
-    "Im April in der Wagenhallen"
+    *PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE.map { |entry| entry.fetch(:text) }
   ].freeze
 
   EventDetailTextColumns = Data.define(:left, :right)

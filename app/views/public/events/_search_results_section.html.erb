@@ -1,39 +1,16 @@
-<% nav_content = capture do %>
-  <button type="button"
-          class="slider-view-toggle"
-          data-section-view-target="button"
-          data-action="click->section-view#toggle"
-          title="Listenansicht"
-          aria-label="Listenansicht für Suchergebnisse"
-          aria-pressed="false">
-    <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
-    <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
-      <span></span><span></span><span></span>
-    </span>
-    <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
-      <span></span><span></span><span></span><span></span>
-    </span>
-  </button>
-<% end %>
+<%
+  result_count = events.size
+  result_label = result_count == 1 ? "1 Ergebnis" : "#{result_count} Ergebnisse"
+  search_meta = "Suche nach „#{browse_state.query}“ · #{result_label}"
+%>
 
-<section class="home-slider-section search-results-section" data-controller="section-view">
+<section class="home-slider-section search-results-section">
   <%= render "home_slider_header",
              title: "Suchergebnisse",
              variant: :search,
-             nav_content: nav_content %>
+             meta: search_meta %>
   <% if events.any? %>
-    <div data-section-view-target="slider">
-      <%= render "event_cards",
-                 events: events,
-                 browse_state: browse_state,
-                 container_id: "event-grid",
-                 container_class: "flyer-grid search-results-grid",
-                 card_partial: "genre_lane_card",
-                 card_dom_id_prefix: :search_card %>
-    </div>
-    <div class="section-slider-list" data-section-view-target="list" hidden>
-      <%= render "event_rows", events: events, browse_state: browse_state %>
-    </div>
+    <%= render "event_rows", events: events, browse_state: browse_state, container_id: "event-grid", row_dom_id_prefix: :search_card, show_sold_out_ribbon: true %>
   <% else %>
     <div class="search-results-empty">
       <h2>Sorry, nix gefunden</h2>

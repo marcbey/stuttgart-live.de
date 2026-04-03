@@ -3,8 +3,13 @@
 <% thumbnail_source = event_image_source(thumbnail_image) %>
 <% event_url = public_event_detail_path(event, browse_state) %>
 <% primary_offer = event.public_ticket_offer %>
+<% row_dom_id = local_assigns[:row_dom_id] %>
+<% show_sold_out_ribbon = local_assigns.fetch(:show_sold_out_ribbon, false) %>
+<% article_classes = ["event-listing-card", ("event-listing-card--admin" if authenticated?)].compact %>
+<% article_attributes = { class: article_classes.join(" ") } %>
+<% article_attributes[:id] = row_dom_id if row_dom_id.present? %>
 
-<article class="event-listing-card">
+<article <%= tag.attributes(article_attributes) %>>
   <%= link_to event_url, class: "event-listing-row-link", aria: { label: "#{event.artist_name} anzeigen" } do %>
     <span class="sr-only"><%= [event.artist_name, event.title].compact.join(" - ") %></span>
   <% end %>
@@ -14,6 +19,9 @@
       <%= image_tag thumbnail_source, alt: event_image_alt(thumbnail_image, event), loading: "lazy", class: "event-listing-thumb-image" %>
     <% else %>
       <div class="event-listing-thumb-image event-card-placeholder" aria-hidden="true"></div>
+    <% end %>
+    <% if show_sold_out_ribbon && event.public_sold_out? %>
+      <%= render "sold_out_corner_ribbon" %>
     <% end %>
   </div>
 
@@ -38,4 +46,16 @@
       <% end %>
     </div>
   </div>
+  <% if authenticated? %>
+    <div class="event-card-admin-controls event-listing-admin-controls">
+      <%= link_to "Edit",
+                  backend_events_path(status: event.status, event_id: event.id),
+                  class: "event-card-admin-link event-card-admin-link-attention",
+                  data: { turbo: false } %>
+
+      <% if event.primary_source.present? %>
+        <span class="status-badge event-card-admin-link"><%= event_source_label(event.primary_source) %></span>
+      <% end %>
+    </div>
+  <% end %>
 </article>

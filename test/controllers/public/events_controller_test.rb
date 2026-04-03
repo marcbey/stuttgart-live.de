@@ -490,8 +490,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, matching_published_event.artist_name
     assert_includes response.body, "event-card-admin-controls"
     assert_includes response.body, "/backend/events?event_id=#{hidden_event.id}&amp;status=#{hidden_event.status}"
-    assert_select "#event-grid article.genre-lane-card > .event-card-admin-controls", minimum: 1
-    assert_select "#event-grid article.genre-lane-card > a .event-card-admin-controls", count: 0
+    assert_select "#event-grid article.event-listing-card > .event-card-admin-controls", minimum: 1
+    assert_select "#event-grid article.event-listing-card > a .event-card-admin-controls", count: 0
   end
 
   test "search redirects authenticated users to a scheduled unpublished search result" do
@@ -1787,6 +1787,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "index renders the search filter in the app nav" do
     placeholder_phrases = Public::EventsHelper::PUBLIC_SEARCH_PLACEHOLDER_PHRASES
+    placeholder_sequence = Public::EventsHelper::PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE
 
     get events_url(filter: "all", view: "list")
 
@@ -1796,8 +1797,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     form = css_select(".app-nav-search .public-search-filter").first
     input = css_select(".app-nav-search .public-search-input").first
 
-    assert_equal placeholder_phrases.to_json, form["data-public-search-placeholder-phrases-value"]
+    assert_equal placeholder_sequence.to_json, form["data-public-search-placeholder-sequence-value"]
     assert_equal placeholder_phrases.first, input["placeholder"]
+    assert_select ".app-nav-search .public-search-placeholder", count: 1
+    assert_select ".app-nav-search [data-public-search-target='placeholderText']", text: placeholder_phrases.first
+    assert_select ".app-nav-search [data-public-search-target='placeholderCursor']", count: 1
 
     assert_select ".public-filter-row", count: 0
     assert_select ".public-view-toggle", count: 0
@@ -1916,8 +1920,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".lane-header.lane-header--search", count: 1
     assert_select ".lane-header.lane-header--search .slider-window-bar", count: 1
-    assert_select "#event-grid article.genre-lane-card", count: 2
-    assert_select "#event-grid .event-card-grid-1-1", count: 0
+    assert_select ".lane-header.lane-header--search .lane-header-title", text: "Suchergebnisse"
+    assert_select ".lane-header.lane-header--search .lane-header-meta", text: /Search Cluster/
+    assert_select ".lane-header.lane-header--search .lane-header-meta", text: /2 Ergebnisse/
+    assert_select ".slider-view-toggle", count: 0
+    assert_select "#event-grid article.event-listing-card", count: 2
+    assert_select "#event-grid article.genre-lane-card", count: 0
     assert_includes response.body, first_event.title
     assert_includes response.body, second_event.title
     assert_includes response.body, "Suchergebnisse"
@@ -1950,8 +1958,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_url(q: "Search All Results")
 
     assert_response :success
-    assert_select "#event-grid article.genre-lane-card", count: 13
-    assert_select "#event-grid article.event-card", count: 0
+    assert_select "#event-grid article.event-listing-card", count: 13
+    assert_select "#event-grid article.genre-lane-card", count: 0
     assert_select "#events-pagination", count: 0
   end
 
@@ -1959,6 +1967,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_url(q: "Absolut Unfindbarer Suchbegriff")
 
     assert_response :success
+    assert_select ".lane-header.lane-header--search .lane-header-meta", text: /Absolut Unfindbarer Suchbegriff/
+    assert_select ".lane-header.lane-header--search .lane-header-meta", text: /0 Ergebnisse/
     assert_includes response.body, "Sorry, nix gefunden"
     assert_includes response.body, "Zu „Absolut Unfindbarer Suchbegriff“ haben wir aktuell keine Events gefunden."
   end
