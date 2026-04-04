@@ -42,6 +42,7 @@
   <% body_classes << "page-public" if public_frontend %>
   <% body_classes << "page-public-newsletter-poster" if public_frontend %>
   <% body_classes << "page-public-events-index" if public_homepage_chrome %>
+  <% body_classes << "page-public-detail" if public_frontend && action_name == "show" %>
 
   <body
     class="<%= body_classes.join(" ") %>"

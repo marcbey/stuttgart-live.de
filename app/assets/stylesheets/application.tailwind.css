@@ -584,6 +584,18 @@ body:has(.app-nav-inner-backend) .app-nav-links-group-separated .app-nav-link-ac
   max-width: max-content;
 }
 
+body.page-public-detail .public-backend-float {
+  position: fixed;
+  inset: auto 0 max(1rem, env(safe-area-inset-bottom, 0px)) 0;
+  top: auto;
+  z-index: 45;
+}
+
+body.page-public-detail .public-backend-float-inner {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .app-nav-link {
   position: relative;
   display: inline-flex;
@@ -5639,7 +5651,7 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-detail-topbar {
-  margin: 0 0 1rem;
+  margin: 1.35rem 0 1rem;
   display: flex;
   align-items: center;
   gap: 0.75rem;
@@ -6657,11 +6669,11 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-detail-image-stage-shell .highlights-slider-arrow-prev {
-  left: -0.15rem;
+  left: 0.2rem;
 }
 
 .event-detail-image-stage-shell .highlights-slider-arrow-next {
-  right: -0.15rem;
+  right: 0.2rem;
 }
 
 .event-detail-content {
@@ -7124,6 +7136,10 @@ trix-editor.blog-rich-text:focus {
     margin: 0;
     min-height: 0;
     pointer-events: none;
+  }
+
+  .event-detail-topbar-actions {
+    margin-top: 3.25rem;
   }
 
   .event-detail-back a {
