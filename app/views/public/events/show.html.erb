@@ -17,7 +17,11 @@
 
 <article class="event-detail"<%= %( style="--event-detail-right-column-width: #{presenter.hero_stage_max_width || "46rem"};") %>>
   <div class="event-detail-topbar">
-    <p class="event-detail-back"><%= link_to "← alle events", presenter.back_path %></p>
+    <p class="event-detail-back">
+      <%= link_to "← Zurück",
+                  presenter.back_path,
+                  data: { controller: "history-back-link", action: "click->history-back-link#navigate" } %>
+    </p>
     <div class="event-detail-topbar-actions">
       <%= render "public/events/saved_event_button",
                  event: @event,

@@ -52,6 +52,9 @@ application.register("hello", HelloController)
 import HeroRotatorController from "./hero_rotator_controller"
 application.register("hero-rotator", HeroRotatorController)
 
+import HistoryBackLinkController from "./history_back_link_controller"
+application.register("history-back-link", HistoryBackLinkController)
+
 import HighlightsSliderController from "./highlights_slider_controller"
 application.register("highlights-slider", HighlightsSliderController)
 
