@@ -9,6 +9,7 @@
 <% image_style = event_card_image_style(desktop_image) %>
 <% card_dom_id = local_assigns[:card_dom_id].presence || dom_id(event, :card) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
+<% sold_out = event.public_sold_out? %>
 
 <article id="<%= card_dom_id %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
   <div class="event-card-image-wrap">
@@ -25,11 +26,13 @@
         <div class="event-card-image event-card-placeholder"></div>
       <% end %>
       <div class="event-card-overlay"></div>
-      <span class="event-card-ticket-overlay" aria-hidden="true">
-        <span class="event-card-ticket-arrow">↓</span>
-        <span class="event-card-ticket-label">TICKETS</span>
-      </span>
-      <% if event.public_sold_out? %>
+      <% unless sold_out %>
+        <span class="event-card-ticket-overlay" aria-hidden="true">
+          <span class="event-card-ticket-arrow">↓</span>
+          <span class="event-card-ticket-label">TICKETS</span>
+        </span>
+      <% end %>
+      <% if sold_out %>
         <%= render "sold_out_corner_ribbon" %>
       <% end %>
       <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>

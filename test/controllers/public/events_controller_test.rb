@@ -2074,6 +2074,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", text: "Ausverkauft"
+    assert_select "#search_card_event_#{event.id} .event-card-ticket-overlay", count: 0
   end
 
   test "search result event cards do not show an ausverkauft ribbon when the leading imported offer is available" do
@@ -2368,6 +2369,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert card.present?, "expected sold out genre lane card to be rendered"
     assert_equal 1, card.css(".event-sold-out-ribbon").size
     assert_equal 1, card.css(".event-series-badge").size
+    assert_equal 0, card.css(".genre-lane-card-ticket-overlay").size
     assert_select ".event-listing-card .event-sold-out-ribbon", count: 0
   end
 
