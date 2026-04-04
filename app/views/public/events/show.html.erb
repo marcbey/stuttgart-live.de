@@ -15,9 +15,11 @@
                   data: { controller: "history-back-link", action: "click->history-back-link#navigate" } %>
     </p>
     <div class="event-detail-topbar-actions">
-      <%= render "public/events/saved_event_button",
-                 event: @event,
-                 button_class: "saved-event-button-detail" %>
+      <% unless presenter.has_hero_gallery? %>
+        <%= render "public/events/saved_event_button",
+                   event: @event,
+                   button_class: "saved-event-button-detail" %>
+      <% end %>
       <% if authenticated? %>
         <%= link_to "Edit",
                     backend_events_path(status: @event.status, event_id: @event.id),

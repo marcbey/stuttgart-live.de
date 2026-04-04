@@ -3061,9 +3061,10 @@ trix-editor.blog-rich-text:focus {
 }
 
 .saved-event-button {
+  --saved-heart-accent: #00c5cc;
   position: absolute;
-  top: 0.9rem;
-  left: 0.9rem;
+  top: 0.8rem;
+  left: 0.8rem;
   z-index: 15;
   display: inline-flex;
   align-items: center;
@@ -3071,71 +3072,78 @@ trix-editor.blog-rich-text:focus {
   width: 2.35rem;
   height: 2.35rem;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.78);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.72);
-  box-shadow: 0 12px 30px rgba(17, 17, 17, 0.24);
-  color: rgba(194, 84, 110, 0.76);
+  border: 0;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.08);
+  box-shadow: none;
+  color: rgba(255, 255, 255, 0.76);
   cursor: pointer;
   opacity: 0;
   transform: translateY(-0.15rem) scale(0.96);
-  transition: opacity 180ms ease, transform 180ms ease, background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease, color 180ms ease;
+  transition: opacity 180ms ease, transform 220ms ease, background-color 220ms ease, color 220ms ease;
+  backdrop-filter: blur(6px);
 }
 
 .saved-event-button:hover,
 .saved-event-button:focus-visible {
-  background: rgba(255, 240, 247, 0.96);
-  border-color: rgba(214, 53, 124, 0.68);
-  box-shadow: 0 14px 32px rgba(17, 17, 17, 0.26);
-  color: #d6357c;
+  background: rgba(0, 197, 204, 0.18);
+  color: #fff;
+  animation: saved-event-button-wobble 420ms ease;
   outline: none;
 }
 
 .saved-event-button.is-saved {
   opacity: 1;
-  background: rgba(255, 230, 240, 0.96);
-  border-color: rgba(214, 53, 124, 0.72);
-  color: #d6357c;
+  background: rgba(0, 197, 204, 0.22);
+  color: #fff;
   transform: translateY(0) scale(1);
 }
 
 .saved-event-button-icon {
-  width: 1.22rem;
-  height: 1.22rem;
-  fill: transparent;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  transition: fill 180ms ease, stroke 180ms ease, opacity 180ms ease;
+  width: 1.16rem;
+  height: 1.16rem;
+  fill: rgba(255, 255, 255, 0.18);
+  stroke: var(--saved-heart-accent);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  paint-order: stroke fill;
+  transition: fill 220ms ease, stroke 220ms ease, opacity 220ms ease, transform 220ms ease;
 }
 
 .saved-event-button:hover .saved-event-button-icon,
 .saved-event-button:focus-visible .saved-event-button-icon {
-  fill: currentColor;
-  stroke: #d6357c;
-  stroke-width: 1.35;
+  fill: var(--saved-heart-accent);
+  stroke: var(--saved-heart-accent);
+  transform: scale(1.14);
 }
 
 .saved-event-button.is-saved .saved-event-button-icon {
-  fill: currentColor;
-  stroke: #d6357c;
-  stroke-width: 1.35;
+  fill: var(--saved-heart-accent);
+  stroke: var(--saved-heart-accent);
 }
 
 .saved-event-button-detail {
   position: static;
-  width: 2.55rem;
-  height: 2.55rem;
+  width: 2.45rem;
+  height: 2.45rem;
   opacity: 1;
   transform: none;
-  background: rgba(255, 255, 255, 0.86);
 }
 
 .saved-event-button-detail:not(.is-saved) {
-  color: rgba(194, 84, 110, 0.8);
+  color: rgba(255, 255, 255, 0.76);
 }
 
 .saved-event-button-detail.is-saved {
-  background: rgba(255, 230, 240, 0.96);
+  color: #fff;
+}
+
+.saved-event-button-detail-image {
+  top: 0.9rem;
+  left: 0.9rem;
+  z-index: 6;
+  opacity: 1;
+  transform: none;
 }
 
 .saved-event-hover-suppressed .saved-event-button:not(.is-saved) {
@@ -3147,6 +3155,24 @@ trix-editor.blog-rich-text:focus {
 .genre-lane-card:focus-within .saved-event-button {
   opacity: 1;
   transform: translateY(0) scale(1);
+}
+
+@keyframes saved-event-button-wobble {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+
+  38% {
+    transform: translateY(0) scale(1.14, 1.08);
+  }
+
+  62% {
+    transform: translateY(0) scale(0.98, 1.02);
+  }
+
+  100% {
+    transform: translateY(0) scale(1.08);
+  }
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -3849,17 +3875,17 @@ trix-editor.blog-rich-text:focus {
 }
 
 .lane-header--saved-events {
-  --lane-header-accent: #d6357c;
-  --lane-header-title-color: #d6357c;
-  --lane-header-kicker-color: color-mix(in srgb, #d6357c 72%, white 28%);
-  --lane-header-button-bg: #d6357c;
+  --lane-header-accent: #00c5cc;
+  --lane-header-title-color: #00c5cc;
+  --lane-header-kicker-color: color-mix(in srgb, #00c5cc 72%, white 28%);
+  --lane-header-button-bg: #00c5cc;
   --lane-header-button-color: #fff;
-  --lane-header-button-border: #d6357c;
-  --lane-header-button-hover-bg: #bf2b6c;
-  --lane-header-button-hover-border: #bf2b6c;
+  --lane-header-button-border: #00c5cc;
+  --lane-header-button-hover-bg: #00aeb5;
+  --lane-header-button-hover-border: #00aeb5;
   --lane-header-button-active-bg: #fff;
-  --lane-header-button-active-color: #d6357c;
-  --lane-header-button-active-border: #d6357c;
+  --lane-header-button-active-color: #00c5cc;
+  --lane-header-button-active-border: #00c5cc;
 }
 
 .lane-header--tagestipp {
@@ -4849,26 +4875,16 @@ trix-editor.blog-rich-text:focus {
 }
 
 .event-card .saved-event-button {
-  top: calc(20px + 0.85rem);
-  left: calc(20px + 0.85rem);
+  top: calc(20px + 0);
+  left: calc(20px + 0);
 }
 
 .home-featured-section .event-card-image-wrap {
   border-radius: inherit;
 }
 
-.home-featured-section .event-card-image-wrap::after {
-  border-radius: 0;
-}
-
 .event-card-image-wrap::after {
-  content: "";
-  position: absolute;
-  inset: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.96);
-  border-radius: 0.75rem;
-  pointer-events: none;
-  z-index: 2;
+  display: none;
 }
 
 .event-card-grid-1-1 .event-card-image-wrap {
@@ -5664,6 +5680,10 @@ trix-editor.blog-rich-text:focus {
   justify-content: flex-end;
   gap: 0.35rem;
   flex-wrap: wrap;
+}
+
+.event-detail-topbar-actions > * {
+  pointer-events: auto;
 }
 
 .event-detail-back {
@@ -7139,7 +7159,7 @@ trix-editor.blog-rich-text:focus {
   }
 
   .event-detail-topbar-actions {
-    margin-top: 3.25rem;
+    margin-top: 0;
   }
 
   .event-detail-back a {
@@ -7163,6 +7183,11 @@ trix-editor.blog-rich-text:focus {
   .event-detail-image-wrap {
     order: -3;
     width: 100%;
+  }
+
+  .saved-event-button-detail-image {
+    top: 0.75rem;
+    left: 0.75rem;
   }
 
   .event-detail-header-panel {

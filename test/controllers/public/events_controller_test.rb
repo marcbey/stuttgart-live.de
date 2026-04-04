@@ -2945,7 +2945,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, expected_link
     assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit"
     assert_select ".event-detail-topbar-actions .event-detail-edit-link", count: 1
-    assert_select ".event-detail-topbar-actions .saved-event-button.saved-event-button-detail[data-controller='saved-event-toggle']", count: 1
+    assert_select ".event-detail-image-stage-shell .saved-event-button.saved-event-button-detail-image[data-controller='saved-event-toggle']", count: 1
   end
 
   test "show renders presenter logos inside organizer notes when presenters exist" do
@@ -3797,11 +3797,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "https://example.com/published.jpg"
   end
 
-  test "show renders the saved event toggle button in the detail topbar" do
+  test "show renders the saved event toggle button on the detail image" do
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".event-detail-topbar-actions .saved-event-button.saved-event-button-detail[data-controller='saved-event-toggle']", count: 1
+    assert_select ".event-detail-image-stage-shell .saved-event-button.saved-event-button-detail-image[data-controller='saved-event-toggle']", count: 1
     assert_includes response.body, @published_event.slug
   end
 
