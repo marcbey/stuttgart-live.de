@@ -271,7 +271,7 @@ module ApplicationHelper
       "top: #{(offset_y * 100).round(3)}%",
       "width: #{(zoom_scale * 100).round(3)}%",
       "height: #{(zoom_scale * 100).round(3)}%",
-      "object-fit: fill",
+      "object-fit: cover",
       "max-width: none",
       "max-height: none"
     ].join("; ")
@@ -305,7 +305,7 @@ module ApplicationHelper
       "top: #{(offset_y * 100).round(3)}%",
       "width: #{(width_factor * 100).round(3)}%",
       "height: #{(height_factor * 100).round(3)}%",
-      "object-fit: fill",
+      "object-fit: cover",
       "max-width: none",
       "max-height: none"
     ].join("; ")

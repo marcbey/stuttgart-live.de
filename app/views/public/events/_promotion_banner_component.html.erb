@@ -12,11 +12,13 @@
   <% end %>
 
   <%= link_to href, class: link_classes, style: link_style do %>
-    <div class="promotion-banner-media">
-      <%= image_tag image_source,
-                    alt: image_alt,
-                    class: "promotion-banner-image",
-                    style: image_style %>
+    <div class="promotion-banner-visual">
+      <div class="promotion-banner-media">
+        <%= image_tag image_source,
+                      alt: image_alt,
+                      class: "promotion-banner-image",
+                      style: image_style %>
+      </div>
       <% if credit.present? %>
         <p class="promotion-banner-credit"><%= credit %></p>
       <% end %>

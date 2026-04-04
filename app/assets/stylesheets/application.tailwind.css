@@ -2798,7 +2798,7 @@ trix-editor.blog-rich-text:focus {
   --section-button-active-color: #1d6d74;
   --section-button-active-border: #1d6d74;
   margin-top: var(--homepage-section-gap, 1.35rem);
-  padding: 1rem 0;
+  padding: 0.9rem 0;
   border: 0;
   background: transparent;
   box-shadow: none;
@@ -3278,7 +3278,7 @@ trix-editor.blog-rich-text:focus {
   display: grid;
   grid-template-rows: auto 1fr auto;
   gap: 0.08rem;
-  min-height: 100%;
+  min-height: 80%;
   align-content: start;
   align-items: start;
   min-width: 0;
@@ -4944,6 +4944,9 @@ trix-editor.blog-rich-text:focus {
   font-size: clamp(2rem, 4vw, 3.15rem);
   line-height: 0.87;
   text-transform: uppercase;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .event-card-title {
@@ -5354,6 +5357,39 @@ trix-editor.blog-rich-text:focus {
   color: #f7fff8;
   font-size: 0.7rem;
   line-height: 1;
+}
+
+.home-slider-card .event-listing-date,
+.genre-lane-card .event-listing-date {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.home-slider-card .event-listing-meta,
+.genre-lane-card .event-listing-meta {
+  gap: 0.45rem;
+}
+
+.home-slider-card .event-listing-price,
+.genre-lane-card .event-listing-price {
+  padding-right: 0;
+}
+
+.home-slider-card .event-listing-link strong,
+.genre-lane-card .event-listing-link strong,
+.home-slider-card .event-listing-link span,
+.genre-lane-card .event-listing-link span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.home-slider-card .event-listing-link span,
+.genre-lane-card .event-listing-link span {
+  display: block;
+  -webkit-line-clamp: unset;
+  -webkit-box-orient: unset;
 }
 
 @media (min-width: 900px) {
@@ -9297,7 +9333,7 @@ trix-editor.blog-rich-text:focus {
   }
 
   .genre-lane-section {
-    padding: 0.9rem 0.82rem;
+    padding: 0.9rem 0;
   }
 
   .settings-reference-items-columns {
@@ -10938,35 +10974,47 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
   background: transparent;
 }
 
+body.page-public-events-index .promotion-banner-poster .promotion-banner-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-self: center;
+  min-width: 0;
+}
+
 body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
   position: relative;
   display: block;
-  margin: 1rem;
+  margin: 1rem 1.75rem 0 1rem;
+  width: calc(100% - 2.75rem);
   background: transparent;
   overflow: hidden;
   border-radius: calc(1.4rem - 1rem);
   padding: 0;
   aspect-ratio: 16 / 9;
   min-height: 0;
+  height: auto;
   align-self: center;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-image {
   display: block;
+  width: 100%;
+  height: 100%;
   border: 0;
   border-radius: inherit;
   background: transparent;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
-  left: -0.5rem;
-  right: auto;
-  top: 50%;
-  bottom: auto;
-  z-index: 2;
-  color: #fff;
+  position: static;
+  margin: 0 1rem 1rem;
+  color: rgba(17, 17, 17, 0.72);
   background: none;
-  transform: translateY(-50%) rotate(180deg);
+  transform: none;
+  text-align: center;
+  writing-mode: initial;
+  text-orientation: initial;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-copy {
@@ -10980,8 +11028,13 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link-da
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-kicker,
-body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-event-title {
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-event-title,
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-credit {
   color: rgba(248, 250, 249, 0.82);
+}
+
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-credit {
+  color: rgba(17, 17, 17, 0.72);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-kicker {
@@ -11042,6 +11095,10 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link-li
     padding: 0.9rem;
   }
 
+  body.page-public-events-index .promotion-banner-poster .promotion-banner-visual {
+    gap: 0.45rem;
+  }
+
   body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
     position: relative;
     display: block;
@@ -11058,12 +11115,11 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link-li
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
     position: static;
     display: block;
-    margin-top: 0.45rem;
+    margin: 0;
     writing-mode: initial;
     text-orientation: initial;
     transform: none;
     text-align: center;
-    color: #fff;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-copy {
@@ -11078,6 +11134,10 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link-li
     padding: 1rem;
   }
 
+  body.page-public-events-index .promotion-banner-poster .promotion-banner-visual {
+    gap: 0.45rem;
+  }
+
   body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
     position: relative;
     display: block;
@@ -11094,7 +11154,7 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-link-li
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
     position: static;
     display: block;
-    margin-top: 0.45rem;
+    margin: 0;
     writing-mode: initial;
     text-orientation: initial;
     transform: none;
