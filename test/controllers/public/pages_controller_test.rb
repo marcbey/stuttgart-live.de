@@ -77,6 +77,22 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Mit der Bahn."
   end
 
+  test "static pages show an edit link for authenticated backend users" do
+    sign_in_as(users(:one))
+    page = StaticPage.create!(
+      slug: "service-faq",
+      title: "Service FAQ",
+      kicker: "Service",
+      intro: "Hilfen und Antworten.",
+      body: "<div><h2>Fragen</h2><p>Antworten.</p></div>"
+    )
+
+    get static_page_url(page.slug)
+
+    assert_response :success
+    assert_select ".info-page-hero-actions .public-edit-link[href='#{edit_backend_page_path(page)}']", text: "Edit"
+  end
+
   test "unknown static page returns not found" do
     get "/nicht-vorhanden"
 

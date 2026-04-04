@@ -1,8 +1,21 @@
 <section class="info-page-shell">
   <header class="info-page-hero">
-    <p class="news-kicker"><%= kicker %></p>
-    <h1><%= title %></h1>
-    <p><%= intro %></p>
+    <div class="info-page-hero-topbar">
+      <div class="info-page-hero-copy">
+        <p class="news-kicker"><%= kicker %></p>
+        <h1><%= title %></h1>
+        <p><%= intro %></p>
+      </div>
+
+      <% if local_assigns[:admin_link_path].present? %>
+        <div class="info-page-hero-actions">
+          <%= link_to "Edit",
+                      local_assigns[:admin_link_path],
+                      class: "button button-secondary button-compact public-edit-link",
+                      data: { turbo: false } %>
+        </div>
+      <% end %>
+    </div>
   </header>
 
   <div class="info-page-content">

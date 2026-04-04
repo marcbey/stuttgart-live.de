@@ -3,7 +3,8 @@
 <%= render "public/pages/info_page",
            kicker: @page.kicker.presence || "Service",
            title: @page.title,
-           intro: @page.intro.to_s do %>
+           intro: @page.intro.to_s,
+           admin_link_path: (authenticated? && current_user.backend_access? ? edit_backend_page_path(@page) : nil) do %>
   <% if @page.card_layout? %>
     <%= @page.body %>
   <% else %>

@@ -10,7 +10,7 @@
   <% if authenticated? %>
     <%= link_to "Edit",
                 backend_events_path(status: @event.status, event_id: @event.id),
-                class: "button button-secondary button-compact event-detail-edit-link public-backend-shortcut",
+                class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
                 data: { turbo: false } %>
   <% end %>
 <% end %>
@@ -25,7 +25,7 @@
       <% if authenticated? %>
         <%= link_to "Edit",
                     backend_events_path(status: @event.status, event_id: @event.id),
-                    class: "button button-secondary button-compact event-detail-edit-link public-backend-shortcut",
+                    class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
                     data: { turbo: false } %>
       <% end %>
     </div>
