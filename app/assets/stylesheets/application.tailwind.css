@@ -5108,6 +5108,7 @@ trix-editor.blog-rich-text:focus {
 .highlights-slider-viewport {
   position: relative;
   padding: 0;
+  overflow-x: clip;
 }
 
 .highlights-slider-arrow {
@@ -10386,8 +10387,9 @@ body.page-public-events-index .app-nav-meta {
   top: calc(100% - 2px);
   right: 0;
   z-index: 35;
-  width: max-content;
+  width: min(17rem, calc(100vw - 1.6rem));
   max-width: calc(100vw - 1.6rem);
+  overflow-x: clip;
   padding: 0.95rem 1rem 1rem;
   border-top: 0;
   border-radius: 0 0 1rem 1rem;
@@ -10416,7 +10418,8 @@ body.page-public-events-index .app-nav-links {
   gap: 1rem;
   align-items: start;
   justify-items: start;
-  width: max-content;
+  width: 100%;
+  min-width: 0;
 }
 
 body.page-public-events-index .app-nav-links-group {
@@ -10425,7 +10428,8 @@ body.page-public-events-index .app-nav-links-group {
   justify-items: start;
   gap: 0.15rem;
   height: auto;
-  width: max-content;
+  width: 100%;
+  min-width: 0;
 }
 
 body.page-public-events-index .app-nav-poster-links-wrap {
