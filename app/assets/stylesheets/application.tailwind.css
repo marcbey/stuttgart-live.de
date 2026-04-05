@@ -9931,16 +9931,20 @@ trix-editor.blog-rich-text:focus {
     position: relative;
     justify-content: center;
     min-height: 4rem;
+    overflow: hidden;
   }
 
   .partner-strip.is-animated {
     display: block;
-    overflow: visible;
+    overflow: hidden;
   }
 
   .partner-strip.is-animated .partner-strip-logo {
     position: absolute;
     inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     opacity: 0;
     transform: translate3d(16vw, 0, 0) scale(0.98);
     pointer-events: none;
