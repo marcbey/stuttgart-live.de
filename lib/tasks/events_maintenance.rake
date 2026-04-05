@@ -27,20 +27,6 @@ namespace :events do
       puts "Event-Veröffentlichungsdaten zurückgesetzt."
       puts "events_updated=#{updated_count}"
     end
-
-    desc "Enqueue cache warming jobs for imported event images"
-    task warm_import_image_cache: :environment do
-      result = Events::Maintenance::ImportImageCacheWarmer.call(
-        scope: ENV.fetch("SCOPE", "published"),
-        include_failed: ENV.fetch("INCLUDE_FAILED", false),
-        limit: ENV["LIMIT"]
-      )
-
-      print_events_import_image_cache_warming_result(
-        result,
-        success_message: "Importbild-Cache-Warming enqueued."
-      )
-    end
   end
 end
 
@@ -84,14 +70,4 @@ def print_events_llm_maintenance_result(result, success_message:)
   when :skipped
     puts "solid_queue=übersprungen"
   end
-end
-
-def print_events_import_image_cache_warming_result(result, success_message:)
-  puts success_message
-  puts "images_scanned=#{result.images_scanned}"
-  puts "images_eligible=#{result.images_eligible}"
-  puts "jobs_enqueued=#{result.jobs_enqueued}"
-  puts "images_skipped_cached=#{result.images_skipped_cached}"
-  puts "images_skipped_invalid=#{result.images_skipped_invalid}"
-  puts "images_skipped_failed=#{result.images_skipped_failed}"
 end

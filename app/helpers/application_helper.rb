@@ -148,34 +148,6 @@ module ApplicationHelper
     rails_storage_proxy_url(optimized_event_image_representation(image))
   end
 
-  def optimized_import_event_image_representation(image)
-    return if image.blank?
-    return image unless image.is_a?(ImportEventImage)
-    return unless image.cached_file.attached?
-
-    image.processed_optimized_variant || image.cached_file
-  end
-
-  def optimized_import_event_image_source(image)
-    return if image.blank?
-    return image.image_url unless image.is_a?(ImportEventImage)
-
-    representation = optimized_import_event_image_representation(image)
-    return image.image_url if representation.blank?
-
-    rails_storage_proxy_path(representation, only_path: true)
-  end
-
-  def optimized_import_event_image_url(image)
-    return if image.blank?
-    return image.image_url unless image.is_a?(ImportEventImage)
-
-    representation = optimized_import_event_image_representation(image)
-    return image.image_url if representation.blank?
-
-    rails_storage_proxy_url(representation)
-  end
-
   def event_cropped_image_style(image, frame_ratio:)
     return event_card_image_style(image) unless image.is_a?(EventImage)
 

@@ -13,14 +13,12 @@
         <% import_images.each do |image| %>
           <li class="slider-image-editor-card">
             <div class="action-cell slider-image-editor-thumb">
-              <% preview_source = optimized_import_event_image_source(image) %>
-              <%= link_to preview_source, target: "_blank", rel: "noopener" do %>
-                <%= image_tag preview_source, alt: "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
+              <%= link_to image.image_url, target: "_blank", rel: "noopener" do %>
+                <%= image_tag image.image_url, alt: "#{event.artist_name} - #{event.title}", style: "width:56px;height:56px;object-fit:cover;border:1px solid #ddd;" %>
               <% end %>
             </div>
             <div class="slider-image-editor-meta">
               <span class="import-image-editor-label"><%= [ image.source, image.image_type, image.role, image.aspect_hint ].reject(&:blank?).join(" · ") %></span>
-              <span class="import-image-editor-label"><%= image.cached? ? "lokal gecacht" : (image.failed? ? "Cache fehlgeschlagen" : "Cache ausstehend") %></span>
             </div>
           </li>
         <% end %>

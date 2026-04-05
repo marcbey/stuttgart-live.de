@@ -17,7 +17,6 @@ module Importing
         image_key(source: image.source, image_type: image.image_type, image_url: image.image_url)
       end
       changed = false
-      images_to_cache = []
 
       normalized_candidates.each_with_index do |candidate, index|
         key = image_key(
@@ -27,20 +26,16 @@ module Importing
         )
         image = existing_by_key.delete(key) || owner.import_event_images.new
         image.assign_attributes(candidate.merge(position: index))
-        should_enqueue_cache = image.new_record? || image.will_save_change_to_image_url?
         next unless image.new_record? || image.changed?
 
         image.save!
         changed = true
-        images_to_cache << image if should_enqueue_cache && image.persisted?
       end
 
       existing_by_key.each_value do |image|
         image.destroy!
         changed = true
       end
-
-      enqueue_cache_jobs(images_to_cache)
 
       changed
     end
@@ -103,12 +98,6 @@ module Importing
         image_type.to_s.strip,
         image_url.to_s.strip.downcase
       ]
-    end
-
-    def enqueue_cache_jobs(images)
-      images.each do |image|
-        Importing::CacheImportEventImageJob.perform_later(image.id, image.image_url)
-      end
     end
   end
 end

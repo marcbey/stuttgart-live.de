@@ -366,12 +366,13 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
     import_image = create_import_event_image
 
-    count_before = EventImage.where(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO).count
-    downloaded_file = fake_downloaded_file
-    fetcher_singleton = Importing::RemoteImageFetcher.singleton_class
-    original_call = Importing::RemoteImageFetcher.method(:call)
+    response = fake_image_response
 
-    fetcher_singleton.define_method(:call, ->(url:) { downloaded_file })
+    count_before = EventImage.where(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO).count
+    http_singleton = Net::HTTP.singleton_class
+    original_get_response = Net::HTTP.method(:get_response)
+
+    http_singleton.define_method(:get_response, ->(_uri) { response })
     begin
       post create_from_import_backend_event_event_images_url(@event), params: {
         status: "needs_review",
@@ -382,43 +383,12 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
           }
         }
     ensure
-      fetcher_singleton.define_method(:call, original_call)
+      http_singleton.define_method(:get_response, original_get_response)
     end
 
     count_after = EventImage.where(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO).count
     assert_equal count_before + 1, count_after, flash[:alert].presence || "expected imported image to be created"
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
-  end
-
-  test "creates event image from cached import image without remote fetch" do
-    sign_in_as(@user)
-    import_image = create_import_event_image
-    import_image.cached_file.attach(create_uploaded_blob(filename: "cached-import.png"))
-    import_image.update!(
-      cache_status: ImportEventImage::CACHE_STATUS_CACHED,
-      cache_attempted_at: Time.current,
-      cached_at: Time.current
-    )
-
-    fetcher_singleton = Importing::RemoteImageFetcher.singleton_class
-    original_call = Importing::RemoteImageFetcher.method(:call)
-
-    fetcher_singleton.define_method(:call, ->(url:) { raise "fetcher should not be called" })
-    begin
-      post create_from_import_backend_event_event_images_url(@event), params: {
-        status: "needs_review",
-        event_image: {
-          import_event_image_id: import_image.id,
-          purpose: EventImage::PURPOSE_DETAIL_HERO,
-          grid_variant: EventImage::GRID_VARIANT_1X1
-        }
-      }
-    ensure
-      fetcher_singleton.define_method(:call, original_call)
-    end
-
-    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
-    assert_equal 1, @event.event_images.detail_hero.count
   end
 
   test "deletes arbitrary event image by member route" do
@@ -563,11 +533,23 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  def fake_downloaded_file
-    Importing::RemoteImageFetcher::DownloadedFile.new(
-      io: StringIO.new(File.binread(Rails.root.join("test/fixtures/files/test_image.png"))),
-      filename: "test_image.png",
-      content_type: "image/png"
+  def fake_image_response
+    Class.new do
+      attr_reader :body, :content_type, :code
+
+      def initialize(body:, content_type:, code:)
+        @body = body
+        @content_type = content_type
+        @code = code
+      end
+
+      def is_a?(klass)
+        klass == Net::HTTPSuccess || super
+      end
+    end.new(
+      body: File.binread(Rails.root.join("test/fixtures/files/test_image.png")),
+      content_type: "image/png",
+      code: "200"
     )
   end
 end
