@@ -60,6 +60,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       "https://cdn.example.test/optimized/#{image.object_id}"
     end
 
+    def optimized_import_event_image_url(image)
+      "https://cdn.example.test/imported/#{image.object_id}"
+    end
+
     def presenter_logo_source(presenter, size: :detail)
       "/rails/active_storage/presenters/#{presenter.id}-#{size}"
     end
@@ -429,6 +433,21 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
       assert_equal expected_credit, presenter.hero_image_credit
     end
+  end
+
+  test "uses local cached url for import og images" do
+    event = build_event(artist_name: "Band", title: "Live")
+    import_image = ImportEventImage.new(image_url: "https://images.example/hero.jpg", source: "eventim", image_type: "large", role: "cover", aspect_hint: "landscape")
+
+    event.define_singleton_method(:image_for) do |slot:, breakpoint:|
+      next unless [ slot, breakpoint ] == [ :social_card, :desktop ]
+
+      import_image
+    end
+
+    presenter = build_presenter(event)
+
+    assert_equal "https://cdn.example.test/imported/#{import_image.object_id}", presenter.og_image_url
   end
 
   def build_event(**attributes)

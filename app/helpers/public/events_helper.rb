@@ -150,6 +150,7 @@ module Public::EventsHelper
   def event_image_source(image)
     return nil if image.blank?
     return optimized_event_image_source(image) if image.is_a?(EventImage)
+    return optimized_import_event_image_source(image) if image.is_a?(ImportEventImage)
 
     image.image_url
   end

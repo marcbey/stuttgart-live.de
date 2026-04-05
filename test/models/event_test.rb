@@ -463,6 +463,22 @@ class EventTest < ActiveSupport::TestCase
     )
   end
 
+  test "image_url_for returns local proxy path for cached import images" do
+    event = events(:published_one)
+    import_image = import_event_images(:published_cover)
+    import_image.cached_file.attach(create_uploaded_blob(filename: "cached-import.png"))
+    import_image.update!(
+      cache_status: ImportEventImage::CACHE_STATUS_CACHED,
+      cache_attempted_at: Time.current,
+      cached_at: Time.current
+    )
+
+    assert_equal(
+      Rails.application.routes.url_helpers.rails_storage_proxy_path(import_image.processed_optimized_variant, only_path: true),
+      event.image_url_for(slot: :grid_default, breakpoint: :desktop)
+    )
+  end
+
   test "promotion banner does not require detail hero image" do
     event = Event.new(
       artist_name: "Promo Artist",

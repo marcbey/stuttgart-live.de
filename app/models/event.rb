@@ -477,6 +477,11 @@ class Event < ApplicationRecord
   def image_url_for(slot: :grid_default, breakpoint: :desktop)
     image = image_for(slot: slot, breakpoint: breakpoint)
     return nil if image.blank?
+    if image.is_a?(ImportEventImage)
+      return Rails.application.routes.url_helpers.rails_storage_proxy_path(image.processed_optimized_variant, only_path: true) if image.cached?
+
+      return image.image_url
+    end
     return image.image_url unless image.is_a?(EventImage)
     return nil unless image.file.attached?
 

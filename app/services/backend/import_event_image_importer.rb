@@ -1,11 +1,7 @@
-require "net/http"
 require "stringio"
-require "uri"
 
 module Backend
   class ImportEventImageImporter
-    DownloadedFile = Struct.new(:io, :filename, :content_type, keyword_init: true)
-
     def self.call(event:, import_event_image:, purpose:, grid_variant: nil)
       new(
         event: event,
@@ -42,24 +38,19 @@ module Backend
     private
 
     def download_file(url)
-      uri = URI.parse(url)
-      response = Net::HTTP.get_response(uri)
-      raise "Bild konnte nicht geladen werden (HTTP #{response.code})" unless response.is_a?(Net::HTTPSuccess)
+      return cached_downloaded_file if @import_event_image.cached?
 
-      DownloadedFile.new(
-        io: StringIO.new(response.body),
-        filename: filename_for(uri),
-        content_type: response.content_type.presence || "image/jpeg"
-      )
-    rescue URI::InvalidURIError => e
-      raise "Ungültige Bild-URL: #{e.message}"
+      Importing::RemoteImageFetcher.call(url:)
+    rescue Importing::RemoteImageFetcher::FetchError => error
+      raise error.message
     end
 
-    def filename_for(uri)
-      basename = File.basename(uri.path.to_s)
-      return basename if basename.present? && basename != "/"
-
-      "import-image"
+    def cached_downloaded_file
+      Importing::RemoteImageFetcher::DownloadedFile.new(
+        io: StringIO.new(@import_event_image.cached_file.download),
+        filename: @import_event_image.cached_file.filename.to_s,
+        content_type: @import_event_image.cached_file.content_type.to_s.presence || "image/jpeg"
+      )
     end
 
     def default_alt_text

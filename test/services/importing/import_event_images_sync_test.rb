@@ -1,6 +1,16 @@
 require "test_helper"
 
 class Importing::ImportEventImagesSyncTest < ActiveSupport::TestCase
+  include ActiveJob::TestHelper
+
+  setup do
+    clear_enqueued_jobs
+  end
+
+  teardown do
+    clear_enqueued_jobs
+  end
+
   test "normalizes and deduplicates candidates for events" do
     record = Event.create!(
       title: "Import Image Event",
@@ -11,23 +21,26 @@ class Importing::ImportEventImagesSyncTest < ActiveSupport::TestCase
       status: "needs_review"
     )
 
-    changed = Importing::ImportEventImagesSync.call(
-      owner: record,
-      source: "eventim",
-      candidates: [
-        { "image_url" => "https://example.com/placeholder.jpg", "image_type" => "espicture_small" },
-        { "image_url" => "https://example.com/cover_1200x800.jpg", "image_type" => "espicture_big" },
-        { "image_url" => "https://example.com/cover_1200x800.jpg", "image_type" => "espicture_big" },
-        { "image_url" => "https://example.com/thumb_400x400.jpg", "image_type" => "espicture_small" }
-      ]
-    )
+    changed = nil
+    assert_enqueued_jobs 2, only: Importing::CacheImportEventImageJob do
+      changed = Importing::ImportEventImagesSync.call(
+        owner: record,
+        source: "eventim",
+        candidates: [
+          { "image_url" => "https://example.com/placeholder.jpg", "image_type" => "espicture_small" },
+          { "image_url" => "https://example.com/cover_1200x800.jpg", "image_type" => "espicture_big" },
+          { "image_url" => "https://example.com/cover_1200x800.jpg", "image_type" => "espicture_big" },
+          { "image_url" => "https://example.com/thumb_400x400.jpg", "image_type" => "espicture_small" }
+        ]
+      )
+    end
 
     assert_equal true, changed
 
     assert_equal [
-      [ "eventim", "espicture_big", "cover", "landscape", 0, "https://example.com/cover_1200x800.jpg" ],
-      [ "eventim", "espicture_small", "thumb", "square", 1, "https://example.com/thumb_400x400.jpg" ]
-    ], record.import_event_images.reload.ordered.pluck(:source, :image_type, :role, :aspect_hint, :position, :image_url)
+      [ "eventim", "espicture_big", "cover", "landscape", 0, "https://example.com/cover_1200x800.jpg", "pending" ],
+      [ "eventim", "espicture_small", "thumb", "square", 1, "https://example.com/thumb_400x400.jpg", "pending" ]
+    ], record.import_event_images.reload.ordered.pluck(:source, :image_type, :role, :aspect_hint, :position, :image_url, :cache_status)
   end
 
   test "is idempotent for unchanged images and replaces stale event images" do
@@ -61,7 +74,7 @@ class Importing::ImportEventImagesSyncTest < ActiveSupport::TestCase
 
     assert_equal true, replaced
     assert_equal [
-      [ "eventim", "espicture_small", "thumb", "square", 0, "https://example.com/replacement_400x400.jpg" ]
-    ], event.import_event_images.reload.ordered.pluck(:source, :image_type, :role, :aspect_hint, :position, :image_url)
+      [ "eventim", "espicture_small", "thumb", "square", 0, "https://example.com/replacement_400x400.jpg", "pending" ]
+    ], event.import_event_images.reload.ordered.pluck(:source, :image_type, :role, :aspect_hint, :position, :image_url, :cache_status)
   end
 end
