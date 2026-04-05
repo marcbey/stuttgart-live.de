@@ -81,7 +81,25 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     get news_url(@live_post.slug)
 
     assert_response :success
-    assert_includes response.body, URI.parse(url_for(@live_post.processed_optimized_image_variant(:cover_image))).path
+    assert_includes response.body, rails_storage_proxy_path(@live_post.processed_optimized_image_variant(:cover_image), only_path: true)
+  end
+
+  test "show renders media proxy urls for public cover images when enabled" do
+    @live_post.cover_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
+      filename: "news-cover.png",
+      content_type: "image/png"
+    )
+
+    expected_path = nil
+
+    with_media_proxy do
+      get news_url(@live_post.slug)
+      expected_path = PublicMediaUrl.path_for(@live_post.processed_optimized_image_variant(:cover_image))
+    end
+
+    assert_response :success
+    assert_includes response.body, expected_path
   end
 
   test "show renders hero image with shared event detail figure markup and without crop inline styles" do
@@ -154,6 +172,21 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "YouTube laden"
     assert_select "[data-consent-media-target='frame'] iframe", count: 0
     assert_select "template iframe[src=?]", "https://www.youtube.com/embed/dQw4w9WgXcQ"
+  end
+
+  test "show renders embedded rich text images through media proxy when enabled" do
+    blob = create_uploaded_blob(filename: "body-image.png", width: 640, height: 480)
+    @live_post.update!(body: %(<div>Text</div><action-text-attachment sgid="#{blob.attachable_sgid}"></action-text-attachment>))
+
+    expected_path = nil
+
+    with_media_proxy do
+      get news_url(@live_post.slug)
+      expected_path = PublicMediaUrl.path_for(blob.representation(resize_to_limit: [ 1024, 768 ]).processed)
+    end
+
+    assert_response :success
+    assert_includes response.body, expected_path
   end
 
   private

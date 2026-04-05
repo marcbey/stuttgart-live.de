@@ -57,3 +57,11 @@ Diese Werte solltest du vor dem ersten Lauf prüfen:
 - `postgres_app_password`
 - `backup_storage_enabled`
 - `backup_storage_source`
+
+## Hinweise zum Media-Proxy
+
+Der produktive Media-Proxy läuft bewusst nicht als zusätzlicher Host-Webserver. `kamal-proxy` bleibt TLS- und Routing-Schicht auf dem Host, während `nginx` im App-Container öffentliche `/media/...`-Requests direkt aus dem Docker-Volume `stuttgart_live_de_storage` beantwortet.
+
+Für Backups bleibt deshalb derselbe Storage-Pfad relevant:
+
+- `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`

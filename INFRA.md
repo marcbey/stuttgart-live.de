@@ -41,6 +41,7 @@ Die Zielarchitektur für V1 ist bewusst einfach:
 - `PostgreSQL` lokal auf dem Host
 - `Kamal` für App-Deploys
 - `kamal-proxy` fuer TLS und Routing
+- `nginx` im App-Container für öffentliche `/media/...`-Requests
 - lokale Uploads über persistentes Volume für `/rails/storage`
 - Hetzner Server Backups aktiviert
 
@@ -100,6 +101,7 @@ Kamal übernimmt nur den App-Lifecycle:
 - Container deployen
 - neue Versionen aktivieren
 - `kamal-proxy`
+- den App-Container mit `nginx` vor Puma
 - Rollbacks
 - Volumes für `/rails/storage`
 

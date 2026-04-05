@@ -1,4 +1,5 @@
 require_relative "boot"
+require_relative "../app/lib/production_server_config"
 
 require "rails/all"
 
@@ -34,6 +35,9 @@ module StuttgartLiveDe
     config.x.google_analytics_measurement_id = "G-103580617"
     config.x.mailer_from = "Stuttgart Live <no-reply@stuttgart-live.schopp3r.de>"
     config.x.openai.llm_enrichment_model = ENV["OPENAI_LLM_ENRICHMENT_MODEL"].to_s.strip.presence || "gpt-5.1"
+    config.x.media_proxy.enabled = ProductionServerConfig.media_proxy_enabled?
+    config.x.media_proxy.secret = ProductionServerConfig.media_proxy_secret
+    config.x.media_proxy.ttl = ProductionServerConfig.media_proxy_ttl
     config.active_storage.content_types_to_serve_as_binary -= [ "image/svg+xml" ]
     config.active_storage.content_types_allowed_inline += [ "image/svg+xml" ]
     # config.eager_load_paths << Rails.root.join("extras")

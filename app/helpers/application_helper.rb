@@ -138,14 +138,14 @@ module ApplicationHelper
     return if image.blank?
     return image.image_url unless image.is_a?(EventImage)
 
-    rails_storage_proxy_path(optimized_event_image_representation(image), only_path: true)
+    public_media_path(optimized_event_image_representation(image))
   end
 
   def optimized_event_image_url(image)
     return if image.blank?
     return image.image_url unless image.is_a?(EventImage)
 
-    rails_storage_proxy_url(optimized_event_image_representation(image))
+    public_media_url(optimized_event_image_representation(image))
   end
 
   def event_cropped_image_style(image, frame_ratio:)
@@ -177,7 +177,7 @@ module ApplicationHelper
     representation = optimized_event_promotion_banner_image_representation(event)
     return if representation.blank?
 
-    rails_storage_proxy_path(representation, only_path: true)
+    public_media_path(representation)
   end
 
   def event_promotion_banner_image_style(event, frame_ratio:)
@@ -210,7 +210,7 @@ module ApplicationHelper
     representation = presenter_logo_representation(presenter, size:)
     return if representation.blank?
 
-    rails_storage_proxy_path(representation, only_path: true)
+    public_media_path(representation)
   end
 
   def venue_logo_representation(venue, size: :detail)
@@ -228,7 +228,7 @@ module ApplicationHelper
     representation = venue_logo_representation(venue, size:)
     return if representation.blank?
 
-    rails_storage_proxy_path(representation, only_path: true)
+    public_media_path(representation)
   end
 
   def blog_post_image_style(blog_post, slot)
@@ -254,7 +254,26 @@ module ApplicationHelper
     representation = optimized_blog_post_image_representation(blog_post, slot)
     return if representation.blank?
 
-    url_for(representation)
+    public_media_url(representation)
+  end
+
+  def public_media_path(record)
+    return if record.blank?
+
+    PublicMediaUrl.path_for(record) || rails_storage_proxy_path(record, only_path: true)
+  end
+
+  def public_media_url(record)
+    return if record.blank?
+
+    PublicMediaUrl.url_for(record, url_options: media_url_options) || rails_storage_proxy_url(record)
+  end
+
+  def public_rich_text_representation_source(blob, in_gallery: false)
+    representation = blob.representation(resize_to_limit: in_gallery ? [ 800, 600 ] : [ 1024, 768 ]).processed
+    public_media_path(representation)
+  rescue LoadError, MiniMagick::Error, ActiveStorage::InvariableError, ImageProcessing::Error
+    public_media_path(blob)
   end
 
   def blog_post_cropped_image_style(blog_post, slot, frame_ratio:)
@@ -482,5 +501,15 @@ module ApplicationHelper
   private
     def public_page_slug
       params[:slug].to_s.presence
+    end
+
+    def media_url_options
+      request_options = {
+        protocol: request&.protocol,
+        host: request&.host,
+        port: request&.optional_port
+      }.compact
+
+      request_options.presence || Rails.application.routes.default_url_options
     end
 end

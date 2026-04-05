@@ -77,6 +77,27 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Mit der Bahn."
   end
 
+  test "custom static page renders embedded rich text images through media proxy when enabled" do
+    blob = create_uploaded_blob(filename: "static-page-image.png", width: 640, height: 480)
+    page = StaticPage.create!(
+      slug: "media-proxy-faq",
+      title: "Media Proxy FAQ",
+      kicker: "FAQ",
+      intro: "Alles zum Proxy.",
+      body: %(<div><h2>Bild</h2><action-text-attachment sgid="#{blob.attachable_sgid}"></action-text-attachment></div>)
+    )
+
+    expected_path = nil
+
+    with_media_proxy do
+      get static_page_url(page.slug)
+      expected_path = PublicMediaUrl.path_for(blob.representation(resize_to_limit: [ 1024, 768 ]).processed)
+    end
+
+    assert_response :success
+    assert_includes response.body, expected_path
+  end
+
   test "static pages show an edit link for authenticated backend users" do
     sign_in_as(users(:one))
     page = StaticPage.create!(

@@ -449,6 +449,7 @@ Produktion läuft auf Hetzner und wird mit Kamal ausgerollt. Im Alltag gibt es z
 - manuelle Eingriffe von lokal per `bin/kamal ... -d hetzner`
 
 Webprozess und Job-Verarbeitung laufen gemeinsam in der Rails-Anwendung. `SOLID_QUEUE_IN_PUMA=true` ist für dieses Setup bereits vorgesehen.
+Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt signierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
 
 Die produktive öffentliche Domain, die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
 Die Datei bleibt bewusst außerhalb des Docker-Build-Kontexts; Kamal setzt `APP_HOST` daraus zur Laufzeit in den Produktions-Container.
@@ -463,6 +464,7 @@ Für manuelle Produktions-Kommandos brauchst du lokal:
 - den SSH-Key `~/.ssh/stgt-live-hetzner-github` für den Benutzer `deploy`
 - optional den SSH-Key `~/.ssh/stgt-live-hetzner-admin` für Host-Administration als `admin`
 - eine `.env` mit `DB_PASSWORD` und `KAMAL_REGISTRY_PULL_PASSWORD`
+- eine `.env` mit `MEDIA_PROXY_SECRET`, wenn du das Produktions-Setup lokal gegen Hetzner prüfst oder deployen willst
 
 Für lokale Sentry-Release-Meldungen zusätzlich:
 
@@ -493,6 +495,7 @@ Hintergrund: Seit `kamal 2.11.0` ist `kamal-proxy v0.9.2` oder neuer für Deploy
 In GitHub müssen deshalb nur diese Secrets gepflegt sein:
 
 - `DB_PASSWORD`
+- `MEDIA_PROXY_SECRET`
 - `RAILS_MASTER_KEY`
 - `KAMAL_REGISTRY_PULL_PASSWORD`
 - `KAMAL_SSH_PRIVATE_KEY`
@@ -589,6 +592,7 @@ PostgreSQL läuft direkt auf dem Host, nicht in einem separaten Container. Die A
 - `stuttgart_live_de_production_cable`
 
 Uploads liegen im Docker-Volume `stuttgart_live_de_storage`. Der Host-Pfad dafür ist üblicherweise `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`. Backups liegen standardmäßig unter `/var/backups/stuttgart-live`.
+Öffentliche Bild-URLs zeigen in Production auf signierte `/media/...`-Pfade. Wenn ein Bild im Backend ersetzt oder eine Variant/Crop-Änderung gespeichert wird, rendert Rails eine neue URL. Damit wird kein manuelles Cache-Purging für den Media-Pfad benötigt.
 
 Datenbankzugriff auf dem Host:
 

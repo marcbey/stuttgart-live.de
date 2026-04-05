@@ -55,3 +55,4 @@ Das schreibt standardmäßig nach:
 - `enable_ipv4` ist standardmäßig aktiviert, damit die App problemlos per IPv4 erreichbar bleibt.
 - `enable_ipv6` ist zusätzlich aktiviert.
 - Das Root-Dateisystem liegt zunächst auf dem Server selbst. Ein zusätzliches Hetzner-Volume ist optional und standardmäßig deaktiviert.
+- Der Produktions-Media-Proxy für öffentliche Bilder benötigt keine zusätzliche Hetzner-Ressource. Die Dateien liegen weiter im bestehenden Docker-/Kamal-Volume für `/rails/storage`.

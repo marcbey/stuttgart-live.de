@@ -11,7 +11,7 @@ Empfohlene Zielarchitektur:
 - 1x Hetzner Cloud `CX33`
 - `Ubuntu 24.04`
 - `Docker + Kamal`
-- `Rails + Puma + Solid Queue` im App-Container
+- `nginx + Puma + Solid Queue` im App-Container
 - `PostgreSQL` lokal auf derselben VM
 - `kamal-proxy` für TLS und Routing
 - `Hetzner Backups` aktiviert
@@ -124,6 +124,8 @@ V1-Empfehlung:
 
 - lokale Uploads auf der VM
 - persistentes Kamal-Volume für `/rails/storage`
+- öffentliche Active-Storage-Bilder in Production direkt über `nginx` aus `/rails/storage`
+- signierte `/media/...`-URLs aus Rails statt Bild-Streaming durch Puma
 
 Später optional:
 
@@ -138,6 +140,7 @@ Empfohlene Backup-Strategie:
 - Hetzner Server Backups aktivieren
 - tägliches `pg_dump`
 - zusätzliche Sicherung von `/rails/storage`, wenn Uploads geschützt werden müssen
+- `MEDIA_PROXY_SECRET` als Deploy-Secret pflegen, weil Production-Bild-URLs daran hängen
 
 ## Migrationsplan
 

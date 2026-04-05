@@ -3,6 +3,24 @@ require "test_helper"
 class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
 
+  test "public media path falls back to rails storage proxy when media proxy is disabled" do
+    blob = create_uploaded_blob(filename: "fallback.png")
+
+    with_media_proxy(enabled: false) do
+      assert_equal rails_storage_proxy_path(blob, only_path: true), public_media_path(blob)
+    end
+  end
+
+  test "public media path uses signed media paths when media proxy is enabled" do
+    blob = create_uploaded_blob(filename: "proxy.png")
+
+    with_media_proxy do
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        assert_equal PublicMediaUrl.path_for(blob), public_media_path(blob)
+      end
+    end
+  end
+
   test "formatted organizer notes renders headings and categorized lists" do
     notes = <<~TEXT
       Wichtige Sicherheitsregeln

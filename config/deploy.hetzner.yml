@@ -24,6 +24,7 @@ env:
   secret:
     - RAILS_MASTER_KEY
     - DB_PASSWORD
+    - MEDIA_PROXY_SECRET
   clear:
     SOLID_QUEUE_IN_PUMA: true
     APP_HOST: <%= HetznerDeployConfig.app_host %>
@@ -34,6 +35,8 @@ env:
     DB_NAME: <%= ENV.fetch("DB_NAME", "stuttgart_live_de_production") %>
     DB_USER: <%= ENV.fetch("DB_USER", "stuttgart_live_de") %>
     ACTIVE_STORAGE_SERVICE: <%= ENV.fetch("ACTIVE_STORAGE_SERVICE", "local") %>
+    MEDIA_PROXY_ENABLED: <%= ENV.fetch("MEDIA_PROXY_ENABLED", "true") %>
+    MEDIA_PROXY_TTL: <%= ENV.fetch("MEDIA_PROXY_TTL", 1.year.to_i) %>
 
 ssh:
   user: deploy
