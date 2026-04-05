@@ -144,6 +144,51 @@ Für die öffentliche Sichtbarkeit gilt zusätzlich:
 
 Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In diesem Fall werden nur Fingerprints neu gebaut, die seit `last_run_at` von neuen Rohimporten berührt wurden; für diese Gruppen wird aber jeweils wieder der aktuelle Gesamtstand aller Quellen zusammengeführt.
 
+### Wie importierte Eventbilder lokal gecacht werden
+
+Importierte Eventbilder werden öffentlich nicht mehr dauerhaft direkt von Drittanbietern ausgeliefert. Stattdessen übernimmt die Anwendung diese Bilder nach dem Merge asynchron in Active Storage und liefert sie anschließend über eigene App- beziehungsweise Storage-URLs aus.
+
+Das Ziel dahinter ist bewusst operativ und performance-getrieben:
+
+- Das Frontend hängt nicht bei jedem Seitenaufruf an der Latenz externer Bildserver.
+- Event-Karten, Detailseiten und Social-Meta-Tags bleiben stabil, auch wenn ein externer Anbieter langsam ist oder Bilder entfernt.
+- Die Anwendung kontrolliert Timeouts, Fehlerbehandlung und spätere Variantenbildung selbst.
+- Öffentliche Seiten und `og:image` beziehungsweise `twitter:image` zeigen nach erfolgreichem Cache bevorzugt auf eigene URLs statt auf Fremdhosts.
+
+Technisch besteht der Ablauf aus zwei Schritten:
+
+1. Der Merge synchronisiert wie bisher `import_event_images` pro Quelle auf den aktuellen Stand der Rohimporte.
+2. Für neue oder geänderte Importbilder wird anschließend ein Hintergrundjob in die dedizierte Queue `image_caching` eingereiht, der das Bild herunterlädt und lokal speichert.
+
+`ImportEventImage` ist damit nicht mehr nur eine reine Quell-URL, sondern zugleich ein Cache-Record. Relevant sind dabei:
+
+- `image_url` bleibt als Herkunfts- und Fallback-URL erhalten.
+- `cached_file` enthält die lokal gespeicherte Datei als Active-Storage-Attachment.
+- `cache_status` beschreibt den Zustand des Cache-Lifecycles, zum Beispiel `pending`, `cached` oder `failed`.
+- `cache_attempted_at`, `cached_at` und `cache_error` machen nachvollziehbar, wann zuletzt ein Download versucht wurde und warum er gegebenenfalls fehlgeschlagen ist.
+
+Für die öffentliche Auslieferung gilt:
+
+- Sobald ein Importbild erfolgreich gecacht wurde, verwenden Helper, Presenter und Meta-Tags die lokale URL.
+- Solange ein Bild noch `pending` ist oder der Download fehlgeschlagen ist, bleibt die ursprüngliche `image_url` als Fallback erhalten.
+- Das Event bleibt dadurch auch dann funktionsfähig, wenn ein einzelner Bilddownload noch aussteht oder wiederholt fehlschlägt.
+
+Für das Backend gilt:
+
+- Auch die Importbild-Vorschau bevorzugt die lokal gecachte Datei, sobald sie vorhanden ist.
+- Solange der Cache noch nicht verfügbar ist, bleibt die externe Quell-URL sichtbar nutzbar.
+- Der Cache ist also ein robuster Auslieferungspfad, aber bewusst kein harter Veröffentlichungsblocker.
+
+Die Download-Logik ist zentral gekapselt und wird sowohl für den automatischen Cache-Aufbau als auch für den bestehenden manuellen Importpfad genutzt. Dadurch verhalten sich Redirects, Timeouts, Content-Type-Prüfung und Größenlimits an beiden Stellen konsistent.
+
+Wichtig für Änderungen an Bildquellen:
+
+- Wenn sich die `image_url` eines `ImportEventImage` ändert, wird der bestehende Cache verworfen und erneut aufgebaut.
+- Wenn ein Importbild im nächsten Merge nicht mehr vorhanden ist, wird der zugehörige `ImportEventImage`-Record entfernt; damit verschwindet auch sein lokales Attachment.
+- Eine periodische Revalidierung aller Bilder gibt es derzeit bewusst noch nicht. Ein Refresh passiert nur bei neuen oder geänderten Importbildern oder über einen expliziten Warmup-Run.
+
+Die Bild-Caching-Jobs laufen absichtlich getrennt von den eigentlichen Import- und Merge-Jobs. Langsame externe Bildserver sollen den fachlichen Importfluss nicht blockieren. Im Tagesbetrieb bedeutet das: Ein Merge kann erfolgreich durchlaufen, während die zugehörigen Bilder wenige Sekunden oder Minuten später im Hintergrund lokalisiert werden.
+
 ### Wie Event-Reihen funktionieren
 
 Zusätzlich zum eigentlichen Termin-Merge kennt die Anwendung das separate fachliche Konzept `EventSeries`. Eine Event-Reihe gruppiert mehrere logisch zusammengehörige Events, ohne sie zu einem einzelnen Termin zusammenzuführen. Das ist bewusst unabhängig vom Dubletten-Merge: Der Merge beantwortet die Frage "Sind das dieselben Termine aus verschiedenen Quellen?", die Event-Reihe beantwortet die Frage "Gehören mehrere unterschiedliche Termine inhaltlich zusammen?".
@@ -630,6 +675,37 @@ mise exec -- bin/rails venues:maintenance:backfill_duplicates
 ```
 
 Der Task gruppiert bestehende Venues über denselben Match-Key wie der Merge-Import, hängt Events auf eine kanonische Venue um, übernimmt fehlende Metadaten und ein vorhandenes Logo und löscht anschließend redundante Dubletten wie `LKA-Longhorn Stuttgart` neben `LKA-Longhorn`.
+
+Bestehende importierte Eventbilder gesammelt für den lokalen Bildcache vormerken:
+
+```bash
+mise exec -- bin/rails events:maintenance:warm_import_image_cache
+```
+
+Der Task lädt keine Bilder selbst herunter, sondern enqueueed nur `Importing::CacheImportEventImageJob` für bereits vorhandene `import_event_images`. Damit nutzt der Backfill exakt denselben Pfad wie der normale laufende Betrieb und blockiert den Shell-Prozess nicht mit langen Netzwerk-Downloads.
+
+Standardverhalten:
+
+- Es werden nur veröffentlichte Events berücksichtigt.
+- Bereits erfolgreich gecachte Bilder werden übersprungen.
+- Bilder mit ungültiger oder leerer URL werden übersprungen.
+- Bereits fehlgeschlagene Downloads werden standardmäßig nicht erneut enqueued, um unbeabsichtigte Mass-Retries zu vermeiden.
+
+Unterstützte Optionen:
+
+- `SCOPE=published|all`
+- `INCLUDE_FAILED=true|false`
+- `LIMIT=<zahl>`
+
+Beispiele:
+
+```bash
+mise exec -- bin/rails events:maintenance:warm_import_image_cache
+mise exec -- bin/rails events:maintenance:warm_import_image_cache LIMIT=500
+mise exec -- bin/rails events:maintenance:warm_import_image_cache SCOPE=all INCLUDE_FAILED=true
+```
+
+Die Ausgabe des Tasks enthält einfache Zählwerte wie `images_scanned`, `images_eligible`, `jobs_enqueued`, `images_skipped_cached`, `images_skipped_invalid` und `images_skipped_failed`. Das ist nützlich, um einen Backfill in kontrollierten Batches zu fahren und die Last auf Worker und externe Bildquellen bewusst zu steuern.
 
 ### Produktionsdatenbank neu aufsetzen
 
