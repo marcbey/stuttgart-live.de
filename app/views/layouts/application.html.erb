@@ -6,15 +6,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="application-name" content="Stuttgart Live">
     <meta name="mobile-web-app-capable" content="yes">
+    <% backend_context = controller_path.start_with?("backend/") %>
+    <% auth_chrome = controller_path == "sessions" ||
+                     (controller_path == "passwords" && action_name == "new") %>
+    <% frontend_context = controller_path.start_with?("public/") || controller_path == "errors" %>
     <% if controller_path.start_with?("backend/") %>
       <meta name="turbo-cache-control" content="no-cache">
     <% end %>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Archivo+Narrow:wght@400;500;700&family=Bebas+Neue&family=Oswald:wght@200;300;500;700&display=swap" rel="stylesheet">
 
     <%= yield :head %>
 
@@ -22,10 +22,15 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <% backend_context = controller_path.start_with?("backend/") %>
-    <% auth_chrome = controller_path == "sessions" ||
-                     (controller_path == "passwords" && action_name == "new") %>
-    <% frontend_context = controller_path.start_with?("public/") || controller_path == "errors" %>
+    <link rel="preload" href="<%= asset_path("archivo-narrow-400.woff2") %>" as="font" type="font/woff2" crossorigin>
+    <% if frontend_context %>
+      <link rel="preload" href="<%= asset_path("bebas-neue-400.woff2") %>" as="font" type="font/woff2" crossorigin>
+    <% end %>
+    <% if frontend_context || backend_context || auth_chrome %>
+      <style data-local-font-faces>
+        <%= local_font_face_stylesheet(frontend: frontend_context) %>
+      </style>
+    <% end %>
     <% if compiled_asset_exists?("shared.css") %>
       <%= stylesheet_link_tag "shared", "data-turbo-track": "reload" %>
     <% end %>

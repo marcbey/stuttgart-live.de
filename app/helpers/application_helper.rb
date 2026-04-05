@@ -3,12 +3,30 @@ module ApplicationHelper
     stuttgart-live.de
     www.stuttgart-live.de
   ].freeze
+  LOCAL_FONT_FACES = {
+    shared: [
+      { family: "Archivo Narrow", weight: 400, logical_path: "archivo-narrow-400.woff2" },
+      { family: "Archivo Narrow", weight: 700, logical_path: "archivo-narrow-700.woff2" },
+      { family: "Oswald", weight: 500, logical_path: "oswald-500.woff2" },
+      { family: "Oswald", weight: 700, logical_path: "oswald-700.woff2" }
+    ],
+    frontend: [
+      { family: "Bebas Neue", weight: 400, logical_path: "bebas-neue-400.woff2" }
+    ]
+  }.freeze
 
   def app_nav_link_class(active: false, accent: false)
     classes = [ "app-nav-link" ]
     classes << "app-nav-link-active" if active
     classes << "app-nav-link-accent" if accent
     classes.join(" ")
+  end
+
+  def local_font_face_stylesheet(frontend:)
+    font_faces = LOCAL_FONT_FACES[:shared]
+    font_faces += LOCAL_FONT_FACES[:frontend] if frontend
+
+    safe_join(font_faces.map { |font_face| local_font_face_rule(**font_face) }, "\n".html_safe)
   end
 
   def events_nav_active?
@@ -75,6 +93,18 @@ module ApplicationHelper
     return unless google_analytics_allowed_host?
 
     Rails.configuration.x.google_analytics_measurement_id.to_s.strip.presence
+  end
+
+  def local_font_face_rule(family:, weight:, logical_path:)
+    <<~CSS.html_safe
+      @font-face {
+        font-family: "#{ERB::Util.html_escape(family)}";
+        font-style: normal;
+        font-weight: #{weight};
+        font-display: swap;
+        src: url("#{ERB::Util.html_escape(asset_path(logical_path))}") format("woff2");
+      }
+    CSS
   end
 
   def google_analytics_enabled?

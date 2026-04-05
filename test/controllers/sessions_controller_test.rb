@@ -9,6 +9,15 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   test "new" do
     get new_session_path
     assert_response :success
+    assert_not_includes response.body, "fonts.googleapis.com"
+    assert_not_includes response.body, "fonts.gstatic.com"
+    assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
+    assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 0
+    assert_select "style[data-local-font-faces]", count: 1
+    assert_includes response.body, ActionController::Base.helpers.asset_path("archivo-narrow-700.woff2")
+    assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
+    assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
+    assert_not_includes response.body, ActionController::Base.helpers.asset_path("bebas-neue-400.woff2")
     assert_select "body.page-auth-backoffice"
     assert_select ".app-nav-inner.app-nav-inner-backend.app-nav-inner-auth-backoffice", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Login"

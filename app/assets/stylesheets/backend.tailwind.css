@@ -26,6 +26,15 @@ body.page-auth-backoffice .editor-panel.backend-panel {
 box-shadow: 0 10px 28px rgba(17, 17, 17, 0.08);
 }
 
+body.page-auth-backoffice h1,
+body.page-auth-backoffice h2,
+body.page-auth-backoffice h3,
+body.page-auth-backoffice .eyebrow,
+body.page-auth-backoffice .button {
+font-family: "Oswald", "Arial Narrow", sans-serif;
+  letter-spacing: 0.04em;
+}
+
 body:has(.app-nav-inner-backend) .app-nav {
 border-bottom: 0;
   background:
@@ -2702,7 +2711,7 @@ background: rgba(15, 23, 42, 0.06);
 }
 
 .venue-autocomplete-item-name {
-font-weight: 600;
+font-weight: 700;
 }
 
 .venue-autocomplete-item-meta,

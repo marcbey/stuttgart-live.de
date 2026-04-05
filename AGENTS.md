@@ -13,6 +13,8 @@
 - If new migrations enter the working tree after a `git pull`, rebase, or branch switch, the local database must be brought up to date before running further tests, starting the app, or performing deployment steps.
 - Changes to the app, new features, workflows, deployments, or infrastructure must always be checked to determine whether `README.md` also needs to be updated. If usage, operations, setup, architecture, dependencies, or troubleshooting change, `README.md` must be updated in the same workflow.
 - `README.md` should primarily be written for humans: clear, understandable, concise, and practical. Documentation should explain relationships and describe concrete steps, rather than merely listing internal implementation details or file inventories.
+- CSS and JavaScript are split by surface. Public-facing pages must use the `frontend`/`public` assets, while backoffice and auth pages must use the `backend` assets. Do not reintroduce a single global CSS or JavaScript bundle for all surfaces.
+- Fonts must always be served locally from the app's asset pipeline. Do not load fonts from Google Fonts or other external font CDNs, and keep font payloads reduced to the actually used families and weights.
 
 ## Skills
 
