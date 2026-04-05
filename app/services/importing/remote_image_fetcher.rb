@@ -36,25 +36,25 @@ module Importing
     attr_reader :url
 
     def fetch(uri:, redirects_remaining:)
-      perform_request(uri) do |response|
-        case response
-        when Net::HTTPSuccess
-          build_downloaded_file(response:, uri:)
-        when Net::HTTPRedirection
-          location = response["location"].to_s.strip
-          raise FetchError, "Bildweiterleitung ohne Ziel-URL." if location.blank?
-          raise FetchError, "Zu viele Weiterleitungen beim Laden des Bildes." if redirects_remaining <= 0
+      response = perform_request(uri)
 
-          fetch(uri: URI.join(uri.to_s, location), redirects_remaining: redirects_remaining - 1)
-        else
-          raise FetchError, "Bild konnte nicht geladen werden (HTTP #{response.code})."
-        end
+      case response
+      when Net::HTTPSuccess
+        build_downloaded_file(response:, uri:)
+      when Net::HTTPRedirection
+        location = response["location"].to_s.strip
+        raise FetchError, "Bildweiterleitung ohne Ziel-URL." if location.blank?
+        raise FetchError, "Zu viele Weiterleitungen beim Laden des Bildes." if redirects_remaining <= 0
+
+        fetch(uri: URI.join(uri.to_s, location), redirects_remaining: redirects_remaining - 1)
+      else
+        raise FetchError, "Bild konnte nicht geladen werden (HTTP #{response.code})."
       end
     rescue Timeout::Error, Errno::ECONNREFUSED, Errno::ECONNRESET, EOFError, SocketError => error
       raise FetchError, "Bild konnte nicht geladen werden: #{error.message}"
     end
 
-    def perform_request(uri, &block)
+    def perform_request(uri)
       Net::HTTP.start(
         uri.host,
         uri.port,
@@ -64,11 +64,7 @@ module Importing
       ) do |http|
         request = Net::HTTP::Get.new(uri)
         request["User-Agent"] = USER_AGENT
-        result = nil
-        http.request(request) do |response|
-          result = block.call(response)
-        end
-        result
+        http.request(request)
       end
     end
 
