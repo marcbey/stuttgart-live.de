@@ -30,6 +30,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url
 
     assert_response :success
+    assert_select "script[type='module'][src*='/assets/backend']", count: 1
+    assert_select "script[type='module'][src*='/assets/public']", count: 0
+    assert_select "script[type='module'][src*='/assets/application']", count: 0
     assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
     assert_select ".app-nav-backend-menu", count: 0
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"

@@ -22,19 +22,26 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <% if compiled_asset_exists?("application.css") %>
-      <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <% backend_context = controller_path.start_with?("backend/") %>
+    <% auth_chrome = controller_path == "sessions" ||
+                     (controller_path == "passwords" && action_name == "new") %>
+    <% frontend_context = controller_path.start_with?("public/") || controller_path == "errors" %>
+    <% if compiled_asset_exists?("shared.css") %>
+      <%= stylesheet_link_tag "shared", "data-turbo-track": "reload" %>
     <% end %>
-    <% if compiled_asset_exists?("application.js") %>
-      <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+    <% css_asset = backend_context || auth_chrome ? "backend" : (frontend_context ? "frontend" : nil) %>
+    <% if css_asset.present? && compiled_asset_exists?("#{css_asset}.css") %>
+      <%= stylesheet_link_tag css_asset, "data-turbo-track": "reload" %>
+    <% end %>
+    <% javascript_asset = controller_path.start_with?("backend/") ? "backend" : "public" %>
+    <% if compiled_asset_exists?("#{javascript_asset}.js") %>
+      <%= javascript_include_tag javascript_asset, "data-turbo-track": "reload", type: "module" %>
     <% end %>
     <% if defined?(::Sentry) && ::Sentry.respond_to?(:get_trace_propagation_meta) %>
       <%= ::Sentry.get_trace_propagation_meta.to_s.html_safe %>
     <% end %>
   </head>
 
-  <% auth_chrome = controller_path == "sessions" ||
-                   (controller_path == "passwords" && action_name == "new") %>
   <% public_frontend = controller_path.start_with?("public/") || controller_path == "errors" %>
   <% public_homepage_chrome = controller_path.start_with?("public/") || controller_path == "errors" %>
   <% body_classes = [] %>
@@ -55,7 +62,6 @@
     <% if !controller_path.start_with?("backend/") && google_analytics_enabled? %>
       data-consent-measurement-id-value="<%= google_analytics_measurement_id %>"
     <% end %>>
-    <% backend_context = controller_path.start_with?("backend/") %>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if backend_context %>
     <% nav_inner_classes << "app-nav-inner-backend" if auth_chrome %>

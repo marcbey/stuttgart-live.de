@@ -24,6 +24,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+    assert_select "script[type='module'][src*='/assets/public']", count: 1
+    assert_select "script[type='module'][src*='/assets/backend']", count: 0
+    assert_select "script[type='module'][src*='/assets/application']", count: 0
     assert_select ".lane-header.lane-header--highlights", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_select ".app-nav-hotline", text: /Dein Ticketportal für Stuttgart und Region -\s*0711 550 660 77/
