@@ -2,7 +2,7 @@ require "test_helper"
 
 class HomepagePromotionBannerStylesheetTest < ActiveSupport::TestCase
   test "homepage poster banner stylesheet preserves crop positioning" do
-    stylesheet = Rails.root.join("app/assets/stylesheets/application.tailwind.css").read
+    stylesheet = Rails.root.join("app/assets/stylesheets/frontend.tailwind.css").read
     image_rules = stylesheet.scan(/body\.page-public-events-index \.promotion-banner-poster \.promotion-banner-image \{([^}]*)\}/m).flatten
     media_rules = stylesheet.scan(/body\.page-public-events-index \.promotion-banner-poster \.promotion-banner-media \{([^}]*)\}/m).flatten
 
