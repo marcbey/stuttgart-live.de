@@ -27,6 +27,17 @@ class StaticPageTest < ActiveSupport::TestCase
     assert_includes page.errors[:slug], "ist reserviert"
   end
 
+  test "rejects lane landing page slugs for custom pages" do
+    page = StaticPage.new(
+      slug: "highlights",
+      title: "Highlights",
+      body: "<div>Inhalt</div>"
+    )
+
+    assert_not page.valid?
+    assert_includes page.errors[:slug], "ist reserviert"
+  end
+
   test "rejects invalid slug format" do
     page = StaticPage.new(
       slug: "mehr/info",

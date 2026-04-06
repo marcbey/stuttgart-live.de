@@ -18,6 +18,7 @@ class StaticPage < ApplicationRecord
     datenschutz
     errors
     events
+    highlights
     impressum
     kontakt
     login
@@ -26,8 +27,10 @@ class StaticPage < ApplicationRecord
     rails
     search
     session
+    tagestipp
     up
     agb
+    alles-aus-stuttgart
     barrierefreiheit
   ].freeze
   SLUG_FORMAT = /\A[a-z0-9]+(?:-[a-z0-9]+)*\z/.freeze

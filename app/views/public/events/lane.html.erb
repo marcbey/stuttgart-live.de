@@ -1,0 +1,12 @@
+<% content_for :title, "Stuttgart Live - #{@lane.title}" %>
+<% content_for :page_newsletter do %>
+  <%= render "newsletter_signup", browse_state: @browse_state %>
+<% end %>
+
+<section class="public-shell">
+  <%= render "lane_page_section",
+             lane: @lane,
+             events: @lane_events,
+             effective_series_ids: @lane_effective_series_ids,
+             browse_state: @browse_state %>
+</section>

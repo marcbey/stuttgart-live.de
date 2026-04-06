@@ -1,6 +1,6 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :saved_lane, :search, :show, :search_overlay ]
+    allow_unauthenticated_access only: [ :index, :lane, :saved_lane, :search, :show, :search_overlay ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
@@ -8,7 +8,7 @@ module Public
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
 
-    before_action :set_browse_state, only: [ :index, :saved_lane, :search, :show, :search_overlay ]
+    before_action :set_browse_state, only: [ :index, :lane, :saved_lane, :search, :show, :search_overlay ]
 
     def index
       if params[:q].present?
@@ -48,6 +48,13 @@ module Public
       end
 
       @events = relation.to_a
+    end
+
+    def lane
+      @lane = resolved_lane
+      raise ActiveRecord::RecordNotFound if @lane.blank?
+
+      assign_lane_page(@lane)
     end
 
     def saved_lane
@@ -224,6 +231,9 @@ module Public
         query: nil
       )
       scoped_reservix = scoped_all.where(primary_source: "reservix")
+      @home_featured_lane = Public::Events::LaneDirectory.highlights
+      @home_all_stuttgart_lane = Public::Events::LaneDirectory.all_stuttgart
+      @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
 
       @home_featured_effective_series_ids = effective_public_series_ids_for_relation(scoped_highlights)
       @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.to_a)
@@ -312,7 +322,8 @@ module Public
       Public::Events::HomepageGenreLanesBuilder::Lane.new(
         group: pop_group || Public::Events::HomepageGenreLanesBuilder::LaneGroup.new(name: "Pop", slug: "pop"),
         events:,
-        effective_series_ids:
+        effective_series_ids:,
+        public_path: Public::Events::LaneDirectory.public_path_for_genre_slug(pop_group&.slug, snapshot: snapshot)
       )
     end
 
@@ -423,6 +434,64 @@ module Public
       )
         .where.not(primary_source: "reservix")
         .reorder(:start_at, :id)
+    end
+
+    def assign_lane_page(lane)
+      case lane.key
+      when "highlights"
+        scoped_highlights = published_visible_events_relation(
+          scope: homepage_events_relation,
+          filter: Public::Events::BrowseState::FILTER_SKS,
+          event_date: @browse_state.event_date,
+          query: nil
+        ).highlighted_first
+        @lane_effective_series_ids = effective_public_series_ids_for_relation(scoped_highlights)
+        @lane_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.to_a)
+
+        return unless @lane_events.empty?
+
+        fallback_relation = published_visible_events_relation(
+          scope: homepage_events_relation,
+          filter: Public::Events::BrowseState::FILTER_ALL,
+          event_date: @browse_state.event_date,
+          query: nil
+        ).reorder(:start_at, :id)
+        @lane_effective_series_ids = effective_public_series_ids_for_relation(fallback_relation)
+        @lane_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.to_a)
+      when "all_stuttgart"
+        relation = published_visible_events_relation(
+          scope: homepage_events_relation,
+          filter: Public::Events::BrowseState::FILTER_ALL,
+          event_date: @browse_state.event_date,
+          query: nil
+        ).where(primary_source: "reservix")
+        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
+        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
+      when "tagestipp"
+        relation = tagestipp_relation
+        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
+        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
+      when "genre"
+        snapshot = LlmGenreGrouping::Lookup.selected_snapshot
+        lane_page = Public::Events::HomepageGenreLanesBuilder.new(
+          relation: homepage_events_relation,
+          slugs: [ lane.group.slug ],
+          snapshot: snapshot,
+          limit: nil
+        ).call.first
+        raise ActiveRecord::RecordNotFound if lane_page.blank?
+
+        @lane_effective_series_ids = lane_page.effective_series_ids
+        @lane_events = lane_page.events
+      else
+        raise ActiveRecord::RecordNotFound
+      end
+    end
+
+    def resolved_lane
+      return Public::Events::LaneDirectory.resolve(params[:lane]) if params[:lane].present?
+
+      Public::Events::LaneDirectory.resolve(params[:lane_slug])
     end
 
     def apply_status!(event, status)

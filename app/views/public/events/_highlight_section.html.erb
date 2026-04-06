@@ -27,6 +27,7 @@
          <% if featured %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
   <%= render "home_slider_header",
              title: title,
+             title_url: local_assigns[:title_url],
              variant: :highlights,
              nav_content: nav_content,
              header_class: ("lane-header--turquoise-title" if title.to_s.casecmp("Alle Veranstaltungen").zero?) %>

@@ -1,7 +1,7 @@
 module Public
   module Events
     class HomepageGenreLanesBuilder
-      Lane = Data.define(:group, :events, :effective_series_ids)
+      Lane = Data.define(:group, :events, :effective_series_ids, :public_path)
       LaneGroup = Data.define(:name, :slug)
 
       DEFAULT_LIMIT = 15
@@ -26,7 +26,12 @@ module Public
           events, effective_series_ids = chronological_group_events(group)
           next if events.empty?
 
-          Lane.new(group:, events:, effective_series_ids:)
+          Lane.new(
+            group:,
+            events:,
+            effective_series_ids:,
+            public_path: LaneDirectory.public_path_for_genre_slug(group.slug, snapshot: snapshot)
+          )
         end
       end
 
@@ -47,7 +52,8 @@ module Public
             .to_a
 
         effective_series_ids = effective_series_ids_for(selected_events)
-        events = SeriesRepresentativeSelector.call(selected_events).first(limit)
+        events = SeriesRepresentativeSelector.call(selected_events)
+        events = events.first(limit) if limit.present?
 
         [ events, effective_series_ids ]
       end

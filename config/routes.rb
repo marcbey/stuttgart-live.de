@@ -19,6 +19,10 @@ Rails.application.routes.draw do
     false
   end
 
+  genre_lane_route = lambda do |request|
+    Public::Events::LaneDirectory.routeable_genre_slug?(request.path_parameters[:lane_slug])
+  end
+
   match "/400", to: "errors#show", via: :all, defaults: { code: 400 }
   match "/404", to: "errors#show", via: :all, defaults: { code: 404 }
   match "/422", to: "errors#show", via: :all, defaults: { code: 422 }
@@ -86,6 +90,9 @@ Rails.application.routes.draw do
     patch :status, on: :member
   end
   get "search", to: "public/events#search", as: :search
+  get "highlights", to: "public/events#lane", defaults: { lane: "highlights" }, as: :highlights_lane
+  get "alles-aus-stuttgart", to: "public/events#lane", defaults: { lane: "all_stuttgart" }, as: :all_stuttgart_lane
+  get "tagestipp", to: "public/events#lane", defaults: { lane: "tagestipp" }, as: :tagestipp_lane
   resources :newsletter_subscribers, only: [ :create ], module: :public
   get "kontakt", to: "public/pages#show", defaults: { slug: "kontakt" }, as: :contact
   get "impressum", to: "public/pages#show", defaults: { slug: "impressum" }, as: :imprint
@@ -110,6 +117,7 @@ Rails.application.routes.draw do
 
   root "public/events#index"
 
+  get ":lane_slug", to: "public/events#lane", as: :genre_lane, constraints: genre_lane_route
   get ":slug", to: "public/pages#show", as: :static_page, constraints: static_page_route
 
   match "*unmatched", to: "errors#show", via: :all, defaults: { code: 404 }, constraints: internal_framework_path

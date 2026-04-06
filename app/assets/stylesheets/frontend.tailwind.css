@@ -2708,6 +2708,33 @@ margin: 0;
   transform: translateY(0.03em);
 }
 
+.lane-header-title-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.lane-header-title-link:hover,
+.lane-header-title-link:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.12em;
+}
+
+.lane-page-grid {
+display: grid;
+  gap: 1rem;
+}
+
+.lane-page-section .lane-header-nav {
+  align-self: start;
+}
+
+@media (min-width: 900px) {
+  .lane-page-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
 .lane-header-meta {
 margin: 0;
   color: var(--ink-soft);

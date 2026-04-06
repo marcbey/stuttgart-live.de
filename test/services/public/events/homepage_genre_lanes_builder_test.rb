@@ -109,6 +109,28 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal "lane-limit-14", lanes.first.events.last.slug
   end
 
+  test "returns all lane events when limit is nil" do
+    18.times do |index|
+      event = build_lane_event(
+        slug: "lane-unlimited-#{index}",
+        artist_name: "Lane Unlimited #{index}",
+        start_at: (index + 1).days.from_now.change(hour: 20)
+      )
+      build_lane_enrichment(event: event, genres: [ "Rock" ])
+    end
+
+    lanes = Public::Events::HomepageGenreLanesBuilder.new(
+      relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
+      slugs: [ @rock_group.slug ],
+      snapshot: @snapshot,
+      limit: nil
+    ).call
+
+    assert_equal 18, lanes.first.events.size
+    assert_equal "lane-unlimited-0", lanes.first.events.first.slug
+    assert_equal "lane-unlimited-17", lanes.first.events.last.slug
+  end
+
   test "deduplicates event series to the next upcoming event per lane" do
     series = EventSeries.create!(origin: "manual", name: "Frida Reihe")
     later_highlighted = build_lane_event(
