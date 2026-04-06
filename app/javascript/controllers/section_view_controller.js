@@ -2,8 +2,14 @@ import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
   static targets = [ "slider", "list", "button", "label" ]
+  static values = { mobileListDefault: Boolean }
 
   connect() {
+    if (this.mobileListDefaultValue && window.matchMedia("(max-width: 699px)").matches) {
+      this.showList()
+      return
+    }
+
     this.showSlider()
   }
 
