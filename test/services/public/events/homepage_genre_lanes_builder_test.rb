@@ -88,7 +88,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal [ @rock_group.slug, @pop_group.slug ], lanes.map { |lane| lane.group.slug }
   end
 
-  test "uses 100 as the default limit for lane events" do
+  test "uses 15 as the default limit for lane events" do
     105.times do |index|
       event = build_lane_event(
         slug: "lane-limit-#{index}",
@@ -104,9 +104,9 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
       snapshot: @snapshot
     ).call
 
-    assert_equal 100, lanes.first.events.size
+    assert_equal 15, lanes.first.events.size
     assert_equal "lane-limit-0", lanes.first.events.first.slug
-    assert_equal "lane-limit-99", lanes.first.events.last.slug
+    assert_equal "lane-limit-14", lanes.first.events.last.slug
   end
 
   test "deduplicates event series to the next upcoming event per lane" do

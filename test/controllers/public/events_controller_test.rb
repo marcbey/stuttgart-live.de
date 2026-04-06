@@ -1367,15 +1367,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "index limits the all events slider to 100 reservix events" do
+  test "index limits the all events slider to 15 reservix events" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
     included_event_names = []
     excluded_event_name = nil
 
     101.times do |index|
       artist_name = "Reservix Limited Artist #{index}"
-      included_event_names << artist_name if index < 100
-      excluded_event_name = artist_name if index == 100
+      included_event_names << artist_name if index < 15
+      excluded_event_name = artist_name if index == 15
 
       Event.create!(
         slug: "reservix-home-slider-limited-#{index}",
@@ -1404,7 +1404,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     names = slider_section.css(".genre-lane-card-name").map(&:text)
 
-    assert_equal 100, names.size
+    assert_equal 15, names.size
     assert_includes names, included_event_names.first
     assert_includes names, included_event_names.last
     assert_not_includes names, excluded_event_name
