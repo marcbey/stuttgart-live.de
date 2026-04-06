@@ -1260,43 +1260,44 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "homepage renders optimized promotion banner image" do
-    highlight = Event.create!(
-      slug: "promotion-banner-optimized-highlight-event",
-      source_fingerprint: "test::homepage::promotion-banner-optimized-highlight",
-      title: "Promotion Banner Optimized Highlight",
-      artist_name: "Promotion Banner Optimized Highlight Artist",
-      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
-      venue: "Porsche-Arena",
-      city: "Stuttgart",
-      promoter_id: AppSetting.sks_promoter_ids.first,
-      primary_source: "eventim",
-      status: "published",
-      published_at: 2.days.ago,
-      source_snapshot: {}
-    )
-
-    create_event_image(event: highlight, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
-
-    blog_post = BlogPost.create!(
-      title: "Optimierter Promo-Post",
-      teaser: "Teaser",
-      body: "<div>Inhalt</div>",
-      author: @user,
-      status: "published",
-      published_at: 1.hour.ago,
-      published_by: @user
-    )
-    blog_post.promotion_banner_image.attach(
-      io: StringIO.new(solid_png_binary(width: 2200, height: 1400)),
-      filename: "homepage-banner-large.png",
-      content_type: "image/png"
-    )
-    blog_post.update!(promotion_banner: true)
-
+    banner_time = Time.zone.local(2026, 4, 6, 12, 0, 0)
     expected_path = nil
 
     with_media_proxy do
-      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+      travel_to banner_time do
+        highlight = Event.create!(
+          slug: "promotion-banner-optimized-highlight-event",
+          source_fingerprint: "test::homepage::promotion-banner-optimized-highlight",
+          title: "Promotion Banner Optimized Highlight",
+          artist_name: "Promotion Banner Optimized Highlight Artist",
+          start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+          venue: "Porsche-Arena",
+          city: "Stuttgart",
+          promoter_id: AppSetting.sks_promoter_ids.first,
+          primary_source: "eventim",
+          status: "published",
+          published_at: 2.days.ago,
+          source_snapshot: {}
+        )
+
+        create_event_image(event: highlight, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+        blog_post = BlogPost.create!(
+          title: "Optimierter Promo-Post",
+          teaser: "Teaser",
+          body: "<div>Inhalt</div>",
+          author: @user,
+          status: "published",
+          published_at: 1.hour.ago,
+          published_by: @user
+        )
+        blog_post.promotion_banner_image.attach(
+          io: StringIO.new(solid_png_binary(width: 2200, height: 1400)),
+          filename: "homepage-banner-large.png",
+          content_type: "image/png"
+        )
+        blog_post.update!(promotion_banner: true)
+
         get events_url(filter: "all")
         expected_path = PublicMediaUrl.path_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
       end
@@ -1318,43 +1319,44 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "homepage falls back to original news promotion banner image when optimized proxy path is unavailable" do
-    highlight = Event.create!(
-      slug: "promotion-banner-news-fallback-highlight-event",
-      source_fingerprint: "test::homepage::promotion-banner-news-fallback-highlight",
-      title: "Promotion Banner News Fallback Highlight",
-      artist_name: "Promotion Banner News Fallback Highlight Artist",
-      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
-      venue: "Porsche-Arena",
-      city: "Stuttgart",
-      promoter_id: AppSetting.sks_promoter_ids.first,
-      primary_source: "eventim",
-      status: "published",
-      published_at: 2.days.ago,
-      source_snapshot: {}
-    )
-
-    create_event_image(event: highlight, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
-
-    blog_post = BlogPost.create!(
-      title: "Promo-Post mit Variant-Fallback",
-      teaser: "Teaser",
-      body: "<div>Inhalt</div>",
-      author: @user,
-      status: "published",
-      published_at: 1.hour.ago,
-      published_by: @user
-    )
-    blog_post.promotion_banner_image.attach(
-      io: StringIO.new(solid_png_binary(width: 2200, height: 1400)),
-      filename: "homepage-banner-fallback.png",
-      content_type: "image/png"
-    )
-    blog_post.update!(promotion_banner: true)
-
+    banner_time = Time.zone.local(2026, 4, 6, 12, 0, 0)
     expected_path = nil
 
     with_media_proxy do
-      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+      travel_to banner_time do
+        highlight = Event.create!(
+          slug: "promotion-banner-news-fallback-highlight-event",
+          source_fingerprint: "test::homepage::promotion-banner-news-fallback-highlight",
+          title: "Promotion Banner News Fallback Highlight",
+          artist_name: "Promotion Banner News Fallback Highlight Artist",
+          start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+          venue: "Porsche-Arena",
+          city: "Stuttgart",
+          promoter_id: AppSetting.sks_promoter_ids.first,
+          primary_source: "eventim",
+          status: "published",
+          published_at: 2.days.ago,
+          source_snapshot: {}
+        )
+
+        create_event_image(event: highlight, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+        blog_post = BlogPost.create!(
+          title: "Promo-Post mit Variant-Fallback",
+          teaser: "Teaser",
+          body: "<div>Inhalt</div>",
+          author: @user,
+          status: "published",
+          published_at: 1.hour.ago,
+          published_by: @user
+        )
+        blog_post.promotion_banner_image.attach(
+          io: StringIO.new(solid_png_binary(width: 2200, height: 1400)),
+          filename: "homepage-banner-fallback.png",
+          content_type: "image/png"
+        )
+        blog_post.update!(promotion_banner: true)
+
         with_variant_proxy_path_unavailable do |original_path_for|
           get events_url(filter: "all")
           expected_path = original_path_for.call(blog_post.promotion_banner_image)
