@@ -134,11 +134,11 @@ module ApplicationHelper
     image.file
   end
 
-  def optimized_event_image_source(image)
+  def optimized_event_image_source(image, strict_proxy: false)
     return if image.blank?
     return image.image_url unless image.is_a?(EventImage)
 
-    public_media_path(optimized_event_image_representation(image))
+    public_media_path(optimized_event_image_representation(image), strict_proxy:)
   end
 
   def optimized_event_image_url(image)
@@ -173,11 +173,11 @@ module ApplicationHelper
     event.promotion_banner_image
   end
 
-  def optimized_event_promotion_banner_image_source(event)
+  def optimized_event_promotion_banner_image_source(event, strict_proxy: false)
     representation = optimized_event_promotion_banner_image_representation(event)
     return if representation.blank?
 
-    public_media_path(representation)
+    public_media_path(representation, strict_proxy:)
   end
 
   def event_promotion_banner_image_style(event, frame_ratio:)
@@ -257,16 +257,31 @@ module ApplicationHelper
     public_media_url(representation)
   end
 
-  def public_media_path(record)
-    return if record.blank?
+  def optimized_blog_post_image_source(blog_post, slot, strict_proxy: false)
+    representation = optimized_blog_post_image_representation(blog_post, slot)
+    return if representation.blank?
 
-    PublicMediaUrl.path_for(record) || rails_storage_proxy_path(record, only_path: true)
+    public_media_path(representation, strict_proxy:)
   end
 
-  def public_media_url(record)
+  def public_media_path(record, strict_proxy: false)
     return if record.blank?
 
-    PublicMediaUrl.url_for(record, url_options: media_url_options) || rails_storage_proxy_url(record)
+    proxied_path = PublicMediaUrl.path_for(record)
+    return proxied_path if proxied_path.present?
+    return if strict_proxy
+
+    rails_storage_proxy_path(record, only_path: true)
+  end
+
+  def public_media_url(record, strict_proxy: false)
+    return if record.blank?
+
+    proxied_url = PublicMediaUrl.url_for(record, url_options: media_url_options)
+    return proxied_url if proxied_url.present?
+    return if strict_proxy
+
+    rails_storage_proxy_url(record)
   end
 
   def public_rich_text_representation_source(blob, in_gallery: false)

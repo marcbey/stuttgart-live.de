@@ -1,10 +1,11 @@
 <% card_slot = local_assigns.fetch(:card_slot, :grid_default) %>
 <% tile_variant = local_assigns.fetch(:tile_variant, Event::GRID_VARIANT_BY_SLOT[card_slot.to_sym] || EventImage::GRID_VARIANT_1X1) %>
 <% browse_state = local_assigns.fetch(:browse_state) %>
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% desktop_image = event.image_for(slot: card_slot, breakpoint: :desktop) %>
 <% mobile_image = desktop_image.is_a?(EventImage) ? desktop_image : (event.image_for(slot: :grid_default, breakpoint: :mobile) || desktop_image) %>
-<% desktop_image_source = event_image_source(desktop_image) %>
-<% mobile_image_source = event_image_source(mobile_image) %>
+<% desktop_image_source = event_image_source(desktop_image, strict_proxy: strict_proxy) %>
+<% mobile_image_source = event_image_source(mobile_image, strict_proxy: strict_proxy) %>
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
 <% card_dom_id = local_assigns[:card_dom_id].presence || dom_id(event, :card) %>

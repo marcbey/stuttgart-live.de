@@ -2,7 +2,7 @@
   "name": "app",
   "private": true,
   "scripts": {
-    "build": "esbuild app/javascript/public.js app/javascript/backend.js --bundle --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets",
+    "build": "esbuild app/javascript/public.js app/javascript/backend.js --bundle --minify --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets",
     "build:css:shared": "npx @tailwindcss/cli -i ./app/assets/stylesheets/shared.tailwind.css -o ./app/assets/builds/shared.css --minify",
     "build:css:frontend": "npx @tailwindcss/cli -i ./app/assets/stylesheets/frontend.tailwind.css -o ./app/assets/builds/frontend.css --minify",
     "build:css:backend": "npx @tailwindcss/cli -i ./app/assets/stylesheets/backend.tailwind.css -o ./app/assets/builds/backend.css --minify",

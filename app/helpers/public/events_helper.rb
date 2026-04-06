@@ -147,9 +147,9 @@ module Public::EventsHelper
     end
   end
 
-  def event_image_source(image)
+  def event_image_source(image, strict_proxy: false)
     return nil if image.blank?
-    return optimized_event_image_source(image) if image.is_a?(EventImage)
+    return optimized_event_image_source(image, strict_proxy:) if image.is_a?(EventImage)
 
     image.image_url
   end

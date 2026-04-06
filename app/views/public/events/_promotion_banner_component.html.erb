@@ -2,6 +2,15 @@
 <% article_options[:style] = article_style if article_style.present? %>
 
 <%= content_tag :article, **article_options do %>
+  <% image_options = {
+    alt: image_alt,
+    class: "promotion-banner-image",
+    style: image_style
+  } %>
+  <% image_options[:loading] = local_assigns[:image_loading] if local_assigns[:image_loading].present? %>
+  <% image_options[:fetchpriority] = local_assigns[:image_fetchpriority] if local_assigns[:image_fetchpriority].present? %>
+  <% image_options[:decoding] = local_assigns[:image_decoding] if local_assigns[:image_decoding].present? %>
+
   <% if admin_link_path.present? %>
     <div class="promotion-banner-admin-controls">
       <%= link_to admin_link_label,
@@ -14,10 +23,11 @@
   <%= link_to href, class: link_classes, style: link_style do %>
     <div class="promotion-banner-visual">
       <div class="promotion-banner-media">
-        <%= image_tag image_source,
-                      alt: image_alt,
-                      class: "promotion-banner-image",
-                      style: image_style %>
+        <% if image_source.present? %>
+          <%= image_tag image_source, **image_options %>
+        <% else %>
+          <div class="promotion-banner-image event-card-placeholder" aria-hidden="true"></div>
+        <% end %>
       </div>
       <% if credit.present? %>
         <p class="promotion-banner-credit"><%= credit %></p>

@@ -6,6 +6,7 @@
 <% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
 <% hover_lift_cards = local_assigns.fetch(:hover_lift_cards, false) %>
 <% header_variant = local_assigns.fetch(:header_variant, :genre) %>
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% nav_content = capture do %>
   <button type="button"
           class="slider-view-toggle"
@@ -49,6 +50,7 @@
                      event: event,
                      browse_state: browse_state,
                      card_variant: card_variant,
+                     strict_proxy: strict_proxy,
                      effective_series_ids: effective_series_ids,
                      show_series_badge: show_series_badge %>
         <% end %>
@@ -64,6 +66,10 @@
   </div>
 
   <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
-    <%= render "event_rows", events: events, browse_state: browse_state, effective_series_ids: effective_series_ids %>
+    <%= render "event_rows",
+               events: events,
+               browse_state: browse_state,
+               effective_series_ids: effective_series_ids,
+               strict_proxy: strict_proxy %>
   </div>
 </section>

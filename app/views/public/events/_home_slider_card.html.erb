@@ -1,8 +1,9 @@
 <% browse_state = local_assigns.fetch(:browse_state) %>
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% desktop_image = event.image_for(slot: :grid_default, breakpoint: :desktop) %>
 <% mobile_image = desktop_image.is_a?(EventImage) ? desktop_image : (event.image_for(slot: :grid_default, breakpoint: :mobile) || desktop_image) %>
-<% desktop_image_source = event_image_source(desktop_image) %>
-<% mobile_image_source = event_image_source(mobile_image) %>
+<% desktop_image_source = event_image_source(desktop_image, strict_proxy: strict_proxy) %>
+<% mobile_image_source = event_image_source(mobile_image, strict_proxy: strict_proxy) %>
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>

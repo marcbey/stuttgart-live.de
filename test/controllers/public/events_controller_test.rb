@@ -1293,13 +1293,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     )
     blog_post.update!(promotion_banner: true)
 
-    get events_url(filter: "all")
+    expected_path = nil
+
+    with_media_proxy do
+      get events_url(filter: "all")
+      expected_path = PublicMediaUrl.path_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
+    end
 
     assert_response :success
-    assert_includes response.body, url_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
+    assert_includes response.body, expected_path
+    refute_includes response.body, "/rails/active_storage/"
     document = Nokogiri::HTML.parse(response.body)
     promotion_banner_image = document.at_css(".promotion-banner:not(.promotion-banner-event) .promotion-banner-image")
     assert_not_nil promotion_banner_image
+    assert_equal "eager", promotion_banner_image["loading"]
+    assert_equal "high", promotion_banner_image["fetchpriority"]
+    assert_equal "async", promotion_banner_image["decoding"]
     assert_includes promotion_banner_image["style"], "left:"
     assert_includes promotion_banner_image["style"], "top:"
     assert_includes promotion_banner_image["style"], "width:"
@@ -1322,12 +1331,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     image = create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
     event.update!(promotion_banner: true)
 
-    get events_url(filter: "all")
+    expected_path = nil
+
+    with_media_proxy do
+      get events_url(filter: "all")
+      expected_path = PublicMediaUrl.path_for(image.processed_optimized_variant)
+    end
 
     assert_response :success
     assert_select ".promotion-banner-event .promotion-banner-kicker", text: "Promotion"
     assert_select ".promotion-banner-event .promotion-banner-cta", text: "Zum Event"
-    assert_includes response.body, Rails.application.routes.url_helpers.rails_storage_proxy_path(image.processed_optimized_variant, only_path: true)
+    assert_includes response.body, expected_path
+    refute_includes response.body, "/rails/active_storage/"
   end
 
   test "homepage prefers dedicated event promotion banner image when present" do
@@ -1355,19 +1370,68 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       content_type: "image/png"
     )
 
-    get events_url(filter: "all")
+    expected_path = nil
+
+    with_media_proxy do
+      get events_url(filter: "all")
+      expected_path = PublicMediaUrl.path_for(event.processed_optimized_promotion_banner_image_variant)
+    end
 
     assert_response :success
-    assert_includes response.body, rails_storage_proxy_path(event.processed_optimized_promotion_banner_image_variant, only_path: true)
+    assert_includes response.body, expected_path
+    refute_includes response.body, "/rails/active_storage/"
     assert_select ".promotion-banner-event .promotion-banner-credit", text: "Foto: Banner"
     refute_includes response.body, "Fallback Credit"
     document = Nokogiri::HTML.parse(response.body)
     promotion_banner_image = document.at_css(".promotion-banner-event .promotion-banner-image")
     assert_not_nil promotion_banner_image
+    assert_equal "eager", promotion_banner_image["loading"]
+    assert_equal "high", promotion_banner_image["fetchpriority"]
+    assert_equal "async", promotion_banner_image["decoding"]
     assert_includes promotion_banner_image["style"], "left:"
     assert_includes promotion_banner_image["style"], "top:"
     assert_includes promotion_banner_image["style"], "width:"
     assert_includes promotion_banner_image["style"], "height:"
+  end
+
+  test "homepage never renders active storage media urls when media proxy is unavailable" do
+    event = Event.create!(
+      slug: "homepage-strict-media-proxy-guard",
+      source_fingerprint: "test::homepage::strict-media-proxy-guard",
+      title: "Strict Media Proxy Guard",
+      artist_name: "Strict Media Proxy Guard Artist",
+      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner: true,
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    blog_post = BlogPost.create!(
+      title: "Strict Proxy Blog Banner",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user
+    )
+    blog_post.promotion_banner_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2200, height: 1400)),
+      filename: "strict-proxy-homepage-banner.png",
+      content_type: "image/png"
+    )
+    blog_post.update!(promotion_banner: true)
+
+    with_media_proxy(enabled: false) do
+      get events_url(filter: "all")
+    end
+
+    assert_response :success
+    refute_includes response.body, "/rails/active_storage/"
   end
 
   test "homepage skips event promotion banner without event image" do
@@ -4026,12 +4090,17 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       alt_text: "Grid 2x2 Alt"
     )
 
-    get events_url(filter: "all")
+    expected_path = nil
+
+    with_media_proxy do
+      get events_url(filter: "all")
+      expected_path = PublicMediaUrl.path_for(image.processed_optimized_variant)
+    end
 
     assert_response :success
     assert_includes response.body, "event-card-grid-2-2"
     assert_includes response.body, "Grid 2x2 Alt"
-    assert_includes response.body, rails_storage_proxy_path(image.processed_optimized_variant, only_path: true)
+    assert_includes response.body, expected_path
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
@@ -4043,7 +4112,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       alt_text: "Grid 1x2 Alt"
     )
 
-    get events_url(filter: "all")
+    with_media_proxy do
+      get events_url(filter: "all")
+    end
 
     assert_response :success
     assert_includes response.body, "event-card-grid-1-2"
@@ -4057,7 +4128,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       alt_text: "Eventbild Default Alt"
     )
 
-    get events_url(filter: "all")
+    with_media_proxy do
+      get events_url(filter: "all")
+    end
 
     assert_response :success
     assert_includes response.body, "event-card-grid-1-1"

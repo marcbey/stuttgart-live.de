@@ -21,6 +21,14 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
+  test "public media path skips rails storage fallback when strict proxy is enabled" do
+    blob = create_uploaded_blob(filename: "strict-proxy.png")
+
+    with_media_proxy(enabled: false) do
+      assert_nil public_media_path(blob, strict_proxy: true)
+    end
+  end
+
   test "formatted organizer notes renders headings and categorized lists" do
     notes = <<~TEXT
       Wichtige Sicherheitsregeln

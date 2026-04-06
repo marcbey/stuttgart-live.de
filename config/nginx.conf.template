@@ -27,6 +27,21 @@ http {
     "" close;
   }
 
+  gzip on;
+  gzip_vary on;
+  gzip_min_length 1024;
+  gzip_proxied any;
+  gzip_comp_level 5;
+  gzip_types
+    text/plain
+    text/css
+    text/javascript
+    application/javascript
+    application/json
+    application/xml
+    image/svg+xml
+    font/woff2;
+
   server {
     listen 80;
     server_name _;
@@ -50,6 +65,12 @@ http {
 
       expires 1y;
       add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location ~ ^/assets/.+\.(css|js|woff2|svg|png|jpg|jpeg|webp)$ {
+      expires 1y;
+      add_header Cache-Control "public, max-age=31536000, immutable";
+      try_files $uri @puma;
     }
 
     location / {

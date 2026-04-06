@@ -1,6 +1,7 @@
 <% browse_state = local_assigns.fetch(:browse_state) %>
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% thumbnail_image = event.image_for(slot: :grid_default, breakpoint: :mobile) || event.image_for(slot: :grid_default, breakpoint: :desktop) %>
-<% thumbnail_source = event_image_source(thumbnail_image) %>
+<% thumbnail_source = event_image_source(thumbnail_image, strict_proxy: strict_proxy) %>
 <% event_url = public_event_detail_path(event, browse_state) %>
 <% primary_offer = event.public_ticket_offer %>
 <% row_dom_id = local_assigns[:row_dom_id] %>

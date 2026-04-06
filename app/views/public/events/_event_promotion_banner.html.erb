@@ -1,6 +1,6 @@
 <% event_image = event.event_image %>
 <% uses_promotion_banner_image = event.promotion_banner_image.attached? %>
-<% event_image_source = uses_promotion_banner_image ? optimized_event_promotion_banner_image_source(event) : event_image_source(event_image) %>
+<% event_image_source = uses_promotion_banner_image ? optimized_event_promotion_banner_image_source(event, strict_proxy: true) : event_image_source(event_image, strict_proxy: true) %>
 <% event_image_style = uses_promotion_banner_image ? event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0) : event_cropped_image_style(event_image, frame_ratio: 16.0 / 9.0) %>
 <% event_image_credit = uses_promotion_banner_image ? event.promotion_banner_image_copyright : event_image&.sub_text %>
 <% image_alt = uses_promotion_banner_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(event_image, event) %>
@@ -16,6 +16,9 @@
            image_source: event_image_source,
            image_alt: image_alt,
            image_style: event_image_style,
+           image_loading: "eager",
+           image_fetchpriority: "high",
+           image_decoding: "async",
            credit: event_image_credit,
            kicker_text: event.promotion_banner_kicker_text_value,
            heading: event.artist_name,

@@ -3,6 +3,7 @@
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 <% row_dom_id_prefix = local_assigns[:row_dom_id_prefix] %>
 <% show_sold_out_ribbon = local_assigns.fetch(:show_sold_out_ribbon, false) %>
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 
 <% if wrap && container_id.present? %>
   <div class="event-listing-grid" id="<%= container_id %>">
@@ -14,6 +15,7 @@
                event: event,
                browse_state: browse_state,
                effective_series_ids: effective_series_ids,
+               strict_proxy: strict_proxy,
                row_dom_id: (row_dom_id_prefix.present? ? dom_id(event, row_dom_id_prefix) : nil),
                show_sold_out_ribbon: show_sold_out_ribbon %>
   <% end %>
