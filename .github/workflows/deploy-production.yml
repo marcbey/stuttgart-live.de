@@ -66,11 +66,14 @@ jobs:
             org.opencontainers.image.source=https://github.com/marcbey/stuttgart-live.de
 
       - name: Prepare Kamal secrets for GitHub Actions
+        env:
+          MEDIA_PROXY_SECRET: ${{ secrets.MEDIA_PROXY_SECRET }}
         run: |
           cat > .kamal/secrets.hetzner <<'EOF'
           KAMAL_REGISTRY_PULL_PASSWORD=$KAMAL_REGISTRY_PULL_PASSWORD
           RAILS_MASTER_KEY=$RAILS_MASTER_KEY
           DB_PASSWORD=$DB_PASSWORD
+          MEDIA_PROXY_SECRET=$MEDIA_PROXY_SECRET
           EOF
 
       - name: Prepare SSH access
