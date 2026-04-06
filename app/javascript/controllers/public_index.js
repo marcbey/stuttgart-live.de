@@ -1,5 +1,8 @@
 import { application } from "./application"
 
+import BackendNavMenuController from "./backend_nav_menu_controller"
+application.register("backend-nav-menu", BackendNavMenuController)
+
 import ConsentController from "./consent_controller"
 application.register("consent", ConsentController)
 

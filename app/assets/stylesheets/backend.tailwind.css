@@ -119,42 +119,6 @@ body:has(.app-nav-inner-backend) .app-nav-links-group-separated .app-nav-link-ac
 display: none;
 }
 
-.public-backend-float {
-position: sticky;
-  top: var(--app-nav-height, 0px);
-  z-index: 40;
-  pointer-events: none;
-}
-
-.public-backend-float-inner {
-max-width: 1480px;
-  margin: 0 auto;
-  padding: 0.8rem 1rem 0;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
-}
-
-.public-backend-shortcut {
-pointer-events: auto;
-  flex: 0 0 auto;
-  width: auto;
-  max-width: max-content;
-}
-
-body.page-public-detail .public-backend-float {
-position: fixed;
-  inset: auto 0 max(1rem, env(safe-area-inset-bottom, 0px)) 0;
-  top: auto;
-  z-index: 45;
-}
-
-body.page-public-detail .public-backend-float-inner {
-padding-top: 0;
-  padding-bottom: 0;
-}
-
 .blog-admin-shell {
 max-width: 1200px;
   margin: 0 auto;
@@ -2723,47 +2687,4 @@ color: rgba(30, 41, 59, 0.78);
 
 .venue-autocomplete-empty {
 padding: 0.75rem 0.9rem;
-}
-
-body.page-public-events-index .app-nav-backend-menu {
-display: none;
-}
-
-body.page-public-events-index .public-backend-float .app-nav-backend-menu {
-display: block;
-}
-
-body.page-public-events-index .public-backend-float {
-position: absolute;
-  top: var(--app-nav-height, 0px);
-  left: 0;
-  right: 0;
-}
-
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link,
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link-form .app-nav-link {
-min-height: 2.35rem;
-  padding: 0.45rem 0;
-  border: 0;
-  background: transparent;
-  color: rgba(17, 17, 17, 0.78);
-  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
-  font-size: 0.96rem;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: 0.01em;
-  text-decoration: none;
-  box-shadow: none;
-}
-
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link::after,
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link-form .app-nav-link::after {
-display: none;
-}
-
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link:hover,
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link-active,
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link-form .app-nav-link:hover {
-color: var(--ink);
-  transform: none;
 }
