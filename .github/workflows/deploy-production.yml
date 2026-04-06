@@ -154,10 +154,32 @@ jobs:
               "docker login ghcr.io -u marcbey --password-stdin"
 
           deploy_log="$RUNNER_TEMP/kamal-deploy.log"
+          max_attempts=3
 
-          if bin/kamal deploy -d hetzner --skip_push 2>&1 | tee "$deploy_log"; then
-            exit 0
-          fi
+          run_deploy() {
+            bin/kamal deploy -d hetzner --skip_push 2>&1 | tee "$deploy_log"
+          }
+
+          transient_registry_failure() {
+            grep -Eq \
+              'TLS handshake timeout|Client\\.Timeout exceeded|i/o timeout|unexpected EOF|connection reset by peer|dial tcp.*:443: connect: connection timed out' \
+              "$deploy_log"
+          }
+
+          attempt=1
+          while true; do
+            if run_deploy; then
+              exit 0
+            fi
+
+            if [ "$attempt" -ge "$max_attempts" ] || ! transient_registry_failure; then
+              break
+            fi
+
+            echo "Temporärer GHCR-Pull-Fehler erkannt, warte 15 Sekunden und versuche Deploy erneut ($attempt/$max_attempts)"
+            sleep 15
+            attempt=$((attempt + 1))
+          done
 
           if ! grep -Fq "kamal-proxy version" "$deploy_log"; then
             exit 1
