@@ -320,7 +320,7 @@ module ApplicationHelper
   end
 
   def homepage_media_strict_proxy?
-    PublicMediaUrl.enabled?
+    Rails.env.production? || PublicMediaUrl.enabled?
   end
 
   def formatted_organizer_notes(notes)
