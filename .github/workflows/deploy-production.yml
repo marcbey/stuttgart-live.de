@@ -70,6 +70,7 @@ jobs:
           MEDIA_PROXY_SECRET: ${{ secrets.MEDIA_PROXY_SECRET }}
         run: |
           cat > .kamal/secrets.hetzner <<'EOF'
+          KAMAL_REGISTRY_PUSH_TOKEN=$KAMAL_REGISTRY_PUSH_TOKEN
           KAMAL_REGISTRY_PULL_PASSWORD=$KAMAL_REGISTRY_PULL_PASSWORD
           RAILS_MASTER_KEY=$RAILS_MASTER_KEY
           DB_PASSWORD=$DB_PASSWORD
@@ -97,10 +98,12 @@ jobs:
       - name: Ensure compatible kamal-proxy version
         env:
           KAMAL_SSH_KEY_PATH: ${{ runner.temp }}/kamal.key
+          KAMAL_REGISTRY_PUSH_TOKEN: ${{ github.token }}
           KAMAL_REGISTRY_PULL_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PULL_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           REQUIRED_KAMAL_PROXY_VERSION: v0.9.2
+          KAMAL_SKIP_REMOTE_REGISTRY_LOGIN: true
         run: |
           set -euo pipefail
 
@@ -136,6 +139,7 @@ jobs:
       - name: Deploy with Kamal
         env:
           KAMAL_SSH_KEY_PATH: ${{ runner.temp }}/kamal.key
+          KAMAL_REGISTRY_PUSH_TOKEN: ${{ github.token }}
           KAMAL_REGISTRY_PULL_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PULL_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
@@ -144,6 +148,7 @@ jobs:
           set -euo pipefail
 
           # GitHub-Secrets dürfen hier keine Zeilenumbrüche enthalten.
+          export KAMAL_REGISTRY_PUSH_TOKEN="$(printf '%s' "$KAMAL_REGISTRY_PUSH_TOKEN" | tr -d '\r\n')"
           export KAMAL_REGISTRY_PULL_PASSWORD="$(printf '%s' "$KAMAL_REGISTRY_PULL_PASSWORD" | tr -d '\r\n')"
           export KAMAL_SKIP_REMOTE_REGISTRY_LOGIN=true
 

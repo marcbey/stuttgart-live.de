@@ -368,7 +368,7 @@ Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese
 - `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`
 - statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
-- lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
+- lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
 - lokale Datei `config/master.key`: Schlüssel für `config/credentials.yml.enc`
 - GitHub-Secrets für Deployments: `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD`, `KAMAL_SSH_PRIVATE_KEY`, `SENTRY_AUTH_TOKEN`
 - GitHub-Variablen für Sentry-Releases: `SENTRY_ORG`, `SENTRY_PROJECT`
@@ -407,8 +407,8 @@ Mit der aktuellen Struktur gibt es vier übliche Betriebsmodi:
 
 - lokale Entwicklung: Rails liest App-Konfiguration aus `config/credentials.yml.enc`; dafür braucht die App vor allem `config/master.key`
 - lokale Hetzner-Infrastruktur: Terraform nutzt lokal `HCLOUD_TOKEN`, typischerweise aus `.env` oder der Shell
-- lokaler Produktions-Deploy: Kamal nutzt lokal `DB_PASSWORD` und `KAMAL_REGISTRY_PULL_PASSWORD` aus `.env` sowie `config/master.key`
-- GitHub-Produktions-Deploy: GitHub Actions nutzt `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD` und `KAMAL_SSH_PRIVATE_KEY` aus GitHub-Secrets
+- lokaler Produktions-Deploy: Kamal nutzt lokal `DB_PASSWORD` und `KAMAL_REGISTRY_PUSH_TOKEN` aus `.env` sowie `config/master.key`
+- GitHub-Produktions-Deploy: GitHub Actions nutzt `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD` und `KAMAL_SSH_PRIVATE_KEY` aus GitHub-Secrets; für den Build-Push nach GHCR verwendet der Workflow das temporäre `github.token`
 
 Für Sentry gilt zusätzlich:
 
@@ -422,6 +422,7 @@ Wenn du lokal sowohl entwickelst als auch Hetzner-Infrastruktur steuerst und man
 ```dotenv
 DB_PASSWORD=...
 HCLOUD_TOKEN=...
+KAMAL_REGISTRY_PUSH_TOKEN=...
 KAMAL_REGISTRY_PULL_PASSWORD=...
 ```
 
@@ -463,7 +464,7 @@ Für manuelle Produktions-Kommandos brauchst du lokal:
 - eine lokale `.kamal/secrets.hetzner`
 - den SSH-Key `~/.ssh/stgt-live-hetzner-github` für den Benutzer `deploy`
 - optional den SSH-Key `~/.ssh/stgt-live-hetzner-admin` für Host-Administration als `admin`
-- eine `.env` mit `DB_PASSWORD` und `KAMAL_REGISTRY_PULL_PASSWORD`
+- eine `.env` mit `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN` und `KAMAL_REGISTRY_PULL_PASSWORD`
 - eine `.env` mit `MEDIA_PROXY_SECRET`, wenn du das Produktions-Setup lokal gegen Hetzner prüfst oder deployen willst
 
 Für lokale Sentry-Release-Meldungen zusätzlich:

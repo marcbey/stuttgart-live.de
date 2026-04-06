@@ -18,7 +18,7 @@ registry:
   server: ghcr.io
   username: <%= ENV.fetch("KAMAL_REGISTRY_USERNAME", "marcbey") %>
   password:
-    - KAMAL_REGISTRY_PULL_PASSWORD
+    - KAMAL_REGISTRY_PUSH_TOKEN
 
 env:
   secret:

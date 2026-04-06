@@ -50,7 +50,7 @@ http {
 
     location ~ ^/media/(?<media_expires>\d+)/(?<media_signature>[-_A-Za-z0-9]+)/(?<media_path>.+)--[^/]+$ {
       secure_link $media_signature,$media_expires;
-      secure_link_md5 "$secure_link_expires/$media_path${MEDIA_PROXY_SECRET}";
+      secure_link_md5 "$secure_link_expires/${media_path}${MEDIA_PROXY_SECRET}";
 
       if ($secure_link = "") {
         return 403;

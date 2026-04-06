@@ -44,6 +44,7 @@ require "erb"
 config_path = File.expand_path("config/deploy.hetzner.yml", Dir.pwd)
 raw = ERB.new(File.read(config_path)).result
 config = YAML.safe_load(raw, aliases: true)
+Array(config.dig("registry", "password")).each { |name| puts name }
 Array(config.dig("env", "secret")).each { |name| puts name }
 RUBY
 }
