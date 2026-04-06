@@ -102,6 +102,7 @@ jobs:
           KAMAL_REGISTRY_PULL_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PULL_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MEDIA_PROXY_SECRET: ${{ secrets.MEDIA_PROXY_SECRET }}
           REQUIRED_KAMAL_PROXY_VERSION: v0.9.2
           KAMAL_SKIP_REMOTE_REGISTRY_LOGIN: true
         run: |
@@ -143,6 +144,7 @@ jobs:
           KAMAL_REGISTRY_PULL_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PULL_PASSWORD }}
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          MEDIA_PROXY_SECRET: ${{ secrets.MEDIA_PROXY_SECRET }}
           SENTRY_RELEASE: ${{ github.sha }}
         run: |
           set -euo pipefail
@@ -150,6 +152,7 @@ jobs:
           # GitHub-Secrets dürfen hier keine Zeilenumbrüche enthalten.
           export KAMAL_REGISTRY_PUSH_TOKEN="$(printf '%s' "$KAMAL_REGISTRY_PUSH_TOKEN" | tr -d '\r\n')"
           export KAMAL_REGISTRY_PULL_PASSWORD="$(printf '%s' "$KAMAL_REGISTRY_PULL_PASSWORD" | tr -d '\r\n')"
+          export MEDIA_PROXY_SECRET="$(printf '%s' "$MEDIA_PROXY_SECRET" | tr -d '\r\n')"
           export KAMAL_SKIP_REMOTE_REGISTRY_LOGIN=true
 
           host="${KAMAL_WEB_HOST}"
