@@ -29,6 +29,16 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
+  test "homepage media strict proxy follows media proxy availability" do
+    with_media_proxy(enabled: false) do
+      assert_equal false, homepage_media_strict_proxy?
+    end
+
+    with_media_proxy do
+      assert homepage_media_strict_proxy?
+    end
+  end
+
   test "formatted organizer notes renders headings and categorized lists" do
     notes = <<~TEXT
       Wichtige Sicherheitsregeln

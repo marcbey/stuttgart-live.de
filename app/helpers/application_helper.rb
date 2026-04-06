@@ -138,7 +138,12 @@ module ApplicationHelper
     return if image.blank?
     return image.image_url unless image.is_a?(EventImage)
 
-    public_media_path(optimized_event_image_representation(image), strict_proxy:)
+    representation = optimized_event_image_representation(image)
+    return if representation.blank?
+
+    return strict_public_media_path(representation, image.file) if strict_proxy
+
+    public_media_path(representation)
   end
 
   def optimized_event_image_url(image)
@@ -177,7 +182,9 @@ module ApplicationHelper
     representation = optimized_event_promotion_banner_image_representation(event)
     return if representation.blank?
 
-    public_media_path(representation, strict_proxy:)
+    return strict_public_media_path(representation, event.promotion_banner_image) if strict_proxy
+
+    public_media_path(representation)
   end
 
   def event_promotion_banner_image_style(event, frame_ratio:)
@@ -261,7 +268,9 @@ module ApplicationHelper
     representation = optimized_blog_post_image_representation(blog_post, slot)
     return if representation.blank?
 
-    public_media_path(representation, strict_proxy:)
+    return strict_public_media_path(representation, blog_post.public_send(slot)) if strict_proxy
+
+    public_media_path(representation)
   end
 
   def public_media_path(record, strict_proxy: false)
@@ -310,11 +319,24 @@ module ApplicationHelper
     blog_post.public_send("#{slot}_copyright")
   end
 
+  def homepage_media_strict_proxy?
+    PublicMediaUrl.enabled?
+  end
+
   def formatted_organizer_notes(notes)
     formatted_organizer_notes_with_link(notes)
   end
 
   private
+
+  def strict_public_media_path(*records)
+    records.compact.each do |record|
+      path = public_media_path(record, strict_proxy: true)
+      return path if path.present?
+    end
+
+    nil
+  end
 
   def focused_image_style(focus_x:, focus_y:, zoom:)
     [

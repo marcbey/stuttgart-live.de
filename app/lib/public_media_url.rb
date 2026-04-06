@@ -70,6 +70,8 @@ module PublicMediaUrl
 
   def storage_record_for(record)
     case record
+    when ActiveStorage::Attached::One
+      record.blob if record.attached?
     when ActiveStorage::Attachment
       record.blob if record.attached?
     when ActiveStorage::Blob

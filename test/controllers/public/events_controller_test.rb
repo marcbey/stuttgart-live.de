@@ -1296,8 +1296,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     expected_path = nil
 
     with_media_proxy do
-      get events_url(filter: "all")
-      expected_path = PublicMediaUrl.path_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        get events_url(filter: "all")
+        expected_path = PublicMediaUrl.path_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
+      end
     end
 
     assert_response :success
@@ -1313,6 +1315,59 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes promotion_banner_image["style"], "top:"
     assert_includes promotion_banner_image["style"], "width:"
     assert_includes promotion_banner_image["style"], "height:"
+  end
+
+  test "homepage falls back to original news promotion banner image when optimized proxy path is unavailable" do
+    highlight = Event.create!(
+      slug: "promotion-banner-news-fallback-highlight-event",
+      source_fingerprint: "test::homepage::promotion-banner-news-fallback-highlight",
+      title: "Promotion Banner News Fallback Highlight",
+      artist_name: "Promotion Banner News Fallback Highlight Artist",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      primary_source: "eventim",
+      status: "published",
+      published_at: 2.days.ago,
+      source_snapshot: {}
+    )
+
+    create_event_image(event: highlight, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    blog_post = BlogPost.create!(
+      title: "Promo-Post mit Variant-Fallback",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user
+    )
+    blog_post.promotion_banner_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2200, height: 1400)),
+      filename: "homepage-banner-fallback.png",
+      content_type: "image/png"
+    )
+    blog_post.update!(promotion_banner: true)
+
+    expected_path = nil
+
+    with_media_proxy do
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        with_variant_proxy_path_unavailable do |original_path_for|
+          get events_url(filter: "all")
+          expected_path = original_path_for.call(blog_post.promotion_banner_image)
+        end
+      end
+    end
+
+    assert_response :success
+    refute_includes response.body, "/rails/active_storage/"
+    document = Nokogiri::HTML.parse(response.body)
+    promotion_banner_image = document.at_css(".promotion-banner:not(.promotion-banner-event) .promotion-banner-image")
+    assert_not_nil promotion_banner_image
+    assert_equal expected_path, promotion_banner_image["src"]
   end
 
   test "homepage renders event promotion banner defaults and optimized event image" do
@@ -1334,8 +1389,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     expected_path = nil
 
     with_media_proxy do
-      get events_url(filter: "all")
-      expected_path = PublicMediaUrl.path_for(image.processed_optimized_variant)
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        get events_url(filter: "all")
+        expected_path = PublicMediaUrl.path_for(image.processed_optimized_variant)
+      end
     end
 
     assert_response :success
@@ -1343,6 +1400,41 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner-event .promotion-banner-cta", text: "Zum Event"
     assert_includes response.body, expected_path
     refute_includes response.body, "/rails/active_storage/"
+  end
+
+  test "homepage falls back to original event image when optimized proxy path is unavailable" do
+    event = Event.create!(
+      slug: "homepage-event-promotion-banner-event-image-fallback",
+      source_fingerprint: "test::homepage::event-promotion-banner-event-image-fallback",
+      title: "Fallback Banner Event",
+      artist_name: "Fallback Banner Artist",
+      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner: true,
+      source_snapshot: {}
+    )
+    image = create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    expected_path = nil
+
+    with_media_proxy do
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        with_variant_proxy_path_unavailable do |original_path_for|
+          get events_url(filter: "all")
+          expected_path = original_path_for.call(image.file)
+        end
+      end
+    end
+
+    assert_response :success
+    refute_includes response.body, "/rails/active_storage/"
+    document = Nokogiri::HTML.parse(response.body)
+    promotion_banner_image = document.at_css(".promotion-banner-event .promotion-banner-image")
+    assert_not_nil promotion_banner_image
+    assert_equal expected_path, promotion_banner_image["src"]
   end
 
   test "homepage prefers dedicated event promotion banner image when present" do
@@ -1373,8 +1465,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     expected_path = nil
 
     with_media_proxy do
-      get events_url(filter: "all")
-      expected_path = PublicMediaUrl.path_for(event.processed_optimized_promotion_banner_image_variant)
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        get events_url(filter: "all")
+        expected_path = PublicMediaUrl.path_for(event.processed_optimized_promotion_banner_image_variant)
+      end
     end
 
     assert_response :success
@@ -1394,7 +1488,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes promotion_banner_image["style"], "height:"
   end
 
-  test "homepage never renders active storage media urls when media proxy is unavailable" do
+  test "homepage falls back to rails storage media urls when media proxy is unavailable" do
     event = Event.create!(
       slug: "homepage-strict-media-proxy-guard",
       source_fingerprint: "test::homepage::strict-media-proxy-guard",
@@ -1431,7 +1525,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    refute_includes response.body, "/rails/active_storage/"
+    assert_includes response.body, "/rails/active_storage/"
+    document = Nokogiri::HTML.parse(response.body)
+    assert_not_nil document.at_css(".promotion-banner:not(.promotion-banner-event) .promotion-banner-image[src*='/rails/active_storage/']")
+    assert_not_nil document.at_css(".promotion-banner-event .promotion-banner-image[src*='/rails/active_storage/']")
   end
 
   test "homepage skips event promotion banner without event image" do
@@ -4307,5 +4404,17 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       filename:,
       content_type: "image/svg+xml"
     )
+  end
+
+  def with_variant_proxy_path_unavailable
+    original_path_for = PublicMediaUrl.method(:path_for)
+
+    PublicMediaUrl.singleton_class.send(:define_method, :path_for) do |record|
+      record.is_a?(ActiveStorage::VariantWithRecord) ? nil : original_path_for.call(record)
+    end
+
+    yield original_path_for
+  ensure
+    PublicMediaUrl.singleton_class.send(:define_method, :path_for, original_path_for) if original_path_for.present?
   end
 end

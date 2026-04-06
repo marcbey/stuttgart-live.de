@@ -26,6 +26,31 @@ class PublicMediaUrlTest < ActiveSupport::TestCase
     end
   end
 
+  test "builds a signed path for attached one records" do
+    author = users(:one)
+    blog_post = BlogPost.create!(
+      title: "Attached One Proxy",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: author,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: author
+    )
+    blog_post.promotion_banner_image.attach(
+      io: StringIO.new(solid_png_binary(width: 1200, height: 675)),
+      filename: "attached-one.png",
+      content_type: "image/png"
+    )
+
+    with_media_proxy do
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        assert_equal PublicMediaUrl.path_for(blog_post.promotion_banner_image.blob),
+                     PublicMediaUrl.path_for(blog_post.promotion_banner_image)
+      end
+    end
+  end
+
   test "returns nil when media proxy is disabled" do
     blob = create_uploaded_blob(filename: "disabled.png")
 

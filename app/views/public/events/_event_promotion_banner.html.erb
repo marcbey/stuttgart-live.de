@@ -1,6 +1,7 @@
+<% strict_proxy = local_assigns.fetch(:strict_proxy, homepage_media_strict_proxy?) %>
 <% event_image = event.event_image %>
 <% uses_promotion_banner_image = event.promotion_banner_image.attached? %>
-<% event_image_source = uses_promotion_banner_image ? optimized_event_promotion_banner_image_source(event, strict_proxy: true) : event_image_source(event_image, strict_proxy: true) %>
+<% event_image_source = uses_promotion_banner_image ? optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy) : event_image_source(event_image, strict_proxy: strict_proxy) %>
 <% event_image_style = uses_promotion_banner_image ? event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0) : event_cropped_image_style(event_image, frame_ratio: 16.0 / 9.0) %>
 <% event_image_credit = uses_promotion_banner_image ? event.promotion_banner_image_copyright : event_image&.sub_text %>
 <% image_alt = uses_promotion_banner_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(event_image, event) %>

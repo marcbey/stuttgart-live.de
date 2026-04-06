@@ -7,12 +7,13 @@
 <% end %>
 
 <section class="public-shell">
+  <% strict_proxy = homepage_media_strict_proxy? %>
   <% if @browse_state.page == 1 && @promotion_banner_event.present? %>
-    <%= render "event_promotion_banner", event: @promotion_banner_event, browse_state: @browse_state %>
+    <%= render "event_promotion_banner", event: @promotion_banner_event, browse_state: @browse_state, strict_proxy: strict_proxy %>
   <% end %>
 
   <% if @browse_state.page == 1 && @promotion_banner_blog_post.present? %>
-    <%= render "promotion_banner", blog_post: @promotion_banner_blog_post %>
+    <%= render "promotion_banner", blog_post: @promotion_banner_blog_post, strict_proxy: strict_proxy %>
   <% end %>
 
   <% if @browse_state.page == 1 && @home_featured_events.present? %>
@@ -22,7 +23,7 @@
                events: @home_featured_events,
                effective_series_ids: @home_featured_effective_series_ids,
                browse_state: @browse_state,
-               strict_proxy: true,
+               strict_proxy: strict_proxy,
                featured: true,
                list_aria_label: "Listenansicht für Highlights" %>
   <% end %>
@@ -36,7 +37,7 @@
                  events: genre_lanes.first.events,
                  effective_series_ids: genre_lanes.first.effective_series_ids,
                  browse_state: @browse_state,
-                 strict_proxy: true,
+                 strict_proxy: strict_proxy,
                  header_variant: :genre,
                  hover_lift_cards: true,
                  tone_class: "genre-lane-section--tone-1",
@@ -50,7 +51,7 @@
                  events: @home_tagestipp_events,
                  effective_series_ids: @home_tagestipp_effective_series_ids,
                  browse_state: @browse_state,
-                 strict_proxy: true,
+                 strict_proxy: strict_proxy,
                  header_variant: :tagestipp,
                  hover_lift_cards: true,
                  summary: "#{pluralize(@home_tagestipp_events.size, "Event", "Events")} in der heutigen Auswahl",
@@ -67,7 +68,7 @@
                  events: @home_highlight_events,
                  effective_series_ids: @home_highlight_effective_series_ids,
                  browse_state: @browse_state,
-                 strict_proxy: true,
+                 strict_proxy: strict_proxy,
                  header_variant: :editorial,
                  hover_lift_cards: true,
                  summary: "#{pluralize(@home_highlight_events.size, "Event", "Events")} aus dem aktuellen Feed",
@@ -84,7 +85,7 @@
                  events: lane.events,
                  effective_series_ids: lane.effective_series_ids,
                  browse_state: @browse_state,
-                 strict_proxy: true,
+                 strict_proxy: strict_proxy,
                  header_variant: :genre,
                  hover_lift_cards: true,
                  tone_class: "genre-lane-section--tone-#{((index + 1) % 4) + 1}",
