@@ -4,7 +4,7 @@ module Public
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
-    HOME_HIGHLIGHT_LIMIT = 100
+    HOME_LANE_LIMIT = 15
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
 
@@ -236,10 +236,10 @@ module Public
 
       @home_highlight_effective_series_ids = effective_public_series_ids_for_relation(scoped_reservix)
       @home_genre_lanes = homepage_genre_lanes
-      @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_reservix.limit(HOME_HIGHLIGHT_LIMIT).to_a)
+      @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_reservix.limit(HOME_LANE_LIMIT).to_a)
       tagestipp_scope = tagestipp_relation
       @home_tagestipp_effective_series_ids = effective_public_series_ids_for_relation(tagestipp_scope)
-      @home_tagestipp_events = Public::Events::SeriesRepresentativeSelector.call(tagestipp_scope.to_a)
+      @home_tagestipp_events = Public::Events::SeriesRepresentativeSelector.call(tagestipp_scope.to_a).first(HOME_LANE_LIMIT)
     end
 
     def should_redirect_search_result?(relation)

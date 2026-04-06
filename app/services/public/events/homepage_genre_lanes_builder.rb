@@ -4,7 +4,7 @@ module Public
       Lane = Data.define(:group, :events, :effective_series_ids)
       LaneGroup = Data.define(:name, :slug)
 
-      DEFAULT_LIMIT = 100
+      DEFAULT_LIMIT = 15
 
       def initialize(relation:, slugs: nil, snapshot: LlmGenreGrouping::Lookup.selected_snapshot, limit: DEFAULT_LIMIT)
         @relation = relation
