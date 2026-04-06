@@ -36,7 +36,7 @@ env:
     DB_USER: <%= ENV.fetch("DB_USER", "stuttgart_live_de") %>
     ACTIVE_STORAGE_SERVICE: <%= ENV.fetch("ACTIVE_STORAGE_SERVICE", "local") %>
     MEDIA_PROXY_ENABLED: <%= ENV.fetch("MEDIA_PROXY_ENABLED", "true") %>
-    MEDIA_PROXY_TTL: <%= ENV.fetch("MEDIA_PROXY_TTL", 1.year.to_i) %>
+    MEDIA_PROXY_TTL: <%= ENV.fetch("MEDIA_PROXY_TTL", 365 * 24 * 60 * 60) %>
 
 ssh:
   user: deploy
