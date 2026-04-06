@@ -207,7 +207,7 @@ module Public
     end
 
     def future_events_relation
-      all_events_relation
+      list_events_relation
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .chronological
     end
@@ -275,27 +275,18 @@ module Public
     end
 
     def published_events_relation
-      all_events_relation
+      detail_events_relation
         .published_live
     end
 
     def homepage_events_relation
-      Event.includes(
-        :venue_record,
-        :event_offers,
-        :import_event_images,
-        event_images: [ file_attachment: :blob ],
-        event_presenters: { presenter: [ logo_attachment: :blob ] }
-      ).published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
+      list_events_relation
+        .published_live
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
     def search_events_relation
-      Event.includes(
-        :venue_record,
-        :import_event_images,
-        event_images: [ file_attachment: :blob ],
-        event_presenters: { presenter: [ logo_attachment: :blob ] }
-      )
+      list_events_relation
     end
 
     def homepage_genre_lanes
@@ -389,40 +380,39 @@ module Public
     def show_events_relation
       return published_events_relation unless authenticated?
 
-      all_events_relation
+      detail_events_relation
     end
 
     def show_related_genre_lane_events_relation
-      Event.includes(
-        :venue_record,
-        :event_offers,
-        :import_event_images,
-        event_images: [ file_attachment: :blob ],
-        event_presenters: { presenter: [ logo_attachment: :blob ] }
-      ).published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
+      list_events_relation
+        .published_live
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
     def show_event_series_lane_relation
-      relation = Event.includes(
-        :venue_record,
-        :event_offers,
-        :import_event_images,
-        event_images: [ file_attachment: :blob ],
-        event_presenters: { presenter: [ logo_attachment: :blob ] }
-      )
+      relation = list_events_relation
 
       authenticated? ? relation : relation.published_live
     end
 
-    def all_events_relation
+    def detail_events_relation
       Event.includes(
         :llm_enrichment,
         :genres,
-        :venue_record,
         :event_offers,
         :import_event_images,
         event_images: [ file_attachment: :blob ],
+        venue_record: [ logo_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
+      )
+    end
+
+    def list_events_relation
+      Event.includes(
+        :venue_record,
+        :event_offers,
+        :import_event_images,
+        event_images: [ file_attachment: :blob ]
       )
     end
 
