@@ -156,6 +156,28 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     assert_equal [ "Punctuation Artist" ], result.map(&:artist_name)
   end
 
+  test "matches genres without returning duplicate events" do
+    matching_event = create_visible_event(
+      title: "Heavy Night",
+      artist_name: "Genre Artist"
+    )
+    matching_event.genres << Genre.create!(name: "Search Rock", slug: "search-rock")
+    matching_event.genres << Genre.create!(name: "Search Progressive Rock", slug: "search-progressive-rock")
+
+    create_visible_event(
+      title: "Different Night",
+      artist_name: "Other Artist"
+    ).genres << Genre.create!(name: "Search Jazz", slug: "search-jazz")
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_ALL,
+      query: "search rock"
+    ).call
+
+    assert_equal [ matching_event ], result.to_a
+  end
+
   test "filters structured today queries by start_at" do
     travel_to(Time.zone.parse("2026-04-07 10:00:00")) do
       matching_event = create_visible_event(
