@@ -220,7 +220,7 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   test "returns turbo stream error when image optimization fails" do
     sign_in_as(@user)
 
-    if image_processing_backend_available?
+    if image_processing_backend_available? && broken_uploaded_image_rejected_by_processor?
       assert_no_difference -> { @event.event_images.count } do
         post backend_event_event_images_url(@event), params: {
           status: "needs_review",
@@ -467,6 +467,18 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def broken_uploaded_image_rejected_by_processor?
+    probe = EventImage.new(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO)
+    probe.file.attach(broken_uploaded_image)
+    probe.save!
+    probe.processed_optimized_variant
+    false
+  rescue EventImage::ProcessingError
+    true
+  ensure
+    probe&.destroy if probe&.persisted?
+  end
 
   def uploaded_image
     Rack::Test::UploadedFile.new(

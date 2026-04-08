@@ -422,7 +422,13 @@ class Event < ApplicationRecord
   end
 
   def promotion_banner_display_image_present?
-    promotion_banner_image.attached? || event_image.present?
+    return true if promotion_banner_image.attached?
+
+    if association(:event_images).loaded?
+      event_images.any?
+    else
+      event_images.exists?
+    end
   end
 
   def processed_optimized_promotion_banner_image_variant
@@ -511,12 +517,11 @@ class Event < ApplicationRecord
 
   def event_image
     if association(:event_images).loaded?
-      return event_images
-        .select(&:detail_hero?)
-        .min_by { |image| [ image.created_at || Time.at(0), image.id.to_i ] }
+      ordered_images = event_images.sort_by { |image| [ image.created_at || Time.at(0), image.id.to_i ] }
+      return ordered_images.find(&:detail_hero?) || ordered_images.first
     end
 
-    event_images.detail_hero.ordered.first
+    event_images.detail_hero.ordered.first || event_images.ordered.first
   end
 
   private

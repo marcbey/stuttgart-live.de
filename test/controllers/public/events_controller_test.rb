@@ -1373,6 +1373,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "homepage renders event promotion banner defaults and optimized event image" do
+    published_at = Time.zone.local(2026, 4, 5, 12, 0, 0)
     event = Event.create!(
       slug: "homepage-event-promotion-banner-defaults",
       source_fingerprint: "test::homepage::event-promotion-banner-defaults",
@@ -1382,7 +1383,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       venue: "Porsche-Arena",
       city: "Stuttgart",
       status: "published",
-      published_at: 1.day.ago,
+      published_at: published_at,
       source_snapshot: {}
     )
     image = create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
@@ -1405,6 +1406,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "homepage falls back to original event image when optimized proxy path is unavailable" do
+    published_at = Time.zone.local(2026, 4, 5, 12, 0, 0)
     event = Event.create!(
       slug: "homepage-event-promotion-banner-event-image-fallback",
       source_fingerprint: "test::homepage::event-promotion-banner-event-image-fallback",
@@ -1414,7 +1416,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       venue: "Porsche-Arena",
       city: "Stuttgart",
       status: "published",
-      published_at: 1.day.ago,
+      published_at: published_at,
       promotion_banner: true,
       source_snapshot: {}
     )
@@ -1440,6 +1442,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "homepage prefers dedicated event promotion banner image when present" do
+    published_at = Time.zone.local(2026, 4, 5, 12, 0, 0)
     event = Event.create!(
       slug: "homepage-event-promotion-banner-dedicated-image",
       source_fingerprint: "test::homepage::event-promotion-banner-dedicated-image",
@@ -1449,7 +1452,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       venue: "Porsche-Arena",
       city: "Stuttgart",
       status: "published",
-      published_at: 1.day.ago,
+      published_at: published_at,
       promotion_banner: true,
       promotion_banner_image_copyright: "Foto: Banner",
       promotion_banner_image_focus_x: 18,
