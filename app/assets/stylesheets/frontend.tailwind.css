@@ -4343,6 +4343,14 @@ right: -0.15rem;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
 }
 
+@media (min-width: 700px) {
+  .highlights-slider-viewport {
+  overflow: visible;
+    padding-inline: 1rem;
+    margin-inline: -1rem;
+  }
+}
+
 .highlights-slider-viewport:hover .highlights-slider-arrow-overlay {
 opacity: 1;
   pointer-events: auto;
