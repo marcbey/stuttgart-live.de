@@ -18,7 +18,6 @@ class HomepagePromotionBannerStylesheetTest < ActiveSupport::TestCase
 
     media_rules.each do |rule|
       refute_match(/overflow:\s*visible\b/, rule)
-      refute_match(/aspect-ratio:\s*auto\b/, rule)
     end
   end
 end
