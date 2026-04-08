@@ -25,8 +25,9 @@ module ApplicationHelper
   def local_font_face_stylesheet(frontend:)
     font_faces = LOCAL_FONT_FACES[:shared]
     font_faces += LOCAL_FONT_FACES[:frontend] if frontend
+    available_font_faces = font_faces.select { |font_face| asset_available?(font_face[:logical_path]) }
 
-    safe_join(font_faces.map { |font_face| local_font_face_rule(**font_face) }, "\n".html_safe)
+    safe_join(available_font_faces.map { |font_face| local_font_face_rule(**font_face) }, "\n".html_safe)
   end
 
   def events_nav_active?
@@ -74,11 +75,20 @@ module ApplicationHelper
   end
 
   def compiled_asset_exists?(logical_path)
+    asset_available?(logical_path)
+  end
+
+  def asset_available?(logical_path)
     manifest_assets =
       if Rails.application.respond_to?(:assets_manifest)
         Rails.application.assets_manifest&.assets
       end
     return true if manifest_assets&.key?(logical_path)
+
+    if Rails.application.respond_to?(:assets)
+      propshaft_asset = Rails.application.assets.load_path.find(logical_path)
+      return true if propshaft_asset.present?
+    end
 
     builds_path = Rails.root.join("app/assets/builds", logical_path)
     return true if File.exist?(builds_path)
@@ -300,17 +310,19 @@ module ApplicationHelper
     public_media_path(blob)
   end
 
-  def blog_post_cropped_image_style(blog_post, slot, frame_ratio:)
+  def blog_post_cropped_image_style(blog_post, slot, frame_ratio:, lock_top: false)
     cropped_attachment_style(
       attachment: blog_post.public_send(slot),
       focus_x: blog_post.public_send("#{slot}_focus_x_value"),
       focus_y: blog_post.public_send("#{slot}_focus_y_value"),
       zoom: blog_post.public_send("#{slot}_zoom_value"),
       frame_ratio: frame_ratio,
+      lock_top: lock_top,
       fallback_style: focused_cropped_fallback_style(
         focus_x: blog_post.public_send("#{slot}_focus_x_value"),
         focus_y: blog_post.public_send("#{slot}_focus_y_value"),
-        zoom: blog_post.public_send("#{slot}_zoom_value")
+        zoom: blog_post.public_send("#{slot}_zoom_value"),
+        lock_top: lock_top
       )
     )
   end
@@ -346,10 +358,11 @@ module ApplicationHelper
     ].join("; ")
   end
 
-  def focused_cropped_fallback_style(focus_x:, focus_y:, zoom:)
+  def focused_cropped_fallback_style(focus_x:, focus_y:, zoom:, lock_top: false)
     zoom_scale = zoom.to_f / 100.0
     offset_x = 0.5 - ((focus_x.to_f / 100.0) * zoom_scale)
     offset_y = 0.5 - ((focus_y.to_f / 100.0) * zoom_scale)
+    offset_y = 0 if lock_top
 
     [
       "position: absolute",
@@ -363,7 +376,7 @@ module ApplicationHelper
     ].join("; ")
   end
 
-  def cropped_attachment_style(attachment:, focus_x:, focus_y:, zoom:, frame_ratio:, fallback_style:)
+  def cropped_attachment_style(attachment:, focus_x:, focus_y:, zoom:, frame_ratio:, fallback_style:, lock_top: false)
     metadata = analyzed_attachment_metadata(attachment)
     image_width = metadata_value(metadata, :width).to_f
     image_height = metadata_value(metadata, :height).to_f
@@ -384,6 +397,7 @@ module ApplicationHelper
 
     offset_x = clamp_crop_offset(0.5 - (focus_x * width_factor), width_factor)
     offset_y = clamp_crop_offset(0.5 - (focus_y * height_factor), height_factor)
+    offset_y = 0 if lock_top
 
     [
       "position: absolute",

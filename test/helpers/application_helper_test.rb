@@ -39,6 +39,25 @@ class ApplicationHelperTest < ActionView::TestCase
     end
   end
 
+  test "asset availability checks propshaft load path for fonts" do
+    assert asset_available?("archivo-narrow-400.woff2")
+  end
+
+  test "local font face stylesheet skips unavailable fonts" do
+    original_method = method(:asset_available?)
+
+    singleton_class.define_method(:asset_available?) do |logical_path|
+      logical_path != "archivo-narrow-400.woff2"
+    end
+
+    stylesheet = local_font_face_stylesheet(frontend: false)
+
+    refute_includes stylesheet, "archivo-narrow-400"
+    assert_includes stylesheet, "archivo-narrow-700"
+  ensure
+    singleton_class.define_method(:asset_available?, original_method)
+  end
+
   test "formatted organizer notes renders headings and categorized lists" do
     notes = <<~TEXT
       Wichtige Sicherheitsregeln

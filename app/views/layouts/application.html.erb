@@ -22,9 +22,13 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <link rel="apple-touch-icon" href="/icon.png">
 
-    <link rel="preload" href="<%= asset_path("archivo-narrow-400.woff2") %>" as="font" type="font/woff2" crossorigin>
+    <% if asset_available?("archivo-narrow-400.woff2") %>
+      <link rel="preload" href="<%= asset_path("archivo-narrow-400.woff2") %>" as="font" type="font/woff2" crossorigin>
+    <% end %>
     <% if frontend_context %>
-      <link rel="preload" href="<%= asset_path("bebas-neue-400.woff2") %>" as="font" type="font/woff2" crossorigin>
+      <% if asset_available?("bebas-neue-400.woff2") %>
+        <link rel="preload" href="<%= asset_path("bebas-neue-400.woff2") %>" as="font" type="font/woff2" crossorigin>
+      <% end %>
     <% end %>
     <% if frontend_context || backend_context || auth_chrome %>
       <style data-local-font-faces>
