@@ -2673,8 +2673,8 @@ border-color: #666;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
-  gap: 0.9rem 1rem;
-  margin-bottom: 1.1rem;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0;
   padding: 0;
   box-shadow: none;
 }
@@ -5753,6 +5753,79 @@ margin-top: 0;
 margin-bottom: 0;
 }
 
+.event-detail-venue-layout {
+display: grid;
+  gap: 1rem;
+}
+
+.event-detail-venue-main {
+display: grid;
+  gap: 0.9rem;
+}
+
+.event-detail-venue-actions {
+display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.event-detail-venue-button,
+.event-detail-venue-map-link {
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  width: fit-content;
+  min-height: 2.9rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111;
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-decoration: none;
+}
+
+.event-detail-venue-button:hover,
+.event-detail-venue-button:focus-visible,
+.event-detail-venue-map-link:hover,
+.event-detail-venue-map-link:focus-visible {
+border-color: rgba(17, 17, 17, 0.28);
+  background: #fff;
+}
+
+.event-detail-venue-meta {
+display: grid;
+  gap: 0.9rem;
+}
+
+.event-detail-venue-address {
+display: grid;
+  gap: 0.25rem;
+}
+
+.event-detail-venue-address p {
+margin: 0;
+}
+
+.event-detail-venue-label {
+color: rgba(17, 17, 17, 0.62);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.event-detail-venue-map-pin {
+display: block;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+}
+
 .event-detail-venue-brand {
 display: flex;
   align-items: end;
@@ -6489,7 +6562,12 @@ display: flex;
 
 @media (max-width: 699px) {
   body.page-public-events-index {
-  --homepage-section-gap: 0.9rem;
+  --homepage-section-gap: 0.05rem;
+  }
+
+  body.page-public-events-index .genre-lane-section,
+  body.page-public-events-index .home-slider-section {
+  padding: 0.08rem 0 0;
   }
 
   .event-detail-image-badge {
@@ -6515,12 +6593,12 @@ display: flex;
   .lane-header {
   grid-template-columns: minmax(0, 1fr) auto;
       align-items: end;
-      padding: 1rem 0;
+      padding: 0.18rem 0 0.08rem;
   }
 
   .lane-header-title {
-  font-size: 2.5rem;
-      line-height: 0.87;
+  font-size: 2rem;
+      line-height: 1.2;
   }
 
   .lane-header-nav {
@@ -6529,12 +6607,83 @@ display: flex;
       justify-self: end;
   }
 
-  .genre-lane-track {
-  grid-auto-columns: minmax(84%, 84%);
+  body.page-public-events-index .genre-lane-track {
+  grid-auto-columns: minmax(10.8rem, 10.8rem);
+      gap: 0.55rem;
+      padding-bottom: 0;
   }
 
-  .genre-lane-card-media {
-  aspect-ratio: 1 / 1.06;
+  body.page-public-events-index .genre-lane-card {
+  width: auto;
+      min-width: 0;
+  }
+
+  body.page-public-events-index .genre-lane-card-link,
+  body.page-public-events-index .genre-lane-card-link--editorial,
+  body.page-public-events-index .genre-lane-card-link--spotlight {
+  width: 100%;
+      min-width: 0;
+      gap: 0.34rem;
+      padding: 0.38rem 0.38rem 0.34rem;
+  }
+
+  body.page-public-events-index .genre-lane-card-media,
+  body.page-public-events-index .genre-lane-card-media--editorial,
+  body.page-public-events-index .genre-lane-card-media--spotlight {
+  aspect-ratio: 0.98 / 1.12;
+  }
+
+  body.page-public-events-index .genre-lane-card-copy {
+  gap: 0.08rem;
+      padding-left: 0.18rem;
+      padding-bottom: 0.22rem;
+  }
+
+  body.page-public-events-index .genre-lane-card .event-card-badge-genre-lane,
+  body.page-public-events-index .genre-lane-card .event-listing-venue,
+  body.page-public-events-index .genre-lane-card .event-listing-link span {
+  display: none;
+  }
+
+  body.page-public-events-index .genre-lane-card .event-listing-date {
+  font-size: 0.76rem;
+      line-height: 1.15;
+  }
+
+  body.page-public-events-index .genre-lane-card-name {
+  font-size: 0.92rem;
+      line-height: 1.15;
+      -webkit-line-clamp: 2;
+  }
+
+  body.page-public-events-index .genre-lane-card-price {
+  display: block;
+      margin-top: 0.14rem;
+      padding-left: 0;
+      justify-self: start;
+      align-self: start;
+      text-align: left;
+      color: rgba(6, 47, 49, 0.62);
+  }
+
+  body.page-public-events-index .genre-lane-card-admin-controls {
+  top: 0.5rem;
+      right: 0.5rem;
+      gap: 0.2rem;
+  }
+
+  body.page-public-events-index .genre-lane-card-admin-controls .status-badge {
+  display: none;
+  }
+
+  body.page-public-events-index .genre-lane-card-admin-controls .event-card-admin-link {
+  min-height: 1.9rem;
+      padding: 0.2rem 0.45rem;
+      font-size: 0.78rem;
+  }
+
+  body.page-public-events-index .section-slider-list {
+  margin-top: 0.2rem;
   }
 }
 
@@ -6713,6 +6862,37 @@ display: flex;
 }
 
 @media (max-width: 699px) {
+  .home-slider-track {
+  grid-auto-columns: calc((100% - 1rem) / 3);
+      gap: 0.5rem;
+  }
+
+  .home-slider-card {
+  gap: 0.18rem;
+  }
+
+  .home-slider-card-copy {
+  gap: 0.02rem;
+      padding-bottom: 0.15rem;
+  }
+
+  .home-slider-card .event-card-badge-home-slider,
+  .home-slider-card .event-listing-venue,
+  .home-slider-card .event-listing-link span,
+  .home-slider-card-price {
+  display: none;
+  }
+
+  .home-slider-card .event-listing-date {
+  font-size: 0.7rem;
+      line-height: 1.15;
+  }
+
+  .home-slider-card .event-listing-link strong {
+  font-size: 0.84rem;
+      line-height: 1.15;
+  }
+
   .partner-strip {
   position: relative;
       justify-content: center;
@@ -7782,23 +7962,25 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-visual 
 display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  align-self: center;
+  padding: 10px;
+  align-self: stretch;
+  justify-content: flex-start;
   min-width: 0;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
 position: relative;
   display: block;
-  margin: 1rem 1.75rem 0 1rem;
-  width: calc(100% - 2.75rem);
+  margin: 0;
+  width: 100%;
   background: transparent;
   overflow: hidden;
-  border-radius: calc(1.4rem - 1rem);
+  border-radius: 1rem;
   padding: 0;
-  aspect-ratio: 16 / 9;
-  min-height: 0;
-  height: auto;
-  align-self: center;
+  aspect-ratio: auto;
+  min-height: 100%;
+  height: 100%;
+  align-self: stretch;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-image {
@@ -7896,7 +8078,7 @@ border-color: #f8faf9;
   body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
   grid-template-columns: minmax(0, 1fr);
       gap: 0;
-      padding: 0.9rem;
+      padding: 0;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-visual {
@@ -7927,7 +8109,7 @@ border-color: #f8faf9;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-copy {
-  padding: 1rem 0 0;
+  padding: 1rem;
   }
 }
 
@@ -7935,7 +8117,7 @@ border-color: #f8faf9;
   body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
   grid-template-columns: minmax(0, 1fr);
       gap: 0;
-      padding: 1rem;
+      padding: 0;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-visual {
