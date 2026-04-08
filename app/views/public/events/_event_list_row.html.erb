@@ -36,9 +36,6 @@
           <% end %>
         </p>
       </div>
-      <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
-        <p class="event-listing-price"><%= display_price %></p>
-      <% end %>
     </div>
     <div class="event-listing-link">
       <strong><%= event.artist_name %></strong>
@@ -46,6 +43,9 @@
         <span><%= event.title %></span>
       <% end %>
     </div>
+    <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
+      <p class="event-listing-price"><%= display_price %></p>
+    <% end %>
   </div>
   <% if authenticated? %>
     <div class="event-card-admin-controls event-listing-admin-controls">

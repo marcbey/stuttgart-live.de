@@ -33,6 +33,9 @@
       <% if sold_out %>
         <%= render "sold_out_corner_ribbon" %>
       <% end %>
+      <% if event.badge_text.present? %>
+        <span class="event-card-badge event-card-badge-home-slider"><%= event.badge_text %></span>
+      <% end %>
     <% end %>
 
     <% if authenticated? %>
@@ -53,9 +56,6 @@
   </div>
 
   <div class="home-slider-card-copy">
-    <% if event.badge_text.present? %>
-      <span class="event-card-badge event-card-badge-home-slider"><%= event.badge_text %></span>
-    <% end %>
     <div class="event-listing-body">
       <p class="event-listing-date">
         <span class="event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>

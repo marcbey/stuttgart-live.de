@@ -38,15 +38,15 @@
       <% if sold_out %>
         <%= render "sold_out_corner_ribbon" %>
       <% end %>
+      <% if event.badge_text.present? %>
+        <span class="event-card-badge event-card-badge-genre-lane"><%= event.badge_text %></span>
+      <% end %>
       <% if show_series_badge && public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
         <%= render "event_series_corner_badge" %>
       <% end %>
     </div>
 
     <div class="<%= ["genre-lane-card-copy", ("genre-lane-card-copy--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
-      <% if event.badge_text.present? %>
-        <span class="event-card-badge event-card-badge-genre-lane"><%= event.badge_text %></span>
-      <% end %>
       <div class="event-listing-body">
         <p class="event-listing-date">
           <span class="event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>

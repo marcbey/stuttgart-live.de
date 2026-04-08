@@ -1825,6 +1825,12 @@ scroll-snap-align: start;
   box-shadow: none;
 }
 
+.home-featured-section,
+.home-slider-section,
+.genre-lane-section {
+padding-bottom: 0.3rem;
+}
+
 .genre-lane-section--tone-1 {
 --genre-lane-accent: rgba(227, 27, 46, 0.08);
   --genre-lane-start: rgba(255, 248, 239, 0.98);
@@ -1907,6 +1913,7 @@ display: none;
 
 .genre-lane-card {
 position: relative;
+  height: 100%;
   scroll-snap-align: start;
   background: #fff;
   border: none;
@@ -1925,9 +1932,10 @@ background: #fff;
 
 .genre-lane-card-link {
 display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.46rem;
   align-items: start;
+  height: 100%;
   padding: 0.48rem 0.48rem 0.5rem;
   overflow: hidden;
   border-radius: 10px;
@@ -2332,11 +2340,12 @@ color: var(--ink);
 
 .genre-lane-card-copy {
 display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto minmax(2.9rem, 1fr) auto;
   gap: 0.08rem;
   min-height: auto;
   align-content: start;
   align-items: start;
+  height: 100%;
   min-width: 0;
   padding-top: 0rem;
 }
@@ -2409,8 +2418,10 @@ display: -webkit-box;
 .genre-lane-card-price {
 margin: 0.02rem 0 0;
   padding-right: 0;
-  align-self: end;
-  justify-self: end;
+  align-self: start;
+  justify-self: start;
+  color: rgba(17, 17, 17, 0.58);
+  text-align: left;
 }
 
 .genre-lane-card-meta-date {
@@ -2660,6 +2671,7 @@ border-color: #666;
 
 .lane-header {
 --lane-header-accent: #178f9c;
+  --lane-header-bottom-gap: 0.65rem;
   --lane-header-title-color: var(--lane-header-accent);
   --lane-header-kicker-color: color-mix(in srgb, var(--lane-header-accent) 72%, white 28%);
   --lane-header-button-bg: #178f9c;
@@ -2674,7 +2686,7 @@ border-color: #666;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: end;
   gap: 0.5rem 1rem;
-  margin-bottom: 0;
+  margin-bottom: var(--lane-header-bottom-gap);
   padding: 0;
   box-shadow: none;
 }
@@ -2853,6 +2865,7 @@ color: var(--lane-header-button-active-color);
 
 .lane-header--highlights {
 padding: 0.9rem 0;
+  --lane-header-bottom-gap: 0.8rem;
   --lane-header-accent: #178f9c;
   --lane-header-title-color: #178f9c;
   --lane-header-kicker-color: color-mix(in srgb, #178f9c 72%, white 28%);
@@ -2970,9 +2983,10 @@ display: none;
 
 .home-slider-card {
 display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: auto minmax(0, 1fr);
   gap: 0.24rem;
   align-content: start;
+  height: 100%;
   scroll-snap-align: start;
 }
 
@@ -3107,24 +3121,38 @@ opacity: 1;
 
 .home-slider-card-copy {
 display: grid;
-  grid-template-rows: auto auto auto;
+  grid-template-rows: auto minmax(2.9rem, 1fr) auto;
   gap: 0.08rem;
   min-height: auto;
   align-content: start;
   align-items: start;
+  height: 100%;
   padding-top: 0.08rem;
   padding-bottom: 0.5rem;
 }
 
-.home-slider-card-price {
+.home-slider-card-price,
+.home-slider-card .event-listing-price {
 margin: 0.02rem 0 0;
   padding-right: 0;
-  align-self: end;
-  justify-self: end;
+  align-self: start;
+  justify-self: start;
+  color: rgba(17, 17, 17, 0.58);
+  text-align: left;
+}
+
+.genre-lane-card-price,
+.genre-lane-card .event-listing-price {
+margin: 0.02rem 0 0;
+  padding-right: 0;
+  align-self: start;
+  justify-self: start;
+  color: rgba(17, 17, 17, 0.58);
+  text-align: left;
 }
 
 .section-slider-list {
-margin-top: 0.7rem;
+margin-top: 0.45rem;
 }
 
 @media (min-width: 1100px) {
@@ -4135,12 +4163,22 @@ position: static;
 max-width: min(100%, 16rem);
   font-size: 0.88rem;
   padding: 0.16rem 1rem 0.14rem 0.66rem;
+  position: absolute;
+  left: 0;
+  bottom: 10px;
+  z-index: 3;
+  margin: 0;
 }
 
 .event-card-badge-genre-lane {
 max-width: min(100%, 16rem);
   font-size: 0.86rem;
-  padding: 0.16rem 0.96rem 0.14rem 0.62rem;
+  padding: 0.4rem 0.96rem 0.14rem 0.62rem;
+  position: absolute;
+  left: 0;
+  bottom: 10px;
+  z-index: 3;
+  margin: 0;
 }
 
 .event-card:hover {
@@ -4160,16 +4198,29 @@ transform: scale(calc(var(--event-card-base-scale) * 1.03));
 background: linear-gradient(0deg, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.56) 52%, rgba(0, 0, 0, 0.18) 100%);
 }
 
+.home-featured-track .event-card h2,
+.home-featured-track .event-card-title {
+white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
 .home-featured-track .event-card-ticket-overlay {
-padding-top: calc(4.2rem + 20px);
+align-content: start;
+  gap: 0.52rem;
+  padding-top: calc(3.7rem + 20px);
 }
 
 .home-featured-track .event-card-ticket-arrow {
 color: #2bd7cf;
+  font-size: 1.68rem;
+  transform: translateY(-0.36rem);
 }
 
 .home-featured-track .event-card-ticket-label {
 color: #2bd7cf;
+  font-size: 1.4rem;
+  letter-spacing: 0.14em;
 }
 
 .home-featured-track .event-card-link:hover .event-card-ticket-overlay,
@@ -4326,7 +4377,7 @@ display: grid;
 position: relative;
   display: grid;
   grid-template-columns: 4.4rem minmax(0, 1fr);
-  align-items: start;
+  align-items: stretch;
   gap: 0.9rem;
   padding: 0.3rem;
   border-radius: 16px;
@@ -4403,21 +4454,20 @@ display: flex;
 
 .event-listing-meta {
 display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: 0.9rem;
+  gap: 0.35rem;
   min-width: 0;
 }
 
 .event-listing-price {
 margin: 0;
-  padding-right: 0.35rem;
   font-size: 0.9rem;
   line-height: 1.2;
   flex: 0 0 auto;
   font-weight: 700;
   color: rgba(17, 17, 17, 0.76);
-  text-align: right;
+  text-align: left;
   white-space: nowrap;
 }
 
@@ -4439,7 +4489,9 @@ min-width: 0;
 
 .event-listing-body {
 display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   gap: 0.14rem;
+  height: 100%;
   min-width: 0;
 }
 
@@ -4450,6 +4502,7 @@ top: 0.3rem;
 
 .event-listing-link {
 display: grid;
+  align-content: start;
   gap: 0.12rem;
   color: inherit;
   text-decoration: none;
@@ -4496,8 +4549,24 @@ gap: 0.45rem;
 
 .home-slider-card .event-listing-price,
 .genre-lane-card .event-listing-price {
-margin-top: 0.9rem;
+margin-top: 0.35rem;
   padding-right: 0;
+  justify-self: start;
+  text-align: left;
+  color: rgba(17, 17, 17, 0.58);
+}
+
+.section-slider-list .event-listing-body {
+grid-template-rows: auto minmax(3.3rem, 1fr) auto;
+}
+
+.section-slider-list .event-listing-link {
+min-height: 3.3rem;
+}
+
+.section-slider-list .event-listing-price {
+margin-top: 0.4rem;
+  color: rgba(17, 17, 17, 0.58);
 }
 
 .home-slider-card .event-listing-link strong,
@@ -6696,6 +6765,7 @@ display: flex;
 
   body.page-public-events-index .genre-lane-card-copy {
   gap: 0.08rem;
+      grid-template-rows: auto minmax(2.3rem, 1fr) auto;
       padding-left: 0.18rem;
       padding-bottom: 0.22rem;
   }
@@ -6719,7 +6789,7 @@ display: flex;
 
   body.page-public-events-index .genre-lane-card-price {
   display: block;
-      margin-top: 0.14rem;
+      margin-top: 0.1rem;
       padding-left: 0;
       justify-self: start;
       align-self: start;
@@ -6934,6 +7004,7 @@ display: flex;
 
   .home-slider-card-copy {
   gap: 0.02rem;
+      grid-template-rows: auto minmax(1.4rem, 1fr) auto;
       padding-bottom: 0.15rem;
   }
 
