@@ -87,12 +87,24 @@
                 </div>
               <% end %>
 
-              <% if presenter.venue_info.present? && (presenter.venue_info.address.present? || presenter.venue_info.map_url.present?) %>
+              <% if presenter.venue_info.present? && (presenter.venue_info.address.present? || presenter.venue_info.map_url.present? || presenter.venue_info.logo_source.present?) %>
                 <div class="event-detail-venue-meta">
-                  <% if presenter.venue_info.address.present? %>
-                    <div class="event-detail-venue-address">
-                      <p class="event-detail-venue-label">Adresse:</p>
-                      <p><%= presenter.venue_info.address %></p>
+                  <% if presenter.venue_info.address.present? || presenter.venue_info.logo_source.present? %>
+                    <div class="event-detail-venue-meta-header">
+                      <% if presenter.venue_info.address.present? %>
+                        <div class="event-detail-venue-address">
+                          <p class="event-detail-venue-label">Adresse:</p>
+                          <p><%= presenter.venue_info.address %></p>
+                        </div>
+                      <% end %>
+
+                      <% if presenter.venue_info.logo_source.present? %>
+                        <div class="event-detail-venue-brand">
+                          <%= image_tag presenter.venue_info.logo_source,
+                                        alt: presenter.venue_info.name,
+                                        class: "event-detail-venue-logo" %>
+                        </div>
+                      <% end %>
                     </div>
                   <% end %>
 
@@ -108,14 +120,6 @@
                 </div>
               <% end %>
             </div>
-
-            <% if presenter.venue_info&.logo_source.present? %>
-              <div class="event-detail-venue-brand">
-                <%= image_tag presenter.venue_info.logo_source,
-                              alt: presenter.venue_info.name,
-                              class: "event-detail-venue-logo" %>
-              </div>
-            <% end %>
           </div>
         </section>
       <% end %>
