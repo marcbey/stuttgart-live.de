@@ -17,6 +17,7 @@ module Backend
 
       def call(run_metadata: {})
         result = nil
+        run = nil
 
         run_source.with_lock do
           active_run = ImportRun.where(source_type: "merge", status: "running").order(started_at: :desc).first
@@ -31,20 +32,11 @@ module Backend
             started_at: clock.call,
             metadata: prepared_metadata(run_metadata)
           )
-          job = job_class.perform_later(import_run_id: run.id)
-          run.update!(
-            metadata: run.metadata.merge(
-              "job_id" => job.job_id,
-              "provider_job_id" => job.provider_job_id,
-              "job_attempt" => 1,
-              "job_retries_used" => 0,
-              "max_retries" => 0
-            )
-          )
-          broadcaster.broadcast!
-
           result = Result.new(run:, notice: "Merge-Sync wurde gestartet.", alert: nil)
         end
+
+        dispatch_run!(run) if run.present?
+        broadcaster.broadcast! if result.run.present?
 
         result
       end
@@ -61,6 +53,27 @@ module Backend
 
       def normalized_metadata(run_metadata)
         run_metadata.is_a?(Hash) ? run_metadata.deep_stringify_keys : {}
+      end
+
+      def dispatch_run!(run)
+        job = job_class.perform_later(import_run_id: run.id)
+
+        run.update!(
+          metadata: run.metadata.merge(
+            "job_id" => job.job_id,
+            "provider_job_id" => job.provider_job_id,
+            "job_attempt" => 1,
+            "job_retries_used" => 0,
+            "max_retries" => 0
+          )
+        )
+      rescue StandardError => e
+        run.update!(
+          status: "failed",
+          finished_at: clock.call,
+          error_message: "Merge-Sync konnte nicht an die Queue übergeben werden: #{e.message}"
+        )
+        raise
       end
 
       def run_source
