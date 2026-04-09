@@ -89,9 +89,11 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
 
     expected_path = nil
 
-    with_media_proxy do
-      get static_page_url(page.slug)
-      expected_path = PublicMediaUrl.path_for(blob.representation(resize_to_limit: [ 1024, 768 ]).processed)
+    travel_to Time.zone.local(2026, 4, 9, 10, 0, 0) do
+      with_media_proxy do
+        get static_page_url(page.slug)
+        expected_path = PublicMediaUrl.path_for(blob.representation(resize_to_limit: [ 1024, 768 ]).processed)
+      end
     end
 
     assert_response :success
