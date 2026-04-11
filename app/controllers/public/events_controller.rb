@@ -1,14 +1,15 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :lane, :saved_lane, :search, :show, :search_overlay ]
+    allow_unauthenticated_access only: [ :index, :lane, :saved_lane, :search, :show, :search_overlay, :termine ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
     HOME_LANE_LIMIT = 15
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
+    SHOW_EVENT_SERIES_TERMS_LIMIT = 6
 
-    before_action :set_browse_state, only: [ :index, :lane, :saved_lane, :search, :show, :search_overlay ]
+    before_action :set_browse_state, only: [ :index, :lane, :saved_lane, :search, :show, :search_overlay, :termine ]
 
     def index
       if params[:q].present?
@@ -82,12 +83,24 @@ module Public
       @primary_offer = @event.public_ticket_offer
       @event_series_lane = Public::Events::EventSeriesLaneBuilder.new(
         event: @event,
-        relation: show_event_series_lane_relation
+        relation: show_event_series_lane_relation,
+        exclude_event: @event,
+        limit: SHOW_EVENT_SERIES_TERMS_LIMIT
       ).call
       @related_genre_lane = Public::Events::RelatedGenreLaneBuilder.new(
         event: @event,
         relation: show_related_genre_lane_events_relation
       ).call
+    end
+
+    def termine
+      @event = show_events_relation.find_by!(slug: params[:slug])
+      @event_series_lane = Public::Events::EventSeriesLaneBuilder.new(
+        event: @event,
+        relation: show_event_series_lane_relation
+      ).call
+
+      raise ActiveRecord::RecordNotFound if @event_series_lane.blank?
     end
 
     def search_overlay

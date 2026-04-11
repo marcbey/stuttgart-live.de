@@ -93,6 +93,10 @@ module Public::EventsHelper
     event_path(event.slug, **browse_state.route_params)
   end
 
+  def public_event_series_terms_path(event, browse_state)
+    termine_event_path(event.slug, **browse_state.route_params)
+  end
+
   def public_events_index_path(browse_state, page: nil, format: nil)
     route_params = browse_state.route_params(page: page, format: format)
     return search_path(**route_params) if browse_state.search_query_present?

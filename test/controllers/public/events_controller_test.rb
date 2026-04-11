@@ -2918,7 +2918,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-related-list", count: 0
   end
 
-  test "show renders the full event series lane before the related genre lane" do
+  test "show renders upcoming event series terms before the related genre lane" do
     create_homepage_genre_snapshot
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
 
@@ -2938,11 +2938,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
     @published_event.update!(event_series: series, event_series_assignment: "manual")
-    past_event = Event.create!(
+    Event.create!(
       slug: "show-series-past",
       source_fingerprint: "test::public::show-series::past",
       title: "A Tribute to Frida Kahlo",
-      artist_name: "Viva la Vida",
+      artist_name: "Past Series Artist",
       start_at: 4.days.ago.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
@@ -2952,35 +2952,40 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       event_series_assignment: "manual",
       source_snapshot: {}
     )
-    future_event = Event.create!(
-      slug: "show-series-future",
-      source_fingerprint: "test::public::show-series::future",
-      title: "A Tribute to Frida Kahlo",
-      artist_name: "Viva la Vida",
-      start_at: 6.days.from_now.change(hour: 20, min: 0, sec: 0),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      event_series: series,
-      event_series_assignment: "manual",
-      source_snapshot: {}
-    )
+    future_events = 7.times.map do |index|
+      Event.create!(
+        slug: "show-series-future-#{index}",
+        source_fingerprint: "test::public::show-series::future::#{index}",
+        title: "A Tribute to Frida Kahlo #{index}",
+        artist_name: "Viva la Vida #{index}",
+        start_at: @published_event.start_at + (index + 1).days,
+        venue: "Im Wizemann",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        event_series: series,
+        event_series_assignment: "manual",
+        source_snapshot: {}
+      )
+    end
 
     get event_url(@published_event.slug)
 
     assert_response :success
-    series_section = css_select("section.genre-lane-section").find do |section|
-      section.at_css(".lane-header-kicker")&.text.to_s.include?("Event-Reihe")
-    end
+    series_section = css_select(".event-detail-series-terms").first
     assert_not_nil series_section
-    assert_equal series.name, series_section.at_css("h2")&.text.to_s.strip
-    assert_equal 3, series_section.css(".genre-lane-card-name").size
-    assert_equal 0, series_section.css(".event-series-badge").size
-    assert_includes series_section.text, I18n.l(future_event.start_at.to_date, format: "%d.%m.%Y")
-    assert_includes series_section.text, I18n.l(past_event.start_at.to_date, format: "%d.%m.%Y")
+    assert_equal "Weitere Termine", series_section.at_css("h2")&.text.to_s.strip
+    assert_equal 6, series_section.css(".event-listing-card").size
+    assert_not_includes series_section.text, @published_event.artist_name
+    assert_includes series_section.text, future_events.first.artist_name
+    assert_includes series_section.text, future_events[5].artist_name
+    assert_not_includes series_section.text, "Past Series Artist"
+    assert_not_includes series_section.text, future_events.last.artist_name
+    assert_equal "Alle anzeigen", series_section.at_css(".event-detail-series-terms-button")&.text.to_s.strip
+    assert_includes series_section.at_css(".event-detail-series-terms-button")["href"], termine_event_path(@published_event.slug)
+    assert_select "section.genre-lane-section .lane-header-kicker", text: /Event-Reihe/, count: 0
 
-    series_index = response.body.index(@published_event.title)
+    series_index = response.body.index("Weitere Termine")
     genre_index = response.body.index("Das könnte dir auch gefallen")
     assert_operator series_index, :<, genre_index
   end
@@ -3005,10 +3010,66 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    series_section = css_select("section.genre-lane-section").find do |section|
-      section.at_css(".lane-header-kicker")&.text.to_s.include?("Event-Reihe")
+    assert_select ".event-detail-series-terms", count: 0
+    assert_select "section.genre-lane-section .lane-header-kicker", text: /Event-Reihe/, count: 0
+  end
+
+  test "termine renders all upcoming event series terms" do
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    @published_event.update!(event_series: series, event_series_assignment: "manual")
+    Event.create!(
+      slug: "termine-series-past",
+      source_fingerprint: "test::public::termine-series::past",
+      title: "A Tribute to Frida Kahlo Past",
+      artist_name: "Viva la Vida Past",
+      start_at: 4.days.ago.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 10.days.ago,
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+    future_events = 7.times.map do |index|
+      Event.create!(
+        slug: "termine-series-future-#{index}",
+        source_fingerprint: "test::public::termine-series::future::#{index}",
+        title: "A Tribute to Frida Kahlo #{index}",
+        artist_name: "Viva la Vida #{index}",
+        start_at: @published_event.start_at + (index + 1).days,
+        venue: "Im Wizemann",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        event_series: series,
+        event_series_assignment: "manual",
+        source_snapshot: {}
+      )
     end
-    assert_nil series_section
+
+    get termine_event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".lane-header-kicker", text: "Event-Reihe"
+    assert_select ".event-listing-card", count: 8
+    assert_includes response.body, @published_event.artist_name
+    assert_includes response.body, future_events.last.artist_name
+    assert_not_includes response.body, "Viva la Vida Past"
+    assert_select ".event-listing-current-badge", count: 0
+  end
+
+  test "termine returns not found without a public event series lane" do
+    get termine_event_url(@published_event.slug)
+
+    assert_response :not_found
+
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    @published_event.update!(event_series: series, event_series_assignment: "manual")
+
+    get termine_event_url(@published_event.slug)
+
+    assert_response :not_found
   end
 
   test "show gates youtube embeds behind consent placeholder" do

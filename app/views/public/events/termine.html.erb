@@ -1,0 +1,30 @@
+<% content_for :title, "Stuttgart Live - #{@event_series_lane.title}" %>
+<% content_for :page_newsletter do %>
+  <%= render "newsletter_signup", browse_state: @browse_state %>
+<% end %>
+
+<section class="public-shell">
+  <div class="lane-page-topbar">
+    <p class="event-detail-back">
+      <%= link_to "← Zurück",
+                  public_event_detail_path(@event, @browse_state),
+                  data: { controller: "history-back-link", action: "click->history-back-link#navigate" } %>
+    </p>
+  </div>
+
+  <section class="home-slider-section lane-page-section search-results-section">
+    <%= render "home_slider_header",
+               title: @event_series_lane.title,
+               kicker: "Event-Reihe",
+               variant: :genre %>
+
+    <div class="section-slider-list genre-lane-list event-series-terms-page-list">
+      <%= render "event_rows",
+                 events: @event_series_lane.events,
+                 browse_state: @browse_state,
+                 effective_series_ids: [@event_series_lane.series.id],
+                 row_dom_id_prefix: :event_series_terms_row,
+                 show_sold_out_ribbon: true %>
+    </div>
+  </section>
+</section>

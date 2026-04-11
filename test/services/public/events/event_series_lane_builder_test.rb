@@ -53,7 +53,7 @@ module Public
         assert_equal [ first_event.id, second_event.id ], lane.events.map(&:id)
       end
 
-      test "includes published past events in the series lane" do
+      test "excludes published past events from the series lane" do
         series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
         past_event = create_public_series_event!(
           slug: "lane-builder-past",
@@ -75,8 +75,84 @@ module Public
           relation: Event.published_live
         ).call
 
+        past_lane = EventSeriesLaneBuilder.new(
+          event: past_event,
+          relation: Event.published_live
+        ).call
+
+        assert_nil lane
+        assert_nil past_lane
+      end
+
+      test "limits the returned lane events when a limit is provided" do
+        series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+        first_event = create_public_series_event!(
+          slug: "lane-builder-limited-first",
+          event_series: series,
+          start_at: 1.day.from_now.change(hour: 20),
+          status: "published",
+          published_at: 1.day.ago
+        )
+        create_public_series_event!(
+          slug: "lane-builder-limited-second",
+          event_series: series,
+          start_at: 2.days.from_now.change(hour: 20),
+          status: "published",
+          published_at: 1.day.ago
+        )
+        create_public_series_event!(
+          slug: "lane-builder-limited-third",
+          event_series: series,
+          start_at: 3.days.from_now.change(hour: 20),
+          status: "published",
+          published_at: 1.day.ago
+        )
+
+        lane = EventSeriesLaneBuilder.new(
+          event: first_event,
+          relation: Event.published_live,
+          limit: 2
+        ).call
+
         assert_not_nil lane
-        assert_equal [ past_event.id, future_event.id ], lane.events.map(&:id)
+        assert_equal 2, lane.events.size
+        assert_equal first_event.id, lane.events.first.id
+      end
+
+      test "excludes the provided event before applying the limit" do
+        series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+        first_event = create_public_series_event!(
+          slug: "lane-builder-excluded-first",
+          event_series: series,
+          start_at: 1.day.from_now.change(hour: 20),
+          status: "published",
+          published_at: 1.day.ago
+        )
+        second_event = create_public_series_event!(
+          slug: "lane-builder-excluded-second",
+          event_series: series,
+          start_at: 2.days.from_now.change(hour: 20),
+          status: "published",
+          published_at: 1.day.ago
+        )
+        third_event = create_public_series_event!(
+          slug: "lane-builder-excluded-third",
+          event_series: series,
+          start_at: 3.days.from_now.change(hour: 20),
+          status: "published",
+          published_at: 1.day.ago
+        )
+
+        lane = EventSeriesLaneBuilder.new(
+          event: first_event,
+          relation: Event.published_live,
+          exclude_event: first_event,
+          limit: 1
+        ).call
+
+        assert_not_nil lane
+        assert_equal [ second_event.id ], lane.events.map(&:id)
+        assert_not_includes lane.events.map(&:id), third_event.id
       end
 
       private

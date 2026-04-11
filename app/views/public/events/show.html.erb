@@ -135,16 +135,36 @@
 
     </div>
 
-    <% if @related_genre_lane.present? %>
-      <aside class="event-detail-related-list" aria-label="Das könnte dir auch gefallen">
-        <div class="event-detail-related-list-heading">
-          <h2>Das könnte dir auch gefallen</h2>
-        </div>
-        <%= render "event_rows",
-                   events: @related_genre_lane.events.first(10),
-                   browse_state: @browse_state,
-                   wrap: true,
-                   effective_series_ids: @related_genre_lane.effective_series_ids %>
+    <% if @event_series_lane.present? || @related_genre_lane.present? %>
+      <aside class="event-detail-sidebar" aria-label="Weitere Event-Empfehlungen">
+        <% if @event_series_lane.present? %>
+          <section class="event-detail-related-list event-detail-series-terms" aria-label="Weitere Termine">
+            <div class="event-detail-related-list-heading">
+              <h2>Weitere Termine</h2>
+            </div>
+            <%= render "event_rows",
+                       events: @event_series_lane.events,
+                       browse_state: @browse_state,
+                       wrap: true,
+                       effective_series_ids: [@event_series_lane.series.id] %>
+            <%= link_to "Alle anzeigen",
+                        public_event_series_terms_path(@event, @browse_state),
+                        class: "button event-detail-series-terms-button" %>
+          </section>
+        <% end %>
+
+        <% if @related_genre_lane.present? %>
+          <section class="event-detail-related-list" aria-label="Das könnte dir auch gefallen">
+            <div class="event-detail-related-list-heading">
+              <h2>Das könnte dir auch gefallen</h2>
+            </div>
+            <%= render "event_rows",
+                       events: @related_genre_lane.events.first(10),
+                       browse_state: @browse_state,
+                       wrap: true,
+                       effective_series_ids: @related_genre_lane.effective_series_ids %>
+          </section>
+        <% end %>
       </aside>
     <% end %>
   </div>
@@ -173,19 +193,6 @@
         </div>
       </div>
     </section>
-  <% end %>
-
-  <% if @event_series_lane.present? %>
-    <%= render "genre_lane_section",
-               title: @event_series_lane.title,
-               events: @event_series_lane.events,
-               effective_series_ids: [@event_series_lane.series.id],
-               show_series_badge: false,
-               browse_state: @browse_state,
-               header_variant: :genre,
-               kicker: "Event-Reihe",
-               tone_class: "genre-lane-section--tone-4",
-               list_aria_label: "Listenansicht für #{@event_series_lane.title}" %>
   <% end %>
 
 </article>
