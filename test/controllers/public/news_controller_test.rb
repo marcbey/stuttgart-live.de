@@ -176,7 +176,10 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
 
   test "show renders embedded rich text images through media proxy when enabled" do
     blob = create_uploaded_blob(filename: "body-image.png", width: 640, height: 480)
-    @live_post.update!(body: %(<div>Text</div><action-text-attachment sgid="#{blob.attachable_sgid}"></action-text-attachment>))
+    @live_post.update!(
+      body: %(<div>Text</div><action-text-attachment sgid="#{blob.attachable_sgid}"></action-text-attachment>),
+      published_at: Time.zone.local(2026, 4, 8, 10, 0, 0)
+    )
 
     expected_path = nil
 
