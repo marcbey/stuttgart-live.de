@@ -5371,6 +5371,7 @@ max-width: none;
 
 .event-detail-title,
 .event-detail-support-line,
+.event-detail-meta-line,
 .event-detail-time-line {
 margin: 0;
   max-width: 42rem;
@@ -5384,7 +5385,6 @@ margin: 0;
 margin: 0;
   max-width: 42rem;
   color: #111;
-  font-size: clamp(0.95rem, 1.3vw, 1.05rem);
   line-height: 1.4;
   font-weight: 500;
 }
@@ -6190,14 +6190,14 @@ padding-inline: 0;
 
   .event-detail-title,
   .event-detail-support-line,
+  .event-detail-meta-line,
   .event-detail-time-line {
   font-size: 1rem;
       line-height: 1.6;
   }
 
   .event-detail-meta-line {
-  font-size: 0.95rem;
-      line-height: 1.4;
+  line-height: 1.4;
   }
 
   .event-detail-time-line {
