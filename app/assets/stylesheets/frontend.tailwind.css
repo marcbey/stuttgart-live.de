@@ -6112,6 +6112,24 @@ justify-self: start;
   padding: 0.62rem 0.8rem;
 }
 
+@media (max-width: 1499px) {
+  .event-detail-sidebar {
+  display: contents;
+  }
+
+  .event-detail-series-terms {
+  order: 1;
+  }
+
+  .event-detail-main {
+  order: 2;
+  }
+
+  .event-detail-related-list:not(.event-detail-series-terms) {
+  order: 3;
+  }
+}
+
 .event-series-terms-page-list {
 display: block;
 }
