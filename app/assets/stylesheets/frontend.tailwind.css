@@ -6363,9 +6363,7 @@ padding-inline: 0;
   .event-detail-cta-meta {
   gap: 0.9rem;
   }
-}
 
-@media (max-width: 699px) {
   .event-detail-public-event {
   padding-top: 0.45rem;
   }
@@ -6388,7 +6386,12 @@ padding-inline: 0;
 
   .event-detail-image-figure-rotator .event-detail-image-stage {
   aspect-ratio: 16 / 10;
-      max-height: 18rem;
+      max-height: 22rem;
+  }
+
+  .event-detail-image-stage-shell .highlights-slider-arrow-overlay {
+  opacity: 1;
+      pointer-events: auto;
   }
 }
 
