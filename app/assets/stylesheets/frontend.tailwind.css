@@ -6129,16 +6129,13 @@ justify-self: start;
 
   .event-detail-main {
   order: 2;
+      margin-top: 0.6rem;
+      border-top: 1px solid #666;
+      padding-top: 1.4rem;
   }
 
   .event-detail-related-list:not(.event-detail-series-terms) {
   order: 3;
-  }
-}
-
-@media (max-width: 1499px) {
-  .event-detail-main {
-  margin-top: 1.6rem;
   }
 }
 
