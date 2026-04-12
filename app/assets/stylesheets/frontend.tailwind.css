@@ -7503,7 +7503,7 @@ grid-area: center;
 }
 
 body.page-public-events-index .app-nav-homepage-center.has-saved-events-link {
-gap: 0.5rem;
+gap: 0;
 }
 
 body.page-public-events-index .app-nav-search {
@@ -7540,6 +7540,10 @@ display: none;
 }
 
 body.page-public-events-index .app-nav-saved-events-link-desktop {
+display: none;
+}
+
+body.page-public-events-index .app-nav-saved-events-link-mobile {
 display: none;
 }
 
@@ -7948,6 +7952,14 @@ top: 1.18rem;
       gap: 0.65rem 0.85rem;
   }
 
+  body.page-public-events-index .app-nav-socials-poster .app-nav-saved-events-link-desktop:not([hidden]) {
+  display: inline-flex;
+      flex-basis: 2.4rem;
+      width: 2.4rem;
+      min-width: 2.4rem;
+      height: 2.4rem;
+  }
+
   body.page-public-events-index .brand-wordmark-poster .brand-wordmark-city,
   body.page-public-events-index .brand-wordmark-poster .brand-wordmark-live {
   font-size: clamp(2.2rem, 6vw, 3rem);
@@ -8051,6 +8063,10 @@ top: 1.18rem;
 
   body.page-public-events-index .app-nav-saved-events-link-desktop:not([hidden]) {
   display: inline-flex;
+      flex-basis: 2.2rem;
+      width: 2.2rem;
+      min-width: 2.2rem;
+      height: 2.2rem;
   }
 
   body.page-public-events-index .app-nav-meta {
