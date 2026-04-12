@@ -7474,22 +7474,72 @@ color: var(--ink);
 
 body.page-public-events-index .app-nav-homepage-center {
 grid-area: center;
-  display: grid;
+  display: flex;
   gap: 0;
   align-content: start;
+  align-items: center;
   width: 100%;
   min-width: 0;
   padding-top: 0;
-  justify-items: stretch;
   transition: gap 180ms ease;
+}
+
+body.page-public-events-index .app-nav-homepage-center.has-saved-events-link {
+gap: 0.5rem;
 }
 
 body.page-public-events-index .app-nav-search {
 width: 100%;
   max-width: none;
   min-width: 0;
+  flex: 1 1 auto;
+  order: 1;
   justify-self: stretch;
   transition: width 180ms ease, max-width 180ms ease, transform 180ms ease;
+}
+
+body.page-public-events-index .app-nav-saved-events-link {
+display: inline-flex;
+  flex: 0 0 auto;
+  order: 2;
+  align-items: center;
+  justify-content: center;
+  justify-self: end;
+  width: 2.8rem;
+  height: 2.8rem;
+  min-width: 2.8rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink);
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+body.page-public-events-index .app-nav-saved-events-link[hidden] {
+display: none;
+}
+
+body.page-public-events-index .app-nav-saved-events-link-desktop {
+display: none;
+}
+
+body.page-public-events-index .app-nav-saved-events-link svg {
+width: 1.2rem;
+  height: 1.2rem;
+  fill: #00c5cc;
+  stroke: #00c5cc;
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+}
+
+body.page-public-events-index .app-nav-saved-events-link:hover,
+body.page-public-events-index .app-nav-saved-events-link:focus-visible,
+body.page-public-events-index .app-nav-saved-events-link[aria-current="page"] {
+background: #ffa5dc;
+  color: var(--ink);
+  transform: translate(-1px, -1px);
 }
 
 body.page-public-events-index .public-search-filter {
@@ -7831,6 +7881,12 @@ top: 1.18rem;
       height: 2.6rem;
   }
 
+  body.page-public-events-index .app-nav-saved-events-link {
+  width: 2.6rem;
+      height: 2.6rem;
+      min-width: 2.6rem;
+  }
+
   body.page-public-events-index .app-nav-toggle span:nth-child(1) {
   top: 0.72rem;
   }
@@ -7967,6 +8023,18 @@ top: 1.18rem;
   display: none;
   }
 
+  body.page-public-events-index .app-nav-homepage-center.has-saved-events-link {
+  gap: 0;
+  }
+
+  body.page-public-events-index .app-nav-saved-events-link-mobile {
+  display: none;
+  }
+
+  body.page-public-events-index .app-nav-saved-events-link-desktop:not([hidden]) {
+  display: inline-flex;
+  }
+
   body.page-public-events-index .app-nav-meta {
   position: static;
       grid-area: meta;
@@ -8022,6 +8090,12 @@ top: 1.18rem;
   body.page-public-events-index .app-nav-socials-poster .app-nav-social-link {
   width: 2.2rem;
       height: 2.2rem;
+  }
+
+  body.page-public-events-index .app-nav-saved-events-link {
+  width: 2.35rem;
+      height: 2.35rem;
+      min-width: 2.35rem;
   }
 }
 

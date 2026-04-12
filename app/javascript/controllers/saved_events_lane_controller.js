@@ -2,7 +2,14 @@ import { Controller } from "@hotwired/stimulus"
 import { STORAGE_KEY, savedEventSlugs } from "../lib/saved_events_storage"
 
 export default class extends Controller {
-  static values = { url: String }
+  static values = {
+    emptyMessage: String,
+    emptyTitle: String,
+    showEmpty: { type: Boolean, default: false },
+    unavailableMessage: String,
+    unavailableTitle: String,
+    url: String
+  }
 
   connect() {
     this.requestId = 0
@@ -28,7 +35,7 @@ export default class extends Controller {
 
     const slugs = savedEventSlugs()
     if (slugs.length === 0) {
-      this.clear()
+      this.renderEmpty()
       return
     }
 
@@ -62,7 +69,7 @@ export default class extends Controller {
       if (!response.ok) throw new Error(`Saved lane request failed (${response.status})`)
 
       if (html.trim().length === 0) {
-        this.clear()
+        this.renderUnavailable()
         return
       }
 
@@ -87,6 +94,47 @@ export default class extends Controller {
     this.abortPendingRequest()
     this.element.innerHTML = ""
     this.element.hidden = true
+  }
+
+  renderEmpty() {
+    this.renderMessage({
+      title: this.emptyTitleValue || "Du hast noch keine Events gemerkt.",
+      message: this.emptyMessageValue || "Tippe bei einem Event auf das Herz, dann findest du es hier wieder."
+    })
+  }
+
+  renderUnavailable() {
+    this.renderMessage({
+      title: this.unavailableTitleValue || "Deine gemerkten Events sind aktuell nicht mehr verfügbar.",
+      message: this.unavailableMessageValue || "Manche Termine sind vielleicht vorbei oder nicht mehr öffentlich sichtbar."
+    })
+  }
+
+  renderMessage({ title, message }) {
+    this.abortPendingRequest()
+
+    if (!this.showEmptyValue) {
+      this.clear()
+      return
+    }
+
+    this.element.replaceChildren(this.emptyStateElement(title, message))
+    this.element.hidden = false
+  }
+
+  emptyStateElement(title, message) {
+    const wrapper = document.createElement("div")
+    wrapper.className = "search-results-empty saved-events-empty"
+
+    const heading = document.createElement("h2")
+    heading.textContent = title
+    wrapper.appendChild(heading)
+
+    const copy = document.createElement("p")
+    copy.textContent = message
+    wrapper.appendChild(copy)
+
+    return wrapper
   }
 
   abortPendingRequest() {

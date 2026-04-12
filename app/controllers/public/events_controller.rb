@@ -1,6 +1,6 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :lane, :saved_lane, :search, :show, :search_overlay, :termine ]
+    allow_unauthenticated_access only: [ :index, :lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
@@ -9,7 +9,7 @@ module Public
     SEARCH_OVERLAY_IDLE_LIMIT = 10
     SHOW_EVENT_SERIES_TERMS_LIMIT = 6
 
-    before_action :set_browse_state, only: [ :index, :lane, :saved_lane, :search, :show, :search_overlay, :termine ]
+    before_action :set_browse_state, only: [ :index, :lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
 
     def index
       if params[:q].present?
@@ -56,6 +56,9 @@ module Public
       raise ActiveRecord::RecordNotFound if @lane.blank?
 
       assign_lane_page(@lane)
+    end
+
+    def saved
     end
 
     def saved_lane

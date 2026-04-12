@@ -1,0 +1,30 @@
+<% content_for :title, "Stuttgart Live - Deine Events" %>
+<% content_for :page_newsletter do %>
+  <%= render "newsletter_signup", browse_state: @browse_state %>
+<% end %>
+
+<section class="public-shell">
+  <div class="lane-page-topbar">
+    <p class="event-detail-back">
+      <%= link_to "← Zurück",
+                  public_events_index_path(@browse_state),
+                  data: { controller: "history-back-link", action: "click->history-back-link#navigate" } %>
+    </p>
+  </div>
+
+  <section class="saved-events-page-section"
+           data-controller="saved-events-lane"
+           data-saved-events-lane-url-value="<%= saved_lane_events_path %>"
+           data-saved-events-lane-show-empty-value="true"
+           data-saved-events-lane-empty-title-value="Du hast noch keine Events gemerkt."
+           data-saved-events-lane-empty-message-value="Tippe bei einem Event auf das Herz, dann findest du es hier wieder."
+           data-saved-events-lane-unavailable-title-value="Deine gemerkten Events sind aktuell nicht mehr verfügbar."
+           data-saved-events-lane-unavailable-message-value="Manche Termine sind vielleicht vorbei oder nicht mehr öffentlich sichtbar.">
+    <noscript>
+      <div class="search-results-empty saved-events-empty">
+        <h2>Deine Events</h2>
+        <p>Gemerkte Events werden in diesem Browser gespeichert. Bitte aktiviere JavaScript, damit wir sie hier anzeigen können.</p>
+      </div>
+    </noscript>
+  </section>
+</section>

@@ -91,6 +91,7 @@ Rails.application.routes.draw do
     patch :status, on: :member
   end
   get "search", to: "public/events#search", as: :search
+  get "deine-events", to: "public/events#saved", as: :saved_events
   get "highlights", to: "public/events#lane", defaults: { lane: "highlights" }, as: :highlights_lane
   get "alles-aus-stuttgart", to: "public/events#lane", defaults: { lane: "all_stuttgart" }, as: :all_stuttgart_lane
   get "tagestipp", to: "public/events#lane", defaults: { lane: "tagestipp" }, as: :tagestipp_lane

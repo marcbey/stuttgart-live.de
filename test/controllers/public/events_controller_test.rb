@@ -38,6 +38,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, ActionController::Base.helpers.asset_path("bebas-neue-400.woff2")
     assert_select ".lane-header.lane-header--highlights", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
+    assert_select ".app-nav-homepage-center[data-controller='saved-events-nav']", count: 1
+    assert_select ".app-nav-saved-events-link[href='#{saved_events_path}'][data-saved-events-nav-target='link'][hidden]", count: 2
+    assert_select ".app-nav-socials-poster[data-controller='saved-events-nav'] .app-nav-saved-events-link-desktop[hidden]", count: 1
     assert_select ".app-nav-hotline", text: /Dein Ticketportal für Stuttgart und Region -\s*0711 550 660 77/
     assert_select ".app-nav-hotline-contact .app-nav-link", text: "Kontakt"
     assert_includes response.body, "Published Artist"
@@ -4305,6 +4308,17 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#saved-events-lane-slot[data-controller='saved-events-lane'][data-saved-events-lane-url-value='#{saved_lane_events_path}'][hidden]", count: 1
+  end
+
+  test "saved events page renders the dynamic saved events container" do
+    get saved_events_url
+
+    assert_response :success
+    assert_select "title", text: "Stuttgart Live - Deine Events"
+    assert_select ".app-nav-saved-events-link[href='#{saved_events_path}'][hidden]", count: 2
+    assert_select ".saved-events-page-section[data-controller='saved-events-lane'][data-saved-events-lane-url-value='#{saved_lane_events_path}']", count: 1
+    assert_select ".saved-events-page-section[data-saved-events-lane-show-empty-value='true']", count: 1
+    assert_select "noscript .saved-events-empty", text: /Gemerkte Events werden in diesem Browser gespeichert/
   end
 
   test "saved lane renders only valid future published events in chronological order" do

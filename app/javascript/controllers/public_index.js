@@ -42,6 +42,9 @@ application.register("public-search", PublicSearchController)
 import SavedEventToggleController from "./saved_event_toggle_controller"
 application.register("saved-event-toggle", SavedEventToggleController)
 
+import SavedEventsNavController from "./saved_events_nav_controller"
+application.register("saved-events-nav", SavedEventsNavController)
+
 import SavedEventsLaneController from "./saved_events_lane_controller"
 application.register("saved-events-lane", SavedEventsLaneController)
 
