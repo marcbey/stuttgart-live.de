@@ -6136,6 +6136,12 @@ justify-self: start;
   }
 }
 
+@media (max-width: 1499px) {
+  .event-detail-main {
+  margin-top: 1.6rem;
+  }
+}
+
 .event-series-terms-page-list {
 display: block;
 }
