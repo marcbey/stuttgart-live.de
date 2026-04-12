@@ -1511,6 +1511,12 @@ color: transparent;
   opacity: 0;
 }
 
+.public-search-input:focus,
+.public-search-input:focus-visible {
+outline: none;
+  box-shadow: none;
+}
+
 .public-search-placeholder {
 position: absolute;
   inset: 0;
