@@ -6365,6 +6365,33 @@ padding-inline: 0;
   }
 }
 
+@media (max-width: 699px) {
+  .event-detail-public-event {
+  padding-top: 0.45rem;
+  }
+
+  .event-detail-public-event .event-detail-topbar {
+  position: static;
+      inset: auto;
+      z-index: 8;
+      display: flex;
+      width: 100%;
+      margin: 0 0 0.35rem;
+      padding-inline: 0;
+      pointer-events: auto;
+  }
+
+  .event-detail-public-event .event-detail-back a {
+  font-size: 0.82rem;
+      letter-spacing: 0.06em;
+  }
+
+  .event-detail-image-figure-rotator .event-detail-image-stage {
+  aspect-ratio: 16 / 10;
+      max-height: 18rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .event-detail-image-slide {
   transition: none;
