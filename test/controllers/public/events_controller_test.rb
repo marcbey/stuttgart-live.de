@@ -4203,7 +4203,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-image-stage", count: 1
     assert_select ".event-detail-image-slide", count: 2
     assert_select ".event-detail-image-backdrop", count: 2
-    assert_select ".event-detail-image-stage-shell .highlights-slider-arrow.highlights-slider-arrow-overlay", count: 2
+    assert_select ".event-detail-image-stage-shell .event-detail-image-arrow.highlights-slider-arrow", count: 2
     assert_select ".event-detail-image-stage-shell .highlights-slider-arrow-prev[data-action='hero-rotator#previous']", count: 1
     assert_select ".event-detail-image-stage-shell .highlights-slider-arrow-next[data-action='hero-rotator#next']", count: 1
     assert_select ".event-lightbox .highlights-slider-arrow.highlights-slider-arrow-overlay", count: 2

@@ -23,6 +23,7 @@ export default class extends Controller {
     this.element.addEventListener("focusout", this.handleFocusOut)
     document.addEventListener("visibilitychange", this.handleVisibilityChange)
 
+    this.bindSwipe()
     this.bindHeroStageRatio()
     this.render()
     this.scheduleAutoplay(this.delayValue)
@@ -36,6 +37,7 @@ export default class extends Controller {
     this.element.removeEventListener("focusin", this.handleFocusIn)
     this.element.removeEventListener("focusout", this.handleFocusOut)
     document.removeEventListener("visibilitychange", this.handleVisibilityChange)
+    this.unbindSwipe()
     this.unbindHeroStageRatio()
   }
 
@@ -221,6 +223,89 @@ export default class extends Controller {
       outgoing.classList.add("is-animating")
       incoming.classList.add("is-animating")
     })
+  }
+
+  bindSwipe() {
+    if (!this.hasStageTarget) return
+
+    this.stageTarget.addEventListener("pointerdown", this.handleStagePointerDown)
+    this.stageTarget.addEventListener("pointermove", this.handleStagePointerMove)
+    this.stageTarget.addEventListener("pointerup", this.handleStagePointerUp)
+    this.stageTarget.addEventListener("pointercancel", this.handleStagePointerCancel)
+    this.stageTarget.addEventListener("click", this.handleStageClickCapture, true)
+  }
+
+  unbindSwipe() {
+    if (!this.hasStageTarget) return
+
+    this.stageTarget.removeEventListener("pointerdown", this.handleStagePointerDown)
+    this.stageTarget.removeEventListener("pointermove", this.handleStagePointerMove)
+    this.stageTarget.removeEventListener("pointerup", this.handleStagePointerUp)
+    this.stageTarget.removeEventListener("pointercancel", this.handleStagePointerCancel)
+    this.stageTarget.removeEventListener("click", this.handleStageClickCapture, true)
+  }
+
+  handleStagePointerDown = (event) => {
+    if (this.slideTargets.length <= 1) return
+    if (event.pointerType === "mouse" && event.button !== 0) return
+
+    this.pauseAutoplay()
+    this.swipeState = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      currentX: event.clientX,
+      currentY: event.clientY
+    }
+  }
+
+  handleStagePointerMove = (event) => {
+    if (!this.swipeState || event.pointerId !== this.swipeState.pointerId) return
+
+    this.swipeState.currentX = event.clientX
+    this.swipeState.currentY = event.clientY
+
+    const deltaX = event.clientX - this.swipeState.startX
+    const deltaY = event.clientY - this.swipeState.startY
+    if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      event.preventDefault()
+    }
+  }
+
+  handleStagePointerUp = (event) => {
+    if (!this.swipeState || event.pointerId !== this.swipeState.pointerId) return
+
+    const { startX, startY } = this.swipeState
+    const currentX = event.clientX
+    const currentY = event.clientY
+    this.swipeState = null
+
+    const deltaX = currentX - startX
+    const deltaY = currentY - startY
+    const swipeThreshold = Math.min(80, Math.max(36, this.stageTarget.clientWidth * 0.12))
+    if (Math.abs(deltaX) >= swipeThreshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.2) {
+      this.suppressNextClick = true
+      event.preventDefault()
+      this.showIndex(this.currentIndex + (deltaX < 0 ? 1 : -1), deltaX < 0 ? "next" : "previous")
+      return
+    }
+
+    this.resumeAutoplay()
+  }
+
+  handleStagePointerCancel = (event) => {
+    if (!this.swipeState || event.pointerId !== this.swipeState.pointerId) return
+
+    this.swipeState = null
+    this.resumeAutoplay()
+  }
+
+  handleStageClickCapture = (event) => {
+    if (!this.suppressNextClick) return
+
+    this.suppressNextClick = false
+    event.preventDefault()
+    event.stopImmediatePropagation()
   }
 
   clearTransition() {
