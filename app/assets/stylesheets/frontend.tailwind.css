@@ -1692,8 +1692,26 @@ display: grid;
 
 .public-search-result-compact {
 width: 100%;
-  grid-template-columns: minmax(0, 1fr) auto;
+  display: block;
+  position: relative;
   text-align: left;
+}
+
+.public-search-result-compact .public-search-result-copy {
+display: block;
+  padding-right: 1.8rem;
+}
+
+.public-search-result-compact .public-search-result-artist {
+display: block;
+  width: 100%;
+}
+
+.public-search-result-compact .public-search-result-arrow {
+position: absolute;
+  top: 50%;
+  right: 0.72rem;
+  transform: translateY(-50%);
 }
 
 .public-search-result:hover {
@@ -1731,11 +1749,14 @@ display: grid;
 display: grid;
   gap: 0.16rem;
   min-width: 0;
+  width: 100%;
 }
 
 .public-search-result-artist,
 .public-search-result-title {
-min-width: 0;
+display: block;
+  width: 100%;
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -7998,6 +8019,13 @@ top: 1.18rem;
       right: 1.4rem;
       width: max-content;
       max-width: calc(100vw - 2.8rem);
+  }
+}
+
+@media (max-width: 767px) {
+  body.page-public-events-index .public-search-overlay {
+  left: 0;
+      width: 100%;
   }
 }
 
