@@ -57,6 +57,7 @@ class Event < ApplicationRecord
   has_many :event_change_logs, dependent: :destroy
   has_many :event_images, dependent: :destroy
   has_many :event_presenters, -> { order(:position, :id) }, dependent: :destroy
+  has_many :event_social_posts, -> { order(:platform, :id) }, dependent: :destroy
   has_many :presenters, -> { order("event_presenters.position ASC", "event_presenters.id ASC") }, through: :event_presenters
   has_one :llm_enrichment, class_name: "EventLlmEnrichment", dependent: :destroy
   has_one_attached :promotion_banner_image
@@ -220,6 +221,14 @@ class Event < ApplicationRecord
 
   def event_series_origin
     event_series&.origin.to_s.presence
+  end
+
+  def social_post_for(platform)
+    if association(:event_social_posts).loaded?
+      event_social_posts.find { |post| post.platform == platform.to_s }
+    else
+      event_social_posts.find_by(platform: platform.to_s)
+    end
   end
 
   def sync_publication_fields(user: nil)

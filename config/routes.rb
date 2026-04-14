@@ -73,6 +73,12 @@ Rails.application.routes.draw do
       patch :publish, on: :member
       patch :unpublish, on: :member
       post :run_llm_enrichment, on: :member
+      resources :event_social_posts, path: "social_posts", only: [ :create, :update ] do
+        post :quick_publish, on: :collection
+        patch :approve, on: :member
+        post :publish, on: :member
+        post :regenerate, on: :member
+      end
       patch :bulk, on: :collection
       post :apply_filters, on: :collection
       post :next_event_preference, on: :collection

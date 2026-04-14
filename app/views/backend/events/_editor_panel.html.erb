@@ -9,8 +9,10 @@
 <% slider_images_tab_active = active_editor_tab == "slider_images" %>
 <% presenters_tab_active = active_editor_tab == "presenters" %>
 <% llm_tab_active = active_editor_tab == "llm_enrichment" %>
+<% social_tab_active = active_editor_tab == "social" %>
 <% settings_tab_active = active_editor_tab == "settings" %>
 <% llm_tab_available = event.persisted? %>
+<% social_tab_available = event.persisted? %>
 <% editor_form_id = dom_id(event, :editor_form) %>
 
 <div class="editor-panel backend-panel"
@@ -113,6 +115,20 @@
           LLM-Enrichment
         </button>
       <% end %>
+      <% if social_tab_available %>
+        <button type="button"
+                id="event-editor-tab-social"
+                class="settings-tabs-link<%= " is-active" if social_tab_active %>"
+                role="tab"
+                aria-controls="event-editor-panel-social"
+                aria-selected="<%= social_tab_active %>"
+                tabindex="<%= social_tab_active ? 0 : -1 %>"
+                data-event-editor-tabs-target="tab"
+                data-event-editor-tabs-tab-key-param="social"
+                data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
+          Social
+        </button>
+      <% end %>
       <button type="button"
               id="event-editor-tab-settings"
               class="settings-tabs-link<%= " is-active" if settings_tab_active %>"
@@ -201,6 +217,21 @@
                      event: event,
                      llm_enrichment: llm_enrichment,
                      editor_form_id: editor_form_id,
+                     filter_status: filter_status %>
+        </section>
+      <% end %>
+
+      <% if social_tab_available %>
+        <section id="event-editor-panel-social"
+                 class="settings-tab-panel backend-tab-panel<%= " is-active" if social_tab_active %>"
+                 role="tabpanel"
+                 aria-labelledby="event-editor-tab-social"
+                 tabindex="0"
+                 <%= "hidden" unless social_tab_active %>
+                 data-event-editor-tabs-target="panel"
+                 data-event-editor-tabs-panel-key="social">
+          <%= render "backend/events/social_posts_section",
+                     event: event,
                      filter_status: filter_status %>
         </section>
       <% end %>

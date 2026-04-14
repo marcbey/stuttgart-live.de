@@ -16,6 +16,7 @@ module Editorial
         :import_event_images,
         :event_change_logs,
         :venue_record,
+        event_social_posts: [ :approved_by, :published_by ],
         event_images: [ file_attachment: :blob ]
       ).left_outer_joins(:venue_record)
       relation = relation.where(status: status_filter) if status_filter.present?

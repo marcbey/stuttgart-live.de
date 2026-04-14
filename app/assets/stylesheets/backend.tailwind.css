@@ -1362,6 +1362,70 @@ display: grid;
   gap: 0.9rem;
 }
 
+.social-post-platform-grid {
+display: grid;
+  gap: 1rem;
+}
+
+.social-post-card {
+border: 1px solid rgba(17, 17, 17, 0.12);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 1rem;
+}
+
+.social-post-card-body {
+display: grid;
+  gap: 1rem;
+}
+
+.social-post-preview {
+border: 1px solid rgba(17, 17, 17, 0.08);
+  background: #f7f4f1;
+  min-height: 12rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.social-post-preview-image {
+width: 100%;
+  max-height: 16rem;
+  object-fit: cover;
+}
+
+.social-post-preview-empty {
+padding: 1rem;
+  color: #645d52;
+  text-align: center;
+}
+
+.social-post-form-column {
+display: grid;
+  gap: 0.9rem;
+}
+
+.social-post-meta-list {
+display: grid;
+  gap: 0.75rem;
+}
+
+.social-post-action-row {
+display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.social-post-link {
+word-break: break-word;
+}
+
+@media (min-width: 960px) {
+  .social-post-card-body {
+    grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
 .presenter-linked-event-list {
 margin: 0;
   padding: 0;

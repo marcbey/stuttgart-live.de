@@ -84,6 +84,26 @@ module AppConfig
       fetch(:smtp, :enable_starttls_auto, env: "SMTP_ENABLE_STARTTLS_AUTO")
     end
 
+    def meta_app_id
+      fetch(:meta, :app_id, env: "META_APP_ID")
+    end
+
+    def meta_app_secret
+      fetch(:meta, :app_secret, env: "META_APP_SECRET")
+    end
+
+    def meta_facebook_page_id
+      fetch(:meta, :facebook_page_id, env: "META_FACEBOOK_PAGE_ID")
+    end
+
+    def meta_facebook_page_access_token
+      fetch(:meta, :facebook_page_access_token, env: "META_FACEBOOK_PAGE_ACCESS_TOKEN")
+    end
+
+    def meta_instagram_business_account_id
+      fetch(:meta, :instagram_business_account_id, env: "META_INSTAGRAM_BUSINESS_ACCOUNT_ID")
+    end
+
     private
 
     def fetch(*keys, env:)

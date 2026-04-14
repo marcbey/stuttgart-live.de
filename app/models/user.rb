@@ -10,6 +10,8 @@ class User < ApplicationRecord
   has_many :login_attempts, dependent: :nullify
   has_many :published_events, class_name: "Event", foreign_key: :published_by_id, dependent: :nullify
   has_many :event_change_logs, dependent: :nullify
+  has_many :approved_event_social_posts, class_name: "EventSocialPost", foreign_key: :approved_by_id, dependent: :nullify
+  has_many :published_event_social_posts, class_name: "EventSocialPost", foreign_key: :published_by_id, dependent: :nullify
   has_many :authored_blog_posts, class_name: "BlogPost", foreign_key: :author_id, dependent: :restrict_with_exception
   has_many :published_blog_posts, class_name: "BlogPost", foreign_key: :published_by_id, dependent: :nullify
 

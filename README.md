@@ -24,6 +24,7 @@ Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität n
 - Redaktionelles Backend für Events, Venues, statische Seiten, Bilder, Blog, Benutzer und Importquellen
 - Import-Pipeline für externe Anbieter wie Easyticket, Eventim und Reservix
 - Redaktionelle Qualitätssicherung mit Inbox, Änderungsprotokollen und Vollständigkeitsprüfungen
+- Manuelles Social-Publishing für Event-Posts auf Facebook und Instagram
 - Newsletter-Anmeldung mit optionalem Mailchimp-Sync
 
 ## Wie das System grob funktioniert
@@ -149,6 +150,31 @@ Für die öffentliche Sichtbarkeit gilt zusätzlich:
 - Eingeloggte Redaktionsnutzer können die Event-Detailseite auch vor diesem Zeitpunkt öffnen, um geplante Veröffentlichungen zu prüfen.
 
 Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In diesem Fall werden nur Fingerprints neu gebaut, die seit `last_run_at` von neuen Rohimporten berührt wurden; für diese Gruppen wird aber jeweils wieder der aktuelle Gesamtstand aller Quellen zusammengeführt.
+
+### Wie Social-Publishing für Events funktioniert
+
+Das Backend unterstützt einen bewusst einfachen Freigabe-Workflow für Social-Posts. Pro Event und Plattform gibt es genau einen `EventSocialPost`. Unterstützt werden aktuell `facebook` und `instagram`.
+
+Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
+
+1. Zuerst wird pro Plattform ein Draft erzeugt oder neu generiert.
+2. Der Draft baut serverseitig eine Caption aus Eventdaten und wählt ein öffentlich erreichbares Bild.
+3. Die Caption kann danach manuell angepasst werden.
+4. Erst nach einer expliziten Freigabe darf der Post veröffentlicht werden.
+5. Die Veröffentlichung läuft pro Plattform einzeln und speichert Status, Fehler und externe IDs am `EventSocialPost`.
+
+Wichtig für die Generierung:
+
+- Als Ziel-URL wird die kanonische öffentliche Event-URL verwendet.
+- Als Bildquelle gilt zuerst die Social-Card, danach ein Promotion-Banner und danach das primäre Eventbild.
+- Die Caption enthält Artist oder Titel, Datum, Venue, einen kurzen Call-to-Action und die Event-URL.
+
+Wichtig für die Veröffentlichung:
+
+- Gesendet werden nur Events, die bereits öffentlich live sind. Ein geplantes `published_at` in der Zukunft reicht nicht.
+- Facebook wird als Foto-Post über die verknüpfte Page veröffentlicht.
+- Instagram wird über einen Media-Container und anschließendes `media_publish` veröffentlicht.
+- Fehlgeschlagene Posts bleiben sichtbar und können nach einer Korrektur der Konfiguration erneut gesendet werden.
 
 ### Wie Event-Reihen funktionieren
 
@@ -371,7 +397,7 @@ bin/ci
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, `meta.facebook_page_id`, `meta.facebook_page_access_token`, `meta.instagram_business_account_id`
 - statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
@@ -396,6 +422,17 @@ openai:
   api_key: sk-...
 ```
 
+Für das Social-Publishing liegen die Meta-Zugangsdaten bewusst ebenfalls in den Rails-Credentials und nicht in `app_settings`, zum Beispiel so:
+
+```yml
+meta:
+  app_id: "..."
+  app_secret: "..."
+  facebook_page_id: "..."
+  facebook_page_access_token: "..."
+  instagram_business_account_id: "..."
+```
+
 Nach dem Speichern und Schließen des Editors schreibt Rails die verschlüsselte Datei automatisch zurück. Voraussetzung ist eine vorhandene lokale `config/master.key`.
 
 Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`. Diese Werte werden im Admin-Bereich unter `Einstellungen` gepflegt und sind bewusst nicht in Credentials oder Umgebungsvariablen abgelegt. Aktuell liegen dort unter anderem:
@@ -406,6 +443,19 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 - `llm_genre_grouping_model`, `llm_genre_grouping_prompt_template` und `llm_genre_grouping_group_count` für den Genre-Gruppierungsjob
 - `public_genre_grouping_snapshot_id` für den global öffentlich verwendeten Genre-Snapshot
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen im Merge-Import bei exakt gleicher Startzeit
+
+### Meta-Setup für Social-Publishing
+
+Damit Facebook- und Instagram-Posts aus dem Backend funktionieren, muss das externe Meta-Setup zur hinterlegten App und den Ziel-Accounts passen:
+
+- eine Facebook Page als Publishing-Ziel, nicht nur ein persönliches Profil
+- ein Instagram-Professional-Konto, das mit dieser Facebook Page verknüpft ist
+- eine Meta-App mit Zugriff auf die Facebook Pages API und die Instagram API with Facebook Login
+- ein gültiger Page Access Token für genau diese Page
+
+Die Anwendung erwartet aktuell genau eine globale Konfiguration für beide Plattformen. Es gibt also keinen OAuth-Connect-Flow pro Redaktionsnutzer und keine Auswahl mehrerer Pages oder Instagram-Accounts im Backend.
+
+Wenn ein Token rotiert oder die Page neu verknüpft wird, reicht es, die betroffenen `meta.*`-Einträge in `config/credentials.yml.enc` zu aktualisieren und anschließend einen Test-Post im Backend erneut zu senden.
 
 ### Typische Arbeitsweisen
 

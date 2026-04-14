@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_14_123000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_14_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -195,6 +195,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_123000) do
     t.string "source_type"
     t.datetime "updated_at", null: false
     t.index ["source_type", "source_key"], name: "index_event_series_on_source_type_and_source_key", unique: true, where: "(source_key IS NOT NULL)"
+  end
+
+  create_table "event_social_posts", force: :cascade do |t|
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
+    t.text "caption", default: "", null: false
+    t.datetime "created_at", null: false
+    t.text "error_message"
+    t.bigint "event_id", null: false
+    t.string "image_url"
+    t.jsonb "payload_snapshot", default: {}, null: false
+    t.string "platform", null: false
+    t.datetime "published_at"
+    t.bigint "published_by_id"
+    t.string "remote_media_id"
+    t.string "remote_post_id"
+    t.string "status", default: "draft", null: false
+    t.string "target_url"
+    t.datetime "updated_at", null: false
+    t.index ["approved_by_id"], name: "index_event_social_posts_on_approved_by_id"
+    t.index ["event_id", "platform"], name: "index_event_social_posts_on_event_id_and_platform", unique: true
+    t.index ["event_id"], name: "index_event_social_posts_on_event_id"
+    t.index ["published_by_id"], name: "index_event_social_posts_on_published_by_id"
+    t.index ["status"], name: "index_event_social_posts_on_status"
   end
 
   create_table "events", force: :cascade do |t|
@@ -499,6 +523,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_123000) do
   add_foreign_key "event_offers", "events"
   add_foreign_key "event_presenters", "events"
   add_foreign_key "event_presenters", "presenters"
+  add_foreign_key "event_social_posts", "events"
+  add_foreign_key "event_social_posts", "users", column: "approved_by_id"
+  add_foreign_key "event_social_posts", "users", column: "published_by_id"
   add_foreign_key "events", "event_series"
   add_foreign_key "events", "users", column: "published_by_id"
   add_foreign_key "events", "venues"

@@ -29,6 +29,38 @@ class AppConfigTest < ActiveSupport::TestCase
     end
   end
 
+  test "reads meta values from credentials" do
+    with_credentials(meta: {
+      app_id: "meta-app-id",
+      app_secret: "meta-app-secret",
+      facebook_page_id: "page-123",
+      facebook_page_access_token: "page-token",
+      instagram_business_account_id: "ig-123"
+    }) do
+      assert_equal "meta-app-id", AppConfig.meta_app_id
+      assert_equal "meta-app-secret", AppConfig.meta_app_secret
+      assert_equal "page-123", AppConfig.meta_facebook_page_id
+      assert_equal "page-token", AppConfig.meta_facebook_page_access_token
+      assert_equal "ig-123", AppConfig.meta_instagram_business_account_id
+    end
+  end
+
+  test "falls back to env for meta values" do
+    with_env(
+      "META_APP_ID" => "env-app-id",
+      "META_FACEBOOK_PAGE_ID" => "env-page-id",
+      "META_FACEBOOK_PAGE_ACCESS_TOKEN" => "env-page-token",
+      "META_INSTAGRAM_BUSINESS_ACCOUNT_ID" => "env-ig-id"
+    ) do
+      with_credentials({}) do
+        assert_equal "env-app-id", AppConfig.meta_app_id
+        assert_equal "env-page-id", AppConfig.meta_facebook_page_id
+        assert_equal "env-page-token", AppConfig.meta_facebook_page_access_token
+        assert_equal "env-ig-id", AppConfig.meta_instagram_business_account_id
+      end
+    end
+  end
+
   private
 
   def with_credentials(values, &block)

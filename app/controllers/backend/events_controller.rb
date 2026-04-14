@@ -258,6 +258,7 @@ module Backend
         :llm_enrichment,
         :import_event_images,
         :venue_record,
+        event_social_posts: [ :approved_by, :published_by ],
         promotion_banner_image_attachment: :blob,
         event_images: [ file_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
@@ -300,6 +301,7 @@ module Backend
           :llm_enrichment,
           :import_event_images,
           :venue_record,
+          event_social_posts: [ :approved_by, :published_by ],
           promotion_banner_image_attachment: :blob,
           event_images: [ file_attachment: :blob ],
           event_presenters: { presenter: [ logo_attachment: :blob ] }
@@ -415,6 +417,7 @@ module Backend
       tabs = %w[event event_image slider_images]
       tabs << "presenters"
       tabs << "llm_enrichment" if event.present? && event.persisted?
+      tabs << "social" if event.present? && event.persisted?
       tabs << "settings"
       tabs
     end
