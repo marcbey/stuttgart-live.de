@@ -20,13 +20,21 @@ module Backend
         return
       end
 
+      if social_post&.publishing?
+        redirect_to redirect_path, notice: "#{platform_label(social_post)}-Post wird bereits im Hintergrund veröffentlicht."
+        return
+      end
+
       social_post ||= draft_sync.call(event: @event, platform: platform_param)
       social_post.approve!(user: current_user) unless social_post.ready_for_publish?
-      publisher.call(event_social_post: social_post, user: current_user)
+      enqueue_publish!(social_post)
 
-      redirect_to redirect_path, notice: "#{platform_label(social_post)}-Post wurde veröffentlicht."
+      redirect_to redirect_path, notice: "#{platform_label(social_post)}-Post wird im Hintergrund veröffentlicht."
     rescue ActiveRecord::RecordInvalid => error
       redirect_to redirect_path, alert: error.record.errors.full_messages.to_sentence
+    rescue ActiveJob::EnqueueError => error
+      social_post&.mark_failed!(error.message)
+      redirect_to redirect_path, alert: error.message
     rescue Meta::Error => error
       redirect_to redirect_path, alert: error.message
     end
@@ -54,8 +62,21 @@ module Backend
     end
 
     def publish
-      publisher.call(event_social_post: @event_social_post, user: current_user)
-      redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Post wurde veröffentlicht."
+      if @event_social_post.published?
+        redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Post ist bereits veröffentlicht."
+        return
+      end
+
+      if @event_social_post.publishing?
+        redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Post wird bereits im Hintergrund veröffentlicht."
+        return
+      end
+
+      enqueue_publish!(@event_social_post)
+      redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Post wird im Hintergrund veröffentlicht."
+    rescue ActiveJob::EnqueueError => error
+      @event_social_post.mark_failed!(error.message)
+      redirect_to redirect_path, alert: error.message
     rescue Meta::Error => error
       redirect_to redirect_path, alert: error.message
     end
@@ -91,8 +112,10 @@ module Backend
       @draft_sync ||= Meta::EventSocialPostDraftSync.new
     end
 
-    def publisher
-      @publisher ||= Meta::EventSocialPostPublisher.new
+    def enqueue_publish!(social_post)
+      social_post.ensure_publishable!
+      social_post.mark_publishing!
+      Meta::PublishEventSocialPostJob.perform_later(social_post.id, current_user.id)
     end
 
     def redirect_path

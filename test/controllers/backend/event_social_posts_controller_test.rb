@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     @event = events(:published_one)
     @user = users(:one)
@@ -8,6 +10,8 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   teardown do
+    clear_enqueued_jobs
+    clear_performed_jobs
     sign_out
   end
 
@@ -59,50 +63,41 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Bild-Link fehlt oder ist ungültig.", response.body
   end
 
-  test "publish sends an approved social post" do
+  test "publish enqueues an approved social post" do
     social_post = create_approved_social_post(@event, platform: "facebook")
-    original_publisher = Meta::EventSocialPostPublisher
-    Meta.send(:remove_const, :EventSocialPostPublisher)
-    Meta.const_set(:EventSocialPostPublisher, StubPublisher)
 
-    begin
+    assert_enqueued_with(job: Meta::PublishEventSocialPostJob, args: [ social_post.id, @user.id ]) do
       post publish_backend_event_event_social_post_url(@event, social_post), params: {
         inbox_status: "published"
       }
-    ensure
-      Meta.send(:remove_const, :EventSocialPostPublisher)
-      Meta.const_set(:EventSocialPostPublisher, original_publisher)
     end
 
     assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
     social_post.reload
-    assert_equal "published", social_post.status
-    assert_equal "page-post-1", social_post.remote_post_id
+    assert_equal "publishing", social_post.status
+    follow_redirect!
+    assert_match "Facebook-Post wird im Hintergrund veröffentlicht.", response.body
   end
 
-  test "quick publish creates and publishes a platform post" do
-    original_publisher = Meta::EventSocialPostPublisher
-    Meta.send(:remove_const, :EventSocialPostPublisher)
-    Meta.const_set(:EventSocialPostPublisher, StubPublisher)
-
-    begin
-      assert_difference -> { @event.event_social_posts.count }, 1 do
+  test "quick publish creates and enqueues a platform post" do
+    assert_difference -> { @event.event_social_posts.count }, 1 do
+      assert_enqueued_jobs 1, only: Meta::PublishEventSocialPostJob do
         post quick_publish_backend_event_event_social_posts_url(@event), params: {
           platform: "instagram",
           inbox_status: "published"
         }
       end
-    ensure
-      Meta.send(:remove_const, :EventSocialPostPublisher)
-      Meta.const_set(:EventSocialPostPublisher, original_publisher)
     end
 
     assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
     social_post = @event.event_social_posts.find_by!(platform: "instagram")
-    assert_equal "published", social_post.status
-    assert_equal "page-post-1", social_post.remote_post_id
+    assert_enqueued_with(job: Meta::PublishEventSocialPostJob, args: [ social_post.id, @user.id ])
+    assert_equal "publishing", social_post.status
+    assert_nil social_post.remote_post_id
     assert_equal @user, social_post.approved_by
-    assert_equal @user, social_post.published_by
+    assert_nil social_post.published_by
+    follow_redirect!
+    assert_match "Instagram-Post wird im Hintergrund veröffentlicht.", response.body
   end
 
   test "quick publish skips already published platform posts" do
@@ -133,7 +128,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal social_post, @event.event_social_posts.find_by!(platform: "facebook")
   end
 
-  test "publish rejects events that are not yet live" do
+  test "publish rejects events that are not yet live before enqueuing" do
     event = Event.create!(
       slug: "scheduled-social-event",
       source_fingerprint: "test::social::scheduled",
@@ -156,14 +151,17 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     social_post = Meta::EventSocialPostDraftSync.new.call(event:, platform: "instagram")
     social_post.approve!(user: @user)
 
-    post publish_backend_event_event_social_post_url(event, social_post), params: {
-      inbox_status: "ready_for_publish"
-    }
+    assert_no_enqueued_jobs only: Meta::PublishEventSocialPostJob do
+      post publish_backend_event_event_social_post_url(event, social_post), params: {
+        inbox_status: "ready_for_publish"
+      }
+    end
 
     assert_redirected_to backend_events_url(status: "ready_for_publish", event_id: event.id, editor_tab: "social")
     social_post.reload
-    assert_equal "failed", social_post.status
-    assert_equal "Event ist noch nicht öffentlich live.", social_post.error_message
+    assert_equal "approved", social_post.status
+    follow_redirect!
+    assert_match "Event ist noch nicht öffentlich live.", response.body
   end
 
   private
@@ -178,16 +176,5 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       approved_at: Time.current,
       approved_by: @user
     )
-  end
-
-  class StubPublisher
-    def call(event_social_post:, user:)
-      event_social_post.mark_published!(
-        user:,
-        remote_media_id: "photo-1",
-        remote_post_id: "page-post-1",
-        payload: { "publish_response" => { "ok" => true } }
-      )
-    end
   end
 end

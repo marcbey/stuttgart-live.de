@@ -43,7 +43,7 @@ class EventSocialPost < ApplicationRecord
   end
 
   def ready_for_publish?
-    approved? || (failed? && approved_at.present?)
+    approved? || queued_for_publish? || (failed? && approved_at.present?)
   end
 
   def approval_errors
@@ -110,6 +110,10 @@ class EventSocialPost < ApplicationRecord
 
   def mark_publishing!
     update!(status: "publishing", error_message: nil)
+  end
+
+  def queued_for_publish?
+    publishing? && approved_at.present?
   end
 
   def mark_published!(user:, remote_media_id:, remote_post_id:, payload: nil)
