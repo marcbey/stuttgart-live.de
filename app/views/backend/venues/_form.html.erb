@@ -84,5 +84,26 @@
       </div>
     </section>
 
+    <% if venue.persisted? %>
+      <section class="backend-section backend-section-compact">
+        <div class="backend-section-header">
+          <h3>Metadaten</h3>
+        </div>
+        <div class="backend-section-body">
+          <div class="editor-grid">
+            <div>
+              <p class="form-label">Erstellt am</p>
+              <p class="form-hint"><%= l(venue.created_at, format: "%d.%m.%Y %H:%M") %></p>
+            </div>
+
+            <div>
+              <p class="form-label">Editiert am</p>
+              <p class="form-hint"><%= l(venue.updated_at, format: "%d.%m.%Y %H:%M") %></p>
+            </div>
+          </div>
+        </div>
+      </section>
+    <% end %>
+
   <% end %>
 </div>

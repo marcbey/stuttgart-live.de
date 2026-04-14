@@ -1,0 +1,19 @@
+<%= turbo_stream.update "flash-messages" do %>
+  <%= render "layouts/flash_messages" %>
+<% end %>
+
+<%= turbo_stream.replace "presenters_list" do %>
+  <%= render "presenters_list",
+             presenters: @presenters,
+             selected_presenter: @selected_presenter,
+             query_filter: @query_filter,
+             sort_filter: @sort_filter %>
+<% end %>
+
+<%= turbo_stream.replace "presenter_editor" do %>
+  <%= render "editor_frame",
+             presenter: @selected_presenter,
+             linked_events: @selected_presenter_linked_events,
+             query_filter: @query_filter,
+             sort_filter: @sort_filter %>
+<% end %>

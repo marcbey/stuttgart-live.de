@@ -1,14 +1,20 @@
 module Backend
   class PresentersController < BaseController
     EditorState = Data.define(:id, :presenters, :selected_presenter)
+    SORT_OPTIONS = %w[alphabetical total created_at].freeze
 
     before_action :set_filters, only: %i[index new create edit update]
     before_action :set_presenter, only: [ :edit, :update, :destroy ]
 
     def index
-      @presenters = filtered_presenters(query: @query_filter)
+      @presenters = filtered_presenters(query: @query_filter, sort: @sort_filter)
       @selected_presenter = selected_presenter_from(@presenters)
       @selected_presenter_linked_events = linked_events_for(@selected_presenter)
+
+      respond_to do |format|
+        format.html
+        format.turbo_stream
+      end
     end
 
     def new
@@ -16,7 +22,7 @@ module Backend
 
       return render_editor_panel(@presenter, query: @query_filter) if turbo_frame_request?
 
-      redirect_to backend_presenters_path(query: @query_filter.presence, new: "1")
+      redirect_to backend_presenters_path(query: @query_filter.presence, sort: sort_param_for_url, new: "1")
     end
 
     def bulk_new
@@ -51,7 +57,7 @@ module Backend
     def edit
       return render_editor_panel(@presenter, query: @query_filter) if turbo_frame_request?
 
-      redirect_to backend_presenters_path(query: @query_filter.presence, presenter_id: @presenter.id)
+      redirect_to backend_presenters_path(query: @query_filter.presence, sort: sort_param_for_url, presenter_id: @presenter.id)
     end
 
     def update
@@ -65,20 +71,21 @@ module Backend
 
     def destroy
       if @presenter.event_presenters.exists?
-        redirect_to backend_presenters_path(query: current_query.presence), alert: "Präsentator ist noch Events zugeordnet und kann nicht gelöscht werden."
+        redirect_to backend_presenters_path(query: current_query.presence, sort: sort_param_for_url(current_sort)), alert: "Präsentator ist noch Events zugeordnet und kann nicht gelöscht werden."
         return
       end
 
       if @presenter.destroy
-        redirect_to backend_presenters_path(query: current_query.presence), notice: "Präsentator wurde gelöscht."
+        redirect_to backend_presenters_path(query: current_query.presence, sort: sort_param_for_url(current_sort)), notice: "Präsentator wurde gelöscht."
       else
-        redirect_to backend_presenters_path(query: current_query.presence), alert: @presenter.errors.full_messages.to_sentence.presence || "Präsentator konnte nicht gelöscht werden."
+        redirect_to backend_presenters_path(query: current_query.presence, sort: sort_param_for_url(current_sort)), alert: @presenter.errors.full_messages.to_sentence.presence || "Präsentator konnte nicht gelöscht werden."
       end
     end
 
     private
       def set_filters
         @query_filter = current_query
+        @sort_filter = current_sort
       end
 
       def set_presenter
@@ -89,8 +96,13 @@ module Backend
         params[:query].to_s.strip.presence
       end
 
-      def filtered_presenters(query:)
-        relation = Presenter.with_attached_logo.includes(event_presenters: :event).ordered_by_name
+      def filtered_presenters(query:, sort:)
+        relation = Presenter
+          .with_attached_logo
+          .left_joins(:event_presenters)
+          .group("presenters.id")
+          .select("presenters.*", "COUNT(event_presenters.id) AS events_count")
+          .reorder(Arel.sql(sort_order_sql(sort)))
         return relation if query.blank?
 
         token = "%#{Presenter.sanitize_sql_like(query.downcase)}%"
@@ -118,10 +130,30 @@ module Backend
         ActiveModel::Type::Boolean.new.cast(params[:new])
       end
 
+      def current_sort
+        sort = params[:sort].to_s
+        SORT_OPTIONS.include?(sort) ? sort : "alphabetical"
+      end
+
+      def sort_order_sql(sort)
+        case sort
+        when "total"
+          "COUNT(event_presenters.id) DESC, LOWER(presenters.name) ASC, presenters.id ASC"
+        when "created_at"
+          "presenters.updated_at DESC, presenters.created_at DESC, presenters.id DESC"
+        else
+          "LOWER(presenters.name) ASC, presenters.id ASC"
+        end
+      end
+
+      def sort_param_for_url(sort = @sort_filter)
+        sort == "alphabetical" ? nil : sort
+      end
+
       def render_invalid_state(presenter)
         respond_to do |format|
           format.html do
-            @presenters = filtered_presenters(query: @query_filter)
+            @presenters = filtered_presenters(query: @query_filter, sort: @sort_filter)
             @selected_presenter = presenter
             @selected_presenter_linked_events = linked_events_for(@selected_presenter)
             render :index, status: :unprocessable_entity
@@ -132,16 +164,16 @@ module Backend
               turbo_stream.replace(
                 "presenter_editor",
                 partial: "backend/presenters/editor_frame",
-                locals: editor_frame_locals(presenter, query: @query_filter)
+                locals: editor_frame_locals(presenter, query: @query_filter, sort: @sort_filter)
               )
             ], status: :unprocessable_entity
           end
         end
       end
 
-      def render_editor_panel(presenter, query:)
+      def render_editor_panel(presenter, query:, sort: @sort_filter)
         render partial: "backend/presenters/editor_frame",
-               locals: editor_frame_locals(presenter, query:)
+               locals: editor_frame_locals(presenter, query:, sort:)
       end
 
       def respond_with_editor_state(editor_state, notice:)
@@ -149,6 +181,7 @@ module Backend
           format.html do
             redirect_to backend_presenters_path(
               query: @query_filter.presence,
+              sort: sort_param_for_url,
               presenter_id: editor_state.id
             ), notice: notice
           end
@@ -162,13 +195,14 @@ module Backend
                 locals: {
                   presenters: editor_state.presenters,
                   selected_presenter: editor_state.selected_presenter,
-                  query_filter: @query_filter
+                  query_filter: @query_filter,
+                  sort_filter: @sort_filter
                 }
               ),
               turbo_stream.replace(
                 "presenter_editor",
                 partial: "backend/presenters/editor_frame",
-                locals: editor_frame_locals(editor_state.selected_presenter, query: @query_filter)
+                locals: editor_frame_locals(editor_state.selected_presenter, query: @query_filter, sort: @sort_filter)
               )
             ]
           end
@@ -176,7 +210,7 @@ module Backend
       end
 
       def editor_state_for(target_presenter)
-        presenters = filtered_presenters(query: @query_filter)
+        presenters = filtered_presenters(query: @query_filter, sort: @sort_filter)
         selected_presenter = presenters.find { |presenter| presenter.id == target_presenter.id } || presenters.first
 
         EditorState.new(
@@ -186,16 +220,17 @@ module Backend
         )
       end
 
-      def editor_frame_locals(presenter, query:)
+      def editor_frame_locals(presenter, query:, sort:)
         {
           presenter: presenter,
           query_filter: query,
+          sort_filter: sort,
           linked_events: linked_events_for(presenter)
         }
       end
 
       def linked_events_for(presenter)
-        return [] unless presenter.persisted?
+        return [] unless presenter&.persisted?
 
         presenter.event_presenters
           .filter_map(&:event)

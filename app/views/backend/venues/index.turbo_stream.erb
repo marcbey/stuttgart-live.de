@@ -3,7 +3,7 @@
 <% end %>
 
 <%= turbo_stream.replace "venues_list" do %>
-  <%= render "venues_list", venues: @venues, selected_venue: @selected_venue, query_filter: @query_filter %>
+  <%= render "venues_list", venues: @venues, selected_venue: @selected_venue, query_filter: @query_filter, sort_filter: @sort_filter %>
 <% end %>
 
 <%= turbo_stream.replace "venue_editor" do %>

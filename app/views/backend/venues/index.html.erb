@@ -12,11 +12,11 @@
     </div>
     <div class="backend-topbar-controls backend-inbox-topbar-controls">
       <div class="backend-inbox-control-rail">
-        <%= render "backend/venues/topbar_editor_actions", venue: @selected_venue, query_filter: @query_filter %>
+        <%= render "backend/venues/topbar_editor_actions", venue: @selected_venue, query_filter: @query_filter, sort_filter: @sort_filter %>
         <% unless @selected_venue.present? && !@selected_venue.persisted? %>
           <div class="backend-topbar-actions" data-editor-inbox-target="newAction">
             <%= link_to "New",
-                        new_backend_venue_path(query: @query_filter),
+                        new_backend_venue_path(query: @query_filter, sort: (@sort_filter unless @sort_filter == "alphabetical")),
                         data: { turbo_frame: "venue_editor" },
                         class: "button button-secondary button-compact" %>
           </div>
@@ -58,13 +58,27 @@
                              } %>
             </div>
           </div>
+          <div class="filter-search-field filter-search-field-full">
+            <%= form.label :sort, "Sortierung", class: "form-label" %>
+            <%= form.select :sort,
+                            options_for_select([
+                              [ "Alphabetisch", "alphabetical" ],
+                              [ "Anzahl gesamter Events", "total" ],
+                              [ "Anzahl kommender Events", "upcoming" ],
+                              [ "Editiert am", "created_at" ]
+                            ], @sort_filter),
+                            {},
+                            class: "form-input",
+                            data: { action: "change->live-search#submitNow" } %>
+          </div>
         </div>
       <% end %>
 
       <%= render "venues_list",
                  venues: @venues,
                  selected_venue: @selected_venue,
-                 query_filter: @query_filter %>
+                 query_filter: @query_filter,
+                 sort_filter: @sort_filter %>
     </aside>
 
     <section class="backend-editor-column backend-inbox-editor-column">

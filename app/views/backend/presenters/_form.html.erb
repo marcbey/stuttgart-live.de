@@ -1,11 +1,12 @@
 <% query_filter = local_assigns[:query_filter] %>
+<% sort_filter = local_assigns[:sort_filter] %>
 <% linked_events = local_assigns.fetch(:linked_events, []) %>
 
 <div class="editor-panel backend-panel"
      id="presenter_editor_panel"
      data-selected-item-id="<%= presenter.id if presenter.persisted? %>">
   <template class="editor-actions-template">
-    <%= render "backend/presenters/editor_actions", presenter: presenter, query_filter: query_filter %>
+    <%= render "backend/presenters/editor_actions", presenter: presenter, query_filter: query_filter, sort_filter: sort_filter %>
   </template>
 
   <% if presenter.errors.any? %>
@@ -23,6 +24,7 @@
                 id: dom_id(presenter, :editor_form),
                 class: "editor-form" do |form| %>
     <%= hidden_field_tag :query, query_filter if query_filter.present? %>
+    <%= hidden_field_tag :sort, sort_filter if sort_filter.present? && sort_filter != "alphabetical" %>
     <section class="backend-section backend-section-compact">
       <div class="backend-section-header">
         <h3>Stammdaten</h3>

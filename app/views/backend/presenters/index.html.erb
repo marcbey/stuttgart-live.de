@@ -12,11 +12,11 @@
     </div>
     <div class="backend-topbar-controls backend-inbox-topbar-controls">
       <div class="backend-inbox-control-rail">
-        <%= render "backend/presenters/topbar_editor_actions", presenter: @selected_presenter, query_filter: @query_filter %>
+        <%= render "backend/presenters/topbar_editor_actions", presenter: @selected_presenter, query_filter: @query_filter, sort_filter: @sort_filter %>
         <% unless @selected_presenter.present? && !@selected_presenter.persisted? %>
           <div class="backend-topbar-actions" data-editor-inbox-target="newAction">
             <%= link_to "New",
-                        new_backend_presenter_path(query: @query_filter.presence),
+                        new_backend_presenter_path(query: @query_filter.presence, sort: (@sort_filter unless @sort_filter == "alphabetical")),
                         data: { turbo_frame: "presenter_editor" },
                         class: "button button-secondary button-compact" %>
           </div>
@@ -33,7 +33,11 @@
       <%= form_with url: backend_presenters_path,
                     method: :get,
                     class: "filter-form",
-                    data: { turbo_frame: "_top" } do |form| %>
+                    data: {
+                      controller: "live-search",
+                      turbo_stream: true,
+                      live_search_delay_value: 180
+                    } do |form| %>
         <div class="filter-grid">
           <div class="filter-search-field filter-search-field-full">
             <%= form.label :query, "Suche", class: "form-label" %>
@@ -42,13 +46,32 @@
                                   value: @query_filter,
                                   placeholder: "Name, Beschreibung oder URL",
                                   class: "form-input filter-input-with-clear",
-                                  oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
+                                  autocomplete: "off",
+                                  data: {
+                                    live_search_target: "query",
+                                    action: "input->live-search#queueSubmit keydown.enter->live-search#submitNow"
+                                  } %>
               <%= button_tag "×",
                              type: "button",
                              class: "filter-date-clear filter-input-clear #{'filter-date-clear-visible' if @query_filter.present?}",
                              aria: { label: "Suche löschen" },
-                             onclick: "this.previousElementSibling.value=''; this.classList.remove('filter-date-clear-visible'); this.form.requestSubmit();" %>
+                             data: {
+                               live_search_target: "clear",
+                               action: "live-search#clear"
+                             } %>
             </div>
+          </div>
+          <div class="filter-search-field filter-search-field-full">
+            <%= form.label :sort, "Sortierung", class: "form-label" %>
+            <%= form.select :sort,
+                            options_for_select([
+                              [ "Alphabetisch", "alphabetical" ],
+                              [ "Anzahl Events", "total" ],
+                              [ "Editiert am", "created_at" ]
+                            ], @sort_filter),
+                            {},
+                            class: "form-input",
+                            data: { action: "change->live-search#submitNow" } %>
           </div>
         </div>
       <% end %>
@@ -56,14 +79,16 @@
       <%= render "presenters_list",
                  presenters: @presenters,
                  selected_presenter: @selected_presenter,
-                 query_filter: @query_filter %>
+                 query_filter: @query_filter,
+                 sort_filter: @sort_filter %>
     </aside>
 
     <section class="backend-editor-column backend-inbox-editor-column">
       <%= render "editor_frame",
                  presenter: @selected_presenter,
                  linked_events: @selected_presenter_linked_events,
-                 query_filter: @query_filter %>
+                 query_filter: @query_filter,
+                 sort_filter: @sort_filter %>
     </section>
   </div>
 </section>

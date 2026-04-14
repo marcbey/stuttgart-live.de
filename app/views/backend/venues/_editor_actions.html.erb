@@ -7,14 +7,14 @@
 
   <% unless venue.persisted? %>
     <%= link_to "Cancel",
-                backend_venues_path(query: query_filter.presence),
+                backend_venues_path(query: query_filter.presence, sort: local_assigns[:sort_filter]),
                 class: "button button-secondary button-compact",
                 data: { turbo_frame: "_top" } %>
   <% end %>
 
   <% if venue.persisted? %>
     <%= link_to "Delete",
-                backend_venue_path(venue, query: query_filter.presence),
+                backend_venue_path(venue, query: query_filter.presence, sort: local_assigns[:sort_filter]),
                 class: "button button-ghost button-compact",
                 data: {
                   turbo_frame: "_top",

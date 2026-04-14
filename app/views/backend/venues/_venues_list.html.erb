@@ -1,13 +1,9 @@
 <div id="venues_list">
-  <p class="event-list-count"><strong><%= venues.size %></strong> gefilterte Venues</p>
-
-  <% if query_filter.blank? %>
-    <p class="form-hint">Suche nach Name, Adresse, Beschreibung oder URL, um Venues anzuzeigen.</p>
-  <% elsif venues.any? %>
+  <% if venues.any? %>
     <ul class="event-list" role="list">
       <% venues.each do |venue| %>
         <li class="event-list-item venue-list-item <%= 'event-list-item-active' if selected_venue&.id == venue.id %>">
-          <%= link_to edit_backend_venue_path(venue, query: query_filter),
+          <%= link_to edit_backend_venue_path(venue, query: query_filter, sort: (local_assigns[:sort_filter] unless local_assigns[:sort_filter] == "alphabetical")),
                       data: {
                         turbo_frame: "venue_editor",
                         action: "click->editor-inbox#itemLinkClicked",
@@ -30,6 +26,10 @@
       <% end %>
     </ul>
   <% else %>
-    <p class="form-hint">Keine Venues für „<%= query_filter %>“ gefunden.</p>
+    <% if query_filter.present? %>
+      <p class="form-hint">Keine Venues für „<%= query_filter %>“ gefunden.</p>
+    <% else %>
+      <div class="empty-state">Keine Venues vorhanden.</div>
+    <% end %>
   <% end %>
 </div>

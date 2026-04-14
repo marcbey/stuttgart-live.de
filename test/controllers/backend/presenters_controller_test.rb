@@ -18,6 +18,46 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".backend-split", count: 1
     assert_select "#presenters_list", count: 1
     assert_select "turbo-frame#presenter_editor", count: 1
+    assert_select "select[name='sort'] option[selected='selected'][value='alphabetical']", count: 1
+  end
+
+  test "presenters inbox can sort alphabetically" do
+    sign_in_as(@editor)
+    create_presenter(name: "Aaa Artists")
+    create_presenter(name: "Zzz Artists")
+
+    get backend_presenters_url, params: { sort: "alphabetical" }
+
+    assert_response :success
+    assert_operator response.body.index("Aaa Artists"), :<, response.body.index("Live Nation")
+    assert_operator response.body.index("Live Nation"), :<, response.body.index("Zzz Artists")
+  end
+
+  test "presenters inbox can sort by edited at" do
+    sign_in_as(@editor)
+    older = create_presenter(name: "Older Presenter")
+    newer = create_presenter(name: "Newer Presenter")
+    older.update_columns(created_at: 2.days.ago, updated_at: 2.days.ago)
+    newer.update_columns(created_at: 3.days.ago, updated_at: 1.hour.ago)
+
+    get backend_presenters_url, params: { sort: "created_at" }
+
+    assert_response :success
+    assert_operator response.body.index("Newer Presenter"), :<, response.body.index("Older Presenter")
+  end
+
+  test "presenters inbox can sort by event count" do
+    sign_in_as(@editor)
+    lower = create_presenter(name: "Lower Count")
+    higher = create_presenter(name: "Higher Count")
+    events(:published_one).event_presenters.create!(presenter: lower, position: 1)
+    events(:published_past_one).event_presenters.create!(presenter: higher, position: 1)
+    events(:needs_review_one).event_presenters.create!(presenter: higher, position: 1)
+
+    get backend_presenters_url, params: { sort: "total" }
+
+    assert_response :success
+    assert_operator response.body.index("Higher Count"), :<, response.body.index("Lower Count")
   end
 
   test "presenters inbox hides new button while a new presenter is selected" do
@@ -40,6 +80,20 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Live Nation"
     assert_not_includes response.body, "Jazz House"
+  end
+
+  test "presenter filters update via turbo stream" do
+    sign_in_as(@editor)
+    create_presenter(name: "Jazz House")
+
+    get backend_presenters_url, params: { query: "jazz", sort: "created_at" }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.media_type, "turbo-stream"
+    assert_includes response.body, 'target="presenters_list"'
+    assert_includes response.body, 'target="presenter_editor"'
+    assert_includes response.body, "Jazz House"
+    assert_not_includes response.body, "Live Nation"
   end
 
   test "backend user can render presenter pages with svg logos" do

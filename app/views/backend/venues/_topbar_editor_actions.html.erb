@@ -2,6 +2,6 @@
      class="backend-topbar-editor-actions"
      data-editor-inbox-target="headerActions">
   <% if venue.present? %>
-    <%= render "backend/venues/editor_actions", venue: venue, query_filter: query_filter %>
+    <%= render "backend/venues/editor_actions", venue: venue, query_filter: query_filter, sort_filter: local_assigns[:sort_filter] %>
   <% end %>
 </div>

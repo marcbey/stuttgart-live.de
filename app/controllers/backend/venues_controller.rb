@@ -1,6 +1,7 @@
 module Backend
   class VenuesController < BaseController
     EditorState = Data.define(:id, :venues, :selected_venue)
+    SORT_OPTIONS = %w[alphabetical total upcoming created_at].freeze
 
     before_action :set_filters, only: [ :index, :new, :create, :edit, :update ]
     before_action :set_venue, only: [ :edit, :update, :destroy ]
@@ -20,7 +21,7 @@ module Backend
 
       return render_editor_panel(@venue, query: @query_filter) if turbo_frame_request?
 
-      redirect_to backend_venues_path(query: @query_filter.presence, new: "1")
+      redirect_to backend_venues_path(query: @query_filter.presence, sort: sort_param_for_url, new: "1")
     end
 
     def create
@@ -37,7 +38,7 @@ module Backend
     def edit
       return render_editor_panel(@venue, query: @query_filter) if turbo_frame_request?
 
-      redirect_to backend_venues_path(query: @query_filter.presence, venue_id: @venue.id)
+      redirect_to backend_venues_path(query: @query_filter.presence, sort: sort_param_for_url, venue_id: @venue.id)
     end
 
     def update
@@ -51,9 +52,9 @@ module Backend
 
     def destroy
       if @venue.destroy
-        redirect_to backend_venues_path(query: current_query.presence), notice: "Venue wurde gelöscht."
+        redirect_to backend_venues_path(query: current_query.presence, sort: sort_param_for_url(current_sort)), notice: "Venue wurde gelöscht."
       else
-        redirect_to backend_venues_path(query: current_query.presence), alert: @venue.errors.full_messages.to_sentence.presence || "Venue konnte nicht gelöscht werden."
+        redirect_to backend_venues_path(query: current_query.presence, sort: sort_param_for_url(current_sort)), alert: @venue.errors.full_messages.to_sentence.presence || "Venue konnte nicht gelöscht werden."
       end
     end
 
@@ -65,6 +66,7 @@ module Backend
     private
       def set_filters
         @query_filter = current_query
+        @sort_filter = current_sort
       end
 
       def set_venue
@@ -97,8 +99,6 @@ module Backend
       end
 
       def venues_with_counts(query:)
-        return Venue.none if query.blank?
-
         quoted_now = ActiveRecord::Base.connection.quote(Time.current)
 
         Venue
@@ -111,6 +111,29 @@ module Backend
             "COUNT(CASE WHEN events.start_at >= #{quoted_now} THEN 1 END) AS upcoming_events_count"
           )
           .filter_by_query(query)
+          .reorder(Arel.sql(sort_order_sql))
+      end
+
+      def current_sort
+        sort = params[:sort].to_s
+        SORT_OPTIONS.include?(sort) ? sort : "alphabetical"
+      end
+
+      def sort_order_sql
+        case @sort_filter
+        when "total"
+          "COUNT(events.id) DESC, LOWER(venues.name) ASC, venues.id ASC"
+        when "upcoming"
+          "COUNT(CASE WHEN events.start_at >= #{ActiveRecord::Base.connection.quote(Time.current)} THEN 1 END) DESC, COUNT(events.id) DESC, LOWER(venues.name) ASC, venues.id ASC"
+        when "created_at"
+          "venues.updated_at DESC, venues.created_at DESC, venues.id DESC"
+        else
+          "LOWER(venues.name) ASC, venues.id ASC"
+        end
+      end
+
+      def sort_param_for_url(sort = @sort_filter)
+        sort == "alphabetical" ? nil : sort
       end
 
       def render_invalid_state(venue)
@@ -143,6 +166,7 @@ module Backend
           format.html do
             redirect_to backend_venues_path(
               query: @query_filter.presence,
+              sort: sort_param_for_url,
               venue_id: editor_state.id
             ), notice: notice
           end
@@ -156,7 +180,8 @@ module Backend
                 locals: {
                   venues: editor_state.venues,
                   selected_venue: editor_state.selected_venue,
-                  query_filter: @query_filter
+                  query_filter: @query_filter,
+                  sort_filter: @sort_filter
                 }
               ),
               turbo_stream.replace(

@@ -13,11 +13,35 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Venues"
-    assert_includes response.body, "Suche nach Name, Adresse, Beschreibung oder URL"
     assert_select ".backend-split", count: 1
     assert_select "#venues_list", count: 1
     assert_select "turbo-frame#venue_editor", count: 1
-    assert_not_includes response.body, "Im Wizemann"
+    assert_includes response.body, "Im Wizemann"
+    assert_select "turbo-frame#venue_editor form.editor-form", count: 1
+    assert_select "select[name='sort'] option[selected='selected'][value='alphabetical']", count: 1
+  end
+
+  test "venues inbox can sort alphabetically" do
+    sign_in_as(@editor)
+    Venue.create!(name: "Aaa Venue")
+    Venue.create!(name: "Zzz Venue")
+
+    get backend_venues_url, params: { sort: "alphabetical" }
+
+    assert_response :success
+    assert_operator response.body.index("Aaa Venue"), :<, response.body.index("Im Wizemann")
+    assert_operator response.body.index("Im Wizemann"), :<, response.body.index("Zzz Venue")
+  end
+
+  test "venues inbox can sort by created at" do
+    sign_in_as(@editor)
+    older = Venue.create!(name: "Older Venue", created_at: 2.days.ago, updated_at: 2.days.ago)
+    newer = Venue.create!(name: "Newer Venue", created_at: 3.days.ago, updated_at: 1.hour.ago)
+
+    get backend_venues_url, params: { sort: "created_at" }
+
+    assert_response :success
+    assert_operator response.body.index("Newer Venue"), :<, response.body.index("Older Venue")
   end
 
   test "venues inbox hides new button while a new venue is selected" do
