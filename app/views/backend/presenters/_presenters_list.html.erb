@@ -1,0 +1,33 @@
+<div id="presenters_list">
+  <p class="event-list-count"><strong><%= presenters.count %></strong> gefilterte Präsentatoren</p>
+
+  <% if presenters.any? %>
+    <ul class="event-list" role="list">
+      <% presenters.each do |presenter| %>
+        <li class="event-list-item presenter-list-item <%= 'event-list-item-active' if selected_presenter&.id == presenter.id %>">
+          <%= link_to edit_backend_presenter_path(presenter, query: query_filter.presence),
+                      data: {
+                        turbo_frame: "presenter_editor",
+                        action: "click->editor-inbox#itemLinkClicked",
+                        editor_inbox_item_id: presenter.id
+                      },
+                      class: "event-link presenter-link" do %>
+            <div class="event-list-main">
+              <strong><%= presenter.name %></strong>
+              <span><%= truncate(presenter.description.presence || presenter.external_url.presence || "Keine weiteren Angaben", length: 105) %></span>
+              <small><%= presenter.event_presenters.size %> Events</small>
+            </div>
+
+            <span class="event-list-badges">
+              <% if presenter.logo.attached? %>
+                <span class="status-badge">Logo</span>
+              <% end %>
+            </span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="empty-state">Keine Präsentatoren zur aktuellen Filterung.</div>
+  <% end %>
+</div>

@@ -1,0 +1,33 @@
+<div class="backend-topbar-actions">
+  <button type="submit"
+          form="<%= dom_id(page, :editor_form) %>"
+          class="button button-save-primary button-compact">
+    Save
+  </button>
+
+  <% unless page.persisted? %>
+    <%= link_to "Cancel",
+                backend_pages_path(query: query_filter.presence),
+                class: "button button-secondary button-compact",
+                data: { turbo_frame: "_top" } %>
+  <% end %>
+
+  <% if page.persisted? %>
+    <%= link_to "Open",
+                "/#{page.slug}",
+                class: "button button-secondary button-compact",
+                target: "_blank",
+                rel: "noopener" %>
+  <% end %>
+
+  <% if page.persisted? && !page.system_page? %>
+    <%= link_to "Delete",
+                backend_page_path(page, query: query_filter.presence),
+                class: "button button-ghost button-compact",
+                data: {
+                  turbo_frame: "_top",
+                  turbo_method: :delete,
+                  turbo_confirm: "Seite wirklich löschen?"
+                } %>
+  <% end %>
+</div>

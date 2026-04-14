@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["toggle", "preference", "headerActions"]
+  static targets = ["toggle", "preference", "headerActions", "newAction"]
   static values = { enabled: { type: Boolean, default: true }, preferenceUrl: String }
 
   connect() {
@@ -70,16 +70,19 @@ export default class extends Controller {
 
     const form = document.querySelector("turbo-frame#event_editor form.editor-form")
     if (!(form instanceof HTMLFormElement)) {
+      this.syncNewActionVisibility(false)
       this.highlightEventById(null)
       return
     }
 
     const eventId = this.eventIdFromEditorForm(form)
     if (eventId === null) {
+      this.syncNewActionVisibility(true)
       this.highlightEventById(null)
       return
     }
 
+    this.syncNewActionVisibility(false)
     this.highlightEventById(eventId)
   }
 
@@ -101,6 +104,14 @@ export default class extends Controller {
     if (!(template instanceof HTMLTemplateElement)) return
 
     this.headerActionsTarget.append(template.content.cloneNode(true))
+  }
+
+  syncNewActionVisibility(hideNewAction) {
+    if (!this.hasNewActionTarget) return
+
+    this.newActionTargets.forEach((element) => {
+      element.hidden = hideNewAction
+    })
   }
 
   highlightEventById(eventId) {

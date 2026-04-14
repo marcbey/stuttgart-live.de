@@ -5,7 +5,11 @@
      id="blog_editor_panel"
      data-selected-item-id="<%= blog_post.id if blog_post.persisted? %>">
   <template class="editor-actions-template">
-    <%= render "backend/blog_posts/editor_actions", blog_post: blog_post, form_id: form_id %>
+    <%= render "backend/blog_posts/editor_actions",
+               blog_post: blog_post,
+               form_id: form_id,
+               status_filter: status_filter,
+               query_filter: query_filter %>
   </template>
 
   <header class="editor-header">

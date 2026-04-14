@@ -2,6 +2,10 @@
   <%= render "layouts/flash_messages" %>
 <% end %>
 
-<%= turbo_stream.replace "venues_results" do %>
-  <%= render "venues_list", venues: @venues, query_filter: @query_filter %>
+<%= turbo_stream.replace "venues_list" do %>
+  <%= render "venues_list", venues: @venues, selected_venue: @selected_venue, query_filter: @query_filter %>
+<% end %>
+
+<%= turbo_stream.replace "venue_editor" do %>
+  <%= render "editor_frame", venue: @selected_venue, query_filter: @query_filter %>
 <% end %>

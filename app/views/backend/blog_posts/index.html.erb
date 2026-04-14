@@ -10,14 +10,19 @@
 
     <div class="backend-topbar-controls backend-inbox-topbar-controls">
       <div class="backend-inbox-control-rail">
-        <%= render "topbar_editor_actions", blog_post: @selected_blog_post %>
+        <%= render "topbar_editor_actions",
+                   blog_post: @selected_blog_post,
+                   status_filter: @status_filter,
+                   query_filter: @query_filter %>
 
-        <div class="backend-topbar-actions">
-          <%= link_to "New",
-                      new_backend_blog_post_path(status: @status_filter, query: @query_filter.presence, editor_tab: (@active_editor_tab unless @active_editor_tab == "news")),
-                      data: { turbo_frame: "blog_editor" },
-                      class: "button button-secondary button-compact" %>
-        </div>
+        <% unless @selected_blog_post.present? && !@selected_blog_post.persisted? %>
+          <div class="backend-topbar-actions" data-editor-inbox-target="newAction">
+            <%= link_to "New",
+                        new_backend_blog_post_path(status: @status_filter, query: @query_filter.presence, editor_tab: (@active_editor_tab unless @active_editor_tab == "news")),
+                        data: { turbo_frame: "blog_editor" },
+                        class: "button button-secondary button-compact" %>
+          </div>
+        <% end %>
       </div>
     </div>
   </header>

@@ -22,6 +22,10 @@
                 target: "_blank",
                 rel: "noreferrer" %>
   <% else %>
-    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button button-save-primary button-compact">Event erstellen</button>
+    <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button button-save-primary button-compact">Save</button>
+    <%= link_to "Cancel",
+                backend_events_path(status: filter_status.presence),
+                class: "button button-secondary button-compact",
+                data: { turbo_frame: "_top" } %>
   <% end %>
 </div>

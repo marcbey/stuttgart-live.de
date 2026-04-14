@@ -1,45 +1,31 @@
-<div id="venues_results">
+<div id="venues_list">
+  <p class="event-list-count"><strong><%= venues.size %></strong> gefilterte Venues</p>
+
   <% if query_filter.blank? %>
     <p class="form-hint">Suche nach Name, Adresse, Beschreibung oder URL, um Venues anzuzeigen.</p>
   <% elsif venues.any? %>
-    <ul class="venue-grid" role="list">
+    <ul class="event-list" role="list">
       <% venues.each do |venue| %>
-        <li class="venue-card <%= "venue-card-with-logo-bg" if venue.logo.attached? %>"
-            <% if venue.logo.attached? %>style="--venue-card-logo: url('<%= url_for(venue.detail_logo_variant) %>')" <% end %>>
-          <div class="venue-card-header">
-            <h4><%= venue.name %></h4>
-          </div>
+        <li class="event-list-item venue-list-item <%= 'event-list-item-active' if selected_venue&.id == venue.id %>">
+          <%= link_to edit_backend_venue_path(venue, query: query_filter),
+                      data: {
+                        turbo_frame: "venue_editor",
+                        action: "click->editor-inbox#itemLinkClicked",
+                        editor_inbox_item_id: venue.id
+                      },
+                      class: "event-link venue-link" do %>
+            <div class="event-list-main">
+              <strong><%= venue.name %></strong>
+              <span><%= truncate(venue.address.presence || venue.external_url.presence || "Keine Adresse oder URL", length: 105) %></span>
+              <small>Venue ID: <%= venue.id %> · Gesamt: <%= venue.events_count %> · Kommend: <%= venue.upcoming_events_count %></small>
+            </div>
 
-          <% if venue.address.present? %>
-            <p class="venue-card-kicker"><%= venue.address %></p>
+            <span class="event-list-badges">
+              <% if venue.logo.attached? %>
+                <span class="status-badge">Logo</span>
+              <% end %>
+            </span>
           <% end %>
-
-          <% if venue.external_url.present? %>
-            <%= link_to venue.external_url,
-                        venue.external_url,
-                        target: "_blank",
-                        rel: "noopener",
-                        class: "venue-card-link" %>
-          <% end %>
-
-          <% if venue.description.present? %>
-            <p class="venue-card-summary"><%= truncate(venue.description, length: 100) %></p>
-          <% end %>
-
-          <p class="venue-card-stats">Venue ID: <%= venue.id %>, Gesamt: <%= venue.events_count %>, Kommend: <%= venue.upcoming_events_count %></p>
-
-          <div class="venue-card-actions">
-            <%= link_to "Edit", edit_backend_venue_path(venue, query: query_filter), class: "button button-ghost button-compact" %>
-            <%= button_to "Delete",
-                          backend_venue_path(venue),
-                          method: :delete,
-                          class: "button button-secondary button-compact",
-                          form: {
-                            data: {
-                              turbo_confirm: "Venue wirklich löschen?"
-                            }
-                          } %>
-          </div>
         </li>
       <% end %>
     </ul>

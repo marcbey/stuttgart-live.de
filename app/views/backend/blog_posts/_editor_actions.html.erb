@@ -25,6 +25,13 @@
     </button>
   <% end %>
 
+  <% unless blog_post.persisted? %>
+    <%= link_to "Cancel",
+                backend_blog_posts_path(status: (status_filter.presence unless status_filter == "all"), query: query_filter.presence),
+                class: "button button-secondary button-compact",
+                data: { turbo_frame: "_top" } %>
+  <% end %>
+
   <% if blog_post.persisted? %>
     <%= link_to "Delete",
                 backend_blog_post_path(blog_post),

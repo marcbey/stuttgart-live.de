@@ -15,12 +15,14 @@
                    event: @selected_event,
                    next_event_enabled: @next_event_enabled,
                    filter_status: @filters[:status] %>
-        <div class="backend-topbar-actions">
-          <%= link_to "New",
-                      new_backend_event_path(status: @filters[:status], editor_tab: (@active_editor_tab unless @active_editor_tab == "event")),
-                      data: { turbo_frame: "event_editor" },
-                      class: "button button-secondary button-compact" %>
-        </div>
+        <% unless @selected_event.present? && !@selected_event.persisted? %>
+          <div class="backend-topbar-actions" data-next-event-target="newAction">
+            <%= link_to "New",
+                        new_backend_event_path(status: @filters[:status], editor_tab: (@active_editor_tab unless @active_editor_tab == "event")),
+                        data: { turbo_frame: "event_editor" },
+                        class: "button button-secondary button-compact" %>
+          </div>
+        <% end %>
       </div>
     </div>
   </header>

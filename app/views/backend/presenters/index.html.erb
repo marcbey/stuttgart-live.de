@@ -1,73 +1,69 @@
 <% content_for :title, "Präsentatoren" %>
 
-<section class="backend-shell">
-  <header class="backend-topbar">
-    <div>
+<section class="backend-shell backend-inbox-shell"
+         data-controller="editor-inbox"
+         data-action="turbo:frame-load@document->editor-inbox#syncActiveFromEditor turbo:submit-end@document->editor-inbox#syncActiveAfterSubmit"
+         data-editor-inbox-frame-id-value="presenter_editor"
+         data-editor-inbox-item-selector-value=".presenter-list-item"
+         data-editor-inbox-link-selector-value=".presenter-link">
+  <header class="backend-topbar backend-topbar-sticky backend-inbox-topbar">
+    <div class="backend-topbar-title">
       <h1>Präsentatoren</h1>
-      <p>Globale Präsentatoren für Events mit Logo und externer Verlinkung.</p>
     </div>
-    <div class="backend-topbar-actions">
-      <%= link_to "Präsentator anlegen", new_backend_presenter_path, class: "button button-compact" %>
-      <%= link_to "Import Logos", bulk_new_backend_presenters_path, class: "button button-secondary button-compact" %>
+    <div class="backend-topbar-controls backend-inbox-topbar-controls">
+      <div class="backend-inbox-control-rail">
+        <%= render "backend/presenters/topbar_editor_actions", presenter: @selected_presenter, query_filter: @query_filter %>
+        <% unless @selected_presenter.present? && !@selected_presenter.persisted? %>
+          <div class="backend-topbar-actions" data-editor-inbox-target="newAction">
+            <%= link_to "New",
+                        new_backend_presenter_path(query: @query_filter.presence),
+                        data: { turbo_frame: "presenter_editor" },
+                        class: "button button-secondary button-compact" %>
+          </div>
+        <% end %>
+        <div class="backend-topbar-actions">
+          <%= link_to "Import Logos", bulk_new_backend_presenters_path, class: "button button-secondary button-compact" %>
+        </div>
+      </div>
     </div>
   </header>
 
-  <section class="backend-section backend-table-section">
-    <div class="backend-section-header">
-      <h3>Alle Präsentatoren</h3>
-    </div>
-    <% if @presenters.any? %>
-      <ul class="presenter-grid" role="list">
-        <% @presenters.each do |presenter| %>
-          <li class="presenter-card">
-            <div class="presenter-card-logo">
-              <% if presenter.logo.attached? %>
-                <%= image_tag presenter.thumbnail_logo_variant, alt: presenter.name %>
-              <% end %>
+  <div class="backend-split backend-inbox-split">
+    <aside class="backend-list-column">
+      <%= form_with url: backend_presenters_path,
+                    method: :get,
+                    class: "filter-form",
+                    data: { turbo_frame: "_top" } do |form| %>
+        <div class="filter-grid">
+          <div class="filter-search-field filter-search-field-full">
+            <%= form.label :query, "Suche", class: "form-label" %>
+            <div class="filter-date-wrap">
+              <%= form.text_field :query,
+                                  value: @query_filter,
+                                  placeholder: "Name, Beschreibung oder URL",
+                                  class: "form-input filter-input-with-clear",
+                                  oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
+              <%= button_tag "×",
+                             type: "button",
+                             class: "filter-date-clear filter-input-clear #{'filter-date-clear-visible' if @query_filter.present?}",
+                             aria: { label: "Suche löschen" },
+                             onclick: "this.previousElementSibling.value=''; this.classList.remove('filter-date-clear-visible'); this.form.requestSubmit();" %>
             </div>
+          </div>
+        </div>
+      <% end %>
 
-            <div class="presenter-card-body">
-              <div class="presenter-card-header">
-                <div>
-                  <h4><%= presenter.name %></h4>
-                  <% if presenter.description.present? %>
-                    <p class="presenter-card-copy"><%= truncate(presenter.description, length: 140) %></p>
-                  <% end %>
-                </div>
-                <span class="presenter-card-count"><%= presenter.event_presenters.size %> Events</span>
-              </div>
+      <%= render "presenters_list",
+                 presenters: @presenters,
+                 selected_presenter: @selected_presenter,
+                 query_filter: @query_filter %>
+    </aside>
 
-              <div class="presenter-card-meta">
-                <span class="presenter-card-label">Externe URL</span>
-                <% if presenter.external_url.present? %>
-                  <%= link_to presenter.external_url,
-                              presenter.external_url,
-                              target: "_blank",
-                              rel: "noopener",
-                              class: "presenter-card-link" %>
-                <% else %>
-                  <span class="presenter-card-copy">Keine URL hinterlegt</span>
-                <% end %>
-              </div>
-            </div>
-
-            <div class="presenter-card-actions">
-              <%= link_to "Edit", edit_backend_presenter_path(presenter), class: "button button-ghost button-compact" %>
-              <%= button_to "Delete",
-                            backend_presenter_path(presenter),
-                            method: :delete,
-                            class: "button button-secondary button-compact",
-                            form: {
-                              data: {
-                                turbo_confirm: "Presenter wirklich löschen?"
-                              }
-                            } %>
-            </div>
-          </li>
-        <% end %>
-      </ul>
-    <% else %>
-      <p class="form-hint">Noch keine Präsentatoren angelegt.</p>
-    <% end %>
-  </section>
+    <section class="backend-editor-column backend-inbox-editor-column">
+      <%= render "editor_frame",
+                 presenter: @selected_presenter,
+                 linked_events: @selected_presenter_linked_events,
+                 query_filter: @query_filter %>
+    </section>
+  </div>
 </section>

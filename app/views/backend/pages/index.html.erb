@@ -1,22 +1,65 @@
 <% content_for :title, "Seiten" %>
 
-<section class="backend-shell">
-  <header class="backend-topbar">
-    <div>
+<section class="backend-shell backend-inbox-shell"
+         data-controller="editor-inbox"
+         data-action="turbo:frame-load@document->editor-inbox#syncActiveFromEditor turbo:submit-end@document->editor-inbox#syncActiveAfterSubmit"
+         data-editor-inbox-frame-id-value="page_editor"
+         data-editor-inbox-item-selector-value=".page-list-item"
+         data-editor-inbox-link-selector-value=".page-link">
+  <header class="backend-topbar backend-topbar-sticky backend-inbox-topbar">
+    <div class="backend-topbar-title">
       <h1>Seiten</h1>
-      <p>Statische Inhalte wie Impressum, Datenschutz oder eigene Landingpages direkt im Backend pflegen.</p>
     </div>
-    <div class="backend-topbar-actions">
-      <%= link_to "Neue Seite", new_backend_page_path, class: "button button-compact" %>
+    <div class="backend-topbar-controls backend-inbox-topbar-controls">
+      <div class="backend-inbox-control-rail">
+        <%= render "backend/pages/topbar_editor_actions", page: @selected_page, query_filter: @query_filter %>
+        <% unless @selected_page.present? && !@selected_page.persisted? %>
+          <div class="backend-topbar-actions" data-editor-inbox-target="newAction">
+            <%= link_to "New",
+                        new_backend_page_path(query: @query_filter.presence),
+                        data: { turbo_frame: "page_editor" },
+                        class: "button button-secondary button-compact" %>
+          </div>
+        <% end %>
+      </div>
     </div>
   </header>
 
-  <section class="backend-section backend-section-compact">
-    <div class="backend-section-header">
-      <p>Alle Seiten werden hier zentral gepflegt. Neue Seiten sind sofort live unter ihrem Root-Slug veröffentlicht, zum Beispiel <code>/sommer-faq</code>.</p>
-    </div>
-    <div class="backend-section-body">
-      <%= render "pages_list", pages: @pages, empty_message: "Noch keine Seiten angelegt." %>
-    </div>
-  </section>
+  <div class="backend-split backend-inbox-split">
+    <aside class="backend-list-column">
+      <%= form_with url: backend_pages_path,
+                    method: :get,
+                    class: "filter-form",
+                    data: { turbo_frame: "_top" } do |form| %>
+        <div class="filter-grid">
+          <div class="filter-search-field filter-search-field-full">
+            <%= form.label :query, "Suche", class: "form-label" %>
+            <div class="filter-date-wrap">
+              <%= form.text_field :query,
+                                  value: @query_filter,
+                                  placeholder: "Titel, Slug, Kicker oder Intro",
+                                  class: "form-input filter-input-with-clear",
+                                  oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
+              <%= button_tag "×",
+                             type: "button",
+                             class: "filter-date-clear filter-input-clear #{'filter-date-clear-visible' if @query_filter.present?}",
+                             aria: { label: "Suche löschen" },
+                             onclick: "this.previousElementSibling.value=''; this.classList.remove('filter-date-clear-visible'); this.form.requestSubmit();" %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <%= render "pages_list",
+                 pages: @pages,
+                 selected_page: @selected_page,
+                 query_filter: @query_filter %>
+    </aside>
+
+    <section class="backend-editor-column backend-inbox-editor-column">
+      <%= render "editor_frame",
+                 page: @selected_page,
+                 query_filter: @query_filter %>
+    </section>
+  </div>
 </section>

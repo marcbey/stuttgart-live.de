@@ -1,0 +1,7 @@
+<div id="presenter_topbar_editor_actions"
+     class="backend-topbar-editor-actions"
+     data-editor-inbox-target="headerActions">
+  <% if presenter.present? %>
+    <%= render "backend/presenters/editor_actions", presenter: presenter, query_filter: query_filter %>
+  <% end %>
+</div>

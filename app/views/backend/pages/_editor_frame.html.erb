@@ -1,0 +1,10 @@
+<%= turbo_frame_tag "page_editor" do %>
+  <% if page.present? %>
+    <%= render "backend/pages/form",
+               page: page,
+               query_filter: query_filter,
+               submit_label: (page.persisted? ? "Seite speichern" : "Seite anlegen") %>
+  <% else %>
+    <div class="empty-state">Keine Seiten zur aktuellen Filterung.</div>
+  <% end %>
+<% end %>

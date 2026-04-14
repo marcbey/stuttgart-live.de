@@ -1,42 +1,33 @@
-<% if pages.any? %>
-  <ul class="backend-page-grid" role="list">
-    <% pages.each do |page| %>
-      <li class="backend-page-card">
-        <div class="backend-page-card-header">
-          <div>
-            <h4><%= page.title %></h4>
-            <p class="backend-page-card-slug">/<%= page.slug %></p>
-          </div>
-        </div>
+<div id="pages_list">
+  <p class="event-list-count"><strong><%= pages.count %></strong> gefilterte Seiten</p>
 
-        <% if page.kicker.present? %>
-          <p class="backend-page-card-kicker"><%= page.kicker %></p>
-        <% end %>
+  <% if pages.any? %>
+    <ul class="event-list" role="list">
+      <% pages.each do |page| %>
+        <li class="event-list-item page-list-item <%= 'event-list-item-active' if selected_page&.id == page.id %>">
+          <%= link_to edit_backend_page_path(page, query: query_filter.presence),
+                      data: {
+                        turbo_frame: "page_editor",
+                        action: "click->editor-inbox#itemLinkClicked",
+                        editor_inbox_item_id: page.id
+                      },
+                      class: "event-link page-link" do %>
+            <div class="event-list-main">
+              <strong><%= page.title %></strong>
+              <span>/<%= page.slug %></span>
+              <small><%= truncate(page.intro.presence || page.body.to_plain_text, length: 105) %></small>
+            </div>
 
-        <% if page.intro.present? %>
-          <p class="backend-page-card-copy"><%= truncate(page.intro, length: 180) %></p>
-        <% else %>
-          <p class="backend-page-card-copy"><%= truncate(page.body.to_plain_text, length: 180) %></p>
-        <% end %>
-
-        <div class="backend-page-card-actions">
-          <%= link_to "Bearbeiten", edit_backend_page_path(page), class: "button button-ghost button-compact" %>
-          <%= link_to "Öffnen", "/#{page.slug}", class: "button button-secondary button-compact", target: "_blank", rel: "noopener" %>
-          <% unless page.system_page? %>
-            <%= button_to "Löschen",
-                          backend_page_path(page),
-                          method: :delete,
-                          class: "button button-secondary button-compact",
-                          form: {
-                            data: {
-                              turbo_confirm: "Seite wirklich löschen?"
-                            }
-                          } %>
+            <span class="event-list-badges">
+              <% if page.system_page? %>
+                <span class="status-badge">System</span>
+              <% end %>
+            </span>
           <% end %>
-        </div>
-      </li>
-    <% end %>
-  </ul>
-<% else %>
-  <p class="form-hint"><%= empty_message %></p>
-<% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="empty-state">Keine Seiten zur aktuellen Filterung.</div>
+  <% end %>
+</div>

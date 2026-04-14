@@ -1,0 +1,10 @@
+<%= turbo_frame_tag "venue_editor" do %>
+  <% if venue.present? %>
+    <%= render "backend/venues/form",
+               venue: venue,
+               query_filter: query_filter,
+               submit_label: (venue.persisted? ? "Save" : "New") %>
+  <% else %>
+    <div class="empty-state">Keine Venues zur aktuellen Filterung.</div>
+  <% end %>
+<% end %>

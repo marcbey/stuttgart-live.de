@@ -6,7 +6,7 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     @venue = venues(:im_wizemann)
   end
 
-  test "backend user can list venues" do
+  test "backend user can list venues inbox" do
     sign_in_as(@editor)
 
     get backend_venues_url
@@ -14,10 +14,23 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Venues"
     assert_includes response.body, "Suche nach Name, Adresse, Beschreibung oder URL"
+    assert_select ".backend-split", count: 1
+    assert_select "#venues_list", count: 1
+    assert_select "turbo-frame#venue_editor", count: 1
     assert_not_includes response.body, "Im Wizemann"
   end
 
-  test "backend user can search venues" do
+  test "venues inbox hides new button while a new venue is selected" do
+    sign_in_as(@editor)
+
+    get backend_venues_url(new: "1")
+
+    assert_response :success
+    assert_select "#venue_topbar_editor_actions button[form='editor_form_venue']", text: "Save", count: 1
+    assert_select "a.button", text: "New", count: 0
+  end
+
+  test "backend user can search venues and load selected editor" do
     sign_in_as(@editor)
 
     get backend_venues_url, params: { query: "wiz" }
@@ -27,6 +40,7 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Kommend"
     assert_includes response.body, "Adresse"
     assert_not_includes response.body, "LKA Longhorn"
+    assert_select "turbo-frame#venue_editor form.editor-form", count: 1
   end
 
   test "backend user can search venues via turbo stream" do
@@ -36,9 +50,28 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.media_type, "turbo-stream"
-    assert_includes response.body, "turbo-stream"
+    assert_includes response.body, 'target="venues_list"'
+    assert_includes response.body, 'target="venue_editor"'
     assert_includes response.body, "LKA Longhorn"
-    assert_not_includes response.body, "event-list-count"
+  end
+
+  test "edit redirects to inbox state" do
+    sign_in_as(@editor)
+
+    get edit_backend_venue_url(@venue, query: "wiz")
+
+    assert_redirected_to backend_venues_url(query: "wiz", venue_id: @venue.id)
+  end
+
+  test "turbo frame edit renders editor panel" do
+    sign_in_as(@editor)
+
+    get edit_backend_venue_url(@venue, query: "wiz"), headers: { "Turbo-Frame" => "venue_editor" }
+
+    assert_response :success
+    assert_select "turbo-frame#venue_editor"
+    assert_select ".editor-panel.backend-panel[data-selected-item-id='#{@venue.id}']"
+    assert_select "form.editor-form[action='#{backend_venue_path(@venue)}']"
   end
 
   test "backend user can create venue" do
@@ -56,7 +89,7 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     end
 
     created_venue = Venue.order(:id).last
-    assert_redirected_to edit_backend_venue_url(created_venue)
+    assert_redirected_to backend_venues_url(venue_id: created_venue.id)
     assert_equal "Porsche Arena", created_venue.name
   end
 
@@ -72,11 +105,31 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to edit_backend_venue_url(@venue)
+    assert_redirected_to backend_venues_url(venue_id: @venue.id)
     @venue.reload
     assert_equal "Im Wizemann Club", @venue.name
     assert_equal "Neue Adresse", @venue.address
     assert_equal "Venue wurde gespeichert.", flash[:notice]
+  end
+
+  test "turbo update refreshes venues list and editor" do
+    sign_in_as(@editor)
+
+    patch backend_venue_url(@venue), params: {
+      query: "wiz",
+      venue: {
+        name: "Im Wizemann Club",
+        external_url: "https://example.com/wizemann-club",
+        address: "Neue Adresse",
+        description: "Neue Beschreibung"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, 'target="flash-messages"'
+    assert_includes response.body, 'target="venues_list"'
+    assert_includes response.body, 'target="venue_editor"'
+    assert_equal "Im Wizemann Club", @venue.reload.name
   end
 
   test "backend user can remove venue logo" do
@@ -93,7 +146,7 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to edit_backend_venue_url(@venue)
+    assert_redirected_to backend_venues_url(venue_id: @venue.id)
     @venue.reload
     assert_not @venue.logo.attached?
   end

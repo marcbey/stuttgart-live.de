@@ -1,4 +1,12 @@
-<div class="editor-panel backend-panel">
+<% query_filter = local_assigns[:query_filter] %>
+
+<div class="editor-panel backend-panel"
+     id="page_editor_panel"
+     data-selected-item-id="<%= page.id if page.persisted? %>">
+  <template class="editor-actions-template">
+    <%= render "backend/pages/editor_actions", page: page, query_filter: query_filter %>
+  </template>
+
   <% if page.errors.any? %>
     <div class="flash flash-alert">
       <strong>Bitte Eingaben prüfen.</strong>
@@ -12,7 +20,9 @@
 
   <%= form_with model: page,
                 url: (page.persisted? ? backend_page_path(page) : backend_pages_path),
+                id: dom_id(page, :editor_form),
                 class: "editor-form" do |form| %>
+    <%= hidden_field_tag :query, query_filter if query_filter.present? %>
     <section class="backend-section backend-section-compact">
       <div class="backend-section-header">
         <h3>Seitendaten</h3>
@@ -56,8 +66,5 @@
       </div>
     </section>
 
-    <div class="editor-footer">
-      <%= form.submit submit_label, class: "button button-compact" %>
-    </div>
   <% end %>
 </div>

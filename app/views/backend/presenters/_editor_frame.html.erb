@@ -1,0 +1,11 @@
+<%= turbo_frame_tag "presenter_editor" do %>
+  <% if presenter.present? %>
+    <%= render "backend/presenters/form",
+               presenter: presenter,
+               query_filter: query_filter,
+               linked_events: local_assigns.fetch(:linked_events, []),
+               submit_label: (presenter.persisted? ? "Präsentator speichern" : "Präsentator anlegen") %>
+  <% else %>
+    <div class="empty-state">Keine Präsentatoren zur aktuellen Filterung.</div>
+  <% end %>
+<% end %>

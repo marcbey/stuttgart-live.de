@@ -265,6 +265,16 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='editor_tab'][value='settings']", count: 1
   end
 
+  test "index hides new button while a new draft is selected" do
+    sign_in_as(@editor)
+
+    get backend_blog_posts_url(new: "1")
+
+    assert_response :success
+    assert_select "#blog_topbar_editor_actions button[form='editor_form_blog_post']", text: "Save", count: 1
+    assert_select "a.button", text: "New", count: 0
+  end
+
   test "turbo frame edit keeps requested news image tab active" do
     sign_in_as(@editor)
     blog_post = create_blog_post(author: @editor)

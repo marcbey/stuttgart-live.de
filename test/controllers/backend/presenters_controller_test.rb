@@ -6,7 +6,7 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     @presenter = create_presenter(name: "Live Nation")
   end
 
-  test "backend user can list presenters" do
+  test "backend user can list presenters in inbox layout" do
     sign_in_as(@editor)
 
     get backend_presenters_url
@@ -15,6 +15,31 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links .app-nav-link-active", text: "Präsentatoren"
     assert_includes response.body, "Live Nation"
     assert_includes response.body, @presenter.external_url
+    assert_select ".backend-split", count: 1
+    assert_select "#presenters_list", count: 1
+    assert_select "turbo-frame#presenter_editor", count: 1
+  end
+
+  test "presenters inbox hides new button while a new presenter is selected" do
+    sign_in_as(@editor)
+
+    get backend_presenters_url(new: "1")
+
+    assert_response :success
+    assert_select "#presenter_topbar_editor_actions button[form='editor_form_presenter']", text: "Save", count: 1
+    assert_select "a.button", text: "New", count: 0
+    assert_select "a.button", text: "Import Logos", count: 1
+  end
+
+  test "presenter search is case insensitive" do
+    sign_in_as(@editor)
+    create_presenter(name: "Jazz House")
+
+    get backend_presenters_url, params: { query: "LIVE" }
+
+    assert_response :success
+    assert_includes response.body, "Live Nation"
+    assert_not_includes response.body, "Jazz House"
   end
 
   test "backend user can render presenter pages with svg logos" do
@@ -32,10 +57,32 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "SVG Nation"
 
-    get edit_backend_presenter_url(presenter)
+    get edit_backend_presenter_url(presenter), headers: { "Turbo-Frame" => "presenter_editor" }
 
     assert_response :success
+    assert_select "turbo-frame#presenter_editor"
     assert_includes response.body, "SVG Nation"
+  end
+
+  test "presenter editor shows linked events" do
+    sign_in_as(@editor)
+    event = events(:published_one)
+    event.event_presenters.create!(presenter: @presenter, position: 1)
+
+    get backend_presenters_url(presenter_id: @presenter.id)
+
+    assert_response :success
+    assert_select "h3", text: "Verknüpfte Events"
+    assert_includes response.body, event.artist_name
+    assert_select "a.presenter-linked-event-link[href='#{backend_events_path(status: event.status, event_id: event.id)}']", count: 1
+  end
+
+  test "edit redirects to inbox state" do
+    sign_in_as(@editor)
+
+    get edit_backend_presenter_url(@presenter, query: "live")
+
+    assert_redirected_to backend_presenters_url(query: "live", presenter_id: @presenter.id)
   end
 
   test "backend user can create presenter" do
@@ -52,8 +99,9 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to backend_presenters_url
-    assert_equal "DreamHaus", Presenter.order(:id).last.name
+    presenter = Presenter.order(:id).last
+    assert_redirected_to backend_presenters_url(presenter_id: presenter.id)
+    assert_equal "DreamHaus", presenter.name
   end
 
   test "backend user can create presenter without external url" do
@@ -69,8 +117,28 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to backend_presenters_url
-    assert_nil Presenter.order(:id).last.external_url
+    presenter = Presenter.order(:id).last
+    assert_redirected_to backend_presenters_url(presenter_id: presenter.id)
+    assert_nil presenter.external_url
+  end
+
+  test "turbo update refreshes presenters list and editor" do
+    sign_in_as(@editor)
+
+    patch backend_presenter_url(@presenter), params: {
+      query: "live",
+      presenter: {
+        name: "Live Nation Updated",
+        external_url: "https://example.com/live-nation-updated",
+        description: "Neue Beschreibung"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_includes response.body, 'target="flash-messages"'
+    assert_includes response.body, 'target="presenters_list"'
+    assert_includes response.body, 'target="presenter_editor"'
+    assert_equal "Live Nation Updated", @presenter.reload.name
   end
 
   test "backend user can render bulk upload page" do
@@ -145,7 +213,7 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Mehrdeutiger vorhandener Präsentator-Name"
   end
 
-  test "create rerenders form when logo is missing" do
+  test "create rerenders inbox form when logo is missing" do
     sign_in_as(@editor)
 
     assert_no_difference -> { Presenter.count } do
@@ -158,24 +226,9 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :unprocessable_entity
+    assert_select "#presenters_list", count: 1
+    assert_select "turbo-frame#presenter_editor", count: 1
     assert_includes response.body, "muss hochgeladen werden"
-  end
-
-  test "backend user can update presenter" do
-    sign_in_as(@editor)
-
-    patch backend_presenter_url(@presenter), params: {
-      presenter: {
-        name: "Live Nation Updated",
-        external_url: "https://example.com/live-nation-updated",
-        description: "Neue Beschreibung"
-      }
-    }
-
-    assert_redirected_to backend_presenters_url
-    @presenter.reload
-    assert_equal "Live Nation Updated", @presenter.name
-    assert_equal "Neue Beschreibung", @presenter.description
   end
 
   test "destroy shows message when presenter is still assigned" do

@@ -1,0 +1,25 @@
+<div class="backend-topbar-actions">
+  <button type="submit"
+          form="<%= dom_id(presenter, :editor_form) %>"
+          class="button button-save-primary button-compact">
+    Save
+  </button>
+
+  <% unless presenter.persisted? %>
+    <%= link_to "Cancel",
+                backend_presenters_path(query: query_filter.presence),
+                class: "button button-secondary button-compact",
+                data: { turbo_frame: "_top" } %>
+  <% end %>
+
+  <% if presenter.persisted? %>
+    <%= link_to "Delete",
+                backend_presenter_path(presenter, query: query_filter.presence),
+                class: "button button-ghost button-compact",
+                data: {
+                  turbo_frame: "_top",
+                  turbo_method: :delete,
+                  turbo_confirm: "Präsentator wirklich löschen?"
+                } %>
+  <% end %>
+</div>

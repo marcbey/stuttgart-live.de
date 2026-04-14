@@ -147,8 +147,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".backend-split", count: 1
     assert_select "turbo-frame#event_editor", count: 1
     assert_select "div#event_editor_panel", count: 1
-    assert_select "#event_topbar_editor_actions button[form='editor_form_event']", text: "Event erstellen", count: 1
+    assert_select "#event_topbar_editor_actions button[form='editor_form_event']", text: "Save", count: 1
     assert_select "#event_topbar_editor_actions a.button", text: "Open", count: 0
+    assert_select "a.button", text: "New", count: 0
   end
 
   test "turbo frame new shows the same event fields with read only promoter display" do
