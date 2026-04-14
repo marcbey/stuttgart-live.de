@@ -71,6 +71,7 @@ class Merging::SyncFromImports::ArtistSimilarityMatcherTest < ActiveSupport::Tes
       ticket_url: nil,
       ticket_price_text: nil,
       sold_out: false,
+      availability_status: "available",
       raw_payload: {}
     )
   end

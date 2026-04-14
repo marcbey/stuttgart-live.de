@@ -4444,6 +4444,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Deine Events"
+    assert_select ".lane-header--saved-events .lane-header-title-link[href='#{saved_events_path}']",
+                  text: "Deine Events",
+                  count: 1
 
     document = Nokogiri::HTML.fragment(response.body)
     rendered_names = document.css(".genre-lane-card-name").map(&:text)

@@ -3,7 +3,7 @@ require "test_helper"
 class Merging::SyncFromImportsTest < ActiveSupport::TestCase
   setup do
     RawEventImport.delete_all
-    AppSetting.where(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).delete_all
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: false)
     AppSetting.reset_cache!
   end
 
@@ -375,7 +375,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
   end
 
   test "does not similarity-match artist variants when similarity matching is disabled" do
-    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: false)
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: false)
     AppSetting.reset_cache!
 
     RawEventImport.create!(
@@ -414,7 +414,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
   end
 
   test "similarity-matches artist variants when enabled" do
-    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
     AppSetting.reset_cache!
     merge_run_id = 101
 
@@ -462,7 +462,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
   end
 
   test "similarity match keeps easyticket as primary source over existing eventim event" do
-    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
     AppSetting.reset_cache!
 
     source_eventim = import_sources(:two)
@@ -601,7 +601,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
   end
 
   test "existing events can still log multiple merged_update entries within the same run" do
-    AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
     AppSetting.reset_cache!
 
     source_easyticket = import_sources(:one)

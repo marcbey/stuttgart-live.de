@@ -99,6 +99,7 @@ module Backend
       def filtered_presenters(query:, sort:)
         relation = Presenter
           .with_attached_logo
+          .includes(event_presenters: :event)
           .left_joins(:event_presenters)
           .group("presenters.id")
           .select("presenters.*", "COUNT(event_presenters.id) AS events_count")

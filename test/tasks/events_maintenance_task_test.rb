@@ -68,9 +68,30 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
   end
 
   test "reset_published_at clears publication dates for all events" do
-    published_event = events(:published_one)
-    review_event = events(:needs_review_one)
-    review_event.update!(published_at: 2.days.from_now.change(usec: 0))
+    published_event = Event.create!(
+      slug: "maintenance-published-at-published",
+      source_fingerprint: "test::maintenance::published",
+      title: "Maintenance Published",
+      artist_name: "Maintenance Artist Published",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago.change(usec: 0),
+      source_snapshot: {}
+    )
+    review_event = Event.create!(
+      slug: "maintenance-published-at-review",
+      source_fingerprint: "test::maintenance::review",
+      title: "Maintenance Review",
+      artist_name: "Maintenance Artist Review",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      published_at: 2.days.from_now.change(usec: 0),
+      source_snapshot: {}
+    )
     expected_updated_count = Event.where.not(published_at: nil).count
 
     output = capture_io do
