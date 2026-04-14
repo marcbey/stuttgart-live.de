@@ -35,6 +35,7 @@ module Merging
       :ticket_url,
       :ticket_price_text,
       :sold_out,
+      :availability_status,
       :raw_payload
     )
 

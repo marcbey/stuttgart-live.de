@@ -2,6 +2,8 @@ module Merging
   class SyncFromImports
     module RecordBuilders
       class Eventim < Base
+        CANCELED_EVENT_STATUS_CODES = %w[1].freeze
+
         private
 
         def projection
@@ -117,6 +119,12 @@ module Merging
           end
         end
 
+        def availability_status
+          return "canceled" if canceled_event_status?
+
+          super
+        end
+
         def prices
           @prices ||= eventim_price_categories.filter_map { |entry| parse_decimal(entry["price"] || entry[:price]) }
         end
@@ -135,6 +143,14 @@ module Merging
 
         def inventory_label(entry)
           entry["inventory"].to_s.strip.downcase
+        end
+
+        def canceled_event_status?
+          CANCELED_EVENT_STATUS_CODES.include?(event_status_code)
+        end
+
+        def event_status_code
+          payload["eventStatus"].to_s.strip
         end
       end
     end

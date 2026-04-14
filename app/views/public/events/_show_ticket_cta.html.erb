@@ -12,7 +12,7 @@
           <% if presenter.show_ticket_link? %>
             <% ticket_cta_label = presenter.ticket_provider_label.present? ? "Tickets bei #{presenter.ticket_provider_label} sichern" : "Tickets sichern" %>
             <%= link_to ticket_cta_label, presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
-          <% elsif presenter.show_sold_out_note? %>
+          <% elsif presenter.show_unavailable_note? %>
             <p class="event-detail-meta-strong event-detail-sold-out-note"><%= presenter.sold_out_note_text %></p>
           <% end %>
           <% if presenter.show_sks_sold_out_hint? %>

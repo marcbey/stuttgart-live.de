@@ -21,8 +21,8 @@
     <% else %>
       <div class="event-listing-thumb-image event-card-placeholder" aria-hidden="true"></div>
     <% end %>
-    <% if show_sold_out_ribbon && event.public_sold_out? %>
-      <%= render "sold_out_corner_ribbon" %>
+    <% if show_sold_out_ribbon && event.public_ticket_status_label.present? %>
+      <%= render "sold_out_corner_ribbon", label: event.public_ticket_status_label %>
     <% end %>
   </div>
 

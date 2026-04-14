@@ -209,7 +209,7 @@ module Public
       end
 
       def show_ticket_panel?
-        show_ticket_link? || show_sold_out_note? || show_sks_sold_out_hint?
+        show_ticket_link? || show_unavailable_note? || show_sks_sold_out_hint?
       end
 
       def show_ticket_cta?
@@ -217,11 +217,19 @@ module Public
       end
 
       def show_ticket_link?
-        !event.past? && !event.public_sold_out? && raw_ticket_url.present?
+        !event.past? && !event.public_canceled? && !event.public_sold_out? && raw_ticket_url.present?
       end
 
       def show_sold_out_note?
         !event.past? && event.public_sold_out?
+      end
+
+      def show_canceled_note?
+        !event.past? && event.public_canceled?
+      end
+
+      def show_unavailable_note?
+        show_canceled_note? || show_sold_out_note?
       end
 
       def ticket_badge_text
@@ -255,9 +263,9 @@ module Public
       end
 
       def sold_out_note_text
-        return unless show_sold_out_note?
+        return unless show_unavailable_note?
 
-        "Ausverkauft"
+        event.public_ticket_status_label
       end
 
       def show_sks_sold_out_hint?
@@ -406,7 +414,7 @@ module Public
           startDate: event.start_at&.iso8601,
           url: canonical_url,
           eventAttendanceMode: "https://schema.org/OfflineEventAttendanceMode",
-          eventStatus: "https://schema.org/EventScheduled",
+          eventStatus: schema_event_status,
           image: og_image_url.presence && [ og_image_url ],
           location: schema_location,
           organizer: schema_organizer,
@@ -428,6 +436,12 @@ module Public
         return unless primary_offer.present?
 
         primary_offer.resolved_ticket_url.to_s.presence
+      end
+
+      def schema_event_status
+        return "https://schema.org/EventCancelled" if event.public_canceled?
+
+        "https://schema.org/EventScheduled"
       end
 
       def venue_map_url_for(address)

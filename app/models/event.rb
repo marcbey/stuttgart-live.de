@@ -340,8 +340,19 @@ class Event < ApplicationRecord
     nil
   end
 
+  def public_canceled?
+    public_ticket_status_offer&.canceled? == true
+  end
+
   def public_sold_out?
-    public_ticket_status_offer&.sold_out? == true
+    !public_canceled? && public_ticket_status_offer&.sold_out? == true
+  end
+
+  def public_ticket_status_label
+    return "Abgesagt" if public_canceled?
+    return "Ausverkauft" if public_sold_out?
+
+    nil
   end
 
   def primary_genre
@@ -537,7 +548,7 @@ class Event < ApplicationRecord
   end
 
   def ticket_offer_active?(offer)
-    offer.present? && !offer.sold_out? && offer.ticket_url.present?
+    offer.present? && !offer.sold_out? && !offer.canceled? && offer.ticket_url.present?
   end
 
   def offer_source_priority(source)

@@ -48,6 +48,7 @@ module Merging
             ticket_url: ticket_url.to_s.strip.presence,
             ticket_price_text: ticket_price_text.to_s.strip.presence,
             sold_out: sold_out,
+            availability_status: availability_status,
             raw_payload: payload
           )
         end
@@ -166,6 +167,12 @@ module Merging
 
         def sold_out
           false
+        end
+
+        def availability_status
+          return "sold_out" if sold_out
+
+          "available"
         end
 
         def parse_date(value)

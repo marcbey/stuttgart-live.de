@@ -2694,6 +2694,99 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "https://easyticket.example/sks-sold-out-without-message"
   end
 
+  test "show renders canceled note when imported primary offer is canceled" do
+    event = Event.create!(
+      slug: "show-canceled-imported-offer",
+      source_fingerprint: "test::public::show::canceled-imported-offer",
+      title: "Canceled Priority",
+      artist_name: "Canceled Artist",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "eventim-canceled-123",
+      ticket_url: "https://eventim.example/canceled",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {
+        "availability_status" => "canceled",
+        "source_status_code" => "1"
+      }
+    )
+
+    event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/still-open",
+      sold_out: false,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-cta", count: 1
+    assert_includes response.body, "Abgesagt"
+    assert_not_includes response.body, "Ausverkauft"
+    assert_not_includes response.body, "Tickets sichern"
+    assert_not_includes response.body, "https://manual.example/still-open"
+    assert_not_includes response.body, "https://eventim.example/canceled"
+    assert_includes response.body, "\"eventStatus\":\"https://schema.org/EventCancelled\""
+  end
+
+  test "search result event cards show an abgesagt ribbon for canceled leading offers" do
+    event = Event.create!(
+      slug: "search-canceled-ribbon",
+      source_fingerprint: "test::public::search::canceled-ribbon",
+      title: "Canceled Ribbon Tour",
+      artist_name: "Canceled Ribbon Artist",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "eventim-search-canceled-1",
+      ticket_url: "https://eventim.example/search-canceled",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {
+        "availability_status" => "canceled",
+        "source_status_code" => "1"
+      }
+    )
+
+    Event.create!(
+      slug: "search-canceled-ribbon-companion",
+      source_fingerprint: "test::public::search::canceled-ribbon-companion",
+      title: "Canceled Ribbon Companion",
+      artist_name: "Canceled Ribbon Collective",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_url(q: "Canceled Ribbon")
+
+    assert_response :success
+    assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", text: "Abgesagt"
+    assert_select "#search_card_event_#{event.id} .event-card-ticket-overlay", count: 0
+  end
+
   test "genre lane cards render sold out ribbon above the event series badge while list rows stay unchanged" do
     create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 

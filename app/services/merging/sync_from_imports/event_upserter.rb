@@ -375,6 +375,11 @@ module Merging
         max_price = decimal_as_json(record.max_price)
         metadata["min_price"] = min_price if min_price.present?
         metadata["max_price"] = max_price if max_price.present?
+        availability_status = record.availability_status.to_s.strip
+        metadata["availability_status"] = availability_status if availability_status.present?
+
+        source_status_code = record.raw_payload["eventStatus"].to_s.strip
+        metadata["source_status_code"] = source_status_code if source_status_code.present?
 
         metadata
       end

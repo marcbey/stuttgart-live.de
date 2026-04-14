@@ -13,7 +13,8 @@
 <% card_dom_id = local_assigns[:card_dom_id] %>
 <% article_attributes = { class: ["genre-lane-card", ("genre-lane-card--#{card_variant}" if card_variant.present?)].compact.join(" ") } %>
 <% article_attributes[:id] = card_dom_id if card_dom_id.present? %>
-<% sold_out = event.public_sold_out? %>
+<% unavailable_label = event.public_ticket_status_label %>
+<% unavailable = unavailable_label.present? %>
 
 <article <%= tag.attributes(article_attributes) %>>
   <%= render "public/events/saved_event_button", event: event %>
@@ -29,14 +30,14 @@
       <% else %>
         <div class="genre-lane-card-image event-card-placeholder"></div>
       <% end %>
-      <% unless sold_out %>
+      <% unless unavailable %>
         <span class="genre-lane-card-ticket-overlay" aria-hidden="true">
           <span class="genre-lane-card-ticket-arrow">↓</span>
           <span class="genre-lane-card-ticket-label">TICKETS</span>
         </span>
       <% end %>
-      <% if sold_out %>
-        <%= render "sold_out_corner_ribbon" %>
+      <% if unavailable %>
+        <%= render "sold_out_corner_ribbon", label: unavailable_label %>
       <% end %>
       <% if event.badge_text.present? %>
         <span class="event-card-badge event-card-badge-genre-lane"><%= event.badge_text %></span>

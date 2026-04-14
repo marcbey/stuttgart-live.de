@@ -421,6 +421,43 @@ class EventTest < ActiveSupport::TestCase
     assert_nil event.public_ticket_offer
   end
 
+  test "public_canceled? takes precedence over sold out when the leading offer is canceled" do
+    event = Event.create!(
+      slug: "public-canceled-leading-offer",
+      source_fingerprint: "test::event::public-canceled-leading-offer",
+      artist_name: "Canceled Artist",
+      title: "Canceled Tour",
+      start_at: Time.zone.local(2026, 10, 15, 20, 0, 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.hour.ago
+    )
+    event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "eventim-canceled-1",
+      ticket_url: "https://eventim.example/canceled",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {
+        "availability_status" => "canceled",
+        "source_status_code" => "1"
+      }
+    )
+    event.event_offers.create!(
+      source: "manual",
+      source_event_id: event.id.to_s,
+      ticket_url: "https://manual.example/available",
+      sold_out: false,
+      priority_rank: 0
+    )
+
+    assert_predicate event, :public_canceled?
+    assert_not event.public_sold_out?
+    assert_nil event.public_ticket_offer
+    assert_equal "Abgesagt", event.public_ticket_status_label
+  end
+
   test "primary_genre uses loaded genres without extra queries" do
     event = Event.includes(:genres).find(events(:published_one).id)
     expected_genre = genres(:rock)

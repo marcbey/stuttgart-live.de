@@ -1,5 +1,6 @@
 class EventOffer < ApplicationRecord
   EVENT_ID_TEMPLATE_PLACEHOLDERS = [ "%{event_id}", "{event_id}" ].freeze
+  AVAILABILITY_STATUSES = %w[available sold_out canceled].freeze
 
   belongs_to :event
 
@@ -33,6 +34,17 @@ class EventOffer < ApplicationRecord
     resolved_url.sub(duplicate_pattern, "/#{normalized_source_event_id}")
   end
 
+  def availability_status
+    status = normalized_metadata["availability_status"].to_s.strip
+    return status if AVAILABILITY_STATUSES.include?(status)
+
+    sold_out? ? "sold_out" : "available"
+  end
+
+  def canceled?
+    availability_status == "canceled"
+  end
+
   private
 
   def normalize_attributes
@@ -41,5 +53,9 @@ class EventOffer < ApplicationRecord
     self.ticket_url = ticket_url.to_s.strip.presence
     self.ticket_price_text = ticket_price_text.to_s.strip.presence
     self.metadata = {} unless metadata.is_a?(Hash)
+  end
+
+  def normalized_metadata
+    metadata.is_a?(Hash) ? metadata.deep_stringify_keys : {}
   end
 end

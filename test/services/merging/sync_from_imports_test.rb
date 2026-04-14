@@ -86,6 +86,42 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal 2, event.source_snapshot.fetch("sources").size
   end
 
+  test "persists canceled availability from eventim status codes separately from sold out" do
+    RawEventImport.create!(
+      import_source: import_sources(:two),
+      import_event_type: "eventim",
+      source_identifier: "merge-eventim-canceled:2026-05-23",
+      payload: {
+        "eventid" => "merge-eventim-canceled",
+        "eventdate" => "2026-05-23",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Schräglage",
+        "eventname" => "Canceled Tour",
+        "artistname" => "Canceled Artist",
+        "eventStatus" => "1",
+        "eventlink" => "https://example.com/eventim-canceled",
+        "espicture_big" => "https://example.com/eventim-canceled.jpg",
+        "pricecategory" => [
+          { "price" => "31,00", "currency" => "EUR", "inventory" => "nicht buchbar" }
+        ]
+      }
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(artist_name: "Canceled Artist", start_at: Time.zone.local(2026, 5, 23, 20, 0, 0))
+    offer = event.event_offers.find_by!(source: "eventim")
+
+    assert_equal true, offer.sold_out
+    assert_equal "canceled", offer.metadata["availability_status"]
+    assert_equal "1", offer.metadata["source_status_code"]
+    assert_predicate event, :public_canceled?
+    assert_not event.public_sold_out?
+    assert_nil event.public_ticket_offer
+    assert_equal "Abgesagt", event.public_ticket_status_label
+  end
+
   test "sets needs_review when merged raw imports do not provide an image" do
     RawEventImport.create!(
       import_source: import_sources(:one),

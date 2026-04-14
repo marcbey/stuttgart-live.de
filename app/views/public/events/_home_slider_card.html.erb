@@ -8,7 +8,8 @@
 <% image_style = event_card_image_style(desktop_image) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
 <% primary_offer = event.public_ticket_offer %>
-<% sold_out = event.public_sold_out? %>
+<% unavailable_label = event.public_ticket_status_label %>
+<% unavailable = unavailable_label.present? %>
 
 <article class="home-slider-card">
   <div class="home-slider-card-media">
@@ -24,14 +25,14 @@
       <% else %>
         <div class="home-slider-card-image event-card-placeholder"></div>
       <% end %>
-      <% unless sold_out %>
+      <% unless unavailable %>
         <span class="home-slider-card-ticket-overlay" aria-hidden="true">
           <span class="home-slider-card-ticket-arrow">↓</span>
           <span class="home-slider-card-ticket-label">TICKETS</span>
         </span>
       <% end %>
-      <% if sold_out %>
-        <%= render "sold_out_corner_ribbon" %>
+      <% if unavailable %>
+        <%= render "sold_out_corner_ribbon", label: unavailable_label %>
       <% end %>
       <% if event.badge_text.present? %>
         <span class="event-card-badge event-card-badge-home-slider"><%= event.badge_text %></span>
