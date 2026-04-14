@@ -1,5 +1,6 @@
 <%= render "genre_lane_section",
            title: "Deine Events",
+           title_url: saved_events_path,
            events: events,
            effective_series_ids: effective_public_event_series_ids(events),
            browse_state: browse_state,
