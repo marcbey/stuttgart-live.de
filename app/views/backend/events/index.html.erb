@@ -1,32 +1,31 @@
 <% content_for :title, "Redaktion" %>
 
-<section class="backend-shell"
+<section class="backend-shell backend-inbox-shell"
          data-controller="keyboard-shortcuts next-event"
          data-action="turbo:frame-load@document->next-event#syncActiveFromEditor turbo:submit-end@document->next-event#syncActiveAfterSubmit"
          data-next-event-enabled-value="<%= @next_event_enabled %>"
          data-next-event-preference-url-value="<%= next_event_preference_backend_events_path %>">
-  <header class="backend-topbar backend-topbar-sticky">
+  <header class="backend-topbar backend-topbar-sticky backend-inbox-topbar">
     <div class="backend-topbar-title">
       <h1>Event-Inbox</h1>
-      <span id="event_topbar_context"
-            class="backend-topbar-context"
-            data-next-event-target="selectedContext"><%= render "backend/events/topbar_context", event: @selected_event if @selected_event.present? %></span>
     </div>
-    <div class="backend-topbar-controls">
-      <%= render "backend/events/topbar_editor_actions",
-                 event: @selected_event,
-                 next_event_enabled: @next_event_enabled,
-                 filter_status: @filters[:status] %>
-      <div class="backend-topbar-actions">
-        <%= link_to "New",
-                    new_backend_event_path(status: @filters[:status], editor_tab: (@active_editor_tab unless @active_editor_tab == "event")),
-                    data: { turbo_frame: "event_editor" },
-                    class: "button button-secondary button-compact" %>
+    <div class="backend-topbar-controls backend-inbox-topbar-controls">
+      <div class="backend-inbox-control-rail">
+        <%= render "backend/events/topbar_editor_actions",
+                   event: @selected_event,
+                   next_event_enabled: @next_event_enabled,
+                   filter_status: @filters[:status] %>
+        <div class="backend-topbar-actions">
+          <%= link_to "New",
+                      new_backend_event_path(status: @filters[:status], editor_tab: (@active_editor_tab unless @active_editor_tab == "event")),
+                      data: { turbo_frame: "event_editor" },
+                      class: "button button-secondary button-compact" %>
+        </div>
       </div>
     </div>
   </header>
 
-  <div class="backend-split">
+  <div class="backend-split backend-inbox-split">
     <aside class="backend-list-column">
       <div class="backend-status-row">
         <% @status_filters.each do |status| %>
@@ -148,7 +147,7 @@
                  filtered_events_count: @filtered_events_count %>
     </aside>
 
-    <section class="backend-editor-column">
+    <section class="backend-editor-column backend-inbox-editor-column">
       <%= render "editor_frame",
                  event: @selected_event,
                  all_genres: @all_genres,

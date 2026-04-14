@@ -14,8 +14,7 @@
 <% editor_form_id = dom_id(event, :editor_form) %>
 
 <div class="editor-panel backend-panel"
-     id="event_editor_panel"
-     data-selected-context="<%= backend_event_context(event) %>">
+     id="event_editor_panel">
   <template class="editor-actions-template">
     <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled, filter_status: filter_status %>
   </template>

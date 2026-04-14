@@ -195,7 +195,6 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'target="blog_topbar_editor_actions"'
     assert_includes response.body, "Unpublish"
     assert_includes response.body, "Open"
-    assert_includes response.body, 'target="blog_topbar_context"'
     assert_includes response.body, "Published"
   end
 
@@ -220,7 +219,6 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'target="blog_posts_list"'
     assert_includes response.body, remaining_draft.title
     assert_not_includes response.body, "Will Publish"
-    assert_includes response.body, 'target="blog_topbar_context"'
     assert_includes response.body, remaining_draft.title
   end
 

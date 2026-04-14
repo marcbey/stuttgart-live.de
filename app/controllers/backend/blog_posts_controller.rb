@@ -272,11 +272,6 @@ module Backend
         render turbo_stream: [
           turbo_stream.update("flash-messages", partial: "layouts/flash_messages"),
           turbo_stream.replace(
-            "blog_topbar_context",
-            partial: "backend/blog_posts/topbar_context",
-            locals: { blog_post: editor_state.selected_blog_post }
-          ),
-          turbo_stream.replace(
             "blog_topbar_editor_actions",
             partial: "backend/blog_posts/topbar_editor_actions",
             locals: { blog_post: editor_state.selected_blog_post }

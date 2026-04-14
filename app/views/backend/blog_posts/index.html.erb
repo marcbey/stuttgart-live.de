@@ -1,29 +1,28 @@
 <% content_for :title, "News" %>
 
-<section class="backend-shell"
+<section class="backend-shell backend-inbox-shell"
          data-controller="editor-inbox"
          data-action="turbo:frame-load@document->editor-inbox#syncActiveFromEditor turbo:submit-end@document->editor-inbox#syncActiveAfterSubmit">
-  <header class="backend-topbar backend-topbar-sticky blog-topbar">
+  <header class="backend-topbar backend-topbar-sticky blog-topbar backend-inbox-topbar">
     <div class="backend-topbar-title">
       <h1>News-Inbox</h1>
-      <span id="blog_topbar_context"
-            class="backend-topbar-context"
-            data-editor-inbox-target="selectedContext"><%= render "topbar_context", blog_post: @selected_blog_post if @selected_blog_post.present? %></span>
     </div>
 
-    <div class="backend-topbar-controls">
-      <%= render "topbar_editor_actions", blog_post: @selected_blog_post %>
+    <div class="backend-topbar-controls backend-inbox-topbar-controls">
+      <div class="backend-inbox-control-rail">
+        <%= render "topbar_editor_actions", blog_post: @selected_blog_post %>
 
-      <div class="backend-topbar-actions">
-        <%= link_to "New",
-                    new_backend_blog_post_path(status: @status_filter, query: @query_filter.presence, editor_tab: (@active_editor_tab unless @active_editor_tab == "news")),
-                    data: { turbo_frame: "blog_editor" },
-                    class: "button button-secondary button-compact" %>
+        <div class="backend-topbar-actions">
+          <%= link_to "New",
+                      new_backend_blog_post_path(status: @status_filter, query: @query_filter.presence, editor_tab: (@active_editor_tab unless @active_editor_tab == "news")),
+                      data: { turbo_frame: "blog_editor" },
+                      class: "button button-secondary button-compact" %>
+        </div>
       </div>
     </div>
   </header>
 
-  <div class="backend-split">
+  <div class="backend-split backend-inbox-split">
     <aside class="backend-list-column">
       <div class="backend-status-row">
         <% Backend::BlogPostsController::FILTERS.each do |filter| %>
@@ -66,7 +65,7 @@
                  active_editor_tab: @active_editor_tab %>
     </aside>
 
-    <section class="backend-editor-column">
+    <section class="backend-editor-column backend-inbox-editor-column">
       <% if @selected_blog_post.present? %>
         <%= render "editor_frame",
                    blog_post: @selected_blog_post,

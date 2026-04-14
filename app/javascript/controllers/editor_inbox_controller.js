@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["selectedContext", "headerActions"]
+  static targets = ["headerActions"]
 
   connect() {
     this.syncActiveFromEditor()
@@ -16,7 +16,6 @@ export default class extends Controller {
     const frame = event?.target
     if (frame && frame.id !== "blog_editor") return
 
-    this.syncSelectedContext()
     this.syncHeaderActions()
 
     const editorPanel = document.querySelector("turbo-frame#blog_editor .editor-panel")
@@ -31,13 +30,6 @@ export default class extends Controller {
     if (!target.id.startsWith("editor_form_")) return
 
     window.requestAnimationFrame(() => this.syncActiveFromEditor())
-  }
-
-  syncSelectedContext() {
-    if (!this.hasSelectedContextTarget) return
-
-    const editorPanel = document.querySelector("turbo-frame#blog_editor .editor-panel")
-    this.selectedContextTarget.textContent = editorPanel?.dataset?.selectedContext?.trim() || ""
   }
 
   syncHeaderActions() {

@@ -59,17 +59,17 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_includes response.body, "data-next-event-enabled-value=\"false\""
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
-    assert_select ".backend-topbar-context", text: "Published Artist · Published Event · 01.06.2026 22:00"
     assert_select "#event_topbar_editor_actions a.button", text: "Open"
   end
 
-  test "index shows selected event context in topbar" do
+  test "index does not render a separate topbar context" do
     sign_in_as(@user)
 
     get backend_events_url(status: "needs_review", event_id: @event.id)
 
     assert_response :success
-    assert_select ".backend-topbar-context", text: "Review Artist · Review Event · 10.07.2026 22:00"
+    assert_select "#event_editor_panel .editor-header h2", text: "Review Artist"
+    assert_select "#event_topbar_editor_actions", count: 1
   end
 
   test "show keeps active inbox status in editor form" do
@@ -147,7 +147,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".backend-split", count: 1
     assert_select "turbo-frame#event_editor", count: 1
     assert_select "div#event_editor_panel", count: 1
-    assert_select "#event_topbar_context", text: /Neues Event anlegen/
     assert_select "#event_topbar_editor_actions button[form='editor_form_event']", text: "Event erstellen", count: 1
     assert_select "#event_topbar_editor_actions a.button", text: "Open", count: 0
   end
@@ -1989,7 +1988,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "published", @event.reload.status
-    assert_includes response.body, 'target="event_topbar_context"'
     assert_includes response.body, 'target="event_topbar_editor_actions"'
     assert_includes response.body, 'target="events_list"'
     assert_includes response.body, @next_event.artist_name
@@ -2016,7 +2014,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_equal "ready_for_publish", @published_event.reload.status
-    assert_includes response.body, 'target="event_topbar_context"'
     assert_includes response.body, 'target="event_topbar_editor_actions"'
     assert_includes response.body, 'target="events_list"'
     assert_includes response.body, other_published_event.artist_name
