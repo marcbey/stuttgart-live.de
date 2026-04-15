@@ -4,6 +4,8 @@ body.page-public {
   --ink-deep: #031d1f;
   --ink-rgb: 6, 47, 49;
   --ink-banner: linear-gradient(135deg, #062f31 0%, #0a484b 58%, #116266 100%);
+  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 .public-backend-float {
@@ -3735,6 +3737,7 @@ position: relative;
   display: flex;
   align-items: stretch;
   width: 100%;
+  min-width: 0;
 }
 
 .newsletter-signup-frame {
@@ -9230,6 +9233,11 @@ display: none;
 
   body.page-public-events-index .newsletter-signup-section .newsletter-signup-input,
   body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input {
+  min-width: 0;
+  }
+
+  body.page-public-events-index .newsletter-signup-section .newsletter-signup-button,
+  body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-button {
   min-width: 0;
   }
 
