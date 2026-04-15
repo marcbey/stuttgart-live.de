@@ -5,6 +5,7 @@ require "net/http"
 module Meta
   class SocialCardRenderer
     RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :title_lines, :venue_text)
+    TextLayer = Data.define(:image, :x, :y)
     Variant = Data.define(
       :key,
       :width,
@@ -130,17 +131,21 @@ module Meta
       venue_text = fitted_meta_venue_text(card_payload.fetch(:venue_label), date_text:, variant:)
 
       overlay = Vips::Image.new_from_buffer(
-        overlay_svg(
+        overlay_svg(variant:),
+        "",
+        access: :sequential
+      )
+      card = background.composite2(overlay, :over)
+      card = composite_text_layers(
+        card,
+        text_layers_for(
           variant:,
           artist_lines:,
           title_lines:,
           date_text:,
           venue_text:
-        ),
-        "",
-        access: :sequential
+        )
       )
-      card = background.composite2(overlay, :over)
 
       RenderedCard.new(
         binary: card.write_to_buffer(".png"),
@@ -198,73 +203,7 @@ module Meta
       raise Error, "Social-Post-Bild konnte nicht gerendert werden: #{error.message}"
     end
 
-    def overlay_svg(variant:, artist_lines:, title_lines:, date_text:, venue_text:)
-      artist_step = line_step(variant.artist_font_size, variant.artist_line_height)
-      title_step = line_step(variant.title_font_size, variant.title_line_height)
-      artist_block_height = block_height(artist_lines.size, variant.artist_font_size, artist_step)
-      title_block_height = block_height(title_lines.size, variant.title_font_size, title_step)
-      total_height = artist_block_height + variant.meta_font_size + variant.meta_gap
-      total_height += variant.title_gap + title_block_height if title_lines.any?
-      top = variant.height - variant.bottom_padding - total_height
-      current_y = top + variant.artist_font_size
-
-      lines_markup = +""
-
-      artist_lines.each do |line|
-        lines_markup << text_tag(
-          text: line,
-          x: variant.content_left,
-          y: current_y,
-          font_family: "Bebas Neue",
-          font_size: variant.artist_font_size,
-          fill: "rgba(255,255,255,0.98)",
-          letter_spacing: 2
-        )
-        current_y += artist_step
-      end
-
-      if title_lines.any?
-        current_y += variant.title_gap
-        title_lines.each do |line|
-          lines_markup << text_tag(
-            text: line,
-            x: variant.content_left,
-            y: current_y,
-            font_family: "Oswald",
-            font_size: variant.title_font_size,
-            fill: "rgba(255,255,255,0.92)",
-            letter_spacing: 0.4
-          )
-          current_y += title_step
-        end
-      end
-
-      current_y += variant.meta_gap
-      date_width = measure_text(date_text, font_name: "Oswald", font_size: variant.meta_font_size)
-      venue_x = variant.content_left + date_width + 26
-
-      lines_markup << text_tag(
-        text: date_text,
-        x: variant.content_left,
-        y: current_y,
-        font_family: "Oswald",
-        font_size: variant.meta_font_size,
-        fill: "rgba(255,255,255,0.98)",
-        letter_spacing: 0.6
-      )
-
-      if venue_text.present?
-        lines_markup << text_tag(
-          text: venue_text,
-          x: venue_x,
-          y: current_y,
-          font_family: "Oswald",
-          font_size: variant.meta_font_size,
-          fill: "rgba(255,255,255,0.98)",
-          letter_spacing: 0.6
-        )
-      end
-
+    def overlay_svg(variant:)
       <<~SVG
         <svg xmlns="http://www.w3.org/2000/svg" width="#{variant.width}" height="#{variant.height}" viewBox="0 0 #{variant.width} #{variant.height}">
           <defs>
@@ -277,9 +216,77 @@ module Meta
           </defs>
           <rect x="0" y="0" width="#{variant.width}" height="#{variant.height}" fill="url(#social-card-shade)" />
           <rect x="#{variant.frame_inset}" y="#{variant.frame_inset}" width="#{variant.width - (variant.frame_inset * 2)}" height="#{variant.height - (variant.frame_inset * 2)}" fill="none" stroke="rgba(255,255,255,0.98)" stroke-width="3" />
-          #{lines_markup}
         </svg>
       SVG
+    end
+
+    def text_layers_for(variant:, artist_lines:, title_lines:, date_text:, venue_text:)
+      artist_step = line_step(variant.artist_font_size, variant.artist_line_height)
+      title_step = line_step(variant.title_font_size, variant.title_line_height)
+      artist_block_height = block_height(artist_lines.size, variant.artist_font_size, artist_step)
+      title_block_height = block_height(title_lines.size, variant.title_font_size, title_step)
+      total_height = artist_block_height + variant.meta_font_size + variant.meta_gap
+      total_height += variant.title_gap + title_block_height if title_lines.any?
+      top = variant.height - variant.bottom_padding - total_height
+      current_y = top
+      layers = []
+
+      artist_lines.each do |line|
+        layers << text_layer(
+          text: line,
+          x: variant.content_left,
+          y: current_y,
+          font_family: "Bebas Neue",
+          font_size: variant.artist_font_size,
+          color: [ 255, 255, 255 ],
+          opacity: 0.98
+        )
+        current_y += artist_step
+      end
+
+      if title_lines.any?
+        current_y += variant.title_gap
+        title_lines.each do |line|
+          layers << text_layer(
+            text: line,
+            x: variant.content_left,
+            y: current_y,
+            font_family: "Oswald",
+            font_size: variant.title_font_size,
+            color: [ 255, 255, 255 ],
+            opacity: 0.92
+          )
+          current_y += title_step
+        end
+      end
+
+      current_y += variant.meta_gap
+      date_width = measure_text(date_text, font_name: "Oswald", font_size: variant.meta_font_size)
+      venue_x = variant.content_left + date_width + 26
+
+      layers << text_layer(
+        text: date_text,
+        x: variant.content_left,
+        y: current_y,
+        font_family: "Oswald",
+        font_size: variant.meta_font_size,
+        color: [ 255, 255, 255 ],
+        opacity: 0.98
+      )
+
+      if venue_text.present?
+        layers << text_layer(
+          text: venue_text,
+          x: venue_x,
+          y: current_y,
+          font_family: "Oswald",
+          font_size: variant.meta_font_size,
+          color: [ 255, 255, 255 ],
+          opacity: 0.98
+        )
+      end
+
+      layers
     end
 
     def fitted_meta_venue_text(venue_text, date_text:, variant:)
@@ -378,8 +385,34 @@ module Meta
       Vips::Image.text(CGI.escapeHTML(text.to_s), font: "#{font_name} #{font_size}", rgba: true).width
     end
 
-    def text_tag(text:, x:, y:, font_family:, font_size:, fill:, letter_spacing:)
-      %(<text x="#{x}" y="#{y}" fill="#{fill}" font-family="#{font_family}" font-size="#{font_size}" letter-spacing="#{letter_spacing}">#{CGI.escapeHTML(text.to_s)}</text>)
+    def composite_text_layers(base_image, layers)
+      return base_image if layers.empty?
+
+      positioned_layers = layers.map do |layer|
+        layer.image.embed(
+          layer.x,
+          layer.y,
+          base_image.width,
+          base_image.height,
+          extend: :background,
+          background: [ 0, 0, 0, 0 ]
+        ).copy(interpretation: :srgb)
+      end
+
+      base_image.composite(positioned_layers, Array.new(positioned_layers.size, "over"))
+    end
+
+    def text_layer(text:, x:, y:, font_family:, font_size:, color:, opacity:)
+      rendered_text = Vips::Image.text(
+        CGI.escapeHTML(text.to_s),
+        font: "#{font_family} #{font_size}",
+        rgba: true
+      )
+      alpha = rendered_text.extract_band(3).linear(opacity, 0)
+      rgb = rendered_text.new_from_image(color)
+      rgba = rgb.bandjoin(alpha).copy(interpretation: :srgb)
+
+      TextLayer.new(image: rgba, x:, y:)
     end
 
     def line_step(font_size, line_height)
