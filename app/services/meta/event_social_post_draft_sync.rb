@@ -60,7 +60,6 @@ module Meta
           "width" => rendered_card.width,
           "height" => rendered_card.height,
           "artist_lines" => rendered_card.artist_lines,
-          "title_lines" => rendered_card.title_lines,
           "venue_text" => rendered_card.venue_text
         }
       end

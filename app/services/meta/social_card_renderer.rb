@@ -4,10 +4,10 @@ require "net/http"
 
 module Meta
   class SocialCardRenderer
-    RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :title_lines, :venue_text)
+    RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :venue_text)
     TextLayer = Data.define(:image, :x, :y)
-    ARTIST_FONT_NAME = "DejaVu Sans Bold".freeze
-    BODY_FONT_NAME = "DejaVu Sans".freeze
+    ARTIST_FONT_NAME = "Bebas Neue".freeze
+    BODY_FONT_NAME = "Archivo Narrow".freeze
     Variant = Data.define(
       :key,
       :width,
@@ -19,12 +19,8 @@ module Meta
       :artist_font_size,
       :artist_line_height,
       :artist_max_lines,
-      :title_font_size,
-      :title_line_height,
-      :title_max_lines,
       :meta_font_size,
-      :meta_gap,
-      :title_gap
+      :meta_gap
     )
 
     VARIANTS = {
@@ -39,12 +35,8 @@ module Meta
         artist_font_size: 126,
         artist_line_height: 0.86,
         artist_max_lines: 3,
-        title_font_size: 58,
-        title_line_height: 1.0,
-        title_max_lines: 1,
         meta_font_size: 52,
-        meta_gap: 30,
-        title_gap: 24
+        meta_gap: 30
       ),
       facebook: Variant.new(
         key: :facebook,
@@ -57,12 +49,8 @@ module Meta
         artist_font_size: 126,
         artist_line_height: 0.86,
         artist_max_lines: 3,
-        title_font_size: 58,
-        title_line_height: 1.0,
-        title_max_lines: 1,
         meta_font_size: 52,
-        meta_gap: 30,
-        title_gap: 24
+        meta_gap: 30
       ),
       instagram: Variant.new(
         key: :instagram,
@@ -75,17 +63,17 @@ module Meta
         artist_font_size: 126,
         artist_line_height: 0.86,
         artist_max_lines: 4,
-        title_font_size: 58,
-        title_line_height: 1.0,
-        title_max_lines: 1,
         meta_font_size: 52,
-        meta_gap: 30,
-        title_gap: 24
+        meta_gap: 30
       )
     }.freeze
     FONT_CONFIG_MUTEX = Mutex.new
     FONT_CONFIG_PATH = Rails.root.join("tmp", "meta-social-card-fonts.conf").freeze
     FONT_CACHE_PATH = Rails.root.join("tmp", "fontconfig-cache").freeze
+    RUNTIME_FONT_DIRECTORIES = [
+      Rails.root.join("vendor/fonts/runtime").to_s,
+      "/usr/local/share/fonts/stuttgart-live"
+    ].freeze
     SYSTEM_FONT_CONFIG_PATH = "/etc/fonts/fonts.conf".freeze
     SYSTEM_FONT_DIRECTORIES = [
       "/usr/share/fonts",
@@ -127,13 +115,6 @@ module Meta
         max_lines: variant.artist_max_lines,
         uppercase: true
       )
-      title_lines = wrap_lines(
-        card_payload.fetch(:title),
-        font_name: BODY_FONT_NAME,
-        font_size: variant.title_font_size,
-        max_width: text_width_for(variant),
-        max_lines: variant.title_max_lines
-      )
       date_text = card_payload.fetch(:date_label).to_s.strip
       venue_text = fitted_meta_venue_text(card_payload.fetch(:venue_label), date_text:, variant:)
 
@@ -148,7 +129,6 @@ module Meta
         text_layers_for(
           variant:,
           artist_lines:,
-          title_lines:,
           date_text:,
           venue_text:
         )
@@ -161,7 +141,6 @@ module Meta
         width: variant.width,
         height: variant.height,
         artist_lines:,
-        title_lines:,
         venue_text:
       )
     end
@@ -227,13 +206,10 @@ module Meta
       SVG
     end
 
-    def text_layers_for(variant:, artist_lines:, title_lines:, date_text:, venue_text:)
+    def text_layers_for(variant:, artist_lines:, date_text:, venue_text:)
       artist_step = line_step(variant.artist_font_size, variant.artist_line_height)
-      title_step = line_step(variant.title_font_size, variant.title_line_height)
       artist_block_height = block_height(artist_lines.size, variant.artist_font_size, artist_step)
-      title_block_height = block_height(title_lines.size, variant.title_font_size, title_step)
       total_height = artist_block_height + variant.meta_font_size + variant.meta_gap
-      total_height += variant.title_gap + title_block_height if title_lines.any?
       top = variant.height - variant.bottom_padding - total_height
       current_y = top
       layers = []
@@ -249,22 +225,6 @@ module Meta
           opacity: 0.98
         )
         current_y += artist_step
-      end
-
-      if title_lines.any?
-        current_y += variant.title_gap
-        title_lines.each do |line|
-          layers << text_layer(
-            text: line,
-            x: variant.content_left,
-            y: current_y,
-            font_family: BODY_FONT_NAME,
-            font_size: variant.title_font_size,
-            color: [ 255, 255, 255 ],
-            opacity: 0.92
-          )
-          current_y += title_step
-        end
       end
 
       current_y += variant.meta_gap
@@ -463,7 +423,7 @@ module Meta
         <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
         <fontconfig>
           <include ignore_missing="yes">#{SYSTEM_FONT_CONFIG_PATH}</include>
-          <dir>#{Rails.root.join("app/assets/fonts")}</dir>
+          #{RUNTIME_FONT_DIRECTORIES.map { |directory| "<dir>#{directory}</dir>" }.join("\n  ")}
           #{SYSTEM_FONT_DIRECTORIES.map { |directory| "<dir>#{directory}</dir>" }.join("\n  ")}
           <cachedir>#{FONT_CACHE_PATH}</cachedir>
           <config></config>

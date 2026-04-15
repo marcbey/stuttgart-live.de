@@ -59,7 +59,6 @@ module Meta
     def card_payload
       {
         artist_name: event.artist_name.to_s.strip,
-        title: event.title.to_s.strip,
         date_label: date_label,
         venue_label: event.venue.to_s.strip
       }

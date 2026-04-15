@@ -29,5 +29,7 @@ class Meta::EventSocialPostDraftSyncTest < ActiveSupport::TestCase
     assert_equal [ 1080, 1350 ], image_dimensions(social_post.publish_image_instagram.download)
     assert_equal 1080, social_post.payload_snapshot.dig("rendered_variants", "instagram", "width")
     assert_equal 1350, social_post.payload_snapshot.dig("rendered_variants", "instagram", "height")
+    assert_nil social_post.payload_snapshot.dig("rendered_variants", "facebook", "title_lines")
+    assert_nil social_post.payload_snapshot.dig("rendered_variants", "instagram", "title_lines")
   end
 end
