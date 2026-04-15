@@ -1331,8 +1331,15 @@ grid-template-columns: minmax(0, 1fr) auto;
 
 .backend-section-header-actions {
 display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
   justify-content: flex-end;
   justify-self: end;
+}
+
+.backend-section-header-actions .button_to {
+margin: 0;
 }
 
 .backend-section-header h2,
@@ -1367,6 +1374,21 @@ display: grid;
   gap: 1rem;
 }
 
+.social-post-health-header {
+display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.45rem;
+}
+
+.social-post-health-list {
+margin: 0.6rem 0 0;
+  padding-left: 1.1rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
 .social-post-card {
 border: 1px solid rgba(17, 17, 17, 0.12);
   background: rgba(255, 255, 255, 0.92);
@@ -1381,15 +1403,17 @@ display: grid;
 .social-post-preview {
 border: 1px solid rgba(17, 17, 17, 0.08);
   background: #f7f4f1;
+  aspect-ratio: 1 / 1;
   min-height: 12rem;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
 }
 
 .social-post-preview-image {
 width: 100%;
-  max-height: 16rem;
+  height: 100%;
   object-fit: cover;
 }
 

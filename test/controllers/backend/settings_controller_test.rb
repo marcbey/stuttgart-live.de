@@ -21,9 +21,10 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Einstellungen"
     assert_select "[data-controller='settings-tabs']", count: 1
-    assert_select "[role='tab']", count: 6
-    assert_select "#settings-tab-sks-promoter-ids[aria-selected='true']", count: 1
-    assert_select "form[action='#{backend_settings_path(section: :sks_promoter_ids)}'] textarea[name='app_setting[sks_promoter_ids_text]']", count: 1
+    assert_select "[role='tab']", count: 7
+    assert_select "#settings-tab-meta-connection[aria-selected='true']", count: 1
+    assert_select "form[action='#{backend_settings_path(section: :sks_promoter_ids)}'] textarea[name='app_setting[sks_promoter_ids_text]']", count: 0
+    assert_select "a[href='#{start_backend_meta_connection_path}'][data-turbo='false']", count: 1
     assert_select "textarea[name='app_setting[llm_enrichment_prompt_template_text]']", count: 0
   end
 
@@ -46,7 +47,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     get edit_backend_settings_url(section: :unknown)
 
     assert_response :success
-    assert_select "#settings-tab-sks-promoter-ids[aria-selected='true']", count: 1
+    assert_select "#settings-tab-meta-connection[aria-selected='true']", count: 1
   end
 
   test "admin can load a section partial" do

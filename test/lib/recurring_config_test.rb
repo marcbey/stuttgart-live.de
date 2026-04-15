@@ -14,6 +14,14 @@ class RecurringConfigTest < ActiveSupport::TestCase
       production.fetch("hourly_publish_scheduled_events").fetch("schedule")
     )
     assert_equal(
+      "Meta::CheckConnectionHealthJob.perform_later",
+      production.fetch("hourly_check_meta_connection_health").fetch("command")
+    )
+    assert_equal(
+      "every hour at minute 32",
+      production.fetch("hourly_check_meta_connection_health").fetch("schedule")
+    )
+    assert_equal(
       "Events::Retention::PruneStaleUnpublishedEventsJob.perform_later",
       production.fetch("daily_event_retention_cleanup").fetch("command")
     )

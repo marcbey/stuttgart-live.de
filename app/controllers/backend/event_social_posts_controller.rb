@@ -114,6 +114,7 @@ module Backend
 
     def enqueue_publish!(social_post)
       social_post.ensure_publishable!
+      meta_access_status.ensure_publishable!(force: true)
       social_post.mark_publishing!
       Meta::PublishEventSocialPostJob.perform_later(social_post.id, current_user.id)
     end
@@ -128,6 +129,10 @@ module Backend
 
     def platform_label(social_post)
       view_context.event_social_post_platform_label(social_post.platform)
+    end
+
+    def meta_access_status
+      @meta_access_status ||= Meta::AccessStatus.new
     end
   end
 end

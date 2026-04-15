@@ -231,6 +231,22 @@ class Event < ApplicationRecord
     end
   end
 
+  def social_publication_status
+    posts = association(:event_social_posts).loaded? ? event_social_posts : event_social_posts.to_a
+    return "draft" if posts.empty?
+
+    published_count = posts.count(&:published?)
+    failed_count = posts.count(&:failed?)
+
+    return "partial" if published_count.positive? && failed_count.positive?
+    return "published" if published_count == posts.size
+    return "failed" if failed_count == posts.size
+    return "publishing" if posts.any?(&:publishing?)
+    return "approved" if posts.any?(&:approved?)
+
+    "draft"
+  end
+
   def sync_publication_fields(user: nil)
     self.published_by ||= user if published? && user.present?
     self.published_by = nil unless published?

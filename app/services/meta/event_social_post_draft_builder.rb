@@ -1,5 +1,8 @@
 module Meta
   class EventSocialPostDraftBuilder
+    Draft = Data.define(:attributes, :card_payload, :background_source)
+    BackgroundSource = Data.define(:source_type, :attachment, :remote_url, :focus_x, :focus_y, :zoom, :source_label)
+
     attr_reader :event, :platform
 
     def initialize(event:, platform:)
@@ -7,13 +10,21 @@ module Meta
       @platform = platform.to_s
     end
 
+    def build
+      Draft.new(
+        attributes: {
+          caption:,
+          target_url:,
+          image_url: nil,
+          payload_snapshot: payload_snapshot
+        },
+        card_payload:,
+        background_source:
+      )
+    end
+
     def attributes
-      {
-        caption:,
-        target_url:,
-        image_url:,
-        payload_snapshot: payload_snapshot
-      }
+      build.attributes
     end
 
     private
@@ -40,63 +51,87 @@ module Meta
     end
 
     def target_url
-      return if url_options[:host].blank?
+      return if Meta::PublicAssetUrl.url_options[:host].blank?
 
-      Rails.application.routes.url_helpers.event_url(event.slug, **url_options)
+      Rails.application.routes.url_helpers.event_url(event.slug, **Meta::PublicAssetUrl.url_options)
     end
 
-    def image_url
-      editorial_event_image_url || promotion_banner_image_url || social_card_image_url
+    def card_payload
+      {
+        artist_name: event.artist_name.to_s.strip,
+        title: event.title.to_s.strip,
+        date_label: date_label,
+        venue_label: event.venue.to_s.strip
+      }
     end
 
-    def editorial_event_image_url
-      media_url_for(event.event_image)
+    def date_label
+      return "" unless event.start_at.present?
+
+      I18n.l(event.start_at.to_date, format: "%d.%m.%Y")
     end
 
-    def social_card_image_url
-      media_url_for(event.image_for(slot: :social_card, breakpoint: :desktop))
+    def background_source
+      editorial_background_source || promotion_banner_background_source || social_card_background_source
     end
 
-    def promotion_banner_image_url
+    def editorial_background_source
+      image = event.event_image
+      return unless image.is_a?(EventImage) && image.file.attached?
+
+      BackgroundSource.new(
+        source_type: :attachment,
+        attachment: image.file,
+        remote_url: nil,
+        focus_x: image.card_focus_x_value,
+        focus_y: image.card_focus_y_value,
+        zoom: image.card_zoom_value,
+        source_label: "editorial_event_image"
+      )
+    end
+
+    def promotion_banner_background_source
       return unless event.promotion_banner_image.attached?
 
-      public_url_for(optimized_promotion_banner_representation)
+      BackgroundSource.new(
+        source_type: :attachment,
+        attachment: event.promotion_banner_image,
+        remote_url: nil,
+        focus_x: event.promotion_banner_image_focus_x_value,
+        focus_y: event.promotion_banner_image_focus_y_value,
+        zoom: event.promotion_banner_image_zoom_value,
+        source_label: "promotion_banner_image"
+      )
     end
 
-    def optimized_promotion_banner_representation
-      event.processed_optimized_promotion_banner_image_variant
-    rescue Event::ProcessingError, LoadError
-      event.promotion_banner_image
-    end
-
-    def media_url_for(image)
+    def social_card_background_source
+      image = event.image_for(slot: :social_card, breakpoint: :desktop)
       return if image.blank?
-      return image.image_url.to_s.strip.presence unless image.is_a?(EventImage)
-      return unless image.file.attached?
 
-      public_url_for(optimized_event_representation(image))
-    end
-
-    def optimized_event_representation(image)
-      image.processed_optimized_variant
-    rescue EventImage::ProcessingError, LoadError
-      image.file
-    end
-
-    def public_url_for(record)
-      return if url_options[:host].blank?
-
-      PublicMediaUrl.url_for(record, url_options:) ||
-        Rails.application.routes.url_helpers.rails_storage_proxy_url(record, **url_options)
-    end
-
-    def url_options
-      @url_options ||= begin
-        options = Rails.application.config.action_mailer.default_url_options.to_h.symbolize_keys
-        options[:host] ||= HetznerDeployConfig.app_host_if_present
-        options[:protocol] ||= options[:host].to_s.include?("localhost") ? "http" : "https"
-        options.compact
+      if image.is_a?(EventImage) && image.file.attached?
+        return BackgroundSource.new(
+          source_type: :attachment,
+          attachment: image.file,
+          remote_url: nil,
+          focus_x: image.card_focus_x_value,
+          focus_y: image.card_focus_y_value,
+          zoom: image.card_zoom_value,
+          source_label: "event_image_fallback"
+        )
       end
+
+      remote_url = image.image_url.to_s.strip.presence
+      return if remote_url.blank?
+
+      BackgroundSource.new(
+        source_type: :remote_url,
+        attachment: nil,
+        remote_url:,
+        focus_x: EventImage::DEFAULT_CARD_FOCUS_X,
+        focus_y: EventImage::DEFAULT_CARD_FOCUS_Y,
+        zoom: EventImage::DEFAULT_CARD_ZOOM,
+        source_label: "import_image"
+      )
     end
 
     def payload_snapshot
@@ -104,7 +139,8 @@ module Meta
         "platform" => platform,
         "caption" => caption,
         "target_url" => target_url,
-        "image_url" => image_url,
+        "image_url" => nil,
+        "background_source" => background_source&.source_label,
         "generated_at" => Time.current.iso8601
       }
     end

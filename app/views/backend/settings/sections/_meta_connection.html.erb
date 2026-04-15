@@ -1,0 +1,143 @@
+<% connection = @meta_connection %>
+<% access_status = @meta_access_status %>
+<% page_targets = connection&.social_connection_targets&.facebook_pages&.includes(:child_targets)&.order(:name, :external_id) || [] %>
+
+<section class="backend-section backend-section-compact">
+  <div class="backend-section-header">
+    <div>
+      <h2>Meta Publishing</h2>
+      <p>Gemeinsames Onboarding für Facebook Pages und verknüpfte Instagram Professional Accounts.</p>
+    </div>
+    <div class="backend-section-header-actions">
+      <%= link_to "Facebook & Instagram verbinden",
+                  start_backend_meta_connection_path,
+                  class: "button button-save-primary button-compact",
+                  data: { turbo: false } %>
+      <%= button_to "Status prüfen",
+                    refresh_status_backend_meta_connection_path,
+                    method: :post,
+                    class: "button button-secondary button-compact" %>
+    </div>
+  </div>
+
+  <div class="backend-section-body">
+    <div class="flash <%= access_status.error? ? "flash-alert" : "flash-notice" %>">
+      <div class="social-post-health-header">
+        <strong>Verbindungsstatus</strong>
+        <span class="<%= meta_access_status_badge_class(access_status) %>"><%= social_connection_status_label(access_status.connection_status) %></span>
+      </div>
+      <div><%= access_status.summary %></div>
+
+      <div class="social-post-meta-list">
+        <div>
+          <span class="form-label">Auth-Modus</span>
+          <p><code>facebook_login_for_business</code></p>
+        </div>
+        <% if access_status.page_name.present? %>
+          <div>
+            <span class="form-label">Facebook Page</span>
+            <p><%= access_status.page_name %></p>
+          </div>
+        <% end %>
+        <% if access_status.instagram_username.present? %>
+          <div>
+            <span class="form-label">Instagram</span>
+            <p>@<%= access_status.instagram_username %></p>
+          </div>
+        <% end %>
+        <% if connection&.connected_at.present? %>
+          <div>
+            <span class="form-label">Verbunden seit</span>
+            <p><%= l(connection.connected_at, format: "%d.%m.%Y %H:%M") %></p>
+          </div>
+        <% end %>
+        <% if access_status.checked_at.present? %>
+          <div>
+            <span class="form-label">Letzter Token-Check</span>
+            <p><%= l(access_status.checked_at, format: "%d.%m.%Y %H:%M") %></p>
+          </div>
+        <% end %>
+        <% if access_status.expires_at.present? %>
+          <div>
+            <span class="form-label">Token gültig bis</span>
+            <p><%= l(access_status.expires_at, format: "%d.%m.%Y %H:%M") %></p>
+          </div>
+        <% end %>
+        <% if connection&.reauth_required_at.present? %>
+          <div>
+            <span class="form-label">Re-Auth seit</span>
+            <p><%= l(connection.reauth_required_at, format: "%d.%m.%Y %H:%M") %></p>
+          </div>
+        <% end %>
+        <% if connection&.last_error.present? %>
+          <div>
+            <span class="form-label">Letzter Fehler</span>
+            <p><%= connection.last_error %></p>
+          </div>
+        <% end %>
+      </div>
+
+      <% if access_status.details.any? %>
+        <ul class="social-post-health-list">
+          <% access_status.details.each do |detail| %>
+            <li><%= detail %></li>
+          <% end %>
+        </ul>
+      <% end %>
+    </div>
+  </div>
+
+  <% if page_targets.any? %>
+    <div class="backend-section-body">
+      <h3>Verfügbare Facebook Pages</h3>
+      <div class="social-post-platform-grid">
+        <% page_targets.each do |target| %>
+          <% instagram_target = target.child_targets.find(&:instagram_account?) %>
+          <article class="social-post-card">
+            <div class="backend-section-header backend-section-header-with-actions">
+              <div>
+                <h3><%= target.display_name %></h3>
+                <p>
+                  <span class="<%= target.selected? ? "status-badge status-badge-published" : "status-badge status-badge-default" %>">
+                    <%= target.selected? ? "Ausgewählt" : "Verfügbar" %>
+                  </span>
+                </p>
+              </div>
+              <div class="backend-section-header-actions">
+                <% unless target.selected? %>
+                  <%= button_to "Diese Seite verbinden",
+                                select_target_backend_meta_connection_path(target_id: target.id),
+                                method: :patch,
+                                class: "button button-secondary button-compact" %>
+                <% end %>
+              </div>
+            </div>
+
+            <div class="social-post-card-body">
+              <div class="social-post-meta-list">
+                <div>
+                  <span class="form-label">Page-ID</span>
+                  <p><code><%= target.external_id %></code></p>
+                </div>
+                <div>
+                  <span class="form-label">Instagram</span>
+                  <% if instagram_target.present? %>
+                    <p>@<%= instagram_target.username.presence || instagram_target.external_id %></p>
+                  <% else %>
+                    <p class="form-hint">Kein verknüpfter Instagram Professional Account gefunden.</p>
+                  <% end %>
+                </div>
+                <% if target.last_synced_at.present? %>
+                  <div>
+                    <span class="form-label">Zuletzt synchronisiert</span>
+                    <p><%= l(target.last_synced_at, format: "%d.%m.%Y %H:%M") %></p>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </article>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</section>

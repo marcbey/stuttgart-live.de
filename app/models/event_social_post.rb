@@ -5,6 +5,10 @@ class EventSocialPost < ApplicationRecord
   belongs_to :event
   belongs_to :approved_by, class_name: "User", optional: true
   belongs_to :published_by, class_name: "User", optional: true
+  has_many :publish_attempts, dependent: :destroy
+  has_one_attached :preview_image
+  has_one_attached :publish_image_facebook
+  has_one_attached :publish_image_instagram
 
   validates :platform, presence: true, inclusion: { in: PLATFORMS }, uniqueness: { scope: :event_id }
   validates :status, presence: true, inclusion: { in: STATUSES }
@@ -42,14 +46,43 @@ class EventSocialPost < ApplicationRecord
     !published? && !publishing?
   end
 
+  def preview_image_url
+    asset_url_for(preview_image)
+  end
+
+  def publish_image_facebook_url
+    asset_url_for(publish_image_facebook)
+  end
+
+  def publish_image_instagram_url
+    asset_url_for(publish_image_instagram)
+  end
+
+  def publish_image_url_for(target_platform = platform)
+    case target_platform.to_s
+    when "facebook"
+      publish_image_facebook_url.presence || image_url
+    when "instagram"
+      publish_image_instagram_url.presence || image_url
+    else
+      image_url
+    end
+  end
+
   def ready_for_publish?
     approved? || queued_for_publish? || (failed? && approved_at.present?)
   end
 
   def approval_errors
     errors = []
-    errors << "Event-Link fehlt oder ist ungültig." unless valid_http_url?(target_url)
-    errors << "Bild-Link fehlt oder ist ungültig." unless valid_http_url?(image_url)
+    target_url_valid = valid_http_url?(target_url)
+    publish_image_url = publish_image_url_for(platform)
+    image_url_valid = valid_http_url?(publish_image_url)
+
+    errors << "Event-Link fehlt oder ist ungültig." unless target_url_valid
+    errors << "Bild-Link fehlt oder ist ungültig." unless image_url_valid
+    errors << "Event-Link ist nicht öffentlich erreichbar." if target_url_valid && !Meta::PublicUrlGuard.public_url?(target_url)
+    errors << "Bild-Link ist nicht öffentlich erreichbar." if image_url_valid && !Meta::PublicUrlGuard.public_url?(publish_image_url)
     errors
   end
 
@@ -161,5 +194,11 @@ class EventSocialPost < ApplicationRecord
     return payload_snapshot if payload.blank?
 
     payload_snapshot.deep_merge(payload.deep_stringify_keys)
+  end
+
+  def asset_url_for(attachment)
+    return unless attachment.attached?
+
+    Meta::PublicAssetUrl.url_for(attachment)
   end
 end

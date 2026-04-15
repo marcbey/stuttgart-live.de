@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_14_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_15_100200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -449,6 +449,30 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_150000) do
     t.index ["source_type"], name: "index_provider_priorities_on_source_type", unique: true
   end
 
+  create_table "publish_attempts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "error_code"
+    t.text "error_message"
+    t.bigint "event_social_post_id", null: false
+    t.datetime "finished_at"
+    t.bigint "initiated_by_id"
+    t.string "platform", null: false
+    t.jsonb "request_snapshot", default: {}, null: false
+    t.jsonb "response_snapshot", default: {}, null: false
+    t.bigint "social_connection_id"
+    t.bigint "social_connection_target_id"
+    t.datetime "started_at", null: false
+    t.string "status", default: "started", null: false
+    t.datetime "updated_at", null: false
+    t.index ["event_social_post_id", "created_at"], name: "index_publish_attempts_on_event_social_post_id_and_created_at"
+    t.index ["event_social_post_id"], name: "index_publish_attempts_on_event_social_post_id"
+    t.index ["initiated_by_id"], name: "index_publish_attempts_on_initiated_by_id"
+    t.index ["platform"], name: "index_publish_attempts_on_platform"
+    t.index ["social_connection_id"], name: "index_publish_attempts_on_social_connection_id"
+    t.index ["social_connection_target_id"], name: "index_publish_attempts_on_social_connection_target_id"
+    t.index ["status"], name: "index_publish_attempts_on_status"
+  end
+
   create_table "raw_event_imports", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.jsonb "detail_payload", default: {}, null: false
@@ -469,6 +493,49 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_150000) do
     t.string "user_agent"
     t.bigint "user_id", null: false
     t.index ["user_id"], name: "index_sessions_on_user_id"
+  end
+
+  create_table "social_connection_targets", force: :cascade do |t|
+    t.text "access_token"
+    t.datetime "created_at", null: false
+    t.string "external_id", null: false
+    t.text "last_error"
+    t.datetime "last_synced_at"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "name"
+    t.bigint "parent_target_id"
+    t.boolean "selected", default: false, null: false
+    t.bigint "social_connection_id", null: false
+    t.string "status", default: "available", null: false
+    t.string "target_type", null: false
+    t.datetime "token_expires_at"
+    t.datetime "updated_at", null: false
+    t.string "username"
+    t.index ["parent_target_id"], name: "index_social_connection_targets_on_parent_target_id"
+    t.index ["social_connection_id", "target_type", "external_id"], name: "index_social_connection_targets_on_connection_and_target", unique: true
+    t.index ["social_connection_id", "target_type", "selected"], name: "index_social_connection_targets_on_connection_type_selected"
+    t.index ["social_connection_id"], name: "index_social_connection_targets_on_social_connection_id"
+    t.index ["status"], name: "index_social_connection_targets_on_status"
+  end
+
+  create_table "social_connections", force: :cascade do |t|
+    t.string "auth_mode", null: false
+    t.datetime "connected_at"
+    t.string "connection_status", default: "disconnected", null: false
+    t.datetime "created_at", null: false
+    t.string "external_user_id"
+    t.jsonb "granted_scopes", default: [], null: false
+    t.text "last_error"
+    t.datetime "last_refresh_at"
+    t.datetime "last_token_check_at"
+    t.jsonb "metadata", default: {}, null: false
+    t.string "provider", null: false
+    t.datetime "reauth_required_at"
+    t.datetime "updated_at", null: false
+    t.text "user_access_token"
+    t.datetime "user_token_expires_at"
+    t.index ["connection_status"], name: "index_social_connections_on_connection_status"
+    t.index ["provider"], name: "index_social_connections_on_provider", unique: true
   end
 
   create_table "static_pages", force: :cascade do |t|
@@ -536,6 +603,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_14_150000) do
   add_foreign_key "llm_genre_grouping_groups", "llm_genre_grouping_snapshots", column: "snapshot_id"
   add_foreign_key "llm_genre_grouping_snapshots", "import_runs"
   add_foreign_key "login_attempts", "users"
+  add_foreign_key "publish_attempts", "event_social_posts"
+  add_foreign_key "publish_attempts", "social_connection_targets"
+  add_foreign_key "publish_attempts", "social_connections"
+  add_foreign_key "publish_attempts", "users", column: "initiated_by_id"
   add_foreign_key "raw_event_imports", "import_sources"
   add_foreign_key "sessions", "users"
+  add_foreign_key "social_connection_targets", "social_connection_targets", column: "parent_target_id"
+  add_foreign_key "social_connection_targets", "social_connections"
 end

@@ -1,17 +1,20 @@
 require "test_helper"
 
 class Meta::EventSocialPostDraftBuilderTest < ActiveSupport::TestCase
-  test "builds draft attributes from event data and import image" do
-    attributes = Meta::EventSocialPostDraftBuilder.new(
+  test "builds draft data from event data and imported background image" do
+    draft = Meta::EventSocialPostDraftBuilder.new(
       event: events(:published_one),
       platform: "facebook"
-    ).attributes
+    ).build
 
-    assert_equal "https://example.com/events/published-event", attributes[:target_url]
-    assert_equal "https://example.com/published.jpg", attributes[:image_url]
-    assert_includes attributes[:caption], "Published Artist | Published Event"
-    assert_includes attributes[:caption], "Mehr Infos und Tickets:"
-    assert_equal "facebook", attributes[:payload_snapshot]["platform"]
+    assert_equal "https://example.com/events/published-event", draft.attributes[:target_url]
+    assert_nil draft.attributes[:image_url]
+    assert_includes draft.attributes[:caption], "Published Artist | Published Event"
+    assert_includes draft.attributes[:caption], "Mehr Infos und Tickets:"
+    assert_equal "facebook", draft.attributes[:payload_snapshot]["platform"]
+    assert_equal :remote_url, draft.background_source.source_type
+    assert_equal "https://example.com/published.jpg", draft.background_source.remote_url
+    assert_equal "import_image", draft.attributes[:payload_snapshot]["background_source"]
   end
 
   test "prefers editorial event image over imported fallback images" do
@@ -29,13 +32,14 @@ class Meta::EventSocialPostDraftBuilderTest < ActiveSupport::TestCase
     )
     event_image.save!
 
-    attributes = Meta::EventSocialPostDraftBuilder.new(
+    draft = Meta::EventSocialPostDraftBuilder.new(
       event:,
       platform: "facebook"
-    ).attributes
+    ).build
 
-    assert_match(%r{\Ahttps://example.com/rails/active_storage/}, attributes[:image_url])
-    refute_equal "https://example.com/published.jpg", attributes[:image_url]
+    assert_equal :attachment, draft.background_source.source_type
+    assert_equal event_image.file.blob, draft.background_source.attachment.blob
+    assert_equal "editorial_event_image", draft.background_source.source_label
   end
 
   test "falls back to promotion banner image when no event image is present" do
@@ -56,9 +60,11 @@ class Meta::EventSocialPostDraftBuilderTest < ActiveSupport::TestCase
       content_type: "image/png"
     )
 
-    attributes = Meta::EventSocialPostDraftBuilder.new(event:, platform: "instagram").attributes
+    draft = Meta::EventSocialPostDraftBuilder.new(event:, platform: "instagram").build
 
-    assert_equal "https://example.com/events/promotion-only-event", attributes[:target_url]
-    assert_match(%r{\Ahttps://example.com/rails/active_storage/}, attributes[:image_url])
+    assert_equal "https://example.com/events/promotion-only-event", draft.attributes[:target_url]
+    assert_equal :attachment, draft.background_source.source_type
+    assert_equal event.promotion_banner_image.blob, draft.background_source.attachment.blob
+    assert_equal "promotion_banner_image", draft.background_source.source_label
   end
 end

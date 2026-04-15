@@ -31,6 +31,21 @@ class EventSocialPostTest < ActiveSupport::TestCase
     assert_raises(Meta::Error) { social_post.ensure_approvable! }
   end
 
+  test "rejects localhost publish urls because meta cannot fetch them" do
+    social_post = events(:published_one).event_social_posts.build(
+      platform: "facebook",
+      status: "draft",
+      caption: "Caption",
+      target_url: "http://localhost:3000/events/test",
+      image_url: "http://localhost:3000/rails/active_storage/blobs/test.png"
+    )
+
+    assert_equal [
+      "Event-Link ist nicht öffentlich erreichbar.",
+      "Bild-Link ist nicht öffentlich erreichbar."
+    ], social_post.approval_errors
+  end
+
   test "keeps retry eligibility after a failed publish" do
     social_post = events(:published_one).event_social_posts.create!(
       platform: "facebook",

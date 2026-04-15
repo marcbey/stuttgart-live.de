@@ -59,6 +59,23 @@ require "zlib"
 require_relative "test_helpers/session_test_helper"
 require "stringio"
 
+ActiveRecord::Encryption.configure(
+  primary_key: "test-primary-key-1234567890123456",
+  deterministic_key: "test-deterministic-key-1234567890",
+  key_derivation_salt: "test-key-derivation-salt-1234567890"
+)
+
+if RUBY_PLATFORM.include?("darwin")
+  begin
+    require "vips"
+
+    Meta::SocialCardRenderer.new.send(:ensure_font_config!)
+    Vips::Image.text("Warmup", font: "Bebas Neue 12", rgba: true).width
+  rescue LoadError, StandardError => error
+    warn("Skipping SocialCardRenderer warmup: #{error.class}: #{error.message}")
+  end
+end
+
 if defined?(Bullet)
   module BulletRequestLifecycle
     def before_setup
@@ -85,8 +102,8 @@ end
 
 module ActiveSupport
   class TestCase
-    # Run tests in parallel with specified workers
-    parallelize(workers: :number_of_processors)
+    # libvips text rendering can crash on macOS after fork due CoreText initialization.
+    parallelize(workers: RUBY_PLATFORM.include?("darwin") ? 1 : :number_of_processors)
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all

@@ -1,8 +1,15 @@
 module Backend
   class SettingsController < BaseController
-    DEFAULT_SECTION = "sks_promoter_ids".freeze
+    DEFAULT_SECTION = "meta_connection".freeze
 
     SECTIONS = [
+      {
+        key: "meta_connection",
+        label: "Meta Publishing",
+        panel_id: "settings-panel-meta-connection",
+        tab_id: "settings-tab-meta-connection",
+        partial: "backend/settings/sections/meta_connection"
+      },
       {
         key: "sks_promoter_ids",
         label: "SKS Promoter IDs",
@@ -104,6 +111,9 @@ module Backend
 
     def load_active_section
       case @active_section_key
+      when "meta_connection"
+        @meta_connection = SocialConnection.includes(:social_connection_targets).find_by(provider: "meta")
+        @meta_access_status = Meta::AccessStatus.new.call
       when "sks_promoter_ids"
         @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
       when "sks_organizer_notes"
@@ -158,6 +168,8 @@ module Backend
 
     def active_section_records
       case @active_section_key
+      when "meta_connection"
+        []
       when "sks_promoter_ids"
         [ @sks_promoter_ids_setting ]
       when "sks_organizer_notes"
@@ -181,6 +193,8 @@ module Backend
 
     def active_settings_params
       case @active_section_key
+      when "meta_connection"
+        ActionController::Parameters.new.permit!
       when "sks_promoter_ids"
         params.require(:app_setting).permit(:sks_promoter_ids_text)
       when "sks_organizer_notes"

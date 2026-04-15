@@ -35,6 +35,12 @@ Rails.application.routes.draw do
 
   namespace :backend do
     resource :account_password, only: [ :edit, :update ]
+    resource :meta_connection, only: [ :show ] do
+      get :start
+      get :callback
+      patch :select_target
+      post :refresh_status
+    end
     resource :settings, only: [ :edit, :update ] do
       get :section, on: :collection
     end

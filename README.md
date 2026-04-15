@@ -155,6 +155,8 @@ Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In dies
 
 Das Backend unterstützt einen bewusst einfachen Freigabe-Workflow für Social-Posts. Pro Event und Plattform gibt es genau einen `EventSocialPost`. Unterstützt werden aktuell `facebook` und `instagram`.
 
+Die Meta-Verbindung wird dabei nicht mehr über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über einen persistierten Onboarding- und Lifecycle-Flow im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Facebook Login for Business, wählt die gewünschte Facebook Page aus und speichert damit zugleich den verknüpften Instagram Professional Account. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
+
 Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
 1. Zuerst wird pro Plattform ein Draft erzeugt oder neu generiert.
@@ -172,9 +174,16 @@ Wichtig für die Generierung:
 Wichtig für die Veröffentlichung:
 
 - Gesendet werden nur Events, die bereits öffentlich live sind. Ein geplantes `published_at` in der Zukunft reicht nicht.
-- Facebook wird als Foto-Post über die verknüpfte Page veröffentlicht.
-- Instagram wird über einen Media-Container und anschließendes `media_publish` veröffentlicht.
+- Facebook wird als Foto-Post über die ausgewählte und persistierte Meta-Page veröffentlicht.
+- Instagram wird über den mit dieser Page verknüpften persistierten Instagram Professional Account per Media-Container und anschließendem `media_publish` veröffentlicht.
 - Fehlgeschlagene Posts bleiben sichtbar und können nach einer Korrektur der Konfiguration erneut gesendet werden.
+
+Wichtig für Betrieb und Architektur:
+
+- Onboarding und Publishing sind strikt getrennt.
+- Facebook und Instagram bleiben intern zwei getrennte Publish-Ziele.
+- Die bestehenden Graph-API-Payloads wurden bewusst beibehalten; umgestellt wurde vor allem die Credential-Herkunft.
+- Token-Gültigkeit wird regelmäßig geprüft, serverseitige Refresh-Versuche laufen über einen wiederkehrenden Job, und `reauth_required` blockiert Publishing explizit statt implizit zu scheitern.
 
 ### Wie Event-Reihen funktionieren
 
@@ -456,6 +465,16 @@ Damit Facebook- und Instagram-Posts aus dem Backend funktionieren, muss das exte
 Die Anwendung erwartet aktuell genau eine globale Konfiguration für beide Plattformen. Es gibt also keinen OAuth-Connect-Flow pro Redaktionsnutzer und keine Auswahl mehrerer Pages oder Instagram-Accounts im Backend.
 
 Wenn ein Token rotiert oder die Page neu verknüpft wird, reicht es, die betroffenen `meta.*`-Einträge in `config/credentials.yml.enc` zu aktualisieren und anschließend einen Test-Post im Backend erneut zu senden.
+
+Im Social-Tab prüft die App die Meta-Verbindung zusätzlich aktiv gegen die Graph API. Dadurch werden abgelaufene oder falsch berechtigte Tokens schon vor dem Enqueue eines Publish-Jobs sichtbar. Wenn zusätzlich `meta.app_secret` gesetzt ist, kann die Anwendung auch das von Meta gemeldete Ablaufdatum des Tokens anzeigen. Ohne `meta.app_secret` bleibt die Live-Prüfung der Page- und Instagram-Verknüpfung aktiv, aber das Ablaufdatum selbst kann nicht verlässlich angezeigt werden.
+
+Beim Erzeugen eines Social-Drafts rendert die App zusätzlich eigene Kartenbilder im Highlight-Stil aus dem ausgewählten Eventbild. Dabei entstehen bewusst getrennte Varianten:
+
+- eine quadratische Backend-Vorschau (`preview_image`)
+- ein quadratisches Facebook-Bild (`publish_image_facebook`)
+- ein 4:5-Instagram-Bild (`publish_image_instagram`)
+
+Die Redaktionsvorschau im Backend bleibt dadurch stabil quadratisch, während Instagram trotzdem ein höheres Feed-Format erhält. Lange Artist-, Titel- und Venue-Texte werden serverseitig mit `...` gekürzt, damit das Layout nicht ausbricht.
 
 ### Typische Arbeitsweisen
 

@@ -7,6 +7,10 @@ production:
     command: "Events::Publication::PublishScheduledEventsJob.perform_later"
     schedule: every hour at minute 22
 
+  hourly_check_meta_connection_health:
+    command: "Meta::CheckConnectionHealthJob.perform_later"
+    schedule: every hour at minute 32
+
   daily_import_runs:
     command: "Importing::DailyRunJob.perform_later"
     schedule: every day at 3:05am

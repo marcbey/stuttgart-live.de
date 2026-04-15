@@ -6,8 +6,9 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     platform_publishers = {
       "facebook" => SuccessfulPlatformPublisher.new("media-1", "post-1")
     }
+    access_status = SuccessfulAccessStatus.new
 
-    Meta::EventSocialPostPublisher.new(platform_publishers:).call(
+    Meta::EventSocialPostPublisher.new(platform_publishers:, access_status:).call(
       event_social_post: social_post,
       user: users(:one)
     )
@@ -17,6 +18,8 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     assert_equal "media-1", social_post.remote_media_id
     assert_equal "post-1", social_post.remote_post_id
     assert_equal users(:one), social_post.published_by
+    assert_equal 1, social_post.publish_attempts.count
+    assert_equal "succeeded", social_post.publish_attempts.last.status
   end
 
   test "marks the social post as failed when publishing raises" do
@@ -24,9 +27,10 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     platform_publishers = {
       "facebook" => FailingPlatformPublisher.new
     }
+    access_status = SuccessfulAccessStatus.new
 
     error = assert_raises(Meta::Error) do
-      Meta::EventSocialPostPublisher.new(platform_publishers:).call(
+      Meta::EventSocialPostPublisher.new(platform_publishers:, access_status:).call(
         event_social_post: social_post,
         user: users(:one)
       )
@@ -38,6 +42,28 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     assert_equal "failed", social_post.status
     assert_equal "Meta unavailable", social_post.error_message
     assert social_post.ready_for_publish?
+    assert_equal "failed", social_post.publish_attempts.last.status
+  end
+
+  test "fails early when meta access status is invalid" do
+    social_post = create_approved_social_post(platform: "facebook")
+    platform_publishers = {
+      "facebook" => SuccessfulPlatformPublisher.new("media-1", "post-1")
+    }
+
+    error = assert_raises(Meta::Error) do
+      Meta::EventSocialPostPublisher.new(
+        platform_publishers:,
+        access_status: FailingAccessStatus.new
+      ).call(event_social_post: social_post, user: users(:one))
+    end
+
+    assert_equal "Meta-Token ist abgelaufen oder ungültig.", error.message
+
+    social_post.reload
+    assert_equal "failed", social_post.status
+    assert_equal "Meta-Token ist abgelaufen oder ungültig.", social_post.error_message
+    assert_equal "failed", social_post.publish_attempts.last.status
   end
 
   private
@@ -72,6 +98,18 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
   class FailingPlatformPublisher
     def publish!(**)
       raise Meta::Error, "Meta unavailable"
+    end
+  end
+
+  class SuccessfulAccessStatus
+    def ensure_publishable!(force: false)
+      true
+    end
+  end
+
+  class FailingAccessStatus
+    def ensure_publishable!(force: false)
+      raise Meta::Error, "Meta-Token ist abgelaufen oder ungültig."
     end
   end
 end

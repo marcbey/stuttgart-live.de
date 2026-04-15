@@ -1,4 +1,5 @@
 <% inbox_status = local_assigns[:filter_status] %>
+<% meta_access_status = Meta::AccessStatus.new.call %>
 
 <div class="backend-section-stack">
   <section class="backend-section backend-section-compact">
@@ -6,6 +7,35 @@
       <div>
         <h3>Social Publishing</h3>
         <p>Manuelle Drafts, Freigabe und Veröffentlichung für Facebook und Instagram.</p>
+      </div>
+    </div>
+
+    <div class="backend-section-body">
+      <div class="flash <%= meta_access_status.error? ? "flash-alert" : "flash-notice" %>">
+        <div class="social-post-health-header">
+          <strong>Meta-Verbindung</strong>
+          <span class="<%= meta_access_status_badge_class(meta_access_status) %>"><%= meta_access_status_label(meta_access_status) %></span>
+        </div>
+        <div><%= meta_access_status.summary %></div>
+        <% if meta_access_status.page_name.present? || meta_access_status.instagram_username.present? %>
+          <div class="form-hint">
+            <% parts = [] %>
+            <% parts << "Seite: #{meta_access_status.page_name}" if meta_access_status.page_name.present? %>
+            <% parts << "Instagram: @#{meta_access_status.instagram_username}" if meta_access_status.instagram_username.present? %>
+            <%= parts.join(" · ") %>
+          </div>
+        <% end %>
+        <% if meta_access_status.expires_at.present? %>
+          <div class="form-hint">Token-Ablauf: <%= l(meta_access_status.expires_at, format: "%d.%m.%Y %H:%M") %></div>
+        <% end %>
+        <div class="form-hint">Zuletzt geprüft: <%= l(meta_access_status.checked_at, format: "%d.%m.%Y %H:%M") %></div>
+        <% if meta_access_status.details.any? %>
+          <ul class="social-post-health-list">
+            <% meta_access_status.details.each do |detail| %>
+              <li><%= detail %></li>
+            <% end %>
+          </ul>
+        <% end %>
       </div>
     </div>
 
@@ -55,8 +85,8 @@
 
             <div class="social-post-card-body">
               <div class="social-post-preview">
-                <% if social_post.image_url.present? %>
-                  <img src="<%= social_post.image_url %>"
+                <% if social_post.preview_image_url.present? %>
+                  <img src="<%= social_post.preview_image_url %>"
                        alt="<%= event_social_post_platform_label(platform) %> Vorschau"
                        class="social-post-preview-image">
                 <% else %>
@@ -93,11 +123,29 @@
                     </div>
 
                     <div>
-                      <span class="form-label">Bild-Link</span>
-                      <% if social_post.image_url.present? %>
-                        <%= link_to social_post.image_url, social_post.image_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
+                      <span class="form-label">Preview-Bild</span>
+                      <% if social_post.preview_image_url.present? %>
+                        <%= link_to social_post.preview_image_url, social_post.preview_image_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
                       <% else %>
                         <p class="form-hint">Kein öffentlicher Bild-Link verfügbar.</p>
+                      <% end %>
+                    </div>
+
+                    <div>
+                      <span class="form-label">Facebook-Bild</span>
+                      <% if social_post.publish_image_facebook_url.present? %>
+                        <%= link_to social_post.publish_image_facebook_url, social_post.publish_image_facebook_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
+                      <% else %>
+                        <p class="form-hint">Noch nicht gerendert.</p>
+                      <% end %>
+                    </div>
+
+                    <div>
+                      <span class="form-label">Instagram-Bild</span>
+                      <% if social_post.publish_image_instagram_url.present? %>
+                        <%= link_to social_post.publish_image_instagram_url, social_post.publish_image_instagram_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
+                      <% else %>
+                        <p class="form-hint">Noch nicht gerendert.</p>
                       <% end %>
                     </div>
 

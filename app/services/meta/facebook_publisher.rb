@@ -5,12 +5,14 @@ module Meta
 
     def initialize(
       http_client: HttpClient.new,
-      page_id: AppConfig.meta_facebook_page_id,
-      page_access_token: AppConfig.meta_facebook_page_access_token
+      page_id: nil,
+      page_access_token: nil,
+      connection_resolver: ConnectionResolver.new
     )
+      page_target = connection_resolver.connection&.selected_facebook_page_target
       @http_client = http_client
-      @page_id = page_id.to_s.strip
-      @page_access_token = page_access_token.to_s.strip
+      @page_id = page_id.to_s.strip.presence || page_target&.external_id.to_s.strip
+      @page_access_token = page_access_token.to_s.strip.presence || page_target&.access_token.to_s.strip
     end
 
     def publish!(event_social_post:)
@@ -19,7 +21,7 @@ module Meta
       payload = http_client.post_form!(
         "https://graph.facebook.com/#{API_VERSION}/#{page_id}/photos",
         params: {
-          url: event_social_post.image_url,
+          url: event_social_post.publish_image_url_for("facebook"),
           message: event_social_post.caption,
           published: true,
           access_token: page_access_token
@@ -38,8 +40,8 @@ module Meta
     attr_reader :http_client, :page_access_token, :page_id
 
     def ensure_configured!
-      raise Error, "meta.facebook_page_id ist nicht konfiguriert." if page_id.blank?
-      raise Error, "meta.facebook_page_access_token ist nicht konfiguriert." if page_access_token.blank?
+      raise Error, "Es ist keine Facebook-Seite für Meta ausgewählt." if page_id.blank?
+      raise Error, "Für die ausgewählte Facebook-Seite fehlt ein Page-Access-Token." if page_access_token.blank?
     end
   end
 end

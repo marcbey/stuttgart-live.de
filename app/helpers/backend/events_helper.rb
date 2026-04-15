@@ -237,6 +237,53 @@ module Backend::EventsHelper
     end
   end
 
+  def meta_access_status_badge_class(status)
+    case status&.state
+    when :ok
+      "status-badge status-badge-published"
+    when :warning
+      "status-badge status-badge-ready"
+    when :error
+      "status-badge status-badge-rejected"
+    else
+      "status-badge status-badge-default"
+    end
+  end
+
+  def meta_access_status_label(status)
+    case status&.state
+    when :ok
+      "Meta OK"
+    when :warning
+      "Meta Warnung"
+    when :error
+      "Meta Fehler"
+    else
+      "Meta Unbekannt"
+    end
+  end
+
+  def social_connection_status_label(status)
+    case status.to_s
+    when "connected"
+      "Verbunden"
+    when "pending_selection"
+      "Page auswählen"
+    when "expiring_soon"
+      "Läuft bald ab"
+    when "refresh_failed"
+      "Refresh fehlgeschlagen"
+    when "reauth_required"
+      "Re-Auth nötig"
+    when "revoked"
+      "Widerrufen"
+    when "error"
+      "Fehler"
+    else
+      "Nicht verbunden"
+    end
+  end
+
   private
 
   def localized_day_name(date)
