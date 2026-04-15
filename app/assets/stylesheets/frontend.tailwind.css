@@ -6116,7 +6116,7 @@ aspect-ratio: 1 / 1.1;
 }
 
 .event-detail-video {
-padding-inline: 1rem;
+padding-inline: 0;
 }
 
 .event-detail-related-list .event-listing-date {
