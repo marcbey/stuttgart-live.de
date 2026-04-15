@@ -52,7 +52,28 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "approve rejects invalid drafts" do
+  test "update stores custom card text and refreshes rendered metadata" do
+    social_post = Meta::EventSocialPostDraftSync.new.call(event: @event, platform: "facebook")
+
+    with_stubbed_meta_access_status do
+      patch backend_event_event_social_post_url(@event, social_post), params: {
+        inbox_status: "published",
+        event_social_post: {
+          caption: social_post.caption,
+          card_artist_name: "Custom Artist",
+          card_meta_line: "11.11.2026 · Custom Venue"
+        }
+      }
+
+      assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
+      social_post.reload
+      assert_equal "Custom Artist", social_post.payload_snapshot.dig("card_text", "artist_name")
+      assert_equal "11.11.2026 · Custom Venue", social_post.payload_snapshot.dig("card_text", "meta_line")
+      assert_equal "11.11.2026 · CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "facebook", "meta_line")
+    end
+  end
+
+  test "publish rejects invalid drafts" do
     social_post = @event.event_social_posts.create!(
       platform: "facebook",
       status: "draft",
@@ -62,7 +83,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     )
 
     with_stubbed_meta_access_status do
-      patch approve_backend_event_event_social_post_url(@event, social_post), params: {
+      post publish_backend_event_event_social_post_url(@event, social_post), params: {
         inbox_status: "published"
       }
 
@@ -73,8 +94,8 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "publish enqueues an approved social post" do
-    social_post = create_approved_social_post(@event, platform: "facebook")
+  test "publish enqueues a draft social post directly" do
+    social_post = create_draft_social_post(@event, platform: "facebook")
     access_status = StubMetaAccessStatus.new
 
     with_stubbed_meta_access_status(access_status) do
@@ -87,6 +108,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
       social_post.reload
       assert_equal "publishing", social_post.status
+      assert_nil social_post.approved_at
       follow_redirect!
       assert_match "Facebook-Post wird im Hintergrund veröffentlicht.", response.body
     end
@@ -110,7 +132,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_enqueued_with(job: Meta::PublishEventSocialPostJob, args: [ social_post.id, @user.id ])
       assert_equal "publishing", social_post.status
       assert_nil social_post.remote_post_id
-      assert_equal @user, social_post.approved_by
+      assert_nil social_post.approved_by
       assert_nil social_post.published_by
       follow_redirect!
       assert_match "Instagram-Post wird im Hintergrund veröffentlicht.", response.body
@@ -118,7 +140,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "publish blocks enqueue when meta token check fails" do
-    social_post = create_approved_social_post(@event, platform: "facebook")
+    social_post = create_draft_social_post(@event, platform: "facebook")
     failing_access_status = FailingMetaAccessStatus.new
 
     with_stubbed_meta_access_status(failing_access_status) do
@@ -130,7 +152,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
 
       assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
       social_post.reload
-      assert_equal "approved", social_post.status
+      assert_equal "draft", social_post.status
       follow_redirect!
       assert_match "Meta-Token ist abgelaufen oder ungültig.", response.body
     end
@@ -180,7 +202,6 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     )
     attach_social_background!(event)
     social_post = Meta::EventSocialPostDraftSync.new.call(event:, platform: "instagram")
-    social_post.approve!(user: @user)
 
     with_stubbed_meta_access_status do
       assert_no_enqueued_jobs only: Meta::PublishEventSocialPostJob do
@@ -191,7 +212,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
 
       assert_redirected_to backend_events_url(status: "ready_for_publish", event_id: event.id, editor_tab: "social")
       social_post.reload
-      assert_equal "approved", social_post.status
+      assert_equal "draft", social_post.status
       follow_redirect!
       assert_match "Event ist noch nicht öffentlich live.", response.body
     end
@@ -223,6 +244,16 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       image_url: "https://example.com/published.jpg",
       approved_at: Time.current,
       approved_by: @user
+    )
+  end
+
+  def create_draft_social_post(event, platform:)
+    event.event_social_posts.create!(
+      platform:,
+      status: "draft",
+      caption: "Caption",
+      target_url: "https://example.com/events/#{event.slug}",
+      image_url: "https://example.com/published.jpg"
     )
   end
 

@@ -16,6 +16,18 @@ module Meta
       social_post
     end
 
+    def refresh_rendered_assets!(social_post)
+      base_draft = builder_class.new(event: social_post.event, platform: social_post.platform).build
+      draft = builder_class::Draft.new(
+        attributes: base_draft.attributes,
+        card_payload: social_post.card_payload,
+        background_source: base_draft.background_source
+      )
+
+      sync_rendered_assets!(social_post, draft:)
+      social_post
+    end
+
     private
 
     attr_reader :builder_class, :renderer
@@ -55,12 +67,12 @@ module Meta
     end
 
     def rendered_variant_payload(rendered_cards)
-      rendered_cards.transform_values do |rendered_card|
+      rendered_cards.deep_stringify_keys.transform_values do |rendered_card|
         {
           "width" => rendered_card.width,
           "height" => rendered_card.height,
           "artist_lines" => rendered_card.artist_lines,
-          "venue_text" => rendered_card.venue_text
+          "meta_line" => rendered_card.meta_line
         }
       end
     end

@@ -129,10 +129,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event_topbar_editor_actions form button", text: "Instagram Publish", count: 0
   end
 
-  test "social tab shows published facebook and instagram urls" do
+  test "social tab hides social post link details" do
     sign_in_as(@user)
 
-    facebook_post = @published_event.event_social_posts.create!(
+    @published_event.event_social_posts.create!(
       platform: "facebook",
       status: "published",
       caption: "Facebook Caption",
@@ -144,7 +144,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       published_by: @user,
       remote_post_id: "1065331226666212_122101097324744282"
     )
-    instagram_post = @published_event.event_social_posts.create!(
+    @published_event.event_social_posts.create!(
       platform: "instagram",
       status: "published",
       caption: "Instagram Caption",
@@ -165,8 +165,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
 
     assert_response :success
-    assert_select "a.social-post-link[href='#{facebook_post.facebook_post_url}']", text: facebook_post.facebook_post_url
-    assert_select "a.social-post-link[href='#{instagram_post.instagram_post_url}']", text: instagram_post.instagram_post_url
+    assert_select ".social-post-meta-list .social-post-link", count: 0
+    assert_select ".social-post-meta-list .form-label", text: "Facebook-URL", count: 0
+    assert_select ".social-post-meta-list .form-label", text: "Instagram-URL", count: 0
   end
 
   test "show populates ticket url with the frontend ticket url" do

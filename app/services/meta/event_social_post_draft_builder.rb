@@ -59,15 +59,8 @@ module Meta
     def card_payload
       {
         artist_name: event.artist_name.to_s.strip,
-        date_label: date_label,
-        venue_label: event.venue.to_s.strip
+        meta_line: default_card_meta_line
       }
-    end
-
-    def date_label
-      return "" unless event.start_at.present?
-
-      I18n.l(event.start_at.to_date, format: "%d.%m.%Y")
     end
 
     def background_source
@@ -139,9 +132,17 @@ module Meta
         "caption" => caption,
         "target_url" => target_url,
         "image_url" => nil,
+        "card_text" => card_payload.deep_stringify_keys,
         "background_source" => background_source&.source_label,
         "generated_at" => Time.current.iso8601
       }
+    end
+
+    def default_card_meta_line
+      [
+        event.start_at.present? ? I18n.l(event.start_at.to_date, format: "%d.%m.%Y") : nil,
+        event.venue.to_s.strip.presence
+      ].compact.join(" · ").presence.to_s
     end
   end
 end

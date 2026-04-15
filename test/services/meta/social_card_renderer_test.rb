@@ -17,8 +17,7 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
       background_source:,
       card_payload: {
         artist_name: "Mike Oldfield's Tubular Bells",
-        date_label: "09.09.2026",
-        venue_label: "Liederhalle Hegelsaal"
+        meta_line: "09.09.2026 · Liederhalle Hegelsaal"
       },
       slug: "tubular-bells"
     )
@@ -28,7 +27,7 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
     assert_equal [ 1080, 1350 ], image_dimensions(rendered_cards[:instagram].binary)
   end
 
-  test "truncates long artist, title and venue text with ellipsis" do
+  test "truncates long artist and venue text with ellipsis" do
     renderer = Meta::SocialCardRenderer.new
     renderer.define_singleton_method(:measure_text) do |text, font_name:, font_size:|
       text.to_s.length * 20
@@ -46,14 +45,13 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
       uppercase: true
     )
 
-    venue_text = renderer.send(
-      :fitted_meta_venue_text,
-      "MHP Arena Ludwigsburg With A Venue Name That Definitely Will Not Fit In One Row Even If Font Metrics Shift Slightly Between Operating Systems",
-      date_text: "18.02.2027",
+    meta_line = renderer.send(
+      :fitted_meta_line_text,
+      "18.02.2027 · MHP Arena Ludwigsburg With A Venue Name That Definitely Will Not Fit In One Row Even If Font Metrics Shift Slightly Between Operating Systems",
       variant:
     )
 
     assert artist_lines.last.end_with?("...")
-    assert venue_text.end_with?("...")
+    assert meta_line.end_with?("...")
   end
 end

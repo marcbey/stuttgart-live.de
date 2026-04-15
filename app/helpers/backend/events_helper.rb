@@ -214,7 +214,7 @@ module Backend::EventsHelper
   def event_social_post_status_label(post)
     case post&.status.to_s
     when "draft" then "Draft"
-    when "approved" then "Freigegeben"
+    when "approved" then "Bereit"
     when "publishing" then "Wird gesendet"
     when "published" then "Veröffentlicht"
     when "failed" then "Fehlgeschlagen"
@@ -225,7 +225,7 @@ module Backend::EventsHelper
   def event_social_post_status_badge_class(post)
     case post&.status.to_s
     when "approved"
-      "status-badge status-badge-ready"
+      "status-badge status-badge-default"
     when "publishing"
       "status-badge status-badge-default"
     when "published"

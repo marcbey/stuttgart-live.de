@@ -49,12 +49,10 @@ class EventSocialPostTest < ActiveSupport::TestCase
   test "keeps retry eligibility after a failed publish" do
     social_post = events(:published_one).event_social_posts.create!(
       platform: "facebook",
-      status: "approved",
+      status: "draft",
       caption: "Caption",
       target_url: "https://example.com/events/published-event",
-      image_url: "https://example.com/published.jpg",
-      approved_at: Time.current,
-      approved_by: users(:one)
+      image_url: "https://example.com/published.jpg"
     )
 
     social_post.mark_failed!("Meta down")

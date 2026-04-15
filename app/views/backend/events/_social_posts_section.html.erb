@@ -5,8 +5,8 @@
   <section class="backend-section backend-section-compact">
     <div class="backend-section-header">
       <div>
-        <h3>Social Publishing</h3>
-        <p>Manuelle Drafts, Freigabe und Veröffentlichung für Facebook und Instagram.</p>
+        <h3>Social Posts</h3>
+        <p>Drafts bearbeiten und direkt für Facebook oder Instagram veröffentlichen.</p>
       </div>
     </div>
 
@@ -43,36 +43,32 @@
       <% EventSocialPost.platforms_for_select.each do |platform| %>
         <% social_post = event.social_post_for(platform) %>
         <% editable = social_post&.caption_editable? %>
+        <% caption_form_id = social_post.present? ? dom_id(social_post, :caption_form) : nil %>
 
         <article class="social-post-card">
           <div class="backend-section-header backend-section-header-with-actions">
             <div>
               <h3><%= event_social_post_platform_label(platform) %></h3>
               <% if social_post.present? %>
-                <p>
-                  <span class="<%= event_social_post_status_badge_class(social_post) %>"><%= event_social_post_status_label(social_post) %></span>
-                </p>
+                <% unless social_post.draft? %>
+                  <p>
+                    <span class="<%= event_social_post_status_badge_class(social_post) %>"><%= event_social_post_status_label(social_post) %></span>
+                  </p>
+                <% end %>
               <% else %>
                 <p>Für diese Plattform existiert noch kein Draft.</p>
               <% end %>
             </div>
-            <div class="backend-section-header-actions">
-              <% if social_post.present? %>
-                <%= button_to "Draft neu erzeugen",
-                              regenerate_backend_event_event_social_post_path(event, social_post),
-                              method: :post,
-                              params: { inbox_status: inbox_status },
-                              form: { data: { turbo_frame: "_top" } },
-                              class: "button button-secondary button-compact" %>
-              <% else %>
+            <% unless social_post.present? %>
+              <div class="backend-section-header-actions">
                 <%= button_to "Draft erzeugen",
                               backend_event_event_social_posts_path(event),
                               method: :post,
                               params: { platform:, inbox_status: inbox_status },
                               form: { data: { turbo_frame: "_top" } },
                               class: "button button-save-primary button-compact" %>
-              <% end %>
-            </div>
+              </div>
+            <% end %>
           </div>
 
           <% if social_post.present? %>
@@ -97,11 +93,26 @@
               <div class="social-post-form-column">
                 <%= form_with model: [ :backend, event, social_post ],
                               method: :patch,
+                              id: caption_form_id,
                               class: "social-post-caption-form",
                               data: { turbo_frame: "_top" } do |form| %>
                   <%= hidden_field_tag :inbox_status, inbox_status if inbox_status.present? %>
 
-                  <div>
+                  <div class="social-post-form-field">
+                    <%= form.label :card_artist_name, "Bildtext Artist", class: "form-label" %>
+                    <%= form.text_field :card_artist_name,
+                                        class: "form-input",
+                                        disabled: !editable %>
+                  </div>
+
+                  <div class="social-post-form-field">
+                    <%= form.label :card_meta_line, "Bildtext Datum & Venue", class: "form-label" %>
+                    <%= form.text_field :card_meta_line,
+                                        class: "form-input",
+                                        disabled: !editable %>
+                  </div>
+
+                  <div class="social-post-form-field">
                     <%= form.label :caption, "Caption", class: "form-label" %>
                     <%= form.text_area :caption,
                                        rows: 8,
@@ -112,107 +123,22 @@
                     <% end %>
                   </div>
 
-                  <div class="social-post-meta-list">
-                    <div>
-                      <span class="form-label">Event-Link</span>
-                      <% if social_post.target_url.present? %>
-                        <%= link_to social_post.target_url, social_post.target_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
-                      <% else %>
-                        <p class="form-hint">Kein öffentlicher Event-Link verfügbar.</p>
-                      <% end %>
-                    </div>
-
-                    <div>
-                      <span class="form-label">Preview-Bild</span>
-                      <% if social_post.preview_image_url.present? %>
-                        <%= link_to social_post.preview_image_url, social_post.preview_image_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
-                      <% else %>
-                        <p class="form-hint">Kein öffentlicher Bild-Link verfügbar.</p>
-                      <% end %>
-                    </div>
-
-                    <div>
-                      <span class="form-label">Facebook-Bild</span>
-                      <% if social_post.publish_image_facebook_url.present? %>
-                        <%= link_to social_post.publish_image_facebook_url, social_post.publish_image_facebook_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
-                      <% else %>
-                        <p class="form-hint">Noch nicht gerendert.</p>
-                      <% end %>
-                    </div>
-
-                    <div>
-                      <span class="form-label">Instagram-Bild</span>
-                      <% if social_post.publish_image_instagram_url.present? %>
-                        <%= link_to social_post.publish_image_instagram_url, social_post.publish_image_instagram_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
-                      <% else %>
-                        <p class="form-hint">Noch nicht gerendert.</p>
-                      <% end %>
-                    </div>
-
-                    <% if social_post.remote_media_id.present? %>
-                      <div>
-                        <span class="form-label">Remote Media ID</span>
-                        <p><code><%= social_post.remote_media_id %></code></p>
-                      </div>
+                  <div class="social-post-action-row">
+                    <% if editable %>
+                      <%= form.submit "Caption speichern", class: "button button-secondary button-compact" %>
                     <% end %>
-
-                    <% if social_post.remote_post_id.present? %>
-                      <div>
-                        <span class="form-label">Remote Post ID</span>
-                        <p><code><%= social_post.remote_post_id %></code></p>
-                      </div>
-                    <% end %>
-
-                    <% if social_post.facebook_post_url.present? %>
-                      <div>
-                        <span class="form-label">Facebook-URL</span>
-                        <%= link_to social_post.facebook_post_url, social_post.facebook_post_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
-                      </div>
-                    <% end %>
-
-                    <% if social_post.instagram_post_url.present? %>
-                      <div>
-                        <span class="form-label">Instagram-URL</span>
-                        <%= link_to social_post.instagram_post_url, social_post.instagram_post_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
-                      </div>
+                    <% unless social_post.published? || social_post.publishing? %>
+                      <%= button_to "Veröffentlichen",
+                                    publish_backend_event_event_social_post_path(event, social_post),
+                                    method: :post,
+                                    params: { inbox_status: inbox_status },
+                                    form: { data: { turbo_frame: "_top" } },
+                                    class: "button button-save-primary button-compact" %>
                     <% end %>
                   </div>
-
-                  <% if editable %>
-                    <div class="social-post-action-row">
-                      <%= form.submit "Caption speichern", class: "button button-secondary button-compact" %>
-                    </div>
-                  <% end %>
                 <% end %>
 
-                <div class="social-post-action-row">
-                  <% unless social_post.published? %>
-                    <%= button_to "Freigeben",
-                                  approve_backend_event_event_social_post_path(event, social_post),
-                                  method: :patch,
-                                  params: { inbox_status: inbox_status },
-                                  form: { data: { turbo_frame: "_top" } },
-                                  class: "button button-secondary button-compact" %>
-                  <% end %>
-
-                  <% if social_post.approved? || social_post.failed? %>
-                    <%= button_to "Veröffentlichen",
-                                  publish_backend_event_event_social_post_path(event, social_post),
-                                  method: :post,
-                                  params: { inbox_status: inbox_status },
-                                  form: { data: { turbo_frame: "_top" } },
-                                  class: "button button-save-primary button-compact" %>
-                  <% end %>
-                </div>
-
                 <div class="social-post-meta-list">
-                  <% if social_post.approved_at.present? %>
-                    <div>
-                      <span class="form-label">Freigegeben</span>
-                      <p><%= l(social_post.approved_at, format: "%d.%m.%Y %H:%M") %><% if social_post.approved_by&.name.present? %> · <%= social_post.approved_by.name %><% end %></p>
-                    </div>
-                  <% end %>
-
                   <% if social_post.published_at.present? %>
                     <div>
                       <span class="form-label">Veröffentlicht</span>

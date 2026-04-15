@@ -12,9 +12,7 @@ class Meta::PublishEventSocialPostJobTest < ActiveJob::TestCase
       status: "publishing",
       caption: "Caption",
       target_url: "https://example.com/events/#{@event.slug}",
-      image_url: "https://example.com/published.jpg",
-      approved_at: Time.current,
-      approved_by: @user
+      image_url: "https://example.com/published.jpg"
     )
 
     original_publisher = Meta::EventSocialPostPublisher

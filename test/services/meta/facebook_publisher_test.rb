@@ -40,11 +40,10 @@ class Meta::FacebookPublisherTest < ActiveSupport::TestCase
     EventSocialPost.new(
       event: events(:published_one),
       platform:,
-      status: "approved",
+      status: "draft",
       caption: "Caption",
       target_url: "https://example.com/events/published-event",
-      image_url: "https://example.com/published.jpg",
-      approved_at: Time.current
+      image_url: "https://example.com/published.jpg"
     )
   end
 

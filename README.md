@@ -153,7 +153,7 @@ Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In dies
 
 ### Wie Social-Publishing für Events funktioniert
 
-Das Backend unterstützt einen bewusst einfachen Freigabe-Workflow für Social-Posts. Pro Event und Plattform gibt es genau einen `EventSocialPost`. Unterstützt werden aktuell `facebook` und `instagram`.
+Das Backend unterstützt einen bewusst einfachen Draft-und-Publish-Workflow für Social-Posts. Pro Event und Plattform gibt es genau einen `EventSocialPost`. Unterstützt werden aktuell `facebook` und `instagram`.
 
 Die Meta-Verbindung wird dabei nicht mehr über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über einen persistierten Onboarding- und Lifecycle-Flow im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Facebook Login for Business, wählt die gewünschte Facebook Page aus und speichert damit zugleich den verknüpften Instagram Professional Account. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
 
@@ -161,9 +161,8 @@ Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
 1. Zuerst wird pro Plattform ein Draft erzeugt oder neu generiert.
 2. Der Draft baut serverseitig eine Caption aus Eventdaten und wählt ein öffentlich erreichbares Bild.
-3. Die Caption kann danach manuell angepasst werden.
-4. Erst nach einer expliziten Freigabe darf der Post veröffentlicht werden.
-5. Die Veröffentlichung läuft pro Plattform einzeln und speichert Status, Fehler und externe IDs am `EventSocialPost`.
+3. Caption sowie die beiden Bildtext-Zeilen für Artist und Meta-Zeile können danach manuell angepasst werden.
+4. Die Veröffentlichung läuft pro Plattform einzeln direkt aus dem Draft und speichert Status, Fehler und externe IDs am `EventSocialPost`.
 
 Wichtig für die Generierung:
 

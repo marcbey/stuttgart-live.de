@@ -71,12 +71,10 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
   def create_approved_social_post(platform:)
     events(:published_one).event_social_posts.create!(
       platform:,
-      status: "approved",
+      status: "draft",
       caption: "Caption",
       target_url: "https://example.com/events/published-event",
-      image_url: "https://example.com/published.jpg",
-      approved_at: Time.current,
-      approved_by: users(:one)
+      image_url: "https://example.com/published.jpg"
     )
   end
 

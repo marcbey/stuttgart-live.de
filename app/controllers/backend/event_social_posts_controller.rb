@@ -1,7 +1,7 @@
 module Backend
   class EventSocialPostsController < BaseController
     before_action :set_event
-    before_action :set_event_social_post, only: [ :update, :approve, :publish, :regenerate ]
+    before_action :set_event_social_post, only: [ :update, :publish, :regenerate ]
 
     def create
       social_post = draft_sync.call(event: @event, platform: platform_param)
@@ -26,7 +26,6 @@ module Backend
       end
 
       social_post ||= draft_sync.call(event: @event, platform: platform_param)
-      social_post.approve!(user: current_user) unless social_post.ready_for_publish?
       enqueue_publish!(social_post)
 
       redirect_to redirect_path, notice: "#{platform_label(social_post)}-Post wird im Hintergrund veröffentlicht."
@@ -45,20 +44,18 @@ module Backend
         return
       end
 
+      previous_card_artist_name = @event_social_post.card_artist_name
+      previous_card_meta_line = @event_social_post.card_meta_line
       @event_social_post.assign_attributes(event_social_post_params)
-      @event_social_post.reset_workflow_to_draft! if @event_social_post.will_save_change_to_caption? && !@event_social_post.draft?
+      card_text_changed = previous_card_artist_name != @event_social_post.card_artist_name ||
+        previous_card_meta_line != @event_social_post.card_meta_line
+      @event_social_post.reset_workflow_to_draft! if (@event_social_post.will_save_change_to_caption? || card_text_changed) && !@event_social_post.draft?
       @event_social_post.save!
+      draft_sync.refresh_rendered_assets!(@event_social_post) if card_text_changed
 
-      redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Caption wurde gespeichert."
+      redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Social-Draft wurde gespeichert."
     rescue ActiveRecord::RecordInvalid => error
       redirect_to redirect_path, alert: error.record.errors.full_messages.to_sentence
-    end
-
-    def approve
-      @event_social_post.approve!(user: current_user)
-      redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Post wurde freigegeben."
-    rescue Meta::Error => error
-      redirect_to redirect_path, alert: error.message
     end
 
     def publish
@@ -101,7 +98,7 @@ module Backend
     end
 
     def event_social_post_params
-      params.require(:event_social_post).permit(:caption)
+      params.require(:event_social_post).permit(:caption, :card_artist_name, :card_meta_line)
     end
 
     def platform_param

@@ -15,6 +15,7 @@ class EventSocialPost < ApplicationRecord
   validates :caption, presence: true
 
   before_validation :normalize_attributes
+  attr_writer :card_artist_name, :card_meta_line
 
   scope :ordered, -> { order(:platform, :id) }
 
@@ -44,6 +45,25 @@ class EventSocialPost < ApplicationRecord
 
   def caption_editable?
     !published? && !publishing?
+  end
+
+  def card_artist_name
+    @card_artist_name.presence ||
+      payload_snapshot.dig("card_text", "artist_name").to_s.strip.presence ||
+      event.artist_name.to_s.strip
+  end
+
+  def card_meta_line
+    @card_meta_line.presence ||
+      payload_snapshot.dig("card_text", "meta_line").to_s.strip.presence ||
+      default_card_meta_line
+  end
+
+  def card_payload
+    {
+      artist_name: card_artist_name,
+      meta_line: card_meta_line
+    }
   end
 
   def preview_image_url
@@ -96,7 +116,7 @@ class EventSocialPost < ApplicationRecord
   end
 
   def ready_for_publish?
-    approved? || queued_for_publish? || (failed? && approved_at.present?)
+    draft? || approved? || publishing? || failed?
   end
 
   def approval_errors
@@ -114,7 +134,7 @@ class EventSocialPost < ApplicationRecord
 
   def publish_errors
     errors = approval_errors
-    errors << "Post muss zuerst freigegeben werden." unless ready_for_publish?
+    errors << "Post ist bereits veröffentlicht." if published?
     errors << "Event ist noch nicht öffentlich live." unless event.live?
     errors
   end
@@ -172,7 +192,7 @@ class EventSocialPost < ApplicationRecord
   end
 
   def queued_for_publish?
-    publishing? && approved_at.present?
+    publishing?
   end
 
   def mark_published!(user:, remote_media_id:, remote_post_id:, payload: nil)
@@ -207,6 +227,10 @@ class EventSocialPost < ApplicationRecord
     self.remote_post_id = remote_post_id.to_s.strip.presence
     self.error_message = error_message.to_s.strip.presence
     self.payload_snapshot = {} unless payload_snapshot.is_a?(Hash)
+    payload_snapshot["card_text"] = {
+      "artist_name" => card_artist_name.to_s.strip,
+      "meta_line" => card_meta_line.to_s.strip
+    }
   end
 
   def valid_http_url?(value)
@@ -226,5 +250,12 @@ class EventSocialPost < ApplicationRecord
     return unless attachment.attached?
 
     Meta::PublicAssetUrl.url_for(attachment)
+  end
+
+  def default_card_meta_line
+    [
+      event.start_at.present? ? I18n.l(event.start_at.to_date, format: "%d.%m.%Y") : nil,
+      event.venue.to_s.strip.presence
+    ].compact.join(" · ").presence.to_s
   end
 end

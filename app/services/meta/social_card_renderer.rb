@@ -4,7 +4,7 @@ require "net/http"
 
 module Meta
   class SocialCardRenderer
-    RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :venue_text)
+    RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :meta_line)
     TextLayer = Data.define(:image, :x, :y)
     ARTIST_FONT_NAME = "Bebas Neue".freeze
     BODY_FONT_NAME = "Archivo Narrow".freeze
@@ -80,7 +80,7 @@ module Meta
       "/usr/local/share/fonts"
     ].freeze
     DEFAULT_ZOOM = 100.0
-    BACKGROUND_DIMMER_ALPHA = 0.18
+    BACKGROUND_DIMMER_ALPHA = 0.08
 
     def initialize(remote_image_fetcher: nil)
       @remote_image_fetcher = remote_image_fetcher || method(:fetch_remote_image)
@@ -115,8 +115,7 @@ module Meta
         max_lines: variant.artist_max_lines,
         uppercase: true
       )
-      date_text = card_payload.fetch(:date_label).to_s.strip
-      venue_text = fitted_meta_venue_text(card_payload.fetch(:venue_label), date_text:, variant:)
+      meta_line = fitted_meta_line_text(card_payload.fetch(:meta_line), variant:)
 
       overlay = Vips::Image.new_from_buffer(
         overlay_svg(variant:),
@@ -129,8 +128,7 @@ module Meta
         text_layers_for(
           variant:,
           artist_lines:,
-          date_text:,
-          venue_text:
+          meta_line:
         )
       )
 
@@ -141,7 +139,7 @@ module Meta
         width: variant.width,
         height: variant.height,
         artist_lines:,
-        venue_text:
+        meta_line:
       )
     end
 
@@ -194,10 +192,10 @@ module Meta
         <svg xmlns="http://www.w3.org/2000/svg" width="#{variant.width}" height="#{variant.height}" viewBox="0 0 #{variant.width} #{variant.height}">
           <defs>
             <linearGradient id="social-card-shade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="rgba(0,0,0,0.10)" />
-              <stop offset="42%" stop-color="rgba(0,0,0,0.24)" />
-              <stop offset="68%" stop-color="rgba(0,0,0,0.58)" />
-              <stop offset="100%" stop-color="rgba(0,0,0,0.88)" />
+              <stop offset="0%" stop-color="rgba(0,0,0,0.02)" />
+              <stop offset="40%" stop-color="rgba(0,0,0,0.10)" />
+              <stop offset="72%" stop-color="rgba(0,0,0,0.34)" />
+              <stop offset="100%" stop-color="rgba(0,0,0,0.62)" />
             </linearGradient>
           </defs>
           <rect x="0" y="0" width="#{variant.width}" height="#{variant.height}" fill="url(#social-card-shade)" />
@@ -206,7 +204,7 @@ module Meta
       SVG
     end
 
-    def text_layers_for(variant:, artist_lines:, date_text:, venue_text:)
+    def text_layers_for(variant:, artist_lines:, meta_line:)
       artist_step = line_step(variant.artist_font_size, variant.artist_line_height)
       artist_block_height = block_height(artist_lines.size, variant.artist_font_size, artist_step)
       total_height = artist_block_height + variant.meta_font_size + variant.meta_gap
@@ -228,23 +226,10 @@ module Meta
       end
 
       current_y += variant.meta_gap
-      date_width = measure_text(date_text, font_name: BODY_FONT_NAME, font_size: variant.meta_font_size)
-      venue_x = variant.content_left + date_width + 26
-
-      layers << text_layer(
-        text: date_text,
-        x: variant.content_left,
-        y: current_y,
-        font_family: BODY_FONT_NAME,
-        font_size: variant.meta_font_size,
-        color: [ 255, 255, 255 ],
-        opacity: 0.98
-      )
-
-      if venue_text.present?
+      if meta_line.present?
         layers << text_layer(
-          text: venue_text,
-          x: venue_x,
+          text: meta_line,
+          x: variant.content_left,
           y: current_y,
           font_family: BODY_FONT_NAME,
           font_size: variant.meta_font_size,
@@ -256,12 +241,11 @@ module Meta
       layers
     end
 
-    def fitted_meta_venue_text(venue_text, date_text:, variant:)
-      normalized = venue_text.to_s.strip.upcase
+    def fitted_meta_line_text(meta_line, variant:)
+      normalized = meta_line.to_s.strip.upcase
       return "" if normalized.blank?
 
-      available_width = [ text_width_for(variant) - measure_text(date_text, font_name: BODY_FONT_NAME, font_size: variant.meta_font_size) - 26, 0 ].max
-      fit_text(normalized, font_name: BODY_FONT_NAME, font_size: variant.meta_font_size, max_width: available_width)
+      fit_text(normalized, font_name: BODY_FONT_NAME, font_size: variant.meta_font_size, max_width: text_width_for(variant))
     end
 
     def wrap_lines(text, font_name:, font_size:, max_width:, max_lines:, uppercase: false)
