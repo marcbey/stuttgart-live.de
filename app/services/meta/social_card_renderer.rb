@@ -86,6 +86,11 @@ module Meta
     FONT_CONFIG_MUTEX = Mutex.new
     FONT_CONFIG_PATH = Rails.root.join("tmp", "meta-social-card-fonts.conf").freeze
     FONT_CACHE_PATH = Rails.root.join("tmp", "fontconfig-cache").freeze
+    SYSTEM_FONT_CONFIG_PATH = "/etc/fonts/fonts.conf".freeze
+    SYSTEM_FONT_DIRECTORIES = [
+      "/usr/share/fonts",
+      "/usr/local/share/fonts"
+    ].freeze
     DEFAULT_ZOOM = 100.0
     BACKGROUND_DIMMER_ALPHA = 0.18
 
@@ -443,11 +448,11 @@ module Meta
     end
 
     def ensure_font_config!
-      return if ENV["FONTCONFIG_FILE"] == FONT_CONFIG_PATH.to_s && File.exist?(FONT_CONFIG_PATH)
-
       FONT_CONFIG_MUTEX.synchronize do
+        config_xml = font_config_xml
         FileUtils.mkdir_p(FONT_CACHE_PATH)
-        File.write(FONT_CONFIG_PATH, font_config_xml) unless File.exist?(FONT_CONFIG_PATH)
+        existing_config = File.exist?(FONT_CONFIG_PATH) ? File.read(FONT_CONFIG_PATH) : nil
+        File.write(FONT_CONFIG_PATH, config_xml) if existing_config != config_xml
         ENV["FONTCONFIG_FILE"] = FONT_CONFIG_PATH.to_s
       end
     end
@@ -457,7 +462,9 @@ module Meta
         <?xml version="1.0"?>
         <!DOCTYPE fontconfig SYSTEM "fonts.dtd">
         <fontconfig>
+          <include ignore_missing="yes">#{SYSTEM_FONT_CONFIG_PATH}</include>
           <dir>#{Rails.root.join("app/assets/fonts")}</dir>
+          #{SYSTEM_FONT_DIRECTORIES.map { |directory| "<dir>#{directory}</dir>" }.join("\n  ")}
           <cachedir>#{FONT_CACHE_PATH}</cachedir>
           <config></config>
         </fontconfig>
