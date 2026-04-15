@@ -1258,6 +1258,13 @@ position: fixed;
   backdrop-filter: none;
 }
 
+body.page-public-events-index .scroll-top-button {
+right: max(
+    1rem,
+    calc(((100vw - var(--homepage-header-max-width, 1980px)) / 2) + var(--homepage-header-padding-inline, 1rem))
+  );
+}
+
 .scroll-top-button:hover {
 transform: translateY(-1px);
 }
@@ -7112,9 +7119,11 @@ display: flex;
   display: flex;
       flex-wrap: nowrap;
       width: 100%;
+      max-width: var(--homepage-header-max-width, 1980px);
+      margin-inline: auto;
       gap: 0;
       justify-content: space-between;
-      padding-inline: 1.4rem;
+      padding-inline: var(--homepage-header-padding-inline, 1.4rem);
       min-height: 0;
       overflow: visible;
   }
@@ -7162,19 +7171,19 @@ display: flex;
 
 @media (min-width: 1024px) {
   .partner-strip {
-  padding-inline: 1.8rem;
+  padding-inline: var(--homepage-header-padding-inline, 1.8rem);
   }
 }
 
 @media (min-width: 1280px) {
   .partner-strip {
-  padding-inline: 2.1rem;
+  padding-inline: var(--homepage-header-padding-inline, 2.1rem);
   }
 }
 
 @media (min-width: 1440px) {
   .partner-strip {
-  padding-inline: 2.55rem;
+  padding-inline: var(--homepage-header-padding-inline, 2.55rem);
   }
 }
 
@@ -7532,6 +7541,10 @@ position: sticky;
 
 body.page-public-events-index {
 --homepage-section-gap: 1.1rem;
+  --homepage-content-max-width: 1360px;
+  --homepage-header-max-width: 1980px;
+  --homepage-content-padding-inline: 0.8rem;
+  --homepage-header-padding-inline: 0.8rem;
 }
 
 body.page-public-events-index .public-shell {
@@ -7966,6 +7979,11 @@ top: 1.18rem;
 }
 
 @media (min-width: 768px) {
+  body.page-public-events-index {
+  --homepage-content-padding-inline: 1.4rem;
+      --homepage-header-padding-inline: 1.4rem;
+  }
+
   body.page-public-events-index .public-shell {
   padding-inline: 1.4rem;
   }
@@ -8048,6 +8066,11 @@ top: 1.18rem;
 }
 
 @media (max-width: 1023px) {
+  body.page-public-events-index {
+  --homepage-content-padding-inline: 1rem;
+      --homepage-header-padding-inline: 1rem;
+  }
+
   body.page-public-events-index .public-shell {
   padding-inline: 1rem;
   }
@@ -8125,6 +8148,11 @@ top: 1.18rem;
 }
 
 @media (min-width: 1024px) {
+  body.page-public-events-index {
+  --homepage-content-padding-inline: 1.8rem;
+      --homepage-header-padding-inline: 1.8rem;
+  }
+
   body.page-public-events-index .public-shell {
   padding-inline: 1.8rem;
   }
@@ -8247,6 +8275,11 @@ top: 1.18rem;
 }
 
 @media (min-width: 1280px) {
+  body.page-public-events-index {
+  --homepage-content-padding-inline: 2.1rem;
+      --homepage-header-padding-inline: 2.1rem;
+  }
+
   body.page-public-events-index .public-shell {
   padding-inline: 2.1rem;
   }
@@ -8367,6 +8400,11 @@ top: 1.18rem;
 }
 
 @media (min-width: 1440px) {
+  body.page-public-events-index {
+  --homepage-content-padding-inline: 2.55rem;
+      --homepage-header-padding-inline: 2.55rem;
+  }
+
   body.page-public-events-index .public-shell {
   padding-inline: 2.55rem;
   }
@@ -8426,6 +8464,12 @@ top: 1.18rem;
   body.page-public-events-index .app-nav-hotline {
   font-size: clamp(1.35rem, 1.55vw, 1.65rem);
       letter-spacing: 0.14em;
+  }
+}
+
+@media (min-width: 1500px) {
+  body.page-public-events-index {
+  --homepage-content-max-width: 1480px;
   }
 }
 
@@ -8664,7 +8708,7 @@ margin-top: var(--homepage-section-gap);
   overflow: hidden;
   border: 0;
   border-radius: 0;
-  padding: 40px 0.35rem;
+  padding: 40px 0;
   gap: 0.9rem;
   background:
     radial-gradient(circle at 78% 18%, rgba(243, 200, 236, 0.28), transparent 18%),
@@ -8703,6 +8747,10 @@ body.page-public-events-index .newsletter-signup-inner,
 body.page-public-newsletter-poster .newsletter-signup-inner {
 position: relative;
   z-index: 1;
+  width: 100%;
+  max-width: var(--homepage-content-max-width, 1360px);
+  margin-inline: auto;
+  padding-inline: var(--homepage-content-padding-inline, 0.8rem);
   grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.98fr);
   gap: 1.6rem 2rem;
   align-items: start;
@@ -8712,7 +8760,7 @@ body.page-public-events-index .newsletter-signup-copy,
 body.page-public-newsletter-poster .newsletter-signup-copy {
 align-content: start;
   gap: 1.05rem;
-  padding: 0.2rem 0.4rem 0.1rem;
+  padding: 0.2rem 0 0.1rem;
 }
 
 body.page-public-events-index .newsletter-signup-copy-intro,
@@ -8775,6 +8823,7 @@ body.page-public-events-index .newsletter-signup-panel,
 body.page-public-newsletter-poster .newsletter-signup-panel {
 align-self: start;
   margin-top: 0.5rem;
+  justify-self: stretch;
   padding: 0;
   border: 0;
   border-radius: 0;
@@ -8788,6 +8837,7 @@ body.page-public-newsletter-poster .newsletter-signup-panel-content {
 display: grid;
   gap: 1rem;
   padding: 0;
+  justify-items: stretch;
 }
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-form,
@@ -8992,13 +9042,13 @@ display: none;
 @media (min-width: 1180px) {
   body.page-public-events-index .newsletter-signup-section,
   body.page-public-newsletter-poster .newsletter-signup-section {
-  padding: 40px 0.15rem;
+  padding: 40px 0;
   }
 
   body.page-public-events-index .newsletter-signup-inner,
   body.page-public-newsletter-poster .newsletter-signup-inner {
-  grid-template-columns: minmax(0, 0.9fr) minmax(40rem, 1.1fr);
-      gap: 1.4rem 1.8rem;
+  grid-template-columns: minmax(0, 0.75fr) minmax(42rem, 1.25fr);
+      gap: 1.4rem 3rem;
       align-items: start;
   }
 
@@ -9009,7 +9059,7 @@ display: none;
 
   body.page-public-events-index .newsletter-signup-copy,
   body.page-public-newsletter-poster .newsletter-signup-copy {
-  padding: 0.1rem 0.2rem 0 0.15rem;
+  padding: 0.1rem 0 0;
   }
 
   body.page-public-events-index .newsletter-signup-copy h2,
@@ -9031,19 +9081,20 @@ display: none;
   body.page-public-events-index .newsletter-signup-panel,
   body.page-public-newsletter-poster .newsletter-signup-panel {
   margin-top: 0.9rem;
+      justify-self: stretch;
   }
 
   body.page-public-events-index .newsletter-signup-panel-content,
   body.page-public-newsletter-poster .newsletter-signup-panel-content {
   width: 100%;
-      max-width: 68rem;
-      padding-top: 5rem;
-      padding-right: 0.1rem;
+      max-width: 64rem;
+      padding-top: 0.4rem;
+      padding-right: 0;
   }
 
   body.page-public-events-index .newsletter-signup-section .newsletter-signup-form,
   body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-form {
-  grid-template-columns: minmax(36rem, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
       gap: 1.1rem;
       align-items: center;
   }
@@ -9086,12 +9137,13 @@ display: none;
 
   body.page-public-events-index .newsletter-signup-section,
   body.page-public-newsletter-poster .newsletter-signup-section {
-  padding: 1.2rem;
+  padding: 1.2rem 0;
   }
 
   body.page-public-events-index .newsletter-signup-inner,
   body.page-public-newsletter-poster .newsletter-signup-inner {
   grid-template-columns: minmax(0, 1fr);
+      padding-inline: var(--homepage-content-padding-inline, 1rem);
   }
 
   body.page-public-events-index .newsletter-signup-copy,
