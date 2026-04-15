@@ -44,10 +44,10 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
     rendered_cards = Meta::SocialCardRenderer.new.render_set(
       background_source:,
       card_payload: {
-        artist_name: "The Astonishingly Long Artist Name That Absolutely Must Not Overflow The Card Layout",
-        title: "An Even Longer Event Title That Needs To Be Cut Cleanly Before It Breaks The Highlight Style",
+        artist_name: "The Astonishingly Long Artist Name That Absolutely Must Not Overflow The Card Layout Or Continue Into Yet Another Needlessly Long Clause",
+        title: "An Even Longer Event Title That Needs To Be Cut Cleanly Before It Breaks The Highlight Style And Keeps Running Far Beyond A Single Reasonable Line",
         date_label: "18.02.2027",
-        venue_label: "MHP Arena Ludwigsburg With A Venue Name That Definitely Will Not Fit In One Row"
+        venue_label: "MHP Arena Ludwigsburg With A Venue Name That Definitely Will Not Fit In One Row Even If Font Metrics Shift Slightly Between Operating Systems"
       },
       slug: "long-card"
     )
