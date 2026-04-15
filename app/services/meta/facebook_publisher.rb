@@ -32,7 +32,11 @@ module Meta
       remote_post_id = payload["post_id"].to_s.strip.presence || remote_media_id
       raise Error, "Facebook hat keine Beitrags-ID zurückgegeben." if remote_post_id.blank?
 
-      Result.new(remote_media_id:, remote_post_id:, payload:)
+      Result.new(
+        remote_media_id:,
+        remote_post_id:,
+        payload: payload.merge("post_url" => post_url_for(remote_post_id))
+      )
     end
 
     private
@@ -42,6 +46,13 @@ module Meta
     def ensure_configured!
       raise Error, "Es ist keine Facebook-Seite für Meta ausgewählt." if page_id.blank?
       raise Error, "Für die ausgewählte Facebook-Seite fehlt ein Page-Access-Token." if page_access_token.blank?
+    end
+
+    def post_url_for(remote_post_id)
+      page_id_part, post_id_part = remote_post_id.to_s.split("_", 2)
+      return if page_id_part.blank? || post_id_part.blank?
+
+      "https://www.facebook.com/#{page_id_part}/posts/#{post_id_part}"
     end
   end
 end

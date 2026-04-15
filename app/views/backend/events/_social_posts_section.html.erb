@@ -162,6 +162,20 @@
                         <p><code><%= social_post.remote_post_id %></code></p>
                       </div>
                     <% end %>
+
+                    <% if social_post.facebook_post_url.present? %>
+                      <div>
+                        <span class="form-label">Facebook-URL</span>
+                        <%= link_to social_post.facebook_post_url, social_post.facebook_post_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
+                      </div>
+                    <% end %>
+
+                    <% if social_post.instagram_post_url.present? %>
+                      <div>
+                        <span class="form-label">Instagram-URL</span>
+                        <%= link_to social_post.instagram_post_url, social_post.instagram_post_url, target: "_blank", rel: "noreferrer", class: "social-post-link" %>
+                      </div>
+                    <% end %>
                   </div>
 
                   <% if editable %>

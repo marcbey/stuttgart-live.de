@@ -8,18 +8,6 @@
     <% unless event.published? %>
       <button type="submit" form="<%= dom_id(event, :editor_form) %>" name="save_and_publish" value="1" class="button button-compact">Publish</button>
     <% end %>
-    <%= button_to "Facebook Publish",
-                  quick_publish_backend_event_event_social_posts_path(event),
-                  method: :post,
-                  params: { platform: "facebook", inbox_status: filter_status },
-                  class: "button button-secondary button-compact",
-                  form: { data: { turbo_frame: "_top" } } %>
-    <%= button_to "Instagram Publish",
-                  quick_publish_backend_event_event_social_posts_path(event),
-                  method: :post,
-                  params: { platform: "instagram", inbox_status: filter_status },
-                  class: "button button-secondary button-compact",
-                  form: { data: { turbo_frame: "_top" } } %>
     <% if event.published? %>
       <%= button_to "Unpublish",
                     unpublish_backend_event_path(event),

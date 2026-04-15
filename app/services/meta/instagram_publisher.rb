@@ -42,13 +42,15 @@ module Meta
 
       remote_media_id = publish_payload["id"].to_s.strip.presence
       raise Error, "Instagram hat keine Media-ID zurückgegeben." if remote_media_id.blank?
+      media_payload = fetch_media_payload(remote_media_id)
 
       Result.new(
         remote_media_id: remote_media_id,
         remote_post_id: nil,
         payload: {
           "container" => container_payload,
-          "publish" => publish_payload
+          "publish" => publish_payload,
+          "media" => media_payload
         }
       )
     end
@@ -60,6 +62,18 @@ module Meta
     def ensure_configured!
       raise Error, "Für die ausgewählte Facebook-Seite ist kein Instagram-Professional-Account verknüpft." if instagram_business_account_id.blank?
       raise Error, "Für die ausgewählte Facebook-Seite fehlt ein Page-Access-Token." if page_access_token.blank?
+    end
+
+    def fetch_media_payload(remote_media_id)
+      http_client.get_json!(
+        "https://graph.facebook.com/#{API_VERSION}/#{remote_media_id}",
+        params: {
+          fields: "id,permalink",
+          access_token: page_access_token
+        }
+      )
+    rescue Error
+      {}
     end
   end
 end

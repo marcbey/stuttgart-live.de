@@ -72,6 +72,17 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event_topbar_editor_actions", count: 1
   end
 
+  test "index keeps the social tab active for a selected event" do
+    sign_in_as(@user)
+
+    get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
+
+    assert_response :success
+    assert_select "#event-editor-tab-social[aria-selected='true']", count: 1
+    assert_select "#event-editor-panel-social:not([hidden])", count: 1
+    assert_select "form#editor_form_event_#{@published_event.id} input[name='editor_tab'][value='social']", count: 1
+  end
+
   test "show keeps active inbox status in editor form" do
     sign_in_as(@user)
 
@@ -105,6 +116,57 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[venue_name]'][data-venue-autocomplete-target='input']", count: 1
     assert_select "input[name='event[venue_id]'][data-venue-autocomplete-target='hidden']", count: 1
     assert_select ".venue-autocomplete[data-controller='venue-autocomplete']", count: 1
+  end
+
+  test "topbar does not render direct facebook or instagram publish buttons" do
+    sign_in_as(@user)
+
+    get backend_events_url(status: "published", event_id: @published_event.id)
+
+    assert_response :success
+    assert_select "#event_topbar_editor_actions", count: 1
+    assert_select "#event_topbar_editor_actions form button", text: "Facebook Publish", count: 0
+    assert_select "#event_topbar_editor_actions form button", text: "Instagram Publish", count: 0
+  end
+
+  test "social tab shows published facebook and instagram urls" do
+    sign_in_as(@user)
+
+    facebook_post = @published_event.event_social_posts.create!(
+      platform: "facebook",
+      status: "published",
+      caption: "Facebook Caption",
+      target_url: "https://example.com/events/#{@published_event.slug}",
+      image_url: "https://example.com/facebook.jpg",
+      approved_at: Time.current,
+      approved_by: @user,
+      published_at: Time.current,
+      published_by: @user,
+      remote_post_id: "1065331226666212_122101097324744282"
+    )
+    instagram_post = @published_event.event_social_posts.create!(
+      platform: "instagram",
+      status: "published",
+      caption: "Instagram Caption",
+      target_url: "https://example.com/events/#{@published_event.slug}",
+      image_url: "https://example.com/instagram.jpg",
+      approved_at: Time.current,
+      approved_by: @user,
+      published_at: Time.current,
+      published_by: @user,
+      remote_media_id: "media-1",
+      payload_snapshot: {
+        "media" => {
+          "permalink" => "https://www.instagram.com/p/ABC123/"
+        }
+      }
+    )
+
+    get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
+
+    assert_response :success
+    assert_select "a.social-post-link[href='#{facebook_post.facebook_post_url}']", text: facebook_post.facebook_post_url
+    assert_select "a.social-post-link[href='#{instagram_post.instagram_post_url}']", text: instagram_post.instagram_post_url
   end
 
   test "show populates ticket url with the frontend ticket url" do

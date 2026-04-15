@@ -4,7 +4,8 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
   test "creates a container and publishes it" do
     client = FakeMetaHttpClient.new(
       { "id" => "container-1" },
-      { "id" => "media-1" }
+      { "id" => "media-1" },
+      { "id" => "media-1", "permalink" => "https://www.instagram.com/p/ABC123/" }
     )
     publisher = Meta::InstagramPublisher.new(
       http_client: client,
@@ -16,9 +17,11 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
 
     assert_equal "https://graph.facebook.com/v25.0/ig-123/media", client.calls.first.fetch(:url)
     assert_equal "https://graph.facebook.com/v25.0/ig-123/media_publish", client.calls.second.fetch(:url)
+    assert_equal "https://graph.facebook.com/v25.0/media-1", client.calls.third.fetch(:url)
     assert_equal "container-1", client.calls.second.fetch(:params).fetch(:creation_id)
     assert_equal "media-1", result.remote_media_id
     assert_nil result.remote_post_id
+    assert_equal "https://www.instagram.com/p/ABC123/", result.payload.dig("media", "permalink")
   end
 
   private
@@ -44,6 +47,11 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
     end
 
     def post_form!(url, params:)
+      calls << { url:, params: params.deep_dup }
+      @responses.shift
+    end
+
+    def get_json!(url, params: {})
       calls << { url:, params: params.deep_dup }
       @responses.shift
     end

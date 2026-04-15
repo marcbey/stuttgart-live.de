@@ -12,8 +12,15 @@ module Backend
 
     def index
       prepare_index_state!
-      @active_editor_tab = new_panel_requested? ? new_editor_tab : "event"
       @selected_event = selected_event_from(@events)
+      @active_editor_tab =
+        if new_panel_requested?
+          new_editor_tab
+        elsif @selected_event.present?
+          editor_tab_for(@selected_event)
+        else
+          "event"
+        end
     end
 
     def apply_filters
@@ -258,7 +265,13 @@ module Backend
         :llm_enrichment,
         :import_event_images,
         :venue_record,
-        event_social_posts: [ :approved_by, :published_by ],
+        event_social_posts: [
+          :approved_by,
+          :published_by,
+          :preview_image_attachment,
+          :publish_image_facebook_attachment,
+          :publish_image_instagram_attachment
+        ],
         promotion_banner_image_attachment: :blob,
         event_images: [ file_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
@@ -301,7 +314,13 @@ module Backend
           :llm_enrichment,
           :import_event_images,
           :venue_record,
-          event_social_posts: [ :approved_by, :published_by ],
+          event_social_posts: [
+            :approved_by,
+            :published_by,
+            :preview_image_attachment,
+            :publish_image_facebook_attachment,
+            :publish_image_instagram_attachment
+          ],
           promotion_banner_image_attachment: :blob,
           event_images: [ file_attachment: :blob ],
           event_presenters: { presenter: [ logo_attachment: :blob ] }

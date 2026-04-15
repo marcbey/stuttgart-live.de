@@ -62,4 +62,33 @@ class EventSocialPostTest < ActiveSupport::TestCase
     assert social_post.failed?
     assert social_post.ready_for_publish?
   end
+
+  test "builds a facebook post url from the remote post id" do
+    social_post = events(:published_one).event_social_posts.build(
+      platform: "facebook",
+      status: "published",
+      caption: "Caption",
+      remote_post_id: "1065331226666212_122101097324744282"
+    )
+
+    assert_equal "https://www.facebook.com/1065331226666212/posts/122101097324744282", social_post.facebook_post_url
+    assert_equal social_post.facebook_post_url, social_post.published_post_url
+  end
+
+  test "reads instagram permalink from the payload snapshot" do
+    social_post = events(:published_one).event_social_posts.build(
+      platform: "instagram",
+      status: "published",
+      caption: "Caption",
+      payload_snapshot: {
+        "media" => {
+          "id" => "1789",
+          "permalink" => "https://www.instagram.com/p/ABC123/"
+        }
+      }
+    )
+
+    assert_equal "https://www.instagram.com/p/ABC123/", social_post.instagram_post_url
+    assert_equal social_post.instagram_post_url, social_post.published_post_url
+  end
 end

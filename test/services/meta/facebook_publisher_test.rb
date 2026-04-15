@@ -19,6 +19,21 @@ class Meta::FacebookPublisherTest < ActiveSupport::TestCase
     assert_equal "page-post-1", result.remote_post_id
   end
 
+  test "stores the derived facebook post url when the post id contains page and post ids" do
+    client = FakeMetaHttpClient.new(
+      { "id" => "photo-1", "post_id" => "1065331226666212_122101097324744282" }
+    )
+    publisher = Meta::FacebookPublisher.new(
+      http_client: client,
+      page_id: "12345",
+      page_access_token: "page-token"
+    )
+
+    result = publisher.publish!(event_social_post: build_social_post(platform: "facebook"))
+
+    assert_equal "https://www.facebook.com/1065331226666212/posts/122101097324744282", result.payload.fetch("post_url")
+  end
+
   private
 
   def build_social_post(platform:)

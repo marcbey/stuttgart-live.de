@@ -58,6 +58,32 @@ class EventSocialPost < ApplicationRecord
     asset_url_for(publish_image_instagram)
   end
 
+  def facebook_post_url
+    return unless platform == "facebook"
+
+    page_id, post_id = remote_post_id.to_s.split("_", 2)
+    return if page_id.blank? || post_id.blank?
+
+    "https://www.facebook.com/#{page_id}/posts/#{post_id}"
+  end
+
+  def instagram_post_url
+    return unless platform == "instagram"
+
+    payload_snapshot.dig("media", "permalink").to_s.strip.presence ||
+      payload_snapshot.dig("publish", "permalink").to_s.strip.presence ||
+      payload_snapshot.dig("publish_response", "permalink").to_s.strip.presence
+  end
+
+  def published_post_url
+    case platform
+    when "facebook"
+      facebook_post_url
+    when "instagram"
+      instagram_post_url
+    end
+  end
+
   def publish_image_url_for(target_platform = platform)
     case target_platform.to_s
     when "facebook"
