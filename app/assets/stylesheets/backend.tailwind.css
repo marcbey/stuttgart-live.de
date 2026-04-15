@@ -1451,6 +1451,10 @@ display: flex;
   align-items: center;
 }
 
+.social-post-inline-action-form {
+margin: 0;
+}
+
 .social-post-link {
 word-break: break-word;
 }

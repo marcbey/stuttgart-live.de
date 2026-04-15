@@ -122,21 +122,24 @@
                       <p class="form-hint">Zum Bearbeiten zuerst einen neuen Draft erzeugen.</p>
                     <% end %>
                   </div>
-
-                  <div class="social-post-action-row">
-                    <% if editable %>
-                      <%= form.submit "Caption speichern", class: "button button-secondary button-compact" %>
-                    <% end %>
-                    <% unless social_post.published? || social_post.publishing? %>
-                      <%= button_to "Veröffentlichen",
-                                    publish_backend_event_event_social_post_path(event, social_post),
-                                    method: :post,
-                                    params: { inbox_status: inbox_status },
-                                    form: { data: { turbo_frame: "_top" } },
-                                    class: "button button-save-primary button-compact" %>
-                    <% end %>
-                  </div>
                 <% end %>
+
+                <div class="social-post-action-row">
+                  <% if editable %>
+                    <%= button_tag "Caption speichern",
+                                   type: :submit,
+                                   form: caption_form_id,
+                                   class: "button button-secondary button-compact" %>
+                  <% end %>
+                  <% unless social_post.published? || social_post.publishing? %>
+                    <%= button_to "Veröffentlichen",
+                                  publish_backend_event_event_social_post_path(event, social_post),
+                                  method: :post,
+                                  params: { inbox_status: inbox_status },
+                                  form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
+                                  class: "button button-save-primary button-compact" %>
+                  <% end %>
+                </div>
 
                 <div class="social-post-meta-list">
                   <% if social_post.published_at.present? %>
