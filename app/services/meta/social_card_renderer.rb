@@ -6,6 +6,8 @@ module Meta
   class SocialCardRenderer
     RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :title_lines, :venue_text)
     TextLayer = Data.define(:image, :x, :y)
+    ARTIST_FONT_NAME = "DejaVu Sans Bold".freeze
+    BODY_FONT_NAME = "DejaVu Sans".freeze
     Variant = Data.define(
       :key,
       :width,
@@ -114,7 +116,7 @@ module Meta
       background = prepared_background(background_source:, variant:)
       artist_lines = wrap_lines(
         card_payload.fetch(:artist_name),
-        font_name: "Bebas Neue",
+        font_name: ARTIST_FONT_NAME,
         font_size: variant.artist_font_size,
         max_width: text_width_for(variant),
         max_lines: variant.artist_max_lines,
@@ -122,7 +124,7 @@ module Meta
       )
       title_lines = wrap_lines(
         card_payload.fetch(:title),
-        font_name: "Oswald",
+        font_name: BODY_FONT_NAME,
         font_size: variant.title_font_size,
         max_width: text_width_for(variant),
         max_lines: variant.title_max_lines
@@ -236,7 +238,7 @@ module Meta
           text: line,
           x: variant.content_left,
           y: current_y,
-          font_family: "Bebas Neue",
+          font_family: ARTIST_FONT_NAME,
           font_size: variant.artist_font_size,
           color: [ 255, 255, 255 ],
           opacity: 0.98
@@ -251,7 +253,7 @@ module Meta
             text: line,
             x: variant.content_left,
             y: current_y,
-            font_family: "Oswald",
+            font_family: BODY_FONT_NAME,
             font_size: variant.title_font_size,
             color: [ 255, 255, 255 ],
             opacity: 0.92
@@ -261,14 +263,14 @@ module Meta
       end
 
       current_y += variant.meta_gap
-      date_width = measure_text(date_text, font_name: "Oswald", font_size: variant.meta_font_size)
+      date_width = measure_text(date_text, font_name: BODY_FONT_NAME, font_size: variant.meta_font_size)
       venue_x = variant.content_left + date_width + 26
 
       layers << text_layer(
         text: date_text,
         x: variant.content_left,
         y: current_y,
-        font_family: "Oswald",
+        font_family: BODY_FONT_NAME,
         font_size: variant.meta_font_size,
         color: [ 255, 255, 255 ],
         opacity: 0.98
@@ -279,7 +281,7 @@ module Meta
           text: venue_text,
           x: venue_x,
           y: current_y,
-          font_family: "Oswald",
+          font_family: BODY_FONT_NAME,
           font_size: variant.meta_font_size,
           color: [ 255, 255, 255 ],
           opacity: 0.98
@@ -293,8 +295,8 @@ module Meta
       normalized = venue_text.to_s.strip.upcase
       return "" if normalized.blank?
 
-      available_width = [ text_width_for(variant) - measure_text(date_text, font_name: "Oswald", font_size: variant.meta_font_size) - 26, 0 ].max
-      fit_text(normalized, font_name: "Oswald", font_size: variant.meta_font_size, max_width: available_width)
+      available_width = [ text_width_for(variant) - measure_text(date_text, font_name: BODY_FONT_NAME, font_size: variant.meta_font_size) - 26, 0 ].max
+      fit_text(normalized, font_name: BODY_FONT_NAME, font_size: variant.meta_font_size, max_width: available_width)
     end
 
     def wrap_lines(text, font_name:, font_size:, max_width:, max_lines:, uppercase: false)
