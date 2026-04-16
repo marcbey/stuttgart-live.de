@@ -1395,6 +1395,11 @@ border: 1px solid rgba(17, 17, 17, 0.12);
   padding: 1rem;
 }
 
+.social-post-card-header {
+grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+}
+
 .social-post-card-body {
 display: grid;
   gap: 1rem;

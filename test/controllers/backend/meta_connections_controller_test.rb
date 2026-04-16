@@ -23,10 +23,12 @@ class Backend::MetaConnectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "start uses configured instagram redirect uri override" do
-    with_singleton_return_value(AppConfig, :meta_instagram_app_id, "123456") do
-      with_singleton_return_value(AppConfig, :meta_instagram_app_secret, "secret") do
-        with_singleton_return_value(AppConfig, :meta_instagram_redirect_uri, "http://www.example.com/backend/meta_connection/callback") do
-          get start_backend_meta_connection_url
+    with_stubbed_meta_configuration_check do
+      with_singleton_return_value(AppConfig, :meta_instagram_app_id, "123456") do
+        with_singleton_return_value(AppConfig, :meta_instagram_app_secret, "secret") do
+          with_singleton_return_value(AppConfig, :meta_instagram_redirect_uri, "http://www.example.com/backend/meta_connection/callback") do
+            get start_backend_meta_connection_url
+          end
         end
       end
     end
@@ -40,10 +42,12 @@ class Backend::MetaConnectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "start blocks when configured instagram redirect uri points to another host" do
-    with_singleton_return_value(AppConfig, :meta_instagram_app_id, "123456") do
-      with_singleton_return_value(AppConfig, :meta_instagram_app_secret, "secret") do
-        with_singleton_return_value(AppConfig, :meta_instagram_redirect_uri, "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback") do
-          get start_backend_meta_connection_url
+    with_stubbed_meta_configuration_check do
+      with_singleton_return_value(AppConfig, :meta_instagram_app_id, "123456") do
+        with_singleton_return_value(AppConfig, :meta_instagram_app_secret, "secret") do
+          with_singleton_return_value(AppConfig, :meta_instagram_redirect_uri, "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback") do
+            get start_backend_meta_connection_url
+          end
         end
       end
     end
@@ -54,6 +58,15 @@ class Backend::MetaConnectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   private
+
+  def with_stubbed_meta_configuration_check
+    configuration = Object.new
+    configuration.define_singleton_method(:ensure_configured!) { true }
+
+    with_singleton_return_value(Meta::Onboarding::Configuration, :new, configuration) do
+      yield
+    end
+  end
 
   def with_singleton_return_value(target, method_name, value)
     original_method = target.method(method_name)
