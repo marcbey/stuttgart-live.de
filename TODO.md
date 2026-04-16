@@ -44,19 +44,32 @@
 - CMS: Alle statische Seiten sollen pflegbar sein (CMS)
 - Suche: erweitern, zielgerichet mit Datum (heute, morgen, Wochenende), Genre
 - Suche: Suchergebnis mit besserem Aufbau, Design, etc...
+- Ist abgesagt, nicht ausverkauft: https://stuttgart-live.schopp3r.de/backend/events?event_id=15171&status=published
 
+# BUGS:
 
 # TODO:
 - Genre: Obergruppen fix definieren und im LLM-Enrichment mit geben, macht einen LLM-entrichmenr re-run notwendig
-- Listenansicht: einschränken: desktop 6 rows, mobile 10 events
-- Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
 - Suche: Auf Mobile optimieren
-- Bug: SKS Sonderlocke & Event Ausverkauft
- 
+
 # POSTPONE:
 - Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?
+- Listenansicht: einschränken: desktop 6 rows, mobile 10 events
+- Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
+- Bug: SKS Sonderlocke & Event Ausverkauft. Fixed?
 
 # Social Media Export
+
+Logge dich bei Meta for Developers mit marc@schopp3r.de an, wenn ein passwort erforderlich ist, frage nach "Passwort vergessen" - ich nenne dir dann den code.
+Dann erstelle alles was notwendig ist (api tokens, etc.), sodass wir aus der stuttgart-live App heraus Instagram & Facebook Posts zu Events machen können.
+Ich hatte schon mal von Hand eine Admin-App stuttgart-live angelegt, vielleicht kannst du die ja gebrauchen bzw. verwenden dazu.
+Hast du noch Fragen?
+
+
+## Meta for Developers
+https://business.facebook.com/business/loginpage/?cma_account_switch=true&login_options[0]=SSO&login_options[1]=FB&is_logout_from_dfc=true&next=https%3A%2F%2Fdevelopers.facebook.com%2Fapps%2F&request_id=b34c40c7-bcbb-4763-ba50-5ef099be1495
+Username: marc@beyerlin.net
+Password: !kJGzdp6BnE7XHf
 
 ## Insta: 
 https://www.instagram.com/sl_test_26/
@@ -71,4 +84,4 @@ Password: LIVE0711MRuss!2025
 
  
  
-
+stuttgart live publishing id: 1353436776609468

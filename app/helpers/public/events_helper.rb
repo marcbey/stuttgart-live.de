@@ -1,9 +1,8 @@
 module Public::EventsHelper
   PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE = [
     { text: "Suche nach Künstlern und Events in Stuttgart", cursor_blinks: 2, hold_ms: 5000, instant: true, repeat: false },
-    { text: "Pop", cursor_blinks: 4 },
     { text: "Diesen Freitag im Wizemann", cursor_blinks: 6 },
-    { text: "Heute im Goldmark's", cursor_blinks: 0 },
+    { text: "Heute im Goldmarks", cursor_blinks: 0 },
     { text: "Diese Woche in der Porsche-Arena", cursor_blinks: 0 },
     { text: "Rock", cursor_blinks: 2 },
     { text: "Übermorgen im LKA Longhorn", cursor_blinks: 2 },
