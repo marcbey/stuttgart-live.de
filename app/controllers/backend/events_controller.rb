@@ -268,8 +268,6 @@ module Backend
         event_social_posts: [
           :approved_by,
           :published_by,
-          :preview_image_attachment,
-          :publish_image_facebook_attachment,
           :publish_image_instagram_attachment
         ],
         promotion_banner_image_attachment: :blob,
@@ -317,8 +315,6 @@ module Backend
           event_social_posts: [
             :approved_by,
             :published_by,
-            :preview_image_attachment,
-            :publish_image_facebook_attachment,
             :publish_image_instagram_attachment
           ],
           promotion_banner_image_attachment: :blob,

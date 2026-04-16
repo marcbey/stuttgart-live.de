@@ -2,11 +2,10 @@
 
 ## Zielbild
 
-`stuttgart-live` verwendet für Social Publishing eine persistierte Meta-Verbindung statt statischer Einmal-Tokens. Das Onboarding verbindet Facebook Page und verknüpften Instagram Professional Account gemeinsam, während Publishing Facebook und Instagram weiterhin als getrennte Ziele behandelt.
+`stuttgart-live` verwendet für Social Publishing eine persistierte Meta-Verbindung statt statischer Einmal-Tokens. Das Onboarding verbindet Facebook Page und verknüpften Instagram Professional Account gemeinsam. Operativ publisht das Backend anschließend nur noch direkt zu Instagram; ein optionaler Facebook-Cross-Post wird ausschließlich in Meta konfiguriert.
 
-Die bestehende Publish-Logik für die eigentlichen Graph-API-Calls wurde bewusst beibehalten:
+Die bestehende Instagram-Publish-Logik für die eigentlichen Graph-API-Calls wurde bewusst beibehalten:
 
-- Facebook postet weiter über `/{page-id}/photos`
 - Instagram postet weiter über `/{ig-user-id}/media` und `/{ig-user-id}/media_publish`
 
 Neu strukturiert wurde ausschließlich der Credential-, Onboarding- und Lifecycle-Teil.
@@ -47,17 +46,11 @@ Damit bleiben mehrere gefundene Pages auswählbar, aber nur eine Page plus ihr v
 
 ### Bestehende `event_social_posts`
 
-`event_social_posts` bleiben die eigentlichen Publish-Ziel-Records pro Event und Plattform. Das bestehende Modell erfüllt bereits die fachliche Rolle von getrennten `social_post_targets`:
+`event_social_posts` bleiben die eigentlichen Publish-Records. Operativ wird nur noch der `instagram`-Record aktiv verwendet:
 
-- ein Record für `facebook`
 - ein Record für `instagram`
 
-Dadurch bleiben Teilfehler bewusst möglich:
-
-- Facebook erfolgreich, Instagram fehlgeschlagen
-- Instagram erfolgreich, Facebook fehlgeschlagen
-
-Der aggregierte Gesamtzustand wird über `Event#social_publication_status` abgeleitet, zum Beispiel `partial`, `published` oder `failed`.
+Historische `facebook`-Records können in der Datenbank verbleiben, werden aber im Backend weder neu erzeugt noch für Status, UI oder Publishing herangezogen. `Event#social_publication_status` spiegelt deshalb nur noch den Zustand des Instagram-Posts.
 
 ### `publish_attempts`
 
@@ -83,7 +76,7 @@ Der Backend-Einstieg liegt im Settings-Tab `Meta Publishing`.
 6. Im Backend wählt der Admin die gewünschte Facebook Page aus.
 7. Die App löst den verknüpften Instagram Professional Account der Page auf und markiert beide Targets als aktiv.
 
-Wenn keine Pages gefunden werden oder keine Instagram-Verknüpfung existiert, bleibt das im Status klar sichtbar und wird als operator-taugliche Fehlerspur gespeichert.
+Wenn keine Pages gefunden werden oder keine Instagram-Verknüpfung existiert, bleibt das im Status klar sichtbar und blockiert Publishing.
 
 ## Token-Lifecycle
 
@@ -117,6 +110,8 @@ Die Verbindung verwendet klar definierte Zustände:
 - `error`
 
 `reauth_required` blockiert Publishing bewusst explizit.
+
+Zusätzlich blockiert ein fehlender Instagram-Professional-Account an der ausgewählten Facebook-Seite das Publishing, auch wenn die Facebook-Seite selbst erreichbar ist.
 
 ### Refresh
 
@@ -154,7 +149,7 @@ Onboarding ist ausschließlich zuständig für:
 Publishing ist ausschließlich zuständig für:
 
 - Laden der aktiven Meta-Verbindung
-- Laden des passenden Ziel-Targets
+- Laden des Instagram-Ziel-Targets
 - Verwenden der gespeicherten IDs und Tokens
 - sauberes Scheitern bei `reauth_required`
 - Protokollierung der Publish-Versuche
@@ -165,9 +160,8 @@ Publishing erzeugt keine Ad-hoc-Tokens mehr und startet auch keinen interaktiven
 
 Die funktionierenden Teile des bisherigen Publish-Flows wurden bewusst nicht neu erfunden:
 
-- bestehende `Meta::FacebookPublisher`-Payload
 - bestehende `Meta::InstagramPublisher`-Payload
 - vorhandener Draft-, Freigabe- und Publish-Workflow über `EventSocialPost`
-- getrennte Behandlung von Facebook und Instagram im Backend
+- Persistenz der Facebook-Seitenauswahl als Meta-Anker für Instagram
 
 Geändert wurde im Kern nur die Herkunft der Credentials und die Produktionshärtung drumherum.

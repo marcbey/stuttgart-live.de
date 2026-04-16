@@ -130,7 +130,7 @@ class Meta::AccessStatusTest < ActiveSupport::TestCase
     assert_equal "Meta-Token ist abgelaufen oder ungültig.", status.summary
   end
 
-  test "returns warning when selected facebook page has no linked instagram account" do
+  test "returns error when selected facebook page has no linked instagram account" do
     @connection.selected_instagram_target.destroy!
 
     client = StubHttpClient.new(
@@ -159,8 +159,8 @@ class Meta::AccessStatusTest < ActiveSupport::TestCase
       cache: ActiveSupport::Cache::MemoryStore.new
     ).call
 
-    assert_predicate status, :warning?
-    assert_equal "connected", status.connection_status
+    assert_predicate status, :error?
+    assert_equal "error", status.connection_status
     assert_match(/kein Instagram-Professional-Account/, status.summary)
   end
 

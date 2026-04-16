@@ -5,8 +5,8 @@
   <section class="backend-section backend-section-compact">
     <div class="backend-section-header">
       <div>
-        <h3>Social Posts</h3>
-        <p>Drafts bearbeiten und direkt für Facebook oder Instagram veröffentlichen.</p>
+        <h3>Instagram Publishing</h3>
+        <p>Instagram-Draft bearbeiten und direkt veröffentlichen. Facebook wird nur über Meta-Cross-Post außerhalb der App bedient.</p>
       </div>
     </div>
 
@@ -29,6 +29,7 @@
           <div class="form-hint">Token-Ablauf: <%= l(meta_access_status.expires_at, format: "%d.%m.%Y %H:%M") %></div>
         <% end %>
         <div class="form-hint">Zuletzt geprüft: <%= l(meta_access_status.checked_at, format: "%d.%m.%Y %H:%M") %></div>
+        <div class="form-hint">Hinweis: Ob Instagram-Posts zusätzlich nach Facebook geteilt werden, wird in Meta konfiguriert und hier nicht geprüft.</div>
         <% if meta_access_status.details.any? %>
           <ul class="social-post-health-list">
             <% meta_access_status.details.each do |detail| %>
@@ -40,120 +41,118 @@
     </div>
 
     <div class="backend-section-body social-post-platform-grid">
-      <% EventSocialPost.platforms_for_select.each do |platform| %>
-        <% social_post = event.social_post_for(platform) %>
-        <% editable = social_post&.caption_editable? %>
-        <% caption_form_id = social_post.present? ? dom_id(social_post, :caption_form) : nil %>
+      <% social_post = event.instagram_social_post %>
+      <% editable = social_post&.caption_editable? %>
+      <% caption_form_id = social_post.present? ? dom_id(social_post, :caption_form) : nil %>
 
-        <article class="social-post-card">
-          <div class="backend-section-header backend-section-header-with-actions">
-            <div>
-              <h3><%= event_social_post_platform_label(platform) %></h3>
-              <% if social_post.present? %>
-                <% unless social_post.draft? %>
-                  <p>
-                    <span class="<%= event_social_post_status_badge_class(social_post) %>"><%= event_social_post_status_label(social_post) %></span>
-                  </p>
-                <% end %>
-              <% else %>
-                <p>Für diese Plattform existiert noch kein Draft.</p>
+      <article class="social-post-card">
+        <div class="backend-section-header backend-section-header-with-actions">
+          <div>
+            <h3>Instagram</h3>
+            <% if social_post.present? %>
+              <% unless social_post.draft? %>
+                <p>
+                  <span class="<%= event_social_post_status_badge_class(social_post) %>"><%= event_social_post_status_label(social_post) %></span>
+                </p>
               <% end %>
-            </div>
-            <% unless social_post.present? %>
-              <div class="backend-section-header-actions">
-                <%= button_to "Draft erzeugen",
-                              backend_event_event_social_posts_path(event),
-                              method: :post,
-                              params: { platform:, inbox_status: inbox_status },
-                              form: { data: { turbo_frame: "_top" } },
-                              class: "button button-save-primary button-compact" %>
-              </div>
+            <% else %>
+              <p>Für Instagram existiert noch kein Draft.</p>
             <% end %>
           </div>
-
-          <% if social_post.present? %>
-            <% if social_post.error_message.present? %>
-              <div class="flash flash-alert">
-                <strong>Letzter Fehler:</strong>
-                <div><%= social_post.error_message %></div>
-              </div>
-            <% end %>
-
-            <div class="social-post-card-body">
-              <div class="social-post-preview">
-                <% if social_post.preview_image_url.present? %>
-                  <img src="<%= social_post.preview_image_url %>"
-                       alt="<%= event_social_post_platform_label(platform) %> Vorschau"
-                       class="social-post-preview-image">
-                <% else %>
-                  <div class="social-post-preview-empty">Kein öffentlich erreichbares Bild verfügbar.</div>
-                <% end %>
-              </div>
-
-              <div class="social-post-form-column">
-                <%= form_with model: [ :backend, event, social_post ],
-                              method: :patch,
-                              id: caption_form_id,
-                              class: "social-post-caption-form",
-                              data: { turbo_frame: "_top" } do |form| %>
-                  <%= hidden_field_tag :inbox_status, inbox_status if inbox_status.present? %>
-
-                  <div class="social-post-form-field">
-                    <%= form.label :card_artist_name, "Bildtext Artist", class: "form-label" %>
-                    <%= form.text_field :card_artist_name,
-                                        class: "form-input",
-                                        disabled: !editable %>
-                  </div>
-
-                  <div class="social-post-form-field">
-                    <%= form.label :card_meta_line, "Bildtext Datum & Venue", class: "form-label" %>
-                    <%= form.text_field :card_meta_line,
-                                        class: "form-input",
-                                        disabled: !editable %>
-                  </div>
-
-                  <div class="social-post-form-field">
-                    <%= form.label :caption, "Caption", class: "form-label" %>
-                    <%= form.text_area :caption,
-                                       rows: 8,
-                                       class: "form-textarea",
-                                       disabled: !editable %>
-                    <% unless editable %>
-                      <p class="form-hint">Zum Bearbeiten zuerst einen neuen Draft erzeugen.</p>
-                    <% end %>
-                  </div>
-                <% end %>
-
-                <div class="social-post-action-row">
-                  <% if editable %>
-                    <%= button_tag "Caption speichern",
-                                   type: :submit,
-                                   form: caption_form_id,
-                                   class: "button button-secondary button-compact" %>
-                  <% end %>
-                  <% unless social_post.published? || social_post.publishing? %>
-                    <%= button_to "Veröffentlichen",
-                                  publish_backend_event_event_social_post_path(event, social_post),
-                                  method: :post,
-                                  params: { inbox_status: inbox_status },
-                                  form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
-                                  class: "button button-save-primary button-compact" %>
-                  <% end %>
-                </div>
-
-                <div class="social-post-meta-list">
-                  <% if social_post.published_at.present? %>
-                    <div>
-                      <span class="form-label">Veröffentlicht</span>
-                      <p><%= l(social_post.published_at, format: "%d.%m.%Y %H:%M") %><% if social_post.published_by&.name.present? %> · <%= social_post.published_by.name %><% end %></p>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
+          <% unless social_post.present? %>
+            <div class="backend-section-header-actions">
+              <%= button_to "Instagram-Draft erzeugen",
+                            backend_event_event_social_posts_path(event),
+                            method: :post,
+                            params: { inbox_status: inbox_status },
+                            form: { data: { turbo_frame: "_top" } },
+                            class: "button button-save-primary button-compact" %>
             </div>
           <% end %>
-        </article>
-      <% end %>
+        </div>
+
+        <% if social_post.present? %>
+          <% if social_post.error_message.present? %>
+            <div class="flash flash-alert">
+              <strong>Letzter Fehler:</strong>
+              <div><%= social_post.error_message %></div>
+            </div>
+          <% end %>
+
+          <div class="social-post-card-body">
+            <div class="social-post-preview">
+              <% if social_post.publish_image_instagram_url.present? %>
+                <img src="<%= social_post.publish_image_instagram_url %>"
+                     alt="Instagram Vorschau"
+                     class="social-post-preview-image">
+              <% else %>
+                <div class="social-post-preview-empty">Kein öffentlich erreichbares Bild verfügbar.</div>
+              <% end %>
+            </div>
+
+            <div class="social-post-form-column">
+              <%= form_with model: [ :backend, event, social_post ],
+                            method: :patch,
+                            id: caption_form_id,
+                            class: "social-post-caption-form",
+                            data: { turbo_frame: "_top" } do |form| %>
+                <%= hidden_field_tag :inbox_status, inbox_status if inbox_status.present? %>
+
+                <div class="social-post-form-field">
+                  <%= form.label :card_artist_name, "Bildtext Artist", class: "form-label" %>
+                  <%= form.text_field :card_artist_name,
+                                      class: "form-input",
+                                      disabled: !editable %>
+                </div>
+
+                <div class="social-post-form-field">
+                  <%= form.label :card_meta_line, "Bildtext Datum & Venue", class: "form-label" %>
+                  <%= form.text_field :card_meta_line,
+                                      class: "form-input",
+                                      disabled: !editable %>
+                </div>
+
+                <div class="social-post-form-field">
+                  <%= form.label :caption, "Caption", class: "form-label" %>
+                  <%= form.text_area :caption,
+                                     rows: 8,
+                                     class: "form-textarea",
+                                     disabled: !editable %>
+                  <% unless editable %>
+                    <p class="form-hint">Zum Bearbeiten zuerst einen neuen Instagram-Draft erzeugen.</p>
+                  <% end %>
+                </div>
+              <% end %>
+
+              <div class="social-post-action-row">
+                <% if editable %>
+                  <%= button_tag "Caption speichern",
+                                 type: :submit,
+                                 form: caption_form_id,
+                                 class: "button button-secondary button-compact" %>
+                <% end %>
+                <% unless social_post.published? || social_post.publishing? %>
+                  <%= button_to "Instagram veröffentlichen",
+                                publish_backend_event_event_social_post_path(event, social_post),
+                                method: :post,
+                                params: { inbox_status: inbox_status },
+                                form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
+                                class: "button button-save-primary button-compact" %>
+                <% end %>
+              </div>
+
+              <div class="social-post-meta-list">
+                <% if social_post.published_at.present? %>
+                  <div>
+                    <span class="form-label">Veröffentlicht</span>
+                    <p><%= l(social_post.published_at, format: "%d.%m.%Y %H:%M") %><% if social_post.published_by&.name.present? %> · <%= social_post.published_by.name %><% end %></p>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </article>
     </div>
   </section>
 </div>

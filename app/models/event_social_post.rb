@@ -1,5 +1,7 @@
 class EventSocialPost < ApplicationRecord
+  CANONICAL_PLATFORM = "instagram".freeze
   PLATFORMS = %w[facebook instagram].freeze
+  ACTIVE_PLATFORMS = [ CANONICAL_PLATFORM ].freeze
   STATUSES = %w[draft approved publishing published failed].freeze
 
   belongs_to :event
@@ -20,7 +22,7 @@ class EventSocialPost < ApplicationRecord
   scope :ordered, -> { order(:platform, :id) }
 
   def self.platforms_for_select
-    PLATFORMS
+    ACTIVE_PLATFORMS
   end
 
   def draft?
@@ -67,7 +69,7 @@ class EventSocialPost < ApplicationRecord
   end
 
   def preview_image_url
-    asset_url_for(preview_image)
+    publish_image_instagram_url.presence || asset_url_for(preview_image)
   end
 
   def publish_image_facebook_url
@@ -107,11 +109,11 @@ class EventSocialPost < ApplicationRecord
   def publish_image_url_for(target_platform = platform)
     case target_platform.to_s
     when "facebook"
-      publish_image_facebook_url.presence || image_url
+      publish_image_instagram_url.presence || publish_image_facebook_url.presence || image_url
     when "instagram"
       publish_image_instagram_url.presence || image_url
     else
-      image_url
+      publish_image_instagram_url.presence || image_url
     end
   end
 

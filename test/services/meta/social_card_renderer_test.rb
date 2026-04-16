@@ -1,7 +1,7 @@
 require "test_helper"
 
 class Meta::SocialCardRendererTest < ActiveSupport::TestCase
-  test "renders all card variants in the expected dimensions" do
+  test "renders the instagram card variant in the expected dimensions" do
     background_blob = create_uploaded_blob(filename: "social-card-background.png", width: 1600, height: 1200, rgb: [ 18, 45, 51 ])
     background_source = Meta::EventSocialPostDraftBuilder::BackgroundSource.new(
       source_type: :attachment,
@@ -22,18 +22,18 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
       slug: "tubular-bells"
     )
 
-    assert_equal [ 1080, 1080 ], image_dimensions(rendered_cards[:preview].binary)
-    assert_equal [ 1080, 1080 ], image_dimensions(rendered_cards[:facebook].binary)
+    assert_nil rendered_cards[:preview]
+    assert_nil rendered_cards[:facebook]
     assert_equal [ 1080, 1350 ], image_dimensions(rendered_cards[:instagram].binary)
   end
 
   test "truncates long artist and venue text with ellipsis" do
     renderer = Meta::SocialCardRenderer.new
     renderer.define_singleton_method(:measure_text) do |text, font_name:, font_size:|
-      text.to_s.length * 20
+      text.to_s.length * 28
     end
 
-    variant = Meta::SocialCardRenderer::VARIANTS.fetch(:facebook)
+    variant = Meta::SocialCardRenderer::VARIANTS.fetch(:instagram)
 
     artist_lines = renderer.send(
       :wrap_lines,

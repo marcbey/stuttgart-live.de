@@ -70,6 +70,49 @@ class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
     assert connection.last_refresh_at.present?
   end
 
+  test "blocks publishing when the selected page has no instagram professional account" do
+    connection = SocialConnection.create!(
+      provider: "meta",
+      auth_mode: "facebook_login_for_business",
+      connection_status: "connected",
+      user_access_token: "user-token",
+      user_token_expires_at: 40.days.from_now,
+      granted_scopes: %w[pages_show_list pages_read_engagement pages_manage_posts instagram_basic instagram_content_publish]
+    )
+    connection.social_connection_targets.create!(
+      target_type: "facebook_page",
+      external_id: "page-123",
+      name: "Test SL",
+      access_token: "page-token",
+      selected: true,
+      status: "selected"
+    )
+
+    health_check = Meta::ConnectionHealthCheck.new(
+      http_client: StubHttpClient.new(
+        "https://graph.facebook.com/v25.0/debug_token" => {
+          "data" => {
+            "is_valid" => true,
+            "expires_at" => 40.days.from_now.to_i,
+            "scopes" => %w[pages_show_list pages_read_engagement pages_manage_posts instagram_basic instagram_content_publish]
+          }
+        },
+        "https://graph.facebook.com/v25.0/page-123" => {
+          "id" => "page-123",
+          "name" => "Test SL"
+        }
+      ),
+      page_catalog_fetcher: StubPageCatalogFetcher.new([]),
+      token_refresher: StubTokenRefresher.new
+    )
+
+    status = health_check.call(connection:)
+
+    assert_predicate status, :error?
+    assert_equal "error", status.connection_status
+    assert_equal "Instagram-Publishing ist nicht möglich, weil zur ausgewählten Facebook-Seite kein Instagram-Professional-Account verknüpft ist.", status.summary
+  end
+
   private
 
   class StubTokenRefresher

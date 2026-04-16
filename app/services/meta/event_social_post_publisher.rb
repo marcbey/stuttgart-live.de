@@ -41,24 +41,17 @@ module Meta
 
     def default_platform_publishers
       {
-        "facebook" => FacebookPublisher.new,
         "instagram" => InstagramPublisher.new
       }
     end
 
     def publish_context_for(platform)
+      raise Error, "Direktes Facebook-Publishing wird nicht mehr unterstützt." unless platform.to_s == EventSocialPost::CANONICAL_PLATFORM
+
       connection = connection_resolver.connection
       return { connection: nil, target: nil } if connection.blank?
 
-      target =
-        case platform.to_s
-        when "facebook"
-          connection.selected_facebook_page_target
-        when "instagram"
-          connection.selected_instagram_target
-        end
-
-      { connection:, target: }
+      { connection:, target: connection.selected_instagram_target }
     end
 
     def create_publish_attempt(event_social_post:, publish_context:, user:)

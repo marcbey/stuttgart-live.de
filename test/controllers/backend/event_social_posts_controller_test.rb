@@ -23,20 +23,19 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     with_stubbed_meta_access_status do
       assert_difference -> { @event.event_social_posts.count }, 1 do
         post backend_event_event_social_posts_url(@event), params: {
-          platform: "facebook",
           inbox_status: "published"
         }
       end
 
       social_post = @event.event_social_posts.order(:id).last
       assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
-      assert_equal "facebook", social_post.platform
+      assert_equal "instagram", social_post.platform
       assert_equal "draft", social_post.status
     end
   end
 
   test "update resets an approved draft back to draft when caption changes" do
-    social_post = create_approved_social_post(@event, platform: "facebook")
+    social_post = create_approved_social_post(@event, platform: "instagram")
 
     with_stubbed_meta_access_status do
       patch backend_event_event_social_post_url(@event, social_post), params: {
@@ -53,7 +52,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "update stores custom card text and refreshes rendered metadata" do
-    social_post = Meta::EventSocialPostDraftSync.new.call(event: @event, platform: "facebook")
+    social_post = Meta::EventSocialPostDraftSync.new.call(event: @event, platform: "instagram")
 
     with_stubbed_meta_access_status do
       patch backend_event_event_social_post_url(@event, social_post), params: {
@@ -69,13 +68,13 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       social_post.reload
       assert_equal "Custom Artist", social_post.payload_snapshot.dig("card_text", "artist_name")
       assert_equal "11.11.2026 · Custom Venue", social_post.payload_snapshot.dig("card_text", "meta_line")
-      assert_equal "11.11.2026 · CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "facebook", "meta_line")
+      assert_equal "11.11.2026 · CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "instagram", "meta_line")
     end
   end
 
   test "publish rejects invalid drafts" do
     social_post = @event.event_social_posts.create!(
-      platform: "facebook",
+      platform: "instagram",
       status: "draft",
       caption: "Caption",
       target_url: nil,
@@ -95,7 +94,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "publish enqueues a draft social post directly" do
-    social_post = create_draft_social_post(@event, platform: "facebook")
+    social_post = create_draft_social_post(@event, platform: "instagram")
     access_status = StubMetaAccessStatus.new
 
     with_stubbed_meta_access_status(access_status) do
@@ -110,7 +109,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "publishing", social_post.status
       assert_nil social_post.approved_at
       follow_redirect!
-      assert_match "Facebook-Post wird im Hintergrund veröffentlicht.", response.body
+      assert_match "Instagram-Post wird im Hintergrund veröffentlicht.", response.body
     end
   end
 
@@ -121,7 +120,6 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_difference -> { @event.event_social_posts.count }, 1 do
         assert_enqueued_jobs 1, only: Meta::PublishEventSocialPostJob do
           post quick_publish_backend_event_event_social_posts_url(@event), params: {
-            platform: "instagram",
             inbox_status: "published"
           }
         end
@@ -140,7 +138,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "publish blocks enqueue when meta token check fails" do
-    social_post = create_draft_social_post(@event, platform: "facebook")
+    social_post = create_draft_social_post(@event, platform: "instagram")
     failing_access_status = FailingMetaAccessStatus.new
 
     with_stubbed_meta_access_status(failing_access_status) do
@@ -158,9 +156,9 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "quick publish skips already published platform posts" do
+  test "quick publish skips an already published instagram post" do
     social_post = @event.event_social_posts.create!(
-      platform: "facebook",
+      platform: "instagram",
       status: "published",
       caption: "Caption",
       target_url: "https://example.com/events/#{@event.slug}",
@@ -176,15 +174,14 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     with_stubbed_meta_access_status do
       assert_no_difference -> { @event.event_social_posts.count } do
         post quick_publish_backend_event_event_social_posts_url(@event), params: {
-          platform: "facebook",
           inbox_status: "published"
         }
       end
 
       assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
       follow_redirect!
-      assert_match "Facebook-Post ist bereits veröffentlicht.", response.body
-      assert_equal social_post, @event.event_social_posts.find_by!(platform: "facebook")
+      assert_match "Instagram-Post ist bereits veröffentlicht.", response.body
+      assert_equal social_post, @event.event_social_posts.find_by!(platform: "instagram")
     end
   end
 

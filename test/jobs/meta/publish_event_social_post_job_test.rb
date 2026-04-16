@@ -8,7 +8,7 @@ class Meta::PublishEventSocialPostJobTest < ActiveJob::TestCase
 
   test "publishes the social post through the publisher service" do
     social_post = @event.event_social_posts.create!(
-      platform: "facebook",
+      platform: "instagram",
       status: "publishing",
       caption: "Caption",
       target_url: "https://example.com/events/#{@event.slug}",
@@ -23,7 +23,7 @@ class Meta::PublishEventSocialPostJobTest < ActiveJob::TestCase
 
     social_post.reload
     assert_equal "published", social_post.status
-    assert_equal "page-post-1", social_post.remote_post_id
+    assert_nil social_post.remote_post_id
     assert_equal @user, social_post.published_by
   ensure
     Meta.send(:remove_const, :EventSocialPostPublisher)
@@ -37,7 +37,7 @@ class Meta::PublishEventSocialPostJobTest < ActiveJob::TestCase
       event_social_post.mark_published!(
         user:,
         remote_media_id: "photo-1",
-        remote_post_id: "page-post-1",
+        remote_post_id: nil,
         payload: { "publish_response" => { "ok" => true } }
       )
     end

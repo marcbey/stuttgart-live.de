@@ -2,9 +2,9 @@ require "test_helper"
 
 class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
   test "marks the social post as published on success" do
-    social_post = create_approved_social_post(platform: "facebook")
+    social_post = create_approved_social_post(platform: "instagram")
     platform_publishers = {
-      "facebook" => SuccessfulPlatformPublisher.new("media-1", "post-1")
+      "instagram" => SuccessfulPlatformPublisher.new("media-1", nil)
     }
     access_status = SuccessfulAccessStatus.new
 
@@ -16,16 +16,16 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     social_post.reload
     assert_equal "published", social_post.status
     assert_equal "media-1", social_post.remote_media_id
-    assert_equal "post-1", social_post.remote_post_id
+    assert_nil social_post.remote_post_id
     assert_equal users(:one), social_post.published_by
     assert_equal 1, social_post.publish_attempts.count
     assert_equal "succeeded", social_post.publish_attempts.last.status
   end
 
   test "marks the social post as failed when publishing raises" do
-    social_post = create_approved_social_post(platform: "facebook")
+    social_post = create_approved_social_post(platform: "instagram")
     platform_publishers = {
-      "facebook" => FailingPlatformPublisher.new
+      "instagram" => FailingPlatformPublisher.new
     }
     access_status = SuccessfulAccessStatus.new
 
@@ -46,9 +46,9 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
   end
 
   test "fails early when meta access status is invalid" do
-    social_post = create_approved_social_post(platform: "facebook")
+    social_post = create_approved_social_post(platform: "instagram")
     platform_publishers = {
-      "facebook" => SuccessfulPlatformPublisher.new("media-1", "post-1")
+      "instagram" => SuccessfulPlatformPublisher.new("media-1", nil)
     }
 
     error = assert_raises(Meta::Error) do
@@ -85,7 +85,7 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     end
 
     def publish!(event_social_post:)
-      Meta::FacebookPublisher::Result.new(
+      Meta::InstagramPublisher::Result.new(
         remote_media_id: @remote_media_id,
         remote_post_id: @remote_post_id,
         payload: { "platform" => event_social_post.platform }

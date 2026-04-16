@@ -174,11 +174,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
 
     social_post = @published_event.event_social_posts.create!(
-      platform: "facebook",
+      platform: "instagram",
       status: "draft",
-      caption: "Facebook Caption",
+      caption: "Instagram Caption",
       target_url: "https://example.com/events/#{@published_event.slug}",
-      image_url: "https://example.com/facebook.jpg"
+      image_url: "https://example.com/instagram.jpg"
     )
 
     get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
@@ -187,13 +187,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form##{ActionView::RecordIdentifier.dom_id(social_post, :caption_form)}" do
       assert_select "button", text: "Caption speichern", count: 0
       assert_select "button", text: "Veröffentlichen", count: 0
+      assert_select "button", text: "Instagram veröffentlichen", count: 0
     end
 
     assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(social_post, :caption_form)}']",
                   text: "Caption speichern",
                   count: 1
     assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, social_post)}'] button",
-                  text: "Veröffentlichen",
+                  text: "Instagram veröffentlichen",
                   count: 1
   end
 

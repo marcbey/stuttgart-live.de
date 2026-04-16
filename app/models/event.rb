@@ -224,6 +224,8 @@ class Event < ApplicationRecord
   end
 
   def social_post_for(platform)
+    return instagram_social_post if platform.blank? || platform.to_s == EventSocialPost::CANONICAL_PLATFORM
+
     if association(:event_social_posts).loaded?
       event_social_posts.find { |post| post.platform == platform.to_s }
     else
@@ -231,18 +233,22 @@ class Event < ApplicationRecord
     end
   end
 
+  def instagram_social_post
+    if association(:event_social_posts).loaded?
+      event_social_posts.find { |post| post.platform == EventSocialPost::CANONICAL_PLATFORM }
+    else
+      event_social_posts.find_by(platform: EventSocialPost::CANONICAL_PLATFORM)
+    end
+  end
+
   def social_publication_status
-    posts = association(:event_social_posts).loaded? ? event_social_posts : event_social_posts.to_a
-    return "draft" if posts.empty?
+    post = instagram_social_post
+    return "draft" if post.blank?
 
-    published_count = posts.count(&:published?)
-    failed_count = posts.count(&:failed?)
-
-    return "partial" if published_count.positive? && failed_count.positive?
-    return "published" if published_count == posts.size
-    return "failed" if failed_count == posts.size
-    return "publishing" if posts.any?(&:publishing?)
-    return "approved" if posts.any?(&:approved?)
+    return "published" if post.published?
+    return "failed" if post.failed?
+    return "publishing" if post.publishing?
+    return "approved" if post.approved?
 
     "draft"
   end

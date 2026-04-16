@@ -34,7 +34,7 @@ module Backend
 
       notice =
         if connection.social_connection_targets.facebook_pages.any?
-          "Meta-Verbindung wurde hergestellt. Bitte jetzt die Facebook-Seite auswählen."
+          "Meta-Verbindung wurde hergestellt. Bitte jetzt die Facebook-Seite auswählen, die mit dem gewünschten Instagram-Professional-Account verknüpft ist."
         else
           "Meta-Login war erfolgreich, aber es wurden keine Facebook Pages gefunden."
         end
@@ -51,12 +51,13 @@ module Backend
 
       notice =
         if connection.selected_instagram_target.present?
-          "Meta-Verbindung ist aktiv. Facebook-Seite und Instagram-Account wurden gespeichert."
+          "Meta-Verbindung ist aktiv. Facebook-Seite und Instagram-Professional-Account wurden gespeichert."
         else
-          "Meta-Verbindung ist aktiv. Für die gewählte Facebook-Seite wurde kein Instagram-Professional-Account gefunden."
+          "Meta-Verbindung ist unvollständig. Für die gewählte Facebook-Seite wurde kein verknüpfter Instagram-Professional-Account gefunden."
         end
 
-      redirect_to edit_backend_settings_path(section: "meta_connection"), notice:
+      flash_type = connection.selected_instagram_target.present? ? :notice : :alert
+      redirect_to edit_backend_settings_path(section: "meta_connection"), flash_type => notice
     rescue ActiveRecord::RecordNotFound
       redirect_to edit_backend_settings_path(section: "meta_connection"), alert: "Facebook-Page-Auswahl ist ungültig."
     rescue Meta::Error => error

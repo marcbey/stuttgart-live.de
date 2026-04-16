@@ -6,7 +6,7 @@
   <div class="backend-section-header">
     <div>
       <h2>Meta Publishing</h2>
-      <p>Gemeinsames Onboarding für Facebook Pages und verknüpfte Instagram Professional Accounts.</p>
+      <p>Instagram-Publishing mit Meta-Anbindung. Facebook läuft optional nur über Cross-Post aus Meta heraus.</p>
     </div>
     <div class="backend-section-header-actions">
       <%= link_to "Facebook & Instagram verbinden",
@@ -45,6 +45,10 @@
             <p>@<%= access_status.instagram_username %></p>
           </div>
         <% end %>
+        <div>
+          <span class="form-label">Facebook-Cross-Post</span>
+          <p>Wird von der App nicht geprüft oder gesteuert. Falls gewünscht, direkt in Meta konfigurieren.</p>
+        </div>
         <% if connection&.connected_at.present? %>
           <div>
             <span class="form-label">Verbunden seit</span>
@@ -90,6 +94,7 @@
   <% if page_targets.any? %>
     <div class="backend-section-body">
       <h3>Verfügbare Facebook Pages</h3>
+      <p class="form-hint">Wähle die Facebook-Seite, die direkt mit dem gewünschten Instagram-Professional-Account verknüpft ist. Diese Seite dient als Meta-Anker für Instagram-Publishing und optionales Cross-Posting.</p>
       <div class="social-post-platform-grid">
         <% page_targets.each do |target| %>
           <% instagram_target = target.child_targets.find(&:instagram_account?) %>

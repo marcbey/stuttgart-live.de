@@ -5,7 +5,7 @@ module Backend
 
     def create
       social_post = draft_sync.call(event: @event, platform: platform_param)
-      redirect_to redirect_path, notice: "#{platform_label(social_post)}-Draft wurde erzeugt."
+      redirect_to redirect_path, notice: "Instagram-Draft wurde erzeugt."
     rescue ActiveRecord::RecordInvalid => error
       redirect_to redirect_path, alert: error.record.errors.full_messages.to_sentence
     rescue Meta::Error => error
@@ -16,19 +16,19 @@ module Backend
       social_post = @event.social_post_for(platform_param)
 
       if social_post&.published?
-        redirect_to redirect_path, notice: "#{platform_label(social_post)}-Post ist bereits veröffentlicht."
+        redirect_to redirect_path, notice: "Instagram-Post ist bereits veröffentlicht."
         return
       end
 
       if social_post&.publishing?
-        redirect_to redirect_path, notice: "#{platform_label(social_post)}-Post wird bereits im Hintergrund veröffentlicht."
+        redirect_to redirect_path, notice: "Instagram-Post wird bereits im Hintergrund veröffentlicht."
         return
       end
 
       social_post ||= draft_sync.call(event: @event, platform: platform_param)
       enqueue_publish!(social_post)
 
-      redirect_to redirect_path, notice: "#{platform_label(social_post)}-Post wird im Hintergrund veröffentlicht."
+      redirect_to redirect_path, notice: "Instagram-Post wird im Hintergrund veröffentlicht."
     rescue ActiveRecord::RecordInvalid => error
       redirect_to redirect_path, alert: error.record.errors.full_messages.to_sentence
     rescue ActiveJob::EnqueueError => error
@@ -39,8 +39,13 @@ module Backend
     end
 
     def update
+      unless @event_social_post.platform == EventSocialPost::CANONICAL_PLATFORM
+        redirect_to redirect_path, alert: "Nur Instagram-Posts können noch bearbeitet werden."
+        return
+      end
+
       unless @event_social_post.caption_editable?
-        redirect_to redirect_path, alert: "#{platform_label(@event_social_post)}-Post kann in diesem Status nicht bearbeitet werden."
+        redirect_to redirect_path, alert: "Instagram-Post kann in diesem Status nicht bearbeitet werden."
         return
       end
 
@@ -53,24 +58,29 @@ module Backend
       @event_social_post.save!
       draft_sync.refresh_rendered_assets!(@event_social_post) if card_text_changed
 
-      redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Social-Draft wurde gespeichert."
+      redirect_to redirect_path, notice: "Instagram-Draft wurde gespeichert."
     rescue ActiveRecord::RecordInvalid => error
       redirect_to redirect_path, alert: error.record.errors.full_messages.to_sentence
     end
 
     def publish
+      unless @event_social_post.platform == EventSocialPost::CANONICAL_PLATFORM
+        redirect_to redirect_path, alert: "Nur Instagram-Posts können noch veröffentlicht werden."
+        return
+      end
+
       if @event_social_post.published?
-        redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Post ist bereits veröffentlicht."
+        redirect_to redirect_path, notice: "Instagram-Post ist bereits veröffentlicht."
         return
       end
 
       if @event_social_post.publishing?
-        redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Post wird bereits im Hintergrund veröffentlicht."
+        redirect_to redirect_path, notice: "Instagram-Post wird bereits im Hintergrund veröffentlicht."
         return
       end
 
       enqueue_publish!(@event_social_post)
-      redirect_to redirect_path, notice: "#{platform_label(@event_social_post)}-Post wird im Hintergrund veröffentlicht."
+      redirect_to redirect_path, notice: "Instagram-Post wird im Hintergrund veröffentlicht."
     rescue ActiveJob::EnqueueError => error
       @event_social_post.mark_failed!(error.message)
       redirect_to redirect_path, alert: error.message
@@ -79,8 +89,13 @@ module Backend
     end
 
     def regenerate
+      unless @event_social_post.platform == EventSocialPost::CANONICAL_PLATFORM
+        redirect_to redirect_path, alert: "Nur Instagram-Posts können noch neu erzeugt werden."
+        return
+      end
+
       social_post = draft_sync.call(event: @event, platform: @event_social_post.platform)
-      redirect_to redirect_path, notice: "#{platform_label(social_post)}-Draft wurde neu erzeugt."
+      redirect_to redirect_path, notice: "Instagram-Draft wurde neu erzeugt."
     rescue ActiveRecord::RecordInvalid => error
       redirect_to redirect_path, alert: error.record.errors.full_messages.to_sentence
     rescue Meta::Error => error
@@ -102,7 +117,11 @@ module Backend
     end
 
     def platform_param
-      params[:platform].to_s
+      EventSocialPost::CANONICAL_PLATFORM
+    end
+
+    def meta_access_status
+      @meta_access_status ||= Meta::AccessStatus.new
     end
 
     def draft_sync
@@ -122,14 +141,6 @@ module Backend
         event_id: @event.id,
         editor_tab: "social"
       )
-    end
-
-    def platform_label(social_post)
-      view_context.event_social_post_platform_label(social_post.platform)
-    end
-
-    def meta_access_status
-      @meta_access_status ||= Meta::AccessStatus.new
     end
   end
 end

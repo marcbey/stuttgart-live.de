@@ -24,34 +24,6 @@ module Meta
     )
 
     VARIANTS = {
-      preview: Variant.new(
-        key: :preview,
-        width: 1080,
-        height: 1080,
-        frame_inset: 58,
-        content_left: 94,
-        content_right: 120,
-        bottom_padding: 88,
-        artist_font_size: 126,
-        artist_line_height: 0.86,
-        artist_max_lines: 3,
-        meta_font_size: 52,
-        meta_gap: 30
-      ),
-      facebook: Variant.new(
-        key: :facebook,
-        width: 1080,
-        height: 1080,
-        frame_inset: 58,
-        content_left: 94,
-        content_right: 120,
-        bottom_padding: 88,
-        artist_font_size: 126,
-        artist_line_height: 0.86,
-        artist_max_lines: 3,
-        meta_font_size: 52,
-        meta_gap: 30
-      ),
       instagram: Variant.new(
         key: :instagram,
         width: 1080,
@@ -59,7 +31,7 @@ module Meta
         frame_inset: 58,
         content_left: 94,
         content_right: 120,
-        bottom_padding: 104,
+        bottom_padding: 164,
         artist_font_size: 126,
         artist_line_height: 0.86,
         artist_max_lines: 4,

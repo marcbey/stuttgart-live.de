@@ -155,16 +155,16 @@ Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In dies
 
 ### Wie Social-Publishing für Events funktioniert
 
-Das Backend unterstützt einen bewusst einfachen Draft-und-Publish-Workflow für Social-Posts. Pro Event und Plattform gibt es genau einen `EventSocialPost`. Unterstützt werden aktuell `facebook` und `instagram`.
+Das Backend unterstützt einen bewusst einfachen Instagram-first-Draft-und-Publish-Workflow für Social-Posts. Pro Event gibt es operativ genau einen aktiven `EventSocialPost` für `instagram`. Historische `facebook`-Records können in der Datenbank weiter existieren, werden aber nicht mehr aktiv aus dem Backend gesteuert.
 
 Die Meta-Verbindung wird dabei nicht mehr über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über einen persistierten Onboarding- und Lifecycle-Flow im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Facebook Login for Business, wählt die gewünschte Facebook Page aus und speichert damit zugleich den verknüpften Instagram Professional Account. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
 
 Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
-1. Zuerst wird pro Plattform ein Draft erzeugt oder neu generiert.
+1. Zuerst wird ein Instagram-Draft erzeugt oder neu generiert.
 2. Der Draft baut serverseitig eine Caption aus Eventdaten und wählt ein öffentlich erreichbares Bild.
 3. Caption sowie die beiden Bildtext-Zeilen für Artist und Meta-Zeile können danach manuell angepasst werden.
-4. Die Veröffentlichung läuft pro Plattform einzeln direkt aus dem Draft und speichert Status, Fehler und externe IDs am `EventSocialPost`.
+4. Die Veröffentlichung läuft direkt aus dem Draft zu Instagram und speichert Status, Fehler und externe IDs am `EventSocialPost`.
 
 Wichtig für die Generierung:
 
@@ -177,15 +177,15 @@ Wichtig für die Generierung:
 Wichtig für die Veröffentlichung:
 
 - Gesendet werden nur Events, die bereits öffentlich live sind. Ein geplantes `published_at` in der Zukunft reicht nicht.
-- Facebook wird als Foto-Post über die ausgewählte und persistierte Meta-Page veröffentlicht.
 - Instagram wird über den mit dieser Page verknüpften persistierten Instagram Professional Account per Media-Container und anschließendem `media_publish` veröffentlicht.
+- Optionales Facebook-Sharing läuft ausschließlich als extern konfigurierte Cross-Post-Einstellung in Meta; die App verfolgt oder prüft diesen Schritt nicht.
 - Fehlgeschlagene Posts bleiben sichtbar und können nach einer Korrektur der Konfiguration erneut gesendet werden.
 
 Wichtig für Betrieb und Architektur:
 
 - Onboarding und Publishing sind strikt getrennt.
-- Facebook und Instagram bleiben intern zwei getrennte Publish-Ziele.
-- Die bestehenden Graph-API-Payloads wurden bewusst beibehalten; umgestellt wurde vor allem die Credential-Herkunft.
+- Die App veröffentlicht nur noch direkt zu Instagram; die Facebook-Seite bleibt als Meta-Anker für den verknüpften Instagram-Account relevant.
+- Die bestehende Instagram-Graph-API-Payload wurde bewusst beibehalten; umgestellt wurde vor allem die Fachlogik im Backend.
 - Token-Gültigkeit wird regelmäßig geprüft, serverseitige Refresh-Versuche laufen über einen wiederkehrenden Job, und `reauth_required` blockiert Publishing explizit statt implizit zu scheitern.
 
 ### Wie Event-Reihen funktionieren
@@ -458,9 +458,9 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 
 ### Meta-Setup für Social-Publishing
 
-Damit Facebook- und Instagram-Posts aus dem Backend funktionieren, muss das externe Meta-Setup zur hinterlegten App und den Ziel-Accounts passen:
+Damit Instagram-Posts aus dem Backend funktionieren, muss das externe Meta-Setup zur hinterlegten App und den Ziel-Accounts passen:
 
-- eine Facebook Page als Publishing-Ziel, nicht nur ein persönliches Profil
+- eine Facebook Page als Meta-Anker, nicht nur ein persönliches Profil
 - ein Instagram-Professional-Konto, das mit dieser Facebook Page verknüpft ist
 - eine Meta-App mit Zugriff auf die Facebook Pages API und die Instagram API with Facebook Login
 - ein gültiger Page Access Token für genau diese Page
@@ -469,15 +469,13 @@ Die Anwendung erwartet aktuell genau eine globale Konfiguration für beide Platt
 
 Wenn ein Token rotiert oder die Page neu verknüpft wird, reicht es, die betroffenen `meta.*`-Einträge in `config/credentials.yml.enc` zu aktualisieren und anschließend einen Test-Post im Backend erneut zu senden.
 
-Im Social-Tab prüft die App die Meta-Verbindung zusätzlich aktiv gegen die Graph API. Dadurch werden abgelaufene oder falsch berechtigte Tokens schon vor dem Enqueue eines Publish-Jobs sichtbar. Wenn zusätzlich `meta.app_secret` gesetzt ist, kann die Anwendung auch das von Meta gemeldete Ablaufdatum des Tokens anzeigen. Ohne `meta.app_secret` bleibt die Live-Prüfung der Page- und Instagram-Verknüpfung aktiv, aber das Ablaufdatum selbst kann nicht verlässlich angezeigt werden.
+Im Social-Tab prüft die App die Meta-Verbindung zusätzlich aktiv gegen die Graph API. Dadurch werden abgelaufene oder falsch berechtigte Tokens schon vor dem Enqueue eines Publish-Jobs sichtbar. Wenn zusätzlich `meta.app_secret` gesetzt ist, kann die Anwendung auch das von Meta gemeldete Ablaufdatum des Tokens anzeigen. Ohne `meta.app_secret` bleibt die Live-Prüfung der Page- und Instagram-Verknüpfung aktiv, aber das Ablaufdatum selbst kann nicht verlässlich angezeigt werden. Ob Instagram-Posts zusätzlich nach Facebook geteilt werden, bleibt eine separate Meta-Einstellung und wird von der App nicht verifiziert.
 
-Beim Erzeugen eines Social-Drafts rendert die App zusätzlich eigene Kartenbilder im Highlight-Stil aus dem ausgewählten Eventbild. Dabei entstehen bewusst getrennte Varianten:
+Beim Erzeugen eines Social-Drafts rendert die App zusätzlich ein eigenes Kartenbild im Highlight-Stil aus dem ausgewählten Eventbild:
 
-- eine quadratische Backend-Vorschau (`preview_image`)
-- ein quadratisches Facebook-Bild (`publish_image_facebook`)
 - ein 4:5-Instagram-Bild (`publish_image_instagram`)
 
-Die Redaktionsvorschau im Backend bleibt dadurch stabil quadratisch, während Instagram trotzdem ein höheres Feed-Format erhält. Lange Artist-, Titel- und Venue-Texte werden serverseitig mit `...` gekürzt, damit das Layout nicht ausbricht.
+Die Redaktionsvorschau im Backend verwendet dasselbe 4:5-Instagram-Bild wie der Publish-Upload. Lange Artist-, Titel- und Venue-Texte werden serverseitig mit `...` gekürzt, damit das Layout nicht ausbricht.
 
 ### Typische Arbeitsweisen
 

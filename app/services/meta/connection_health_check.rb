@@ -85,10 +85,10 @@ module Meta
       if page_instagram_payload["id"].to_s.strip.blank?
         return persist_and_build_status(
           connection:,
-          connection_status: "connected",
-          state: :warning,
-          summary: "Facebook ist verbunden, aber mit der ausgewählten Seite ist kein Instagram-Professional-Account verknüpft.",
-          details: [ "Facebook-Publishing funktioniert, Instagram-Publishing ist mit dieser Seitenauswahl nicht möglich." ],
+          connection_status: "error",
+          state: :error,
+          summary: "Instagram-Publishing ist nicht möglich, weil zur ausgewählten Facebook-Seite kein Instagram-Professional-Account verknüpft ist.",
+          details: [ "Bitte in Meta eine Facebook-Seite auswählen, die direkt mit dem gewünschten Instagram-Professional-Account verbunden ist." ],
           checked_at:,
           expires_at:,
           permissions:,
