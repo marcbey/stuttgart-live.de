@@ -59,31 +59,23 @@ module Importing
         assert_equal "blocked_homepage_domain", result.payload.dig("fields", "homepage_link", "candidates", 1, "rejection_reason")
       end
 
-      test "rejects unavailable social links from validator and keeps fields nil" do
-        validator = FakeLinkValidator.new(
-          {
-            [ :instagram_link, "https://www.instagram.com/lucanoelmusik/" ] => Importing::LlmEnrichment::LinkValidator::Result.new(
-              accepted: false,
-              sanitized_url: nil,
-              status: "rejected_login_redirect",
-              final_url: "https://www.instagram.com/accounts/login/",
+      test "selects social profile matches without http validation" do
+        validator = Class.new do
+          def call(url:, field_name:)
+            raise "social profiles should not be HTTP-validated" if %i[instagram_link facebook_link].include?(field_name.to_sym)
+
+            Importing::LlmEnrichment::LinkValidator::Result.new(
+              accepted: true,
+              sanitized_url: url,
+              status: "ok",
+              final_url: url,
               http_status: 200,
               error_class: nil,
-              matched_phrase: "Anmelden",
-              checked_at: Time.current
-            ),
-            [ :facebook_link, "https://www.facebook.com/lucanoelmusik/" ] => Importing::LlmEnrichment::LinkValidator::Result.new(
-              accepted: false,
-              sanitized_url: nil,
-              status: "rejected_login_redirect",
-              final_url: "https://www.facebook.com/login/",
-              http_status: 200,
-              error_class: nil,
-              matched_phrase: "Anmelden",
+              matched_phrase: nil,
               checked_at: Time.current
             )
-          }
-        )
+          end
+        end.new
 
         result = build_finder(
           {
@@ -95,10 +87,12 @@ module Importing
           link_validator: validator
         ).call(event: @event)
 
-        assert_nil result.links[:instagram_link]
-        assert_nil result.links[:facebook_link]
-        assert_equal "rejected_login_redirect", result.payload.dig("fields", "instagram_link", "candidates", 0, "rejection_reason")
-        assert_equal "rejected_login_redirect", result.payload.dig("fields", "facebook_link", "candidates", 0, "rejection_reason")
+        assert_equal "https://www.instagram.com/lucanoelmusik/", result.links[:instagram_link]
+        assert_equal "https://www.facebook.com/lucanoelmusik/", result.links[:facebook_link]
+        assert_equal "search_profile_match", result.payload.dig("fields", "instagram_link", "candidates", 0, "selection_strategy")
+        assert_equal "search_profile_match", result.payload.dig("fields", "facebook_link", "candidates", 0, "selection_strategy")
+        assert_nil result.payload.dig("fields", "instagram_link", "candidates", 0, "validation")
+        assert_nil result.payload.dig("fields", "facebook_link", "candidates", 0, "validation")
       end
 
       test "rejects youtube video pages and invalid channels" do

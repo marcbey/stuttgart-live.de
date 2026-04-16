@@ -66,6 +66,13 @@ module Importing
           candidates.each do |candidate|
             next if candidate["rejection_reason"].present?
 
+            if social_field?(field_name)
+              candidate["selected"] = true
+              candidate["selection_strategy"] = "search_profile_match"
+              selected_url = candidate.fetch("url")
+              break
+            end
+
             validation = link_validator.call(url: candidate.fetch("url"), field_name:)
             validation_results << validation
             candidate["validation"] = validation.as_json
@@ -104,6 +111,10 @@ module Importing
       private
 
       attr_reader :link_validator, :query_builder, :serpapi_client
+
+      def social_field?(field_name)
+        %i[instagram_link facebook_link].include?(field_name)
+      end
 
       def run_query(event:, query:, candidates_by_field:)
         search_result = serpapi_client.search(query: query.query, num: GOOGLE_RESULT_LIMIT)

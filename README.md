@@ -298,7 +298,7 @@ Der Ablauf ist:
 1. Zuerst wählt der Job geeignete bestehende Events aus, typischerweise solche ohne vollständige LLM-Anreicherung oder mit veralteten Enrichment-Daten.
 2. Diese Events werden in Batches an das konfigurierte LLM-Modell geschickt.
 3. Das LLM liefert nur noch `genre`, `event_description`, `venue_description`, `venue_external_url` und `venue_address`.
-4. Anschließend sucht ein separater SerpApi-Schritt nach `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link`, bewertet Kandidaten deterministisch und prüft sie mit dem bestehenden Link-Validator.
+4. Anschließend sucht ein separater SerpApi-Schritt nach `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link`, bewertet Kandidaten deterministisch und wendet je Feld passende Auswahlregeln an: `homepage_link` und `youtube_link` werden zusätzlich mit dem bestehenden Link-Validator geprüft, `instagram_link` und `facebook_link` werden über Host, Profilpfad und Score entschieden.
 5. Das Ergebnis wird validiert, normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
 6. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, Batch-Zahl, SerpApi-Suchmetriken und Fehler im zugehörigen `ImportRun`.
 
@@ -307,8 +307,8 @@ Fachlich ist wichtig:
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
 - `event_description` bündelt die belastbaren Informationen zu Artist, Projekt/Produktion und konkretem Eventformat in einem einzigen zusammenhängenden Beschreibungstext.
 - `EventLlmEnrichment.venue`, `venue_description`, `venue_external_url` und `venue_address` bleiben als Rohdaten erhalten.
-- `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` werden nicht mehr vom LLM geraten, sondern ausschließlich aus SerpApi-Kandidaten plus nachgelagerter Validierung abgeleitet.
-- Für diese vier Linkfelder gilt bewusst: Nur technisch bestätigte Treffer werden gespeichert; bei unklaren oder schwachen Kandidaten bleibt das Feld `null`.
+- `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` werden nicht mehr vom LLM geraten, sondern ausschließlich aus SerpApi-Kandidaten abgeleitet.
+- Für `homepage_link` und `youtube_link` muss zusätzlich der technische Link-Check bestehen; bei `instagram_link` und `facebook_link` zählen dagegen vor allem Profil-URL-Form, Score und Query-Match, damit öffentliche Profile nicht an umgebungsabhängigen Login-Redirects scheitern.
 - Hat ein Event bereits eine zugeordnete `Venue`, ändert ein LLM-Lauf weder die Venue-Zuordnung noch `Venue.name`.
 - Passt `EventLlmEnrichment.venue` zu der bereits zugeordneten `Venue`, dürfen `Venue.description`, `Venue.external_url` und `Venue.address` aus dem Enrichment nur dann ergänzt werden, wenn das jeweilige Venue-Feld noch leer ist. Bereits gepflegte Werte werden nicht überschrieben.
 - Weicht `EventLlmEnrichment.venue` von der bereits zugeordneten `Venue` ab, bleibt die bestehende Venue vollständig unverändert.
