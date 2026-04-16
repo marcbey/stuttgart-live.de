@@ -3734,10 +3734,10 @@ display: grid;
 
 .newsletter-signup-field {
 position: relative;
-  display: flex;
-  align-items: stretch;
+  display: block;
   width: 100%;
   min-width: 0;
+  min-height: 3.05rem;
 }
 
 .newsletter-signup-frame {
@@ -3755,6 +3755,10 @@ display: grid;
 
 .newsletter-signup-form .newsletter-signup-feedback {
 grid-column: 1 / -1;
+}
+
+.newsletter-signup-section .field_with_errors {
+display: contents;
 }
 
 .newsletter-signup-confirmation {
@@ -3804,14 +3808,23 @@ margin: 0;
 
 .newsletter-signup-section .newsletter-signup-input {
 width: 100%;
+  flex: 1 1 auto;
   min-width: 0;
+  height: 100%;
   min-height: 3.05rem;
+  box-sizing: border-box;
+  appearance: none;
   border-color: rgba(17, 17, 17, 0.12);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   padding-inline: 0.95rem;
   font-size: 1rem;
   transition: box-shadow 180ms ease, background-color 180ms ease, border-color 180ms ease;
+}
+
+.newsletter-signup-section .newsletter-signup-input.newsletter-signup-input-invalid {
+border-color: rgba(199, 53, 66, 0.85);
+  box-shadow: inset 0 0 0 1px rgba(199, 53, 66, 0.12);
 }
 
 .newsletter-signup-section .newsletter-signup-input::placeholder {
@@ -8930,9 +8943,10 @@ grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
 }
 
-body.page-public-events-index .newsletter-signup-section .newsletter-signup-form-inline,
-body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-form-inline {
+body.page-public-events-index .newsletter-signup-section .newsletter-signup-form.newsletter-signup-form-inline,
+body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-form.newsletter-signup-form-inline {
 grid-template-columns: minmax(0, 1fr);
+  align-items: start;
 }
 
 body.page-public-events-index .newsletter-signup-note,
@@ -8945,7 +8959,8 @@ color: rgba(252, 236, 249, 0.82);
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-input,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input {
-min-height: 4.1rem;
+height: 4.1rem;
+  min-height: 4.1rem;
   min-width: 0;
   width: 100%;
   border: 2px solid var(--ink);
@@ -8995,6 +9010,11 @@ justify-self: stretch;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.14rem;
   letter-spacing: 0.05em;
+}
+
+body.page-public-events-index .newsletter-signup-field,
+body.page-public-newsletter-poster .newsletter-signup-field {
+min-height: 4.1rem;
 }
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button-arrow,
@@ -9088,21 +9108,6 @@ body.page-public-events-index .newsletter-signup-confirmation-home .newsletter-s
 body.page-public-newsletter-poster .newsletter-signup-confirmation-home .newsletter-signup-confirmation-copy > p:last-child {
 color: var(--ink);
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
-  font-size: clamp(1.15rem, 1.8vw, 1.45rem);
-  font-weight: 400;
-  line-height: 1.15;
-}
-
-body.page-public-events-index .newsletter-signup-confirmation-error .newsletter-signup-confirmation-copy .eyebrow,
-body.page-public-newsletter-poster .newsletter-signup-confirmation-error .newsletter-signup-confirmation-copy .eyebrow {
-color: #ff3b0a;
-  font-size: clamp(1rem, 1.45vw, 1.2rem);
-  letter-spacing: 0.025em;
-}
-
-body.page-public-events-index .newsletter-signup-confirmation-error .newsletter-signup-confirmation-copy > p:last-child,
-body.page-public-newsletter-poster .newsletter-signup-confirmation-error .newsletter-signup-confirmation-copy > p:last-child {
-font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: clamp(1.15rem, 1.8vw, 1.45rem);
   font-weight: 400;
   line-height: 1.15;

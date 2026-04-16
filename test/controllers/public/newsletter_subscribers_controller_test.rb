@@ -86,8 +86,33 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
 
     assert_response :unprocessable_entity
     assert_includes response.body, 'id="events-newsletter-signup"'
-    assert_includes response.body, "Diese Mailadresse ist schon vorhanden."
+    assert_includes response.body, expected_invalid_email_message("ungültig")
     assert_includes response.body, "ungültig"
     assert_includes response.body, "<form"
+    assert_includes response.body, "newsletter-signup-field"
+  end
+
+  test "shows duplicate email feedback inline while keeping the homepage field usable" do
+    NewsletterSubscriber.create!(email: "existing@example.com", source: "homepage")
+
+    assert_no_difference("NewsletterSubscriber.count") do
+      post newsletter_subscribers_url,
+           params: {
+             context: "events_index",
+             return_to: root_path,
+             source: "homepage",
+             newsletter_subscriber: { email: "existing@example.com" }
+           },
+           headers: { "Turbo-Frame" => "events-newsletter-signup" }
+    end
+
+    assert_response :unprocessable_entity
+    assert_includes response.body, 'id="events-newsletter-signup"'
+    assert_includes response.body, "Diese Mailadresse ist schon vorhanden."
+    assert_includes response.body, 'class="newsletter-signup-feedback flash flash-alert"'
+    assert_includes response.body, "newsletter-signup-field"
+    assert_includes response.body, 'value="existing@example.com"'
+    assert_equal 1, response.body.scan("newsletter-signup-field").length
+    refute_includes response.body, "newsletter-signup-confirmation-error"
   end
 end
