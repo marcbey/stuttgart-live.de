@@ -106,6 +106,8 @@ Der Ablauf ist:
 
 Im Backend gibt es für Venues einen eigenen Verwaltungsbereich unter `/backend/venues`. Die Liste startet dort bewusst leer und zeigt erst nach einer Suche Treffer an. Die Suche läuft bereits während des Tippens und aktualisiert die Trefferliste per Turbo, ohne dass die komplette Seite neu geladen werden muss. Gesucht wird nach Venue-Name, Adresse, Beschreibung und externer URL.
 
+Auch die öffentliche Event-Suche versteht strukturierte Zeitphrasen wie `heute`, `morgen`, `diese Woche`, `dieses Wochenende` oder `am Wochenende`, kombiniert mit einer Venue wie `am Wochenende im Goldmark´s Stuttgart`. Wichtig dabei: Das Wochenende ist in dieser Suche bewusst als Freitag bis Sonntag definiert.
+
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen bei exakt gleicher Startzeit. Damit kann der Merge-Import auch Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten` oder `Gregory Porter & Orchestra` und `Gregory Porter` als denselben Termin erkennen. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Artist-Dubletten` ein- oder ausschalten.
 
 Wichtig für das Verhalten im Backend:

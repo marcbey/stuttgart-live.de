@@ -164,8 +164,8 @@ module Public
         end
 
         def weekend_range_for(week_start)
-          saturday = week_start + 5.days
-          saturday..(saturday + 1.day)
+          friday = week_start + 4.days
+          friday..(friday + 2.days)
         end
 
         def weekday_offset(weekday_key)

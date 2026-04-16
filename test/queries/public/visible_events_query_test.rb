@@ -276,6 +276,31 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     end
   end
 
+  test "weekend queries include friday events for matching venues" do
+    travel_to(Time.zone.parse("2026-04-07 10:00:00")) do
+      friday_event = create_visible_event(
+        title: "Goldmark's Friday Weekend",
+        artist_name: "Goldmark Friday Artist",
+        start_at: Time.zone.parse("2026-04-10 20:00:00"),
+        venue_name: "Goldmark´s Stuttgart"
+      )
+      create_visible_event(
+        title: "Goldmark's Thursday",
+        artist_name: "Goldmark Thursday Artist",
+        start_at: Time.zone.parse("2026-04-09 20:00:00"),
+        venue_name: "Goldmark´s Stuttgart"
+      )
+
+      result = Public::VisibleEventsQuery.new(
+        scope: Event.published_live,
+        filter: Public::VisibleEventsQuery::FILTER_ALL,
+        query: "Am Wochenende im Goldmark´s Stuttgart"
+      ).call
+
+      assert_equal [ friday_event ], result.to_a
+    end
+  end
+
   test "returns none for incomplete structured queries" do
     create_visible_event(title: "Montag Konzert", artist_name: "Band")
 

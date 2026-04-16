@@ -5,7 +5,7 @@ class Public::Events::Search::TimePhraseResolverTest < ActiveSupport::TestCase
     travel_to(Time.zone.parse("2026-04-07 12:00:00")) do
       resolution = resolve(type: :coming_weekend)
 
-      assert_equal Time.zone.parse("2026-04-11 00:00:00"), resolution.from
+      assert_equal Time.zone.parse("2026-04-10 00:00:00"), resolution.from
       assert_equal Time.zone.parse("2026-04-12 23:59:59.999999999"), resolution.to
     end
   end
@@ -14,7 +14,7 @@ class Public::Events::Search::TimePhraseResolverTest < ActiveSupport::TestCase
     travel_to(Time.zone.parse("2026-04-12 12:00:00")) do
       resolution = resolve(type: :coming_weekend)
 
-      assert_equal Time.zone.parse("2026-04-11 00:00:00"), resolution.from
+      assert_equal Time.zone.parse("2026-04-10 00:00:00"), resolution.from
       assert_equal Time.zone.parse("2026-04-12 23:59:59.999999999"), resolution.to
     end
   end
@@ -24,8 +24,8 @@ class Public::Events::Search::TimePhraseResolverTest < ActiveSupport::TestCase
       this_weekend = resolve(type: :this_weekend)
       next_weekend = resolve(type: :next_weekend)
 
-      assert_equal Date.new(2026, 4, 11), this_weekend.from.to_date
-      assert_equal Date.new(2026, 4, 18), next_weekend.from.to_date
+      assert_equal Date.new(2026, 4, 10), this_weekend.from.to_date
+      assert_equal Date.new(2026, 4, 17), next_weekend.from.to_date
     end
   end
 
@@ -33,7 +33,7 @@ class Public::Events::Search::TimePhraseResolverTest < ActiveSupport::TestCase
     travel_to(Time.zone.parse("2026-04-07 12:00:00")) do
       resolution = resolve(type: :week_after_next_weekend)
 
-      assert_equal Date.new(2026, 4, 25), resolution.from.to_date
+      assert_equal Date.new(2026, 4, 24), resolution.from.to_date
       assert_equal Date.new(2026, 4, 26), resolution.to.to_date
     end
   end
