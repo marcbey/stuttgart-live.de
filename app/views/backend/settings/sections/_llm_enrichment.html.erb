@@ -25,6 +25,17 @@
                          class: "form-textarea",
                          aria: { describedby: "llm-enrichment-prompt-help" } %>
       <p id="llm-enrichment-prompt-help" class="form-hint">Dieses Template steuert den Prompt für den LLM-Enrichment-Importer. Der Platzhalter <code>{{input_json}}</code> muss enthalten bleiben und wird pro Batch durch die Eventdaten ersetzt.</p>
+
+      <%= form.label :llm_enrichment_temperature, "LLM-Temperature", class: "form-label" %>
+      <%= form.number_field :llm_enrichment_temperature,
+                            value: @llm_enrichment_temperature_setting.llm_enrichment_temperature,
+                            min: 0,
+                            max: 2,
+                            step: 0.1,
+                            class: "form-input",
+                            placeholder: AppSetting::DEFAULT_LLM_ENRICHMENT_TEMPERATURE,
+                            aria: { describedby: "llm-enrichment-temperature-help" } %>
+      <p id="llm-enrichment-temperature-help" class="form-hint">Optionaler Wert zwischen 0 und 2. Projekt-Default für das LLM-Enrichment ist <%= AppSetting::DEFAULT_LLM_ENRICHMENT_TEMPERATURE %>. Der OpenAI-API-Default wäre nur ohne diesen Projektoverride <code>1</code>. Niedrige Werte liefern stabilere, konsistentere Ergebnisse; höhere Werte machen die Antworten variantenreicher, aber auch weniger vorhersehbar.</p>
       <div class="settings-group-footer">
         <%= form.submit "Save", class: "button button-save-primary button-compact" %>
       </div>

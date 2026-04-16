@@ -5,10 +5,11 @@ module OpenAi
     Error = Class.new(StandardError)
     DEFAULT_MODEL = "gpt-5.1".freeze
 
-    attr_reader :model
+    attr_reader :model, :temperature
 
-    def initialize(model: AppSetting.llm_enrichment_model, sdk_client: nil)
+    def initialize(model: AppSetting.llm_enrichment_model, temperature: nil, sdk_client: nil)
       @model = normalize_model(model)
+      @temperature = temperature
       @sdk_client = sdk_client
     end
 
@@ -16,13 +17,16 @@ module OpenAi
       raise Error, "openai.api_key ist nicht in den Rails Credentials gesetzt." if resolved_api_key.blank?
       raise Error, "llm_enrichment_model ist nicht gesetzt." if model.blank?
 
-      response = client.responses.create(
+      request = {
         model: model,
         input: input,
         text: {
           format: text_format
         }
-      )
+      }
+      request[:temperature] = temperature if temperature.present?
+
+      response = client.responses.create(**request)
 
       response
     rescue OpenAI::Errors::Error => e

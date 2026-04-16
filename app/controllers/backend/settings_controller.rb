@@ -131,6 +131,7 @@ module Backend
       when "llm_enrichment"
         @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
         @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
+        @llm_enrichment_temperature_setting = AppSetting.llm_enrichment_temperature_record
       when "llm_genre_grouping"
         @llm_genre_grouping_model_setting = AppSetting.llm_genre_grouping_model_record
         @llm_genre_grouping_prompt_template_setting = AppSetting.llm_genre_grouping_prompt_template_record
@@ -154,6 +155,8 @@ module Backend
         @llm_enrichment_model_setting.llm_enrichment_model = active_settings_params[:llm_enrichment_model]
         @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text =
           active_settings_params[:llm_enrichment_prompt_template_text]
+        @llm_enrichment_temperature_setting.llm_enrichment_temperature =
+          active_settings_params[:llm_enrichment_temperature]
       when "llm_genre_grouping"
         @llm_genre_grouping_model_setting.llm_genre_grouping_model = active_settings_params[:llm_genre_grouping_model]
         @llm_genre_grouping_prompt_template_setting.llm_genre_grouping_prompt_template_text =
@@ -177,7 +180,7 @@ module Backend
       when "homepage_genre_lanes"
         [ @public_genre_grouping_snapshot_id_setting, @homepage_genre_lane_configuration ].compact
       when "llm_enrichment"
-        [ @llm_enrichment_model_setting, @llm_enrichment_prompt_template_setting ]
+        [ @llm_enrichment_model_setting, @llm_enrichment_prompt_template_setting, @llm_enrichment_temperature_setting ]
       when "llm_genre_grouping"
         [
           @llm_genre_grouping_model_setting,
@@ -202,7 +205,7 @@ module Backend
       when "homepage_genre_lanes"
         params.require(:app_setting).permit(:public_genre_grouping_snapshot_id, homepage_genre_lane_slugs: [])
       when "llm_enrichment"
-        params.require(:app_setting).permit(:llm_enrichment_model, :llm_enrichment_prompt_template_text)
+        params.require(:app_setting).permit(:llm_enrichment_model, :llm_enrichment_prompt_template_text, :llm_enrichment_temperature)
       when "llm_genre_grouping"
         params.require(:app_setting).permit(
           :llm_genre_grouping_model,

@@ -114,6 +114,23 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal "gpt-5-mini", AppSetting.llm_enrichment_model
   end
 
+  test "returns default llm enrichment temperature when no setting exists" do
+    assert_equal 1.0, AppSetting.llm_enrichment_temperature
+  end
+
+  test "returns configured llm enrichment temperature" do
+    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY, value: 0.4)
+
+    assert_equal 0.4, AppSetting.llm_enrichment_temperature
+  end
+
+  test "normalizes llm enrichment temperature from text" do
+    setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY)
+    setting.llm_enrichment_temperature = " 0.7 "
+
+    assert_equal 0.7, setting.llm_enrichment_temperature
+  end
+
   test "supports gpt-5.4 for llm settings" do
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5.4")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5.4")
@@ -140,6 +157,13 @@ class AppSettingTest < ActiveSupport::TestCase
 
     assert_not setting.valid?
     assert_includes setting.errors[:value], "{{input_json}} muss im Prompt enthalten sein"
+  end
+
+  test "requires llm enrichment temperature to be between 0 and 2" do
+    setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY, value: "2.5")
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "muss eine Zahl zwischen 0 und 2 sein"
   end
 
   test "returns default llm genre grouping prompt template when no setting exists" do

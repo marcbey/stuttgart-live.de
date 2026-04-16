@@ -59,6 +59,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "section.settings-group", count: 1
     assert_select "form[action='#{backend_settings_path(section: :llm_enrichment)}'] select[name='app_setting[llm_enrichment_model]']", count: 1
+    assert_select "form[action='#{backend_settings_path(section: :llm_enrichment)}'] input[name='app_setting[llm_enrichment_temperature]']", count: 1
     assert_select ".settings-tabs-nav", count: 0
   end
 
@@ -91,13 +92,15 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     patch backend_settings_url(section: :llm_enrichment), params: {
       app_setting: {
         llm_enrichment_model: "gpt-5-mini",
-        llm_enrichment_prompt_template_text: "Bitte recherchiere\n{{input_json}}"
+        llm_enrichment_prompt_template_text: "Bitte recherchiere\n{{input_json}}",
+        llm_enrichment_temperature: "0.3"
       }
     }
 
     assert_redirected_to edit_backend_settings_url(section: :llm_enrichment)
     assert_equal "gpt-5-mini", AppSetting.llm_enrichment_model
     assert_equal "Bitte recherchiere\n{{input_json}}", AppSetting.llm_enrichment_prompt_template
+    assert_equal 0.3, AppSetting.llm_enrichment_temperature
   end
 
   test "admin can update llm genre grouping section with gpt-5.4" do
@@ -294,6 +297,22 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "ist kein unterstütztes LLM-Modell"
   end
 
+  test "admin cannot save invalid llm enrichment temperature" do
+    sign_in_as(@admin)
+
+    patch backend_settings_url(section: :llm_enrichment), params: {
+      app_setting: {
+        llm_enrichment_model: "gpt-5.1",
+        llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
+        llm_enrichment_temperature: "2.5"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "#settings-tab-llm-enrichment[aria-selected='true']", count: 1
+    assert_includes response.body, "muss eine Zahl zwischen 0 und 2 sein"
+  end
+
   test "admin cannot save invalid llm genre grouping settings" do
     sign_in_as(@admin)
 
@@ -321,6 +340,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY,
       AppSetting::LLM_ENRICHMENT_MODEL_KEY,
       AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY,
+      AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY,
       AppSetting::LLM_GENRE_GROUPING_MODEL_KEY,
       AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY,
       AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY,
@@ -337,6 +357,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Bestehender Hinweistext")
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5-mini")
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
+    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY, value: 1)
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5-mini")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Gruppiere\n{{group_count}}\n{{input_json}}")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 30)

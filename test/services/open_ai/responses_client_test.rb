@@ -62,7 +62,60 @@ module OpenAi
       end
     end
 
+    test "forwards temperature when configured" do
+      captured_request = nil
+      fake_sdk_client = build_fake_sdk_client do |request|
+        captured_request = request
+        { "id" => "resp_123" }
+      end
+      fake_credentials = fake_credentials_with_api_key
+
+      with_stubbed_credentials(fake_credentials) do
+        ResponsesClient.new(model: "gpt-5-mini", temperature: 0.4, sdk_client: fake_sdk_client)
+          .create!(input: "Prompt", text_format: { type: "json_schema" })
+      end
+
+      assert_equal 0.4, captured_request[:temperature]
+    end
+
+    test "omits temperature when not configured" do
+      captured_request = nil
+      fake_sdk_client = build_fake_sdk_client do |request|
+        captured_request = request
+        { "id" => "resp_123" }
+      end
+      fake_credentials = fake_credentials_with_api_key
+
+      with_stubbed_credentials(fake_credentials) do
+        ResponsesClient.new(model: "gpt-5-mini", sdk_client: fake_sdk_client)
+          .create!(input: "Prompt", text_format: { type: "json_schema" })
+      end
+
+      assert_not_includes captured_request.keys, :temperature
+    end
+
     private
+
+    def build_fake_sdk_client(&block)
+      responses_resource = Object.new
+      responses_resource.define_singleton_method(:create) do |**request|
+        block.call(request)
+      end
+
+      Object.new.tap do |sdk_client|
+        sdk_client.define_singleton_method(:responses) do
+          responses_resource
+        end
+      end
+    end
+
+    def fake_credentials_with_api_key
+      Object.new.tap do |credentials|
+        credentials.define_singleton_method(:dig) do |*keys|
+          keys == [ :openai, :api_key ] ? "test-openai-key" : nil
+        end
+      end
+    end
 
     def with_stubbed_credentials(fake_credentials)
       application_class = Rails.application.singleton_class

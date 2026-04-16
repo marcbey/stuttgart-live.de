@@ -6,12 +6,14 @@ class AppSetting < ApplicationRecord
   PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY = "public_genre_grouping_snapshot_id".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
+  LLM_ENRICHMENT_TEMPERATURE_KEY = "llm_enrichment_temperature".freeze
   LLM_GENRE_GROUPING_MODEL_KEY = "llm_genre_grouping_model".freeze
   LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY = "llm_genre_grouping_prompt_template".freeze
   LLM_GENRE_GROUPING_GROUP_COUNT_KEY = "llm_genre_grouping_group_count".freeze
   LLM_ENRICHMENT_INPUT_PLACEHOLDER = "{{input_json}}".freeze
   LLM_GENRE_GROUPING_INPUT_PLACEHOLDER = "{{input_json}}".freeze
   LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER = "{{group_count}}".freeze
+  DEFAULT_LLM_ENRICHMENT_TEMPERATURE = 1
   DEFAULT_LLM_GENRE_GROUPING_GROUP_COUNT = 30
   AVAILABLE_LLM_ENRICHMENT_MODELS = [
     [ "GPT-5.4", "gpt-5.4" ],
@@ -153,6 +155,7 @@ class AppSetting < ApplicationRecord
   validate :sks_promoter_ids_must_be_present
   validate :llm_enrichment_model_must_be_valid
   validate :llm_enrichment_prompt_template_must_be_valid
+  validate :llm_enrichment_temperature_must_be_valid
   validate :public_genre_grouping_snapshot_id_must_be_valid
   validate :llm_genre_grouping_model_must_be_valid
   validate :llm_genre_grouping_prompt_template_must_be_valid
@@ -185,6 +188,11 @@ class AppSetting < ApplicationRecord
     def llm_enrichment_model
       @llm_enrichment_model ||=
         normalize_llm_enrichment_model(find_by(key: LLM_ENRICHMENT_MODEL_KEY)&.value) || default_llm_enrichment_model
+    end
+
+    def llm_enrichment_temperature
+      @llm_enrichment_temperature ||=
+        normalize_llm_enrichment_temperature(find_by(key: LLM_ENRICHMENT_TEMPERATURE_KEY)&.value) || default_llm_enrichment_temperature
     end
 
     def llm_genre_grouping_prompt_template
@@ -230,6 +238,14 @@ class AppSetting < ApplicationRecord
       find_or_initialize_by(key: LLM_ENRICHMENT_MODEL_KEY).tap do |setting|
         if normalize_llm_enrichment_model(setting.value).blank?
           setting.value = llm_enrichment_model
+        end
+      end
+    end
+
+    def llm_enrichment_temperature_record
+      find_or_initialize_by(key: LLM_ENRICHMENT_TEMPERATURE_KEY).tap do |setting|
+        if normalize_llm_enrichment_temperature(setting.value).blank?
+          setting.value = llm_enrichment_temperature
         end
       end
     end
@@ -339,12 +355,39 @@ class AppSetting < ApplicationRecord
       available_llm_enrichment_model_values.include?(model) ? model : nil
     end
 
+    def normalize_llm_enrichment_temperature(value)
+      raw_value =
+        case value
+        when Numeric
+          value
+        else
+          normalize_text(value)
+        end
+
+      temperature =
+        case raw_value
+        when Numeric
+          raw_value.to_f
+        else
+          Float(raw_value, exception: false)
+        end
+
+      return if temperature.nil? || !temperature.finite?
+      return if temperature < 0.0 || temperature > 2.0
+
+      temperature
+    end
+
     def available_llm_enrichment_model_values
       AVAILABLE_LLM_ENRICHMENT_MODELS.map(&:last)
     end
 
     def default_llm_enrichment_model
       Rails.application.config.x.openai.llm_enrichment_model.to_s.strip.presence || "gpt-5.1"
+    end
+
+    def default_llm_enrichment_temperature
+      DEFAULT_LLM_ENRICHMENT_TEMPERATURE
     end
 
     def reset_cache!
@@ -354,6 +397,7 @@ class AppSetting < ApplicationRecord
       @public_genre_grouping_snapshot_id = nil
       @llm_enrichment_model = nil
       @llm_enrichment_prompt_template = nil
+      @llm_enrichment_temperature = nil
       @llm_genre_grouping_model = nil
       @llm_genre_grouping_prompt_template = nil
       @llm_genre_grouping_group_count = nil
@@ -425,6 +469,22 @@ class AppSetting < ApplicationRecord
 
   def llm_enrichment_model=(raw_value)
     self.value = self.class.normalize_text(raw_value)
+  end
+
+  def llm_enrichment_temperature
+    temperature = self.class.normalize_llm_enrichment_temperature(value)
+    if key == LLM_ENRICHMENT_TEMPERATURE_KEY && temperature.blank?
+      raw_value = self.class.normalize_text(value)
+      return self.class.llm_enrichment_temperature if raw_value.blank?
+
+      return raw_value
+    end
+
+    temperature
+  end
+
+  def llm_enrichment_temperature=(raw_value)
+    self.value = self.class.normalize_llm_enrichment_temperature(raw_value) || raw_value.to_s.strip
   end
 
   def llm_enrichment_prompt_template_text
@@ -524,6 +584,16 @@ class AppSetting < ApplicationRecord
     return if self.class.available_llm_enrichment_model_values.include?(model)
 
     errors.add(:value, "ist kein unterstütztes LLM-Modell")
+  end
+
+  def llm_enrichment_temperature_must_be_valid
+    return unless key == LLM_ENRICHMENT_TEMPERATURE_KEY
+
+    raw_value = self.class.normalize_text(value)
+    return if raw_value.blank?
+    return if self.class.normalize_llm_enrichment_temperature(value).present?
+
+    errors.add(:value, "muss eine Zahl zwischen 0 und 2 sein")
   end
 
   def public_genre_grouping_snapshot_id_must_be_valid

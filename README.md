@@ -455,7 +455,7 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 
 - `sks_promoter_ids` für SKS-Filter und Sortierung
 - `sks_organizer_notes` für den Standardtext bei SKS-Events ohne eigene Veranstalterhinweise
-- `llm_enrichment_model` und `llm_enrichment_prompt_template` für den Enrichment-Job
+- `llm_enrichment_model`, `llm_enrichment_prompt_template` und `llm_enrichment_temperature` für den Enrichment-Job; projektseitig ist für `llm_enrichment_temperature` standardmäßig `1` gesetzt und entspricht damit dem OpenAI-API-Default. Niedrigere Werte liefern stabilere, höhere Werte variantenreichere Antworten
 - `llm_genre_grouping_model`, `llm_genre_grouping_prompt_template` und `llm_genre_grouping_group_count` für den Genre-Gruppierungsjob
 - `public_genre_grouping_snapshot_id` für den global öffentlich verwendeten Genre-Snapshot
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen im Merge-Import bei exakt gleicher Startzeit

@@ -55,7 +55,15 @@ module Importing
         :canceled
       )
 
-      def initialize(run:, client: OpenAi::ResponsesClient.new, logger: Importing::Logging.logger, link_validator: nil)
+      def initialize(
+        run:,
+        client: OpenAi::ResponsesClient.new(
+          model: AppSetting.llm_enrichment_model,
+          temperature: AppSetting.llm_enrichment_temperature
+        ),
+        logger: Importing::Logging.logger,
+        link_validator: nil
+      )
         @run = run
         @client = client
         @logger = logger
