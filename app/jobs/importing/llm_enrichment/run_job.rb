@@ -33,6 +33,10 @@ module Importing
               "links_checked_count" => result.links_checked_count,
               "links_rejected_count" => result.links_rejected_count,
               "links_unverifiable_count" => result.links_unverifiable_count,
+              "serpapi_search_count" => result.serpapi_search_count,
+              "serpapi_candidate_count" => result.serpapi_candidate_count,
+              "links_found_via_serpapi_count" => result.links_found_via_serpapi_count,
+              "links_null_after_serpapi_count" => result.links_null_after_serpapi_count,
               "stop_released_at" => Time.current.iso8601,
               "stop_release_reason" => "Stopped by user"
             )
@@ -59,7 +63,11 @@ module Importing
             "model" => result.model,
             "links_checked_count" => result.links_checked_count,
             "links_rejected_count" => result.links_rejected_count,
-            "links_unverifiable_count" => result.links_unverifiable_count
+            "links_unverifiable_count" => result.links_unverifiable_count,
+            "serpapi_search_count" => result.serpapi_search_count,
+            "serpapi_candidate_count" => result.serpapi_candidate_count,
+            "links_found_via_serpapi_count" => result.links_found_via_serpapi_count,
+            "links_null_after_serpapi_count" => result.links_null_after_serpapi_count
           )
         )
       rescue StandardError => e

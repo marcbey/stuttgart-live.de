@@ -26,10 +26,6 @@ class AppSetting < ApplicationRecord
     Ermittle zu den Events aus `Input` die fehlenden Felder
 
     - `genre`
-    - `youtube_link`
-    - `instagram_link`
-    - `homepage_link`
-    - `facebook_link`
     - `event_description`
     - `venue_description`
     - `venue_external_url`
@@ -38,58 +34,23 @@ class AppSetting < ApplicationRecord
     und gib das Ergebnis im selben JSON-Format zurück wie in `Output`.
 
     Wichtig:
-    Die ermittelten Links und Informationen müssen für das Zielmodell „offiziell oder belastbar genug“ sein.
-    Ziel ist ausdrücklich, möglichst viele korrekt zuordenbare Links für `youtube_link`, `instagram_link`, `homepage_link` und `facebook_link` zu finden. Sei deshalb bei der Recherche breit und beharrlich, aber nicht erfinderisch.
+    Die ermittelten Informationen müssen belastbar sein. `venue_external_url` und `venue_address` sollen sich klar dem Veranstaltungsort zuordnen lassen.
 
     Dabei gelten folgende Regeln:
 
-    1. Bevorzuge für Links in dieser Reihenfolge:
-      - `official`: offizielle Website oder offiziell wirkender verifizierbarer Künstler-/Projekt-/Venue-Account
-      - `promoter`: offizielle Projekt-, Veranstalter- oder Tour-Seite eines bekannten Promoters / Managements / Veranstalters
-      - `event_listing`: belastbare Event-Seite eines bekannten Ticketing- oder Venue-Portals
-      - `social_post`: einzelner konkreter Social-Media-Post, wenn kein offizieller Account oder keine bessere Quelle verfügbar ist
+    1. Erfinde keine Genres, Beschreibungen oder Venue-Metadaten.
 
-    2. Suche für jeden der vier Link-Typen aktiv nach mehreren plausiblen Kandidaten und entscheide dich dann für den besten belastbaren Treffer. Prüfe insbesondere:
-      - offizielle Artist-Website
-      - offizielle Venue-Website
-      - offizielle Tour- oder Projektseite
-      - offizielle oder klar zuordenbare Social-Media-Profile
-      - YouTube-Kanal oder offizieller Artist-/Venue-Channel
-      - bekannte Veranstalter-, Management- oder Promoter-Seiten
-      - bekannte Ticketing-, Venue- oder Festival-Listings
-
-    3. Verwende einen Link nur dann, wenn er eindeutig dem Artist, Projekt, Event oder Venue zugeordnet werden kann. Bevorzuge dabei lieber einen schwächeren, aber noch belastbaren Treffer aus `promoter` oder `event_listing`, statt vorschnell `null` zu setzen.
-
-    4. Wenn kein ausreichend belastbarer Link gefunden wird, setze das Feld auf `null`.
-
-    5. Erfinde keine Links, Genres oder Beschreibungen.
-
-    6. `genre` meint immer eine fachliche stilistische oder spartenbezogene Einordnung, nicht den bloßen Eventtyp oder einen Containerbegriff:
+    2. `genre` meint immer eine fachliche stilistische oder spartenbezogene Einordnung, nicht den bloßen Eventtyp oder einen Containerbegriff:
       - verwende nur belastbare fachliche Genres oder Sparten
       - verboten sind generische Meta-Begriffe wie `show`, `concert`, `event`, `live`, `veranstaltung`, `konzert` oder sinngleiche Containerlabels
       - wenn ein Event kein Musik-Act ist, verwende stattdessen passende fachliche Sparten wie z. B. `Theater`, `Comedy`, `Kabarett`, `Lesung`, `Tanz`, `Musical` oder `Oper`, sofern belastbar
       - wenn kein belastbares fachliches Genre ermittelbar ist, gib lieber ein leeres Genre-Array zurück, statt ein generisches Meta-Genre zu erfinden oder zu raten
 
-    7. Bei Projekt- oder Tour-Formaten wie z. B. Ensemble-, Tribute-, Jubiläums- oder Mehrkünstler-Events dürfen auch projektbezogene oder promoterbezogene Links verwendet werden, wenn keine klaren offiziellen Artist-Accounts existieren.
-
-    8. Für Linkfelder gilt zusätzlich:
-      - `homepage_link`: bevorzugt offizielle Artist-, Projekt- oder Venue-Website; ersatzweise offizielle Tour-/Promoter-Seite
-      - `instagram_link`: bevorzugt offizielles Profil von Artist, Projekt oder Venue; wenn nicht vorhanden, ein klar zuordenbares Projekt-, Tour- oder Promoter-Profil
-      - `facebook_link`: bevorzugt offizielle Facebook-Seite von Artist, Projekt, Venue oder Tour; ersatzweise belastbare Veranstalter-/Promoter-Seite
-      - `youtube_link`: bevorzugt offizieller Kanal; ersatzweise klar zuordenbarer Topic-/Projekt-/Venue-Kanal oder ein belastbares einzelnes Video, wenn kein besserer Kanal auffindbar ist
-
-    9. Prüfe jeden ausgewählten Link für `youtube_link`, `instagram_link`, `homepage_link`, `facebook_link` und `venue_external_url` zusätzlich auf technische und inhaltliche Erreichbarkeit:
-      - verwende einen Link nur, wenn die Zielseite erreichbar ist und kein HTTP-Fehler vorliegt, insbesondere kein `404` und kein sonstiger HTTP-Statuscode-Fehler
-      - folge Redirects gedanklich bis zur tatsächlichen Zielseite; maßgeblich ist die letztlich geladene Seite, nicht nur die Ausgangs-URL
-      - verwende keinen Link, wenn die Zielseite Hinweise auf Nichtverfügbarkeit enthält, insbesondere `Diese Seite ist leider nicht verfügbar` oder `Dieser Inhalt ist momentan nicht verfügbar`
-      - wenn ein fachlich plausibler Kandidat technisch nicht erreichbar ist oder auf eine Fehler-/Nichtverfügbarkeitsseite führt, verwerfe ihn und prüfe den nächsten plausiblen Kandidaten
-      - wenn kein belastbarer und zugleich erreichbarer Kandidat gefunden wird, setze das jeweilige Linkfeld auf `null`
-
-    10. Für Venue-Metadaten gilt zusätzlich:
+    3. Für Venue-Metadaten gilt zusätzlich:
       - `venue_external_url`: bevorzugt die offizielle Website des Veranstaltungsorts; ersatzweise eine klar zuordenbare offizielle Profil- oder Hausseite des Venues
       - `venue_address`: möglichst vollständige öffentlich belastbare Adresse des Veranstaltungsorts
 
-    11. Beschreibungen sollen nüchtern, präzise und faktennah sein, aber deutlich ausführlicher als bisher:
+    4. Beschreibungen sollen nüchtern, präzise und faktennah sein, aber deutlich ausführlicher als bisher:
       - `event_description`: beschreibt Artist, Projekt oder Produktion sowie das konkrete Event bzw. Tour-/Show-Format in einem zusammenhängenden Text ohne Wiederholungen
       - `venue_description`: beschreibt den Veranstaltungsort
       - schreibe in vollständigen deutschen Sätzen
@@ -100,13 +61,13 @@ class AppSetting < ApplicationRecord
       - nenne bei `venue_description` nach Möglichkeit Ort, Profil, Größe/Atmosphäre, Nutzungsschwerpunkt und Relevanz für das lokale Kulturleben
       - wenn nur wenig belastbare Information verfügbar ist, schreibe lieber einen vorsichtigen, aber immer noch substanziellen Text statt nur einen sehr kurzen Satz
 
-    12. Nutze zusätzlich `event_info` aus dem Input als Kontextquelle für Disambiguierung, fachliche Einordnung und belastbarere Beschreibungen. Behandle `event_info` als hilfreichen Hinweistext zum konkreten Event, aber nicht als automatisch verifizierte Tatsache.
+    5. Nutze zusätzlich `event_info` aus dem Input als Kontextquelle für Disambiguierung, fachliche Einordnung und belastbarere Beschreibungen. Behandle `event_info` als hilfreichen Hinweistext zum konkreten Event, aber nicht als automatisch verifizierte Tatsache.
 
-    13. Ziehe auch den Eventtitel, die Venue und den wahrscheinlichen lokalen Kontext heran, um korrekte Projekt-, Tour- oder Venue-Treffer besser zu identifizieren.
+    6. Ziehe auch den Eventtitel, die Venue und den wahrscheinlichen lokalen Kontext heran, um korrekte Projekt-, Tour- oder Venue-Treffer besser zu identifizieren.
 
-    14. Wenn Artist-Name oder Event-Name mehrdeutig sind, gleiche immer mit Venue, Ort, Tourtitel, Projektkontext und `event_info` ab, bevor du einen Link wählst.
+    7. Wenn Artist-Name oder Event-Name mehrdeutig sind, gleiche immer mit Venue, Ort, Tourtitel, Projektkontext und `event_info` ab, bevor du ein Genre, eine Beschreibung oder Venue-Metadaten festlegst.
 
-    15. Falls du für einen Link keinen ausreichend belastbaren Treffer findest, gib für das Linkfeld `null` zurück.
+    8. Falls du für `venue_external_url` oder `venue_address` keinen ausreichend belastbaren Treffer findest, gib für das jeweilige Feld `null` zurück.
 
     Antwort nur als JSON.
 

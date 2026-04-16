@@ -297,20 +297,25 @@ Der Ablauf ist:
 
 1. Zuerst wählt der Job geeignete bestehende Events aus, typischerweise solche ohne vollständige LLM-Anreicherung oder mit veralteten Enrichment-Daten.
 2. Diese Events werden in Batches an das konfigurierte LLM-Modell geschickt.
-3. Die Antwort wird validiert, normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
-4. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, Batch-Zahl und Fehler im zugehörigen `ImportRun`.
+3. Das LLM liefert nur noch `genre`, `event_description`, `venue_description`, `venue_external_url` und `venue_address`.
+4. Anschließend sucht ein separater SerpApi-Schritt nach `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link`, bewertet Kandidaten deterministisch und prüft sie mit dem bestehenden Link-Validator.
+5. Das Ergebnis wird validiert, normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
+6. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, Batch-Zahl, SerpApi-Suchmetriken und Fehler im zugehörigen `ImportRun`.
 
 Fachlich ist wichtig:
 
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
 - `event_description` bündelt die belastbaren Informationen zu Artist, Projekt/Produktion und konkretem Eventformat in einem einzigen zusammenhängenden Beschreibungstext.
 - `EventLlmEnrichment.venue`, `venue_description`, `venue_external_url` und `venue_address` bleiben als Rohdaten erhalten.
+- `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` werden nicht mehr vom LLM geraten, sondern ausschließlich aus SerpApi-Kandidaten plus nachgelagerter Validierung abgeleitet.
+- Für diese vier Linkfelder gilt bewusst: Nur technisch bestätigte Treffer werden gespeichert; bei unklaren oder schwachen Kandidaten bleibt das Feld `null`.
 - Hat ein Event bereits eine zugeordnete `Venue`, ändert ein LLM-Lauf weder die Venue-Zuordnung noch `Venue.name`.
 - Passt `EventLlmEnrichment.venue` zu der bereits zugeordneten `Venue`, dürfen `Venue.description`, `Venue.external_url` und `Venue.address` aus dem Enrichment nur dann ergänzt werden, wenn das jeweilige Venue-Feld noch leer ist. Bereits gepflegte Werte werden nicht überschrieben.
 - Weicht `EventLlmEnrichment.venue` von der bereits zugeordneten `Venue` ab, bleibt die bestehende Venue vollständig unverändert.
 - Hat ein Event noch keine zugeordnete `Venue`, darf aus `EventLlmEnrichment.venue` eine passende Venue gesucht oder neu angelegt und dem Event zugeordnet werden.
 - In genau diesem Fallback-Fall dürfen zusätzlich `Venue.description`, `Venue.external_url` und `Venue.address` aus `EventLlmEnrichment.venue_description`, `venue_external_url` und `venue_address` gesetzt werden; auch hier werden bereits vorhandene Werte der gefundenen oder neu angelegten Venue nicht überschrieben.
 - Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
+- Für bestehende Enrichments gibt es zusätzlich einen `refresh_links_only`-Pfad: Dabei bleibt der vorhandene LLM-Text unverändert und nur die vier Event-Links werden neu über SerpApi gesucht.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.
 - Fehlerhafte Einzelantworten sollen im Laufprotokoll sichtbar sein, ohne zwangsläufig den kompletten Prozess unbrauchbar zu machen.
@@ -413,7 +418,7 @@ bin/ci
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.instagram_app_id`, `meta.instagram_app_secret`, plus für Legacy-Fälle optional weiter `meta.app_id`, `meta.app_secret`, `meta.facebook_page_id`, `meta.facebook_page_access_token`, `meta.instagram_business_account_id`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.instagram_app_id`, `meta.instagram_app_secret`, plus für Legacy-Fälle optional weiter `meta.app_id`, `meta.app_secret`, `meta.facebook_page_id`, `meta.facebook_page_access_token`, `meta.instagram_business_account_id`
 - statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
@@ -707,6 +712,14 @@ bin/rails events:maintenance:reset_llm_enrichment
 ```
 
 Der Task löscht alle Einträge aus `event_llm_enrichments`, `llm_genre_grouping_snapshots` und `llm_genre_grouping_groups`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` oder `source_type = "llm_genre_grouping"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
+
+Gezielter Backfill nur für Event-Links bestehender zukünftiger Enrichments:
+
+```bash
+mise exec -- bin/rails events:maintenance:backfill_llm_links
+```
+
+Der Task reiht serielle `llm_enrichment`-Runs mit `refresh_existing=true` und `refresh_links_only=true` ein. Standardmäßig werden zukünftige Events mit bestehenden Enrichments in Blöcken zu je `250` Events verarbeitet und zuerst nach Status `published`, dann `ready_for_publish`, dann `needs_review` priorisiert. Abweichende Chunk-Größen oder Statuslisten lassen sich über `CHUNK_SIZE=` und `STATUSES=` steuern.
 
 Bestehende Venue-Dubletten anhand des flexiblen Venue-Matchings zusammenführen:
 

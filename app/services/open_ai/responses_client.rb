@@ -17,6 +17,18 @@ module OpenAi
       raise Error, "openai.api_key ist nicht in den Rails Credentials gesetzt." if resolved_api_key.blank?
       raise Error, "llm_enrichment_model ist nicht gesetzt." if model.blank?
 
+      create_with_optional_temperature(
+        input: input,
+        text_format: text_format,
+        include_temperature: temperature.present?
+      )
+    end
+
+    private
+
+    attr_reader :sdk_client
+
+    def create_with_optional_temperature(input:, text_format:, include_temperature:)
       request = {
         model: model,
         input: input,
@@ -24,22 +36,22 @@ module OpenAi
           format: text_format
         }
       }
-      request[:temperature] = temperature if temperature.present?
+      request[:temperature] = temperature if include_temperature
 
-      response = client.responses.create(**request)
-
-      response
-    rescue OpenAI::Errors::Error => e
-      raise Error, "OpenAI-Request fehlgeschlagen: #{e.message}"
-    rescue StandardError => e
+      client.responses.create(**request)
+    rescue OpenAI::Errors::Error, StandardError => e
       raise if e.is_a?(Error)
+
+      if include_temperature && unsupported_temperature_error?(e)
+        return create_with_optional_temperature(
+          input: input,
+          text_format: text_format,
+          include_temperature: false
+        )
+      end
 
       raise Error, "OpenAI-Request fehlgeschlagen: #{e.message}"
     end
-
-    private
-
-    attr_reader :sdk_client
 
     def client
       @client ||= sdk_client || OpenAI::Client.new(api_key: resolved_api_key)
@@ -55,6 +67,10 @@ module OpenAi
 
     def normalize_model(value)
       value.to_s.strip.presence || DEFAULT_MODEL
+    end
+
+    def unsupported_temperature_error?(error)
+      error.message.to_s.include?("Unsupported parameter: 'temperature'")
     end
   end
 end

@@ -109,6 +109,48 @@ module Importing
         assert_equal "\"canonicalRouteName\":\"comet.fbweb.CometErrorRoute\"", result.matched_phrase
       end
 
+      test "rejects instagram login redirects" do
+        validator = build_validator(
+          "https://www.instagram.com/lucanoelmusik/" => FakeResponse.new(
+            code: "302",
+            body: "",
+            headers: { "location" => "https://www.instagram.com/accounts/login/?next=https%3A%2F%2Fwww.instagram.com%2Flucanoelmusik%2F" }
+          ),
+          "https://www.instagram.com/accounts/login/?next=https%3A%2F%2Fwww.instagram.com%2Flucanoelmusik%2F" => FakeResponse.new(
+            code: "200",
+            body: "<html>Anmelden</html>",
+            headers: {}
+          )
+        )
+
+        result = validator.call(url: "https://www.instagram.com/lucanoelmusik/", field_name: :instagram_link)
+
+        assert_equal false, result.accepted?
+        assert_equal "rejected_login_redirect", result.status
+        assert_equal "Anmelden", result.matched_phrase
+      end
+
+      test "rejects facebook login redirects" do
+        validator = build_validator(
+          "https://www.facebook.com/lucanoelmusik/" => FakeResponse.new(
+            code: "302",
+            body: "",
+            headers: { "location" => "https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Flucanoelmusik%2F" }
+          ),
+          "https://www.facebook.com/login/?next=https%3A%2F%2Fwww.facebook.com%2Flucanoelmusik%2F" => FakeResponse.new(
+            code: "200",
+            body: "<html>Anmelden</html>",
+            headers: {}
+          )
+        )
+
+        result = validator.call(url: "https://www.facebook.com/lucanoelmusik/", field_name: :facebook_link)
+
+        assert_equal false, result.accepted?
+        assert_equal "rejected_login_redirect", result.status
+        assert_equal "Anmelden", result.matched_phrase
+      end
+
       test "normalizes binary response bodies before checking unavailable markers" do
         body = "<html>\xC3<script>{\"pageID\":\"httpErrorPage\"}</script></html>".b
         validator = build_validator(

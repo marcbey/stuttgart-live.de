@@ -26,6 +26,10 @@ module AppConfig
       fetch(:reservix, :events_api, env: "RESERVIX_EVENTS_API")
     end
 
+    def serpapi_api_key
+      fetch(:serpapi, :api_key, env: "SERPAPI_API_KEY")
+    end
+
     def easyticket_events_api
       fetch(:easyticket, :events_api, env: "EASYTICKET_EVENTS_API")
     end

@@ -66,6 +66,37 @@ module Importing
         end
       end
 
+      FakeLinkFinder = Struct.new(:results_by_event_id, :calls, keyword_init: true) do
+        def call(event:)
+          self.calls ||= []
+          calls << event.id
+          results_by_event_id.fetch(event.id) do
+            LinkFinder::Result.new(
+              links: {
+                youtube_link: nil,
+                instagram_link: nil,
+                homepage_link: nil,
+                facebook_link: nil
+              },
+              payload: {
+                "queries" => [],
+                "fields" => {
+                  "youtube_link" => { "selected_url" => nil, "candidates" => [] },
+                  "instagram_link" => { "selected_url" => nil, "candidates" => [] },
+                  "homepage_link" => { "selected_url" => nil, "candidates" => [] },
+                  "facebook_link" => { "selected_url" => nil, "candidates" => [] }
+                }
+              },
+              search_count: 0,
+              candidate_count: 0,
+              found_count: 0,
+              null_count: 4,
+              validation_results: []
+            )
+          end
+        end
+      end
+
       setup do
         @source = import_sources(:two)
         @run = @source.import_runs.create!(
@@ -82,6 +113,12 @@ module Importing
 
       test "selects all future events without enrichment and persists enrichments" do
         freeze_time do
+          link_finder = FakeLinkFinder.new(
+            results_by_event_id: {
+              events(:published_one).id => fake_link_lookup_result(homepage_link: "https://example.com/one")
+            },
+            calls: []
+          )
           client = FakeClient.new(
             model: "gpt-5-mini",
             responses: [
@@ -129,13 +166,15 @@ module Importing
             ]
           )
 
-          result = build_importer(client: client).call
+          result = build_importer(client: client, link_finder: link_finder).call
 
           assert_equal 3, result.selected_count
           assert_equal 0, result.skipped_count
           assert_equal 3, result.enriched_count
           assert_equal 1, result.batches_count
           assert_nil result.merge_run_id
+          assert_equal 0, result.serpapi_search_count
+          assert_equal 1, result.links_found_via_serpapi_count
 
           enrichment = events(:published_one).reload.llm_enrichment
           assert_equal [ "Indie", "Pop" ], enrichment.genre
@@ -217,6 +256,88 @@ module Importing
 
       test "validates links before persisting and stores validation details" do
         freeze_time do
+          validation_results = [
+            FakeLinkValidationResult.new(
+              accepted: false,
+              sanitized_url: nil,
+              status: "rejected_http_error",
+              http_status: 404,
+              checked_at: Time.current
+            ),
+            FakeLinkValidationResult.new(
+              accepted: true,
+              sanitized_url: "https://facebook.example/final",
+              status: "ok",
+              final_url: "https://facebook.example/final",
+              http_status: 200,
+              checked_at: Time.current
+            ),
+            FakeLinkValidationResult.new(
+              accepted: true,
+              sanitized_url: "https://youtube.example/blocked",
+              status: "kept_unverifiable",
+              http_status: 429,
+              checked_at: Time.current
+            ),
+            FakeLinkValidationResult.new(
+              accepted: true,
+              sanitized_url: "https://instagram.example/private",
+              status: "kept_unverifiable",
+              http_status: 403,
+              checked_at: Time.current
+            )
+          ]
+          link_finder = FakeLinkFinder.new(
+            results_by_event_id: {
+              events(:published_one).id => LinkFinder::Result.new(
+                links: {
+                  youtube_link: "https://youtube.example/blocked",
+                  instagram_link: "https://instagram.example/private",
+                  homepage_link: nil,
+                  facebook_link: "https://facebook.example/final"
+                },
+                payload: {
+                  "queries" => [ { "name" => "broad", "field_name" => "homepage_link", "query" => "\"Published Artist\" \"Published Event\" 2026" } ],
+                  "fields" => {
+                    "youtube_link" => {
+                      "selected_url" => "https://youtube.example/blocked",
+                      "candidates" => [
+                        { "url" => "https://youtube.example/blocked", "validation" => validation_results[2].as_json }
+                      ]
+                    },
+                    "instagram_link" => {
+                      "selected_url" => "https://instagram.example/private",
+                      "candidates" => [
+                        { "url" => "https://instagram.example/private", "validation" => validation_results[3].as_json }
+                      ]
+                    },
+                    "homepage_link" => {
+                      "selected_url" => nil,
+                      "candidates" => [
+                        {
+                          "url" => "https://example.com/missing",
+                          "validation" => validation_results[0].as_json,
+                          "rejection_reason" => "rejected_http_error"
+                        }
+                      ]
+                    },
+                    "facebook_link" => {
+                      "selected_url" => "https://facebook.example/final",
+                      "candidates" => [
+                        { "url" => "https://facebook.example/final", "validation" => validation_results[1].as_json }
+                      ]
+                    }
+                  }
+                },
+                search_count: 4,
+                candidate_count: 4,
+                found_count: 3,
+                null_count: 1,
+                validation_results: validation_results
+              )
+            },
+            calls: []
+          )
           client = FakeClient.new(
             model: "gpt-5-mini",
             responses: [
@@ -261,54 +382,25 @@ module Importing
               }
             ]
           )
-          link_validator = FakeLinkValidator.new(
-            {
-              "https://youtube.example/blocked" => FakeLinkValidationResult.new(
-                accepted: true,
-                sanitized_url: "https://youtube.example/blocked",
-                status: "kept_unverifiable",
-                http_status: 429,
-                checked_at: Time.current
-              ),
-              "https://instagram.example/private" => FakeLinkValidationResult.new(
-                accepted: true,
-                sanitized_url: "https://instagram.example/private",
-                status: "kept_unverifiable",
-                http_status: 403,
-                checked_at: Time.current
-              ),
-              "https://example.com/missing" => FakeLinkValidationResult.new(
-                accepted: false,
-                sanitized_url: nil,
-                status: "rejected_http_error",
-                http_status: 404,
-                checked_at: Time.current
-              ),
-              "https://facebook.example/final" => FakeLinkValidationResult.new(
-                accepted: true,
-                sanitized_url: "https://facebook.example/final",
-                status: "ok",
-                final_url: "https://facebook.example/final",
-                http_status: 200,
-                checked_at: Time.current
-              )
-            }
-          )
 
-          result = Importer.new(run: @run, client: client, link_validator: link_validator).call
+          result = build_importer(client: client, link_finder: link_finder).call
 
           assert_equal 4, result.links_checked_count
           assert_equal 1, result.links_rejected_count
           assert_equal 2, result.links_unverifiable_count
+          assert_equal 4, result.serpapi_search_count
+          assert_equal 4, result.serpapi_candidate_count
+          assert_equal 3, result.links_found_via_serpapi_count
+          assert_equal 9, result.links_null_after_serpapi_count
 
           enrichment = events(:published_one).reload.llm_enrichment
           assert_equal "https://youtube.example/blocked", enrichment.youtube_link
           assert_equal "https://instagram.example/private", enrichment.instagram_link
           assert_nil enrichment.homepage_link
           assert_equal "https://facebook.example/final", enrichment.facebook_link
-          assert_equal "rejected_http_error", enrichment.raw_response.dig("link_validation", "homepage_link", "status")
-          assert_equal 404, enrichment.raw_response.dig("link_validation", "homepage_link", "http_status")
-          assert_equal "kept_unverifiable", enrichment.raw_response.dig("link_validation", "youtube_link", "status")
+          assert_equal "rejected_http_error", enrichment.raw_response.dig("link_lookup", "fields", "homepage_link", "candidates", 0, "rejection_reason")
+          assert_equal 404, enrichment.raw_response.dig("link_lookup", "fields", "homepage_link", "candidates", 0, "validation", "http_status")
+          assert_equal "kept_unverifiable", enrichment.raw_response.dig("link_lookup", "fields", "youtube_link", "candidates", 0, "validation", "status")
         end
       end
 
@@ -391,6 +483,16 @@ module Importing
           raw_response: { "event_id" => events(:needs_review_one).id, "genre" => [ "Pop" ] }
         )
         @run.update!(metadata: @run.metadata.merge("refresh_existing" => true))
+        link_finder = FakeLinkFinder.new(
+          results_by_event_id: {
+            events(:published_one).id => fake_link_lookup_result(homepage_link: "https://example.com/one-refresh"),
+            events(:needs_review_one).id => fake_link_lookup_result(
+              homepage_link: "https://example.com/updated",
+              youtube_link: "https://youtube.example/updated"
+            )
+          },
+          calls: []
+        )
 
         freeze_time do
           client = FakeClient.new(
@@ -438,7 +540,7 @@ module Importing
             ]
           )
 
-          result = build_importer(client: client).call
+          result = build_importer(client: client, link_finder: link_finder).call
 
           assert_equal 3, result.selected_count
           assert_equal 0, result.skipped_count
@@ -452,7 +554,7 @@ module Importing
           assert_equal "Event neu", updated_enrichment.event_description
           assert_equal "https://example.com/updated", updated_enrichment.homepage_link
           assert_equal "gpt-5-mini", updated_enrichment.model
-          assert_equal "v3", updated_enrichment.prompt_version
+          assert_equal "v4", updated_enrichment.prompt_version
           assert_equal @run, updated_enrichment.source_run
         end
       end
@@ -638,7 +740,15 @@ module Importing
           ]
         )
 
-        result = build_importer(client: client).call
+        result = build_importer(
+          client: client,
+          link_finder: FakeLinkFinder.new(
+            results_by_event_id: {
+              event.id => fake_link_lookup_result(homepage_link: "https://example.com/past")
+            },
+            calls: []
+          )
+        ).call
 
         assert_equal 1, result.selected_count
         assert_equal 0, result.skipped_count
@@ -748,7 +858,7 @@ module Importing
         assert_equal [ "Indie" ], first_enrichment.genre
         assert_equal [ "Show", "Indie" ], first_enrichment.raw_response.fetch("genre")
         assert_equal [ "Show" ], first_enrichment.raw_response.dig("genre_filter", "rejected_terms")
-        assert_equal "v3", first_enrichment.prompt_version
+        assert_equal "v4", first_enrichment.prompt_version
 
         second_enrichment = events(:needs_review_one).reload.llm_enrichment
         assert_equal [], second_enrichment.genre
@@ -872,6 +982,12 @@ module Importing
       test "ignores duplicate event ids in the same response batch" do
         freeze_time do
           event = events(:published_one)
+          link_finder = FakeLinkFinder.new(
+            results_by_event_id: {
+              event.id => fake_link_lookup_result(homepage_link: "https://example.com/first")
+            },
+            calls: []
+          )
 
           client = FakeClient.new(
             model: "gpt-5-mini",
@@ -929,7 +1045,7 @@ module Importing
             ]
           )
 
-          result = build_importer(client: client).call
+          result = build_importer(client: client, link_finder: link_finder).call
 
           assert_equal 3, result.enriched_count
 
@@ -938,6 +1054,62 @@ module Importing
           assert_equal "Erste Venue", enrichment.venue
           assert_equal "https://example.com/first", enrichment.homepage_link
         end
+      end
+
+      test "refresh_links_only updates only existing link fields without calling OpenAI" do
+        event = events(:published_one)
+        enrichment = EventLlmEnrichment.create!(
+          event: event,
+          source_run: import_runs(:one),
+          genre: [ "Indie" ],
+          venue: "LKA Longhorn",
+          event_description: "Bestehend",
+          venue_description: "Venue",
+          homepage_link: nil,
+          youtube_link: nil,
+          instagram_link: nil,
+          facebook_link: nil,
+          model: "existing-model",
+          prompt_version: "v2",
+          raw_response: { "event_id" => event.id }
+        )
+        @run.update!(
+          metadata: @run.metadata.merge(
+            "refresh_existing" => true,
+            "refresh_links_only" => true,
+            "target_event_ids" => [ event.id ]
+          )
+        )
+        client = Struct.new(:model) do
+          def create!(**)
+            raise "OpenAI darf in refresh_links_only nicht aufgerufen werden"
+          end
+        end.new("gpt-5-mini")
+        link_finder = FakeLinkFinder.new(
+          results_by_event_id: {
+            event.id => fake_link_lookup_result(
+              homepage_link: "https://example.com/refreshed",
+              instagram_link: "https://instagram.example/refreshed"
+            )
+          },
+          calls: []
+        )
+
+        result = build_importer(client: client, link_finder: link_finder).call
+
+        assert_equal 1, result.selected_count
+        assert_equal 1, result.enriched_count
+        assert_equal 2, result.links_found_via_serpapi_count
+
+        enrichment.reload
+        assert_equal enrichment.id, event.reload.llm_enrichment.id
+        assert_equal [ "Indie" ], enrichment.genre
+        assert_equal "Bestehend", enrichment.event_description
+        assert_equal "https://example.com/refreshed", enrichment.homepage_link
+        assert_equal "https://instagram.example/refreshed", enrichment.instagram_link
+        assert_equal "existing-model", enrichment.model
+        assert_equal "v2", enrichment.prompt_version
+        assert_equal "https://example.com/refreshed", enrichment.raw_response.dig("link_lookup", "fields", "homepage_link", "selected_url")
       end
 
       test "returns canceled result when stop was requested after response before persist" do
@@ -998,8 +1170,35 @@ module Importing
         parent.const_set(const_name, original)
       end
 
-      def build_importer(client:, link_validator: FakeLinkValidator.new({}))
-        Importer.new(run: @run, client: client, link_validator: link_validator)
+      def build_importer(client:, link_validator: FakeLinkValidator.new({}), link_finder: FakeLinkFinder.new(results_by_event_id: {}, calls: []))
+        Importer.new(run: @run, client: client, link_validator: link_validator, link_finder: link_finder)
+      end
+
+      def fake_link_lookup_result(homepage_link: nil, instagram_link: nil, facebook_link: nil, youtube_link: nil)
+        links = {
+          homepage_link: homepage_link,
+          instagram_link: instagram_link,
+          facebook_link: facebook_link,
+          youtube_link: youtube_link
+        }
+
+        LinkFinder::Result.new(
+          links: links,
+          payload: {
+            "queries" => [],
+            "fields" => links.transform_keys(&:to_s).transform_values do |value|
+              {
+                "selected_url" => value,
+                "candidates" => value.present? ? [ { "url" => value, "validation" => { "status" => "ok" } } ] : []
+              }
+            end
+          },
+          search_count: 0,
+          candidate_count: links.values.compact.size,
+          found_count: links.values.count(&:present?),
+          null_count: links.values.count(&:blank?),
+          validation_results: []
+        )
       end
     end
   end

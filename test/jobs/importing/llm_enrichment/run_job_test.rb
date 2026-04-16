@@ -25,6 +25,10 @@ module Importing
           links_checked_count: 7,
           links_rejected_count: 2,
           links_unverifiable_count: 1,
+          serpapi_search_count: 9,
+          serpapi_candidate_count: 14,
+          links_found_via_serpapi_count: 4,
+          links_null_after_serpapi_count: 8,
           canceled: false
         )
         fake_importer = Struct.new(:call).new(fake_result)
@@ -46,6 +50,10 @@ module Importing
         assert_equal 7, @run.metadata["links_checked_count"]
         assert_equal 2, @run.metadata["links_rejected_count"]
         assert_equal 1, @run.metadata["links_unverifiable_count"]
+        assert_equal 9, @run.metadata["serpapi_search_count"]
+        assert_equal 14, @run.metadata["serpapi_candidate_count"]
+        assert_equal 4, @run.metadata["links_found_via_serpapi_count"]
+        assert_equal 8, @run.metadata["links_null_after_serpapi_count"]
         assert_equal true, ActiveModel::Type::Boolean.new.cast(@run.metadata["refresh_existing"])
         assert @run.metadata["execution_started_at"].present?
       ensure
@@ -87,6 +95,10 @@ module Importing
           links_checked_count: 4,
           links_rejected_count: 1,
           links_unverifiable_count: 2,
+          serpapi_search_count: 5,
+          serpapi_candidate_count: 11,
+          links_found_via_serpapi_count: 3,
+          links_null_after_serpapi_count: 6,
           canceled: true
         )
         fake_importer = Struct.new(:call).new(fake_result)
@@ -105,6 +117,10 @@ module Importing
         assert_equal 4, @run.metadata["links_checked_count"]
         assert_equal 1, @run.metadata["links_rejected_count"]
         assert_equal 2, @run.metadata["links_unverifiable_count"]
+        assert_equal 5, @run.metadata["serpapi_search_count"]
+        assert_equal 11, @run.metadata["serpapi_candidate_count"]
+        assert_equal 3, @run.metadata["links_found_via_serpapi_count"]
+        assert_equal 6, @run.metadata["links_null_after_serpapi_count"]
         assert_equal "Stopped by user", @run.metadata["stop_release_reason"]
       ensure
         importer_class.alias_method :new, :__original_new_for_test
@@ -143,6 +159,10 @@ module Importing
           links_checked_count: 0,
           links_rejected_count: 0,
           links_unverifiable_count: 0,
+          serpapi_search_count: 0,
+          serpapi_candidate_count: 0,
+          links_found_via_serpapi_count: 0,
+          links_null_after_serpapi_count: 0,
           canceled: false
         )
         fake_importer = Struct.new(:call).new(fake_result)

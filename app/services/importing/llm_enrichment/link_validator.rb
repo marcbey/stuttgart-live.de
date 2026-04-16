@@ -28,6 +28,10 @@ module Importing
         "facebook.com" => [ "\"canonicalRouteName\":\"comet.fbweb.CometErrorRoute\"" ],
         "www.facebook.com" => [ "\"canonicalRouteName\":\"comet.fbweb.CometErrorRoute\"" ]
       }.freeze
+      LOGIN_REDIRECT_HOSTS = {
+        instagram_link: %w[instagram.com www.instagram.com],
+        facebook_link: %w[facebook.com www.facebook.com]
+      }.freeze
 
       Result = Data.define(
         :accepted,
@@ -100,6 +104,16 @@ module Importing
 
         login_wall_phrase = detect_phrase(response_body, LOGIN_WALL_PHRASES)
         if login_wall_phrase.present?
+          if reject_login_redirect?(field_name, final_uri)
+            return rejected_result(
+              status: "rejected_login_redirect",
+              original_url: value,
+              final_url: final_uri,
+              http_status: response.code.to_i,
+              matched_phrase: login_wall_phrase
+            )
+          end
+
           return unverifiable_result(
             original_url: value,
             final_url: final_uri,
@@ -243,6 +257,13 @@ module Importing
         return if markers.blank?
 
         detect_phrase(body, markers)
+      end
+
+      def reject_login_redirect?(field_name, final_uri)
+        hosts = LOGIN_REDIRECT_HOSTS[field_name.to_sym]
+        return false if hosts.blank?
+
+        hosts.include?(final_uri.host.to_s.downcase) && final_uri.path.to_s.downcase.include?("login")
       end
 
       def rejected_result(status:, original_url: nil, final_url: nil, http_status: nil, error_class: nil, matched_phrase: nil)

@@ -6,6 +6,7 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
     Rails.application.load_tasks unless Rake::Task.task_defined?("events:maintenance:purge_all_with_imports")
     Rake::Task["events:maintenance:purge_all_with_imports"].reenable
     Rake::Task["events:maintenance:reset_llm_enrichment"].reenable
+    Rake::Task["events:maintenance:backfill_llm_links"].reenable
     Rake::Task["events:maintenance:reset_published_at"].reenable
   end
 
@@ -102,5 +103,38 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
     assert_nil review_event.reload.published_at
     assert_includes output, "Event-Veröffentlichungsdaten zurückgesetzt."
     assert_includes output, "events_updated=#{expected_updated_count}"
+  end
+
+  test "backfill_llm_links delegates to the link backfill enqueuer" do
+    result = Events::Maintenance::LlmLinkBackfillEnqueuer::Result.new(
+      eligible_count: 25,
+      runs_enqueued: 1,
+      chunk_size: 250,
+      statuses: %w[published ready_for_publish needs_review]
+    )
+    original_call = Events::Maintenance::LlmLinkBackfillEnqueuer.method(:call)
+    captured_kwargs = nil
+
+    Events::Maintenance::LlmLinkBackfillEnqueuer.singleton_class.define_method(:call) do |**kwargs|
+      captured_kwargs = kwargs
+      result
+    end
+
+    output = capture_io do
+      Rake::Task["events:maintenance:backfill_llm_links"].invoke
+    end.first
+
+    assert_equal(
+      {
+        chunk_size: Events::Maintenance::LlmLinkBackfillEnqueuer::DEFAULT_CHUNK_SIZE,
+        statuses: Events::Maintenance::LlmLinkBackfillEnqueuer::DEFAULT_STATUSES
+      },
+      captured_kwargs
+    )
+    assert_includes output, "LLM-Link-Backfill eingereiht."
+    assert_includes output, "eligible_events=25"
+    assert_includes output, "runs_enqueued=1"
+  ensure
+    Events::Maintenance::LlmLinkBackfillEnqueuer.singleton_class.define_method(:call, original_call)
   end
 end

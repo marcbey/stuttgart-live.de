@@ -163,7 +163,8 @@ module Backend
     def llm_enrichment_run_metadata(refresh_existing: false)
       {
         "triggered_at" => Time.current.iso8601,
-        "refresh_existing" => refresh_existing
+        "refresh_existing" => refresh_existing,
+        "refresh_links_only" => false
       }
     end
 

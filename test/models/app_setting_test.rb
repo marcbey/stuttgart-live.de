@@ -93,14 +93,14 @@ class AppSettingTest < ActiveSupport::TestCase
 
   test "returns default llm enrichment prompt template when no setting exists" do
     assert_includes AppSetting.llm_enrichment_prompt_template, "{{input_json}}"
-    assert_includes AppSetting.llm_enrichment_prompt_template, "kein `404`"
-    assert_includes AppSetting.llm_enrichment_prompt_template, "Diese Seite ist leider nicht verfügbar"
-    assert_includes AppSetting.llm_enrichment_prompt_template, "Dieser Inhalt ist momentan nicht verfügbar"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "`venue_external_url`"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`event_info`"
     assert_includes AppSetting.llm_enrichment_prompt_template, "nicht den bloßen Eventtyp oder einen Containerbegriff"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`show`, `concert`, `event`, `live`, `veranstaltung`, `konzert`"
     assert_includes AppSetting.llm_enrichment_prompt_template, "gib lieber ein leeres Genre-Array zurück"
     assert_includes AppSetting.llm_enrichment_prompt_template, "ohne Wiederholungen"
+    assert_not_includes AppSetting.llm_enrichment_prompt_template, "`youtube_link`"
+    assert_not_includes AppSetting.llm_enrichment_prompt_template, "`instagram_link`"
     assert_not_includes AppSetting.llm_enrichment_prompt_template, "`artist_description`"
   end
 

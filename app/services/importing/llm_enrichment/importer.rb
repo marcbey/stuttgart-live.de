@@ -7,10 +7,11 @@ module Importing
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       BATCH_SIZE = 25
       EVENT_INFO_MAX_LENGTH = 1000
-      PROMPT_VERSION = "v3"
+      PROMPT_VERSION = "v4"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment_batch".freeze
       OUTPUT_ITEMS_KEY = "events".freeze
-      LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link venue_external_url].freeze
+      LOOKED_UP_LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
+      VALIDATED_LINK_FIELDS = %i[venue_external_url].freeze
       META_GENRE_TERMS = [
         "show",
         "shows",
@@ -52,6 +53,10 @@ module Importing
         :links_checked_count,
         :links_rejected_count,
         :links_unverifiable_count,
+        :serpapi_search_count,
+        :serpapi_candidate_count,
+        :links_found_via_serpapi_count,
+        :links_null_after_serpapi_count,
         :canceled
       )
 
@@ -62,16 +67,19 @@ module Importing
           temperature: AppSetting.llm_enrichment_temperature
         ),
         logger: Importing::Logging.logger,
-        link_validator: nil
+        link_validator: nil,
+        link_finder: nil
       )
         @run = run
         @client = client
         @logger = logger
         @link_validator = link_validator || LinkValidator.new
+        @link_finder = link_finder || LinkFinder.new(link_validator: @link_validator)
       end
 
       def call
         reset_link_validation_counts!
+        reset_serpapi_counts!
         selection_time = Time.current
         selected_events = selected_events_scope(selection_time)
         selected_count = selected_events.count
@@ -94,26 +102,39 @@ module Importing
           "model" => client_model,
           "links_checked_count" => links_checked_count,
           "links_rejected_count" => links_rejected_count,
-          "links_unverifiable_count" => links_unverifiable_count
+          "links_unverifiable_count" => links_unverifiable_count,
+          "serpapi_search_count" => serpapi_search_count,
+          "serpapi_candidate_count" => serpapi_candidate_count,
+          "links_found_via_serpapi_count" => links_found_via_serpapi_count,
+          "links_null_after_serpapi_count" => links_null_after_serpapi_count
         )
 
         batches.each_with_index do |batch_events, index|
           check_stop_requested!(message: "before batch", current_batch: index + 1)
 
           touch_run_heartbeat!("current_batch" => index + 1)
-          logger.info("[LlmEnrichmentImporter] run_id=#{run.id} requesting batch=#{index + 1}/#{batches.count} size=#{batch_events.size}")
+          logger.info("[LlmEnrichmentImporter] run_id=#{run.id} processing batch=#{index + 1}/#{batches.count} size=#{batch_events.size} refresh_links_only=#{refresh_links_only?}")
 
-          items = batch_events.map { |event| item_for(event) }
-          response = client.create!(input: request_input(items), text_format: output_format)
-          check_stop_requested!(message: "after response", current_batch: index + 1)
-          payload = extract_payload!(response)
-          check_stop_requested!(message: "before persist", current_batch: index + 1)
-          enriched_count += persist_batch!(
-            payload:,
-            run:,
-            batch_event_ids: batch_events.map(&:id),
-            stop_requested: -> { stop_requested? }
-          )
+          enriched_count +=
+            if refresh_links_only?
+              refresh_links_batch!(
+                run: run,
+                batch_events: batch_events,
+                stop_requested: -> { stop_requested? }
+              )
+            else
+              items = batch_events.map { |event| item_for(event) }
+              response = client.create!(input: request_input(items), text_format: output_format)
+              check_stop_requested!(message: "after response", current_batch: index + 1)
+              payload = extract_payload!(response)
+              check_stop_requested!(message: "before persist", current_batch: index + 1)
+              persist_batch!(
+                payload: payload,
+                run: run,
+                batch_events: batch_events,
+                stop_requested: -> { stop_requested? }
+              )
+            end
           batches_processed += 1
           logger.info("[LlmEnrichmentImporter] run_id=#{run.id} completed batch=#{batches_processed}/#{batches.count} enriched_total=#{enriched_count}")
 
@@ -126,7 +147,11 @@ module Importing
             "current_batch" => batches_processed,
             "links_checked_count" => links_checked_count,
             "links_rejected_count" => links_rejected_count,
-            "links_unverifiable_count" => links_unverifiable_count
+            "links_unverifiable_count" => links_unverifiable_count,
+            "serpapi_search_count" => serpapi_search_count,
+            "serpapi_candidate_count" => serpapi_candidate_count,
+            "links_found_via_serpapi_count" => links_found_via_serpapi_count,
+            "links_null_after_serpapi_count" => links_null_after_serpapi_count
           )
         end
 
@@ -140,6 +165,10 @@ module Importing
           links_checked_count: links_checked_count,
           links_rejected_count: links_rejected_count,
           links_unverifiable_count: links_unverifiable_count,
+          serpapi_search_count: serpapi_search_count,
+          serpapi_candidate_count: serpapi_candidate_count,
+          links_found_via_serpapi_count: links_found_via_serpapi_count,
+          links_null_after_serpapi_count: links_null_after_serpapi_count,
           canceled: false
         )
       rescue Importing::StopRequested
@@ -154,12 +183,13 @@ module Importing
 
       Error = Class.new(StandardError)
 
-      attr_reader :client, :link_validator, :logger, :run
+      attr_reader :client, :link_finder, :link_validator, :logger, :run
 
       def selected_events_scope(selection_time)
-        return Event.where(id: target_event_id) if single_event_run?
+        scope = target_event_ids.present? ? Event.where(id: target_event_ids) : Event.where("start_at >= ?", selection_time)
+        scope = scope.joins(:llm_enrichment).distinct if refresh_links_only?
 
-        Event.where("start_at >= ?", selection_time)
+        scope
       end
 
       def already_enriched_count(scope)
@@ -167,6 +197,7 @@ module Importing
       end
 
       def pending_events_scope(scope)
+        return scope.joins(:llm_enrichment).distinct if refresh_links_only?
         return scope unless skip_existing_enrichments?
 
         scope.where.missing(:llm_enrichment)
@@ -205,7 +236,7 @@ module Importing
                 items: {
                   type: "object",
                   additionalProperties: false,
-                  required: %w[event_id genre venue event_description venue_description venue_external_url venue_address youtube_link instagram_link homepage_link facebook_link],
+                  required: %w[event_id genre venue event_description venue_description venue_external_url venue_address],
                   properties: {
                     event_id: { type: "integer" },
                     genre: {
@@ -216,11 +247,7 @@ module Importing
                     event_description: { type: [ "string", "null" ] },
                     venue_description: { type: [ "string", "null" ] },
                     venue_external_url: { type: [ "string", "null" ] },
-                    venue_address: { type: [ "string", "null" ] },
-                    youtube_link: { type: [ "string", "null" ] },
-                    instagram_link: { type: [ "string", "null" ] },
-                    homepage_link: { type: [ "string", "null" ] },
-                    facebook_link: { type: [ "string", "null" ] }
+                    venue_address: { type: [ "string", "null" ] }
                   }
                 }
               }
@@ -308,8 +335,9 @@ module Importing
         response.inspect
       end
 
-      def persist_batch!(payload:, run:, batch_event_ids:, stop_requested: nil)
-        allowed_event_ids = batch_event_ids.map(&:to_i)
+      def persist_batch!(payload:, run:, batch_events:, stop_requested: nil)
+        allowed_event_ids = batch_events.map(&:id)
+        events_by_id = batch_events.index_by(&:id)
         seen_event_ids = {}
         Importing::CooperativeStop.check!(stop_requested)
 
@@ -332,10 +360,13 @@ module Importing
 
             seen_event_ids[event_id] = true
             filtered_attributes, genre_filter_payload = filter_meta_genres(attributes)
-            validated_attributes, validation_payload = validate_link_attributes(filtered_attributes)
+            validated_attributes, validation_payload = validate_payload_attributes(filtered_attributes)
+            event = events_by_id.fetch(event_id)
+            link_lookup_result = resolve_links_for(event)
             raw_response = item.is_a?(Hash) ? item.deep_stringify_keys : {}
             raw_response["genre_filter"] = genre_filter_payload if genre_filter_payload.present?
             raw_response["link_validation"] = validation_payload if validation_payload.present?
+            raw_response["link_lookup"] = link_lookup_result.payload if link_lookup_result.payload.present?
 
             enrichment = EventLlmEnrichment.find_or_initialize_by(event_id: event_id)
             enrichment.source_run = run
@@ -345,21 +376,51 @@ module Importing
             enrichment.venue_description = validated_attributes[:venue_description]
             enrichment.venue_external_url = validated_attributes[:venue_external_url]
             enrichment.venue_address = validated_attributes[:venue_address]
-            enrichment.youtube_link = validated_attributes[:youtube_link]
-            enrichment.instagram_link = validated_attributes[:instagram_link]
-            enrichment.homepage_link = validated_attributes[:homepage_link]
-            enrichment.facebook_link = validated_attributes[:facebook_link]
+            enrichment.youtube_link = link_lookup_result.links[:youtube_link]
+            enrichment.instagram_link = link_lookup_result.links[:instagram_link]
+            enrichment.homepage_link = link_lookup_result.links[:homepage_link]
+            enrichment.facebook_link = link_lookup_result.links[:facebook_link]
             enrichment.model = client_model
             enrichment.prompt_version = PROMPT_VERSION
             enrichment.raw_response = raw_response
             enrichment.save!
 
-            event = Event.find(event_id)
             Venues::LlmFallbackAssignment.call(event: event, enrichment: enrichment)
           end
         end
 
         seen_event_ids.size
+      end
+
+      def refresh_links_batch!(run:, batch_events:, stop_requested: nil)
+        refreshed_count = 0
+        Importing::CooperativeStop.check!(stop_requested)
+
+        ActiveRecord::Base.transaction do
+          batch_events.each do |event|
+            Importing::CooperativeStop.check!(stop_requested)
+            enrichment = event.llm_enrichment
+            next if enrichment.blank?
+
+            link_lookup_result = resolve_links_for(event)
+            raw_response = enrichment.raw_response.is_a?(Hash) ? enrichment.raw_response.deep_stringify_keys : {}
+            raw_response["link_lookup"] = link_lookup_result.payload if link_lookup_result.payload.present?
+
+            enrichment.source_run = run
+            enrichment.youtube_link = link_lookup_result.links[:youtube_link]
+            enrichment.instagram_link = link_lookup_result.links[:instagram_link]
+            enrichment.homepage_link = link_lookup_result.links[:homepage_link]
+            enrichment.facebook_link = link_lookup_result.links[:facebook_link]
+            enrichment.model = enrichment.model.presence || client_model
+            enrichment.prompt_version = enrichment.prompt_version.presence || PROMPT_VERSION
+            enrichment.raw_response = raw_response
+            enrichment.save!
+
+            refreshed_count += 1
+          end
+        end
+
+        refreshed_count
       end
 
       def normalize_payload_item(item)
@@ -374,21 +435,17 @@ module Importing
           event_description: item["event_description"] || item[:event_description],
           venue_description: item["venue_description"] || item[:venue_description],
           venue_external_url: item["venue_external_url"] || item[:venue_external_url],
-          venue_address: item["venue_address"] || item[:venue_address],
-          youtube_link: item["youtube_link"] || item[:youtube_link],
-          instagram_link: item["instagram_link"] || item[:instagram_link],
-          homepage_link: item["homepage_link"] || item[:homepage_link],
-          facebook_link: item["facebook_link"] || item[:facebook_link]
+          venue_address: item["venue_address"] || item[:venue_address]
         }.tap do |attributes|
           raise Error, "OpenAI-Antwort enthält keine gültige event_id." if attributes[:event_id].blank?
         end
       end
 
-      def validate_link_attributes(attributes)
+      def validate_payload_attributes(attributes)
         validated_attributes = attributes.deep_dup
         validation_payload = {}
 
-        LINK_FIELDS.each do |field_name|
+        VALIDATED_LINK_FIELDS.each do |field_name|
           url = attributes[field_name].to_s.strip
           next if url.blank?
 
@@ -418,6 +475,30 @@ module Importing
         end
 
         [ validated_attributes, validation_payload ]
+      end
+
+      def resolve_links_for(event)
+        result = link_finder.call(event: event)
+        increment_serpapi_counts!(result)
+        result.validation_results.each { |validation_result| increment_link_validation_counts!(validation_result) }
+        result
+      rescue StandardError => e
+        LinkFinder::Result.new(
+          links: LOOKED_UP_LINK_FIELDS.index_with { nil },
+          payload: {
+            "queries" => [],
+            "fields" => LOOKED_UP_LINK_FIELDS.index_with do
+              { "selected_url" => nil, "candidates" => [] }
+            end,
+            "error_class" => e.class.to_s,
+            "error_message" => e.message
+          },
+          search_count: 0,
+          candidate_count: 0,
+          found_count: 0,
+          null_count: LOOKED_UP_LINK_FIELDS.size,
+          validation_results: []
+        )
       end
 
       def filter_meta_genres(attributes)
@@ -496,6 +577,10 @@ module Importing
           links_checked_count: links_checked_count,
           links_rejected_count: links_rejected_count,
           links_unverifiable_count: links_unverifiable_count,
+          serpapi_search_count: serpapi_search_count,
+          serpapi_candidate_count: serpapi_candidate_count,
+          links_found_via_serpapi_count: links_found_via_serpapi_count,
+          links_null_after_serpapi_count: links_null_after_serpapi_count,
           canceled: true
         )
       end
@@ -512,6 +597,20 @@ module Importing
         @links_unverifiable_count = 0
       end
 
+      def increment_serpapi_counts!(result)
+        @serpapi_search_count += result.search_count
+        @serpapi_candidate_count += result.candidate_count
+        @links_found_via_serpapi_count += result.found_count
+        @links_null_after_serpapi_count += result.null_count
+      end
+
+      def reset_serpapi_counts!
+        @serpapi_search_count = 0
+        @serpapi_candidate_count = 0
+        @links_found_via_serpapi_count = 0
+        @links_null_after_serpapi_count = 0
+      end
+
       def links_checked_count
         @links_checked_count || 0
       end
@@ -522,6 +621,22 @@ module Importing
 
       def links_unverifiable_count
         @links_unverifiable_count || 0
+      end
+
+      def serpapi_search_count
+        @serpapi_search_count || 0
+      end
+
+      def serpapi_candidate_count
+        @serpapi_candidate_count || 0
+      end
+
+      def links_found_via_serpapi_count
+        @links_found_via_serpapi_count || 0
+      end
+
+      def links_null_after_serpapi_count
+        @links_null_after_serpapi_count || 0
       end
 
       def normalized_metadata(metadata)
@@ -552,12 +667,26 @@ module Importing
         ActiveModel::Type::Boolean.new.cast(current_run_metadata["refresh_existing"])
       end
 
+      def refresh_links_only?
+        ActiveModel::Type::Boolean.new.cast(current_run_metadata["refresh_links_only"])
+      end
+
       def single_event_run?
-        target_event_id.present?
+        target_event_ids.one? && target_event_id.present?
       end
 
       def skip_existing_enrichments?
-        !refresh_existing? && !single_event_run?
+        !refresh_existing? && target_event_ids.blank?
+      end
+
+      def target_event_ids
+        @target_event_ids ||= begin
+          ids = Array(current_run_metadata["target_event_ids"]).filter_map do |value|
+            Integer(value, exception: false)
+          end
+          ids << target_event_id if target_event_id.present?
+          ids.uniq
+        end
       end
 
       def target_event_id

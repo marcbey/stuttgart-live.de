@@ -94,6 +94,29 @@ module OpenAi
       assert_not_includes captured_request.keys, :temperature
     end
 
+    test "retries without temperature when the model does not support it" do
+      captured_requests = []
+      fake_sdk_client = build_fake_sdk_client do |request|
+        captured_requests << request
+
+        if request.key?(:temperature)
+          raise StandardError, "Unsupported parameter: 'temperature' is not supported with this model."
+        end
+
+        { "id" => "resp_123" }
+      end
+      fake_credentials = fake_credentials_with_api_key
+
+      with_stubbed_credentials(fake_credentials) do
+        ResponsesClient.new(model: "gpt-5-mini", temperature: 1.0, sdk_client: fake_sdk_client)
+          .create!(input: "Prompt", text_format: { type: "json_schema" })
+      end
+
+      assert_equal 2, captured_requests.size
+      assert_equal 1.0, captured_requests.first[:temperature]
+      assert_not_includes captured_requests.second.keys, :temperature
+    end
+
     private
 
     def build_fake_sdk_client(&block)
