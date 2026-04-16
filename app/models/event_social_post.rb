@@ -118,7 +118,7 @@ class EventSocialPost < ApplicationRecord
   end
 
   def ready_for_publish?
-    draft? || approved? || publishing? || failed?
+    draft? || approved? || publishing? || failed? || published?
   end
 
   def approval_errors
@@ -136,7 +136,6 @@ class EventSocialPost < ApplicationRecord
 
   def publish_errors
     errors = approval_errors
-    errors << "Post ist bereits veröffentlicht." if published?
     errors << "Event ist noch nicht öffentlich live." unless event.live?
     errors
   end

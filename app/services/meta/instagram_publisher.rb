@@ -3,18 +3,26 @@ module Meta
     Result = Data.define(:remote_media_id, :remote_post_id, :payload)
     API_VERSION = "v25.0".freeze
     PUBLISHING_STATUS_FIELDS = "id,status_code".freeze
+    PUBLISHABLE_CONTAINER_STATUSES = %w[FINISHED PUBLISHED].freeze
+    TERMINAL_ERROR_CONTAINER_STATUSES = %w[ERROR EXPIRED].freeze
 
     def initialize(
       http_client: HttpClient.new,
       instagram_account_id: nil,
       user_access_token: nil,
-      connection_resolver: ConnectionResolver.new
+      connection_resolver: ConnectionResolver.new,
+      max_container_status_checks: 10,
+      container_status_interval_seconds: 2,
+      sleeper: ->(seconds) { sleep(seconds) }
     )
       connection = connection_resolver.connection
       instagram_target = connection&.selected_instagram_target
       @http_client = http_client
       @instagram_account_id = instagram_account_id.to_s.strip.presence || instagram_target&.external_id.to_s.strip
       @user_access_token = user_access_token.to_s.strip.presence || connection&.user_access_token.to_s.strip
+      @max_container_status_checks = max_container_status_checks
+      @container_status_interval_seconds = container_status_interval_seconds
+      @sleeper = sleeper
     end
 
     def publish!(event_social_post:)
@@ -32,6 +40,7 @@ module Meta
       container_id = container_payload["id"].to_s.strip
       raise Error, "Instagram hat keinen Media-Container zurückgegeben." if container_id.blank?
 
+      container_status = wait_for_container!(container_id)
       publish_payload = http_client.post_form!(
         "https://graph.instagram.com/#{API_VERSION}/#{instagram_account_id}/media_publish",
         params: {
@@ -53,6 +62,7 @@ module Meta
         remote_post_id: nil,
         payload: {
           "container" => container_payload,
+          "container_status" => container_status,
           "publish" => publish_payload,
           "media" => media_payload
         }
@@ -61,7 +71,7 @@ module Meta
 
     private
 
-    attr_reader :http_client, :instagram_account_id, :user_access_token
+    attr_reader :container_status_interval_seconds, :http_client, :instagram_account_id, :max_container_status_checks, :sleeper, :user_access_token
 
     def ensure_configured!
       raise Error, "Es ist kein Instagram-Professional-Account für das Publishing verbunden." if instagram_account_id.blank?
@@ -90,6 +100,23 @@ module Meta
       )
     rescue Error
       {}
+    end
+
+    def wait_for_container!(container_id)
+      last_status = {}
+
+      max_container_status_checks.times do |attempt|
+        last_status = fetch_container_status(container_id)
+        status_code = last_status["status_code"].to_s.strip.upcase
+
+        return last_status if PUBLISHABLE_CONTAINER_STATUSES.include?(status_code)
+        raise Error, "Instagram-Mediencontainer konnte nicht verarbeitet werden (Status: #{status_code})." if TERMINAL_ERROR_CONTAINER_STATUSES.include?(status_code)
+
+        sleeper.call(container_status_interval_seconds) if attempt < max_container_status_checks - 1
+      end
+
+      status_code = last_status["status_code"].to_s.strip.upcase.presence || "UNBEKANNT"
+      raise Error, "Instagram-Mediencontainer ist nicht rechtzeitig bereit geworden (Status: #{status_code})."
     end
 
     def missing_media_id_message(container_status)

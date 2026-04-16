@@ -61,6 +61,21 @@ class EventSocialPostTest < ActiveSupport::TestCase
     assert social_post.ready_for_publish?
   end
 
+  test "keeps republish eligibility after a successful publish" do
+    social_post = events(:published_one).event_social_posts.create!(
+      platform: "instagram",
+      status: "published",
+      caption: "Caption",
+      target_url: "https://example.com/events/published-event",
+      image_url: "https://example.com/published.jpg",
+      published_at: Time.current
+    )
+
+    assert social_post.published?
+    assert social_post.ready_for_publish?
+    assert_empty social_post.publish_errors
+  end
+
   test "builds a facebook post url from the remote post id" do
     social_post = events(:published_one).event_social_posts.build(
       platform: "facebook",

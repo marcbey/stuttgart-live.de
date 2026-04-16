@@ -156,7 +156,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "quick publish skips an already published instagram post" do
+  test "quick publish republishes an already published instagram post" do
     social_post = @event.event_social_posts.create!(
       platform: "instagram",
       status: "published",
@@ -173,15 +173,46 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
 
     with_stubbed_meta_access_status do
       assert_no_difference -> { @event.event_social_posts.count } do
-        post quick_publish_backend_event_event_social_posts_url(@event), params: {
+        assert_enqueued_jobs 1, only: Meta::PublishEventSocialPostJob do
+          post quick_publish_backend_event_event_social_posts_url(@event), params: {
+            inbox_status: "published"
+          }
+        end
+      end
+
+      assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
+      social_post.reload
+      assert_equal "publishing", social_post.status
+      assert_equal social_post, @event.event_social_posts.find_by!(platform: "instagram")
+      follow_redirect!
+      assert_match "Instagram-Post wird im Hintergrund veröffentlicht.", response.body
+    end
+  end
+
+  test "publish republishes an already published instagram post" do
+    social_post = @event.event_social_posts.create!(
+      platform: "instagram",
+      status: "published",
+      caption: "Caption",
+      target_url: "https://example.com/events/#{@event.slug}",
+      image_url: "https://example.com/published.jpg",
+      approved_at: Time.current,
+      approved_by: @user,
+      published_at: Time.current,
+      published_by: @user,
+      remote_media_id: "photo-1"
+    )
+
+    with_stubbed_meta_access_status do
+      assert_enqueued_with(job: Meta::PublishEventSocialPostJob, args: [ social_post.id, @user.id ]) do
+        post publish_backend_event_event_social_post_url(@event, social_post), params: {
           inbox_status: "published"
         }
       end
 
       assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
-      follow_redirect!
-      assert_match "Instagram-Post ist bereits veröffentlicht.", response.body
-      assert_equal social_post, @event.event_social_posts.find_by!(platform: "instagram")
+      social_post.reload
+      assert_equal "publishing", social_post.status
     end
   end
 

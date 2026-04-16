@@ -49,17 +49,15 @@
         <div class="backend-section-header backend-section-header-with-actions">
           <div>
             <h3>Instagram</h3>
-            <% if social_post.present? %>
-              <% unless social_post.draft? %>
-                <p>
-                  <span class="<%= event_social_post_status_badge_class(social_post) %>"><%= event_social_post_status_label(social_post) %></span>
-                </p>
-              <% end %>
-            <% else %>
+            <% unless social_post.present? %>
               <p>Für Instagram existiert noch kein Draft.</p>
             <% end %>
           </div>
-          <% unless social_post.present? %>
+          <% if social_post.present? && !social_post.draft? %>
+            <div class="backend-section-header-actions">
+              <span class="<%= event_social_post_status_badge_class(social_post) %>"><%= event_social_post_status_label(social_post) %></span>
+            </div>
+          <% elsif social_post.blank? %>
             <div class="backend-section-header-actions">
               <%= button_to "Instagram-Draft erzeugen",
                             backend_event_event_social_posts_path(event),
@@ -131,20 +129,20 @@
                                  form: caption_form_id,
                                  class: "button button-secondary button-compact" %>
                 <% end %>
-                <% unless social_post.published? || social_post.publishing? %>
-                  <%= button_to "Instagram veröffentlichen",
+                <% unless social_post.publishing? %>
+                  <%= button_to(social_post.published? ? "Instagram erneut veröffentlichen" : "Instagram veröffentlichen",
                                 publish_backend_event_event_social_post_path(event, social_post),
                                 method: :post,
                                 params: { inbox_status: inbox_status },
                                 form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
-                                class: "button button-save-primary button-compact" %>
+                                class: "button button-save-primary button-compact") %>
                 <% end %>
               </div>
 
               <div class="social-post-meta-list">
                 <% if social_post.published_at.present? %>
                   <div>
-                    <span class="form-label">Veröffentlicht</span>
+                    <span class="form-label">Zuletzt gesendet</span>
                     <p><%= l(social_post.published_at, format: "%d.%m.%Y %H:%M") %><% if social_post.published_by&.name.present? %> · <%= social_post.published_by.name %><% end %></p>
                   </div>
                 <% end %>

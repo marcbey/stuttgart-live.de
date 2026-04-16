@@ -15,11 +15,6 @@ module Backend
     def quick_publish
       social_post = @event.social_post_for(platform_param)
 
-      if social_post&.published?
-        redirect_to redirect_path, notice: "Instagram-Post ist bereits veröffentlicht."
-        return
-      end
-
       if social_post&.publishing?
         redirect_to redirect_path, notice: "Instagram-Post wird bereits im Hintergrund veröffentlicht."
         return
@@ -66,11 +61,6 @@ module Backend
     def publish
       unless @event_social_post.platform == EventSocialPost::CANONICAL_PLATFORM
         redirect_to redirect_path, alert: "Nur Instagram-Posts können noch veröffentlicht werden."
-        return
-      end
-
-      if @event_social_post.published?
-        redirect_to redirect_path, notice: "Instagram-Post ist bereits veröffentlicht."
         return
       end
 

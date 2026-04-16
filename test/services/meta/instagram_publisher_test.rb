@@ -4,6 +4,7 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
   test "creates a container and publishes it" do
     client = FakeMetaHttpClient.new(
       { "id" => "container-1" },
+      { "id" => "container-1", "status_code" => "FINISHED" },
       { "id" => "media-1" },
       { "id" => "media-1", "permalink" => "https://www.instagram.com/p/ABC123/" }
     )
@@ -16,17 +17,20 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
     result = publisher.publish!(event_social_post: build_social_post(platform: "instagram"))
 
     assert_equal "https://graph.instagram.com/v25.0/ig-123/media", client.calls.first.fetch(:url)
-    assert_equal "https://graph.instagram.com/v25.0/ig-123/media_publish", client.calls.second.fetch(:url)
-    assert_equal "https://graph.instagram.com/v25.0/media-1", client.calls.third.fetch(:url)
-    assert_equal "container-1", client.calls.second.fetch(:params).fetch(:creation_id)
+    assert_equal "https://graph.instagram.com/v25.0/container-1", client.calls.second.fetch(:url)
+    assert_equal "https://graph.instagram.com/v25.0/ig-123/media_publish", client.calls.third.fetch(:url)
+    assert_equal "https://graph.instagram.com/v25.0/media-1", client.calls.fourth.fetch(:url)
+    assert_equal "container-1", client.calls.third.fetch(:params).fetch(:creation_id)
     assert_equal "media-1", result.remote_media_id
     assert_nil result.remote_post_id
+    assert_equal "FINISHED", result.payload.dig("container_status", "status_code")
     assert_equal "https://www.instagram.com/p/ABC123/", result.payload.dig("media", "permalink")
   end
 
   test "includes container status when publish returns no media id" do
     client = FakeMetaHttpClient.new(
       { "id" => "container-1" },
+      { "id" => "container-1", "status_code" => "FINISHED" },
       {},
       { "id" => "container-1", "status_code" => "ERROR" }
     )
@@ -41,8 +45,49 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
     end
 
     assert_equal "Instagram hat keine Media-ID zurückgegeben (Container-Status: ERROR).", error.message
+    assert_equal "https://graph.instagram.com/v25.0/container-1", client.calls.fourth.fetch(:url)
+    assert_equal "id,status_code", client.calls.fourth.fetch(:params).fetch(:fields)
+  end
+
+  test "waits until the container is finished before publishing" do
+    client = FakeMetaHttpClient.new(
+      { "id" => "container-1" },
+      { "id" => "container-1", "status_code" => "IN_PROGRESS" },
+      { "id" => "container-1", "status_code" => "FINISHED" },
+      { "id" => "media-1" },
+      { "id" => "media-1", "permalink" => "https://www.instagram.com/p/ABC123/" }
+    )
+    sleeps = []
+    publisher = Meta::InstagramPublisher.new(
+      http_client: client,
+      instagram_account_id: "ig-123",
+      user_access_token: "ig-user-token",
+      sleeper: ->(seconds) { sleeps << seconds }
+    )
+
+    publisher.publish!(event_social_post: build_social_post(platform: "instagram"))
+
+    assert_equal [ 2 ], sleeps
+    assert_equal "https://graph.instagram.com/v25.0/container-1", client.calls.second.fetch(:url)
     assert_equal "https://graph.instagram.com/v25.0/container-1", client.calls.third.fetch(:url)
-    assert_equal "id,status_code", client.calls.third.fetch(:params).fetch(:fields)
+  end
+
+  test "raises when container processing ends in an error state" do
+    client = FakeMetaHttpClient.new(
+      { "id" => "container-1" },
+      { "id" => "container-1", "status_code" => "ERROR" }
+    )
+    publisher = Meta::InstagramPublisher.new(
+      http_client: client,
+      instagram_account_id: "ig-123",
+      user_access_token: "ig-user-token"
+    )
+
+    error = assert_raises(Meta::Error) do
+      publisher.publish!(event_social_post: build_social_post(platform: "instagram"))
+    end
+
+    assert_equal "Instagram-Mediencontainer konnte nicht verarbeitet werden (Status: ERROR).", error.message
   end
 
   private
