@@ -22,6 +22,12 @@ module Importing
         "Sign in to continue",
         "Anmelden"
       ].freeze
+      HOST_UNAVAILABLE_MARKERS = {
+        "instagram.com" => [ "\"pageID\":\"httpErrorPage\"" ],
+        "www.instagram.com" => [ "\"pageID\":\"httpErrorPage\"" ],
+        "facebook.com" => [ "\"canonicalRouteName\":\"comet.fbweb.CometErrorRoute\"" ],
+        "www.facebook.com" => [ "\"canonicalRouteName\":\"comet.fbweb.CometErrorRoute\"" ]
+      }.freeze
 
       Result = Data.define(
         :accepted,
@@ -70,6 +76,17 @@ module Importing
         response, final_uri = redirect_result
         response_body = response.body.to_s
 
+        host_unavailable_marker = detect_host_unavailable_marker(final_uri.host, response_body)
+        if host_unavailable_marker.present?
+          return rejected_result(
+            status: "rejected_unavailable_text",
+            original_url: value,
+            final_url: final_uri,
+            http_status: response.code.to_i,
+            matched_phrase: host_unavailable_marker
+          )
+        end
+
         unavailable_phrase = detect_phrase(response_body, UNAVAILABLE_PHRASES)
         if unavailable_phrase.present?
           return rejected_result(
@@ -103,6 +120,8 @@ module Importing
         )
       rescue Timeout::Error => e
         unverifiable_result(original_url: value, error_class: e.class.to_s)
+      rescue OpenSSL::SSL::SSLError => e
+        rejected_result(status: "rejected_ssl_error", original_url: value, error_class: e.class.to_s)
       rescue SocketError, SystemCallError, IOError => e
         unverifiable_result(original_url: value, error_class: e.class.to_s)
       rescue URI::InvalidURIError => e
@@ -207,6 +226,13 @@ module Importing
 
       def detect_phrase(body, phrases)
         phrases.find { |phrase| body.include?(phrase) }
+      end
+
+      def detect_host_unavailable_marker(host, body)
+        markers = HOST_UNAVAILABLE_MARKERS[host.to_s.downcase]
+        return if markers.blank?
+
+        detect_phrase(body, markers)
       end
 
       def rejected_result(status:, original_url: nil, final_url: nil, http_status: nil, error_class: nil, matched_phrase: nil)

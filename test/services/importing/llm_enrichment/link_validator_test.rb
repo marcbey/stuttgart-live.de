@@ -77,6 +77,38 @@ module Importing
         assert_equal "Dieser Inhalt ist momentan nicht verfügbar", result.matched_phrase
       end
 
+      test "rejects instagram pages flagged as http error pages" do
+        validator = build_validator(
+          "https://www.instagram.com/lucanoel.music/" => FakeResponse.new(
+            code: "200",
+            body: "<html><script>{\"pageID\":\"httpErrorPage\"}</script></html>",
+            headers: {}
+          )
+        )
+
+        result = validator.call(url: "https://www.instagram.com/lucanoel.music/", field_name: :instagram_link)
+
+        assert_equal false, result.accepted?
+        assert_equal "rejected_unavailable_text", result.status
+        assert_equal "\"pageID\":\"httpErrorPage\"", result.matched_phrase
+      end
+
+      test "rejects facebook pages flagged as comet error routes" do
+        validator = build_validator(
+          "https://www.facebook.com/theaterrampe/" => FakeResponse.new(
+            code: "200",
+            body: "<html><script>{\"canonicalRouteName\":\"comet.fbweb.CometErrorRoute\"}</script></html>",
+            headers: {}
+          )
+        )
+
+        result = validator.call(url: "https://www.facebook.com/theaterrampe/", field_name: :facebook_link)
+
+        assert_equal false, result.accepted?
+        assert_equal "rejected_unavailable_text", result.status
+        assert_equal "\"canonicalRouteName\":\"comet.fbweb.CometErrorRoute\"", result.matched_phrase
+      end
+
       test "follows redirects to a valid destination" do
         validator = build_validator(
           "https://example.com/start" => FakeResponse.new(
@@ -141,6 +173,16 @@ module Importing
         assert_equal true, result.accepted?
         assert_equal "kept_unverifiable", result.status
         assert_equal "Timeout::Error", result.error_class
+      end
+
+      test "rejects ssl certificate errors" do
+        validator = LinkValidator.new(fetcher: ->(_uri) { raise OpenSSL::SSL::SSLError, "certificate verify failed" })
+
+        result = validator.call(url: "https://example.com/ssl-problem", field_name: :homepage_link)
+
+        assert_equal false, result.accepted?
+        assert_equal "rejected_ssl_error", result.status
+        assert_equal "OpenSSL::SSL::SSLError", result.error_class
       end
 
       test "rejects invalid or non-http URLs" do
