@@ -45,12 +45,12 @@
 - Suche: erweitern, zielgerichet mit Datum (heute, morgen, Wochenende), Genre
 - Suche: Suchergebnis mit besserem Aufbau, Design, etc...
 - Ist abgesagt, nicht ausverkauft: https://stuttgart-live.schopp3r.de/backend/events?event_id=15171&status=published
+- Suche: Auf Mobile optimieren
 
 # BUGS:
 
 # TODO:
 - Genre: Obergruppen fix definieren und im LLM-Enrichment mit geben, macht einen LLM-entrichmenr re-run notwendig
-- Suche: Auf Mobile optimieren
 
 # POSTPONE:
 - Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?
@@ -73,8 +73,8 @@ Password: !kJGzdp6BnE7XHf
 
 ## Insta: 
 https://www.instagram.com/sl_test_26/
-Name: sl_test_26
 eMail: chantalerler@russ-live.de
+Name: sl_test_26
 Password: af6mCSk7
 
 ## Facebook:

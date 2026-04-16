@@ -74,7 +74,7 @@ module Importing
         return redirect_result if redirect_result.is_a?(Result)
 
         response, final_uri = redirect_result
-        response_body = response.body.to_s
+        response_body = normalize_response_body(response.body)
 
         host_unavailable_marker = detect_host_unavailable_marker(final_uri.host, response_body)
         if host_unavailable_marker.present?
@@ -226,6 +226,16 @@ module Importing
 
       def detect_phrase(body, phrases)
         phrases.find { |phrase| body.include?(phrase) }
+      end
+
+      def normalize_response_body(body)
+        value = body.to_s
+        return value if value.encoding == Encoding::UTF_8 && value.valid_encoding?
+
+        value
+          .dup
+          .force_encoding(Encoding::UTF_8)
+          .encode(Encoding::UTF_8, invalid: :replace, undef: :replace, replace: "")
       end
 
       def detect_host_unavailable_marker(host, body)

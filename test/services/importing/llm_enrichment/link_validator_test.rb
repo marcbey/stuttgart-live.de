@@ -109,6 +109,23 @@ module Importing
         assert_equal "\"canonicalRouteName\":\"comet.fbweb.CometErrorRoute\"", result.matched_phrase
       end
 
+      test "normalizes binary response bodies before checking unavailable markers" do
+        body = "<html>\xC3<script>{\"pageID\":\"httpErrorPage\"}</script></html>".b
+        validator = build_validator(
+          "https://www.instagram.com/lucanoelmusic/" => FakeResponse.new(
+            code: "200",
+            body: body,
+            headers: {}
+          )
+        )
+
+        result = validator.call(url: "https://www.instagram.com/lucanoelmusic/", field_name: :instagram_link)
+
+        assert_equal false, result.accepted?
+        assert_equal "rejected_unavailable_text", result.status
+        assert_equal "\"pageID\":\"httpErrorPage\"", result.matched_phrase
+      end
+
       test "follows redirects to a valid destination" do
         validator = build_validator(
           "https://example.com/start" => FakeResponse.new(
