@@ -22,6 +22,8 @@ class Meta::EventSocialPostDraftSyncTest < ActiveSupport::TestCase
     assert_equal social_post.publish_image_instagram_url, social_post.image_url
     assert_match(%r{\Ahttps://example.com/}, social_post.preview_image_url)
     assert_match(%r{\Ahttps://example.com/}, social_post.publish_image_instagram_url)
+    assert_equal "image/jpeg", social_post.publish_image_instagram.blob.content_type
+    assert_equal "published-event-instagram-social-card.jpg", social_post.publish_image_instagram.blob.filename.to_s
     assert_equal [ 1080, 1350 ], image_dimensions(social_post.publish_image_instagram.download)
     assert_equal 1080, social_post.payload_snapshot.dig("rendered_variants", "instagram", "width")
     assert_equal 1350, social_post.payload_snapshot.dig("rendered_variants", "instagram", "height")
@@ -53,6 +55,6 @@ class Meta::EventSocialPostDraftSyncTest < ActiveSupport::TestCase
     social_post.reload
     assert_equal "Custom Artist", social_post.payload_snapshot.dig("card_text", "artist_name")
     assert_equal "11.11.2026 · Custom Venue", social_post.payload_snapshot.dig("card_text", "meta_line")
-    assert_equal "11.11.2026 · CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "instagram", "meta_line")
+    assert_equal "11.11.2026 CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "instagram", "meta_line")
   end
 end

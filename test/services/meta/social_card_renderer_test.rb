@@ -25,6 +25,8 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
     assert_nil rendered_cards[:preview]
     assert_nil rendered_cards[:facebook]
     assert_equal [ 1080, 1350 ], image_dimensions(rendered_cards[:instagram].binary)
+    assert_no_match(/[·•]/, rendered_cards[:instagram].meta_line)
+    assert_match(/\A09\.09\.2026 /, rendered_cards[:instagram].meta_line)
   end
 
   test "truncates long artist and venue text with ellipsis" do
@@ -53,5 +55,6 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
 
     assert artist_lines.last.end_with?("...")
     assert meta_line.end_with?("...")
+    assert_no_match(/[·•]/, meta_line)
   end
 end

@@ -31,7 +31,7 @@ module Meta
         frame_inset: 58,
         content_left: 94,
         content_right: 120,
-        bottom_padding: 164,
+        bottom_padding: 124,
         artist_font_size: 126,
         artist_line_height: 0.86,
         artist_max_lines: 4,
@@ -53,6 +53,7 @@ module Meta
     ].freeze
     DEFAULT_ZOOM = 100.0
     BACKGROUND_DIMMER_ALPHA = 0.08
+    INSTAGRAM_EXPORT_FORMAT = ".jpg[Q=90,strip,optimize_coding,interlace]".freeze
 
     def initialize(remote_image_fetcher: nil)
       @remote_image_fetcher = remote_image_fetcher || method(:fetch_remote_image)
@@ -105,9 +106,9 @@ module Meta
       )
 
       RenderedCard.new(
-        binary: card.write_to_buffer(".png"),
-        content_type: "image/png",
-        filename: "#{slug}-#{variant.key}-social-card.png",
+        binary: card.write_to_buffer(INSTAGRAM_EXPORT_FORMAT),
+        content_type: "image/jpeg",
+        filename: "#{slug}-#{variant.key}-social-card.jpg",
         width: variant.width,
         height: variant.height,
         artist_lines:,
@@ -214,7 +215,7 @@ module Meta
     end
 
     def fitted_meta_line_text(meta_line, variant:)
-      normalized = meta_line.to_s.strip.upcase
+      normalized = meta_line.to_s.strip.upcase.gsub(/\s*[·•]\s*/, " ")
       return "" if normalized.blank?
 
       fit_text(normalized, font_name: BODY_FONT_NAME, font_size: variant.meta_font_size, max_width: text_width_for(variant))

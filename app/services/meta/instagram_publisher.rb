@@ -2,6 +2,7 @@ module Meta
   class InstagramPublisher
     Result = Data.define(:remote_media_id, :remote_post_id, :payload)
     API_VERSION = "v25.0".freeze
+    PUBLISHING_STATUS_FIELDS = "id,status_code".freeze
 
     def initialize(
       http_client: HttpClient.new,
@@ -40,7 +41,11 @@ module Meta
       )
 
       remote_media_id = publish_payload["id"].to_s.strip.presence
-      raise Error, "Instagram hat keine Media-ID zurückgegeben." if remote_media_id.blank?
+      if remote_media_id.blank?
+        container_status = fetch_container_status(container_id)
+        raise Error, missing_media_id_message(container_status)
+      end
+
       media_payload = fetch_media_payload(remote_media_id)
 
       Result.new(
@@ -73,6 +78,25 @@ module Meta
       )
     rescue Error
       {}
+    end
+
+    def fetch_container_status(container_id)
+      http_client.get_json!(
+        "https://graph.instagram.com/#{API_VERSION}/#{container_id}",
+        params: {
+          fields: PUBLISHING_STATUS_FIELDS,
+          access_token: user_access_token
+        }
+      )
+    rescue Error
+      {}
+    end
+
+    def missing_media_id_message(container_status)
+      status_code = container_status["status_code"].to_s.strip.presence
+      return "Instagram hat keine Media-ID zurückgegeben." if status_code.blank?
+
+      "Instagram hat keine Media-ID zurückgegeben (Container-Status: #{status_code})."
     end
   end
 end

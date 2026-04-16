@@ -24,6 +24,27 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
     assert_equal "https://www.instagram.com/p/ABC123/", result.payload.dig("media", "permalink")
   end
 
+  test "includes container status when publish returns no media id" do
+    client = FakeMetaHttpClient.new(
+      { "id" => "container-1" },
+      {},
+      { "id" => "container-1", "status_code" => "ERROR" }
+    )
+    publisher = Meta::InstagramPublisher.new(
+      http_client: client,
+      instagram_account_id: "ig-123",
+      user_access_token: "ig-user-token"
+    )
+
+    error = assert_raises(Meta::Error) do
+      publisher.publish!(event_social_post: build_social_post(platform: "instagram"))
+    end
+
+    assert_equal "Instagram hat keine Media-ID zurückgegeben (Container-Status: ERROR).", error.message
+    assert_equal "https://graph.instagram.com/v25.0/container-1", client.calls.third.fetch(:url)
+    assert_equal "id,status_code", client.calls.third.fetch(:params).fetch(:fields)
+  end
+
   private
 
   def build_social_post(platform:)

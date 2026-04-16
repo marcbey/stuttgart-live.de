@@ -124,7 +124,10 @@ module ActiveSupport
     end
 
     def image_dimensions(binary)
-      parse_png_dimensions(binary) || parse_webp_dimensions(binary) || raise(ArgumentError, "unsupported image binary")
+      parse_png_dimensions(binary) ||
+        parse_webp_dimensions(binary) ||
+        parse_jpeg_dimensions(binary) ||
+        raise(ArgumentError, "unsupported image binary")
     end
 
     def image_processing_backend_available?
@@ -210,6 +213,31 @@ module ActiveSupport
         width_minus_one = little_endian_24bit(binary.byteslice(24, 3))
         height_minus_one = little_endian_24bit(binary.byteslice(27, 3))
         [ width_minus_one + 1, height_minus_one + 1 ]
+      end
+    end
+
+    def parse_jpeg_dimensions(binary)
+      return unless binary.start_with?("\xFF\xD8".b)
+
+      offset = 2
+
+      while offset < binary.bytesize
+        return if binary.getbyte(offset) != 0xFF
+
+        marker = binary.getbyte(offset + 1)
+        offset += 2
+
+        next if marker == 0xD8 || marker == 0xD9
+
+        segment_length = binary.byteslice(offset, 2)&.unpack1("n")
+        return if segment_length.blank? || segment_length < 2
+
+        if [ 0xC0, 0xC1, 0xC2, 0xC3, 0xC5, 0xC6, 0xC7, 0xC9, 0xCA, 0xCB, 0xCD, 0xCE, 0xCF ].include?(marker)
+          height, width = binary.byteslice(offset + 3, 4).unpack("n2")
+          return [ width, height ]
+        end
+
+        offset += segment_length
       end
     end
 

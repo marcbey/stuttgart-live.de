@@ -68,7 +68,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       social_post.reload
       assert_equal "Custom Artist", social_post.payload_snapshot.dig("card_text", "artist_name")
       assert_equal "11.11.2026 · Custom Venue", social_post.payload_snapshot.dig("card_text", "meta_line")
-      assert_equal "11.11.2026 · CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "instagram", "meta_line")
+      assert_equal "11.11.2026 CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "instagram", "meta_line")
     end
   end
 
