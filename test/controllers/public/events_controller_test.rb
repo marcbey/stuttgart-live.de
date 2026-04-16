@@ -706,8 +706,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, matching_published_event.artist_name
     assert_includes response.body, "event-card-admin-controls"
     assert_includes response.body, "/backend/events?event_id=#{hidden_event.id}&amp;status=#{hidden_event.status}"
-    assert_select "#event-grid article.event-listing-card > .event-card-admin-controls", minimum: 1
-    assert_select "#event-grid article.event-listing-card > a .event-card-admin-controls", count: 0
+    assert_select "#event-grid article.genre-lane-card > .event-card-admin-controls", minimum: 1
+    assert_select "#event-grid article.genre-lane-card > a .event-card-admin-controls", count: 0
   end
 
   test "search redirects authenticated users to a scheduled unpublished search result" do
@@ -2300,14 +2300,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_url(filter: "all", q: "Search Cluster")
 
     assert_response :success
+    assert_select "section.lane-page-section.search-results-section", count: 1
+    assert_select ".lane-page-topbar .event-detail-back a", text: "← Zurück"
     assert_select ".lane-header.lane-header--search", count: 1
     assert_select ".lane-header.lane-header--search .slider-window-bar", count: 1
     assert_select ".lane-header.lane-header--search .lane-header-title", text: "Suchergebnisse"
     assert_select ".lane-header.lane-header--search .lane-header-meta", text: /Search Cluster/
     assert_select ".lane-header.lane-header--search .lane-header-meta", text: /2 Ergebnisse/
-    assert_select ".slider-view-toggle", count: 0
-    assert_select "#event-grid article.event-listing-card", count: 2
-    assert_select "#event-grid article.genre-lane-card", count: 0
+    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 1
+    assert_select "#event-grid article.genre-lane-card", count: 2
+    assert_select "#event-grid article.event-listing-card", count: 0
     assert_includes response.body, first_event.title
     assert_includes response.body, second_event.title
     assert_includes response.body, "Suchergebnisse"
@@ -2340,8 +2342,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_url(q: "Search All Results")
 
     assert_response :success
-    assert_select "#event-grid article.event-listing-card", count: 13
-    assert_select "#event-grid article.genre-lane-card", count: 0
+    assert_select "#event-grid article.genre-lane-card", count: 13
+    assert_select "#event-grid article.event-listing-card", count: 0
     assert_select "#events-pagination", count: 0
   end
 

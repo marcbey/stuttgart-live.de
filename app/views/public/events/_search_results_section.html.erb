@@ -2,15 +2,54 @@
   result_count = events.size
   result_label = result_count == 1 ? "1 Ergebnis" : "#{result_count} Ergebnisse"
   search_meta = "Suche nach „#{browse_state.query}“ · #{result_label}"
+  effective_series_ids = effective_public_event_series_ids(events)
+  nav_content = capture do
 %>
+  <button type="button"
+          class="slider-view-toggle"
+          data-section-view-target="button"
+          data-action="click->section-view#toggle"
+          title="Listenansicht"
+          aria-label="Listenansicht für Suchergebnisse"
+          aria-pressed="false">
+    <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
+    <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </span>
+    <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+      <span></span><span></span><span></span><span></span>
+    </span>
+  </button>
+<% end %>
 
-<section class="home-slider-section search-results-section">
+<section class="home-slider-section lane-page-section search-results-section"
+         data-controller="section-view"
+         data-section-view-mobile-list-default-value="true">
   <%= render "home_slider_header",
              title: "Suchergebnisse",
              variant: :search,
-             meta: search_meta %>
+             meta: search_meta,
+             nav_content: nav_content %>
   <% if events.any? %>
-    <%= render "event_rows", events: events, browse_state: browse_state, container_id: "event-grid", row_dom_id_prefix: :search_card, show_sold_out_ribbon: true %>
+    <div data-section-view-target="slider">
+      <div class="lane-page-grid" id="event-grid">
+        <% events.each do |event| %>
+          <%= render "genre_lane_card",
+                     event: event,
+                     browse_state: browse_state,
+                     effective_series_ids: effective_series_ids,
+                     card_dom_id: dom_id(event, :search_card) %>
+        <% end %>
+      </div>
+    </div>
+    <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
+      <%= render "event_rows",
+                 events: events,
+                 browse_state: browse_state,
+                 effective_series_ids: effective_series_ids,
+                 row_dom_id_prefix: :search_row,
+                 show_sold_out_ribbon: true %>
+    </div>
   <% else %>
     <div class="search-results-empty">
       <h2>Sorry, nix gefunden</h2>
