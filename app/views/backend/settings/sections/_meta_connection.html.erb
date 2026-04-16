@@ -1,15 +1,19 @@
 <% connection = @meta_connection %>
 <% access_status = @meta_access_status %>
-<% page_targets = connection&.social_connection_targets&.facebook_pages&.includes(:child_targets)&.order(:name, :external_id) || [] %>
+<% page_targets = if connection&.facebook_login_for_business?
+                    connection.social_connection_targets.facebook_pages.includes(:child_targets).order(:name, :external_id)
+                  else
+                    []
+                  end %>
 
 <section class="backend-section backend-section-compact">
   <div class="backend-section-header">
     <div>
       <h2>Meta Publishing</h2>
-      <p>Instagram-Publishing mit Meta-Anbindung. Facebook läuft optional nur über Cross-Post aus Meta heraus.</p>
+      <p>Instagram-Publishing mit Instagram Login. Facebook läuft optional nur über Cross-Post aus Meta heraus.</p>
     </div>
     <div class="backend-section-header-actions">
-      <%= link_to "Facebook & Instagram verbinden",
+      <%= link_to "Instagram verbinden",
                   start_backend_meta_connection_path,
                   class: "button button-save-primary button-compact",
                   data: { turbo: false } %>
@@ -31,11 +35,11 @@
       <div class="social-post-meta-list">
         <div>
           <span class="form-label">Auth-Modus</span>
-          <p><code>facebook_login_for_business</code></p>
+          <p><code><%= connection&.auth_mode.presence || "instagram_login" %></code></p>
         </div>
         <% if access_status.page_name.present? %>
           <div>
-            <span class="form-label">Facebook Page</span>
+            <span class="form-label">Facebook-Seite</span>
             <p><%= access_status.page_name %></p>
           </div>
         <% end %>
@@ -43,6 +47,12 @@
           <div>
             <span class="form-label">Instagram</span>
             <p>@<%= access_status.instagram_username %></p>
+          </div>
+        <% end %>
+        <% if connection&.metadata&.dig("instagram_account_type").present? || connection&.selected_instagram_target&.metadata&.dig("account_type").present? %>
+          <div>
+            <span class="form-label">Account-Typ</span>
+            <p><%= connection.metadata.dig("instagram_account_type").presence || connection.selected_instagram_target&.metadata&.dig("account_type") %></p>
           </div>
         <% end %>
         <div>
@@ -93,8 +103,8 @@
 
   <% if page_targets.any? %>
     <div class="backend-section-body">
-      <h3>Verfügbare Facebook Pages</h3>
-      <p class="form-hint">Wähle die Facebook-Seite, die direkt mit dem gewünschten Instagram-Professional-Account verknüpft ist. Diese Seite dient als Meta-Anker für Instagram-Publishing und optionales Cross-Posting.</p>
+      <h3>Legacy-Facebook-Verbindung</h3>
+      <p class="form-hint">Diese Auswahl wird nur noch für bestehende Legacy-Verbindungen mit `facebook_login_for_business` benötigt. Neue Verbindungen laufen direkt über Instagram Login ohne Facebook-Seitenauswahl.</p>
       <div class="social-post-platform-grid">
         <% page_targets.each do |target| %>
           <% instagram_target = target.child_targets.find(&:instagram_account?) %>
@@ -110,7 +120,7 @@
               </div>
               <div class="backend-section-header-actions">
                 <% unless target.selected? %>
-                  <%= button_to "Diese Seite verbinden",
+                  <%= button_to "Legacy-Seite verbinden",
                                 select_target_backend_meta_connection_path(target_id: target.id),
                                 method: :patch,
                                 class: "button button-secondary button-compact" %>

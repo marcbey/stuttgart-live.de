@@ -9,15 +9,15 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
     )
     publisher = Meta::InstagramPublisher.new(
       http_client: client,
-      instagram_business_account_id: "ig-123",
-      page_access_token: "page-token"
+      instagram_account_id: "ig-123",
+      user_access_token: "ig-user-token"
     )
 
     result = publisher.publish!(event_social_post: build_social_post(platform: "instagram"))
 
-    assert_equal "https://graph.facebook.com/v25.0/ig-123/media", client.calls.first.fetch(:url)
-    assert_equal "https://graph.facebook.com/v25.0/ig-123/media_publish", client.calls.second.fetch(:url)
-    assert_equal "https://graph.facebook.com/v25.0/media-1", client.calls.third.fetch(:url)
+    assert_equal "https://graph.instagram.com/v25.0/ig-123/media", client.calls.first.fetch(:url)
+    assert_equal "https://graph.instagram.com/v25.0/ig-123/media_publish", client.calls.second.fetch(:url)
+    assert_equal "https://graph.instagram.com/v25.0/media-1", client.calls.third.fetch(:url)
     assert_equal "container-1", client.calls.second.fetch(:params).fetch(:creation_id)
     assert_equal "media-1", result.remote_media_id
     assert_nil result.remote_post_id

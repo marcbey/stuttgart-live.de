@@ -1,6 +1,45 @@
 require "test_helper"
 
 class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
+  test "accepts instagram login connections without any facebook page" do
+    connection = SocialConnection.create!(
+      provider: "meta",
+      auth_mode: "instagram_login",
+      connection_status: "connected",
+      user_access_token: "ig-user-token",
+      user_token_expires_at: 40.days.from_now,
+      granted_scopes: %w[instagram_business_basic instagram_business_content_publish]
+    )
+    connection.social_connection_targets.create!(
+      target_type: "instagram_account",
+      external_id: "ig-123",
+      username: "sl_test_26",
+      selected: true,
+      status: "selected"
+    )
+
+    health_check = Meta::ConnectionHealthCheck.new(
+      http_client: StubHttpClient.new(
+        "https://graph.instagram.com/v25.0/me" => {
+          "id" => "app-scoped-user-123",
+          "user_id" => "ig-123",
+          "username" => "sl_test_26",
+          "account_type" => "BUSINESS",
+          "name" => "Stuttgart Live"
+        }
+      ),
+      page_catalog_fetcher: StubPageCatalogFetcher.new([]),
+      token_refresher: StubTokenRefresher.new
+    )
+
+    status = health_check.call(connection:)
+
+    assert_predicate status, :ok?
+    assert_equal "connected", status.connection_status
+    assert_equal "Instagram-Verbindung ist gültig.", status.summary
+    assert_equal "sl_test_26", status.instagram_username
+  end
+
   test "refreshes an expiring user token and updates discovered page tokens" do
     connection = SocialConnection.create!(
       provider: "meta",
@@ -110,13 +149,15 @@ class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
 
     assert_predicate status, :error?
     assert_equal "error", status.connection_status
-    assert_equal "Instagram-Publishing ist nicht möglich, weil zur ausgewählten Facebook-Seite kein Instagram-Professional-Account verknüpft ist.", status.summary
+    assert_equal "Instagram-Publishing ist im Legacy-Facebook-Flow nicht möglich, weil zur ausgewählten Facebook-Seite kein Instagram-Professional-Account verknüpft ist.", status.summary
   end
 
   private
 
   class StubTokenRefresher
-    def call(token:)
+    def call(token:, auth_mode:)
+      raise "Unexpected auth mode: #{auth_mode}" if auth_mode.blank?
+
       Struct.new(:access_token, :expires_at).new("new-user-token", 50.days.from_now)
     end
   end

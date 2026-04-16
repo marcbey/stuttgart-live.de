@@ -187,7 +187,7 @@ class Meta::AccessStatusTest < ActiveSupport::TestCase
   end
 
   class StubTokenRefresher
-    def call(token:)
+    def call(token:, auth_mode: "facebook_login_for_business")
       Struct.new(:access_token, :expires_at).new(token, 60.days.from_now)
     end
   end

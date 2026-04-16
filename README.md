@@ -157,7 +157,11 @@ Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In dies
 
 Das Backend unterstützt einen bewusst einfachen Instagram-first-Draft-und-Publish-Workflow für Social-Posts. Pro Event gibt es operativ genau einen aktiven `EventSocialPost` für `instagram`. Historische `facebook`-Records können in der Datenbank weiter existieren, werden aber nicht mehr aktiv aus dem Backend gesteuert.
 
-Die Meta-Verbindung wird dabei nicht mehr über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über einen persistierten Onboarding- und Lifecycle-Flow im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Facebook Login for Business, wählt die gewünschte Facebook Page aus und speichert damit zugleich den verknüpften Instagram Professional Account. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
+Die Meta-Verbindung wird dabei nicht mehr über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über einen persistierten Onboarding- und Lifecycle-Flow im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin den gewünschten Instagram-Professional-Account direkt über Instagram Login. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
+
+Für den OAuth-Callback kann optional eine feste Redirect-URL über `meta.instagram_redirect_uri` bzw. `META_INSTAGRAM_REDIRECT_URI` gesetzt werden. Das ist vor allem hilfreich, wenn der Login lokal gestartet wird, Meta aber nur einen öffentlichen HTTPS-Callback wie `https://stuttgart-live.schopp3r.de/backend/meta_connection/callback` akzeptieren soll.
+
+Sobald eine feste Redirect-URL gesetzt ist, muss der Connect-Flow auch auf genau diesem Host gestartet werden. Der serverseitige OAuth-`state` hängt an der Session des Start-Hosts; ein lokal gestarteter Flow kann deshalb nicht sauber auf einer anderen Callback-Domain beendet werden.
 
 Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
@@ -177,14 +181,14 @@ Wichtig für die Generierung:
 Wichtig für die Veröffentlichung:
 
 - Gesendet werden nur Events, die bereits öffentlich live sind. Ein geplantes `published_at` in der Zukunft reicht nicht.
-- Instagram wird über den mit dieser Page verknüpften persistierten Instagram Professional Account per Media-Container und anschließendem `media_publish` veröffentlicht.
+- Instagram wird über den direkt verbundenen persistierten Instagram-Professional-Account per Media-Container und anschließendem `media_publish` veröffentlicht.
 - Optionales Facebook-Sharing läuft ausschließlich als extern konfigurierte Cross-Post-Einstellung in Meta; die App verfolgt oder prüft diesen Schritt nicht.
 - Fehlgeschlagene Posts bleiben sichtbar und können nach einer Korrektur der Konfiguration erneut gesendet werden.
 
 Wichtig für Betrieb und Architektur:
 
 - Onboarding und Publishing sind strikt getrennt.
-- Die App veröffentlicht nur noch direkt zu Instagram; die Facebook-Seite bleibt als Meta-Anker für den verknüpften Instagram-Account relevant.
+- Die App veröffentlicht nur noch direkt zu Instagram; Facebook ist nur noch ein optionaler externer Cross-Post-Kontext.
 - Die bestehende Instagram-Graph-API-Payload wurde bewusst beibehalten; umgestellt wurde vor allem die Fachlogik im Backend.
 - Token-Gültigkeit wird regelmäßig geprüft, serverseitige Refresh-Versuche laufen über einen wiederkehrenden Job, und `reauth_required` blockiert Publishing explizit statt implizit zu scheitern.
 
@@ -409,7 +413,7 @@ bin/ci
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, `meta.facebook_page_id`, `meta.facebook_page_access_token`, `meta.instagram_business_account_id`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.instagram_app_id`, `meta.instagram_app_secret`, plus für Legacy-Fälle optional weiter `meta.app_id`, `meta.app_secret`, `meta.facebook_page_id`, `meta.facebook_page_access_token`, `meta.instagram_business_account_id`
 - statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
@@ -460,16 +464,16 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 
 Damit Instagram-Posts aus dem Backend funktionieren, muss das externe Meta-Setup zur hinterlegten App und den Ziel-Accounts passen:
 
-- eine Facebook Page als Meta-Anker, nicht nur ein persönliches Profil
-- ein Instagram-Professional-Konto, das mit dieser Facebook Page verknüpft ist
-- eine Meta-App mit Zugriff auf die Facebook Pages API und die Instagram API with Facebook Login
-- ein gültiger Page Access Token für genau diese Page
+- ein Instagram-Professional-Konto, also `Business` oder `Creator`
+- eine konfigurierte Meta-App mit Zugriff auf die Instagram API with Instagram Login
+- gültige App-Konfiguration für den serverseitigen OAuth- und Token-Refresh-Flow
+- ein im Backend erfolgreich durchlaufener Instagram-Login-Connect-Flow
 
-Die Anwendung erwartet aktuell genau eine globale Konfiguration für beide Plattformen. Es gibt also keinen OAuth-Connect-Flow pro Redaktionsnutzer und keine Auswahl mehrerer Pages oder Instagram-Accounts im Backend.
+Die Anwendung erwartet aktuell genau eine globale Meta-Verbindung. Es gibt also keinen OAuth-Connect-Flow pro Redaktionsnutzer und keine parallele Auswahl mehrerer aktiver Publish-Ziele im Backend.
 
-Wenn ein Token rotiert oder die Page neu verknüpft wird, reicht es, die betroffenen `meta.*`-Einträge in `config/credentials.yml.enc` zu aktualisieren und anschließend einen Test-Post im Backend erneut zu senden.
+Wenn ein Token rotiert oder die Berechtigungen ungültig werden, reicht es in der Regel, die Verbindung im Backend neu aufzubauen und anschließend einen Test-Post erneut zu senden.
 
-Im Social-Tab prüft die App die Meta-Verbindung zusätzlich aktiv gegen die Graph API. Dadurch werden abgelaufene oder falsch berechtigte Tokens schon vor dem Enqueue eines Publish-Jobs sichtbar. Wenn zusätzlich `meta.app_secret` gesetzt ist, kann die Anwendung auch das von Meta gemeldete Ablaufdatum des Tokens anzeigen. Ohne `meta.app_secret` bleibt die Live-Prüfung der Page- und Instagram-Verknüpfung aktiv, aber das Ablaufdatum selbst kann nicht verlässlich angezeigt werden. Ob Instagram-Posts zusätzlich nach Facebook geteilt werden, bleibt eine separate Meta-Einstellung und wird von der App nicht verifiziert.
+Im Social-Tab prüft die App die Meta-Verbindung zusätzlich aktiv gegen die Graph API. Dadurch werden abgelaufene oder falsch berechtigte Tokens schon vor dem Enqueue eines Publish-Jobs sichtbar. Ob Instagram-Posts zusätzlich nach Facebook geteilt werden, bleibt eine separate Meta-Einstellung und wird von der App nicht verifiziert.
 
 Beim Erzeugen eines Social-Drafts rendert die App zusätzlich ein eigenes Kartenbild im Highlight-Stil aus dem ausgewählten Eventbild:
 

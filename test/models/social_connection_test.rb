@@ -1,6 +1,13 @@
 require "test_helper"
 
 class SocialConnectionTest < ActiveSupport::TestCase
+  test "meta defaults to instagram login for new connections" do
+    connection = SocialConnection.meta
+
+    assert_equal "meta", connection.provider
+    assert_equal "instagram_login", connection.auth_mode
+  end
+
   test "resolves selected facebook and instagram targets" do
     connection = SocialConnection.create!(
       provider: "meta",
@@ -24,5 +31,17 @@ class SocialConnectionTest < ActiveSupport::TestCase
 
     assert_equal page_target, connection.selected_facebook_page_target
     assert_equal instagram_target, connection.selected_instagram_target
+    assert_predicate connection, :facebook_login_for_business?
+  end
+
+  test "recognizes instagram login connections" do
+    connection = SocialConnection.create!(
+      provider: "meta",
+      auth_mode: "instagram_login",
+      connection_status: "connected",
+      user_access_token: "user-token"
+    )
+
+    assert_predicate connection, :instagram_login?
   end
 end

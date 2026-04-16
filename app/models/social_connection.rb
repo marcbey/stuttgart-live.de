@@ -1,6 +1,6 @@
 class SocialConnection < ApplicationRecord
   PROVIDERS = %w[meta].freeze
-  AUTH_MODES = %w[facebook_login_for_business].freeze
+  AUTH_MODES = %w[facebook_login_for_business instagram_login].freeze
   CONNECTION_STATUSES = %w[
     disconnected
     pending_selection
@@ -27,7 +27,7 @@ class SocialConnection < ApplicationRecord
 
   def self.meta
     find_or_initialize_by(provider: "meta") do |connection|
-      connection.auth_mode = "facebook_login_for_business"
+      connection.auth_mode = "instagram_login"
     end
   end
 
@@ -41,6 +41,14 @@ class SocialConnection < ApplicationRecord
 
   def connected?
     connection_status == "connected"
+  end
+
+  def facebook_login_for_business?
+    auth_mode == "facebook_login_for_business"
+  end
+
+  def instagram_login?
+    auth_mode == "instagram_login"
   end
 
   def pending_selection?
@@ -67,7 +75,7 @@ class SocialConnection < ApplicationRecord
 
   def normalize_attributes
     self.provider = provider.to_s.strip.presence || "meta"
-    self.auth_mode = auth_mode.to_s.strip.presence || "facebook_login_for_business"
+    self.auth_mode = auth_mode.to_s.strip.presence || "instagram_login"
     self.connection_status = connection_status.to_s.strip.presence || "disconnected"
     self.external_user_id = external_user_id.to_s.strip.presence
     self.user_access_token = user_access_token.to_s.strip.presence

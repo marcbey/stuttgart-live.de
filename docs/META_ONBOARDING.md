@@ -2,13 +2,13 @@
 
 ## Zielbild
 
-`stuttgart-live` verwendet für Social Publishing eine persistierte Meta-Verbindung statt statischer Einmal-Tokens. Das Onboarding verbindet Facebook Page und verknüpften Instagram Professional Account gemeinsam. Operativ publisht das Backend anschließend nur noch direkt zu Instagram; ein optionaler Facebook-Cross-Post wird ausschließlich in Meta konfiguriert.
+`stuttgart-live` verwendet für Social Publishing eine persistierte Meta-Verbindung statt statischer Einmal-Tokens. Das Onboarding ist jetzt **Instagram-first** und nutzt **Instagram API with Instagram Login**. Operativ publisht das Backend anschließend nur noch direkt zu Instagram. Ein optionaler Facebook-Cross-Post wird ausschließlich im verbundenen Meta-Konto konfiguriert und von der App weder geprüft noch gesteuert.
 
-Die bestehende Instagram-Publish-Logik für die eigentlichen Graph-API-Calls wurde bewusst beibehalten:
+Die eigentliche Publish-Logik bleibt bewusst schlank:
 
 - Instagram postet weiter über `/{ig-user-id}/media` und `/{ig-user-id}/media_publish`
-
-Neu strukturiert wurde ausschließlich der Credential-, Onboarding- und Lifecycle-Teil.
+- der API-Host ist dafür `graph.instagram.com`
+- verwendet wird ein persistiertes **Instagram User access token**
 
 ## Persistierte Daten
 
@@ -17,7 +17,7 @@ Neu strukturiert wurde ausschließlich der Credential-, Onboarding- und Lifecycl
 Speichert die Meta-Hauptverbindung:
 
 - `provider = meta`
-- `auth_mode = facebook_login_for_business`
+- `auth_mode = instagram_login` für neue Verbindungen
 - verschlüsseltes `user_access_token`
 - `user_token_expires_at`
 - `granted_scopes`
@@ -28,21 +28,26 @@ Speichert die Meta-Hauptverbindung:
 - `reauth_required_at`
 - `last_error`
 
-Es gibt bewusst genau eine Meta-Hauptverbindung im System, die bei Re-Auth aktualisiert wird.
+`facebook_login_for_business` bleibt nur noch als Legacy-Modus für Altverbindungen lesbar.
+
+Zusätzliche Metadaten für den neuen Flow:
+
+- `instagram_user_id`
+- `instagram_username`
+- `instagram_account_type`
+- `last_instagram_sync_at`
 
 ### `social_connection_targets`
 
 Speichert die aus dem Onboarding gefundenen Publish-Ziele:
 
-- `target_type = facebook_page` oder `instagram_account`
-- `external_id`
-- `name` beziehungsweise `username`
-- verschlüsseltes `access_token` für Facebook Pages
+- `target_type = instagram_account` als operatives Ziel
+- `external_id` = Instagram Professional Account ID
+- `username` und optional `name`
 - `selected`
 - `status`
-- optionale Parent-Beziehung von Instagram-Target zur gewählten Facebook Page
 
-Damit bleiben mehrere gefundene Pages auswählbar, aber nur eine Page plus ihr verknüpfter Instagram-Account sind aktiv ausgewählt.
+Historische `facebook_page`-Targets können für Legacy-Verbindungen weiter existieren, werden für neue Verbindungen aber nicht mehr angelegt.
 
 ### Bestehende `event_social_posts`
 
@@ -68,34 +73,63 @@ Jeder Publish-Versuch wird separat protokolliert mit:
 
 Der Backend-Einstieg liegt im Settings-Tab `Meta Publishing`.
 
-1. Admin klickt auf `Facebook & Instagram verbinden`.
-2. Die App startet `Facebook Login for Business`.
-3. Der Callback tauscht den Code serverseitig gegen ein User-Token und danach gegen ein langlebigeres User-Token.
-4. Die App lädt die verfügbaren Facebook Pages über `/me/accounts`.
-5. Gefundene Pages und verknüpfte Instagram-Accounts werden als `social_connection_targets` persistiert.
-6. Im Backend wählt der Admin die gewünschte Facebook Page aus.
-7. Die App löst den verknüpften Instagram Professional Account der Page auf und markiert beide Targets als aktiv.
+1. Admin klickt auf `Instagram verbinden`.
+2. Die App startet den OAuth-Flow über `https://www.instagram.com/oauth/authorize`.
+3. Der Callback tauscht den Code serverseitig gegen ein Short-lived User-Token.
+4. Die App tauscht dieses Token direkt gegen ein Long-lived Instagram User access token.
+5. Danach lädt die App den verbundenen Instagram-Professional-Account über `/me`.
+6. Die Verbindung wird als `social_connection` persistiert.
+7. Der gefundene Instagram-Account wird als einziges aktives `instagram_account`-Target gespeichert und ausgewählt.
 
-Wenn keine Pages gefunden werden oder keine Instagram-Verknüpfung existiert, bleibt das im Status klar sichtbar und blockiert Publishing.
+Es gibt im Standardflow **keine Facebook-Seitenauswahl mehr**.
+
+## Erwartete Konfiguration
+
+Für den aktuellen Instagram-Login-Flow liest die App bevorzugt diese Credentials oder ENV-Werte:
+
+- `meta.instagram_app_id` oder `META_INSTAGRAM_APP_ID`
+- `meta.instagram_app_secret` oder `META_INSTAGRAM_APP_SECRET`
+- `meta.instagram_redirect_uri` oder `META_INSTAGRAM_REDIRECT_URI`
+
+Zur Rückwärtskompatibilität akzeptiert die App vorerst auch noch:
+
+- `meta.app_id` oder `META_APP_ID`
+- `meta.app_secret` oder `META_APP_SECRET`
+
+Die neuen Instagram-spezifischen Namen sollten aber bevorzugt werden, damit die Werte nicht mehr mit dem alten Facebook-Login-Flow verwechselt werden.
+
+Wenn `meta.instagram_redirect_uri` gesetzt ist, verwendet die App diese Callback-URL explizit statt die URL aus dem aktuellen Request zu bauen. Das ist nützlich, wenn der OAuth-Start lokal ausgelöst wird, der Meta-Callback aber bewusst auf eine feste HTTPS-Domain wie `https://stuttgart-live.schopp3r.de/backend/meta_connection/callback` zurücklaufen soll.
+
+Wichtig: Der OAuth-Start und der Callback müssen dabei auf demselben Host laufen, weil der `state` serverseitig an die Session gebunden ist. Wenn `meta.instagram_redirect_uri` auf `https://stuttgart-live.schopp3r.de/...` zeigt, muss der Connect-Flow deshalb auch auf genau diesem Host gestartet werden und nicht auf `localhost`.
+
+## Verwendete Scopes
+
+Für den aktuellen Publishing-Use-Case erwartet die App mindestens:
+
+- `instagram_business_basic`
+- `instagram_business_content_publish`
+
+Wenn einer dieser Scopes fehlt, markiert der Health Check die Verbindung als `reauth_required` und blockiert Publishing.
 
 ## Token-Lifecycle
 
 ### Baseline
 
-Die persistierte Baseline ist das User-Token der Meta-Verbindung. Das Page-Token wird pro ausgewählter Facebook Page gespeichert und für Publishing verwendet.
+Die persistierte Baseline ist das Instagram User access token der Verbindung. Page-Tokens werden im neuen Flow nicht mehr benötigt.
 
 ### Health Check
 
-`Meta::ConnectionHealthCheck` prüft:
+`Meta::ConnectionHealthCheck` prüft im `instagram_login`-Modus:
 
 - ob eine Meta-Verbindung existiert
-- ob eine Facebook Page ausgewählt ist
-- ob das User-Token laut `debug_token` noch gültig ist
+- ob ein User-Token vorhanden ist
+- ob das Token laut gespeichertem Ablaufdatum noch gültig ist
 - ob die nötigen Scopes vorhanden sind
-- ob die gespeicherte Facebook Page noch erreichbar ist
-- ob die gespeicherte Instagram-Verknüpfung noch zur Page passt
+- ob der Instagram-Professional-Account über `/me` erreichbar ist
+- ob der Account-Typ `BUSINESS` oder `MEDIA_CREATOR` ist
+- ob das gespeicherte Instagram-Ziel noch mit dem verbundenen Account übereinstimmt
 
-Dabei werden `social_connections` und ausgewählte Targets laufend aktualisiert.
+Für Legacy-Verbindungen mit `facebook_login_for_business` bleibt zusätzlich der alte Check gegen Facebook-Seite und `instagram_business_account` aktiv.
 
 ### Statuswerte
 
@@ -111,17 +145,21 @@ Die Verbindung verwendet klar definierte Zustände:
 
 `reauth_required` blockiert Publishing bewusst explizit.
 
-Zusätzlich blockiert ein fehlender Instagram-Professional-Account an der ausgewählten Facebook-Seite das Publishing, auch wenn die Facebook-Seite selbst erreichbar ist.
-
 ### Refresh
 
-Wenn das gespeicherte User-Token in das Refresh-Fenster läuft, versucht `Meta::ConnectionHealthCheck` serverseitig eine Verlängerung über den OAuth-Exchange.
+Wenn das gespeicherte User-Token in das Refresh-Fenster läuft, versucht `Meta::ConnectionHealthCheck` serverseitig eine Verlängerung.
+
+Für `instagram_login` läuft das über:
+
+- `https://graph.instagram.com/refresh_access_token`
+- `grant_type=ig_refresh_token`
+
+Das Long-lived Token ist laut Meta typischerweise 60 Tage gültig und kann erneuert werden, solange es noch gültig und älter als 24 Stunden ist.
 
 Bei Erfolg:
 
 - wird das User-Token aktualisiert
 - `last_refresh_at` gesetzt
-- der Page-Katalog erneut synchronisiert
 
 Bei Fehlschlag:
 
@@ -142,9 +180,8 @@ Onboarding ist ausschließlich zuständig für:
 
 - Login
 - Token-Beschaffung
-- Auswahl der Facebook Page
-- Auflösung des Instagram-Accounts
-- Persistenz der Verbindung und Targets
+- Laden des verbundenen Instagram-Accounts
+- Persistenz der Verbindung und des aktiven Targets
 
 Publishing ist ausschließlich zuständig für:
 
@@ -156,12 +193,17 @@ Publishing ist ausschließlich zuständig für:
 
 Publishing erzeugt keine Ad-hoc-Tokens mehr und startet auch keinen interaktiven Login.
 
-## Was bewusst erhalten blieb
+## Legacy-Kompatibilität
 
-Die funktionierenden Teile des bisherigen Publish-Flows wurden bewusst nicht neu erfunden:
+Bestehende `facebook_login_for_business`-Verbindungen bleiben vorerst lesbar:
 
-- bestehende `Meta::InstagramPublisher`-Payload
-- vorhandener Draft-, Freigabe- und Publish-Workflow über `EventSocialPost`
-- Persistenz der Facebook-Seitenauswahl als Meta-Anker für Instagram
+- die Legacy-Facebook-Seitenauswahl bleibt für diese Verbindungen sichtbar
+- neue Verbindungen laufen aber ausschließlich über `instagram_login`
+- direkte Facebook-Seitenlogik ist kein Teil des Standard-Onboardings mehr
 
-Geändert wurde im Kern nur die Herkunft der Credentials und die Produktionshärtung drumherum.
+## Wichtige Betriebsannahmen
+
+- Die App veröffentlicht nur noch direkt zu Instagram.
+- Ob Instagram-Posts zusätzlich nach Facebook geteilt werden, bleibt eine reine Meta-Kontoeinstellung.
+- Eine Facebook-Seite ist für neue Verbindungen **keine Onboarding-Voraussetzung** mehr.
+- Ein möglicher PPA-Fehler auf Meta-Seite bleibt ein Laufzeitproblem beim Publish, kein Onboarding-Schritt der App.

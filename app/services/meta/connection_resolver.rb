@@ -21,7 +21,7 @@ module Meta
 
     def selected_instagram_target!
       target = connection!&.selected_instagram_target
-      raise Error, "Für die ausgewählte Facebook-Seite ist kein Instagram-Professional-Account verknüpft." if target.blank?
+      raise Error, "Es ist kein Instagram-Professional-Account für das Publishing verbunden." if target.blank?
 
       target
     end
