@@ -99,7 +99,10 @@
 
 <div>
   <%= form.label :event_info, "Beschreibung", class: "form-label" %>
-  <%= form.text_area :event_info, rows: 5, class: "form-textarea" %>
+  <% event_info_input_id = form.field_id(:event_info) %>
+  <%= form.hidden_field :event_info, id: event_info_input_id %>
+  <trix-editor input="<%= event_info_input_id %>" class="form-rich-text-editor backend-description-editor"></trix-editor>
+  <p class="form-hint">Unterstützt u. a. fett und Links.</p>
 </div>
 
 <div class="editor-grid">

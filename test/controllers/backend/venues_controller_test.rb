@@ -18,6 +18,9 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#venue_editor", count: 1
     assert_includes response.body, "Im Wizemann"
     assert_select "turbo-frame#venue_editor form.editor-form", count: 1
+    assert_select "turbo-frame#venue_editor input[type='hidden'][name='venue[description]']", count: 1
+    assert_select "turbo-frame#venue_editor trix-editor.backend-description-editor[input='venue_description']", count: 1
+    assert_select "turbo-frame#venue_editor textarea[name='venue[description]']", count: 0
     assert_select "select[name='sort'] option[selected='selected'][value='alphabetical']", count: 1
   end
 

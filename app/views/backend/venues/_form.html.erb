@@ -46,7 +46,10 @@
 
           <div class="editor-grid-span-full">
             <%= form.label :description, "Beschreibung", class: "form-label" %>
-            <%= form.text_area :description, class: "form-input", rows: 6 %>
+            <% description_input_id = form.field_id(:description) %>
+            <%= form.hidden_field :description, id: description_input_id %>
+            <trix-editor input="<%= description_input_id %>" class="form-rich-text-editor backend-description-editor"></trix-editor>
+            <p class="form-hint">Unterstützt u. a. fett und Links.</p>
           </div>
         </div>
       </div>

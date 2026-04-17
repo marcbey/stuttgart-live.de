@@ -107,6 +107,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
     assert_select "input[name='event[support]']", count: 1
+    assert_select "#event-editor-panel-event input[type='hidden'][name='event[event_info]']", count: 1
+    assert_select "#event-editor-panel-event trix-editor.backend-description-editor[input='event_event_info']", count: 1
+    assert_select "#event-editor-panel-event textarea[name='event[event_info]']", count: 0
     assert_select "#event-editor-panel-event input[name='event[published_at]'][type='hidden'][value='']", count: 1
     assert_select "#event-editor-panel-event input[name='event[published_at]'][type='datetime-local']", count: 1
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2

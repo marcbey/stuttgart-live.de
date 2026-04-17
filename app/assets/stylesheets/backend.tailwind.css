@@ -1814,6 +1814,46 @@ outline: 3px solid #b8b8b8;
   outline-offset: 2px;
 }
 
+trix-editor.form-rich-text-editor {
+  width: 100%;
+  min-height: 12rem;
+  border: 1px solid #d0d0d0;
+  background: #fcfcfc;
+  padding: 0.43rem 0.48rem;
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 1rem;
+  line-height: 1.35;
+}
+
+trix-editor.form-rich-text-editor:focus,
+trix-editor.form-rich-text-editor:focus-visible {
+  border-color: #666;
+  outline: 3px solid #b8b8b8;
+  outline-offset: 2px;
+}
+
+.backend-description-toolbar .trix-button--icon-attach,
+.backend-description-toolbar .trix-button--icon-italic,
+.backend-description-toolbar .trix-button--icon-strike,
+.backend-description-toolbar .trix-button--icon-quote,
+.backend-description-toolbar .trix-button--icon-heading-1,
+.backend-description-toolbar .trix-button--icon-code,
+.backend-description-toolbar .trix-button--icon-bullet-list,
+.backend-description-toolbar .trix-button--icon-number-list,
+.backend-description-toolbar .trix-button--icon-decrease-nesting-level,
+.backend-description-toolbar .trix-button--icon-increase-nesting-level,
+.backend-description-toolbar .trix-button--icon-undo,
+.backend-description-toolbar .trix-button--icon-redo {
+  display: none;
+}
+
+.backend-description-toolbar .trix-button-group--block-tools,
+.backend-description-toolbar .trix-button-group--history-tools,
+.backend-description-toolbar .trix-button-group--file-tools,
+.backend-description-toolbar .trix-button-group-spacer {
+  display: none;
+}
+
 .editor-panel input.form-input[readonly],
 .editor-panel input.form-input:read-only:not([type="file"]),
 .editor-panel textarea.form-textarea[readonly],
