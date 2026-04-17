@@ -4325,7 +4325,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-image-figure .event-detail-image-stage.event-detail-image-stage-static", count: 1
     assert_select ".event-detail-image-stage .event-detail-image-picture img.event-detail-image", count: 1
-    assert_select ".event-detail-image-figure > .event-detail-image-credit", text: "© Foto Max Mustermann"
+    assert_select ".event-detail-image-stage-shell > .event-detail-image-credit", text: "© Foto Max Mustermann"
   end
 
   test "show falls back to import image when no event image exists" do

@@ -69,11 +69,12 @@ export default class extends Controller {
       return
     }
 
-    const currentIndex = this.leadingVisibleIndex(items)
-    const pageSize = this.visibleItemCount(items)
-    const targetIndex = this.clampIndex(currentIndex + (pageSize * direction), items)
+    const columns = this.sliderColumns(items)
+    const currentIndex = this.leadingVisibleColumnIndex(columns)
+    const pageSize = this.visibleColumnCount(columns)
+    const targetIndex = this.clampIndex(currentIndex + (pageSize * direction), columns)
 
-    this.scrollToItem(items[targetIndex])
+    this.scrollToColumn(columns[targetIndex])
   }
 
   updateButtons() {
@@ -150,6 +151,45 @@ export default class extends Controller {
     return Math.max(count, 1)
   }
 
+  sliderColumns(items) {
+    const columns = []
+    const tolerance = 2
+
+    items.forEach((item) => {
+      const left = item.offsetLeft
+      const width = item.offsetWidth
+      const existingColumn = columns.find((column) => Math.abs(column.left - left) <= tolerance)
+
+      if (existingColumn) {
+        existingColumn.right = Math.max(existingColumn.right, left + width)
+      } else {
+        columns.push({ left, right: left + width })
+      }
+    })
+
+    return columns.sort((a, b) => a.left - b.left)
+  }
+
+  leadingVisibleColumnIndex(columns) {
+    const currentScroll = this.trackTarget.scrollLeft
+
+    for (let index = 0; index < columns.length; index += 1) {
+      if (columns[index].right > currentScroll + 4) {
+        return index
+      }
+    }
+
+    return Math.max(0, columns.length - 1)
+  }
+
+  visibleColumnCount(columns) {
+    const viewportStart = this.trackTarget.scrollLeft + 4
+    const viewportEnd = viewportStart + this.trackTarget.clientWidth - 8
+    const count = columns.filter((column) => column.right > viewportStart && column.left < viewportEnd).length
+
+    return Math.max(count, 1)
+  }
+
   clampIndex(index, items) {
     return Math.max(0, Math.min(index, items.length - 1))
   }
@@ -158,6 +198,12 @@ export default class extends Controller {
     if (!(item instanceof HTMLElement)) return
 
     this.trackTarget.scrollTo({ left: item.offsetLeft, behavior: "smooth" })
+  }
+
+  scrollToColumn(column) {
+    if (!column) return
+
+    this.trackTarget.scrollTo({ left: column.left, behavior: "smooth" })
   }
 
   atEnd() {
