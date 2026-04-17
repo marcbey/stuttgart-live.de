@@ -10,6 +10,7 @@ Requirements:
 - Add or update tests if that is appropriate to prove the follow-up fix.
 - Leave the pull request branch in a review-ready state.
 - If the comment is unclear, avoid unsafe guessing. Make only a clearly justified minimal change, or stop and explain the blocker in your final message.
+- If local screenshot files are listed below, inspect them as part of the review context.
 
 Pull request title:
 {{PR_TITLE}}
@@ -30,4 +31,9 @@ Comment body:
 Comment context:
 ```text
 {{COMMENT_CONTEXT}}
+```
+
+Screenshot inputs:
+```text
+{{IMAGE_INPUTS}}
 ```

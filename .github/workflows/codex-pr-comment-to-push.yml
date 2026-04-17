@@ -106,6 +106,16 @@ jobs:
           ref: ${{ steps.pr.outputs.head_ref }}
           fetch-depth: 0
 
+      - name: Checkout workflow support files
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ github.repository }}
+          ref: ${{ github.event.repository.default_branch }}
+          sparse-checkout: |
+            .github/codex/prompts/address-pr-comment.md
+            script/github_collect_codex_images.py
+          path: .workflow-support
+
       - name: Set up Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -136,6 +146,7 @@ jobs:
         run: bin/rails db:prepare
 
       - name: Render Codex prompt
+        id: prompt
         env:
           PR_TITLE_JSON: ${{ toJson(steps.pr.outputs.title) }}
           PR_BODY_JSON: ${{ toJson(steps.pr.outputs.body) }}
@@ -143,14 +154,37 @@ jobs:
           COMMENT_CONTEXT_JSON: "${{ toJson(format('File: {0}\nLine: {1}\nSide: {2}', github.event.comment.path || 'n/a', github.event.comment.line || github.event.comment.original_line || 'n/a', github.event.comment.side || 'n/a')) }}"
           COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
         run: |
+          set -euo pipefail
+
+          tmp_dir=".github/codex/tmp/pr-${{ steps.pr.outputs.number }}-comment-${{ github.event.comment.id }}"
+          mkdir -p "$tmp_dir"
+
+          python3 <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          tmp_dir = Path(".github/codex/tmp/pr-${{ steps.pr.outputs.number }}-comment-${{ github.event.comment.id }}")
+          tmp_dir.mkdir(parents=True, exist_ok=True)
+          (tmp_dir / "pr-body.txt").write_text(json.loads(os.environ["PR_BODY_JSON"]), encoding="utf-8")
+          (tmp_dir / "comment-body.txt").write_text(json.loads(os.environ["COMMENT_BODY_JSON"]), encoding="utf-8")
+          PY
+
+          python3 .workflow-support/script/github_collect_codex_images.py \
+            --source-file "$tmp_dir/pr-body.txt" \
+            --source-file "$tmp_dir/comment-body.txt" \
+            --output-dir "$tmp_dir/images" \
+            --metadata-file "$tmp_dir/image-metadata.json"
+
           python3 <<'PY'
           import json
           import os
           import re
           from pathlib import Path
 
-          template_path = Path(".github/codex/prompts/address-pr-comment.md")
+          template_path = Path(".workflow-support/.github/codex/prompts/address-pr-comment.md")
           rendered_path = Path(".github/codex/prompts/address-pr-comment.rendered.md")
+          metadata_path = Path(".github/codex/tmp/pr-${{ steps.pr.outputs.number }}-comment-${{ github.event.comment.id }}/image-metadata.json")
 
           def sanitize_text(value: str) -> str:
             value = value.replace("\r\n", "\n").replace("\r", "\n")
@@ -169,6 +203,8 @@ jobs:
           comment_body = normalized_text("COMMENT_BODY_JSON", "_No comment body provided._")
           comment_context = normalized_text("COMMENT_CONTEXT_JSON", "_No inline review context provided._")
           comment_author = sanitize_text(os.environ["COMMENT_AUTHOR"]).strip() or "unknown"
+          metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+          image_notes = metadata["notes"]
 
           template = template_path.read_text(encoding="utf-8")
           replacements = {
@@ -177,14 +213,27 @@ jobs:
               "{{COMMENT_BODY}}": comment_body,
               "{{COMMENT_CONTEXT}}": comment_context,
               "{{COMMENT_AUTHOR}}": comment_author,
+              "{{IMAGE_INPUTS}}": image_notes,
           }
           rendered = re.sub(
-              r"\{\{PR_TITLE\}\}|\{\{PR_BODY\}\}|\{\{COMMENT_BODY\}\}|\{\{COMMENT_CONTEXT\}\}|\{\{COMMENT_AUTHOR\}\}",
+              r"\{\{PR_TITLE\}\}|\{\{PR_BODY\}\}|\{\{COMMENT_BODY\}\}|\{\{COMMENT_CONTEXT\}\}|\{\{COMMENT_AUTHOR\}\}|\{\{IMAGE_INPUTS\}\}",
               lambda match: replacements[match.group(0)],
               template,
           )
 
           rendered_path.write_text(rendered, encoding="utf-8")
+          PY
+
+          python3 <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          metadata = json.loads(Path(".github/codex/tmp/pr-${{ steps.pr.outputs.number }}-comment-${{ github.event.comment.id }}/image-metadata.json").read_text(encoding="utf-8"))
+          args = ["--full-auto"]
+          for image_path in metadata["image_paths"]:
+            args.extend(["--image", image_path])
+
+          print(f"codex_args_json={json.dumps(args)}")
           PY
 
       - name: Run Codex
@@ -195,7 +244,7 @@ jobs:
           output-file: codex-output.md
           sandbox: workspace-write
           safety-strategy: drop-sudo
-          codex-args: '["--full-auto"]'
+          codex-args: ${{ steps.prompt.outputs.codex_args_json }}
 
       - name: Verify repository
         run: |
@@ -217,6 +266,7 @@ jobs:
           set -euo pipefail
 
           rm -f .github/codex/prompts/address-pr-comment.rendered.md codex-output.md
+          rm -rf .github/codex/tmp/pr-${{ steps.pr.outputs.number }}-comment-${{ github.event.comment.id }}
 
           if [ -z "$(git status --porcelain)" ]; then
             echo "No repository changes to commit."

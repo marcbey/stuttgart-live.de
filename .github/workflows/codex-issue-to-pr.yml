@@ -75,10 +75,32 @@ jobs:
         run: bin/rails db:prepare
 
       - name: Render Codex prompt
+        id: prompt
         env:
           ISSUE_TITLE_JSON: ${{ toJson(github.event.issue.title) }}
           ISSUE_BODY_JSON: ${{ toJson(github.event.issue.body || '') }}
         run: |
+          set -euo pipefail
+
+          tmp_dir=".github/codex/tmp/issue-${{ github.event.issue.number }}"
+          mkdir -p "$tmp_dir"
+
+          python3 <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          tmp_dir = Path(".github/codex/tmp/issue-${{ github.event.issue.number }}")
+          tmp_dir.mkdir(parents=True, exist_ok=True)
+          issue_body = json.loads(os.environ["ISSUE_BODY_JSON"])
+          (tmp_dir / "issue-body.txt").write_text(issue_body, encoding="utf-8")
+          PY
+
+          python3 script/github_collect_codex_images.py \
+            --source-file "$tmp_dir/issue-body.txt" \
+            --output-dir "$tmp_dir/images" \
+            --metadata-file "$tmp_dir/image-metadata.json"
+
           python3 <<'PY'
           import json
           import os
@@ -87,6 +109,7 @@ jobs:
 
           template_path = Path(".github/codex/prompts/fix-issue.md")
           rendered_path = Path(".github/codex/prompts/fix-issue.rendered.md")
+          metadata_path = Path(".github/codex/tmp/issue-${{ github.event.issue.number }}/image-metadata.json")
 
           def sanitize_text(value: str) -> str:
             value = value.replace("\r\n", "\n").replace("\r", "\n")
@@ -100,18 +123,34 @@ jobs:
           elif len(issue_body) > 12000:
             issue_body = f"{issue_body[:12000].rstrip()}\n\n[truncated]"
 
+          metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+          image_notes = metadata["notes"]
+
           template = template_path.read_text(encoding="utf-8")
           replacements = {
               "{{ISSUE_TITLE}}": issue_title,
               "{{ISSUE_BODY}}": issue_body,
+              "{{IMAGE_INPUTS}}": image_notes,
           }
           rendered = re.sub(
-              r"\{\{ISSUE_TITLE\}\}|\{\{ISSUE_BODY\}\}",
+              r"\{\{ISSUE_TITLE\}\}|\{\{ISSUE_BODY\}\}|\{\{IMAGE_INPUTS\}\}",
               lambda match: replacements[match.group(0)],
               template,
           )
 
           rendered_path.write_text(rendered, encoding="utf-8")
+          PY
+
+          python3 <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          from pathlib import Path
+
+          metadata = json.loads(Path(".github/codex/tmp/issue-${{ github.event.issue.number }}/image-metadata.json").read_text(encoding="utf-8"))
+          args = ["--full-auto"]
+          for image_path in metadata["image_paths"]:
+            args.extend(["--image", image_path])
+
+          print(f"codex_args_json={json.dumps(args)}")
           PY
 
       - name: Run Codex
@@ -122,7 +161,7 @@ jobs:
           output-file: codex-output.md
           sandbox: workspace-write
           safety-strategy: drop-sudo
-          codex-args: '["--full-auto"]'
+          codex-args: ${{ steps.prompt.outputs.codex_args_json }}
 
       - name: Verify repository
         run: |
@@ -143,6 +182,7 @@ jobs:
         run: |
           rm -f .github/codex/prompts/fix-issue.rendered.md
           rm -f codex-output.md
+          rm -rf .github/codex/tmp/issue-${{ github.event.issue.number }}
 
       - name: Create pull request
         if: ${{ success() }}
