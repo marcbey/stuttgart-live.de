@@ -423,7 +423,8 @@ Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
 - lokale Datei `config/master.key`: Schlüssel für `config/credentials.yml.enc`
-- GitHub-Secrets für Deployments: `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD`, `KAMAL_SSH_PRIVATE_KEY`, `SENTRY_AUTH_TOKEN`
+- GitHub-Environment-Secrets für Deployments im Environment `production`: `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD`, `KAMAL_SSH_PRIVATE_KEY`, `SENTRY_AUTH_TOKEN`
+- GitHub-Repository-Secret für den Codex-Issue-Workflow: `OPENAI_API_KEY`
 - GitHub-Variablen für Sentry-Releases: `SENTRY_ORG`, `SENTRY_PROJECT`
 
 Ohne Mailchimp-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus.
@@ -533,6 +534,10 @@ Produktion läuft auf Hetzner und wird mit Kamal ausgerollt. Im Alltag gibt es z
 
 - automatische Deployments über GitHub Actions nach Pushes auf `main`
 - manuelle Eingriffe von lokal per `bin/kamal ... -d hetzner`
+
+Zusätzlich gibt es einen GitHub-Actions-Workflow für kleine automatisierte Bugfixes aus Issues: Wenn ein GitHub-Issue das Label `codex-fix` erhält, rendert der Workflow aus Titel und Beschreibung einen Codex-Prompt, lässt Codex den kleinstmöglichen Fix im Repository umsetzen, führt danach `bin/ci` aus und eröffnet nur bei erfolgreicher Verifikation automatisch einen Pull Request gegen den Default-Branch. Dafür müssen im Repository das Secret `OPENAI_API_KEY` sowie die GitHub-Einstellung zum Erstellen von Pull Requests durch Actions aktiviert sein.
+
+Das Skript `script/github_set_production_secrets` setzt dafür sowohl die benötigten Production-Environment-Secrets als auch das Repository-Secret `OPENAI_API_KEY` aus der lokalen `.env`.
 
 Webprozess und Job-Verarbeitung laufen gemeinsam in der Rails-Anwendung. `SOLID_QUEUE_IN_PUMA=true` ist für dieses Setup bereits vorgesehen.
 Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt signierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
