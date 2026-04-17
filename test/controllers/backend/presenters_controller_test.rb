@@ -18,6 +18,9 @@ class Backend::PresentersControllerTest < ActionDispatch::IntegrationTest
     assert_select ".backend-split", count: 1
     assert_select "#presenters_list", count: 1
     assert_select "turbo-frame#presenter_editor", count: 1
+    assert_select "turbo-frame#presenter_editor input[type='hidden'][name='presenter[description]']", count: 1
+    assert_select "turbo-frame#presenter_editor trix-editor.backend-description-editor[input='presenter_description']", count: 1
+    assert_select "turbo-frame#presenter_editor textarea[name='presenter[description]']", count: 0
     assert_select "select[name='sort'] option[selected='selected'][value='alphabetical']", count: 1
   end
 
