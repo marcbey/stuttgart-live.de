@@ -269,7 +269,7 @@ module Public
       end
 
       def show_sks_sold_out_hint?
-        show_sold_out_note? && event.sks_promoter? && sks_sold_out_message.present?
+        show_unavailable_note? && event.sks_promoter? && sks_sold_out_message.present?
       end
 
       def sks_sold_out_hint_text
