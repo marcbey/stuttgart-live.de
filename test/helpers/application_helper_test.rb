@@ -58,6 +58,18 @@ class ApplicationHelperTest < ActionView::TestCase
     singleton_class.define_method(:asset_available?, original_method)
   end
 
+  test "formatted venue address breaks lines at commas" do
+    fragment = Nokogiri::HTML.fragment(
+      formatted_venue_address("Hanns-Martin-Schleyer-Halle, Mercedesstraße 69, 70372 Stuttgart, Deutschland")
+    )
+
+    assert_equal [
+      "Hanns-Martin-Schleyer-Halle,",
+      "Mercedesstraße 69,",
+      "70372 Stuttgart, Deutschland"
+    ], fragment.css(".event-detail-venue-address-line").map(&:text)
+  end
+
   test "formatted organizer notes renders headings and categorized lists" do
     notes = <<~TEXT
       Wichtige Sicherheitsregeln

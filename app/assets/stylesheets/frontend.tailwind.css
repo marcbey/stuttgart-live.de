@@ -3,6 +3,7 @@ body.page-public {
   --ink-soft: #0b4346;
   --ink-deep: #031d1f;
   --ink-rgb: 6, 47, 49;
+  --event-price-color: rgba(var(--ink-rgb), 0.68);
   --ink-banner: linear-gradient(135deg, #062f31 0%, #0a484b 58%, #116266 100%);
   overflow-x: hidden;
   overflow-x: clip;
@@ -2487,7 +2488,7 @@ margin: 0.02rem 0 0;
   padding-right: 0;
   align-self: start;
   justify-self: start;
-  color: rgba(17, 17, 17, 0.58);
+  color: var(--event-price-color);
   text-align: left;
 }
 
@@ -2947,17 +2948,17 @@ padding: 0.9rem 0;
 }
 
 .lane-header--search {
---lane-header-accent: #111111;
-  --lane-header-title-color: #111111;
+--lane-header-accent: var(--ink-soft);
+  --lane-header-title-color: var(--ink-soft);
   --lane-header-kicker-color: rgba(17, 17, 17, 0.68);
-  --lane-header-button-bg: #111111;
+  --lane-header-button-bg: var(--ink-soft);
   --lane-header-button-color: #fff;
-  --lane-header-button-border: #111111;
-  --lane-header-button-hover-bg: #111111;
-  --lane-header-button-hover-border: #111111;
+  --lane-header-button-border: var(--ink-soft);
+  --lane-header-button-hover-bg: var(--ink);
+  --lane-header-button-hover-border: var(--ink);
   --lane-header-button-active-bg: #fff;
-  --lane-header-button-active-color: #111111;
-  --lane-header-button-active-border: #111111;
+  --lane-header-button-active-color: var(--ink-soft);
+  --lane-header-button-active-border: var(--ink-soft);
 }
 
 .lane-header--genre {
@@ -3204,7 +3205,7 @@ margin: 0.02rem 0 0;
   padding-right: 0;
   align-self: start;
   justify-self: start;
-  color: rgba(17, 17, 17, 0.58);
+  color: var(--event-price-color);
   text-align: left;
 }
 
@@ -3214,7 +3215,7 @@ margin: 0.02rem 0 0;
   padding-right: 0;
   align-self: start;
   justify-self: start;
-  color: rgba(17, 17, 17, 0.58);
+  color: var(--event-price-color);
   text-align: left;
 }
 
@@ -4560,7 +4561,7 @@ margin: 0;
   line-height: 1.2;
   flex: 0 0 auto;
   font-weight: 700;
-  color: rgba(17, 17, 17, 0.76);
+  color: var(--event-price-color);
   text-align: left;
   white-space: nowrap;
 }
@@ -4647,7 +4648,7 @@ margin-top: 0.35rem;
   padding-right: 0;
   justify-self: start;
   text-align: left;
-  color: rgba(17, 17, 17, 0.58);
+  color: var(--event-price-color);
 }
 
 .section-slider-list .event-listing-body {
@@ -4660,7 +4661,7 @@ min-height: 3.3rem;
 
 .section-slider-list .event-listing-price {
 margin-top: 0.4rem;
-  color: rgba(17, 17, 17, 0.58);
+  color: var(--event-price-color);
 }
 
 .home-slider-card .event-listing-link strong,
@@ -5548,6 +5549,7 @@ margin: 0;
 font-size: 1.45rem;
   line-height: 1.1;
   font-weight: 700;
+  color: var(--event-price-color);
 }
 
 .event-detail-cta-button {
@@ -6076,8 +6078,14 @@ display: grid;
 
 .event-detail-venue-address p {
 margin: 0;
-  overflow-wrap: anywhere;
-  hyphens: auto;
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+}
+
+.event-detail-venue-address-line {
+display: block;
+  white-space: nowrap;
 }
 
 .event-detail-venue-label {
@@ -6225,6 +6233,13 @@ font-size: 0.82rem;
 justify-self: start;
   border-radius: 6px;
   padding: 0.62rem 0.8rem;
+}
+
+@media (min-width: 981px) {
+  .event-detail-copy-block-primary,
+  .event-detail-venue-block {
+  padding-right: clamp(2.5rem, 5vw, 6rem);
+  }
 }
 
 @media (max-width: 1499px) {
@@ -6612,6 +6627,7 @@ padding-inline: 0;
   inline-size: min(100%, var(--event-detail-right-column-width, 46rem));
       width: min(100%, var(--event-detail-right-column-width, 46rem));
       max-width: 100%;
+      margin-top: 0;
       justify-self: start;
   }
 
@@ -7085,7 +7101,7 @@ display: flex;
       justify-self: start;
       align-self: start;
       text-align: left;
-      color: rgba(6, 47, 49, 0.62);
+      color: var(--event-price-color);
   }
 
   body.page-public-events-index .genre-lane-card-admin-controls {

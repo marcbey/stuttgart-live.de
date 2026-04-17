@@ -97,7 +97,7 @@
                       <% if presenter.venue_info.address.present? %>
                         <div class="event-detail-venue-address">
                           <p class="event-detail-venue-label">Adresse:</p>
-                          <p><%= presenter.venue_info.address %></p>
+                          <p><%= formatted_venue_address(presenter.venue_info.address) %></p>
                         </div>
                       <% end %>
 

@@ -283,6 +283,23 @@ module ApplicationHelper
     public_media_path(representation)
   end
 
+  def formatted_venue_address(address)
+    lines = address.to_s.split(",").map(&:strip).reject(&:blank?)
+    return if lines.blank?
+
+    if lines.length > 1 && lines.last.casecmp?("deutschland")
+      country = lines.pop
+      lines[-1] = "#{lines.last}, #{country}"
+    end
+
+    safe_join(
+      lines.each_with_index.map do |line, index|
+        formatted_line = index == lines.length - 1 ? line : "#{line},"
+        tag.span(formatted_line, class: "event-detail-venue-address-line")
+      end
+    )
+  end
+
   def public_media_path(record, strict_proxy: false)
     return if record.blank?
 

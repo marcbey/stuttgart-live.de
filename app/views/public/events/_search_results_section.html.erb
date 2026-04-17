@@ -1,7 +1,7 @@
 <%
   result_count = events.size
   result_label = result_count == 1 ? "1 Ergebnis" : "#{result_count} Ergebnisse"
-  search_meta = "Suche nach „#{browse_state.query}“ · #{result_label}"
+  search_meta = "Deine Suche nach „#{browse_state.query}“ ergab #{result_label}"
   effective_series_ids = effective_public_event_series_ids(events)
   nav_content = capture do
 %>
