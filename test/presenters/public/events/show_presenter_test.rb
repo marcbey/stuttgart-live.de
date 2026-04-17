@@ -225,7 +225,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_nil presenter.ticket_price_text
   end
 
-  test "shows canceled note without sold out hint for canceled events" do
+  test "shows canceled note with sks hint for canceled sks events" do
     event = build_event(
       artist_name: "Band",
       title: "Live",
@@ -244,8 +244,9 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert presenter.show_canceled_note?
     assert presenter.show_unavailable_note?
     assert_not presenter.show_ticket_link?
-    assert_not presenter.show_sks_sold_out_hint?
+    assert presenter.show_sks_sold_out_hint?
     assert_equal "Abgesagt", presenter.sold_out_note_text
+    assert_equal "Bitte bei SKS nach Restkarten fragen", presenter.sks_sold_out_hint_text
     schema = JSON.parse(presenter.schema_json_ld)
     assert_equal "https://schema.org/EventCancelled", schema["eventStatus"]
   end
