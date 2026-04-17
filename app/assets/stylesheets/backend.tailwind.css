@@ -1847,6 +1847,13 @@ trix-editor.form-rich-text-editor:focus-visible {
   display: none;
 }
 
+.backend-description-toolbar .trix-button-group--block-tools,
+.backend-description-toolbar .trix-button-group--history-tools,
+.backend-description-toolbar .trix-button-group--file-tools,
+.backend-description-toolbar .trix-button-group-spacer {
+  display: none;
+}
+
 .editor-panel input.form-input[readonly],
 .editor-panel input.form-input:read-only:not([type="file"]),
 .editor-panel textarea.form-textarea[readonly],
