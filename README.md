@@ -537,6 +537,8 @@ Produktion läuft auf Hetzner und wird mit Kamal ausgerollt. Im Alltag gibt es z
 
 Zusätzlich gibt es einen GitHub-Actions-Workflow für kleine automatisierte Bugfixes aus Issues: Wenn ein GitHub-Issue das Label `codex-fix` erhält, rendert der Workflow aus Titel und Beschreibung einen Codex-Prompt, lässt Codex den kleinstmöglichen Fix im Repository umsetzen, führt danach `bin/ci` aus und eröffnet nur bei erfolgreicher Verifikation automatisch einen Pull Request gegen den Default-Branch. Dafür müssen im Repository das Secret `OPENAI_API_KEY` sowie die GitHub-Einstellung zum Erstellen von Pull Requests durch Actions aktiviert sein.
 
+Bestehende Codex-PRs lassen sich danach per Kommentar nachschärfen: Ein neuer PR-Kommentar oder Inline-Review-Kommentar, der mit `/codex fix` oder `/codex address` beginnt, startet einen zweiten Workflow auf dem bestehenden PR-Branch. Der Workflow übernimmt PR-Titel, PR-Body und den auslösenden Kommentar als Prompt, führt erneut `bin/ci` aus und pusht nur bei erfolgreicher Verifikation zurück in denselben PR. Aus Sicherheitsgründen reagieren diese Slash-Kommandos nur auf Kommentare von `OWNER`, `MEMBER` oder `COLLABORATOR` und nur bei PRs aus demselben Repository.
+
 Das Skript `script/github_set_production_secrets` setzt dafür sowohl die benötigten Production-Environment-Secrets als auch das Repository-Secret `OPENAI_API_KEY` aus der lokalen `.env`.
 
 Webprozess und Job-Verarbeitung laufen gemeinsam in der Rails-Anwendung. `SOLID_QUEUE_IN_PUMA=true` ist für dieses Setup bereits vorgesehen.

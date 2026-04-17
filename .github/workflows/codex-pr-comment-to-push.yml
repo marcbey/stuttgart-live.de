@@ -1,0 +1,230 @@
+name: Codex PR Comment To Push
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: codex-pr-comment-${{ github.event.pull_request.number || github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  codex-address-comment:
+    if: >-
+      (
+        github.event_name == 'issue_comment' &&
+        github.event.issue.pull_request &&
+        (
+          startsWith(github.event.comment.body, '/codex fix') ||
+          startsWith(github.event.comment.body, '/codex address')
+        ) &&
+        contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      ) ||
+      (
+        github.event_name == 'pull_request_review_comment' &&
+        (
+          startsWith(github.event.comment.body, '/codex fix') ||
+          startsWith(github.event.comment.body, '/codex address')
+        ) &&
+        contains(fromJson('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RAILS_ENV: test
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+
+    steps:
+      - name: Load pull request metadata
+        id: pr
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          ISSUE_NUMBER: ${{ github.event.issue.number || '' }}
+          REVIEW_PR_NUMBER: ${{ github.event.pull_request.number || '' }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+
+          if [ "$EVENT_NAME" = "pull_request_review_comment" ]; then
+            pr_number="$REVIEW_PR_NUMBER"
+          else
+            pr_number="$ISSUE_NUMBER"
+          fi
+
+          if [ -z "$pr_number" ]; then
+            echo "Unable to determine pull request number." >&2
+            exit 1
+          fi
+
+          pr_json="$(gh api "repos/$REPOSITORY/pulls/$pr_number")"
+          head_repo="$(printf '%s' "$pr_json" | jq -r '.head.repo.full_name')"
+          head_ref="$(printf '%s' "$pr_json" | jq -r '.head.ref')"
+          title="$(printf '%s' "$pr_json" | jq -r '.title')"
+          body="$(printf '%s' "$pr_json" | jq -r '.body // ""')"
+
+          if [ "$head_repo" != "$REPOSITORY" ]; then
+            echo "Only pull requests from the same repository are supported." >&2
+            exit 1
+          fi
+
+          {
+            printf 'number=%s\n' "$pr_number"
+            printf 'head_repo=%s\n' "$head_repo"
+            printf 'head_ref=%s\n' "$head_ref"
+            printf 'title<<EOF\n%s\nEOF\n' "$title"
+            printf 'body<<EOF\n%s\nEOF\n' "$body"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Checkout pull request branch
+        uses: actions/checkout@v6
+        with:
+          repository: ${{ steps.pr.outputs.head_repo }}
+          ref: ${{ steps.pr.outputs.head_ref }}
+          fetch-depth: 0
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: .ruby-version
+          bundler-cache: true
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: yarn
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install libvips
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y libvips
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install JavaScript dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Prepare test database
+        run: bin/rails db:prepare
+
+      - name: Render Codex prompt
+        env:
+          PR_TITLE_JSON: ${{ toJson(steps.pr.outputs.title) }}
+          PR_BODY_JSON: ${{ toJson(steps.pr.outputs.body) }}
+          COMMENT_BODY_JSON: ${{ toJson(github.event.comment.body) }}
+          COMMENT_CONTEXT_JSON: "${{ toJson(format('File: {0}\nLine: {1}\nSide: {2}', github.event.comment.path || 'n/a', github.event.comment.line || github.event.comment.original_line || 'n/a', github.event.comment.side || 'n/a')) }}"
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          template_path = Path(".github/codex/prompts/address-pr-comment.md")
+          rendered_path = Path(".github/codex/prompts/address-pr-comment.rendered.md")
+
+          def sanitize_text(value: str) -> str:
+            value = value.replace("\r\n", "\n").replace("\r", "\n")
+            return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", "", value)
+
+          def normalized_text(env_key: str, fallback: str) -> str:
+            value = sanitize_text(json.loads(os.environ[env_key])).strip()
+            if not value:
+              return fallback
+            if len(value) > 12000:
+              return f"{value[:12000].rstrip()}\n\n[truncated]"
+            return value
+
+          pr_title = normalized_text("PR_TITLE_JSON", "_No pull request title provided._").replace("\n", " ").strip()
+          pr_body = normalized_text("PR_BODY_JSON", "_No pull request body provided._")
+          comment_body = normalized_text("COMMENT_BODY_JSON", "_No comment body provided._")
+          comment_context = normalized_text("COMMENT_CONTEXT_JSON", "_No inline review context provided._")
+          comment_author = sanitize_text(os.environ["COMMENT_AUTHOR"]).strip() or "unknown"
+
+          template = template_path.read_text(encoding="utf-8")
+          replacements = {
+              "{{PR_TITLE}}": pr_title,
+              "{{PR_BODY}}": pr_body,
+              "{{COMMENT_BODY}}": comment_body,
+              "{{COMMENT_CONTEXT}}": comment_context,
+              "{{COMMENT_AUTHOR}}": comment_author,
+          }
+          rendered = re.sub(
+              r"\{\{PR_TITLE\}\}|\{\{PR_BODY\}\}|\{\{COMMENT_BODY\}\}|\{\{COMMENT_CONTEXT\}\}|\{\{COMMENT_AUTHOR\}\}",
+              lambda match: replacements[match.group(0)],
+              template,
+          )
+
+          rendered_path.write_text(rendered, encoding="utf-8")
+          PY
+
+      - name: Run Codex
+        uses: openai/codex-action@v1
+        with:
+          openai-api-key: ${{ secrets.OPENAI_API_KEY }}
+          prompt-file: .github/codex/prompts/address-pr-comment.rendered.md
+          output-file: codex-output.md
+          sandbox: workspace-write
+          safety-strategy: drop-sudo
+          codex-args: '["--full-auto"]'
+
+      - name: Verify repository
+        run: |
+          set -euo pipefail
+
+          if [ -x ./bin/ci ]; then
+            ./bin/ci
+          elif [ -f ./package.json ]; then
+            npm test
+          elif [ -f ./Gemfile ]; then
+            bundle exec rspec
+          else
+            echo "No supported verification command found. Expected an executable ./bin/ci, package.json, or Gemfile." >&2
+            exit 1
+          fi
+
+      - name: Commit and push follow-up changes
+        run: |
+          set -euo pipefail
+
+          rm -f .github/codex/prompts/address-pr-comment.rendered.md codex-output.md
+
+          if [ -z "$(git status --porcelain)" ]; then
+            echo "No repository changes to commit."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Address Codex PR feedback"
+          git push origin "HEAD:${{ steps.pr.outputs.head_ref }}"
