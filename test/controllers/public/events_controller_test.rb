@@ -4325,7 +4325,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-image-figure .event-detail-image-stage.event-detail-image-stage-static", count: 1
     assert_select ".event-detail-image-stage .event-detail-image-picture img.event-detail-image", count: 1
-    assert_select ".event-detail-image-stage-shell > .event-detail-image-credit", text: "© Foto Max Mustermann"
+    assert_select ".event-detail-image-figure > .event-detail-image-credit", text: "© Foto Max Mustermann"
   end
 
   test "show falls back to import image when no event image exists" do
@@ -4354,8 +4354,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     expected_path = nil
 
     with_media_proxy do
-      get events_url(filter: "all")
-      expected_path = PublicMediaUrl.path_for(image.processed_optimized_variant)
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        get events_url(filter: "all")
+        expected_path = PublicMediaUrl.path_for(image.processed_optimized_variant)
+      end
     end
 
     assert_response :success
