@@ -273,7 +273,7 @@ class EventTest < ActiveSupport::TestCase
     assert_equal 0, queries
   end
 
-  test "editor_ticket_offer prefers imported offers over manual offers" do
+  test "editor_ticket_offer prefers manual offers over imported offers" do
     event = Event.create!(
       slug: "editor-ticket-offer-priority",
       source_fingerprint: "test::event::editor-ticket-offer-priority",
@@ -299,7 +299,7 @@ class EventTest < ActiveSupport::TestCase
       priority_rank: 50
     )
 
-    assert_equal imported_offer, event.editor_ticket_offer
+    assert_equal manual_offer, event.editor_ticket_offer
     assert_equal manual_offer, event.manual_ticket_offer
   end
 
@@ -330,7 +330,7 @@ class EventTest < ActiveSupport::TestCase
       priority_rank: 0
     )
 
-    assert_equal imported_offer, event.editor_ticket_offer
+    assert_equal manual_offer, event.editor_ticket_offer
     assert_nil event.public_ticket_offer
     assert_equal manual_offer, event.manual_ticket_offer
   end

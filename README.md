@@ -135,6 +135,9 @@ Wichtig für Updates bestehender Events:
 - `primary_source` bleibt bei bereits zusammengeführten Events auf der höchst priorisierten vorhandenen Quelle. Standardmäßig gilt dabei `easyticket` vor `eventim` vor `reservix`.
 - `source_snapshot` wird quellenübergreifend zusammengeführt, statt bei späteren Merges nur noch den zuletzt verarbeiteten Provider zu enthalten.
 - `event_offers` werden quellenweise auf den aktuellen Importstand synchronisiert: bestehende passende Offers werden aktualisiert, neue angelegt und nur Offers derselben gerade verarbeiteten Quelle entfernt, wenn sie dort nicht mehr vorkommen.
+- Im Event-Editor kann die sichtbare Ticket-URL zusätzlich als manueller Override gespeichert werden. Dieser Override wird als eigenes `event_offer` mit `source = manual` angelegt oder aktualisiert und überschreibt keine importierten Offers direkt.
+- Ein bloßes erneutes Speichern einer unveränderten importierten Ticket-URL erzeugt dabei bewusst kein zusätzliches manuelles Offer.
+- Im Backend zeigt der Editor bei vorhandenem manuellem Override künftig diesen Wert an. Für die öffentliche Ticketlogik bleiben importierte Offers und deren Priorisierung weiterhin maßgeblich.
 - Die öffentliche Ticketverfügbarkeit wird dabei nicht nur über `sold_out` abgeleitet, sondern zusätzlich über provider-spezifische Verfügbarkeits-Signale im Offer-Metadatum `availability_status`.
 - Für `Eventim` gilt aktuell:
   - `eventStatus = 1` wird als `canceled` interpretiert und im Frontend als `Abgesagt` angezeigt.

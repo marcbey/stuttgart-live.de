@@ -833,6 +833,7 @@ module Backend
       return unless manual_ticket_fields_submitted?
 
       offer = event.manual_ticket_offer
+      return if unchanged_imported_ticket_url_submission?(event, offer)
 
       if should_persist_manual_ticket_offer?
         offer ||= event.event_offers.build(
@@ -846,6 +847,15 @@ module Backend
       elsif offer.present?
         offer.destroy!
       end
+    end
+
+    def unchanged_imported_ticket_url_submission?(event, offer)
+      return false if offer.present? || manual_ticket_sold_out
+
+      imported_offer = event.imported_primary_ticket_offer
+      return false if imported_offer.blank?
+
+      imported_offer.resolved_ticket_url.to_s.strip.presence == manual_ticket_url
     end
 
     def should_persist_manual_ticket_offer?

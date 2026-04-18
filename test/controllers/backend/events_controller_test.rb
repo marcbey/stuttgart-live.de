@@ -210,9 +210,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h3", text: "Ticket"
     assert_select "input#ticket_sold_out_event_#{@published_event.id}", count: 0
     assert_includes response.body, "Ist nicht ausverkauft"
-    assert_select "input#ticket_url_event_#{@published_event.id}[readonly][value='https://example.com/tickets/published']"
+    assert_select "input#ticket_url_event_#{@published_event.id}[name='event[ticket_url]'][value='https://example.com/tickets/published']"
     assert_select "input#sks_sold_out_message_event_#{@published_event.id}[name='event[sks_sold_out_message]']"
-    assert_select "input[name='event[ticket_url]']", count: 0
+    assert_select "input#ticket_url_event_#{@published_event.id}[readonly]", count: 0
     assert_includes response.body, "Quelle: easyticket"
   end
 
@@ -740,6 +740,60 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate @event, :highlighted?
     assert_equal "https://tickets.example/updated", offer.reload.resolved_ticket_url
     assert_equal "https://tickets.example/updated", @event.preferred_ticket_offer&.resolved_ticket_url
+  end
+
+  test "update with unchanged imported ticket url does not create a manual override" do
+    sign_in_as(@user)
+
+    assert_no_difference("EventOffer.where(event: @published_event, source: 'manual').count") do
+      patch backend_event_url(@published_event), params: {
+        event: {
+          title: @published_event.title,
+          artist_name: @published_event.artist_name,
+          start_at: @published_event.start_at,
+          venue: @published_event.venue,
+          city: @published_event.city,
+          ticket_url: "https://example.com/tickets/published",
+          status: @published_event.status
+        }
+      }
+    end
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+    assert_nil @published_event.reload.manual_ticket_offer
+    assert_equal "https://example.com/tickets/published", @published_event.editor_ticket_offer&.resolved_ticket_url
+    assert_equal "easyticket", @published_event.editor_ticket_offer&.source
+  end
+
+  test "update with changed imported ticket url creates a manual override and shows it in the editor" do
+    sign_in_as(@user)
+    imported_offer = event_offers(:published_one_offer)
+
+    assert_difference("EventOffer.where(event: @published_event, source: 'manual').count", 1) do
+      patch backend_event_url(@published_event), params: {
+        event: {
+          title: @published_event.title,
+          artist_name: @published_event.artist_name,
+          start_at: @published_event.start_at,
+          venue: @published_event.venue,
+          city: @published_event.city,
+          ticket_url: "https://tickets.example/manual-override",
+          status: @published_event.status
+        }
+      }
+    end
+
+    assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
+    @published_event.reload
+    assert_equal "https://example.com/tickets/published", imported_offer.reload.resolved_ticket_url
+    assert_equal "https://tickets.example/manual-override", @published_event.manual_ticket_offer&.resolved_ticket_url
+    assert_equal "manual", @published_event.editor_ticket_offer&.source
+
+    get backend_event_url(@published_event, status: "published")
+
+    assert_response :success
+    assert_select "input#ticket_url_event_#{@published_event.id}[name='event[ticket_url]'][value='https://tickets.example/manual-override']"
+    assert_includes response.body, "Quelle: manual"
   end
 
   test "creates manual event with preuploaded images and extended editor fields" do

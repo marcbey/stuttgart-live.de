@@ -353,7 +353,7 @@ class Event < ApplicationRecord
   end
 
   def editor_ticket_offer
-    imported_primary_ticket_offer || manual_ticket_offer
+    manual_ticket_offer || imported_primary_ticket_offer
   end
 
   def public_ticket_status_offer

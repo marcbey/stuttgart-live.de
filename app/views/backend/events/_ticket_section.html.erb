@@ -31,17 +31,21 @@
       <div>
         <label class="form-label" for="<%= dom_id(event, :ticket_url) %>">Ticket-URL</label>
         <% if read_only_import_offer %>
-          <%= url_field_tag nil,
+          <%= url_field_tag "event[ticket_url]",
                             event_display_ticket_url(event),
                             id: dom_id(event, :ticket_url),
+                            form: editor_form_id,
                             class: "form-input",
-                            readonly: true %>
+                            data: { source_locked: true } %>
         <% else %>
           <%= url_field_tag "event[ticket_url]",
                             display_ticket_url,
                             id: dom_id(event, :ticket_url),
                             form: editor_form_id,
                             class: "form-input" %>
+        <% end %>
+        <% if source_label.present? %>
+          <p class="form-hint">Quelle: <%= source_label %></p>
         <% end %>
       </div>
 
@@ -56,8 +60,5 @@
       </div>
     </div>
 
-    <% if source_label.present? %>
-      <p class="form-hint">Quelle: <%= source_label %></p>
-    <% end %>
   </div>
 </section>
