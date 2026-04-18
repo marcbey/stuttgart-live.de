@@ -36,6 +36,18 @@
                             placeholder: AppSetting::DEFAULT_LLM_ENRICHMENT_TEMPERATURE,
                             aria: { describedby: "llm-enrichment-temperature-help" } %>
       <p id="llm-enrichment-temperature-help" class="form-hint">Optionaler Wert zwischen 0 und 2. Projekt-Default für das LLM-Enrichment ist <%= AppSetting::DEFAULT_LLM_ENRICHMENT_TEMPERATURE %>. Der OpenAI-API-Default wäre nur ohne diesen Projektoverride <code>1</code>. Niedrige Werte liefern stabilere, konsistentere Ergebnisse; höhere Werte machen die Antworten variantenreicher, aber auch weniger vorhersehbar.</p>
+
+      <%= form.label :llm_enrichment_web_search_provider, "Web Search Provider", class: "form-label" %>
+      <%= form.select :llm_enrichment_web_search_provider,
+                      options_for_select(
+                        AppSetting::AVAILABLE_LLM_ENRICHMENT_WEB_SEARCH_PROVIDERS,
+                        @llm_enrichment_web_search_provider_setting.llm_enrichment_web_search_provider
+                      ),
+                      {},
+                      class: "form-input",
+                      aria: { describedby: "llm-enrichment-web-search-provider-help" } %>
+      <p id="llm-enrichment-web-search-provider-help" class="form-hint">Steuert die Websuche für <code>homepage_link</code>, <code>instagram_link</code>, <code>facebook_link</code> und <code>youtube_link</code>. Standard ist <code>serpapi</code>; optional kann <code>openwebninja</code> genutzt werden.</p>
+
       <div class="settings-group-footer">
         <%= form.submit "Save", class: "button button-save-primary button-compact" %>
       </div>

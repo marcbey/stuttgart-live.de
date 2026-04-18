@@ -24,128 +24,109 @@ module Importing
       Result = Data.define(
         :links,
         :payload,
-        :search_count,
-        :candidate_count,
-        :found_count,
-        :null_count,
+        :web_search_request_count,
+        :web_search_candidate_count,
+        :links_found_via_web_search_count,
+        :links_null_after_link_lookup_count,
         :validation_results
       )
 
       def initialize(
-        serpapi_client: SerpApiClient.new,
+        web_search_provider: AppSetting.llm_enrichment_web_search_provider,
+        web_search_client: WebSearchClientFactory.build(provider: web_search_provider),
         query_builder: QueryBuilder.new,
         link_validator: LinkValidator.new
       )
-        @serpapi_client = serpapi_client
+        @web_search_provider = web_search_provider
+        @web_search_client = web_search_client
         @query_builder = query_builder
         @link_validator = link_validator
       end
 
       def call(event:)
-        queries_payload = []
-        candidates_by_field = LINK_FIELDS.index_with { [] }
-
-        query_builder.call(event: event).each do |query|
-          queries_payload << run_query(event:, query:, candidates_by_field:)
-        end
-
         validation_results = []
+        web_queries_payload = []
         fields_payload = {}
         links = {}
-        candidate_count = 0
+        web_search_candidate_count = 0
         found_count = 0
+        links_found_via_web_search_count = 0
 
-        LINK_FIELDS.each do |field_name|
-          candidates = candidates_by_field.fetch(field_name).sort_by do |candidate|
-            [ -(candidate["score"] || -1), candidate["position"] || GOOGLE_RESULT_LIMIT, candidate["url"].to_s ]
-          end
-          candidate_count += candidates.size
+        query_builder.call(event:).each do |query|
+          candidates = []
+          web_queries_payload << run_web_search_query(event:, query:, candidates:)
+          selected_url, selected_candidate = select_url_for_candidates(
+            field_name: query.field_name.to_sym,
+            candidates:,
+            validation_results:
+          )
 
-          selected_url = nil
-
-          candidates.each do |candidate|
-            next if candidate["rejection_reason"].present?
-
-            if social_field?(field_name)
-              candidate["selected"] = true
-              candidate["selection_strategy"] = "search_profile_match"
-              selected_url = candidate.fetch("url")
-              break
-            end
-
-            validation = link_validator.call(url: candidate.fetch("url"), field_name:)
-            validation_results << validation
-            candidate["validation"] = validation.as_json
-
-            if validation.accepted?
-              candidate["selected"] = true
-              selected_url = validation.sanitized_url
-              break
-            end
-
-            candidate["rejection_reason"] = validation.status
-          end
-
-          fields_payload[field_name.to_s] = {
+          web_search_candidate_count += candidates.count { |candidate| candidate["source_type"] == "web_search" }
+          links_found_via_web_search_count += 1 if selected_candidate&.dig("source_type") == "web_search"
+          fields_payload[query.field_name.to_s] = {
             "selected_url" => selected_url,
             "candidates" => candidates
           }
-          links[field_name] = selected_url
+          links[query.field_name.to_sym] = selected_url
           found_count += 1 if selected_url.present?
         end
 
         Result.new(
           links: links,
           payload: {
-            "queries" => queries_payload,
+            "web_search_provider" => web_search_provider,
+            "queries" => web_queries_payload,
             "fields" => fields_payload
           },
-          search_count: queries_payload.size,
-          candidate_count: candidate_count,
-          found_count: found_count,
-          null_count: LINK_FIELDS.size - found_count,
+          web_search_request_count: web_queries_payload.size,
+          web_search_candidate_count: web_search_candidate_count,
+          links_found_via_web_search_count: links_found_via_web_search_count,
+          links_null_after_link_lookup_count: LINK_FIELDS.size - found_count,
           validation_results: validation_results
         )
       end
 
       private
 
-      attr_reader :link_validator, :query_builder, :serpapi_client
+      attr_reader :link_validator, :query_builder, :web_search_client, :web_search_provider
 
       def social_field?(field_name)
         %i[instagram_link facebook_link].include?(field_name)
       end
 
-      def run_query(event:, query:, candidates_by_field:)
-        search_result = serpapi_client.search(query: query.query, num: GOOGLE_RESULT_LIMIT)
+      def run_web_search_query(event:, query:, candidates:)
+        search_result = web_search_client.search(query: query.query, num: GOOGLE_RESULT_LIMIT)
         Array(search_result.organic_results).each do |organic_result|
           candidate = build_candidate(
             event: event,
             field_name: query.field_name.to_sym,
             organic_result: organic_result,
             query: query,
-            search_id: search_result.search_id
+            search_id: search_result.search_id,
+            source_type: "web_search"
           )
-          candidates_by_field.fetch(query.field_name.to_sym) << candidate if candidate.present?
+          candidates << candidate if candidate.present?
         end
 
         {
           "name" => query.name,
           "field_name" => query.field_name.to_s,
           "query" => query.query,
-          "search_id" => search_result.search_id
+          "search_id" => search_result.search_id,
+          "provider" => web_search_provider
         }
-      rescue SerpApiClient::Error => e
+      rescue StandardError => e
         {
           "name" => query.name,
           "field_name" => query.field_name.to_s,
           "query" => query.query,
+          "provider" => web_search_provider,
           "error_class" => e.class.to_s,
           "error_message" => e.message
         }
       end
 
-      def build_candidate(event:, field_name:, organic_result:, query:, search_id:)
+      def build_candidate(event:, field_name:, organic_result:, query:, search_id:, source_type:)
         uri = parse_http_uri(organic_result.link)
         return if uri.blank?
 
@@ -162,9 +143,49 @@ module Importing
           "position" => organic_result.position,
           "query_name" => query.name,
           "search_id" => search_id,
+          "source_type" => source_type,
           "score" => score,
           "rejection_reason" => rejection_reason
         }.compact
+      end
+
+      def select_url_for_candidates(field_name:, candidates:, validation_results:)
+        selected_candidate = nil
+        selected_url = nil
+
+        sorted_candidates(candidates).each do |candidate|
+          next if candidate["selected"]
+          next if candidate["rejection_reason"].present?
+
+          if social_field?(field_name)
+            candidate["selected"] = true
+            candidate["selection_strategy"] = "search_profile_match"
+            selected_candidate = candidate
+            selected_url = candidate.fetch("url")
+            break
+          end
+
+          validation = link_validator.call(url: candidate.fetch("url"), field_name:)
+          validation_results << validation
+          candidate["validation"] = validation.as_json
+
+          if validation.accepted?
+            candidate["selected"] = true
+            selected_candidate = candidate
+            selected_url = validation.sanitized_url
+            break
+          end
+
+          candidate["rejection_reason"] = validation.status
+        end
+
+        [ selected_url, selected_candidate ]
+      end
+
+      def sorted_candidates(candidates)
+        candidates.sort_by do |candidate|
+          [ -(candidate["score"] || -1), candidate["position"] || GOOGLE_RESULT_LIMIT, candidate["url"].to_s ]
+        end
       end
 
       def parse_http_uri(value)

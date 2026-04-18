@@ -22,13 +22,14 @@ module Importing
           batches_count: 1,
           merge_run_id: nil,
           model: "gpt-5-mini",
+          web_search_provider: "serpapi",
           links_checked_count: 7,
           links_rejected_count: 2,
           links_unverifiable_count: 1,
-          serpapi_search_count: 9,
-          serpapi_candidate_count: 14,
-          links_found_via_serpapi_count: 4,
-          links_null_after_serpapi_count: 8,
+          web_search_request_count: 9,
+          web_search_candidate_count: 14,
+          links_found_via_web_search_count: 4,
+          links_null_after_link_lookup_count: 8,
           canceled: false
         )
         fake_importer = Struct.new(:call).new(fake_result)
@@ -47,13 +48,14 @@ module Importing
         assert_equal 1, @run.upserted_count
         assert_nil @run.metadata["merge_run_id"]
         assert_equal "gpt-5-mini", @run.metadata["model"]
+        assert_equal "serpapi", @run.metadata["web_search_provider"]
         assert_equal 7, @run.metadata["links_checked_count"]
         assert_equal 2, @run.metadata["links_rejected_count"]
         assert_equal 1, @run.metadata["links_unverifiable_count"]
-        assert_equal 9, @run.metadata["serpapi_search_count"]
-        assert_equal 14, @run.metadata["serpapi_candidate_count"]
-        assert_equal 4, @run.metadata["links_found_via_serpapi_count"]
-        assert_equal 8, @run.metadata["links_null_after_serpapi_count"]
+        assert_equal 9, @run.metadata["web_search_request_count"]
+        assert_equal 14, @run.metadata["web_search_candidate_count"]
+        assert_equal 4, @run.metadata["links_found_via_web_search_count"]
+        assert_equal 8, @run.metadata["links_null_after_link_lookup_count"]
         assert_equal true, ActiveModel::Type::Boolean.new.cast(@run.metadata["refresh_existing"])
         assert @run.metadata["execution_started_at"].present?
       ensure
@@ -92,13 +94,14 @@ module Importing
           batches_count: 3,
           merge_run_id: 123,
           model: "gpt-5-mini",
+          web_search_provider: "openwebninja",
           links_checked_count: 4,
           links_rejected_count: 1,
           links_unverifiable_count: 2,
-          serpapi_search_count: 5,
-          serpapi_candidate_count: 11,
-          links_found_via_serpapi_count: 3,
-          links_null_after_serpapi_count: 6,
+          web_search_request_count: 5,
+          web_search_candidate_count: 11,
+          links_found_via_web_search_count: 2,
+          links_null_after_link_lookup_count: 6,
           canceled: true
         )
         fake_importer = Struct.new(:call).new(fake_result)
@@ -114,13 +117,14 @@ module Importing
         assert_equal 5, @run.fetched_count
         assert_equal 1, @run.filtered_count
         assert_equal 2, @run.imported_count
+        assert_equal "openwebninja", @run.metadata["web_search_provider"]
         assert_equal 4, @run.metadata["links_checked_count"]
         assert_equal 1, @run.metadata["links_rejected_count"]
         assert_equal 2, @run.metadata["links_unverifiable_count"]
-        assert_equal 5, @run.metadata["serpapi_search_count"]
-        assert_equal 11, @run.metadata["serpapi_candidate_count"]
-        assert_equal 3, @run.metadata["links_found_via_serpapi_count"]
-        assert_equal 6, @run.metadata["links_null_after_serpapi_count"]
+        assert_equal 5, @run.metadata["web_search_request_count"]
+        assert_equal 11, @run.metadata["web_search_candidate_count"]
+        assert_equal 2, @run.metadata["links_found_via_web_search_count"]
+        assert_equal 6, @run.metadata["links_null_after_link_lookup_count"]
         assert_equal "Stopped by user", @run.metadata["stop_release_reason"]
       ensure
         importer_class.alias_method :new, :__original_new_for_test
@@ -156,13 +160,14 @@ module Importing
           batches_count: 1,
           merge_run_id: nil,
           model: "gpt-5-mini",
+          web_search_provider: "serpapi",
           links_checked_count: 0,
           links_rejected_count: 0,
           links_unverifiable_count: 0,
-          serpapi_search_count: 0,
-          serpapi_candidate_count: 0,
-          links_found_via_serpapi_count: 0,
-          links_null_after_serpapi_count: 0,
+          web_search_request_count: 0,
+          web_search_candidate_count: 0,
+          links_found_via_web_search_count: 0,
+          links_null_after_link_lookup_count: 0,
           canceled: false
         )
         fake_importer = Struct.new(:call).new(fake_result)

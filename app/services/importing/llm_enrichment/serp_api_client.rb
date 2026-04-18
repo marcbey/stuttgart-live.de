@@ -10,8 +10,8 @@ module Importing
       READ_TIMEOUT_SECONDS = 20
 
       Error = Class.new(StandardError)
-      OrganicResult = Data.define(:position, :link, :title, :snippet)
-      SearchResult = Data.define(:search_id, :organic_results)
+      OrganicResult = WebSearchResponse::OrganicResult
+      SearchResult = WebSearchResponse::SearchResult
 
       def initialize(api_key: AppConfig.serpapi_api_key)
         @api_key = api_key.to_s.strip

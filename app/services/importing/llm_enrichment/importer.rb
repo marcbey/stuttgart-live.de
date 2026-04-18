@@ -50,13 +50,14 @@ module Importing
         :batches_count,
         :merge_run_id,
         :model,
+        :web_search_provider,
         :links_checked_count,
         :links_rejected_count,
         :links_unverifiable_count,
-        :serpapi_search_count,
-        :serpapi_candidate_count,
-        :links_found_via_serpapi_count,
-        :links_null_after_serpapi_count,
+        :web_search_request_count,
+        :web_search_candidate_count,
+        :links_found_via_web_search_count,
+        :links_null_after_link_lookup_count,
         :canceled
       )
 
@@ -79,7 +80,7 @@ module Importing
 
       def call
         reset_link_validation_counts!
-        reset_serpapi_counts!
+        reset_link_lookup_counts!
         selection_time = Time.current
         selected_events = selected_events_scope(selection_time)
         selected_count = selected_events.count
@@ -100,13 +101,14 @@ module Importing
           "merge_run_id" => nil,
           "batch_size" => BATCH_SIZE,
           "model" => client_model,
+          "web_search_provider" => web_search_provider,
           "links_checked_count" => links_checked_count,
           "links_rejected_count" => links_rejected_count,
           "links_unverifiable_count" => links_unverifiable_count,
-          "serpapi_search_count" => serpapi_search_count,
-          "serpapi_candidate_count" => serpapi_candidate_count,
-          "links_found_via_serpapi_count" => links_found_via_serpapi_count,
-          "links_null_after_serpapi_count" => links_null_after_serpapi_count
+          "web_search_request_count" => web_search_request_count,
+          "web_search_candidate_count" => web_search_candidate_count,
+          "links_found_via_web_search_count" => links_found_via_web_search_count,
+          "links_null_after_link_lookup_count" => links_null_after_link_lookup_count
         )
 
         batches.each_with_index do |batch_events, index|
@@ -148,10 +150,10 @@ module Importing
             "links_checked_count" => links_checked_count,
             "links_rejected_count" => links_rejected_count,
             "links_unverifiable_count" => links_unverifiable_count,
-            "serpapi_search_count" => serpapi_search_count,
-            "serpapi_candidate_count" => serpapi_candidate_count,
-            "links_found_via_serpapi_count" => links_found_via_serpapi_count,
-            "links_null_after_serpapi_count" => links_null_after_serpapi_count
+            "web_search_request_count" => web_search_request_count,
+            "web_search_candidate_count" => web_search_candidate_count,
+            "links_found_via_web_search_count" => links_found_via_web_search_count,
+            "links_null_after_link_lookup_count" => links_null_after_link_lookup_count
           )
         end
 
@@ -162,13 +164,14 @@ module Importing
           batches_count: batches.count,
           merge_run_id: nil,
           model: client_model,
+          web_search_provider: web_search_provider,
           links_checked_count: links_checked_count,
           links_rejected_count: links_rejected_count,
           links_unverifiable_count: links_unverifiable_count,
-          serpapi_search_count: serpapi_search_count,
-          serpapi_candidate_count: serpapi_candidate_count,
-          links_found_via_serpapi_count: links_found_via_serpapi_count,
-          links_null_after_serpapi_count: links_null_after_serpapi_count,
+          web_search_request_count: web_search_request_count,
+          web_search_candidate_count: web_search_candidate_count,
+          links_found_via_web_search_count: links_found_via_web_search_count,
+          links_null_after_link_lookup_count: links_null_after_link_lookup_count,
           canceled: false
         )
       rescue Importing::StopRequested
@@ -479,7 +482,7 @@ module Importing
 
       def resolve_links_for(event)
         result = link_finder.call(event: event)
-        increment_serpapi_counts!(result)
+        increment_link_lookup_counts!(result)
         result.validation_results.each { |validation_result| increment_link_validation_counts!(validation_result) }
         result
       rescue StandardError => e
@@ -493,10 +496,10 @@ module Importing
             "error_class" => e.class.to_s,
             "error_message" => e.message
           },
-          search_count: 0,
-          candidate_count: 0,
-          found_count: 0,
-          null_count: LOOKED_UP_LINK_FIELDS.size,
+          web_search_request_count: 0,
+          web_search_candidate_count: 0,
+          links_found_via_web_search_count: 0,
+          links_null_after_link_lookup_count: LOOKED_UP_LINK_FIELDS.size,
           validation_results: []
         )
       end
@@ -574,13 +577,14 @@ module Importing
           batches_count: batches_count,
           merge_run_id: nil,
           model: client_model,
+          web_search_provider: web_search_provider,
           links_checked_count: links_checked_count,
           links_rejected_count: links_rejected_count,
           links_unverifiable_count: links_unverifiable_count,
-          serpapi_search_count: serpapi_search_count,
-          serpapi_candidate_count: serpapi_candidate_count,
-          links_found_via_serpapi_count: links_found_via_serpapi_count,
-          links_null_after_serpapi_count: links_null_after_serpapi_count,
+          web_search_request_count: web_search_request_count,
+          web_search_candidate_count: web_search_candidate_count,
+          links_found_via_web_search_count: links_found_via_web_search_count,
+          links_null_after_link_lookup_count: links_null_after_link_lookup_count,
           canceled: true
         )
       end
@@ -597,18 +601,18 @@ module Importing
         @links_unverifiable_count = 0
       end
 
-      def increment_serpapi_counts!(result)
-        @serpapi_search_count += result.search_count
-        @serpapi_candidate_count += result.candidate_count
-        @links_found_via_serpapi_count += result.found_count
-        @links_null_after_serpapi_count += result.null_count
+      def increment_link_lookup_counts!(result)
+        @web_search_request_count += result.web_search_request_count
+        @web_search_candidate_count += result.web_search_candidate_count
+        @links_found_via_web_search_count += result.links_found_via_web_search_count
+        @links_null_after_link_lookup_count += result.links_null_after_link_lookup_count
       end
 
-      def reset_serpapi_counts!
-        @serpapi_search_count = 0
-        @serpapi_candidate_count = 0
-        @links_found_via_serpapi_count = 0
-        @links_null_after_serpapi_count = 0
+      def reset_link_lookup_counts!
+        @web_search_request_count = 0
+        @web_search_candidate_count = 0
+        @links_found_via_web_search_count = 0
+        @links_null_after_link_lookup_count = 0
       end
 
       def links_checked_count
@@ -623,20 +627,24 @@ module Importing
         @links_unverifiable_count || 0
       end
 
-      def serpapi_search_count
-        @serpapi_search_count || 0
+      def web_search_provider
+        AppSetting.llm_enrichment_web_search_provider
       end
 
-      def serpapi_candidate_count
-        @serpapi_candidate_count || 0
+      def web_search_request_count
+        @web_search_request_count || 0
       end
 
-      def links_found_via_serpapi_count
-        @links_found_via_serpapi_count || 0
+      def web_search_candidate_count
+        @web_search_candidate_count || 0
       end
 
-      def links_null_after_serpapi_count
-        @links_null_after_serpapi_count || 0
+      def links_found_via_web_search_count
+        @links_found_via_web_search_count || 0
+      end
+
+      def links_null_after_link_lookup_count
+        @links_null_after_link_lookup_count || 0
       end
 
       def normalized_metadata(metadata)

@@ -298,16 +298,16 @@ Der Ablauf ist:
 1. Zuerst wählt der Job geeignete bestehende Events aus, typischerweise solche ohne vollständige LLM-Anreicherung oder mit veralteten Enrichment-Daten.
 2. Diese Events werden in Batches an das konfigurierte LLM-Modell geschickt.
 3. Das LLM liefert nur noch `genre`, `event_description`, `venue_description`, `venue_external_url` und `venue_address`.
-4. Anschließend sucht ein separater SerpApi-Schritt nach `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link`, bewertet Kandidaten deterministisch und wendet je Feld passende Auswahlregeln an: `homepage_link` und `youtube_link` werden zusätzlich mit dem bestehenden Link-Validator geprüft, `instagram_link` und `facebook_link` werden über Host, Profilpfad und Score entschieden.
+4. Anschließend sucht ein separater Link-Lookup-Schritt nach `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link`, bewertet Kandidaten deterministisch und wendet je Feld passende Auswahlregeln an: `homepage_link` kommt aus dem konfigurierten Web-Search-Provider, Social-Links kommen je nach Backend-Einstellung aus der Websuche oder direkt aus der OpenWebNinja-Social-Links-API; `homepage_link` und `youtube_link` werden zusätzlich mit dem bestehenden Link-Validator geprüft, `instagram_link` und `facebook_link` werden über Host, Profilpfad und Score entschieden.
 5. Das Ergebnis wird validiert, normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
-6. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, Batch-Zahl, SerpApi-Suchmetriken und Fehler im zugehörigen `ImportRun`.
+6. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, Batch-Zahl, Web-Search-/Social-Links-Metriken und Fehler im zugehörigen `ImportRun`.
 
 Fachlich ist wichtig:
 
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
 - `event_description` bündelt die belastbaren Informationen zu Artist, Projekt/Produktion und konkretem Eventformat in einem einzigen zusammenhängenden Beschreibungstext.
 - `EventLlmEnrichment.venue`, `venue_description`, `venue_external_url` und `venue_address` bleiben als Rohdaten erhalten.
-- `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` werden nicht mehr vom LLM geraten, sondern ausschließlich aus SerpApi-Kandidaten abgeleitet.
+- `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` werden nicht mehr vom LLM geraten, sondern ausschließlich aus Suchkandidaten der konfigurierten Provider abgeleitet.
 - Für `homepage_link` und `youtube_link` muss zusätzlich der technische Link-Check bestehen; bei `instagram_link` und `facebook_link` zählen dagegen vor allem Profil-URL-Form, Score und Query-Match, damit öffentliche Profile nicht an umgebungsabhängigen Login-Redirects scheitern.
 - Hat ein Event bereits eine zugeordnete `Venue`, ändert ein LLM-Lauf weder die Venue-Zuordnung noch `Venue.name`.
 - Passt `EventLlmEnrichment.venue` zu der bereits zugeordneten `Venue`, dürfen `Venue.description`, `Venue.external_url` und `Venue.address` aus dem Enrichment nur dann ergänzt werden, wenn das jeweilige Venue-Feld noch leer ist. Bereits gepflegte Werte werden nicht überschrieben.
@@ -315,7 +315,7 @@ Fachlich ist wichtig:
 - Hat ein Event noch keine zugeordnete `Venue`, darf aus `EventLlmEnrichment.venue` eine passende Venue gesucht oder neu angelegt und dem Event zugeordnet werden.
 - In genau diesem Fallback-Fall dürfen zusätzlich `Venue.description`, `Venue.external_url` und `Venue.address` aus `EventLlmEnrichment.venue_description`, `venue_external_url` und `venue_address` gesetzt werden; auch hier werden bereits vorhandene Werte der gefundenen oder neu angelegten Venue nicht überschrieben.
 - Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
-- Für bestehende Enrichments gibt es zusätzlich einen `refresh_links_only`-Pfad: Dabei bleibt der vorhandene LLM-Text unverändert und nur die vier Event-Links werden neu über SerpApi gesucht.
+- Für bestehende Enrichments gibt es zusätzlich einen `refresh_links_only`-Pfad: Dabei bleibt der vorhandene LLM-Text unverändert und nur die vier Event-Links werden neu gesucht.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.
 - Fehlerhafte Einzelantworten sollen im Laufprotokoll sichtbar sein, ohne zwangsläufig den kompletten Prozess unbrauchbar zu machen.
@@ -418,7 +418,7 @@ bin/ci
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.instagram_app_id`, `meta.instagram_app_secret`, plus für Legacy-Fälle optional weiter `meta.app_id`, `meta.app_secret`, `meta.facebook_page_id`, `meta.facebook_page_access_token`, `meta.instagram_business_account_id`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.instagram_app_id`, `meta.instagram_app_secret`, plus für Legacy-Fälle optional weiter `meta.app_id`, `meta.app_secret`, `meta.facebook_page_id`, `meta.facebook_page_access_token`, `meta.instagram_business_account_id`
 - statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
@@ -461,7 +461,7 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 
 - `sks_promoter_ids` für SKS-Filter und Sortierung
 - `sks_organizer_notes` für den Standardtext bei SKS-Events ohne eigene Veranstalterhinweise
-- `llm_enrichment_model`, `llm_enrichment_prompt_template` und `llm_enrichment_temperature` für den Enrichment-Job; projektseitig ist für `llm_enrichment_temperature` standardmäßig `1` gesetzt und entspricht damit dem OpenAI-API-Default. Niedrigere Werte liefern stabilere, höhere Werte variantenreichere Antworten
+- `llm_enrichment_model`, `llm_enrichment_prompt_template`, `llm_enrichment_temperature` und `llm_enrichment_web_search_provider` für den Enrichment-Job; projektseitig ist für `llm_enrichment_temperature` standardmäßig `1` gesetzt und entspricht damit dem OpenAI-API-Default. Niedrigere Werte liefern stabilere, höhere Werte variantenreichere Antworten. Standardmäßig bleibt `serpapi` für die Websuche aktiv; alternativ kann im Backend auf OpenWebNinja umgestellt werden, sofern `openwebninja.api_key` hinterlegt ist. Die Websuche wird für `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` gleichermaßen verwendet.
 - `llm_genre_grouping_model`, `llm_genre_grouping_prompt_template` und `llm_genre_grouping_group_count` für den Genre-Gruppierungsjob
 - `public_genre_grouping_snapshot_id` für den global öffentlich verwendeten Genre-Snapshot
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen im Merge-Import bei exakt gleicher Startzeit

@@ -23,6 +23,20 @@ class AppConfigTest < ActiveSupport::TestCase
     end
   end
 
+  test "reads openwebninja api key from credentials" do
+    with_credentials(openwebninja: { api_key: "openweb-secret" }) do
+      assert_equal "openweb-secret", AppConfig.openwebninja_api_key
+    end
+  end
+
+  test "falls back to env for openwebninja api key" do
+    with_env("OPENWEBNINJA_API_KEY" => "env-openweb-secret") do
+      with_credentials({}) do
+        assert_equal "env-openweb-secret", AppConfig.openwebninja_api_key
+      end
+    end
+  end
+
   test "builds the eventim feed url from configured parts" do
     with_credentials(eventim: { user: "SRU", pass: "secret", feed_key: "35-sas8n7" }) do
       assert_equal "https://SRU:secret@pft.eventim.com/serve/35-sas8n7", AppConfig.eventim_feed_url

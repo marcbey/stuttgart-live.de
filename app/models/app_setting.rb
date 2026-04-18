@@ -7,12 +7,14 @@ class AppSetting < ApplicationRecord
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
   LLM_ENRICHMENT_TEMPERATURE_KEY = "llm_enrichment_temperature".freeze
+  LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY = "llm_enrichment_web_search_provider".freeze
   LLM_GENRE_GROUPING_MODEL_KEY = "llm_genre_grouping_model".freeze
   LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY = "llm_genre_grouping_prompt_template".freeze
   LLM_GENRE_GROUPING_GROUP_COUNT_KEY = "llm_genre_grouping_group_count".freeze
   LLM_ENRICHMENT_INPUT_PLACEHOLDER = "{{input_json}}".freeze
   LLM_GENRE_GROUPING_INPUT_PLACEHOLDER = "{{input_json}}".freeze
   LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER = "{{group_count}}".freeze
+  DEFAULT_LLM_ENRICHMENT_WEB_SEARCH_PROVIDER = "serpapi".freeze
   DEFAULT_LLM_ENRICHMENT_TEMPERATURE = 1
   DEFAULT_LLM_GENRE_GROUPING_GROUP_COUNT = 30
   AVAILABLE_LLM_ENRICHMENT_MODELS = [
@@ -20,6 +22,10 @@ class AppSetting < ApplicationRecord
     [ "GPT-5.1", "gpt-5.1" ],
     [ "GPT-5 mini", "gpt-5-mini" ],
     [ "GPT-5 nano", "gpt-5-nano" ]
+  ].freeze
+  AVAILABLE_LLM_ENRICHMENT_WEB_SEARCH_PROVIDERS = [
+    [ "SerpApi", "serpapi" ],
+    [ "OpenWebNinja", "openwebninja" ]
   ].freeze
 
   LLM_ENRICHMENT_PROMPT_TEMPLATE = <<~TEXT.strip
@@ -117,6 +123,7 @@ class AppSetting < ApplicationRecord
   validate :llm_enrichment_model_must_be_valid
   validate :llm_enrichment_prompt_template_must_be_valid
   validate :llm_enrichment_temperature_must_be_valid
+  validate :llm_enrichment_web_search_provider_must_be_valid
   validate :public_genre_grouping_snapshot_id_must_be_valid
   validate :llm_genre_grouping_model_must_be_valid
   validate :llm_genre_grouping_prompt_template_must_be_valid
@@ -154,6 +161,12 @@ class AppSetting < ApplicationRecord
     def llm_enrichment_temperature
       @llm_enrichment_temperature ||=
         normalize_llm_enrichment_temperature(find_by(key: LLM_ENRICHMENT_TEMPERATURE_KEY)&.value) || default_llm_enrichment_temperature
+    end
+
+    def llm_enrichment_web_search_provider
+      @llm_enrichment_web_search_provider ||=
+        normalize_llm_enrichment_web_search_provider(find_by(key: LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY)&.value) ||
+          DEFAULT_LLM_ENRICHMENT_WEB_SEARCH_PROVIDER
     end
 
     def llm_genre_grouping_prompt_template
@@ -207,6 +220,14 @@ class AppSetting < ApplicationRecord
       find_or_initialize_by(key: LLM_ENRICHMENT_TEMPERATURE_KEY).tap do |setting|
         if normalize_llm_enrichment_temperature(setting.value).blank?
           setting.value = llm_enrichment_temperature
+        end
+      end
+    end
+
+    def llm_enrichment_web_search_provider_record
+      find_or_initialize_by(key: LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY).tap do |setting|
+        if normalize_llm_enrichment_web_search_provider(setting.value).blank?
+          setting.value = llm_enrichment_web_search_provider
         end
       end
     end
@@ -339,8 +360,19 @@ class AppSetting < ApplicationRecord
       temperature
     end
 
+    def normalize_llm_enrichment_web_search_provider(value)
+      provider = normalize_text(value)
+      return if provider.blank?
+
+      available_llm_enrichment_web_search_provider_values.include?(provider) ? provider : nil
+    end
+
     def available_llm_enrichment_model_values
       AVAILABLE_LLM_ENRICHMENT_MODELS.map(&:last)
+    end
+
+    def available_llm_enrichment_web_search_provider_values
+      AVAILABLE_LLM_ENRICHMENT_WEB_SEARCH_PROVIDERS.map(&:last)
     end
 
     def default_llm_enrichment_model
@@ -359,6 +391,7 @@ class AppSetting < ApplicationRecord
       @llm_enrichment_model = nil
       @llm_enrichment_prompt_template = nil
       @llm_enrichment_temperature = nil
+      @llm_enrichment_web_search_provider = nil
       @llm_genre_grouping_model = nil
       @llm_genre_grouping_prompt_template = nil
       @llm_genre_grouping_group_count = nil
@@ -446,6 +479,19 @@ class AppSetting < ApplicationRecord
 
   def llm_enrichment_temperature=(raw_value)
     self.value = self.class.normalize_llm_enrichment_temperature(raw_value) || raw_value.to_s.strip
+  end
+
+  def llm_enrichment_web_search_provider
+    provider = self.class.normalize_llm_enrichment_web_search_provider(value)
+    if key == LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY && provider.blank?
+      return self.class.llm_enrichment_web_search_provider
+    end
+
+    provider
+  end
+
+  def llm_enrichment_web_search_provider=(raw_value)
+    self.value = self.class.normalize_text(raw_value)
   end
 
   def llm_enrichment_prompt_template_text
@@ -555,6 +601,20 @@ class AppSetting < ApplicationRecord
     return if self.class.normalize_llm_enrichment_temperature(value).present?
 
     errors.add(:value, "muss eine Zahl zwischen 0 und 2 sein")
+  end
+
+  def llm_enrichment_web_search_provider_must_be_valid
+    return unless key == LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY
+
+    provider = self.class.normalize_text(value)
+    if provider.blank?
+      errors.add(:value, "darf nicht leer sein")
+      return
+    end
+
+    return if self.class.available_llm_enrichment_web_search_provider_values.include?(provider)
+
+    errors.add(:value, "ist kein unterstützter Web-Search-Provider")
   end
 
   def public_genre_grouping_snapshot_id_must_be_valid

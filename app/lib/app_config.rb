@@ -30,6 +30,10 @@ module AppConfig
       fetch(:serpapi, :api_key, env: "SERPAPI_API_KEY")
     end
 
+    def openwebninja_api_key
+      fetch(:openwebninja, :api_key, env: "OPENWEBNINJA_API_KEY")
+    end
+
     def easyticket_events_api
       fetch(:easyticket, :events_api, env: "EASYTICKET_EVENTS_API")
     end

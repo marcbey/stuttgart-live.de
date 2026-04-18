@@ -87,10 +87,10 @@ module Importing
                   "facebook_link" => { "selected_url" => nil, "candidates" => [] }
                 }
               },
-              search_count: 0,
-              candidate_count: 0,
-              found_count: 0,
-              null_count: 4,
+              web_search_request_count: 0,
+              web_search_candidate_count: 0,
+              links_found_via_web_search_count: 0,
+              links_null_after_link_lookup_count: 4,
               validation_results: []
             )
           end
@@ -173,8 +173,8 @@ module Importing
           assert_equal 3, result.enriched_count
           assert_equal 1, result.batches_count
           assert_nil result.merge_run_id
-          assert_equal 0, result.serpapi_search_count
-          assert_equal 1, result.links_found_via_serpapi_count
+          assert_equal 0, result.web_search_request_count
+          assert_equal 1, result.links_found_via_web_search_count
 
           enrichment = events(:published_one).reload.llm_enrichment
           assert_equal [ "Indie", "Pop" ], enrichment.genre
@@ -327,12 +327,12 @@ module Importing
                         { "url" => "https://facebook.example/final", "validation" => validation_results[1].as_json }
                       ]
                     }
-                  }
+                }
                 },
-                search_count: 4,
-                candidate_count: 4,
-                found_count: 3,
-                null_count: 1,
+                web_search_request_count: 4,
+                web_search_candidate_count: 4,
+                links_found_via_web_search_count: 3,
+                links_null_after_link_lookup_count: 1,
                 validation_results: validation_results
               )
             },
@@ -388,10 +388,10 @@ module Importing
           assert_equal 4, result.links_checked_count
           assert_equal 1, result.links_rejected_count
           assert_equal 2, result.links_unverifiable_count
-          assert_equal 4, result.serpapi_search_count
-          assert_equal 4, result.serpapi_candidate_count
-          assert_equal 3, result.links_found_via_serpapi_count
-          assert_equal 9, result.links_null_after_serpapi_count
+          assert_equal 4, result.web_search_request_count
+          assert_equal 4, result.web_search_candidate_count
+          assert_equal 3, result.links_found_via_web_search_count
+          assert_equal 9, result.links_null_after_link_lookup_count
 
           enrichment = events(:published_one).reload.llm_enrichment
           assert_equal "https://youtube.example/blocked", enrichment.youtube_link
@@ -1099,7 +1099,7 @@ module Importing
 
         assert_equal 1, result.selected_count
         assert_equal 1, result.enriched_count
-        assert_equal 2, result.links_found_via_serpapi_count
+        assert_equal 2, result.links_found_via_web_search_count
 
         enrichment.reload
         assert_equal enrichment.id, event.reload.llm_enrichment.id
@@ -1193,10 +1193,10 @@ module Importing
               }
             end
           },
-          search_count: 0,
-          candidate_count: links.values.compact.size,
-          found_count: links.values.count(&:present?),
-          null_count: links.values.count(&:blank?),
+          web_search_request_count: 0,
+          web_search_candidate_count: links.values.compact.size,
+          links_found_via_web_search_count: links.values.count(&:present?),
+          links_null_after_link_lookup_count: links.values.count(&:blank?),
           validation_results: []
         )
       end

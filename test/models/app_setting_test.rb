@@ -124,6 +124,16 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal 0.4, AppSetting.llm_enrichment_temperature
   end
 
+  test "returns default llm enrichment search providers when not configured" do
+    assert_equal "serpapi", AppSetting.llm_enrichment_web_search_provider
+  end
+
+  test "returns configured llm enrichment web search provider" do
+    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY, value: "openwebninja")
+
+    assert_equal "openwebninja", AppSetting.llm_enrichment_web_search_provider
+  end
+
   test "normalizes llm enrichment temperature from text" do
     setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY)
     setting.llm_enrichment_temperature = " 0.7 "
@@ -164,6 +174,13 @@ class AppSettingTest < ActiveSupport::TestCase
 
     assert_not setting.valid?
     assert_includes setting.errors[:value], "muss eine Zahl zwischen 0 und 2 sein"
+  end
+
+  test "requires llm enrichment web search provider to be supported" do
+    setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY, value: "bing")
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "ist kein unterstützter Web-Search-Provider"
   end
 
   test "returns default llm genre grouping prompt template when no setting exists" do

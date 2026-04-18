@@ -5,7 +5,7 @@ module Importing
     class QueryBuilderTest < ActiveSupport::TestCase
       EventStub = Struct.new(:artist_name, :title, :start_at, keyword_init: true)
 
-      test "builds the four serpapi queries" do
+      test "builds the four web search queries" do
         event = EventStub.new(
           artist_name: "Luca Noel",
           title: "Tour 2026",

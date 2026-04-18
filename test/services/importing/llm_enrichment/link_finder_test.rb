@@ -5,7 +5,7 @@ module Importing
     class LinkFinderTest < ActiveSupport::TestCase
       EventStub = Struct.new(:id, :artist_name, :title, :venue, :start_at, keyword_init: true)
 
-      FakeSerpApiClient = Struct.new(:results_by_query) do
+      FakeWebSearchClient = Struct.new(:results_by_query) do
         def search(query:, **)
           results_by_query.fetch(query)
         end
@@ -47,16 +47,13 @@ module Importing
                 organic_result(1, "https://www.instagram.com/lucanoelmusik/", "Instagram", "Social"),
                 organic_result(2, "https://www.lucanoel.de/", "Luca Noel", "Offizielle Website")
               ]
-            ),
-            "\"Luca Noel\" site:instagram.com" => search_result("ig-1", []),
-            "\"Luca Noel\" site:facebook.com" => search_result("fb-1", []),
-            "\"Luca Noel\" site:youtube.com" => search_result("yt-1", [])
+            )
           }
         ).call(event: @event)
 
         assert_equal "https://www.lucanoel.de/", result.links[:homepage_link]
         assert_equal "https://www.lucanoel.de/", result.payload.dig("fields", "homepage_link", "selected_url")
-        assert_equal "blocked_homepage_domain", result.payload.dig("fields", "homepage_link", "candidates", 1, "rejection_reason")
+        assert_equal "blocked_homepage_domain", result.payload.dig("fields", "homepage_link", "candidates", 0, "rejection_reason")
       end
 
       test "selects social profile matches without http validation" do
@@ -93,6 +90,24 @@ module Importing
         assert_equal "search_profile_match", result.payload.dig("fields", "facebook_link", "candidates", 0, "selection_strategy")
         assert_nil result.payload.dig("fields", "instagram_link", "candidates", 0, "validation")
         assert_nil result.payload.dig("fields", "facebook_link", "candidates", 0, "validation")
+      end
+
+      test "selects all links via web search" do
+        result = build_finder(
+          {
+            "\"Luca Noel\"" => search_result("broad-1", [ organic_result(1, "https://www.lucanoel.de/", "Luca Noel", "Offizielle Website") ]),
+            "\"Luca Noel\" site:instagram.com" => search_result("ig-1", [ organic_result(1, "https://www.instagram.com/lucanoelmusik/", "Luca Noel", "Instagram") ]),
+            "\"Luca Noel\" site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
+            "\"Luca Noel\" site:youtube.com" => search_result("yt-1", [ organic_result(1, "https://www.youtube.com/@lucanoelmusic", "Luca Noel", "YouTube") ])
+          }
+        ).call(event: @event)
+
+        assert_equal "https://www.lucanoel.de/", result.links[:homepage_link]
+        assert_equal "https://www.instagram.com/lucanoelmusik/", result.links[:instagram_link]
+        assert_equal "https://www.facebook.com/lucanoelmusik/", result.links[:facebook_link]
+        assert_equal "https://www.youtube.com/@lucanoelmusic", result.links[:youtube_link]
+        assert_equal 4, result.links_found_via_web_search_count
+        assert_equal 4, result.web_search_request_count
       end
 
       test "rejects youtube video pages and invalid channels" do
@@ -135,15 +150,16 @@ module Importing
         ).call(event: event)
 
         assert_nil result.links[:youtube_link]
-        assert_equal "rejected_http_error", result.payload.dig("fields", "youtube_link", "candidates", 0, "rejection_reason")
-        assert_equal "non_channel_path", result.payload.dig("fields", "youtube_link", "candidates", 1, "rejection_reason")
+        assert_equal "non_channel_path", result.payload.dig("fields", "youtube_link", "candidates", 0, "rejection_reason")
+        assert_equal "rejected_http_error", result.payload.dig("fields", "youtube_link", "candidates", 1, "rejection_reason")
       end
 
       private
 
       def build_finder(results_by_query, link_validator: FakeLinkValidator.new({}))
         LinkFinder.new(
-          serpapi_client: FakeSerpApiClient.new(results_by_query),
+          web_search_provider: "serpapi",
+          web_search_client: FakeWebSearchClient.new(results_by_query),
           query_builder: QueryBuilder.new,
           link_validator: link_validator
         )

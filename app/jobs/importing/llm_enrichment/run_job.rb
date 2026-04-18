@@ -30,13 +30,14 @@ module Importing
               "batches_count" => result.batches_count,
               "batch_size" => Importing::LlmEnrichment::Importer::BATCH_SIZE,
               "model" => result.model,
+              "web_search_provider" => result.web_search_provider,
               "links_checked_count" => result.links_checked_count,
               "links_rejected_count" => result.links_rejected_count,
               "links_unverifiable_count" => result.links_unverifiable_count,
-              "serpapi_search_count" => result.serpapi_search_count,
-              "serpapi_candidate_count" => result.serpapi_candidate_count,
-              "links_found_via_serpapi_count" => result.links_found_via_serpapi_count,
-              "links_null_after_serpapi_count" => result.links_null_after_serpapi_count,
+              "web_search_request_count" => result.web_search_request_count,
+              "web_search_candidate_count" => result.web_search_candidate_count,
+              "links_found_via_web_search_count" => result.links_found_via_web_search_count,
+              "links_null_after_link_lookup_count" => result.links_null_after_link_lookup_count,
               "stop_released_at" => Time.current.iso8601,
               "stop_release_reason" => "Stopped by user"
             )
@@ -61,13 +62,14 @@ module Importing
             "batches_count" => result.batches_count,
             "batch_size" => Importing::LlmEnrichment::Importer::BATCH_SIZE,
             "model" => result.model,
+            "web_search_provider" => result.web_search_provider,
             "links_checked_count" => result.links_checked_count,
             "links_rejected_count" => result.links_rejected_count,
             "links_unverifiable_count" => result.links_unverifiable_count,
-            "serpapi_search_count" => result.serpapi_search_count,
-            "serpapi_candidate_count" => result.serpapi_candidate_count,
-            "links_found_via_serpapi_count" => result.links_found_via_serpapi_count,
-            "links_null_after_serpapi_count" => result.links_null_after_serpapi_count
+            "web_search_request_count" => result.web_search_request_count,
+            "web_search_candidate_count" => result.web_search_candidate_count,
+            "links_found_via_web_search_count" => result.links_found_via_web_search_count,
+            "links_null_after_link_lookup_count" => result.links_null_after_link_lookup_count
           )
         )
       rescue StandardError => e
