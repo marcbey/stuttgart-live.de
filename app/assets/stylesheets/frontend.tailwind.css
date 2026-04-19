@@ -695,7 +695,7 @@ margin-top: 0.35rem;
 
 @media (min-width: 1280px) {
   body.page-public.page-public-events-index .info-page-shell {
-  max-width: calc(var(--homepage-header-max-width, 1480px) - (2 * var(--homepage-header-padding-inline, 0px)));
+  max-width: var(--homepage-content-max-width, 1360px);
   }
 }
 
