@@ -2,7 +2,7 @@ module Importing
   module LlmEnrichment
     class QueryBuilder
       Query = Data.define(:name, :field_name, :query)
-      FACEBOOK_SITE_QUERY = "(official OR band OR music OR artist) site:facebook.com".freeze
+      FACEBOOK_SITE_QUERY = "official page site:facebook.com".freeze
       HOMEPAGE_SITE_QUERY = "offizielle website".freeze
       INSTAGRAM_SITE_QUERY = "(official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/".freeze
       YOUTUBE_SITE_QUERY = "site:youtube.com/@ OR site:youtube.com/channel".freeze
