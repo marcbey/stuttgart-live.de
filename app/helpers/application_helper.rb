@@ -531,6 +531,7 @@ module ApplicationHelper
     escaped = ERB::Util.html_escape(text.to_s)
     escaped
       .gsub("(Das Begleitformular findest Du HIER)", organizer_notes_begleitformular_link(event:))
+      .gsub("(Das Begleitformular findest du HIER)", organizer_notes_begleitformular_link(event:))
       .gsub("→ Begleitformular PDF", organizer_notes_begleitformular_link(event:))
       .html_safe
   end
