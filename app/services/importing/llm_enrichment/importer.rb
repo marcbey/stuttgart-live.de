@@ -7,7 +7,7 @@ module Importing
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       BATCH_SIZE = 25
       EVENT_INFO_MAX_LENGTH = 1000
-      PROMPT_VERSION = "v4"
+      PROMPT_VERSION = "v6"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment_batch".freeze
       OUTPUT_ITEMS_KEY = "events".freeze
       LOOKED_UP_LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
@@ -481,7 +481,7 @@ module Importing
       end
 
       def resolve_links_for(event)
-        result = link_finder.call(event: event)
+        result = link_finder.call(event:)
         increment_link_lookup_counts!(result)
         result.validation_results.each { |validation_result| increment_link_validation_counts!(validation_result) }
         result

@@ -77,6 +77,21 @@ class AppSetting < ApplicationRecord
 
     Antwort nur als JSON.
 
+    Output:
+    {
+      "events": [
+        {
+          "event_id": 123,
+          "genre": [ "Indie Pop" ],
+          "venue": "Beispiel Venue",
+          "event_description": "Beispieltext.",
+          "venue_description": "Beispieltext.",
+          "venue_external_url": "https://venue.example",
+          "venue_address": "Beispielstraße 1, 70173 Stuttgart"
+        }
+      ]
+    }
+
     Input:
     #{LLM_ENRICHMENT_INPUT_PLACEHOLDER}
   TEXT

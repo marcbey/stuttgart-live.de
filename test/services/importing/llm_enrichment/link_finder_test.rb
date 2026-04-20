@@ -11,23 +11,6 @@ module Importing
         end
       end
 
-      FakeLinkValidator = Struct.new(:results_by_url) do
-        def call(url:, field_name:)
-          results_by_url.fetch([ field_name.to_sym, url ]) do
-            Importing::LlmEnrichment::LinkValidator::Result.new(
-              accepted: true,
-              sanitized_url: url,
-              status: "ok",
-              final_url: url,
-              http_status: 200,
-              error_class: nil,
-              matched_phrase: nil,
-              checked_at: Time.current
-            )
-          end
-        end
-      end
-
       setup do
         @event = EventStub.new(
           id: 1,
@@ -38,10 +21,10 @@ module Importing
         )
       end
 
-      test "selects the official homepage from broad results" do
+      test "uses the first homepage result without extra checks" do
         result = build_finder(
           {
-            "\"Luca Noel\"" => search_result(
+            "\"Luca Noel\" offizielle website" => search_result(
               "broad-1",
               [
                 organic_result(1, "https://www.instagram.com/lucanoelmusik/", "Instagram", "Social"),
@@ -51,54 +34,37 @@ module Importing
           }
         ).call(event: @event)
 
-        assert_equal "https://www.lucanoel.de/", result.links[:homepage_link]
-        assert_equal "https://www.lucanoel.de/", result.payload.dig("fields", "homepage_link", "selected_url")
-        assert_equal "blocked_homepage_domain", result.payload.dig("fields", "homepage_link", "candidates", 0, "rejection_reason")
+        assert_equal "https://www.instagram.com/lucanoelmusik/", result.links[:homepage_link]
+        assert_equal "\"Luca Noel\" offizielle website", result.payload.dig("fields", "homepage_link", "query")
+        assert_equal "https://www.instagram.com/lucanoelmusik/", result.payload.dig("fields", "homepage_link", "selected_url")
+        assert_equal "first_search_result", result.payload.dig("fields", "homepage_link", "candidates", 0, "selection_strategy")
       end
 
-      test "selects social profile matches without http validation" do
-        validator = Class.new do
-          def call(url:, field_name:)
-            raise "social profiles should not be HTTP-validated" if %i[instagram_link facebook_link].include?(field_name.to_sym)
-
-            Importing::LlmEnrichment::LinkValidator::Result.new(
-              accepted: true,
-              sanitized_url: url,
-              status: "ok",
-              final_url: url,
-              http_status: 200,
-              error_class: nil,
-              matched_phrase: nil,
-              checked_at: Time.current
-            )
-          end
-        end.new
-
+      test "uses the first social result without validation" do
         result = build_finder(
           {
-            "\"Luca Noel\"" => search_result("broad-1", []),
-            "\"Luca Noel\" site:instagram.com" => search_result("ig-1", [ organic_result(1, "https://www.instagram.com/lucanoelmusik/", "Luca Noel", "Instagram") ]),
-            "\"Luca Noel\" site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
-            "\"Luca Noel\" site:youtube.com" => search_result("yt-1", [])
-          },
-          link_validator: validator
+            "\"Luca Noel\" offizielle website" => search_result("broad-1", []),
+            "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/" => search_result("ig-1", [ organic_result(1, "https://secure.instagram.com/lucanoelmusik/?hl=da", "Luca Noel", "Instagram") ]),
+            "\"Luca Noel\" official page site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
+            "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel" => search_result("yt-1", [])
+          }
         ).call(event: @event)
 
         assert_equal "https://www.instagram.com/lucanoelmusik/", result.links[:instagram_link]
         assert_equal "https://www.facebook.com/lucanoelmusik/", result.links[:facebook_link]
-        assert_equal "search_profile_match", result.payload.dig("fields", "instagram_link", "candidates", 0, "selection_strategy")
-        assert_equal "search_profile_match", result.payload.dig("fields", "facebook_link", "candidates", 0, "selection_strategy")
-        assert_nil result.payload.dig("fields", "instagram_link", "candidates", 0, "validation")
-        assert_nil result.payload.dig("fields", "facebook_link", "candidates", 0, "validation")
+        assert_equal "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/", result.payload.dig("fields", "instagram_link", "query")
+        assert_equal "\"Luca Noel\" official page site:facebook.com", result.payload.dig("fields", "facebook_link", "query")
+        assert_equal "first_search_result", result.payload.dig("fields", "instagram_link", "candidates", 0, "selection_strategy")
+        assert_equal "first_search_result", result.payload.dig("fields", "facebook_link", "candidates", 0, "selection_strategy")
       end
 
       test "selects all links via web search" do
         result = build_finder(
           {
-            "\"Luca Noel\"" => search_result("broad-1", [ organic_result(1, "https://www.lucanoel.de/", "Luca Noel", "Offizielle Website") ]),
-            "\"Luca Noel\" site:instagram.com" => search_result("ig-1", [ organic_result(1, "https://www.instagram.com/lucanoelmusik/", "Luca Noel", "Instagram") ]),
-            "\"Luca Noel\" site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
-            "\"Luca Noel\" site:youtube.com" => search_result("yt-1", [ organic_result(1, "https://www.youtube.com/@lucanoelmusic", "Luca Noel", "YouTube") ])
+            "\"Luca Noel\" offizielle website" => search_result("broad-1", [ organic_result(1, "https://www.lucanoel.de/", "Luca Noel", "Offizielle Website") ]),
+            "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/" => search_result("ig-1", [ organic_result(1, "https://www.instagram.com/lucanoelmusik/", "Luca Noel", "Instagram") ]),
+            "\"Luca Noel\" official page site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
+            "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel" => search_result("yt-1", [ organic_result(1, "https://www.youtube.com/@lucanoelmusic", "Luca Noel", "YouTube") ])
           }
         ).call(event: @event)
 
@@ -110,7 +76,7 @@ module Importing
         assert_equal 4, result.web_search_request_count
       end
 
-      test "rejects youtube video pages and invalid channels" do
+      test "uses the first youtube result even when it is a video page" do
         event = EventStub.new(
           id: 2,
           artist_name: "Café del Mundo",
@@ -118,50 +84,33 @@ module Importing
           venue: "Theaterhaus",
           start_at: Time.zone.parse("2026-03-25 20:00:00")
         )
-        validator = FakeLinkValidator.new(
-          {
-            [ :youtube_link, "https://www.youtube.com/@CafedelMundoGuitars" ] => Importing::LlmEnrichment::LinkValidator::Result.new(
-              accepted: false,
-              sanitized_url: nil,
-              status: "rejected_http_error",
-              final_url: "https://www.youtube.com/@CafedelMundoGuitars",
-              http_status: 404,
-              error_class: nil,
-              matched_phrase: nil,
-              checked_at: Time.current
-            )
-          }
-        )
 
         result = build_finder(
           {
-            "\"Café del Mundo\"" => search_result("broad-1", []),
-            "\"Café del Mundo\" site:instagram.com" => search_result("ig-1", []),
-            "\"Café del Mundo\" site:facebook.com" => search_result("fb-1", []),
-            "\"Café del Mundo\" site:youtube.com" => search_result(
+            "\"Café del Mundo\" offizielle website" => search_result("broad-1", []),
+            "\"Café del Mundo\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/" => search_result("ig-1", []),
+            "\"Café del Mundo\" official page site:facebook.com" => search_result("fb-1", []),
+            "\"Café del Mundo\" site:youtube.com/@ OR site:youtube.com/channel" => search_result(
               "yt-1",
               [
                 organic_result(1, "https://www.youtube.com/watch?v=abc123", "Video", "Video"),
                 organic_result(2, "https://www.youtube.com/@CafedelMundoGuitars", "Café del Mundo", "Channel")
               ]
             )
-          },
-          link_validator: validator
+          }
         ).call(event: event)
 
-        assert_nil result.links[:youtube_link]
-        assert_equal "non_channel_path", result.payload.dig("fields", "youtube_link", "candidates", 0, "rejection_reason")
-        assert_equal "rejected_http_error", result.payload.dig("fields", "youtube_link", "candidates", 1, "rejection_reason")
+        assert_equal "https://www.youtube.com/watch?v=abc123", result.links[:youtube_link]
+        assert_equal "first_search_result", result.payload.dig("fields", "youtube_link", "candidates", 0, "selection_strategy")
       end
 
       private
 
-      def build_finder(results_by_query, link_validator: FakeLinkValidator.new({}))
+      def build_finder(results_by_query)
         LinkFinder.new(
           web_search_provider: "serpapi",
           web_search_client: FakeWebSearchClient.new(results_by_query),
-          query_builder: QueryBuilder.new,
-          link_validator: link_validator
+          query_builder: QueryBuilder.new
         )
       end
 

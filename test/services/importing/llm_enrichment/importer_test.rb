@@ -300,18 +300,24 @@ module Importing
                   "queries" => [ { "name" => "broad", "field_name" => "homepage_link", "query" => "\"Published Artist\" \"Published Event\" 2026" } ],
                   "fields" => {
                     "youtube_link" => {
+                      "query_name" => "youtube",
+                      "query" => "\"Published Artist\" site:youtube.com/@ OR site:youtube.com/channel",
                       "selected_url" => "https://youtube.example/blocked",
                       "candidates" => [
                         { "url" => "https://youtube.example/blocked", "validation" => validation_results[2].as_json }
                       ]
                     },
                     "instagram_link" => {
+                      "query_name" => "instagram",
+                      "query" => "\"Published Artist\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/",
                       "selected_url" => "https://instagram.example/private",
                       "candidates" => [
                         { "url" => "https://instagram.example/private", "validation" => validation_results[3].as_json }
                       ]
                     },
                     "homepage_link" => {
+                      "query_name" => "broad",
+                      "query" => "\"Published Artist\" offizielle website",
                       "selected_url" => nil,
                       "candidates" => [
                         {
@@ -322,6 +328,8 @@ module Importing
                       ]
                     },
                     "facebook_link" => {
+                      "query_name" => "facebook",
+                      "query" => "\"Published Artist\" official page site:facebook.com",
                       "selected_url" => "https://facebook.example/final",
                       "candidates" => [
                         { "url" => "https://facebook.example/final", "validation" => validation_results[1].as_json }
@@ -554,7 +562,7 @@ module Importing
           assert_equal "Event neu", updated_enrichment.event_description
           assert_equal "https://example.com/updated", updated_enrichment.homepage_link
           assert_equal "gpt-5-mini", updated_enrichment.model
-          assert_equal "v4", updated_enrichment.prompt_version
+          assert_equal "v6", updated_enrichment.prompt_version
           assert_equal @run, updated_enrichment.source_run
         end
       end
@@ -858,7 +866,7 @@ module Importing
         assert_equal [ "Indie" ], first_enrichment.genre
         assert_equal [ "Show", "Indie" ], first_enrichment.raw_response.fetch("genre")
         assert_equal [ "Show" ], first_enrichment.raw_response.dig("genre_filter", "rejected_terms")
-        assert_equal "v4", first_enrichment.prompt_version
+        assert_equal "v6", first_enrichment.prompt_version
 
         second_enrichment = events(:needs_review_one).reload.llm_enrichment
         assert_equal [], second_enrichment.genre
@@ -1110,6 +1118,7 @@ module Importing
         assert_equal "existing-model", enrichment.model
         assert_equal "v2", enrichment.prompt_version
         assert_equal "https://example.com/refreshed", enrichment.raw_response.dig("link_lookup", "fields", "homepage_link", "selected_url")
+        assert_equal [ event.id ], link_finder.calls
       end
 
       test "returns canceled result when stop was requested after response before persist" do
@@ -1186,8 +1195,10 @@ module Importing
           links: links,
           payload: {
             "queries" => [],
-            "fields" => links.transform_keys(&:to_s).transform_values do |value|
+            "fields" => links.transform_keys(&:to_s).transform_values.with_index do |value, index|
               {
+                "query_name" => "query_#{index}",
+                "query" => "example query #{index}",
                 "selected_url" => value,
                 "candidates" => value.present? ? [ { "url" => value, "validation" => { "status" => "ok" } } ] : []
               }

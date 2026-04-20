@@ -652,23 +652,9 @@ class Event < ApplicationRecord
   end
 
   def split_artist_and_tour_from_title!
-    return if title.blank?
-
-    match = title.match(/\A(.+?)\s*[-–—]\s+(.+)\z/)
-    return unless match
-
-    extracted_artist = match[1].to_s.strip
-    extracted_title = match[2].to_s.strip
-    return if extracted_artist.blank? || extracted_title.blank?
-
-    normalized_artist = normalize_comparison_token(artist_name)
-    normalized_title = normalize_comparison_token(title)
-    normalized_extracted_artist = normalize_comparison_token(extracted_artist)
-
-    if artist_name.blank? || normalized_artist == normalized_title || normalized_artist == normalized_extracted_artist
-      self.artist_name = extracted_artist
-      self.title = extracted_title
-    end
+    sanitized = Events::ArtistTitleSanitizer.sanitize(artist_name:, title:)
+    self.artist_name = sanitized.artist_name
+    self.title = sanitized.title
   end
 
   def slug_needed?
@@ -731,10 +717,6 @@ class Event < ApplicationRecord
 
   def vips_processing_error?(error)
     defined?(Vips::Error) && error.is_a?(Vips::Error)
-  end
-
-  def normalize_comparison_token(value)
-    value.to_s.downcase.gsub(/[^[:alnum:]]+/, "")
   end
 
   def normalize_venue_name(value)

@@ -99,9 +99,13 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_includes AppSetting.llm_enrichment_prompt_template, "`show`, `concert`, `event`, `live`, `veranstaltung`, `konzert`"
     assert_includes AppSetting.llm_enrichment_prompt_template, "gib lieber ein leeres Genre-Array zurück"
     assert_includes AppSetting.llm_enrichment_prompt_template, "ohne Wiederholungen"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "Output:"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "\"genre\": [ \"Indie Pop\" ]"
     assert_not_includes AppSetting.llm_enrichment_prompt_template, "`youtube_link`"
     assert_not_includes AppSetting.llm_enrichment_prompt_template, "`instagram_link`"
     assert_not_includes AppSetting.llm_enrichment_prompt_template, "`artist_description`"
+    assert_not_includes AppSetting.llm_enrichment_prompt_template, "`link_query`"
+    assert_not_includes AppSetting.llm_enrichment_prompt_template, "\"link_query\":"
   end
 
   test "returns default llm enrichment model when no setting exists" do
