@@ -24,7 +24,7 @@
                    button_class: "saved-event-button-detail" %>
       <% end %>
       <% if authenticated? %>
-        <%= link_to "Edit",
+        <%= link_to "Edit event",
                     backend_events_path(status: @event.status, event_id: @event.id),
                     class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
                     data: { turbo: false } %>
@@ -74,7 +74,7 @@
           <div class="event-detail-venue-layout">
             <h2>Über die Venue</h2>
             <% if authenticated? && @event.venue_record.present? %>
-              <%= link_to "Venue bearbeiten",
+              <%= link_to "Edit venue",
                           backend_venues_path(venue_id: @event.venue_record.id),
                           class: "button button-secondary button-compact event-detail-edit-link public-edit-link",
                           data: { turbo: false } %>

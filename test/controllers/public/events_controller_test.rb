@@ -3483,9 +3483,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
     assert_includes response.body, expected_link
     assert_includes response.body, expected_venue_link
-    assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit"
+    assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit event"
     assert_select ".event-detail-topbar-actions .event-detail-edit-link", count: 1
-    assert_select ".event-detail-venue-block .event-detail-edit-link", text: "Venue bearbeiten", count: 1
+    assert_select ".event-detail-venue-block .event-detail-edit-link", text: "Edit venue", count: 1
     assert_select ".event-detail-image-stage-shell .saved-event-button.saved-event-button-detail-image[data-controller='saved-event-toggle']", count: 1
   end
 
