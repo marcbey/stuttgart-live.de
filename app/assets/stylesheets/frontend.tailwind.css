@@ -56,7 +56,10 @@ display: block;
 body.page-public-events-index .public-backend-float {
 position: absolute;
   top: var(--app-nav-height, 0px);
-  right: 1rem;
+  right: max(
+    var(--homepage-content-padding-inline, 1rem),
+    calc(((100vw - var(--homepage-content-max-width, 1360px)) / 2) + var(--homepage-content-padding-inline, 1rem))
+  );
   left: auto;
 }
 
@@ -7838,7 +7841,8 @@ display: flex;
   }
 
   body.page-public .info-page-shell {
-  max-width: 1360px;
+  max-width: 1440px;
+      padding: 1.5rem;
   }
 
   .news-index-shell {
@@ -8474,7 +8478,10 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .public-backend-float {
-  right: 1rem;
+  right: max(
+    var(--homepage-content-padding-inline, 1rem),
+    calc(((100vw - var(--homepage-content-max-width, 1360px)) / 2) + var(--homepage-content-padding-inline, 1rem))
+  );
   }
 
   body.page-public-events-index .public-backend-float-inner {
@@ -8556,7 +8563,10 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .public-backend-float {
-  right: 1.8rem;
+  right: max(
+    var(--homepage-content-padding-inline, 1.8rem),
+    calc(((100vw - var(--homepage-content-max-width, 1360px)) / 2) + var(--homepage-content-padding-inline, 1.8rem))
+  );
   }
 
   body.page-public-events-index .public-backend-float-inner {
@@ -8565,8 +8575,9 @@ top: 1.18rem;
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
   padding: 0.95rem 1.8rem 0.95rem;
-      --poster-nav-column-width: 8rem;
-      grid-template-columns: auto minmax(22rem, 1fr) auto;
+      --poster-nav-column-width: 9.5rem;
+      --poster-meta-column-width: 18rem;
+      grid-template-columns: auto minmax(20rem, 1fr) minmax(var(--poster-meta-column-width), auto);
       grid-template-areas:
         "brand center meta"
         "hotline hotline hotline";
@@ -8757,10 +8768,11 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  --poster-nav-column-width: 8.5rem;
+  --poster-nav-column-width: 11rem;
+      --poster-meta-column-width: 20rem;
       max-width: var(--homepage-content-max-width, 1360px);
       padding: 0.95rem 2.1rem 0.58rem;
-      grid-template-columns: auto minmax(24rem, 1fr) auto;
+      grid-template-columns: auto minmax(18rem, 1fr) minmax(var(--poster-meta-column-width), auto);
       grid-template-areas:
         "brand center meta"
         "hotline hotline hotline";
@@ -8773,7 +8785,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-homepage-center {
-  width: min(100%, 36rem);
+  width: min(100%, 30rem);
       justify-self: center;
   }
 
@@ -8885,8 +8897,10 @@ top: 1.18rem;
   body.page-public-events-index .app-nav-inner-homepage-poster {
   max-width: var(--homepage-content-max-width, 1360px);
       padding: 0.95rem 2.55rem 0.5rem;
-      grid-template-columns: auto minmax(28rem, 1fr) auto;
-      gap: 0 2rem;
+      --poster-nav-column-width: 11.5rem;
+      --poster-meta-column-width: 21rem;
+      grid-template-columns: auto minmax(18rem, 1fr) minmax(var(--poster-meta-column-width), auto);
+      gap: 0 1.25rem;
   }
 
   body.page-public-events-index .brand-wordmark-poster .brand-wordmark-city,
@@ -8895,11 +8909,11 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-homepage-center {
-  width: min(100%, 35rem);
+  width: min(100%, 30rem);
   }
 
   body.page-public-events-index .app-nav-search {
-  max-width: 35rem;
+  max-width: 30rem;
   }
 
   body.page-public-events-index .public-search-field,
