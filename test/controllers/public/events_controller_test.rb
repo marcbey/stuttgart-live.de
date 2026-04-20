@@ -6,7 +6,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
     AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382" ])
-    AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Konfigurierter SKS Hinweis\nWir danken für Ihr Verständnis!")
+    AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Konfigurierter SKS Hinweis\nDanke für euer Verständnis!")
     AppSetting.reset_cache!
     @published_event = events(:published_one)
     @past_published_event = events(:published_past_one)
@@ -3479,10 +3479,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
+    expected_venue_link = backend_venues_path(venue_id: @published_event.venue_record.id).gsub("&", "&amp;")
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
     assert_includes response.body, expected_link
-    assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit"
+    assert_includes response.body, expected_venue_link
+    assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit event"
     assert_select ".event-detail-topbar-actions .event-detail-edit-link", count: 1
+    assert_select ".event-detail-venue-block .event-detail-edit-link", text: "Edit venue", count: 1
     assert_select ".event-detail-image-stage-shell .saved-event-button.saved-event-button-detail-image[data-controller='saved-event-toggle']", count: 1
   end
 
@@ -3502,6 +3505,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-presenters", count: 0
     assert_select ".event-detail-organizer-presenters", count: 1
+    assert_select ".event-detail-organizer-presenters .event-detail-organizer-sidebar-heading",
+                  text: "Diese Veranstaltung wird präsentiert von:"
     assert_select ".event-detail-organizer-partner-grid", count: 1
     assert_select ".event-detail-organizer-partner[href='#{presenter_one.external_url}']", count: 1
     assert_select ".event-detail-organizer-partner[href='#{presenter_two.external_url}']", count: 1

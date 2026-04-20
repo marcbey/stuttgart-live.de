@@ -10,8 +10,13 @@ body.page-public {
 }
 
 .public-backend-float {
-position: sticky;
+position: fixed;
   top: var(--app-nav-height, 0px);
+  right: max(
+    var(--homepage-content-padding-inline, 1rem),
+    calc(((100vw - var(--homepage-content-max-width, 1480px)) / 2) + var(--homepage-content-padding-inline, 1rem))
+  );
+  left: auto;
   z-index: 40;
   pointer-events: none;
 }
@@ -33,18 +38,6 @@ pointer-events: auto;
   max-width: max-content;
 }
 
-body.page-public-detail .public-backend-float {
-position: fixed;
-  inset: auto 0 max(1rem, env(safe-area-inset-bottom, 0px)) 0;
-  top: auto;
-  z-index: 45;
-}
-
-body.page-public-detail .public-backend-float-inner {
-padding-top: 0;
-  padding-bottom: 0;
-}
-
 body.page-public-events-index .app-nav-backend-menu {
 display: none;
 }
@@ -54,7 +47,7 @@ display: block;
 }
 
 body.page-public-events-index .public-backend-float {
-position: absolute;
+position: fixed;
   top: var(--app-nav-height, 0px);
   right: 1rem;
   left: auto;
@@ -2793,10 +2786,12 @@ position: absolute;
   left: 0.7rem;
   top: 50%;
   margin: 0;
-  padding: 0;
-  background: transparent;
+  padding: 0.2rem;
+  color: #fff;
+  background: #666;
+  opacity: 0.7;
+  border-radius: 6px;
   text-align: center;
-  color: rgba(255, 255, 255, 0.78);
   font-size: 0.68rem;
   line-height: 1.2;
   letter-spacing: 0.04em;
@@ -5554,6 +5549,18 @@ max-width: 1280px;
 margin-bottom: 1.35rem;
 }
 
+@media (min-width: 1200px) {
+  .event-detail-public-event .event-detail-topbar-actions > .event-detail-edit-link {
+  position: fixed;
+    top: calc(var(--app-nav-height, 0px) + 0.85rem);
+    left: max(
+      var(--homepage-content-padding-inline, 1rem),
+      calc(((100vw - var(--homepage-content-max-width, 1480px)) / 2) + var(--homepage-content-padding-inline, 1rem))
+    );
+    z-index: 55;
+  }
+}
+
 .event-detail-header {
 position: relative;
   gap: 1.8rem;
@@ -6043,21 +6050,19 @@ position: absolute;
   bottom: 10px;
   left: 10px;
   z-index: 5;
+  width: fit-content;
+  max-width: calc(100% - 20px);
   margin: 0 auto;
+  padding: 0.2rem;
   color: #fff;
+  background: #666;
+  opacity: 0.7;
+  border-radius: 6px;
   font-size: 0.72rem;
   line-height: 1.2;
   text-align: center;
-  text-shadow: 0 1px 2px rgba(17, 17, 17, 0.85), 0 0 8px rgba(17, 17, 17, 0.58);
+  text-shadow: none;
   pointer-events: none;
-}
-
-@supports (mix-blend-mode: difference) {
-  .event-detail-image-credit {
-    color: #fff;
-    mix-blend-mode: difference;
-    text-shadow: 0 1px 2px rgba(17, 17, 17, 0.45);
-  }
 }
 
 .event-detail-image-dots {
@@ -8519,9 +8524,13 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
-  position: static;
+  position: absolute;
+      right: 0.65rem;
+      bottom: 0.65rem;
+      left: auto;
+      top: auto;
       display: block;
-      margin-top: 0.45rem;
+      margin: 0;
       writing-mode: initial;
       text-orientation: initial;
       transform: none;
@@ -8987,7 +8996,8 @@ align-items: stretch;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-visual {
-display: flex;
+position: relative;
+  display: flex;
   flex-direction: column;
   gap: 0.5rem;
   padding: 10px;
@@ -9021,10 +9031,19 @@ display: block;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
-position: static;
-  margin: 0 1rem 1rem;
-  color: rgba(17, 17, 17, 0.72);
-  background: none;
+position: absolute;
+  right: 0.65rem;
+  bottom: 0.65rem;
+  left: auto;
+  top: auto;
+  z-index: 2;
+  margin: 0;
+  padding: 0.2rem;
+  max-width: calc(100% - 1.3rem);
+  color: #fff;
+  background: #666;
+  opacity: 0.7;
+  border-radius: 6px;
   transform: none;
   text-align: center;
   writing-mode: initial;
@@ -9042,13 +9061,8 @@ color: rgba(17, 17, 17, 0.72);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-kicker,
-body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-event-title,
-body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-credit {
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-event-title {
 color: rgba(248, 250, 249, 0.82);
-}
-
-body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-credit {
-color: rgba(17, 17, 17, 0.72);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-kicker {
@@ -9127,7 +9141,11 @@ border-color: #f8faf9;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
-  position: static;
+  position: absolute;
+      right: 0.65rem;
+      bottom: 0.65rem;
+      left: auto;
+      top: auto;
       display: block;
       margin: 0;
       writing-mode: initial;
@@ -9166,7 +9184,11 @@ border-color: #f8faf9;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
-  position: static;
+  position: absolute;
+      right: 0.65rem;
+      bottom: 0.65rem;
+      left: auto;
+      top: auto;
       display: block;
       margin: 0;
       writing-mode: initial;
