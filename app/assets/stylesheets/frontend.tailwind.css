@@ -5,8 +5,40 @@ body.page-public {
   --ink-rgb: 6, 47, 49;
   --event-price-color: rgba(var(--ink-rgb), 0.68);
   --ink-banner: linear-gradient(135deg, #062f31 0%, #0a484b 58%, #116266 100%);
+  --homepage-content-max-width: 1480px;
+  --homepage-header-max-width: 1480px;
+  --homepage-content-padding-inline: 0.8rem;
+  --homepage-header-padding-inline: var(--homepage-content-padding-inline);
   overflow-x: hidden;
   overflow-x: clip;
+}
+
+@media (min-width: 768px) {
+  body.page-public {
+  --homepage-content-padding-inline: 1rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
+  }
+}
+
+@media (min-width: 1024px) {
+  body.page-public {
+  --homepage-content-padding-inline: 1.8rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
+  }
+}
+
+@media (min-width: 1280px) {
+  body.page-public {
+  --homepage-content-padding-inline: 2.1rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
+  }
+}
+
+@media (min-width: 1440px) {
+  body.page-public {
+  --homepage-content-padding-inline: 2.55rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
+  }
 }
 
 .public-backend-float {
@@ -19,7 +51,7 @@ position: sticky;
 .public-backend-float-inner {
 max-width: 1480px;
   margin: 0 auto;
-  padding: 0.8rem 1rem 0;
+  padding: 0.8rem var(--homepage-content-padding-inline, 0.8rem) 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -58,7 +90,7 @@ position: absolute;
   top: var(--app-nav-height, 0px);
   right: max(
     var(--homepage-content-padding-inline, 1rem),
-    calc(((100vw - var(--homepage-content-max-width, 1360px)) / 2) + var(--homepage-content-padding-inline, 1rem))
+    calc(((100vw - var(--homepage-content-max-width, 1480px)) / 2) + var(--homepage-content-padding-inline, 1rem))
   );
   left: auto;
 }
@@ -129,9 +161,9 @@ color: inherit;
 .news-shell,
 .news-article-shell,
 .info-page-shell {
-max-width: 1200px;
+max-width: var(--homepage-content-max-width, 1480px);
   margin: 0 auto;
-  padding: 2.25rem 1rem 4.5rem;
+  padding: 2.25rem var(--homepage-content-padding-inline, 0.8rem) 4.5rem;
 }
 
 .news-kicker {
@@ -163,7 +195,7 @@ max-width: 52rem;
 
 .news-index-shell {
 --news-header-accent: #cc4d8f;
-  max-width: 1180px;
+  max-width: var(--homepage-content-max-width, 1480px);
 }
 
 .news-index-hero {
@@ -171,7 +203,6 @@ display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0.8rem;
   margin-bottom: 1.6rem;
-  padding-inline: 1rem;
   text-align: left;
 }
 
@@ -595,8 +626,8 @@ margin-top: 0.35rem;
     grid-template-columns: minmax(10rem, 1fr) minmax(0, clamp(34rem, 44vw, 40rem)) minmax(10rem, 1fr);
     gap: 0 clamp(1.5rem, 3.5vw, 3rem);
     align-items: start;
-    max-width: min(var(--homepage-content-max-width, 1360px), calc(100% - 4rem));
-    padding-inline: 0;
+    max-width: min(var(--homepage-content-max-width, 1480px), calc(100% - (2 * var(--homepage-content-padding-inline, 0.8rem))));
+    padding-inline: var(--homepage-content-padding-inline, 0.8rem);
     padding-top: 1.6rem;
     position: relative;
   }
@@ -698,7 +729,7 @@ margin-top: 0.35rem;
 
 @media (min-width: 1280px) {
   body.page-public .info-page-shell {
-  max-width: var(--homepage-content-max-width, 1360px);
+  max-width: var(--homepage-content-max-width, 1480px);
   }
 }
 
@@ -1076,9 +1107,9 @@ font-size: clamp(1rem, 1.8vw, 1.2rem);
 }
 
 .public-shell {
-max-width: 1360px;
+max-width: var(--homepage-content-max-width, 1480px);
   margin: 0 auto;
-  padding: 1.2rem 0.75rem 3rem;
+  padding: 1.2rem var(--homepage-content-padding-inline, 0.8rem) 3rem;
 }
 
 .auth-shell {
@@ -1333,9 +1364,9 @@ position: relative;
 }
 
 .site-footer-shell {
-max-width: 1360px;
+max-width: var(--homepage-content-max-width, 1480px);
   margin: 0 auto;
-  padding: 1rem 0.75rem 1.2rem;
+  padding: 1rem var(--homepage-content-padding-inline, 0.8rem) 1.2rem;
 }
 
 .site-footer-nav {
@@ -1389,7 +1420,7 @@ outline: 2px solid #59e8de;
 
 @media (min-width: 768px) {
   .site-footer-shell {
-  padding: 1rem 0.75rem;
+  padding: 1rem var(--homepage-content-padding-inline, 1rem);
   }
 
   .site-footer-nav {
@@ -4917,15 +4948,15 @@ margin: 0;
 }
 
 .event-detail {
-max-width: 1220px;
+max-width: var(--homepage-content-max-width, 1480px);
   margin: 0 auto;
-  padding: 1.2rem 2rem 3.5rem;
+  padding: 1.2rem var(--homepage-content-padding-inline, 0.8rem) 3.5rem;
 }
 
 .event-not-found {
-max-width: 1220px;
+max-width: var(--homepage-content-max-width, 1480px);
   margin: 0 auto;
-  padding: 1.2rem 1rem 4rem;
+  padding: 1.2rem var(--homepage-content-padding-inline, 0.8rem) 4rem;
 }
 
 .event-not-found-shell {
@@ -4992,9 +5023,9 @@ position: relative;
 }
 
 .app-error-page {
-max-width: 1220px;
+max-width: var(--homepage-content-max-width, 1480px);
   margin: 0 auto;
-  padding: 1.2rem 1rem 4rem;
+  padding: 1.2rem var(--homepage-content-padding-inline, 0.8rem) 4rem;
 }
 
 .app-error-shell {
@@ -5547,9 +5578,9 @@ display: block;
 }
 
 .event-detail {
-max-width: 1280px;
+max-width: var(--homepage-content-max-width, 1480px);
   position: relative;
-  padding: 1.2rem 2rem 3.5rem;
+  padding: 1.2rem var(--homepage-content-padding-inline, 0.8rem) 3.5rem;
   padding-bottom: 4rem;
 }
 
@@ -7828,7 +7859,7 @@ display: flex;
   .public-shell,
   .site-footer-shell,
   .event-detail {
-  max-width: 1480px;
+  max-width: var(--homepage-content-max-width, 1480px);
   }
 
   body.page-public .public-shell,
@@ -7841,12 +7872,12 @@ display: flex;
   }
 
   body.page-public .info-page-shell {
-  max-width: 1440px;
-      padding: 1.5rem;
+  max-width: var(--homepage-content-max-width, 1480px);
+      padding: 1.5rem var(--homepage-content-padding-inline, 0.8rem);
   }
 
   .news-index-shell {
-  max-width: 1440px;
+  max-width: var(--homepage-content-max-width, 1480px);
   }
 
   body.page-public .news-index-shell {
@@ -7942,14 +7973,12 @@ position: sticky;
 
 body.page-public-events-index {
 --homepage-section-gap: 1.1rem;
-  --homepage-content-max-width: 1360px;
+  --homepage-content-max-width: 1480px;
   --homepage-header-max-width: 1480px;
-  --homepage-content-padding-inline: 0.8rem;
-  --homepage-header-padding-inline: 0.8rem;
 }
 
 body.page-public-events-index .public-shell {
-padding: 1.1rem 0.8rem 3rem;
+padding: 1.1rem var(--homepage-content-padding-inline, 0.8rem) 3rem;
 }
 
 body.page-public-events-index .app-nav-inner-homepage-poster {
@@ -8382,16 +8411,16 @@ top: 1.18rem;
 
 @media (min-width: 768px) {
   body.page-public-events-index {
-  --homepage-content-padding-inline: 1.4rem;
-      --homepage-header-padding-inline: 1.4rem;
+  --homepage-content-padding-inline: 1rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
   }
 
   body.page-public-events-index .public-shell {
-  padding-inline: 1.4rem;
+  padding-inline: var(--homepage-content-padding-inline, 1rem);
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  padding: 0.95rem 1.4rem 1rem;
+  padding: 0.95rem var(--homepage-content-padding-inline, 1rem) 1rem;
       grid-template-columns: auto minmax(18rem, 1fr) auto;
       grid-template-areas: "brand center meta";
       align-items: center;
@@ -8470,17 +8499,17 @@ top: 1.18rem;
 @media (max-width: 1023px) {
   body.page-public-events-index {
   --homepage-content-padding-inline: 1rem;
-      --homepage-header-padding-inline: 1rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
   }
 
   body.page-public-events-index .public-shell {
-  padding-inline: 1rem;
+  padding-inline: var(--homepage-content-padding-inline, 1rem);
   }
 
   body.page-public-events-index .public-backend-float {
   right: max(
     var(--homepage-content-padding-inline, 1rem),
-    calc(((100vw - var(--homepage-content-max-width, 1360px)) / 2) + var(--homepage-content-padding-inline, 1rem))
+    calc(((100vw - var(--homepage-content-max-width, 1480px)) / 2) + var(--homepage-content-padding-inline, 1rem))
   );
   }
 
@@ -8489,7 +8518,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  padding: 0.8rem 1rem 0.9rem;
+  padding: 0.8rem var(--homepage-content-padding-inline, 1rem) 0.9rem;
       gap: 0.65rem 0.85rem;
   }
 
@@ -8555,17 +8584,17 @@ top: 1.18rem;
 @media (min-width: 1024px) {
   body.page-public-events-index {
   --homepage-content-padding-inline: 1.8rem;
-      --homepage-header-padding-inline: 1.8rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
   }
 
   body.page-public-events-index .public-shell {
-  padding-inline: 1.8rem;
+  padding-inline: var(--homepage-content-padding-inline, 1.8rem);
   }
 
   body.page-public-events-index .public-backend-float {
   right: max(
     var(--homepage-content-padding-inline, 1.8rem),
-    calc(((100vw - var(--homepage-content-max-width, 1360px)) / 2) + var(--homepage-content-padding-inline, 1.8rem))
+    calc(((100vw - var(--homepage-content-max-width, 1480px)) / 2) + var(--homepage-content-padding-inline, 1.8rem))
   );
   }
 
@@ -8574,7 +8603,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  padding: 0.95rem 1.8rem 0.95rem;
+  padding: 0.95rem var(--homepage-content-padding-inline, 1.8rem) 0.95rem;
       --poster-nav-column-width: 9.5rem;
       --poster-meta-column-width: 18rem;
       grid-template-columns: auto minmax(20rem, 1fr) minmax(var(--poster-meta-column-width), auto);
@@ -8760,18 +8789,18 @@ top: 1.18rem;
 @media (min-width: 1280px) {
   body.page-public-events-index {
   --homepage-content-padding-inline: 2.1rem;
-      --homepage-header-padding-inline: 2.1rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
   }
 
   body.page-public-events-index .public-shell {
-  padding-inline: 2.1rem;
+  padding-inline: var(--homepage-content-padding-inline, 2.1rem);
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  --poster-nav-column-width: 11rem;
+      --poster-nav-column-width: 11rem;
       --poster-meta-column-width: 20rem;
-      max-width: var(--homepage-content-max-width, 1360px);
-      padding: 0.95rem 2.1rem 0.58rem;
+      max-width: var(--homepage-content-max-width, 1480px);
+      padding: 0.95rem var(--homepage-content-padding-inline, 2.1rem) 0.58rem;
       grid-template-columns: auto minmax(18rem, 1fr) minmax(var(--poster-meta-column-width), auto);
       grid-template-areas:
         "brand center meta"
@@ -8887,16 +8916,16 @@ top: 1.18rem;
 @media (min-width: 1440px) {
   body.page-public-events-index {
   --homepage-content-padding-inline: 2.55rem;
-      --homepage-header-padding-inline: 2.55rem;
+      --homepage-header-padding-inline: var(--homepage-content-padding-inline);
   }
 
   body.page-public-events-index .public-shell {
-  padding-inline: 2.55rem;
+  padding-inline: var(--homepage-content-padding-inline, 2.55rem);
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  max-width: var(--homepage-content-max-width, 1360px);
-      padding: 0.95rem 2.55rem 0.5rem;
+  max-width: var(--homepage-content-max-width, 1480px);
+      padding: 0.95rem var(--homepage-content-padding-inline, 2.55rem) 0.5rem;
       --poster-nav-column-width: 11.5rem;
       --poster-meta-column-width: 21rem;
       grid-template-columns: auto minmax(18rem, 1fr) minmax(var(--poster-meta-column-width), auto);
@@ -8956,11 +8985,6 @@ top: 1.18rem;
 }
 
 @media (min-width: 1500px) {
-  body.page-public-events-index {
-  --homepage-content-max-width: 1480px;
-      --homepage-header-max-width: 1480px;
-  }
-
   body.page-public-events-index .app-nav-inner-homepage-poster {
   max-width: var(--homepage-header-max-width, 1480px);
   }
@@ -9241,7 +9265,7 @@ body.page-public-newsletter-poster .newsletter-signup-inner {
 position: relative;
   z-index: 1;
   width: 100%;
-  max-width: var(--homepage-content-max-width, 1360px);
+  max-width: var(--homepage-content-max-width, 1480px);
   margin-inline: auto;
   padding-inline: var(--homepage-content-padding-inline, 0.8rem);
   grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.98fr);
