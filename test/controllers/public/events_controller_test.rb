@@ -3505,6 +3505,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-presenters", count: 0
     assert_select ".event-detail-organizer-presenters", count: 1
+    assert_select ".event-detail-organizer-presenters .event-detail-organizer-sidebar-heading",
+                  text: "Diese Veranstaltung wird präsentiert von:"
     assert_select ".event-detail-organizer-partner-grid", count: 1
     assert_select ".event-detail-organizer-partner[href='#{presenter_one.external_url}']", count: 1
     assert_select ".event-detail-organizer-partner[href='#{presenter_two.external_url}']", count: 1

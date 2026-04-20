@@ -1,7 +1,7 @@
 <% presenters = Array(local_assigns.fetch(:presenters, [])) %>
 <% if presenters.any? %>
   <div class="event-detail-organizer-presenters" aria-label="Präsentatoren">
-    <h3 class="event-detail-organizer-sidebar-heading">Mit freundlicher Unterstützung von:</h3>
+    <h3 class="event-detail-organizer-sidebar-heading">Diese Veranstaltung wird präsentiert von:</h3>
     <div class="event-detail-organizer-partner-grid" role="list">
       <% presenters.each do |item| %>
         <% if item.external_url.present? %>
