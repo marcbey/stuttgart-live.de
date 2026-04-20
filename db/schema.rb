@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_16_233000) do
+ActiveRecord::Schema[8.1].define(version: 2026_04_20_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -241,7 +241,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_16_233000) do
     t.decimal "max_price", precision: 10, scale: 2
     t.decimal "min_price", precision: 10, scale: 2
     t.string "normalized_artist_name", null: false
-    t.text "organizer_notes", default: "Wir bitten um Beachtung verstärkter Sicherheitsmaßnahmen\n\nWas du mitbringen darfst:\n✅ Handy, Schlüssel, Geldbeutel, Medikamente, Kleine Kosmetikartikel, kleine Taschen (maximal Größe DIN A4)\n\nWas du nicht mitbringen darfst:\n❌ Handtaschen, Rucksäcke, Helme, Behälter aller Art, Keine großen Taschen\n\nKontrollen beim Einlass:\n- Alle Besucher werden abgetastet (Bodycheck)\n- Es gibt strengere Sicherheitskontrollen als sonst\n\nDie Einhaltung dieser Regeln und Hinweise sowie ein rechtzeitiges Eintreffen helfen dabei, den Einlass so zügig wie möglich zu organisieren.\n\nWir danken für Ihr Verständnis!\n\nAltersfreigabe:\nkein Zutritt: unter 6 Jahren\nnur in Begleitung: bis 14 Jahren → Begleitformular PDF\nfrei ab 14 Jahren\n\nTelefonischer Ticketkauf:\n\nBei dieser Veranstaltung gibt es auch die Möglichkeit des telefonischen Ticketkaufes. Sie erreichen unsere Tickethotline in der Regel von Montag bis Freitag zwischen 10 und 18 Uhr unter Telefon 0711-550 660 77", null: false
+    t.text "organizer_notes", default: "Wir bitten um Beachtung verstärkter Sicherheitsmaßnahmen\n\nWas du mitbringen darfst:\n✅ Handy, Schlüssel, Geldbeutel, Medikamente, Kleine Kosmetikartikel, kleine Taschen (maximal Größe DIN A4)\n\nWas du nicht mitbringen darfst:\n❌ Handtaschen, Rucksäcke, Helme, Behälter aller Art, Keine großen Taschen\n\nKontrollen beim Einlass:\n- Alle Besucher werden abgetastet (Bodycheck)\n- Es gibt strengere Sicherheitskontrollen als sonst\n\nDie Einhaltung dieser Regeln und Hinweise sowie ein rechtzeitiges Eintreffen helfen dabei, den Einlass so zügig wie möglich zu organisieren.\n\nDanke für euer Verständnis!\n\nAltersfreigabe:\nkein Zutritt: unter 6 Jahren\nnur in Begleitung: bis 14 Jahren → Begleitformular PDF\nfrei ab 14 Jahren\n\nTelefonischer Ticketkauf:\n\nBei dieser Veranstaltung gibt es auch die Möglichkeit des telefonischen Ticketkaufes. Unsere Tickethotline erreichst du in der Regel von Montag bis Freitag zwischen 10 und 18 Uhr unter Telefon 0711-550 660 77", null: false
     t.string "primary_source"
     t.string "promoter_id"
     t.string "promoter_name"

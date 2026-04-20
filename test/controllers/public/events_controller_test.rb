@@ -6,7 +6,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
     AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382" ])
-    AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Konfigurierter SKS Hinweis\nWir danken für Ihr Verständnis!")
+    AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Konfigurierter SKS Hinweis\nDanke für euer Verständnis!")
     AppSetting.reset_cache!
     @published_event = events(:published_one)
     @past_published_event = events(:published_past_one)

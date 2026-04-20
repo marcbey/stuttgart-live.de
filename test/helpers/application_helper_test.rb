@@ -108,4 +108,13 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes fragment.text, "nur in Begleitung: bis 14 Jahren"
     assert_equal "→ Begleitformular PDF", fragment.at_css("a")&.text&.squish
   end
+
+  test "formatted organizer notes replaces du addressed begleiformular shortcut with link" do
+    notes = "nur in Begleitung: bis 14 Jahren (Das Begleitformular findest du HIER)"
+
+    fragment = Nokogiri::HTML.fragment(formatted_organizer_notes_with_link(notes))
+
+    assert_includes fragment.text, "nur in Begleitung: bis 14 Jahren"
+    assert_equal "→ Begleitformular PDF", fragment.at_css("a")&.text&.squish
+  end
 end
