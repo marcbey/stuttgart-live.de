@@ -45,7 +45,7 @@ module Importing
           {
             "\"Luca Noel\" offizielle website" => search_result("broad-1", []),
             "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/" => search_result("ig-1", [ organic_result(1, "https://secure.instagram.com/lucanoelmusik/?hl=da", "Luca Noel", "Instagram") ]),
-            "\"Luca Noel\" official page site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
+            "\"Luca Noel\" (official OR band OR music OR artist) site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
             "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel" => search_result("yt-1", [])
           }
         ).call(event: @event)
@@ -53,7 +53,7 @@ module Importing
         assert_equal "https://www.instagram.com/lucanoelmusik/", result.links[:instagram_link]
         assert_equal "https://www.facebook.com/lucanoelmusik/", result.links[:facebook_link]
         assert_equal "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/", result.payload.dig("fields", "instagram_link", "query")
-        assert_equal "\"Luca Noel\" official page site:facebook.com", result.payload.dig("fields", "facebook_link", "query")
+        assert_equal "\"Luca Noel\" (official OR band OR music OR artist) site:facebook.com", result.payload.dig("fields", "facebook_link", "query")
         assert_equal "first_search_result", result.payload.dig("fields", "instagram_link", "candidates", 0, "selection_strategy")
         assert_equal "first_search_result", result.payload.dig("fields", "facebook_link", "candidates", 0, "selection_strategy")
       end
@@ -63,7 +63,7 @@ module Importing
           {
             "\"Luca Noel\" offizielle website" => search_result("broad-1", [ organic_result(1, "https://www.lucanoel.de/", "Luca Noel", "Offizielle Website") ]),
             "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/" => search_result("ig-1", [ organic_result(1, "https://www.instagram.com/lucanoelmusik/", "Luca Noel", "Instagram") ]),
-            "\"Luca Noel\" official page site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
+            "\"Luca Noel\" (official OR band OR music OR artist) site:facebook.com" => search_result("fb-1", [ organic_result(1, "https://www.facebook.com/lucanoelmusik/", "Luca Noel", "Facebook") ]),
             "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel" => search_result("yt-1", [ organic_result(1, "https://www.youtube.com/@lucanoelmusic", "Luca Noel", "YouTube") ])
           }
         ).call(event: @event)
@@ -89,7 +89,7 @@ module Importing
           {
             "\"Café del Mundo\" offizielle website" => search_result("broad-1", []),
             "\"Café del Mundo\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/" => search_result("ig-1", []),
-            "\"Café del Mundo\" official page site:facebook.com" => search_result("fb-1", []),
+            "\"Café del Mundo\" (official OR band OR music OR artist) site:facebook.com" => search_result("fb-1", []),
             "\"Café del Mundo\" site:youtube.com/@ OR site:youtube.com/channel" => search_result(
               "yt-1",
               [

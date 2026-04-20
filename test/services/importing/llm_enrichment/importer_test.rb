@@ -329,7 +329,7 @@ module Importing
                     },
                     "facebook_link" => {
                       "query_name" => "facebook",
-                      "query" => "\"Published Artist\" official page site:facebook.com",
+                      "query" => "\"Published Artist\" (official OR band OR music OR artist) site:facebook.com",
                       "selected_url" => "https://facebook.example/final",
                       "candidates" => [
                         { "url" => "https://facebook.example/final", "validation" => validation_results[1].as_json }

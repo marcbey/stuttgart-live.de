@@ -17,7 +17,7 @@ module Importing
         assert_equal [ "broad", "instagram", "facebook", "youtube" ], queries.map(&:name)
         assert_equal "\"Luca Noel\" offizielle website", queries.first.query
         assert_equal "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/", queries.second.query
-        assert_equal "\"Luca Noel\" official page site:facebook.com", queries.third.query
+        assert_equal "\"Luca Noel\" (official OR band OR music OR artist) site:facebook.com", queries.third.query
         assert_equal "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel", queries.fourth.query
       end
 
@@ -44,7 +44,7 @@ module Importing
 
         assert_equal "\"Michael Nast\" offizielle website", queries.first.query
         assert_equal "\"Michael Nast\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/", queries.second.query
-        assert_equal "\"Michael Nast\" official page site:facebook.com", queries.third.query
+        assert_equal "\"Michael Nast\" (official OR band OR music OR artist) site:facebook.com", queries.third.query
         assert_equal "\"Michael Nast\" site:youtube.com/@ OR site:youtube.com/channel", queries.fourth.query
       end
     end
