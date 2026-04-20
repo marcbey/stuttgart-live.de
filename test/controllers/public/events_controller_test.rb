@@ -3479,11 +3479,21 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
+    expected_venue_link = backend_venues_path(venue_id: @published_event.venue_record.id).gsub("&", "&amp;")
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
     assert_includes response.body, expected_link
+    assert_includes response.body, expected_venue_link
     assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit"
     assert_select ".event-detail-topbar-actions .event-detail-edit-link", count: 1
+    assert_select ".event-detail-venue-block .event-detail-edit-link", text: "Venue bearbeiten", count: 1
     assert_select ".event-detail-image-stage-shell .saved-event-button.saved-event-button-detail-image[data-controller='saved-event-toggle']", count: 1
+  end
+
+  test "show hides venue edit link for unauthenticated users" do
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-venue-block .event-detail-edit-link", text: "Venue bearbeiten", count: 0
   end
 
   test "show renders presenter logos inside organizer notes when presenters exist" do
