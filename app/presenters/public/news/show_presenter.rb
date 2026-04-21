@@ -74,6 +74,35 @@ module Public
         view_context.optimized_blog_post_image_url(blog_post, :cover_image)
       end
 
+      def hero_image_style
+        return unless hero_image?
+
+        view_context.blog_post_cropped_image_style(
+          blog_post,
+          :cover_image,
+          frame_ratio: hero_stage_ratio,
+          edge_lock_margin: 0.06
+        )
+      end
+
+      def hero_stage_style
+        [
+          "aspect-ratio: 16 / 10",
+          "height: auto",
+          "min-height: 0",
+          "background: transparent",
+          "box-shadow: none"
+        ].join("; ")
+      end
+
+      def hero_picture_style
+        "inset: 0;"
+      end
+
+      def hero_stage_ratio
+        16.0 / 10.0
+      end
+
       def hero_alt_text
         headline
       end

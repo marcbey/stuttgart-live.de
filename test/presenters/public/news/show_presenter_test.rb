@@ -18,6 +18,10 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
       "https://cdn.example.test/news-cover.webp"
     end
 
+    def blog_post_cropped_image_style(_blog_post, _slot, frame_ratio:, edge_lock_margin: nil)
+      "crop-style-#{frame_ratio.round(2)}-margin-#{edge_lock_margin}"
+    end
+
     def blog_post_image_copyright(blog_post, slot)
       blog_post.public_send("#{slot}_copyright")
     end
@@ -50,6 +54,9 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Kurzbeschreibung", presenter.teaser
     assert_equal "17.03.2026 von Autor Eins", presenter.meta_line
     assert_equal "https://cdn.example.test/news-cover.webp", presenter.hero_image_source
+    assert_equal "crop-style-1.6-margin-0.06", presenter.hero_image_style
+    assert_equal "aspect-ratio: 16 / 10; height: auto; min-height: 0; background: transparent; box-shadow: none", presenter.hero_stage_style
+    assert_equal "inset: 0;", presenter.hero_picture_style
     assert_equal "Neue Headline", presenter.hero_alt_text
     assert_equal "Foto: Agentur", presenter.hero_image_credit
     assert presenter.has_video_block?
@@ -70,6 +77,9 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "event-detail-header news-detail-header news-detail-header-no-image", presenter.header_classes
     assert_not presenter.hero_image?
     assert_nil presenter.hero_image_source
+    assert_nil presenter.hero_image_style
+    assert_equal "aspect-ratio: 16 / 10; height: auto; min-height: 0; background: transparent; box-shadow: none", presenter.hero_stage_style
+    assert_equal "inset: 0;", presenter.hero_picture_style
     assert_nil presenter.hero_image_credit
   end
 
