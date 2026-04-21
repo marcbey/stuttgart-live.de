@@ -140,7 +140,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert presenter.show_ticket_panel?
     assert presenter.show_ticket_link?
     assert_not presenter.show_sold_out_note?
-    assert_not presenter.show_sks_sold_out_hint?
+    assert_not presenter.show_ticket_special_note?
     assert_equal "Fast ausverkauft", presenter.ticket_badge_text
     assert_equal "https://tickets.example/band", presenter.ticket_url
     assert_equal "39,00 €", presenter.ticket_price_text
@@ -201,31 +201,31 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_nil presenter.ticket_price_text
   end
 
-  test "shows sold out badge and sks hint without ticket link for sold out sks events" do
+  test "shows sold out badge and ticket special note without ticket link" do
     event = build_event(
       artist_name: "Band",
       title: "Live",
       start_at: Time.zone.local(2026, 6, 17, 20, 0),
-      promoter_id: AppSetting.sks_promoter_ids.first,
-      sks_sold_out_message: "Bitte beim Veranstalter nach Restkarten fragen"
+      promoter_id: "99999",
+      ticket_special_note: "Bitte beim Veranstalter nach Restkarten fragen"
     )
     event.define_singleton_method(:public_sold_out?) { true }
-    event.define_singleton_method(:sks_promoter?) { true }
+    event.define_singleton_method(:public_ticket_status_offer) { OpenStruct.new(sold_out?: true) }
 
     presenter = build_presenter(event, primary_offer: nil)
 
     assert presenter.show_ticket_panel?
     assert_not presenter.show_ticket_link?
     assert presenter.show_sold_out_note?
-    assert presenter.show_sks_sold_out_hint?
+    assert presenter.show_ticket_special_note?
     assert_equal "Ausverkauft", presenter.sold_out_note_text
-    assert_equal "Bitte beim Veranstalter nach Restkarten fragen", presenter.sks_sold_out_hint_text
-    assert_equal "Bitte beim Veranstalter nach Restkarten fragen", presenter.sks_sold_out_message
+    assert_equal "Bitte beim Veranstalter nach Restkarten fragen", presenter.ticket_special_note_text
+    assert_equal "Bitte beim Veranstalter nach Restkarten fragen", presenter.ticket_special_note
     assert_nil presenter.ticket_url
     assert_nil presenter.ticket_price_text
   end
 
-  test "shows canceled note without sold out hint for canceled events" do
+  test "shows canceled note without ticket special note for canceled events without sold out status" do
     event = build_event(
       artist_name: "Band",
       title: "Live",
@@ -235,8 +235,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     event.define_singleton_method(:public_canceled?) { true }
     event.define_singleton_method(:public_sold_out?) { false }
     event.define_singleton_method(:public_ticket_status_label) { "Abgesagt" }
-    event.define_singleton_method(:sks_promoter?) { true }
-    event.define_singleton_method(:sks_sold_out_message) { "Bitte bei SKS nach Restkarten fragen" }
+    event.define_singleton_method(:ticket_special_note) { "Bitte bei Tickets nachfragen" }
 
     presenter = build_presenter(event, primary_offer: nil)
 
@@ -244,10 +243,35 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert presenter.show_canceled_note?
     assert presenter.show_unavailable_note?
     assert_not presenter.show_ticket_link?
-    assert_not presenter.show_sks_sold_out_hint?
+    assert_not presenter.show_ticket_special_note?
     assert_equal "Abgesagt", presenter.sold_out_note_text
     schema = JSON.parse(presenter.schema_json_ld)
     assert_equal "https://schema.org/EventCancelled", schema["eventStatus"]
+  end
+
+  test "shows canceled note with ticket special note for canceled sold out events" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      start_at: Time.zone.local(2026, 6, 17, 20, 0),
+      slug: "band-live-canceled-sold-out",
+      promoter_id: "99999",
+      ticket_special_note: "Bitte bei Tickets nachfragen"
+    )
+    event.define_singleton_method(:public_canceled?) { true }
+    event.define_singleton_method(:public_sold_out?) { false }
+    event.define_singleton_method(:public_ticket_status_label) { "Abgesagt" }
+    event.define_singleton_method(:public_ticket_status_offer) { OpenStruct.new(sold_out?: true) }
+
+    presenter = build_presenter(event, primary_offer: nil)
+
+    assert presenter.show_ticket_panel?
+    assert presenter.show_canceled_note?
+    assert presenter.show_unavailable_note?
+    assert_not presenter.show_ticket_link?
+    assert presenter.show_ticket_special_note?
+    assert_equal "Abgesagt", presenter.sold_out_note_text
+    assert_equal "Bitte bei Tickets nachfragen", presenter.ticket_special_note_text
   end
 
   test "exposes hero stage aspect ratio for editorial hero images" do

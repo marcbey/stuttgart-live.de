@@ -61,6 +61,14 @@ module Backend::EventsHelper
     ActiveModel::Type::Boolean.new.cast(event.editor_ticket_offer&.sold_out?)
   end
 
+  def event_display_ticket_availability_label(event)
+    offer = event.editor_ticket_offer
+    return "Ist abgesagt" if offer&.canceled?
+    return "Ist ausverkauft" if ActiveModel::Type::Boolean.new.cast(offer&.sold_out?)
+
+    "Ist nicht ausverkauft"
+  end
+
   def event_editor_ticket_offer_source(event)
     event.editor_ticket_offer&.source.to_s.strip.presence
   end

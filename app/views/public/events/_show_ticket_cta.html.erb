@@ -15,8 +15,8 @@
           <% elsif presenter.show_unavailable_note? %>
             <p class="event-detail-meta-strong event-detail-sold-out-note"><%= presenter.sold_out_note_text %></p>
           <% end %>
-          <% if presenter.show_sks_sold_out_hint? %>
-            <p class="event-detail-sold-out-hint"><%= presenter.sks_sold_out_hint_text %></p>
+          <% if presenter.show_ticket_special_note? %>
+            <p class="event-detail-sold-out-hint"><%= presenter.ticket_special_note_text %></p>
           <% end %>
         </div>
       </div>

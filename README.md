@@ -143,6 +143,7 @@ Wichtig für Updates bestehender Events:
   - `eventStatus = 1` wird als `canceled` interpretiert und im Frontend als `Abgesagt` angezeigt.
   - Fehlt dieses Absage-Signal, aber es existiert keine `pricecategory` mehr mit `inventory = buchbar`, wird das Offer als `sold_out` behandelt und im Frontend als `Ausverkauft` angezeigt.
   - `Abgesagt` hat immer Vorrang vor `Ausverkauft`. Ein abgesagtes Event zeigt deshalb keinen Ticket-Link mehr, selbst wenn parallel noch manuelle Ticketdaten existieren.
+  - Bei Events mit gepflegter `Ticket Sonderlocke` bleibt dieser Hinweis zusätzlich sichtbar, wenn das führende Status-Offer gleichzeitig `canceled` und `sold_out` signalisiert.
 - Der führende öffentliche Status eines Events wird immer aus dem priorisierten öffentlichen Ticket-Status-Offer gelesen. Dadurch bleiben Fälle wie `Melrose Avenue = Ausverkauft` und `Juliano = Abgesagt` technisch sauber getrennt.
 - Bilder werden ebenfalls quellenweise auf den aktuellen Merge-Stand synchronisiert.
 - `title`, `artist_name`, `city`, `promoter_id`, `promoter_name`, `youtube_url`, `homepage_url`, `facebook_url` und `event_info` werden bei einem bestehenden Event durch den Merge nicht überschrieben. Diese Felder werden nur beim erstmaligen Anlegen aus den Importdaten vorbelegt.
