@@ -4334,7 +4334,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, @published_event.artist_name
     assert_includes response.body, "© Foto Max Mustermann"
-    assert_includes response.body, "Slider Subline"
+    assert_includes response.body, "© Slider Subline"
     assert_select ".event-detail-image-figure-rotator[data-controller='hero-rotator lightbox'][data-hero-rotator-delay-value='3000']", count: 1
     assert_select ".event-detail-image-stage-shell.highlights-slider-viewport", count: 1
     assert_select ".event-detail-image-stage", count: 1

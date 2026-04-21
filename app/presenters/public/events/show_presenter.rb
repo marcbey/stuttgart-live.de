@@ -134,8 +134,8 @@ module Public
                 desktop_source: item.source,
                 mobile_source: nil,
                 alt_text: item.alt_text,
-                caption: item.caption.to_s.strip.presence,
-                credit: nil,
+                caption: nil,
+                credit: formatted_credit(item.caption),
                 lightbox_source: item.source
               )
             end
@@ -465,10 +465,7 @@ module Public
       def editorial_hero_credit
         return unless hero_desktop_image.is_a?(EventImage)
 
-        credit = hero_desktop_image.sub_text.to_s.strip
-        return if credit.blank?
-
-        credit.start_with?("©") ? credit : "© #{credit}"
+        formatted_credit(hero_desktop_image.sub_text)
       end
 
       def import_hero_credit_label
@@ -476,6 +473,13 @@ module Public
         return if hero_desktop_image.is_a?(EventImage)
 
         IMPORT_HERO_CREDIT_LABELS[hero_desktop_image.source.to_s.downcase]
+      end
+
+      def formatted_credit(value)
+        credit = value.to_s.strip
+        return if credit.blank?
+
+        credit.start_with?("©") ? credit : "© #{credit}"
       end
 
       def doors_at

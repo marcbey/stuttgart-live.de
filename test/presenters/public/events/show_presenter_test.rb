@@ -162,7 +162,8 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "/hero-mobile.jpg", presenter.hero_gallery_slides.first.mobile_source
     assert_equal "Bildquelle: Easy Ticket Service / Veranstalter", presenter.hero_gallery_slides.first.credit
     assert_equal "/slide-1.jpg", presenter.hero_gallery_slides.second.desktop_source
-    assert_equal "Live auf der Bühne", presenter.hero_gallery_slides.second.caption
+    assert_nil presenter.hero_gallery_slides.second.caption
+    assert_equal "© Live auf der Bühne", presenter.hero_gallery_slides.second.credit
   end
 
   test "writes out price ranges in the ticket cta" do
