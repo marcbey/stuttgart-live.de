@@ -46,7 +46,7 @@
                              action: "change->event-image-editor-upload#select"
                            } %>
         <%= text_field_tag "event_image[alt_text]", nil, placeholder: "Alt-Text (optional)", class: "form-input" %>
-        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Sub-Text unter dem Bild (optional)", class: "form-input" %>
+        <%= text_field_tag "event_image[sub_text]", nil, placeholder: "Copyright (optional)", class: "form-input" %>
         <div class="preuploaded-image-list" data-event-image-editor-upload-target="preview"></div>
         <p class="preuploaded-image-live-region" data-event-image-editor-upload-target="status" role="status" aria-live="polite"></p>
       <% end %>
