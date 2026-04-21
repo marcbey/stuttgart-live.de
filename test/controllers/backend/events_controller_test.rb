@@ -227,6 +227,24 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Ist nicht ausverkauft"
   end
 
+  test "show renders canceled label from offer availability status" do
+    sign_in_as(@user)
+    event_offers(:published_one_offer).update!(
+      sold_out: true,
+      metadata: {
+        "availability_status" => "canceled",
+        "source_status_code" => "1"
+      }
+    )
+
+    get backend_event_url(@published_event, status: "published")
+
+    assert_response :success
+    assert_includes response.body, "Ist abgesagt"
+    assert_not_includes response.body, "Ist ausverkauft"
+    assert_not_includes response.body, "Ist nicht ausverkauft"
+  end
+
   test "new redirects to inbox split layout" do
     sign_in_as(@user)
 

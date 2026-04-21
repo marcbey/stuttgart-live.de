@@ -211,6 +211,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     )
     event.define_singleton_method(:public_sold_out?) { true }
     event.define_singleton_method(:sks_promoter?) { true }
+    event.define_singleton_method(:public_ticket_status_offer) { OpenStruct.new(sold_out?: true) }
 
     presenter = build_presenter(event, primary_offer: nil)
 
@@ -225,7 +226,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_nil presenter.ticket_price_text
   end
 
-  test "shows canceled note without sold out hint for canceled events" do
+  test "shows canceled note without sold out hint for canceled events without sold out status" do
     event = build_event(
       artist_name: "Band",
       title: "Live",
@@ -248,6 +249,32 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Abgesagt", presenter.sold_out_note_text
     schema = JSON.parse(presenter.schema_json_ld)
     assert_equal "https://schema.org/EventCancelled", schema["eventStatus"]
+  end
+
+  test "shows canceled note with sks hint for canceled sold out sks events" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      start_at: Time.zone.local(2026, 6, 17, 20, 0),
+      slug: "band-live-canceled-sold-out",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      sks_sold_out_message: "Bitte bei SKS nach Restkarten fragen"
+    )
+    event.define_singleton_method(:public_canceled?) { true }
+    event.define_singleton_method(:public_sold_out?) { false }
+    event.define_singleton_method(:public_ticket_status_label) { "Abgesagt" }
+    event.define_singleton_method(:sks_promoter?) { true }
+    event.define_singleton_method(:public_ticket_status_offer) { OpenStruct.new(sold_out?: true) }
+
+    presenter = build_presenter(event, primary_offer: nil)
+
+    assert presenter.show_ticket_panel?
+    assert presenter.show_canceled_note?
+    assert presenter.show_unavailable_note?
+    assert_not presenter.show_ticket_link?
+    assert presenter.show_sks_sold_out_hint?
+    assert_equal "Abgesagt", presenter.sold_out_note_text
+    assert_equal "Bitte bei SKS nach Restkarten fragen", presenter.sks_sold_out_hint_text
   end
 
   test "exposes hero stage aspect ratio for editorial hero images" do

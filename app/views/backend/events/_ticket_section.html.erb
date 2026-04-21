@@ -14,7 +14,7 @@
       <div>
         <label class="form-label" for="<%= dom_id(event, :ticket_sold_out) %>">Ticket Verfügbarkeit</label>
         <% if read_only_import_offer %>
-          <p><%= display_ticket_sold_out ? "Ist ausverkauft" : "Ist nicht ausverkauft" %></p>
+          <p><%= event_display_ticket_availability_label(event) %></p>
         <% else %>
           <%= hidden_field_tag "event[ticket_sold_out]", "0", form: editor_form_id, id: nil %>
           <label class="form-checkbox">

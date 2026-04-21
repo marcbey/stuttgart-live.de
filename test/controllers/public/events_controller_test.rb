@@ -2696,6 +2696,44 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "https://easyticket.example/sks-sold-out-without-message"
   end
 
+  test "show renders canceled note and sks hint for canceled sold out sks events" do
+    event = Event.create!(
+      slug: "show-sks-canceled-sold-out-message",
+      source_fingerprint: "test::public::show::sks-canceled-sold-out-message",
+      title: "SKS Canceled Sold Out Message",
+      artist_name: "SKS Canceled Sold Out Artist",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      sks_sold_out_message: "Bitte bei SKS nach Restkarten fragen",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "eventim-sks-canceled-sold-out-message-123",
+      ticket_url: "https://eventim.example/sks-canceled-sold-out-message",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {
+        "availability_status" => "canceled",
+        "source_status_code" => "1"
+      }
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-cta", count: 1
+    assert_includes response.body, "Abgesagt"
+    assert_includes response.body, "Bitte bei SKS nach Restkarten fragen"
+    assert_not_includes response.body, "Tickets sichern"
+    assert_not_includes response.body, "https://eventim.example/sks-canceled-sold-out-message"
+  end
+
   test "show renders canceled note when imported primary offer is canceled" do
     event = Event.create!(
       slug: "show-canceled-imported-offer",
