@@ -327,7 +327,7 @@ module ApplicationHelper
     public_media_path(blob)
   end
 
-  def blog_post_cropped_image_style(blog_post, slot, frame_ratio:, lock_top: false)
+  def blog_post_cropped_image_style(blog_post, slot, frame_ratio:, lock_top: false, edge_lock_margin: nil)
     cropped_attachment_style(
       attachment: blog_post.public_send(slot),
       focus_x: blog_post.public_send("#{slot}_focus_x_value"),
@@ -335,6 +335,7 @@ module ApplicationHelper
       zoom: blog_post.public_send("#{slot}_zoom_value"),
       frame_ratio: frame_ratio,
       lock_top: lock_top,
+      edge_lock_margin: edge_lock_margin,
       fallback_style: focused_cropped_fallback_style(
         focus_x: blog_post.public_send("#{slot}_focus_x_value"),
         focus_y: blog_post.public_send("#{slot}_focus_y_value"),
@@ -393,7 +394,7 @@ module ApplicationHelper
     ].join("; ")
   end
 
-  def cropped_attachment_style(attachment:, focus_x:, focus_y:, zoom:, frame_ratio:, fallback_style:, lock_top: false)
+  def cropped_attachment_style(attachment:, focus_x:, focus_y:, zoom:, frame_ratio:, fallback_style:, lock_top: false, edge_lock_margin: nil)
     metadata = analyzed_attachment_metadata(attachment)
     image_width = metadata_value(metadata, :width).to_f
     image_height = metadata_value(metadata, :height).to_f
@@ -415,6 +416,7 @@ module ApplicationHelper
     offset_x = clamp_crop_offset(0.5 - (focus_x * width_factor), width_factor)
     offset_y = clamp_crop_offset(0.5 - (focus_y * height_factor), height_factor)
     offset_y = 0 if lock_top
+    offset_y = 0 if edge_lock_margin.present? && top_edge_within_margin?(offset_y, height_factor, edge_lock_margin)
 
     [
       "position: absolute",
@@ -452,6 +454,11 @@ module ApplicationHelper
 
   def clamp_crop_offset(offset, size_factor)
     [ [ offset, 0 ].min, 1 - size_factor ].max
+  end
+
+  def top_edge_within_margin?(offset_y, height_factor, edge_lock_margin)
+    crop_top = -offset_y / height_factor
+    crop_top <= edge_lock_margin.to_f
   end
 
   def formatted_organizer_notes_with_link(notes, event: nil)

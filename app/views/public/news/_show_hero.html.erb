@@ -16,12 +16,19 @@
   <% if presenter.hero_image? %>
     <div class="event-detail-image-wrap">
       <div class="event-detail-image-figure">
-        <%= image_tag presenter.hero_image_source,
-                      alt: presenter.hero_alt_text,
-                      class: "event-detail-image" %>
-        <% if presenter.hero_image_credit.present? %>
-          <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
-        <% end %>
+        <div class="event-detail-image-stage-shell">
+          <div class="event-detail-image-stage event-detail-image-stage-static" style="<%= presenter.hero_stage_style %>">
+            <picture class="event-detail-image-picture" style="<%= presenter.hero_picture_style %>">
+              <%= image_tag presenter.hero_image_source,
+                            alt: presenter.hero_alt_text,
+                            class: "event-detail-image",
+                            style: presenter.hero_image_style %>
+            </picture>
+          </div>
+          <% if presenter.hero_image_credit.present? %>
+            <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
+          <% end %>
+        </div>
       </div>
     </div>
   <% end %>

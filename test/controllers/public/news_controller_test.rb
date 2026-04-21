@@ -42,7 +42,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @live_post.teaser
     assert_includes response.body, @live_post.display_author_name
     assert_includes response.body, "alle news"
-    assert_select "h2", text: "Artikel"
+    assert_select "h2", text: "Artikel", count: 0
     assert_select ".event-detail-meta-line", text: /\d{2}\.\d{2}\.\d{4} von #{@live_post.display_author_name}/
   end
 
@@ -102,7 +102,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, expected_path
   end
 
-  test "show renders hero image with shared event detail figure markup and without crop inline styles" do
+  test "show renders hero image with shared event detail figure markup and crop inline styles" do
     @live_post.update!(cover_image_focus_x: 20, cover_image_focus_y: 80, cover_image_zoom: 180)
     @live_post.cover_image.attach(
       io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
@@ -114,10 +114,13 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-image-wrap .event-detail-image-figure", count: 1
-    assert_select ".event-detail-image-wrap .event-detail-image-frame", count: 0
-    assert_select ".event-detail-image-wrap img.event-detail-image:not([style])", count: 1
-    assert_no_match(/object-position:/, response.body)
-    assert_no_match(/transform: scale/, response.body)
+    assert_select ".event-detail-image-wrap .event-detail-image-stage", count: 1
+    assert_select ".event-detail-image-wrap .event-detail-image-picture img.event-detail-image[style*='object-fit: cover']", count: 1
+    assert_match(/object-fit: cover/, response.body)
+    assert_match(/left: 0%/, response.body)
+    assert_match(/top: -?\d+(\.\d+)?%/, response.body)
+    assert_match(/width: \d+(\.\d+)?%/, response.body)
+    assert_match(/height: \d+(\.\d+)?%/, response.body)
   end
 
   test "show renders seo tags and article schema" do
