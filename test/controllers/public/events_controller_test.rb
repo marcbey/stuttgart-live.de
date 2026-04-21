@@ -1299,7 +1299,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
           filename: "homepage-banner-large.png",
           content_type: "image/png"
         )
-        blog_post.update!(promotion_banner: true)
+        blog_post.update!(
+          promotion_banner: true,
+          promotion_banner_image_focus_x: 18,
+          promotion_banner_image_focus_y: 72,
+          promotion_banner_image_zoom: 145
+        )
 
         get events_url(filter: "all")
         expected_path = PublicMediaUrl.path_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
@@ -1319,6 +1324,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes promotion_banner_image["style"], "top:"
     assert_includes promotion_banner_image["style"], "width:"
     assert_includes promotion_banner_image["style"], "height:"
+    refute_match(/top:\s*0(?:\.0+)?%/, promotion_banner_image["style"])
   end
 
   test "homepage falls back to original news promotion banner image when optimized proxy path is unavailable" do
