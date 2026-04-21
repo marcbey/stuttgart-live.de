@@ -161,7 +161,8 @@ class Meta::AccessStatusTest < ActiveSupport::TestCase
 
     assert_predicate status, :error?
     assert_equal "error", status.connection_status
-    assert_match(/noch kein eindeutiger Instagram-Professional-Account ausgewählt/, status.summary)
+    assert_equal "Die Meta-Verbindung ist noch nicht vollständig konfiguriert.", status.summary
+    assert_includes status.details, "Bitte in Meta Publishing eine Facebook-Seite auswählen, die mit dem gewünschten Instagram-Professional-Account verknüpft ist."
   end
 
   private
