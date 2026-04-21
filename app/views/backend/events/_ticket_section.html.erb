@@ -50,13 +50,13 @@
       </div>
 
       <div class="editor-grid-span-full">
-        <label class="form-label" for="<%= dom_id(event, :sks_sold_out_message) %>">SKS Sonderlocke</label>
-        <%= text_field_tag "event[sks_sold_out_message]",
-                           event.sks_sold_out_message,
-                           id: dom_id(event, :sks_sold_out_message),
+        <label class="form-label" for="<%= dom_id(event, :ticket_special_note) %>">Ticket Sonderlocke</label>
+        <%= text_field_tag "event[ticket_special_note]",
+                           event.ticket_special_note,
+                           id: dom_id(event, :ticket_special_note),
                            form: editor_form_id,
                            class: "form-input" %>
-        <p class="form-hint">Wird bei ausverkauften SKS-Events auf der Event-Detailseite statt des Ticket-Links angezeigt.</p>
+        <p class="form-hint">Wird bei ausverkauften oder abgesagten Events auf der Event-Detailseite statt des Ticket-Links angezeigt.</p>
       </div>
     </div>
 

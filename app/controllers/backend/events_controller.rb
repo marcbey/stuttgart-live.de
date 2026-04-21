@@ -369,7 +369,7 @@ module Backend
         :instagram_url,
         :facebook_url,
         :youtube_url,
-        :sks_sold_out_message,
+        :ticket_special_note,
         :highlighted,
         :promotion_banner,
         :promotion_banner_kicker_text,

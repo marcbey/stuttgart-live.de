@@ -209,7 +209,7 @@ module Public
       end
 
       def show_ticket_panel?
-        show_ticket_link? || show_unavailable_note? || show_sks_sold_out_hint?
+        show_ticket_link? || show_unavailable_note? || show_ticket_special_note?
       end
 
       def show_ticket_cta?
@@ -258,8 +258,8 @@ module Public
         view_context.public_event_ticket_price(event, primary_offer, format: :detail)
       end
 
-      def sks_sold_out_message
-        event.sks_sold_out_message.to_s.presence
+      def ticket_special_note
+        event.ticket_special_note.to_s.presence
       end
 
       def sold_out_note_text
@@ -268,14 +268,14 @@ module Public
         event.public_ticket_status_label
       end
 
-      def show_sks_sold_out_hint?
-        event.public_ticket_status_offer&.sold_out? == true && event.sks_promoter? && sks_sold_out_message.present?
+      def show_ticket_special_note?
+        event.public_ticket_status_offer&.sold_out? == true && ticket_special_note.present?
       end
 
-      def sks_sold_out_hint_text
-        return unless show_sks_sold_out_hint?
+      def ticket_special_note_text
+        return unless show_ticket_special_note?
 
-        sks_sold_out_message
+        ticket_special_note
       end
 
       def visibility_badges
