@@ -276,7 +276,7 @@ module Backend::EventsHelper
     when "connected"
       "Verbunden"
     when "pending_selection"
-      "Page auswählen"
+      "Seite auswählen"
     when "expiring_soon"
       "Läuft bald ab"
     when "refresh_failed"

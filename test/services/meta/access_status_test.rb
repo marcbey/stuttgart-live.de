@@ -161,7 +161,7 @@ class Meta::AccessStatusTest < ActiveSupport::TestCase
 
     assert_predicate status, :error?
     assert_equal "error", status.connection_status
-    assert_match(/kein Instagram-Professional-Account/, status.summary)
+    assert_match(/noch kein eindeutiger Instagram-Professional-Account ausgewählt/, status.summary)
   end
 
   private

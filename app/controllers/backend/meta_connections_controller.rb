@@ -9,7 +9,7 @@ module Backend
     def start
       Meta::Onboarding::Configuration.new.ensure_configured!
 
-      authorization_url = Meta::Onboarding::InstagramAuthorizationUrlBuilder.new.call(
+      authorization_url = Meta::Onboarding::AuthorizationUrlBuilder.new.call(
         session:,
         redirect_uri: callback_url
       )
@@ -25,15 +25,23 @@ module Backend
         return
       end
 
-      connection = Meta::Onboarding::InstagramCallbackHandler.new.call(
+      connection = Meta::Onboarding::CallbackHandler.new.call(
         code: params[:code].to_s,
         state: params[:state].to_s,
         session:,
         redirect_uri: callback_url
       )
 
-      redirect_to edit_backend_settings_path(section: "meta_connection"),
-        notice: "Instagram-Verbindung wurde hergestellt. Facebook-Cross-Posting wird weiterhin ausschließlich direkt in Meta konfiguriert."
+      notice =
+        if connection.selected_facebook_page_target.present?
+          "Meta-Verbindung ist aktiv. Instagram-Professional-Account und Facebook-Seite wurden gespeichert."
+        elsif connection.selected_instagram_target.present?
+          "Meta-Verbindung wurde hergestellt. Instagram ist aktiv, für direktes Facebook-Publishing bitte noch eine Facebook-Seite auswählen."
+        else
+          "Meta-Verbindung wurde hergestellt. Für Publishing muss jetzt eine passende Facebook-Seite mit verknüpftem Instagram-Professional-Account ausgewählt werden."
+        end
+
+      redirect_to edit_backend_settings_path(section: "meta_connection"), notice: notice
     rescue Meta::Error => error
       redirect_to edit_backend_settings_path(section: "meta_connection"), alert: error.message
     end
@@ -74,7 +82,7 @@ module Backend
     private
 
     def callback_error_message
-      params[:error_description].to_s.strip.presence || "Instagram-Onboarding wurde abgebrochen."
+      params[:error_description].to_s.strip.presence || "Meta-Onboarding wurde abgebrochen."
     end
 
     def callback_url

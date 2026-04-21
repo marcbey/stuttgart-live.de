@@ -190,14 +190,29 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form##{ActionView::RecordIdentifier.dom_id(social_post, :caption_form)}" do
       assert_select "button", text: "Caption speichern", count: 0
       assert_select "button", text: "Veröffentlichen", count: 0
-      assert_select "button", text: "Instagram veröffentlichen", count: 0
+      assert_select "button", text: "Social-Post veröffentlichen", count: 0
     end
 
     assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(social_post, :caption_form)}']",
                   text: "Caption speichern",
                   count: 1
     assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, social_post)}'] button",
-                  text: "Instagram veröffentlichen",
+                  text: "Social-Post veröffentlichen",
+                  count: 1
+  end
+
+  test "social tab shows meta verbinden button when meta connection is invalid" do
+    sign_in_as(@user)
+
+    status = build_meta_access_status(state: :error, connection_status: "reauth_required", summary: "Meta-Token ist abgelaufen oder ungültig.")
+
+    with_stubbed_meta_social_state(status:, connection: nil) do
+      get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
+    end
+
+    assert_response :success
+    assert_select "#event-editor-panel-social a[href='#{start_backend_meta_connection_path}'][data-turbo='false']",
+                  text: "Meta verbinden",
                   count: 1
   end
 
@@ -2343,5 +2358,49 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     presenter.logo.attach(create_uploaded_blob(filename: "#{name.parameterize}.png"))
     presenter.save!
     presenter
+  end
+
+  def build_meta_access_status(state:, connection_status:, summary:, details: [])
+    Meta::AccessStatus::Status.new(
+      connection_status: connection_status,
+      state: state,
+      summary: summary,
+      details: details,
+      checked_at: Time.current,
+      expires_at: nil,
+      page_name: nil,
+      instagram_username: nil,
+      permissions: [],
+      debug_available: true,
+      reauth_required: state == :error,
+      payload: {}
+    )
+  end
+
+  def with_stubbed_meta_social_state(status:, connection:)
+    access_status_service = Object.new
+    access_status_service.define_singleton_method(:call) do |force: false|
+      status
+    end
+
+    resolver = Object.new
+    resolver.define_singleton_method(:connection) do
+      connection
+    end
+
+    with_singleton_return_value(Meta::AccessStatus, :new, access_status_service) do
+      with_singleton_return_value(Meta::ConnectionResolver, :new, resolver) do
+        yield
+      end
+    end
+  end
+
+  def with_singleton_return_value(target, method_name, value)
+    original_method = target.method(method_name)
+
+    target.define_singleton_method(method_name) { value }
+    yield
+  ensure
+    target.define_singleton_method(method_name, original_method)
   end
 end

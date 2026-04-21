@@ -2,8 +2,8 @@ module Meta
   module Onboarding
     class Configuration
       def initialize(
-        app_id: AppConfig.meta_instagram_app_id,
-        app_secret: AppConfig.meta_instagram_app_secret,
+        app_id: AppConfig.meta_app_id.presence || AppConfig.meta_instagram_app_id,
+        app_secret: AppConfig.meta_app_secret.presence || AppConfig.meta_instagram_app_secret,
         credentials: Rails.application.credentials
       )
         @app_id = app_id.to_s.strip
@@ -12,8 +12,8 @@ module Meta
       end
 
       def ensure_configured!
-        raise Error, "meta.instagram_app_id ist nicht konfiguriert." if app_id.blank?
-        raise Error, "meta.instagram_app_secret ist nicht konfiguriert." if app_secret.blank?
+        raise Error, "meta.app_id oder meta.instagram_app_id ist nicht konfiguriert." if app_id.blank?
+        raise Error, "meta.app_secret oder meta.instagram_app_secret ist nicht konfiguriert." if app_secret.blank?
         raise Error, "active_record_encryption ist nicht vollständig konfiguriert." unless active_record_encryption_configured?
       end
 

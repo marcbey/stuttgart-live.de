@@ -109,7 +109,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "publishing", social_post.status
       assert_nil social_post.approved_at
       follow_redirect!
-      assert_match "Instagram-Post wird im Hintergrund veröffentlicht.", response.body
+      assert_match "Social-Post wird im Hintergrund veröffentlicht.", response.body
     end
   end
 
@@ -133,7 +133,30 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_nil social_post.approved_by
       assert_nil social_post.published_by
       follow_redirect!
-      assert_match "Instagram-Post wird im Hintergrund veröffentlicht.", response.body
+      assert_match "Social-Post wird im Hintergrund veröffentlicht.", response.body
+    end
+  end
+
+  test "quick publish creates a facebook mirror when a facebook page is selected" do
+    create_dual_publish_connection!
+    access_status = StubMetaAccessStatus.new
+
+    with_stubbed_meta_access_status(access_status) do
+      assert_difference -> { @event.event_social_posts.count }, 2 do
+        assert_enqueued_jobs 1, only: Meta::PublishEventSocialPostJob do
+          post quick_publish_backend_event_event_social_posts_url(@event), params: {
+            inbox_status: "published"
+          }
+        end
+      end
+
+      instagram_post = @event.event_social_posts.find_by!(platform: "instagram")
+      facebook_post = @event.event_social_posts.find_by!(platform: "facebook")
+
+      assert_equal "publishing", instagram_post.status
+      assert_equal "publishing", facebook_post.status
+      assert_equal instagram_post.caption, facebook_post.caption
+      assert_equal instagram_post.publish_image_instagram_url, facebook_post.image_url
     end
   end
 
@@ -185,7 +208,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "publishing", social_post.status
       assert_equal social_post, @event.event_social_posts.find_by!(platform: "instagram")
       follow_redirect!
-      assert_match "Instagram-Post wird im Hintergrund veröffentlicht.", response.body
+      assert_match "Social-Post wird im Hintergrund veröffentlicht.", response.body
     end
   end
 
@@ -296,6 +319,37 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
   ensure
     Meta.send(:remove_const, :AccessStatus)
     Meta.const_set(:AccessStatus, META_ACCESS_STATUS_CLASS)
+  end
+
+  def create_dual_publish_connection!
+    connection = SocialConnection.create!(
+      provider: "meta",
+      auth_mode: "facebook_login_for_business",
+      connection_status: "connected",
+      user_access_token: "user-token",
+      user_token_expires_at: 40.days.from_now,
+      granted_scopes: %w[pages_show_list pages_read_engagement pages_manage_posts instagram_basic instagram_content_publish]
+    )
+    facebook_target = connection.social_connection_targets.create!(
+      target_type: "facebook_page",
+      external_id: "page-123",
+      name: "Test SL",
+      access_token: "page-token",
+      selected: true,
+      status: "selected",
+      metadata: {
+        "instagram_account_id" => "ig-123",
+        "instagram_username" => "sl_test_26"
+      }
+    )
+    connection.social_connection_targets.create!(
+      target_type: "instagram_account",
+      external_id: "ig-123",
+      username: "sl_test_26",
+      parent_target: facebook_target,
+      selected: true,
+      status: "selected"
+    )
   end
 
   class StubMetaAccessStatus

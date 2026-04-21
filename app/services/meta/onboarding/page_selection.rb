@@ -23,7 +23,11 @@ module Meta
             selected: true,
             status: "selected",
             last_synced_at: Time.current,
-            last_error: nil
+            last_error: nil,
+            metadata: facebook_target.metadata.to_h.merge(
+              "instagram_account_id" => instagram_payload["id"].to_s.strip.presence,
+              "instagram_username" => instagram_payload["username"].to_s.strip.presence
+            ).compact
           )
 
           upsert_instagram_target!(

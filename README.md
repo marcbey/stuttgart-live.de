@@ -159,9 +159,9 @@ Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In dies
 
 ### Wie Social-Publishing für Events funktioniert
 
-Das Backend unterstützt einen bewusst einfachen Instagram-first-Draft-und-Publish-Workflow für Social-Posts. Pro Event gibt es operativ genau einen aktiven `EventSocialPost` für `instagram`. Historische `facebook`-Records können in der Datenbank weiter existieren, werden aber nicht mehr aktiv aus dem Backend gesteuert.
+Das Backend unterstützt einen Instagram-zentrierten Draft-und-Publish-Workflow für Social-Posts. Die Redaktion bearbeitet pro Event genau einen Instagram-Haupt-Draft. Wenn in `Meta Publishing` zusätzlich eine Facebook-Seite ausgewählt ist, erzeugt die App intern einen gekoppelten Facebook-Spiegel-Post und veröffentlicht beim Publish direkt auf **Instagram und Facebook**.
 
-Die Meta-Verbindung wird dabei nicht mehr über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über einen persistierten Onboarding- und Lifecycle-Flow im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin den gewünschten Instagram-Professional-Account direkt über Instagram Login. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
+Die Meta-Verbindung wird dabei nicht über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über einen persistierten Onboarding- und Lifecycle-Flow im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Meta so, dass sowohl der gewünschte Instagram-Professional-Account als auch optional eine Facebook-Seite für direktes Publishing verfügbar sind. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
 
 Für den OAuth-Callback kann optional eine feste Redirect-URL über `meta.instagram_redirect_uri` bzw. `META_INSTAGRAM_REDIRECT_URI` gesetzt werden. Das ist vor allem hilfreich, wenn der Login lokal gestartet wird, Meta aber nur einen öffentlichen HTTPS-Callback wie `https://stuttgart-live.schopp3r.de/backend/meta_connection/callback` akzeptieren soll.
 
@@ -169,10 +169,10 @@ Sobald eine feste Redirect-URL gesetzt ist, muss der Connect-Flow auch auf genau
 
 Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
-1. Zuerst wird ein Instagram-Draft erzeugt oder neu generiert.
+1. Zuerst wird ein Social-Draft erzeugt oder neu generiert.
 2. Der Draft baut serverseitig eine Caption aus Eventdaten und wählt ein öffentlich erreichbares Bild.
 3. Caption sowie die beiden Bildtext-Zeilen für Artist und Meta-Zeile können danach manuell angepasst werden.
-4. Die Veröffentlichung läuft direkt aus dem Draft zu Instagram und speichert Status, Fehler und externe IDs am `EventSocialPost`.
+4. Die Veröffentlichung läuft direkt aus dem Draft zu Instagram und bei aktiver Facebook-Seite zusätzlich direkt zu Facebook. Status, Fehler und externe IDs werden getrennt pro Plattform am jeweiligen `EventSocialPost` gespeichert.
 
 Wichtig für die Generierung:
 
@@ -186,7 +186,8 @@ Wichtig für die Veröffentlichung:
 
 - Gesendet werden nur Events, die bereits öffentlich live sind. Ein geplantes `published_at` in der Zukunft reicht nicht.
 - Instagram wird über den direkt verbundenen persistierten Instagram-Professional-Account per Media-Container und anschließendem `media_publish` veröffentlicht.
-- Optionales Facebook-Sharing läuft ausschließlich als extern konfigurierte Cross-Post-Einstellung in Meta; die App verfolgt oder prüft diesen Schritt nicht.
+- Wenn eine Facebook-Seite in `Meta Publishing` ausgewählt ist, veröffentlicht die App denselben Post zusätzlich direkt über die Facebook-Graph-API auf dieser Seite.
+- Ist Facebook als aktives Ziel konfiguriert, blockiert ein Facebook-/Token-/Seitenfehler den gesamten Publish schon vor dem Enqueue.
 - Fehlgeschlagene Posts bleiben sichtbar und können nach einer Korrektur der Konfiguration erneut gesendet werden.
 
 Wichtig für Betrieb und Architektur:
@@ -471,18 +472,20 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 
 ### Meta-Setup für Social-Publishing
 
-Damit Instagram-Posts aus dem Backend funktionieren, muss das externe Meta-Setup zur hinterlegten App und den Ziel-Accounts passen:
+Damit Social-Posts aus dem Backend zuverlässig auf Instagram und optional zusätzlich auf Facebook funktionieren, muss das externe Meta-Setup zur hinterlegten App und den Ziel-Accounts passen:
 
 - ein Instagram-Professional-Konto, also `Business` oder `Creator`
-- eine konfigurierte Meta-App mit Zugriff auf die Instagram API with Instagram Login
+- eine konfigurierte Meta-App mit Zugriff auf Facebook Pages und Instagram Content Publishing
 - gültige App-Konfiguration für den serverseitigen OAuth- und Token-Refresh-Flow
-- ein im Backend erfolgreich durchlaufener Instagram-Login-Connect-Flow
+- ein im Backend erfolgreich durchlaufener Meta-Connect-Flow
+- optional eine ausgewählte Facebook-Seite, die direkt mit dem gewünschten Instagram-Professional-Account verknüpft ist
 
 Die Anwendung erwartet aktuell genau eine globale Meta-Verbindung. Es gibt also keinen OAuth-Connect-Flow pro Redaktionsnutzer und keine parallele Auswahl mehrerer aktiver Publish-Ziele im Backend.
 
 Wenn ein Token rotiert oder die Berechtigungen ungültig werden, reicht es in der Regel, die Verbindung im Backend neu aufzubauen und anschließend einen Test-Post erneut zu senden.
 
-Im Social-Tab prüft die App die Meta-Verbindung zusätzlich aktiv gegen die Graph API. Dadurch werden abgelaufene oder falsch berechtigte Tokens schon vor dem Enqueue eines Publish-Jobs sichtbar. Ob Instagram-Posts zusätzlich nach Facebook geteilt werden, bleibt eine separate Meta-Einstellung und wird von der App nicht verifiziert.
+Im Social-Tab prüft die App die Meta-Verbindung zusätzlich aktiv gegen die Graph API. Dadurch werden abgelaufene oder falsch berechtigte Tokens schon vor dem Enqueue eines Publish-Jobs sichtbar. Direktes Facebook-Publishing ist nur aktiv, wenn in `Meta Publishing` genau eine passende Facebook-Seite ausgewählt ist. Bestehende reine `instagram_login`-Verbindungen können weiter auf Instagram veröffentlichen, benötigen für direktes Facebook-Publishing aber einen Reconnect im erweiterten Connect-Flow.
+Wenn gar keine gültige Meta-Verbindung mehr vorhanden ist, zeigt der Social-Tab zusätzlich direkt einen `Meta verbinden`-Button, damit der Reconnect ohne Umweg über die Einstellungen gestartet werden kann.
 
 Beim Erzeugen eines Social-Drafts rendert die App zusätzlich ein eigenes Kartenbild im Highlight-Stil aus dem ausgewählten Eventbild:
 

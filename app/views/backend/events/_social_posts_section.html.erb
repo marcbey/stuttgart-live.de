@@ -1,12 +1,15 @@
 <% inbox_status = local_assigns[:filter_status] %>
 <% meta_access_status = Meta::AccessStatus.new.call %>
+<% meta_connection = Meta::ConnectionResolver.new.connection %>
+<% facebook_page_target = meta_connection&.selected_facebook_page_target %>
+<% show_meta_connect_button = meta_connection.blank? || meta_access_status.error? %>
 
 <div class="backend-section-stack">
   <section class="backend-section backend-section-compact">
     <div class="backend-section-header">
       <div>
-        <h3>Instagram Publishing</h3>
-        <p>Instagram-Draft bearbeiten und direkt veröffentlichen. Facebook wird nur über Meta-Cross-Post außerhalb der App bedient.</p>
+        <h3>Social Publishing</h3>
+        <p>Instagram-Draft bearbeiten und direkt veröffentlichen. Wenn eine Facebook-Seite in Meta Publishing ausgewählt ist, wird derselbe Post zusätzlich direkt auf Facebook veröffentlicht.</p>
       </div>
     </div>
 
@@ -29,7 +32,11 @@
           <div class="form-hint">Token-Ablauf: <%= l(meta_access_status.expires_at, format: "%d.%m.%Y %H:%M") %></div>
         <% end %>
         <div class="form-hint">Zuletzt geprüft: <%= l(meta_access_status.checked_at, format: "%d.%m.%Y %H:%M") %></div>
-        <div class="form-hint">Hinweis: Ob Instagram-Posts zusätzlich nach Facebook geteilt werden, wird in Meta konfiguriert und hier nicht geprüft.</div>
+        <% if facebook_page_target.present? %>
+          <div class="form-hint">Direktes Facebook-Publishing ist aktiv für <strong><%= facebook_page_target.display_name %></strong>.</div>
+        <% else %>
+          <div class="form-hint">Es ist aktuell keine Facebook-Seite für direktes Facebook-Publishing ausgewählt.</div>
+        <% end %>
         <% if meta_access_status.details.any? %>
           <ul class="social-post-health-list">
             <% meta_access_status.details.each do |detail| %>
@@ -37,11 +44,20 @@
             <% end %>
           </ul>
         <% end %>
+        <% if show_meta_connect_button %>
+          <div class="social-post-action-row">
+            <%= link_to "Meta verbinden",
+                        start_backend_meta_connection_path,
+                        class: "button button-save-primary button-compact",
+                        data: { turbo: false } %>
+          </div>
+        <% end %>
       </div>
     </div>
 
     <div class="backend-section-body social-post-platform-grid">
       <% social_post = event.instagram_social_post %>
+      <% facebook_post = event.social_post_for("facebook") %>
       <% editable = social_post&.caption_editable? %>
       <% caption_form_id = social_post.present? ? dom_id(social_post, :caption_form) : nil %>
 
@@ -130,7 +146,7 @@
                                  class: "button button-secondary button-compact" %>
                 <% end %>
                 <% unless social_post.publishing? %>
-                  <%= button_to(social_post.published? ? "Instagram erneut veröffentlichen" : "Instagram veröffentlichen",
+                  <%= button_to(social_post.published? ? "Social-Post erneut veröffentlichen" : "Social-Post veröffentlichen",
                                 publish_backend_event_event_social_post_path(event, social_post),
                                 method: :post,
                                 params: { inbox_status: inbox_status },
@@ -150,6 +166,79 @@
             </div>
           </div>
         <% end %>
+      </article>
+
+      <article class="social-post-card">
+        <div class="backend-section-header backend-section-header-with-actions social-post-card-header">
+          <div>
+            <h3>Facebook</h3>
+            <% if facebook_page_target.present? %>
+              <p>Zielseite: <strong><%= facebook_page_target.display_name %></strong></p>
+            <% else %>
+              <p>Direktes Facebook-Publishing ist nicht konfiguriert.</p>
+            <% end %>
+          </div>
+          <% if facebook_post.present? %>
+            <div class="backend-section-header-actions">
+              <span class="<%= event_social_post_status_badge_class(facebook_post) %>"><%= event_social_post_status_label(facebook_post) %></span>
+            </div>
+          <% end %>
+        </div>
+
+        <div class="social-post-card-body">
+          <div class="social-post-preview">
+            <% preview_url = social_post&.publish_image_instagram_url.presence || facebook_post&.image_url %>
+            <% if preview_url.present? %>
+              <img src="<%= preview_url %>"
+                   alt="Facebook Vorschau"
+                   class="social-post-preview-image">
+            <% else %>
+              <div class="social-post-preview-empty">Kein Bild verfügbar.</div>
+            <% end %>
+          </div>
+
+          <div class="social-post-form-column">
+            <% if facebook_page_target.present? %>
+              <div class="social-post-form-field">
+                <label class="form-label">Publish-Modus</label>
+                <p class="form-hint">Wird automatisch zusammen mit dem Instagram-Haupt-Post veröffentlicht.</p>
+              </div>
+            <% else %>
+              <div class="social-post-form-field">
+                <label class="form-label">Status</label>
+                <p class="form-hint">In Meta Publishing eine Facebook-Seite auswählen, um zusätzlich direkt auf Facebook zu veröffentlichen.</p>
+              </div>
+            <% end %>
+
+            <% if facebook_post&.error_message.present? %>
+              <div class="flash flash-alert">
+                <strong>Letzter Fehler:</strong>
+                <div><%= facebook_post.error_message %></div>
+              </div>
+            <% end %>
+
+            <div class="social-post-meta-list">
+              <% if facebook_post&.published_at.present? %>
+                <div>
+                  <span class="form-label">Zuletzt gesendet</span>
+                  <p><%= l(facebook_post.published_at, format: "%d.%m.%Y %H:%M") %><% if facebook_post.published_by&.name.present? %> · <%= facebook_post.published_by.name %><% end %></p>
+                </div>
+              <% end %>
+              <% if facebook_post&.published_post_url.present? %>
+                <div>
+                  <span class="form-label">Facebook-Post</span>
+                  <p><%= link_to "Beitrag öffnen", facebook_post.published_post_url, target: "_blank", rel: "noopener" %></p>
+                </div>
+              <% end %>
+              <% if facebook_post.present? && social_post.present? %>
+                <div>
+                  <span class="form-label">Content</span>
+                  <p>Verwendet denselben Caption-Text und dasselbe Bild wie Instagram.</p>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
       </article>
     </div>
   </section>

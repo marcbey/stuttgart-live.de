@@ -40,6 +40,55 @@ class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
     assert_equal "sl_test_26", status.instagram_username
   end
 
+  test "allows instagram publishing while warning that a facebook page still needs to be selected" do
+    connection = SocialConnection.create!(
+      provider: "meta",
+      auth_mode: "facebook_login_for_business",
+      connection_status: "pending_selection",
+      user_access_token: "user-token",
+      user_token_expires_at: 40.days.from_now,
+      granted_scopes: %w[pages_show_list pages_read_engagement pages_manage_posts instagram_basic instagram_content_publish]
+    )
+    connection.social_connection_targets.create!(
+      target_type: "instagram_account",
+      external_id: "ig-123",
+      username: "sl_test_26",
+      selected: true,
+      status: "selected"
+    )
+
+    health_check = Meta::ConnectionHealthCheck.new(
+      http_client: StubHttpClient.new(
+        "https://graph.facebook.com/v25.0/debug_token" => {
+          "data" => {
+            "is_valid" => true,
+            "expires_at" => 40.days.from_now.to_i,
+            "scopes" => %w[pages_show_list pages_read_engagement pages_manage_posts instagram_basic instagram_content_publish]
+          }
+        }
+      ),
+      page_catalog_fetcher: StubPageCatalogFetcher.new(
+        [
+          Meta::PageCatalogFetcher::PageAccount.new(
+            page_id: "page-123",
+            page_name: "Test SL",
+            page_access_token: "page-token",
+            instagram_account_id: "ig-123",
+            instagram_username: "sl_test_26"
+          )
+        ]
+      ),
+      token_refresher: StubTokenRefresher.new
+    )
+
+    status = health_check.call(connection:)
+
+    assert_predicate status, :warning?
+    assert_equal "pending_selection", status.connection_status
+    assert_equal "Instagram-Verbindung ist gültig. Für direktes Facebook-Publishing ist noch keine Facebook-Seite ausgewählt.", status.summary
+    assert_equal "sl_test_26", status.instagram_username
+  end
+
   test "refreshes an expiring user token and updates discovered page tokens" do
     connection = SocialConnection.create!(
       provider: "meta",
@@ -126,6 +175,13 @@ class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
       selected: true,
       status: "selected"
     )
+    connection.social_connection_targets.create!(
+      target_type: "instagram_account",
+      external_id: "ig-123",
+      username: "sl_test_26",
+      selected: true,
+      status: "selected"
+    )
 
     health_check = Meta::ConnectionHealthCheck.new(
       http_client: StubHttpClient.new(
@@ -149,7 +205,7 @@ class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
 
     assert_predicate status, :error?
     assert_equal "error", status.connection_status
-    assert_equal "Instagram-Publishing ist im Legacy-Facebook-Flow nicht möglich, weil zur ausgewählten Facebook-Seite kein Instagram-Professional-Account verknüpft ist.", status.summary
+    assert_equal "Die ausgewählte Facebook-Seite ist nicht mit einem Instagram-Professional-Account verknüpft.", status.summary
   end
 
   private

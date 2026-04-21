@@ -1,19 +1,15 @@
 <% connection = @meta_connection %>
 <% access_status = @meta_access_status %>
-<% page_targets = if connection&.facebook_login_for_business?
-                    connection.social_connection_targets.facebook_pages.includes(:child_targets).order(:name, :external_id)
-                  else
-                    []
-                  end %>
+<% page_targets = connection&.social_connection_targets&.facebook_pages&.order(:name, :external_id) || [] %>
 
 <section class="backend-section backend-section-compact">
   <div class="backend-section-header">
     <div>
       <h2>Meta Publishing</h2>
-      <p>Instagram-Publishing mit Instagram Login. Facebook läuft optional nur über Cross-Post aus Meta heraus.</p>
+      <p>Instagram- und optionales direktes Facebook-Publishing über eine gemeinsame Meta-Verbindung.</p>
     </div>
     <div class="backend-section-header-actions">
-      <%= link_to "Instagram verbinden",
+      <%= link_to "Meta verbinden",
                   start_backend_meta_connection_path,
                   class: "button button-save-primary button-compact",
                   data: { turbo: false } %>
@@ -56,8 +52,8 @@
           </div>
         <% end %>
         <div>
-          <span class="form-label">Facebook-Cross-Post</span>
-          <p>Wird von der App nicht geprüft oder gesteuert. Falls gewünscht, direkt in Meta konfigurieren.</p>
+          <span class="form-label">Direktes Facebook-Publishing</span>
+          <p><%= connection&.selected_facebook_page_target.present? ? "Aktiv für #{connection.selected_facebook_page_target.display_name}." : "Noch nicht aktiv. Dafür muss eine Facebook-Seite ausgewählt werden." %></p>
         </div>
         <% if connection&.connected_at.present? %>
           <div>
@@ -101,13 +97,21 @@
     </div>
   </div>
 
+  <% if connection&.instagram_login? %>
+    <div class="backend-section-body">
+      <div class="flash flash-alert">
+        <strong>Reconnect nötig für direktes Facebook-Publishing</strong>
+        <div>Diese Verbindung stammt noch aus dem reinen Instagram-Login-Flow. Instagram-Publishing funktioniert weiter, für zusätzliches direktes Facebook-Publishing bitte die Meta-Verbindung neu aufbauen.</div>
+      </div>
+    </div>
+  <% end %>
+
   <% if page_targets.any? %>
     <div class="backend-section-body">
-      <h3>Legacy-Facebook-Verbindung</h3>
-      <p class="form-hint">Diese Auswahl wird nur noch für bestehende Legacy-Verbindungen mit `facebook_login_for_business` benötigt. Neue Verbindungen laufen direkt über Instagram Login ohne Facebook-Seitenauswahl.</p>
+      <h3>Facebook-Seitenauswahl</h3>
+      <p class="form-hint">Für direktes Facebook-Publishing muss genau eine Facebook-Seite ausgewählt sein, die mit dem gewünschten Instagram-Professional-Account verknüpft ist.</p>
       <div class="social-post-platform-grid">
         <% page_targets.each do |target| %>
-          <% instagram_target = target.child_targets.find(&:instagram_account?) %>
           <article class="social-post-card">
             <div class="backend-section-header backend-section-header-with-actions">
               <div>
@@ -119,8 +123,8 @@
                 </p>
               </div>
               <div class="backend-section-header-actions">
-                <% unless target.selected? %>
-                  <%= button_to "Legacy-Seite verbinden",
+                <% if target.metadata["instagram_account_id"].present? && !connection&.instagram_login? && !target.selected? %>
+                  <%= button_to "Seite auswählen",
                                 select_target_backend_meta_connection_path(target_id: target.id),
                                 method: :patch,
                                 class: "button button-secondary button-compact" %>
@@ -136,8 +140,8 @@
                 </div>
                 <div>
                   <span class="form-label">Instagram</span>
-                  <% if instagram_target.present? %>
-                    <p>@<%= instagram_target.username.presence || instagram_target.external_id %></p>
+                  <% if target.metadata["instagram_account_id"].present? %>
+                    <p>@<%= target.metadata["instagram_username"].presence || target.metadata["instagram_account_id"] %></p>
                   <% else %>
                     <p class="form-hint">Kein verknüpfter Instagram Professional Account gefunden.</p>
                   <% end %>
