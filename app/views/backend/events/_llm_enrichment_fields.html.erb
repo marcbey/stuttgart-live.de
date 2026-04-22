@@ -80,7 +80,7 @@
             <div class="backend-section-body">
               <div class="editor-grid">
                 <div>
-                  <%= form.label :venue_external_url, "Venue-Link", class: "form-label" %>
+                  <%= llm_enrichment_link_label_row(form, :venue_external_url, "Venue-Link") %>
                   <%= form.url_field :venue_external_url, class: "form-input", form: editor_form_id %>
                 </div>
                 <div>
@@ -98,19 +98,19 @@
             <div class="backend-section-body">
               <div class="editor-grid">
                 <div>
-                  <%= form.label :youtube_link, "YouTube-Link", class: "form-label" %>
+                  <%= llm_enrichment_link_label_row(form, :youtube_link, "YouTube-Link") %>
                   <%= form.url_field :youtube_link, class: "form-input", form: editor_form_id %>
                 </div>
                 <div>
-                  <%= form.label :instagram_link, "Instagram-Link", class: "form-label" %>
+                  <%= llm_enrichment_link_label_row(form, :instagram_link, "Instagram-Link") %>
                   <%= form.url_field :instagram_link, class: "form-input", form: editor_form_id %>
                 </div>
                 <div>
-                  <%= form.label :homepage_link, "Homepage-Link", class: "form-label" %>
+                  <%= llm_enrichment_link_label_row(form, :homepage_link, "Homepage-Link") %>
                   <%= form.url_field :homepage_link, class: "form-input", form: editor_form_id %>
                 </div>
                 <div>
-                  <%= form.label :facebook_link, "Facebook-Link", class: "form-label" %>
+                  <%= llm_enrichment_link_label_row(form, :facebook_link, "Facebook-Link") %>
                   <%= form.url_field :facebook_link, class: "form-input", form: editor_form_id %>
                 </div>
               </div>

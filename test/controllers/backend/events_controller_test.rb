@@ -232,6 +232,26 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Quelle: easyticket"
   end
 
+  test "show renders external link shortcuts for event and ticket urls" do
+    sign_in_as(@user)
+
+    @published_event.update!(
+      youtube_url: "https://youtube.example/watch?v=demo",
+      homepage_url: "https://homepage.example/artist",
+      instagram_url: "https://instagram.example/artist",
+      facebook_url: "https://facebook.example/artist"
+    )
+
+    get backend_event_url(@published_event, status: "published")
+
+    assert_response :success
+    assert_select ".form-label-link[aria-label='YouTube URL öffnen'][href='https://youtube.example/watch?v=demo'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='Homepage URL öffnen'][href='https://homepage.example/artist'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='Instagram URL öffnen'][href='https://instagram.example/artist'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='Facebook URL öffnen'][href='https://facebook.example/artist'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='Ticket-URL öffnen'][href='https://example.com/tickets/published'][target='_blank']", count: 1
+  end
+
   test "show renders sold out label from event sold_out" do
     sign_in_as(@user)
     event_offers(:published_one_offer).update!(sold_out: true)
@@ -1602,6 +1622,28 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "textarea[name='event[llm_enrichment_attributes][artist_description]']", count: 0
     assert_includes response.body, "&quot;event_description&quot;: &quot;LLM Event Beschreibung&quot;"
     assert_includes response.body, "&quot;genre&quot;: ["
+  end
+
+  test "editor shows llm enrichment link shortcuts for social links" do
+    sign_in_as(@user)
+
+    enrichment = create_llm_enrichment(event: @published_event)
+    enrichment.update!(
+      venue_external_url: "https://venue.example/artist",
+      youtube_link: "https://youtube.example/watch?v=demo",
+      instagram_link: "https://instagram.example/artist",
+      homepage_link: "https://homepage.example/artist",
+      facebook_link: "https://facebook.example/artist"
+    )
+
+    get backend_event_url(@published_event, editor_tab: "llm_enrichment")
+
+    assert_response :success
+    assert_select ".form-label-link[aria-label='Venue-Link öffnen'][href='https://venue.example/artist'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='YouTube-Link öffnen'][href='https://youtube.example/watch?v=demo'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='Instagram-Link öffnen'][href='https://instagram.example/artist'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='Homepage-Link öffnen'][href='https://homepage.example/artist'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='Facebook-Link öffnen'][href='https://facebook.example/artist'][target='_blank']", count: 1
   end
 
   test "editor shows event image and slider tabs without llm enrichment" do

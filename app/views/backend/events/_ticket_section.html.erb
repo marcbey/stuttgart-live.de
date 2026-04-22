@@ -29,7 +29,11 @@
       </div>
 
       <div>
-        <label class="form-label" for="<%= dom_id(event, :ticket_url) %>">Ticket-URL</label>
+        <%= external_link_label_row(
+          label_html: label_tag(dom_id(event, :ticket_url), "Ticket-URL", class: "form-label"),
+          url: display_ticket_url,
+          text: "Ticket-URL"
+        ) %>
         <% if read_only_import_offer %>
           <%= url_field_tag "event[ticket_url]",
                             event_display_ticket_url(event),

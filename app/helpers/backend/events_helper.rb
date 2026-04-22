@@ -168,6 +168,62 @@ module Backend::EventsHelper
     "Letzter LLM-Enrichment-Run: #{day_name}, #{l(timestamp, format: "%d.%m.%Y %H:%M")}"
   end
 
+  def external_link_label_row(label_html:, url:, text:)
+    content_tag(:div, class: "form-label-row") do
+      parts = [ label_html ]
+
+      if (external_url = url.to_s.strip.presence).present?
+        parts << link_to(external_url,
+                         class: "form-label-link",
+                         target: "_blank",
+                         rel: "noopener",
+                         title: "#{text} öffnen",
+                         aria: { label: "#{text} öffnen" }) do
+          tag.svg(viewBox: "0 0 20 20", aria: { hidden: "true" }, focusable: "false") do
+            safe_join([
+              tag.path(
+                d: "M11.75 4.25h4v4",
+                fill: "none",
+                stroke: "currentColor",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                "stroke-width": "1.5"
+              ),
+              tag.path(
+                d: "M15.75 4.25 8.5 11.5",
+                fill: "none",
+                stroke: "currentColor",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                "stroke-width": "1.5"
+              ),
+              tag.path(
+                d: "M9.25 5.25h-3.5A1.5 1.5 0 0 0 4.25 6.75v7.5a1.5 1.5 0 0 0 1.5 1.5h7.5a1.5 1.5 0 0 0 1.5-1.5v-3.5",
+                fill: "none",
+                stroke: "currentColor",
+                "stroke-linecap": "round",
+                "stroke-linejoin": "round",
+                "stroke-width": "1.5"
+              )
+            ])
+          end
+        end
+      end
+
+      safe_join(parts)
+    end
+  end
+
+  def form_external_link_label_row(form, attribute, text)
+    external_link_label_row(
+      label_html: form.label(attribute, text, class: "form-label"),
+      url: form.object.public_send(attribute),
+      text: text
+    )
+  end
+
+  alias_method :llm_enrichment_link_label_row, :form_external_link_label_row
+
   def preuploaded_blob_from_signed_id(signed_id)
     return if signed_id.blank?
 
