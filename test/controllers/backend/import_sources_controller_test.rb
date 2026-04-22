@@ -465,15 +465,16 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_import_run_row_in_response(existing_run)
   end
 
-  test "should render llm enrichment button on index" do
+  test "should render llm enrichment actions on index without rerun button" do
     get backend_import_sources_url
 
     assert_response :success
     assert_includes response.body, "LLM-Enrichment starten"
-    assert_includes response.body, "Zukünftige Events neu anreichern"
+    assert_not_includes response.body, "Zukünftige Events neu anreichern"
     assert_includes response.body, "Edit"
     assert_select "a[href='#{edit_backend_settings_path(section: :llm_enrichment)}']", text: "Edit"
-    assert_select "form[action='#{rerun_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}'] .button-save-primary", text: "Zukünftige Events neu anreichern"
+    assert_select "form[action='#{run_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}'] .button", text: "LLM-Enrichment starten"
+    assert_select "form[action='#{rerun_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}']", count: 0
   end
 
   test "should render llm genre grouping button on index" do
