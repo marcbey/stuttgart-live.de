@@ -48,7 +48,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Review Artist"
     assert_not_includes response.body, "event-card-status-select"
     assert_select ".event-card-genre", count: 0
-    assert_select ".genre-lane-section", count: 0
+    assert_select ".lane-header.lane-header--genre", count: 0
   end
 
   test "index renders configured homepage genre lanes in priority order" do
@@ -184,7 +184,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select ".genre-lane-section", count: 0
+    assert_select ".lane-header.lane-header--genre", count: 0
   end
 
   test "index renders a pop lane on the homepage even when it is not selected in the lane configuration" do
@@ -467,6 +467,85 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".lane-header.lane-header--tagestipp .lane-header-title", text: "Tagestipp"
     assert_select "#lane-event-grid .genre-lane-card-name", text: today_event.artist_name
+  end
+
+  test "russ live lane renders with highlights look and only public future russ live events" do
+    visible_russ_live = Event.create!(
+      slug: "lane-page-russ-live-visible",
+      source_fingerprint: "test::public::lane-page::russ-live::visible",
+      title: "RUSS Live Visible",
+      artist_name: "RUSS Live Visible Artist",
+      promoter_id: "382",
+      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "lane-page-russ-live-other-promoter",
+      source_fingerprint: "test::public::lane-page::russ-live::other-promoter",
+      title: "Other Promoter",
+      artist_name: "Other Promoter Artist",
+      promoter_id: "99999",
+      start_at: 15.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "lane-page-russ-live-past",
+      source_fingerprint: "test::public::lane-page::russ-live::past",
+      title: "Past Russ Live",
+      artist_name: "Past Russ Live Artist",
+      promoter_id: "382",
+      start_at: 2.days.ago.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 3.days.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "lane-page-russ-live-unpublished",
+      source_fingerprint: "test::public::lane-page::russ-live::unpublished",
+      title: "Unpublished Russ Live",
+      artist_name: "Unpublished Russ Live Artist",
+      promoter_id: "382",
+      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "ready_for_publish",
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+
+    get "/russ-live"
+
+    assert_response :success
+    assert_select "section.lane-page-section.search-results-section", count: 1
+    assert_select ".lane-header.lane-header--highlights .lane-header-title", text: "RUSS Live"
+    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 1
+    assert_select "#russ-live-grid.lane-page-grid", count: 1
+    assert_select "#russ-live-grid article.event-card", count: 1
+    assert_select "#russ-live-grid .event-card-copy h2", text: visible_russ_live.artist_name
+    assert_select ".section-slider-list[hidden]", count: 1
+    assert_select "#russ-live-grid .event-card-copy h2", text: "Other Promoter Artist", count: 0
+    assert_select "#russ-live-grid .event-card-copy h2", text: "Past Russ Live Artist", count: 0
+    assert_select "#russ-live-grid .event-card-copy h2", text: "Unpublished Russ Live Artist", count: 0
+  end
+
+  test "homepage does not link to russ live lane" do
+    get root_url
+
+    assert_response :success
+    assert_select ".lane-header-title-link[href='/russ-live']", count: 0
   end
 
   test "genre lane page resolves by snapshot group slug even when it is not on the homepage" do
@@ -1671,7 +1750,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ highlighted_event.artist_name, earlier_event.artist_name, middle_event.artist_name ], names.first(3)
   end
 
-  test "index shows only reservix events in the all events slider" do
+  test "index shows events from all providers in the all events slider" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 
     reservix_event = Event.create!(
@@ -1699,6 +1778,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       status: "published",
       published_at: 1.day.ago,
       primary_source: "eventim",
+      source_snapshot: {}
+    )
+    sks_event = Event.create!(
+      slug: "sks-home-slider-event",
+      source_fingerprint: "test::homepage::sks::slider",
+      title: "SKS Homepage Slider Event",
+      artist_name: "SKS Slider Artist",
+      start_at: future_start + 90.minutes,
+      venue: "Hanns-Martin-Schleyer-Halle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      promoter_id: AppSetting.sks_promoter_ids.first,
       source_snapshot: {}
     )
 
@@ -1739,11 +1832,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "section.genre-lane-section", text: /alles aus stuttgart/ do
       assert_select ".genre-lane-card-name", text: reservix_event.artist_name
       assert_select ".genre-lane-card-name", text: late_reservix_event.artist_name
-      assert_select ".genre-lane-card-name", text: eventim_event.artist_name, count: 0
+      assert_select ".genre-lane-card-name", text: eventim_event.artist_name
+      assert_select ".genre-lane-card-name", text: sks_event.artist_name
     end
   end
 
-  test "index limits the all events slider to 15 reservix events" do
+  test "index limits the all events slider to 15 events" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
     included_event_names = []
     excluded_event_name = nil
@@ -1897,7 +1991,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "index shows only today's non-reservix events in tagestipp" do
+  test "index shows today's events from all providers in tagestipp" do
     today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
 
     sks_today_event = Event.create!(
@@ -2005,7 +2099,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes names, today_event.artist_name
     assert_includes names, sks_today_event.artist_name
     assert_includes names, late_today_event.artist_name
-    assert_not_includes names, reservix_today_event.artist_name
+    assert_includes names, reservix_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
   end
 
