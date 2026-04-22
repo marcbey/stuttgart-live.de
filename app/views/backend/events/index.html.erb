@@ -2,7 +2,7 @@
 
 <section class="backend-shell backend-inbox-shell"
          data-controller="keyboard-shortcuts next-event"
-         data-action="turbo:frame-load@document->next-event#syncActiveFromEditor turbo:submit-end@document->next-event#syncActiveAfterSubmit"
+         data-action="turbo:load@document->next-event#syncActiveFromEditor turbo:frame-load@document->next-event#syncActiveFromEditor turbo:submit-end@document->next-event#syncActiveAfterSubmit"
          data-next-event-enabled-value="<%= @next_event_enabled %>"
          data-next-event-preference-url-value="<%= next_event_preference_backend_events_path %>">
   <header class="backend-topbar backend-topbar-sticky backend-inbox-topbar">

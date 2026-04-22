@@ -60,11 +60,15 @@ export default class extends Controller {
     if (Number.isNaN(eventId)) return
 
     this.highlightEventById(eventId)
+    this.replaceUrl({
+      eventId,
+      status: this.statusFromLink(event.currentTarget)
+    })
   }
 
   syncActiveFromEditor(event) {
     const frame = event?.target
-    if (frame && frame.id !== "event_editor") return
+    if (frame instanceof Element && frame.id && frame.id !== "event_editor") return
 
     this.syncHeaderActions()
 
@@ -72,6 +76,7 @@ export default class extends Controller {
     if (!(form instanceof HTMLFormElement)) {
       this.syncNewActionVisibility(false)
       this.highlightEventById(null)
+      this.replaceUrl({ eventId: null, newRecord: false, editorTab: null })
       return
     }
 
@@ -79,11 +84,23 @@ export default class extends Controller {
     if (eventId === null) {
       this.syncNewActionVisibility(true)
       this.highlightEventById(null)
+      this.replaceUrl({
+        eventId: null,
+        status: this.statusFromEditorForm(form),
+        editorTab: this.editorTabFromEditorForm(form),
+        newRecord: true
+      })
       return
     }
 
     this.syncNewActionVisibility(false)
     this.highlightEventById(eventId)
+    this.replaceUrl({
+      eventId,
+      status: this.statusFromEditorForm(form),
+      editorTab: this.editorTabFromEditorForm(form),
+      newRecord: false
+    })
   }
 
   syncActiveAfterSubmit(event) {
@@ -130,5 +147,50 @@ export default class extends Controller {
     if (!match) return null
 
     return Number.parseInt(match[1], 10)
+  }
+
+  statusFromLink(link) {
+    if (!(link instanceof HTMLAnchorElement)) return null
+
+    return new URL(link.href, window.location.origin).searchParams.get("status")
+  }
+
+  statusFromEditorForm(form) {
+    return form.querySelector("input[name='inbox_status']")?.value || null
+  }
+
+  editorTabFromEditorForm(form) {
+    return form.querySelector("input[name='editor_tab']")?.value || null
+  }
+
+  replaceUrl({ eventId = null, status = null, editorTab = null, newRecord = false } = {}) {
+    const url = new URL(window.location.href)
+
+    if (status) {
+      url.searchParams.set("status", status)
+    }
+
+    if (eventId === null || eventId === undefined) {
+      url.searchParams.delete("event_id")
+    } else {
+      url.searchParams.set("event_id", eventId)
+    }
+
+    if (newRecord) {
+      url.searchParams.set("new", "1")
+    } else {
+      url.searchParams.delete("new")
+    }
+
+    if (editorTab && editorTab !== "event") {
+      url.searchParams.set("editor_tab", editorTab)
+    } else {
+      url.searchParams.delete("editor_tab")
+    }
+
+    const nextUrl = url.toString()
+    if (nextUrl === window.location.href) return
+
+    window.history.replaceState(window.history.state, "", nextUrl)
   }
 }
