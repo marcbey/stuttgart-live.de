@@ -165,9 +165,19 @@ class AppSettingTest < ActiveSupport::TestCase
   end
 
   test "returns configured llm enrichment prompt template" do
-    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
+    custom_prompt = <<~TEXT.strip
+      Nutze search_results und candidates für homepage_link, instagram_link, facebook_link, youtube_link und venue_external_url.
+      {{input_json}}
+    TEXT
+    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: custom_prompt)
 
-    assert_equal "Prompt\n{{input_json}}", AppSetting.llm_enrichment_prompt_template
+    assert_equal custom_prompt, AppSetting.llm_enrichment_prompt_template
+  end
+
+  test "falls back to default llm enrichment prompt template when configured prompt is incompatible" do
+    AppSetting.new(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}").save!(validate: false)
+
+    assert_equal AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE, AppSetting.llm_enrichment_prompt_template
   end
 
   test "requires llm enrichment prompt template to contain input placeholder" do
@@ -175,6 +185,13 @@ class AppSettingTest < ActiveSupport::TestCase
 
     assert_not setting.valid?
     assert_includes setting.errors[:value], "{{input_json}} muss im Prompt enthalten sein"
+  end
+
+  test "requires llm enrichment prompt template to include search context fields" do
+    setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "muss die Felder homepage_link, instagram_link, facebook_link, youtube_link, venue_external_url sowie search_results/candidates berücksichtigen"
   end
 
   test "requires llm enrichment temperature to be between 0 and 2" do

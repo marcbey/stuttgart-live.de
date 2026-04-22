@@ -65,16 +65,17 @@ module Importing
 
       def initialize(
         run:,
-        client: OpenAi::ResponsesClient.new(
-          model: AppSetting.llm_enrichment_model,
-          temperature: AppSetting.llm_enrichment_temperature
-        ),
+        client: nil,
         logger: Importing::Logging.logger,
         link_validator: nil,
         link_finder: nil
       )
+        AppSetting.reset_cache!
         @run = run
-        @client = client
+        @client = client || OpenAi::ResponsesClient.new(
+          model: AppSetting.llm_enrichment_model,
+          temperature: AppSetting.llm_enrichment_temperature
+        )
         @logger = logger
         @link_validator = link_validator || LinkValidator.new
         @link_finder = link_finder || LinkFinder.new

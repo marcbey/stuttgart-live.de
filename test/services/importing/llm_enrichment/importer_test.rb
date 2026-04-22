@@ -154,10 +154,42 @@ module Importing
         assert_nil events(:published_past_one).reload.llm_enrichment
       end
 
-      test "includes truncated event_info and search result context in single-event prompt payload" do
-        AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "{{input_json}}")
+      test "reloads llm prompt settings from the database before a run starts" do
+        original_prompt = <<~TEXT.strip
+          ALT search_results candidates homepage_link instagram_link facebook_link youtube_link venue_external_url
+          {{input_json}}
+        TEXT
+        updated_prompt = <<~TEXT.strip
+          NEU search_results candidates homepage_link instagram_link facebook_link youtube_link venue_external_url
+          {{input_json}}
+        TEXT
+        prompt_setting = AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: original_prompt)
         AppSetting.reset_cache!
+        AppSetting.llm_enrichment_prompt_template
+        prompt_setting.update_column(:value, updated_prompt)
 
+        event = events(:published_one)
+        @run.update!(metadata: @run.metadata.merge("target_event_id" => event.id, "refresh_existing" => true))
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: event.id,
+              genre: [ "Indie" ],
+              venue: "LKA Longhorn",
+              event_description: "Event eins",
+              venue_description: "Venue eins"
+            )
+          ]
+        )
+
+        build_importer(client: client, link_finder: FakeLinkFinder.new(results_by_event_id: { event.id => search_context_result }, calls: [])).call
+
+        assert_includes client.captured_inputs.first, "NEU search_results candidates homepage_link instagram_link facebook_link youtube_link venue_external_url"
+        assert_not_includes client.captured_inputs.first, "ALT search_results candidates homepage_link instagram_link facebook_link youtube_link venue_external_url"
+      end
+
+      test "includes truncated event_info and search result context in single-event prompt payload" do
         long_event_info = "ä" * 1005
         event = events(:published_one)
         event.update!(event_info: long_event_info)
@@ -197,7 +229,7 @@ module Importing
 
         build_importer(client: client, link_finder: link_finder).call
 
-        input_payload = JSON.parse(client.captured_inputs.first)
+        input_payload = JSON.parse(client.captured_inputs.first.split("Input:\n", 2).last)
         assert_equal event.id, input_payload.fetch("event_id")
         assert_equal long_event_info[0, 1000], input_payload.fetch("event_info")
         candidate_payload = input_payload.dig("search_results", "fields", "homepage_link", "candidates", 0)

@@ -1,6 +1,11 @@
 require "test_helper"
 
 class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
+  VALID_LLM_ENRICHMENT_PROMPT = <<~TEXT.strip
+    Nutze search_results und candidates für homepage_link, instagram_link, facebook_link, youtube_link und venue_external_url.
+    {{input_json}}
+  TEXT
+
   setup do
     @admin = users(:two)
     @editor = users(:one)
@@ -93,7 +98,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     patch backend_settings_url(section: :llm_enrichment), params: {
       app_setting: {
         llm_enrichment_model: "gpt-5-mini",
-        llm_enrichment_prompt_template_text: "Bitte recherchiere\n{{input_json}}",
+        llm_enrichment_prompt_template_text: VALID_LLM_ENRICHMENT_PROMPT,
         llm_enrichment_temperature: "0.3",
         llm_enrichment_web_search_provider: "openwebninja"
       }
@@ -101,7 +106,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to edit_backend_settings_url(section: :llm_enrichment)
     assert_equal "gpt-5-mini", AppSetting.llm_enrichment_model
-    assert_equal "Bitte recherchiere\n{{input_json}}", AppSetting.llm_enrichment_prompt_template
+    assert_equal VALID_LLM_ENRICHMENT_PROMPT, AppSetting.llm_enrichment_prompt_template
     assert_equal 0.3, AppSetting.llm_enrichment_temperature
     assert_equal "openwebninja", AppSetting.llm_enrichment_web_search_provider
   end
@@ -292,7 +297,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     patch backend_settings_url(section: :llm_enrichment), params: {
       app_setting: {
         llm_enrichment_model: "gpt-4.1",
-        llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}"
+        llm_enrichment_prompt_template_text: VALID_LLM_ENRICHMENT_PROMPT
       }
     }
 
@@ -306,7 +311,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     patch backend_settings_url(section: :llm_enrichment), params: {
       app_setting: {
         llm_enrichment_model: "gpt-5.1",
-        llm_enrichment_prompt_template_text: "Prompt\n{{input_json}}",
+        llm_enrichment_prompt_template_text: VALID_LLM_ENRICHMENT_PROMPT,
         llm_enrichment_temperature: "2.5",
         llm_enrichment_web_search_provider: "serpapi"
       }
@@ -361,7 +366,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: %w[10135 10136 382])
     AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Bestehender Hinweistext")
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5-mini")
-    AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
+    AppSetting.new(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}").save!(validate: false)
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY, value: 1)
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY, value: "serpapi")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5-mini")

@@ -27,6 +27,16 @@ class AppSetting < ApplicationRecord
     [ "SerpApi", "serpapi" ],
     [ "OpenWebNinja", "openwebninja" ]
   ].freeze
+  LLM_ENRICHMENT_PROMPT_REQUIRED_FRAGMENTS = [
+    LLM_ENRICHMENT_INPUT_PLACEHOLDER,
+    "homepage_link",
+    "instagram_link",
+    "facebook_link",
+    "youtube_link",
+    "venue_external_url",
+    "search_results",
+    "candidates"
+  ].freeze
 
   LLM_ENRICHMENT_PROMPT_TEMPLATE = <<~TEXT.strip
     Ermittle für genau ein Event aus `Input` die fehlenden Felder
@@ -183,7 +193,14 @@ class AppSetting < ApplicationRecord
 
     def llm_enrichment_prompt_template
       @llm_enrichment_prompt_template ||=
-        normalize_text(find_by(key: LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY)&.value) || LLM_ENRICHMENT_PROMPT_TEMPLATE
+        begin
+          configured_template = normalize_text(find_by(key: LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY)&.value)
+          if llm_enrichment_prompt_template_compatible?(configured_template)
+            configured_template
+          else
+            LLM_ENRICHMENT_PROMPT_TEMPLATE
+          end
+        end
     end
 
     def llm_enrichment_model
@@ -400,6 +417,15 @@ class AppSetting < ApplicationRecord
       available_llm_enrichment_web_search_provider_values.include?(provider) ? provider : nil
     end
 
+    def llm_enrichment_prompt_template_compatible?(template)
+      normalized_template = normalize_text(template)
+      return false if normalized_template.blank?
+
+      LLM_ENRICHMENT_PROMPT_REQUIRED_FRAGMENTS.all? do |fragment|
+        normalized_template.include?(fragment)
+      end
+    end
+
     def available_llm_enrichment_model_values
       AVAILABLE_LLM_ENRICHMENT_MODELS.map(&:last)
     end
@@ -482,7 +508,9 @@ class AppSetting < ApplicationRecord
 
   def llm_enrichment_prompt_template
     template = self.class.normalize_text(value)
-    return self.class.llm_enrichment_prompt_template if key == LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY && template.blank?
+    if key == LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY && !self.class.llm_enrichment_prompt_template_compatible?(template)
+      return self.class.llm_enrichment_prompt_template
+    end
 
     template
   end
@@ -607,9 +635,14 @@ class AppSetting < ApplicationRecord
       return
     end
 
-    return if template.include?(LLM_ENRICHMENT_INPUT_PLACEHOLDER)
+    unless template.include?(LLM_ENRICHMENT_INPUT_PLACEHOLDER)
+      errors.add(:value, "{{input_json}} muss im Prompt enthalten sein")
+      return
+    end
 
-    errors.add(:value, "{{input_json}} muss im Prompt enthalten sein")
+    return if self.class.llm_enrichment_prompt_template_compatible?(template)
+
+    errors.add(:value, "muss die Felder homepage_link, instagram_link, facebook_link, youtube_link, venue_external_url sowie search_results/candidates berücksichtigen")
   end
 
   def llm_enrichment_model_must_be_valid
