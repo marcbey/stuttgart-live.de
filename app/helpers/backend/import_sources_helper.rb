@@ -6,7 +6,7 @@ module Backend::ImportSourcesHelper
     inserts: "Provider-Importer: entspricht den geschriebenen Rohimporten dieses Laufs. Merge: Anzahl der neu angelegten Events. LLM-Enrichment: Anzahl gespeicherter bzw. aktualisierter Enrichments. LLM-Genre-Gruppierung: Anzahl gespeicherter Obergruppen.",
     updates: "Nur für Merge-Läufe: Anzahl bestehender Events, die in diesem Lauf aktualisiert wurden. Überschrieben werden dabei start_at, doors_at, venue, badge_text, min_price, max_price, primary_source, source_fingerprint und source_snapshot.",
     similarity_duplicates: "Nur für Merge-Läufe: Teilmenge der Updates, bei denen das Ähnlichkeits-Matching ein Import-Record einem bestehenden Event zugeordnet hat.",
-    collapsed_records: "Nur für Merge-Läufe: Differenz aus Raw Imports und Merge Groups. Zeigt, wie viele aktuelle Rohimporte vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden. LLM-Enrichment: Anzahl der an OpenAI gesendeten Batches. LLM-Genre-Gruppierung: Anzahl der an OpenAI gesendeten Requests."
+    collapsed_records: "Nur für Merge-Läufe: Differenz aus Raw Imports und Merge Groups. Zeigt, wie viele aktuelle Rohimporte vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden. LLM-Enrichment: Anzahl der abgeschlossenen OpenAI-Calls. LLM-Genre-Gruppierung: Anzahl der an OpenAI gesendeten Requests."
   }.freeze
 
   def import_run_type_label(run)
@@ -143,7 +143,7 @@ module Backend::ImportSourcesHelper
 
   def import_run_collapsed_records_label(run)
     return llm_genre_grouping_requests_count(run) if llm_genre_grouping_import_run?(run)
-    return llm_batches_count(run) if run.source_type == "llm_enrichment"
+    return llm_api_calls_count(run) if run.source_type == "llm_enrichment"
     return "-" unless run.source_type == "merge"
 
     raw_imports = merge_import_records_count(run)
@@ -248,8 +248,8 @@ module Backend::ImportSourcesHelper
     Integer(import_run_metadata(run)["events_enriched_count"], exception: false) || run.imported_count
   end
 
-  def llm_batches_count(run)
-    Integer(import_run_metadata(run)["batches_count"], exception: false) || "-"
+  def llm_api_calls_count(run)
+    Integer(import_run_metadata(run)["api_calls_completed_count"], exception: false) || run.upserted_count || "-"
   end
 
   def llm_genre_grouping_selected_count(run)

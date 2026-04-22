@@ -20,15 +20,15 @@ module Importing
             fetched_count: result.selected_count,
             filtered_count: result.skipped_count,
             imported_count: result.enriched_count,
-            upserted_count: run.upserted_count,
+            upserted_count: result.api_calls_completed_count,
             failed_count: 0,
             metadata: run.metadata.merge(
               "merge_run_id" => result.merge_run_id,
               "events_selected_count" => result.selected_count,
               "events_skipped_count" => result.skipped_count,
               "events_enriched_count" => result.enriched_count,
-              "batches_count" => result.batches_count,
-              "batch_size" => Importing::LlmEnrichment::Importer::BATCH_SIZE,
+              "api_calls_count" => result.api_calls_count,
+              "api_calls_completed_count" => result.api_calls_completed_count,
               "model" => result.model,
               "web_search_provider" => result.web_search_provider,
               "links_checked_count" => result.links_checked_count,
@@ -45,22 +45,25 @@ module Importing
           return
         end
 
-        logger.info("[LlmEnrichmentRunJob] run_id=#{run.id} succeeded selected=#{result.selected_count} enriched=#{result.enriched_count} batches=#{result.batches_count}")
+        logger.info(
+          "[LlmEnrichmentRunJob] run_id=#{run.id} succeeded selected=#{result.selected_count} " \
+          "enriched=#{result.enriched_count} api_calls=#{result.api_calls_count}"
+        )
         run.update!(
           status: "succeeded",
           finished_at: Time.current,
           fetched_count: result.selected_count,
           filtered_count: result.skipped_count,
           imported_count: result.enriched_count,
-          upserted_count: result.batches_count,
+          upserted_count: result.api_calls_completed_count,
           failed_count: 0,
           metadata: run.metadata.merge(
             "merge_run_id" => result.merge_run_id,
             "events_selected_count" => result.selected_count,
             "events_skipped_count" => result.skipped_count,
             "events_enriched_count" => result.enriched_count,
-            "batches_count" => result.batches_count,
-            "batch_size" => Importing::LlmEnrichment::Importer::BATCH_SIZE,
+            "api_calls_count" => result.api_calls_count,
+            "api_calls_completed_count" => result.api_calls_completed_count,
             "model" => result.model,
             "web_search_provider" => result.web_search_provider,
             "links_checked_count" => result.links_checked_count,

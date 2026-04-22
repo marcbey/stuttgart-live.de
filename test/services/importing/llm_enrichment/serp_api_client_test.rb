@@ -31,6 +31,8 @@ module Importing
 
         assert_equal "search-123", result.search_id
         assert_equal "https://example.com", result.organic_results.first.link
+        assert_equal "", result.organic_results.first.displayed_link
+        assert_equal "", result.organic_results.first.source
       end
 
       test "raises on api errors" do

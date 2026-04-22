@@ -18,19 +18,6 @@ namespace :events do
       print_events_llm_maintenance_result(result, success_message: "LLM-Enrichment-Daten zurückgesetzt.")
     end
 
-    desc "Enqueue a chunked LLM link refresh backfill for future events with existing enrichments"
-    task backfill_llm_links: :environment do
-      chunk_size = ENV.fetch("CHUNK_SIZE", Events::Maintenance::LlmLinkBackfillEnqueuer::DEFAULT_CHUNK_SIZE)
-      statuses = ENV.fetch("STATUSES", Events::Maintenance::LlmLinkBackfillEnqueuer::DEFAULT_STATUSES.join(",")).split(",")
-
-      result = Events::Maintenance::LlmLinkBackfillEnqueuer.call(chunk_size:, statuses:)
-      puts "LLM-Link-Backfill eingereiht."
-      puts "eligible_events=#{result.eligible_count}"
-      puts "runs_enqueued=#{result.runs_enqueued}"
-      puts "chunk_size=#{result.chunk_size}"
-      puts "statuses=#{result.statuses.join(',')}"
-    end
-
     desc "Reset published_at for all events"
     task reset_published_at: :environment do
       relation = Event.where.not(published_at: nil)

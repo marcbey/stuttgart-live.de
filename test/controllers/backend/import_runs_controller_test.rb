@@ -150,7 +150,7 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
       filtered_count: 25,
       imported_count: 140,
       failed_count: 3,
-      metadata: { "batches_count" => 8 }
+      metadata: { "api_calls_completed_count" => 8 }
     )
 
     get backend_import_run_url(run)

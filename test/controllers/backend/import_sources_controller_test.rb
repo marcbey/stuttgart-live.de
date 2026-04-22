@@ -235,7 +235,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
       imported_count: 40,
       failed_count: 2,
       metadata: {
-        "batches_count" => 5
+        "api_calls_completed_count" => 5
       }
     )
 

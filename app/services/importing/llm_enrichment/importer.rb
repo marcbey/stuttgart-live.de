@@ -5,12 +5,10 @@ module Importing
     class Importer
       RUN_STALE_AFTER = 4.hours
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
-      BATCH_SIZE = 25
       EVENT_INFO_MAX_LENGTH = 1000
-      PROMPT_VERSION = "v6"
-      OUTPUT_SCHEMA_NAME = "event_llm_enrichment_batch".freeze
-      OUTPUT_ITEMS_KEY = "events".freeze
-      LOOKED_UP_LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
+      PROMPT_VERSION = "v7"
+      OUTPUT_SCHEMA_NAME = "event_llm_enrichment".freeze
+      SEARCH_LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link venue_external_url].freeze
       VALIDATED_LINK_FIELDS = %i[venue_external_url].freeze
       META_GENRE_TERMS = [
         "show",
@@ -31,14 +29,15 @@ module Importing
         term.to_s.strip.downcase.gsub(/[-\s]+/, " ")
       end.freeze
 
-      Item = Data.define(:event_id, :artist_name, :event_name, :venue, :event_info) do
+      Item = Data.define(:event_id, :artist_name, :event_name, :venue, :event_info, :search_results) do
         def as_json(*)
           {
             event_id: event_id,
             artist_name: artist_name,
             event_name: event_name,
             venue: venue,
-            event_info: event_info
+            event_info: event_info,
+            search_results: search_results
           }
         end
       end
@@ -47,7 +46,8 @@ module Importing
         :selected_count,
         :skipped_count,
         :enriched_count,
-        :batches_count,
+        :api_calls_count,
+        :api_calls_completed_count,
         :merge_run_id,
         :model,
         :web_search_provider,
@@ -60,6 +60,8 @@ module Importing
         :links_null_after_link_lookup_count,
         :canceled
       )
+
+      LinkSelectionResult = Data.define(:attributes, :payload, :links_found_count, :links_null_count)
 
       def initialize(
         run:,
@@ -75,7 +77,7 @@ module Importing
         @client = client
         @logger = logger
         @link_validator = link_validator || LinkValidator.new
-        @link_finder = link_finder || LinkFinder.new(link_validator: @link_validator)
+        @link_finder = link_finder || LinkFinder.new
       end
 
       def call
@@ -86,20 +88,22 @@ module Importing
         selected_count = selected_events.count
         skipped_count = skip_existing_enrichments? ? already_enriched_count(selected_events) : 0
         pending_events = pending_events_scope(selected_events).order(:start_at, :id).to_a
-        batches = pending_events.each_slice(BATCH_SIZE).to_a
+        api_calls_count = pending_events.size
+        api_calls_completed_count = 0
         enriched_count = 0
-        batches_processed = 0
 
-        logger.info("[LlmEnrichmentImporter] run_id=#{run.id} started selected=#{selected_count} skipped=#{skipped_count} batches=#{batches.count}")
+        logger.info(
+          "[LlmEnrichmentImporter] run_id=#{run.id} started selected=#{selected_count} " \
+          "skipped=#{skipped_count} api_calls=#{api_calls_count}"
+        )
 
         update_run_progress!(
           selected_count: selected_count,
           skipped_count: skipped_count,
           enriched_count: enriched_count,
-          batches_count: batches.count,
-          batches_processed: batches_processed,
+          api_calls_count: api_calls_count,
+          api_calls_completed_count: api_calls_completed_count,
           "merge_run_id" => nil,
-          "batch_size" => BATCH_SIZE,
           "model" => client_model,
           "web_search_provider" => web_search_provider,
           "links_checked_count" => links_checked_count,
@@ -111,42 +115,42 @@ module Importing
           "links_null_after_link_lookup_count" => links_null_after_link_lookup_count
         )
 
-        batches.each_with_index do |batch_events, index|
-          check_stop_requested!(message: "before batch", current_batch: index + 1)
+        pending_events.each_with_index do |event, index|
+          current_event_index = index + 1
+          check_stop_requested!(message: "before event", current_event_index:)
+          touch_run_heartbeat!("current_event_index" => current_event_index)
 
-          touch_run_heartbeat!("current_batch" => index + 1)
-          logger.info("[LlmEnrichmentImporter] run_id=#{run.id} processing batch=#{index + 1}/#{batches.count} size=#{batch_events.size} refresh_links_only=#{refresh_links_only?}")
+          logger.info(
+            "[LlmEnrichmentImporter] run_id=#{run.id} processing event=#{current_event_index}/#{api_calls_count} " \
+            "event_id=#{event.id}"
+          )
 
-          enriched_count +=
-            if refresh_links_only?
-              refresh_links_batch!(
-                run: run,
-                batch_events: batch_events,
-                stop_requested: -> { stop_requested? }
-              )
-            else
-              items = batch_events.map { |event| item_for(event) }
-              response = client.create!(input: request_input(items), text_format: output_format)
-              check_stop_requested!(message: "after response", current_batch: index + 1)
-              payload = extract_payload!(response)
-              check_stop_requested!(message: "before persist", current_batch: index + 1)
-              persist_batch!(
-                payload: payload,
-                run: run,
-                batch_events: batch_events,
-                stop_requested: -> { stop_requested? }
-              )
-            end
-          batches_processed += 1
-          logger.info("[LlmEnrichmentImporter] run_id=#{run.id} completed batch=#{batches_processed}/#{batches.count} enriched_total=#{enriched_count}")
+          search_context_result = resolve_links_for(event)
+          response = client.create!(
+            input: request_input(item_for(event, search_context_result.payload)),
+            text_format: output_format
+          )
+          api_calls_completed_count += 1
+
+          check_stop_requested!(message: "after response", current_event_index:)
+          payload = extract_payload!(response)
+          check_stop_requested!(message: "before persist", current_event_index:)
+
+          enriched_count += persist_event!(
+            payload: payload,
+            run: run,
+            event: event,
+            search_context_result: search_context_result,
+            stop_requested: -> { stop_requested? }
+          )
 
           update_run_progress!(
             selected_count: selected_count,
             skipped_count: skipped_count,
             enriched_count: enriched_count,
-            batches_count: batches.count,
-            batches_processed: batches_processed,
-            "current_batch" => batches_processed,
+            api_calls_count: api_calls_count,
+            api_calls_completed_count: api_calls_completed_count,
+            "current_event_index" => current_event_index,
             "links_checked_count" => links_checked_count,
             "links_rejected_count" => links_rejected_count,
             "links_unverifiable_count" => links_unverifiable_count,
@@ -161,7 +165,8 @@ module Importing
           selected_count: selected_count,
           skipped_count: skipped_count,
           enriched_count: enriched_count,
-          batches_count: batches.count,
+          api_calls_count: api_calls_count,
+          api_calls_completed_count: api_calls_completed_count,
           merge_run_id: nil,
           model: client_model,
           web_search_provider: web_search_provider,
@@ -176,7 +181,13 @@ module Importing
         )
       rescue Importing::StopRequested
         logger.info("[LlmEnrichmentImporter] run_id=#{run.id} stopped cooperatively")
-        canceled_result(selected_count:, skipped_count:, enriched_count:, batches_count: batches.count)
+        canceled_result(
+          selected_count: selected_count,
+          skipped_count: skipped_count,
+          enriched_count: enriched_count,
+          api_calls_count: api_calls_count,
+          api_calls_completed_count: api_calls_completed_count
+        )
       rescue StandardError => e
         logger.error("[LlmEnrichmentImporter] run_id=#{run.id} failed: #{e.class}: #{e.message}")
         raise
@@ -189,10 +200,9 @@ module Importing
       attr_reader :client, :link_finder, :link_validator, :logger, :run
 
       def selected_events_scope(selection_time)
-        scope = target_event_ids.present? ? Event.where(id: target_event_ids) : Event.where("start_at >= ?", selection_time)
-        scope = scope.joins(:llm_enrichment).distinct if refresh_links_only?
+        return Event.where(id: target_event_ids) if target_event_ids.present?
 
-        scope
+        Event.where("start_at >= ?", selection_time)
       end
 
       def already_enriched_count(scope)
@@ -200,24 +210,24 @@ module Importing
       end
 
       def pending_events_scope(scope)
-        return scope.joins(:llm_enrichment).distinct if refresh_links_only?
         return scope unless skip_existing_enrichments?
 
         scope.where.missing(:llm_enrichment)
       end
 
-      def item_for(event)
+      def item_for(event, search_results)
         Item.new(
           event_id: event.id,
           artist_name: event.artist_name.to_s,
           event_name: event.title.to_s,
           venue: event.venue.to_s,
-          event_info: truncated_event_info(event)
+          event_info: truncated_event_info(event),
+          search_results: search_results
         )
       end
 
-      def request_input(items)
-        AppSetting.llm_enrichment_prompt_template.gsub("{{input_json}}", JSON.pretty_generate(items.map(&:as_json)))
+      def request_input(item)
+        AppSetting.llm_enrichment_prompt_template.gsub("{{input_json}}", JSON.pretty_generate(item.as_json))
       end
 
       def truncated_event_info(event)
@@ -232,28 +242,34 @@ module Importing
           schema: {
             type: "object",
             additionalProperties: false,
-            required: [ OUTPUT_ITEMS_KEY ],
+            required: %w[
+              event_id
+              genre
+              venue
+              event_description
+              venue_description
+              venue_external_url
+              venue_address
+              youtube_link
+              instagram_link
+              homepage_link
+              facebook_link
+            ],
             properties: {
-              OUTPUT_ITEMS_KEY => {
+              event_id: { type: "integer" },
+              genre: {
                 type: "array",
-                items: {
-                  type: "object",
-                  additionalProperties: false,
-                  required: %w[event_id genre venue event_description venue_description venue_external_url venue_address],
-                  properties: {
-                    event_id: { type: "integer" },
-                    genre: {
-                      type: "array",
-                      items: { type: "string" }
-                    },
-                    venue: { type: [ "string", "null" ] },
-                    event_description: { type: [ "string", "null" ] },
-                    venue_description: { type: [ "string", "null" ] },
-                    venue_external_url: { type: [ "string", "null" ] },
-                    venue_address: { type: [ "string", "null" ] }
-                  }
-                }
-              }
+                items: { type: "string" }
+              },
+              venue: { type: [ "string", "null" ] },
+              event_description: { type: [ "string", "null" ] },
+              venue_description: { type: [ "string", "null" ] },
+              venue_external_url: { type: [ "string", "null" ] },
+              venue_address: { type: [ "string", "null" ] },
+              youtube_link: { type: [ "string", "null" ] },
+              instagram_link: { type: [ "string", "null" ] },
+              homepage_link: { type: [ "string", "null" ] },
+              facebook_link: { type: [ "string", "null" ] }
             }
           }
         }
@@ -261,25 +277,22 @@ module Importing
 
       def extract_payload!(response)
         parsed_payload = extract_parsed_payload(response)
-        return extract_items_from_payload(parsed_payload) if parsed_payload.present?
+        return extract_item_payload(parsed_payload) if parsed_payload.present?
 
         output_text = extract_output_text(response)
         raise Error, "OpenAI-Antwort enthält keinen JSON-Text." if output_text.blank?
 
         payload = JSON.parse(output_text)
-        extract_items_from_payload(payload)
+        extract_item_payload(payload)
       rescue JSON::ParserError => e
         logger.error("[LlmEnrichmentImporter] run_id=#{run.id} invalid json response=#{safe_response_dump(response)}")
         raise Error, "OpenAI-Antwort enthält ungültiges JSON: #{e.message}"
       end
 
-      def extract_items_from_payload(payload)
+      def extract_item_payload(payload)
         raise Error, "OpenAI-Antwort ist kein JSON-Objekt." unless payload.is_a?(Hash)
 
-        items = payload[OUTPUT_ITEMS_KEY]
-        raise Error, "OpenAI-Antwort enthält kein #{OUTPUT_ITEMS_KEY}-Array." unless items.is_a?(Array)
-
-        items
+        payload
       end
 
       def extract_parsed_payload(response)
@@ -338,98 +351,49 @@ module Importing
         response.inspect
       end
 
-      def persist_batch!(payload:, run:, batch_events:, stop_requested: nil)
-        allowed_event_ids = batch_events.map(&:id)
-        events_by_id = batch_events.index_by(&:id)
-        seen_event_ids = {}
+      def persist_event!(payload:, run:, event:, search_context_result:, stop_requested: nil)
         Importing::CooperativeStop.check!(stop_requested)
+        attributes = normalize_payload_item(payload)
+        event_id = attributes.fetch(:event_id)
+        raise Error, "OpenAI-Antwort enthält event_id=#{event_id}, die nicht zum aktuellen Event passt." unless event_id == event.id
+
+        filtered_attributes, genre_filter_payload = filter_meta_genres(attributes)
+        selected_link_result = resolve_selected_links(attributes: filtered_attributes, search_context_result:)
+        validated_attributes, validation_payload = validate_payload_attributes(selected_link_result.attributes)
+        raw_response = payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
+        raw_response["genre_filter"] = genre_filter_payload if genre_filter_payload.present?
+        raw_response["search_context"] = search_context_result.payload if search_context_result.payload.present?
+        raw_response["link_selection"] = selected_link_result.payload if selected_link_result.payload.present?
+        raw_response["link_validation"] = validation_payload if validation_payload.present?
+
+        increment_final_link_counts!(selected_link_result)
 
         ActiveRecord::Base.transaction do
-          payload.each do |item|
-            Importing::CooperativeStop.check!(stop_requested)
-            attributes = normalize_payload_item(item)
-            event_id = attributes.fetch(:event_id)
+          enrichment = EventLlmEnrichment.find_or_initialize_by(event_id: event_id)
+          enrichment.source_run = run
+          enrichment.genre = validated_attributes[:genre]
+          enrichment.venue = validated_attributes[:venue]
+          enrichment.event_description = validated_attributes[:event_description]
+          enrichment.venue_description = validated_attributes[:venue_description]
+          enrichment.venue_external_url = validated_attributes[:venue_external_url]
+          enrichment.venue_address = validated_attributes[:venue_address]
+          enrichment.youtube_link = validated_attributes[:youtube_link]
+          enrichment.instagram_link = validated_attributes[:instagram_link]
+          enrichment.homepage_link = validated_attributes[:homepage_link]
+          enrichment.facebook_link = validated_attributes[:facebook_link]
+          enrichment.model = client_model
+          enrichment.prompt_version = PROMPT_VERSION
+          enrichment.raw_response = raw_response
+          enrichment.save!
 
-            unless allowed_event_ids.include?(event_id)
-              raise Error, "OpenAI-Antwort enthält event_id=#{event_id}, die nicht im aktuellen Batch liegt."
-            end
-
-            if seen_event_ids[event_id]
-              logger.warn(
-                "[LlmEnrichmentImporter] run_id=#{run.id} skipping duplicate response item for event_id=#{event_id}"
-              )
-              next
-            end
-
-            seen_event_ids[event_id] = true
-            filtered_attributes, genre_filter_payload = filter_meta_genres(attributes)
-            validated_attributes, validation_payload = validate_payload_attributes(filtered_attributes)
-            event = events_by_id.fetch(event_id)
-            link_lookup_result = resolve_links_for(event)
-            raw_response = item.is_a?(Hash) ? item.deep_stringify_keys : {}
-            raw_response["genre_filter"] = genre_filter_payload if genre_filter_payload.present?
-            raw_response["link_validation"] = validation_payload if validation_payload.present?
-            raw_response["link_lookup"] = link_lookup_result.payload if link_lookup_result.payload.present?
-
-            enrichment = EventLlmEnrichment.find_or_initialize_by(event_id: event_id)
-            enrichment.source_run = run
-            enrichment.genre = validated_attributes[:genre]
-            enrichment.venue = validated_attributes[:venue]
-            enrichment.event_description = validated_attributes[:event_description]
-            enrichment.venue_description = validated_attributes[:venue_description]
-            enrichment.venue_external_url = validated_attributes[:venue_external_url]
-            enrichment.venue_address = validated_attributes[:venue_address]
-            enrichment.youtube_link = link_lookup_result.links[:youtube_link]
-            enrichment.instagram_link = link_lookup_result.links[:instagram_link]
-            enrichment.homepage_link = link_lookup_result.links[:homepage_link]
-            enrichment.facebook_link = link_lookup_result.links[:facebook_link]
-            enrichment.model = client_model
-            enrichment.prompt_version = PROMPT_VERSION
-            enrichment.raw_response = raw_response
-            enrichment.save!
-
-            Venues::LlmFallbackAssignment.call(event: event, enrichment: enrichment)
-          end
+          Venues::LlmFallbackAssignment.call(event: event, enrichment: enrichment)
         end
 
-        seen_event_ids.size
-      end
-
-      def refresh_links_batch!(run:, batch_events:, stop_requested: nil)
-        refreshed_count = 0
-        Importing::CooperativeStop.check!(stop_requested)
-
-        ActiveRecord::Base.transaction do
-          batch_events.each do |event|
-            Importing::CooperativeStop.check!(stop_requested)
-            enrichment = event.llm_enrichment
-            next if enrichment.blank?
-
-            link_lookup_result = resolve_links_for(event)
-            raw_response = enrichment.raw_response.is_a?(Hash) ? enrichment.raw_response.deep_stringify_keys : {}
-            raw_response["link_lookup"] = link_lookup_result.payload if link_lookup_result.payload.present?
-
-            enrichment.source_run = run
-            enrichment.youtube_link = link_lookup_result.links[:youtube_link]
-            enrichment.instagram_link = link_lookup_result.links[:instagram_link]
-            enrichment.homepage_link = link_lookup_result.links[:homepage_link]
-            enrichment.facebook_link = link_lookup_result.links[:facebook_link]
-            enrichment.model = enrichment.model.presence || client_model
-            enrichment.prompt_version = enrichment.prompt_version.presence || PROMPT_VERSION
-            enrichment.raw_response = raw_response
-            enrichment.save!
-
-            refreshed_count += 1
-          end
-        end
-
-        refreshed_count
+        1
       end
 
       def normalize_payload_item(item)
-        unless item.is_a?(Hash)
-          raise Error, "OpenAI-Antwort enthält einen ungültigen Eintrag."
-        end
+        raise Error, "OpenAI-Antwort enthält keinen gültigen Eintrag." unless item.is_a?(Hash)
 
         {
           event_id: Integer(item["event_id"] || item[:event_id], exception: false),
@@ -438,9 +402,59 @@ module Importing
           event_description: item["event_description"] || item[:event_description],
           venue_description: item["venue_description"] || item[:venue_description],
           venue_external_url: item["venue_external_url"] || item[:venue_external_url],
-          venue_address: item["venue_address"] || item[:venue_address]
+          venue_address: item["venue_address"] || item[:venue_address],
+          youtube_link: item["youtube_link"] || item[:youtube_link],
+          instagram_link: item["instagram_link"] || item[:instagram_link],
+          homepage_link: item["homepage_link"] || item[:homepage_link],
+          facebook_link: item["facebook_link"] || item[:facebook_link]
         }.tap do |attributes|
           raise Error, "OpenAI-Antwort enthält keine gültige event_id." if attributes[:event_id].blank?
+        end
+      end
+
+      def resolve_selected_links(attributes:, search_context_result:)
+        resolved_attributes = attributes.deep_dup
+        fields_payload = {}
+        links_found_count = 0
+
+        SEARCH_LINK_FIELDS.each do |field_name|
+          requested_url = attributes[field_name].to_s.strip.presence
+          field_context = search_context_result.payload.dig("fields", field_name.to_s) || default_search_context_field
+          candidates = Array(field_context["candidates"])
+          selected_candidate = find_selected_candidate(field_name:, requested_url:, candidates:)
+          selected_url = selected_candidate&.fetch("link", nil)
+
+          resolved_attributes[field_name] = selected_url
+          links_found_count += 1 if selected_url.present?
+
+          fields_payload[field_name.to_s] = {
+            "query_name" => field_context["query_name"],
+            "query" => field_context["query"],
+            "provider" => field_context["provider"],
+            "search_id" => field_context["search_id"],
+            "requested_url" => requested_url,
+            "selected_url" => selected_url,
+            "rejection_reason" => requested_url.present? && selected_url.blank? ? "not_in_supplied_candidates" : nil,
+            "candidates" => candidates
+          }.compact
+        end
+
+        LinkSelectionResult.new(
+          attributes: resolved_attributes,
+          payload: { "fields" => fields_payload },
+          links_found_count: links_found_count,
+          links_null_count: SEARCH_LINK_FIELDS.size - links_found_count
+        )
+      end
+
+      def find_selected_candidate(field_name:, requested_url:, candidates:)
+        return if requested_url.blank?
+
+        normalized_requested_url = LinkFinder.normalize_candidate_url(requested_url, field_name:)
+        return if normalized_requested_url.blank?
+
+        candidates.find do |candidate|
+          LinkFinder.normalize_candidate_url(candidate["link"], field_name:) == normalized_requested_url
         end
       end
 
@@ -482,26 +496,30 @@ module Importing
 
       def resolve_links_for(event)
         result = link_finder.call(event:)
-        increment_link_lookup_counts!(result)
-        result.validation_results.each { |validation_result| increment_link_validation_counts!(validation_result) }
+        increment_search_context_counts!(result)
         result
       rescue StandardError => e
         LinkFinder::Result.new(
-          links: LOOKED_UP_LINK_FIELDS.index_with { nil },
           payload: {
+            "web_search_provider" => web_search_provider,
             "queries" => [],
-            "fields" => LOOKED_UP_LINK_FIELDS.index_with do
-              { "selected_url" => nil, "candidates" => [] }
-            end,
-            "error_class" => e.class.to_s,
-            "error_message" => e.message
+            "fields" => SEARCH_LINK_FIELDS.index_with do
+              default_search_context_field.merge("error_class" => e.class.to_s, "error_message" => e.message)
+            end.deep_stringify_keys
           },
           web_search_request_count: 0,
-          web_search_candidate_count: 0,
-          links_found_via_web_search_count: 0,
-          links_null_after_link_lookup_count: LOOKED_UP_LINK_FIELDS.size,
-          validation_results: []
+          web_search_candidate_count: 0
         )
+      end
+
+      def default_search_context_field
+        {
+          "query_name" => nil,
+          "query" => nil,
+          "provider" => web_search_provider,
+          "search_id" => nil,
+          "candidates" => []
+        }
       end
 
       def filter_meta_genres(attributes)
@@ -536,21 +554,21 @@ module Importing
         Backend::ImportRunsBroadcaster.broadcast!
       end
 
-      def update_run_progress!(selected_count:, skipped_count:, enriched_count:, batches_count:, batches_processed:, **extra_metadata)
+      def update_run_progress!(selected_count:, skipped_count:, enriched_count:, api_calls_count:, api_calls_completed_count:, **extra_metadata)
         return unless run_running?
 
         run.update!(
           fetched_count: selected_count,
           filtered_count: skipped_count,
           imported_count: enriched_count,
-          upserted_count: batches_processed,
+          upserted_count: api_calls_completed_count,
           metadata: current_run_metadata.merge(
             {
               "events_selected_count" => selected_count,
               "events_skipped_count" => skipped_count,
               "events_enriched_count" => enriched_count,
-              "batches_count" => batches_count,
-              "batches_processed_count" => batches_processed
+              "api_calls_count" => api_calls_count,
+              "api_calls_completed_count" => api_calls_completed_count
             }
           ).merge(extra_metadata.deep_stringify_keys)
         )
@@ -569,12 +587,13 @@ module Importing
         run.reload.status == "running"
       end
 
-      def canceled_result(selected_count:, skipped_count:, enriched_count:, batches_count:)
+      def canceled_result(selected_count:, skipped_count:, enriched_count:, api_calls_count:, api_calls_completed_count:)
         Result.new(
           selected_count: selected_count,
           skipped_count: skipped_count,
           enriched_count: enriched_count,
-          batches_count: batches_count,
+          api_calls_count: api_calls_count,
+          api_calls_completed_count: api_calls_completed_count,
           merge_run_id: nil,
           model: client_model,
           web_search_provider: web_search_provider,
@@ -601,11 +620,14 @@ module Importing
         @links_unverifiable_count = 0
       end
 
-      def increment_link_lookup_counts!(result)
+      def increment_search_context_counts!(result)
         @web_search_request_count += result.web_search_request_count
         @web_search_candidate_count += result.web_search_candidate_count
-        @links_found_via_web_search_count += result.links_found_via_web_search_count
-        @links_null_after_link_lookup_count += result.links_null_after_link_lookup_count
+      end
+
+      def increment_final_link_counts!(selection_result)
+        @links_found_via_web_search_count += selection_result.links_found_count
+        @links_null_after_link_lookup_count += selection_result.links_null_count
       end
 
       def reset_link_lookup_counts!
@@ -673,14 +695,6 @@ module Importing
 
       def refresh_existing?
         ActiveModel::Type::Boolean.new.cast(current_run_metadata["refresh_existing"])
-      end
-
-      def refresh_links_only?
-        ActiveModel::Type::Boolean.new.cast(current_run_metadata["refresh_links_only"])
-      end
-
-      def single_event_run?
-        target_event_ids.one? && target_event_id.present?
       end
 
       def skip_existing_enrichments?

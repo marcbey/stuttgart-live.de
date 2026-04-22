@@ -301,25 +301,28 @@ Zusätzlich ist standardmäßig ein täglicher automatischer Lauf um `05:05` Uhr
 Der Ablauf ist:
 
 1. Zuerst wählt der Job geeignete bestehende Events aus, typischerweise solche ohne vollständige LLM-Anreicherung oder mit veralteten Enrichment-Daten.
-2. Diese Events werden in Batches an das konfigurierte LLM-Modell geschickt.
-3. Das LLM liefert `genre`, `event_description`, `venue_description`, `venue_external_url` und `venue_address`.
-4. Anschließend sucht ein separater Link-Lookup-Schritt nach `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` und übernimmt pro Feld den ersten Treffer des konfigurierten Web-Search-Providers auf Basis deterministisch gebauter Suchanfragen.
-5. Das Ergebnis wird validiert, normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
-6. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, Batch-Zahl, Web-Search-/Social-Links-Metriken und Fehler im zugehörigen `ImportRun`.
+2. Jedes Event wird einzeln verarbeitet; pro Event gibt es genau einen OpenAI-Call.
+3. Vor diesem Call baut der Importer für `homepage_link`, `instagram_link`, `facebook_link`, `youtube_link` und `venue_external_url` einen Suchkontext über den konfigurierten Web-Search-Provider auf.
+4. Für jedes dieser fünf Felder werden bis zu 10 Suchtreffer mit kontextreichen Feldern wie Titel, Snippet, angezeigtem Link, Quelle und zusätzlicher Ergebnisbeschreibung in den Prompt übernommen.
+5. Das LLM liefert `genre`, `event_description`, `venue_description`, `venue_address` sowie die fünf Linkfelder zurück und darf dabei nur aus den mitgelieferten Suchtreffern auswählen.
+6. Anschließend wird geprüft, ob die zurückgegebenen Links tatsächlich in den gelieferten Kandidatenlisten enthalten sind; `venue_external_url` wird zusätzlich technisch validiert.
+7. Das Ergebnis wird normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
+8. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, abgeschlossene OpenAI-Calls, Web-Search-Metriken und Fehler im zugehörigen `ImportRun`.
 
 Fachlich ist wichtig:
 
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
 - `event_description` bündelt die belastbaren Informationen zu Artist, Projekt/Produktion und konkretem Eventformat in einem einzigen zusammenhängenden Beschreibungstext.
 - `EventLlmEnrichment.venue`, `venue_description`, `venue_external_url` und `venue_address` bleiben als Rohdaten erhalten.
-- `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` werden nicht mehr vom LLM geraten, sondern ausschließlich aus den ersten Suchtreffern der konfigurierten Provider abgeleitet.
+- `homepage_link`, `instagram_link`, `facebook_link`, `youtube_link` und `venue_external_url` werden vom LLM nur aus den gelieferten Top-10-Kandidaten des konfigurierten Search-Providers ausgewählt.
+- `venue_external_url` wird über Venue-Name plus Stadt aus den Import-Daten gesucht; dafür nutzt der Importer primär `events.city` und fällt bei Bedarf auf `events.source_snapshot["sources"]` zurück.
+- Die Search Provider `serpapi` und `openwebninja` bleiben austauschbar; beide liefern denselben normalisierten Suchkontext an den Prompt.
 - Hat ein Event bereits eine zugeordnete `Venue`, ändert ein LLM-Lauf weder die Venue-Zuordnung noch `Venue.name`.
 - Passt `EventLlmEnrichment.venue` zu der bereits zugeordneten `Venue`, dürfen `Venue.description`, `Venue.external_url` und `Venue.address` aus dem Enrichment nur dann ergänzt werden, wenn das jeweilige Venue-Feld noch leer ist. Bereits gepflegte Werte werden nicht überschrieben.
 - Weicht `EventLlmEnrichment.venue` von der bereits zugeordneten `Venue` ab, bleibt die bestehende Venue vollständig unverändert.
 - Hat ein Event noch keine zugeordnete `Venue`, darf aus `EventLlmEnrichment.venue` eine passende Venue gesucht oder neu angelegt und dem Event zugeordnet werden.
 - In genau diesem Fallback-Fall dürfen zusätzlich `Venue.description`, `Venue.external_url` und `Venue.address` aus `EventLlmEnrichment.venue_description`, `venue_external_url` und `venue_address` gesetzt werden; auch hier werden bereits vorhandene Werte der gefundenen oder neu angelegten Venue nicht überschrieben.
 - Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
-- Für bestehende Enrichments gibt es zusätzlich einen `refresh_links_only`-Pfad: Dabei bleibt der vorhandene LLM-Text unverändert und nur die vier Event-Links werden neu gesucht.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.
 - Fehlerhafte Einzelantworten sollen im Laufprotokoll sichtbar sein, ohne zwangsläufig den kompletten Prozess unbrauchbar zu machen.
@@ -727,14 +730,6 @@ bin/rails events:maintenance:reset_llm_enrichment
 ```
 
 Der Task löscht alle Einträge aus `event_llm_enrichments`, `llm_genre_grouping_snapshots` und `llm_genre_grouping_groups`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` oder `source_type = "llm_genre_grouping"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
-
-Gezielter Backfill nur für Event-Links bestehender zukünftiger Enrichments:
-
-```bash
-mise exec -- bin/rails events:maintenance:backfill_llm_links
-```
-
-Der Task reiht serielle `llm_enrichment`-Runs mit `refresh_existing=true` und `refresh_links_only=true` ein. Standardmäßig werden zukünftige Events mit bestehenden Enrichments in Blöcken zu je `250` Events verarbeitet und zuerst nach Status `published`, dann `ready_for_publish`, dann `needs_review` priorisiert. Abweichende Chunk-Größen oder Statuslisten lassen sich über `CHUNK_SIZE=` und `STATUSES=` steuern.
 
 Bestehende Venue-Dubletten anhand des flexiblen Venue-Matchings zusammenführen:
 

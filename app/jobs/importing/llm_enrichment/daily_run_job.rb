@@ -19,8 +19,7 @@ module Importing
           run_metadata: {
             "triggered_by" => "scheduler",
             "schedule_name" => "daily_llm_enrichment_run",
-            "refresh_existing" => false,
-            "refresh_links_only" => false
+            "refresh_existing" => false
           }
         )
       end

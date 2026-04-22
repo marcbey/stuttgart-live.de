@@ -59,7 +59,12 @@ module Importing
               position: item["position"].to_i,
               link: item["link"].to_s,
               title: item["title"].to_s,
-              snippet: item["snippet"].to_s
+              displayed_link: item["displayed_link"].to_s,
+              snippet: item["snippet"].to_s,
+              source: item["source"].to_s,
+              about_source_description: item.dig("about_this_result", "source", "description").to_s,
+              languages: Array(item.dig("about_this_result", "languages")).map(&:to_s),
+              regions: Array(item.dig("about_this_result", "regions")).map(&:to_s)
             )
           end
         )

@@ -19,7 +19,8 @@ module Importing
           selected_count: 5,
           skipped_count: 2,
           enriched_count: 3,
-          batches_count: 1,
+          api_calls_count: 3,
+          api_calls_completed_count: 3,
           merge_run_id: nil,
           model: "gpt-5-mini",
           web_search_provider: "serpapi",
@@ -45,7 +46,7 @@ module Importing
         assert_equal 5, @run.fetched_count
         assert_equal 2, @run.filtered_count
         assert_equal 3, @run.imported_count
-        assert_equal 1, @run.upserted_count
+        assert_equal 3, @run.upserted_count
         assert_nil @run.metadata["merge_run_id"]
         assert_equal "gpt-5-mini", @run.metadata["model"]
         assert_equal "serpapi", @run.metadata["web_search_provider"]
@@ -91,7 +92,8 @@ module Importing
           selected_count: 5,
           skipped_count: 1,
           enriched_count: 2,
-          batches_count: 3,
+          api_calls_count: 3,
+          api_calls_completed_count: 2,
           merge_run_id: 123,
           model: "gpt-5-mini",
           web_search_provider: "openwebninja",
@@ -157,7 +159,8 @@ module Importing
           selected_count: 1,
           skipped_count: 0,
           enriched_count: 1,
-          batches_count: 1,
+          api_calls_count: 1,
+          api_calls_completed_count: 1,
           merge_run_id: nil,
           model: "gpt-5-mini",
           web_search_provider: "serpapi",

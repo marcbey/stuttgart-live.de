@@ -530,7 +530,6 @@ module Backend
         "target_event_id" => event.id,
         "target_event_context" => single_event_llm_enrichment_context(event),
         "refresh_existing" => true,
-        "refresh_links_only" => false,
         "triggered_at" => Time.current.iso8601
       }
     end
