@@ -10,6 +10,13 @@ module Public
           public_path: "/highlights",
           featured: true
         },
+        "russ_live" => {
+          title: "RUSS Live",
+          header_variant: :highlights,
+          public_path: "/russ-live",
+          featured: false,
+          home_visible: false
+        },
         "all_stuttgart" => {
           title: "alles aus stuttgart",
           header_variant: :editorial,
@@ -42,7 +49,7 @@ module Public
             public_path: attributes.fetch(:public_path),
             group: nil,
             featured: attributes.fetch(:featured),
-            home_visible: true
+            home_visible: attributes.fetch(:home_visible, true)
           )
         end
 
@@ -68,6 +75,10 @@ module Public
           fixed("highlights")
         end
 
+        def russ_live
+          fixed("russ_live")
+        end
+
         def public_path_for_genre_slug(slug, snapshot: LlmGenreGrouping::Lookup.selected_snapshot)
           genre(slug, snapshot: snapshot)&.public_path
         end
@@ -75,6 +86,7 @@ module Public
         def resolve(identifier, snapshot: LlmGenreGrouping::Lookup.selected_snapshot)
           case identifier.to_s
           when "highlights" then highlights
+          when "russ_live" then russ_live
           when "all_stuttgart" then all_stuttgart
           when "tagestipp" then tagestipp
           else genre(identifier, snapshot: snapshot)

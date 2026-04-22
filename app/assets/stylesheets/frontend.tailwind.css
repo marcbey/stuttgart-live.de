@@ -3015,6 +3015,30 @@ display: grid;
   gap: 1rem;
 }
 
+.russ-live-grid .event-card {
+--event-card-radius: 0;
+  border-radius: var(--event-card-radius);
+  border: 1px solid rgba(93, 42, 16, 0.1);
+  background: rgba(255, 252, 248, 0.74);
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+
+.russ-live-grid .event-card-image-wrap::after {
+content: "";
+  display: block;
+  position: absolute;
+  inset: 20px;
+  z-index: 2;
+  border: 1px solid rgba(255, 255, 255, 0.96);
+  pointer-events: none;
+}
+
+.russ-live-grid .event-card:hover,
+.russ-live-grid .event-card:focus-within {
+transform: translateY(-3px);
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.22);
+}
+
 .lane-page-section .lane-header-nav {
   align-self: start;
 }
