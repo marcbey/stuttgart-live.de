@@ -126,8 +126,9 @@ module Importing
           )
 
           search_context_result = resolve_links_for(event)
+          prompt_input = request_input(item_for(event, search_context_result.payload))
           response = client.create!(
-            input: request_input(item_for(event, search_context_result.payload)),
+            input: prompt_input,
             text_format: output_format
           )
           api_calls_completed_count += 1
@@ -138,6 +139,7 @@ module Importing
 
           enriched_count += persist_event!(
             payload: payload,
+            prompt_input: prompt_input,
             run: run,
             event: event,
             search_context_result: search_context_result,
@@ -351,7 +353,7 @@ module Importing
         response.inspect
       end
 
-      def persist_event!(payload:, run:, event:, search_context_result:, stop_requested: nil)
+      def persist_event!(payload:, prompt_input:, run:, event:, search_context_result:, stop_requested: nil)
         Importing::CooperativeStop.check!(stop_requested)
         attributes = normalize_payload_item(payload)
         event_id = attributes.fetch(:event_id)
@@ -360,7 +362,12 @@ module Importing
         filtered_attributes, genre_filter_payload = filter_meta_genres(attributes)
         selected_link_result = resolve_selected_links(attributes: filtered_attributes, search_context_result:)
         validated_attributes, validation_payload = validate_payload_attributes(selected_link_result.attributes)
-        raw_response = payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
+        raw_result = payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
+        raw_response = {
+          "llm_prompt" => prompt_input,
+          "llm_raw_result" => raw_result
+        }
+        raw_response.merge!(raw_result)
         raw_response["genre_filter"] = genre_filter_payload if genre_filter_payload.present?
         raw_response["search_context"] = search_context_result.payload if search_context_result.payload.present?
         raw_response["link_selection"] = selected_link_result.payload if selected_link_result.payload.present?

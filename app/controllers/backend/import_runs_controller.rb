@@ -1,11 +1,13 @@
 module Backend
   class ImportRunsController < BaseController
     helper Backend::ImportSourcesHelper
+    helper Backend::ImportRunsHelper
 
     before_action :set_import_run, only: [ :show, :add_filtered_city, :remove_whitelist_city ]
 
     def show
       @run_errors = @import_run.import_run_errors.order(created_at: :desc)
+      @llm_enrichments = @import_run.source_type == "llm_enrichment" ? import_run_event_llm_enrichments : []
     end
 
     def add_filtered_city
@@ -48,6 +50,10 @@ module Backend
 
     def set_import_run
       @import_run = ImportRun.includes(:import_source, :import_run_errors, llm_genre_grouping_snapshot: :groups).find(params[:id])
+    end
+
+    def import_run_event_llm_enrichments
+      EventLlmEnrichment.includes(:event).where(source_run: @import_run).order(:event_id)
     end
 
     def allowed_filtered_city?(city)

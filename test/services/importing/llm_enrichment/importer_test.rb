@@ -145,8 +145,11 @@ module Importing
         assert_equal 3, result.api_calls_count
         assert_equal 3, result.api_calls_completed_count
         assert_equal 3, client.captured_inputs.size
-        assert_equal [ "Indie", "Pop" ], events(:published_one).reload.llm_enrichment.genre
-        assert_equal "https://example.com/one", events(:published_one).reload.llm_enrichment.homepage_link
+        published_enrichment = events(:published_one).reload.llm_enrichment
+        assert_equal [ "Indie", "Pop" ], published_enrichment.genre
+        assert_equal "https://example.com/one", published_enrichment.homepage_link
+        assert_equal client.captured_inputs.first, published_enrichment.raw_response["llm_prompt"]
+        assert_equal events(:published_one).id, published_enrichment.raw_response.dig("llm_raw_result", "event_id")
         assert_equal [], events(:needs_review_two).reload.llm_enrichment.genre
         assert_nil events(:published_past_one).reload.llm_enrichment
       end

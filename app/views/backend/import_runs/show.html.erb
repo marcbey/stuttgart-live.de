@@ -185,6 +185,46 @@
     </section>
   <% end %>
 
+  <% if llm_import_run?(@import_run) %>
+    <section class="import-run-section backend-section backend-table-section">
+      <h2>LLM-Enrichment Details (<%= @llm_enrichments.size %>)</h2>
+      <% if @llm_enrichments.any? %>
+        <% @llm_enrichments.each do |enrichment| %>
+          <article class="import-run-llm-detail">
+            <p>
+              Event: <strong>#<%= enrichment.event_id %></strong>
+              <% if enrichment.event.present? %>
+                · <strong><%= [ enrichment.event.artist_name, enrichment.event.title ].compact.join(" · ") %></strong>
+              <% end %>
+            </p>
+
+            <details class="import-run-llm-detail-disclosure">
+              <summary>Gesendeter Prompt anzeigen</summary>
+              <% prompt = enrichment.raw_response["llm_prompt"].to_s %>
+              <% if prompt.present? %>
+                <pre class="payload-json import-run-llm-detail-payload"><%= prompt %></pre>
+              <% else %>
+                <p>Für dieses Enrichment wurde kein gespeicherter Prompt gefunden.</p>
+              <% end %>
+            </details>
+
+            <details class="import-run-llm-detail-disclosure">
+              <summary>Raw Result anzeigen</summary>
+              <% raw_result = enrichment.raw_response["llm_raw_result"] %>
+              <% if raw_result.present? %>
+                <pre class="payload-json import-run-llm-detail-payload"><%= import_run_json_payload(raw_result) %></pre>
+              <% else %>
+                <p>Für dieses Enrichment wurde kein gespeichertes Raw Result gefunden.</p>
+              <% end %>
+            </details>
+          </article>
+        <% end %>
+      <% else %>
+        <p>Für diesen LLM-Enrichment-Run wurden keine Enrichment-Details gespeichert.</p>
+      <% end %>
+    </section>
+  <% end %>
+
   <section class="import-run-section backend-section backend-table-section">
     <h2>Errors (<%= @run_errors.size %>)</h2>
     <% if @run_errors.any? %>

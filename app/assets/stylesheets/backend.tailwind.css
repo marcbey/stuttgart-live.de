@@ -2139,6 +2139,36 @@ display: grid;
 padding: 1.1rem;
 }
 
+.import-run-llm-detail {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.import-run-llm-detail-disclosure {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  box-sizing: border-box;
+}
+
+.import-run-llm-detail-disclosure > summary {
+  min-width: 0;
+}
+
+.import-run-llm-detail-payload {
+  display: block;
+  width: max-content;
+  min-width: 100%;
+  max-width: none;
+  max-height: 28rem;
+  overflow-x: visible;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
 .import-runs-block + .table-wrap,
 .import-runs-note + .import-runs-block,
 .import-runs-note + .table-wrap {

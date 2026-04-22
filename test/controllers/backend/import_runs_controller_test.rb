@@ -163,6 +163,45 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.data-table tbody tr td:nth-child(8)", text: "3"
   end
 
+  test "shows llm enrichment prompt and raw result details on detail page" do
+    run = import_sources(:two).import_runs.create!(
+      status: "succeeded",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago,
+      fetched_count: 1,
+      filtered_count: 0,
+      imported_count: 1,
+      failed_count: 0,
+      metadata: { "api_calls_completed_count" => 1 }
+    )
+    EventLlmEnrichment.create!(
+      event: events(:published_one),
+      source_run: run,
+      genre: [ "Indie" ],
+      venue: "LKA Longhorn",
+      event_description: "Event eins",
+      venue_description: "Venue eins",
+      model: "gpt-5-mini",
+      prompt_version: "v7",
+      raw_response: {
+        "llm_prompt" => "Prompttext für Event 1",
+        "llm_raw_result" => {
+          "event_id" => events(:published_one).id,
+          "genre" => [ "Indie" ]
+        }
+      }
+    )
+
+    get backend_import_run_url(run)
+    assert_response :success
+    assert_includes response.body, "LLM-Enrichment Details"
+    assert_includes response.body, "Gesendeter Prompt anzeigen"
+    assert_includes response.body, "Prompttext für Event 1"
+    assert_includes response.body, "&quot;event_id&quot;: #{events(:published_one).id}"
+    assert_includes response.body, "&quot;genre&quot;: ["
+  end
+
   test "shows llm genre grouping run with snapshot details on detail page" do
     run = import_sources(:two).import_runs.create!(
       status: "succeeded",
