@@ -16,10 +16,11 @@ class UpdateLlmEnrichmentPromptTemplateForCombinedEventDescriptionTest < ActiveS
   end
 
   test "up replaces templates that still reference artist_description" do
-    setting = AppSetting.create!(
+    setting = AppSetting.new(
       key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY,
       value: "Prompt\n- `artist_description`\n{{input_json}}"
     )
+    setting.save!(validate: false)
 
     @migration.up
 
@@ -28,10 +29,11 @@ class UpdateLlmEnrichmentPromptTemplateForCombinedEventDescriptionTest < ActiveS
 
   test "up keeps compatible templates unchanged" do
     custom_template = "Prompt\n- `event_description`\n{{input_json}}"
-    setting = AppSetting.create!(
+    setting = AppSetting.new(
       key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY,
       value: custom_template
     )
+    setting.save!(validate: false)
 
     @migration.up
 

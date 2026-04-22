@@ -16,10 +16,11 @@ class UpdateLlmEnrichmentPromptTemplateForMetaGenresTest < ActiveSupport::TestCa
   end
 
   test "up updates the previous default template to the new default" do
-    setting = AppSetting.create!(
+    setting = AppSetting.new(
       key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY,
       value: UpdateLlmEnrichmentPromptTemplateForMetaGenres::PREVIOUS_TEMPLATE
     )
+    setting.save!(validate: false)
 
     @migration.up
 
@@ -28,10 +29,11 @@ class UpdateLlmEnrichmentPromptTemplateForMetaGenresTest < ActiveSupport::TestCa
 
   test "up keeps custom templates unchanged" do
     custom_template = "Eigener Prompt\n{{input_json}}"
-    setting = AppSetting.create!(
+    setting = AppSetting.new(
       key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY,
       value: custom_template
     )
+    setting.save!(validate: false)
 
     @migration.up
 
