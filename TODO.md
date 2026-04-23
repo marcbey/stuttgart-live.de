@@ -46,6 +46,7 @@
 - Suche: Suchergebnis mit besserem Aufbau, Design, etc...
 - Ist abgesagt, nicht ausverkauft: https://stuttgart-live.schopp3r.de/backend/events?event_id=15171&status=published
 - Suche: Auf Mobile optimieren
+- Bug: SKS Sonderlocke & Event Ausverkauft. Fixed?
 
 # BUGS:
 
@@ -56,7 +57,6 @@
 - Events: teure Seminare nach Preis filter? Was für Lösungen gibt es noch?
 - Listenansicht: einschränken: desktop 6 rows, mobile 10 events
 - Listenansicht: Filter nach Genre & Venue ? Oder irgendwie über die globale Suche lösen
-- Bug: SKS Sonderlocke & Event Ausverkauft. Fixed?
 
 # Social Media Export
 

@@ -75,3 +75,4 @@ skills-lock.json
 .agents/*
 !.agents/skills/
 !.agents/skills/**
+test/locust/__pycache__/*
