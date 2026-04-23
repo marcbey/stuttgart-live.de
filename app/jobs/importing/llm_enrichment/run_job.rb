@@ -81,13 +81,15 @@ module Importing
           return
         end
 
+        formatted_error_message = format_error_message(e)
         logger.error("[LlmEnrichmentRunJob] run_id=#{run&.id} failed: #{e.class}: #{e.message}")
         run&.update!(
           status: "failed",
           finished_at: Time.current,
-          error_message: e.message
+          failed_count: 1,
+          error_message: formatted_error_message
         )
-        create_import_run_error!(run: run, error: e)
+        create_import_run_error!(run: run, error: e, message: formatted_error_message, payload: error_payload(e))
         raise
       ensure
         Backend::ImportRunsBroadcaster.broadcast!
@@ -124,17 +126,28 @@ module Importing
         )
       end
 
-      def create_import_run_error!(run:, error:)
+      def create_import_run_error!(run:, error:, message: nil, payload: {})
         return unless run&.persisted?
 
         run.import_run_errors.create!(
           source_type: "llm_enrichment",
           error_class: error.class.to_s,
-          message: error.message.to_s.presence || error.class.to_s,
-          payload: {}
+          message: message.to_s.presence || error.message.to_s.presence || error.class.to_s,
+          payload: payload
         )
       rescue StandardError
         nil
+      end
+
+      def format_error_message(error)
+        error.message.to_s.presence || error.class.to_s
+      end
+
+      def error_payload(error)
+        return {} unless error.respond_to?(:details_payload)
+
+        details_payload = error.details_payload
+        details_payload.is_a?(Hash) ? details_payload.deep_stringify_keys : {}
       end
 
       def keep_canceled_run_terminal?(run)

@@ -142,6 +142,15 @@
     </div>
   </section>
 
+  <% if @import_run.error_message.present? %>
+    <section class="import-run-section backend-section">
+      <div class="flash flash-alert" role="alert">
+        <strong>Run-Fehler:</strong>
+        <%= @import_run.error_message %>
+      </div>
+    </section>
+  <% end %>
+
   <% if llm_genre_grouping_import_run?(@import_run) %>
     <% snapshot = @import_run.llm_genre_grouping_snapshot %>
     <% public_snapshot_id = AppSetting.public_genre_grouping_snapshot_id %>

@@ -1,4 +1,5 @@
 require "test_helper"
+require "uri"
 
 module OpenAi
   class ResponsesClientTest < ActiveSupport::TestCase
@@ -118,6 +119,48 @@ module OpenAi
       assert_equal 2, captured_requests.size
       assert_equal 1.0, captured_requests.first[:temperature]
       assert_not_includes captured_requests.second.keys, :temperature
+    end
+
+    test "preserves quota error details from the sdk" do
+      fake_sdk_client = build_fake_sdk_client do |_request|
+        raise OpenAI::Errors::RateLimitError.new(
+          url: URI("https://api.openai.com/v1/responses"),
+          status: 429,
+          headers: {},
+          body: {
+            "message" => "You exceeded your current quota.",
+            "type" => "insufficient_quota",
+            "code" => "insufficient_quota"
+          },
+          request: nil,
+          response: nil
+        )
+      end
+      fake_credentials = fake_credentials_with_api_key
+
+      with_stubbed_credentials(fake_credentials) do
+        error = assert_raises(ResponsesClient::Error) do
+          ResponsesClient.new(model: "gpt-5-mini", sdk_client: fake_sdk_client)
+            .create!(input: "Prompt", text_format: { type: "json_schema" })
+        end
+
+        assert_equal "OpenAI-Kontingent überschritten (HTTP 429): You exceeded your current quota.", error.message
+        assert_equal(
+          {
+            "sdk_error_class" => "OpenAI::Errors::RateLimitError",
+            "status" => 429,
+            "code" => "insufficient_quota",
+            "type" => "insufficient_quota",
+            "url" => "https://api.openai.com/v1/responses",
+            "body" => {
+              "message" => "You exceeded your current quota.",
+              "type" => "insufficient_quota",
+              "code" => "insufficient_quota"
+            }
+          },
+          error.details_payload
+        )
+      end
     end
 
     private

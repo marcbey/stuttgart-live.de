@@ -202,6 +202,34 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "&quot;genre&quot;: ["
   end
 
+  test "shows llm run error message and payload details on detail page" do
+    run = import_sources(:two).import_runs.create!(
+      status: "failed",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago,
+      failed_count: 1,
+      error_message: "OpenAI-Kontingent überschritten (HTTP 429): You exceeded your current quota.",
+      metadata: { "api_calls_completed_count" => 0 }
+    )
+    run.import_run_errors.create!(
+      source_type: "llm_enrichment",
+      error_class: "OpenAi::ResponsesClient::Error",
+      message: run.error_message,
+      payload: {
+        "status" => 429,
+        "code" => "insufficient_quota",
+        "type" => "insufficient_quota"
+      }
+    )
+
+    get backend_import_run_url(run)
+    assert_response :success
+    assert_select ".flash.flash-alert", text: /OpenAI-Kontingent überschritten/
+    assert_includes response.body, "&quot;status&quot;: 429"
+    assert_includes response.body, "&quot;code&quot;: &quot;insufficient_quota&quot;"
+  end
+
   test "shows llm genre grouping run with snapshot details on detail page" do
     run = import_sources(:two).import_runs.create!(
       status: "succeeded",
