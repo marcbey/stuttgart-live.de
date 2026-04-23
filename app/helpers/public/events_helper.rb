@@ -1,4 +1,6 @@
 module Public::EventsHelper
+  require "digest"
+
   PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE = [
     { text: "Suche nach Künstlern und Events in Stuttgart", cursor_blinks: 2, hold_ms: 5000, instant: true, repeat: false },
     { text: "Diesen Freitag im Wizemann", cursor_blinks: 6 },
@@ -26,6 +28,20 @@ module Public::EventsHelper
 
   def effective_public_event_series_ids(events)
     Public::Events::EffectiveSeriesIdsQuery.call(events)
+  end
+
+  def public_events_section_cache_key(section:, browse_state:, events:, context: nil, strict_proxy: false, authenticated: authenticated?)
+    [
+      "public-events-section-v2",
+      section,
+      ("authenticated" if authenticated),
+      ("strict-proxy" if strict_proxy),
+      ("page-#{browse_state.page}"),
+      ("filter-#{browse_state.filter}"),
+      ("date-#{browse_state.event_date&.to_date&.iso8601 || 'all'}"),
+      ("context-#{cache_fingerprint(context)}" if context.present?),
+      "events-#{public_events_render_fingerprint(events)}"
+    ].compact
   end
 
   def public_event_series_effective?(event, effective_series_ids: nil)
@@ -178,6 +194,39 @@ module Public::EventsHelper
   end
 
   private
+
+  def public_events_render_fingerprint(events)
+    cache_fingerprint(Array(events).map { |event| public_event_render_cache_components(event) })
+  end
+
+  def public_event_render_cache_components(event)
+    [
+      event.cache_key_with_version,
+      cache_key_with_version_for(event.venue_record),
+      cache_key_with_version_for(event.public_ticket_offer),
+      records_cache_fingerprint(event.event_offers),
+      records_cache_fingerprint(event.event_images),
+      records_cache_fingerprint(event.import_event_images)
+    ].compact
+  end
+
+  def records_cache_fingerprint(records)
+    cache_fingerprint(records_cache_components(records))
+  end
+
+  def records_cache_components(records)
+    Array(records).map { |record| cache_key_with_version_for(record) }.compact
+  end
+
+  def cache_key_with_version_for(record)
+    return if record.blank?
+
+    record.respond_to?(:cache_key_with_version) ? record.cache_key_with_version : record.cache_key.to_s
+  end
+
+  def cache_fingerprint(parts)
+    Digest::SHA1.hexdigest(Array(parts).flatten.compact.map(&:to_s).join("/"))
+  end
 
   def event_detail_text_units(text)
     paragraphs = text.split(/\n{2,}/).map(&:strip).reject(&:blank?)

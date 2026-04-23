@@ -10,8 +10,10 @@ module Public
     SEARCH_OVERLAY_IDLE_LIMIT = 10
     SHOW_EVENT_SERIES_TERMS_LIMIT = 6
     RUSS_LIVE_PROMOTER_ID = "382".freeze
+    REQUEST_PROFILE_HEADER = "X-Stuttgart-Live-Profile".freeze
 
     before_action :set_browse_state, only: [ :index, :lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
+    around_action :append_index_profile_headers, only: :index
 
     def index
       if params[:q].present?
@@ -493,12 +495,46 @@ module Public
 
     def render_not_found
       respond_to do |format|
-      format.html do
+        format.html do
           @browse_state ||= Public::Events::BrowseState.new(params)
           render "public/events/not_found", status: :not_found
         end
         format.any { head :not_found }
       end
+    end
+
+    def append_index_profile_headers
+      started_at = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+      yield
+      return unless index_profile_requested?
+
+      wall_ms = elapsed_milliseconds_since(started_at)
+      profile_payload = {
+        wall_ms: wall_ms,
+        view_ms: view_runtime.to_f.round(1),
+        sql_ms: db_runtime.to_f.round(1),
+        queries: ActiveRecord::RuntimeRegistry.stats.queries_count,
+        cached_queries: ActiveRecord::RuntimeRegistry.stats.cached_queries_count
+      }
+
+      response.set_header(REQUEST_PROFILE_HEADER, profile_payload.map { |key, value| "#{key}=#{value}" }.join(", "))
+      response.set_header("Server-Timing", server_timing_header(profile_payload))
+    end
+
+    def index_profile_requested?
+      params[:profile].present? || request.headers[REQUEST_PROFILE_HEADER].present?
+    end
+
+    def elapsed_milliseconds_since(started_at)
+      ((Process.clock_gettime(Process::CLOCK_MONOTONIC) - started_at) * 1000.0).round(1)
+    end
+
+    def server_timing_header(profile_payload)
+      [
+        "app;dur=#{profile_payload[:wall_ms]}",
+        "view;dur=#{profile_payload[:view_ms]}",
+        "sql;dur=#{profile_payload[:sql_ms]}"
+      ].join(", ")
     end
   end
 end

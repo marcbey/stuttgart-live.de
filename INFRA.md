@@ -286,11 +286,12 @@ Neue Datei:
 Inhaltlich:
 
 - `servers.web` mit Hetzner-Host
+- `servers.job` mit demselben Hetzner-Host und eigenem `bin/jobs`-Command
 - `proxy.ssl: true`
 - `proxy.host` mit Produktionsdomain
 - Registry auf `ghcr.io`
-- `SOLID_QUEUE_IN_PUMA=true`
-- `DB_HOST=127.0.0.1`
+- getrennte Env-Werte für `WEB_CONCURRENCY`, `RAILS_MAX_THREADS`, `DB_POOL`, `QUEUE_DB_POOL`, `JOB_THREADS` und `JOB_CONCURRENCY`
+- `DB_HOST=172.18.0.1`
 - `DB_PORT=5432`
 - `DB_NAME=stuttgart_live_de_production`
 - `DB_USER=stuttgart_live_de`

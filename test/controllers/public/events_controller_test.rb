@@ -51,6 +51,24 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".lane-header.lane-header--genre", count: 0
   end
 
+  test "index exposes opt-in profile headers" do
+    get events_url(filter: "all"), headers: { "X-Stuttgart-Live-Profile" => "1" }
+
+    assert_response :success
+
+    profile_header = response.headers["X-Stuttgart-Live-Profile"]
+    server_timing = response.headers["Server-Timing"]
+
+    assert_match(/wall_ms=\d+(\.\d+)?/, profile_header)
+    assert_match(/view_ms=\d+(\.\d+)?/, profile_header)
+    assert_match(/sql_ms=\d+(\.\d+)?/, profile_header)
+    assert_match(/queries=\d+/, profile_header)
+    assert_match(/cached_queries=\d+/, profile_header)
+    assert_match(/app;dur=\d+(\.\d+)?/, server_timing)
+    assert_match(/view;dur=\d+(\.\d+)?/, server_timing)
+    assert_match(/sql;dur=\d+(\.\d+)?/, server_timing)
+  end
+
   test "index renders configured homepage genre lanes in priority order" do
     snapshot, rock_group, pop_group = create_homepage_genre_snapshot
     AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ pop_group.slug, rock_group.slug ])

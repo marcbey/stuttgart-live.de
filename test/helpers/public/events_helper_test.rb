@@ -87,4 +87,57 @@ class Public::EventsHelperTest < ActionView::TestCase
 
     assert_equal "/events?event_date=2026-07-10", public_events_index_path(browse_state)
   end
+
+  test "public_events_section_cache_key changes with rendered event associations" do
+    event = events(:published_one)
+    browse_state = Public::Events::BrowseState.new({ "filter" => "all" })
+
+    initial_key = public_events_section_cache_key(
+      section: "highlight",
+      browse_state: browse_state,
+      events: [ event ],
+      context: [ "Highlights" ],
+      strict_proxy: false,
+      authenticated: false
+    )
+
+    travel 1.second do
+      event.event_offers.first.touch
+    end
+
+    updated_key = public_events_section_cache_key(
+      section: "highlight",
+      browse_state: browse_state,
+      events: [ event ],
+      context: [ "Highlights" ],
+      strict_proxy: false,
+      authenticated: false
+    )
+
+    assert_not_equal initial_key, updated_key
+  end
+
+  test "public_events_section_cache_key changes between public and authenticated markup" do
+    event = events(:published_one)
+    browse_state = Public::Events::BrowseState.new({ "filter" => "all" })
+
+    public_key = public_events_section_cache_key(
+      section: "genre-lane",
+      browse_state: browse_state,
+      events: [ event ],
+      context: [ "Rock" ],
+      strict_proxy: false,
+      authenticated: false
+    )
+    authenticated_key = public_events_section_cache_key(
+      section: "genre-lane",
+      browse_state: browse_state,
+      events: [ event ],
+      context: [ "Rock" ],
+      strict_proxy: false,
+      authenticated: true
+    )
+
+    assert_not_equal public_key, authenticated_key
+  end
 end

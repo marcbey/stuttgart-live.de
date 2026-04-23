@@ -461,6 +461,16 @@ Wichtig für den Ablauf:
 - Für erste Production-Läufe nur kleine Nutzerzahlen, niedrige Spawn-Rate und kurze Laufzeiten verwenden. Keine aggressiven Ramp-ups ohne vorherige Abstimmung.
 - Bei der Auswertung zuerst auf HTTP-Fehlerquote, p95/p99 sowie einzelne auffällige Request-Gruppen wie `GET /events/:slug` und `GET /news/:slug` schauen.
 
+Für lokales oder staging-nahes Profiling von `/` und `/events` lassen sich zusätzlich opt-in Header aktivieren:
+
+```bash
+curl -sD - -o /dev/null \
+  -H 'X-Stuttgart-Live-Profile: 1' \
+  'http://127.0.0.1:3000/events?filter=all'
+```
+
+Die Antwort enthält dann `X-Stuttgart-Live-Profile` und `Server-Timing` mit Wall-Time, View-Zeit und SQL-Zeit. Das ist nur für gezielte Analyse gedacht und bewusst nicht standardmäßig aktiv.
+
 ## Wichtige Konfiguration
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
@@ -592,7 +602,8 @@ Der Issue-Workflow für `codex-fix` lädt GitHub-hosted Screenshots aus dem Issu
 
 Das Skript `script/github_set_production_secrets` setzt dafür sowohl die benötigten Production-Environment-Secrets als auch das Repository-Secret `OPENAI_API_KEY` aus der lokalen `.env`.
 
-Webprozess und Job-Verarbeitung laufen gemeinsam in der Rails-Anwendung. `SOLID_QUEUE_IN_PUMA=true` ist für dieses Setup bereits vorgesehen.
+Webprozess und Job-Verarbeitung laufen in Production getrennt. Kamal startet eine `web`-Rolle für den öffentlichen Traffic und zusätzlich eine `job`-Rolle mit `bin/jobs`, damit Queue-Arbeit nicht mehr im selben Puma-Prozess um dieselben Threads konkurriert.
+Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=2` und `RAILS_MAX_THREADS=3` gesetzt. Die Datenbank-Pools werden zusätzlich explizit über `DB_POOL` und `QUEUE_DB_POOL` festgelegt.
 Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt signierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
 
 Die produktive öffentliche Domain, die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
@@ -676,9 +687,10 @@ bin/kamal details -d hetzner
 bin/kamal proxy reboot -d hetzner
 bin/kamal app containers -d hetzner
 bin/kamal app version -d hetzner
-bin/kamal app logs -f -d hetzner
-bin/kamal app logs --since 15m -d hetzner
-bin/kamal app logs --since 30m --grep ERROR -d hetzner
+bin/kamal app logs -f -d hetzner -r web
+bin/kamal app logs -f -d hetzner -r job
+bin/kamal app logs --since 15m -d hetzner -r web
+bin/kamal app logs --since 30m --grep ERROR -d hetzner -r job
 ```
 
 Der Produktions-Logpfad für App und Jobs ist bewusst zentral über Docker/Kamal organisiert. Rails schreibt in Production nach `STDOUT`, daher sind `bin/kamal app logs ...` und auf dem Host `docker logs ...` die primären Werkzeuge auch für Import- und LLM-Läufe.

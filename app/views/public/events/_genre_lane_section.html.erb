@@ -1,3 +1,4 @@
+<% group = local_assigns[:group] %>
 <% title = local_assigns[:title] || group&.name %>
 <% kicker = local_assigns[:kicker] %>
 <% section_variant = local_assigns[:section_variant] %>
@@ -7,6 +8,27 @@
 <% hover_lift_cards = local_assigns.fetch(:hover_lift_cards, false) %>
 <% header_variant = local_assigns.fetch(:header_variant, :genre) %>
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
+<% tone_class = local_assigns.fetch(:tone_class, "genre-lane-section--tone-1") %>
+<% section_cache_key = public_events_section_cache_key(
+  section: "genre-lane",
+  browse_state: browse_state,
+  events: events,
+  context: [
+    title,
+    group&.slug,
+    local_assigns[:title_url],
+    kicker,
+    section_variant,
+    card_variant,
+    show_series_badge,
+    hover_lift_cards,
+    header_variant,
+    local_assigns[:header_class],
+    tone_class,
+    list_aria_label
+  ],
+  strict_proxy: strict_proxy
+) %>
 <% nav_content = capture do %>
   <button type="button"
           class="slider-view-toggle"
@@ -25,51 +47,53 @@
   </button>
 <% end %>
 
-<section class="<%= ["genre-lane-section", local_assigns.fetch(:tone_class, "genre-lane-section--tone-1"), ("genre-lane-section--#{section_variant}" if section_variant.present?), ("genre-lane-section--hover-lift" if hover_lift_cards)].compact.join(" ") %>"
-         data-controller="highlights-slider section-view">
-  <%= render "home_slider_header",
-             title: title,
-             title_url: local_assigns[:title_url],
-             kicker: kicker,
-             variant: header_variant,
-             header_class: local_assigns[:header_class],
-             nav_content: nav_content %>
+<% cache section_cache_key do %>
+  <section class="<%= ["genre-lane-section", tone_class, ("genre-lane-section--#{section_variant}" if section_variant.present?), ("genre-lane-section--hover-lift" if hover_lift_cards)].compact.join(" ") %>"
+           data-controller="highlights-slider section-view">
+    <%= render "home_slider_header",
+               title: title,
+               title_url: local_assigns[:title_url],
+               kicker: kicker,
+               variant: header_variant,
+               header_class: local_assigns[:header_class],
+               nav_content: nav_content %>
 
-  <div data-section-view-target="slider">
-    <div class="highlights-slider-viewport">
-      <button type="button"
-              class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev genre-lane-arrow"
-              data-highlights-slider-target="previousButton"
-              data-action="click->highlights-slider#previous"
-              aria-label="Zurück">
-        ‹
-      </button>
-      <div class="genre-lane-track" data-highlights-slider-target="track">
-        <% events.each do |event| %>
-          <%= render "genre_lane_card",
-                     event: event,
-                     browse_state: browse_state,
-                     card_variant: card_variant,
-                     strict_proxy: strict_proxy,
-                     effective_series_ids: effective_series_ids,
-                     show_series_badge: show_series_badge %>
-        <% end %>
+    <div data-section-view-target="slider">
+      <div class="highlights-slider-viewport">
+        <button type="button"
+                class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev genre-lane-arrow"
+                data-highlights-slider-target="previousButton"
+                data-action="click->highlights-slider#previous"
+                aria-label="Zurück">
+          ‹
+        </button>
+        <div class="genre-lane-track" data-highlights-slider-target="track">
+          <% events.each do |event| %>
+            <%= render "genre_lane_card",
+                       event: event,
+                       browse_state: browse_state,
+                       card_variant: card_variant,
+                       strict_proxy: strict_proxy,
+                       effective_series_ids: effective_series_ids,
+                       show_series_badge: show_series_badge %>
+          <% end %>
+        </div>
+        <button type="button"
+                class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next genre-lane-arrow"
+                data-highlights-slider-target="nextButton"
+                data-action="click->highlights-slider#next"
+                aria-label="Weiter">
+          ›
+        </button>
       </div>
-      <button type="button"
-              class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next genre-lane-arrow"
-              data-highlights-slider-target="nextButton"
-              data-action="click->highlights-slider#next"
-              aria-label="Weiter">
-        ›
-      </button>
     </div>
-  </div>
 
-  <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
-    <%= render "event_rows",
-               events: events,
-               browse_state: browse_state,
-               effective_series_ids: effective_series_ids,
-               strict_proxy: strict_proxy %>
-  </div>
-</section>
+    <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
+      <%= render "event_rows",
+                 events: events,
+                 browse_state: browse_state,
+                 effective_series_ids: effective_series_ids,
+                 strict_proxy: strict_proxy %>
+    </div>
+  </section>
+<% end %>

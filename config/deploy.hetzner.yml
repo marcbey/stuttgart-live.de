@@ -7,7 +7,24 @@ require File.expand_path("app/lib/hetzner_deploy_config.rb", Dir.pwd)
 
 servers:
   web:
-    - <%= HetznerDeployConfig.web_host %>
+    hosts:
+      - <%= HetznerDeployConfig.web_host %>
+    env:
+      clear:
+        WEB_CONCURRENCY: 2
+        RAILS_MAX_THREADS: 3
+        DB_POOL: 3
+        QUEUE_DB_POOL: 3
+  job:
+    hosts:
+      - <%= HetznerDeployConfig.web_host %>
+    cmd: bin/jobs
+    env:
+      clear:
+        JOB_CONCURRENCY: 1
+        JOB_THREADS: 3
+        DB_POOL: 3
+        QUEUE_DB_POOL: 5
 
 proxy:
   ssl: <%= ENV.fetch("APP_SSL", "true") == "true" %>
@@ -26,7 +43,6 @@ env:
     - DB_PASSWORD
     - MEDIA_PROXY_SECRET
   clear:
-    SOLID_QUEUE_IN_PUMA: true
     APP_HOST: <%= HetznerDeployConfig.app_host %>
     SENTRY_ENVIRONMENT: production
     SENTRY_RELEASE: <%= ENV.fetch("SENTRY_RELEASE") { `git rev-parse HEAD`.strip } %>
