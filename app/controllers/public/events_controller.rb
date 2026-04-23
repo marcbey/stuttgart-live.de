@@ -5,6 +5,7 @@ module Public
 
     PER_PAGE = 12
     HOME_LANE_LIMIT = 15
+    HOME_CANDIDATE_LIMIT = 100
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
     SHOW_EVENT_SERIES_TERMS_LIMIT = 6
@@ -251,21 +252,21 @@ module Public
       @home_all_stuttgart_lane = Public::Events::LaneDirectory.all_stuttgart
       @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
 
-      @home_featured_effective_series_ids = effective_public_series_ids_for_relation(scoped_highlights)
-      @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.to_a)
+      @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.limit(HOME_CANDIDATE_LIMIT).to_a)
+      @home_featured_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_featured_events)
 
       if @home_featured_events.empty?
         fallback_relation = current_relation.reorder(:start_at, :id)
-        @home_featured_effective_series_ids = effective_public_series_ids_for_relation(fallback_relation)
-        @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.to_a)
+        @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.limit(HOME_CANDIDATE_LIMIT).to_a)
+        @home_featured_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_featured_events)
       end
 
-      @home_highlight_effective_series_ids = effective_public_series_ids_for_relation(scoped_all)
       @home_genre_lanes = homepage_genre_lanes
       @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_all.limit(HOME_LANE_LIMIT).to_a)
+      @home_highlight_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_highlight_events)
       tagestipp_scope = tagestipp_relation
-      @home_tagestipp_effective_series_ids = effective_public_series_ids_for_relation(tagestipp_scope)
       @home_tagestipp_events = Public::Events::SeriesRepresentativeSelector.call(tagestipp_scope.to_a).first(HOME_LANE_LIMIT)
+      @home_tagestipp_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_tagestipp_events)
     end
 
     def should_redirect_search_result?(relation)
@@ -306,47 +307,7 @@ module Public
     end
 
     def homepage_genre_lanes
-      lanes = Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
-      pop_lane = explicit_pop_homepage_lane(existing_lanes: lanes)
-      return lanes if pop_lane.blank?
-
-      lanes + [ pop_lane ]
-    end
-
-    def explicit_pop_homepage_lane(existing_lanes:)
-      return if existing_lanes.any? { |lane| lane.group.slug == "pop" || lane.group.name == "Pop" }
-
-      snapshot = LlmGenreGrouping::Lookup.selected_snapshot
-      pop_group = snapshot&.groups&.find { |group| group.member_genres.include?("Pop") }
-
-      selected_events = pop_homepage_events
-      return if selected_events.empty?
-
-      effective_series_ids = effective_public_series_ids_for_relation(Event.where(id: selected_events.map(&:id)))
-      events = Public::Events::SeriesRepresentativeSelector.call(selected_events).first(Public::Events::HomepageGenreLanesBuilder::DEFAULT_LIMIT)
-      return if events.empty?
-
-      Public::Events::HomepageGenreLanesBuilder::Lane.new(
-        group: pop_group || Public::Events::HomepageGenreLanesBuilder::LaneGroup.new(name: "Pop", slug: "pop"),
-        events:,
-        effective_series_ids:,
-        public_path: Public::Events::LaneDirectory.public_path_for_genre_slug(pop_group&.slug, snapshot: snapshot)
-      )
-    end
-
-    def pop_homepage_events
-      homepage_events_relation
-        .joins(:llm_enrichment)
-        .where(
-          "EXISTS (" \
-            "SELECT 1 FROM jsonb_array_elements_text(event_llm_enrichments.genre) AS event_genre(value) " \
-            "WHERE event_genre.value = ?" \
-          ")",
-          "Pop"
-        )
-        .reorder(:start_at, :id)
-        .distinct
-        .to_a
+      Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
     end
 
     def initial_search_overlay_events

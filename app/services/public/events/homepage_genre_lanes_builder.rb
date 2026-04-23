@@ -48,18 +48,24 @@ module Public
       def chronological_group_events(group)
         selected_events =
           LlmGenreGrouping::Lookup
-            .chronological_events_for_group(group, relation:, limit: nil)
+            .chronological_events_for_group(group, relation:, limit: candidate_limit)
             .to_a
 
-        effective_series_ids = effective_series_ids_for(selected_events)
         events = SeriesRepresentativeSelector.call(selected_events)
         events = events.first(limit) if limit.present?
+        effective_series_ids = effective_series_ids_for(events)
 
         [ events, effective_series_ids ]
       end
 
       def effective_series_ids_for(events)
         EffectiveSeriesIdsQuery.call(events)
+      end
+
+      def candidate_limit
+        return if limit.nil?
+
+        [ limit * 4, LlmGenreGrouping::Lookup::DEFAULT_GROUP_EVENTS_LIMIT ].max
       end
     end
   end

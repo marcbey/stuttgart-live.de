@@ -31,17 +31,21 @@ module Public
       def chronological_group_events
         selected_events =
           LlmGenreGrouping::Lookup
-            .chronological_events_for_group(group, relation:, limit: nil, exclude_event_id: event.id)
+            .chronological_events_for_group(group, relation:, limit: candidate_limit, exclude_event_id: event.id)
             .to_a
 
-        effective_series_ids = effective_series_ids_for(selected_events)
         events = SeriesRepresentativeSelector.call(selected_events).first(limit)
+        effective_series_ids = effective_series_ids_for(events)
 
         [ events, effective_series_ids ]
       end
 
       def effective_series_ids_for(events)
         EffectiveSeriesIdsQuery.call(events)
+      end
+
+      def candidate_limit
+        [ limit * 4, LlmGenreGrouping::Lookup::DEFAULT_GROUP_EVENTS_LIMIT ].max
       end
     end
   end

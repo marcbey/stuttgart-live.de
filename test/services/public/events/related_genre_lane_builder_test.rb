@@ -111,6 +111,31 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     assert_not_includes lane.events.map(&:id), current_event.id
   end
 
+  test "uses a bounded candidate limit for related lane events" do
+    current_event = build_lane_event(slug: "related-candidate-current", artist_name: "Current Event", start_at: 2.days.from_now.change(hour: 20))
+    related_event = build_lane_event(slug: "related-candidate-match", artist_name: "Matching Event", start_at: 3.days.from_now.change(hour: 20))
+
+    build_lane_enrichment(event: current_event, genres: [ "Rock" ])
+    build_lane_enrichment(event: related_event, genres: [ "Rock" ])
+
+    captured_limit = nil
+    lookup_singleton = LlmGenreGrouping::Lookup.singleton_class
+    original_lookup = LlmGenreGrouping::Lookup.method(:chronological_events_for_group)
+
+    lookup_singleton.send(:define_method, :chronological_events_for_group) do |group, relation:, limit:, exclude_event_id: nil|
+      captured_limit = limit
+      original_lookup.call(group, relation:, limit:, exclude_event_id:)
+    end
+
+    begin
+      build_builder(event: current_event).call
+    ensure
+      lookup_singleton.send(:define_method, :chronological_events_for_group, original_lookup)
+    end
+
+    assert_equal 400, captured_limit
+  end
+
   test "marks a related lane event as event series when another published event exists only in the past" do
     series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
     current_event = build_lane_event(slug: "related-series-current", artist_name: "Current Event", start_at: 4.days.from_now.change(hour: 20))

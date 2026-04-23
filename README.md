@@ -421,6 +421,46 @@ bin/rake -T
 bin/ci
 ```
 
+### Locust / Lasttest
+
+Für vorsichtige Read-only-Lasttests gibt es ein manuelles Locust-Skript unter `test/locust/locustfile.py`. Es ist bewusst nicht Teil von `bin/ci` und testet nur öffentliche `GET`-Seiten.
+
+Lokal gegen die Entwicklungsumgebung:
+
+```bash
+bin/dev
+locust -f test/locust/locustfile.py --host http://127.0.0.1:3000
+```
+
+Konservativer headless Smoke-Test lokal:
+
+```bash
+locust -f test/locust/locustfile.py \
+  --host http://127.0.0.1:3000 \
+  --headless \
+  --users 2 \
+  --spawn-rate 1 \
+  --run-time 1m
+```
+
+Konservativer headless Smoke-Test gegen Production:
+
+```bash
+locust -f test/locust/locustfile.py \
+  --host https://stuttgart-live.schopp3r.de \
+  --headless \
+  --users 3 \
+  --spawn-rate 1 \
+  --run-time 2m
+```
+
+Wichtig für den Ablauf:
+
+- Der Host wird immer explizit über `--host` gesetzt und nicht im Skript fest verdrahtet.
+- `on_start` entdeckt Event- und News-Detailseiten aus den öffentlichen HTML-Listen. Wenn keine Detailseiten gefunden werden, fällt der Test automatisch auf stabile Index-Seiten zurück.
+- Für erste Production-Läufe nur kleine Nutzerzahlen, niedrige Spawn-Rate und kurze Laufzeiten verwenden. Keine aggressiven Ramp-ups ohne vorherige Abstimmung.
+- Bei der Auswertung zuerst auf HTTP-Fehlerquote, p95/p99 sowie einzelne auffällige Request-Gruppen wie `GET /events/:slug` und `GET /news/:slug` schauen.
+
 ## Wichtige Konfiguration
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:

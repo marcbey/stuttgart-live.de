@@ -131,6 +131,36 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal "lane-unlimited-17", lanes.first.events.last.slug
   end
 
+  test "uses a bounded candidate limit for homepage lanes" do
+    event = build_lane_event(
+      slug: "lane-candidate-limit",
+      artist_name: "Lane Candidate Limit",
+      start_at: 3.days.from_now.change(hour: 20)
+    )
+    build_lane_enrichment(event: event, genres: [ "Rock" ])
+
+    captured_limit = nil
+    lookup_singleton = LlmGenreGrouping::Lookup.singleton_class
+    original_lookup = LlmGenreGrouping::Lookup.method(:chronological_events_for_group)
+
+    lookup_singleton.send(:define_method, :chronological_events_for_group) do |group, relation:, limit:, exclude_event_id: nil|
+      captured_limit = limit
+      original_lookup.call(group, relation:, limit:, exclude_event_id:)
+    end
+
+    begin
+      Public::Events::HomepageGenreLanesBuilder.new(
+        relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
+        slugs: [ @rock_group.slug ],
+        snapshot: @snapshot
+      ).call
+    ensure
+      lookup_singleton.send(:define_method, :chronological_events_for_group, original_lookup)
+    end
+
+    assert_equal 100, captured_limit
+  end
+
   test "deduplicates event series to the next upcoming event per lane" do
     series = EventSeries.create!(origin: "manual", name: "Frida Reihe")
     later_highlighted = build_lane_event(
