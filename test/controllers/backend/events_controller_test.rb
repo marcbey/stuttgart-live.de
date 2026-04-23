@@ -1798,6 +1798,37 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'aria-selected="true"'
   end
 
+  test "run llm enrichment starts alongside active single-event runs while capacity is available" do
+    sign_in_as(@user)
+    9.times do |index|
+      ImportRun.create!(
+        import_source: import_sources(:two),
+        status: "running",
+        source_type: "llm_enrichment",
+        started_at: (index + 1).minutes.ago,
+        metadata: {
+          "trigger_scope" => "single_event",
+          "target_event_id" => events(:published_one).id,
+          "execution_started_at" => (index + 1).minutes.ago.iso8601
+        }
+      )
+    end
+
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      post run_llm_enrichment_backend_event_url(@published_event), params: {
+        status: "published",
+        editor_tab: "llm_enrichment"
+      }, as: :turbo_stream
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+
+    assert_equal "queued", run.status
+    assert_equal "single_event", run.metadata["trigger_scope"]
+    assert run.metadata["job_id"].present?
+    assert_includes response.body, "LLM-Enrichment für dieses Event wurde gestartet."
+  end
+
   test "editor shows presenters tab with sortable selection list" do
     sign_in_as(@user)
     create_presenter(name: "Alpha Presenter")

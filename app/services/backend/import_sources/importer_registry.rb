@@ -54,6 +54,7 @@ module Backend
           importer_class: Importing::LlmEnrichment::Importer,
           stop_route_helper: :stop_llm_enrichment_run_backend_import_sources_path,
           run_mode: :serial_queue,
+          single_event_parallel_limit: 10,
           max_retries: 0,
           run_job_arguments_builder: ->(_import_source, run) { [ run.id ] },
           run_source_resolver: lambda {

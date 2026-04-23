@@ -21,6 +21,7 @@ module Backend
       def dispatch_next_locked(source_type:, import_source:)
         config = registry.fetch(source_type)
         return nil unless config.fetch(:run_mode) == :serial_queue
+        return dispatch_next_llm_enrichment_locked(source_type:, import_source:) if source_type.to_s == "llm_enrichment"
         return nil if active_or_pending_dispatch?(source_type:, import_source:)
 
         run = next_dispatchable_queued_run(source_type:, import_source:)
@@ -73,6 +74,22 @@ module Backend
 
       attr_reader :clock, :registry
 
+      def dispatch_next_llm_enrichment_locked(source_type:, import_source:)
+        first_dispatched_run = nil
+
+        loop do
+          run = next_dispatchable_queued_run(source_type:, import_source:)
+          break unless run.present?
+          break unless llm_enrichment_run_dispatchable?(run:, import_source:)
+
+          dispatched_run = dispatch_run_locked(run:, source_type:, import_source:)
+          first_dispatched_run ||= dispatched_run
+          break unless llm_enrichment_single_event_run?(run)
+        end
+
+        first_dispatched_run
+      end
+
       def active_or_pending_dispatch?(source_type:, import_source:)
         scope = import_source.import_runs.where(source_type: source_type)
         scope.where(status: "running").exists? ||
@@ -89,6 +106,49 @@ module Backend
 
       def build_job_arguments(config, import_source, run)
         config.fetch(:run_job_arguments_builder).call(import_source, run)
+      end
+
+      def llm_enrichment_run_dispatchable?(run:, import_source:)
+        if llm_enrichment_single_event_run?(run)
+          return false if llm_enrichment_non_single_event_active_or_pending?(import_source:)
+
+          llm_enrichment_single_event_active_or_pending_count(import_source) < llm_enrichment_single_event_parallel_limit
+        else
+          !llm_enrichment_active_or_pending?(import_source:)
+        end
+      end
+
+      def llm_enrichment_active_or_pending?(import_source:)
+        llm_enrichment_runs(import_source).any? do |run|
+          run.status == "running" || (run.status == "queued" && dispatch_requested?(run))
+        end
+      end
+
+      def llm_enrichment_non_single_event_active_or_pending?(import_source:)
+        llm_enrichment_runs(import_source).any? do |run|
+          next false if llm_enrichment_single_event_run?(run)
+
+          run.status == "running" || (run.status == "queued" && dispatch_requested?(run))
+        end
+      end
+
+      def llm_enrichment_single_event_active_or_pending_count(import_source)
+        llm_enrichment_runs(import_source).count do |run|
+          llm_enrichment_single_event_run?(run) &&
+            (run.status == "running" || (run.status == "queued" && dispatch_requested?(run)))
+        end
+      end
+
+      def llm_enrichment_runs(import_source)
+        import_source.import_runs.where(source_type: "llm_enrichment")
+      end
+
+      def llm_enrichment_single_event_parallel_limit
+        registry.fetch("llm_enrichment").fetch(:single_event_parallel_limit, 1)
+      end
+
+      def llm_enrichment_single_event_run?(run)
+        normalized_metadata(run.metadata)["trigger_scope"] == "single_event"
       end
 
       def dispatch_requested?(run)

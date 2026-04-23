@@ -70,6 +70,8 @@ module Backend
         case result.action
         when :canceled_queue
           "LLM-Enrichment (Run ##{result.run.id}) wurde aus der Warteschlange entfernt."
+        when :forced_cancel
+          "LLM-Enrichment (Run ##{result.run.id}) wurde sofort gestoppt."
         else
           "Stop für LLM-Enrichment (Run ##{result.run.id}) wurde angefordert."
         end

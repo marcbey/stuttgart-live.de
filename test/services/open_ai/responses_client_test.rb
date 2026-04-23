@@ -24,6 +24,7 @@ module OpenAi
     test "uses api key from rails credentials" do
       fake_sdk_client = Object.new
       captured_api_key = nil
+      captured_timeout = nil
       fake_credentials = Object.new
       fake_credentials.define_singleton_method(:dig) do |*keys|
         keys == [ :openai, :api_key ] ? "test-openai-key" : nil
@@ -31,8 +32,9 @@ module OpenAi
 
       client_class = OpenAI::Client.singleton_class
       client_class.alias_method :__original_new_for_test, :new
-      client_class.define_method(:new) do |api_key:, **|
+      client_class.define_method(:new) do |api_key:, timeout:, **|
         captured_api_key = api_key
+        captured_timeout = timeout
         fake_sdk_client
       end
 
@@ -42,6 +44,7 @@ module OpenAi
       end
 
       assert_equal "test-openai-key", captured_api_key
+      assert_equal ResponsesClient::DEFAULT_TIMEOUT_SECONDS, captured_timeout
     ensure
       client_class.alias_method :new, :__original_new_for_test
       client_class.remove_method :__original_new_for_test

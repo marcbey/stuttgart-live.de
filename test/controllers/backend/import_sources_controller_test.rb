@@ -663,6 +663,27 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "stopping"
   end
 
+  test "should immediately cancel a running single event llm enrichment run" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: {
+        "trigger_scope" => "single_event",
+        "target_event_id" => events(:published_one).id
+      }
+    )
+
+    post stop_llm_enrichment_run_backend_import_sources_url(run_id: run.id, section: :llm_enrichment), as: :turbo_stream
+
+    assert_equal "canceled", run.reload.status
+    assert_equal "Force-stopped single-event run", run.metadata["stop_release_reason"]
+    assert_import_sources_turbo_feedback(message: "LLM-Enrichment (Run ##{run.id}) wurde sofort gestoppt.")
+    assert_import_run_row_in_response(run)
+    assert_includes response.body, "canceled"
+  end
+
   test "should render stop action for running llm enrichment jobs" do
     run = ImportRun.create!(
       import_source: @eventim_source,

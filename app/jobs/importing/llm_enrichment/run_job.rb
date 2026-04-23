@@ -76,6 +76,11 @@ module Importing
           )
         )
       rescue StandardError => e
+        if keep_canceled_run_terminal?(run)
+          logger.info("[LlmEnrichmentRunJob] run_id=#{run&.id} ignored error after cancel: #{e.class}: #{e.message}")
+          return
+        end
+
         logger.error("[LlmEnrichmentRunJob] run_id=#{run&.id} failed: #{e.class}: #{e.message}")
         run&.update!(
           status: "failed",
@@ -130,6 +135,20 @@ module Importing
         )
       rescue StandardError
         nil
+      end
+
+      def keep_canceled_run_terminal?(run)
+        return false unless run&.persisted?
+
+        current_run = run.reload
+        return false unless current_run.status == "canceled"
+        return false unless current_run.finished_at.present?
+
+        ActiveModel::Type::Boolean.new.cast(normalized_metadata(current_run.metadata)["stop_requested"])
+      end
+
+      def normalized_metadata(metadata)
+        metadata.is_a?(Hash) ? metadata.deep_stringify_keys : {}
       end
     end
   end

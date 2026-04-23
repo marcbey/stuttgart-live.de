@@ -4,12 +4,14 @@ module OpenAi
   class ResponsesClient
     Error = Class.new(StandardError)
     DEFAULT_MODEL = "gpt-5.1".freeze
+    DEFAULT_TIMEOUT_SECONDS = 180.0
 
-    attr_reader :model, :temperature
+    attr_reader :model, :temperature, :timeout
 
-    def initialize(model: AppSetting.llm_enrichment_model, temperature: nil, sdk_client: nil)
+    def initialize(model: AppSetting.llm_enrichment_model, temperature: nil, timeout: DEFAULT_TIMEOUT_SECONDS, sdk_client: nil)
       @model = normalize_model(model)
       @temperature = temperature
+      @timeout = timeout
       @sdk_client = sdk_client
     end
 
@@ -54,7 +56,7 @@ module OpenAi
     end
 
     def client
-      @client ||= sdk_client || OpenAI::Client.new(api_key: resolved_api_key)
+      @client ||= sdk_client || OpenAI::Client.new(api_key: resolved_api_key, timeout: timeout)
     end
 
     def resolved_api_key
