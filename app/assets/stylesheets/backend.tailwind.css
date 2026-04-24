@@ -1253,6 +1253,35 @@ display: grid;
   gap: 0.85rem;
 }
 
+.llm-enrichment-run-controls {
+align-items: center;
+}
+
+.llm-enrichment-run-button {
+display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.llm-enrichment-run-button.is-loading {
+cursor: progress;
+}
+
+.llm-enrichment-run-spinner {
+width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(141, 19, 32, 0.24);
+  border-top-color: #8d1320;
+  border-radius: 999px;
+  animation: llm-enrichment-spin 0.8s linear infinite;
+}
+
+@keyframes llm-enrichment-spin {
+to {
+  transform: rotate(360deg);
+}
+}
+
 .llm-enrichment-copy-grid {
 display: grid;
   gap: 0.75rem;

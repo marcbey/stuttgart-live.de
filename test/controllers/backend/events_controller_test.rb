@@ -1752,6 +1752,34 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Für dieses Event gibt es noch kein LLM-Enrichment."
   end
 
+  test "llm enrichment tab shows spinner while single event run is active" do
+    sign_in_as(@user)
+    ImportRun.create!(
+      import_source: import_sources(:two),
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {
+        "trigger_scope" => "single_event",
+        "target_event_id" => @published_event.id,
+        "job_id" => "job-123"
+      }
+    )
+
+    get backend_event_url(@published_event, editor_tab: "llm_enrichment")
+
+    assert_response :success
+    assert_select "##{ActionView::RecordIdentifier.dom_id(@published_event, :llm_enrichment_run_controls)}", count: 1
+    assert_select ".llm-enrichment-run-controls > .llm-enrichment-run-spinner[role='status'][aria-label='LLM-Enrichment läuft']",
+                  count: 1
+    assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button .llm-enrichment-run-spinner",
+                  count: 0
+    assert_select ".llm-enrichment-run-status", count: 0
+    assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button[disabled]",
+                  text: "LLM-Enrichment für dieses Event starten",
+                  count: 1
+  end
+
   test "run llm enrichment starts a single event run" do
     sign_in_as(@user)
 
@@ -1795,6 +1823,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "queued", run.status
     assert_equal "single_event", run.metadata["trigger_scope"]
     assert_includes response.body, "LLM-Enrichment für dieses Event wurde zur Warteschlange hinzugefügt"
+    assert_includes response.body, "llm-enrichment-run-spinner"
     assert_includes response.body, 'id="event-editor-tab-llm-enrichment"'
     assert_includes response.body, 'aria-selected="true"'
   end
@@ -1828,6 +1857,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "single_event", run.metadata["trigger_scope"]
     assert run.metadata["job_id"].present?
     assert_includes response.body, "LLM-Enrichment für dieses Event wurde gestartet."
+    assert_includes response.body, "llm-enrichment-run-spinner"
   end
 
   test "editor shows presenters tab with sortable selection list" do

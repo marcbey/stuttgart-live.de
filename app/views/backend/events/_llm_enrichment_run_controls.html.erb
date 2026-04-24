@@ -1,0 +1,24 @@
+<% active_run = event_active_llm_enrichment_run(event) %>
+
+<div id="<%= event_llm_enrichment_run_controls_id(event) %>"
+     class="backend-section-header-actions llm-enrichment-run-controls">
+  <% if active_run.present? %>
+    <span class="llm-enrichment-run-spinner" role="status" aria-label="LLM-Enrichment läuft"></span>
+  <% end %>
+
+  <div class="action-cell">
+    <%= button_to run_llm_enrichment_backend_event_path(event),
+                  method: :post,
+                  params: {
+                    status: filter_status,
+                    editor_tab: "llm_enrichment"
+                  },
+                  form: { data: { turbo_stream: true } },
+                  class: class_names("button button-save-primary button-compact llm-enrichment-run-button",
+                                     "is-loading": active_run.present?),
+                  disabled: active_run.present?,
+                  aria: { busy: active_run.present? ? "true" : nil } do %>
+      <span>LLM-Enrichment für dieses Event starten</span>
+    <% end %>
+  </div>
+</div>

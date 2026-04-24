@@ -8,19 +8,10 @@
       <h3>LLM-Enrichment</h3>
     </div>
     <% if allow_run %>
-      <div class="backend-section-header-actions">
-        <div class="action-cell">
-          <%= button_to "LLM-Enrichment für dieses Event starten",
-                        run_llm_enrichment_backend_event_path(event),
-                        method: :post,
-                        params: {
-                          status: filter_status,
-                          editor_tab: "llm_enrichment"
-                        },
-                        form: { data: { turbo_stream: true } },
-                        class: "button button-save-primary button-compact" %>
-        </div>
-      </div>
+      <%= turbo_stream_from [ :backend, :event_llm_enrichment, event.id ] %>
+      <%= render "backend/events/llm_enrichment_run_controls",
+                 event: event,
+                 filter_status: filter_status %>
     <% end %>
   </div>
 

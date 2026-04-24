@@ -168,6 +168,23 @@ module Backend::EventsHelper
     "Letzter LLM-Enrichment-Run: #{day_name}, #{l(timestamp, format: "%d.%m.%Y %H:%M")}"
   end
 
+  def event_llm_enrichment_run_controls_id(event)
+    dom_id(event, :llm_enrichment_run_controls)
+  end
+
+  def event_active_llm_enrichment_run(event)
+    return if event.blank? || !event.persisted?
+
+    ImportRun
+      .where(source_type: "llm_enrichment", status: %w[queued running])
+      .where("metadata @> ?", {
+        trigger_scope: "single_event",
+        target_event_id: event.id
+      }.to_json)
+      .order(Arel.sql("CASE import_runs.status WHEN 'running' THEN 0 ELSE 1 END"), created_at: :desc)
+      .first
+  end
+
   def external_link_label_row(label_html:, url:, text:)
     content_tag(:div, class: "form-label-row") do
       parts = [ label_html ]
