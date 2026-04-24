@@ -10,6 +10,9 @@ permissions:
   contents: write
   pull-requests: write
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 concurrency:
   group: codex-pr-comment-${{ github.event.pull_request.number || github.event.issue.number }}
   cancel-in-progress: false
@@ -267,6 +270,7 @@ jobs:
 
           rm -f .github/codex/prompts/address-pr-comment.rendered.md codex-output.md
           rm -rf .github/codex/tmp/pr-${{ steps.pr.outputs.number }}-comment-${{ github.event.comment.id }}
+          rm -rf .workflow-support
 
           if [ -z "$(git status --porcelain)" ]; then
             echo "No repository changes to commit."
