@@ -119,6 +119,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[venue_name]'][data-venue-autocomplete-target='input']", count: 1
     assert_select "input[name='event[venue_id]'][data-venue-autocomplete-target='hidden']", count: 1
     assert_select ".venue-autocomplete[data-controller='venue-autocomplete']", count: 1
+    assert_select ".form-label-link[aria-label='Venue im Backend öffnen'][href='#{backend_venues_path(venue_id: @event.venue_record.id)}'][target='_blank']", count: 1
   end
 
   test "topbar does not render direct facebook or instagram publish buttons" do

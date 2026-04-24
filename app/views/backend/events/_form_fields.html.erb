@@ -39,7 +39,7 @@
     <%= form.text_field :city, class: "form-input" %>
   </div>
   <div>
-    <%= form.label :venue_name, "Venue", class: "form-label" %>
+    <%= event_venue_link_label_row(form, event) %>
     <div class="venue-autocomplete"
          data-controller="venue-autocomplete"
          data-venue-autocomplete-url-value="<%= autocomplete_backend_venues_path %>">

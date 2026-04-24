@@ -3,11 +3,17 @@
     <ul class="event-list" role="list">
       <% venues.each do |venue| %>
         <li class="event-list-item venue-list-item <%= 'event-list-item-active' if selected_venue&.id == venue.id %>">
-          <%= link_to edit_backend_venue_path(venue, query: query_filter, sort: (local_assigns[:sort_filter] unless local_assigns[:sort_filter] == "alphabetical")),
+          <% sort_filter = local_assigns[:sort_filter] %>
+          <%= link_to edit_backend_venue_path(venue, query: query_filter, sort: (sort_filter unless sort_filter == "alphabetical")),
                       data: {
                         turbo_frame: "venue_editor",
                         action: "click->editor-inbox#itemLinkClicked",
-                        editor_inbox_item_id: venue.id
+                        editor_inbox_item_id: venue.id,
+                        editor_inbox_selection_url: backend_venues_path(
+                          query: query_filter.presence,
+                          sort: (sort_filter unless sort_filter == "alphabetical"),
+                          venue_id: venue.id
+                        )
                       },
                       class: "event-link venue-link" do %>
             <div class="event-list-main">

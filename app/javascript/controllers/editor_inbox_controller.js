@@ -14,6 +14,8 @@ export default class extends Controller {
   }
 
   itemLinkClicked(event) {
+    this.pushSelectionUrl(event)
+
     const itemId = this.itemIdFrom(event.currentTarget)
     this.highlightItem(itemId)
   }
@@ -75,5 +77,23 @@ export default class extends Controller {
     if (!(element instanceof HTMLElement)) return null
 
     return element.dataset?.[this.itemIdAttributeValue]
+  }
+
+  pushSelectionUrl(event) {
+    if (event.defaultPrevented || event.button !== 0) return
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+
+    const link = event.currentTarget
+    if (!(link instanceof HTMLAnchorElement)) return
+    if (link.target && link.target !== "_self") return
+
+    const selectionUrl = link.dataset.editorInboxSelectionUrl
+    if (!selectionUrl) return
+
+    const nextUrl = new URL(selectionUrl, window.location.href)
+    if (nextUrl.origin !== window.location.origin) return
+    if (`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}` === `${window.location.pathname}${window.location.search}${window.location.hash}`) return
+
+    window.history.pushState(window.history.state, "", nextUrl)
   }
 }

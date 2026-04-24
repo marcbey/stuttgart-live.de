@@ -70,6 +70,15 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#venue_editor form.editor-form", count: 1
   end
 
+  test "venues list exposes selectable backend url for browser history" do
+    sign_in_as(@editor)
+
+    get backend_venues_url, params: { query: "wiz", sort: "total" }
+
+    assert_response :success
+    assert_select ".venue-link[data-editor-inbox-selection-url='#{backend_venues_path(query: "wiz", sort: "total", venue_id: @venue.id)}']", count: 1
+  end
+
   test "backend user can search venues via turbo stream" do
     sign_in_as(@editor)
 

@@ -224,6 +224,14 @@ module Backend::EventsHelper
 
   alias_method :llm_enrichment_link_label_row, :form_external_link_label_row
 
+  def event_venue_link_label_row(form, event)
+    external_link_label_row(
+      label_html: form.label(:venue_name, "Venue", class: "form-label"),
+      url: (backend_venues_path(venue_id: event.venue_record.id) if event.venue_record.present?),
+      text: "Venue im Backend"
+    )
+  end
+
   def preuploaded_blob_from_signed_id(signed_id)
     return if signed_id.blank?
 
