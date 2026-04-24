@@ -3555,6 +3555,32 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
+  test "show falls back to a base venue logo when the sub venue has none" do
+    base_venue = Venue.create!(name: "Liederhalle")
+    base_venue.logo.attach(create_uploaded_blob(filename: "liederhalle.png"))
+    Venue.create!(name: "Liederhalle Hegelsaal")
+
+    event = Event.create!(
+      slug: "venue-logo-fallback-event",
+      source_fingerprint: "test::public::show::venue-logo-fallback",
+      title: "Venue Logo Fallback",
+      artist_name: "Venue Logo Artist",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle Hegelsaal",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-venue-logo[alt='Liederhalle Hegelsaal']", count: 1
+    assert_includes response.body, rails_storage_proxy_path(base_venue.detail_logo_variant, only_path: true)
+    refute_includes response.body, "/rails/active_storage/blobs/redirect/"
+  end
+
   test "show renders a single presenter in the organizer partner grid" do
     presenter = create_presenter(name: "Solo Presenter")
     @published_event.update!(

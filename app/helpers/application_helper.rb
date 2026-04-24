@@ -231,13 +231,16 @@ module ApplicationHelper
   end
 
   def venue_logo_representation(venue, size: :detail)
-    return if venue.blank? || !venue.logo.attached?
+    return if venue.blank?
+
+    logo_venue = venue.logo_display_record || venue
+    return unless logo_venue.logo.attached?
 
     case size.to_sym
     when :thumbnail
-      venue.thumbnail_logo_variant
+      logo_venue.thumbnail_logo_variant
     else
-      venue.detail_logo_variant
+      logo_venue.detail_logo_variant
     end
   end
 

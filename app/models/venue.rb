@@ -258,12 +258,34 @@ class Venue < ApplicationRecord
     )
   end
 
+  def self.logo_fallback_tokens(value)
+    ActiveSupport::Inflector.transliterate(value.to_s).downcase.scan(/[[:alnum:]]+/)
+  end
+
   def thumbnail_logo_variant
     processed_logo_representation(resize_to_limit: [ 160, 160 ])
   end
 
   def detail_logo_variant
     processed_logo_representation(resize_to_limit: [ 320, 320 ])
+  end
+
+  def logo_display_record
+    return self if logo.attached?
+
+    current_tokens = self.class.logo_fallback_tokens(name)
+    return if current_tokens.size < 2
+
+    Venue.joins(:logo_attachment)
+      .where.not(id: id)
+      .ordered_by_name
+      .select do |candidate|
+        candidate_tokens = self.class.logo_fallback_tokens(candidate.name)
+        next false if candidate_tokens.empty? || candidate_tokens.size >= current_tokens.size
+
+        current_tokens.first(candidate_tokens.size) == candidate_tokens
+      end
+      .max_by { |candidate| self.class.logo_fallback_tokens(candidate.name).size }
   end
 
   def events_count

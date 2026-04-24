@@ -49,6 +49,15 @@ class VenueTest < ActiveSupport::TestCase
     assert_includes venue.errors[:logo], "muss ein Bild sein"
   end
 
+  test "falls back to a base venue logo for sub venues" do
+    base_venue = Venue.create!(name: "Liederhalle")
+    base_venue.logo.attach(create_uploaded_blob(filename: "liederhalle.png"))
+
+    sub_venue = Venue.create!(name: "Liederhalle Hegelsaal")
+
+    assert_equal base_venue, sub_venue.logo_display_record
+  end
+
   test "cannot be destroyed while events are assigned" do
     venue = venues(:im_wizemann)
 
