@@ -2,6 +2,11 @@ class Venue < ApplicationRecord
   ProcessingError = Class.new(StandardError)
   MATCH_KEY_REMOVABLE_CITY_TOKENS = %w[stuttgart].freeze
   MATCH_KEY_APOSTROPHE_VARIANTS = /['’`´ʼʹʽꞌ՚＇]/.freeze
+  CANONICAL_NAME_ALIASES = {
+    "schleyer halle" => "Hanns-Martin-Schleyer-Halle",
+    "schleyer halle stuttgart" => "Hanns-Martin-Schleyer-Halle",
+    "hanns martin schleyer halle stuttgart" => "Hanns-Martin-Schleyer-Halle"
+  }.freeze
 
   attr_accessor :remove_logo
 
@@ -20,6 +25,9 @@ class Venue < ApplicationRecord
 
   def self.normalize_name(value)
     normalized = value.to_s.strip
+    canonical_alias = canonical_name_alias_for(normalized)
+    return canonical_alias if canonical_alias.present?
+
     return normalized unless normalized.match?(/kulturquartier/i)
 
     normalized.gsub(/\s*[-,]?\s*proton\b/i, "").strip
@@ -236,6 +244,17 @@ class Venue < ApplicationRecord
       .split
   end
   private_class_method :match_key_tokens
+
+  def self.canonical_name_alias_for(value)
+    alias_key = ActiveSupport::Inflector.transliterate(value.to_s)
+      .downcase
+      .gsub(/[^[:alnum:]\s]/, " ")
+      .squeeze(" ")
+      .strip
+
+    CANONICAL_NAME_ALIASES[alias_key]
+  end
+  private_class_method :canonical_name_alias_for
 
   def self.lower_name_arel_node
     Arel::Nodes::NamedFunction.new(

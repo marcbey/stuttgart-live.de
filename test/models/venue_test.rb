@@ -34,6 +34,17 @@ class VenueTest < ActiveSupport::TestCase
     assert Venue.same_name?("Kulturquartier - PROTON", "Kulturquartier Stuttgart")
   end
 
+  test "normalizes schleyer halle aliases to the official venue name" do
+    assert_equal "Hanns-Martin-Schleyer-Halle", Venue.normalize_name("Schleyer-Halle")
+    assert_equal "Hanns-Martin-Schleyer-Halle", Venue.normalize_name("Schleyer-Halle Stuttgart")
+  end
+
+  test "matches schleyer halle alias names to the official venue name" do
+    assert Venue.same_name?("Schleyer-Halle", "Hanns-Martin-Schleyer-Halle")
+    assert Venue.same_name?("Schleyer-Halle Stuttgart", "Hanns-Martin-Schleyer-Halle")
+    assert_not Venue.same_name?("Schleyer-Halle Saal 4 Stuttgart", "Hanns-Martin-Schleyer-Halle")
+  end
+
   test "allows blank logo but validates uploaded images" do
     venue = Venue.new(name: "Neue Venue")
 
