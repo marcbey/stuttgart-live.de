@@ -112,8 +112,11 @@ module Backend
     def load_active_section
       case @active_section_key
       when "meta_connection"
-        @meta_connection = SocialConnection.includes(:social_connection_targets).find_by(provider: "meta")
-        @meta_access_status = Meta::AccessStatus.new.call
+        resolver = Meta::ConnectionResolver.new
+        @instagram_connection = resolver.instagram_connection
+        @facebook_connection = resolver.facebook_connection
+        @instagram_access_status = Meta::AccessStatus.new(platform: "instagram").call
+        @facebook_access_status = Meta::AccessStatus.new(platform: "facebook").call
       when "sks_promoter_ids"
         @sks_promoter_ids_setting = AppSetting.sks_promoter_ids_record
       when "sks_organizer_notes"

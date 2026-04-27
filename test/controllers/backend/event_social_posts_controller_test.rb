@@ -137,7 +137,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "quick publish creates a facebook mirror when a facebook page is selected" do
+  test "quick publish instagram does not enqueue facebook when a facebook page is selected" do
     create_dual_publish_connection!
     access_status = StubMetaAccessStatus.new
 
@@ -154,9 +154,32 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       facebook_post = @event.event_social_posts.find_by!(platform: "facebook")
 
       assert_equal "publishing", instagram_post.status
+      assert_equal "draft", facebook_post.status
+    end
+  end
+
+  test "quick publish facebook creates and enqueues a facebook mirror independently" do
+    create_dual_publish_connection!
+    access_status = StubMetaAccessStatus.new
+
+    with_stubbed_meta_access_status(access_status) do
+      assert_difference -> { @event.event_social_posts.count }, 2 do
+        assert_enqueued_jobs 1, only: Meta::PublishEventSocialPostJob do
+          post quick_publish_backend_event_event_social_posts_url(@event), params: {
+            inbox_status: "published",
+            platform: "facebook"
+          }
+        end
+      end
+
+      instagram_post = @event.event_social_posts.find_by!(platform: "instagram")
+      facebook_post = @event.event_social_posts.find_by!(platform: "facebook")
+
+      assert_equal "draft", instagram_post.status
       assert_equal "publishing", facebook_post.status
       assert_equal instagram_post.caption, facebook_post.caption
       assert_equal instagram_post.publish_image_instagram_url, facebook_post.image_url
+      assert_enqueued_with(job: Meta::PublishEventSocialPostJob, args: [ facebook_post.id, @user.id ])
     end
   end
 
@@ -310,7 +333,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
 
   def with_stubbed_meta_access_status(access_status = StubMetaAccessStatus.new, &block)
     fake_access_status_class = Class.new do
-      define_singleton_method(:new) { access_status }
+      define_singleton_method(:new) { |*| access_status }
     end
 
     Meta.send(:remove_const, :AccessStatus)
@@ -324,6 +347,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
   def create_dual_publish_connection!
     connection = SocialConnection.create!(
       provider: "meta",
+      platform: "facebook",
       auth_mode: "facebook_login_for_business",
       connection_status: "connected",
       user_access_token: "user-token",
@@ -370,13 +394,13 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       )
     end
 
-    def ensure_publishable!(force: false)
+    def ensure_publishable!(force: false, platform: nil)
       call
     end
   end
 
   class FailingMetaAccessStatus < StubMetaAccessStatus
-    def ensure_publishable!(force: false)
+    def ensure_publishable!(force: false, platform: nil)
       raise Meta::Error, "Meta-Token ist abgelaufen oder ungültig."
     end
   end

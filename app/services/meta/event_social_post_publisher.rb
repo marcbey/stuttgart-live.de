@@ -15,9 +15,7 @@ module Meta
     def call(event_social_post:, user:)
       ensure_access_status!(event_social_post, user:)
 
-      primary_result = publish_single!(event_social_post:, user:)
-      publish_facebook_mirror!(instagram_post: event_social_post, user:) if publish_facebook_mirror?(event_social_post)
-      primary_result
+      publish_single!(event_social_post:, user:)
     end
 
     private
@@ -32,7 +30,7 @@ module Meta
     end
 
     def publish_context_for(platform)
-      connection = connection_resolver.connection
+      connection = connection_resolver.connection_for(platform)
       return { connection: nil, target: nil } if connection.blank?
 
       target =
@@ -84,20 +82,8 @@ module Meta
       raise
     end
 
-    def publish_facebook_mirror?(event_social_post)
-      event_social_post.platform == EventSocialPost::CANONICAL_PLATFORM &&
-        connection_resolver.connection&.selected_facebook_page_target.present?
-    end
-
-    def publish_facebook_mirror!(instagram_post:, user:)
-      facebook_post = draft_sync.sync_facebook_mirror!(instagram_post)
-      return if facebook_post.blank?
-
-      publish_single!(event_social_post: facebook_post, user:)
-    end
-
     def ensure_access_status!(event_social_post, user:)
-      access_status.ensure_publishable!(force: true)
+      access_status.ensure_publishable!(force: true, platform: event_social_post.platform)
     rescue Error => error
       publish_context = publish_context_for(event_social_post.platform)
       publish_attempt = create_publish_attempt(event_social_post:, publish_context:, user:)

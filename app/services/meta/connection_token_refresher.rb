@@ -5,8 +5,8 @@ module Meta
 
     def initialize(
       http_client: HttpClient.new,
-      app_id: AppConfig.meta_app_id.presence || AppConfig.meta_instagram_app_id,
-      app_secret: AppConfig.meta_app_secret.presence || AppConfig.meta_instagram_app_secret
+      app_id: AppConfig.meta_app_id,
+      app_secret: AppConfig.meta_app_secret
     )
       @http_client = http_client
       @app_id = app_id.to_s.strip

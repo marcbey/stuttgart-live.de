@@ -15,7 +15,7 @@ module Meta
       container_status_interval_seconds: 2,
       sleeper: ->(seconds) { sleep(seconds) }
     )
-      connection = connection_resolver.connection
+      connection = connection_resolver.instagram_connection
       instagram_target = connection&.selected_instagram_target
       @http_client = http_client
       @instagram_account_id = instagram_account_id.to_s.strip.presence || instagram_target&.external_id.to_s.strip

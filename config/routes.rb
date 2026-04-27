@@ -37,6 +37,8 @@ Rails.application.routes.draw do
     resource :account_password, only: [ :edit, :update ]
     resource :meta_connection, only: [ :show ] do
       get :start
+      get :start_instagram
+      get :start_facebook
       get :callback
       patch :select_target
       post :refresh_status

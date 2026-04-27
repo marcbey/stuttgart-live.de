@@ -1,17 +1,23 @@
-<% connection = @meta_connection %>
-<% access_status = @meta_access_status %>
-<% page_targets = connection&.social_connection_targets&.facebook_pages&.order(:name, :external_id) || [] %>
+<% instagram_connection = @instagram_connection %>
+<% facebook_connection = @facebook_connection %>
+<% instagram_status = @instagram_access_status %>
+<% facebook_status = @facebook_access_status %>
+<% page_targets = facebook_connection&.social_connection_targets&.facebook_pages&.order(:name, :external_id) || [] %>
 
 <section class="backend-section backend-section-compact">
   <div class="backend-section-header">
     <div>
       <h2>Meta Publishing</h2>
-      <p>Instagram- und optionales direktes Facebook-Publishing über eine gemeinsame Meta-Verbindung.</p>
+      <p>Instagram und Facebook werden getrennt verbunden, geprüft und veröffentlicht.</p>
     </div>
     <div class="backend-section-header-actions">
-      <%= link_to "Meta verbinden",
-                  start_backend_meta_connection_path,
+      <%= link_to "Instagram verbinden",
+                  start_instagram_backend_meta_connection_path,
                   class: "button button-save-primary button-compact",
+                  data: { turbo: false } %>
+      <%= link_to "Facebook verbinden",
+                  start_facebook_backend_meta_connection_path,
+                  class: "button button-secondary button-compact",
                   data: { turbo: false } %>
       <%= button_to "Status prüfen",
                     refresh_status_backend_meta_connection_path,
@@ -20,96 +26,120 @@
     </div>
   </div>
 
-  <div class="backend-section-body">
-    <div class="flash <%= access_status.error? ? "flash-alert" : "flash-notice" %>">
-      <div class="social-post-health-header">
-        <strong>Verbindungsstatus</strong>
-        <span class="<%= meta_access_status_badge_class(access_status) %>"><%= social_connection_status_label(access_status.connection_status) %></span>
-      </div>
-      <div><%= access_status.summary %></div>
-
-      <div class="social-post-meta-list">
+  <div class="backend-section-body social-post-platform-grid">
+    <article class="social-post-card">
+      <div class="backend-section-header backend-section-header-with-actions">
         <div>
-          <span class="form-label">Auth-Modus</span>
-          <p><code><%= connection&.auth_mode.presence || "instagram_login" %></code></p>
+          <h3>Instagram</h3>
+          <p><span class="<%= meta_access_status_badge_class(instagram_status) %>"><%= social_connection_status_label(instagram_status.connection_status) %></span></p>
         </div>
-        <% if access_status.page_name.present? %>
-          <div>
-            <span class="form-label">Facebook-Seite</span>
-            <p><%= access_status.page_name %></p>
-          </div>
-        <% end %>
-        <% if access_status.instagram_username.present? %>
-          <div>
-            <span class="form-label">Instagram</span>
-            <p>@<%= access_status.instagram_username %></p>
-          </div>
-        <% end %>
-        <% if connection&.metadata&.dig("instagram_account_type").present? || connection&.selected_instagram_target&.metadata&.dig("account_type").present? %>
-          <div>
-            <span class="form-label">Account-Typ</span>
-            <p><%= connection.metadata.dig("instagram_account_type").presence || connection.selected_instagram_target&.metadata&.dig("account_type") %></p>
-          </div>
-        <% end %>
-        <div>
-          <span class="form-label">Direktes Facebook-Publishing</span>
-          <p><%= connection&.selected_facebook_page_target.present? ? "Aktiv für #{connection.selected_facebook_page_target.display_name}." : "Noch nicht aktiv. Dafür muss eine Facebook-Seite ausgewählt werden." %></p>
-        </div>
-        <% if connection&.connected_at.present? %>
-          <div>
-            <span class="form-label">Verbunden seit</span>
-            <p><%= l(connection.connected_at, format: "%d.%m.%Y %H:%M") %></p>
-          </div>
-        <% end %>
-        <% if access_status.checked_at.present? %>
-          <div>
-            <span class="form-label">Letzter Token-Check</span>
-            <p><%= l(access_status.checked_at, format: "%d.%m.%Y %H:%M") %></p>
-          </div>
-        <% end %>
-        <% if access_status.expires_at.present? %>
-          <div>
-            <span class="form-label">Token gültig bis</span>
-            <p><%= l(access_status.expires_at, format: "%d.%m.%Y %H:%M") %></p>
-          </div>
-        <% end %>
-        <% if connection&.reauth_required_at.present? %>
-          <div>
-            <span class="form-label">Re-Auth seit</span>
-            <p><%= l(connection.reauth_required_at, format: "%d.%m.%Y %H:%M") %></p>
-          </div>
-        <% end %>
-        <% if connection&.last_error.present? %>
-          <div>
-            <span class="form-label">Letzter Fehler</span>
-            <p><%= connection.last_error %></p>
-          </div>
-        <% end %>
       </div>
-
-      <% if access_status.details.any? %>
-        <ul class="social-post-health-list">
-          <% access_status.details.each do |detail| %>
-            <li><%= detail %></li>
+      <div class="social-post-card-body">
+        <div class="flash <%= instagram_status.error? ? "flash-alert" : "flash-notice" %>">
+          <div><%= instagram_status.summary %></div>
+          <% if instagram_status.details.any? %>
+            <ul class="social-post-health-list">
+              <% instagram_status.details.each do |detail| %>
+                <li><%= detail %></li>
+              <% end %>
+            </ul>
           <% end %>
-        </ul>
-      <% end %>
-    </div>
-  </div>
-
-  <% if connection&.instagram_login? %>
-    <div class="backend-section-body">
-      <div class="flash flash-alert">
-        <strong>Reconnect nötig für direktes Facebook-Publishing</strong>
-        <div>Diese Verbindung stammt noch aus dem reinen Instagram-Login-Flow. Instagram-Publishing funktioniert weiter, für zusätzliches direktes Facebook-Publishing bitte die Meta-Verbindung neu aufbauen.</div>
+        </div>
+        <div class="social-post-meta-list">
+          <div>
+            <span class="form-label">Auth-Modus</span>
+            <p><code><%= instagram_connection&.auth_mode.presence || "instagram_login" %></code></p>
+          </div>
+          <% if instagram_status.instagram_username.present? %>
+            <div>
+              <span class="form-label">Instagram</span>
+              <p>@<%= instagram_status.instagram_username %></p>
+            </div>
+          <% end %>
+          <% if instagram_connection&.metadata&.dig("instagram_account_type").present? || instagram_connection&.selected_instagram_target&.metadata&.dig("account_type").present? %>
+            <div>
+              <span class="form-label">Account-Typ</span>
+              <p><%= instagram_connection.metadata.dig("instagram_account_type").presence || instagram_connection.selected_instagram_target&.metadata&.dig("account_type") %></p>
+            </div>
+          <% end %>
+          <% if instagram_connection&.connected_at.present? %>
+            <div>
+              <span class="form-label">Verbunden seit</span>
+              <p><%= l(instagram_connection.connected_at, format: "%d.%m.%Y %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if instagram_status.expires_at.present? %>
+            <div>
+              <span class="form-label">Token gültig bis</span>
+              <p><%= l(instagram_status.expires_at, format: "%d.%m.%Y %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if instagram_connection&.last_error.present? %>
+            <div>
+              <span class="form-label">Letzter Fehler</span>
+              <p><%= instagram_connection.last_error %></p>
+            </div>
+          <% end %>
+        </div>
       </div>
-    </div>
-  <% end %>
+    </article>
+
+    <article class="social-post-card">
+      <div class="backend-section-header backend-section-header-with-actions">
+        <div>
+          <h3>Facebook</h3>
+          <p><span class="<%= meta_access_status_badge_class(facebook_status) %>"><%= social_connection_status_label(facebook_status.connection_status) %></span></p>
+        </div>
+      </div>
+      <div class="social-post-card-body">
+        <div class="flash <%= facebook_status.error? ? "flash-alert" : "flash-notice" %>">
+          <div><%= facebook_status.summary %></div>
+          <% if facebook_status.details.any? %>
+            <ul class="social-post-health-list">
+              <% facebook_status.details.each do |detail| %>
+                <li><%= detail %></li>
+              <% end %>
+            </ul>
+          <% end %>
+        </div>
+        <div class="social-post-meta-list">
+          <div>
+            <span class="form-label">Auth-Modus</span>
+            <p><code><%= facebook_connection&.auth_mode.presence || "facebook_login_for_business" %></code></p>
+          </div>
+          <% if facebook_status.page_name.present? %>
+            <div>
+              <span class="form-label">Facebook-Seite</span>
+              <p><%= facebook_status.page_name %></p>
+            </div>
+          <% end %>
+          <% if facebook_connection&.connected_at.present? %>
+            <div>
+              <span class="form-label">Verbunden seit</span>
+              <p><%= l(facebook_connection.connected_at, format: "%d.%m.%Y %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if facebook_status.expires_at.present? %>
+            <div>
+              <span class="form-label">Token gültig bis</span>
+              <p><%= l(facebook_status.expires_at, format: "%d.%m.%Y %H:%M") %></p>
+            </div>
+          <% end %>
+          <% if facebook_connection&.last_error.present? %>
+            <div>
+              <span class="form-label">Letzter Fehler</span>
+              <p><%= facebook_connection.last_error %></p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </article>
+  </div>
 
   <% if page_targets.any? %>
     <div class="backend-section-body">
       <h3>Facebook-Seitenauswahl</h3>
-      <p class="form-hint">Für direktes Facebook-Publishing muss genau eine Facebook-Seite ausgewählt sein, die mit dem gewünschten Instagram-Professional-Account verknüpft ist.</p>
+      <p class="form-hint">Für direktes Facebook-Publishing muss genau eine Facebook-Seite ausgewählt sein.</p>
       <div class="social-post-platform-grid">
         <% page_targets.each do |target| %>
           <article class="social-post-card">
@@ -123,7 +153,7 @@
                 </p>
               </div>
               <div class="backend-section-header-actions">
-                <% if target.metadata["instagram_account_id"].present? && !connection&.instagram_login? && !target.selected? %>
+                <% unless target.selected? %>
                   <%= button_to "Seite auswählen",
                                 select_target_backend_meta_connection_path(target_id: target.id),
                                 method: :patch,
@@ -138,14 +168,12 @@
                   <span class="form-label">Page-ID</span>
                   <p><code><%= target.external_id %></code></p>
                 </div>
-                <div>
-                  <span class="form-label">Instagram</span>
-                  <% if target.metadata["instagram_account_id"].present? %>
+                <% if target.metadata["instagram_account_id"].present? %>
+                  <div>
+                    <span class="form-label">Verknüpftes Instagram</span>
                     <p>@<%= target.metadata["instagram_username"].presence || target.metadata["instagram_account_id"] %></p>
-                  <% else %>
-                    <p class="form-hint">Kein verknüpfter Instagram Professional Account gefunden.</p>
-                  <% end %>
-                </div>
+                  </div>
+                <% end %>
                 <% if target.last_synced_at.present? %>
                   <div>
                     <span class="form-label">Zuletzt synchronisiert</span>

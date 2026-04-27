@@ -30,12 +30,6 @@ module Meta
             ).compact
           )
 
-          upsert_instagram_target!(
-            connection:,
-            facebook_target:,
-            instagram_payload:
-          )
-
           connection.update!(
             connection_status: "connected",
             connected_at: connection.connected_at || Time.current,
@@ -76,25 +70,6 @@ module Meta
         connection.social_connection_targets.selected.find_each do |target|
           target.update!(selected: false, status: "available")
         end
-      end
-
-      def upsert_instagram_target!(connection:, facebook_target:, instagram_payload:)
-        connection.social_connection_targets.instagram_accounts.where(parent_target_id: facebook_target.id).find_each do |target|
-          target.update!(selected: false, status: "available")
-        end
-
-        instagram_account_id = instagram_payload["id"].to_s.strip.presence
-        return if instagram_account_id.blank?
-
-        target = connection.social_connection_targets.instagram_accounts.find_or_initialize_by(external_id: instagram_account_id)
-        target.update!(
-          parent_target: facebook_target,
-          username: instagram_payload["username"].to_s.strip.presence,
-          selected: true,
-          status: "selected",
-          last_synced_at: Time.current,
-          last_error: nil
-        )
       end
     end
   end

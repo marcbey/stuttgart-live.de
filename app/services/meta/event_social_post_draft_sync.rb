@@ -19,7 +19,6 @@ module Meta
       social_post.assign_draft_attributes!(draft.attributes)
       social_post.save!
       sync_rendered_assets!(social_post, draft:)
-      sync_facebook_mirror!(social_post)
       social_post
     end
 
@@ -38,7 +37,7 @@ module Meta
 
     def sync_facebook_mirror!(social_post)
       return social_post unless social_post.platform == EventSocialPost::CANONICAL_PLATFORM
-      return if connection_resolver.connection&.selected_facebook_page_target.blank?
+      return if connection_resolver.facebook_connection&.selected_facebook_page_target.blank?
 
       facebook_post = social_post.event.event_social_posts.find_or_initialize_by(platform: "facebook")
       facebook_post.assign_attributes(

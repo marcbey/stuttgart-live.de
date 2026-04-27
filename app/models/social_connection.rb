@@ -1,5 +1,6 @@
 class SocialConnection < ApplicationRecord
   PROVIDERS = %w[meta].freeze
+  PLATFORMS = %w[facebook instagram].freeze
   AUTH_MODES = %w[facebook_login_for_business instagram_login].freeze
   CONNECTION_STATUSES = %w[
     disconnected
@@ -17,7 +18,8 @@ class SocialConnection < ApplicationRecord
   has_many :social_connection_targets, dependent: :destroy
   has_many :publish_attempts, dependent: :nullify
 
-  validates :provider, presence: true, inclusion: { in: PROVIDERS }, uniqueness: true
+  validates :provider, presence: true, inclusion: { in: PROVIDERS }
+  validates :platform, presence: true, inclusion: { in: PLATFORMS }, uniqueness: { scope: :provider }
   validates :auth_mode, presence: true, inclusion: { in: AUTH_MODES }
   validates :connection_status, presence: true, inclusion: { in: CONNECTION_STATUSES }
 
@@ -25,9 +27,10 @@ class SocialConnection < ApplicationRecord
 
   scope :meta_provider, -> { where(provider: "meta") }
 
-  def self.meta
-    find_or_initialize_by(provider: "meta") do |connection|
-      connection.auth_mode = "instagram_login"
+  def self.meta(platform: "instagram")
+    normalized_platform = platform.to_s.strip.presence || "instagram"
+    find_or_initialize_by(provider: "meta", platform: normalized_platform) do |connection|
+      connection.auth_mode = normalized_platform == "facebook" ? "facebook_login_for_business" : "instagram_login"
     end
   end
 
@@ -75,6 +78,7 @@ class SocialConnection < ApplicationRecord
 
   def normalize_attributes
     self.provider = provider.to_s.strip.presence || "meta"
+    self.platform = platform.to_s.strip.presence || default_platform
     self.auth_mode = auth_mode.to_s.strip.presence || "instagram_login"
     self.connection_status = connection_status.to_s.strip.presence || "disconnected"
     self.external_user_id = external_user_id.to_s.strip.presence
@@ -84,5 +88,9 @@ class SocialConnection < ApplicationRecord
       scope.to_s.strip.presence
     end.uniq.sort
     self.metadata = {} unless metadata.is_a?(Hash)
+  end
+
+  def default_platform
+    auth_mode == "facebook_login_for_business" ? "facebook" : "instagram"
   end
 end

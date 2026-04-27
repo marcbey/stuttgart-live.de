@@ -10,12 +10,12 @@ module Meta
       ].freeze
       AUTH_BASE_URL = "https://www.instagram.com/oauth/authorize".freeze
 
-      def initialize(app_id: AppConfig.meta_instagram_app_id)
+      def initialize(app_id: AppConfig.meta_app_id)
         @app_id = app_id.to_s.strip
       end
 
       def call(session:, redirect_uri:)
-        raise Error, "meta.instagram_app_id ist nicht konfiguriert." if app_id.blank?
+        raise Error, "meta.app_id ist nicht konfiguriert." if app_id.blank?
 
         state = SecureRandom.hex(24)
         session[SESSION_KEY] = state

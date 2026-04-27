@@ -1,7 +1,7 @@
 require "test_helper"
 
 class Meta::Onboarding::CallbackHandlerTest < ActiveSupport::TestCase
-  test "persists the meta connection, keeps instagram selected and requires page selection when multiple pages match" do
+  test "persists the facebook connection and requires page selection when multiple pages are available" do
     session = { Meta::Onboarding::AuthorizationUrlBuilder::SESSION_KEY => "valid-state" }
     page_accounts = [
       Meta::PageCatalogFetcher::PageAccount.new(
@@ -37,6 +37,7 @@ class Meta::Onboarding::CallbackHandlerTest < ActiveSupport::TestCase
 
     assert_predicate connection, :persisted?
     assert_equal "meta", connection.provider
+    assert_equal "facebook", connection.platform
     assert_equal "facebook_login_for_business", connection.auth_mode
     assert_equal "user-123", connection.external_user_id
     assert_equal "long-lived-token", connection.user_access_token
@@ -45,18 +46,15 @@ class Meta::Onboarding::CallbackHandlerTest < ActiveSupport::TestCase
       connection.granted_scopes
 
     facebook_targets = connection.social_connection_targets.facebook_pages.order(:external_id)
-    instagram_targets = connection.social_connection_targets.instagram_accounts.order(:external_id)
 
     assert_equal %w[page-1 page-2], facebook_targets.map(&:external_id)
-    assert_equal [ "ig-1" ], instagram_targets.map(&:external_id)
     assert_equal "Stuttgart Live", facebook_targets.first.name
-    assert_equal "stuttgart.live", instagram_targets.first.username
     assert_nil connection.selected_facebook_page_target
-    assert_equal "ig-1", connection.selected_instagram_target.external_id
+    assert_nil connection.selected_instagram_target
     assert_nil session[Meta::Onboarding::AuthorizationUrlBuilder::SESSION_KEY]
   end
 
-  test "auto-selects the only facebook page that is linked to an instagram professional account" do
+  test "does not auto-select when multiple facebook pages are available" do
     session = { Meta::Onboarding::AuthorizationUrlBuilder::SESSION_KEY => "valid-state" }
     page_accounts = [
       Meta::PageCatalogFetcher::PageAccount.new(
@@ -90,9 +88,8 @@ class Meta::Onboarding::CallbackHandlerTest < ActiveSupport::TestCase
       redirect_uri: "https://example.test/backend/meta_connection/callback"
     )
 
-    assert_equal "connected", connection.connection_status
-    assert_equal "page-1", connection.selected_facebook_page_target.external_id
-    assert_equal "ig-1", connection.selected_instagram_target.external_id
+    assert_nil connection.selected_facebook_page_target
+    assert_equal "pending_selection", connection.connection_status
   end
 
   private

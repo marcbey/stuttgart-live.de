@@ -49,45 +49,34 @@ class AppConfigTest < ActiveSupport::TestCase
       app_secret: "meta-app-secret",
       instagram_app_id: "instagram-app-id",
       instagram_app_secret: "instagram-app-secret",
-      instagram_redirect_uri: "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback",
-      facebook_page_id: "page-123",
-      facebook_page_access_token: "page-token",
-      instagram_business_account_id: "ig-123"
+      instagram_redirect_uri: "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback"
     }) do
       assert_equal "meta-app-id", AppConfig.meta_app_id
       assert_equal "meta-app-secret", AppConfig.meta_app_secret
-      assert_equal "instagram-app-id", AppConfig.meta_instagram_app_id
-      assert_equal "instagram-app-secret", AppConfig.meta_instagram_app_secret
+      assert_equal "meta-app-id", AppConfig.meta_instagram_app_id
+      assert_equal "meta-app-secret", AppConfig.meta_instagram_app_secret
       assert_equal "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback", AppConfig.meta_instagram_redirect_uri
-      assert_equal "page-123", AppConfig.meta_facebook_page_id
-      assert_equal "page-token", AppConfig.meta_facebook_page_access_token
-      assert_equal "ig-123", AppConfig.meta_instagram_business_account_id
     end
   end
 
   test "falls back to env for meta values" do
     with_env(
       "META_APP_ID" => "env-app-id",
+      "META_APP_SECRET" => "env-app-secret",
       "META_INSTAGRAM_APP_ID" => "env-instagram-app-id",
       "META_INSTAGRAM_APP_SECRET" => "env-instagram-app-secret",
-      "META_INSTAGRAM_REDIRECT_URI" => "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback",
-      "META_FACEBOOK_PAGE_ID" => "env-page-id",
-      "META_FACEBOOK_PAGE_ACCESS_TOKEN" => "env-page-token",
-      "META_INSTAGRAM_BUSINESS_ACCOUNT_ID" => "env-ig-id"
+      "META_INSTAGRAM_REDIRECT_URI" => "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback"
     ) do
       with_credentials({}) do
         assert_equal "env-app-id", AppConfig.meta_app_id
-        assert_equal "env-instagram-app-id", AppConfig.meta_instagram_app_id
-        assert_equal "env-instagram-app-secret", AppConfig.meta_instagram_app_secret
+        assert_equal "env-app-id", AppConfig.meta_instagram_app_id
+        assert_equal "env-app-secret", AppConfig.meta_instagram_app_secret
         assert_equal "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback", AppConfig.meta_instagram_redirect_uri
-        assert_equal "env-page-id", AppConfig.meta_facebook_page_id
-        assert_equal "env-page-token", AppConfig.meta_facebook_page_access_token
-        assert_equal "env-ig-id", AppConfig.meta_instagram_business_account_id
       end
     end
   end
 
-  test "falls back from instagram login keys to legacy meta app keys" do
+  test "uses the meta app keys for instagram login" do
     with_credentials(meta: { app_id: "legacy-app-id", app_secret: "legacy-app-secret" }) do
       assert_equal "legacy-app-id", AppConfig.meta_instagram_app_id
       assert_equal "legacy-app-secret", AppConfig.meta_instagram_app_secret

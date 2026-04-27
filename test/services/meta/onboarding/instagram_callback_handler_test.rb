@@ -21,6 +21,7 @@ class Meta::Onboarding::InstagramCallbackHandlerTest < ActiveSupport::TestCase
 
     assert_predicate connection, :persisted?
     assert_equal "meta", connection.provider
+    assert_equal "instagram", connection.platform
     assert_equal "instagram_login", connection.auth_mode
     assert_equal "app-scoped-user-123", connection.external_user_id
     assert_equal "long-lived-token", connection.user_access_token

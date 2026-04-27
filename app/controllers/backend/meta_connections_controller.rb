@@ -7,6 +7,23 @@ module Backend
     end
 
     def start
+      start_facebook
+    end
+
+    def start_instagram
+      Meta::Onboarding::Configuration.new.ensure_configured!
+
+      authorization_url = Meta::Onboarding::InstagramAuthorizationUrlBuilder.new.call(
+        session:,
+        redirect_uri: callback_url
+      )
+
+      redirect_to authorization_url, allow_other_host: true
+    rescue Meta::Error => error
+      redirect_to edit_backend_settings_path(section: "meta_connection"), alert: error.message
+    end
+
+    def start_facebook
       Meta::Onboarding::Configuration.new.ensure_configured!
 
       authorization_url = Meta::Onboarding::AuthorizationUrlBuilder.new.call(
@@ -25,20 +42,32 @@ module Backend
         return
       end
 
-      connection = Meta::Onboarding::CallbackHandler.new.call(
-        code: params[:code].to_s,
-        state: params[:state].to_s,
-        session:,
-        redirect_uri: callback_url
-      )
+      connection =
+        if session[Meta::Onboarding::InstagramAuthorizationUrlBuilder::SESSION_KEY].present?
+          Meta::Onboarding::InstagramCallbackHandler.new.call(
+            code: params[:code].to_s,
+            state: params[:state].to_s,
+            session:,
+            redirect_uri: callback_url
+          )
+        else
+          Meta::Onboarding::CallbackHandler.new.call(
+            code: params[:code].to_s,
+            state: params[:state].to_s,
+            session:,
+            redirect_uri: callback_url
+          )
+        end
 
       notice =
-        if connection.selected_facebook_page_target.present?
-          "Meta-Verbindung ist aktiv. Instagram-Professional-Account und Facebook-Seite wurden gespeichert."
+        if connection.platform == "instagram"
+          "Instagram-Verbindung ist aktiv."
+        elsif connection.selected_facebook_page_target.present?
+          "Facebook-Verbindung ist aktiv. Facebook-Seite wurde gespeichert."
         elsif connection.selected_instagram_target.present?
           "Meta-Verbindung wurde hergestellt. Instagram ist aktiv, für direktes Facebook-Publishing bitte noch eine Facebook-Seite auswählen."
         else
-          "Meta-Verbindung wurde hergestellt. Für Publishing muss jetzt eine passende Facebook-Seite mit verknüpftem Instagram-Professional-Account ausgewählt werden."
+          "Facebook-Verbindung wurde hergestellt. Für Publishing muss jetzt eine Facebook-Seite ausgewählt werden."
         end
 
       redirect_to edit_backend_settings_path(section: "meta_connection"), notice: notice
@@ -47,24 +76,19 @@ module Backend
     end
 
     def select_target
-      connection = Meta::ConnectionResolver.new.connection!
-      if connection.instagram_login?
-        redirect_to edit_backend_settings_path(section: "meta_connection"),
-          alert: "Im Instagram-Login-Modus ist keine Facebook-Seitenauswahl nötig."
-        return
-      end
+      connection = Meta::ConnectionResolver.new.connection_for!("facebook")
 
       facebook_target = connection.social_connection_targets.facebook_pages.find(params[:target_id])
       connection = Meta::Onboarding::PageSelection.new.call(connection:, facebook_target:)
 
       notice =
-        if connection.selected_instagram_target.present?
-          "Meta-Verbindung ist aktiv. Facebook-Seite und Instagram-Professional-Account wurden gespeichert."
+        if connection.selected_facebook_page_target.present?
+          "Facebook-Verbindung ist aktiv. Facebook-Seite wurde gespeichert."
         else
-          "Meta-Verbindung ist unvollständig. Für die gewählte Facebook-Seite wurde kein verknüpfter Instagram-Professional-Account gefunden."
+          "Facebook-Verbindung ist unvollständig. Bitte eine Facebook-Seite auswählen."
         end
 
-      flash_type = connection.selected_instagram_target.present? ? :notice : :alert
+      flash_type = connection.selected_facebook_page_target.present? ? :notice : :alert
       redirect_to edit_backend_settings_path(section: "meta_connection"), flash_type => notice
     rescue ActiveRecord::RecordNotFound
       redirect_to edit_backend_settings_path(section: "meta_connection"), alert: "Facebook-Page-Auswahl ist ungültig."
@@ -73,7 +97,8 @@ module Backend
     end
 
     def refresh_status
-      Meta::AccessStatus.new.call(force: true)
+      Meta::AccessStatus.new(platform: "instagram").call(force: true)
+      Meta::AccessStatus.new(platform: "facebook").call(force: true)
       redirect_to edit_backend_settings_path(section: "meta_connection"), notice: "Meta-Status wurde aktualisiert."
     rescue Meta::Error => error
       redirect_to edit_backend_settings_path(section: "meta_connection"), alert: error.message

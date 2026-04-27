@@ -5,8 +5,8 @@ module Meta
         http_client: HttpClient.new,
         token_refresher: ConnectionTokenRefresher.new,
         instagram_account_fetcher: InstagramAccountFetcher.new,
-        app_id: AppConfig.meta_instagram_app_id,
-        app_secret: AppConfig.meta_instagram_app_secret
+        app_id: AppConfig.meta_app_id,
+        app_secret: AppConfig.meta_app_secret
       )
         @http_client = http_client
         @token_refresher = token_refresher
@@ -83,7 +83,7 @@ module Meta
 
       def persist_connection!(account_profile:, token_result:, fallback_expires_at:, granted_scopes:)
         SocialConnection.transaction do
-          connection = SocialConnection.meta
+          connection = SocialConnection.meta(platform: "instagram")
           connection.assign_attributes(
             auth_mode: "instagram_login",
             external_user_id: account_profile["id"].to_s.strip.presence,

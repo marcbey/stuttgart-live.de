@@ -13,14 +13,15 @@ module Backend
     end
 
     def quick_publish
-      social_post = @event.social_post_for(platform_param)
+      social_post = social_post_for_quick_publish
 
       if social_post&.publishing?
         redirect_to redirect_path, notice: "Social-Post wird bereits im Hintergrund veröffentlicht."
         return
       end
 
-      social_post ||= draft_sync.call(event: @event, platform: platform_param)
+      social_post ||= social_post_for_quick_publish(create: true)
+      raise Meta::Error, "Facebook-Publishing ist nicht konfiguriert." if social_post.blank?
       enqueue_publish!(social_post)
 
       redirect_to redirect_path, notice: "Social-Post wird im Hintergrund veröffentlicht."
@@ -59,11 +60,6 @@ module Backend
     end
 
     def publish
-      unless @event_social_post.platform == EventSocialPost::CANONICAL_PLATFORM
-        redirect_to redirect_path, alert: "Nur der Instagram-Haupt-Post kann veröffentlicht werden."
-        return
-      end
-
       if @event_social_post.publishing?
         redirect_to redirect_path, notice: "Social-Post wird bereits im Hintergrund veröffentlicht."
         return
@@ -107,7 +103,8 @@ module Backend
     end
 
     def platform_param
-      EventSocialPost::CANONICAL_PLATFORM
+      requested_platform = params[:platform].to_s
+      EventSocialPost::PLATFORMS.include?(requested_platform) ? requested_platform : EventSocialPost::CANONICAL_PLATFORM
     end
 
     def meta_access_status
@@ -119,14 +116,26 @@ module Backend
     end
 
     def enqueue_publish!(social_post)
-      draft_sync.sync_facebook_mirror!(social_post)
+      draft_sync.sync_facebook_mirror!(social_post) if social_post.platform == EventSocialPost::CANONICAL_PLATFORM
       social_post.ensure_publishable!
-      meta_access_status.ensure_publishable!(force: true)
-      companion_facebook_post = social_post.event.social_post_for("facebook")
-      companion_facebook_post&.ensure_publishable! if Meta::ConnectionResolver.new.connection&.selected_facebook_page_target.present?
+      meta_access_status.ensure_publishable!(force: true, platform: social_post.platform)
       social_post.mark_publishing!
-      companion_facebook_post&.mark_publishing! if companion_facebook_post.present? && Meta::ConnectionResolver.new.connection&.selected_facebook_page_target.present?
       Meta::PublishEventSocialPostJob.perform_later(social_post.id, current_user.id)
+    end
+
+    def social_post_for_quick_publish(create: false)
+      if platform_param == "instagram"
+        instagram_post = @event.social_post_for("instagram")
+        return instagram_post if instagram_post.present? || !create
+
+        return draft_sync.call(event: @event, platform: "instagram")
+      end
+
+      facebook_post = @event.social_post_for("facebook")
+      return facebook_post if facebook_post.present? || !create
+
+      instagram_post = @event.social_post_for("instagram") || draft_sync.call(event: @event, platform: "instagram")
+      draft_sync.sync_facebook_mirror!(instagram_post)
     end
 
     def redirect_path

@@ -36,21 +36,23 @@ module Meta
     CACHE_NAMESPACE = "meta/access-status".freeze
     CACHE_TTL = 10.minutes
 
-    def initialize(cache: Rails.cache, health_check: ConnectionHealthCheck.new, connection_resolver: ConnectionResolver.new)
+    def initialize(cache: Rails.cache, health_check: ConnectionHealthCheck.new, connection_resolver: ConnectionResolver.new, platform: nil)
       @cache = cache
       @health_check = health_check
       @connection_resolver = connection_resolver
+      @platform = platform.to_s.strip.presence
     end
 
-    def call(force: false)
-      return fetch_status unless force
+    def call(force: false, platform: nil)
+      active_platform = platform.presence || self.platform
+      return fetch_status(platform: active_platform) unless force
 
-      cache.delete(cache_key)
-      fetch_status
+      cache.delete(cache_key(platform: active_platform))
+      fetch_status(platform: active_platform)
     end
 
-    def ensure_publishable!(force: false)
-      status = call(force:)
+    def ensure_publishable!(force: false, platform: nil)
+      status = call(force:, platform: platform.presence || self.platform)
       return status if status.can_publish?
 
       raise Error, status.summary
@@ -58,22 +60,23 @@ module Meta
 
     private
 
-    attr_reader :cache, :connection_resolver, :health_check
+    attr_reader :cache, :connection_resolver, :health_check, :platform
 
-    def fetch_status
-      cache.fetch(cache_key, expires_in: CACHE_TTL) { build_status }
+    def fetch_status(platform:)
+      cache.fetch(cache_key(platform:), expires_in: CACHE_TTL) { build_status(platform:) }
     end
 
-    def build_status
-      health_check.call(connection: connection_resolver.connection, refresh: true)
+    def build_status(platform:)
+      connection = platform.present? ? connection_resolver.connection_for(platform) : connection_resolver.connection
+      health_check.call(connection:, refresh: true, platform:)
     end
 
-    def cache_key
-      connection = connection_resolver.connection
-      return "#{CACHE_NAMESPACE}/missing" if connection.blank?
+    def cache_key(platform:)
+      connection = platform.present? ? connection_resolver.connection_for(platform) : connection_resolver.connection
+      return "#{CACHE_NAMESPACE}/#{platform || 'default'}/missing" if connection.blank?
 
       token_digest = Digest::SHA256.hexdigest(connection.user_access_token.to_s)
-      [ CACHE_NAMESPACE, connection.id, connection.updated_at.to_i, token_digest ].join("/")
+      [ CACHE_NAMESPACE, platform || connection.platform, connection.id, connection.updated_at.to_i, token_digest ].join("/")
     end
   end
 end

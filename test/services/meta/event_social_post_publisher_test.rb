@@ -45,7 +45,7 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     assert_equal "failed", social_post.publish_attempts.last.status
   end
 
-  test "publishes instagram and facebook when a facebook page is selected" do
+  test "publishes only the requested instagram post when a facebook page is selected" do
     social_post = create_approved_social_post(platform: "instagram")
     facebook_post = create_approved_social_post(platform: "facebook")
     platform_publishers = {
@@ -68,10 +68,30 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
 
     assert_equal "published", social_post.status
     assert_equal "ig-media-1", social_post.remote_media_id
+    assert_equal "draft", facebook_post.status
+    assert_nil facebook_post.remote_media_id
+    assert_nil facebook_post.remote_post_id
+    assert_equal %w[succeeded], social_post.publish_attempts.pluck(:status)
+    assert_empty facebook_post.publish_attempts
+  end
+
+  test "publishes a facebook post independently" do
+    facebook_post = create_approved_social_post(platform: "facebook")
+    platform_publishers = {
+      "facebook" => SuccessfulFacebookPublisher.new("fb-media-1", "page-1_post-1")
+    }
+
+    Meta::EventSocialPostPublisher.new(
+      platform_publishers:,
+      access_status: SuccessfulAccessStatus.new,
+      connection_resolver: ResolverStub.with_facebook_page
+    ).call(event_social_post: facebook_post, user: users(:one))
+
+    facebook_post.reload
+
     assert_equal "published", facebook_post.status
     assert_equal "fb-media-1", facebook_post.remote_media_id
     assert_equal "page-1_post-1", facebook_post.remote_post_id
-    assert_equal %w[succeeded], social_post.publish_attempts.pluck(:status)
     assert_equal %w[succeeded], facebook_post.publish_attempts.pluck(:status)
   end
 
@@ -197,13 +217,13 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
   end
 
   class SuccessfulAccessStatus
-    def ensure_publishable!(force: false)
+    def ensure_publishable!(force: false, platform: nil)
       true
     end
   end
 
   class FailingAccessStatus
-    def ensure_publishable!(force: false)
+    def ensure_publishable!(force: false, platform: nil)
       raise Meta::Error, "Meta-Token ist abgelaufen oder ungültig."
     end
   end
@@ -222,6 +242,7 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     def self.with_facebook_page
       connection = SocialConnection.create!(
         provider: "meta",
+        platform: "facebook",
         auth_mode: "facebook_login_for_business",
         connection_status: "connected",
         user_access_token: "user-token",
@@ -254,6 +275,10 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
 
     def connection
       @connection
+    end
+
+    def connection_for(platform)
+      @connection if platform.to_s == @connection.platform
     end
   end
 end

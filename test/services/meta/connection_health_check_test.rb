@@ -85,7 +85,7 @@ class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
 
     assert_predicate status, :warning?
     assert_equal "pending_selection", status.connection_status
-    assert_equal "Instagram-Verbindung ist gültig. Für direktes Facebook-Publishing ist noch keine Facebook-Seite ausgewählt.", status.summary
+    assert_equal "Facebook-Verbindung ist gültig. Für direktes Facebook-Publishing ist noch keine Facebook-Seite ausgewählt.", status.summary
     assert_equal "sl_test_26", status.instagram_username
   end
 
@@ -158,7 +158,7 @@ class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
     assert connection.last_refresh_at.present?
   end
 
-  test "blocks publishing when the selected page has no instagram professional account" do
+  test "accepts a selected facebook page without a linked instagram professional account" do
     connection = SocialConnection.create!(
       provider: "meta",
       auth_mode: "facebook_login_for_business",
@@ -203,9 +203,9 @@ class Meta::ConnectionHealthCheckTest < ActiveSupport::TestCase
 
     status = health_check.call(connection:)
 
-    assert_predicate status, :error?
-    assert_equal "error", status.connection_status
-    assert_equal "Die ausgewählte Facebook-Seite ist nicht mit einem Instagram-Professional-Account verknüpft.", status.summary
+    assert_predicate status, :ok?
+    assert_equal "connected", status.connection_status
+    assert_equal "Facebook-Verbindung ist gültig.", status.summary
   end
 
   private

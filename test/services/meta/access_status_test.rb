@@ -130,7 +130,7 @@ class Meta::AccessStatusTest < ActiveSupport::TestCase
     assert_equal "Meta-Token ist abgelaufen oder ungültig.", status.summary
   end
 
-  test "returns error when selected facebook page has no linked instagram account" do
+  test "returns ok when selected facebook page has no linked instagram account" do
     @connection.selected_instagram_target.destroy!
 
     client = StubHttpClient.new(
@@ -159,10 +159,9 @@ class Meta::AccessStatusTest < ActiveSupport::TestCase
       cache: ActiveSupport::Cache::MemoryStore.new
     ).call
 
-    assert_predicate status, :error?
-    assert_equal "error", status.connection_status
-    assert_equal "Die Meta-Verbindung ist noch nicht vollständig konfiguriert.", status.summary
-    assert_includes status.details, "Bitte in Meta Publishing eine Facebook-Seite auswählen, die mit dem gewünschten Instagram-Professional-Account verknüpft ist."
+    assert_predicate status, :ok?
+    assert_equal "connected", status.connection_status
+    assert_equal "Facebook-Verbindung ist gültig.", status.summary
   end
 
   private

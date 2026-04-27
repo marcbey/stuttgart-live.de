@@ -1,7 +1,7 @@
 require "test_helper"
 
 class Meta::Onboarding::PageSelectionTest < ActiveSupport::TestCase
-  test "selects a facebook page and linked instagram account" do
+  test "selects a facebook page without changing instagram targets" do
     connection = SocialConnection.create!(
       provider: "meta",
       auth_mode: "facebook_login_for_business",
@@ -21,15 +21,12 @@ class Meta::Onboarding::PageSelectionTest < ActiveSupport::TestCase
 
     connection.reload
     page_target.reload
-    instagram_target = connection.selected_instagram_target
 
     assert_equal "connected", connection.connection_status
     assert_predicate connection, :connected?
     assert page_target.selected?
     assert_equal "selected", page_target.status
-    assert_equal "ig-123", instagram_target.external_id
-    assert_equal "sl_test_26", instagram_target.username
-    assert instagram_target.selected?
+    assert_nil connection.selected_instagram_target
   end
 
   private

@@ -198,7 +198,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
                   text: "Caption speichern",
                   count: 1
     assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, social_post)}'] button",
-                  text: "Social-Post veröffentlichen",
+                  text: "Instagram veröffentlichen",
                   count: 1
   end
 
@@ -212,8 +212,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_select "#event-editor-panel-social a[href='#{start_backend_meta_connection_path}'][data-turbo='false']",
-                  text: "Meta verbinden",
+    assert_select "#event-editor-panel-social a[href='#{start_instagram_backend_meta_connection_path}'][data-turbo='false']",
+                  text: "Instagram verbinden",
+                  count: 1
+    assert_select "#event-editor-panel-social a[href='#{start_facebook_backend_meta_connection_path}'][data-turbo='false']",
+                  text: "Facebook verbinden",
                   count: 1
   end
 
@@ -2492,6 +2495,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     resolver.define_singleton_method(:connection) do
       connection
     end
+    resolver.define_singleton_method(:facebook_connection) do
+      connection
+    end
 
     with_singleton_return_value(Meta::AccessStatus, :new, access_status_service) do
       with_singleton_return_value(Meta::ConnectionResolver, :new, resolver) do
@@ -2503,7 +2509,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   def with_singleton_return_value(target, method_name, value)
     original_method = target.method(method_name)
 
-    target.define_singleton_method(method_name) { value }
+    target.define_singleton_method(method_name) { |*| value }
     yield
   ensure
     target.define_singleton_method(method_name, original_method)

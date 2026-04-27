@@ -529,13 +529,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_27_120000) do
     t.datetime "last_refresh_at"
     t.datetime "last_token_check_at"
     t.jsonb "metadata", default: {}, null: false
+    t.string "platform", null: false
     t.string "provider", null: false
     t.datetime "reauth_required_at"
     t.datetime "updated_at", null: false
     t.text "user_access_token"
     t.datetime "user_token_expires_at"
     t.index ["connection_status"], name: "index_social_connections_on_connection_status"
-    t.index ["provider"], name: "index_social_connections_on_provider", unique: true
+    t.index ["provider", "platform"], name: "index_social_connections_on_provider_and_platform", unique: true
   end
 
   create_table "static_pages", force: :cascade do |t|

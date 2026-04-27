@@ -7,8 +7,8 @@ module Meta
         http_client: HttpClient.new,
         token_refresher: ConnectionTokenRefresher.new,
         page_catalog_fetcher: PageCatalogFetcher.new,
-        app_id: AppConfig.meta_app_id.presence || AppConfig.meta_instagram_app_id,
-        app_secret: AppConfig.meta_app_secret.presence || AppConfig.meta_instagram_app_secret
+        app_id: AppConfig.meta_app_id,
+        app_secret: AppConfig.meta_app_secret
       )
         @http_client = http_client
         @token_refresher = token_refresher
@@ -113,17 +113,16 @@ module Meta
 
       def persist_connection!(user_profile:, token_result:, fallback_expires_at:, granted_scopes:, page_accounts:)
         SocialConnection.transaction do
-          connection = SocialConnection.meta
-          unique_instagram_accounts = unique_instagram_accounts_for(page_accounts)
-          selected_instagram_account = unique_instagram_accounts.one? ? unique_instagram_accounts.first : nil
+          connection = SocialConnection.meta(platform: "facebook")
           connection.assign_attributes(
             auth_mode: "facebook_login_for_business",
+            platform: "facebook",
             external_user_id: user_profile["id"].to_s.strip.presence,
             user_access_token: token_result.access_token,
             user_token_expires_at: token_result.expires_at || fallback_expires_at,
             granted_scopes: granted_scopes,
-            connection_status: connection_status_for(page_accounts:, selected_instagram_account:),
-            last_error: connection_error_for(page_accounts:, selected_instagram_account:),
+            connection_status: connection_status_for(page_accounts:),
+            last_error: connection_error_for(page_accounts:),
             reauth_required_at: nil,
             metadata: connection.metadata.merge(
               "meta_user_name" => user_profile["name"].to_s.strip.presence,
@@ -134,8 +133,7 @@ module Meta
 
           sync_page_targets!(
             connection:,
-            page_accounts:,
-            selected_instagram_account:
+            page_accounts:
           )
 
           auto_select_page!(connection, page_accounts)
@@ -143,9 +141,8 @@ module Meta
         end
       end
 
-      def sync_page_targets!(connection:, page_accounts:, selected_instagram_account:)
+      def sync_page_targets!(connection:, page_accounts:)
         discovered_page_ids = page_accounts.map(&:page_id)
-        discovered_instagram_ids = unique_instagram_accounts_for(page_accounts).map(&:instagram_account_id)
 
         connection.social_connection_targets.selected.update_all(
           selected: false,
@@ -155,10 +152,6 @@ module Meta
 
         connection.social_connection_targets.facebook_pages.where.not(external_id: discovered_page_ids).find_each do |target|
           target.update!(selected: false, status: "missing", last_error: "Seite wurde im letzten Onboarding nicht mehr gefunden.")
-        end
-
-        connection.social_connection_targets.instagram_accounts.where.not(external_id: discovered_instagram_ids).find_each do |target|
-          target.update!(selected: false, status: "missing", last_error: "Instagram-Account wurde im letzten Onboarding nicht mehr gefunden.")
         end
 
         page_accounts.each do |account|
@@ -176,50 +169,24 @@ module Meta
           )
           page_target.save!
         end
-
-        unique_instagram_accounts_for(page_accounts).each do |account|
-          instagram_target = connection.social_connection_targets.instagram_accounts.find_or_initialize_by(
-            external_id: account.instagram_account_id
-          )
-          selected = selected_instagram_account.present? && selected_instagram_account.instagram_account_id == account.instagram_account_id
-          instagram_target.assign_attributes(
-            parent_target: nil,
-            username: account.instagram_username,
-            status: selected ? "selected" : "available",
-            selected:,
-            last_synced_at: Time.current,
-            last_error: nil
-          )
-          instagram_target.save!
-        end
       end
 
       def auto_select_page!(connection, page_accounts)
-        matching_pages = page_accounts.select { |account| account.instagram_account_id.present? }
-        return unless matching_pages.one?
+        return unless page_accounts.one?
 
-        facebook_target = connection.social_connection_targets.facebook_pages.find_by!(external_id: matching_pages.first.page_id)
+        facebook_target = connection.social_connection_targets.facebook_pages.find_by!(external_id: page_accounts.first.page_id)
         PageSelection.new(http_client:).call(connection:, facebook_target:)
       end
 
-      def unique_instagram_accounts_for(page_accounts)
-        Array(page_accounts)
-          .select { |account| account.instagram_account_id.present? }
-          .uniq { |account| account.instagram_account_id }
-      end
-
-      def connection_status_for(page_accounts:, selected_instagram_account:)
+      def connection_status_for(page_accounts:)
         return "error" if page_accounts.empty?
-        return "error" unless page_accounts.any? { |account| account.instagram_account_id.present? }
-        return "connected" if page_accounts.one? && page_accounts.first.instagram_account_id.present?
+        return "connected" if page_accounts.one?
 
         "pending_selection"
       end
 
-      def connection_error_for(page_accounts:, selected_instagram_account:)
+      def connection_error_for(page_accounts:)
         return "Keine Facebook Pages gefunden." if page_accounts.empty?
-        return "Kein verknüpfter Instagram-Professional-Account gefunden." unless page_accounts.any? { |account| account.instagram_account_id.present? }
-        return nil if selected_instagram_account.present?
 
         nil
       end

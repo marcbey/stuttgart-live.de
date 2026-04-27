@@ -9,7 +9,7 @@ module Meta
       page_access_token: nil,
       connection_resolver: ConnectionResolver.new
     )
-      page_target = connection_resolver.connection&.selected_facebook_page_target
+      page_target = connection_resolver.facebook_connection&.selected_facebook_page_target
       @http_client = http_client
       @page_id = page_id.to_s.strip.presence || page_target&.external_id.to_s.strip
       @page_access_token = page_access_token.to_s.strip.presence || page_target&.access_token.to_s.strip

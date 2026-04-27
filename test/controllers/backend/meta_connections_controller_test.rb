@@ -11,8 +11,8 @@ class Backend::MetaConnectionsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "start redirects back with clear error when meta app secret is missing" do
-    with_singleton_return_value(AppConfig, :meta_app_id, nil) do
-      with_singleton_return_value(AppConfig, :meta_instagram_app_id, "123456") do
+    with_singleton_return_value(AppConfig, :meta_app_id, "123456") do
+      with_singleton_return_value(AppConfig, :meta_instagram_app_id, "ignored-instagram-app") do
         with_singleton_return_value(AppConfig, :meta_app_secret, nil) do
           with_singleton_return_value(AppConfig, :meta_instagram_app_secret, nil) do
             get start_backend_meta_connection_url
@@ -23,7 +23,7 @@ class Backend::MetaConnectionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to edit_backend_settings_url(section: "meta_connection")
     follow_redirect!
-    assert_match "meta.app_secret oder meta.instagram_app_secret ist nicht konfiguriert.", response.body
+    assert_match "meta.app_secret ist nicht konfiguriert.", response.body
   end
 
   test "start uses configured instagram redirect uri override" do

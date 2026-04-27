@@ -11,8 +11,8 @@ module Meta
       http_client: HttpClient.new,
       page_catalog_fetcher: PageCatalogFetcher.new,
       token_refresher: ConnectionTokenRefresher.new,
-      app_id: AppConfig.meta_app_id.presence || AppConfig.meta_instagram_app_id,
-      app_secret: AppConfig.meta_app_secret.presence || AppConfig.meta_instagram_app_secret
+      app_id: AppConfig.meta_app_id,
+      app_secret: AppConfig.meta_app_secret
     )
       @http_client = http_client
       @page_catalog_fetcher = page_catalog_fetcher
@@ -21,8 +21,8 @@ module Meta
       @app_secret = app_secret.to_s.strip
     end
 
-    def call(connection: ConnectionResolver.new.connection, refresh: true)
-      return missing_connection_status unless connection.present?
+    def call(connection: ConnectionResolver.new.connection, refresh: true, platform: nil)
+      return missing_connection_status(platform:) unless connection.present?
 
       connection.instagram_login? ? instagram_login_status(connection:, refresh:) : facebook_login_status(connection:, refresh:)
     rescue Error => error
@@ -165,7 +165,6 @@ module Meta
       permissions = permissions_from(debug_payload, connection)
       expires_at = token_expiration_from(debug_payload) || connection.user_token_expires_at
       page_accounts = page_catalog_fetcher.call(user_access_token: connection.user_access_token)
-      selected_instagram_target = connection.selected_instagram_target
       missing_permissions = required_scopes_for(connection) - permissions
 
       if missing_permissions.any?
@@ -178,8 +177,6 @@ module Meta
           checked_at:,
           expires_at:,
           permissions:,
-          page_payload:,
-          instagram_payload: page_instagram_payload,
           auth_mode: connection.auth_mode
         )
       end
@@ -198,90 +195,21 @@ module Meta
         )
       end
 
-      if selected_instagram_target.blank?
-        return persist_and_build_status(
-          connection:,
-          connection_status: "error",
-          state: :error,
-          summary: "Die Meta-Verbindung ist noch nicht vollständig konfiguriert.",
-          details: [ "Bitte in Meta Publishing eine Facebook-Seite auswählen, die mit dem gewünschten Instagram-Professional-Account verknüpft ist." ],
-          checked_at:,
-          expires_at:,
-          permissions:,
-          auth_mode: connection.auth_mode
-        )
-      end
-
       if page_target.blank?
-        unless page_accounts.any? { |account| account.instagram_account_id == selected_instagram_target.external_id }
-          return persist_and_build_status(
-            connection:,
-            connection_status: "error",
-            state: :error,
-            summary: "Der gespeicherte Instagram-Professional-Account ist in der aktuellen Meta-Verbindung nicht mehr verfügbar.",
-            details: [ "Bitte die Meta-Verbindung erneut herstellen oder eine passende Facebook-Seite auswählen." ],
-            checked_at:,
-            expires_at:,
-            permissions:,
-            instagram_payload: {
-              "id" => selected_instagram_target.external_id,
-              "username" => selected_instagram_target.username
-            },
-            auth_mode: connection.auth_mode
-          )
-        end
-
         return persist_and_build_status(
           connection:,
           connection_status: "pending_selection",
           state: :warning,
-          summary: "Instagram-Verbindung ist gültig. Für direktes Facebook-Publishing ist noch keine Facebook-Seite ausgewählt.",
-          details: [ "Instagram-Publishing ist möglich. Für zusätzliches Facebook-Publishing bitte eine Facebook-Seite auswählen." ],
+          summary: "Facebook-Verbindung ist gültig. Für direktes Facebook-Publishing ist noch keine Facebook-Seite ausgewählt.",
+          details: [ "Bitte eine Facebook-Seite auswählen." ],
           checked_at:,
           expires_at:,
           permissions:,
-          instagram_payload: {
-            "id" => selected_instagram_target.external_id,
-            "username" => selected_instagram_target.username
-          },
           auth_mode: connection.auth_mode
         )
       end
 
       page_payload = fetch_page_payload(page_target)
-      page_instagram_payload = page_payload["instagram_business_account"] || {}
-
-      if page_instagram_payload["id"].to_s.strip.blank?
-        return persist_and_build_status(
-          connection:,
-          connection_status: "error",
-          state: :error,
-          summary: "Die ausgewählte Facebook-Seite ist nicht mit einem Instagram-Professional-Account verknüpft.",
-          details: [ "Bitte in Meta Publishing eine andere Facebook-Seite auswählen oder die Seitenverknüpfung in Meta korrigieren." ],
-          checked_at:,
-          expires_at:,
-          permissions:,
-          page_payload:,
-          instagram_payload: page_instagram_payload,
-          auth_mode: connection.auth_mode
-        )
-      end
-
-      if page_instagram_payload["id"].to_s.strip != selected_instagram_target.external_id
-        return persist_and_build_status(
-          connection:,
-          connection_status: "error",
-          state: :error,
-          summary: "Die ausgewählte Facebook-Seite passt nicht zum gespeicherten Instagram-Professional-Account.",
-          details: [ "Bitte die Meta-Verbindung prüfen und die Facebook-Seite erneut auswählen." ],
-          checked_at:,
-          expires_at:,
-          permissions:,
-          page_payload:,
-          instagram_payload: page_instagram_payload,
-          auth_mode: connection.auth_mode
-        )
-      end
 
       if expires_at.present? && expires_at <= WARNING_WINDOW.from_now
         return persist_and_build_status(
@@ -294,7 +222,6 @@ module Meta
           expires_at:,
           permissions:,
           page_payload:,
-          instagram_payload: page_instagram_payload,
           auth_mode: connection.auth_mode
         )
       end
@@ -310,7 +237,6 @@ module Meta
           expires_at:,
           permissions:,
           page_payload:,
-          instagram_payload: page_instagram_payload,
           auth_mode: connection.auth_mode
         )
       end
@@ -319,25 +245,25 @@ module Meta
         connection:,
         connection_status: "connected",
         state: :ok,
-        summary: "Meta-Verbindung ist gültig.",
-        details: [ "Token, Legacy-Facebook-Seite und Instagram-Verknüpfung wurden erfolgreich geprüft." ],
+        summary: "Facebook-Verbindung ist gültig.",
+        details: [ "Token und Facebook-Seite wurden erfolgreich geprüft." ],
         checked_at:,
         expires_at:,
         permissions:,
         page_payload:,
-        instagram_payload: page_instagram_payload,
         auth_mode: connection.auth_mode
       )
     end
 
-    def missing_connection_status
+    def missing_connection_status(platform: nil)
+      label = platform.to_s == "facebook" ? "Facebook" : "Instagram"
       build_status(
         connection_status: "reauth_required",
         state: :error,
-        summary: "Instagram-Verbindung ist nicht eingerichtet.",
-        details: [ "Bitte Instagram zuerst mit Meta verbinden." ],
+        summary: "#{label}-Verbindung ist nicht eingerichtet.",
+        details: [ "Bitte #{label} zuerst mit Meta verbinden." ],
         checked_at: Time.current,
-        auth_mode: "instagram_login"
+        auth_mode: platform.to_s == "facebook" ? "facebook_login_for_business" : "instagram_login"
       )
     end
 

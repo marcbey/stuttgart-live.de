@@ -5,7 +5,28 @@ class SocialConnectionTest < ActiveSupport::TestCase
     connection = SocialConnection.meta
 
     assert_equal "meta", connection.provider
+    assert_equal "instagram", connection.platform
     assert_equal "instagram_login", connection.auth_mode
+  end
+
+  test "allows separate instagram and facebook meta connections" do
+    instagram_connection = SocialConnection.create!(
+      provider: "meta",
+      platform: "instagram",
+      auth_mode: "instagram_login",
+      connection_status: "connected",
+      user_access_token: "instagram-token"
+    )
+    facebook_connection = SocialConnection.create!(
+      provider: "meta",
+      platform: "facebook",
+      auth_mode: "facebook_login_for_business",
+      connection_status: "connected",
+      user_access_token: "facebook-token"
+    )
+
+    assert_predicate instagram_connection, :persisted?
+    assert_predicate facebook_connection, :persisted?
   end
 
   test "resolves selected facebook and instagram targets" do
