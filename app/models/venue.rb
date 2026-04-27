@@ -3,6 +3,50 @@ class Venue < ApplicationRecord
   MATCH_KEY_REMOVABLE_CITY_TOKENS = %w[stuttgart].freeze
   MATCH_KEY_APOSTROPHE_VARIANTS = /['’`´ʼʹʽꞌ՚＇]/.freeze
   CANONICAL_NAME_ALIASES = {
+    "das k kultur und kongresszentrum theatersaal" => "Das K-Kultur-und Kongresszentrum",
+    "das k kulturzentrum festsaal" => "Das K-Kultur-und Kongresszentrum",
+    "das k kultur und kongresszentrum festsaal" => "Das K-Kultur-und Kongresszentrum",
+    "fitz" => "FITZ! Figurentheater",
+    "fitz zentrum fur figurentheater" => "FITZ! Figurentheater",
+    "fitz das theater animierter formen" => "FITZ! Figurentheater",
+    "hospitalhof" => "Hospitalhof",
+    "hospitalhof stuttgart" => "Hospitalhof",
+    "hospitalhof paul lechler saal" => "Hospitalhof",
+    "kulinarium an der glems" => "Kulinarium an der Glems",
+    "kulinarium an der glems romerhof" => "Kulinarium an der Glems",
+    "kulturquartier" => "Kulturquartier (Proton)",
+    "kulturquartier proton" => "Kulturquartier (Proton)",
+    "kulturquartier stuttgart the club" => "Kulturquartier (Proton)",
+    "schrage lage" => "Schräglage",
+    "schraglage" => "Schräglage",
+    "schraglage club" => "Schräglage",
+    "schraglage stuttgart" => "Schräglage",
+    "schräglage" => "Schräglage",
+    "schräglage club" => "Schräglage",
+    "schräglage stuttgart" => "Schräglage",
+    "scala" => "Scala Ludwigsburg",
+    "scala ludwigsburg" => "Scala Ludwigsburg",
+    "scala theater ludwigsburg" => "Scala Ludwigsburg",
+    "scala theater ludwigburg" => "Scala Ludwigsburg",
+    "kkl beethoven saal" => "Kultur- und Kongresszentrum Liederhalle Beethoven-Saal",
+    "kkl beethoven saal stuttgart" => "Kultur- und Kongresszentrum Liederhalle Beethoven-Saal",
+    "liederhalle beethovensaal" => "Kultur- und Kongresszentrum Liederhalle Beethoven-Saal",
+    "liederhalle beethoven saal" => "Kultur- und Kongresszentrum Liederhalle Beethoven-Saal",
+    "kkl mozart saal" => "Kultur- und Kongresszentrum Liederhalle Mozart-Saal",
+    "kkl mozart saal stuttgart" => "Kultur- und Kongresszentrum Liederhalle Mozart-Saal",
+    "liederhalle mozartsaal" => "Kultur- und Kongresszentrum Liederhalle Mozart-Saal",
+    "mozartsaal kultur und kongresszentrum liederhalle stuttgart" => "Kultur- und Kongresszentrum Liederhalle Mozart-Saal",
+    "kkl silcher saal" => "Kultur- und Kongresszentrum Liederhalle Silcher-Saal",
+    "kkl silcher saal stuttgart" => "Kultur- und Kongresszentrum Liederhalle Silcher-Saal",
+    "liederhalle silchersaal" => "Kultur- und Kongresszentrum Liederhalle Silcher-Saal",
+    "kkl hegel saal" => "Kultur- und Kongresszentrum Liederhalle Hegel-Saal",
+    "kkl hegel saal stuttgart" => "Kultur- und Kongresszentrum Liederhalle Hegel-Saal",
+    "kkl hegel saal konzert stuttgart" => "Kultur- und Kongresszentrum Liederhalle Hegel-Saal",
+    "liederhalle hegelsaal" => "Kultur- und Kongresszentrum Liederhalle Hegel-Saal",
+    "liederhalle stuttgart hegelsaal" => "Kultur- und Kongresszentrum Liederhalle Hegel-Saal",
+    "kkl schiller saal" => "Kultur- und Kongresszentrum Liederhalle Schiller-Saal",
+    "kkl schiller saal stuttgart" => "Kultur- und Kongresszentrum Liederhalle Schiller-Saal",
+    "liederhalle schiller saal" => "Kultur- und Kongresszentrum Liederhalle Schiller-Saal",
     "schleyer halle" => "Hanns-Martin-Schleyer-Halle",
     "schleyer halle stuttgart" => "Hanns-Martin-Schleyer-Halle",
     "hanns martin schleyer halle stuttgart" => "Hanns-Martin-Schleyer-Halle"
@@ -27,10 +71,7 @@ class Venue < ApplicationRecord
     normalized = value.to_s.strip
     canonical_alias = canonical_name_alias_for(normalized)
     return canonical_alias if canonical_alias.present?
-
-    return normalized unless normalized.match?(/kulturquartier/i)
-
-    normalized.gsub(/\s*[-,]?\s*proton\b/i, "").strip
+    normalized
   end
 
   def self.match_key(value)

@@ -61,7 +61,7 @@ class EventTest < ActiveSupport::TestCase
     )
 
     assert event.valid?
-    assert_equal "Kulturquartier", event.venue
+    assert_equal "Kulturquartier (Proton)", event.venue
   end
 
   test "reuses an existing venue by name" do
@@ -121,6 +121,134 @@ class EventTest < ActiveSupport::TestCase
     assert event.valid?
     assert_equal venue, event.venue_record
     assert_equal "Hanns-Martin-Schleyer-Halle", event.venue
+  end
+
+  test "reuses the canonical hospitalhof venue for hall-specific aliases" do
+    venue = Venue.create!(name: "Hospitalhof")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 12, 20, 0, 0),
+      venue_name: "Hospitalhof, Paul-Lechler-Saal",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+    assert_equal "Hospitalhof", event.venue
+  end
+
+  test "reuses the canonical kulinarium venue for romerhof alias" do
+    venue = Venue.create!(name: "Kulinarium an der Glems")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 15, 20, 0, 0),
+      venue_name: "Kulinarium an der Glems/Römerhof",
+      city: "Leonberg",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+    assert_equal "Kulinarium an der Glems", event.venue
+  end
+
+  test "reuses the canonical kulturquartier proton venue for club aliases" do
+    venue = Venue.create!(name: "Kulturquartier (Proton)")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 16, 20, 0, 0),
+      venue_name: "Kulturquartier Stuttgart ( the Club)",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+    assert_equal "Kulturquartier (Proton)", event.venue
+  end
+
+  test "reuses the canonical schraglage venue for club aliases" do
+    venue = Venue.create!(name: "Schräglage")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 17, 20, 0, 0),
+      venue_name: "Schräglage Club",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+    assert_equal "Schräglage", event.venue
+  end
+
+  test "reuses the canonical fitz venue for fitz aliases" do
+    venue = Venue.create!(name: "FITZ! Figurentheater")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 18, 20, 0, 0),
+      venue_name: "FITZ Das Theater animierter Formen",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+    assert_equal "FITZ! Figurentheater", event.venue
+  end
+
+  test "reuses the canonical das k venue for room aliases" do
+    venue = Venue.create!(name: "Das K-Kultur-und Kongresszentrum")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 19, 20, 0, 0),
+      venue_name: "Das K - Kultur- und Kongresszentrum - Festsaal",
+      city: "Kornwestheim",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+    assert_equal "Das K-Kultur-und Kongresszentrum", event.venue
+  end
+
+  test "reuses the canonical scala ludwigsburg venue for scala theater aliases" do
+    venue = Venue.create!(name: "Scala Ludwigsburg")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 14, 20, 0, 0),
+      venue_name: "Scala Theater Ludwigsburg",
+      city: "Ludwigsburg",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+    assert_equal "Scala Ludwigsburg", event.venue
+  end
+
+  test "reuses canonical liederhalle hall venues for hall aliases" do
+    venue = Venue.create!(name: "Kultur- und Kongresszentrum Liederhalle Hegel-Saal")
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 13, 20, 0, 0),
+      venue_name: "Liederhalle Stuttgart - Hegelsaal",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    assert event.valid?
+    assert_equal venue, event.venue_record
+    assert_equal "Kultur- und Kongresszentrum Liederhalle Hegel-Saal", event.venue
   end
 
   test "creates a new venue from venue_name on save" do
