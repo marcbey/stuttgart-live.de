@@ -100,6 +100,8 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_includes AppSetting.llm_enrichment_prompt_template, "`homepage_link`"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`facebook_link`"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`search_results.fields.<feld>.candidates`"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "`venue_external_url` ermittelst du direkt"
+    assert_not_includes AppSetting.llm_enrichment_prompt_template, "`youtube_link` und `venue_external_url` darfst du ausschließlich"
     assert_includes AppSetting.llm_enrichment_prompt_template, "nicht den bloßen Eventtyp oder einen Containerbegriff"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`show`, `concert`, `event`, `live`, `veranstaltung`, `konzert`"
     assert_includes AppSetting.llm_enrichment_prompt_template, "gib lieber ein leeres Genre-Array zurück"
@@ -166,7 +168,8 @@ class AppSettingTest < ActiveSupport::TestCase
 
   test "returns configured llm enrichment prompt template" do
     custom_prompt = <<~TEXT.strip
-      Nutze search_results und candidates für homepage_link, instagram_link, facebook_link, youtube_link und venue_external_url.
+      Nutze search_results und candidates für homepage_link, instagram_link, facebook_link und youtube_link.
+      Ermittle venue_external_url direkt.
       {{input_json}}
     TEXT
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: custom_prompt)
@@ -191,7 +194,7 @@ class AppSettingTest < ActiveSupport::TestCase
     setting = AppSetting.new(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
 
     assert_not setting.valid?
-    assert_includes setting.errors[:value], "muss die Felder homepage_link, instagram_link, facebook_link, youtube_link, venue_external_url sowie search_results/candidates berücksichtigen"
+    assert_includes setting.errors[:value], "muss die Felder homepage_link, instagram_link, facebook_link und youtube_link über search_results/candidates sowie venue_external_url berücksichtigen"
   end
 
   test "requires llm enrichment temperature to be between 0 and 2" do

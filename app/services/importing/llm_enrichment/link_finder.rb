@@ -3,7 +3,7 @@ require "uri"
 module Importing
   module LlmEnrichment
     class LinkFinder
-      LINK_FIELDS = %i[homepage_link instagram_link facebook_link youtube_link venue_external_url].freeze
+      LINK_FIELDS = %i[homepage_link instagram_link facebook_link youtube_link].freeze
       GOOGLE_RESULT_LIMIT = 10
 
       Result = Data.define(

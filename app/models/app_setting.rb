@@ -55,17 +55,17 @@ class AppSetting < ApplicationRecord
 
     Wichtig:
     Die ermittelten Informationen müssen belastbar sein. `venue_external_url` und `venue_address` sollen sich klar dem Veranstaltungsort zuordnen lassen.
-    Für `homepage_link`, `instagram_link`, `facebook_link`, `youtube_link` und `venue_external_url` darfst du ausschließlich Links aus `search_results.fields.<feld>.candidates` auswählen. Freie Link-Erfindung ist verboten.
+    Für `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` darfst du ausschließlich Links aus `search_results.fields.<feld>.candidates` auswählen. Freie Link-Erfindung ist für diese vier Felder verboten.
+    `venue_external_url` ermittelst du direkt anhand des Venues und der verfügbaren Kontextinformationen aus dem Input.
 
     Dabei gelten folgende Regeln:
 
     1. Erfinde keine Genres, Beschreibungen, Venue-Metadaten oder Links.
 
-    2. Für die fünf Linkfelder gilt zwingend:
-      - `homepage_link`, `instagram_link`, `facebook_link`, `youtube_link` und `venue_external_url` dürfen nur einen Link aus den mitgelieferten Kandidatenlisten enthalten
+    2. Für die vier Search-Linkfelder gilt zwingend:
+      - `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` dürfen nur einen Link aus den mitgelieferten Kandidatenlisten enthalten
       - wenn keiner der Kandidaten passt, gib für das jeweilige Feld `null` zurück
       - bewerte die Kandidaten anhand von `title`, `displayed_link`, `snippet`, `source`, `about_source_description`, `languages` und `regions`
-      - `venue_external_url` bezieht sich auf den Veranstaltungsort, nicht auf den Artist
       - `search_results` enthält pro Feld höchstens 10 Treffer; wähle nur dann einen Link, wenn die Zuordnung zum Event klar belastbar ist
 
     3. `genre` meint immer eine fachliche stilistische oder spartenbezogene Einordnung, nicht den bloßen Eventtyp oder einen Containerbegriff:
@@ -76,6 +76,7 @@ class AppSetting < ApplicationRecord
 
     4. Für Venue-Metadaten gilt zusätzlich:
       - `venue_external_url`: bevorzugt die offizielle Website des Veranstaltungsorts; ersatzweise eine klar zuordenbare offizielle Profil- oder Hausseite des Venues
+      - `venue_external_url` bezieht sich auf den Veranstaltungsort, nicht auf den Artist
       - `venue_address`: möglichst vollständige öffentlich belastbare Adresse des Veranstaltungsorts
 
     5. Für die Social-Link-Felder gilt zusätzlich:
@@ -642,7 +643,7 @@ class AppSetting < ApplicationRecord
 
     return if self.class.llm_enrichment_prompt_template_compatible?(template)
 
-    errors.add(:value, "muss die Felder homepage_link, instagram_link, facebook_link, youtube_link, venue_external_url sowie search_results/candidates berücksichtigen")
+    errors.add(:value, "muss die Felder homepage_link, instagram_link, facebook_link und youtube_link über search_results/candidates sowie venue_external_url berücksichtigen")
   end
 
   def llm_enrichment_model_must_be_valid

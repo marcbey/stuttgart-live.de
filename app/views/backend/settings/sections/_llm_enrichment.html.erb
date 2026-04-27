@@ -24,7 +24,7 @@
                          rows: 24,
                          class: "form-textarea",
                          aria: { describedby: "llm-enrichment-prompt-help" } %>
-      <p id="llm-enrichment-prompt-help" class="form-hint">Dieses Template steuert den Prompt für den LLM-Enrichment-Importer. Der Platzhalter <code>{{input_json}}</code> muss enthalten bleiben und wird pro Event durch die Eventdaten ersetzt. Für die Linkauswahl müssen außerdem die Felder <code>homepage_link</code>, <code>instagram_link</code>, <code>facebook_link</code>, <code>youtube_link</code>, <code>venue_external_url</code> sowie <code>search_results</code>/<code>candidates</code> im Prompt berücksichtigt bleiben.</p>
+      <p id="llm-enrichment-prompt-help" class="form-hint">Dieses Template steuert den Prompt für den LLM-Enrichment-Importer. Der Platzhalter <code>{{input_json}}</code> muss enthalten bleiben und wird pro Event durch die Eventdaten ersetzt. Für die Linkauswahl müssen außerdem die Felder <code>homepage_link</code>, <code>instagram_link</code>, <code>facebook_link</code> und <code>youtube_link</code> über <code>search_results</code>/<code>candidates</code> berücksichtigt bleiben; <code>venue_external_url</code> muss als direktes Venue-Feld enthalten bleiben.</p>
 
       <%= form.label :llm_enrichment_temperature, "LLM-Temperature", class: "form-label" %>
       <%= form.number_field :llm_enrichment_temperature,

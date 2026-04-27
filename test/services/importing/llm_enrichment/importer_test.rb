@@ -156,11 +156,13 @@ module Importing
 
       test "reloads llm prompt settings from the database before a run starts" do
         original_prompt = <<~TEXT.strip
-          ALT search_results candidates homepage_link instagram_link facebook_link youtube_link venue_external_url
+          ALT search_results candidates homepage_link instagram_link facebook_link youtube_link
+          venue_external_url
           {{input_json}}
         TEXT
         updated_prompt = <<~TEXT.strip
-          NEU search_results candidates homepage_link instagram_link facebook_link youtube_link venue_external_url
+          NEU search_results candidates homepage_link instagram_link facebook_link youtube_link
+          venue_external_url
           {{input_json}}
         TEXT
         prompt_setting = AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: original_prompt)
@@ -185,8 +187,8 @@ module Importing
 
         build_importer(client: client, link_finder: FakeLinkFinder.new(results_by_event_id: { event.id => search_context_result }, calls: [])).call
 
-        assert_includes client.captured_inputs.first, "NEU search_results candidates homepage_link instagram_link facebook_link youtube_link venue_external_url"
-        assert_not_includes client.captured_inputs.first, "ALT search_results candidates homepage_link instagram_link facebook_link youtube_link venue_external_url"
+        assert_includes client.captured_inputs.first, "NEU search_results candidates homepage_link instagram_link facebook_link youtube_link"
+        assert_not_includes client.captured_inputs.first, "ALT search_results candidates homepage_link instagram_link facebook_link youtube_link"
       end
 
       test "includes truncated event_info and search result context in single-event prompt payload" do
@@ -269,8 +271,7 @@ module Importing
         link_finder = FakeLinkFinder.new(
           results_by_event_id: {
             event.id => search_context_result(
-              homepage_link: [ candidate("https://example.com/allowed") ],
-              venue_external_url: [ candidate("https://venue.example/invalid") ]
+              homepage_link: [ candidate("https://example.com/allowed") ]
             )
           },
           calls: []
@@ -287,7 +288,38 @@ module Importing
         assert_nil enrichment.homepage_link
         assert_nil enrichment.venue_external_url
         assert_equal "not_in_supplied_candidates", enrichment.raw_response.dig("link_selection", "fields", "homepage_link", "rejection_reason")
+        assert_nil enrichment.raw_response.dig("link_selection", "fields", "venue_external_url")
         assert_equal "rejected_http_error", enrichment.raw_response.dig("link_validation", "venue_external_url", "status")
+      end
+
+      test "stores venue external url from llm response without supplied search candidate" do
+        event = events(:published_one)
+        @run.update!(metadata: @run.metadata.merge("target_event_id" => event.id, "refresh_existing" => true))
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: event.id,
+              genre: [ "Indie" ],
+              venue: "LKA Longhorn",
+              event_description: "Event eins",
+              venue_description: "Venue eins",
+              venue_external_url: "https://venue.example"
+            )
+          ]
+        )
+
+        result = build_importer(
+          client: client,
+          link_finder: FakeLinkFinder.new(results_by_event_id: { event.id => search_context_result }, calls: [])
+        ).call
+
+        enrichment = event.reload.llm_enrichment
+        assert_equal "https://venue.example", enrichment.venue_external_url
+        assert_equal 1, result.links_checked_count
+        assert_nil enrichment.raw_response.dig("search_context", "fields", "venue_external_url")
+        assert_nil enrichment.raw_response.dig("link_selection", "fields", "venue_external_url")
+        assert_equal "ok", enrichment.raw_response.dig("link_validation", "venue_external_url", "status")
       end
 
       test "refresh_existing overwrites an existing enrichment via single event call" do

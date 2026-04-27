@@ -56,16 +56,16 @@ module Importing
             ),
             "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/" => search_result("ig-1", []),
             "\"Luca Noel\" (official OR band OR music OR artist) site:facebook.com" => search_result("fb-1", []),
-            "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel" => search_result("yt-1", []),
-            "\"Im Wizemann\" \"Stuttgart\" offizielle website" => search_result("venue-1", [])
+            "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel" => search_result("yt-1", [])
           }
         ).call(event: @event)
 
         first_candidate = result.payload.dig("fields", "homepage_link", "candidates", 0)
 
-        assert_equal 5, result.web_search_request_count
+        assert_equal 4, result.web_search_request_count
         assert_equal 2, result.web_search_candidate_count
         assert_equal "\"Luca Noel\" offizielle website", result.payload.dig("fields", "homepage_link", "query")
+        assert_nil result.payload.dig("fields", "venue_external_url")
         assert_equal "https://www.instagram.com/lucanoelmusik/", first_candidate["link"]
         assert_equal "www.instagram.com/lucanoelmusik", first_candidate["displayed_link"]
         assert_equal "Instagram", first_candidate["source"]

@@ -302,10 +302,10 @@ Der Ablauf ist:
 
 1. Zuerst wählt der Job geeignete bestehende Events aus, typischerweise solche ohne vollständige LLM-Anreicherung oder mit veralteten Enrichment-Daten.
 2. Jedes Event wird einzeln verarbeitet; pro Event gibt es genau einen OpenAI-Call.
-3. Vor diesem Call baut der Importer für `homepage_link`, `instagram_link`, `facebook_link`, `youtube_link` und `venue_external_url` einen Suchkontext über den konfigurierten Web-Search-Provider auf.
-4. Für jedes dieser fünf Felder werden bis zu 10 Suchtreffer mit kontextreichen Feldern wie Titel, Snippet, angezeigtem Link, Quelle und zusätzlicher Ergebnisbeschreibung in den Prompt übernommen.
-5. Das LLM liefert `genre`, `event_description`, `venue_description`, `venue_address` sowie die fünf Linkfelder zurück und darf dabei nur aus den mitgelieferten Suchtreffern auswählen.
-6. Anschließend wird geprüft, ob die zurückgegebenen Links tatsächlich in den gelieferten Kandidatenlisten enthalten sind; `venue_external_url` wird zusätzlich technisch validiert.
+3. Vor diesem Call baut der Importer für `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` einen Suchkontext über den konfigurierten Web-Search-Provider auf.
+4. Für jedes dieser vier Felder werden bis zu 10 Suchtreffer mit kontextreichen Feldern wie Titel, Snippet, angezeigtem Link, Quelle und zusätzlicher Ergebnisbeschreibung in den Prompt übernommen.
+5. Das LLM liefert `genre`, `event_description`, `venue_description`, `venue_address`, `venue_external_url` sowie die vier Search-Linkfelder zurück. Nur die vier Search-Linkfelder dürfen aus den mitgelieferten Suchtreffern gewählt werden; `venue_external_url` kommt direkt aus Prompt und LLM-Response.
+6. Anschließend wird geprüft, ob die zurückgegebenen Search-Links tatsächlich in den gelieferten Kandidatenlisten enthalten sind; `venue_external_url` wird technisch validiert.
 7. Das Ergebnis wird normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
 8. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, abgeschlossene OpenAI-Calls, Web-Search-Metriken und Fehler im zugehörigen `ImportRun`.
 
@@ -314,8 +314,8 @@ Fachlich ist wichtig:
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
 - `event_description` bündelt die belastbaren Informationen zu Artist, Projekt/Produktion und konkretem Eventformat in einem einzigen zusammenhängenden Beschreibungstext.
 - `EventLlmEnrichment.venue`, `venue_description`, `venue_external_url` und `venue_address` bleiben als Rohdaten erhalten.
-- `homepage_link`, `instagram_link`, `facebook_link`, `youtube_link` und `venue_external_url` werden vom LLM nur aus den gelieferten Top-10-Kandidaten des konfigurierten Search-Providers ausgewählt.
-- `venue_external_url` wird über Venue-Name plus Stadt aus den Import-Daten gesucht; dafür nutzt der Importer primär `events.city` und fällt bei Bedarf auf `events.source_snapshot["sources"]` zurück.
+- `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` werden vom LLM nur aus den gelieferten Top-10-Kandidaten des konfigurierten Search-Providers ausgewählt.
+- `venue_external_url` wird direkt vom LLM aus Venue-Name und Event-Kontext ermittelt und anschließend technisch validiert.
 - Die Search Provider `serpapi` und `openwebninja` bleiben austauschbar; beide liefern denselben normalisierten Suchkontext an den Prompt.
 - Hat ein Event bereits eine zugeordnete `Venue`, ändert ein LLM-Lauf weder die Venue-Zuordnung noch `Venue.name`.
 - Passt `EventLlmEnrichment.venue` zu der bereits zugeordneten `Venue`, dürfen `Venue.description`, `Venue.external_url` und `Venue.address` aus dem Enrichment nur dann ergänzt werden, wenn das jeweilige Venue-Feld noch leer ist. Bereits gepflegte Werte werden nicht überschrieben.

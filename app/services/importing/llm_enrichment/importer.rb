@@ -6,9 +6,9 @@ module Importing
       RUN_STALE_AFTER = 4.hours
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       EVENT_INFO_MAX_LENGTH = 1000
-      PROMPT_VERSION = "v7"
+      PROMPT_VERSION = "v8"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment".freeze
-      SEARCH_LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link venue_external_url].freeze
+      SEARCH_LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
       VALIDATED_LINK_FIELDS = %i[venue_external_url].freeze
       META_GENRE_TERMS = [
         "show",

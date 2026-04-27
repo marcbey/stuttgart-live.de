@@ -2,7 +2,8 @@ require "test_helper"
 
 class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
   VALID_LLM_ENRICHMENT_PROMPT = <<~TEXT.strip
-    Nutze search_results und candidates für homepage_link, instagram_link, facebook_link, youtube_link und venue_external_url.
+    Nutze search_results und candidates für homepage_link, instagram_link, facebook_link und youtube_link.
+    Ermittle venue_external_url direkt.
     {{input_json}}
   TEXT
 
