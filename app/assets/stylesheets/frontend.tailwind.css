@@ -5809,10 +5809,19 @@ margin-top: 0.55rem;
   place-self: start;
   justify-content: center;
   border-radius: 999px;
+  border-color: #22c7c0;
+  background: #22c7c0;
+  color: #f8f8f8;
   padding-inline: 1.55rem;
   font-size: 1.22rem;
   letter-spacing: 0.055em;
   box-shadow: 0 0.75rem 1.8rem rgba(17, 17, 17, 0.16);
+}
+
+.event-detail-cta-button:hover,
+.event-detail-cta-button:focus-visible {
+background: #18b3ad;
+  color: #f8f8f8;
 }
 
 .event-detail-cta-button::before,
