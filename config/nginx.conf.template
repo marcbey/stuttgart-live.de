@@ -68,6 +68,66 @@ http {
       add_header Cache-Control "public, max-age=31536000, immutable";
     }
 
+    location ~ ^/media/(?<media_expires>\d+)/(?<media_signature>[-_A-Za-z0-9]+)/(?<media_path>.+)--[^/]+\.(?:jpg|jpeg)$ {
+      secure_link $media_signature,$media_expires;
+      secure_link_md5 "$secure_link_expires/${media_path}${MEDIA_PROXY_SECRET}";
+
+      if ($secure_link = "") {
+        return 403;
+      }
+
+      if ($secure_link = "0") {
+        return 403;
+      }
+
+      root /rails/storage;
+      try_files /$media_path =404;
+
+      default_type image/jpeg;
+      expires 1y;
+      add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location ~ ^/media/(?<media_expires>\d+)/(?<media_signature>[-_A-Za-z0-9]+)/(?<media_path>.+)--[^/]+\.png$ {
+      secure_link $media_signature,$media_expires;
+      secure_link_md5 "$secure_link_expires/${media_path}${MEDIA_PROXY_SECRET}";
+
+      if ($secure_link = "") {
+        return 403;
+      }
+
+      if ($secure_link = "0") {
+        return 403;
+      }
+
+      root /rails/storage;
+      try_files /$media_path =404;
+
+      default_type image/png;
+      expires 1y;
+      add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
+    location ~ ^/media/(?<media_expires>\d+)/(?<media_signature>[-_A-Za-z0-9]+)/(?<media_path>.+)--[^/]+\.webp$ {
+      secure_link $media_signature,$media_expires;
+      secure_link_md5 "$secure_link_expires/${media_path}${MEDIA_PROXY_SECRET}";
+
+      if ($secure_link = "") {
+        return 403;
+      }
+
+      if ($secure_link = "0") {
+        return 403;
+      }
+
+      root /rails/storage;
+      try_files /$media_path =404;
+
+      default_type image/webp;
+      expires 1y;
+      add_header Cache-Control "public, max-age=31536000, immutable";
+    }
+
     location ~ ^/media/(?<media_expires>\d+)/(?<media_signature>[-_A-Za-z0-9]+)/(?<media_path>.+)--[^/]+$ {
       secure_link $media_signature,$media_expires;
       secure_link_md5 "$secure_link_expires/${media_path}${MEDIA_PROXY_SECRET}";

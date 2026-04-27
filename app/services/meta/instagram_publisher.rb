@@ -31,7 +31,6 @@ module Meta
       container_payload = http_client.post_form!(
         "https://graph.instagram.com/#{API_VERSION}/#{instagram_account_id}/media",
         params: {
-          media_type: "IMAGE",
           image_url: event_social_post.publish_image_url_for("instagram"),
           caption: event_social_post.caption,
           access_token: user_access_token
