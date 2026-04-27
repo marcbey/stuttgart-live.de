@@ -2393,7 +2393,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "https://eventim.example/tickets"
   end
 
-  test "search result event cards show an ausverkauft ribbon for sold out leading offers" do
+  test "search result event cards do not show an ausverkauft ribbon when manual offer is available" do
     event = Event.create!(
       slug: "search-sold-out-ribbon",
       source_fingerprint: "test::public::search::sold-out-ribbon",
@@ -2441,11 +2441,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_url(q: "Search Ribbon")
 
     assert_response :success
-    assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", text: "Ausverkauft"
-    assert_select "#search_card_event_#{event.id} .event-card-ticket-overlay", count: 0
+    assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", count: 0
+    assert_select "#search_card_event_#{event.id} .genre-lane-card-ticket-overlay", count: 1
   end
 
-  test "search result event cards do not show an ausverkauft ribbon when the leading imported offer is available" do
+  test "search result event cards show an ausverkauft ribbon when manual offer is sold out" do
     event = Event.create!(
       slug: "search-available-no-ribbon",
       source_fingerprint: "test::public::search::available-no-ribbon",
@@ -2493,7 +2493,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_url(q: "Available Ribbon")
 
     assert_response :success
-    assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", count: 0
+    assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", text: "Ausverkauft"
+    assert_select "#search_card_event_#{event.id} .genre-lane-card-ticket-overlay", count: 0
   end
 
   test "show prefers easyticket offer for primary ticket cta" do
@@ -2536,7 +2537,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
   end
 
-  test "show renders sold out note when imported primary offer is sold out even if a manual offer exists" do
+  test "show renders manual ticket link when imported primary offer is sold out" do
     event = Event.create!(
       slug: "show-imported-sold-out-blocks-manual",
       source_fingerprint: "test::public::show::imported-sold-out-blocks-manual",
@@ -2562,7 +2563,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     event.event_offers.create!(
       source: "manual",
       source_event_id: event.id.to_s,
-      ticket_url: "https://manual.example/still-open",
+      ticket_url: "https://partnershop.easyticket.de/still-open",
       sold_out: false,
       priority_rank: 0,
       metadata: {}
@@ -2572,10 +2573,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-cta", count: 1
-    assert_includes response.body, "Ausverkauft"
-    assert_not_includes response.body, "https://manual.example/still-open"
+    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
+    assert_includes response.body, "https://partnershop.easyticket.de/still-open"
+    assert_not_includes response.body, "Ausverkauft"
     assert_not_includes response.body, "https://easyticket.example/sold-out"
-    assert_not_includes response.body, "Tickets sichern"
   end
 
   test "show renders sold out note and ticket special note for sold out events" do
@@ -2717,7 +2718,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "https://eventim.example/sks-canceled-sold-out-message"
   end
 
-  test "show renders canceled note when imported primary offer is canceled" do
+  test "show renders manual ticket link when imported primary offer is canceled" do
     event = Event.create!(
       slug: "show-canceled-imported-offer",
       source_fingerprint: "test::public::show::canceled-imported-offer",
@@ -2746,7 +2747,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     event.event_offers.create!(
       source: "manual",
       source_event_id: event.id.to_s,
-      ticket_url: "https://manual.example/still-open",
+      ticket_url: "https://partnershop.easyticket.de/still-open",
       sold_out: false,
       priority_rank: 0,
       metadata: {}
@@ -2756,12 +2757,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-cta", count: 1
-    assert_includes response.body, "Abgesagt"
+    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
+    assert_not_includes response.body, "Abgesagt"
     assert_not_includes response.body, "Ausverkauft"
-    assert_not_includes response.body, "Tickets sichern"
-    assert_not_includes response.body, "https://manual.example/still-open"
+    assert_includes response.body, "https://partnershop.easyticket.de/still-open"
     assert_not_includes response.body, "https://eventim.example/canceled"
-    assert_includes response.body, "\"eventStatus\":\"https://schema.org/EventCancelled\""
+    assert_includes response.body, "\"eventStatus\":\"https://schema.org/EventScheduled\""
   end
 
   test "search result event cards show an abgesagt ribbon for canceled leading offers" do

@@ -33,7 +33,7 @@ class Public::EventsHelperTest < ActionView::TestCase
     assert_equal "45 EUR", public_event_ticket_price(event, offer)
   end
 
-  test "public_event_ticket_price does not use a manual offer when an imported primary offer is sold out" do
+  test "public_event_ticket_price uses manual offer when imported primary offer is sold out" do
     event = Event.create!(
       slug: "helper-public-ticket-price-imported-blocks-manual",
       source_fingerprint: "test::helper::public-ticket-price-imported-blocks-manual",
@@ -64,7 +64,7 @@ class Public::EventsHelperTest < ActionView::TestCase
       priority_rank: 0
     )
 
-    assert_nil public_event_ticket_price(event)
+    assert_equal "39 EUR", public_event_ticket_price(event)
   end
 
   test "public_event_visibility_badges labels scheduled ready_for_publish events as geplant" do

@@ -357,16 +357,12 @@ class Event < ApplicationRecord
   end
 
   def public_ticket_status_offer
-    imported_primary_ticket_offer || manual_ticket_offer
+    editor_ticket_offer
   end
 
   def public_ticket_offer
-    imported_offer = imported_primary_ticket_offer
-    return imported_offer if ticket_offer_active?(imported_offer)
-    return nil if imported_offer.present?
-
-    manual_offer = manual_ticket_offer
-    return manual_offer if ticket_offer_active?(manual_offer)
+    offer = editor_ticket_offer
+    return offer if ticket_offer_active?(offer)
 
     nil
   end

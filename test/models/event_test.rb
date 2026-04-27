@@ -303,7 +303,7 @@ class EventTest < ActiveSupport::TestCase
     assert_equal manual_offer, event.manual_ticket_offer
   end
 
-  test "public_ticket_offer blocks manual fallback when imported primary offer is unavailable" do
+  test "public_ticket_offer prefers active manual offer over unavailable imported offer" do
     event = Event.create!(
       slug: "public-ticket-offer-blocks-manual",
       source_fingerprint: "test::event::public-ticket-offer-blocks-manual",
@@ -331,7 +331,8 @@ class EventTest < ActiveSupport::TestCase
     )
 
     assert_equal manual_offer, event.editor_ticket_offer
-    assert_nil event.public_ticket_offer
+    assert_equal manual_offer, event.public_ticket_offer
+    assert_not_predicate event, :public_sold_out?
     assert_equal manual_offer, event.manual_ticket_offer
   end
 
@@ -359,7 +360,7 @@ class EventTest < ActiveSupport::TestCase
     assert_equal manual_offer, event.public_ticket_offer
   end
 
-  test "public_ticket_status_offer prefers imported offers over manual offers" do
+  test "public_ticket_status_offer prefers manual offers over imported offers" do
     event = Event.create!(
       slug: "public-ticket-status-offer-priority",
       source_fingerprint: "test::event::public-ticket-status-offer-priority",
@@ -386,11 +387,11 @@ class EventTest < ActiveSupport::TestCase
       priority_rank: 10
     )
 
-    assert_equal imported_offer, event.public_ticket_status_offer
-    assert_not_equal manual_offer, event.public_ticket_status_offer
+    assert_equal manual_offer, event.public_ticket_status_offer
+    assert_not_equal imported_offer, event.public_ticket_status_offer
   end
 
-  test "public_sold_out? follows the leading public ticket status offer" do
+  test "public_sold_out? follows the manual ticket status offer" do
     event = Event.create!(
       slug: "public-sold-out-leading-offer",
       source_fingerprint: "test::event::public-sold-out-leading-offer",
@@ -417,11 +418,11 @@ class EventTest < ActiveSupport::TestCase
       priority_rank: 0
     )
 
-    assert_predicate event, :public_sold_out?
-    assert_nil event.public_ticket_offer
+    assert_not_predicate event, :public_sold_out?
+    assert_equal event.manual_ticket_offer, event.public_ticket_offer
   end
 
-  test "public_canceled? takes precedence over sold out when the leading offer is canceled" do
+  test "manual ticket offer overrides canceled imported offer" do
     event = Event.create!(
       slug: "public-canceled-leading-offer",
       source_fingerprint: "test::event::public-canceled-leading-offer",
@@ -452,10 +453,10 @@ class EventTest < ActiveSupport::TestCase
       priority_rank: 0
     )
 
-    assert_predicate event, :public_canceled?
+    assert_not_predicate event, :public_canceled?
     assert_not event.public_sold_out?
-    assert_nil event.public_ticket_offer
-    assert_equal "Abgesagt", event.public_ticket_status_label
+    assert_equal event.manual_ticket_offer, event.public_ticket_offer
+    assert_nil event.public_ticket_status_label
   end
 
   test "primary_genre uses loaded genres without extra queries" do

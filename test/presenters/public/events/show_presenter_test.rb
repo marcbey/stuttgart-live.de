@@ -166,6 +166,40 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "© Live auf der Bühne", presenter.hero_gallery_slides.second.credit
   end
 
+  test "uses known ticket source for provider label" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      start_at: Time.zone.local(2026, 6, 17, 20, 0)
+    )
+    primary_offer = OpenStruct.new(
+      source: "eventim",
+      resolved_ticket_url: "https://tickets.example/band",
+      ticket_price_text: nil
+    )
+
+    presenter = build_presenter(event, primary_offer: primary_offer)
+
+    assert_equal "Eventim", presenter.ticket_provider_label
+  end
+
+  test "detects provider label from manual ticket url" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      start_at: Time.zone.local(2026, 6, 17, 20, 0)
+    )
+    primary_offer = OpenStruct.new(
+      source: "manual",
+      resolved_ticket_url: "https://partnershop.easyticket.de/event/band-live",
+      ticket_price_text: nil
+    )
+
+    presenter = build_presenter(event, primary_offer: primary_offer)
+
+    assert_equal "Easy Ticket", presenter.ticket_provider_label
+  end
+
   test "writes out price ranges in the ticket cta" do
     event = build_event(
       artist_name: "Band",
