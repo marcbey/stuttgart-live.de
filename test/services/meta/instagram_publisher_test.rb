@@ -17,6 +17,7 @@ class Meta::InstagramPublisherTest < ActiveSupport::TestCase
     result = publisher.publish!(event_social_post: build_social_post(platform: "instagram"))
 
     assert_equal "https://graph.instagram.com/v25.0/ig-123/media", client.calls.first.fetch(:url)
+    assert_equal "IMAGE", client.calls.first.fetch(:params).fetch(:media_type)
     assert_equal "https://graph.instagram.com/v25.0/container-1", client.calls.second.fetch(:url)
     assert_equal "https://graph.instagram.com/v25.0/ig-123/media_publish", client.calls.third.fetch(:url)
     assert_equal "https://graph.instagram.com/v25.0/media-1", client.calls.fourth.fetch(:url)
