@@ -5,8 +5,8 @@ module Meta
         http_client: HttpClient.new,
         token_refresher: ConnectionTokenRefresher.new,
         instagram_account_fetcher: InstagramAccountFetcher.new,
-        app_id: AppConfig.meta_app_id,
-        app_secret: AppConfig.meta_app_secret
+        app_id: AppConfig.meta_instagram_app_id,
+        app_secret: AppConfig.meta_instagram_app_secret
       )
         @http_client = http_client
         @token_refresher = token_refresher

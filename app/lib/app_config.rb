@@ -101,11 +101,11 @@ module AppConfig
     end
 
     def meta_instagram_app_id
-      meta_app_id
+      fetch(:meta, :instagram_app_id, env: "META_INSTAGRAM_APP_ID") || meta_app_id
     end
 
     def meta_instagram_app_secret
-      meta_app_secret
+      fetch(:meta, :instagram_app_secret, env: "META_INSTAGRAM_APP_SECRET") || meta_app_secret
     end
 
     def meta_instagram_redirect_uri

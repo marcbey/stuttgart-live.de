@@ -53,8 +53,8 @@ class AppConfigTest < ActiveSupport::TestCase
     }) do
       assert_equal "meta-app-id", AppConfig.meta_app_id
       assert_equal "meta-app-secret", AppConfig.meta_app_secret
-      assert_equal "meta-app-id", AppConfig.meta_instagram_app_id
-      assert_equal "meta-app-secret", AppConfig.meta_instagram_app_secret
+      assert_equal "instagram-app-id", AppConfig.meta_instagram_app_id
+      assert_equal "instagram-app-secret", AppConfig.meta_instagram_app_secret
       assert_equal "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback", AppConfig.meta_instagram_redirect_uri
     end
   end
@@ -69,14 +69,14 @@ class AppConfigTest < ActiveSupport::TestCase
     ) do
       with_credentials({}) do
         assert_equal "env-app-id", AppConfig.meta_app_id
-        assert_equal "env-app-id", AppConfig.meta_instagram_app_id
-        assert_equal "env-app-secret", AppConfig.meta_instagram_app_secret
+        assert_equal "env-instagram-app-id", AppConfig.meta_instagram_app_id
+        assert_equal "env-instagram-app-secret", AppConfig.meta_instagram_app_secret
         assert_equal "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback", AppConfig.meta_instagram_redirect_uri
       end
     end
   end
 
-  test "uses the meta app keys for instagram login" do
+  test "falls back from instagram login keys to meta app keys" do
     with_credentials(meta: { app_id: "legacy-app-id", app_secret: "legacy-app-secret" }) do
       assert_equal "legacy-app-id", AppConfig.meta_instagram_app_id
       assert_equal "legacy-app-secret", AppConfig.meta_instagram_app_secret

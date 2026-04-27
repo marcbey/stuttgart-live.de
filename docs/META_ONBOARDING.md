@@ -81,18 +81,21 @@ Facebook-Publishing setzt keine Instagram-Verknüpfung der Seite mehr voraus.
 
 ## Erwartete Konfiguration
 
-In Rails-Credentials oder ENV werden nur die technische App und optional die feste Callback-URL konfiguriert:
+In Rails-Credentials oder ENV werden nur App-Zugangsdaten und optional die feste Callback-URL konfiguriert:
 
 - `meta.app_id` oder `META_APP_ID`
 - `meta.app_secret` oder `META_APP_SECRET`
+- optional `meta.instagram_app_id` oder `META_INSTAGRAM_APP_ID`
+- optional `meta.instagram_app_secret` oder `META_INSTAGRAM_APP_SECRET`
 - optional `meta.instagram_redirect_uri` oder `META_INSTAGRAM_REDIRECT_URI`
+
+Facebook verwendet `meta.app_id` und `meta.app_secret`. Instagram verwendet bevorzugt `meta.instagram_app_id` und `meta.instagram_app_secret`, weil der Instagram-Login-Dialog eine Instagram-Platform-App erwartet. Wenn diese Werte fehlen, fällt die App auf `meta.app_id` und `meta.app_secret` zurück.
 
 Nicht in Credentials gehören:
 
 - Facebook-Page-IDs als aktive Zielauswahl
 - Facebook-Page-Access-Tokens
 - Instagram-Business-Account-IDs
-- separate Instagram-App-ID/Secrets
 
 Wenn `meta.instagram_redirect_uri` gesetzt ist, verwendet die App diese Callback-URL explizit statt die URL aus dem aktuellen Request zu bauen. Der OAuth-Start und der Callback müssen dabei auf demselben Host laufen, weil der `state` serverseitig an die Session gebunden ist.
 

@@ -475,7 +475,7 @@ Die Antwort enthält dann `X-Stuttgart-Live-Profile` und `Server-Timing` mit Wal
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, `meta.instagram_redirect_uri`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, optional `meta.instagram_app_id`, `meta.instagram_app_secret`, `meta.instagram_redirect_uri`
 - statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
@@ -501,12 +501,14 @@ openai:
   api_key: sk-...
 ```
 
-Für das Social-Publishing liegen die Meta-Zugangsdaten bewusst ebenfalls in den Rails-Credentials und nicht in `app_settings`, zum Beispiel so:
+Für das Social-Publishing liegen nur die App-Zugangsdaten in den Rails-Credentials und nicht in `app_settings`. Facebook nutzt die Meta-App. Instagram kann eine eigene Instagram-Platform-App-ID benötigen; wenn keine eigenen Instagram-Werte gesetzt sind, fällt die App auf `meta.app_id` und `meta.app_secret` zurück:
 
 ```yml
 meta:
   app_id: "..."
   app_secret: "..."
+  instagram_app_id: "..."
+  instagram_app_secret: "..."
   instagram_redirect_uri: "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback"
 ```
 
