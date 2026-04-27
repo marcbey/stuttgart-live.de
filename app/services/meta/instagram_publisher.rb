@@ -11,6 +11,7 @@ module Meta
       instagram_account_id: nil,
       user_access_token: nil,
       connection_resolver: ConnectionResolver.new,
+      image_relay: FacebookImageRelay.new(connection_resolver:),
       max_container_status_checks: 10,
       container_status_interval_seconds: 2,
       sleeper: ->(seconds) { sleep(seconds) }
@@ -20,6 +21,7 @@ module Meta
       @http_client = http_client
       @instagram_account_id = instagram_account_id.to_s.strip.presence || instagram_target&.external_id.to_s.strip
       @user_access_token = user_access_token.to_s.strip.presence || connection&.user_access_token.to_s.strip
+      @image_relay = image_relay
       @max_container_status_checks = max_container_status_checks
       @container_status_interval_seconds = container_status_interval_seconds
       @sleeper = sleeper
@@ -27,11 +29,12 @@ module Meta
 
     def publish!(event_social_post:)
       ensure_configured!
+      image_url = publish_image_url(event_social_post)
 
       container_payload = http_client.post_form!(
         "https://graph.instagram.com/#{API_VERSION}/#{instagram_account_id}/media",
         params: {
-          image_url: event_social_post.publish_image_url_for("instagram"),
+          image_url:,
           caption: event_social_post.caption,
           access_token: user_access_token
         }
@@ -71,11 +74,18 @@ module Meta
 
     private
 
-    attr_reader :container_status_interval_seconds, :http_client, :instagram_account_id, :max_container_status_checks, :sleeper, :user_access_token
+    attr_reader :container_status_interval_seconds, :http_client, :image_relay, :instagram_account_id, :max_container_status_checks, :sleeper, :user_access_token
 
     def ensure_configured!
       raise Error, "Es ist kein Instagram-Professional-Account für das Publishing verbunden." if instagram_account_id.blank?
       raise Error, "Für das Instagram-Publishing fehlt ein gültiges User-Token." if user_access_token.blank?
+    end
+
+    def publish_image_url(event_social_post)
+      direct_url = event_social_post.publish_image_url_for("instagram")
+      image_relay&.relay_image_url(source_url: direct_url).presence || direct_url
+    rescue Error => error
+      raise Error, "Instagram-Bild konnte nicht über Facebook-CDN vorbereitet werden: #{error.message}"
     end
 
     def fetch_media_payload(remote_media_id)

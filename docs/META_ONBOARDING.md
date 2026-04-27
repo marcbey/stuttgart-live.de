@@ -154,3 +154,5 @@ Publishing ist ausschließlich zuständig für:
 - Protokollierung des Plattformversuchs
 
 Publishing erzeugt keine Ad-hoc-Tokens und startet keinen interaktiven Login. Instagram-Fehler blockieren Facebook nicht; Facebook-Fehler blockieren Instagram nicht.
+
+Für Instagram-Foto-Posts verwendet die App einen normalen `image_url`-Container ohne `media_type`. In Produktion kann die Instagram-API die eigene App-Domain als Medienquelle ablehnen, obwohl Browser und Facebook-Crawler die Datei abrufen können. Wenn eine Facebook-Seite verbunden ist, verwendet die App deshalb für Instagram-Bilder einen Meta-internen Relay: Das Bild wird als unveröffentlichte Page-Photo hochgeladen, die resultierende Facebook-CDN-URL wird als `image_url` für den Instagram-Container genutzt, und erst danach läuft `media_publish`. Dieser Relay erzeugt keinen Facebook-Post, benötigt aber eine gültige Facebook-Seitenverbindung mit `pages_manage_posts`.

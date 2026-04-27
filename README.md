@@ -185,16 +185,16 @@ Wichtig für die Generierung:
 Wichtig für die Veröffentlichung:
 
 - Gesendet werden nur Events, die bereits öffentlich live sind. Ein geplantes `published_at` in der Zukunft reicht nicht.
-- Instagram wird über den direkt verbundenen persistierten Instagram-Professional-Account per Media-Container und anschließendem `media_publish` veröffentlicht.
+- Instagram wird über den direkt verbundenen persistierten Instagram-Professional-Account per Media-Container und anschließendem `media_publish` veröffentlicht. Wenn eine Facebook-Seite verbunden ist, lädt die App das Social-Card-Bild vorher als unveröffentlichte Page-Photo hoch und verwendet die daraus entstehende Facebook-CDN-URL für den Instagram-Container. Das umgeht Fetch-Probleme der Instagram-API mit der eigenen App-Domain; es veröffentlicht keinen Facebook-Post.
 - Facebook wird über die separat verbundene und ausgewählte Facebook-Seite direkt über die Facebook-Graph-API veröffentlicht.
-- Ein Facebook-/Token-/Seitenfehler blockiert nur Facebook-Publishing. Ein Instagram-/Token-/Account-Fehler blockiert nur Instagram-Publishing.
+- Ein Facebook-/Token-/Seitenfehler blockiert nur Facebook-Publishing. Für Instagram kann eine kaputte Facebook-Seitenverbindung zusätzlich den optionalen Bild-Relay verhindern; ohne Relay versucht Instagram weiterhin die direkte Bild-URL.
 - Fehlgeschlagene Posts bleiben sichtbar und können nach einer Korrektur der Konfiguration erneut gesendet werden.
 
 Wichtig für Betrieb und Architektur:
 
 - Onboarding und Publishing sind strikt getrennt.
 - Instagram und Facebook sind getrennte Meta-Verbindungen mit getrennten Tokens und Health Checks.
-- Die bestehende Instagram-Graph-API-Payload wurde bewusst beibehalten; umgestellt wurde vor allem die Fachlogik im Backend.
+- Die Instagram-Graph-API-Payload für Bildposts bleibt ein normaler Image-Container mit `image_url`; `media_type` wird für reguläre Feed-Fotos nicht gesetzt.
 - Token-Gültigkeit wird regelmäßig geprüft, serverseitige Refresh-Versuche laufen über einen wiederkehrenden Job, und `reauth_required` blockiert Publishing explizit statt implizit zu scheitern.
 
 ### Wie Event-Reihen funktionieren
