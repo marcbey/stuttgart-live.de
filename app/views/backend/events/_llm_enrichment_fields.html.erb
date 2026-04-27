@@ -113,6 +113,9 @@
 
     <div class="backend-section-header llm-enrichment-raw-response">
       <h3>Raw Response</h3>
+      <% if (llm_job_run_hint = event_llm_last_successful_job_run_hint(event)).present? %>
+        <p class="form-hint"><%= llm_job_run_hint %></p>
+      <% end %>
     </div>
     <div class="backend-section-body">
       <% if (raw_response = event_llm_raw_response(event)).present? %>

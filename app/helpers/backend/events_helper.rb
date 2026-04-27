@@ -158,6 +158,14 @@ module Backend::EventsHelper
   end
 
   def event_llm_last_successful_run_hint(event)
+    event_llm_last_successful_run_label(event, "Letzter LLM-Enrichment-Run")
+  end
+
+  def event_llm_last_successful_job_run_hint(event)
+    event_llm_last_successful_run_label(event, "Letzter LLM-Enrichment-Job-Run")
+  end
+
+  def event_llm_last_successful_run_label(event, label)
     run = event.llm_enrichment&.source_run
     return if run.blank? || run.status != "succeeded"
 
@@ -165,7 +173,7 @@ module Backend::EventsHelper
     return if timestamp.blank?
 
     day_name = localized_day_name(timestamp.to_date)
-    "Letzter LLM-Enrichment-Run: #{day_name}, #{l(timestamp, format: "%d.%m.%Y %H:%M")}"
+    "#{label}: #{day_name}, #{l(timestamp, format: "%d.%m.%Y %H:%M")}"
   end
 
   def event_llm_enrichment_run_controls_id(event)

@@ -1616,6 +1616,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings[hidden]", count: 1
     assert_operator response.body.index('id="event-editor-tab-llm-enrichment"'), :<, response.body.index('id="event-editor-tab-settings"')
     assert_includes response.body, "Letzter LLM-Enrichment-Run: Montag, 02.03.2026 12:11"
+    assert_includes response.body, "Letzter LLM-Enrichment-Job-Run: Montag, 02.03.2026 12:11"
     assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button", text: "LLM-Enrichment für dieses Event starten"
     assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 1
     assert_select "textarea[name='event[llm_enrichment_attributes][venue_description]']", count: 0
