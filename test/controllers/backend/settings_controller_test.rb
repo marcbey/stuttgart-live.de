@@ -30,8 +30,13 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[role='tab']", count: 7
     assert_select "#settings-tab-meta-connection[aria-selected='true']", count: 1
     assert_select "form[action='#{backend_settings_path(section: :sks_promoter_ids)}'] textarea[name='app_setting[sks_promoter_ids_text]']", count: 0
-    assert_select "a[href='#{start_instagram_backend_meta_connection_path}'][data-turbo='false']", count: 1
-    assert_select "a[href='#{start_facebook_backend_meta_connection_path}'][data-turbo='false']", count: 1
+    assert_select ".social-post-card .social-post-card-header .backend-section-header-actions a[href='#{start_instagram_backend_meta_connection_path}'][data-turbo='false']",
+                  text: "Instagram verbinden",
+                  count: 1
+    assert_select ".social-post-card .social-post-card-header .backend-section-header-actions a.button-save-primary[href='#{start_facebook_backend_meta_connection_path}'][data-turbo='false']",
+                  text: "Facebook verbinden",
+                  count: 1
+    assert_select "form[action='#{refresh_status_backend_meta_connection_path}'] button", text: "Status prüfen", count: 0
     assert_select "textarea[name='app_setting[llm_enrichment_prompt_template_text]']", count: 0
   end
 

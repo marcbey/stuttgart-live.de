@@ -1454,6 +1454,18 @@ display: grid;
   gap: 0.25rem;
 }
 
+.social-post-card-title-row {
+display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.6rem;
+  row-gap: 0.35rem;
+}
+
+.social-post-card-title-row .status-badge {
+flex: 0 0 auto;
+}
+
 .social-post-card-body {
 display: grid;
   gap: 1rem;
