@@ -13,7 +13,7 @@
   </div>
 
   <div class="backend-section-body social-post-platform-grid">
-    <article class="social-post-card">
+    <article class="social-post-card meta-platform-card meta-platform-card-instagram">
       <div class="backend-section-header backend-section-header-with-actions social-post-card-header">
         <div>
           <div class="social-post-card-title-row">
@@ -78,7 +78,7 @@
       </div>
     </article>
 
-    <article class="social-post-card">
+    <article class="social-post-card meta-platform-card meta-platform-card-facebook">
       <div class="backend-section-header backend-section-header-with-actions social-post-card-header">
         <div>
           <div class="social-post-card-title-row">
@@ -134,59 +134,59 @@
             </div>
           <% end %>
         </div>
+
+        <% if page_targets.any? %>
+          <div class="meta-page-target-section">
+            <div>
+              <h3>Facebook-Seitenauswahl</h3>
+              <p class="form-hint">Für direktes Facebook-Publishing muss genau eine Facebook-Seite ausgewählt sein.</p>
+            </div>
+
+            <div class="meta-page-target-list">
+              <% page_targets.each do |target| %>
+                <div class="meta-page-target-row">
+                  <div class="meta-page-target-main">
+                    <div class="social-post-card-title-row">
+                      <h4><%= target.display_name %></h4>
+                      <span class="<%= target.selected? ? "status-badge status-badge-published" : "status-badge status-badge-default" %>">
+                        <%= target.selected? ? "Ausgewählt" : "Verfügbar" %>
+                      </span>
+                    </div>
+
+                    <div class="social-post-meta-list">
+                      <div>
+                        <span class="form-label">Page-ID</span>
+                        <p><code><%= target.external_id %></code></p>
+                      </div>
+                      <% if target.metadata["instagram_account_id"].present? %>
+                        <div>
+                          <span class="form-label">Verknüpftes Instagram</span>
+                          <p>@<%= target.metadata["instagram_username"].presence || target.metadata["instagram_account_id"] %></p>
+                        </div>
+                      <% end %>
+                      <% if target.last_synced_at.present? %>
+                        <div>
+                          <span class="form-label">Zuletzt synchronisiert</span>
+                          <p><%= l(target.last_synced_at, format: "%d.%m.%Y %H:%M") %></p>
+                        </div>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <div class="backend-section-header-actions">
+                    <% unless target.selected? %>
+                      <%= button_to "Seite auswählen",
+                                    select_target_backend_meta_connection_path(target_id: target.id),
+                                    method: :patch,
+                                    class: "button button-secondary button-compact" %>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
     </article>
   </div>
-
-  <% if page_targets.any? %>
-    <div class="backend-section-body">
-      <h3>Facebook-Seitenauswahl</h3>
-      <p class="form-hint">Für direktes Facebook-Publishing muss genau eine Facebook-Seite ausgewählt sein.</p>
-      <div class="social-post-platform-grid">
-        <% page_targets.each do |target| %>
-          <article class="social-post-card">
-            <div class="backend-section-header backend-section-header-with-actions">
-              <div>
-                <div class="social-post-card-title-row">
-                  <h3><%= target.display_name %></h3>
-                  <span class="<%= target.selected? ? "status-badge status-badge-published" : "status-badge status-badge-default" %>">
-                    <%= target.selected? ? "Ausgewählt" : "Verfügbar" %>
-                  </span>
-                </div>
-              </div>
-              <div class="backend-section-header-actions">
-                <% unless target.selected? %>
-                  <%= button_to "Seite auswählen",
-                                select_target_backend_meta_connection_path(target_id: target.id),
-                                method: :patch,
-                                class: "button button-secondary button-compact" %>
-                <% end %>
-              </div>
-            </div>
-
-            <div class="social-post-card-body">
-              <div class="social-post-meta-list">
-                <div>
-                  <span class="form-label">Page-ID</span>
-                  <p><code><%= target.external_id %></code></p>
-                </div>
-                <% if target.metadata["instagram_account_id"].present? %>
-                  <div>
-                    <span class="form-label">Verknüpftes Instagram</span>
-                    <p>@<%= target.metadata["instagram_username"].presence || target.metadata["instagram_account_id"] %></p>
-                  </div>
-                <% end %>
-                <% if target.last_synced_at.present? %>
-                  <div>
-                    <span class="form-label">Zuletzt synchronisiert</span>
-                    <p><%= l(target.last_synced_at, format: "%d.%m.%Y %H:%M") %></p>
-                  </div>
-                <% end %>
-              </div>
-            </div>
-          </article>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
 </section>

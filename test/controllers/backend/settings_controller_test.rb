@@ -29,6 +29,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_select "[data-controller='settings-tabs']", count: 1
     assert_select "[role='tab']", count: 7
     assert_select "#settings-tab-meta-connection[aria-selected='true']", count: 1
+    assert_select "article.social-post-card", count: 2
     assert_select "form[action='#{backend_settings_path(section: :sks_promoter_ids)}'] textarea[name='app_setting[sks_promoter_ids_text]']", count: 0
     assert_select ".social-post-card .social-post-card-header .backend-section-header-actions a[href='#{start_instagram_backend_meta_connection_path}'][data-turbo='false']",
                   text: "Instagram verbinden",
@@ -38,6 +39,30 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
                   count: 1
     assert_select "form[action='#{refresh_status_backend_meta_connection_path}'] button", text: "Status prüfen", count: 0
     assert_select "textarea[name='app_setting[llm_enrichment_prompt_template_text]']", count: 0
+  end
+
+  test "meta page selection keeps selected page action in its card" do
+    sign_in_as(@admin)
+    facebook_connection = create_facebook_connection_with_pages!
+    selected_page = facebook_connection.selected_facebook_page_target
+    other_page = facebook_connection.social_connection_targets.facebook_pages.where(selected: false).first
+
+    with_stubbed_meta_connection_state(facebook_connection:) do
+      get edit_backend_settings_url(section: :meta_connection)
+    end
+
+    assert_response :success
+
+    document = Nokogiri::HTML5(response.body)
+    facebook_card = document.at_css("article.meta-platform-card-facebook")
+    selected_row = page_target_row_for(facebook_card, selected_page.display_name)
+    other_row = page_target_row_for(facebook_card, other_page.display_name)
+
+    assert_equal 2, document.css("article.social-post-card").size
+    assert_equal "Ausgewählt", selected_row.at_css(".status-badge")&.text&.strip
+    assert_nil selected_row.at_css(".backend-section-header-actions button")
+    assert_nil selected_row.at_css("form[action*='target_id=#{selected_page.id}']")
+    assert_equal "Seite auswählen", other_row.at_css(".backend-section-header-actions form[action*='target_id=#{other_page.id}'] button")&.text&.strip
   end
 
   test "admin can open specific section via query param" do
@@ -367,6 +392,97 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     end
 
     AppSetting.reset_cache!
+  end
+
+  def create_facebook_connection_with_pages!
+    SocialConnection.where(provider: "meta").destroy_all
+    connection = SocialConnection.create!(
+      provider: "meta",
+      platform: "facebook",
+      auth_mode: "facebook_login_for_business",
+      connection_status: "connected",
+      user_access_token: "user-token",
+      user_token_expires_at: 40.days.from_now,
+      granted_scopes: %w[pages_show_list pages_read_engagement pages_manage_posts]
+    )
+    connection.social_connection_targets.create!(
+      target_type: "facebook_page",
+      external_id: "selected-page",
+      name: "Selected Page",
+      access_token: "selected-page-token",
+      selected: true,
+      status: "selected"
+    )
+    connection.social_connection_targets.create!(
+      target_type: "facebook_page",
+      external_id: "other-page",
+      name: "Other Page",
+      access_token: "other-page-token",
+      selected: false,
+      status: "available"
+    )
+    connection
+  end
+
+  def with_stubbed_meta_connection_state(facebook_connection:)
+    instagram_status = build_meta_access_status(connection_status: "disconnected", state: :error, summary: "Instagram fehlt.")
+    facebook_status = build_meta_access_status(
+      connection_status: "connected",
+      state: :ok,
+      summary: "Facebook-Verbindung ist gültig.",
+      page_name: facebook_connection.selected_facebook_page_target.display_name
+    )
+    resolver = Object.new
+    resolver.define_singleton_method(:instagram_connection) { nil }
+    resolver.define_singleton_method(:facebook_connection) { facebook_connection }
+    resolver.define_singleton_method(:connection_for) { |platform| platform.to_s == "facebook" ? facebook_connection : nil }
+
+    original_access_status_new = Meta::AccessStatus.method(:new)
+    Meta::AccessStatus.define_singleton_method(:new) do |*_args, **kwargs|
+      initialized_platform = kwargs[:platform].to_s
+      service = Object.new
+      service.define_singleton_method(:call) do |force: false, platform: nil|
+        active_platform = platform.to_s.presence || initialized_platform
+        active_platform == "facebook" ? facebook_status : instagram_status
+      end
+      service
+    end
+
+    with_singleton_return_value(Meta::ConnectionResolver, :new, resolver) { yield }
+  ensure
+    Meta::AccessStatus.define_singleton_method(:new, original_access_status_new) if original_access_status_new
+  end
+
+  def build_meta_access_status(connection_status:, state:, summary:, page_name: nil)
+    Meta::AccessStatus::Status.new(
+      connection_status:,
+      state:,
+      summary:,
+      details: [],
+      checked_at: Time.current,
+      expires_at: nil,
+      page_name:,
+      instagram_username: nil,
+      permissions: [],
+      debug_available: true,
+      reauth_required: state == :error,
+      payload: {}
+    )
+  end
+
+  def page_target_row_for(facebook_card, title)
+    facebook_card.css(".meta-page-target-row").find do |row|
+      row.at_css(".social-post-card-title-row h4")&.text&.strip == title
+    end
+  end
+
+  def with_singleton_return_value(target, method_name, value)
+    original_method = target.method(method_name)
+
+    target.define_singleton_method(method_name) { |*| value }
+    yield
+  ensure
+    target.define_singleton_method(method_name, original_method)
   end
 
   def seed_all_settings!
