@@ -8,7 +8,7 @@
 - Facebook-Business-Login für verwaltete Facebook-Seiten
 - getrennte Health Checks, Tokens, Publish-Buttons und Publish-Versuche
 
-Ein Event-Social-Post kann dadurch unabhängig auf Instagram oder Facebook veröffentlicht werden. Facebook übernimmt in v1 denselben Caption-Text und dasselbe Bild aus dem Instagram-Draft, bleibt aber ein eigener `event_social_posts`-Record.
+Ein Event-Social-Post kann dadurch unabhängig auf Instagram oder Facebook veröffentlicht werden. Instagram und Facebook haben getrennte Drafts mit eigenen `event_social_posts`-Records; nicht veröffentlichte Drafts werden beim Hinzufügen oder Ändern des Eventbilds automatisch neu erzeugt, damit das aktuelle Eventbild verwendet wird.
 
 ## Persistierte Daten
 

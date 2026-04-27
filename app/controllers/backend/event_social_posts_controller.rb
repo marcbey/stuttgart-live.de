@@ -35,11 +35,6 @@ module Backend
     end
 
     def update
-      unless @event_social_post.platform == EventSocialPost::CANONICAL_PLATFORM
-        redirect_to redirect_path, alert: "Nur der Instagram-Haupt-Post kann bearbeitet werden."
-        return
-      end
-
       unless @event_social_post.caption_editable?
         redirect_to redirect_path, alert: "Social-Post kann in diesem Status nicht bearbeitet werden."
         return
@@ -75,11 +70,6 @@ module Backend
     end
 
     def regenerate
-      unless @event_social_post.platform == EventSocialPost::CANONICAL_PLATFORM
-        redirect_to redirect_path, alert: "Nur der Instagram-Haupt-Post kann neu erzeugt werden."
-        return
-      end
-
       social_post = draft_sync.call(event: @event, platform: @event_social_post.platform)
       redirect_to redirect_path, notice: "Social-Draft wurde neu erzeugt."
     rescue ActiveRecord::RecordInvalid => error

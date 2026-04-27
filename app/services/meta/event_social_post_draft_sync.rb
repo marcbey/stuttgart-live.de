@@ -13,13 +13,26 @@ module Meta
     end
 
     def call(event:, platform:)
-      normalized_platform = EventSocialPost::CANONICAL_PLATFORM
+      normalized_platform = normalize_platform(platform)
       social_post = event.event_social_posts.find_or_initialize_by(platform: normalized_platform)
       draft = builder_class.new(event:, platform: normalized_platform).build
       social_post.assign_draft_attributes!(draft.attributes)
       social_post.save!
       sync_rendered_assets!(social_post, draft:)
+      sync_facebook_mirror!(social_post) if normalized_platform == EventSocialPost::CANONICAL_PLATFORM
       social_post
+    end
+
+    def refresh_after_event_image_change!(event:)
+      event.event_images.reset if event.association(:event_images).loaded?
+      event.event_social_posts.reset if event.association(:event_social_posts).loaded?
+
+      [ EventSocialPost::CANONICAL_PLATFORM, "facebook" ].filter_map do |platform|
+        social_post = event.event_social_posts.find_by(platform:)
+        next if social_post.present? && !social_post.caption_editable?
+
+        call(event:, platform:)
+      end
     end
 
     def refresh_rendered_assets!(social_post)
@@ -40,6 +53,8 @@ module Meta
       return if connection_resolver.facebook_connection&.selected_facebook_page_target.blank?
 
       facebook_post = social_post.event.event_social_posts.find_or_initialize_by(platform: "facebook")
+      return facebook_post if facebook_post.persisted? && !facebook_post.caption_editable?
+
       facebook_post.assign_attributes(
         caption: social_post.caption,
         target_url: social_post.target_url,
@@ -60,6 +75,13 @@ module Meta
     private
 
     attr_reader :builder_class, :connection_resolver, :renderer
+
+    def normalize_platform(platform)
+      requested_platform = platform.to_s
+      return requested_platform if EventSocialPost::PLATFORMS.include?(requested_platform)
+
+      EventSocialPost::CANONICAL_PLATFORM
+    end
 
     def sync_rendered_assets!(social_post, draft:)
       rendered_cards = renderer.render_set(

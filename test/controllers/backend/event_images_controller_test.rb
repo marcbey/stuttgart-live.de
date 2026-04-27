@@ -154,6 +154,44 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 145.0, created.card_zoom_value
   end
 
+  test "refreshes social drafts when event image is uploaded" do
+    sign_in_as(@user)
+    @event.event_social_posts.destroy_all
+    @event.event_social_posts.create!(
+      platform: "instagram",
+      status: "approved",
+      caption: "Old Instagram caption",
+      target_url: "https://example.com/events/old",
+      image_url: "https://example.com/old-instagram.jpg",
+      payload_snapshot: { "background_source" => "import_image" }
+    )
+    @event.event_social_posts.create!(
+      platform: "facebook",
+      status: "failed",
+      caption: "Old Facebook caption",
+      target_url: "https://example.com/events/old",
+      image_url: "https://example.com/old-facebook.jpg",
+      payload_snapshot: { "background_source" => "import_image" }
+    )
+
+    post backend_event_event_images_url(@event), params: {
+      status: "needs_review",
+      event_image: {
+        purpose: EventImage::PURPOSE_DETAIL_HERO,
+        files: [ uploaded_image ]
+      }
+    }
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+    posts = @event.event_social_posts.reload.index_by(&:platform)
+    assert_equal "draft", posts.fetch("instagram").status
+    assert_equal "draft", posts.fetch("facebook").status
+    assert_equal "editorial_event_image", posts.fetch("instagram").payload_snapshot.fetch("background_source")
+    assert_equal "editorial_event_image", posts.fetch("facebook").payload_snapshot.fetch("background_source")
+    assert posts.fetch("instagram").publish_image_instagram.attached?
+    assert posts.fetch("facebook").publish_image_instagram.attached?
+  end
+
   test "creates event image via turbo stream without reload" do
     sign_in_as(@user)
 
@@ -173,6 +211,9 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "target=\"flash-messages\""
     assert_includes response.body, "Bild wurde hochgeladen."
     assert_includes response.body, "target=\"#{ActionView::RecordIdentifier.dom_id(@event, :event_image_section)}\""
+    assert_includes response.body, 'target="event-editor-panel-social"'
+    assert_not_includes response.body, "Für Instagram existiert noch kein Draft."
+    assert_not_includes response.body, "Für Facebook existiert noch kein Draft."
     assert_includes response.body, "action=\"replace\""
     created = @event.event_images.detail_hero.ordered.last
     assert_includes response.body, rails_storage_proxy_path(created.processed_optimized_variant, only_path: true)

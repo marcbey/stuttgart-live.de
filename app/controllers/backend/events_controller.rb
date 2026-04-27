@@ -21,6 +21,7 @@ module Backend
         else
           "event"
         end
+      ensure_social_drafts_for!(@selected_event) if @active_editor_tab == "social"
     end
 
     def apply_filters
@@ -36,6 +37,7 @@ module Backend
     def show
       @filter_status = @inbox_state.navigation_status || params[:status].to_s.presence_in(status_filters)
       @active_editor_tab = editor_tab_for(@event)
+      ensure_social_drafts_for!(@event) if @active_editor_tab == "social"
     end
 
     def new
@@ -302,6 +304,29 @@ module Backend
         all_presenters: @all_presenters,
         next_event_enabled: @next_event_enabled
       )
+    end
+
+    def ensure_social_drafts_for!(event)
+      return unless event&.persisted?
+
+      errors = []
+
+      [ EventSocialPost::CANONICAL_PLATFORM, "facebook" ].each do |platform|
+        next if event.event_social_posts.where(platform: platform).exists?
+
+        begin
+          social_draft_sync.call(event:, platform:)
+        rescue ActiveRecord::RecordInvalid, Meta::Error => error
+          errors << error.message
+        end
+      end
+
+      event.event_social_posts.reset
+      flash.now[:alert] = errors.uniq.to_sentence if errors.any?
+    end
+
+    def social_draft_sync
+      @social_draft_sync ||= Meta::EventSocialPostDraftSync.new
     end
 
     def selected_event_from(events)

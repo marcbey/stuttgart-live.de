@@ -34,6 +34,22 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "create generates an independent facebook draft" do
+    with_stubbed_meta_access_status do
+      assert_difference -> { @event.event_social_posts.count }, 1 do
+        post backend_event_event_social_posts_url(@event), params: {
+          inbox_status: "published",
+          platform: "facebook"
+        }
+      end
+
+      social_post = @event.event_social_posts.order(:id).last
+      assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
+      assert_equal "facebook", social_post.platform
+      assert_equal "draft", social_post.status
+    end
+  end
+
   test "update resets an approved draft back to draft when caption changes" do
     social_post = create_approved_social_post(@event, platform: "instagram")
 
@@ -69,6 +85,54 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "Custom Artist", social_post.payload_snapshot.dig("card_text", "artist_name")
       assert_equal "11.11.2026 · Custom Venue", social_post.payload_snapshot.dig("card_text", "meta_line")
       assert_equal "11.11.2026 CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "instagram", "meta_line")
+    end
+  end
+
+  test "update stores facebook draft fields" do
+    social_post = Meta::EventSocialPostDraftSync.new.call(event: @event, platform: "facebook")
+
+    with_stubbed_meta_access_status do
+      patch backend_event_event_social_post_url(@event, social_post), params: {
+        inbox_status: "published",
+        event_social_post: {
+          caption: "Facebook Caption",
+          card_artist_name: "Facebook Artist",
+          card_meta_line: "12.12.2026 · Facebook Venue"
+        }
+      }
+
+      assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
+      social_post.reload
+      assert_equal "facebook", social_post.platform
+      assert_equal "Facebook Caption", social_post.caption
+      assert_equal "Facebook Artist", social_post.payload_snapshot.dig("card_text", "artist_name")
+      assert_equal "12.12.2026 · Facebook Venue", social_post.payload_snapshot.dig("card_text", "meta_line")
+    end
+  end
+
+  test "regenerate refreshes a facebook draft" do
+    social_post = @event.event_social_posts.create!(
+      platform: "facebook",
+      status: "published",
+      caption: "Old Facebook Caption",
+      target_url: "https://example.com/events/#{@event.slug}",
+      image_url: "https://example.com/old-facebook.jpg",
+      published_at: Time.current,
+      published_by: @user,
+      remote_post_id: "page-post-1"
+    )
+
+    with_stubbed_meta_access_status do
+      post regenerate_backend_event_event_social_post_url(@event, social_post), params: {
+        inbox_status: "published"
+      }
+
+      assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
+      social_post.reload
+      assert_equal "facebook", social_post.platform
+      assert_equal "draft", social_post.status
+      assert_nil social_post.remote_post_id
+      assert_nil social_post.published_at
     end
   end
 

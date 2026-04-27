@@ -59,6 +59,7 @@ module Backend
       if errors.any?
         respond_with_create_error(errors.uniq.join(" | "))
       else
+        social_draft_alert = refresh_social_drafts_after_event_image_change(purpose: purpose)
         notice =
           if created == 1
             "Bild wurde hochgeladen."
@@ -68,21 +69,26 @@ module Backend
         respond_to do |format|
           format.turbo_stream do
             flash.now[:notice] = notice
+            flash.now[:alert] = social_draft_alert if social_draft_alert.present?
             render_event_image_create_turbo_stream(purpose: purpose)
           end
-          format.html { redirect_to editor_redirect_path, notice: notice }
+          format.html { redirect_to editor_redirect_path, **redirect_flash(notice:, alert: social_draft_alert) }
         end
       end
     end
 
     def update
       if @event_image.update(update_params)
+        social_draft_alert = refresh_social_drafts_after_event_image_change(purpose: @event_image.purpose)
         respond_to do |format|
           format.turbo_stream do
             flash.now[:notice] = event_image_update_notice
+            flash.now[:alert] = social_draft_alert if social_draft_alert.present?
             render_event_image_update_turbo_stream
           end
-          format.html { redirect_to editor_redirect_path, notice: event_image_update_notice }
+          format.html do
+            redirect_to editor_redirect_path, **redirect_flash(notice: event_image_update_notice, alert: social_draft_alert)
+          end
         end
       else
         respond_to do |format|
@@ -112,7 +118,12 @@ module Backend
         )
       end
 
-      redirect_to editor_redirect_path, notice: "Import-Bild wurde in die Redaktion übernommen."
+      social_draft_alert = refresh_social_drafts_after_event_image_change(purpose: purpose)
+      redirect_to editor_redirect_path,
+                  **redirect_flash(
+                    notice: "Import-Bild wurde in die Redaktion übernommen.",
+                    alert: social_draft_alert
+                  )
     rescue ActiveRecord::RecordInvalid => e
       redirect_to editor_redirect_path, alert: e.record.errors.full_messages.to_sentence
     rescue StandardError => e
@@ -180,6 +191,25 @@ module Backend
       when EventImage::PURPOSE_DETAIL_HERO
         @event.event_images.detail_hero.find_each(&:destroy!)
       end
+    end
+
+    def refresh_social_drafts_after_event_image_change(purpose:)
+      return unless purpose.to_s == EventImage::PURPOSE_DETAIL_HERO
+
+      social_draft_sync.refresh_after_event_image_change!(event: @event)
+      nil
+    rescue ActiveRecord::RecordInvalid, Meta::Error => e
+      "Social-Drafts konnten nicht aktualisiert werden: #{e.message}"
+    end
+
+    def social_draft_sync
+      @social_draft_sync ||= Meta::EventSocialPostDraftSync.new
+    end
+
+    def redirect_flash(notice:, alert:)
+      flash_options = { notice: notice }
+      flash_options[:alert] = alert if alert.present?
+      flash_options
     end
 
     def uploaded_files
@@ -274,6 +304,11 @@ module Backend
           view_context.dom_id(@event, :event_image_section),
           partial: "backend/events/event_image_section",
           locals: { event: @event, editor_status: current_editor_status }
+        ),
+        turbo_stream.update(
+          "event-editor-panel-social",
+          partial: "backend/events/social_posts_section",
+          locals: { event: @event, filter_status: current_editor_status }
         )
       ]
     end

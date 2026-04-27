@@ -83,6 +83,62 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form#editor_form_event_#{@published_event.id} input[name='editor_tab'][value='social']", count: 1
   end
 
+  test "social tab creates missing platform drafts when opened" do
+    sign_in_as(@user)
+
+    status = build_meta_access_status(state: :ok, connection_status: "connected", summary: "Meta-Verbindung ist gültig.")
+
+    assert_difference -> { @published_event.event_social_posts.count }, 2 do
+      with_stubbed_meta_social_state(status:, connection: nil) do
+        get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
+      end
+    end
+
+    assert_response :success
+    assert_equal %w[facebook instagram], @published_event.event_social_posts.order(:platform).pluck(:platform)
+    assert_select "#event-editor-panel-social", text: /Für Facebook existiert noch kein Draft\./, count: 0
+    assert_select "#event-editor-panel-social", text: /Für Instagram existiert noch kein Draft\./, count: 0
+    assert_select "#event-editor-panel-social form[action='#{backend_event_event_social_posts_path(@published_event)}'] button",
+                  text: "Draft erzeugen",
+                  count: 0
+  end
+
+  test "social tab renders editable facebook draft fields and regenerate action" do
+    sign_in_as(@user)
+
+    facebook_post = @published_event.event_social_posts.create!(
+      platform: "facebook",
+      status: "draft",
+      caption: "Facebook Caption",
+      target_url: "https://example.com/events/#{@published_event.slug}",
+      image_url: "https://example.com/facebook.jpg",
+      payload_snapshot: {
+        "card_text" => {
+          "artist_name" => "Facebook Artist",
+          "meta_line" => "01.06.2026 · LKA Longhorn"
+        }
+      }
+    )
+    status = build_meta_access_status(state: :ok, connection_status: "connected", summary: "Meta-Verbindung ist gültig.")
+
+    with_stubbed_meta_social_state(status:, connection: nil) do
+      get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
+    end
+
+    assert_response :success
+    assert_select "form##{ActionView::RecordIdentifier.dom_id(facebook_post, :caption_form)}" do
+      assert_select "input[name='event_social_post[card_artist_name]'][value='Facebook Artist']", count: 1
+      assert_select "input[name='event_social_post[card_meta_line]'][value='01.06.2026 · LKA Longhorn']", count: 1
+      assert_select "textarea[name='event_social_post[caption]']", text: "Facebook Caption", count: 1
+    end
+    assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(facebook_post, :caption_form)}']",
+                  text: "Caption speichern",
+                  count: 1
+    assert_select "form[action='#{regenerate_backend_event_event_social_post_path(@published_event, facebook_post)}'] button",
+                  text: "Draft neu erzeugen",
+                  count: 1
+  end
+
   test "show keeps active inbox status in editor form" do
     sign_in_as(@user)
 
@@ -198,7 +254,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
                   text: "Caption speichern",
                   count: 1
     assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, social_post)}'] button",
-                  text: "Instagram veröffentlichen",
+                  text: "veröffentlichen",
                   count: 1
   end
 
@@ -217,6 +273,80 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
                   count: 1
     assert_select "#event-editor-panel-social a[href='#{start_facebook_backend_meta_connection_path}'][data-turbo='false']",
                   text: "Facebook verbinden",
+                  count: 1
+    assert_select "#event-editor-panel-social a.button-save-primary[href='#{start_facebook_backend_meta_connection_path}']",
+                  text: "Facebook verbinden",
+                  count: 1
+  end
+
+  test "social tab disables publish buttons without valid platform connections" do
+    sign_in_as(@user)
+
+    instagram_post = @published_event.event_social_posts.create!(
+      platform: "instagram",
+      status: "draft",
+      caption: "Instagram Caption",
+      target_url: "https://example.com/events/#{@published_event.slug}",
+      image_url: "https://example.com/instagram.jpg"
+    )
+    facebook_post = @published_event.event_social_posts.create!(
+      platform: "facebook",
+      status: "draft",
+      caption: "Facebook Caption",
+      target_url: "https://example.com/events/#{@published_event.slug}",
+      image_url: "https://example.com/facebook.jpg"
+    )
+    status = build_meta_access_status(state: :error, connection_status: "reauth_required", summary: "Meta-Token ist abgelaufen oder ungültig.")
+
+    with_stubbed_meta_social_state(status:, connection: nil) do
+      get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
+    end
+
+    assert_response :success
+    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, instagram_post)}'] button.button-secondary[disabled]",
+                  text: "veröffentlichen",
+                  count: 1
+    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, instagram_post)}'] button.button-save-primary",
+                  text: "veröffentlichen",
+                  count: 0
+    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, facebook_post)}'] button.button-secondary[disabled]",
+                  text: "veröffentlichen",
+                  count: 1
+    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, facebook_post)}'] button.button-save-primary",
+                  text: "veröffentlichen",
+                  count: 0
+  end
+
+  test "social tab enables publish buttons with valid platform connections" do
+    sign_in_as(@user)
+
+    instagram_post = @published_event.event_social_posts.create!(
+      platform: "instagram",
+      status: "draft",
+      caption: "Instagram Caption",
+      target_url: "https://example.com/events/#{@published_event.slug}",
+      image_url: "https://example.com/instagram.jpg"
+    )
+    facebook_post = @published_event.event_social_posts.create!(
+      platform: "facebook",
+      status: "draft",
+      caption: "Facebook Caption",
+      target_url: "https://example.com/events/#{@published_event.slug}",
+      image_url: "https://example.com/facebook.jpg"
+    )
+    status = build_meta_access_status(state: :ok, connection_status: "connected", summary: "Meta-Verbindung ist gültig.")
+    facebook_connection = create_selected_facebook_connection!
+
+    with_stubbed_meta_social_state(status:, connection: facebook_connection) do
+      get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
+    end
+
+    assert_response :success
+    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, instagram_post)}'] button.button-save-primary:not([disabled])",
+                  text: "veröffentlichen",
+                  count: 1
+    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, facebook_post)}'] button.button-save-primary:not([disabled])",
+                  text: "veröffentlichen",
                   count: 1
   end
 
@@ -2485,12 +2615,28 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  def with_stubbed_meta_social_state(status:, connection:)
-    access_status_service = Object.new
-    access_status_service.define_singleton_method(:call) do |force: false|
-      status
-    end
+  def create_selected_facebook_connection!
+    connection = SocialConnection.create!(
+      provider: "meta",
+      platform: "facebook",
+      auth_mode: "facebook_login_for_business",
+      connection_status: "connected",
+      user_access_token: "user-token",
+      user_token_expires_at: 40.days.from_now,
+      granted_scopes: %w[pages_show_list pages_read_engagement pages_manage_posts]
+    )
+    connection.social_connection_targets.create!(
+      target_type: "facebook_page",
+      external_id: "page-123",
+      name: "Test SL",
+      access_token: "page-token",
+      selected: true,
+      status: "selected"
+    )
+    connection
+  end
 
+  def with_stubbed_meta_social_state(status:, connection:, instagram_status: status, facebook_status: status)
     resolver = Object.new
     resolver.define_singleton_method(:connection) do
       connection
@@ -2498,12 +2644,26 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     resolver.define_singleton_method(:facebook_connection) do
       connection
     end
-
-    with_singleton_return_value(Meta::AccessStatus, :new, access_status_service) do
-      with_singleton_return_value(Meta::ConnectionResolver, :new, resolver) do
-        yield
-      end
+    resolver.define_singleton_method(:connection_for) do |platform|
+      platform.to_s == "facebook" ? connection : nil
     end
+
+    original_access_status_new = Meta::AccessStatus.method(:new)
+    Meta::AccessStatus.define_singleton_method(:new) do |*_args, **kwargs|
+      initialized_platform = kwargs[:platform].to_s
+      service = Object.new
+      service.define_singleton_method(:call) do |force: false, platform: nil|
+        active_platform = platform.to_s.presence || initialized_platform
+        active_platform == "facebook" ? facebook_status : instagram_status
+      end
+      service
+    end
+
+    with_singleton_return_value(Meta::ConnectionResolver, :new, resolver) do
+      yield
+    end
+  ensure
+    Meta::AccessStatus.define_singleton_method(:new, original_access_status_new) if original_access_status_new
   end
 
   def with_singleton_return_value(target, method_name, value)

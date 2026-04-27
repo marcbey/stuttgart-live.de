@@ -159,7 +159,7 @@ Der Merge kann außerdem inkrementell auf Basis eines Zeitpunkts laufen. In dies
 
 ### Wie Social-Publishing für Events funktioniert
 
-Das Backend unterstützt einen Instagram-zentrierten Draft-Workflow für Social-Posts. Die Redaktion bearbeitet pro Event genau einen Instagram-Haupt-Draft. Wenn in `Meta Publishing` zusätzlich eine Facebook-Seite ausgewählt ist, erzeugt die App intern einen Facebook-Spiegel-Post mit demselben Bild und derselben Caption. Veröffentlicht wird aber getrennt: Instagram und Facebook haben eigene Buttons, eigene Statuswerte und eigene Fehler.
+Das Backend unterstützt getrennte Drafts für Instagram und Facebook. Die Redaktion bearbeitet pro Event je Plattform einen eigenen Draft mit eigenem Status, eigenem Fehlerzustand und eigenem Publish-Versuch. Beim Öffnen des Social-Tabs legt die App fehlende Drafts automatisch an; neue Eventbilder erzeugen editierbare Social-Drafts neu, damit das aktuelle Eventbild verwendet wird.
 
 Die Meta-Verbindungen werden dabei nicht über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über persistierte Onboarding- und Lifecycle-Flows im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Instagram und Facebook unabhängig voneinander. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
 
@@ -169,15 +169,16 @@ Sobald eine feste Redirect-URL gesetzt ist, muss der Connect-Flow auch auf genau
 
 Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
-1. Zuerst wird ein Social-Draft erzeugt oder neu generiert.
-2. Der Draft baut serverseitig eine Caption aus Eventdaten und wählt ein öffentlich erreichbares Bild.
+1. Beim Öffnen des Tabs existieren Instagram- und Facebook-Draft normalerweise bereits automatisch.
+2. Ein Draft baut serverseitig eine Caption aus Eventdaten und wählt ein öffentlich erreichbares Bild.
 3. Caption sowie die beiden Bildtext-Zeilen für Artist und Meta-Zeile können danach manuell angepasst werden.
-4. Die Veröffentlichung läuft direkt aus dem Draft wahlweise zu Instagram oder Facebook. Status, Fehler und externe IDs werden getrennt pro Plattform am jeweiligen `EventSocialPost` gespeichert.
+4. Drafts können bei Bedarf manuell neu erzeugt werden; beim Hinzufügen oder Ändern des Eventbilds werden nicht veröffentlichte Drafts automatisch neu gebaut.
+5. Die Veröffentlichung läuft direkt aus dem jeweiligen Plattform-Draft. Status, Fehler und externe IDs werden getrennt pro Plattform am jeweiligen `EventSocialPost` gespeichert.
 
 Wichtig für die Generierung:
 
 - Als Ziel-URL wird die kanonische öffentliche Event-URL verwendet.
-- Als Bildquelle gilt zuerst die Social-Card, danach ein Promotion-Banner und danach das primäre Eventbild.
+- Als Bildquelle gilt zuerst das redaktionelle Eventbild, danach ein Promotion-Banner und danach ein Import-/Fallback-Bild.
 - Der serverseitig gerenderte Bildtext folgt typografisch der `Unsere Highlights`-Kachel: `Bebas Neue` für den Artist und `Archivo Narrow` für Datum und Venue; der Event-Titel wird im Bild nicht separat gerendert.
 - Die Caption enthält Artist oder Titel, Datum, Venue, einen kurzen Call-to-Action und die Event-URL.
 - Damit das auf Production stabil funktioniert, werden die Runtime-Fonts zusätzlich im Docker-Image für Fontconfig/Pango installiert; die Browser-Webfonts bleiben davon unberührt.

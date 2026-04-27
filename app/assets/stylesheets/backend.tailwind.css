@@ -1403,12 +1403,29 @@ display: grid;
   gap: 1rem;
 }
 
+.social-post-status-flash {
+display: grid;
+  gap: 0.45rem;
+}
+
+.social-post-status-topline {
+display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .social-post-health-header {
 display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.45rem;
+}
+
+.social-post-status-topline .social-post-health-header {
+margin-bottom: 0;
 }
 
 .social-post-health-list {
@@ -1422,11 +1439,19 @@ margin: 0.6rem 0 0;
 border: 1px solid rgba(17, 17, 17, 0.12);
   background: rgba(255, 255, 255, 0.92);
   padding: 1rem;
+  display: grid;
+  gap: 1rem;
+  align-content: start;
 }
 
 .social-post-card-header {
 grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
+}
+
+.social-post-card-header > div:first-child {
+display: grid;
+  gap: 0.25rem;
 }
 
 .social-post-card-body {
@@ -1483,6 +1508,12 @@ display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   align-items: center;
+}
+
+.social-post-connection-actions {
+justify-content: flex-end;
+  margin-left: auto;
+  align-self: flex-start;
 }
 
 .social-post-inline-action-form {
