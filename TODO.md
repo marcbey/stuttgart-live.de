@@ -4,7 +4,6 @@
 - DB Backup & File Backup Strategie
 - Rollbacks inkl. migration rollbacks ausprobieren
 - OWASP checks
-- Sentry CLI/MCP einrichten
 
 ## Importer
 
@@ -14,7 +13,6 @@
 ## Frontend
 - Newsletter/Mailchimp
 - Google Analytics
-- getrennte CSS files für Frontend & Backend
 
 # DONE:
 - Venue: soll eigenes Domain Model mit Beschreibung, Logo, Link, Adresse, Google Maps Link, überschreibt die LLM Venue
