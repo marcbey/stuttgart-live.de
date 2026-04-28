@@ -163,9 +163,9 @@ Das Backend unterstützt getrennte Drafts für Instagram und Facebook. Die Redak
 
 Die Meta-Verbindungen werden dabei nicht über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über persistierte Onboarding- und Lifecycle-Flows im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Instagram und Facebook unabhängig voneinander. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
 
-Für den OAuth-Callback kann optional eine feste Redirect-URL über `meta.instagram_redirect_uri` bzw. `META_INSTAGRAM_REDIRECT_URI` gesetzt werden. Das ist vor allem hilfreich, wenn der Login lokal gestartet wird, Meta aber nur einen öffentlichen HTTPS-Callback wie `https://stuttgart-live.schopp3r.de/backend/meta_connection/callback` akzeptieren soll.
+Für den OAuth-Callback kann optional eine feste Redirect-URL über `meta.instagram_redirect_uri` bzw. `META_INSTAGRAM_REDIRECT_URI` gesetzt werden. Der Name ist historisch Instagram-spezifisch, die URL gilt aber für Instagram- und Facebook-Onboarding.
 
-Sobald eine feste Redirect-URL gesetzt ist, muss der Connect-Flow auch auf genau diesem Host gestartet werden. Der serverseitige OAuth-`state` hängt an der Session des Start-Hosts; ein lokal gestarteter Flow kann deshalb nicht sauber auf einer anderen Callback-Domain beendet werden.
+Sobald eine feste Redirect-URL gesetzt ist, muss der jeweilige Connect-Flow auch auf genau diesem Host gestartet werden. Der serverseitige OAuth-`state` hängt an der Session des Start-Hosts; ein lokal gestarteter Flow kann deshalb nicht sauber auf einer anderen Callback-Domain beendet werden.
 
 Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 

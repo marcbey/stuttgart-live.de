@@ -45,12 +45,28 @@ class Backend::MetaConnectionsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  test "start blocks when configured instagram redirect uri points to another host" do
+  test "start blocks with facebook specific message when configured redirect uri points to another host" do
     with_stubbed_meta_configuration_check do
       with_singleton_return_value(AppConfig, :meta_app_id, "123456") do
         with_singleton_return_value(AppConfig, :meta_app_secret, "secret") do
           with_singleton_return_value(AppConfig, :meta_instagram_redirect_uri, "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback") do
             get start_backend_meta_connection_url
+          end
+        end
+      end
+    end
+
+    assert_redirected_to edit_backend_settings_url(section: "meta_connection")
+    follow_redirect!
+    assert_match "Facebook-Onboarding muss auf https://stuttgart-live.schopp3r.de gestartet werden", response.body
+  end
+
+  test "start instagram blocks with instagram specific message when configured redirect uri points to another host" do
+    with_stubbed_meta_configuration_check do
+      with_singleton_return_value(AppConfig, :meta_app_id, "123456") do
+        with_singleton_return_value(AppConfig, :meta_app_secret, "secret") do
+          with_singleton_return_value(AppConfig, :meta_instagram_redirect_uri, "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback") do
+            get start_instagram_backend_meta_connection_url
           end
         end
       end

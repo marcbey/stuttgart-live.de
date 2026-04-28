@@ -59,10 +59,11 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     other_row = page_target_row_for(facebook_card, other_page.display_name)
 
     assert_equal 2, document.css("article.social-post-card").size
+    assert_equal "Seite speichern", facebook_card.at_css("form.meta-page-target-selector input[type='submit']")&.attribute("value")&.value
+    assert_equal selected_page.id.to_s, facebook_card.at_css("form.meta-page-target-selector select[name='target_id'] option[selected]")&.attribute("value")&.value
+    assert_nil facebook_card.at_css("button", text: "Seite auswählen")
     assert_equal "Ausgewählt", selected_row.at_css(".status-badge")&.text&.strip
-    assert_nil selected_row.at_css(".backend-section-header-actions button")
-    assert_nil selected_row.at_css("form[action*='target_id=#{selected_page.id}']")
-    assert_equal "Seite auswählen", other_row.at_css(".backend-section-header-actions form[action*='target_id=#{other_page.id}'] button")&.text&.strip
+    assert_equal "Verfügbar", other_row.at_css(".status-badge")&.text&.strip
   end
 
   test "admin can open specific section via query param" do

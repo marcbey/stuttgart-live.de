@@ -15,7 +15,7 @@ module Backend
 
       authorization_url = Meta::Onboarding::InstagramAuthorizationUrlBuilder.new.call(
         session:,
-        redirect_uri: callback_url
+        redirect_uri: callback_url(flow_label: "Instagram")
       )
 
       redirect_to authorization_url, allow_other_host: true
@@ -28,7 +28,7 @@ module Backend
 
       authorization_url = Meta::Onboarding::AuthorizationUrlBuilder.new.call(
         session:,
-        redirect_uri: callback_url
+        redirect_uri: callback_url(flow_label: "Facebook")
       )
 
       redirect_to authorization_url, allow_other_host: true
@@ -48,14 +48,14 @@ module Backend
             code: params[:code].to_s,
             state: params[:state].to_s,
             session:,
-            redirect_uri: callback_url
+            redirect_uri: callback_url(flow_label: "Meta")
           )
         else
           Meta::Onboarding::CallbackHandler.new.call(
             code: params[:code].to_s,
             state: params[:state].to_s,
             session:,
-            redirect_uri: callback_url
+            redirect_uri: callback_url(flow_label: "Meta")
           )
         end
 
@@ -110,10 +110,10 @@ module Backend
       params[:error_description].to_s.strip.presence || "Meta-Onboarding wurde abgebrochen."
     end
 
-    def callback_url
+    def callback_url(flow_label:)
       configured_redirect_uri = AppConfig.meta_instagram_redirect_uri
       if configured_redirect_uri.present?
-        ensure_redirect_uri_matches_request!(configured_redirect_uri)
+        ensure_redirect_uri_matches_request!(configured_redirect_uri, flow_label:)
         return configured_redirect_uri
       end
 
@@ -124,7 +124,7 @@ module Backend
       )
     end
 
-    def ensure_redirect_uri_matches_request!(configured_redirect_uri)
+    def ensure_redirect_uri_matches_request!(configured_redirect_uri, flow_label:)
       configured_uri = URI.parse(configured_redirect_uri)
       configured_origin = origin_for(configured_uri.scheme, configured_uri.host, optional_port_for(configured_uri))
       request_origin = origin_for(request.protocol.delete_suffix("://"), request.host, request.optional_port)
@@ -132,7 +132,7 @@ module Backend
       return if configured_origin == request_origin
 
       raise Meta::Error,
-        "Instagram-Onboarding muss auf #{configured_origin} gestartet werden, weil meta.instagram_redirect_uri auf diesen Host konfiguriert ist."
+        "#{flow_label}-Onboarding muss auf #{configured_origin} gestartet werden, weil meta.instagram_redirect_uri auf diesen Host konfiguriert ist."
     rescue URI::InvalidURIError
       raise Meta::Error, "meta.instagram_redirect_uri ist ungültig."
     end

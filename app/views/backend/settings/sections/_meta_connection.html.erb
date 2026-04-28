@@ -142,6 +142,23 @@
               <p class="form-hint">Für direktes Facebook-Publishing muss genau eine Facebook-Seite ausgewählt sein.</p>
             </div>
 
+            <%= form_with url: select_target_backend_meta_connection_path,
+                          method: :patch,
+                          class: "meta-page-target-selector" do %>
+              <div class="meta-page-target-selector-field">
+                <%= label_tag :target_id, "Aktive Facebook-Seite", class: "form-label" %>
+                <%= select_tag :target_id,
+                               options_from_collection_for_select(
+                                 page_targets,
+                                 :id,
+                                 :display_name,
+                                 facebook_connection&.selected_facebook_page_target&.id
+                               ),
+                               class: "form-input" %>
+              </div>
+              <%= submit_tag "Seite speichern", class: "button button-secondary button-compact" %>
+            <% end %>
+
             <div class="meta-page-target-list">
               <% page_targets.each do |target| %>
                 <div class="meta-page-target-row">
@@ -171,15 +188,6 @@
                         </div>
                       <% end %>
                     </div>
-                  </div>
-
-                  <div class="backend-section-header-actions">
-                    <% unless target.selected? %>
-                      <%= button_to "Seite auswählen",
-                                    select_target_backend_meta_connection_path(target_id: target.id),
-                                    method: :patch,
-                                    class: "button button-secondary button-compact" %>
-                    <% end %>
                   </div>
                 </div>
               <% end %>

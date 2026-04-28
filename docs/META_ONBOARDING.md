@@ -97,7 +97,7 @@ Nicht in Credentials gehören:
 - Facebook-Page-Access-Tokens
 - Instagram-Business-Account-IDs
 
-Wenn `meta.instagram_redirect_uri` gesetzt ist, verwendet die App diese Callback-URL explizit statt die URL aus dem aktuellen Request zu bauen. Der OAuth-Start und der Callback müssen dabei auf demselben Host laufen, weil der `state` serverseitig an die Session gebunden ist.
+Wenn `meta.instagram_redirect_uri` gesetzt ist, verwendet die App diese Callback-URL explizit statt die URL aus dem aktuellen Request zu bauen. Der Name ist historisch Instagram-spezifisch, die URL gilt aber für beide Meta-Flows, also Instagram und Facebook. Der OAuth-Start und der Callback müssen dabei auf demselben Host laufen, weil der `state` serverseitig an die Session gebunden ist.
 
 ## Meta-App-Konfiguration
 
