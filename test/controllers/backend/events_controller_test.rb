@@ -103,6 +103,36 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
                   count: 0
   end
 
+  test "social tab does not auto-create missing platform when another draft exists" do
+    sign_in_as(@user)
+    @published_event.event_social_posts.destroy_all
+    instagram_post = @published_event.event_social_posts.create!(
+      platform: "instagram",
+      status: "draft",
+      caption: "Instagram Caption",
+      target_url: "https://example.com/events/#{@published_event.slug}",
+      image_url: "https://example.com/instagram.jpg"
+    )
+    status = build_meta_access_status(state: :ok, connection_status: "connected", summary: "Meta-Verbindung ist gültig.")
+
+    assert_no_difference -> { @published_event.event_social_posts.count } do
+      with_stubbed_meta_social_state(status:, connection: nil) do
+        get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
+      end
+    end
+
+    assert_response :success
+    assert_equal [ "instagram" ], @published_event.event_social_posts.order(:platform).pluck(:platform)
+    assert_select "form[action='#{regenerate_backend_event_event_social_post_path(@published_event, instagram_post)}'] button",
+                  text: "Draft neu erzeugen",
+                  count: 1
+    assert_select "#event-editor-panel-social", text: /Für Facebook existiert noch kein Draft\./, count: 1
+    assert_select "form[action='#{backend_event_event_social_posts_path(@published_event)}'] input[name='platform'][value='facebook']", count: 1
+    assert_select "form[action='#{backend_event_event_social_posts_path(@published_event)}'] button",
+                  text: "Draft erzeugen",
+                  count: 1
+  end
+
   test "social tab renders editable facebook draft fields and regenerate action" do
     sign_in_as(@user)
 
@@ -230,7 +260,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".social-post-meta-list .form-label", text: "Instagram-URL", count: 0
   end
 
-  test "social tab renders publish as a separate form action" do
+  test "social tab renders draft publish as caption form submit" do
     sign_in_as(@user)
 
     social_post = @published_event.event_social_posts.create!(
@@ -253,9 +283,12 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(social_post, :caption_form)}']",
                   text: "Caption speichern",
                   count: 1
-    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, social_post)}'] button",
+    assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(social_post, :caption_form)}'][name='publish_after_save'][value='1']",
                   text: "veröffentlichen",
                   count: 1
+    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, social_post)}'] button",
+                  text: "veröffentlichen",
+                  count: 0
   end
 
   test "social tab shows meta verbinden button when meta connection is invalid" do
@@ -303,16 +336,16 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, instagram_post)}'] button.button-secondary[disabled]",
+    assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(instagram_post, :caption_form)}'].button-secondary[disabled]",
                   text: "veröffentlichen",
                   count: 1
-    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, instagram_post)}'] button.button-save-primary",
+    assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(instagram_post, :caption_form)}'].button-save-primary",
                   text: "veröffentlichen",
                   count: 0
-    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, facebook_post)}'] button.button-secondary[disabled]",
+    assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(facebook_post, :caption_form)}'].button-secondary[disabled]",
                   text: "veröffentlichen",
                   count: 1
-    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, facebook_post)}'] button.button-save-primary",
+    assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(facebook_post, :caption_form)}'].button-save-primary",
                   text: "veröffentlichen",
                   count: 0
   end
@@ -342,10 +375,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, instagram_post)}'] button.button-save-primary:not([disabled])",
+    assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(instagram_post, :caption_form)}'].button-save-primary:not([disabled])",
                   text: "veröffentlichen",
                   count: 1
-    assert_select "form[action='#{publish_backend_event_event_social_post_path(@published_event, facebook_post)}'] button.button-save-primary:not([disabled])",
+    assert_select ".social-post-action-row button[form='#{ActionView::RecordIdentifier.dom_id(facebook_post, :caption_form)}'].button-save-primary:not([disabled])",
                   text: "veröffentlichen",
                   count: 1
   end

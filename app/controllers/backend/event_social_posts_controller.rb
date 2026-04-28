@@ -49,7 +49,18 @@ module Backend
       @event_social_post.save!
       draft_sync.refresh_rendered_assets!(@event_social_post) if card_text_changed
 
+      if publish_after_save?
+        enqueue_publish!(@event_social_post)
+        redirect_to redirect_path, notice: "Social-Draft wurde gespeichert und wird im Hintergrund veröffentlicht."
+        return
+      end
+
       redirect_to redirect_path, notice: "Social-Draft wurde gespeichert."
+    rescue ActiveJob::EnqueueError => error
+      @event_social_post.mark_failed!(error.message)
+      redirect_to redirect_path, alert: error.message
+    rescue Meta::Error => error
+      redirect_to redirect_path, alert: error.message
     rescue ActiveRecord::RecordInvalid => error
       redirect_to redirect_path, alert: error.record.errors.full_messages.to_sentence
     end
@@ -95,6 +106,10 @@ module Backend
     def platform_param
       requested_platform = params[:platform].to_s
       EventSocialPost::PLATFORMS.include?(requested_platform) ? requested_platform : EventSocialPost::CANONICAL_PLATFORM
+    end
+
+    def publish_after_save?
+      ActiveModel::Type::Boolean.new.cast(params[:publish_after_save])
     end
 
     def meta_access_status

@@ -19,7 +19,6 @@ module Meta
       social_post.assign_draft_attributes!(draft.attributes)
       social_post.save!
       sync_rendered_assets!(social_post, draft:)
-      sync_facebook_mirror!(social_post) if normalized_platform == EventSocialPost::CANONICAL_PLATFORM
       social_post
     end
 

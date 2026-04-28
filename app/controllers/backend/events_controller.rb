@@ -308,6 +308,7 @@ module Backend
 
     def ensure_social_drafts_for!(event)
       return unless event&.persisted?
+      return if event.event_social_posts.exists?
 
       errors = []
 

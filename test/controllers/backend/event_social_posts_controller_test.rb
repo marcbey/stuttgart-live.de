@@ -34,6 +34,21 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "create instagram draft does not create a facebook draft" do
+    create_dual_publish_connection!
+
+    with_stubbed_meta_access_status do
+      assert_difference -> { @event.event_social_posts.count }, 1 do
+        post backend_event_event_social_posts_url(@event), params: {
+          inbox_status: "published",
+          platform: "instagram"
+        }
+      end
+
+      assert_equal "instagram", @event.event_social_posts.sole.platform
+    end
+  end
+
   test "create generates an independent facebook draft" do
     with_stubbed_meta_access_status do
       assert_difference -> { @event.event_social_posts.count }, 1 do
@@ -47,6 +62,45 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
       assert_equal "facebook", social_post.platform
       assert_equal "draft", social_post.status
+    end
+  end
+
+  test "regenerate instagram draft does not update facebook draft" do
+    @event.event_social_posts.destroy_all
+    instagram_post = @event.event_social_posts.create!(
+      platform: "instagram",
+      status: "published",
+      caption: "Old Instagram Caption",
+      target_url: "https://example.com/events/#{@event.slug}",
+      image_url: "https://example.com/old-instagram.jpg",
+      published_at: Time.current,
+      published_by: @user,
+      remote_post_id: "instagram-post-1"
+    )
+    facebook_post = @event.event_social_posts.create!(
+      platform: "facebook",
+      status: "draft",
+      caption: "Keep Facebook Caption",
+      target_url: "https://example.com/events/#{@event.slug}",
+      image_url: "https://example.com/keep-facebook.jpg",
+      payload_snapshot: { "platform" => "facebook", "custom" => "keep" }
+    )
+
+    with_stubbed_meta_access_status do
+      post regenerate_backend_event_event_social_post_url(@event, instagram_post), params: {
+        inbox_status: "published"
+      }
+
+      assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
+      instagram_post.reload
+      assert_equal "instagram", instagram_post.platform
+      assert_equal "draft", instagram_post.status
+      assert_nil instagram_post.remote_post_id
+
+      facebook_post.reload
+      assert_equal "Keep Facebook Caption", facebook_post.caption
+      assert_equal "https://example.com/keep-facebook.jpg", facebook_post.image_url
+      assert_equal "keep", facebook_post.payload_snapshot.fetch("custom")
     end
   end
 
@@ -64,6 +118,26 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_equal "draft", social_post.status
       assert_nil social_post.approved_at
       assert_equal "Neue Caption", social_post.caption
+    end
+  end
+
+  test "update saves draft and enqueues publish when requested" do
+    social_post = create_draft_social_post(@event, platform: "instagram")
+    access_status = StubMetaAccessStatus.new
+
+    with_stubbed_meta_access_status(access_status) do
+      assert_enqueued_with(job: Meta::PublishEventSocialPostJob, args: [ social_post.id, @user.id ]) do
+        patch backend_event_event_social_post_url(@event, social_post), params: {
+          inbox_status: "published",
+          publish_after_save: "1",
+          event_social_post: { caption: "Caption vor Veröffentlichung" }
+        }
+      end
+
+      assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
+      social_post.reload
+      assert_equal "Caption vor Veröffentlichung", social_post.caption
+      assert_equal "publishing", social_post.status
     end
   end
 

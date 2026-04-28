@@ -9,7 +9,7 @@
     <div class="backend-section-header">
       <div>
         <h3>Social Publishing</h3>
-        <p>Instagram-Draft bearbeiten und getrennt auf Instagram oder Facebook veröffentlichen.</p>
+        <p>Drafts für Instagram und Facebook getrennt bearbeiten und veröffentlichen.</p>
       </div>
     </div>
 
@@ -133,13 +133,23 @@
                                 params: { inbox_status: inbox_status },
                                 form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
                                 class: "button button-secondary button-compact" %>
-                  <%= button_to(social_post.published? ? "erneut veröffentlichen" : "veröffentlichen",
-                                publish_backend_event_event_social_post_path(event, social_post),
-                                method: :post,
-                                params: { inbox_status: inbox_status, platform: "instagram" },
-                                form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
-                                disabled: !instagram_publish_enabled,
-                                class: "button #{instagram_publish_enabled ? "button-save-primary" : "button-secondary"} button-compact") %>
+                  <% if editable %>
+                    <%= button_tag "veröffentlichen",
+                                   type: :submit,
+                                   form: caption_form_id,
+                                   name: :publish_after_save,
+                                   value: "1",
+                                   disabled: !instagram_publish_enabled,
+                                   class: "button #{instagram_publish_enabled ? "button-save-primary" : "button-secondary"} button-compact" %>
+                  <% else %>
+                    <%= button_to(social_post.published? ? "erneut veröffentlichen" : "veröffentlichen",
+                                  publish_backend_event_event_social_post_path(event, social_post),
+                                  method: :post,
+                                  params: { inbox_status: inbox_status, platform: "instagram" },
+                                  form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
+                                  disabled: !instagram_publish_enabled,
+                                  class: "button #{instagram_publish_enabled ? "button-save-primary" : "button-secondary"} button-compact") %>
+                  <% end %>
                 <% end %>
               </div>
 
@@ -277,13 +287,23 @@
                                 params: { inbox_status: inbox_status },
                                 form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
                                 class: "button button-secondary button-compact" %>
-                  <%= button_to(facebook_post.published? ? "erneut veröffentlichen" : "veröffentlichen",
-                                publish_backend_event_event_social_post_path(event, facebook_post),
-                                method: :post,
-                                params: { inbox_status: inbox_status, platform: "facebook" },
-                                form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
-                                disabled: !facebook_publish_enabled,
-                                class: "button #{facebook_publish_enabled ? "button-save-primary" : "button-secondary"} button-compact") %>
+                  <% if facebook_editable %>
+                    <%= button_tag "veröffentlichen",
+                                   type: :submit,
+                                   form: facebook_caption_form_id,
+                                   name: :publish_after_save,
+                                   value: "1",
+                                   disabled: !facebook_publish_enabled,
+                                   class: "button #{facebook_publish_enabled ? "button-save-primary" : "button-secondary"} button-compact" %>
+                  <% else %>
+                    <%= button_to(facebook_post.published? ? "erneut veröffentlichen" : "veröffentlichen",
+                                  publish_backend_event_event_social_post_path(event, facebook_post),
+                                  method: :post,
+                                  params: { inbox_status: inbox_status, platform: "facebook" },
+                                  form: { data: { turbo_frame: "_top" }, class: "social-post-inline-action-form" },
+                                  disabled: !facebook_publish_enabled,
+                                  class: "button #{facebook_publish_enabled ? "button-save-primary" : "button-secondary"} button-compact") %>
+                  <% end %>
                 <% end %>
               </div>
 
