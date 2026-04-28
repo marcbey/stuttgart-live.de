@@ -507,6 +507,8 @@ module Importing
         increment_search_context_counts!(result)
         result
       rescue StandardError => e
+        raise if e.is_a?(WebSearchResponse::FatalError)
+
         LinkFinder::Result.new(
           payload: {
             "web_search_provider" => web_search_provider,

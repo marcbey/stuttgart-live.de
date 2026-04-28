@@ -38,6 +38,8 @@ module Importing
         assert_equal "Example", result.organic_results.first.source
         assert_equal "application/json", @captured_request["Accept"]
         assert_equal "secret", @captured_request["X-API-Key"]
+        assert_includes wire_header_names(@captured_request), "x-api-key"
+        assert_not_includes wire_header_names(@captured_request), "X-Api-Key"
         assert_includes @captured_request.uri.query, "q=%22Luca+Noel%22"
         assert_includes @captured_request.uri.query, "num=10"
         assert_includes @captured_request.uri.query, "location=Germany"
@@ -92,16 +94,18 @@ module Importing
         assert_equal 3, result.organic_results.first.position
       end
 
-      test "raises on api errors" do
+      test "raises fatal authentication error on api auth errors" do
         response = FakeResponse.new("401", { "error" => { "message" => "invalid key", "code" => 401 } }.to_json)
 
-        error = assert_raises(OpenWebNinjaWebSearchClient::Error) do
+        error = assert_raises(OpenWebNinjaWebSearchClient::AuthenticationError) do
           with_http_response(response) do
             OpenWebNinjaWebSearchClient.new(api_key: "secret").search(query: "\"Luca Noel\"")
           end
         end
 
+        assert_kind_of WebSearchResponse::FatalError, error
         assert_includes error.message, "invalid key"
+        assert_includes error.message, "OpenWebNinja-Authentifizierung fehlgeschlagen"
       end
 
       test "raises on string api errors" do
@@ -151,10 +155,11 @@ module Importing
       end
 
       test "raises when api key is missing" do
-        error = assert_raises(OpenWebNinjaWebSearchClient::Error) do
+        error = assert_raises(OpenWebNinjaWebSearchClient::ConfigurationError) do
           OpenWebNinjaWebSearchClient.new(api_key: nil).search(query: "\"Luca Noel\"")
         end
 
+        assert_kind_of WebSearchResponse::FatalError, error
         assert_includes error.message, "OPENWEBNINJA_API_KEY fehlt"
       end
 
@@ -194,6 +199,12 @@ module Importing
         yield
       ensure
         Net::HTTP.singleton_class.define_method(:start, original_start)
+      end
+
+      def wire_header_names(request)
+        names = []
+        request.each_capitalized { |name, _value| names << name }
+        names
       end
     end
   end

@@ -10,6 +10,7 @@ module Importing
       READ_TIMEOUT_SECONDS = 20
 
       Error = Class.new(StandardError)
+      ConfigurationError = Class.new(Error) { include WebSearchResponse::FatalError }
       OrganicResult = WebSearchResponse::OrganicResult
       SearchResult = WebSearchResponse::SearchResult
 
@@ -18,7 +19,7 @@ module Importing
       end
 
       def search(query:, num: 10, location: "Germany", hl: "de", gl: "de", no_cache: false)
-        raise Error, "SERPAPI_API_KEY fehlt." if api_key.blank?
+        raise ConfigurationError, "SERPAPI_API_KEY fehlt." if api_key.blank?
         raise Error, "Suchanfrage darf nicht leer sein." if query.to_s.strip.blank?
 
         uri = URI.parse(ENDPOINT)

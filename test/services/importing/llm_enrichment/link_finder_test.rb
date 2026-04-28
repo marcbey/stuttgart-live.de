@@ -100,6 +100,22 @@ module Importing
         assert_equal "RuntimeError", result.payload.dig("fields", "homepage_link", "error_class")
       end
 
+      test "reraises fatal web search errors" do
+        finder = LinkFinder.new(
+          web_search_provider: "openwebninja",
+          web_search_client: Class.new do
+            def search(**)
+              raise OpenWebNinjaWebSearchClient::AuthenticationError, "Authentication error"
+            end
+          end.new,
+          query_builder: QueryBuilder.new
+        )
+
+        assert_raises(OpenWebNinjaWebSearchClient::AuthenticationError) do
+          finder.call(event: @event)
+        end
+      end
+
       private
 
       def build_finder(results_by_query)

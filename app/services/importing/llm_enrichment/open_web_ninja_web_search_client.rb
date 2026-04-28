@@ -10,6 +10,8 @@ module Importing
       READ_TIMEOUT_SECONDS = 20
 
       Error = Class.new(StandardError)
+      AuthenticationError = Class.new(Error) { include WebSearchResponse::FatalError }
+      ConfigurationError = Class.new(Error) { include WebSearchResponse::FatalError }
       OrganicResult = WebSearchResponse::OrganicResult
       SearchResult = WebSearchResponse::SearchResult
 
@@ -18,7 +20,7 @@ module Importing
       end
 
       def search(query:, num: 10, location: "Germany", hl: "de", gl: "de", **)
-        raise Error, "OPENWEBNINJA_API_KEY fehlt." if api_key.blank?
+        raise ConfigurationError, "OPENWEBNINJA_API_KEY fehlt." if api_key.blank?
         raise Error, "Suchanfrage darf nicht leer sein." if query.to_s.strip.blank?
 
         uri = URI.parse(ENDPOINT)
@@ -32,7 +34,8 @@ module Importing
 
         request = Net::HTTP::Get.new(uri)
         request["Accept"] = "application/json"
-        request["X-API-Key"] = api_key
+        request["x-api-key"] = api_key
+        preserve_api_key_header_name!(request)
 
         response = Net::HTTP.start(
           uri.host,
@@ -46,6 +49,7 @@ module Importing
 
         payload = JSON.parse(response.body.to_s.presence || "{}")
         error_message = api_error_message(payload)
+        raise authentication_error(response, error_message) if authentication_error?(response, error_message)
         raise Error, error_message if error_message.present?
         raise Error, "OpenWebNinja-Websuche fehlgeschlagen (HTTP #{response.code})." unless response.is_a?(Net::HTTPSuccess)
 
@@ -85,6 +89,28 @@ module Importing
         payload["message"].to_s.presence ||
           (error_payload.is_a?(Hash) ? error_payload["message"].to_s.presence : nil) ||
           error_payload.to_s.presence
+      end
+
+      def authentication_error?(response, error_message)
+        response.code.to_i.in?([ 401, 403 ]) ||
+          error_message.to_s.match?(/auth|unauthori[sz]ed|forbidden/i)
+      end
+
+      def authentication_error(response, error_message)
+        detail = error_message.presence || "HTTP #{response.code}"
+        AuthenticationError.new(
+          "OpenWebNinja-Authentifizierung fehlgeschlagen: #{detail}. " \
+          "Prüfe den direkten OpenWebNinja-API-Key in `openwebninja.api_key` oder `OPENWEBNINJA_API_KEY`."
+        )
+      end
+
+      def preserve_api_key_header_name!(request)
+        request.define_singleton_method(:each_capitalized) do |&block|
+          each_header do |key, value|
+            header_name = key == "x-api-key" ? key : key.split("-").map(&:capitalize).join("-")
+            block.call(header_name, value)
+          end
+        end
       end
     end
   end

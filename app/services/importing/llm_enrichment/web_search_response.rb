@@ -1,6 +1,9 @@
 module Importing
   module LlmEnrichment
     module WebSearchResponse
+      module FatalError
+      end
+
       OrganicResult = Data.define(
         :position,
         :link,

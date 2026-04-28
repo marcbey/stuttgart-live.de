@@ -86,6 +86,12 @@ module Importing
         end
       end
 
+      FatalLinkFinder = Struct.new(:error) do
+        def call(event:)
+          raise error
+        end
+      end
+
       setup do
         @source = import_sources(:two)
         @run = @source.import_runs.create!(
@@ -390,6 +396,17 @@ module Importing
         assert_equal 0, result.enriched_count
         assert_equal 0, result.api_calls_count
         assert_equal 0, result.api_calls_completed_count
+      end
+
+      test "reraises fatal link finder errors" do
+        error = OpenWebNinjaWebSearchClient::AuthenticationError.new("Authentication error")
+
+        assert_raises(OpenWebNinjaWebSearchClient::AuthenticationError) do
+          build_importer(
+            client: FakeClient.new(model: "gpt-5-mini", responses: []),
+            link_finder: FatalLinkFinder.new(error)
+          ).call
+        end
       end
 
       test "filters meta genres and stores rejected terms in raw response" do

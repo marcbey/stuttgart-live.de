@@ -126,6 +126,8 @@ module Importing
           candidates.size
         ]
       rescue StandardError => e
+        raise if e.is_a?(WebSearchResponse::FatalError)
+
         [
           {
             "name" => query.name,
