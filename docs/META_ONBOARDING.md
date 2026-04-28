@@ -79,6 +79,10 @@ Der Backend-Einstieg liegt im Settings-Tab `Meta Publishing`.
 
 Facebook-Publishing setzt keine Instagram-Verknüpfung der Seite mehr voraus.
 
+## Verbindung trennen
+
+Im Settings-Tab `Meta Publishing` kann jede Plattform getrennt werden. `Instagram Verbindung trennen` löscht nur die Instagram-Verbindung inklusive Instagram-Target. `Facebook Verbindung trennen` löscht nur die Facebook-Verbindung inklusive gespeicherter Facebook-Seiten und Page-Access-Tokens. Die jeweils andere Plattform bleibt unverändert verbunden.
+
 ## Erwartete Konfiguration
 
 In Rails-Credentials oder ENV werden nur App-Zugangsdaten und optional die feste Callback-URL konfiguriert:

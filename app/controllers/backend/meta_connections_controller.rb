@@ -104,7 +104,29 @@ module Backend
       redirect_to edit_backend_settings_path(section: "meta_connection"), alert: error.message
     end
 
+    def disconnect_instagram
+      disconnect_platform!("instagram", "Instagram")
+    end
+
+    def disconnect_facebook
+      disconnect_platform!("facebook", "Facebook")
+    end
+
     private
+
+    def disconnect_platform!(platform, label)
+      SocialConnection.find_by(provider: "meta", platform:)&.destroy!
+      clear_onboarding_session!
+
+      redirect_to edit_backend_settings_path(section: "meta_connection"), notice: "#{label}-Verbindung wurde getrennt."
+    rescue ActiveRecord::ActiveRecordError => error
+      redirect_to edit_backend_settings_path(section: "meta_connection"), alert: "#{label}-Verbindung konnte nicht getrennt werden: #{error.message}"
+    end
+
+    def clear_onboarding_session!
+      session.delete(Meta::Onboarding::AuthorizationUrlBuilder::SESSION_KEY)
+      session.delete(Meta::Onboarding::InstagramAuthorizationUrlBuilder::SESSION_KEY)
+    end
 
     def callback_error_message
       params[:error_description].to_s.strip.presence || "Meta-Onboarding wurde abgebrochen."

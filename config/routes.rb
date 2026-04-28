@@ -42,6 +42,8 @@ Rails.application.routes.draw do
       get :callback
       patch :select_target
       post :refresh_status
+      delete :disconnect_instagram
+      delete :disconnect_facebook
     end
     resource :settings, only: [ :edit, :update ] do
       get :section, on: :collection

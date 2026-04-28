@@ -77,7 +77,49 @@ class Backend::MetaConnectionsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Instagram-Onboarding muss auf https://stuttgart-live.schopp3r.de gestartet werden", response.body
   end
 
+  test "disconnect instagram removes only instagram connection" do
+    instagram_connection = create_social_connection!("instagram")
+    facebook_connection = create_social_connection!("facebook")
+
+    delete disconnect_instagram_backend_meta_connection_url
+
+    assert_redirected_to edit_backend_settings_url(section: "meta_connection")
+    assert_nil SocialConnection.find_by(id: instagram_connection.id)
+    assert SocialConnection.exists?(facebook_connection.id)
+  end
+
+  test "disconnect facebook removes facebook connection and page targets" do
+    facebook_connection = create_social_connection!("facebook")
+    facebook_connection.social_connection_targets.create!(
+      target_type: "facebook_page",
+      external_id: "page-123",
+      name: "Stuttgart Live",
+      access_token: "page-token",
+      selected: true,
+      status: "selected"
+    )
+
+    delete disconnect_facebook_backend_meta_connection_url
+
+    assert_redirected_to edit_backend_settings_url(section: "meta_connection")
+    assert_nil SocialConnection.find_by(id: facebook_connection.id)
+    assert_empty SocialConnectionTarget.where(social_connection_id: facebook_connection.id)
+  end
+
   private
+
+  def create_social_connection!(platform)
+    SocialConnection.where(provider: "meta", platform:).destroy_all
+    SocialConnection.create!(
+      provider: "meta",
+      platform:,
+      auth_mode: platform == "facebook" ? "facebook_login_for_business" : "instagram_login",
+      connection_status: "connected",
+      user_access_token: "#{platform}-token",
+      user_token_expires_at: 40.days.from_now,
+      granted_scopes: []
+    )
+  end
 
   def with_stubbed_meta_configuration_check
     configuration = Object.new

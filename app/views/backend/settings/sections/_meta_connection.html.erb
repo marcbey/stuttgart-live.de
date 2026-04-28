@@ -22,6 +22,13 @@
           </div>
         </div>
         <div class="backend-section-header-actions">
+          <% if instagram_connection&.persisted? %>
+            <%= button_to "Verbindung trennen",
+                          disconnect_instagram_backend_meta_connection_path,
+                          method: :delete,
+                          class: "button button-secondary button-compact",
+                          data: { turbo_confirm: "Instagram-Verbindung wirklich trennen?" } %>
+          <% end %>
           <%= link_to "Instagram verbinden",
                       start_instagram_backend_meta_connection_path,
                       class: "button button-save-primary button-compact",
@@ -87,6 +94,13 @@
           </div>
         </div>
         <div class="backend-section-header-actions">
+          <% if facebook_connection&.persisted? %>
+            <%= button_to "Verbindung trennen",
+                          disconnect_facebook_backend_meta_connection_path,
+                          method: :delete,
+                          class: "button button-secondary button-compact",
+                          data: { turbo_confirm: "Facebook-Verbindung wirklich trennen?" } %>
+          <% end %>
           <%= link_to "Facebook verbinden",
                       start_facebook_backend_meta_connection_path,
                       class: "button button-save-primary button-compact",

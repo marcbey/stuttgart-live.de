@@ -537,7 +537,7 @@ Damit Social-Posts aus dem Backend zuverlässig auf Instagram und Facebook funkt
 - je ein im Backend erfolgreich durchlaufener Instagram- und Facebook-Connect-Flow
 - eine ausgewählte Facebook-Seite, die vom verbindenden Facebook-Login verwaltet werden darf
 
-Die Anwendung erwartet je eine globale Instagram- und Facebook-Verbindung. Es gibt also weiterhin keinen OAuth-Connect-Flow pro Redaktionsnutzer, aber Instagram und Facebook können unabhängig voneinander neu verbunden und geprüft werden.
+Die Anwendung erwartet je eine globale Instagram- und Facebook-Verbindung. Es gibt also weiterhin keinen OAuth-Connect-Flow pro Redaktionsnutzer, aber Instagram und Facebook können unabhängig voneinander verbunden, getrennt, neu verbunden und geprüft werden. Das Trennen einer Verbindung entfernt die gespeicherte Plattform-Verbindung aus der Datenbank; bei Facebook werden damit auch die gespeicherten Facebook-Seiten und Page-Tokens aufgeräumt.
 
 Wenn ein Token rotiert oder die Berechtigungen ungültig werden, reicht es in der Regel, die Verbindung im Backend neu aufzubauen und anschließend einen Test-Post erneut zu senden.
 

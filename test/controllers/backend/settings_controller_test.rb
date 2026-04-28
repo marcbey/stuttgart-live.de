@@ -61,9 +61,28 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, document.css("article.social-post-card").size
     assert_equal "Seite speichern", facebook_card.at_css("form.meta-page-target-selector input[type='submit']")&.attribute("value")&.value
     assert_equal selected_page.id.to_s, facebook_card.at_css("form.meta-page-target-selector select[name='target_id'] option[selected]")&.attribute("value")&.value
-    assert_nil facebook_card.at_css("button", text: "Seite auswählen")
+    assert facebook_card.css("button").none? { |button| button.text.strip == "Seite auswählen" }
     assert_equal "Ausgewählt", selected_row.at_css(".status-badge")&.text&.strip
     assert_equal "Verfügbar", other_row.at_css(".status-badge")&.text&.strip
+  end
+
+  test "meta publishing shows disconnect actions inside connected platform cards" do
+    sign_in_as(@admin)
+    instagram_connection = create_instagram_connection!
+    facebook_connection = create_facebook_connection_with_pages!
+
+    with_stubbed_meta_connection_state(instagram_connection:, facebook_connection:) do
+      get edit_backend_settings_url(section: :meta_connection)
+    end
+
+    assert_response :success
+
+    document = Nokogiri::HTML5(response.body)
+    instagram_card = document.at_css("article.meta-platform-card-instagram")
+    facebook_card = document.at_css("article.meta-platform-card-facebook")
+
+    assert_equal "Verbindung trennen", instagram_card.at_css("form[action='#{disconnect_instagram_backend_meta_connection_path}'] button")&.text&.strip
+    assert_equal "Verbindung trennen", facebook_card.at_css("form[action='#{disconnect_facebook_backend_meta_connection_path}'] button")&.text&.strip
   end
 
   test "admin can open specific section via query param" do
@@ -396,7 +415,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def create_facebook_connection_with_pages!
-    SocialConnection.where(provider: "meta").destroy_all
+    SocialConnection.where(provider: "meta", platform: "facebook").destroy_all
     connection = SocialConnection.create!(
       provider: "meta",
       platform: "facebook",
@@ -425,8 +444,34 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     connection
   end
 
-  def with_stubbed_meta_connection_state(facebook_connection:)
-    instagram_status = build_meta_access_status(connection_status: "disconnected", state: :error, summary: "Instagram fehlt.")
+  def create_instagram_connection!
+    SocialConnection.where(provider: "meta", platform: "instagram").destroy_all
+    connection = SocialConnection.create!(
+      provider: "meta",
+      platform: "instagram",
+      auth_mode: "instagram_login",
+      connection_status: "connected",
+      user_access_token: "instagram-token",
+      user_token_expires_at: 40.days.from_now,
+      granted_scopes: %w[instagram_business_basic instagram_business_content_publish]
+    )
+    connection.social_connection_targets.create!(
+      target_type: "instagram_account",
+      external_id: "ig-123",
+      username: "sl_test_26",
+      selected: true,
+      status: "selected"
+    )
+    connection
+  end
+
+  def with_stubbed_meta_connection_state(facebook_connection:, instagram_connection: nil)
+    instagram_status = build_meta_access_status(
+      connection_status: instagram_connection.present? ? "connected" : "disconnected",
+      state: instagram_connection.present? ? :ok : :error,
+      summary: instagram_connection.present? ? "Instagram-Verbindung ist gültig." : "Instagram fehlt.",
+      instagram_username: instagram_connection&.selected_instagram_target&.username
+    )
     facebook_status = build_meta_access_status(
       connection_status: "connected",
       state: :ok,
@@ -434,9 +479,14 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       page_name: facebook_connection.selected_facebook_page_target.display_name
     )
     resolver = Object.new
-    resolver.define_singleton_method(:instagram_connection) { nil }
+    resolver.define_singleton_method(:instagram_connection) { instagram_connection }
     resolver.define_singleton_method(:facebook_connection) { facebook_connection }
-    resolver.define_singleton_method(:connection_for) { |platform| platform.to_s == "facebook" ? facebook_connection : nil }
+    resolver.define_singleton_method(:connection_for) do |platform|
+      case platform.to_s
+      when "facebook" then facebook_connection
+      when "instagram" then instagram_connection
+      end
+    end
 
     original_access_status_new = Meta::AccessStatus.method(:new)
     Meta::AccessStatus.define_singleton_method(:new) do |*_args, **kwargs|
@@ -454,7 +504,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     Meta::AccessStatus.define_singleton_method(:new, original_access_status_new) if original_access_status_new
   end
 
-  def build_meta_access_status(connection_status:, state:, summary:, page_name: nil)
+  def build_meta_access_status(connection_status:, state:, summary:, page_name: nil, instagram_username: nil)
     Meta::AccessStatus::Status.new(
       connection_status:,
       state:,
@@ -463,7 +513,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       checked_at: Time.current,
       expires_at: nil,
       page_name:,
-      instagram_username: nil,
+      instagram_username:,
       permissions: [],
       debug_available: true,
       reauth_required: state == :error,
