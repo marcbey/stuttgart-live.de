@@ -13,17 +13,48 @@
   </div>
 
   <% if @lane.key == "highlights" %>
-    <section class="home-slider-section lane-page-section search-results-section">
+    <% nav_content = capture do %>
+      <button type="button"
+              class="slider-view-toggle"
+              data-section-view-target="button"
+              data-action="click->section-view#toggle"
+              title="Listenansicht"
+              aria-label="Listenansicht für <%= @lane.title %>"
+              aria-pressed="false">
+        <span class="slider-view-toggle-label" data-section-view-target="label">Listenansicht</span>
+        <span class="slider-view-icon slider-view-icon-list public-view-icon public-view-icon-list" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </span>
+        <span class="slider-view-icon slider-view-icon-grid public-view-icon public-view-icon-grid" aria-hidden="true">
+          <span></span><span></span><span></span><span></span>
+        </span>
+      </button>
+    <% end %>
+
+    <section class="home-slider-section lane-page-section search-results-section"
+             data-controller="section-view"
+             data-section-view-mobile-list-default-value="true">
       <%= render "home_slider_header",
                  title: @lane.title,
-                 variant: @lane.header_variant %>
+                 variant: @lane.header_variant,
+                 nav_content: nav_content %>
       <% if @lane_events.any? %>
-        <%= render "event_cards",
-                   events: @lane_events,
-                   browse_state: @browse_state,
-                   effective_series_ids: @lane_effective_series_ids,
-                   container_id: "lane-event-grid",
-                   container_class: "lane-page-grid lane-page-grid--highlights" %>
+        <div data-section-view-target="slider">
+          <%= render "event_cards",
+                     events: @lane_events,
+                     browse_state: @browse_state,
+                     effective_series_ids: @lane_effective_series_ids,
+                     container_id: "lane-event-grid",
+                     container_class: "lane-page-grid lane-page-grid--highlights" %>
+        </div>
+        <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
+          <%= render "event_rows",
+                     events: @lane_events,
+                     browse_state: @browse_state,
+                     effective_series_ids: @lane_effective_series_ids,
+                     row_dom_id_prefix: :highlights_row,
+                     show_sold_out_ribbon: true %>
+        </div>
       <% else %>
         <div class="search-results-empty">
           <h2>Aktuell nichts in dieser Lane</h2>

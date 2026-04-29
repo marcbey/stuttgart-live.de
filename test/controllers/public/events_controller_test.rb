@@ -406,7 +406,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#lane-event-grid.lane-page-grid--highlights", count: 1
     assert_select "#lane-event-grid article.event-card", minimum: 3
     assert_select "#lane-event-grid article.genre-lane-card", count: 0
-    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 0
+    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 1
+    assert_select ".lane-page-section [data-section-view-target='slider'] #lane-event-grid", count: 1
+    assert_select ".lane-page-section [data-section-view-target='list'] .event-listing-card", minimum: 3
   end
 
   test "russ live lane renders with highlights look and only public future russ live events" do
