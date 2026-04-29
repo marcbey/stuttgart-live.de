@@ -491,7 +491,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-series-badge", minimum: 1
   end
 
-  test "index does not render event series badges in list view rows" do
+  test "index renders event series pills in list view rows" do
     create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 
     series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
@@ -531,6 +531,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".genre-lane-card .event-series-badge", minimum: 1
+    assert_select ".section-slider-list .event-listing-series-pill", minimum: 1
     assert_select ".section-slider-list .event-series-badge", count: 0
   end
 
@@ -2080,7 +2081,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='view']", count: 0
   end
 
-  test "index list rows show compact unavailable ribbons" do
+  test "index list rows show compact unavailable status pills" do
     sold_out_event = Event.create!(
       slug: "homepage-list-sold-out-ribbon",
       source_fingerprint: "test::public::homepage-list::sold-out-ribbon",
@@ -2128,8 +2129,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select ".section-slider-list .event-sold-out-ribbon", text: "Ausverkauft", minimum: 1
-    assert_select ".section-slider-list .event-sold-out-ribbon", text: "Abgesagt", minimum: 1
+    assert_select ".section-slider-list .event-listing-status-pill", text: "Ausverkauft", minimum: 1
+    assert_select ".section-slider-list .event-listing-status-pill", text: "Abgesagt", minimum: 1
+    assert_select ".section-slider-list .event-sold-out-ribbon", count: 0
   end
 
   test "index redirects old search links to the dedicated search page" do
@@ -2769,7 +2771,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#search_card_event_#{event.id} .event-card-ticket-overlay", count: 0
   end
 
-  test "genre lane cards and list rows render sold out ribbon above the event series badge" do
+  test "genre lane cards keep ribbons while list rows render inline status and series pills" do
     create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 
     series = EventSeries.create!(origin: "manual", name: "Ribbon Reihe")
@@ -2827,7 +2829,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, card.css(".event-sold-out-ribbon").size
     assert_equal 1, card.css(".event-series-badge").size
     assert_equal 0, card.css(".genre-lane-card-ticket-overlay").size
-    assert_select ".section-slider-list .event-listing-card .event-sold-out-ribbon", text: "Ausverkauft", minimum: 1
+
+    list_row = document.css(".section-slider-list .event-listing-card").find do |node|
+      node.at_css(".event-listing-link strong")&.text == event.artist_name
+    end
+
+    assert list_row.present?, "expected sold out genre lane list row to be rendered"
+    assert_equal 0, list_row.css(".event-sold-out-ribbon").size
+    assert_equal 1, list_row.css(".event-listing-status-pill").size
+    assert_equal "Ausverkauft", list_row.at_css(".event-listing-status-pill")&.text.to_s.strip
+    assert_equal 1, list_row.css(".event-listing-series-pill").size
   end
 
   test "show renders published event by slug" do

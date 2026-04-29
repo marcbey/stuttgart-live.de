@@ -5,7 +5,10 @@
 <% event_url = public_event_detail_path(event, browse_state) %>
 <% primary_offer = event.public_ticket_offer %>
 <% row_dom_id = local_assigns[:row_dom_id] %>
-<% show_sold_out_ribbon = local_assigns.fetch(:show_sold_out_ribbon, false) %>
+<% display_price = public_event_ticket_price(event, primary_offer) %>
+<% unavailable_label = event.public_ticket_status_label %>
+<% show_series_pill = public_event_series_effective?(event, effective_series_ids: local_assigns[:effective_series_ids]) %>
+<% show_price_row = display_price.present? || unavailable_label.present? || show_series_pill %>
 <% article_classes = ["event-listing-card", ("event-listing-card--admin" if authenticated?)].compact %>
 <% article_attributes = { class: article_classes.join(" ") } %>
 <% article_attributes[:id] = row_dom_id if row_dom_id.present? %>
@@ -20,9 +23,6 @@
       <%= image_tag thumbnail_source, alt: event_image_alt(thumbnail_image, event), loading: "lazy", class: "event-listing-thumb-image" %>
     <% else %>
       <div class="event-listing-thumb-image event-card-placeholder" aria-hidden="true"></div>
-    <% end %>
-    <% if show_sold_out_ribbon && event.public_ticket_status_label.present? %>
-      <%= render "sold_out_corner_ribbon", label: event.public_ticket_status_label %>
     <% end %>
   </div>
 
@@ -43,8 +43,20 @@
         <span><%= event.title %></span>
       <% end %>
     </div>
-    <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
-      <p class="event-listing-price"><%= display_price %></p>
+    <% if show_price_row %>
+      <div class="event-listing-price-row">
+        <% if display_price.present? %>
+          <p class="event-listing-price"><%= display_price %></p>
+        <% end %>
+        <% if unavailable_label.present? %>
+          <span class="event-listing-status-pill"><%= unavailable_label %></span>
+        <% end %>
+        <% if show_series_pill %>
+          <span class="event-listing-series-pill" aria-label="Event-Reihe">
+            <%= image_tag "event-series-icon.svg", class: "event-listing-series-pill-icon", alt: "" %>
+          </span>
+        <% end %>
+      </div>
     <% end %>
   </div>
   <% if authenticated? %>
