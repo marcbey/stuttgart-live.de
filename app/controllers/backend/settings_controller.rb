@@ -51,6 +51,13 @@ module Backend
         panel_id: "settings-panel-merge-artist-similarity-matching",
         tab_id: "settings-tab-merge-artist-similarity-matching",
         partial: "backend/settings/sections/merge_artist_similarity_matching"
+      },
+      {
+        key: "venue_duplicate_mappings",
+        label: "Venue-Dubletten",
+        panel_id: "settings-panel-venue-duplicate-mappings",
+        tab_id: "settings-tab-venue-duplicate-mappings",
+        partial: "backend/settings/sections/venue_duplicate_mappings"
       }
     ].freeze
 
@@ -142,6 +149,8 @@ module Backend
         @llm_genre_grouping_group_count_setting = AppSetting.llm_genre_grouping_group_count_record
       when "merge_artist_similarity_matching"
         @merge_artist_similarity_matching_setting = AppSetting.merge_artist_similarity_matching_enabled_record
+      when "venue_duplicate_mappings"
+        @venue_duplicate_mappings_setting = AppSetting.venue_duplicate_mappings_record
       end
     end
 
@@ -172,6 +181,9 @@ module Backend
       when "merge_artist_similarity_matching"
         @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled =
           active_settings_params[:merge_artist_similarity_matching_enabled]
+      when "venue_duplicate_mappings"
+        @venue_duplicate_mappings_setting.venue_duplicate_mappings_text =
+          active_settings_params[:venue_duplicate_mappings_text]
       end
     end
 
@@ -200,6 +212,8 @@ module Backend
         ]
       when "merge_artist_similarity_matching"
         [ @merge_artist_similarity_matching_setting ]
+      when "venue_duplicate_mappings"
+        [ @venue_duplicate_mappings_setting ]
       else
         []
       end
@@ -230,6 +244,8 @@ module Backend
         )
       when "merge_artist_similarity_matching"
         params.require(:app_setting).permit(:merge_artist_similarity_matching_enabled)
+      when "venue_duplicate_mappings"
+        params.require(:app_setting).permit(:venue_duplicate_mappings_text)
       else
         ActionController::Parameters.new.permit!
       end

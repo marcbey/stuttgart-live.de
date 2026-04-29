@@ -16,7 +16,7 @@ module Public
         def call
           return Venue.none if query.blank?
 
-          Venue.search_by_query(query, limit:)
+          Venue.canonical_search_by_query(query, limit:)
         end
 
         private

@@ -54,6 +54,82 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal "rock-alternative\npop-mainstream", setting.homepage_genre_lane_slugs_text
   end
 
+  test "normalizes venue duplicate mappings from text" do
+    setting = AppSetting.new(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY)
+    setting.venue_duplicate_mappings_text = <<~TEXT
+      KKL Beethoven-Saal Stuttgart => Liederhalle Beethoven-Saal
+      Liederhalle Beethovensaal => Liederhalle Beethoven-Saal
+    TEXT
+
+    assert setting.valid?
+    assert_equal [
+      {
+        "alias" => "KKL Beethoven-Saal Stuttgart",
+        "canonical" => "Liederhalle Beethoven-Saal",
+        "alias_key" => "kkl beethoven saal",
+        "canonical_key" => "liederhalle beethoven saal"
+      },
+      {
+        "alias" => "Liederhalle Beethovensaal",
+        "canonical" => "Liederhalle Beethoven-Saal",
+        "alias_key" => "liederhalle beethovensaal",
+        "canonical_key" => "liederhalle beethoven saal"
+      }
+    ], setting.venue_duplicate_mappings
+    assert_equal "KKL Beethoven-Saal Stuttgart => Liederhalle Beethoven-Saal\nLiederhalle Beethovensaal => Liederhalle Beethoven-Saal",
+                 setting.venue_duplicate_mappings_text
+  end
+
+  test "returns configured venue duplicate mappings and resets cache" do
+    AppSetting.create!(
+      key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
+      value: [
+        {
+          "alias" => "KKL Beethoven-Saal Stuttgart",
+          "canonical" => "Liederhalle Beethoven-Saal",
+          "alias_key" => "kkl beethoven saal",
+          "canonical_key" => "liederhalle beethoven saal"
+        }
+      ]
+    )
+
+    assert_equal "Liederhalle Beethoven-Saal",
+                 AppSetting.venue_duplicate_mapping_for_key("kkl beethoven saal").fetch("canonical")
+
+    AppSetting.venue_duplicate_mappings_record.update!(venue_duplicate_mappings_text: "Liederhalle Beethovensaal => Liederhalle Beethoven-Saal")
+
+    assert_nil AppSetting.venue_duplicate_mapping_for_key("kkl beethoven saal")
+    assert_equal "Liederhalle Beethoven-Saal",
+                 AppSetting.venue_duplicate_mapping_for_key("liederhalle beethovensaal").fetch("canonical")
+  end
+
+  test "rejects invalid venue duplicate mapping lines" do
+    setting = AppSetting.new(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY)
+    setting.venue_duplicate_mappings_text = "KKL Beethoven-Saal Stuttgart"
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "Zeile 1: muss das Format Alias => Kanonische Venue verwenden"
+  end
+
+  test "rejects venue duplicate mappings with same normalized source and target" do
+    setting = AppSetting.new(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY)
+    setting.venue_duplicate_mappings_text = "Liederhalle Beethoven-Saal Stuttgart => Liederhalle Beethoven-Saal"
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "Zeile 1: Alias und kanonische Venue dürfen nicht identisch sein"
+  end
+
+  test "rejects duplicate venue duplicate mapping aliases" do
+    setting = AppSetting.new(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY)
+    setting.venue_duplicate_mappings_text = <<~TEXT
+      KKL Beethoven-Saal Stuttgart => Liederhalle Beethoven-Saal
+      KKL Beethoven Saal => Liederhalle Beethoven-Saal
+    TEXT
+
+    assert_not setting.valid?
+    assert_includes setting.errors[:value], "Zeile 2: Alias ist bereits in Zeile 1 konfiguriert"
+  end
+
   test "normalizes homepage genre lane slugs from checkbox array" do
     setting = AppSetting.new(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY)
     setting.homepage_genre_lane_slugs = [ "", "Rock & Alternative", "pop-mainstream", "Rock & Alternative" ]

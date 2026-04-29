@@ -363,7 +363,7 @@ module Public
       def venue_info
         return @venue_info if defined?(@venue_info)
 
-        venue = event.venue_record
+        venue = event.canonical_venue_record
         return @venue_info = nil if venue.blank?
 
         address = venue.address.to_s.strip.presence

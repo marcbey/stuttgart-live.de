@@ -2,6 +2,7 @@ class AppSetting < ApplicationRecord
   SKS_PROMOTER_IDS_KEY = "sks_promoter_ids".freeze
   SKS_ORGANIZER_NOTES_KEY = "sks_organizer_notes".freeze
   MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY = "merge_artist_similarity_matching_enabled".freeze
+  VENUE_DUPLICATE_MAPPINGS_KEY = "venue_duplicate_mappings".freeze
   HOMEPAGE_GENRE_LANE_SLUGS_KEY = "homepage_genre_lane_slugs".freeze
   PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY = "public_genre_grouping_snapshot_id".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
@@ -172,7 +173,9 @@ class AppSetting < ApplicationRecord
   validate :llm_genre_grouping_model_must_be_valid
   validate :llm_genre_grouping_prompt_template_must_be_valid
   validate :llm_genre_grouping_group_count_must_be_valid
+  validate :venue_duplicate_mappings_must_be_valid
 
+  before_validation :normalize_valid_venue_duplicate_mappings_value
   after_commit { self.class.reset_cache! }
 
   class << self
@@ -186,6 +189,18 @@ class AppSetting < ApplicationRecord
 
     def homepage_genre_lane_slugs
       @homepage_genre_lane_slugs ||= normalize_slug_list(find_by(key: HOMEPAGE_GENRE_LANE_SLUGS_KEY)&.value)
+    end
+
+    def venue_duplicate_mappings
+      @venue_duplicate_mappings ||= normalize_venue_duplicate_mappings(find_by(key: VENUE_DUPLICATE_MAPPINGS_KEY)&.value)
+    end
+
+    def venue_duplicate_mapping_by_alias_key
+      @venue_duplicate_mapping_by_alias_key ||= venue_duplicate_mappings.index_by { |mapping| mapping.fetch("alias_key") }
+    end
+
+    def venue_duplicate_mapping_for_key(alias_key)
+      venue_duplicate_mapping_by_alias_key[alias_key.to_s]
     end
 
     def public_genre_grouping_snapshot_id
@@ -311,6 +326,10 @@ class AppSetting < ApplicationRecord
       find_or_initialize_by(key: MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY)
     end
 
+    def venue_duplicate_mappings_record
+      find_or_initialize_by(key: VENUE_DUPLICATE_MAPPINGS_KEY)
+    end
+
     def merge_artist_similarity_matching_enabled?
       @merge_artist_similarity_matching_enabled =
         if @merge_artist_similarity_matching_enabled.nil?
@@ -353,6 +372,97 @@ class AppSetting < ApplicationRecord
         .map { |entry| entry.to_s.parameterize.presence }
         .compact
         .uniq
+    end
+
+    def normalize_venue_duplicate_mappings(value)
+      parse_venue_duplicate_mappings(value).fetch(:mappings)
+    end
+
+    def parse_venue_duplicate_mappings(value)
+      mappings = []
+      errors = []
+      seen_alias_keys = {}
+
+      venue_duplicate_mapping_entries(value).each_with_index do |entry, index|
+        line_number = index + 1
+        raw_alias = entry.fetch(:alias_name).to_s.strip
+        raw_canonical = entry.fetch(:canonical).to_s.strip
+
+        if entry.fetch(:invalid_separator, false)
+          errors << "Zeile #{line_number}: muss das Format Alias => Kanonische Venue verwenden"
+          next
+        end
+
+        if raw_alias.blank? || raw_canonical.blank?
+          errors << "Zeile #{line_number}: Alias und kanonische Venue müssen ausgefüllt sein"
+          next
+        end
+
+        alias_name = Venue.normalize_name(raw_alias)
+        canonical_name = Venue.normalize_name(raw_canonical)
+        alias_key = Venue.match_key(alias_name)
+        canonical_key = Venue.match_key(canonical_name)
+
+        if alias_key.blank? || canonical_key.blank?
+          errors << "Zeile #{line_number}: Alias und kanonische Venue müssen auswertbare Namen enthalten"
+          next
+        end
+
+        if alias_key == canonical_key
+          errors << "Zeile #{line_number}: Alias und kanonische Venue dürfen nicht identisch sein"
+          next
+        end
+
+        if seen_alias_keys.key?(alias_key)
+          errors << "Zeile #{line_number}: Alias ist bereits in Zeile #{seen_alias_keys.fetch(alias_key)} konfiguriert"
+          next
+        end
+
+        seen_alias_keys[alias_key] = line_number
+        mappings << {
+          "alias" => alias_name,
+          "canonical" => canonical_name,
+          "alias_key" => alias_key,
+          "canonical_key" => canonical_key
+        }
+      end
+
+      { mappings:, errors: }
+    end
+
+    def venue_duplicate_mapping_entries(value)
+      case value
+      when String
+        value.lines.filter_map do |line|
+          normalized_line = line.strip
+          next if normalized_line.blank?
+
+          unless normalized_line.include?("=>")
+            next({ alias_name: normalized_line, canonical: nil, invalid_separator: true })
+          end
+
+          raw_alias, raw_canonical = normalized_line.split(/\s*=>\s*/, 2)
+          { alias_name: raw_alias, canonical: raw_canonical, invalid_separator: false }
+        end
+      when Array
+        value.filter_map do |entry|
+          case entry
+          when Hash
+            raw_alias = entry["alias"] || entry[:alias]
+            raw_canonical = entry["canonical"] || entry[:canonical]
+            next if raw_alias.to_s.strip.blank? && raw_canonical.to_s.strip.blank?
+
+            { alias_name: raw_alias, canonical: raw_canonical, invalid_separator: false }
+          else
+            normalized_entry = entry.to_s.strip
+            next if normalized_entry.blank?
+
+            { alias_name: normalized_entry, canonical: nil, invalid_separator: true }
+          end
+        end
+      else
+        []
+      end
     end
 
     def normalize_text(value)
@@ -447,6 +557,8 @@ class AppSetting < ApplicationRecord
       @sks_promoter_ids = nil
       @sks_organizer_notes = nil
       @homepage_genre_lane_slugs = nil
+      @venue_duplicate_mappings = nil
+      @venue_duplicate_mapping_by_alias_key = nil
       @public_genre_grouping_snapshot_id = nil
       @llm_enrichment_model = nil
       @llm_enrichment_prompt_template = nil
@@ -497,6 +609,20 @@ class AppSetting < ApplicationRecord
 
   def homepage_genre_lane_slugs=(raw_value)
     self.value = self.class.normalize_slug_list(raw_value)
+  end
+
+  def venue_duplicate_mappings
+    self.class.normalize_venue_duplicate_mappings(value)
+  end
+
+  def venue_duplicate_mappings_text
+    return value.to_s if value.is_a?(String)
+
+    venue_duplicate_mappings.map { |mapping| "#{mapping.fetch("alias")} => #{mapping.fetch("canonical")}" }.join("\n")
+  end
+
+  def venue_duplicate_mappings_text=(raw_value)
+    self.value = raw_value.to_s
   end
 
   def public_genre_grouping_snapshot_id
@@ -620,6 +746,13 @@ class AppSetting < ApplicationRecord
 
   private
 
+  def normalize_valid_venue_duplicate_mappings_value
+    return unless key == VENUE_DUPLICATE_MAPPINGS_KEY
+
+    parsed = self.class.parse_venue_duplicate_mappings(value)
+    self.value = parsed.fetch(:mappings) if parsed.fetch(:errors).empty?
+  end
+
   def sks_promoter_ids_must_be_present
     return unless key == SKS_PROMOTER_IDS_KEY
     return if self.class.normalize_id_list(value).any?
@@ -731,5 +864,13 @@ class AppSetting < ApplicationRecord
     return if integer.present?
 
     errors.add(:value, "muss eine positive Ganzzahl sein")
+  end
+
+  def venue_duplicate_mappings_must_be_valid
+    return unless key == VENUE_DUPLICATE_MAPPINGS_KEY
+
+    self.class.parse_venue_duplicate_mappings(value).fetch(:errors).each do |message|
+      errors.add(:value, message)
+    end
   end
 end

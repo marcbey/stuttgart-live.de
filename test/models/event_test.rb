@@ -5,6 +5,11 @@ class EventTest < ActiveSupport::TestCase
     @fixture_path = Rails.root.join("test/fixtures/files/test_image.png")
   end
 
+  teardown do
+    AppSetting.where(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY).delete_all
+    AppSetting.reset_cache!
+  end
+
   test "splits combined title into artist and tour when artist still equals title" do
     event = Event.new(
       artist_name: "WILHELMINE - magisch Tour 2026",
@@ -123,6 +128,34 @@ class EventTest < ActiveSupport::TestCase
 
     assert_equal "Neue Test Venue", event.reload.venue
     assert_equal "Neue Test Venue", event.venue_record.name
+  end
+
+  test "displays canonical venue name for configured alias venue records" do
+    canonical = Venue.create!(
+      name: "Liederhalle Beethoven-Saal",
+      description: "Kanonische Beschreibung",
+      external_url: "https://liederhalle.example",
+      address: "Berliner Platz 1, Stuttgart"
+    )
+    alias_venue = Venue.create!(name: "Liederhalle Beethovensaal")
+    configure_venue_duplicate_mapping(alias_name: alias_venue.name, canonical_name: canonical.name)
+    event = Event.create!(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 12, 16, 20, 0, 0),
+      venue_record: alias_venue,
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+
+    event.reload
+    assert_equal alias_venue, event.venue_record
+    assert_equal canonical, event.canonical_venue_record
+    assert_equal "Liederhalle Beethoven-Saal", event.venue
+    assert_equal "Liederhalle Beethoven-Saal", event.venue_name
+    assert_equal "Kanonische Beschreibung", event.venue_description
+    assert_equal "https://liederhalle.example", event.venue_external_url
+    assert_equal "Berliner Platz 1, Stuttgart", event.venue_address
   end
 
   test "allows blank city and normalizes it to nil" do
@@ -652,5 +685,20 @@ class EventTest < ActiveSupport::TestCase
     end
 
     queries
+  end
+
+  def configure_venue_duplicate_mapping(alias_name:, canonical_name:)
+    AppSetting.create!(
+      key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
+      value: [
+        {
+          "alias" => alias_name,
+          "canonical" => canonical_name,
+          "alias_key" => Venue.match_key(alias_name),
+          "canonical_key" => Venue.match_key(canonical_name)
+        }
+      ]
+    )
+    AppSetting.reset_cache!
   end
 end

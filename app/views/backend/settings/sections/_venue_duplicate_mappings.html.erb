@@ -1,0 +1,26 @@
+<%= render "backend/settings/sections/section_errors", settings_records: settings_records %>
+
+<section class="settings-group">
+  <div class="settings-group-header">
+    <h2>Venue-Dubletten</h2>
+    <p>Konfiguriert Aliasnamen, die beim Venue-Matching auf eine kanonische Venue zeigen.</p>
+  </div>
+  <div class="settings-group-body">
+    <%= form_with model: @venue_duplicate_mappings_setting,
+                  url: backend_settings_path(section: section_key),
+                  method: :patch,
+                  class: "editor-form" do |form| %>
+      <%= form.label :venue_duplicate_mappings_text, "Venue-Mapping (eine Regel pro Zeile)", class: "form-label" %>
+      <%= form.text_area :venue_duplicate_mappings_text,
+                         value: @venue_duplicate_mappings_setting.venue_duplicate_mappings_text,
+                         rows: 10,
+                         class: "form-textarea",
+                         placeholder: "KKL Beethoven-Saal Stuttgart => Liederhalle Beethoven-Saal",
+                         aria: { describedby: "venue-duplicate-mappings-help" } %>
+      <p id="venue-duplicate-mappings-help" class="form-hint">Format: <code>Alias => Kanonische Venue</code>. Eine Regel greift nur, wenn die kanonische Venue bereits existiert.</p>
+      <div class="settings-group-footer">
+        <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+      </div>
+    <% end %>
+  </div>
+</section>

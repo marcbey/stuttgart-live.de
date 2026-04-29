@@ -1,6 +1,11 @@
 require "test_helper"
 
 class VenueTest < ActiveSupport::TestCase
+  teardown do
+    AppSetting.where(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY).delete_all
+    AppSetting.reset_cache!
+  end
+
   test "requires a unique name" do
     venue = Venue.new(name: "  Im Wizemann  ")
 
@@ -32,6 +37,49 @@ class VenueTest < ActiveSupport::TestCase
 
   test "matches kulturquartier proton variants through the match key" do
     assert Venue.same_name?("Kulturquartier - PROTON", "Kulturquartier Stuttgart")
+  end
+
+  test "resolves configured duplicate mapping to existing canonical venue" do
+    canonical = Venue.create!(name: "Liederhalle Beethoven-Saal")
+    AppSetting.create!(
+      key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
+      value: [
+        {
+          "alias" => "KKL Beethoven-Saal Stuttgart",
+          "canonical" => "Liederhalle Beethoven-Saal",
+          "alias_key" => "kkl beethoven saal",
+          "canonical_key" => "liederhalle beethoven saal"
+        },
+        {
+          "alias" => "Liederhalle Beethovensaal",
+          "canonical" => "Liederhalle Beethoven-Saal",
+          "alias_key" => "liederhalle beethovensaal",
+          "canonical_key" => "liederhalle beethoven saal"
+        }
+      ]
+    )
+
+    assert_equal canonical, Venues::Resolver.call(name: "KKL Beethoven-Saal Stuttgart")
+    assert_equal canonical, Venues::Resolver.call(name: "Liederhalle Beethovensaal")
+  end
+
+  test "ignores duplicate mapping when canonical venue does not exist" do
+    AppSetting.create!(
+      key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
+      value: [
+        {
+          "alias" => "KKL Beethoven-Saal Stuttgart",
+          "canonical" => "Liederhalle Beethoven-Saal",
+          "alias_key" => "kkl beethoven saal",
+          "canonical_key" => "liederhalle beethoven saal"
+        }
+      ]
+    )
+
+    venue = Venues::Resolver.call(name: "KKL Beethoven-Saal Stuttgart")
+
+    assert_predicate venue, :new_record?
+    assert_equal "KKL Beethoven-Saal Stuttgart", venue.name
   end
 
   test "allows blank logo but validates uploaded images" do

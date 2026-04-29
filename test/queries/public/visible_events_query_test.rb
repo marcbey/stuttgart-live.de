@@ -9,6 +9,7 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
   teardown do
     AppSetting.reset_cache!
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
+    AppSetting.where(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY).delete_all
   end
 
   test "filters to sks promoter ids" do
@@ -226,6 +227,35 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     end
   end
 
+  test "structured venue queries include configured alias venues for canonical venue" do
+    travel_to(Time.zone.parse("2026-04-07 10:00:00")) do
+      canonical_event = create_visible_event(
+        title: "Heute Liederhalle",
+        artist_name: "Canonical Venue Artist",
+        start_at: Time.zone.parse("2026-04-07 20:00:00"),
+        venue_name: "Liederhalle Beethoven-Saal"
+      )
+      alias_event = create_visible_event(
+        title: "Heute Liederhalle Alias",
+        artist_name: "Alias Venue Artist",
+        start_at: Time.zone.parse("2026-04-07 21:00:00"),
+        venue_name: "Liederhalle Beethovensaal"
+      )
+      configure_venue_duplicate_mapping(
+        alias_name: "Liederhalle Beethovensaal",
+        canonical_name: "Liederhalle Beethoven-Saal"
+      )
+
+      result = Public::VisibleEventsQuery.new(
+        scope: Event.published_live,
+        filter: Public::VisibleEventsQuery::FILTER_ALL,
+        query: "heute im Liederhalle Beethoven-Saal"
+      ).call
+
+      assert_equal [ canonical_event, alias_event ], result.to_a
+    end
+  end
+
   test "filters diese woche venue queries through matching venues" do
     travel_to(Time.zone.parse("2026-04-07 10:00:00")) do
       matching_event = create_visible_event(
@@ -389,5 +419,20 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
       source_fingerprint: SecureRandom.uuid,
       source_snapshot: {}
     )
+  end
+
+  def configure_venue_duplicate_mapping(alias_name:, canonical_name:)
+    AppSetting.create!(
+      key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
+      value: [
+        {
+          "alias" => alias_name,
+          "canonical" => canonical_name,
+          "alias_key" => Venue.match_key(alias_name),
+          "canonical_key" => Venue.match_key(canonical_name)
+        }
+      ]
+    )
+    AppSetting.reset_cache!
   end
 end

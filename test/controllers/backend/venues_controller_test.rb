@@ -6,6 +6,11 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     @venue = venues(:im_wizemann)
   end
 
+  teardown do
+    AppSetting.where(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY).delete_all
+    AppSetting.reset_cache!
+  end
+
   test "backend user can list venues inbox" do
     sign_in_as(@editor)
 
@@ -208,5 +213,90 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     payload = JSON.parse(response.body)
     assert_equal [ first.id, second.id ], payload.map { |item| item.fetch("id") }
+  end
+
+  test "venues inbox hides configured alias and aggregates counts into canonical venue" do
+    sign_in_as(@editor)
+    canonical = Venue.create!(name: "Liederhalle Beethoven-Saal")
+    alias_venue = Venue.create!(name: "KKL Beethoven-Saal Stuttgart")
+    create_event_for(venue: canonical, title: "Canonical Future", start_at: 2.days.from_now.change(usec: 0))
+    create_event_for(venue: alias_venue, title: "Alias Past", start_at: 2.days.ago.change(usec: 0))
+    configure_venue_duplicate_mapping(alias_name: alias_venue.name, canonical_name: canonical.name)
+
+    get backend_venues_url, params: { sort: "total" }
+
+    assert_response :success
+    assert_includes response.body, "Liederhalle Beethoven-Saal"
+    assert_not_includes response.body, "KKL Beethoven-Saal Stuttgart"
+    assert_includes response.body, "Venue ID: #{canonical.id} · Gesamt: 2 · Kommend: 1"
+  end
+
+  test "venues inbox search by configured alias shows canonical venue" do
+    sign_in_as(@editor)
+    canonical = Venue.create!(name: "Liederhalle Beethoven-Saal")
+    alias_venue = Venue.create!(name: "KKL Beethoven-Saal Stuttgart")
+    configure_venue_duplicate_mapping(alias_name: alias_venue.name, canonical_name: canonical.name)
+
+    get backend_venues_url, params: { query: "KKL Beethoven" }
+
+    assert_response :success
+    assert_includes response.body, "Liederhalle Beethoven-Saal"
+    assert_not_includes response.body, "KKL Beethoven-Saal Stuttgart"
+  end
+
+  test "autocomplete maps configured alias query to canonical venue" do
+    sign_in_as(@editor)
+    canonical = Venue.create!(name: "Liederhalle Beethoven-Saal")
+    alias_venue = Venue.create!(name: "KKL Beethoven-Saal Stuttgart")
+    configure_venue_duplicate_mapping(alias_name: alias_venue.name, canonical_name: canonical.name)
+
+    get autocomplete_backend_venues_url(q: "KKL Beethoven")
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal [ canonical.id ], payload.map { |item| item.fetch("id") }
+    assert_equal "Liederhalle Beethoven-Saal", payload.first.fetch("name")
+  end
+
+  test "autocomplete maps similarly named configured alias to canonical venue" do
+    sign_in_as(@editor)
+    canonical = Venue.create!(name: "Liederhalle Beethoven-Saal")
+    alias_venue = Venue.create!(name: "Liederhalle Beethovensaal")
+    configure_venue_duplicate_mapping(alias_name: alias_venue.name, canonical_name: canonical.name)
+
+    get autocomplete_backend_venues_url(q: "Liederhalle Beethovensaal")
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal [ canonical.id ], payload.map { |item| item.fetch("id") }
+    assert_equal "Liederhalle Beethoven-Saal", payload.first.fetch("name")
+  end
+
+  private
+
+  def configure_venue_duplicate_mapping(alias_name:, canonical_name:)
+    AppSetting.create!(
+      key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
+      value: [
+        {
+          "alias" => alias_name,
+          "canonical" => canonical_name,
+          "alias_key" => Venue.match_key(alias_name),
+          "canonical_key" => Venue.match_key(canonical_name)
+        }
+      ]
+    )
+    AppSetting.reset_cache!
+  end
+
+  def create_event_for(venue:, title:, start_at:)
+    Event.create!(
+      artist_name: "#{title} Artist",
+      title:,
+      start_at:,
+      venue_record: venue,
+      city: "Stuttgart",
+      status: "needs_review"
+    )
   end
 end

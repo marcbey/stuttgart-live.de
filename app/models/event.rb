@@ -150,8 +150,14 @@ class Event < ApplicationRecord
     status == "rejected"
   end
 
+  def canonical_venue_record
+    return if venue_record.blank?
+
+    Venue.canonical_venue_for(venue_record)
+  end
+
   def venue
-    venue_name.to_s.presence || venue_record&.name.to_s.presence
+    canonical_venue_record&.name.to_s.presence || @venue_name.to_s.presence
   end
 
   def venue=(value)
@@ -166,7 +172,7 @@ class Event < ApplicationRecord
   end
 
   def venue_name
-    @venue_name.to_s.presence || venue_record&.name.to_s.presence
+    canonical_venue_record&.name.to_s.presence || @venue_name.to_s.presence
   end
 
   def venue_name=(value)
@@ -175,15 +181,15 @@ class Event < ApplicationRecord
   end
 
   def venue_description
-    venue_record&.description.to_s.presence
+    canonical_venue_record&.description.to_s.presence || venue_record&.description.to_s.presence
   end
 
   def venue_external_url
-    venue_record&.external_url.to_s.presence
+    canonical_venue_record&.external_url.to_s.presence || venue_record&.external_url.to_s.presence
   end
 
   def venue_address
-    venue_record&.address.to_s.presence
+    canonical_venue_record&.address.to_s.presence || venue_record&.address.to_s.presence
   end
 
   def scheduled?

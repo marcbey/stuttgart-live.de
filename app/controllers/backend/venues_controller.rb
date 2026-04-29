@@ -59,7 +59,7 @@ module Backend
     end
 
     def autocomplete
-      venues = Venue.search_by_query(params[:q], limit: autocomplete_limit)
+      venues = canonical_autocomplete_venues(params[:q])
       render json: venues.map { |venue| autocomplete_payload_for(venue) }
     end
 
@@ -99,19 +99,14 @@ module Backend
       end
 
       def venues_with_counts(query:)
-        quoted_now = ActiveRecord::Base.connection.quote(Time.current)
+        venues = Venue.includes(logo_attachment: :blob).to_a
+        aliases_by_canonical_id = alias_venues_by_canonical_id(venues)
+        hidden_alias_ids = aliases_by_canonical_id.values.flatten.map(&:id)
+        visible_venues = venues.reject { |venue| hidden_alias_ids.include?(venue.id) }
+        visible_venues = filter_canonical_venues_by_query(visible_venues, aliases_by_canonical_id, query)
 
-        Venue
-          .includes(logo_attachment: :blob)
-          .left_joins(:events)
-          .group("venues.id")
-          .select(
-            "venues.*",
-            "COUNT(events.id) AS events_count",
-            "COUNT(CASE WHEN events.start_at >= #{quoted_now} THEN 1 END) AS upcoming_events_count"
-          )
-          .filter_by_query(query)
-          .reorder(Arel.sql(sort_order_sql))
+        assign_aggregated_counts!(visible_venues, aliases_by_canonical_id)
+        sort_venues(visible_venues)
       end
 
       def current_sort
@@ -119,16 +114,63 @@ module Backend
         SORT_OPTIONS.include?(sort) ? sort : "alphabetical"
       end
 
-      def sort_order_sql
+      def canonical_autocomplete_venues(query)
+        Venue.canonical_search_by_query(query, limit: autocomplete_limit)
+      end
+
+      def alias_venues_by_canonical_id(venues)
+        venues.each_with_object(Hash.new { |hash, key| hash[key] = [] }) do |venue, aliases|
+          canonical = Venue.canonical_alias_venue_for(venue.name)
+          next if canonical.blank? || canonical.id == venue.id
+
+          aliases[canonical.id] << venue
+        end
+      end
+
+      def filter_canonical_venues_by_query(venues, aliases_by_canonical_id, query)
+        normalized_query = query.to_s.strip.downcase
+        return venues if normalized_query.blank?
+
+        venues.select do |venue|
+          venue_matches_query?(venue, normalized_query) ||
+            aliases_by_canonical_id.fetch(venue.id, []).any? { |alias_venue| venue_matches_query?(alias_venue, normalized_query) }
+        end
+      end
+
+      def venue_matches_query?(venue, normalized_query)
+        [
+          venue.name,
+          venue.address,
+          venue.description,
+          venue.external_url
+        ].any? { |value| value.to_s.downcase.include?(normalized_query) }
+      end
+
+      def assign_aggregated_counts!(venues, aliases_by_canonical_id)
+        venue_ids = venues.flat_map { |venue| [ venue.id, *aliases_by_canonical_id.fetch(venue.id, []).map(&:id) ] }.uniq
+        total_counts = Event.where(venue_id: venue_ids).group(:venue_id).count
+        upcoming_counts = Event.where(venue_id: venue_ids).where("start_at >= ?", Time.current).group(:venue_id).count
+
+        venues.each do |venue|
+          related_ids = [ venue.id, *aliases_by_canonical_id.fetch(venue.id, []).map(&:id) ]
+          total_count = related_ids.sum { |venue_id| total_counts.fetch(venue_id, 0) }
+          upcoming_count = related_ids.sum { |venue_id| upcoming_counts.fetch(venue_id, 0) }
+
+          venue.define_singleton_method(:events_count) { total_count }
+          venue.define_singleton_method(:upcoming_events_count) { upcoming_count }
+        end
+      end
+
+      def sort_venues(venues)
         case @sort_filter
         when "total"
-          "COUNT(events.id) DESC, LOWER(venues.name) ASC, venues.id ASC"
+          venues.sort_by { |venue| [ -venue.events_count, venue.name.to_s.downcase, venue.id ] }
         when "upcoming"
-          "COUNT(CASE WHEN events.start_at >= #{ActiveRecord::Base.connection.quote(Time.current)} THEN 1 END) DESC, COUNT(events.id) DESC, LOWER(venues.name) ASC, venues.id ASC"
+          venues.sort_by { |venue| [ -venue.upcoming_events_count, -venue.events_count, venue.name.to_s.downcase, venue.id ] }
         when "created_at"
-          "venues.updated_at DESC, venues.created_at DESC, venues.id DESC"
+          venues.sort_by { |venue| [ -venue.updated_at.to_f, -venue.created_at.to_f, -venue.id ] }
         else
-          "LOWER(venues.name) ASC, venues.id ASC"
+          venues.sort_by { |venue| [ venue.name.to_s.downcase, venue.id ] }
         end
       end
 

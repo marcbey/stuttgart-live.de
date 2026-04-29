@@ -3,6 +3,11 @@ require "test_helper"
 module Venues
   module Maintenance
     class DeduplicatorTest < ActiveSupport::TestCase
+      teardown do
+        AppSetting.where(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY).delete_all
+        AppSetting.reset_cache!
+      end
+
       test "merges duplicate venues, reassigns events, and keeps the canonical venue" do
         canonical = Venue.create!(name: "Porsche-Arena")
         duplicate = Venue.create!(
@@ -33,6 +38,31 @@ module Venues
 
         assert_equal canonical.id, event_one.reload.venue_id
         assert_equal canonical.id, event_two.reload.venue_id
+      end
+
+      test "merges configured alias venues into canonical venue" do
+        canonical = Venue.create!(name: "Liederhalle Beethoven-Saal")
+        duplicate = Venue.create!(name: "KKL Beethoven-Saal Stuttgart")
+        event = create_event_for(venue: duplicate, title: "Beethoven Show")
+        AppSetting.create!(
+          key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
+          value: [
+            {
+              "alias" => "KKL Beethoven-Saal Stuttgart",
+              "canonical" => "Liederhalle Beethoven-Saal",
+              "alias_key" => "kkl beethoven saal",
+              "canonical_key" => "liederhalle beethoven saal"
+            }
+          ]
+        )
+
+        result = Deduplicator.call(venue_scope: Venue.where(id: [ canonical.id, duplicate.id ]))
+
+        assert_equal 1, result.groups
+        assert_equal 1, result.venues_merged
+        assert_equal 1, result.events_reassigned
+        assert_not Venue.exists?(duplicate.id)
+        assert_equal canonical.id, event.reload.venue_id
       end
 
       private

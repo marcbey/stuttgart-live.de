@@ -38,6 +38,12 @@ class Venue < ApplicationRecord
     left_key.present? && left_key == match_key(right)
   end
 
+  def self.alias_maps_to_venue?(value, venue)
+    return false if venue.blank?
+
+    canonical_alias_venue_for(value)&.id == venue.id
+  end
+
   def self.find_by_normalized_name(value)
     normalized = normalize_name(value)
     return if normalized.blank?
@@ -46,12 +52,33 @@ class Venue < ApplicationRecord
   end
 
   def self.find_by_match_name(value)
-    key = match_key(value)
+    find_by_match_key(match_key(value))
+  end
+
+  def self.find_by_match_key(key)
     return if key.blank?
 
     all
       .select { |venue| match_key(venue.name) == key }
       .min_by { |venue| lookup_sort_key(venue) }
+  end
+
+  def self.canonical_alias_venue_for(value)
+    alias_key = match_key(value)
+    return if alias_key.blank?
+
+    mapping = AppSetting.venue_duplicate_mapping_for_key(alias_key)
+    return if mapping.blank?
+
+    find_by_match_key(mapping.fetch("canonical_key"))
+  end
+
+  def self.canonical_match_key(value)
+    canonical_alias_venue_for(value)&.then { |venue| match_key(venue.name) } || match_key(value)
+  end
+
+  def self.canonical_venue_for(venue)
+    canonical_alias_venue_for(venue.name) || venue
   end
 
   def self.lookup_sort_key(venue)
@@ -77,6 +104,29 @@ class Venue < ApplicationRecord
 
   def self.search_by_query(query, limit: 8)
     matching_query(query).limit(limit)
+  end
+
+  def self.canonical_search_by_query(query, limit: 8)
+    [
+      canonical_alias_venue_for(query),
+      *search_by_query(query, limit: limit * 5).map { |venue| canonical_venue_for(venue) }
+    ].compact.uniq(&:id).first(limit)
+  end
+
+  def self.strict_matching_ids_with_aliases(query)
+    canonical_matches = [
+      canonical_alias_venue_for(query),
+      *strict_matching_query(query).map { |venue| canonical_venue_for(venue) }
+    ].compact.uniq(&:id)
+    canonical_ids = canonical_matches.map(&:id)
+    return [] if canonical_ids.empty?
+
+    alias_ids = all.select do |venue|
+      canonical = canonical_alias_venue_for(venue.name)
+      canonical.present? && canonical_ids.include?(canonical.id)
+    end.map(&:id)
+
+    (canonical_ids + alias_ids).uniq
   end
 
   def self.strict_matching_query(query)

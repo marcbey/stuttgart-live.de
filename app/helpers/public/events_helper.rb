@@ -203,6 +203,8 @@ module Public::EventsHelper
     [
       event.cache_key_with_version,
       cache_key_with_version_for(event.venue_record),
+      cache_key_with_version_for(event.canonical_venue_record),
+      cache_key_with_version_for(AppSetting.venue_duplicate_mappings_record),
       cache_key_with_version_for(event.public_ticket_offer),
       records_cache_fingerprint(event.event_offers),
       records_cache_fingerprint(event.event_images),

@@ -43,7 +43,7 @@ module Public
       relation = relation.where(start_at: analysis.resolution.from..analysis.resolution.to)
       return relation unless analysis.venue_query.present?
 
-      relation.where(venue_id: Venue.strict_matching_query(analysis.venue_query).select(:id))
+      relation.where(venue_id: Venue.strict_matching_ids_with_aliases(analysis.venue_query))
     end
 
     def apply_query(relation)

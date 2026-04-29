@@ -27,7 +27,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Einstellungen"
     assert_select "[data-controller='settings-tabs']", count: 1
-    assert_select "[role='tab']", count: 7
+    assert_select "[role='tab']", count: 8
     assert_select "#settings-tab-meta-connection[aria-selected='true']", count: 1
     assert_select "article.social-post-card", count: 2
     assert_select "form[action='#{backend_settings_path(section: :sks_promoter_ids)}'] textarea[name='app_setting[sks_promoter_ids_text]']", count: 0
@@ -314,6 +314,35 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, AppSetting.find_by!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).value
   end
 
+  test "admin can update venue duplicate mappings" do
+    sign_in_as(@admin)
+
+    patch backend_settings_url(section: :venue_duplicate_mappings), params: {
+      app_setting: {
+        venue_duplicate_mappings_text: <<~TEXT
+          KKL Beethoven-Saal Stuttgart => Liederhalle Beethoven-Saal
+          Liederhalle Beethovensaal => Liederhalle Beethoven-Saal
+        TEXT
+      }
+    }
+
+    assert_redirected_to edit_backend_settings_url(section: :venue_duplicate_mappings)
+    assert_equal [
+      {
+        "alias" => "KKL Beethoven-Saal Stuttgart",
+        "canonical" => "Liederhalle Beethoven-Saal",
+        "alias_key" => "kkl beethoven saal",
+        "canonical_key" => "liederhalle beethoven saal"
+      },
+      {
+        "alias" => "Liederhalle Beethovensaal",
+        "canonical" => "Liederhalle Beethoven-Saal",
+        "alias_key" => "liederhalle beethovensaal",
+        "canonical_key" => "liederhalle beethoven saal"
+      }
+    ], AppSetting.venue_duplicate_mappings
+  end
+
   test "admin cannot save empty sks promoter ids" do
     sign_in_as(@admin)
 
@@ -391,6 +420,20 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "muss eine positive Ganzzahl sein"
   end
 
+  test "admin cannot save invalid venue duplicate mapping" do
+    sign_in_as(@admin)
+
+    patch backend_settings_url(section: :venue_duplicate_mappings), params: {
+      app_setting: {
+        venue_duplicate_mappings_text: "KKL Beethoven-Saal Stuttgart"
+      }
+    }
+
+    assert_response :unprocessable_entity
+    assert_select "#settings-tab-venue-duplicate-mappings[aria-selected='true']", count: 1
+    assert_includes response.body, "muss das Format Alias =&gt; Kanonische Venue verwenden"
+  end
+
   private
 
   def reset_settings!
@@ -406,7 +449,8 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       AppSetting::LLM_GENRE_GROUPING_MODEL_KEY,
       AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY,
       AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY,
-      AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY
+      AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY,
+      AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY
     ].each do |key|
       AppSetting.where(key: key).delete_all
     end
@@ -547,6 +591,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Gruppiere\n{{group_count}}\n{{input_json}}")
     AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 30)
     AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
+    AppSetting.create!(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY, value: [])
     AppSetting.reset_cache!
   end
 

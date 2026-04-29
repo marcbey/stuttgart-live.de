@@ -39,7 +39,7 @@ module Venues
         venue_scope
           .includes(logo_attachment: [ :blob ])
           .to_a
-          .group_by { |venue| Venue.match_key(venue.name) }
+          .group_by { |venue| Venue.canonical_match_key(venue.name) }
           .values
           .select { |venues| venues.size > 1 }
       end

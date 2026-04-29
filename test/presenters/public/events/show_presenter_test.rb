@@ -73,6 +73,11 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     end
   end
 
+  teardown do
+    AppSetting.where(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY).delete_all
+    AppSetting.reset_cache!
+  end
+
   test "exposes hero, meta and navigation data" do
     event = build_event(
       artist_name: "Band",
@@ -388,6 +393,29 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Im Wizemann", presenter.venue_info.name
   end
 
+  test "uses canonical venue for detail location and venue info" do
+    canonical = Venue.create!(
+      name: "Liederhalle Beethoven-Saal",
+      address: "Berliner Platz 1, Stuttgart",
+      external_url: "https://liederhalle.example"
+    )
+    alias_venue = Venue.create!(name: "Liederhalle Beethovensaal")
+    configure_venue_duplicate_mapping(alias_name: alias_venue.name, canonical_name: canonical.name)
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      city: "Stuttgart",
+      venue_record: alias_venue
+    )
+
+    presenter = build_presenter(event)
+
+    assert_equal "Liederhalle Beethoven-Saal, Stuttgart", presenter.send(:venue_location)
+    assert_equal "Liederhalle Beethoven-Saal", presenter.venue_info.name
+    assert_equal "Berliner Platz 1, Stuttgart", presenter.venue_info.address
+    assert_equal "https://liederhalle.example", presenter.venue_info.external_url
+  end
+
   test "adds youtube fallback link when url is not embeddable" do
     event = build_event(
       artist_name: "Band",
@@ -571,5 +599,20 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       filename:,
       content_type: "image/svg+xml"
     )
+  end
+
+  def configure_venue_duplicate_mapping(alias_name:, canonical_name:)
+    AppSetting.create!(
+      key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
+      value: [
+        {
+          "alias" => alias_name,
+          "canonical" => canonical_name,
+          "alias_key" => Venue.match_key(alias_name),
+          "canonical_key" => Venue.match_key(canonical_name)
+        }
+      ]
+    )
+    AppSetting.reset_cache!
   end
 end
