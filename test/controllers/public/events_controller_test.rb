@@ -411,6 +411,43 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".lane-page-section [data-section-view-target='list'] .event-listing-card", minimum: 3
   end
 
+  test "highlights lane sks filter excludes manually highlighted non sks events" do
+    sks_event = Event.create!(
+      slug: "lane-page-sks-filter-sks",
+      source_fingerprint: "test::public::lane-page::sks-filter::sks",
+      title: "Lane Page SKS Filter SKS",
+      artist_name: "Lane SKS Filter SKS Artist",
+      start_at: 12.days.from_now.change(hour: 18, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      source_snapshot: {}
+    )
+    manual_highlight = Event.create!(
+      slug: "lane-page-sks-filter-manual-highlight",
+      source_fingerprint: "test::public::lane-page::sks-filter::manual-highlight",
+      title: "Lane Page SKS Filter Manual Highlight",
+      artist_name: "Lane SKS Filter Manual Highlight Artist",
+      start_at: 12.days.from_now.change(hour: 19, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: "99999",
+      highlighted: true,
+      source_snapshot: {}
+    )
+
+    get "/highlights", params: { filter: "sks" }
+
+    assert_response :success
+    assert_select "#lane-event-grid .event-card-copy h2", text: sks_event.artist_name
+    assert_select "#lane-event-grid .event-card-copy h2", text: manual_highlight.artist_name, count: 0
+    assert_select ".lane-page-section [data-section-view-target='list'] .event-listing-card", count: 1
+  end
+
   test "russ live lane renders with highlights look and only public future russ live events" do
     visible_russ_live = Event.create!(
       slug: "lane-page-russ-live-visible",

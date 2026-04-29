@@ -407,6 +407,18 @@ module Public
     def assign_lane_page(lane)
       case lane.key
       when "highlights"
+        if explicit_sks_filter?
+          relation = published_visible_events_relation(
+            scope: homepage_events_relation.where(promoter_id: Event.sks_promoter_ids),
+            filter: Public::Events::BrowseState::FILTER_ALL,
+            event_date: @browse_state.event_date,
+            query: nil
+          ).reorder(:start_at, :id)
+          @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
+          @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
+          return
+        end
+
         scoped_highlights = published_visible_events_relation(
           scope: homepage_events_relation,
           filter: Public::Events::BrowseState::FILTER_SKS,
@@ -484,6 +496,10 @@ module Public
 
     def effective_public_series_ids_for_relation(relation)
       Public::Events::EffectiveSeriesIdsQuery.call(relation)
+    end
+
+    def explicit_sks_filter?
+      params[:filter].to_s == Public::Events::BrowseState::FILTER_SKS
     end
 
     def exclude_scheduled_published_events(relation)
