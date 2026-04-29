@@ -103,6 +103,40 @@ class AppSettingTest < ActiveSupport::TestCase
                  AppSetting.venue_duplicate_mapping_for_key("liederhalle beethovensaal").fetch("canonical")
   end
 
+  test "creates missing canonical venue when venue duplicate mappings are saved" do
+    alias_venue = Venue.create!(
+      name: "Liederhalle Beethovensaal",
+      description: "Alias-Beschreibung",
+      external_url: "https://alias.example",
+      address: "Aliasstraße 1, 70173 Stuttgart"
+    )
+    alias_venue.logo.attach(create_uploaded_blob(filename: "alias.png"))
+
+    AppSetting.venue_duplicate_mappings_record.update!(
+      venue_duplicate_mappings_text: "Liederhalle Beethovensaal => Liederhalle Beethoven-Saal"
+    )
+
+    canonical = Venue.find_by_match_name("Liederhalle Beethoven-Saal")
+    assert_predicate canonical, :present?
+    assert_equal "Liederhalle Beethoven-Saal", canonical.name
+    assert_equal "Alias-Beschreibung", canonical.description
+    assert_equal "https://alias.example", canonical.external_url
+    assert_equal "Aliasstraße 1, 70173 Stuttgart", canonical.address
+    assert_equal alias_venue.logo.blob, canonical.logo.blob
+  end
+
+  test "does not duplicate existing canonical venue when venue duplicate mappings are saved" do
+    canonical = Venue.create!(name: "Liederhalle Beethoven-Saal")
+
+    assert_no_difference -> { Venue.select { |venue| Venue.match_key(venue.name) == "liederhalle beethoven saal" }.size } do
+      AppSetting.venue_duplicate_mappings_record.update!(
+        venue_duplicate_mappings_text: "Liederhalle Beethovensaal => Liederhalle Beethoven-Saal"
+      )
+    end
+
+    assert_equal canonical, Venue.find_by_match_name("Liederhalle Beethoven-Saal")
+  end
+
   test "rejects invalid venue duplicate mapping lines" do
     setting = AppSetting.new(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY)
     setting.venue_duplicate_mappings_text = "KKL Beethoven-Saal Stuttgart"

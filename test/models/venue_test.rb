@@ -63,7 +63,7 @@ class VenueTest < ActiveSupport::TestCase
     assert_equal canonical, Venues::Resolver.call(name: "Liederhalle Beethovensaal")
   end
 
-  test "ignores duplicate mapping when canonical venue does not exist" do
+  test "creates and resolves missing canonical venue for duplicate mapping" do
     AppSetting.create!(
       key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY,
       value: [
@@ -78,8 +78,8 @@ class VenueTest < ActiveSupport::TestCase
 
     venue = Venues::Resolver.call(name: "KKL Beethoven-Saal Stuttgart")
 
-    assert_predicate venue, :new_record?
-    assert_equal "KKL Beethoven-Saal Stuttgart", venue.name
+    assert_predicate venue, :persisted?
+    assert_equal "Liederhalle Beethoven-Saal", venue.name
   end
 
   test "allows blank logo but validates uploaded images" do

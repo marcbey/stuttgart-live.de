@@ -316,6 +316,12 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
 
   test "admin can update venue duplicate mappings" do
     sign_in_as(@admin)
+    alias_venue = Venue.create!(
+      name: "Liederhalle Beethovensaal",
+      description: "Alias-Beschreibung",
+      external_url: "https://alias.example",
+      address: "Aliasstraße 1, 70173 Stuttgart"
+    )
 
     patch backend_settings_url(section: :venue_duplicate_mappings), params: {
       app_setting: {
@@ -341,6 +347,13 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
         "canonical_key" => "liederhalle beethoven saal"
       }
     ], AppSetting.venue_duplicate_mappings
+
+    canonical = Venue.find_by_match_name("Liederhalle Beethoven-Saal")
+    assert_predicate canonical, :present?
+    assert_equal "Alias-Beschreibung", canonical.description
+    assert_equal "https://alias.example", canonical.external_url
+    assert_equal "Aliasstraße 1, 70173 Stuttgart", canonical.address
+    assert_equal canonical, Venues::Resolver.call(name: alias_venue.name)
   end
 
   test "admin cannot save empty sks promoter ids" do

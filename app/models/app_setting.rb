@@ -177,6 +177,7 @@ class AppSetting < ApplicationRecord
 
   before_validation :normalize_valid_venue_duplicate_mappings_value
   after_commit { self.class.reset_cache! }
+  after_commit :backfill_venue_duplicate_mapping_canonicals, on: [ :create, :update ], if: :venue_duplicate_mappings_setting?
 
   class << self
     def sks_promoter_ids
@@ -747,10 +748,18 @@ class AppSetting < ApplicationRecord
   private
 
   def normalize_valid_venue_duplicate_mappings_value
-    return unless key == VENUE_DUPLICATE_MAPPINGS_KEY
+    return unless venue_duplicate_mappings_setting?
 
     parsed = self.class.parse_venue_duplicate_mappings(value)
     self.value = parsed.fetch(:mappings) if parsed.fetch(:errors).empty?
+  end
+
+  def backfill_venue_duplicate_mapping_canonicals
+    Venues::DuplicateMappings::CanonicalBackfill.call(mappings: venue_duplicate_mappings)
+  end
+
+  def venue_duplicate_mappings_setting?
+    key == VENUE_DUPLICATE_MAPPINGS_KEY
   end
 
   def sks_promoter_ids_must_be_present
