@@ -12,7 +12,26 @@
     </p>
   </div>
 
-  <% if @lane.key == "russ_live" %>
+  <% if @lane.key == "highlights" %>
+    <section class="home-slider-section lane-page-section search-results-section">
+      <%= render "home_slider_header",
+                 title: @lane.title,
+                 variant: @lane.header_variant %>
+      <% if @lane_events.any? %>
+        <%= render "event_cards",
+                   events: @lane_events,
+                   browse_state: @browse_state,
+                   effective_series_ids: @lane_effective_series_ids,
+                   container_id: "lane-event-grid",
+                   container_class: "lane-page-grid lane-page-grid--highlights" %>
+      <% else %>
+        <div class="search-results-empty">
+          <h2>Aktuell nichts in dieser Lane</h2>
+          <p>Für „<%= @lane.title %>“ haben wir aktuell keine zukünftigen Events.</p>
+        </div>
+      <% end %>
+    </section>
+  <% elsif @lane.key == "russ_live" %>
     <% nav_content = capture do %>
       <button type="button"
               class="slider-view-toggle"

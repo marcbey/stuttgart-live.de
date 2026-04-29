@@ -400,9 +400,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.parse(response.body)
-    names = document.css("#lane-event-grid .genre-lane-card-name").map(&:text)
+    names = document.css("#lane-event-grid .event-card-copy h2").map(&:text)
 
     assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
+    assert_select "#lane-event-grid.lane-page-grid--highlights", count: 1
+    assert_select "#lane-event-grid article.event-card", minimum: 3
+    assert_select "#lane-event-grid article.genre-lane-card", count: 0
+    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 0
   end
 
   test "russ live lane renders with highlights look and only public future russ live events" do
