@@ -130,10 +130,24 @@ module Merging
           return direct if direct.present? && direct.match?(URL_PATTERN)
 
           base = AppConfig.easyticket_ticket_link_event_base_url.to_s.strip
-          ticket_event_id = payload["title_3"].to_s.strip.presence || external_event_id
+          ticket_event_id = ticket_link_event_id
           return nil if base.blank? || ticket_event_id.blank?
 
-          "#{base.sub(%r{/+\z}, "")}/#{ticket_event_id}"
+          build_ticket_url_from_base(base, ticket_event_id)
+        end
+
+        def ticket_link_event_id
+          payload["id"].to_s.strip.presence || external_event_id
+        end
+
+        def build_ticket_url_from_base(base, ticket_event_id)
+          return format(base, event_id: ticket_event_id) if base.include?("%{event_id}")
+          return base.gsub("{event_id}", ticket_event_id) if base.include?("{event_id}")
+
+          normalized_base = base.sub(%r{/+\z}, "")
+          return normalized_base if normalized_base.end_with?("/#{ticket_event_id}")
+
+          "#{normalized_base}/#{ticket_event_id}"
         end
 
         def ticket_price_text

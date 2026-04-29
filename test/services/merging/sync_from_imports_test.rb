@@ -86,6 +86,41 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal 2, event.source_snapshot.fetch("sources").size
   end
 
+  test "uses easyticket payload id for ticket url when title_3 is descriptive text" do
+    source_easyticket = import_sources(:one)
+
+    RawEventImport.create!(
+      import_source: source_easyticket,
+      import_event_type: "easyticket",
+      source_identifier: "104364:2026-06-16",
+      payload: {
+        "id" => "105758",
+        "event_id" => "104364",
+        "title_3" => "The Beast Goes On",
+        "date_time" => "2026-06-16 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Goldmarks",
+        "title_1" => "Starbenders",
+        "title_2" => "The Beast goes on Tour",
+        "organizer_id" => "382"
+      }
+    )
+
+    begin
+      original_ticket_base_url = AppConfig.method(:easyticket_ticket_link_event_base_url)
+      AppConfig.define_singleton_method(:easyticket_ticket_link_event_base_url) { "https://tickets.example/event/{event_id}" }
+      Merging::SyncFromImports.new.call
+    ensure
+      AppConfig.define_singleton_method(:easyticket_ticket_link_event_base_url, original_ticket_base_url) if original_ticket_base_url
+    end
+
+    event = Event.find_by!(artist_name: "Starbenders", start_at: Time.zone.local(2026, 6, 16, 20, 0, 0))
+    offer = event.event_offers.find_by!(source: "easyticket")
+
+    assert_equal "104364", offer.source_event_id
+    assert_equal "https://tickets.example/event/105758", offer.ticket_url
+  end
+
   test "persists canceled availability from eventim status codes separately from sold out" do
     RawEventImport.create!(
       import_source: import_sources(:two),

@@ -203,6 +203,28 @@ module Importing
         assert_equal({}, with_image.detail_payload)
       end
 
+      test "uses payload id for detail payload when title_3 is descriptive text" do
+        dump_events = [
+          {
+            "id" => "105758",
+            "event_id" => "104364",
+            "title_3" => "The Beast Goes On",
+            "date_time" => "2026-06-17 20:00:00",
+            "location_name" => "Im Wizemann Stuttgart",
+            "title_1" => "Band A Live"
+          }
+        ]
+        detail_fetcher = StubDetailFetcher.new("105758" => {})
+
+        Importer.new(
+          import_source: @source,
+          dump_fetcher: StubDumpFetcher.new(dump_events),
+          detail_fetcher: detail_fetcher
+        ).call
+
+        assert_equal [ "105758" ], detail_fetcher.calls
+      end
+
       test "cancels run when stop is requested during dump fetching" do
         canceling_dump_fetcher = Class.new do
           def fetch_events(heartbeat: nil, stop_requested: nil)

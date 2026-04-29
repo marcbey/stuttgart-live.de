@@ -86,8 +86,6 @@ module Importing
           dump_value("entry_time"),
           dump_data_value("event", "doors_at")
         ).presence
-        ticket_event_id = dump_value("title_3").presence || external_event_id
-
         city = city.presence
         venue_name = venue_name.presence || "Unbekannte Venue"
         title = title.presence || "Unbekanntes Event"
@@ -103,7 +101,7 @@ module Importing
           doors_time: doors_time,
           concert_date_label: format_concert_date(concert_date),
           venue_label: format_venue(city, venue_name),
-          ticket_url: build_ticket_url(ticket_event_id),
+          ticket_url: build_ticket_url(ticket_link_event_id(external_event_id)),
           source_payload_hash: Digest::SHA256.hexdigest(@dump_payload.to_json)
         }
       end
@@ -298,6 +296,10 @@ module Importing
 
           "#{normalized_base_url}/#{ticket_event_id}"
         end
+      end
+
+      def ticket_link_event_id(external_event_id)
+        dump_value("id").presence || external_event_id
       end
 
       def detail_roots

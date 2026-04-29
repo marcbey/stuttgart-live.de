@@ -221,9 +221,7 @@ module Importing
       end
 
       def detail_event_id(event_id, dump_payload)
-        dump_payload["id"].to_s.strip.presence ||
-          dump_payload["title_3"].to_s.strip.presence ||
-          event_id
+        dump_payload["id"].to_s.strip.presence || event_id
       end
 
       def detail_request_not_found?(error)
