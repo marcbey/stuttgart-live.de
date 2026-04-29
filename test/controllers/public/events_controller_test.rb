@@ -2080,6 +2080,58 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='view']", count: 0
   end
 
+  test "index list rows show compact unavailable ribbons" do
+    sold_out_event = Event.create!(
+      slug: "homepage-list-sold-out-ribbon",
+      source_fingerprint: "test::public::homepage-list::sold-out-ribbon",
+      title: "List Ribbon Sold Out",
+      artist_name: "List Sold Out Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    sold_out_event.event_offers.create!(
+      source: "easyticket",
+      source_event_id: "homepage-list-sold-out-ribbon",
+      ticket_url: "https://easyticket.example/homepage-list-sold-out",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: {}
+    )
+
+    canceled_event = Event.create!(
+      slug: "homepage-list-canceled-ribbon",
+      source_fingerprint: "test::public::homepage-list::canceled-ribbon",
+      title: "List Ribbon Canceled",
+      artist_name: "List Canceled Artist",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    canceled_event.event_offers.create!(
+      source: "eventim",
+      source_event_id: "homepage-list-canceled-ribbon",
+      ticket_url: "https://eventim.example/homepage-list-canceled",
+      sold_out: true,
+      priority_rank: 0,
+      metadata: { "availability_status" => "canceled" }
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".section-slider-list .event-sold-out-ribbon", text: "Ausverkauft", minimum: 1
+    assert_select ".section-slider-list .event-sold-out-ribbon", text: "Abgesagt", minimum: 1
+  end
+
   test "index redirects old search links to the dedicated search page" do
     get events_url(filter: "all", q: @published_event.artist_name)
 
@@ -2717,7 +2769,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#search_card_event_#{event.id} .event-card-ticket-overlay", count: 0
   end
 
-  test "genre lane cards render sold out ribbon above the event series badge while list rows stay unchanged" do
+  test "genre lane cards and list rows render sold out ribbon above the event series badge" do
     create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 
     series = EventSeries.create!(origin: "manual", name: "Ribbon Reihe")
@@ -2775,7 +2827,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, card.css(".event-sold-out-ribbon").size
     assert_equal 1, card.css(".event-series-badge").size
     assert_equal 0, card.css(".genre-lane-card-ticket-overlay").size
-    assert_select ".event-listing-card .event-sold-out-ribbon", count: 0
+    assert_select ".section-slider-list .event-listing-card .event-sold-out-ribbon", text: "Ausverkauft", minimum: 1
   end
 
   test "show renders published event by slug" do
