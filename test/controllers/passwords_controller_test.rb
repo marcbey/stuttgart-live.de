@@ -1,9 +1,16 @@
 require "test_helper"
 
 class PasswordsControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   STRONG_PASSWORD = "Sicher123Pass".freeze
 
   setup { @user = users(:two) }
+
+  teardown do
+    clear_enqueued_jobs
+    clear_performed_jobs
+  end
 
   test "new" do
     get new_password_path
@@ -17,7 +24,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "create" do
-    assert_emails 1 do
+    assert_enqueued_emails 1 do
       post passwords_path, params: { email_address: @user.email_address }
     end
     assert_redirected_to new_session_path
