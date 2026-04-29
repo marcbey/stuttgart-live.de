@@ -5,10 +5,13 @@ export default class extends Controller {
   static values = { delay: { type: Number, default: 180 } }
 
   connect() {
+    this.restoreFocusAfterStreamRender = this.restoreFocusAfterStreamRender.bind(this)
+    document.addEventListener("turbo:before-stream-render", this.restoreFocusAfterStreamRender)
     this.toggleClear()
   }
 
   disconnect() {
+    document.removeEventListener("turbo:before-stream-render", this.restoreFocusAfterStreamRender)
     this.clearPendingSubmit()
   }
 
@@ -27,6 +30,7 @@ export default class extends Controller {
   clear(event) {
     event.preventDefault()
     this.queryTarget.value = ""
+    this.queryTarget.focus({ preventScroll: true })
     this.toggleClear()
     this.clearPendingSubmit()
     this.submit()
@@ -47,5 +51,41 @@ export default class extends Controller {
 
     window.clearTimeout(this.submitTimeout)
     this.submitTimeout = null
+  }
+
+  restoreFocusAfterStreamRender(event) {
+    if (!this.queryTargetFocused()) return
+
+    const selection = this.querySelection()
+    const render = event.detail.render
+
+    event.detail.render = (streamElement) => {
+      render(streamElement)
+      this.restoreQueryFocus(selection)
+    }
+  }
+
+  queryTargetFocused() {
+    return this.hasQueryTarget && document.activeElement === this.queryTarget
+  }
+
+  querySelection() {
+    return {
+      start: this.queryTarget.selectionStart,
+      end: this.queryTarget.selectionEnd,
+      direction: this.queryTarget.selectionDirection
+    }
+  }
+
+  restoreQueryFocus(selection) {
+    window.requestAnimationFrame(() => {
+      if (!this.hasQueryTarget) return
+
+      this.queryTarget.focus({ preventScroll: true })
+
+      if (selection.start === null || selection.end === null) return
+
+      this.queryTarget.setSelectionRange(selection.start, selection.end, selection.direction)
+    })
   }
 }
