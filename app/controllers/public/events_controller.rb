@@ -9,7 +9,6 @@ module Public
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
     SHOW_EVENT_SERIES_TERMS_LIMIT = 6
-    RUSS_LIVE_PROMOTER_ID = "382".freeze
     REQUEST_PROFILE_HEADER = "X-Stuttgart-Live-Profile".freeze
 
     before_action :set_browse_state, only: [ :index, :lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
@@ -250,6 +249,7 @@ module Public
         event_date: @browse_state.event_date,
         query: nil
       )
+      scoped_reservix = scoped_all.where(primary_source: "reservix")
       @home_featured_lane = Public::Events::LaneDirectory.highlights
       @home_all_stuttgart_lane = Public::Events::LaneDirectory.all_stuttgart
       @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
@@ -264,7 +264,7 @@ module Public
       end
 
       @home_genre_lanes = homepage_genre_lanes
-      @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_all.limit(HOME_LANE_LIMIT).to_a)
+      @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_reservix.limit(HOME_LANE_LIMIT).to_a)
       @home_highlight_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_highlight_events)
       tagestipp_scope = tagestipp_relation
       @home_tagestipp_events = Public::Events::SeriesRepresentativeSelector.call(tagestipp_scope.to_a).first(HOME_LANE_LIMIT)
@@ -402,6 +402,7 @@ module Public
         event_date: Time.zone.today,
         query: nil
       )
+        .where.not(primary_source: "reservix")
         .reorder(:start_at, :id)
     end
 
@@ -439,22 +440,13 @@ module Public
         ).reorder(:start_at, :id)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(fallback_relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.to_a)
-      when "russ_live"
-        relation = published_visible_events_relation(
-          scope: homepage_events_relation.where(promoter_id: RUSS_LIVE_PROMOTER_ID),
-          filter: Public::Events::BrowseState::FILTER_ALL,
-          event_date: @browse_state.event_date,
-          query: nil
-        ).reorder(:start_at, :id)
-        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
-        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
       when "all_stuttgart"
         relation = published_visible_events_relation(
           scope: homepage_events_relation,
           filter: Public::Events::BrowseState::FILTER_ALL,
           event_date: @browse_state.event_date,
           query: nil
-        )
+        ).where(primary_source: "reservix")
         @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
       when "tagestipp"

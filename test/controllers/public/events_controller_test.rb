@@ -48,7 +48,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Review Artist"
     assert_not_includes response.body, "event-card-status-select"
     assert_select ".event-card-genre", count: 0
-    assert_select ".lane-header.lane-header--genre", count: 0
+    assert_select ".genre-lane-section", count: 0
   end
 
   test "index exposes opt-in profile headers" do
@@ -70,10 +70,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index renders configured homepage genre lanes in priority order" do
-    _, rock_group, pop_group = create_homepage_genre_snapshot
-    AppSetting.homepage_genre_lane_slugs_record.update!(value: [ pop_group.slug, rock_group.slug ])
+    snapshot, rock_group, pop_group = create_homepage_genre_snapshot
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ pop_group.slug, rock_group.slug ])
     AppSetting.reset_cache!
-    @published_event.genres.clear
 
     highlighted_event = Event.create!(
       slug: "genre-lane-highlighted",
@@ -180,6 +179,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       node.name == "section" && node["class"].to_s.include?("home-featured-section")
     end
 
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
     assert pop_section.present?, "expected configured pop lane to be rendered"
     assert rock_section.present?, "expected configured rock lane to be rendered"
     assert document.at_css(".lane-header.lane-header--genre").present?, "expected standard genre header variant"
@@ -196,13 +196,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes rock_names, past_event.artist_name
   end
 
-  test "index does not render homepage genre lanes without configured slugs" do
+  test "index does not render homepage genre lanes without selected snapshot" do
     AppSetting.reset_cache!
 
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select ".lane-header.lane-header--genre", count: 0
+    assert_select ".genre-lane-section", count: 0
   end
 
   test "homepage lane header titles link to their landing pages when available" do
@@ -351,180 +351,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".lane-header.lane-header--tagestipp .lane-header-title", text: "Tagestipp"
     assert_select "#lane-event-grid .genre-lane-card-name", text: today_event.artist_name
-  end
-
-  test "highlights lane sorts manually highlighted events chronologically" do
-    highlighted_event = Event.create!(
-      slug: "lane-page-highlight-later",
-      source_fingerprint: "test::public::lane-page::highlight::later",
-      title: "Lane Page Highlight Later",
-      artist_name: "Lane Highlight Later Artist",
-      start_at: 12.days.from_now.change(hour: 21, min: 0, sec: 0),
-      venue: "Liederhalle",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      promoter_id: "99999",
-      highlighted: true,
-      source_snapshot: {}
-    )
-    earlier_event = Event.create!(
-      slug: "lane-page-highlight-earlier",
-      source_fingerprint: "test::public::lane-page::highlight::earlier",
-      title: "Lane Page Highlight Earlier",
-      artist_name: "Lane Highlight Earlier Artist",
-      start_at: 12.days.from_now.change(hour: 18, min: 0, sec: 0),
-      venue: "Porsche-Arena",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      promoter_id: AppSetting.sks_promoter_ids.first,
-      source_snapshot: {}
-    )
-    middle_event = Event.create!(
-      slug: "lane-page-highlight-middle",
-      source_fingerprint: "test::public::lane-page::highlight::middle",
-      title: "Lane Page Highlight Middle",
-      artist_name: "Lane Highlight Middle Artist",
-      start_at: 12.days.from_now.change(hour: 19, min: 30, sec: 0),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      promoter_id: AppSetting.sks_promoter_ids.last,
-      source_snapshot: {}
-    )
-
-    get "/highlights"
-
-    assert_response :success
-
-    document = Nokogiri::HTML.parse(response.body)
-    names = document.css("#lane-event-grid .event-card-copy h2").map(&:text)
-
-    assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
-    assert_select "#lane-event-grid.lane-page-grid--highlights", count: 1
-    assert_select "#lane-event-grid article.event-card", minimum: 3
-    assert_select "#lane-event-grid article.genre-lane-card", count: 0
-    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 1
-    assert_select ".lane-page-section [data-section-view-target='slider'] #lane-event-grid", count: 1
-    assert_select ".lane-page-section [data-section-view-target='list'] .event-listing-card", minimum: 3
-  end
-
-  test "highlights lane sks filter excludes manually highlighted non sks events" do
-    sks_event = Event.create!(
-      slug: "lane-page-sks-filter-sks",
-      source_fingerprint: "test::public::lane-page::sks-filter::sks",
-      title: "Lane Page SKS Filter SKS",
-      artist_name: "Lane SKS Filter SKS Artist",
-      start_at: 12.days.from_now.change(hour: 18, min: 0, sec: 0),
-      venue: "Porsche-Arena",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      promoter_id: AppSetting.sks_promoter_ids.first,
-      source_snapshot: {}
-    )
-    manual_highlight = Event.create!(
-      slug: "lane-page-sks-filter-manual-highlight",
-      source_fingerprint: "test::public::lane-page::sks-filter::manual-highlight",
-      title: "Lane Page SKS Filter Manual Highlight",
-      artist_name: "Lane SKS Filter Manual Highlight Artist",
-      start_at: 12.days.from_now.change(hour: 19, min: 0, sec: 0),
-      venue: "Liederhalle",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      promoter_id: "99999",
-      highlighted: true,
-      source_snapshot: {}
-    )
-
-    get "/highlights", params: { filter: "sks" }
-
-    assert_response :success
-    assert_select "#lane-event-grid .event-card-copy h2", text: sks_event.artist_name
-    assert_select "#lane-event-grid .event-card-copy h2", text: manual_highlight.artist_name, count: 0
-    assert_select ".lane-page-section [data-section-view-target='list'] .event-listing-card", count: 1
-  end
-
-  test "russ live lane renders with highlights look and only public future russ live events" do
-    visible_russ_live = Event.create!(
-      slug: "lane-page-russ-live-visible",
-      source_fingerprint: "test::public::lane-page::russ-live::visible",
-      title: "RUSS Live Visible",
-      artist_name: "RUSS Live Visible Artist",
-      promoter_id: "382",
-      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      primary_source: "eventim",
-      source_snapshot: {}
-    )
-    Event.create!(
-      slug: "lane-page-russ-live-other-promoter",
-      source_fingerprint: "test::public::lane-page::russ-live::other-promoter",
-      title: "Other Promoter",
-      artist_name: "Other Promoter Artist",
-      promoter_id: "99999",
-      start_at: 15.days.from_now.change(hour: 20, min: 0, sec: 0),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      primary_source: "eventim",
-      source_snapshot: {}
-    )
-    Event.create!(
-      slug: "lane-page-russ-live-past",
-      source_fingerprint: "test::public::lane-page::russ-live::past",
-      title: "Past Russ Live",
-      artist_name: "Past Russ Live Artist",
-      promoter_id: "382",
-      start_at: 2.days.ago.change(hour: 20, min: 0, sec: 0),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 3.days.ago,
-      primary_source: "eventim",
-      source_snapshot: {}
-    )
-    Event.create!(
-      slug: "lane-page-russ-live-unpublished",
-      source_fingerprint: "test::public::lane-page::russ-live::unpublished",
-      title: "Unpublished Russ Live",
-      artist_name: "Unpublished Russ Live Artist",
-      promoter_id: "382",
-      start_at: 16.days.from_now.change(hour: 20, min: 0, sec: 0),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      status: "ready_for_publish",
-      primary_source: "eventim",
-      source_snapshot: {}
-    )
-
-    get "/russ-live"
-
-    assert_response :success
-    assert_select "section.lane-page-section.search-results-section", count: 1
-    assert_select ".lane-header.lane-header--highlights .lane-header-title", text: "RUSS Live"
-    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 1
-    assert_select "#russ-live-grid.lane-page-grid", count: 1
-    assert_select "#russ-live-grid article.event-card", count: 1
-    assert_select "#russ-live-grid .event-card-copy h2", text: visible_russ_live.artist_name
-    assert_select ".section-slider-list[hidden]", count: 1
-    assert_select "#russ-live-grid .event-card-copy h2", text: "Other Promoter Artist", count: 0
-    assert_select "#russ-live-grid .event-card-copy h2", text: "Past Russ Live Artist", count: 0
-    assert_select "#russ-live-grid .event-card-copy h2", text: "Unpublished Russ Live Artist", count: 0
-  end
-
-  test "homepage does not link to russ live lane" do
-    get root_url
-
-    assert_response :success
-    assert_select ".lane-header-title-link[href='/russ-live']", count: 0
   end
 
   test "genre lane page resolves by snapshot group slug even when it is not on the homepage" do
@@ -1671,7 +1497,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
   end
 
-  test "index sorts manually highlighted events chronologically in homepage highlights" do
+  test "index places manually highlighted events first in homepage highlights" do
     highlighted_event = Event.create!(
       slug: "homepage-highlight-later",
       source_fingerprint: "test::homepage::highlight::later",
@@ -1726,10 +1552,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
 
-    assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
+    assert_equal [ highlighted_event.artist_name, earlier_event.artist_name, middle_event.artist_name ], names.first(3)
   end
 
-  test "index shows events from all providers in the all events slider" do
+  test "index shows only reservix events in the all events slider" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 
     reservix_event = Event.create!(
@@ -1757,20 +1583,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       status: "published",
       published_at: 1.day.ago,
       primary_source: "eventim",
-      source_snapshot: {}
-    )
-    sks_event = Event.create!(
-      slug: "sks-home-slider-event",
-      source_fingerprint: "test::homepage::sks::slider",
-      title: "SKS Homepage Slider Event",
-      artist_name: "SKS Slider Artist",
-      start_at: future_start + 90.minutes,
-      venue: "Hanns-Martin-Schleyer-Halle",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      primary_source: "eventim",
-      promoter_id: AppSetting.sks_promoter_ids.first,
       source_snapshot: {}
     )
 
@@ -1811,12 +1623,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "section.genre-lane-section", text: /alles aus stuttgart/ do
       assert_select ".genre-lane-card-name", text: reservix_event.artist_name
       assert_select ".genre-lane-card-name", text: late_reservix_event.artist_name
-      assert_select ".genre-lane-card-name", text: eventim_event.artist_name
-      assert_select ".genre-lane-card-name", text: sks_event.artist_name
+      assert_select ".genre-lane-card-name", text: eventim_event.artist_name, count: 0
     end
   end
 
-  test "index limits the all events slider to 15 events" do
+  test "index limits the all events slider to 15 reservix events" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
     included_event_names = []
     excluded_event_name = nil
@@ -1970,7 +1781,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "index shows today's events from all providers in tagestipp" do
+  test "index shows only today's non-reservix events in tagestipp" do
     today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
 
     sks_today_event = Event.create!(
@@ -2078,7 +1889,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes names, today_event.artist_name
     assert_includes names, sks_today_event.artist_name
     assert_includes names, late_today_event.artist_name
-    assert_includes names, reservix_today_event.artist_name
+    assert_not_includes names, reservix_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
   end
 
@@ -2981,9 +2792,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-meta-line", text: /LKA Longhorn/
     assert_select ".event-detail-time-line", text: /Einlass/, count: 0
     assert_includes response.body, "Preis: 45 EUR"
-    assert_select ".event-detail-tag", text: "Jazz, Blues & Soul"
-    assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
-    assert_select ".event-detail-tag", text: "Rock & Alternative"
+    assert_select ".event-detail-tag", text: "Jazz"
+    assert_select ".event-detail-tag", text: "Pop"
+    assert_select ".event-detail-tag", text: "Rock"
     assert_select "script[type='application/ld+json']", /Published Artist/
   end
 
@@ -3051,6 +2862,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
+
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
     build_homepage_genre_enrichment(event: regular_event, genres: [ "Rock" ])
     build_homepage_genre_enrichment(event: sks_event, genres: [ "Rock" ])
@@ -3079,6 +2892,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "show limits related genre lane to ten events" do
+    snapshot, = create_homepage_genre_snapshot
+
+    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
+
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
 
     related_events = 12.times.map do |index|
@@ -3110,13 +2927,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes related_names, related_events.last.artist_name
   end
 
-  test "show does not render related genre lane without additional matches" do
+  test "show does not render related genre lane without selected snapshot or additional matches" do
     get event_url(@published_event.slug)
 
     assert_response :success
     assert_select ".event-detail-related-list", count: 0
 
+    snapshot, = create_homepage_genre_snapshot
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
+    AppSetting.where(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY).delete_all
+    AppSetting.reset_cache!
 
     get event_url(@published_event.slug)
 
@@ -3415,16 +3235,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       instagram_link: "https://instagram.example/llm-band",
       facebook_link: "https://facebook.example/llm-band",
       youtube_link: "https://www.youtube.com/watch?v=llm123",
+      genre: [ "Indie", "Synthpop" ],
       source_run: import_runs(:one),
       model: "gpt-test",
       prompt_version: "v1",
       raw_response: {}
     )
-    event.genres = [ genres(:pop) ]
-    event.sub_genres = [
-      SubGenre.find_or_create_by!(slug: "indie") { |sub_genre| sub_genre.name = "Indie" },
-      SubGenre.find_or_create_by!(slug: "synthpop") { |sub_genre| sub_genre.name = "Synthpop" }
-    ]
     event.venue_record.update!(
       description: "Venue Modell Beschreibung",
       external_url: "https://venue.example/im-wizemann",
@@ -3461,22 +3277,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
     event.create_llm_enrichment!(
+      genre: [ "Pop", "Deutschpop" ],
       source_run: import_runs(:one),
       model: "gpt-test",
       prompt_version: "v1",
       raw_response: {}
     )
-    event.genres = [ genres(:pop) ]
-    event.sub_genres = [
-      SubGenre.find_or_create_by!(slug: "deutschpop") { |sub_genre| sub_genre.name = "Deutschpop" }
-    ]
 
     get event_url(event.slug)
 
     assert_response :success
     assert_select "h1", text: "Kuult"
     assert_select ".event-detail-title", count: 0
-    assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
+    assert_select ".event-detail-tag", text: "Pop"
     assert_select ".event-detail-tag", text: "Deutschpop"
     assert_select "h2", text: "Genres", count: 0
     assert_select ".event-detail-copy-block-primary p", text: "Fallschirmvertrauen - Tour 2026", count: 1
@@ -4646,32 +4459,42 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  def create_homepage_genre_snapshot(selected: true, lane_slugs: [ "rock-alternative", "pop-indie-singer-songwriter" ])
-    rock_group = genres(:rock)
-    pop_group = genres(:pop)
+  def create_homepage_genre_snapshot(selected: true, lane_slugs: [ "rock-alternative", "pop-mainstream" ])
+    run = import_sources(:two).import_runs.create!(
+      source_type: "llm_genre_grouping",
+      status: "succeeded",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago
+    )
 
-    if selected
-      AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
-      AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: lane_slugs)
-      AppSetting.reset_cache!
-    end
+    snapshot = run.create_llm_genre_grouping_snapshot!(
+      active: false,
+      requested_group_count: 30,
+      effective_group_count: 2,
+      source_genres_count: 2,
+      model: "gpt-5-mini",
+      prompt_template_digest: "digest",
+      request_payload: {},
+      raw_response: {}
+    )
 
-    [ nil, rock_group, pop_group ]
+    rock_group = snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
+    pop_group = snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
+    snapshot.create_homepage_genre_lane_configuration!(lane_slugs:)
+    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: snapshot.id) if selected
+
+    [ snapshot, rock_group, pop_group ]
   end
 
   def build_homepage_genre_enrichment(event:, genres:)
-    event.genres = genres.map { |name| homepage_genre_for(name) }
-  end
-
-  def homepage_genre_for(name)
-    case name
-    when "Rock"
-      genres(:rock)
-    when "Pop"
-      genres(:pop)
-    else
-      Genre.find_by!(name: name)
-    end
+    EventLlmEnrichment.create!(
+      event: event,
+      source_run: import_runs(:one),
+      genre: genres,
+      model: "gpt-5-mini",
+      prompt_version: "v1",
+      raw_response: {}
+    )
   end
 
   def create_presenter(name:, svg: false)
