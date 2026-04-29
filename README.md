@@ -476,8 +476,8 @@ Die Antwort enthält dann `X-Stuttgart-Live-Profile` und `Server-Timing` mit Wal
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `MAILCHIMP_*`, `SMTP_*`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, optional `meta.instagram_app_id`, `meta.instagram_app_secret`, `meta.instagram_redirect_uri`
-- statisch im Code: `GOOGLE_ANALYTICS_ID`, `MAILER_FROM`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `MAILCHIMP_*`, `SMTP_*`, `mailer.from`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, optional `meta.instagram_app_id`, `meta.instagram_app_secret`, `meta.instagram_redirect_uri`
+- statisch im Code: `GOOGLE_ANALYTICS_ID`
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
 - lokale Datei `config/master.key`: Schlüssel für `config/credentials.yml.enc`
@@ -486,6 +486,7 @@ Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese
 - GitHub-Variablen für Sentry-Releases: `SENTRY_ORG`, `SENTRY_PROJECT`
 
 Ohne Mailchimp-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus.
+Beim SMTP-Versand muss `mailer.from` oder der ENV-Fallback `MAILER_FROM` auf eine Absenderadresse zeigen, die vom konfigurierten SMTP-Konto akzeptiert wird.
 
 ### Credentials bearbeiten
 

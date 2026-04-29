@@ -13,6 +13,7 @@ Rails.application.configure do
   smtp_domain = AppConfig.smtp_domain || app_host
   smtp_authentication = AppConfig.smtp_authentication
   smtp_enable_starttls_auto = AppConfig.smtp_enable_starttls_auto
+  mailer_from = AppConfig.mailer_from
 
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -67,6 +68,7 @@ Rails.application.configure do
   config.solid_queue.connects_to = { database: { writing: :queue } }
 
   config.action_mailer.raise_delivery_errors = true
+  config.x.mailer_from = mailer_from if mailer_from.present?
 
   # Set host to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: app_host, protocol: "https" }.compact

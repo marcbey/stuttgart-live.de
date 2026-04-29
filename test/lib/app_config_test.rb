@@ -43,6 +43,20 @@ class AppConfigTest < ActiveSupport::TestCase
     end
   end
 
+  test "reads mailer from address from credentials" do
+    with_credentials(mailer: { from: "Stuttgart Live <mail@example.com>" }) do
+      assert_equal "Stuttgart Live <mail@example.com>", AppConfig.mailer_from
+    end
+  end
+
+  test "falls back to env for mailer from address" do
+    with_env("MAILER_FROM" => "Stuttgart Live <env-mail@example.com>") do
+      with_credentials({}) do
+        assert_equal "Stuttgart Live <env-mail@example.com>", AppConfig.mailer_from
+      end
+    end
+  end
+
   test "reads meta values from credentials" do
     with_credentials(meta: {
       app_id: "meta-app-id",

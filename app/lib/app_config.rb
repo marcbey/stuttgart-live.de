@@ -92,6 +92,10 @@ module AppConfig
       fetch(:smtp, :enable_starttls_auto, env: "SMTP_ENABLE_STARTTLS_AUTO")
     end
 
+    def mailer_from
+      fetch(:mailer, :from, env: "MAILER_FROM")
+    end
+
     def meta_app_id
       fetch(:meta, :app_id, env: "META_APP_ID")
     end
