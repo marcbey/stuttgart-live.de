@@ -108,7 +108,6 @@ class Event < ApplicationRecord
       .chronological
   }
   scope :homepage_highlights, -> { where(promoter_id: sks_promoter_ids).or(where(highlighted: true)) }
-  scope :highlighted_first, -> { reorder(Arel.sql("CASE WHEN events.highlighted = TRUE THEN 0 ELSE 1 END"), :start_at, :id) }
   scope :sks_first, -> { reorder(Arel.sql(sks_first_order_sql), :start_at, :id) }
   scope :search_priority_first, -> { reorder(Arel.sql(search_priority_order_sql), :start_at, :id) }
   scope :promotion_banner_live, lambda {

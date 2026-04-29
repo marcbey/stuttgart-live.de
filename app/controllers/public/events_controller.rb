@@ -243,7 +243,7 @@ module Public
         filter: Public::Events::BrowseState::FILTER_SKS,
         event_date: @browse_state.event_date,
         query: nil
-      ).highlighted_first
+      ).reorder(:start_at, :id)
       scoped_all = published_visible_events_relation(
         scope: homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_ALL,
@@ -412,7 +412,7 @@ module Public
           filter: Public::Events::BrowseState::FILTER_SKS,
           event_date: @browse_state.event_date,
           query: nil
-        ).highlighted_first
+        ).reorder(:start_at, :id)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(scoped_highlights)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.to_a)
 

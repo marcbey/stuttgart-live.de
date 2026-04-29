@@ -353,6 +353,58 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#lane-event-grid .genre-lane-card-name", text: today_event.artist_name
   end
 
+  test "highlights lane sorts manually highlighted events chronologically" do
+    highlighted_event = Event.create!(
+      slug: "lane-page-highlight-later",
+      source_fingerprint: "test::public::lane-page::highlight::later",
+      title: "Lane Page Highlight Later",
+      artist_name: "Lane Highlight Later Artist",
+      start_at: 12.days.from_now.change(hour: 21, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: "99999",
+      highlighted: true,
+      source_snapshot: {}
+    )
+    earlier_event = Event.create!(
+      slug: "lane-page-highlight-earlier",
+      source_fingerprint: "test::public::lane-page::highlight::earlier",
+      title: "Lane Page Highlight Earlier",
+      artist_name: "Lane Highlight Earlier Artist",
+      start_at: 12.days.from_now.change(hour: 18, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      source_snapshot: {}
+    )
+    middle_event = Event.create!(
+      slug: "lane-page-highlight-middle",
+      source_fingerprint: "test::public::lane-page::highlight::middle",
+      title: "Lane Page Highlight Middle",
+      artist_name: "Lane Highlight Middle Artist",
+      start_at: 12.days.from_now.change(hour: 19, min: 30, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: AppSetting.sks_promoter_ids.last,
+      source_snapshot: {}
+    )
+
+    get "/highlights"
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    names = document.css("#lane-event-grid .genre-lane-card-name").map(&:text)
+
+    assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
+  end
+
   test "russ live lane renders with highlights look and only public future russ live events" do
     visible_russ_live = Event.create!(
       slug: "lane-page-russ-live-visible",
@@ -1576,7 +1628,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
   end
 
-  test "index places manually highlighted events first in homepage highlights" do
+  test "index sorts manually highlighted events chronologically in homepage highlights" do
     highlighted_event = Event.create!(
       slug: "homepage-highlight-later",
       source_fingerprint: "test::homepage::highlight::later",
@@ -1631,7 +1683,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
 
-    assert_equal [ highlighted_event.artist_name, earlier_event.artist_name, middle_event.artist_name ], names.first(3)
+    assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
   end
 
   test "index shows events from all providers in the all events slider" do
