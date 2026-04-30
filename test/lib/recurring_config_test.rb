@@ -10,7 +10,7 @@ class RecurringConfigTest < ActiveSupport::TestCase
       production.fetch("hourly_publish_scheduled_events").fetch("command")
     )
     assert_equal(
-      "every hour at minute 22",
+      "1,16,31,46 * * * *",
       production.fetch("hourly_publish_scheduled_events").fetch("schedule")
     )
     assert_equal(

@@ -5,7 +5,7 @@ production:
 
   hourly_publish_scheduled_events:
     command: "Events::Publication::PublishScheduledEventsJob.perform_later"
-    schedule: every hour at minute 22
+    schedule: "1,16,31,46 * * * *"
 
   hourly_check_meta_connection_health:
     command: "Meta::CheckConnectionHealthJob.perform_later"

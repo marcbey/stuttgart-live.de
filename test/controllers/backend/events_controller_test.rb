@@ -198,6 +198,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-event textarea[name='event[event_info]']", count: 0
     assert_select "#event-editor-panel-event input[name='event[published_at]'][type='hidden'][value='']", count: 1
     assert_select "#event-editor-panel-event input[name='event[published_at]'][type='datetime-local']", count: 1
+    assert_select "#event-editor-panel-event .form-hint", text: /Automatisch veröffentlicht werden nur Events mit Status „Unpublished“, die „Vollständig“ sind\./, count: 1
     assert_select "[data-controller='event-image-editor-upload']", minimum: 2
     assert_select "button", text: "Upload", count: 0
     assert_select "input[name='event_image[files][]'][required]", count: 0
