@@ -3,7 +3,7 @@ module Backend
     helper Backend::ImportSourcesHelper
     helper Backend::ImportRunsHelper
 
-    before_action :set_import_run, only: [ :show, :add_filtered_city, :remove_whitelist_city ]
+    before_action :set_import_run, only: [ :show, :add_filtered_city, :remove_whitelist_city, :resume_llm_enrichment ]
 
     def show
       @run_errors = @import_run.import_run_errors.order(created_at: :desc)
@@ -44,6 +44,16 @@ module Backend
       notice = "'#{city}' wurde aus der Ortsliste entfernt."
 
       redirect_to backend_import_run_path(@import_run), notice: notice
+    end
+
+    def resume_llm_enrichment
+      result = llm_run_resumer.call(source_run: @import_run)
+
+      if result.alert.present?
+        redirect_to llm_resume_redirect_path, alert: result.alert
+      else
+        redirect_to llm_resume_redirect_path, notice: result.notice
+      end
     end
 
     private
@@ -133,6 +143,34 @@ module Backend
       metadata = @import_run.metadata.is_a?(Hash) ? @import_run.metadata.deep_stringify_keys : {}
       metadata["filtered_out_cities"] = cities.map(&:to_s).map(&:strip).reject(&:blank?).uniq.sort
       @import_run.update!(metadata: metadata)
+    end
+
+    def llm_run_resumer
+      @llm_run_resumer ||= Backend::ImportSources::LlmEnrichmentRunResumer.new(
+        registry: importer_registry,
+        maintenance: run_maintenance,
+        dispatcher: llm_run_dispatcher
+      )
+    end
+
+    def importer_registry
+      @importer_registry ||= Backend::ImportSources::ImporterRegistry.new
+    end
+
+    def run_maintenance
+      @run_maintenance ||= Backend::ImportSources::RunMaintenance.new(registry: importer_registry)
+    end
+
+    def llm_run_dispatcher
+      @llm_run_dispatcher ||= Backend::ImportSources::RunDispatcher.new(registry: importer_registry)
+    end
+
+    def llm_resume_redirect_path
+      if params[:return_to] == "run"
+        backend_import_run_path(@import_run, section: :llm_enrichment)
+      else
+        backend_import_sources_path(section: :llm_enrichment)
+      end
     end
   end
 end

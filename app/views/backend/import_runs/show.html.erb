@@ -10,6 +10,12 @@
       </p>
     </div>
     <div class="backend-topbar-actions">
+      <% if import_run_llm_resumable?(@import_run) %>
+        <%= button_to "Fortsetzen",
+                      resume_llm_enrichment_backend_import_run_path(@import_run, return_to: "run"),
+                      method: :post,
+                      class: "button button-compact" %>
+      <% end %>
       <%= link_to "Zurück", backend_import_sources_path(section: params[:section]), class: "button button-secondary button-compact" %>
     </div>
   </header>
@@ -22,6 +28,20 @@
         Lauf-Typ: <strong><%= import_run_single_event_label(@import_run) %></strong>
         <% if (context = import_run_single_event_context(@import_run)).present? %>
           · Zielkontext: <strong><%= context %></strong>
+        <% end %>
+      </p>
+    <% elsif llm_import_run?(@import_run) && (scope_label = import_run_llm_scope_label(@import_run)).present? %>
+      <p>Lauf-Typ: <strong><%= scope_label %></strong></p>
+    <% end %>
+    <% if llm_import_run?(@import_run) %>
+      <p>
+        Auswahl ab:
+        <strong><%= import_run_llm_selection_started_at_label(@import_run).presence || "-" %></strong>
+        <% if (current_event = import_run_llm_cursor_label(@import_run, "current")).present? %>
+          · Aktuelles Event: <strong><%= current_event %></strong>
+        <% end %>
+        <% if (last_completed_event = import_run_llm_cursor_label(@import_run, "last_completed")).present? %>
+          · Letztes abgeschlossenes Event: <strong><%= last_completed_event %></strong>
         <% end %>
       </p>
     <% end %>

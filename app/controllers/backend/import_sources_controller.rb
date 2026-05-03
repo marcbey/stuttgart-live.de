@@ -145,7 +145,7 @@ module Backend
 
       if result.dispatched
         return {
-          notice: refresh_existing ? "LLM-Enrichment-Re-Run für zukünftige Events wurde gestartet." : "LLM-Enrichment wurde gestartet."
+          notice: refresh_existing ? "LLM-Enrichment für alle zukünftigen Events wurde gestartet." : "LLM-Enrichment wurde gestartet."
         }
       end
 
@@ -157,6 +157,7 @@ module Backend
     def llm_enrichment_run_metadata(refresh_existing: false)
       {
         "triggered_at" => Time.current.iso8601,
+        "trigger_scope" => refresh_existing ? "all_future_events" : "scheduled_missing_enrichments",
         "refresh_existing" => refresh_existing
       }
     end
@@ -292,7 +293,7 @@ module Backend
     def llm_enrichment_queue_notice(refresh_existing:, queue_position:)
       base_message =
         if refresh_existing
-          "LLM-Enrichment-Re-Run für zukünftige Events wurde zur Warteschlange hinzugefügt"
+          "LLM-Enrichment für alle zukünftigen Events wurde zur Warteschlange hinzugefügt"
         else
           "LLM-Enrichment wurde zur Warteschlange hinzugefügt"
         end

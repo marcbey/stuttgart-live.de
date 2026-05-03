@@ -297,18 +297,18 @@ Wichtig ist der Unterschied zwischen gespeicherter Zuordnung und öffentlicher W
 ### Wie das LLM-Enrichment funktioniert
 
 Das LLM-Enrichment läuft auf bereits gemergten `events` und ist damit bewusst ein nachgelagerter Qualitätsschritt. Es erzeugt keine neuen Events und verändert keine Rohimporte, sondern ergänzt vorhandene Datensätze um zusätzliche redaktionelle Informationen.
-Zusätzlich ist standardmäßig ein täglicher automatischer Lauf um `05:05` Uhr (`Europe/Berlin`) konfiguriert.
+Standardmäßig ist ein täglicher automatischer Lauf um `05:05` Uhr (`Europe/Berlin`) konfiguriert. Dieser Scheduler bleibt inkrementell und verarbeitet nur zukünftige Events ohne bestehendes Enrichment. Im Backend gibt es zusätzlich zwei manuelle Startmöglichkeiten: `LLM-Enrichment starten` reiht denselben inkrementellen Lauf ein, `Alle zukünftigen Events neu anreichern` startet einen bewussten Voll-Lauf für zukünftige Events und überschreibt vorhandene LLM-Enrichments.
 
 Der Ablauf ist:
 
-1. Zuerst wählt der Job geeignete bestehende Events aus, typischerweise solche ohne vollständige LLM-Anreicherung oder mit veralteten Enrichment-Daten.
+1. Zuerst wählt der Job geeignete bestehende Events aus. Inkrementelle Läufe nehmen zukünftige Events ohne Enrichment, der manuelle Voll-Lauf nimmt alle zukünftigen Events ab seinem Startzeitpunkt.
 2. Jedes Event wird einzeln verarbeitet; pro Event gibt es genau einen OpenAI-Call.
 3. Vor diesem Call baut der Importer für `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` einen Suchkontext über den konfigurierten Web-Search-Provider auf.
 4. Für jedes dieser vier Felder werden bis zu 10 Suchtreffer mit kontextreichen Feldern wie Titel, Snippet, angezeigtem Link, Quelle und zusätzlicher Ergebnisbeschreibung in den Prompt übernommen.
 5. Das LLM liefert `genre`, `event_description`, `venue_description`, `venue_address`, `venue_external_url` sowie die vier Search-Linkfelder zurück. Nur die vier Search-Linkfelder dürfen aus den mitgelieferten Suchtreffern gewählt werden; `venue_external_url` kommt direkt aus Prompt und LLM-Response.
 6. Anschließend wird geprüft, ob die zurückgegebenen Search-Links tatsächlich in den gelieferten Kandidatenlisten enthalten sind; `venue_external_url` wird technisch validiert.
 7. Das Ergebnis wird normalisiert und als `event_llm_enrichments` am jeweiligen Event gespeichert.
-8. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, abgeschlossene OpenAI-Calls, Web-Search-Metriken und Fehler im zugehörigen `ImportRun`.
+8. Der Lauf protokolliert Auswahlmenge, übersprungene Events, erfolgreiche Enrichments, abgeschlossene OpenAI-Calls, Web-Search-Metriken, Cursor-Metadaten und Fehler im zugehörigen `ImportRun`.
 
 Fachlich ist wichtig:
 
@@ -324,6 +324,7 @@ Fachlich ist wichtig:
 - Hat ein Event noch keine zugeordnete `Venue`, darf aus `EventLlmEnrichment.venue` eine passende Venue gesucht oder neu angelegt und dem Event zugeordnet werden.
 - In genau diesem Fallback-Fall dürfen zusätzlich `Venue.description`, `Venue.external_url` und `Venue.address` aus `EventLlmEnrichment.venue_description`, `venue_external_url` und `venue_address` gesetzt werden; auch hier werden bereits vorhandene Werte der gefundenen oder neu angelegten Venue nicht überschrieben.
 - Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
+- Fehlgeschlagene oder abgebrochene manuelle Voll-Läufe können im Backend fortgesetzt werden. Die Fortsetzung erzeugt einen neuen `ImportRun`, übernimmt den ursprünglichen Auswahlzeitpunkt und startet beim zuletzt begonnenen Event erneut; wenn kein aktuelles Event gespeichert wurde, geht es nach dem letzten erfolgreich abgeschlossenen Event weiter.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.
 - Fehlerhafte Einzelantworten sollen im Laufprotokoll sichtbar sein, ohne zwangsläufig den kompletten Prozess unbrauchbar zu machen.
@@ -336,7 +337,7 @@ Im Backend spiegeln die Run-Status dabei die fachliche Koordination wider:
 - `canceled`: Der Lauf wurde vor oder während der Verarbeitung beendet.
 - `failed`: Der Lauf ist mit einem Fehler oder Timeout beendet worden.
 
-Queued LLM-Enrichment-Runs lassen sich im Backend abbrechen, bevor sie gestartet werden. Der nächste wartende Run rückt dann automatisch nach.
+Queued LLM-Enrichment-Runs lassen sich im Backend abbrechen, bevor sie gestartet werden. Der nächste wartende Run rückt dann automatisch nach. Abgebrochene oder fehlgeschlagene Voll-Läufe bleiben als Audit-Trail erhalten; eine Fortsetzung wird immer als neuer Queue-Run eingereiht.
 
 Für Merge-, Provider- und LLM-Läufe gilt außerdem: Wenn ein Run nach einem Stop-Wunsch oder allgemein nach Start über seine Heartbeat-/Stale-Timeouts hinaus keine Fortschrittsupdates mehr schreibt, wird er beim nächsten Aufruf der Importer-Übersicht automatisch freigegeben statt dauerhaft auf `running` oder `stopping` zu hängen.
 

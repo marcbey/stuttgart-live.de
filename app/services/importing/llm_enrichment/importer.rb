@@ -84,8 +84,9 @@ module Importing
       def call
         reset_link_validation_counts!
         reset_link_lookup_counts!
-        selection_time = Time.current
-        selected_events = selected_events_scope(selection_time)
+        selection_started_at = resolved_selection_started_at(Time.current)
+        persist_selection_started_at!(selection_started_at)
+        selected_events = selected_events_scope(selection_started_at)
         selected_count = selected_events.count
         skipped_count = skip_existing_enrichments? ? already_enriched_count(selected_events) : 0
         pending_events = pending_events_scope(selected_events).order(:start_at, :id).to_a
@@ -106,6 +107,7 @@ module Importing
           api_calls_completed_count: api_calls_completed_count,
           "merge_run_id" => nil,
           "model" => client_model,
+          "selection_started_at" => selection_started_at.iso8601,
           "web_search_provider" => web_search_provider,
           "links_checked_count" => links_checked_count,
           "links_rejected_count" => links_rejected_count,
@@ -119,7 +121,7 @@ module Importing
         pending_events.each_with_index do |event, index|
           current_event_index = index + 1
           check_stop_requested!(message: "before event", current_event_index:)
-          touch_run_heartbeat!("current_event_index" => current_event_index)
+          touch_run_heartbeat!(current_event_metadata(event, current_event_index))
 
           logger.info(
             "[LlmEnrichmentImporter] run_id=#{run.id} processing event=#{current_event_index}/#{api_calls_count} " \
@@ -153,7 +155,8 @@ module Importing
             enriched_count: enriched_count,
             api_calls_count: api_calls_count,
             api_calls_completed_count: api_calls_completed_count,
-            "current_event_index" => current_event_index,
+            **current_event_metadata(event, current_event_index),
+            **last_completed_event_metadata(event, current_event_index),
             "links_checked_count" => links_checked_count,
             "links_rejected_count" => links_rejected_count,
             "links_unverifiable_count" => links_unverifiable_count,
@@ -202,10 +205,10 @@ module Importing
 
       attr_reader :client, :link_finder, :link_validator, :logger, :run
 
-      def selected_events_scope(selection_time)
+      def selected_events_scope(selection_started_at)
         return Event.where(id: target_event_ids) if target_event_ids.present?
 
-        Event.where("start_at >= ?", selection_time)
+        apply_resume_cursor(Event.where("start_at >= ?", selection_started_at))
       end
 
       def already_enriched_count(scope)
@@ -698,6 +701,67 @@ module Importing
 
       def current_run_metadata
         normalized_metadata(run.reload.metadata)
+      end
+
+      def resolved_selection_started_at(default_time)
+        parsed_metadata_time("selection_started_at") || default_time
+      end
+
+      def persist_selection_started_at!(selection_started_at)
+        return unless run_running?
+        return if current_run_metadata["selection_started_at"].present?
+
+        run.update!(
+          metadata: current_run_metadata.merge("selection_started_at" => selection_started_at.iso8601)
+        )
+      end
+
+      def apply_resume_cursor(scope)
+        cursor = resume_cursor
+        return scope if cursor.blank?
+
+        start_at = cursor.fetch(:start_at)
+        event_id = cursor.fetch(:event_id)
+        operator = cursor.fetch(:inclusive) ? ">=" : ">"
+
+        scope.where("start_at > :start_at OR (start_at = :start_at AND id #{operator} :event_id)", start_at:, event_id:)
+      end
+
+      def resume_cursor
+        start_at = parsed_metadata_time("resume_from_start_at")
+        event_id = Integer(current_run_metadata["resume_from_event_id"], exception: false)
+        return if start_at.blank? || event_id.blank?
+
+        {
+          start_at: start_at,
+          event_id: event_id,
+          inclusive: ActiveModel::Type::Boolean.new.cast(current_run_metadata.fetch("resume_from_inclusive", true))
+        }
+      end
+
+      def parsed_metadata_time(key)
+        raw_value = current_run_metadata[key].to_s.strip
+        return if raw_value.blank?
+
+        Time.zone.parse(raw_value)
+      rescue ArgumentError
+        nil
+      end
+
+      def current_event_metadata(event, index)
+        {
+          "current_event_id" => event.id,
+          "current_event_start_at" => event.start_at&.iso8601,
+          "current_event_index" => index
+        }
+      end
+
+      def last_completed_event_metadata(event, index)
+        {
+          "last_completed_event_id" => event.id,
+          "last_completed_event_start_at" => event.start_at&.iso8601,
+          "last_completed_event_index" => index
+        }
       end
 
       def client_model

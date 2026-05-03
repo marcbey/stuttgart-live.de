@@ -335,6 +335,32 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Published Artist · Published Event · 01.06.2026 22:00"
   end
 
+  test "should show llm enrichment cursor context and resume action on detail page" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "failed",
+      source_type: "llm_enrichment",
+      started_at: 1.hour.ago,
+      finished_at: 30.minutes.ago,
+      metadata: {
+        "trigger_scope" => "all_future_events",
+        "selection_started_at" => 2.hours.ago.iso8601,
+        "current_event_id" => events(:needs_review_one).id,
+        "current_event_start_at" => events(:needs_review_one).start_at.iso8601,
+        "last_completed_event_id" => events(:published_one).id,
+        "last_completed_event_start_at" => events(:published_one).start_at.iso8601
+      }
+    )
+
+    get backend_import_run_url(run, section: :llm_enrichment)
+    assert_response :success
+
+    assert_select "form[action='#{resume_llm_enrichment_backend_import_run_path(run, return_to: 'run')}'] button", text: "Fortsetzen"
+    assert_includes response.body, "Alle zukünftigen Events"
+    assert_includes response.body, "Aktuelles Event"
+    assert_includes response.body, "Letztes abgeschlossenes Event"
+  end
+
   test "should limit recent runs json to configured size" do
     15.times do |index|
       @source.import_runs.create!(
@@ -438,19 +464,19 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_import_run_row_in_response(existing_run)
   end
 
-  test "should render llm enrichment actions on index without rerun button" do
+  test "should render incremental and full llm enrichment actions on index" do
     get backend_import_sources_url
 
     assert_response :success
     assert_includes response.body, "LLM-Enrichment starten"
-    assert_not_includes response.body, "Zukünftige Events neu anreichern"
+    assert_includes response.body, "Alle zukünftigen Events neu anreichern"
     assert_includes response.body, "Edit"
     assert_select "a[href='#{edit_backend_settings_path(section: :llm_enrichment)}']", text: "Edit"
     assert_select "form[action='#{run_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}'] .button", text: "LLM-Enrichment starten"
-    assert_select "form[action='#{rerun_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}']", count: 0
+    assert_select "form[action='#{rerun_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}'] .button", text: "Alle zukünftigen Events neu anreichern"
   end
 
-  test "should enqueue llm enrichment run from import sources page" do
+  test "should enqueue incremental llm enrichment run from import sources page" do
     assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
       post run_llm_enrichment_backend_import_sources_url(section: :llm_enrichment)
     end
@@ -458,6 +484,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
     assert_equal "queued", run.status
     assert_equal false, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert_equal "scheduled_missing_enrichments", run.metadata["trigger_scope"]
     assert run.metadata["job_id"].present?
 
     assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
@@ -465,7 +492,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "LLM-Enrichment wurde gestartet."
   end
 
-  test "should respond with turbo stream when enqueueing llm enrichment run from import sources page" do
+  test "should respond with turbo stream when enqueueing incremental llm enrichment run from import sources page" do
     assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
       post run_llm_enrichment_backend_import_sources_url(section: :llm_enrichment), as: :turbo_stream
     end
@@ -473,6 +500,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
     assert_equal "queued", run.status
     assert_equal false, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert_equal "scheduled_missing_enrichments", run.metadata["trigger_scope"]
     assert run.metadata["job_id"].present?
 
     assert_import_sources_turbo_feedback(message: "LLM-Enrichment wurde gestartet.")
@@ -491,7 +519,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
     follow_redirect!
-    assert_includes response.body, "LLM-Enrichment-Re-Run für zukünftige Events wurde gestartet."
+    assert_includes response.body, "LLM-Enrichment für alle zukünftigen Events wurde gestartet."
   end
 
   test "should respond with turbo stream when enqueueing llm enrichment rerun from import sources page" do
@@ -504,7 +532,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
     assert run.metadata["job_id"].present?
 
-    assert_import_sources_turbo_feedback(message: "LLM-Enrichment-Re-Run für zukünftige Events wurde gestartet.")
+    assert_import_sources_turbo_feedback(message: "LLM-Enrichment für alle zukünftigen Events wurde gestartet.")
     assert_import_run_row_in_response(run)
   end
 
@@ -525,6 +553,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal "queued", queued_run.status
     assert_equal false, ActiveModel::Type::Boolean.new.cast(queued_run.metadata["refresh_existing"])
+    assert_equal "scheduled_missing_enrichments", queued_run.metadata["trigger_scope"]
     assert_redirected_to backend_import_sources_url
     follow_redirect!
     assert_includes response.body, "LLM-Enrichment wurde zur Warteschlange hinzugefügt (Position 1)."
@@ -549,7 +578,7 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, ActiveModel::Type::Boolean.new.cast(queued_run.metadata["refresh_existing"])
     assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
     follow_redirect!
-    assert_includes response.body, "LLM-Enrichment-Re-Run für zukünftige Events wurde zur Warteschlange hinzugefügt (Position 1)."
+    assert_includes response.body, "LLM-Enrichment für alle zukünftigen Events wurde zur Warteschlange hinzugefügt (Position 1)."
   end
 
   test "should respond with turbo stream when queueing llm enrichment behind an active run" do
@@ -677,6 +706,111 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_select "tr[data-run-id='#{run.id}'] td:last-child form button", text: "Abbrechen"
+  end
+
+  test "should render resume action for failed all future llm enrichment jobs" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "failed",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {
+        "trigger_scope" => "all_future_events",
+        "selection_started_at" => 1.hour.ago.iso8601,
+        "current_event_id" => events(:needs_review_one).id,
+        "current_event_start_at" => events(:needs_review_one).start_at.iso8601
+      }
+    )
+
+    get backend_import_sources_url(section: :llm_enrichment)
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{run.id}'] td:last-child form[action='#{resume_llm_enrichment_backend_import_run_path(run, section: :llm_enrichment)}'] button", text: "Fortsetzen"
+  end
+
+  test "should not render resume action for failed single event llm enrichment jobs" do
+    run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "failed",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {
+        "trigger_scope" => "single_event",
+        "target_event_id" => events(:published_one).id
+      }
+    )
+
+    get backend_import_sources_url(section: :llm_enrichment)
+    assert_response :success
+
+    assert_select "tr[data-run-id='#{run.id}'] td:last-child form[action='#{resume_llm_enrichment_backend_import_run_path(run, section: :llm_enrichment)}']", count: 0
+  end
+
+  test "should resume failed llm enrichment run from current event" do
+    source_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "failed",
+      source_type: "llm_enrichment",
+      started_at: 1.hour.ago,
+      finished_at: 30.minutes.ago,
+      metadata: {
+        "trigger_scope" => "all_future_events",
+        "selection_started_at" => 2.hours.ago.iso8601,
+        "current_event_id" => events(:needs_review_one).id,
+        "current_event_start_at" => events(:needs_review_one).start_at.iso8601,
+        "last_completed_event_id" => events(:published_one).id,
+        "last_completed_event_start_at" => events(:published_one).start_at.iso8601
+      }
+    )
+
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      post resume_llm_enrichment_backend_import_run_url(source_run, section: :llm_enrichment)
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+    assert_equal "queued", run.status
+    assert_equal source_run.id, run.metadata["resume_source_run_id"]
+    assert_equal events(:needs_review_one).id, run.metadata["resume_from_event_id"]
+    assert_equal events(:needs_review_one).start_at.iso8601, run.metadata["resume_from_start_at"]
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["resume_from_inclusive"])
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert_equal "all_future_events", run.metadata["trigger_scope"]
+    assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
+  end
+
+  test "should queue resumed llm enrichment behind active run" do
+    ImportRun.create!(
+      import_source: @eventim_source,
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      metadata: {}
+    )
+    source_run = ImportRun.create!(
+      import_source: @eventim_source,
+      status: "canceled",
+      source_type: "llm_enrichment",
+      started_at: 1.hour.ago,
+      finished_at: 30.minutes.ago,
+      metadata: {
+        "trigger_scope" => "all_future_events",
+        "selection_started_at" => 2.hours.ago.iso8601,
+        "last_completed_event_id" => events(:published_one).id,
+        "last_completed_event_start_at" => events(:published_one).start_at.iso8601
+      }
+    )
+
+    assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
+      post resume_llm_enrichment_backend_import_run_url(source_run, section: :llm_enrichment)
+    end
+
+    run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
+    assert_equal "queued", run.status
+    assert_nil run.metadata["job_id"]
+    assert_equal source_run.id, run.metadata["resume_source_run_id"]
+    assert_equal events(:published_one).id, run.metadata["resume_from_event_id"]
+    assert_equal false, ActiveModel::Type::Boolean.new.cast(run.metadata["resume_from_inclusive"])
+    assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
   end
 
   test "should include llm enrichment runs in recent runs json" do

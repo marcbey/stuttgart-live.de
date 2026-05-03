@@ -18,6 +18,7 @@ module Importing
           import_source: import_source,
           run_metadata: {
             "triggered_by" => "scheduler",
+            "trigger_scope" => "scheduled_missing_enrichments",
             "schedule_name" => "daily_llm_enrichment_run",
             "refresh_existing" => false
           }

@@ -75,6 +75,7 @@ Rails.application.routes.draw do
     resources :import_runs, only: [ :show ] do
       post :add_filtered_city, on: :member
       post :remove_whitelist_city, on: :member
+      post :resume_llm_enrichment, on: :member
     end
 
     resources :events, only: [ :index, :show, :new, :create, :update ] do

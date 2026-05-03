@@ -13,6 +13,7 @@ module Importing
         run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
         assert_equal "queued", run.status
         assert_equal "scheduler", run.metadata["triggered_by"]
+        assert_equal "scheduled_missing_enrichments", run.metadata["trigger_scope"]
         assert_equal "daily_llm_enrichment_run", run.metadata["schedule_name"]
         assert_equal false, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
         assert run.metadata["job_id"].present?
@@ -36,6 +37,7 @@ module Importing
         run = ImportRun.where(source_type: "llm_enrichment").order(:created_at).last
         assert_equal "queued", run.status
         assert_equal "scheduler", run.metadata["triggered_by"]
+        assert_equal "scheduled_missing_enrichments", run.metadata["trigger_scope"]
         assert_equal "daily_llm_enrichment_run", run.metadata["schedule_name"]
         assert_nil run.metadata["job_id"]
       end

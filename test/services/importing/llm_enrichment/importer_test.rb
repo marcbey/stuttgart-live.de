@@ -379,6 +379,173 @@ module Importing
         assert_equal "https://example.com/past", updated_enrichment.homepage_link
       end
 
+      test "refresh_existing overwrites existing future enrichments in full run" do
+        event = events(:published_one)
+        existing_enrichment = EventLlmEnrichment.create!(
+          event: event,
+          source_run: import_runs(:one),
+          venue: "Alt",
+          event_description: "Alt",
+          venue_description: "Alt",
+          model: "existing-model",
+          prompt_version: "v1",
+          raw_response: { "event_id" => event.id }
+        )
+        @run.update!(
+          metadata: @run.metadata.merge(
+            "trigger_scope" => "all_future_events",
+            "refresh_existing" => true,
+            "selection_started_at" => 1.day.ago.iso8601
+          )
+        )
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: events(:published_one).id,
+              genre: [ "Indie" ],
+              venue: "Neu",
+              event_description: "Event eins neu",
+              venue_description: "Venue eins neu"
+            ),
+            response_for(
+              event_id: events(:needs_review_one).id,
+              genre: [ "Rock" ],
+              venue: "Im Wizemann",
+              event_description: "Event zwei",
+              venue_description: "Venue zwei"
+            ),
+            response_for(
+              event_id: events(:needs_review_two).id,
+              genre: [ "Performance" ],
+              venue: "Im Wizemann",
+              event_description: "Event drei",
+              venue_description: "Venue drei"
+            )
+          ]
+        )
+
+        result = build_importer(client: client).call
+
+        assert_equal 3, result.api_calls_count
+        assert_equal 3, result.enriched_count
+        updated_enrichment = event.reload.llm_enrichment
+        assert_equal existing_enrichment.id, updated_enrichment.id
+        assert_equal "Event eins neu", updated_enrichment.event_description
+        assert_equal @run.id, updated_enrichment.source_run_id
+      end
+
+      test "stores current and completed event cursor metadata" do
+        event = events(:published_one)
+        @run.update!(
+          metadata: @run.metadata.merge(
+            "target_event_id" => event.id,
+            "refresh_existing" => true,
+            "selection_started_at" => 1.day.ago.iso8601
+          )
+        )
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: event.id,
+              genre: [ "Indie" ],
+              venue: "LKA Longhorn",
+              event_description: "Event eins",
+              venue_description: "Venue eins"
+            )
+          ]
+        )
+
+        build_importer(client: client).call
+
+        metadata = @run.reload.metadata
+        assert_equal event.id, metadata["current_event_id"]
+        assert_equal event.start_at.iso8601, metadata["current_event_start_at"]
+        assert_equal 1, metadata["current_event_index"]
+        assert_equal event.id, metadata["last_completed_event_id"]
+        assert_equal event.start_at.iso8601, metadata["last_completed_event_start_at"]
+        assert_equal 1, metadata["last_completed_event_index"]
+      end
+
+      test "resume cursor retries current event inclusively" do
+        @run.update!(
+          metadata: @run.metadata.merge(
+            "trigger_scope" => "all_future_events",
+            "refresh_existing" => true,
+            "selection_started_at" => 1.day.ago.iso8601,
+            "resume_from_event_id" => events(:needs_review_one).id,
+            "resume_from_start_at" => events(:needs_review_one).start_at.iso8601,
+            "resume_from_inclusive" => true
+          )
+        )
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: events(:needs_review_one).id,
+              genre: [ "Rock" ],
+              venue: "Im Wizemann",
+              event_description: "Event zwei",
+              venue_description: "Venue zwei"
+            ),
+            response_for(
+              event_id: events(:needs_review_two).id,
+              genre: [ "Performance" ],
+              venue: "Im Wizemann",
+              event_description: "Event drei",
+              venue_description: "Venue drei"
+            )
+          ]
+        )
+        link_finder = FakeLinkFinder.new(results_by_event_id: {}, calls: [])
+
+        result = build_importer(client: client, link_finder: link_finder).call
+
+        assert_equal 2, result.api_calls_count
+        assert_equal [ events(:needs_review_one).id, events(:needs_review_two).id ], link_finder.calls
+        assert_nil events(:published_one).reload.llm_enrichment
+      end
+
+      test "resume cursor can continue after last completed event" do
+        @run.update!(
+          metadata: @run.metadata.merge(
+            "trigger_scope" => "all_future_events",
+            "refresh_existing" => true,
+            "selection_started_at" => 1.day.ago.iso8601,
+            "resume_from_event_id" => events(:published_one).id,
+            "resume_from_start_at" => events(:published_one).start_at.iso8601,
+            "resume_from_inclusive" => false
+          )
+        )
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: events(:needs_review_one).id,
+              genre: [ "Rock" ],
+              venue: "Im Wizemann",
+              event_description: "Event zwei",
+              venue_description: "Venue zwei"
+            ),
+            response_for(
+              event_id: events(:needs_review_two).id,
+              genre: [ "Performance" ],
+              venue: "Im Wizemann",
+              event_description: "Event drei",
+              venue_description: "Venue drei"
+            )
+          ]
+        )
+        link_finder = FakeLinkFinder.new(results_by_event_id: {}, calls: [])
+
+        result = build_importer(client: client, link_finder: link_finder).call
+
+        assert_equal 2, result.api_calls_count
+        assert_equal [ events(:needs_review_one).id, events(:needs_review_two).id ], link_finder.calls
+        assert_nil events(:published_one).reload.llm_enrichment
+      end
+
       test "runs successfully with zero api calls when no future events need enrichment" do
         [ events(:published_one), events(:needs_review_one), events(:needs_review_two) ].each do |event|
           EventLlmEnrichment.create!(

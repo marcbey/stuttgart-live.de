@@ -9,6 +9,10 @@
                     run_llm_enrichment_backend_import_sources_path(section: section_key),
                     method: :post,
                     class: "button button-compact" %>
+      <%= button_to "Alle zukünftigen Events neu anreichern",
+                    rerun_llm_enrichment_backend_import_sources_path(section: section_key),
+                    method: :post,
+                    class: "button button-secondary button-compact" %>
     </div>
   </div>
   <p class="import-runs-note">
@@ -37,7 +41,7 @@
             <tr data-run-id="<%= run.id %>">
               <td>
                 <code><%= run.id %></code>
-                <% if (run_scope_label = import_run_single_event_label(run)).present? %>
+                <% if (run_scope_label = import_run_llm_scope_label(run)).present? %>
                   <div class="form-hint"><%= run_scope_label %></div>
                 <% end %>
               </td>
@@ -50,6 +54,12 @@
               <td><%= run.failed_count %></td>
               <td class="action-cell">
                 <%= link_to "Details", backend_import_run_path(run, section: section_key), class: "button button-ghost button-compact" %>
+                <% if import_run_llm_resumable?(run) %>
+                  <%= button_to "Fortsetzen",
+                                resume_llm_enrichment_backend_import_run_path(run, section: section_key),
+                                method: :post,
+                                class: "button button-compact" %>
+                <% end %>
                 <% if import_run_can_stop?(run, section: section_key) %>
                   <%= button_to import_run_stop_action_label(run), import_run_stop_path(run, section: section_key), method: :post, class: "button button-secondary button-compact" %>
                 <% end %>

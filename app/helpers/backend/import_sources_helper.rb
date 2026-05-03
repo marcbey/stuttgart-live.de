@@ -168,6 +168,40 @@ module Backend::ImportSourcesHelper
     Integer(import_run_metadata(run)["target_event_id"], exception: false)
   end
 
+  def import_run_llm_scope_label(run)
+    return import_run_single_event_label(run) if import_run_single_event_llm?(run)
+    return unless llm_import_run?(run)
+
+    metadata = import_run_metadata(run)
+    return "Fortsetzung von Run ##{metadata['resume_source_run_id']}" if metadata["resume_source_run_id"].present?
+    return "Alle zukünftigen Events" if metadata["trigger_scope"] == "all_future_events"
+    return "Geplanter inkrementeller Lauf" if metadata["trigger_scope"] == "scheduled_missing_enrichments"
+
+    nil
+  end
+
+  def import_run_llm_resumable?(run)
+    llm_import_run?(run) &&
+      %w[failed canceled].include?(run.status) &&
+      import_run_metadata(run)["trigger_scope"] != "single_event"
+  end
+
+  def import_run_llm_cursor_label(run, prefix)
+    metadata = import_run_metadata(run)
+    event_id = Integer(metadata["#{prefix}_event_id"], exception: false)
+    start_at = import_run_metadata_time(run, "#{prefix}_event_start_at")
+    return if event_id.blank? && start_at.blank?
+
+    [
+      (event_id.present? ? "##{event_id}" : nil),
+      (start_at.present? ? start_at.strftime("%d.%m.%Y %H:%M:%S") : nil)
+    ].compact.join(" · ")
+  end
+
+  def import_run_llm_selection_started_at_label(run)
+    import_run_metadata_time(run, "selection_started_at")&.strftime("%d.%m.%Y %H:%M:%S")
+  end
+
   def import_run_retries_label(run)
     retries_used = import_run_retry_metadata_integer(run, "job_retries_used")
     max_retries = import_run_retry_metadata_integer(run, "max_retries")
@@ -214,6 +248,15 @@ module Backend::ImportSourcesHelper
     return nil if raw_value.nil?
 
     Integer(raw_value, exception: false)
+  end
+
+  def import_run_metadata_time(run, key)
+    raw_value = import_run_metadata(run)[key].to_s.strip
+    return if raw_value.blank?
+
+    Time.zone.parse(raw_value)
+  rescue ArgumentError
+    nil
   end
 
   def merge_import_records_count(run)
