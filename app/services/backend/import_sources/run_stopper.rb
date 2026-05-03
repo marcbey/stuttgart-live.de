@@ -50,6 +50,7 @@ module Backend
 
       def request_stop_for_running_run(run)
         return force_cancel_running_single_event_run(run) if force_cancel_running_single_event_run?(run)
+        return force_cancel_stale_running_run(run) if stale_running_run?(run)
 
         metadata = normalized_metadata(run.metadata)
         metadata["stop_requested"] = true
@@ -64,15 +65,24 @@ module Backend
       end
 
       def force_cancel_running_single_event_run(run)
+        force_cancel_running_run(run, reason: "Force-stopped single-event run")
+      end
+
+      def force_cancel_stale_running_run(run)
+        force_cancel_running_run(run, reason: "No progress update before stop request")
+      end
+
+      def force_cancel_running_run(run, reason:)
+        canceled_at = clock.call
         metadata = normalized_metadata(run.metadata)
         metadata["stop_requested"] = true
-        metadata["stop_requested_at"] ||= clock.call.iso8601
-        metadata["stop_released_at"] = clock.call.iso8601
-        metadata["stop_release_reason"] = "Force-stopped single-event run"
+        metadata["stop_requested_at"] ||= canceled_at.iso8601
+        metadata["stop_released_at"] = canceled_at.iso8601
+        metadata["stop_release_reason"] = reason
 
         run.update!(
           status: "canceled",
-          finished_at: clock.call,
+          finished_at: canceled_at,
           metadata: metadata
         )
         dispatcher.dispatch_next_locked(source_type: run.source_type, import_source: run.import_source)
@@ -96,6 +106,26 @@ module Backend
 
       def normalized_metadata(metadata)
         metadata.is_a?(Hash) ? metadata.deep_stringify_keys : {}
+      end
+
+      def stale_running_run?(run)
+        return true if run.started_at < importer_class_for(run.source_type)::RUN_STALE_AFTER.before(clock.call)
+        return false if execution_started_at(run).blank?
+
+        run.updated_at < importer_class_for(run.source_type)::RUN_HEARTBEAT_STALE_AFTER.before(clock.call)
+      end
+
+      def execution_started_at(run)
+        raw_value = normalized_metadata(run.metadata)["execution_started_at"].to_s.strip
+        return nil if raw_value.blank?
+
+        Time.zone.parse(raw_value)
+      rescue ArgumentError
+        nil
+      end
+
+      def importer_class_for(source_type)
+        registry.fetch(source_type).fetch(:importer_class)
       end
 
       def broadcast_if_needed(result)

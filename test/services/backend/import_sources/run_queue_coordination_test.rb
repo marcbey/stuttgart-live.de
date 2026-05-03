@@ -109,6 +109,38 @@ class Backend::ImportSources::RunQueueCoordinationTest < ActiveJob::TestCase
     assert queued_run.reload.metadata["job_id"].present?
   end
 
+  test "force-canceling a stale running llm run dispatches the next queued run" do
+    running_run = @source.import_runs.create!(
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 30.minutes.ago,
+      metadata: {
+        "execution_started_at" => 29.minutes.ago.iso8601
+      }
+    )
+    running_run.update_columns(updated_at: (Importing::LlmEnrichment::Importer::RUN_HEARTBEAT_STALE_AFTER + 1.minute).ago)
+    queued_run = @source.import_runs.create!(
+      status: "queued",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    result = nil
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      result = @stopper.call(
+        source_type: "llm_enrichment",
+        import_source: @source,
+        run_id: running_run.id
+      )
+    end
+
+    assert_equal :forced_cancel, result.action
+    assert_equal "canceled", running_run.reload.status
+    assert_equal "No progress update before stop request", running_run.metadata["stop_release_reason"]
+    assert queued_run.reload.metadata["job_id"].present?
+  end
+
   test "claiming a queued run marks it running and stores execution start" do
     result = nil
 
