@@ -1,9 +1,10 @@
 module Backend
   module ImportSources
     class RunMaintenance
-      def initialize(registry:, broadcaster: Backend::ImportRunsBroadcaster, clock: -> { Time.current })
+      def initialize(registry:, broadcaster: Backend::ImportRunsBroadcaster, dispatcher: nil, clock: -> { Time.current })
         @registry = registry
         @broadcaster = broadcaster
+        @dispatcher = dispatcher
         @clock = clock
       end
 
@@ -59,6 +60,10 @@ module Backend
         registry.fetch(source_type).fetch(:importer_class)
       end
 
+      def config_for(source_type)
+        registry.fetch(source_type)
+      end
+
       def heartbeat_stale?(run)
         return false if execution_started_at(run).blank?
 
@@ -83,7 +88,7 @@ module Backend
           finished_at: clock.call,
           metadata: metadata
         )
-        broadcaster.broadcast!
+        release_next_queued_run(run)
       end
 
       def fail_stale_run!(run, reason: "Run exceeded stale timeout", timeout_value: nil)
@@ -97,7 +102,22 @@ module Backend
           metadata: metadata,
           error_message: "Run automatically marked failed after timeout (#{timeout_value.inspect})"
         )
+        release_next_queued_run(run)
+      end
+
+      def release_next_queued_run(run)
         broadcaster.broadcast!
+        return unless config_for(run.source_type).fetch(:run_mode) == :serial_queue
+
+        dispatcher.dispatch_next(source_type: run.source_type, import_source: run.import_source)
+      end
+
+      def dispatcher
+        @dispatcher ||= Backend::ImportSources::RunDispatcher.new(
+          registry: registry,
+          broadcaster: broadcaster,
+          clock: clock
+        )
       end
     end
   end

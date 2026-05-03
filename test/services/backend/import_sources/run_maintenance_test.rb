@@ -1,7 +1,8 @@
 require "test_helper"
 
-class Backend::ImportSources::RunMaintenanceTest < ActiveSupport::TestCase
+class Backend::ImportSources::RunMaintenanceTest < ActiveJob::TestCase
   setup do
+    clear_enqueued_jobs
     @registry = Backend::ImportSources::ImporterRegistry.new
     @maintenance = Backend::ImportSources::RunMaintenance.new(registry: @registry)
     @source = import_sources(:two)
@@ -70,5 +71,34 @@ class Backend::ImportSources::RunMaintenanceTest < ActiveSupport::TestCase
     assert_equal true, @maintenance.release_stale_running_run!(run)
     assert_equal "canceled", run.reload.status
     assert_equal "No progress update after stop request", run.metadata["stop_release_reason"]
+  end
+
+  test "dispatches next queued llm enrichment run after canceling stale stop-requested run" do
+    running_run = @source.import_runs.create!(
+      status: "running",
+      source_type: "llm_enrichment",
+      started_at: 20.minutes.ago,
+      metadata: {
+        "triggered_at" => 20.minutes.ago.iso8601,
+        "execution_started_at" => 19.minutes.ago.iso8601,
+        "stop_requested" => true,
+        "stop_requested_at" => 10.minutes.ago.iso8601
+      }
+    )
+    running_run.update_columns(updated_at: (Importing::LlmEnrichment::Importer::RUN_HEARTBEAT_STALE_AFTER + 10.seconds).ago)
+    queued_run = @source.import_runs.create!(
+      status: "queued",
+      source_type: "llm_enrichment",
+      started_at: 1.minute.ago,
+      metadata: {}
+    )
+
+    assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
+      assert_equal true, @maintenance.release_stale_running_run!(running_run)
+    end
+
+    assert_equal "canceled", running_run.reload.status
+    assert_equal "No progress update after stop request", running_run.metadata["stop_release_reason"]
+    assert queued_run.reload.metadata["job_id"].present?
   end
 end
