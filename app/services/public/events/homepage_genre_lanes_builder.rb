@@ -2,22 +2,20 @@ module Public
   module Events
     class HomepageGenreLanesBuilder
       Lane = Data.define(:group, :events, :effective_series_ids, :public_path)
-      LaneGroup = Data.define(:name, :slug)
 
       DEFAULT_LIMIT = 15
+      DEFAULT_GROUP_EVENTS_LIMIT = 100
 
-      def initialize(relation:, slugs: nil, snapshot: LlmGenreGrouping::Lookup.selected_snapshot, limit: DEFAULT_LIMIT)
+      def initialize(relation:, slugs: nil, limit: DEFAULT_LIMIT)
         @relation = relation
         @slugs = slugs
-        @snapshot = snapshot
         @limit = limit
       end
 
       def call
-        return [] if snapshot.blank?
         return [] if normalized_slugs.empty?
 
-        groups_by_slug = snapshot.groups.index_by(&:slug)
+        groups_by_slug = Genre.all.index_by(&:slug)
 
         normalized_slugs.filter_map do |slug|
           group = groups_by_slug[slug]
@@ -30,26 +28,23 @@ module Public
             group:,
             events:,
             effective_series_ids:,
-            public_path: LaneDirectory.public_path_for_genre_slug(group.slug, snapshot: snapshot)
+            public_path: LaneDirectory.public_path_for_genre_slug(group.slug)
           )
         end
       end
 
       private
 
-      attr_reader :limit, :relation, :slugs, :snapshot
+      attr_reader :limit, :relation, :slugs
 
       def normalized_slugs
         @normalized_slugs ||= AppSetting.normalize_slug_list(
-          slugs.nil? ? snapshot&.homepage_genre_lane_configuration&.lane_slugs : slugs
+          slugs.nil? ? AppSetting.homepage_genre_lane_slugs : slugs
         )
       end
 
       def chronological_group_events(group)
-        selected_events =
-          LlmGenreGrouping::Lookup
-            .chronological_events_for_group(group, relation:, limit: candidate_limit)
-            .to_a
+        selected_events = group_events(group).limit(candidate_limit).to_a
 
         events = SeriesRepresentativeSelector.call(selected_events)
         events = events.first(limit) if limit.present?
@@ -65,7 +60,15 @@ module Public
       def candidate_limit
         return if limit.nil?
 
-        [ limit * 4, LlmGenreGrouping::Lookup::DEFAULT_GROUP_EVENTS_LIMIT ].max
+        [ limit * 4, DEFAULT_GROUP_EVENTS_LIMIT ].max
+      end
+
+      def group_events(group)
+        relation
+          .joins(:genres)
+          .where(genres: { id: group.id })
+          .distinct
+          .reorder(:start_at, :id)
       end
     end
   end

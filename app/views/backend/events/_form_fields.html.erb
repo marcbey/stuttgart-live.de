@@ -2,6 +2,7 @@
 <% display_promoter = show_promoter_id ? (local_assigns[:display_promoter] || event_display_promoter(event)) : nil %>
 <% show_settings_section = local_assigns.fetch(:show_settings_section, true) %>
 <% selected_genre_ids = Array(local_assigns.fetch(:selected_genre_ids, event.genre_ids)).map(&:to_i) %>
+<% selected_sub_genre_ids = Array(local_assigns.fetch(:selected_sub_genre_ids, event.sub_genre_ids)).map(&:to_i) %>
 
 <div class="editor-grid">
   <div>
@@ -138,9 +139,12 @@
 <% if show_settings_section %>
   <%= render "backend/events/settings_fields",
              event: event,
-             all_genres: all_genres %>
+             all_genres: all_genres,
+             all_sub_genres: all_sub_genres %>
   <%= render "backend/events/genre_fields",
              event: event,
              all_genres: all_genres,
-             selected_genre_ids: selected_genre_ids %>
+             all_sub_genres: all_sub_genres,
+             selected_genre_ids: selected_genre_ids,
+             selected_sub_genre_ids: selected_sub_genre_ids %>
 <% end %>

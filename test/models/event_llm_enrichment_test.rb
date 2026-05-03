@@ -5,7 +5,6 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
     enrichment = EventLlmEnrichment.create!(
       event: events(:published_one),
       source_run: import_runs(:one),
-      genre: [ " Jazz ", "", "Jazz" ],
       venue: " LKA Longhorn ",
       event_description: " Event ",
       venue_description: " Venue ",
@@ -20,7 +19,6 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
       raw_response: { "event_id" => events(:published_one).id }
     )
 
-    assert_equal [ "Jazz" ], enrichment.genre
     assert_equal "LKA Longhorn", enrichment.venue
     assert_equal "Event", enrichment.event_description
     assert_equal "https://venue.example/demo", enrichment.venue_external_url
@@ -47,21 +45,5 @@ class EventLlmEnrichmentTest < ActiveSupport::TestCase
 
     assert enrichment.valid?
     assert_equal({}, enrichment.raw_response)
-  end
-
-  test "genre_list assigns normalized genres" do
-    enrichment = EventLlmEnrichment.new(
-      event: events(:published_one),
-      source_run: import_runs(:one),
-      model: "gpt-5-mini",
-      prompt_version: "v1",
-      raw_response: {}
-    )
-
-    enrichment.genre_list = " Indie \nRock, Pop ; Rock "
-
-    assert enrichment.valid?
-    assert_equal [ "Indie", "Rock", "Pop" ], enrichment.genre
-    assert_equal " Indie \nRock, Pop ; Rock ", enrichment.genre_list
   end
 end

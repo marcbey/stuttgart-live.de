@@ -127,7 +127,7 @@ module Importing
             ),
             response_for(
               event_id: events(:needs_review_two).id,
-              genre: [ "Show" ],
+              genre: [ "Performance" ],
               venue: "Im Wizemann",
               event_description: "Event drei",
               venue_description: "Venue drei"
@@ -152,11 +152,12 @@ module Importing
         assert_equal 3, result.api_calls_completed_count
         assert_equal 3, client.captured_inputs.size
         published_enrichment = events(:published_one).reload.llm_enrichment
-        assert_equal [ "Indie", "Pop" ], published_enrichment.genre
+        assert_equal [ "Pop, Indie & Singer-Songwriter" ], events(:published_one).genres.order(:name).pluck(:name)
+        assert_equal [ "Indie", "Pop" ], events(:published_one).sub_genres.order(:name).pluck(:name)
         assert_equal "https://example.com/one", published_enrichment.homepage_link
         assert_equal client.captured_inputs.first, published_enrichment.raw_response["llm_prompt"]
         assert_equal events(:published_one).id, published_enrichment.raw_response.dig("llm_raw_result", "event_id")
-        assert_equal [], events(:needs_review_two).reload.llm_enrichment.genre
+        assert_equal [ "Performance" ], events(:needs_review_two).sub_genres.order(:name).pluck(:name)
         assert_nil events(:published_past_one).reload.llm_enrichment
       end
 
@@ -164,11 +165,13 @@ module Importing
         original_prompt = <<~TEXT.strip
           ALT search_results candidates homepage_link instagram_link facebook_link youtube_link
           venue_external_url
+          genres sub_genres
           {{input_json}}
         TEXT
         updated_prompt = <<~TEXT.strip
           NEU search_results candidates homepage_link instagram_link facebook_link youtube_link
           venue_external_url
+          genres sub_genres
           {{input_json}}
         TEXT
         prompt_setting = AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: original_prompt)
@@ -333,7 +336,6 @@ module Importing
         existing_enrichment = EventLlmEnrichment.create!(
           event: event,
           source_run: import_runs(:one),
-          genre: [ "Alt" ],
           venue: "Alt",
           event_description: "Alt",
           venue_description: "Alt",
@@ -373,7 +375,7 @@ module Importing
         updated_enrichment = event.reload.llm_enrichment
         assert_equal 1, result.api_calls_count
         assert_equal existing_enrichment.id, updated_enrichment.id
-        assert_equal [ "Jazz" ], updated_enrichment.genre
+        assert_equal [ "Jazz" ], event.sub_genres.order(:name).pluck(:name)
         assert_equal "https://example.com/past", updated_enrichment.homepage_link
       end
 
@@ -382,7 +384,6 @@ module Importing
           EventLlmEnrichment.create!(
             event: event,
             source_run: import_runs(:one),
-            genre: [ "Existing" ],
             model: "existing-model",
             prompt_version: "v1",
             raw_response: { "event_id" => event.id }
@@ -422,7 +423,7 @@ module Importing
             ),
             response_for(
               event_id: events(:needs_review_one).id,
-              genre: [ "Concert", "Live Event" ],
+              genre: [ "Concert", "Rock" ],
               venue: "Im Wizemann",
               event_description: "Event zwei",
               venue_description: "Venue zwei"
@@ -441,7 +442,7 @@ module Importing
 
         assert_equal 3, result.enriched_count
         first_enrichment = events(:published_one).reload.llm_enrichment
-        assert_equal [ "Indie" ], first_enrichment.genre
+        assert_equal [ "Indie" ], events(:published_one).sub_genres.order(:name).pluck(:name)
         assert_equal [ "Show" ], first_enrichment.raw_response.dig("genre_filter", "rejected_terms")
       end
 
@@ -465,7 +466,8 @@ module Importing
             {
               "output_text" => {
                 event_id: @target_event_id,
-                genre: [ "Indie" ],
+                genres: [ "Pop, Indie & Singer-Songwriter" ],
+                sub_genres: [ "Indie" ],
                 venue: "LKA Longhorn",
                 event_description: "Event eins",
                 venue_description: "Venue eins",
@@ -497,6 +499,7 @@ module Importing
       def response_for(
         event_id:,
         genre:,
+        genres: [ "Pop, Indie & Singer-Songwriter" ],
         venue:,
         event_description:,
         venue_description:,
@@ -510,7 +513,8 @@ module Importing
         {
           "output_text" => {
             event_id: event_id,
-            genre: genre,
+            genres: genres,
+            sub_genres: genre,
             venue: venue,
             event_description: event_description,
             venue_description: venue_description,

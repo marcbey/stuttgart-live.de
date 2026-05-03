@@ -39,13 +39,6 @@ module Backend
         partial: "backend/settings/sections/llm_enrichment"
       },
       {
-        key: "llm_genre_grouping",
-        label: "LLM-Genre-Gruppierung",
-        panel_id: "settings-panel-llm-genre-grouping",
-        tab_id: "settings-tab-llm-genre-grouping",
-        partial: "backend/settings/sections/llm_genre_grouping"
-      },
-      {
         key: "merge_artist_similarity_matching",
         label: "Ähnlichkeits-Matching",
         panel_id: "settings-panel-merge-artist-similarity-matching",
@@ -129,24 +122,14 @@ module Backend
       when "sks_organizer_notes"
         @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
       when "homepage_genre_lanes"
-        @public_genre_grouping_snapshot_id_setting = AppSetting.public_genre_grouping_snapshot_id_record
-        @homepage_genre_lane_snapshots = LlmGenreGroupingSnapshot.recent_first.includes(:groups, :homepage_genre_lane_configuration).to_a
-        @homepage_selected_snapshot = homepage_selected_snapshot
-        @homepage_distinct_llm_genres = homepage_distinct_llm_genres
-        @homepage_distinct_llm_genres_text = @homepage_distinct_llm_genres.join(", ")
-        @homepage_genre_lane_configuration =
-          @homepage_selected_snapshot&.homepage_genre_lane_configuration || @homepage_selected_snapshot&.build_homepage_genre_lane_configuration
-        @homepage_genre_lane_reference_groups =
-          homepage_genre_lane_reference_groups(@homepage_selected_snapshot, @homepage_genre_lane_configuration&.lane_slugs)
+        @homepage_genre_lane_setting = AppSetting.homepage_genre_lane_slugs_record
+        @homepage_genre_lane_reference_genres =
+          homepage_genre_lane_reference_genres(@homepage_genre_lane_setting.homepage_genre_lane_slugs)
       when "llm_enrichment"
         @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
         @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
         @llm_enrichment_temperature_setting = AppSetting.llm_enrichment_temperature_record
         @llm_enrichment_web_search_provider_setting = AppSetting.llm_enrichment_web_search_provider_record
-      when "llm_genre_grouping"
-        @llm_genre_grouping_model_setting = AppSetting.llm_genre_grouping_model_record
-        @llm_genre_grouping_prompt_template_setting = AppSetting.llm_genre_grouping_prompt_template_record
-        @llm_genre_grouping_group_count_setting = AppSetting.llm_genre_grouping_group_count_record
       when "merge_artist_similarity_matching"
         @merge_artist_similarity_matching_setting = AppSetting.merge_artist_similarity_matching_enabled_record
       when "venue_duplicate_mappings"
@@ -161,9 +144,7 @@ module Backend
       when "sks_organizer_notes"
         @sks_organizer_notes_setting.sks_organizer_notes_text = active_settings_params[:sks_organizer_notes_text]
       when "homepage_genre_lanes"
-        @public_genre_grouping_snapshot_id_setting.public_genre_grouping_snapshot_id =
-          active_settings_params[:public_genre_grouping_snapshot_id]
-        @homepage_genre_lane_configuration&.lane_slugs = active_settings_params.fetch(:homepage_genre_lane_slugs, [])
+        @homepage_genre_lane_setting.homepage_genre_lane_slugs = active_settings_params.fetch(:homepage_genre_lane_slugs, [])
       when "llm_enrichment"
         @llm_enrichment_model_setting.llm_enrichment_model = active_settings_params[:llm_enrichment_model]
         @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text =
@@ -172,12 +153,6 @@ module Backend
           active_settings_params[:llm_enrichment_temperature]
         @llm_enrichment_web_search_provider_setting.llm_enrichment_web_search_provider =
           active_settings_params[:llm_enrichment_web_search_provider]
-      when "llm_genre_grouping"
-        @llm_genre_grouping_model_setting.llm_genre_grouping_model = active_settings_params[:llm_genre_grouping_model]
-        @llm_genre_grouping_prompt_template_setting.llm_genre_grouping_prompt_template_text =
-          active_settings_params[:llm_genre_grouping_prompt_template_text]
-        @llm_genre_grouping_group_count_setting.llm_genre_grouping_group_count =
-          active_settings_params[:llm_genre_grouping_group_count]
       when "merge_artist_similarity_matching"
         @merge_artist_similarity_matching_setting.merge_artist_similarity_matching_enabled =
           active_settings_params[:merge_artist_similarity_matching_enabled]
@@ -196,19 +171,13 @@ module Backend
       when "sks_organizer_notes"
         [ @sks_organizer_notes_setting ]
       when "homepage_genre_lanes"
-        [ @public_genre_grouping_snapshot_id_setting, @homepage_genre_lane_configuration ].compact
+        [ @homepage_genre_lane_setting ]
       when "llm_enrichment"
         [
           @llm_enrichment_model_setting,
           @llm_enrichment_prompt_template_setting,
           @llm_enrichment_temperature_setting,
           @llm_enrichment_web_search_provider_setting
-        ]
-      when "llm_genre_grouping"
-        [
-          @llm_genre_grouping_model_setting,
-          @llm_genre_grouping_prompt_template_setting,
-          @llm_genre_grouping_group_count_setting
         ]
       when "merge_artist_similarity_matching"
         [ @merge_artist_similarity_matching_setting ]
@@ -228,19 +197,13 @@ module Backend
       when "sks_organizer_notes"
         params.require(:app_setting).permit(:sks_organizer_notes_text)
       when "homepage_genre_lanes"
-        params.require(:app_setting).permit(:public_genre_grouping_snapshot_id, homepage_genre_lane_slugs: [])
+        params.require(:app_setting).permit(homepage_genre_lane_slugs: [])
       when "llm_enrichment"
         params.require(:app_setting).permit(
           :llm_enrichment_model,
           :llm_enrichment_prompt_template_text,
           :llm_enrichment_temperature,
           :llm_enrichment_web_search_provider
-        )
-      when "llm_genre_grouping"
-        params.require(:app_setting).permit(
-          :llm_genre_grouping_model,
-          :llm_genre_grouping_prompt_template_text,
-          :llm_genre_grouping_group_count
         )
       when "merge_artist_similarity_matching"
         params.require(:app_setting).permit(:merge_artist_similarity_matching_enabled)
@@ -260,72 +223,28 @@ module Backend
     end
 
     def active_section_redirect_path
-      return edit_backend_settings_path(section: @active_section_key, selected_snapshot_id: @homepage_selected_snapshot&.id) if @active_section_key == "homepage_genre_lanes"
-
       edit_backend_settings_path(section: @active_section_key)
     end
 
-    def homepage_selected_snapshot
-      snapshot_id = selected_homepage_snapshot_id
-      return if snapshot_id.blank?
-
-      @homepage_genre_lane_snapshots.find { |snapshot| snapshot.id == snapshot_id }
-    end
-
-    def selected_homepage_snapshot_id
-      AppSetting.normalize_positive_integer(params[:selected_snapshot_id].presence || params.dig(:app_setting, :public_genre_grouping_snapshot_id).presence) ||
-        AppSetting.public_genre_grouping_snapshot_id
-    end
-
-    def homepage_genre_lane_reference_groups(snapshot, selected_slugs = [])
-      return [] if snapshot.blank?
-
+    def homepage_genre_lane_reference_genres(selected_slugs = [])
       upcoming_relation = Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
       selected_positions = Array(selected_slugs).each_with_index.to_h
 
-      snapshot.groups.map do |group|
-        member_genres = homepage_genre_group_member_genres(group)
-
+      Genre.all.to_a.sort_by { |genre| Genre::STATIC_NAMES.index(genre.name) || Genre::STATIC_NAMES.size }.map do |genre|
         {
-          position: group.position,
-          name: group.name,
-          slug: group.slug,
-          upcoming_events_count: LlmGenreGrouping::Lookup.events_for_group(group, relation: upcoming_relation).count,
-          member_genres_text: "#{group.name}: #{member_genres.join(', ')}",
-          member_genres_tooltip: homepage_genre_group_member_genres_tooltip(member_genres)
+          position: Genre::STATIC_NAMES.index(genre.name) || Genre::STATIC_NAMES.size,
+          name: genre.name,
+          slug: genre.slug,
+          upcoming_events_count: upcoming_relation.joins(:genres).where(genres: { id: genre.id }).distinct.count
         }
-      end.sort_by do |group|
-        selection_index = selected_positions[group[:slug]]
+      end.sort_by do |genre|
+        selection_index = selected_positions[genre[:slug]]
         [
           selection_index.nil? ? 1 : 0,
-          selection_index || group[:position],
-          group[:position]
+          selection_index || genre[:position],
+          genre[:position]
         ]
       end
-    end
-
-    def homepage_genre_group_member_genres(group)
-      Array(group.member_genres).filter_map do |entry|
-        value = entry.to_s.strip
-        value.presence
-      end.uniq
-    end
-
-    def homepage_genre_group_member_genres_tooltip(member_genres)
-      return if member_genres.empty?
-
-      "Enthaltene Genres: #{member_genres.join(', ')}"
-    end
-
-    def homepage_distinct_llm_genres
-      EventLlmEnrichment.pluck(:genre)
-        .flatten
-        .compact
-        .map(&:to_s)
-        .map(&:strip)
-        .reject(&:blank?)
-        .uniq
-        .sort
     end
   end
 end

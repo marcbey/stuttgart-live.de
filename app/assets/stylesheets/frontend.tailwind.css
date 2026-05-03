@@ -5836,6 +5836,12 @@ display: inline-flex;
   line-height: 1.2;
 }
 
+.event-detail-sub-tag {
+  border-color: rgba(17, 17, 17, 0.18);
+  background: rgba(255, 255, 255, 0.62);
+  color: rgba(17, 17, 17, 0.74);
+}
+
 .event-detail-tag-group {
 border-color: rgba(227, 27, 46, 0.18);
   background: linear-gradient(180deg, rgba(227, 27, 46, 0.1), rgba(244, 216, 96, 0.1));

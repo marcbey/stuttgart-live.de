@@ -54,6 +54,8 @@ class Event < ApplicationRecord
   has_many :event_offers, dependent: :destroy
   has_many :event_genres, dependent: :destroy
   has_many :genres, through: :event_genres
+  has_many :event_sub_genres, dependent: :destroy
+  has_many :sub_genres, through: :event_sub_genres
   has_many :event_change_logs, dependent: :destroy
   has_many :event_images, dependent: :destroy
   has_many :event_presenters, -> { order(:position, :id) }, dependent: :destroy

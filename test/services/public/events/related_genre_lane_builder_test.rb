@@ -2,32 +2,13 @@ require "test_helper"
 
 class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
   setup do
+    EventGenre.delete_all
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
-    AppSetting.where(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY).delete_all
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135" ])
     AppSetting.reset_cache!
 
-    run = import_sources(:two).import_runs.create!(
-      source_type: "llm_genre_grouping",
-      status: "succeeded",
-      started_at: 2.minutes.ago,
-      finished_at: 1.minute.ago
-    )
-
-    @snapshot = run.create_llm_genre_grouping_snapshot!(
-      active: true,
-      requested_group_count: 30,
-      effective_group_count: 2,
-      source_genres_count: 3,
-      model: "gpt-5-mini",
-      prompt_template_digest: "digest",
-      request_payload: {},
-      raw_response: {}
-    )
-
-    @rock_group = @snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
-    @pop_group = @snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
-    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: @snapshot.id)
+    @rock_group = genres(:rock)
+    @pop_group = genres(:pop)
   end
 
   teardown do
@@ -38,7 +19,7 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     current_event = build_lane_event(slug: "related-current", artist_name: "Current Event", start_at: 4.days.from_now.change(hour: 20))
     matching_event = build_lane_event(slug: "related-match", artist_name: "Matching Event", start_at: 5.days.from_now.change(hour: 20))
 
-    build_lane_enrichment(event: current_event, genres: [ "Rock", "Pop" ])
+    build_lane_enrichment(event: current_event, genres: [ "Rock" ])
     build_lane_enrichment(event: matching_event, genres: [ "Rock" ])
 
     lane = build_builder(event: current_event).call
@@ -111,29 +92,17 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     assert_not_includes lane.events.map(&:id), current_event.id
   end
 
-  test "uses a bounded candidate limit for related lane events" do
+  test "builds related lane through static genre associations" do
     current_event = build_lane_event(slug: "related-candidate-current", artist_name: "Current Event", start_at: 2.days.from_now.change(hour: 20))
     related_event = build_lane_event(slug: "related-candidate-match", artist_name: "Matching Event", start_at: 3.days.from_now.change(hour: 20))
 
     build_lane_enrichment(event: current_event, genres: [ "Rock" ])
     build_lane_enrichment(event: related_event, genres: [ "Rock" ])
 
-    captured_limit = nil
-    lookup_singleton = LlmGenreGrouping::Lookup.singleton_class
-    original_lookup = LlmGenreGrouping::Lookup.method(:chronological_events_for_group)
+    lane = build_builder(event: current_event).call
 
-    lookup_singleton.send(:define_method, :chronological_events_for_group) do |group, relation:, limit:, exclude_event_id: nil|
-      captured_limit = limit
-      original_lookup.call(group, relation:, limit:, exclude_event_id:)
-    end
-
-    begin
-      build_builder(event: current_event).call
-    ensure
-      lookup_singleton.send(:define_method, :chronological_events_for_group, original_lookup)
-    end
-
-    assert_equal 400, captured_limit
+    assert_equal @rock_group.id, lane.group.id
+    assert_equal [ related_event.id ], lane.events.map(&:id)
   end
 
   test "marks a related lane event as event series when another published event exists only in the past" do
@@ -186,13 +155,17 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
   end
 
   def build_lane_enrichment(event:, genres:)
-    EventLlmEnrichment.create!(
-      event: event,
-      source_run: import_runs(:one),
-      genre: genres,
-      model: "gpt-5-mini",
-      prompt_version: "v1",
-      raw_response: {}
-    )
+    event.genres = genres.map { |name| genre_for(name) }
+  end
+
+  def genre_for(name)
+    case name
+    when "Rock"
+      @rock_group
+    when "Pop"
+      @pop_group
+    else
+      Genre.find_by!(name: name)
+    end
   end
 end

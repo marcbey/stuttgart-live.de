@@ -4,6 +4,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
   VALID_LLM_ENRICHMENT_PROMPT = <<~TEXT.strip
     Nutze search_results und candidates für homepage_link, instagram_link, facebook_link und youtube_link.
     Ermittle venue_external_url direkt.
+    Ermittle genres und sub_genres.
     {{input_json}}
   TEXT
 
@@ -20,14 +21,13 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
   test "admin can edit settings with tab shell and default section" do
     sign_in_as(@admin)
     seed_all_settings!
-    create_homepage_genre_snapshot
 
     get edit_backend_settings_url
 
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Einstellungen"
     assert_select "[data-controller='settings-tabs']", count: 1
-    assert_select "[role='tab']", count: 8
+    assert_select "[role='tab']", count: 7
     assert_select "#settings-tab-meta-connection[aria-selected='true']", count: 1
     assert_select "article.social-post-card", count: 2
     assert_select "form[action='#{backend_settings_path(section: :sks_promoter_ids)}'] textarea[name='app_setting[sks_promoter_ids_text]']", count: 0
@@ -89,11 +89,11 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@admin)
     seed_all_settings!
 
-    get edit_backend_settings_url(section: :llm_genre_grouping)
+    get edit_backend_settings_url(section: :llm_enrichment)
 
     assert_response :success
-    assert_select "#settings-tab-llm-genre-grouping[aria-selected='true']", count: 1
-    assert_select "form[action='#{backend_settings_path(section: :llm_genre_grouping)}'] select[name='app_setting[llm_genre_grouping_model]']", count: 1
+    assert_select "#settings-tab-llm-enrichment[aria-selected='true']", count: 1
+    assert_select "form[action='#{backend_settings_path(section: :llm_enrichment)}'] select[name='app_setting[llm_enrichment_model]']", count: 1
     assert_select "option[value='gpt-5.4']", text: "GPT-5.4", count: 1
     assert_select "textarea[name='app_setting[sks_promoter_ids_text]']", count: 0
   end
@@ -163,141 +163,29 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "openwebninja", AppSetting.llm_enrichment_web_search_provider
   end
 
-  test "admin can update llm genre grouping section with gpt-5.4" do
-    sign_in_as(@admin)
-
-    patch backend_settings_url(section: :llm_genre_grouping), params: {
-      app_setting: {
-        llm_genre_grouping_model: "gpt-5.4",
-        llm_genre_grouping_prompt_template_text: "Gruppiere sauber\n{{group_count}}\n{{input_json}}",
-        llm_genre_grouping_group_count: "35"
-      }
-    }
-
-    assert_redirected_to edit_backend_settings_url(section: :llm_genre_grouping)
-    assert_equal "gpt-5.4", AppSetting.llm_genre_grouping_model
-    assert_equal "Gruppiere sauber\n{{group_count}}\n{{input_json}}", AppSetting.llm_genre_grouping_prompt_template
-    assert_equal 35, AppSetting.llm_genre_grouping_group_count
-  end
-
   test "admin can update homepage genre lanes section" do
     sign_in_as(@admin)
-    snapshot = create_homepage_genre_snapshot
 
     patch backend_settings_url(section: :homepage_genre_lanes), params: {
       app_setting: {
-        public_genre_grouping_snapshot_id: snapshot.id,
-        homepage_genre_lane_slugs: [ "rock-alternative", "pop-mainstream" ]
+        homepage_genre_lane_slugs: [ "rock-alternative", "pop-indie-singer-songwriter" ]
       }
     }
 
-    assert_redirected_to edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot.id)
-    assert_equal snapshot.id, AppSetting.public_genre_grouping_snapshot_id
-    assert_equal [ "rock-alternative", "pop-mainstream" ], snapshot.reload.homepage_genre_lane_configuration.lane_slugs
+    assert_redirected_to edit_backend_settings_url(section: :homepage_genre_lanes)
+    assert_equal [ "rock-alternative", "pop-indie-singer-songwriter" ], AppSetting.homepage_genre_lane_slugs
   end
 
-  test "homepage genre lanes section shows the stored configuration of the selected snapshot" do
+  test "homepage genre lanes section shows the stored configuration" do
     sign_in_as(@admin)
-    snapshot_one = create_homepage_genre_snapshot(selected: true, lane_slugs: [ "rock-alternative" ])
-    snapshot_two = create_homepage_genre_snapshot(lane_slugs: [ "pop-mainstream" ])
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ "pop-indie-singer-songwriter" ])
 
-    get edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot_two.id)
+    get edit_backend_settings_url(section: :homepage_genre_lanes)
 
     assert_response :success
-    assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='pop-mainstream'][checked='checked']", count: 1
+    assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='pop-indie-singer-songwriter'][checked='checked']", count: 1
     assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='rock-alternative'][checked='checked']", count: 0
-
-    get edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot_one.id)
-
-    assert_response :success
-    assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='rock-alternative'][checked='checked']", count: 1
-    assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='pop-mainstream'][checked='checked']", count: 0
-    assert_select ".settings-reference-selection-index", text: "-", count: 2
-  end
-
-  test "homepage genre lanes section shows member genres as hover tooltip" do
-    sign_in_as(@admin)
-    snapshot = create_homepage_genre_snapshot(selected: true)
-    snapshot.groups.find_by!(slug: "rock-alternative").update!(member_genres: [ "Rock", " Alternative ", "", "Rock" ])
-
-    get edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot.id)
-
-    assert_response :success
-    assert_select ".settings-reference-checkbox-copy[title='Enthaltene Genres: Alternative, Rock'] strong",
-                  text: "Rock & Alternative",
-                  count: 1
-  end
-
-  test "homepage genre lanes section renders copy buttons for member genres" do
-    sign_in_as(@admin)
-    snapshot = create_homepage_genre_snapshot(selected: true)
-    snapshot.groups.find_by!(slug: "rock-alternative").update!(member_genres: [ "Rock", " Alternative ", "", "Rock" ])
-
-    get edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot.id)
-
-    assert_response :success
-    assert_select ".settings-reference-item-actions[data-controller='clipboard']", count: 2
-    assert_select ".settings-reference-copy-button[aria-label='Genres von Rock & Alternative in Zwischenablage kopieren']",
-                  count: 1
-    assert_select ".settings-reference-copy-button svg", count: 2
-    assert_select "[data-clipboard-target='source']", text: "Rock & Alternative: Alternative, Rock", count: 1
-  end
-
-  test "homepage genre lanes section renders copy button for distinct llm genres" do
-    sign_in_as(@admin)
-    snapshot = create_homepage_genre_snapshot(selected: true)
-
-    first_event = Event.create!(
-      slug: "homepage-genre-lanes-copy-source-1",
-      source_fingerprint: "test::settings::homepage-genre-lanes-copy-source-1",
-      title: "Homepage Genre Copy Source 1",
-      artist_name: "Homepage Genre Copy Artist 1",
-      start_at: 5.days.from_now.change(hour: 20),
-      venue: "Club Zentral",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      source_snapshot: {}
-    )
-    second_event = Event.create!(
-      slug: "homepage-genre-lanes-copy-source-2",
-      source_fingerprint: "test::settings::homepage-genre-lanes-copy-source-2",
-      title: "Homepage Genre Copy Source 2",
-      artist_name: "Homepage Genre Copy Artist 2",
-      start_at: 6.days.from_now.change(hour: 20),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 1.day.ago,
-      source_snapshot: {}
-    )
-
-    EventLlmEnrichment.create!(
-      event: first_event,
-      source_run: import_runs(:one),
-      genre: [ "Rock", " Alternative ", "", "Rock" ],
-      model: "gpt-5-mini",
-      prompt_version: "v1",
-      raw_response: {}
-    )
-    EventLlmEnrichment.create!(
-      event: second_event,
-      source_run: import_runs(:one),
-      genre: [ "Pop", "Alternative" ],
-      model: "gpt-5-mini",
-      prompt_version: "v1",
-      raw_response: {}
-    )
-
-    get edit_backend_settings_url(section: :homepage_genre_lanes, selected_snapshot_id: snapshot.id)
-
-    assert_response :success
-    assert_select ".settings-group-header-actions[data-controller='clipboard'] .button",
-                  text: "3 LLM-Genres kopieren",
-                  count: 1
-    assert_select ".settings-group-header-actions [data-clipboard-target='source']",
-                  text: "Alternative, Pop, Rock",
-                  count: 1
+    assert_select ".settings-reference-selection-index", text: "-", minimum: 1
   end
 
   test "admin can enable similarity matching in settings" do
@@ -416,23 +304,6 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "muss eine Zahl zwischen 0 und 2 sein"
   end
 
-  test "admin cannot save invalid llm genre grouping settings" do
-    sign_in_as(@admin)
-
-    patch backend_settings_url(section: :llm_genre_grouping), params: {
-      app_setting: {
-        llm_genre_grouping_model: "gpt-5-mini",
-        llm_genre_grouping_prompt_template_text: "Gruppiere\n{{input_json}}",
-        llm_genre_grouping_group_count: "0"
-      }
-    }
-
-    assert_response :unprocessable_entity
-    assert_select "#settings-tab-llm-genre-grouping[aria-selected='true']", count: 1
-    assert_includes response.body, "{{group_count}} muss im Prompt enthalten sein"
-    assert_includes response.body, "muss eine positive Ganzzahl sein"
-  end
-
   test "admin cannot save invalid venue duplicate mapping" do
     sign_in_as(@admin)
 
@@ -454,14 +325,10 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
       AppSetting::SKS_PROMOTER_IDS_KEY,
       AppSetting::SKS_ORGANIZER_NOTES_KEY,
       AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY,
-      AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY,
       AppSetting::LLM_ENRICHMENT_MODEL_KEY,
       AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY,
       AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY,
       AppSetting::LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY,
-      AppSetting::LLM_GENRE_GROUPING_MODEL_KEY,
-      AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY,
-      AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY,
       AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY,
       AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY
     ].each do |key|
@@ -600,38 +467,8 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.new(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}").save!(validate: false)
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_TEMPERATURE_KEY, value: 1)
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY, value: "serpapi")
-    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5-mini")
-    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Gruppiere\n{{group_count}}\n{{input_json}}")
-    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 30)
     AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
     AppSetting.create!(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY, value: [])
     AppSetting.reset_cache!
-  end
-
-  def create_homepage_genre_snapshot(selected: false, lane_slugs: [])
-    run = import_sources(:two).import_runs.create!(
-      source_type: "llm_genre_grouping",
-      status: "succeeded",
-      started_at: 2.minutes.ago,
-      finished_at: 1.minute.ago
-    )
-
-    snapshot = run.create_llm_genre_grouping_snapshot!(
-      active: false,
-      requested_group_count: 30,
-      effective_group_count: 2,
-      source_genres_count: 2,
-      model: "gpt-5-mini",
-      prompt_template_digest: "digest",
-      request_payload: {},
-      raw_response: {}
-    )
-
-    snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
-    snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
-    snapshot.create_homepage_genre_lane_configuration!(lane_slugs:)
-    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: snapshot.id) if selected
-
-    snapshot
   end
 end

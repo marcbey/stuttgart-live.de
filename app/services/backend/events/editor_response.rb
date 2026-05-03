@@ -1,9 +1,10 @@
 module Backend
   module Events
     class EditorResponse
-      def initialize(controller:, all_genres:, all_presenters:, next_event_enabled:)
+      def initialize(controller:, all_genres:, all_sub_genres:, all_presenters:, next_event_enabled:)
         @controller = controller
         @all_genres = all_genres
+        @all_sub_genres = all_sub_genres
         @all_presenters = all_presenters
         @next_event_enabled = next_event_enabled
       end
@@ -46,7 +47,7 @@ module Backend
 
       private
 
-      attr_reader :all_genres, :all_presenters, :controller, :next_event_enabled
+      attr_reader :all_genres, :all_sub_genres, :all_presenters, :controller, :next_event_enabled
 
       def success_streams(editor_state:, active_editor_tab:)
         [
@@ -96,6 +97,7 @@ module Backend
         {
           event: event,
           all_genres: all_genres,
+          all_sub_genres: all_sub_genres,
           all_presenters: all_presenters,
           next_event_enabled: next_event_enabled,
           filter_status: filter_status,

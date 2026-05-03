@@ -27,10 +27,13 @@
         <% end %>
       </div>
 
-      <% if presenter.genre_tags.any? %>
-        <div class="event-detail-tags" aria-label="Genres">
+      <% if presenter.genre_tags.any? || presenter.sub_genre_tags.any? %>
+        <div class="event-detail-tags" aria-label="Genres und Sub-Genres">
           <% presenter.genre_tags.each do |genre| %>
             <span class="event-detail-tag"><%= genre %></span>
+          <% end %>
+          <% presenter.sub_genre_tags.each do |sub_genre| %>
+            <span class="event-detail-tag event-detail-sub-tag"><%= sub_genre %></span>
           <% end %>
         </div>
       <% end %>

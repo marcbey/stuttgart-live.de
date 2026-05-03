@@ -49,7 +49,7 @@ module Backend
     private
 
     def set_import_run
-      @import_run = ImportRun.includes(:import_source, :import_run_errors, llm_genre_grouping_snapshot: :groups).find(params[:id])
+      @import_run = ImportRun.includes(:import_source, :import_run_errors).find(params[:id])
     end
 
     def import_run_event_llm_enrichments

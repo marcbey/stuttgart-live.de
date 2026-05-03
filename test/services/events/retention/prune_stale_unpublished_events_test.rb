@@ -43,7 +43,6 @@ class Events::Retention::PruneStaleUnpublishedEventsTest < ActiveSupport::TestCa
     EventLlmEnrichment.create!(
       event: stale_event,
       source_run: import_runs(:one),
-      genre: [ "Rock" ],
       venue: stale_event.venue,
       event_description: "Event-Beschreibung",
       venue_description: "Venue-Beschreibung",

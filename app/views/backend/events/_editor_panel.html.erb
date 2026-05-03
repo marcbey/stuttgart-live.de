@@ -155,6 +155,7 @@
         <%= render "backend/events/editor_event_view",
                    event: event,
                    all_genres: all_genres,
+                   all_sub_genres: all_sub_genres,
                    next_event_enabled: next_event_enabled,
                    filter_status: filter_status,
                    active_editor_tab: active_editor_tab,
@@ -216,6 +217,7 @@
           <%= render "backend/events/llm_enrichment_fields",
                      event: event,
                      llm_enrichment: llm_enrichment,
+                     all_genres: all_genres,
                      editor_form_id: editor_form_id,
                      filter_status: filter_status %>
         </section>
@@ -247,6 +249,7 @@
         <%= render "backend/events/settings_fields",
                    event: event,
                    all_genres: all_genres,
+                   all_sub_genres: all_sub_genres,
                    editor_form_id: editor_form_id %>
       </section>
     </div>

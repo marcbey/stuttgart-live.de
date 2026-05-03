@@ -372,11 +372,11 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       instagram_link: "https://instagram.example/llm-band",
       facebook_link: "https://facebook.example/llm-band",
       youtube_link: "https://www.youtube.com/watch?v=fallback",
-      genre: [ "Indie", "Rock" ],
       model: "gpt-test",
       prompt_version: "v1",
       raw_response: {}
     )
+    event.define_singleton_method(:sub_genres) { FakeGenres.new([ "Indie", "Rock" ]) }
     event.venue_record.description = "Venue Modell Beschreibung"
 
     presenter = build_presenter(event)
@@ -388,8 +388,9 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "Homepage", "Instagram", "Facebook" ], presenter.external_links.map(&:label)
     assert_equal [ "https://llm-homepage.example", "https://instagram.example/llm-band", "https://facebook.example/llm-band" ], presenter.external_links.map(&:url)
     assert_equal "https://www.youtube.com/embed/fallback", presenter.youtube_embed_url
-    assert_equal [ "Pop", "Rock", "Indie" ], presenter.genre_tags
-    assert_equal [ "Indie", "Rock" ], presenter.enrichment_genres
+    assert_equal [ "Pop", "Rock" ], presenter.genre_tags
+    assert_equal [ "Indie", "Rock" ], presenter.sub_genre_tags
+    assert_equal [ "Pop", "Rock", "Indie" ], presenter.detail_genres
     assert_equal "Im Wizemann", presenter.venue_info.name
   end
 
@@ -481,7 +482,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       view_context: ViewContextStub.new
     )
 
-    queries = capture_sql_queries { assert_equal [ "Rock" ], presenter.genres }
+    queries = capture_sql_queries { assert_equal [ "Rock & Alternative" ], presenter.genres }
 
     assert_equal 0, queries
   end

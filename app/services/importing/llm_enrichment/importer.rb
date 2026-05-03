@@ -6,7 +6,7 @@ module Importing
       RUN_STALE_AFTER = 4.hours
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       EVENT_INFO_MAX_LENGTH = 1000
-      PROMPT_VERSION = "v8"
+      PROMPT_VERSION = "v9"
       OUTPUT_SCHEMA_NAME = "event_llm_enrichment".freeze
       SEARCH_LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
       VALIDATED_LINK_FIELDS = %i[venue_external_url].freeze
@@ -247,7 +247,8 @@ module Importing
             additionalProperties: false,
             required: %w[
               event_id
-              genre
+              genres
+              sub_genres
               venue
               event_description
               venue_description
@@ -260,8 +261,16 @@ module Importing
             ],
             properties: {
               event_id: { type: "integer" },
-              genre: {
+              genres: {
                 type: "array",
+                minItems: 1,
+                maxItems: 3,
+                items: { type: "string", enum: Genre::STATIC_NAMES }
+              },
+              sub_genres: {
+                type: "array",
+                minItems: 1,
+                maxItems: 4,
                 items: { type: "string" }
               },
               venue: { type: [ "string", "null" ] },
@@ -360,7 +369,9 @@ module Importing
         event_id = attributes.fetch(:event_id)
         raise Error, "OpenAI-Antwort enthält event_id=#{event_id}, die nicht zum aktuellen Event passt." unless event_id == event.id
 
-        filtered_attributes, genre_filter_payload = filter_meta_genres(attributes)
+        filtered_attributes, genre_filter_payload = filter_meta_sub_genres(attributes)
+        validated_genres = validate_static_genres!(filtered_attributes[:genres])
+        sub_genres = validate_sub_genres!(filtered_attributes[:sub_genres])
         selected_link_result = resolve_selected_links(attributes: filtered_attributes, search_context_result:)
         validated_attributes, validation_payload = validate_payload_attributes(selected_link_result.attributes)
         raw_result = payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
@@ -379,7 +390,6 @@ module Importing
         ActiveRecord::Base.transaction do
           enrichment = EventLlmEnrichment.find_or_initialize_by(event_id: event_id)
           enrichment.source_run = run
-          enrichment.genre = validated_attributes[:genre]
           enrichment.venue = validated_attributes[:venue]
           enrichment.event_description = validated_attributes[:event_description]
           enrichment.venue_description = validated_attributes[:venue_description]
@@ -394,6 +404,8 @@ module Importing
           enrichment.raw_response = raw_response
           enrichment.save!
 
+          event.genres = genre_records_for(validated_genres)
+          event.sub_genres = sub_genre_records_for(sub_genres)
           Venues::LlmFallbackAssignment.call(event: event, enrichment: enrichment)
         end
 
@@ -405,7 +417,8 @@ module Importing
 
         {
           event_id: Integer(item["event_id"] || item[:event_id], exception: false),
-          genre: Array(item["genre"] || item[:genre]),
+          genres: Array(item["genres"] || item[:genres]),
+          sub_genres: Array(item["sub_genres"] || item[:sub_genres]),
           venue: item["venue"] || item[:venue],
           event_description: item["event_description"] || item[:event_description],
           venue_description: item["venue_description"] || item[:venue_description],
@@ -532,23 +545,23 @@ module Importing
         }
       end
 
-      def filter_meta_genres(attributes)
+      def filter_meta_sub_genres(attributes)
         filtered_attributes = attributes.deep_dup
-        filtered_genres = []
+        filtered_sub_genres = []
         rejected_terms = []
 
-        Array(attributes[:genre]).each do |entry|
-          genre = entry.to_s.strip
-          next if genre.blank?
+        Array(attributes[:sub_genres]).each do |entry|
+          sub_genre = entry.to_s.strip
+          next if sub_genre.blank?
 
-          if meta_genre?(genre)
-            rejected_terms << genre
+          if meta_genre?(sub_genre)
+            rejected_terms << sub_genre
           else
-            filtered_genres << genre
+            filtered_sub_genres << sub_genre
           end
         end
 
-        filtered_attributes[:genre] = filtered_genres.uniq
+        filtered_attributes[:sub_genres] = filtered_sub_genres.uniq
 
         [
           filtered_attributes,
@@ -701,6 +714,39 @@ module Importing
 
       def normalize_meta_genre_term(value)
         self.class.normalize_meta_genre_term(value)
+      end
+
+      def validate_static_genres!(values)
+        genres = Array(values).filter_map { |entry| entry.to_s.strip.presence }.uniq
+        raise Error, "OpenAI-Antwort muss 1 bis 3 statische Genres enthalten." unless (1..3).cover?(genres.size)
+
+        invalid_genres = genres.reject { |genre| Genre.static_name?(genre) }
+        if invalid_genres.any?
+          raise Error, "OpenAI-Antwort enthält unbekannte statische Genres: #{invalid_genres.join(', ')}"
+        end
+
+        genres
+      end
+
+      def validate_sub_genres!(values)
+        sub_genres = Array(values).filter_map { |entry| entry.to_s.strip.presence }.uniq
+        raise Error, "OpenAI-Antwort muss 1 bis 4 Sub-Genres enthalten." unless (1..4).cover?(sub_genres.size)
+
+        sub_genres
+      end
+
+      def genre_records_for(names)
+        Genre.where(name: names).index_by(&:name).values_at(*names).tap do |records|
+          raise Error, "Statische Genres fehlen in der Datenbank." if records.any?(&:blank?)
+        end
+      end
+
+      def sub_genre_records_for(names)
+        names.map do |name|
+          SubGenre.find_or_create_by!(slug: name.parameterize) do |sub_genre|
+            sub_genre.name = name
+          end
+        end
       end
 
       def refresh_existing?

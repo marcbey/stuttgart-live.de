@@ -60,7 +60,7 @@ module Public
       compact_matches = compact_query.present? ? [ compact_searchable_text.matches("%#{compact_query}%") ] : []
       predicate = (wildcard_matches + raw_matches + compact_matches).reduce { |combined, condition| combined.or(condition) }
 
-      matching_ids = relation.left_outer_joins(:genres).where(predicate).select(:id)
+      matching_ids = relation.left_outer_joins(:genres, :sub_genres).where(predicate).select(:id)
       relation.where(id: matching_ids)
     end
 
@@ -68,7 +68,8 @@ module Public
       events = Event.arel_table
       venues = Venue.arel_table
       genres = Genre.arel_table
-      [ events[:artist_name], events[:normalized_artist_name], events[:title], venues[:name], events[:city], genres[:name] ]
+      sub_genres = SubGenre.arel_table
+      [ events[:artist_name], events[:normalized_artist_name], events[:title], venues[:name], events[:city], genres[:name], sub_genres[:name] ]
     end
 
     def searchable_text_node

@@ -178,7 +178,6 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     EventLlmEnrichment.create!(
       event: events(:published_one),
       source_run: run,
-      genre: [ "Indie" ],
       venue: "LKA Longhorn",
       event_description: "Event eins",
       venue_description: "Venue eins",
@@ -188,7 +187,8 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
         "llm_prompt" => "Prompttext für Event 1",
         "llm_raw_result" => {
           "event_id" => events(:published_one).id,
-          "genre" => [ "Indie" ]
+          "genres" => [ "Rock & Alternative" ],
+          "sub_genres" => [ "Indie" ]
         }
       }
     )
@@ -199,7 +199,8 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Gesendeter Prompt anzeigen"
     assert_includes response.body, "Prompttext für Event 1"
     assert_includes response.body, "&quot;event_id&quot;: #{events(:published_one).id}"
-    assert_includes response.body, "&quot;genre&quot;: ["
+    assert_includes response.body, "&quot;genres&quot;: ["
+    assert_includes response.body, "&quot;sub_genres&quot;: ["
   end
 
   test "shows llm run error message and payload details on detail page" do
@@ -228,48 +229,5 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".flash.flash-alert", text: /OpenAI-Kontingent überschritten/
     assert_includes response.body, "&quot;status&quot;: 429"
     assert_includes response.body, "&quot;code&quot;: &quot;insufficient_quota&quot;"
-  end
-
-  test "shows llm genre grouping run with snapshot details on detail page" do
-    run = import_sources(:two).import_runs.create!(
-      status: "succeeded",
-      source_type: "llm_genre_grouping",
-      started_at: 2.minutes.ago,
-      finished_at: 1.minute.ago,
-      fetched_count: 120,
-      filtered_count: 3,
-      imported_count: 30,
-      upserted_count: 2,
-      failed_count: 0,
-      metadata: {
-        "snapshot_key" => SecureRandom.uuid,
-        "requested_group_count" => 30,
-        "effective_group_count" => 30,
-        "model" => "gpt-5-mini"
-      }
-    )
-    snapshot = run.create_llm_genre_grouping_snapshot!(
-      snapshot_key: SecureRandom.uuid,
-      active: true,
-      requested_group_count: 30,
-      effective_group_count: 30,
-      source_genres_count: 120,
-      model: "gpt-5-mini",
-      prompt_template_digest: "digest",
-      request_payload: {},
-      raw_response: {}
-    )
-    snapshot.groups.create!(position: 1, name: "Rock & Pop", member_genres: [ "Rock", "Pop" ])
-
-    get backend_import_run_url(run)
-    assert_response :success
-    assert_select "table.data-table tbody tr td:nth-child(1) code", text: run.id.to_s
-    assert_select "table.data-table tbody tr td:nth-child(4)", text: "120"
-    assert_select "table.data-table tbody tr td:nth-child(5)", text: "3"
-    assert_select "table.data-table tbody tr td:nth-child(6)", text: "30"
-    assert_select "table.data-table tbody tr td:nth-child(7)", text: "2"
-    assert_includes response.body, "Gruppierungs-Snapshot"
-    assert_select "td", text: "Rock & Pop"
-    assert_includes response.body, snapshot.snapshot_key
   end
 end

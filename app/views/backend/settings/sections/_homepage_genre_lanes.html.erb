@@ -4,103 +4,45 @@
   <div class="settings-group-header">
     <div class="settings-group-header-main">
       <h2>Homepage Genre-Lanes</h2>
-      <p>Wählt den global verwendeten Genre-Snapshot und steuert pro Snapshot, welche Obergruppen als zusätzliche Slider-Lanes auf der Startseite erscheinen.</p>
+      <p>Wählt aus der statischen Genre-Liste, welche Genres als zusätzliche Slider-Lanes auf der Startseite erscheinen.</p>
     </div>
-    <% if @homepage_distinct_llm_genres_text.present? %>
-      <div class="settings-group-header-actions"
-           data-controller="clipboard">
-        <button type="button"
-                class="button button-ghost button-compact settings-reference-list-copy-button"
-                data-action="click->clipboard#copy"
-                data-clipboard-target="copyButton"
-                aria-label="Distinct LLM-Genres in Zwischenablage kopieren"
-                title="Distinct LLM-Genres kopieren">
-          <%= "#{@homepage_distinct_llm_genres.size} LLM-Genres kopieren" %>
-        </button>
-        <p class="sr-only" role="status" aria-live="polite" data-clipboard-target="status"></p>
-        <span class="sr-only" data-clipboard-target="source"><%= @homepage_distinct_llm_genres_text %></span>
-      </div>
-    <% end %>
   </div>
   <div class="settings-group-body">
-    <%= form_with url: edit_backend_settings_path,
-                  method: :get,
-                  class: "editor-form" do |form| %>
-      <%= hidden_field_tag :section, section_key %>
-      <div class="form-group">
-        <%= form.label :selected_snapshot_id, "Genre-Snapshot", class: "form-label" %>
-        <%= form.select :selected_snapshot_id,
-                        options_for_select(
-                          @homepage_genre_lane_snapshots.map do |snapshot|
-                            [ "Snapshot ##{snapshot.id} · #{l(snapshot.created_at, format: '%d.%m.%Y %H:%M')} · #{snapshot.model} · #{snapshot.groups.size} Gruppen", snapshot.id ]
-                          end,
-                          @homepage_selected_snapshot&.id
-                        ),
-                        { include_blank: "Kein Snapshot ausgewählt" },
-                        {
-                          class: "form-select",
-                          onchange: "this.form.requestSubmit()"
-                        } %>
-      </div>
-    <% end %>
-
-    <%= form_with model: @public_genre_grouping_snapshot_id_setting,
+    <%= form_with model: @homepage_genre_lane_setting,
                   url: backend_settings_path(section: section_key),
                   method: :patch,
                   class: "editor-form" do |form| %>
-      <%= form.hidden_field :public_genre_grouping_snapshot_id, value: @homepage_selected_snapshot&.id %>
-
-      <% if @homepage_genre_lane_reference_groups.any? %>
+      <% if @homepage_genre_lane_reference_genres.any? %>
         <div class="settings-reference-list">
-          <h3>Obergruppen aus Snapshot <%= @homepage_selected_snapshot.id %></h3>
+          <h3>Statische Genres</h3>
           <p class="form-hint">Auswahl per Checkbox. Reihenfolge per Drag & Drop.</p>
           <%= hidden_field_tag "app_setting[homepage_genre_lane_slugs][]", "" %>
           <ul class="settings-reference-items settings-reference-items-columns"
               data-controller="settings-sortable">
-            <% @homepage_genre_lane_reference_groups.each do |group| %>
+            <% @homepage_genre_lane_reference_genres.each do |genre| %>
               <li class="settings-reference-item"
                   data-settings-sortable-target="item"
                   data-action="dragstart->settings-sortable#dragstart dragover->settings-sortable#dragover dragenter->settings-sortable#dragenter drop->settings-sortable#drop dragend->settings-sortable#dragend"
                   draggable="true">
-                <div class="settings-reference-item-actions"
-                     data-controller="clipboard">
-                  <button type="button"
-                          class="settings-reference-copy-button"
-                          data-action="click->clipboard#copy"
-                          data-clipboard-target="copyButton"
-                          aria-label="Genres von <%= group[:name] %> in Zwischenablage kopieren"
-                          title="Genres kopieren">
-                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
-                      <path d="M9 9.75A2.25 2.25 0 0 1 11.25 7.5h6A2.25 2.25 0 0 1 19.5 9.75v8.25a2.25 2.25 0 0 1-2.25 2.25h-6A2.25 2.25 0 0 1 9 18z" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
-                      <path d="M6 15.75V6A2.25 2.25 0 0 1 8.25 3.75h7.5" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8"/>
-                    </svg>
-                    <span class="sr-only">Genres kopieren</span>
-                  </button>
-                  <p class="sr-only" role="status" aria-live="polite" data-clipboard-target="status"></p>
-                  <span class="sr-only" data-clipboard-target="source"><%= group[:member_genres_text] %></span>
-                </div>
                 <label class="settings-reference-checkbox">
                   <span class="settings-reference-selection-index"
                         data-settings-sortable-target="index">-</span>
                   <span class="settings-reference-drag-handle" aria-hidden="true">⋮⋮</span>
                   <%= check_box_tag "app_setting[homepage_genre_lane_slugs][]",
-                                    group[:slug],
-                                    @homepage_genre_lane_configuration&.lane_slugs.to_a.include?(group[:slug]),
+                                    genre[:slug],
+                                    @homepage_genre_lane_setting.homepage_genre_lane_slugs.include?(genre[:slug]),
                                     data: { action: "change->settings-sortable#syncSelectionState" } %>
-                  <span class="settings-reference-checkbox-copy"
-                        <% if group[:member_genres_tooltip].present? %>title="<%= group[:member_genres_tooltip] %>"<% end %>>
-                    <strong><%= group[:name] %></strong>
-                    <span><%= group[:upcoming_events_count] %> kommende Events</span>
+                  <span class="settings-reference-checkbox-copy">
+                    <strong><%= genre[:name] %></strong>
+                    <span><%= genre[:upcoming_events_count] %> kommende Events</span>
                   </span>
                 </label>
               </li>
             <% end %>
           </ul>
         </div>
-      <% elsif @homepage_selected_snapshot.present? %>
-        <p class="form-hint">Der ausgewählte Snapshot enthält aktuell keine Obergruppen.</p>
       <% else %>
-        <p class="form-hint">Aktuell ist kein Genre-Snapshot ausgewählt.</p>
+        <p class="form-hint">Die statische Genre-Liste ist noch nicht angelegt.</p>
       <% end %>
 
       <div class="settings-group-footer">

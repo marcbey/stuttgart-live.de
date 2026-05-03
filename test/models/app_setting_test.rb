@@ -181,26 +181,6 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal [], AppSetting.homepage_genre_lane_slugs
   end
 
-  test "normalizes public genre grouping snapshot id" do
-    setting = AppSetting.new(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY)
-    setting.public_genre_grouping_snapshot_id = "42"
-
-    assert_equal 42, setting.public_genre_grouping_snapshot_id
-  end
-
-  test "returns configured public genre grouping snapshot id" do
-    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: 7)
-
-    assert_equal 7, AppSetting.public_genre_grouping_snapshot_id
-  end
-
-  test "rejects invalid public genre grouping snapshot id" do
-    setting = AppSetting.new(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: "abc")
-
-    assert_not setting.valid?
-    assert_includes setting.errors[:value], "muss eine positive Ganzzahl sein"
-  end
-
   test "returns default llm enrichment prompt template when no setting exists" do
     assert_includes AppSetting.llm_enrichment_prompt_template, "{{input_json}}"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`venue_external_url`"
@@ -212,12 +192,15 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_includes AppSetting.llm_enrichment_prompt_template, "`search_results.fields.<feld>.candidates`"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`venue_external_url` ermittelst du direkt"
     assert_not_includes AppSetting.llm_enrichment_prompt_template, "`youtube_link` und `venue_external_url` darfst du ausschließlich"
-    assert_includes AppSetting.llm_enrichment_prompt_template, "nicht den bloßen Eventtyp oder einen Containerbegriff"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "darf ausschließlich Einträge aus dieser statischen Liste enthalten"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "1 bis 4 konkrete fachliche, stilistische oder spartenbezogene Sub-Genres"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "möglichst präzise Format-, Sparten- oder Disziplinbegriffe statt breiter Oberbegriffe"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`show`, `concert`, `event`, `live`, `veranstaltung`, `konzert`"
-    assert_includes AppSetting.llm_enrichment_prompt_template, "gib lieber ein leeres Genre-Array zurück"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "gib keine freien Werte in `genres` aus"
     assert_includes AppSetting.llm_enrichment_prompt_template, "ohne Wiederholungen"
     assert_includes AppSetting.llm_enrichment_prompt_template, "Output:"
-    assert_includes AppSetting.llm_enrichment_prompt_template, "\"genre\": [ \"Indie Pop\" ]"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "\"genres\": [ \"Pop, Indie & Singer-Songwriter\" ]"
+    assert_includes AppSetting.llm_enrichment_prompt_template, "\"sub_genres\": [ \"Indie Pop\" ]"
     assert_includes AppSetting.llm_enrichment_prompt_template, "\"youtube_link\": \"https://www.youtube.com/@artist\""
     assert_not_includes AppSetting.llm_enrichment_prompt_template, "`artist_description`"
     assert_not_includes AppSetting.llm_enrichment_prompt_template, "`link_query`"
@@ -263,10 +246,8 @@ class AppSettingTest < ActiveSupport::TestCase
 
   test "supports gpt-5.4 for llm settings" do
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_MODEL_KEY, value: "gpt-5.4")
-    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5.4")
 
     assert_equal "gpt-5.4", AppSetting.llm_enrichment_model
-    assert_equal "gpt-5.4", AppSetting.llm_genre_grouping_model
   end
 
   test "requires llm enrichment model to be supported" do
@@ -280,6 +261,7 @@ class AppSettingTest < ActiveSupport::TestCase
     custom_prompt = <<~TEXT.strip
       Nutze search_results und candidates für homepage_link, instagram_link, facebook_link und youtube_link.
       Ermittle venue_external_url direkt.
+      Ermittle genres und sub_genres.
       {{input_json}}
     TEXT
     AppSetting.create!(key: AppSetting::LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY, value: custom_prompt)
@@ -319,50 +301,6 @@ class AppSettingTest < ActiveSupport::TestCase
 
     assert_not setting.valid?
     assert_includes setting.errors[:value], "ist kein unterstützter Web-Search-Provider"
-  end
-
-  test "returns default llm genre grouping prompt template when no setting exists" do
-    assert_includes AppSetting.llm_genre_grouping_prompt_template, "{{input_json}}"
-    assert_includes AppSetting.llm_genre_grouping_prompt_template, "{{group_count}}"
-  end
-
-  test "returns default llm genre grouping model when no setting exists" do
-    assert_equal "gpt-5.1", AppSetting.llm_genre_grouping_model
-  end
-
-  test "returns default llm genre grouping group count when no setting exists" do
-    assert_equal 30, AppSetting.llm_genre_grouping_group_count
-  end
-
-  test "returns configured llm genre grouping settings" do
-    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-5.4")
-    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Gruppiere\n{{group_count}}\n{{input_json}}")
-    AppSetting.create!(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 42)
-
-    assert_equal "gpt-5.4", AppSetting.llm_genre_grouping_model
-    assert_equal "Gruppiere\n{{group_count}}\n{{input_json}}", AppSetting.llm_genre_grouping_prompt_template
-    assert_equal 42, AppSetting.llm_genre_grouping_group_count
-  end
-
-  test "requires llm genre grouping prompt template to contain both placeholders" do
-    setting = AppSetting.new(key: AppSetting::LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY, value: "Prompt\n{{input_json}}")
-
-    assert_not setting.valid?
-    assert_includes setting.errors[:value], "{{group_count}} muss im Prompt enthalten sein"
-  end
-
-  test "requires llm genre grouping model to be supported" do
-    setting = AppSetting.new(key: AppSetting::LLM_GENRE_GROUPING_MODEL_KEY, value: "gpt-4.1")
-
-    assert_not setting.valid?
-    assert_includes setting.errors[:value], "ist kein unterstütztes LLM-Modell"
-  end
-
-  test "requires llm genre grouping group count to be positive" do
-    setting = AppSetting.new(key: AppSetting::LLM_GENRE_GROUPING_GROUP_COUNT_KEY, value: 0)
-
-    assert_not setting.valid?
-    assert_includes setting.errors[:value], "muss eine positive Ganzzahl sein"
   end
 
   test "returns true for merge similarity matching when not configured" do

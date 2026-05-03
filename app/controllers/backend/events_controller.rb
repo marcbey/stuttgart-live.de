@@ -8,6 +8,7 @@ module Backend
     before_action :set_inbox_state
     before_action :set_next_event_enabled, only: [ :index, :show, :new, :create, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
+    before_action :load_all_sub_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
     before_action :load_all_presenters, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
 
     def index
@@ -56,6 +57,7 @@ module Backend
       @event = Event.new(event_attribute_params.merge(manual_event_promoter_attributes))
       prepare_promotion_banner_image(@event)
       @selected_genre_ids = genre_ids_from_params
+      @selected_sub_genre_ids = sub_genre_ids_from_params
       @selected_presenter_ids = presenter_ids_from_params
       @manual_image_form_values = manual_image_form_values
       @manual_ticket_url = manual_ticket_url
@@ -77,6 +79,7 @@ module Backend
         persist_promotion_banner_image!(@event)
 
         assign_genres!(@event)
+        assign_sub_genres!(@event)
         sync_presenters!(@event)
         create_manual_ticket_offer!(@event)
         created_images = attach_manual_event_images!
@@ -158,6 +161,7 @@ module Backend
 
         sync_ticket_offer!(@event)
         assign_genres!(@event) if params[:event].respond_to?(:key?) && params[:event].key?(:genre_ids)
+        assign_sub_genres!(@event) if sub_genre_params_present?
         refresh_completeness!(@event)
         Editorial::EventChangeLogger.log!(
           event: @event,
@@ -264,7 +268,9 @@ module Backend
 
     def set_event
       @event = Event.includes(
+        :genres,
         :llm_enrichment,
+        :sub_genres,
         :import_event_images,
         :venue_record,
         event_social_posts: [
@@ -286,6 +292,10 @@ module Backend
       @all_genres = Genre.order(:name)
     end
 
+    def load_all_sub_genres
+      @all_sub_genres = SubGenre.order(:name)
+    end
+
     def load_all_presenters
       @all_presenters = Presenter.with_attached_logo.ordered_by_name.to_a
     end
@@ -301,6 +311,7 @@ module Backend
       @editor_response ||= Backend::Events::EditorResponse.new(
         controller: self,
         all_genres: @all_genres,
+        all_sub_genres: @all_sub_genres,
         all_presenters: @all_presenters,
         next_event_enabled: @next_event_enabled
       )
@@ -335,7 +346,9 @@ module Backend
 
       if params[:event_id].present?
         return Event.includes(
+          :genres,
           :llm_enrichment,
+          :sub_genres,
           :import_event_images,
           :venue_record,
           event_social_posts: [
@@ -413,7 +426,6 @@ module Backend
         llm_enrichment_attributes: [
           :id,
           :venue,
-          :genre_list,
           :event_description,
           :venue_description,
           :venue_external_url,
@@ -506,6 +518,7 @@ module Backend
         **manual_event_promoter_attributes
       )
       @selected_genre_ids ||= []
+      @selected_sub_genre_ids ||= []
       @selected_presenter_ids ||= []
       @manual_image_form_values ||= {}
       @manual_ticket_url ||= nil
@@ -519,11 +532,13 @@ module Backend
              locals: {
                event: @event,
                all_genres: @all_genres,
+               all_sub_genres: @all_sub_genres,
                all_presenters: @all_presenters,
                next_event_enabled: @next_event_enabled,
                filter_status: @inbox_state.current_status,
                active_editor_tab: @active_editor_tab,
                selected_genre_ids: @selected_genre_ids,
+               selected_sub_genre_ids: @selected_sub_genre_ids,
                selected_presenter_ids: @selected_presenter_ids,
                manual_ticket_url: @manual_ticket_url,
                manual_ticket_sold_out: @manual_ticket_sold_out,
@@ -602,6 +617,7 @@ module Backend
               locals: {
                 event: @event,
                 all_genres: @all_genres,
+                all_sub_genres: @all_sub_genres,
                 all_presenters: @all_presenters,
                 next_event_enabled: @next_event_enabled,
                 filter_status: event_editor_filter_status,
@@ -619,6 +635,27 @@ module Backend
 
     def genre_ids_from_params
       Array(params.dig(:event, :genre_ids)).reject(&:blank?).map(&:to_i)
+    end
+
+    def sub_genre_ids_from_params
+      Array(params.dig(:event, :sub_genre_ids)).reject(&:blank?).map(&:to_i)
+    end
+
+    def sub_genre_params_present?
+      params[:event].respond_to?(:key?) &&
+        (params[:event].key?(:sub_genre_ids) || params[:event].key?(:sub_genre_names_text))
+    end
+
+    def sub_genre_records_from_names
+      sub_genre_names_from_params.map do |name|
+        SubGenre.find_or_create_by!(slug: name.parameterize) do |sub_genre|
+          sub_genre.name = name
+        end
+      end
+    end
+
+    def sub_genre_names_from_params
+      params.dig(:event, :sub_genre_names_text).to_s.split(/[\n,]/).filter_map { |entry| entry.strip.presence }.uniq
     end
 
     def manual_event_promoter_id
@@ -685,6 +722,17 @@ module Backend
 
       ids = genre_ids_from_params
       event.genres = Genre.where(id: ids)
+    end
+
+    def assign_sub_genres!(event)
+      return unless params[:event].is_a?(ActionController::Parameters) || params[:event].is_a?(Hash)
+
+      event.sub_genres =
+        if params[:event].respond_to?(:key?) && params[:event].key?(:sub_genre_names_text)
+          sub_genre_records_from_names
+        else
+          SubGenre.where(id: sub_genre_ids_from_params)
+        end
     end
 
     def sync_presenters!(event)

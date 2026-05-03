@@ -4,20 +4,13 @@ class AppSetting < ApplicationRecord
   MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY = "merge_artist_similarity_matching_enabled".freeze
   VENUE_DUPLICATE_MAPPINGS_KEY = "venue_duplicate_mappings".freeze
   HOMEPAGE_GENRE_LANE_SLUGS_KEY = "homepage_genre_lane_slugs".freeze
-  PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY = "public_genre_grouping_snapshot_id".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
   LLM_ENRICHMENT_TEMPERATURE_KEY = "llm_enrichment_temperature".freeze
   LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY = "llm_enrichment_web_search_provider".freeze
-  LLM_GENRE_GROUPING_MODEL_KEY = "llm_genre_grouping_model".freeze
-  LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY = "llm_genre_grouping_prompt_template".freeze
-  LLM_GENRE_GROUPING_GROUP_COUNT_KEY = "llm_genre_grouping_group_count".freeze
   LLM_ENRICHMENT_INPUT_PLACEHOLDER = "{{input_json}}".freeze
-  LLM_GENRE_GROUPING_INPUT_PLACEHOLDER = "{{input_json}}".freeze
-  LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER = "{{group_count}}".freeze
   DEFAULT_LLM_ENRICHMENT_WEB_SEARCH_PROVIDER = "serpapi".freeze
   DEFAULT_LLM_ENRICHMENT_TEMPERATURE = 1
-  DEFAULT_LLM_GENRE_GROUPING_GROUP_COUNT = 30
   AVAILABLE_LLM_ENRICHMENT_MODELS = [
     [ "GPT-5.4", "gpt-5.4" ],
     [ "GPT-5.1", "gpt-5.1" ],
@@ -35,6 +28,8 @@ class AppSetting < ApplicationRecord
     "facebook_link",
     "youtube_link",
     "venue_external_url",
+    "genres",
+    "sub_genres",
     "search_results",
     "candidates"
   ].freeze
@@ -42,7 +37,8 @@ class AppSetting < ApplicationRecord
   LLM_ENRICHMENT_PROMPT_TEMPLATE = <<~TEXT.strip
     Ermittle für genau ein Event aus `Input` die fehlenden Felder
 
-    - `genre`
+    - `genres`
+    - `sub_genres`
     - `homepage_link`
     - `instagram_link`
     - `facebook_link`
@@ -61,7 +57,7 @@ class AppSetting < ApplicationRecord
 
     Dabei gelten folgende Regeln:
 
-    1. Erfinde keine Genres, Beschreibungen, Venue-Metadaten oder Links.
+    1. Erfinde keine statischen Genres, Beschreibungen, Venue-Metadaten oder Links. Sub-Genres darfst du fachlich aus dem Eventkontext ableiten.
 
     2. Für die vier Search-Linkfelder gilt zwingend:
       - `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` dürfen nur einen Link aus den mitgelieferten Kandidatenlisten enthalten
@@ -69,11 +65,14 @@ class AppSetting < ApplicationRecord
       - bewerte die Kandidaten anhand von `title`, `displayed_link`, `snippet`, `source`, `about_source_description`, `languages` und `regions`
       - `search_results` enthält pro Feld höchstens 10 Treffer; wähle nur dann einen Link, wenn die Zuordnung zum Event klar belastbar ist
 
-    3. `genre` meint immer eine fachliche stilistische oder spartenbezogene Einordnung, nicht den bloßen Eventtyp oder einen Containerbegriff:
-      - verwende nur belastbare fachliche Genres oder Sparten
+    3. `genres` und `sub_genres` haben unterschiedliche Aufgaben:
+      - `genres` enthält 1 bis 3 Werte und darf ausschließlich Einträge aus dieser statischen Liste enthalten:
+    #{Genre::STATIC_NAMES.map { |name| "  - #{name}" }.join("\n")}
+      - `sub_genres` enthält 1 bis 4 konkrete fachliche, stilistische oder spartenbezogene Sub-Genres, die du selbstständig aus dem Event ableitest
+      - verwende für `sub_genres` nur belastbare fachliche Genres, Stile oder Sparten
       - verboten sind generische Meta-Begriffe wie `show`, `concert`, `event`, `live`, `veranstaltung`, `konzert` oder sinngleiche Containerlabels
-      - wenn ein Event kein Musik-Act ist, verwende stattdessen passende fachliche Sparten wie z. B. `Theater`, `Comedy`, `Kabarett`, `Lesung`, `Tanz`, `Musical` oder `Oper`, sofern belastbar
-      - wenn kein belastbares fachliches Genre ermittelbar ist, gib lieber ein leeres Genre-Array zurück, statt ein generisches Meta-Genre zu erfinden oder zu raten
+      - wenn ein Event kein Musik-Act ist, verwende bei `sub_genres` möglichst präzise Format-, Sparten- oder Disziplinbegriffe statt breiter Oberbegriffe; Beispiele sind `Schauspiel`, `Improtheater`, `Stand-up-Comedy`, `Politisches Kabarett`, `Autorenlesung`, `Live-Podcast`, `Zeitgenössischer Tanz`, `Tanztheater`, `Musical`, `Operette`, `Performancekunst`, `Varieté`, `Ausstellung`, `Stadtführung`, `Vortrag`, `Workshop`, `Kochkurs`, `Networking` oder `Laufveranstaltung`, sofern belastbar
+      - wenn du zwischen mehreren statischen Genres unsicher bist, wähle die 1 bis 3 am besten passenden Einträge; gib keine freien Werte in `genres` aus
 
     4. Für Venue-Metadaten gilt zusätzlich:
       - `venue_external_url`: bevorzugt die offizielle Website des Veranstaltungsorts; ersatzweise eine klar zuordenbare offizielle Profil- oder Hausseite des Venues
@@ -101,7 +100,7 @@ class AppSetting < ApplicationRecord
 
     8. Ziehe auch den Eventtitel, die Venue und den wahrscheinlichen lokalen Kontext heran, um korrekte Projekt-, Tour- oder Venue-Treffer besser zu identifizieren.
 
-    9. Wenn Artist-Name oder Event-Name mehrdeutig sind, gleiche immer mit Venue, Ort, Tourtitel, Projektkontext und `event_info` ab, bevor du ein Genre, eine Beschreibung, einen Venue-Link oder einen Social-Link festlegst.
+    9. Wenn Artist-Name oder Event-Name mehrdeutig sind, gleiche immer mit Venue, Ort, Tourtitel, Projektkontext und `event_info` ab, bevor du Genres, Sub-Genres, eine Beschreibung, einen Venue-Link oder einen Social-Link festlegst.
 
     10. Falls du für `venue_external_url` oder `venue_address` keinen ausreichend belastbaren Treffer findest, gib für das jeweilige Feld `null` zurück.
 
@@ -110,7 +109,8 @@ class AppSetting < ApplicationRecord
     Output:
     {
       "event_id": 123,
-      "genre": [ "Indie Pop" ],
+      "genres": [ "Pop, Indie & Singer-Songwriter" ],
+      "sub_genres": [ "Indie Pop" ],
       "homepage_link": "https://artist.example",
       "instagram_link": "https://www.instagram.com/artist/",
       "facebook_link": "https://www.facebook.com/artist",
@@ -126,53 +126,12 @@ class AppSetting < ApplicationRecord
     #{LLM_ENRICHMENT_INPUT_PLACEHOLDER}
   TEXT
 
-  LLM_GENRE_GROUPING_PROMPT_TEMPLATE = <<~TEXT.strip
-    Gruppiere die Genres aus `Input` in genau #{LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER} Obergruppen.
-
-    Gib das Ergebnis ausschließlich als JSON im Format von `Output` zurück.
-
-    ABSOLUTE PFLICHTREGELN:
-    1. Jedes Input-Genre darf genau ein einziges Mal in der gesamten Antwort vorkommen.
-    2. Ein Genre darf niemals in zwei oder mehr Gruppen auftauchen.
-    3. Kein Input-Genre darf fehlen. Null fehlende Genres ist eine harte Pflicht, keine Empfehlung.
-    4. Erfinde keine Genres und erfinde keine zusätzlichen Obergruppen.
-    5. Wenn du ein Genre nicht sicher zuordnen kannst, musst du es trotzdem genau einer einzigen am besten passenden Gruppe zuordnen. Weglassen ist verboten.
-    6. Bevor du antwortest, führe intern einen vollständigen Abgleich zwischen allen Input-Genres und allen ausgegebenen Genres durch.
-    7. Wenn auch nur ein einziges Genre fehlen oder doppelt vorkommen würde, musst du deine Antwort vor der Ausgabe korrigieren.
-
-    Weitere Regeln:
-    1. Die Anzahl der Obergruppen muss exakt #{LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER} sein.
-    2. Jede Obergruppe braucht einen kurzen, redaktionell brauchbaren Namen auf Deutsch.
-    3. Jede Obergruppe muss mindestens ein Genre enthalten.
-    4. `position` muss fortlaufend bei 1 beginnen und ohne Lücken bis zur letzten Gruppe reichen.
-    5. Ordne stilistisch oder fachlich ähnliche Genres sinnvoll zusammen, auch wenn einzelne Labels unterschiedlich formuliert sind.
-    6. Prüfe unmittelbar vor der Ausgabe deine Antwort selbst noch einmal und stelle sicher, dass jedes einzelne Input-Genre exakt einmal vorkommt.
-
-    Output:
-    {
-      "groups": [
-        {
-          "position": 1,
-          "name": "Beispielgruppe",
-          "genres": [ "Genre A", "Genre B" ]
-        }
-      ]
-    }
-
-    Input:
-    #{LLM_GENRE_GROUPING_INPUT_PLACEHOLDER}
-  TEXT
-
   validates :key, presence: true, uniqueness: true
   validate :sks_promoter_ids_must_be_present
   validate :llm_enrichment_model_must_be_valid
   validate :llm_enrichment_prompt_template_must_be_valid
   validate :llm_enrichment_temperature_must_be_valid
   validate :llm_enrichment_web_search_provider_must_be_valid
-  validate :public_genre_grouping_snapshot_id_must_be_valid
-  validate :llm_genre_grouping_model_must_be_valid
-  validate :llm_genre_grouping_prompt_template_must_be_valid
-  validate :llm_genre_grouping_group_count_must_be_valid
   validate :venue_duplicate_mappings_must_be_valid
 
   before_validation :normalize_valid_venue_duplicate_mappings_value
@@ -204,10 +163,6 @@ class AppSetting < ApplicationRecord
       venue_duplicate_mapping_by_alias_key[alias_key.to_s]
     end
 
-    def public_genre_grouping_snapshot_id
-      @public_genre_grouping_snapshot_id ||= normalize_positive_integer(find_by(key: PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY)&.value)
-    end
-
     def llm_enrichment_prompt_template
       @llm_enrichment_prompt_template ||=
         begin
@@ -236,21 +191,6 @@ class AppSetting < ApplicationRecord
           DEFAULT_LLM_ENRICHMENT_WEB_SEARCH_PROVIDER
     end
 
-    def llm_genre_grouping_prompt_template
-      @llm_genre_grouping_prompt_template ||=
-        normalize_text(find_by(key: LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY)&.value) || LLM_GENRE_GROUPING_PROMPT_TEMPLATE
-    end
-
-    def llm_genre_grouping_model
-      @llm_genre_grouping_model ||=
-        normalize_llm_enrichment_model(find_by(key: LLM_GENRE_GROUPING_MODEL_KEY)&.value) || default_llm_enrichment_model
-    end
-
-    def llm_genre_grouping_group_count
-      @llm_genre_grouping_group_count ||=
-        normalize_positive_integer(find_by(key: LLM_GENRE_GROUPING_GROUP_COUNT_KEY)&.value) || DEFAULT_LLM_GENRE_GROUPING_GROUP_COUNT
-    end
-
     def sks_promoter_ids_record
       find_or_initialize_by(key: SKS_PROMOTER_IDS_KEY)
     end
@@ -261,10 +201,6 @@ class AppSetting < ApplicationRecord
 
     def homepage_genre_lane_slugs_record
       find_or_initialize_by(key: HOMEPAGE_GENRE_LANE_SLUGS_KEY)
-    end
-
-    def public_genre_grouping_snapshot_id_record
-      find_or_initialize_by(key: PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY)
     end
 
     def llm_enrichment_prompt_template_record
@@ -295,30 +231,6 @@ class AppSetting < ApplicationRecord
       find_or_initialize_by(key: LLM_ENRICHMENT_WEB_SEARCH_PROVIDER_KEY).tap do |setting|
         if normalize_llm_enrichment_web_search_provider(setting.value).blank?
           setting.value = llm_enrichment_web_search_provider
-        end
-      end
-    end
-
-    def llm_genre_grouping_prompt_template_record
-      find_or_initialize_by(key: LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY).tap do |setting|
-        if normalize_text(setting.value).blank?
-          setting.value = LLM_GENRE_GROUPING_PROMPT_TEMPLATE
-        end
-      end
-    end
-
-    def llm_genre_grouping_model_record
-      find_or_initialize_by(key: LLM_GENRE_GROUPING_MODEL_KEY).tap do |setting|
-        if normalize_llm_enrichment_model(setting.value).blank?
-          setting.value = llm_genre_grouping_model
-        end
-      end
-    end
-
-    def llm_genre_grouping_group_count_record
-      find_or_initialize_by(key: LLM_GENRE_GROUPING_GROUP_COUNT_KEY).tap do |setting|
-        if normalize_positive_integer(setting.value).blank?
-          setting.value = llm_genre_grouping_group_count
         end
       end
     end
@@ -560,14 +472,10 @@ class AppSetting < ApplicationRecord
       @homepage_genre_lane_slugs = nil
       @venue_duplicate_mappings = nil
       @venue_duplicate_mapping_by_alias_key = nil
-      @public_genre_grouping_snapshot_id = nil
       @llm_enrichment_model = nil
       @llm_enrichment_prompt_template = nil
       @llm_enrichment_temperature = nil
       @llm_enrichment_web_search_provider = nil
-      @llm_genre_grouping_model = nil
-      @llm_genre_grouping_prompt_template = nil
-      @llm_genre_grouping_group_count = nil
       @merge_artist_similarity_matching_enabled = nil
     end
   end
@@ -626,14 +534,6 @@ class AppSetting < ApplicationRecord
     self.value = raw_value.to_s
   end
 
-  def public_genre_grouping_snapshot_id
-    self.class.normalize_positive_integer(value)
-  end
-
-  def public_genre_grouping_snapshot_id=(raw_value)
-    self.value = self.class.normalize_positive_integer(raw_value)
-  end
-
   def llm_enrichment_prompt_template
     template = self.class.normalize_text(value)
     if key == LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY && !self.class.llm_enrichment_prompt_template_compatible?(template)
@@ -689,48 +589,6 @@ class AppSetting < ApplicationRecord
 
   def llm_enrichment_prompt_template_text=(raw_value)
     self.value = self.class.normalize_text(raw_value)
-  end
-
-  def llm_genre_grouping_prompt_template
-    template = self.class.normalize_text(value)
-    return self.class.llm_genre_grouping_prompt_template if key == LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY && template.blank?
-
-    template
-  end
-
-  def llm_genre_grouping_model
-    model = self.class.normalize_llm_enrichment_model(value)
-    return self.class.llm_genre_grouping_model if key == LLM_GENRE_GROUPING_MODEL_KEY && model.blank?
-
-    model
-  end
-
-  def llm_genre_grouping_group_count
-    group_count = self.class.normalize_positive_integer(value)
-    if key == LLM_GENRE_GROUPING_GROUP_COUNT_KEY && group_count.blank?
-      raw_value = self.class.normalize_text(value)
-      return self.class.llm_genre_grouping_group_count if raw_value.blank?
-
-      return raw_value
-    end
-
-    group_count
-  end
-
-  def llm_genre_grouping_model=(raw_value)
-    self.value = self.class.normalize_text(raw_value)
-  end
-
-  def llm_genre_grouping_prompt_template_text
-    llm_genre_grouping_prompt_template.to_s
-  end
-
-  def llm_genre_grouping_prompt_template_text=(raw_value)
-    self.value = self.class.normalize_text(raw_value)
-  end
-
-  def llm_genre_grouping_group_count=(raw_value)
-    self.value = self.class.normalize_positive_integer(raw_value) || self.class.normalize_text(raw_value)
   end
 
   def merge_artist_similarity_matching_enabled
@@ -824,55 +682,6 @@ class AppSetting < ApplicationRecord
     return if self.class.available_llm_enrichment_web_search_provider_values.include?(provider)
 
     errors.add(:value, "ist kein unterstützter Web-Search-Provider")
-  end
-
-  def public_genre_grouping_snapshot_id_must_be_valid
-    return unless key == PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY
-    return if value.blank?
-    return if self.class.normalize_positive_integer(value).present?
-
-    errors.add(:value, "muss eine positive Ganzzahl sein")
-  end
-
-  def llm_genre_grouping_prompt_template_must_be_valid
-    return unless key == LLM_GENRE_GROUPING_PROMPT_TEMPLATE_KEY
-
-    template = self.class.normalize_text(value)
-    if template.blank?
-      errors.add(:value, "darf nicht leer sein")
-      return
-    end
-
-    unless template.include?(LLM_GENRE_GROUPING_INPUT_PLACEHOLDER)
-      errors.add(:value, "{{input_json}} muss im Prompt enthalten sein")
-    end
-
-    return if template.include?(LLM_GENRE_GROUPING_GROUP_COUNT_PLACEHOLDER)
-
-    errors.add(:value, "{{group_count}} muss im Prompt enthalten sein")
-  end
-
-  def llm_genre_grouping_model_must_be_valid
-    return unless key == LLM_GENRE_GROUPING_MODEL_KEY
-
-    model = self.class.normalize_text(value)
-    if model.blank?
-      errors.add(:value, "darf nicht leer sein")
-      return
-    end
-
-    return if self.class.available_llm_enrichment_model_values.include?(model)
-
-    errors.add(:value, "ist kein unterstütztes LLM-Modell")
-  end
-
-  def llm_genre_grouping_group_count_must_be_valid
-    return unless key == LLM_GENRE_GROUPING_GROUP_COUNT_KEY
-
-    integer = self.class.normalize_positive_integer(value)
-    return if integer.present?
-
-    errors.add(:value, "muss eine positive Ganzzahl sein")
   end
 
   def venue_duplicate_mappings_must_be_valid

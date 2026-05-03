@@ -22,11 +22,7 @@ ImportSource.ensure_supported_sources!
   end
 end
 
-%w[Rock Pop Hip-Hop Metal Jazz Klassik Indie Electro Schlager].each do |name|
-  Genre.find_or_create_by!(name: name) do |genre|
-    genre.slug = name.parameterize
-  end
-end
+Genre.ensure_static_records!
 
 default_admin_email = ENV.fetch("DEFAULT_ADMIN_EMAIL", "admin@stuttgart-live.de")
 default_admin_password = ENV.fetch("DEFAULT_ADMIN_PASSWORD", "PleaseChangeMe123!")

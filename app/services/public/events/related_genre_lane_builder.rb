@@ -4,6 +4,7 @@ module Public
       Lane = Data.define(:group, :events, :effective_series_ids)
 
       DEFAULT_LIMIT = 100
+      DEFAULT_GROUP_EVENTS_LIMIT = 100
 
       def initialize(event:, relation:, limit: DEFAULT_LIMIT)
         @event = event
@@ -25,14 +26,18 @@ module Public
       attr_reader :event, :limit, :relation
 
       def group
-        @group ||= LlmGenreGrouping::Lookup.groups_for_event(event).first
+        @group ||= event.primary_genre
       end
 
       def chronological_group_events
-        selected_events =
-          LlmGenreGrouping::Lookup
-            .chronological_events_for_group(group, relation:, limit: candidate_limit, exclude_event_id: event.id)
-            .to_a
+        selected_events = relation
+          .joins(:genres)
+          .where(genres: { id: group.id })
+          .where.not(id: event.id)
+          .distinct
+          .reorder(:start_at, :id)
+          .limit(candidate_limit)
+          .to_a
 
         events = SeriesRepresentativeSelector.call(selected_events).first(limit)
         effective_series_ids = effective_series_ids_for(events)
@@ -45,7 +50,7 @@ module Public
       end
 
       def candidate_limit
-        [ limit * 4, LlmGenreGrouping::Lookup::DEFAULT_GROUP_EVENTS_LIMIT ].max
+        [ limit * 4, DEFAULT_GROUP_EVENTS_LIMIT ].max
       end
     end
   end

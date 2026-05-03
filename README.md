@@ -43,7 +43,7 @@ Wichtige fachliche Bausteine sind dabei:
 - `Venue` als eigener Veranstaltungsort mit Name, Beschreibung, Logo, Link und Adresse
 - `EventImage`, `EventOffer` und `EventChangeLog` für ergänzende Event-Daten
 - `ImportSource`, `ImportRun` und `RawEventImport` für Rohdaten, Importläufe und Laufprotokolle
-- `EventLlmEnrichment` und `LlmGenreGroupingSnapshot` für nachgelagerte LLM-basierte Qualitäts- und Strukturierungsschritte
+- `EventLlmEnrichment`, statische `Genre`-Zuordnungen und freie `SubGenre`-Zuordnungen für nachgelagerte LLM-basierte Qualitäts- und Strukturierungsschritte
 - `BlogPost` für redaktionelle Inhalte
 - `NewsletterSubscriber` für Newsletter-Anmeldungen
 
@@ -340,38 +340,28 @@ Queued LLM-Enrichment-Runs lassen sich im Backend abbrechen, bevor sie gestartet
 
 Für Merge-, Provider- und LLM-Läufe gilt außerdem: Wenn ein Run nach einem Stop-Wunsch oder allgemein nach Start über seine Heartbeat-/Stale-Timeouts hinaus keine Fortschrittsupdates mehr schreibt, wird er beim nächsten Aufruf der Importer-Übersicht automatisch freigegeben statt dauerhaft auf `running` oder `stopping` zu hängen.
 
-### Wie die LLM-Genre-Gruppierung funktioniert
+### Wie Genres und Sub-Genres funktionieren
 
-Die LLM-Genre-Gruppierung ist ein eigener Schritt zur Vereinheitlichung der Genre-Landschaft im System. Sie betrachtet nicht einzelne Event-Beschreibungen, sondern die bereits vorhandenen Genre-Werte und ordnet ähnliche oder doppelte Begriffe zu größeren, konsistenten Gruppen.
+Events haben zwei getrennte Genre-Ebenen:
 
-Der Ablauf ist:
+1. `genres` sind statische Obergenres aus der festen Liste im Code. Sie steuern die Homepage-Genre-Lanes, Genre-Lane-Routen, Suche, Related-Lanes und die primäre Genre-Zuordnung eines Events.
+2. `sub_genres` sind freie, fachliche Sub-Genres. Sie ersetzen die früheren freien Event-Genres und werden für präzisere Detailansichten und die Textsuche genutzt.
 
-1. Der Job sammelt die vorhandenen Rohgenre-Werte aus dem Datenbestand.
-2. Diese Werte werden normalisiert, offensichtliche Duplikate reduziert und in Requests an das konfigurierte LLM-Modell aufgeteilt.
-3. Das Modell schlägt Obergruppen und Zuordnungen vor.
-4. Das Ergebnis wird als `llm_genre_grouping_snapshot` mit zugehörigen Gruppen gespeichert. Jeder erfolgreiche Lauf erzeugt einen neuen Snapshot mit eigener ID.
+Das LLM-Enrichment ermittelt pro Event beide Ebenen in einem Lauf. Dabei muss `genres` 1 bis 3 Werte aus der statischen Liste enthalten, während `sub_genres` 1 bis 4 frei abgeleitete fachliche Begriffe enthält. Bei jedem erfolgreichen Enrichment-Lauf werden die bestehenden Genre- und Sub-Genre-Zuordnungen des Events ersetzt.
 
-Fachlich ist wichtig:
-
-- Ziel ist eine stabilere, redaktionell brauchbare Genre-Struktur für Filter, Übersichten und thematische Strecken.
-- Der Lauf arbeitet snapshot-basiert, damit Ergebnisse nachvollziehbar und versionierbar bleiben.
-- Ein neuer erfolgreicher Lauf schaltet keinen Snapshot automatisch um. Welcher Snapshot öffentlich verwendet wird, wird separat im Backend gewählt.
-- Die öffentliche Verwendung der Genre-Gruppierung ist global an einen ausgewählten Snapshot gebunden. Das betrifft die Homepage-Genre-Lanes, die Genre-Obergruppe im Event-Detail und die Related-Genre-Lane.
-- Die Lane-Auswahl auf der Startseite wird pro Snapshot gespeichert. Ein Wechsel des ausgewählten Snapshots im Backend zeigt deshalb seine eigene gespeicherte Lane-Konfiguration.
-- Modell, Prompt und Zielanzahl der Gruppen werden über `app_settings` gesteuert.
-- Die Import-Job-Tabelle zeigt bei diesem Lauf vor allem, wie viele Rohgenres verarbeitet, verworfen, gruppiert und an das LLM geschickt wurden.
+Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
 
 ### Kennzahlen in "Importer Jobs"
 
 Im Backend zeigen die Tabellen `Importer Jobs` und `Importer Job #...` absichtlich verschiedene Ebenen der Import-Pipeline. Die Spalten haben dieselbe Bedeutung wie die Hover-Texte im UI:
 
-- `Raw Imports`: Provider-Importer zeigen hier die Anzahl der in diesem Lauf geschriebenen `RawEventImport`-Zeilen. Beim Merge ist es die Anzahl der aktuellen normierten Import-Records nach Auswahl des neuesten Rohimports je `source_identifier`. Beim LLM-Genre-Gruppierungsjob ist es die Anzahl der eindeutigen LLM-Genres, die in diesem Lauf gruppiert wurden.
+- `Raw Imports`: Provider-Importer zeigen hier die Anzahl der in diesem Lauf geschriebenen `RawEventImport`-Zeilen. Beim Merge ist es die Anzahl der aktuellen normierten Import-Records nach Auswahl des neuesten Rohimports je `source_identifier`.
 - `Merge Groups`: Nur beim Merge befüllt. Zeigt, wie viele providerübergreifende Gruppen nach Dublettenzusammenführung über normalisierten Artist-Namen und Startzeit entstanden sind.
-- `Filtered`: Nur bei Provider-Läufen befüllt. Zeigt, wie viele Quelldatensätze die Orts- und Importfilter passiert haben. Beim LLM-Genre-Gruppierungsjob ist es die Anzahl verworfener Rohgenre-Werte nach Normalisierung.
-- `Inserts`: Bei Provider-Läufen entspricht das den geschriebenen Rohimporten dieses Laufs. Beim Merge ist es die Anzahl neu angelegter `Event`-Datensätze. Beim LLM-Genre-Gruppierungsjob ist es die Anzahl gespeicherter Obergruppen.
+- `Filtered`: Nur bei Provider-Läufen befüllt. Zeigt, wie viele Quelldatensätze die Orts- und Importfilter passiert haben.
+- `Inserts`: Bei Provider-Läufen entspricht das den geschriebenen Rohimporten dieses Laufs. Beim Merge ist es die Anzahl neu angelegter `Event`-Datensätze.
 - `Updates`: Nur beim Merge befüllt. Zählt bestehende `Event`-Datensätze, die in diesem Lauf aktualisiert wurden. Dabei überschreibt der Merge `start_at`, `doors_at`, `venue`, `badge_text`, `min_price`, `max_price`, `primary_source`, `source_fingerprint` und `source_snapshot`.
 - `Similarity Duplicates`: Nur beim Merge befüllt. Das ist keine zusätzliche dritte Menge neben `Inserts` und `Updates`, sondern eine Teilmenge der `Updates`. Gezählt werden nur Fälle, in denen das Ähnlichkeits-Matching einen Import-Record einem bestehenden Event zuordnet.
-- `Collapsed Records`: Nur beim Merge befüllt. Das ist `Raw Imports - Merge Groups` und zeigt, wie viele aktuelle Rohimporte schon vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden. Beim LLM-Genre-Gruppierungsjob ist es die Anzahl der an OpenAI gesendeten Requests.
+- `Collapsed Records`: Nur beim Merge befüllt. Das ist `Raw Imports - Merge Groups` und zeigt, wie viele aktuelle Rohimporte schon vor dem finalen Event-Upsert zu gemeinsamen Merge-Gruppen zusammengefasst wurden.
 
 Wichtig für die Interpretation:
 
@@ -520,9 +510,8 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 
 - `sks_promoter_ids` für SKS-Filter und Sortierung
 - `sks_organizer_notes` für den Standardtext bei SKS-Events ohne eigene Veranstalterhinweise
-- `llm_enrichment_model`, `llm_enrichment_prompt_template`, `llm_enrichment_temperature` und `llm_enrichment_web_search_provider` für den Enrichment-Job; projektseitig ist für `llm_enrichment_temperature` standardmäßig `1` gesetzt und entspricht damit dem OpenAI-API-Default. Niedrigere Werte liefern stabilere, höhere Werte variantenreichere Antworten. Standardmäßig bleibt `serpapi` für die Websuche aktiv; alternativ kann im Backend auf OpenWebNinja umgestellt werden, sofern `openwebninja.api_key` oder lokal `OPENWEBNINJA_API_KEY` hinterlegt ist. Dieser Wert muss ein direkter OpenWebNinja-API-Key für `api.openwebninja.com` sein; RapidAPI-Schlüssel funktionieren mit diesem Provider nicht. Fehlende oder abgelehnte Provider-Schlüssel brechen den Enrichment-Lauf sichtbar ab, damit lokale Konfigurationsprobleme nicht nur als leere Link-Kandidaten erscheinen. Die Websuche wird für `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` gleichermaßen verwendet.
-- `llm_genre_grouping_model`, `llm_genre_grouping_prompt_template` und `llm_genre_grouping_group_count` für den Genre-Gruppierungsjob
-- `public_genre_grouping_snapshot_id` für den global öffentlich verwendeten Genre-Snapshot
+- `llm_enrichment_model`, `llm_enrichment_prompt_template`, `llm_enrichment_temperature` und `llm_enrichment_web_search_provider` für den Enrichment-Job; projektseitig ist für `llm_enrichment_temperature` standardmäßig `1` gesetzt und entspricht damit dem OpenAI-API-Default. Niedrigere Werte liefern stabilere, höhere Werte variantenreichere Antworten. Standardmäßig bleibt `serpapi` für die Websuche aktiv; alternativ kann im Backend auf OpenWebNinja umgestellt werden, sofern `openwebninja.api_key` oder lokal `OPENWEBNINJA_API_KEY` hinterlegt ist. Dieser Wert muss ein direkter OpenWebNinja-API-Key für `api.openwebninja.com` sein; RapidAPI-Schlüssel funktionieren mit diesem Provider nicht. Fehlende oder abgelehnte Provider-Schlüssel brechen den Enrichment-Lauf sichtbar ab, damit lokale Konfigurationsprobleme nicht nur als leere Link-Kandidaten erscheinen. Die Websuche wird für `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` gleichermaßen verwendet. Das Enrichment schreibt außerdem statische `genres` und freie `sub_genres` direkt an das Event.
+- `homepage_genre_lane_slugs` für die öffentlich sichtbaren Homepage-Genre-Lanes aus der statischen Genre-Liste
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen im Merge-Import bei exakt gleicher Startzeit
 
 ### Meta-Setup für Social-Publishing
@@ -780,13 +769,13 @@ bin/rails events:maintenance:purge_all_with_imports
 
 Der Task leert zusätzlich `import_runs`, `import_run_errors`, `raw_event_imports` sowie die laufzeitbezogenen `solid_queue_*`-Tabellen. Importquellen, Whitelists und wiederkehrende Queue-Definitionen aus `config/recurring.yml` bleiben erhalten; Reservix-Checkpoints werden zurückgesetzt.
 
-Gezielter Reset für LLM-Enrichment-Daten, Genre-Gruppierungs-Snapshots, die zugehörigen LLM-Läufe und passende Queue-Jobs:
+Gezielter Reset für LLM-Enrichment-Daten, Event-Genre/Sub-Genre-Zuordnungen, die zugehörigen LLM-Läufe und passende Queue-Jobs:
 
 ```bash
 bin/rails events:maintenance:reset_llm_enrichment
 ```
 
-Der Task löscht alle Einträge aus `event_llm_enrichments`, `llm_genre_grouping_snapshots` und `llm_genre_grouping_groups`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` oder `source_type = "llm_genre_grouping"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
+Der Task löscht alle Einträge aus `event_llm_enrichments`, `event_genres` und `event_sub_genres`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
 
 Bestehende Venue-Dubletten anhand des flexiblen Venue-Matchings zusammenführen:
 

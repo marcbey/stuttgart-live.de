@@ -286,18 +286,24 @@ module Public
         end
       end
 
-      def enrichment_genres
-        @enrichment_genres ||= Array(llm_enrichment&.genre).filter_map do |entry|
-          entry.to_s.strip.presence
+      def sub_genres
+        @sub_genres ||= if event.association(:sub_genres).loaded?
+          event.sub_genres.sort_by { |sub_genre| [ sub_genre.name.to_s, sub_genre.id.to_i ] }.map(&:name)
+        else
+          event.sub_genres.order(:name).pluck(:name)
         end
       end
 
       def genre_tags
-        @genre_tags ||= (genres + enrichment_genres).uniq
+        genres
+      end
+
+      def sub_genre_tags
+        sub_genres
       end
 
       def detail_genres
-        genre_tags
+        (genres + sub_genres).uniq
       end
 
       def external_links

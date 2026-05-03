@@ -2,7 +2,7 @@ module Backend
   class ImportSourcesController < BaseController
     before_action :ensure_supported_sources
     before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
-    before_action :set_active_section, only: [ :index, :sync_imported_events, :stop_merge_run, :run_llm_enrichment, :rerun_llm_enrichment, :stop_llm_enrichment_run, :run_llm_genre_grouping, :stop_llm_genre_grouping_run, :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
+    before_action :set_active_section, only: [ :index, :sync_imported_events, :stop_merge_run, :run_llm_enrichment, :rerun_llm_enrichment, :stop_llm_enrichment_run, :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
 
     def index
       run_maintenance.release_stale_running_runs!
@@ -77,14 +77,6 @@ module Backend
         end
 
       respond_with_importer_feedback(notice:)
-    end
-
-    def run_llm_genre_grouping
-      respond_with_importer_feedback(**run_manager_for(llm_run_source).trigger("llm_genre_grouping"))
-    end
-
-    def stop_llm_genre_grouping_run
-      respond_with_importer_feedback(**run_manager_for(llm_run_source).request_stop("llm_genre_grouping", run_id: params[:run_id]))
     end
 
     def update

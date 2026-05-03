@@ -162,13 +162,13 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
       title: "Heavy Night",
       artist_name: "Genre Artist"
     )
-    matching_event.genres << Genre.create!(name: "Search Rock", slug: "search-rock")
-    matching_event.genres << Genre.create!(name: "Search Progressive Rock", slug: "search-progressive-rock")
+    matching_event.sub_genres << SubGenre.create!(name: "Search Rock", slug: "search-rock")
+    matching_event.sub_genres << SubGenre.create!(name: "Search Progressive Rock", slug: "search-progressive-rock")
 
     create_visible_event(
       title: "Different Night",
       artist_name: "Other Artist"
-    ).genres << Genre.create!(name: "Search Jazz", slug: "search-jazz")
+    ).sub_genres << SubGenre.create!(name: "Search Jazz", slug: "search-jazz")
 
     result = Public::VisibleEventsQuery.new(
       scope: Event.published_live,

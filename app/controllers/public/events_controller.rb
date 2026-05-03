@@ -378,6 +378,7 @@ module Public
       Event.includes(
         :llm_enrichment,
         :genres,
+        :sub_genres,
         :event_offers,
         :import_event_images,
         event_images: [ file_attachment: :blob ],
@@ -461,11 +462,9 @@ module Public
         @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
       when "genre"
-        snapshot = LlmGenreGrouping::Lookup.selected_snapshot
         lane_page = Public::Events::HomepageGenreLanesBuilder.new(
           relation: homepage_events_relation,
           slugs: [ lane.group.slug ],
-          snapshot: snapshot,
           limit: nil
         ).call.first
         raise ActiveRecord::RecordNotFound if lane_page.blank?

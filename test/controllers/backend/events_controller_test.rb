@@ -1089,7 +1089,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "RUSS Live", created.promoter_name
     assert_predicate created, :highlighted?
     assert_equal "ready_for_publish", created.status
-    assert_equal [ "Pop" ], created.genres.order(:name).pluck(:name)
+    assert_equal [ "Pop, Indie & Singer-Songwriter" ], created.genres.order(:name).pluck(:name)
     assert_equal [ presenter_two.id, presenter_one.id ], created.event_presenters.order(:position).pluck(:presenter_id)
     assert_equal "https://tickets.example/manual-tour", created.preferred_ticket_offer&.resolved_ticket_url
     assert_equal "manual", created.preferred_ticket_offer&.source
@@ -1690,7 +1690,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
-    assert_equal [ "Rock" ], @published_event.reload.genres.order(:name).pluck(:name)
+    assert_equal [ "Rock & Alternative" ], @published_event.reload.genres.order(:name).pluck(:name)
   end
 
   test "editor does not render genre section" do
@@ -1720,7 +1720,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
-    assert_equal [ "Pop" ], @published_event.reload.genres.order(:name).pluck(:name)
+    assert_equal [ "Pop, Indie & Singer-Songwriter" ], @published_event.reload.genres.order(:name).pluck(:name)
   end
 
   test "update stores highlighted flag from settings tab" do
@@ -1762,7 +1762,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/LLM enriched/i, response.body)
   end
 
-  test "editor shows llm enrichment tabs and read-only raw response when enrichment exists" do
+  test "editor shows llm enrichment tabs with editable metadata and read-only raw response when enrichment exists" do
     sign_in_as(@user)
 
     create_llm_enrichment(event: @published_event)
@@ -1785,12 +1785,17 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Letzter LLM-Enrichment-Run: Montag, 02.03.2026 12:11"
     assert_includes response.body, "Letzter LLM-Enrichment-Job-Run: Montag, 02.03.2026 12:11"
     assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button", text: "LLM-Enrichment für dieses Event starten"
-    assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 1
+    assert_select "#event-editor-panel-llm-enrichment .form-label", text: "Genres", count: 1
+    assert_select "#event-editor-panel-llm-enrichment .form-label", text: "Sub-Genres", count: 1
+    assert_select "#event-editor-panel-llm-enrichment select[multiple='multiple'][name='event[genre_ids][]']", count: 1
+    assert_select "#event-editor-panel-llm-enrichment select[name='event[genre_ids][]'] option[value='#{genres(:rock).id}'][selected='selected']", count: 1
+    assert_equal genres(:rock).id.to_s, css_select("#event-editor-panel-llm-enrichment select[name='event[genre_ids][]'] option").first["value"]
+    assert_select "#event-editor-panel-llm-enrichment textarea[name='event[sub_genre_names_text]']", text: /Indie/, count: 1
     assert_select "textarea[name='event[llm_enrichment_attributes][venue_description]']", count: 0
     assert_select "textarea[name='event[llm_enrichment_attributes][raw_response_json]']", count: 0
     assert_select "textarea[name='event[llm_enrichment_attributes][artist_description]']", count: 0
     assert_includes response.body, "&quot;event_description&quot;: &quot;LLM Event Beschreibung&quot;"
-    assert_includes response.body, "&quot;genre&quot;: ["
+    assert_includes response.body, "&quot;sub_genres&quot;: ["
   end
 
   test "editor shows llm enrichment link shortcuts for social links" do
@@ -1916,7 +1921,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-tab-llm-enrichment[aria-selected='true']", count: 1
     assert_select "#event-editor-panel-llm-enrichment:not([hidden])", count: 1
     assert_select "form[action='#{run_llm_enrichment_backend_event_path(@published_event)}'] button", text: "LLM-Enrichment für dieses Event starten"
-    assert_select "textarea[name='event[llm_enrichment_attributes][genre_list]']", count: 0
+    assert_select "#event-editor-panel-llm-enrichment .form-label", text: "Genres", count: 0
     assert_includes response.body, "Für dieses Event gibt es noch kein LLM-Enrichment."
   end
 
@@ -2234,7 +2239,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         llm_enrichment_attributes: {
           id: @published_event.llm_enrichment.id,
           venue: "Neues LLM Venue",
-          genre_list: "Indie\nRock",
           event_description: "Aktualisierte kombinierte Event-Beschreibung",
           venue_external_url: "https://venue.example/updated",
           venue_address: "Venue Straße 12, Stuttgart",
@@ -2242,7 +2246,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
           instagram_link: "https://instagram.example/updated",
           homepage_link: "https://homepage.example/updated",
           facebook_link: "https://facebook.example/updated"
-        }
+        },
+        genre_ids: [ genres(:pop).id.to_s ],
+        sub_genre_names_text: "Synthpop\nIndie Rock"
       }
     }
 
@@ -2250,7 +2256,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     enrichment = @published_event.reload.llm_enrichment
     assert_equal "Neues LLM Venue", enrichment.venue
-    assert_equal [ "Indie", "Rock" ], enrichment.genre
+    assert_equal [ "Pop, Indie & Singer-Songwriter" ], @published_event.genres.order(:name).pluck(:name)
+    assert_equal [ "Indie Rock", "Synthpop" ], @published_event.sub_genres.order(:name).pluck(:name)
     assert_equal "Aktualisierte kombinierte Event-Beschreibung", enrichment.event_description
     assert_equal "LLM Venue Beschreibung", enrichment.venue_description
     assert_equal "https://venue.example/updated", enrichment.venue_external_url
@@ -2608,16 +2615,18 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   def create_llm_enrichment(event:, event_description: "LLM Event Beschreibung")
+    event.genres = [ genres(:rock) ]
+    event.sub_genres = [ sub_genres(:indie) ]
+
     event.create_llm_enrichment!(
       source_run: import_runs(:one),
       event_description: event_description,
       venue_description: "LLM Venue Beschreibung",
-      genre: [ "Indie" ],
       model: "gpt-test",
       prompt_version: "v1",
       raw_response: {
         "event_description" => event_description,
-        "genre" => [ "Indie" ]
+        "sub_genres" => [ "Indie" ]
       }
     )
   end

@@ -30,23 +30,13 @@ module Backend
           tab_id: "import-runs-tab-llm-enrichment",
           indicator_id: "import-runs-tab-indicator-llm-enrichment",
           partial: "backend/import_sources/panels/llm_enrichment"
-        },
-        {
-          key: "llm_genre_grouping",
-          label: "LLM-Genre-Gruppierung",
-          panel_id: "import-runs-panel-llm-genre-grouping",
-          panel_content_id: "import-runs-panel-content-llm-genre-grouping",
-          tab_id: "import-runs-tab-llm-genre-grouping",
-          indicator_id: "import-runs-tab-indicator-llm-genre-grouping",
-          partial: "backend/import_sources/panels/llm_genre_grouping"
         }
       ].freeze
 
       RUN_SOURCE_TYPE_BLOCKS = {
         "raw_importer" => %w[easyticket eventim reservix],
         "merge_importer" => %w[merge],
-        "llm_enrichment" => %w[llm_enrichment],
-        "llm_genre_grouping" => %w[llm_genre_grouping]
+        "llm_enrichment" => %w[llm_enrichment]
       }.freeze
 
       def initialize(recent_runs: nil, import_sources: nil)

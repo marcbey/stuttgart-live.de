@@ -62,24 +62,6 @@ module Backend
               ImportSource.find_by(source_type: "easyticket") ||
               ImportSource.ensure_eventim_source!
           }
-        },
-        "llm_genre_grouping" => {
-          label: "LLM-Genre-Gruppierung",
-          started_notice: "LLM-Genre-Gruppierung wurde gestartet.",
-          run_job_class: Importing::LlmGenreGrouping::RunJob,
-          importer_class: Importing::LlmGenreGrouping::Importer,
-          stop_route_helper: :stop_llm_genre_grouping_run_backend_import_sources_path,
-          run_mode: :exclusive,
-          max_retries: 0,
-          run_job_arguments_builder: ->(_import_source, run) { [ run.id ] },
-          already_running_alert_builder: ->(run) { "Ein LLM-Genre-Gruppierungs-Lauf läuft bereits (Run ##{run.id})." },
-          stop_requested_notice_builder: ->(run) { "Stop für LLM-Genre-Gruppierung (Run ##{run.id}) wurde angefordert." },
-          canceled_queue_notice_builder: ->(run) { "LLM-Genre-Gruppierung (Run ##{run.id}) wurde aus der Warteschlange entfernt." },
-          run_source_resolver: lambda {
-            ImportSource.find_by(source_type: "eventim") ||
-              ImportSource.find_by(source_type: "easyticket") ||
-              ImportSource.ensure_eventim_source!
-          }
         }
       }.freeze
 

@@ -43,10 +43,35 @@
                   <%= form.label :venue, "Venue", class: "form-label" %>
                   <%= form.text_field :venue, class: "form-input", form: editor_form_id %>
                 </div>
-                <div>
-                  <%= form.label :genre_list, "Genres", class: "form-label" %>
-                  <%= form.text_area :genre_list, rows: 4, class: "form-textarea", form: editor_form_id %>
-                  <p class="form-hint">Ein Genre pro Zeile oder durch Komma getrennt.</p>
+                <div class="editor-grid-span-full llm-enrichment-metadata-genres">
+                  <div>
+                    <%= label_tag "event_llm_genre_ids", "Genres", class: "form-label" %>
+                    <%= hidden_field_tag "event[genre_ids][]", "", form: editor_form_id, id: nil %>
+                    <% selected_genre_ids = event.genre_ids %>
+                    <% genre_options = local_assigns.fetch(:all_genres, Genre.order(:name)).sort_by { |genre| [ selected_genre_ids.include?(genre.id) ? 0 : 1, genre.name.to_s ] } %>
+                    <%= select_tag "event[genre_ids][]",
+                                   options_from_collection_for_select(
+                                     genre_options,
+                                     :id,
+                                     :name,
+                                     selected_genre_ids
+                                   ),
+                                   multiple: true,
+                                   class: "form-input genre-multi-select",
+                                   form: editor_form_id,
+                                   id: "event_llm_genre_ids" %>
+                    <p class="form-hint">Mehrere Genres können ausgewählt werden.</p>
+                  </div>
+                  <div>
+                    <%= label_tag "event_sub_genre_names_text", "Sub-Genres", class: "form-label" %>
+                    <%= text_area_tag "event[sub_genre_names_text]",
+                                      event.sub_genres.order(:name).pluck(:name).join("\n"),
+                                      rows: 4,
+                                      class: "form-textarea",
+                                      form: editor_form_id,
+                                      id: "event_sub_genre_names_text" %>
+                    <p class="form-hint">Ein Sub-Genre pro Zeile. Beim Speichern werden die bestehenden Sub-Genres des Events ersetzt.</p>
+                  </div>
                 </div>
               </div>
             </div>

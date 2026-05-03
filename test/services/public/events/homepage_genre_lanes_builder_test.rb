@@ -2,32 +2,14 @@ require "test_helper"
 
 class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
   setup do
+    EventGenre.delete_all
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
+    AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135" ])
+    @rock_group = genres(:rock)
+    @pop_group = genres(:pop)
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ @rock_group.slug, @pop_group.slug ])
     AppSetting.reset_cache!
-
-    run = import_sources(:two).import_runs.create!(
-      source_type: "llm_genre_grouping",
-      status: "succeeded",
-      started_at: 2.minutes.ago,
-      finished_at: 1.minute.ago
-    )
-
-    @snapshot = run.create_llm_genre_grouping_snapshot!(
-      active: true,
-      requested_group_count: 30,
-      effective_group_count: 2,
-      source_genres_count: 4,
-      model: "gpt-5-mini",
-      prompt_template_digest: "digest",
-      request_payload: {},
-      raw_response: {}
-    )
-
-    @rock_group = @snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
-    @pop_group = @snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
-    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: @snapshot.id)
-    @snapshot.create_homepage_genre_lane_configuration!(lane_slugs: [ @rock_group.slug, @pop_group.slug ])
   end
 
   teardown do
@@ -40,8 +22,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
 
     builder = Public::Events::HomepageGenreLanesBuilder.new(
       relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
-      slugs: [ "missing-group", @rock_group.slug, @pop_group.slug ],
-      snapshot: @snapshot
+      slugs: [ "missing-group", @rock_group.slug, @pop_group.slug ]
     )
 
     lanes = builder.call
@@ -62,8 +43,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
 
     lanes = Public::Events::HomepageGenreLanesBuilder.new(
       relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
-      slugs: [ @rock_group.slug ],
-      snapshot: @snapshot
+      slugs: [ @rock_group.slug ]
     ).call
 
     assert_equal [
@@ -74,7 +54,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     ], lanes.first.events.map(&:id)
   end
 
-  test "uses the snapshot-specific lane configuration by default" do
+  test "uses the configured lane slugs by default" do
     rock_event = build_lane_event(slug: "lane-default-rock", artist_name: "Default Rock", start_at: 10.days.from_now.change(hour: 20))
     pop_event = build_lane_event(slug: "lane-default-pop", artist_name: "Default Pop", start_at: 10.days.from_now.change(hour: 21))
 
@@ -100,8 +80,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
 
     lanes = Public::Events::HomepageGenreLanesBuilder.new(
       relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
-      slugs: [ @rock_group.slug ],
-      snapshot: @snapshot
+      slugs: [ @rock_group.slug ]
     ).call
 
     assert_equal 15, lanes.first.events.size
@@ -122,7 +101,6 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     lanes = Public::Events::HomepageGenreLanesBuilder.new(
       relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
       slugs: [ @rock_group.slug ],
-      snapshot: @snapshot,
       limit: nil
     ).call
 
@@ -139,26 +117,12 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     )
     build_lane_enrichment(event: event, genres: [ "Rock" ])
 
-    captured_limit = nil
-    lookup_singleton = LlmGenreGrouping::Lookup.singleton_class
-    original_lookup = LlmGenreGrouping::Lookup.method(:chronological_events_for_group)
+    lanes = Public::Events::HomepageGenreLanesBuilder.new(
+      relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
+      slugs: [ @rock_group.slug ]
+    ).call
 
-    lookup_singleton.send(:define_method, :chronological_events_for_group) do |group, relation:, limit:, exclude_event_id: nil|
-      captured_limit = limit
-      original_lookup.call(group, relation:, limit:, exclude_event_id:)
-    end
-
-    begin
-      Public::Events::HomepageGenreLanesBuilder.new(
-        relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
-        slugs: [ @rock_group.slug ],
-        snapshot: @snapshot
-      ).call
-    ensure
-      lookup_singleton.send(:define_method, :chronological_events_for_group, original_lookup)
-    end
-
-    assert_equal 100, captured_limit
+    assert_equal [ event.id ], lanes.first.events.map(&:id)
   end
 
   test "deduplicates event series to the next upcoming event per lane" do
@@ -182,8 +146,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
 
     lanes = Public::Events::HomepageGenreLanesBuilder.new(
       relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
-      slugs: [ @rock_group.slug ],
-      snapshot: @snapshot
+      slugs: [ @rock_group.slug ]
     ).call
 
     assert_equal [ earlier_regular.id ], lanes.first.events.map(&:id)
@@ -211,8 +174,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
 
     lanes = Public::Events::HomepageGenreLanesBuilder.new(
       relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
-      slugs: [ @rock_group.slug ],
-      snapshot: @snapshot
+      slugs: [ @rock_group.slug ]
     ).call
 
     assert_equal [ future_event.id ], lanes.first.events.map(&:id)
@@ -239,13 +201,17 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
   end
 
   def build_lane_enrichment(event:, genres:)
-    EventLlmEnrichment.create!(
-      event: event,
-      source_run: import_runs(:one),
-      genre: genres,
-      model: "gpt-5-mini",
-      prompt_version: "v1",
-      raw_response: {}
-    )
+    event.genres = genres.map { |name| genre_for(name) }
+  end
+
+  def genre_for(name)
+    case name
+    when "Rock"
+      @rock_group
+    when "Pop"
+      @pop_group
+    else
+      Genre.find_by!(name: name)
+    end
   end
 end

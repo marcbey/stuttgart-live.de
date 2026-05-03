@@ -1,35 +1,107 @@
-rock:
-  name: Rock
-  slug: rock
-
 pop:
-  name: Pop
-  slug: pop
+  name: Pop, Indie & Singer-Songwriter
+  slug: pop-indie-singer-songwriter
 
-electro:
-  name: Electro
-  slug: electro
-
-hip_hop:
-  name: Hip-Hop
-  slug: hip-hop
-
-indie:
-  name: Indie
-  slug: indie
-
-jazz:
-  name: Jazz
-  slug: jazz
-
-klassik:
-  name: Klassik
-  slug: klassik
+rock:
+  name: Rock & Alternative
+  slug: rock-alternative
 
 metal:
-  name: Metal
-  slug: metal
+  name: Metal, Punk & Hardcore
+  slug: metal-punk-hardcore
+
+hip_hop:
+  name: Hip-Hop & R’n’B
+  slug: hip-hop-r-n-b
+
+deutsch_rap:
+  name: Deutschrap
+  slug: deutschrap
 
 schlager:
-  name: Schlager
-  slug: schlager
+  name: Schlager & Volksmusik
+  slug: schlager-volksmusik
+
+techno:
+  name: Techno & House
+  slug: techno-house
+
+electro:
+  name: Electronic Music & EDM
+  slug: electronic-music-edm
+
+folk:
+  name: Folk & Country
+  slug: folk-country
+
+weltmusik:
+  name: Weltmusik
+  slug: weltmusik
+
+tribute:
+  name: Tribute & Cover
+  slug: tribute-cover
+
+klassik:
+  name: Klassik & Oper
+  slug: klassik-oper
+
+chor:
+  name: Chor & Gospel
+  slug: chor-gospel
+
+ausstellungen:
+  name: Ausstellungen
+  slug: ausstellungen
+
+jazz:
+  name: Jazz, Blues & Soul
+  slug: jazz-blues-soul
+
+musical:
+  name: Musical & Theater
+  slug: musical-theater
+
+comedy:
+  name: Comedy & Kabarett
+  slug: comedy-kabarett
+
+show:
+  name: Show, Varieté & Performance
+  slug: show-variete-performance
+
+lesung:
+  name: Lesung & Podcast
+  slug: lesung-podcast
+
+festivals:
+  name: Festivals/OpenAir
+  slug: festivals-openair
+
+party:
+  name: Party/ Night-Out
+  slug: party-night-out
+
+bildung:
+  name: Bildung & Wissen
+  slug: bildung-wissen
+
+kulinarik:
+  name: Kulinarik & Genuss
+  slug: kulinarik-genuss
+
+business:
+  name: Business, Coaching & Networking
+  slug: business-coaching-networking
+
+diy:
+  name: DIY & Kreativ
+  slug: diy-kreativ
+
+kultur:
+  name: Kultur, Führungen & Touren
+  slug: kultur-fuhrungen-touren
+
+sport:
+  name: Sport & Bewegung
+  slug: sport-bewegung

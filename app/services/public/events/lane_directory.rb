@@ -53,21 +53,21 @@ module Public
           )
         end
 
-        def genre(slug, snapshot: LlmGenreGrouping::Lookup.selected_snapshot)
+        def genre(slug)
           normalized_slug = normalize_slug(slug)
           return if normalized_slug.blank?
 
-          group = snapshot&.groups&.find { |entry| entry.slug == normalized_slug }
+          group = Genre.find_by(slug: normalized_slug)
           return if group.blank?
 
           Lane.new(
             key: "genre",
             title: group.name,
             header_variant: :genre,
-            public_path: routeable_genre_slug?(normalized_slug, snapshot: snapshot) ? "/#{normalized_slug}" : nil,
+            public_path: routeable_genre_slug?(normalized_slug) ? "/#{normalized_slug}" : nil,
             group: group,
             featured: false,
-            home_visible: snapshot_home_lane_slugs(snapshot).include?(normalized_slug)
+            home_visible: AppSetting.homepage_genre_lane_slugs.include?(normalized_slug)
           )
         end
 
@@ -79,25 +79,25 @@ module Public
           fixed("russ_live")
         end
 
-        def public_path_for_genre_slug(slug, snapshot: LlmGenreGrouping::Lookup.selected_snapshot)
-          genre(slug, snapshot: snapshot)&.public_path
+        def public_path_for_genre_slug(slug)
+          genre(slug)&.public_path
         end
 
-        def resolve(identifier, snapshot: LlmGenreGrouping::Lookup.selected_snapshot)
+        def resolve(identifier)
           case identifier.to_s
           when "highlights" then highlights
           when "russ_live" then russ_live
           when "all_stuttgart" then all_stuttgart
           when "tagestipp" then tagestipp
-          else genre(identifier, snapshot: snapshot)
+          else genre(identifier)
           end
         end
 
-        def routeable_genre_slug?(slug, snapshot: LlmGenreGrouping::Lookup.selected_snapshot)
+        def routeable_genre_slug?(slug)
           normalized_slug = normalize_slug(slug)
           return false if normalized_slug.blank?
           return false if reserved_public_slugs.include?(normalized_slug)
-          return false unless snapshot&.groups&.any? { |group| group.slug == normalized_slug }
+          return false unless Genre.exists?(slug: normalized_slug)
           return false if StaticPage.exists?(slug: normalized_slug)
 
           true
@@ -117,10 +117,6 @@ module Public
 
         def reserved_public_slugs
           @reserved_public_slugs ||= (StaticPage::RESERVED_SLUGS + FIXED_PUBLIC_SLUGS).uniq
-        end
-
-        def snapshot_home_lane_slugs(snapshot)
-          Array(snapshot&.homepage_genre_lane_configuration&.lane_slugs)
         end
       end
     end
