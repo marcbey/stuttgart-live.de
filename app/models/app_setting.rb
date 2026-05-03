@@ -2,6 +2,9 @@ class AppSetting < ApplicationRecord
   SKS_PROMOTER_IDS_KEY = "sks_promoter_ids".freeze
   SKS_ORGANIZER_NOTES_KEY = "sks_organizer_notes".freeze
   MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY = "merge_artist_similarity_matching_enabled".freeze
+  DAILY_RAW_IMPORT_ENABLED_KEY = "daily_raw_import_enabled".freeze
+  DAILY_MERGE_IMPORT_ENABLED_KEY = "daily_merge_import_enabled".freeze
+  DAILY_LLM_ENRICHMENT_ENABLED_KEY = "daily_llm_enrichment_enabled".freeze
   VENUE_DUPLICATE_MAPPINGS_KEY = "venue_duplicate_mappings".freeze
   HOMEPAGE_GENRE_LANE_SLUGS_KEY = "homepage_genre_lane_slugs".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
@@ -191,6 +194,33 @@ class AppSetting < ApplicationRecord
           DEFAULT_LLM_ENRICHMENT_WEB_SEARCH_PROVIDER
     end
 
+    def daily_raw_import_enabled?
+      @daily_raw_import_enabled =
+        if @daily_raw_import_enabled.nil?
+          scheduler_enabled?(DAILY_RAW_IMPORT_ENABLED_KEY)
+        else
+          @daily_raw_import_enabled
+        end
+    end
+
+    def daily_merge_import_enabled?
+      @daily_merge_import_enabled =
+        if @daily_merge_import_enabled.nil?
+          scheduler_enabled?(DAILY_MERGE_IMPORT_ENABLED_KEY)
+        else
+          @daily_merge_import_enabled
+        end
+    end
+
+    def daily_llm_enrichment_enabled?
+      @daily_llm_enrichment_enabled =
+        if @daily_llm_enrichment_enabled.nil?
+          scheduler_enabled?(DAILY_LLM_ENRICHMENT_ENABLED_KEY)
+        else
+          @daily_llm_enrichment_enabled
+        end
+    end
+
     def sks_promoter_ids_record
       find_or_initialize_by(key: SKS_PROMOTER_IDS_KEY)
     end
@@ -239,6 +269,18 @@ class AppSetting < ApplicationRecord
       find_or_initialize_by(key: MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY)
     end
 
+    def daily_raw_import_enabled_record
+      boolean_setting_record(DAILY_RAW_IMPORT_ENABLED_KEY)
+    end
+
+    def daily_merge_import_enabled_record
+      boolean_setting_record(DAILY_MERGE_IMPORT_ENABLED_KEY)
+    end
+
+    def daily_llm_enrichment_enabled_record
+      boolean_setting_record(DAILY_LLM_ENRICHMENT_ENABLED_KEY)
+    end
+
     def venue_duplicate_mappings_record
       find_or_initialize_by(key: VENUE_DUPLICATE_MAPPINGS_KEY)
     end
@@ -251,6 +293,11 @@ class AppSetting < ApplicationRecord
         else
           @merge_artist_similarity_matching_enabled
         end
+    end
+
+    def scheduler_enabled?(key)
+      setting = find_by(key: key)
+      setting.nil? ? true : normalize_boolean(setting.value)
     end
 
     def normalize_id_list(value)
@@ -477,6 +524,15 @@ class AppSetting < ApplicationRecord
       @llm_enrichment_temperature = nil
       @llm_enrichment_web_search_provider = nil
       @merge_artist_similarity_matching_enabled = nil
+      @daily_raw_import_enabled = nil
+      @daily_merge_import_enabled = nil
+      @daily_llm_enrichment_enabled = nil
+    end
+
+    def boolean_setting_record(key)
+      find_or_initialize_by(key: key).tap do |setting|
+        setting.value = true if setting.new_record? && (setting.value.nil? || setting.value == [])
+      end
     end
   end
 
@@ -600,6 +656,16 @@ class AppSetting < ApplicationRecord
   end
 
   def merge_artist_similarity_matching_enabled=(raw_value)
+    self.value = self.class.normalize_boolean(raw_value)
+  end
+
+  def daily_scheduler_enabled
+    return self.class.scheduler_enabled?(key) if new_record? && (value.nil? || value == [])
+
+    self.class.normalize_boolean(value)
+  end
+
+  def daily_scheduler_enabled=(raw_value)
     self.value = self.class.normalize_boolean(raw_value)
   end
 

@@ -10,6 +10,10 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     @reservix_source = ImportSource.ensure_reservix_source!
   end
 
+  teardown do
+    AppSetting.reset_cache!
+  end
+
   test "should get index" do
     get backend_import_sources_url
     assert_response :success
@@ -275,11 +279,52 @@ class Backend::ImportSourcesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     assert_includes response.body, "Diese Jobs holen Rohdaten direkt von Easyticket, Eventim und Reservix ab"
-    assert_includes response.body, "Automatischer Lauf täglich um 03:05 Uhr (Europe/Berlin)."
+    assert_includes response.body, "Automatischer Lauf täglich um 03:05 Uhr (Europe/Berlin)"
     assert_includes response.body, "Diese Jobs lesen die aktuellen Rohimporte aller Quellen"
-    assert_includes response.body, "Automatischer Lauf täglich um 04:05 Uhr (Europe/Berlin)."
+    assert_includes response.body, "Automatischer Lauf täglich um 04:05 Uhr (Europe/Berlin)"
     assert_includes response.body, "Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten"
-    assert_includes response.body, "Automatischer Lauf täglich um 05:05 Uhr (Europe/Berlin)."
+    assert_includes response.body, "Automatischer Lauf täglich um 05:05 Uhr (Europe/Berlin)"
+  end
+
+  test "should render scheduler checkboxes for importer blocks" do
+    AppSetting.create!(key: AppSetting::DAILY_MERGE_IMPORT_ENABLED_KEY, value: false)
+
+    get backend_import_sources_url(section: :merge_importer)
+    assert_response :success
+
+    assert_select "form[action='#{update_scheduler_backend_import_sources_path(section: :raw_importer)}'] input[name='scheduler_key'][value='daily_raw_import']", count: 1
+    assert_select "form[action='#{update_scheduler_backend_import_sources_path(section: :merge_importer)}'] input[name='scheduler_key'][value='daily_merge_import']", count: 1
+    assert_select "form[action='#{update_scheduler_backend_import_sources_path(section: :llm_enrichment)}'] input[name='scheduler_key'][value='daily_llm_enrichment']", count: 1
+    assert_includes response.body, "Täglichen Raw-Importer aktivieren"
+    assert_includes response.body, "Täglichen Merge aktivieren"
+    assert_includes response.body, "Tägliches LLM-Enrichment aktivieren"
+    assert_select "form[action='#{update_scheduler_backend_import_sources_path(section: :merge_importer)}']", text: /deaktiviert/
+  end
+
+  test "should update daily scheduler setting and keep manual actions available" do
+    patch update_scheduler_backend_import_sources_url(section: :llm_enrichment), params: {
+      scheduler_key: "daily_llm_enrichment",
+      enabled: "0"
+    }
+
+    assert_redirected_to backend_import_sources_url(section: :llm_enrichment)
+    assert_equal false, AppSetting.daily_llm_enrichment_enabled?
+
+    follow_redirect!
+    assert_includes response.body, "deaktiviert"
+    assert_select "form[action='#{run_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}'] .button", text: "LLM-Enrichment starten"
+    assert_select "form[action='#{rerun_llm_enrichment_backend_import_sources_path(section: :llm_enrichment)}'] .button", text: "Alle zukünftigen Events neu anreichern"
+  end
+
+  test "should reject unknown daily scheduler setting" do
+    patch update_scheduler_backend_import_sources_url(section: :raw_importer), params: {
+      scheduler_key: "unknown",
+      enabled: "0"
+    }
+
+    assert_redirected_to backend_import_sources_url(section: :raw_importer)
+    follow_redirect!
+    assert_includes response.body, "Unbekannter Scheduler."
   end
 
   test "should show import run detail page with errors" do

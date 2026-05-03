@@ -307,6 +307,31 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal true, AppSetting.merge_artist_similarity_matching_enabled?
   end
 
+  test "returns true for daily import schedulers when not configured" do
+    assert_equal true, AppSetting.daily_raw_import_enabled?
+    assert_equal true, AppSetting.daily_merge_import_enabled?
+    assert_equal true, AppSetting.daily_llm_enrichment_enabled?
+  end
+
+  test "normalizes daily scheduler checkbox values" do
+    setting = AppSetting.daily_raw_import_enabled_record
+
+    setting.daily_scheduler_enabled = "0"
+    assert_equal false, setting.daily_scheduler_enabled
+
+    setting.daily_scheduler_enabled = "1"
+    assert_equal true, setting.daily_scheduler_enabled
+  end
+
+  test "resets daily scheduler cache after update" do
+    setting = AppSetting.create!(key: AppSetting::DAILY_RAW_IMPORT_ENABLED_KEY, value: true)
+    assert_equal true, AppSetting.daily_raw_import_enabled?
+
+    setting.update!(value: false)
+
+    assert_equal false, AppSetting.daily_raw_import_enabled?
+  end
+
   test "returns configured merge similarity matching flag" do
     AppSetting.create!(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY, value: true)
 

@@ -1,6 +1,10 @@
 require "test_helper"
 
 class Merging::DailyRunJobTest < ActiveJob::TestCase
+  teardown do
+    AppSetting.reset_cache!
+  end
+
   test "enqueues a merge sync run with scheduler metadata" do
     assert_difference -> { ImportRun.where(source_type: "merge").count }, 1 do
       assert_enqueued_jobs 1, only: Merging::SyncImportedEventsJob do
@@ -23,6 +27,16 @@ class Merging::DailyRunJobTest < ActiveJob::TestCase
       started_at: 2.minutes.ago,
       metadata: {}
     )
+
+    assert_no_difference -> { ImportRun.where(source_type: "merge").count } do
+      assert_no_enqueued_jobs only: Merging::SyncImportedEventsJob do
+        Merging::DailyRunJob.perform_now
+      end
+    end
+  end
+
+  test "does not enqueue a merge sync run when scheduler is disabled" do
+    AppSetting.create!(key: AppSetting::DAILY_MERGE_IMPORT_ENABLED_KEY, value: false)
 
     assert_no_difference -> { ImportRun.where(source_type: "merge").count } do
       assert_no_enqueued_jobs only: Merging::SyncImportedEventsJob do

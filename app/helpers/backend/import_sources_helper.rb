@@ -56,6 +56,23 @@ module Backend::ImportSourcesHelper
     run.status
   end
 
+  def import_scheduler_enabled?(scheduler_key)
+    case scheduler_key.to_s
+    when "daily_raw_import"
+      AppSetting.daily_raw_import_enabled?
+    when "daily_merge_import"
+      AppSetting.daily_merge_import_enabled?
+    when "daily_llm_enrichment"
+      AppSetting.daily_llm_enrichment_enabled?
+    else
+      false
+    end
+  end
+
+  def import_scheduler_status_label(scheduler_key)
+    import_scheduler_enabled?(scheduler_key) ? "aktiv" : "deaktiviert"
+  end
+
   def import_run_can_stop?(run, section: nil)
     return false if import_run_stop_path(run, section: section).blank?
     return true if run.status == "queued"

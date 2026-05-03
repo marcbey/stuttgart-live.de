@@ -3,6 +3,8 @@ module Merging
     queue_as :default
 
     def perform
+      return unless AppSetting.daily_merge_import_enabled?
+
       ImportSource.ensure_supported_sources!
 
       Backend::ImportSources::MergeRunStarter.new.call(

@@ -65,6 +65,7 @@ Rails.application.routes.draw do
       post :run_llm_enrichment, on: :collection
       post :rerun_llm_enrichment, on: :collection
       post :stop_llm_enrichment_run, on: :collection
+      patch :update_scheduler, on: :collection
       post :run_easyticket, on: :member
       post :stop_easyticket_run, on: :member
       post :run_eventim, on: :member

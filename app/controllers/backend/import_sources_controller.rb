@@ -2,7 +2,7 @@ module Backend
   class ImportSourcesController < BaseController
     before_action :ensure_supported_sources
     before_action :set_import_source, only: [ :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
-    before_action :set_active_section, only: [ :index, :sync_imported_events, :stop_merge_run, :run_llm_enrichment, :rerun_llm_enrichment, :stop_llm_enrichment_run, :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
+    before_action :set_active_section, only: [ :index, :sync_imported_events, :stop_merge_run, :run_llm_enrichment, :rerun_llm_enrichment, :stop_llm_enrichment_run, :update_scheduler, :edit, :update, :run_easyticket, :stop_easyticket_run, :run_eventim, :stop_eventim_run, :run_reservix, :stop_reservix_run ]
 
     def index
       run_maintenance.release_stale_running_runs!
@@ -77,6 +77,19 @@ module Backend
         end
 
       respond_with_importer_feedback(notice:)
+    end
+
+    def update_scheduler
+      setting = scheduler_setting_for(params[:scheduler_key])
+      if setting.blank?
+        redirect_to import_sources_redirect_path, alert: "Unbekannter Scheduler."
+        return
+      end
+
+      setting.daily_scheduler_enabled = params[:enabled]
+      setting.save!
+
+      redirect_to import_sources_redirect_path, notice: "Scheduler-Einstellung gespeichert."
     end
 
     def update
@@ -231,6 +244,17 @@ module Backend
 
     def recent_runs_for_list
       Backend::ImportRunsBroadcaster.recent_runs_for_list
+    end
+
+    def scheduler_setting_for(scheduler_key)
+      case scheduler_key.to_s
+      when "daily_raw_import"
+        AppSetting.daily_raw_import_enabled_record
+      when "daily_merge_import"
+        AppSetting.daily_merge_import_enabled_record
+      when "daily_llm_enrichment"
+        AppSetting.daily_llm_enrichment_enabled_record
+      end
     end
 
     def respond_with_importer_feedback(notice: nil, alert: nil)

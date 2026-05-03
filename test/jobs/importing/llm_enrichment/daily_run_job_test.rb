@@ -3,6 +3,10 @@ require "test_helper"
 module Importing
   module LlmEnrichment
     class DailyRunJobTest < ActiveJob::TestCase
+      teardown do
+        AppSetting.reset_cache!
+      end
+
       test "enqueues a scheduled llm enrichment run" do
         assert_difference -> { ImportRun.where(source_type: "llm_enrichment").count }, 1 do
           assert_enqueued_jobs 1, only: Importing::LlmEnrichment::RunJob do
@@ -40,6 +44,16 @@ module Importing
         assert_equal "scheduled_missing_enrichments", run.metadata["trigger_scope"]
         assert_equal "daily_llm_enrichment_run", run.metadata["schedule_name"]
         assert_nil run.metadata["job_id"]
+      end
+
+      test "does not enqueue llm enrichment run when scheduler is disabled" do
+        AppSetting.create!(key: AppSetting::DAILY_LLM_ENRICHMENT_ENABLED_KEY, value: false)
+
+        assert_no_difference -> { ImportRun.where(source_type: "llm_enrichment").count } do
+          assert_no_enqueued_jobs only: Importing::LlmEnrichment::RunJob do
+            DailyRunJob.perform_now
+          end
+        end
       end
     end
   end

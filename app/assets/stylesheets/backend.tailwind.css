@@ -2322,21 +2322,34 @@ display: flex;
   margin: 0 0 0.85rem;
 }
 
-.import-runs-group-header .action-cell,
-.import-runs-panel .action-cell {
-display: flex;
+.import-runs-group-header .action-cell {
+  display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
   align-items: center;
 }
 
-.import-runs-group-header .action-cell,
-.import-runs-panel td.action-cell {
-justify-content: flex-end;
+.import-runs-group-header .action-cell {
+  justify-content: flex-end;
 }
 
-.import-runs-panel .action-cell .button_to {
-display: inline-flex;
+.import-runs-panel td.action-cell {
+  text-align: right;
+}
+
+.import-runs-panel td.action-cell .button_to {
+  display: inline-flex;
+  margin: 0 0 0 0.5rem;
+  vertical-align: middle;
+}
+
+.import-runs-panel td.action-cell > .button {
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.import-runs-panel td.action-cell > :first-child {
+  margin-left: 0;
 }
 
 .import-runs-group-header h3 {
@@ -2382,8 +2395,7 @@ text-align: right;
 }
 
 .data-table td.action-cell {
-display: flex;
-  justify-content: flex-end;
+  text-align: right;
 }
 
 .presenter-grid {

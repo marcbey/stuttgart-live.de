@@ -19,7 +19,22 @@
     Diese Jobs ergänzen bereits gemergte Events um verdichtete redaktionelle Metadaten wie Genre-Vorschläge, Beschreibungen und weitere strukturierte Felder.
     Sie verbessern die Qualität des bestehenden Event-Bestands, ohne neue Rohdaten einzulesen.
   </p>
-  <p class="import-runs-note">Automatischer Lauf täglich um 05:05 Uhr (Europe/Berlin).</p>
+  <div class="import-runs-note">
+    <%= form_with url: update_scheduler_backend_import_sources_path(section: section_key),
+                  method: :patch,
+                  class: "check-inline" do |form| %>
+      <%= hidden_field_tag :scheduler_key, "daily_llm_enrichment" %>
+      <%= form.check_box :enabled,
+                         {
+                           checked: import_scheduler_enabled?("daily_llm_enrichment"),
+                           onchange: "this.form.requestSubmit()"
+                         },
+                         "1",
+                         "0" %>
+      <span>Automatischer Lauf täglich um 05:05 Uhr (Europe/Berlin): <strong><%= import_scheduler_status_label("daily_llm_enrichment") %></strong></span>
+      <span>Tägliches LLM-Enrichment aktivieren</span>
+    <% end %>
+  </div>
   <% if runs.any? %>
     <div class="table-wrap">
       <table class="data-table">

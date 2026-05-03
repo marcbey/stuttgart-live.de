@@ -3,6 +3,8 @@ module Importing
     queue_as :default
 
     def perform
+      return unless AppSetting.daily_raw_import_enabled?
+
       ImportSource.ensure_supported_sources!
 
       ImportSource.where(source_type: %w[easyticket eventim reservix], active: true).find_each do |source|

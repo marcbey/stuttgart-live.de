@@ -6,7 +6,22 @@
     Diese Jobs holen Rohdaten direkt von Easyticket, Eventim und Reservix ab und speichern jeden passenden Quelldatensatz als `RawEventImport`.
     Sie bilden die erste Stufe der Pipeline und liefern die nachvollziehbare Datengrundlage für den späteren Merge.
   </p>
-  <p class="import-runs-note">Automatischer Lauf täglich um 03:05 Uhr (Europe/Berlin).</p>
+  <div class="import-runs-note">
+    <%= form_with url: update_scheduler_backend_import_sources_path(section: section_key),
+                  method: :patch,
+                  class: "check-inline" do |form| %>
+      <%= hidden_field_tag :scheduler_key, "daily_raw_import" %>
+      <%= form.check_box :enabled,
+                         {
+                           checked: import_scheduler_enabled?("daily_raw_import"),
+                           onchange: "this.form.requestSubmit()"
+                         },
+                         "1",
+                         "0" %>
+      <span>Automatischer Lauf täglich um 03:05 Uhr (Europe/Berlin): <strong><%= import_scheduler_status_label("daily_raw_import") %></strong></span>
+      <span>Täglichen Raw-Importer aktivieren</span>
+    <% end %>
+  </div>
 
   <div class="import-runs-block">
     <h4 class="import-runs-subheading">Scheduler</h4>

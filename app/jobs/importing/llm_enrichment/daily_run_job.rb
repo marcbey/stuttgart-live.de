@@ -4,6 +4,8 @@ module Importing
       queue_as :default
 
       def perform
+        return unless AppSetting.daily_llm_enrichment_enabled?
+
         ImportSource.ensure_supported_sources!
 
         registry = Backend::ImportSources::ImporterRegistry.new
