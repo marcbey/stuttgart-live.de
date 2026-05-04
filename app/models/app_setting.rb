@@ -69,7 +69,7 @@ class AppSetting < ApplicationRecord
       - `search_results` enthält pro Feld höchstens 10 Treffer; wähle nur dann einen Link, wenn die Zuordnung zum Event klar belastbar ist
 
     3. `genres` und `sub_genres` haben unterschiedliche Aufgaben:
-      - `genres` enthält 1 bis 3 Werte und darf ausschließlich Einträge aus dieser statischen Liste enthalten:
+      - `genres` enthält 1 bis 2 Werte und darf ausschließlich Einträge aus dieser statischen Liste enthalten:
     #{Genre::STATIC_NAMES.map { |name| "  - #{name}" }.join("\n")}
       - `sub_genres` enthält 1 bis 4 konkrete fachliche, stilistische oder spartenbezogene Sub-Genres, die du selbstständig aus dem Event ableitest
       - verwende für `sub_genres` nur belastbare fachliche Genres, Stile oder Sparten
