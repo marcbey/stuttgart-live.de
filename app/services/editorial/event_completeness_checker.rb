@@ -34,7 +34,6 @@ module Editorial
       missing_venue
       missing_city
       missing_image
-      missing_ticket_url
     ].freeze
 
     attr_reader :event, :offers, :images_present

@@ -113,6 +113,7 @@ Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits
 Wichtig für das Verhalten im Backend:
 
 - Neue oder aktualisierte automatisch gemergte Events werden nur dann direkt veröffentlicht, wenn die Pflichtfelder inklusive Bild vorhanden sind.
+- Eine fehlende Ticket-URL bleibt als Vollständigkeits-Hinweis sichtbar, blockiert die Veröffentlichung aber nicht.
 - Fehlen dafür wichtige Informationen, landet das Event stattdessen in `needs_review`.
 - Erhält ein bestehendes `needs_review`-Event in einem späteren Merge nun alle Pflichtdaten, wird es automatisch nach `published` gehoben.
 - Bereits automatisch veröffentlichte Events fallen ebenfalls zurück auf `needs_review`, wenn sie nach einem späteren Merge nicht mehr vollständig genug sind.
@@ -124,7 +125,7 @@ Die Event-Status und ihre sichtbaren Labels sind dabei:
 | --- | --- | --- |
 | `imported` | `importiert` | Interner Ausgangszustand des Modells. Im regulären redaktionellen Workflow spielt dieser Status normalerweise keine aktive Rolle mehr. |
 | `needs_review` | `Draft` beziehungsweise `Drafts` in Filtern | Das Event ist noch nicht veröffentlichungsreif. Es fehlen Pflichtangaben, es braucht redaktionelle Prüfung oder beides. |
-| `ready_for_publish` | `Unpublished` | Das Event ist fachlich vollständig, aber noch nicht veröffentlicht. |
+| `ready_for_publish` | `Unpublished` | Das Event ist fachlich veröffentlichungsreif, aber noch nicht veröffentlicht. |
 | `published` | `Published` | Das Event ist veröffentlicht und öffentlich sichtbar, sobald `published_at` erreicht ist. Liegt `published_at` in der Zukunft, ist das Event bis dahin geplant, aber noch nicht öffentlich live. |
 | `rejected` | `Rejected` | Das Event wurde bewusst verworfen und soll nicht veröffentlicht werden. |
 

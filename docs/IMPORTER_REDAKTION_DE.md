@@ -41,9 +41,10 @@ Wenn ein Event bewusst durch die Redaktion veröffentlicht wurde, bleibt dieser 
 
 ### Automatisch veröffentlichte Events
 Automatisch veröffentlichte Events können bei fehlenden Pflichtdaten wieder auf "prüfen" zurückfallen.
+Eine fehlende Ticket-URL wird weiterhin als Hinweis in der Vollständigkeit angezeigt, blockiert die Veröffentlichung aber nicht.
 
 ### `needs_review`
-Wird gesetzt, wenn wichtige Informationen fehlen (z. B. Bild oder Ticketlink).
+Wird gesetzt, wenn wichtige Informationen fehlen (z. B. ein Bild).
 
 ## Warum kann sich ein Event nachträglich ändern?
 

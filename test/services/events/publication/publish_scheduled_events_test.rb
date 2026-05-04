@@ -43,6 +43,31 @@ class Events::Publication::PublishScheduledEventsTest < ActiveSupport::TestCase
     assert_includes event.completeness_flags, "missing_image"
   end
 
+  test "publishes due ready_for_publish events when only ticket url is missing" do
+    published_at = 1.hour.ago.change(usec: 0)
+    event = Event.create!(
+      slug: "scheduled-publication-without-ticket-url",
+      source_fingerprint: "test::scheduled::without-ticket-url",
+      title: "Scheduled Event Without Ticket URL",
+      artist_name: "Scheduled Artist",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "ready_for_publish",
+      published_at: 2.hours.from_now.change(usec: 0)
+    )
+    event.event_images.create!(purpose: EventImage::PURPOSE_DETAIL_HERO, file: png_upload)
+    event.update_columns(published_at: published_at)
+
+    result = Events::Publication::PublishScheduledEvents.call(scope: Event.where(id: event.id))
+
+    assert_equal 1, result.processed_count
+    assert_equal 1, result.published_count
+    assert_equal 0, result.skipped_count
+    assert_equal "published", event.reload.status
+    assert_includes event.completeness_flags, "missing_ticket_url"
+  end
+
   private
 
   def build_scheduled_event(slug:, source_fingerprint:, published_at:)

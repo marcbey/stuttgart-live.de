@@ -190,9 +190,10 @@ Blocking completeness requirements include:
 - venue
 - city
 - image present
-- ticket URL present (non-sold-out offer)
 
 If any blocking requirement is missing, `ready_for_publish?` is false.
+
+Missing ticket URLs are still recorded as completeness flags, but they do not block publication readiness.
 
 ## `auto_published` Semantics
 
