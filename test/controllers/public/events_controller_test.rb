@@ -2861,7 +2861,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[type='application/ld+json']", /Published Artist/
   end
 
-  test "show renders related genre lane in chronological order without sks or highlight promotion" do
+  test "show renders related genre lane with sks and highlight priority" do
     snapshot, rock_group, = create_homepage_genre_snapshot
     regular_event = Event.create!(
       slug: "show-related-genre-regular",
@@ -2946,18 +2946,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     related_names = Nokogiri::HTML.parse(response.body).css(".event-detail-related-list .event-listing-link strong").map(&:text)
 
     assert_equal [
-      regular_event.artist_name,
       sks_event.artist_name,
-      highlighted_event.artist_name
+      highlighted_event.artist_name,
+      regular_event.artist_name
     ], related_names.first(3)
   end
 
-  test "show limits related genre lane to ten events" do
-    snapshot, = create_homepage_genre_snapshot
-
+  test "show limits related genre lane to twenty events" do
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
 
-    related_events = 12.times.map do |index|
+    related_events = 22.times.map do |index|
       event = Event.create!(
         slug: "show-related-genre-limit-#{index}",
         source_fingerprint: "test::public::show-related-genre::limit::#{index}",
@@ -2980,8 +2978,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     related_names = Nokogiri::HTML.parse(response.body).css(".event-detail-related-list .event-listing-link strong").map(&:text)
 
-    assert_equal 10, related_names.size
-    assert_equal related_events.first(10).map(&:artist_name), related_names
+    assert_equal 20, related_names.size
+    assert_equal related_events.first(20).map(&:artist_name), related_names
     assert_not_includes related_names, related_events.last(2).first.artist_name
     assert_not_includes related_names, related_events.last.artist_name
   end
