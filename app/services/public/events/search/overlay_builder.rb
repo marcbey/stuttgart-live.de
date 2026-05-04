@@ -47,7 +47,7 @@ module Public
 
         def call
           analysis = Analyzer.call(query)
-          return Result.new(mode: :idle, query: nil, events: idle_loader.call, suggestions: [], venues: [], genres: []) if analysis.blank?
+          return Result.new(mode: :idle, query: nil, events: idle_loader.call, suggestions: [], venues: [], genres: genre_loader.call) if analysis.blank?
           return Result.new(mode: :suggestions, query:, events: standard_event_loader.call, suggestions: analysis.suggestions, venues: [], genres: []) if analysis.time_incomplete?
 
           if analysis.venue_search?

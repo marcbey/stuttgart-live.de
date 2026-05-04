@@ -1848,17 +1848,9 @@ list-style: none;
 }
 
 .public-search-overlay-separator {
-padding: 0.65rem 1rem 0.35rem;
+  margin: 0.65rem 1rem;
+  padding: 0;
   border-top: 1px solid rgba(17, 17, 17, 0.08);
-}
-
-.public-search-overlay-separator span {
-display: block;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(17, 17, 17, 0.54);
 }
 
 .public-search-overlay-empty {

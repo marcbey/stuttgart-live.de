@@ -3790,15 +3790,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "a.public-search-result[href=?]", "/rock-alternative", text: /Rock & Alternative/
-    assert_select ".public-search-overlay-separator span", text: "Event-Treffer", count: 1
+    assert_select ".public-search-overlay-separator", count: 1
+    assert_select ".public-search-overlay-separator span", count: 0
     assert_includes response.body, "Genre Overlay Artist"
   end
 
-  test "search overlay does not render genre suggestions without query" do
+  test "search overlay renders default genre suggestions without query" do
     get search_overlay_events_url
 
     assert_response :success
-    assert_select "a.public-search-result[href='/rock-alternative']", count: 0
+
+    genre_links = css_select("a.public-search-result.public-search-result-compact")
+    assert_equal [
+      "Pop, Indie & Singer-Songwriter",
+      "Rock & Alternative",
+      "Metal, Punk & Hardcore",
+      "Hip-Hop & R’n’B"
+    ], genre_links.first(4).map { |link| link.at_css(".public-search-result-artist").text }
+    assert_equal [
+      "/pop-indie-singer-songwriter",
+      "/rock-alternative",
+      "/metal-punk-hardcore",
+      "/hip-hop-r-n-b"
+    ], genre_links.first(4).map { |link| link["href"] }
   end
 
   test "search overlay renders phrase suggestions for incomplete structured queries" do
@@ -3819,7 +3833,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Diesen Montag"
-    assert_includes response.body, "Event-Treffer"
+    assert_select ".public-search-overlay-separator", count: 1
+    assert_not_includes response.body, "Event-Treffer"
     assert_includes response.body, "Fallback Artist"
     assert_not_includes response.body, "passende zukünftige Events"
   end
@@ -3843,7 +3858,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Porsche-Arena"
-    assert_includes response.body, "Event-Treffer"
+    assert_select ".public-search-overlay-separator", count: 1
+    assert_not_includes response.body, "Event-Treffer"
     assert_includes response.body, "Venue Fallback Artist"
   end
 
@@ -4089,7 +4105,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Initial Regular Artist"
 
     document = Nokogiri::HTML.parse(response.body)
-    artists = document.css(".public-search-result-artist").map(&:text)
+    artists = document.css("a.public-search-result:not(.public-search-result-compact) .public-search-result-artist").map(&:text)
 
     assert_equal promotion_event.artist_name, artists.first
     assert_operator artists.index(highlighted_event.artist_name), :<, artists.index(sks_event.artist_name)
@@ -4182,7 +4198,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_overlay_events_url
 
     assert_response :success
-    assert_select ".public-search-overlay-list li", count: 10
+    assert_select "a.public-search-result:not(.public-search-result-compact)", count: 10
     assert_includes response.body, promotion_event.artist_name
     assert_not_includes response.body, "Initial SKS Limit Artist 5"
     assert_not_includes response.body, "Initial SKS Limit Artist 6"

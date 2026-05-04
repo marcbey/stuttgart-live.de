@@ -1,6 +1,23 @@
 require "test_helper"
 
 class Public::Events::Search::GenreSuggesterTest < ActiveSupport::TestCase
+  test "returns default suggestions for blank query" do
+    suggestions = suggest("")
+
+    assert_equal [
+      "Pop, Indie & Singer-Songwriter",
+      "Rock & Alternative",
+      "Metal, Punk & Hardcore",
+      "Hip-Hop & R’n’B"
+    ], suggestions.map(&:name)
+    assert_equal [
+      "/pop-indie-singer-songwriter",
+      "/rock-alternative",
+      "/metal-punk-hardcore",
+      "/hip-hop-r-n-b"
+    ], suggestions.map(&:path)
+  end
+
   test "finds rock by normalized prefix" do
     suggestions = suggest("rock")
 

@@ -3,6 +3,12 @@ module Public
     module Search
       class GenreSuggester
         DEFAULT_LIMIT = 5
+        DEFAULT_GENRE_NAMES = [
+          "Pop, Indie & Singer-Songwriter",
+          "Rock & Alternative",
+          "Metal, Punk & Hardcore",
+          "Hip-Hop & R’n’B"
+        ].freeze
 
         Suggestion = Data.define(:name, :slug, :path)
 
@@ -16,16 +22,16 @@ module Public
         end
 
         def call
-          return [] if normalized_query.blank?
+          return default_suggestions if normalized_query.blank?
 
           Genre.all.filter_map do |genre|
-            path = Public::Events::LaneDirectory.public_path_for_genre_slug(genre.slug)
-            next if path.blank?
-
             rank = match_rank(genre)
             next if rank.blank?
 
-            [ rank, static_position(genre), Suggestion.new(name: genre.name, slug: genre.slug, path:) ]
+            suggestion = suggestion_for(genre)
+            next if suggestion.blank?
+
+            [ rank, static_position(genre), suggestion ]
           end
             .sort_by { |rank, position, suggestion| [ rank, position, suggestion.name ] }
             .first(limit)
@@ -35,6 +41,24 @@ module Public
         private
 
         attr_reader :query, :limit
+
+        def default_suggestions
+          genres_by_name = Genre.where(name: DEFAULT_GENRE_NAMES).index_by(&:name)
+
+          DEFAULT_GENRE_NAMES.filter_map do |name|
+            genre = genres_by_name[name]
+            next if genre.blank?
+
+            suggestion_for(genre)
+          end.first(limit)
+        end
+
+        def suggestion_for(genre)
+          path = Public::Events::LaneDirectory.public_path_for_genre_slug(genre.slug)
+          return if path.blank?
+
+          Suggestion.new(name: genre.name, slug: genre.slug, path:)
+        end
 
         def normalized_query
           @normalized_query ||= Normalizer.normalize(query)
