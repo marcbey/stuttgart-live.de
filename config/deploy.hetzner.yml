@@ -5,6 +5,8 @@ require File.expand_path("app/lib/hetzner_deploy_config.rb", Dir.pwd)
 # Hetzner production target for Kamal.
 # Usage: bin/kamal deploy -d hetzner
 
+deploy_timeout: 90
+
 servers:
   web:
     hosts:
