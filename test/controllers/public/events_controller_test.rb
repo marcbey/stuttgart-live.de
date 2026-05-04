@@ -3771,6 +3771,36 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Search Overlay Artist Draft"
   end
 
+  test "search overlay renders genre suggestions before event matches" do
+    matching_event = Event.create!(
+      slug: "search-overlay-genre-match",
+      source_fingerprint: "test::public::search-overlay::genre-match",
+      title: "Static Genre Overlay",
+      artist_name: "Genre Overlay Artist",
+      start_at: 15.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    matching_event.genres << genres(:rock)
+
+    get search_overlay_events_url(q: "rock")
+
+    assert_response :success
+    assert_select "a.public-search-result[href=?]", "/rock-alternative", text: /Rock & Alternative/
+    assert_select ".public-search-overlay-separator span", text: "Event-Treffer", count: 1
+    assert_includes response.body, "Genre Overlay Artist"
+  end
+
+  test "search overlay does not render genre suggestions without query" do
+    get search_overlay_events_url
+
+    assert_response :success
+    assert_select "a.public-search-result[href='/rock-alternative']", count: 0
+  end
+
   test "search overlay renders phrase suggestions for incomplete structured queries" do
     Event.create!(
       slug: "search-overlay-suggestion-fallback",

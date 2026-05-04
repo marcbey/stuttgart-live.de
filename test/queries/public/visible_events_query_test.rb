@@ -179,6 +179,27 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     assert_equal [ matching_event ], result.to_a
   end
 
+  test "matches static genres by name" do
+    matching_event = create_visible_event(
+      title: "Static Genre Night",
+      artist_name: "Static Genre Artist"
+    )
+    matching_event.genres << genres(:klassik)
+
+    create_visible_event(
+      title: "Other Static Genre Night",
+      artist_name: "Other Static Genre Artist"
+    ).genres << genres(:jazz)
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_ALL,
+      query: "Klassik & Oper"
+    ).call
+
+    assert_equal [ matching_event ], result.to_a
+  end
+
   test "filters structured today queries by start_at" do
     travel_to(Time.zone.parse("2026-04-07 10:00:00")) do
       matching_event = create_visible_event(

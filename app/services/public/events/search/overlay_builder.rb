@@ -3,7 +3,7 @@ module Public
     module Search
       class OverlayBuilder
         VenueSuggestion = Data.define(:name, :address, :query, :submit)
-        Result = Data.define(:mode, :query, :events, :suggestions, :venues) do
+        Result = Data.define(:mode, :query, :events, :suggestions, :venues, :genres) do
           def idle?
             mode == :idle
           end
@@ -24,26 +24,31 @@ module Public
             suggestions? || venues?
           end
 
+          def genre_suggestions?
+            genres.any?
+          end
+
           def standard_events?
             events.any?
           end
         end
 
-        def self.build(query:, idle_loader:, event_loader:, standard_event_loader:)
-          new(query:, idle_loader:, event_loader:, standard_event_loader:).call
+        def self.build(query:, idle_loader:, event_loader:, standard_event_loader:, genre_loader:)
+          new(query:, idle_loader:, event_loader:, standard_event_loader:, genre_loader:).call
         end
 
-        def initialize(query:, idle_loader:, event_loader:, standard_event_loader:)
+        def initialize(query:, idle_loader:, event_loader:, standard_event_loader:, genre_loader:)
           @query = query.to_s.strip
           @idle_loader = idle_loader
           @event_loader = event_loader
           @standard_event_loader = standard_event_loader
+          @genre_loader = genre_loader
         end
 
         def call
           analysis = Analyzer.call(query)
-          return Result.new(mode: :idle, query: nil, events: idle_loader.call, suggestions: [], venues: []) if analysis.blank?
-          return Result.new(mode: :suggestions, query:, events: standard_event_loader.call, suggestions: analysis.suggestions, venues: []) if analysis.time_incomplete?
+          return Result.new(mode: :idle, query: nil, events: idle_loader.call, suggestions: [], venues: [], genres: []) if analysis.blank?
+          return Result.new(mode: :suggestions, query:, events: standard_event_loader.call, suggestions: analysis.suggestions, venues: [], genres: []) if analysis.time_incomplete?
 
           if analysis.venue_search?
             venues = VenueSuggester.call(analysis.venue_query).map do |venue|
@@ -55,15 +60,15 @@ module Public
               )
             end
 
-            return Result.new(mode: :venues, query:, events: standard_event_loader.call, suggestions: [], venues:)
+            return Result.new(mode: :venues, query:, events: standard_event_loader.call, suggestions: [], venues:, genres: [])
           end
 
-          Result.new(mode: :events, query:, events: event_loader.call, suggestions: [], venues: [])
+          Result.new(mode: :events, query:, events: event_loader.call, suggestions: [], venues: [], genres: genre_loader.call)
         end
 
         private
 
-        attr_reader :query, :idle_loader, :event_loader, :standard_event_loader
+        attr_reader :query, :idle_loader, :event_loader, :standard_event_loader, :genre_loader
 
         def build_venue_query(analysis:, venue:)
           resolution_label = analysis.resolution&.label.to_s

@@ -129,6 +129,9 @@ module Public
             query: @browse_state.query,
             structured: false
           ).limit(SEARCH_OVERLAY_LIMIT).to_a
+        },
+        genre_loader: lambda {
+          Public::Events::Search::GenreSuggester.call(@browse_state.query)
         }
       )
 
