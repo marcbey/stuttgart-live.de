@@ -4,9 +4,9 @@ module Importing
       def self.build(provider: AppSetting.llm_enrichment_web_search_provider)
         case provider.to_s
         when "openwebninja"
-          OpenWebNinjaWebSearchClient.new
+          CachingWebSearchClient.new(provider: "openwebninja", client: OpenWebNinjaWebSearchClient.new)
         else
-          SerpApiClient.new
+          CachingWebSearchClient.new(provider: "serpapi", client: SerpApiClient.new)
         end
       end
     end
