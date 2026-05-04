@@ -8,15 +8,16 @@
 
 <section class="public-shell">
   <% strict_proxy = homepage_media_strict_proxy? %>
-  <% if @browse_state.page == 1 && @promotion_banner_event.present? %>
-    <%= render "event_promotion_banner", event: @promotion_banner_event, browse_state: @browse_state, strict_proxy: strict_proxy %>
-  <% end %>
-
-  <% if @browse_state.page == 1 && @promotion_banner_blog_post.present? %>
-    <%= render "promotion_banner", blog_post: @promotion_banner_blog_post, strict_proxy: strict_proxy %>
-  <% end %>
+  <% promotion_banners_by_lane_position = @promotion_banners_by_lane_position || {} %>
+  <% promotion_banner_lane_position = 1 %>
 
   <% if @browse_state.page == 1 && @home_featured_events.present? %>
+    <%= render "promotion_banners",
+               banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
+               browse_state: @browse_state,
+               strict_proxy: strict_proxy %>
+    <% promotion_banner_lane_position += 1 %>
+
     <%= render "highlight_section",
                title: "Unsere Highlights",
                title_url: @home_featured_lane&.public_path,
@@ -31,6 +32,12 @@
     <% genre_lanes = Array(@home_genre_lanes) %>
 
     <% if genre_lanes.first.present? %>
+      <%= render "promotion_banners",
+                 banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy %>
+      <% promotion_banner_lane_position += 1 %>
+
       <%= render "genre_lane_section",
                  group: genre_lanes.first.group,
                  title_url: genre_lanes.first.public_path,
@@ -45,6 +52,12 @@
     <% end %>
 
     <% if @home_tagestipp_events.present? %>
+      <%= render "promotion_banners",
+                 banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy %>
+      <% promotion_banner_lane_position += 1 %>
+
       <%= render "genre_lane_section",
                  title: "Tagestipp",
                  title_url: @home_tagestipp_lane&.public_path,
@@ -62,6 +75,12 @@
     <% end %>
 
     <% if @home_highlight_events.present? %>
+      <%= render "promotion_banners",
+                 banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy %>
+      <% promotion_banner_lane_position += 1 %>
+
       <%= render "genre_lane_section",
                  title: "alles aus stuttgart",
                  title_url: @home_all_stuttgart_lane&.public_path,
@@ -79,6 +98,12 @@
     <% end %>
 
     <% genre_lanes.drop(1).each_with_index do |lane, index| %>
+      <%= render "promotion_banners",
+                 banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy %>
+      <% promotion_banner_lane_position += 1 %>
+
       <%= render "genre_lane_section",
                  group: lane.group,
                  title_url: lane.public_path,
@@ -91,6 +116,12 @@
                  tone_class: "genre-lane-section--tone-#{((index + 1) % 4) + 1}",
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>
     <% end %>
+
+    <% trailing_promotion_banners = promotion_banners_by_lane_position.select { |position, _banners| position >= promotion_banner_lane_position }.values.flatten %>
+    <%= render "promotion_banners",
+               banners: trailing_promotion_banners,
+               browse_state: @browse_state,
+               strict_proxy: strict_proxy %>
 
     <div id="saved-events-lane-slot"
          class="saved-events-lane-slot"

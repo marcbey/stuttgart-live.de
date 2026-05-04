@@ -15,7 +15,19 @@
             <%= check_box_tag "blog_post[promotion_banner]", "1", blog_post.promotion_banner?, form: form_id %>
             <span>Als Promotion Banner markieren</span>
           </label>
-          <p class="blog-editor-hint">Es kann immer nur ein Beitrag gleichzeitig als Promotion Banner aktiv sein.</p>
+          <p class="blog-editor-hint">Mehrere Events und News können gleichzeitig als Promotion Banner aktiv sein. Die Lane-Position steuert, vor welcher sichtbaren Startseiten-Lane der Banner erscheint.</p>
+        </div>
+
+        <div>
+          <%= label_tag "blog_post_promotion_banner_lane_position", "Lane-Position", class: "form-label" %>
+          <%= number_field_tag "blog_post[promotion_banner_lane_position]",
+                               blog_post.promotion_banner_lane_position || BlogPost::DEFAULT_PROMOTION_BANNER_LANE_POSITION,
+                               id: "blog_post_promotion_banner_lane_position",
+                               class: "form-input",
+                               min: 1,
+                               step: 1,
+                               form: form_id %>
+          <p class="blog-editor-hint">1 bedeutet vor der ersten sichtbaren Startseiten-Lane.</p>
         </div>
 
         <div>

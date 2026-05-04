@@ -412,6 +412,7 @@ module Backend
         :ticket_special_note,
         :highlighted,
         :promotion_banner,
+        :promotion_banner_lane_position,
         :promotion_banner_kicker_text,
         :promotion_banner_cta_text,
         :promotion_banner_background_color,

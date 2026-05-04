@@ -135,7 +135,7 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_includes blog_post.errors[:promotion_banner_image], "muss für einen Promotion Banner vorhanden sein"
   end
 
-  test "promotion banner clears previous banner post" do
+  test "promotion banner allows multiple active banner posts" do
     first = BlogPost.create!(
       title: "Erster Banner",
       teaser: "Teaser",
@@ -143,7 +143,8 @@ class BlogPostTest < ActiveSupport::TestCase
       author: @author,
       status: "published",
       published_at: 2.hours.ago,
-      published_by: @author
+      published_by: @author,
+      promotion_banner_lane_position: 2
     )
     first.promotion_banner_image.attach(png_upload(filename: "first-banner.png"))
     first.update!(promotion_banner: true)
@@ -156,13 +157,36 @@ class BlogPostTest < ActiveSupport::TestCase
       status: "published",
       published_at: 1.hour.ago,
       published_by: @author,
-      promotion_banner: true
+      promotion_banner: true,
+      promotion_banner_lane_position: 3
     )
     second.promotion_banner_image.attach(png_upload(filename: "second-banner.png"))
     second.save!
 
     assert_predicate second.reload, :promotion_banner?
-    assert_not first.reload.promotion_banner?
+    assert_predicate first.reload, :promotion_banner?
+    assert_equal 2, first.promotion_banner_lane_position
+    assert_equal 3, second.promotion_banner_lane_position
+  end
+
+  test "promotion banner lane position defaults to first lane and rejects invalid values" do
+    blog_post = BlogPost.new(
+      title: "Banner Position",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      promotion_banner: true
+    )
+    blog_post.pending_promotion_banner_image_blob = create_uploaded_blob(filename: "banner-position.png")
+
+    assert_predicate blog_post, :valid?
+    assert_equal 1, blog_post.promotion_banner_lane_position
+
+    blog_post.promotion_banner_lane_position = 0
+
+    assert_not blog_post.valid?
+    assert_includes blog_post.errors[:promotion_banner_lane_position], "muss größer als 0 sein"
   end
 
   test "pending promotion banner blob satisfies required image validation" do

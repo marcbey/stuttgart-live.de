@@ -28,9 +28,21 @@
                           form: editor_form_id %>
         <span>Als Promotion Banner markieren</span>
       </label>
-      <p class="form-hint">Es kann immer nur ein Event gleichzeitig als Promotion Banner aktiv sein. Auf der Startseite wird der Banner nur angezeigt, wenn auch ein Eventbild vorhanden ist.</p>
+      <p class="form-hint">Mehrere Events und News können gleichzeitig als Promotion Banner aktiv sein. Die Lane-Position steuert, vor welcher sichtbaren Startseiten-Lane der Banner erscheint. Auf der Startseite wird der Banner nur angezeigt, wenn auch ein Eventbild vorhanden ist.</p>
 
       <div class="editor-grid promotion-banner-settings-grid">
+        <div>
+          <%= label_tag "event_promotion_banner_lane_position", "Lane-Position", class: "form-label" %>
+          <%= number_field_tag "event[promotion_banner_lane_position]",
+                               event.promotion_banner_lane_position || Event::DEFAULT_PROMOTION_BANNER_LANE_POSITION,
+                               id: "event_promotion_banner_lane_position",
+                               class: "form-input",
+                               min: 1,
+                               step: 1,
+                               form: editor_form_id %>
+          <p class="form-hint">1 bedeutet vor der ersten sichtbaren Startseiten-Lane.</p>
+        </div>
+
         <div>
           <%= label_tag "event_promotion_banner_kicker_text", "Kicker", class: "form-label" %>
           <%= text_field_tag "event[promotion_banner_kicker_text]",

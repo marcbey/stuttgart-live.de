@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_04_103000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_04_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -77,6 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_103000) do
     t.float "promotion_banner_image_focus_y"
     t.float "promotion_banner_image_zoom"
     t.string "promotion_banner_kicker_text"
+    t.integer "promotion_banner_lane_position"
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.string "slug", null: false
@@ -88,7 +89,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_103000) do
     t.datetime "updated_at", null: false
     t.jsonb "youtube_video_urls", default: [], null: false
     t.index ["author_id"], name: "index_blog_posts_on_author_id"
-    t.index ["promotion_banner"], name: "index_blog_posts_on_unique_promotion_banner", unique: true, where: "promotion_banner"
+    t.index ["promotion_banner", "promotion_banner_lane_position", "published_at", "id"], name: "index_blog_posts_on_promotion_banner_lane_position", where: "promotion_banner"
     t.index ["published_by_id"], name: "index_blog_posts_on_published_by_id"
     t.index ["slug"], name: "index_blog_posts_on_slug", unique: true
     t.index ["source_identifier"], name: "index_blog_posts_on_source_identifier", unique: true
@@ -261,6 +262,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_103000) do
     t.float "promotion_banner_image_focus_y"
     t.float "promotion_banner_image_zoom"
     t.string "promotion_banner_kicker_text"
+    t.integer "promotion_banner_lane_position"
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.boolean "show_organizer_notes", default: false, null: false
@@ -279,7 +281,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_103000) do
     t.index ["event_series_id"], name: "index_events_on_event_series_id"
     t.index ["promoter_id", "start_at", "id"], name: "index_events_on_published_promoter_id_start_at_and_id", where: "((status)::text = 'published'::text)"
     t.index ["promoter_id"], name: "index_events_on_promoter_id"
-    t.index ["promotion_banner"], name: "index_events_on_unique_promotion_banner", unique: true, where: "promotion_banner"
+    t.index ["promotion_banner", "promotion_banner_lane_position", "start_at", "id"], name: "index_events_on_promotion_banner_lane_position", where: "promotion_banner"
     t.index ["published_at", "start_at"], name: "index_events_on_published_at_and_start_at"
     t.index ["published_by_id"], name: "index_events_on_published_by_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true

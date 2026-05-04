@@ -1,0 +1,12 @@
+<% Array(banners).each do |banner| %>
+  <% if banner[:type] == :event %>
+    <%= render "event_promotion_banner",
+               event: banner[:record],
+               browse_state: browse_state,
+               strict_proxy: strict_proxy %>
+  <% else %>
+    <%= render "promotion_banner",
+               blog_post: banner[:record],
+               strict_proxy: strict_proxy %>
+  <% end %>
+<% end %>

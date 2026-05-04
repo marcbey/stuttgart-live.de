@@ -353,6 +353,8 @@ Das LLM-Enrichment ermittelt pro Event beide Ebenen in einem Lauf. Dabei muss `g
 
 Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
 
+Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.
+
 ### Kennzahlen in "Importer Jobs"
 
 Im Backend zeigen die Tabellen `Importer Jobs` und `Importer Job #...` absichtlich verschiedene Ebenen der Import-Pipeline. Die Spalten haben dieselbe Bedeutung wie die Hover-Texte im UI:

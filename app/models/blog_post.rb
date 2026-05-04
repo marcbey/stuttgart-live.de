@@ -3,6 +3,7 @@ class BlogPost < ApplicationRecord
   DEFAULT_PROMOTION_BANNER_KICKER_TEXT = "Promotion"
   DEFAULT_PROMOTION_BANNER_CTA_TEXT = "Zum Beitrag"
   DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR = "#E0F7F2"
+  DEFAULT_PROMOTION_BANNER_LANE_POSITION = 1
   PROMOTION_BANNER_TEXT_COLOR_LIGHT = "light"
   PROMOTION_BANNER_TEXT_COLOR_DARK = "dark"
   HEX_COLOR_FORMAT = /\A#[0-9A-F]{6}\z/.freeze
@@ -37,6 +38,7 @@ class BlogPost < ApplicationRecord
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_background_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
+  validates :promotion_banner_lane_position, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :cover_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :cover_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :cover_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
@@ -50,11 +52,10 @@ class BlogPost < ApplicationRecord
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
-  before_save :clear_other_promotion_banners, if: :promotion_banner?
 
   scope :ordered_for_backend, -> { includes(:author, :published_by).with_attached_cover_image.with_attached_promotion_banner_image.order(updated_at: :desc, id: :desc) }
   scope :published_live, -> { where(status: "published").where("published_at <= ?", Time.current).order(published_at: :desc, id: :desc) }
-  scope :promotion_banner_live, -> { published_live.where(promotion_banner: true).with_attached_promotion_banner_image }
+  scope :promotion_banner_live, -> { published_live.where(promotion_banner: true).reorder(:promotion_banner_lane_position, published_at: :desc, id: :desc).with_attached_promotion_banner_image }
 
   def self.find_live_by_source_path!(source_path)
     published_live.find_by!(source_url: source_url_candidates_for(source_path))
@@ -232,6 +233,7 @@ class BlogPost < ApplicationRecord
       self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
       self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
       self.promotion_banner_background_color = normalize_hex_color(promotion_banner_background_color)
+      self.promotion_banner_lane_position = normalize_promotion_banner_lane_position
       self.cover_image_focus_x = normalize_percentage(cover_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
       self.cover_image_focus_y = normalize_percentage(cover_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
       self.cover_image_zoom = normalize_percentage(cover_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
@@ -297,10 +299,6 @@ class BlogPost < ApplicationRecord
       errors.add(:promotion_banner_image, "muss für einen Promotion Banner vorhanden sein")
     end
 
-    def clear_other_promotion_banners
-      self.class.where.not(id: id).where(promotion_banner: true).update_all(promotion_banner: false, updated_at: Time.current)
-    end
-
     def image_blob_for_editor(slot)
       pending_blob = pending_blob_for(slot)
       return pending_blob if pending_blob.present?
@@ -339,6 +337,14 @@ class BlogPost < ApplicationRecord
       return fallback if value.blank?
 
       value.to_f.round(2)
+    end
+
+    def normalize_promotion_banner_lane_position
+      value = promotion_banner_lane_position.to_s.strip
+      return DEFAULT_PROMOTION_BANNER_LANE_POSITION if value.blank? && promotion_banner?
+      return nil if value.blank?
+
+      value.to_i
     end
 
     def variant_transformations

@@ -573,7 +573,7 @@ class EventTest < ActiveSupport::TestCase
     assert_equal Event::DEFAULT_IMAGE_ZOOM, event.promotion_banner_image_zoom_value
   end
 
-  test "promotion banner clears previous banner event" do
+  test "promotion banner allows multiple active banner events" do
     first = events(:published_one)
     second = Event.create!(
       slug: "second-promotion-banner-event",
@@ -590,11 +590,27 @@ class EventTest < ActiveSupport::TestCase
     create_event_image(event: first, purpose: EventImage::PURPOSE_DETAIL_HERO)
     create_event_image(event: second, purpose: EventImage::PURPOSE_DETAIL_HERO)
 
-    first.update!(promotion_banner: true)
-    second.update!(promotion_banner: true)
+    first.update!(promotion_banner: true, promotion_banner_lane_position: 2)
+    second.update!(promotion_banner: true, promotion_banner_lane_position: 3)
 
     assert_predicate second.reload, :promotion_banner?
-    assert_not first.reload.promotion_banner?
+    assert_predicate first.reload, :promotion_banner?
+    assert_equal 2, first.promotion_banner_lane_position
+    assert_equal 3, second.promotion_banner_lane_position
+  end
+
+  test "promotion banner lane position defaults to first lane and rejects invalid values" do
+    event = events(:published_one)
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO)
+
+    event.update!(promotion_banner: true, promotion_banner_lane_position: nil)
+
+    assert_equal 1, event.promotion_banner_lane_position
+
+    event.promotion_banner_lane_position = 0
+
+    assert_not event.valid?
+    assert_includes event.errors[:promotion_banner_lane_position], "muss größer als 0 sein"
   end
 
   test "promotion banner texts fall back to defaults" do

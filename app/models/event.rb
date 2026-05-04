@@ -4,6 +4,7 @@ class Event < ApplicationRecord
   DEFAULT_PROMOTION_BANNER_KICKER_TEXT = "Promotion"
   DEFAULT_PROMOTION_BANNER_CTA_TEXT = "Zum Event"
   DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR = "#E0F7F2"
+  DEFAULT_PROMOTION_BANNER_LANE_POSITION = 1
   PROMOTION_BANNER_TEXT_COLOR_LIGHT = "light"
   PROMOTION_BANNER_TEXT_COLOR_DARK = "dark"
   HEX_COLOR_FORMAT = /\A#[0-9A-F]{6}\z/.freeze
@@ -88,6 +89,7 @@ class Event < ApplicationRecord
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_background_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
   validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
+  validates :promotion_banner_lane_position, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :ticket_special_note, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
@@ -98,7 +100,6 @@ class Event < ApplicationRecord
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
   before_validation :apply_publication_schedule_rules
-  before_save :clear_other_promotion_banners, if: :promotion_banner?
   validate :future_publication_must_not_be_published_immediately, if: :validate_immediate_publication?
 
   scope :chronological, -> { order(start_at: :asc, id: :asc) }
@@ -115,6 +116,7 @@ class Event < ApplicationRecord
   scope :promotion_banner_live, lambda {
     published_live
       .where(promotion_banner: true)
+      .reorder(:promotion_banner_lane_position, :start_at, :id)
       .includes(:venue_record, promotion_banner_image_attachment: :blob, event_images: [ file_attachment: :blob ])
   }
 
@@ -620,6 +622,7 @@ class Event < ApplicationRecord
     self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
     self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
     self.promotion_banner_background_color = normalize_hex_color(promotion_banner_background_color)
+    self.promotion_banner_lane_position = normalize_promotion_banner_lane_position
     self.promotion_banner_image_copyright = promotion_banner_image_copyright.to_s.strip.presence
     self.promotion_banner_image_focus_x = normalize_percentage(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
     self.promotion_banner_image_focus_y = normalize_percentage(promotion_banner_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
@@ -640,10 +643,6 @@ class Event < ApplicationRecord
 
     self.min_price = nil if min_price.blank?
     self.max_price = nil if max_price.blank?
-  end
-
-  def clear_other_promotion_banners
-    self.class.where.not(id: id).where(promotion_banner: true).update_all(promotion_banner: false, updated_at: Time.current)
   end
 
   def promotion_banner_image_must_be_image
@@ -684,6 +683,14 @@ class Event < ApplicationRecord
 
     normalized = "##{normalized}" unless normalized.start_with?("#")
     normalized
+  end
+
+  def normalize_promotion_banner_lane_position
+    value = promotion_banner_lane_position.to_s.strip
+    return DEFAULT_PROMOTION_BANNER_LANE_POSITION if value.blank? && promotion_banner?
+    return nil if value.blank?
+
+    value.to_i
   end
 
   def image_focus_value(value, fallback:)

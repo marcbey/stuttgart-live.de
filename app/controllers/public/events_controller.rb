@@ -29,8 +29,7 @@ module Public
           query: nil
         )
         assign_homepage_sections(homepage_relation)
-        @promotion_banner_event = Event.promotion_banner_live.find(&:promotion_banner_display_image_present?)
-        @promotion_banner_blog_post = BlogPost.promotion_banner_live.first
+        assign_homepage_promotion_banners
       end
 
       respond_to do |format|
@@ -313,6 +312,31 @@ module Public
 
     def homepage_genre_lanes
       Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
+    end
+
+    def assign_homepage_promotion_banners
+      event_banners = Event.promotion_banner_live
+        .select(&:promotion_banner_display_image_present?)
+        .map { |event| { type: :event, record: event } }
+      news_banners = BlogPost.promotion_banner_live
+        .select { |blog_post| blog_post.promotion_banner_image.attached? }
+        .map { |blog_post| { type: :news, record: blog_post } }
+
+      @promotion_banners_by_lane_position = (event_banners + news_banners)
+        .sort_by { |banner| promotion_banner_sort_key(banner) }
+        .group_by { |banner| banner[:record].promotion_banner_lane_position || Event::DEFAULT_PROMOTION_BANNER_LANE_POSITION }
+    end
+
+    def promotion_banner_sort_key(banner)
+      record = banner[:record]
+      lane_position = record.promotion_banner_lane_position || Event::DEFAULT_PROMOTION_BANNER_LANE_POSITION
+
+      case banner[:type]
+      when :event
+        [ lane_position, 0, record.start_at, record.id ]
+      else
+        [ lane_position, 1, -record.published_at.to_i, -record.id ]
+      end
     end
 
     def initial_search_overlay_events

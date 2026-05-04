@@ -974,6 +974,96 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_operator news_banner_index, :<, highlights_index
   end
 
+  test "homepage inserts multiple promotion banners before configured visible lanes" do
+    Event.create!(
+      slug: "homepage-positioned-banner-highlight",
+      source_fingerprint: "test::homepage::positioned-banner::highlight",
+      title: "Positioned Banner Highlight",
+      artist_name: "Positioned Banner Highlight Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    Event.create!(
+      slug: "homepage-positioned-banner-regular",
+      source_fingerprint: "test::homepage::positioned-banner::regular",
+      title: "Positioned Banner Regular",
+      artist_name: "Positioned Banner Regular Artist",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    top_blog_post = BlogPost.create!(
+      title: "Top Promotion News",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user,
+      promotion_banner_lane_position: 1
+    )
+    top_blog_post.promotion_banner_image.attach(png_upload(filename: "top-promotion-news.png"))
+    top_blog_post.update!(promotion_banner: true)
+
+    event = Event.create!(
+      slug: "homepage-positioned-event-banner",
+      source_fingerprint: "test::homepage::positioned-banner::event",
+      title: "Positioned Event Banner",
+      artist_name: "Positioned Event Banner Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promotion_banner_lane_position: 2,
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+    event.update!(promotion_banner: true)
+
+    trailing_blog_post = BlogPost.create!(
+      title: "Trailing Promotion News",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 30.minutes.ago,
+      published_by: @user,
+      promotion_banner_lane_position: 99
+    )
+    trailing_blog_post.promotion_banner_image.attach(png_upload(filename: "trailing-promotion-news.png"))
+    trailing_blog_post.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    shell_children = document.css("section.public-shell > *").to_a
+    top_banner_index = shell_children.index { |node| node.at_css("a[href='#{news_path(top_blog_post.slug)}']") }
+    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
+    event_banner_index = shell_children.index { |node| node.at_css("a[href='#{event_path(event.slug)}']") }
+    all_stuttgart_index = shell_children.index do |node|
+      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "alles aus stuttgart"
+    end
+    trailing_banner_index = shell_children.index { |node| node.at_css("a[href='#{news_path(trailing_blog_post.slug)}']") }
+    saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
+
+    assert_equal top_banner_index + 1, highlights_index
+    assert_equal event_banner_index + 1, all_stuttgart_index
+    assert_equal trailing_banner_index + 1, saved_lane_slot_index
+  end
+
   test "homepage renders custom promotion banner texts from blog post" do
     Event.create!(
       slug: "promotion-banner-copy-event",

@@ -187,6 +187,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings[hidden]", count: 1
     assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_lane_position]'][type='number'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner]']", count: 0
@@ -508,6 +509,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-event input[name='event[promotion_banner]']", count: 0
     assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_lane_position]'][type='number'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event']", count: 1
@@ -1854,6 +1856,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings h3", text: "Promotion Banner", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_lane_position]'][type='number'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_background_color]'][form='editor_form_event_#{@published_event.id}']", count: 1
@@ -1886,6 +1889,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         city: @published_event.city,
         status: @published_event.status,
         promotion_banner: "1",
+        promotion_banner_lane_position: "2",
         promotion_banner_kicker_text: "Empfehlung",
         promotion_banner_cta_text: "Jetzt ansehen",
         promotion_banner_background_color: "#18333A",
@@ -1904,6 +1908,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_predicate @published_event.reload.promotion_banner_image, :attached?
+    assert_equal 2, @published_event.promotion_banner_lane_position
     assert_equal "Foto: Haus", @published_event.promotion_banner_image_copyright
     assert_equal 18.0, @published_event.promotion_banner_image_focus_x_value
     assert_equal 72.0, @published_event.promotion_banner_image_focus_y_value

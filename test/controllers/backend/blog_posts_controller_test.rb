@@ -107,7 +107,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_nil blog_post.published_by
   end
 
-  test "editor can publish a promotion banner and it replaces the previous one" do
+  test "editor can publish a promotion banner without replacing previous banners" do
     sign_in_as(@editor)
     previous_banner = create_blog_post(author: @editor, status: "published", published_at: 2.days.ago, published_by: @editor)
     previous_banner.promotion_banner_image.attach(png_upload(filename: "previous-banner.png"))
@@ -123,6 +123,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         slug: blog_post.slug,
         body: "<div>Jetzt Banner.</div>",
         promotion_banner: "1",
+        promotion_banner_lane_position: "2",
         promotion_banner_kicker_text: "Empfehlung",
         promotion_banner_cta_text: "Jetzt lesen",
         promotion_banner_background_color: "#18333A",
@@ -140,7 +141,8 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_blog_posts_url(blog_post_id: blog_post.id)
     assert_predicate blog_post.reload, :promotion_banner?
-    assert_not previous_banner.reload.promotion_banner?
+    assert_predicate previous_banner.reload, :promotion_banner?
+    assert_equal 2, blog_post.promotion_banner_lane_position
     assert blog_post.promotion_banner_image.attached?
     assert_equal "Empfehlung", blog_post.promotion_banner_kicker_text
     assert_equal "Jetzt lesen", blog_post.promotion_banner_cta_text
@@ -321,6 +323,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog-editor-panel-settings .backend-section-stack", count: 1
     assert_select "#blog-editor-panel-settings .backend-section .backend-section-header h3", text: "Promotion Banner", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner]'][type='checkbox'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
+    assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_lane_position]'][type='number'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_kicker_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_background_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
@@ -353,6 +356,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         slug: blog_post.slug,
         body: "<div>Settings save.</div>",
         promotion_banner: "1",
+        promotion_banner_lane_position: "3",
         promotion_banner_kicker_text: "Empfehlung",
         promotion_banner_cta_text: "Jetzt lesen",
         promotion_banner_background_color: "18333a"
@@ -364,6 +368,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'value="settings"'
     assert_match(/id="blog-editor-tab-settings"[^>]*aria-selected="true"/, response.body)
     assert_predicate blog_post.reload, :promotion_banner?
+    assert_equal 3, blog_post.promotion_banner_lane_position
     assert_equal "Empfehlung", blog_post.promotion_banner_kicker_text
     assert_equal "Jetzt lesen", blog_post.promotion_banner_cta_text
     assert_equal "#18333A", blog_post.promotion_banner_background_color
