@@ -800,9 +800,15 @@ module Importing
       end
 
       def genre_records_for(names)
-        Genre.where(name: names).index_by(&:name).values_at(*names).tap do |records|
-          raise Error, "Statische Genres fehlen in der Datenbank." if records.any?(&:blank?)
-        end
+        records_by_name = Genre.where(name: names).index_by(&:name)
+        return records_by_name.values_at(*names) if names.all? { |name| records_by_name.key?(name) }
+
+        Genre.ensure_static_records!
+        records_by_name = Genre.where(name: names).index_by(&:name)
+        missing_names = names.reject { |name| records_by_name.key?(name) }
+        raise Error, "Statische Genres fehlen in der Datenbank: #{missing_names.join(', ')}" if missing_names.any?
+
+        records_by_name.values_at(*names)
       end
 
       def sub_genre_records_for(names)

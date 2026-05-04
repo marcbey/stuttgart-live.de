@@ -161,6 +161,31 @@ module Importing
         assert_nil events(:published_past_one).reload.llm_enrichment
       end
 
+      test "repairs legacy static genre names before assigning llm genres" do
+        event = events(:published_one)
+        @run.update!(metadata: @run.metadata.merge("target_event_id" => event.id, "refresh_existing" => true))
+        genres(:festivals).update_columns(name: "Festivals/OpenAir")
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: event.id,
+              genre: [ "Festival" ],
+              genres: [ "Festivals & OpenAir" ],
+              venue: "LKA Longhorn",
+              event_description: "Event eins",
+              venue_description: "Venue eins"
+            )
+          ]
+        )
+
+        result = build_importer(client: client).call
+
+        assert_equal 1, result.enriched_count
+        assert_equal [ "Festivals & OpenAir" ], event.reload.genres.pluck(:name)
+        assert_equal "Festivals & OpenAir", Genre.find_by!(slug: "festivals-openair").name
+      end
+
       test "reloads llm prompt settings from the database before a run starts" do
         original_prompt = <<~TEXT.strip
           ALT search_results candidates homepage_link instagram_link facebook_link youtube_link
