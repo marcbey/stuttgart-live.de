@@ -5952,6 +5952,54 @@ display: inline-flex;
   text-transform: uppercase;
 }
 
+.event-detail-series-terms {
+display: grid;
+  gap: 0.7rem;
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.event-detail-series-terms h2 {
+margin: 0;
+  color: #092f31;
+  font-size: clamp(1.28rem, 1.9vw, 1.65rem);
+  line-height: 1.08;
+}
+
+.event-detail-series-term-list {
+display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.55rem 0.7rem;
+}
+
+.event-detail-series-term-link {
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.3rem;
+  max-width: 100%;
+  padding: 0.42rem 0.72rem;
+  border: 1px solid rgba(17, 17, 17, 0.04);
+  border-radius: 6px;
+  background: rgba(246, 243, 236, 0.92);
+  color: #092f31;
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.event-detail-series-term-link:hover,
+.event-detail-series-term-link:focus-visible {
+border-color: rgba(34, 199, 192, 0.48);
+  background: rgba(34, 199, 192, 0.12);
+  color: #092f31;
+}
+
 .event-detail-image-wrap {
 position: relative;
   min-width: 0;
@@ -6577,12 +6625,6 @@ font-size: 0.82rem;
   line-height: 1.14;
 }
 
-.event-detail-series-terms-button {
-justify-self: start;
-  border-radius: 6px;
-  padding: 0.62rem 0.8rem;
-}
-
 @media (min-width: 981px) {
   .event-detail-copy-block-primary,
   .event-detail-venue-block {
@@ -6606,7 +6648,7 @@ justify-self: start;
       padding-top: 1.4rem;
   }
 
-  .event-detail-related-list:not(.event-detail-series-terms) {
+  .event-detail-related-list {
   order: 3;
   }
 }
@@ -6728,6 +6770,19 @@ padding-inline: 0;
       padding-inline: 1.4rem;
       font-size: 1.28rem;
       letter-spacing: 0.06em;
+  }
+
+  .event-detail-series-terms {
+  gap: 0.65rem;
+  }
+
+  .event-detail-series-term-list {
+  gap: 0.5rem;
+  }
+
+  .event-detail-series-term-link {
+  min-height: 2.5rem;
+      padding-inline: 0.68rem;
   }
 
   .event-detail-organizer-brand {

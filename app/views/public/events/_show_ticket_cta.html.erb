@@ -23,3 +23,7 @@
     </div>
   </section>
 <% end %>
+
+<%= render "event_series_term_links",
+           event_series_lane: local_assigns[:event_series_lane],
+           browse_state: local_assigns[:browse_state] %>

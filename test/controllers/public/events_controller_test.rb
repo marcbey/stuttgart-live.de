@@ -3001,7 +3001,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-related-list", count: 0
   end
 
-  test "show renders upcoming event series terms before the related genre lane" do
+  test "show renders compact upcoming event series terms below the ticket cta" do
     create_homepage_genre_snapshot
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
 
@@ -3035,13 +3035,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       event_series_assignment: "manual",
       source_snapshot: {}
     )
-    future_events = 7.times.map do |index|
+    term_offsets = [
+      4.days,
+      1.day,
+      3.days + 30.minutes,
+      7.days,
+      2.days,
+      6.days,
+      5.days
+    ]
+    future_events = term_offsets.each_with_index.map do |term_offset, index|
       Event.create!(
         slug: "show-series-future-#{index}",
         source_fingerprint: "test::public::show-series::future::#{index}",
         title: "A Tribute to Frida Kahlo #{index}",
         artist_name: "Viva la Vida #{index}",
-        start_at: @published_event.start_at + (index + 1).days,
+        start_at: @published_event.start_at + term_offset,
         venue: "Im Wizemann",
         city: "Stuttgart",
         status: "published",
@@ -3055,21 +3064,34 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
+    assert_select ".event-detail-header-panel > .event-detail-series-terms", count: 1
+    assert_select ".event-detail-series-terms-button", count: 0
     series_section = css_select(".event-detail-series-terms").first
     assert_not_nil series_section
     assert_equal "Weitere Termine", series_section.at_css("h2")&.text.to_s.strip
-    assert_equal 6, series_section.css(".event-listing-card").size
+    assert_equal 0, series_section.css(".event-listing-card").size
+    assert_equal 7, series_section.css(".event-detail-series-term-link").size
     assert_not_includes series_section.text, @published_event.artist_name
-    assert_includes series_section.text, future_events.first.artist_name
-    assert_includes series_section.text, future_events[5].artist_name
+    assert_not_includes series_section.text, future_events.first.artist_name
+    assert_not_includes series_section.text, future_events.first.title
+    assert_not_includes series_section.text, future_events.first.venue
     assert_not_includes series_section.text, "Past Series Artist"
-    assert_not_includes series_section.text, future_events.last.artist_name
-    assert_equal "Alle anzeigen", series_section.at_css(".event-detail-series-terms-button")&.text.to_s.strip
-    assert_includes series_section.at_css(".event-detail-series-terms-button")["href"], termine_event_path(@published_event.slug)
+    assert_nil series_section.at_css(".event-detail-series-terms-button")
+
+    links = series_section.css(".event-detail-series-term-link")
+    sorted_future_events = future_events.sort_by { |event| [ event.start_at, event.id ] }
+    expected_labels = sorted_future_events.map do |event|
+      label_format = event.start_at.min.zero? ? "%d.%m. %H Uhr" : "%d.%m. %H:%M Uhr"
+      I18n.l(event.start_at, format: label_format)
+    end
+    assert_equal expected_labels, links.map { |link| link.text.strip }
+    assert_equal sorted_future_events.map { |event| event_path(event.slug) }, links.map { |link| link["href"] }
     assert_select "section.genre-lane-section .lane-header-kicker", text: /Event-Reihe/, count: 0
 
+    cta_index = response.body.index("event-detail-cta")
     series_index = response.body.index("Weitere Termine")
     genre_index = response.body.index("Das könnte dir auch gefallen")
+    assert_operator cta_index, :<, series_index
     assert_operator series_index, :<, genre_index
   end
 

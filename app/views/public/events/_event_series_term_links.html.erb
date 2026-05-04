@@ -1,0 +1,20 @@
+<% event_series_lane = local_assigns[:event_series_lane] %>
+<% browse_state = local_assigns[:browse_state] %>
+<% series_events = event_series_lane&.events.to_a.sort_by { |series_event| [series_event.start_at, series_event.id] } %>
+
+<% if event_series_lane.present? && series_events.any? && browse_state.present? %>
+  <section class="event-detail-series-terms" aria-labelledby="event-detail-series-terms-heading">
+    <h2 id="event-detail-series-terms-heading">Weitere Termine</h2>
+    <div class="event-detail-series-term-list" role="list">
+      <% series_events.each do |series_event| %>
+        <% term_label_format = series_event.start_at.min.zero? ? "%d.%m. %H Uhr" : "%d.%m. %H:%M Uhr" %>
+        <% aria_label = "Weiterer Termin: #{l(series_event.start_at, format: '%d.%m.%Y %H:%M Uhr')}" %>
+        <%= link_to l(series_event.start_at, format: term_label_format),
+                    public_event_detail_path(series_event, browse_state),
+                    class: "event-detail-series-term-link",
+                    role: "listitem",
+                    aria: { label: aria_label } %>
+      <% end %>
+    </div>
+  </section>
+<% end %>

@@ -40,7 +40,10 @@
 
     </div>
 
-    <%= render "show_ticket_cta", presenter: presenter %>
+    <%= render "show_ticket_cta",
+               presenter: presenter,
+               event_series_lane: @event_series_lane,
+               browse_state: @browse_state %>
   </div>
 
   <% if presenter.has_hero_gallery? %>

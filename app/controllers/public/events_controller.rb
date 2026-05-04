@@ -9,6 +9,7 @@ module Public
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
     SHOW_EVENT_SERIES_TERMS_LIMIT = 6
+    RUSS_LIVE_PROMOTER_ID = "382".freeze
     REQUEST_PROFILE_HEADER = "X-Stuttgart-Live-Profile".freeze
 
     before_action :set_browse_state, only: [ :index, :lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
@@ -90,8 +91,7 @@ module Public
       @event_series_lane = Public::Events::EventSeriesLaneBuilder.new(
         event: @event,
         relation: show_event_series_lane_relation,
-        exclude_event: @event,
-        limit: SHOW_EVENT_SERIES_TERMS_LIMIT
+        exclude_event: @event
       ).call
       @related_genre_lane = Public::Events::RelatedGenreLaneBuilder.new(
         event: @event,
