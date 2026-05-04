@@ -87,17 +87,7 @@
             <% end %>
 
             <div class="event-detail-venue-main">
-              <% if presenter.venue_info&.external_url.present? %>
-                <div class="event-detail-venue-actions">
-                  <%= link_to "Homepage Venue",
-                              presenter.venue_info.external_url,
-                              target: "_blank",
-                              rel: "noopener",
-                              class: "event-detail-venue-button" %>
-                </div>
-              <% end %>
-
-              <% if presenter.venue_info.present? && (presenter.venue_info.address.present? || presenter.venue_info.map_url.present? || presenter.venue_info.logo_source.present?) %>
+              <% if presenter.venue_info.present? && (presenter.venue_info.address.present? || presenter.venue_info.external_url.present? || presenter.venue_info.map_url.present? || presenter.venue_info.logo_source.present?) %>
                 <div class="event-detail-venue-meta">
                   <% if presenter.venue_info.address.present? || presenter.venue_info.logo_source.present? %>
                     <div class="event-detail-venue-meta-header">
@@ -118,14 +108,26 @@
                     </div>
                   <% end %>
 
-                  <% if presenter.venue_info.map_url.present? %>
-                    <%= link_to presenter.venue_info.map_url,
-                                target: "_blank",
-                                rel: "noopener",
-                                class: "event-detail-venue-map-link" do %>
-                      <%= image_tag "venue-pin.svg", alt: "", class: "event-detail-venue-map-pin", "aria-hidden": "true" %>
-                      <span>Auf Google Maps öffnen</span>
-                    <% end %>
+                  <% if presenter.venue_info.external_url.present? || presenter.venue_info.map_url.present? %>
+                    <div class="event-detail-venue-link-row">
+                      <% if presenter.venue_info.external_url.present? %>
+                        <%= link_to "Homepage Venue",
+                                    presenter.venue_info.external_url,
+                                    target: "_blank",
+                                    rel: "noopener",
+                                    class: "event-detail-venue-map-link event-detail-venue-homepage-link" %>
+                      <% end %>
+
+                      <% if presenter.venue_info.map_url.present? %>
+                        <%= link_to presenter.venue_info.map_url,
+                                    target: "_blank",
+                                    rel: "noopener",
+                                    class: "event-detail-venue-map-link" do %>
+                          <%= image_tag "venue-pin.svg", alt: "", class: "event-detail-venue-map-pin", "aria-hidden": "true" %>
+                          <span>Auf Google Maps öffnen</span>
+                        <% end %>
+                      <% end %>
+                    </div>
                   <% end %>
                 </div>
               <% end %>

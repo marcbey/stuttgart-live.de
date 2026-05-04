@@ -6402,26 +6402,6 @@ display: grid;
   gap: 0.9rem;
 }
 
-.event-detail-venue-actions {
-display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-}
-
-.event-detail-venue-button {
-display: inline-flex;
-  align-items: center;
-  border: 1px solid #111;
-  border-radius: 5px;
-  background: #fff;
-  color: #111;
-  text-decoration: none;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.92rem;
-  padding: 0.42rem 0.62rem;
-}
-
 .event-detail-copy-flow a[href],
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link) {
   color: #006970;
@@ -6440,22 +6420,17 @@ display: inline-flex;
   text-decoration-thickness: 0.14em;
 }
 
-.event-detail-venue-button,
-.event-detail-venue-map-link {
+.event-detail-venue-layout .event-detail-venue-map-link {
   color: #111;
-  font-weight: inherit;
+  font-weight: 700;
   overflow-wrap: normal;
   text-decoration: none;
 }
 
-.event-detail-venue-button:hover,
-.event-detail-venue-button:focus-visible {
-  color: #fff;
-}
-
-.event-detail-venue-map-link:hover,
-.event-detail-venue-map-link:focus-visible {
+.event-detail-venue-layout .event-detail-venue-map-link:hover,
+.event-detail-venue-layout .event-detail-venue-map-link:focus-visible {
   color: #111;
+  text-decoration: none;
 }
 
 .event-detail-copy-flow a[href]::after,
@@ -6492,16 +6467,18 @@ grid-column: 1;
   text-decoration: none;
 }
 
-.event-detail-venue-button:hover,
-.event-detail-venue-button:focus-visible {
-background: #111;
-  color: #fff;
-}
-
 .event-detail-venue-map-link:hover,
 .event-detail-venue-map-link:focus-visible {
 border-color: rgba(17, 17, 17, 0.28);
   background: #fff;
+}
+
+.event-detail-venue-link-row {
+grid-column: 1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
 }
 
 .event-detail-venue-meta {
@@ -7612,7 +7589,7 @@ display: flex;
   order: 1;
   }
 
-  .event-detail-venue-map-link {
+  .event-detail-venue-link-row {
   grid-column: 1;
   order: 2;
   }

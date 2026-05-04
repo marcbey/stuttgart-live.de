@@ -3342,6 +3342,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "https://www.youtube.com/embed/llm123"
     assert_includes response.body, "Indie"
     assert_includes response.body, "Synthpop"
+
+    venue_meta = Nokogiri::HTML.parse(response.body).at_css(".event-detail-venue-meta")
+    venue_link_row = venue_meta.at_css(".event-detail-venue-link-row")
+    homepage_link = venue_meta.at_css(".event-detail-venue-homepage-link")
+    map_link = venue_meta.css(".event-detail-venue-map-link").find { |link| !link["class"].to_s.include?("event-detail-venue-homepage-link") }
+
+    assert_equal "https://venue.example/im-wizemann", homepage_link["href"]
+    assert_equal "Homepage Venue", homepage_link.text.squish
+    assert_empty homepage_link.css(".event-detail-venue-map-pin")
+    assert_equal "Auf Google Maps öffnen", map_link.text.squish
+    assert_equal venue_link_row, homepage_link.parent
+    assert_equal venue_link_row, map_link.parent
+    assert_operator venue_link_row.children.index(homepage_link), :<, venue_link_row.children.index(map_link)
   end
 
   test "show avoids duplicate subtitle and genre section" do
