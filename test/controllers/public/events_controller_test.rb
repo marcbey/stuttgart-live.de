@@ -3349,7 +3349,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     map_link = venue_meta.css(".event-detail-venue-map-link").find { |link| !link["class"].to_s.include?("event-detail-venue-homepage-link") }
 
     assert_equal "https://venue.example/im-wizemann", homepage_link["href"]
-    assert_equal "Homepage Venue", homepage_link.text.squish
+    assert_equal "Im Wizemann", homepage_link.text.squish
     assert_empty homepage_link.css(".event-detail-venue-map-pin")
     assert_equal "Auf Google Maps öffnen", map_link.text.squish
     assert_equal venue_link_row, homepage_link.parent

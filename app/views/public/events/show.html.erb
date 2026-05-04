@@ -111,7 +111,7 @@
                   <% if presenter.venue_info.external_url.present? || presenter.venue_info.map_url.present? %>
                     <div class="event-detail-venue-link-row">
                       <% if presenter.venue_info.external_url.present? %>
-                        <%= link_to "Homepage Venue",
+                        <%= link_to presenter.venue_info.name,
                                     presenter.venue_info.external_url,
                                     target: "_blank",
                                     rel: "noopener",
