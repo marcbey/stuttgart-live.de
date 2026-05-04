@@ -75,11 +75,11 @@ lesung:
   slug: lesung-podcast
 
 festivals:
-  name: Festivals/OpenAir
+  name: Festivals & OpenAir
   slug: festivals-openair
 
 party:
-  name: Party/ Night-Out
+  name: Party & Night-Out
   slug: party-night-out
 
 bildung:
