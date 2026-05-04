@@ -3411,6 +3411,44 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Rockclub in Stuttgart-Wangen."
   end
 
+  test "show renders venue description urls as external links" do
+    @published_event.venue_record.update!(
+      description: "Infos zur Venue: https://example.com/lka/programm."
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-venue-description a.event-detail-inline-link[href='https://example.com/lka/programm']",
+                  text: "https://example.com/lka/programm",
+                  count: 1
+    venue_link = css_select(".event-detail-venue-description a.event-detail-inline-link").first
+    assert_equal "_blank", venue_link["target"]
+    assert_equal "noopener", venue_link["rel"]
+  end
+
+  test "show preserves rich text links from event and venue editors" do
+    @published_event.update!(
+      event_info: '<div>Mehr beim <a href="https://artist.example">Artist</a>.</div>'
+    )
+    @published_event.venue_record.update!(
+      description: '<div>Infos zur <a href="https://example.com/lka">Venue</a>.</div>'
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-copy-block-primary a.event-detail-inline-link[href='https://artist.example']",
+                  text: "Artist",
+                  count: 1
+    assert_select ".event-detail-venue-description a.event-detail-inline-link[href='https://example.com/lka']",
+                  text: "Venue",
+                  count: 1
+    venue_link = css_select(".event-detail-venue-description a.event-detail-inline-link").first
+    assert_equal "_blank", venue_link["target"]
+    assert_equal "noopener", venue_link["rel"]
+  end
+
   test "show hides organizer notes unless explicitly enabled" do
     event = Event.create!(
       slug: "published-event-with-hidden-organizer-notes",

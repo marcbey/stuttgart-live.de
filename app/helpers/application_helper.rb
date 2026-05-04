@@ -300,6 +300,17 @@ module ApplicationHelper
     )
   end
 
+  def formatted_venue_description(description)
+    formatted_event_detail_copy(description)
+  end
+
+  def formatted_event_detail_copy(copy, link_class: "event-detail-inline-link")
+    formatted_public_rich_text_copy(
+      copy,
+      link_class:
+    )
+  end
+
   def public_media_path(record, strict_proxy: false)
     return if record.blank?
 
@@ -358,6 +369,11 @@ module ApplicationHelper
   end
 
   private
+
+  EXTERNAL_URL_PATTERN = %r{https?://[^\s<]+}i
+  RICH_TEXT_TAG_PATTERN = %r{</?[a-z][^>]*>}i
+  PUBLIC_RICH_TEXT_TAGS = %w[a br div strong b em i u strike del ul ol li blockquote pre].freeze
+  PUBLIC_RICH_TEXT_ATTRIBUTES = %w[href].freeze
 
   def strict_public_media_path(*records)
     records.compact.each do |record|
@@ -530,6 +546,100 @@ module ApplicationHelper
     flush_list.call
 
     safe_join(blocks)
+  end
+
+  def formatted_plain_text_with_external_links(text, link_class:)
+    paragraphs = []
+    paragraph_lines = []
+
+    flush_paragraph = lambda do
+      next if paragraph_lines.empty?
+
+      paragraphs << content_tag(
+        :p,
+        safe_join(
+          paragraph_lines.map { |line| linked_plain_text(line, link_class:) },
+          tag.br
+        )
+      )
+      paragraph_lines = []
+    end
+
+    text.to_s.lines.each do |raw_line|
+      line = raw_line.chomp
+
+      if line.strip.blank?
+        flush_paragraph.call
+      else
+        paragraph_lines << line
+      end
+    end
+
+    flush_paragraph.call
+    safe_join(paragraphs)
+  end
+
+  def formatted_public_rich_text_copy(copy, link_class:)
+    copy = copy.to_s
+
+    if copy.match?(RICH_TEXT_TAG_PATTERN)
+      decorate_public_rich_text_links(
+        sanitized_public_rich_text_html(copy),
+        link_class:
+      )
+    else
+      formatted_plain_text_with_external_links(copy, link_class:)
+    end
+  end
+
+  def sanitized_public_rich_text_html(html)
+    fragment = Nokogiri::HTML::DocumentFragment.parse(html)
+    fragment.css("script, style").remove
+
+    sanitize(fragment.to_html, tags: PUBLIC_RICH_TEXT_TAGS, attributes: PUBLIC_RICH_TEXT_ATTRIBUTES)
+  end
+
+  def decorate_public_rich_text_links(html, link_class:)
+    fragment = Nokogiri::HTML::DocumentFragment.parse(html)
+
+    fragment.css("a[href]").each do |link|
+      link["target"] = "_blank"
+      link["rel"] = "noopener"
+      link["class"] = [ link["class"], link_class ].compact_blank.join(" ")
+    end
+
+    fragment.to_html.html_safe
+  end
+
+  def linked_plain_text(text, link_class:)
+    pieces = []
+    previous_index = 0
+
+    text.to_s.to_enum(:scan, EXTERNAL_URL_PATTERN).each do
+      match = Regexp.last_match
+      raw_url = match[0]
+      url, trailing_text = split_trailing_link_punctuation(raw_url)
+
+      pieces << ERB::Util.html_escape(text[previous_index...match.begin(0)])
+      pieces << link_to(url, url, target: "_blank", rel: "noopener", class: link_class)
+      pieces << ERB::Util.html_escape(trailing_text)
+
+      previous_index = match.end(0)
+    end
+
+    pieces << ERB::Util.html_escape(text[previous_index..])
+    safe_join(pieces)
+  end
+
+  def split_trailing_link_punctuation(url)
+    trailing_text = +""
+    url = url.dup
+
+    while url.end_with?(".", ",", ";", ":", "!", "?", ")")
+      trailing_text.prepend(url.slice!(-1))
+    end
+
+    [ url, trailing_text ]
   end
 
   private

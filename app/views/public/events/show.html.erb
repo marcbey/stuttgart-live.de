@@ -40,7 +40,7 @@
         <section class="event-detail-copy-block event-detail-copy-block-primary">
           <h2>Beschreibung</h2>
           <div class="event-detail-copy-flow">
-            <%= simple_format(presenter.primary_description) %>
+            <%= formatted_event_detail_copy(presenter.primary_description) %>
           </div>
           <% if presenter.external_links.any? %>
             <div class="event-detail-links" aria-label="Externe Links">
@@ -64,7 +64,7 @@
         <section class="event-detail-copy-block">
           <h2>Über den Act</h2>
           <div class="event-detail-copy-flow">
-            <%= simple_format(presenter.artist_description) %>
+            <%= formatted_event_detail_copy(presenter.artist_description) %>
           </div>
         </section>
       <% end %>
@@ -82,7 +82,7 @@
 
             <% if presenter.venue_description.present? %>
               <div class="event-detail-copy-flow event-detail-venue-description">
-                <%= simple_format(presenter.venue_description) %>
+                <%= formatted_venue_description(presenter.venue_description) %>
               </div>
             <% end %>
 

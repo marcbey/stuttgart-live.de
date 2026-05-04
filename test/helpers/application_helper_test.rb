@@ -70,6 +70,36 @@ class ApplicationHelperTest < ActionView::TestCase
     ], fragment.css(".event-detail-venue-address-line").map(&:text)
   end
 
+  test "formatted venue description preserves sanitized rich text links" do
+    fragment = Nokogiri::HTML.fragment(
+      formatted_venue_description(
+        '<div>Infos <strong>unter</strong> <a href="https://venue.example/programm">Programm</a>.</div><script>alert("x")</script>'
+      )
+    )
+
+    link = fragment.at_css("a.event-detail-inline-link")
+
+    assert_equal "Infos unter Programm.", fragment.text.squish
+    assert_equal "https://venue.example/programm", link["href"]
+    assert_equal "_blank", link["target"]
+    assert_equal "noopener", link["rel"]
+    assert_equal "unter", fragment.at_css("strong").text
+    assert_empty fragment.css("script")
+  end
+
+  test "formatted venue description links plain text urls" do
+    fragment = Nokogiri::HTML.fragment(
+      formatted_venue_description("Infos unter https://venue.example/programm.")
+    )
+
+    link = fragment.at_css("a.event-detail-inline-link")
+
+    assert_equal "Infos unter https://venue.example/programm.", fragment.text
+    assert_equal "https://venue.example/programm", link["href"]
+    assert_equal "_blank", link["target"]
+    assert_equal "noopener", link["rel"]
+  end
+
   test "formatted organizer notes renders headings and categorized lists" do
     notes = <<~TEXT
       Wichtige Sicherheitsregeln

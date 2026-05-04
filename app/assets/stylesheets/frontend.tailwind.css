@@ -6422,6 +6422,56 @@ display: inline-flex;
   padding: 0.42rem 0.62rem;
 }
 
+.event-detail-copy-flow a[href],
+.event-detail-venue-layout a[href]:not(.event-detail-edit-link) {
+  color: #006970;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.16em;
+}
+
+.event-detail-copy-flow a[href]:hover,
+.event-detail-copy-flow a[href]:focus-visible,
+.event-detail-venue-layout a[href]:not(.event-detail-edit-link):hover,
+.event-detail-venue-layout a[href]:not(.event-detail-edit-link):focus-visible {
+  color: #00464a;
+  text-decoration-thickness: 0.14em;
+}
+
+.event-detail-venue-button,
+.event-detail-venue-map-link {
+  color: #111;
+  font-weight: inherit;
+  overflow-wrap: normal;
+  text-decoration: none;
+}
+
+.event-detail-venue-button:hover,
+.event-detail-venue-button:focus-visible {
+  color: #fff;
+}
+
+.event-detail-venue-map-link:hover,
+.event-detail-venue-map-link:focus-visible {
+  color: #111;
+}
+
+.event-detail-copy-flow a[href]::after,
+.event-detail-venue-layout a[href]:not(.event-detail-edit-link)::after {
+content: "";
+  display: inline-block;
+  width: 0.82em;
+  height: 0.82em;
+  flex: 0 0 auto;
+  margin-left: 0.24em;
+  background: currentColor;
+  vertical-align: -0.08em;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2.4'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M10%206H6a2%202%200%200%200-2%202v10a2%202%200%200%200%202%202h10a2%202%200%200%200%202-2v-4'/%3E%3Cpath%20d='M14%204h6v6'/%3E%3Cpath%20d='M20%204%2010%2014'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='2.4'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='M10%206H6a2%202%200%200%200-2%202v10a2%202%200%200%200%202%202h10a2%202%200%200%200%202-2v-4'/%3E%3Cpath%20d='M14%204h6v6'/%3E%3Cpath%20d='M20%204%2010%2014'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
 .event-detail-venue-map-link {
 grid-column: 1;
   display: inline-flex;
