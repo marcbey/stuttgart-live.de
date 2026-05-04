@@ -2854,7 +2854,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Preis: 45 EUR"
     assert_select ".event-detail-tag", text: "Jazz, Blues & Soul"
     assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
-    assert_select ".event-detail-tag", text: "Rock"
+    assert_select ".event-detail-tag", text: "Rock & Alternative"
+    assert_select "a.event-detail-tag[href=?]", genre_lane_path(extra_genre.slug), text: "Jazz, Blues & Soul"
+    assert_select "a.event-detail-tag[href=?]", genre_lane_path(genres(:pop).slug), text: "Pop, Indie & Singer-Songwriter"
+    assert_select "a.event-detail-tag[href=?]", genre_lane_path(genres(:rock).slug), text: "Rock & Alternative"
     assert_select "script[type='application/ld+json']", /Published Artist/
   end
 
@@ -3349,7 +3352,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-title", count: 0
     assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
     assert_select ".event-detail-sub-tag", text: "Deutschpop"
+    assert_select "a.event-detail-tag[href=?]", genre_lane_path(genres(:pop).slug), text: "Pop, Indie & Singer-Songwriter"
     assert_select ".event-detail-tag", text: "Deutschpop"
+    assert_select "a.event-detail-sub-tag", text: "Deutschpop", count: 0
     assert_select "h2", text: "Genres", count: 0
     assert_select ".event-detail-copy-block-primary p", text: "Fallschirmvertrauen - Tour 2026", count: 1
   end

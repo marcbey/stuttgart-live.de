@@ -5802,6 +5802,17 @@ display: inline-flex;
   color: #0c3f42;
   font-size: 0.88rem;
   line-height: 1.2;
+  text-decoration: none;
+}
+
+a.event-detail-tag:hover {
+  border-color: rgba(0, 150, 156, 0.68);
+  background: rgba(0, 181, 188, 0.32);
+}
+
+a.event-detail-tag:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
 
 .event-detail-tag-group {

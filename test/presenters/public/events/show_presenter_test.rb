@@ -40,6 +40,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       "/search?q=#{q.tr(" ", "+")}"
     end
 
+    def genre_lane_path(slug)
+      "/#{slug}"
+    end
+
     def event_source_label(source)
       source.to_s
     end
@@ -485,6 +489,22 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     queries = capture_sql_queries { assert_equal [ "Rock & Alternative" ], presenter.genres }
 
     assert_equal 0, queries
+  end
+
+  test "builds genre tag links from genre slugs" do
+    event = events(:published_one)
+    event.genres = [ genres(:pop), genres(:rock) ]
+    presenter = Public::Events::ShowPresenter.new(
+      Event.includes(:genres).find(event.id),
+      primary_offer: nil,
+      browse_state: Public::Events::BrowseState.new({}),
+      view_context: ViewContextStub.new
+    )
+
+    assert_equal [
+      Public::Events::ShowPresenter::GenreTag.new(label: "Pop, Indie & Singer-Songwriter", url: "/pop-indie-singer-songwriter"),
+      Public::Events::ShowPresenter::GenreTag.new(label: "Rock & Alternative", url: "/rock-alternative")
+    ], presenter.genre_tag_links
   end
 
   private

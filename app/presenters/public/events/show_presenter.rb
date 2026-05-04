@@ -5,6 +5,7 @@ module Public
       Slide = Data.define(:source, :alt_text, :caption)
       HeroGallerySlide = Data.define(:desktop_source, :mobile_source, :alt_text, :caption, :credit, :lightbox_source)
       FactItem = Data.define(:label, :value)
+      GenreTag = Data.define(:label, :url)
       PresenterItem = Data.define(:name, :external_url, :logo_source)
       VenueInfo = Data.define(:name, :address, :external_url, :logo_source, :map_url)
 
@@ -298,6 +299,12 @@ module Public
         genres
       end
 
+      def genre_tag_links
+        @genre_tag_links ||= sorted_genres.map do |genre|
+          GenreTag.new(label: genre.name, url: view_context.genre_lane_path(genre.slug))
+        end
+      end
+
       def sub_genre_tags
         sub_genres
       end
@@ -481,6 +488,14 @@ module Public
 
       def llm_enrichment
         @llm_enrichment ||= event.llm_enrichment
+      end
+
+      def sorted_genres
+        if event.association(:genres).loaded?
+          event.genres.sort_by { |genre| [ genre.name.to_s, genre.id.to_i ] }
+        else
+          event.genres.order(:name)
+        end
       end
 
       def hero_desktop_image
