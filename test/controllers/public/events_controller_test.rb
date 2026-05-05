@@ -3634,7 +3634,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
     assert_select ".event-detail-sub-tag", text: "Deutschpop"
     assert_select "a.event-detail-tag[href=?]", genre_lane_path(genres(:pop).slug), text: "Pop, Indie & Singer-Songwriter"
-    assert_select ".event-detail-tag", text: "Deutschpop"
+    assert_select ".event-detail-tag", text: "Deutschpop", count: 0
     assert_select "a.event-detail-sub-tag", text: "Deutschpop", count: 0
     assert_select "h2", text: "Genres", count: 0
     assert_select ".event-detail-copy-block-primary p", text: "Fallschirmvertrauen - Tour 2026", count: 1

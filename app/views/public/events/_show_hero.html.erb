@@ -33,7 +33,7 @@
             <%= link_to genre_tag.label, genre_tag.url, class: "event-detail-tag" %>
           <% end %>
           <% presenter.sub_genre_tags.each do |sub_genre| %>
-            <span class="event-detail-tag event-detail-sub-tag"><%= sub_genre %></span>
+            <span class="event-detail-sub-tag"><%= sub_genre %></span>
           <% end %>
         </div>
       <% end %>

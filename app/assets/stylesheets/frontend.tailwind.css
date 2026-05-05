@@ -5934,9 +5934,12 @@ display: inline-flex;
 }
 
 .event-detail-sub-tag {
-  border-color: rgba(227, 27, 46, 0.34);
-  background: rgba(227, 27, 46, 0.14);
-  color: #6f1420;
+display: inline-flex;
+  align-items: center;
+  min-height: 2rem;
+  color: #273234;
+  font-size: 0.88rem;
+  line-height: 1.2;
 }
 
 a.event-detail-tag:hover {
@@ -7274,6 +7277,10 @@ padding-inline: 0;
   .event-detail-tag {
   min-height: 1.85rem;
       padding: 0.22rem 0.58rem;
+  }
+
+  .event-detail-sub-tag {
+  min-height: 1.85rem;
   }
 
   .event-detail-links a {
