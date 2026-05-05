@@ -351,7 +351,7 @@ Events haben zwei getrennte Genre-Ebenen:
 
 Das LLM-Enrichment ermittelt pro Event beide Ebenen in einem Lauf. Dabei muss `genres` 1 bis 3 Werte aus der statischen Liste enthalten, während `sub_genres` 1 bis 4 frei abgeleitete fachliche Begriffe enthält. Bei jedem erfolgreichen Enrichment-Lauf werden die bestehenden Genre- und Sub-Genre-Zuordnungen des Events ersetzt.
 
-Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
+Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Dort kann zusätzlich eine Genre-Tag-Cloud aktiviert werden, die unter den Genre-Lanes weitere statische Genres mit kommenden öffentlichen Events verlinkt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
 
 Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.
 
@@ -516,6 +516,7 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 - `sks_organizer_notes` für den Standardtext bei SKS-Events ohne eigene Veranstalterhinweise
 - `llm_enrichment_model`, `llm_enrichment_prompt_template`, `llm_enrichment_temperature` und `llm_enrichment_web_search_provider` für den Enrichment-Job; projektseitig ist für `llm_enrichment_temperature` standardmäßig `1` gesetzt und entspricht damit dem OpenAI-API-Default. Niedrigere Werte liefern stabilere, höhere Werte variantenreichere Antworten. Standardmäßig bleibt `serpapi` für die Websuche aktiv; alternativ kann im Backend auf OpenWebNinja umgestellt werden, sofern `openwebninja.api_key` oder lokal `OPENWEBNINJA_API_KEY` hinterlegt ist. Dieser Wert muss ein direkter OpenWebNinja-API-Key für `api.openwebninja.com` sein; RapidAPI-Schlüssel funktionieren mit diesem Provider nicht. Fehlende oder abgelehnte Provider-Schlüssel brechen den Enrichment-Lauf sichtbar ab, damit lokale Konfigurationsprobleme nicht nur als leere Link-Kandidaten erscheinen. Die Websuche wird für `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` gleichermaßen verwendet. Erfolgreiche Websuche-Responses werden 1 Woche über `Rails.cache` zwischengespeichert, um doppelte externe Requests bei Event-Reihen zu reduzieren. Das Enrichment schreibt außerdem statische `genres` und freie `sub_genres` direkt an das Event.
 - `homepage_genre_lane_slugs` für die öffentlich sichtbaren Homepage-Genre-Lanes aus der statischen Genre-Liste
+- `homepage_genre_tag_cloud_enabled` für die optionale Tag-Cloud mit übrigen Homepage-Genres
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen im Merge-Import bei exakt gleicher Startzeit
 
 ### Meta-Setup für Social-Publishing

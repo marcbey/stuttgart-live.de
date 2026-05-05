@@ -123,6 +123,7 @@ module Backend
         @sks_organizer_notes_setting = AppSetting.sks_organizer_notes_record
       when "homepage_genre_lanes"
         @homepage_genre_lane_setting = AppSetting.homepage_genre_lane_slugs_record
+        @homepage_genre_tag_cloud_setting = AppSetting.homepage_genre_tag_cloud_enabled_record
         @homepage_genre_lane_reference_genres =
           homepage_genre_lane_reference_genres(@homepage_genre_lane_setting.homepage_genre_lane_slugs)
       when "llm_enrichment"
@@ -145,6 +146,8 @@ module Backend
         @sks_organizer_notes_setting.sks_organizer_notes_text = active_settings_params[:sks_organizer_notes_text]
       when "homepage_genre_lanes"
         @homepage_genre_lane_setting.homepage_genre_lane_slugs = active_settings_params.fetch(:homepage_genre_lane_slugs, [])
+        @homepage_genre_tag_cloud_setting.homepage_genre_tag_cloud_enabled =
+          active_settings_params[:homepage_genre_tag_cloud_enabled]
       when "llm_enrichment"
         @llm_enrichment_model_setting.llm_enrichment_model = active_settings_params[:llm_enrichment_model]
         @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text =
@@ -171,7 +174,7 @@ module Backend
       when "sks_organizer_notes"
         [ @sks_organizer_notes_setting ]
       when "homepage_genre_lanes"
-        [ @homepage_genre_lane_setting ]
+        [ @homepage_genre_lane_setting, @homepage_genre_tag_cloud_setting ]
       when "llm_enrichment"
         [
           @llm_enrichment_model_setting,
@@ -197,7 +200,7 @@ module Backend
       when "sks_organizer_notes"
         params.require(:app_setting).permit(:sks_organizer_notes_text)
       when "homepage_genre_lanes"
-        params.require(:app_setting).permit(homepage_genre_lane_slugs: [])
+        params.require(:app_setting).permit(:homepage_genre_tag_cloud_enabled, homepage_genre_lane_slugs: [])
       when "llm_enrichment"
         params.require(:app_setting).permit(
           :llm_enrichment_model,

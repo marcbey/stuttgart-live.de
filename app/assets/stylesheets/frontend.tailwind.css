@@ -3305,6 +3305,82 @@ color: #69c7c2;
   --lane-header-button-active-border: #69c7c2;
 }
 
+.homepage-genre-tag-cloud {
+display: grid;
+  gap: 0.8rem;
+  margin: 1.15rem 0 1.35rem;
+}
+
+.homepage-genre-tag-cloud-header {
+  margin-bottom: 0;
+}
+
+.homepage-genre-tag-cloud-tags {
+display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem 0.62rem;
+  align-items: baseline;
+}
+
+.homepage-genre-tag-cloud-tag {
+display: inline-flex;
+  align-items: center;
+  color: var(--homepage-genre-tag-color, #d97757);
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: clamp(1.55rem, 1.2rem + 1vw, 2.35rem);
+  font-weight: 400;
+  line-height: 0.94;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.38);
+  transform: translateY(0.03em);
+}
+
+.homepage-genre-tag-cloud-tag:nth-child(6n + 1) {
+  --homepage-genre-tag-color: #d97757;
+}
+
+.homepage-genre-tag-cloud-tag:nth-child(6n + 2) {
+  --homepage-genre-tag-color: #1a8c94;
+}
+
+.homepage-genre-tag-cloud-tag:nth-child(6n + 3) {
+  --homepage-genre-tag-color: #b78d57;
+}
+
+.homepage-genre-tag-cloud-tag:nth-child(6n + 4) {
+  --homepage-genre-tag-color: #c04f83;
+}
+
+.homepage-genre-tag-cloud-tag:nth-child(6n + 5) {
+  --homepage-genre-tag-color: #00aeb5;
+}
+
+.homepage-genre-tag-cloud-tag:nth-child(6n) {
+  --homepage-genre-tag-color: #9e5f34;
+}
+
+.homepage-genre-tag-cloud-tag::after {
+content: "";
+  display: inline-block;
+  width: 0.3em;
+  height: 0.3em;
+  margin-left: 0.08em;
+  flex: 0 0 auto;
+  background: currentColor;
+  transform: translateY(-0.12em);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='3'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='m9%2018%206-6-6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2024%2024'%20fill='none'%20stroke='black'%20stroke-width='3'%20stroke-linecap='round'%20stroke-linejoin='round'%3E%3Cpath%20d='m9%2018%206-6-6-6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+.homepage-genre-tag-cloud-tag:hover,
+.homepage-genre-tag-cloud-tag:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.12em;
+}
+
 .home-slider-track {
 display: grid;
   grid-auto-flow: column;

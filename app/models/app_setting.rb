@@ -7,6 +7,7 @@ class AppSetting < ApplicationRecord
   DAILY_LLM_ENRICHMENT_ENABLED_KEY = "daily_llm_enrichment_enabled".freeze
   VENUE_DUPLICATE_MAPPINGS_KEY = "venue_duplicate_mappings".freeze
   HOMEPAGE_GENRE_LANE_SLUGS_KEY = "homepage_genre_lane_slugs".freeze
+  HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY = "homepage_genre_tag_cloud_enabled".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
   LLM_ENRICHMENT_TEMPERATURE_KEY = "llm_enrichment_temperature".freeze
@@ -154,6 +155,16 @@ class AppSetting < ApplicationRecord
       @homepage_genre_lane_slugs ||= normalize_slug_list(find_by(key: HOMEPAGE_GENRE_LANE_SLUGS_KEY)&.value)
     end
 
+    def homepage_genre_tag_cloud_enabled?
+      @homepage_genre_tag_cloud_enabled =
+        if @homepage_genre_tag_cloud_enabled.nil?
+          setting = find_by(key: HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY)
+          setting.present? && normalize_boolean(setting.value)
+        else
+          @homepage_genre_tag_cloud_enabled
+        end
+    end
+
     def venue_duplicate_mappings
       @venue_duplicate_mappings ||= normalize_venue_duplicate_mappings(find_by(key: VENUE_DUPLICATE_MAPPINGS_KEY)&.value)
     end
@@ -231,6 +242,10 @@ class AppSetting < ApplicationRecord
 
     def homepage_genre_lane_slugs_record
       find_or_initialize_by(key: HOMEPAGE_GENRE_LANE_SLUGS_KEY)
+    end
+
+    def homepage_genre_tag_cloud_enabled_record
+      find_or_initialize_by(key: HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY)
     end
 
     def llm_enrichment_prompt_template_record
@@ -517,6 +532,7 @@ class AppSetting < ApplicationRecord
       @sks_promoter_ids = nil
       @sks_organizer_notes = nil
       @homepage_genre_lane_slugs = nil
+      @homepage_genre_tag_cloud_enabled = nil
       @venue_duplicate_mappings = nil
       @venue_duplicate_mapping_by_alias_key = nil
       @llm_enrichment_model = nil
@@ -574,6 +590,18 @@ class AppSetting < ApplicationRecord
 
   def homepage_genre_lane_slugs=(raw_value)
     self.value = self.class.normalize_slug_list(raw_value)
+  end
+
+  def homepage_genre_tag_cloud_enabled
+    if key == HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY && new_record? && (value.nil? || value == [])
+      return self.class.homepage_genre_tag_cloud_enabled?
+    end
+
+    self.class.normalize_boolean(value)
+  end
+
+  def homepage_genre_tag_cloud_enabled=(raw_value)
+    self.value = self.class.normalize_boolean(raw_value)
   end
 
   def venue_duplicate_mappings

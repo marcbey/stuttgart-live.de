@@ -168,21 +168,40 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
 
     patch backend_settings_url(section: :homepage_genre_lanes), params: {
       app_setting: {
+        homepage_genre_tag_cloud_enabled: "1",
         homepage_genre_lane_slugs: [ "rock-alternative", "pop-indie-singer-songwriter" ]
       }
     }
 
     assert_redirected_to edit_backend_settings_url(section: :homepage_genre_lanes)
     assert_equal [ "rock-alternative", "pop-indie-singer-songwriter" ], AppSetting.homepage_genre_lane_slugs
+    assert_equal true, AppSetting.homepage_genre_tag_cloud_enabled?
+  end
+
+  test "admin can disable homepage genre tag cloud section setting" do
+    sign_in_as(@admin)
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY, value: true)
+
+    patch backend_settings_url(section: :homepage_genre_lanes), params: {
+      app_setting: {
+        homepage_genre_tag_cloud_enabled: "0",
+        homepage_genre_lane_slugs: []
+      }
+    }
+
+    assert_redirected_to edit_backend_settings_url(section: :homepage_genre_lanes)
+    assert_equal false, AppSetting.homepage_genre_tag_cloud_enabled?
   end
 
   test "homepage genre lanes section shows the stored configuration" do
     sign_in_as(@admin)
     AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ "pop-indie-singer-songwriter" ])
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY, value: true)
 
     get edit_backend_settings_url(section: :homepage_genre_lanes)
 
     assert_response :success
+    assert_select "input[name='app_setting[homepage_genre_tag_cloud_enabled]'][value='1'][checked='checked']", count: 1
     assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='pop-indie-singer-songwriter'][checked='checked']", count: 1
     assert_select "input[name='app_setting[homepage_genre_lane_slugs][]'][value='rock-alternative'][checked='checked']", count: 0
     assert_select ".settings-reference-selection-index", text: "-", minimum: 1

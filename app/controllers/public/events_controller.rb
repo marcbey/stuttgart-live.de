@@ -266,6 +266,7 @@ module Public
       end
 
       @home_genre_lanes = homepage_genre_lanes
+      @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
       @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_reservix.limit(HOME_LANE_LIMIT).to_a)
       @home_highlight_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_highlight_events)
       tagestipp_scope = tagestipp_relation
@@ -312,6 +313,10 @@ module Public
 
     def homepage_genre_lanes
       Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
+    end
+
+    def homepage_genre_tag_cloud_genres
+      Public::Events::HomepageGenreTagCloudBuilder.new(relation: homepage_events_relation).call
     end
 
     def assign_homepage_promotion_banners

@@ -181,6 +181,29 @@ class AppSettingTest < ActiveSupport::TestCase
     assert_equal [], AppSetting.homepage_genre_lane_slugs
   end
 
+  test "returns false for homepage genre tag cloud when not configured" do
+    assert_equal false, AppSetting.homepage_genre_tag_cloud_enabled?
+  end
+
+  test "normalizes homepage genre tag cloud checkbox values" do
+    setting = AppSetting.new(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY)
+
+    setting.homepage_genre_tag_cloud_enabled = "0"
+    assert_equal false, setting.homepage_genre_tag_cloud_enabled
+
+    setting.homepage_genre_tag_cloud_enabled = "1"
+    assert_equal true, setting.homepage_genre_tag_cloud_enabled
+  end
+
+  test "resets homepage genre tag cloud cache after update" do
+    setting = AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY, value: true)
+    assert_equal true, AppSetting.homepage_genre_tag_cloud_enabled?
+
+    setting.update!(value: false)
+
+    assert_equal false, AppSetting.homepage_genre_tag_cloud_enabled?
+  end
+
   test "returns default llm enrichment prompt template when no setting exists" do
     assert_includes AppSetting.llm_enrichment_prompt_template, "{{input_json}}"
     assert_includes AppSetting.llm_enrichment_prompt_template, "`venue_external_url`"

@@ -5,6 +5,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
     AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
+    AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY).delete_all
     AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382" ])
     AppSetting.create!(key: AppSetting::SKS_ORGANIZER_NOTES_KEY, value: "Konfigurierter SKS Hinweis\nDanke für euer Verständnis!")
     AppSetting.reset_cache!
@@ -18,6 +19,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
     AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
+    AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY).delete_all
   end
 
   test "index is publicly accessible" do
@@ -200,6 +202,123 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".genre-lane-section", count: 0
+  end
+
+  test "index does not render homepage genre tag cloud while disabled" do
+    event = Event.create!(
+      slug: "genre-tag-cloud-disabled",
+      source_fingerprint: "test::public::genre-tag-cloud::disabled",
+      title: "Genre Tag Cloud Disabled",
+      artist_name: "Genre Tag Cloud Disabled Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    build_homepage_genre_enrichment(event: event, genres: [ "Pop" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".homepage-genre-tag-cloud", count: 0
+  end
+
+  test "index renders enabled homepage genre tag cloud after configured genre lanes" do
+    _, rock_group, pop_group = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY, value: true)
+    AppSetting.reset_cache!
+
+    rock_event = Event.create!(
+      slug: "genre-tag-cloud-rock",
+      source_fingerprint: "test::public::genre-tag-cloud::rock",
+      title: "Genre Tag Cloud Rock",
+      artist_name: "Genre Tag Cloud Rock Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    pop_event = Event.create!(
+      slug: "genre-tag-cloud-pop",
+      source_fingerprint: "test::public::genre-tag-cloud::pop",
+      title: "Genre Tag Cloud Pop",
+      artist_name: "Genre Tag Cloud Pop Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    hidden_event = Event.create!(
+      slug: "genre-tag-cloud-hidden",
+      source_fingerprint: "test::public::genre-tag-cloud::hidden",
+      title: "Genre Tag Cloud Hidden",
+      artist_name: "Genre Tag Cloud Hidden Artist",
+      start_at: 9.days.from_now.change(hour: 21, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "needs_review",
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+
+    build_homepage_genre_enrichment(event: rock_event, genres: [ "Rock" ])
+    build_homepage_genre_enrichment(event: pop_event, genres: [ "Pop" ])
+    build_homepage_genre_enrichment(event: hidden_event, genres: [ "Metal, Punk & Hardcore" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    shell_children = document.css("section.public-shell > *").to_a
+    rock_lane_index = shell_children.index do |node|
+      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == rock_group.name
+    end
+    tag_cloud_index = shell_children.index { |node| node["class"].to_s.include?("homepage-genre-tag-cloud") }
+    saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
+
+    assert tag_cloud_index.present?, "expected enabled genre tag cloud to be rendered"
+    assert_operator tag_cloud_index, :>, rock_lane_index
+    assert_equal saved_lane_slot_index - 1, tag_cloud_index
+    assert_select ".homepage-genre-tag-cloud-tag[href='/#{pop_group.slug}']", text: pop_group.name, count: 1
+    assert_select ".homepage-genre-tag-cloud-tag[href='/#{rock_group.slug}']", count: 0
+    assert_select ".homepage-genre-tag-cloud-tag[href='/metal-punk-hardcore']", count: 0
+  end
+
+  test "index renders enabled homepage genre tag cloud without configured genre lanes" do
+    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY, value: true)
+    AppSetting.reset_cache!
+
+    event = Event.create!(
+      slug: "genre-tag-cloud-without-lanes",
+      source_fingerprint: "test::public::genre-tag-cloud::without-lanes",
+      title: "Genre Tag Cloud Without Lanes",
+      artist_name: "Genre Tag Cloud Without Lanes Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    build_homepage_genre_enrichment(event: event, genres: [ "Pop" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select ".genre-lane-section", count: 0
+    assert_select ".homepage-genre-tag-cloud", count: 1
+    assert_select ".homepage-genre-tag-cloud-tag[href='/pop-indie-singer-songwriter']", text: "Pop, Indie & Singer-Songwriter", count: 1
   end
 
   test "homepage lane header titles link to their landing pages when available" do

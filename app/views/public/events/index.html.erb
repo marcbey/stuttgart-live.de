@@ -117,6 +117,8 @@
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>
     <% end %>
 
+    <%= render "homepage_genre_tag_cloud", tags: @home_genre_tag_cloud_genres %>
+
     <% trailing_promotion_banners = promotion_banners_by_lane_position.select { |position, _banners| position >= promotion_banner_lane_position }.values.flatten %>
     <%= render "promotion_banners",
                banners: trailing_promotion_banners,

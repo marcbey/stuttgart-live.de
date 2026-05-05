@@ -12,6 +12,17 @@
                   url: backend_settings_path(section: section_key),
                   method: :patch,
                   class: "editor-form" do |form| %>
+      <%= label_tag "app_setting_homepage_genre_tag_cloud_enabled", "Genre-Tag-Cloud anzeigen", class: "form-label" %>
+      <label class="check-inline">
+        <%= hidden_field_tag "app_setting[homepage_genre_tag_cloud_enabled]", "0" %>
+        <%= check_box_tag "app_setting[homepage_genre_tag_cloud_enabled]",
+                          "1",
+                          @homepage_genre_tag_cloud_setting.homepage_genre_tag_cloud_enabled,
+                          id: "app_setting_homepage_genre_tag_cloud_enabled" %>
+        <span>Aktiviert</span>
+      </label>
+      <p class="form-hint">Wenn aktiviert, erscheinen unter den Genre-Lanes die übrigen statischen Genres mit kommenden öffentlichen Events als Tag-Cloud.</p>
+
       <% if @homepage_genre_lane_reference_genres.any? %>
         <div class="settings-reference-list">
           <h3>Statische Genres</h3>
