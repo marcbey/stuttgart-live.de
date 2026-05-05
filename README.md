@@ -746,7 +746,7 @@ PostgreSQL läuft direkt auf dem Host, nicht in einem separaten Container. Die A
 - `stuttgart_live_de_production_queue`
 - `stuttgart_live_de_production_cable`
 
-Uploads liegen im Docker-Volume `stuttgart_live_de_storage`. Der Host-Pfad dafür ist üblicherweise `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`. Backups liegen standardmäßig unter `/var/backups/stuttgart-live`.
+Uploads liegen im Docker-Volume `stuttgart_live_de_storage`. Der Host-Pfad dafür ist üblicherweise `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`. Lokale Datenbank-Backups liegen standardmäßig unter `/var/backups/stuttgart-live`; der tägliche Backup-Cronjob schreibt sein Log nach `/var/log/stuttgart-live-db-backup.log`.
 Öffentliche Bild-URLs zeigen in Production auf signierte `/media/...`-Pfade. Wenn ein Bild im Backend ersetzt oder eine Variant/Crop-Änderung gespeichert wird, rendert Rails eine neue URL. Damit wird kein manuelles Cache-Purging für den Media-Pfad benötigt.
 
 Datenbankzugriff auf dem Host:

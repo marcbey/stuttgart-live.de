@@ -1,19 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export LANG=C.UTF-8
+export LC_ALL=C.UTF-8
+
 BACKUP_DIR="{{ backup_dir }}"
 KEEP_DAYS="{{ backup_keep_days }}"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
+log() {
+  printf '[%s] %s\n' "$(date --iso-8601=seconds)" "$*"
+}
+
+log "Starting stuttgart-live database backup"
 mkdir -p "$BACKUP_DIR"
 
 {% for db_name in postgres_app_databases %}
+log "Dumping {{ db_name }}"
 sudo -u postgres pg_dump --format=custom --file "$BACKUP_DIR/{{ db_name }}-$STAMP.dump" "{{ db_name }}"
 {% endfor %}
 
 {% if backup_storage_enabled %}
+log "Syncing storage backup"
 mkdir -p "$BACKUP_DIR/storage"
 rsync -a --delete "{{ backup_storage_source }}/" "$BACKUP_DIR/storage/"
 {% endif %}
 
 find "$BACKUP_DIR" -type f -mtime +"$KEEP_DAYS" -delete
+log "Finished stuttgart-live database backup"

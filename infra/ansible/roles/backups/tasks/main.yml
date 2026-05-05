@@ -3,8 +3,8 @@
   ansible.builtin.file:
     path: "{{ backup_dir }}"
     state: directory
-    owner: root
-    group: root
+    owner: postgres
+    group: postgres
     mode: "0750"
 
 - name: Backup-Skript installieren
@@ -21,4 +21,4 @@
     user: root
     minute: "15"
     hour: "3"
-    job: "/usr/local/bin/stuttgart-live-db-backup"
+    job: "/usr/local/bin/stuttgart-live-db-backup >> {{ backup_log_file }} 2>&1"

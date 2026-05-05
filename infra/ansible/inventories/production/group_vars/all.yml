@@ -64,6 +64,7 @@ postgres_legacy_host_access_rules:
     method: scram-sha-256
 
 backup_dir: /var/backups/stuttgart-live
+backup_log_file: /var/log/stuttgart-live-db-backup.log
 backup_keep_days: 7
 backup_storage_enabled: false
 backup_storage_source: /var/lib/docker/volumes/stuttgart_live_de_storage/_data
