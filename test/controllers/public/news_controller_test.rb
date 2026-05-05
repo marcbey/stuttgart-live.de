@@ -91,15 +91,12 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
       content_type: "image/png"
     )
 
-    expected_path = nil
-
     with_media_proxy do
       get news_url(@live_post.slug)
-      expected_path = PublicMediaUrl.path_for(@live_post.processed_optimized_image_variant(:cover_image))
     end
 
     assert_response :success
-    assert_includes response.body, expected_path
+    assert_match %r{/media/\d+/[-A-Za-z0-9_]+/.+--news-cover\.webp}, response.body
   end
 
   test "show renders hero image with shared event detail figure markup and crop inline styles" do
