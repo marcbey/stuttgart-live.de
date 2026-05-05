@@ -6,7 +6,8 @@ export default class extends Controller {
     frameId: { type: String, default: "blog_editor" },
     itemSelector: { type: String, default: ".blog-list-item" },
     linkSelector: { type: String, default: ".blog-link" },
-    itemIdAttribute: { type: String, default: "editorInboxItemId" }
+    itemIdAttribute: { type: String, default: "editorInboxItemId" },
+    defaultEditorTab: { type: String, default: "" }
   }
 
   connect() {
@@ -14,7 +15,9 @@ export default class extends Controller {
   }
 
   itemLinkClicked(event) {
-    this.pushSelectionUrl(event)
+    const editorTab = this.currentEditorTab()
+    this.applyEditorTabToLink(event.currentTarget, editorTab)
+    this.pushSelectionUrl(event, editorTab)
 
     const itemId = this.itemIdFrom(event.currentTarget)
     this.highlightItem(itemId)
@@ -79,7 +82,27 @@ export default class extends Controller {
     return element.dataset?.[this.itemIdAttributeValue]
   }
 
-  pushSelectionUrl(event) {
+  currentEditorTab() {
+    return document.querySelector(`turbo-frame#${this.frameIdValue} input[name='editor_tab']`)?.value || null
+  }
+
+  applyEditorTabToLink(link, editorTab) {
+    if (!(link instanceof HTMLAnchorElement)) return
+
+    const url = new URL(link.href, window.location.origin)
+    this.applyEditorTabToUrl(url, editorTab)
+    link.href = url.toString()
+  }
+
+  applyEditorTabToUrl(url, editorTab) {
+    if (editorTab && editorTab !== this.defaultEditorTabValue) {
+      url.searchParams.set("editor_tab", editorTab)
+    } else {
+      url.searchParams.delete("editor_tab")
+    }
+  }
+
+  pushSelectionUrl(event, editorTab = null) {
     if (event.defaultPrevented || event.button !== 0) return
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
 
@@ -92,6 +115,7 @@ export default class extends Controller {
 
     const nextUrl = new URL(selectionUrl, window.location.href)
     if (nextUrl.origin !== window.location.origin) return
+    this.applyEditorTabToUrl(nextUrl, editorTab)
     if (`${nextUrl.pathname}${nextUrl.search}${nextUrl.hash}` === `${window.location.pathname}${window.location.search}${window.location.hash}`) return
 
     window.history.pushState(window.history.state, "", nextUrl)

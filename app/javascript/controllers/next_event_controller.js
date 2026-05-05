@@ -59,10 +59,13 @@ export default class extends Controller {
     const eventId = Number.parseInt(event.currentTarget?.dataset?.nextEventEventId, 10)
     if (Number.isNaN(eventId)) return
 
+    const editorTab = this.currentEditorTab()
+    this.applyEditorTabToLink(event.currentTarget, editorTab)
     this.highlightEventById(eventId)
     this.replaceUrl({
       eventId,
-      status: this.statusFromLink(event.currentTarget)
+      status: this.statusFromLink(event.currentTarget),
+      editorTab
     })
   }
 
@@ -161,6 +164,25 @@ export default class extends Controller {
 
   editorTabFromEditorForm(form) {
     return form.querySelector("input[name='editor_tab']")?.value || null
+  }
+
+  currentEditorTab() {
+    const form = document.querySelector("turbo-frame#event_editor form.editor-form")
+    if (form instanceof HTMLFormElement) return this.editorTabFromEditorForm(form)
+
+    return new URL(window.location.href).searchParams.get("editor_tab")
+  }
+
+  applyEditorTabToLink(link, editorTab) {
+    if (!(link instanceof HTMLAnchorElement)) return
+
+    const url = new URL(link.href, window.location.origin)
+    if (editorTab && editorTab !== "event") {
+      url.searchParams.set("editor_tab", editorTab)
+    } else {
+      url.searchParams.delete("editor_tab")
+    }
+    link.href = url.toString()
   }
 
   replaceUrl({ eventId = null, status = null, editorTab = null, newRecord = false } = {}) {

@@ -34,9 +34,24 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog_editor_panel .editor-header", count: 1
     assert_select "#blog_editor_panel > .flash.flash-alert", count: 0
     assert_select "input[name='editor_tab'][value='news']", count: 1
+    assert_select ".blog-link[href*='editor_tab=news']", count: 0
+    assert_select ".blog-link[data-editor-inbox-selection-url='#{backend_blog_posts_path(blog_post_id: blog_post.id)}']", count: 1
+    assert_select ".blog-link[data-editor-inbox-selection-url*='editor_tab=news']", count: 0
     assert_select "section.blog-post-image-section", count: 1
     assert_select "[data-controller='event-image-crop-preview blog-post-image-preupload']", count: 1
     assert_select "[data-controller='event-image-crop-preview promotion-banner-image-preupload']", count: 1
+  end
+
+  test "index keeps requested tab in blog list selection links" do
+    sign_in_as(@blogger)
+    blog_post = create_blog_post(author: @blogger, status: "draft")
+
+    get backend_blog_posts_url(blog_post_id: blog_post.id, editor_tab: "settings")
+
+    assert_response :success
+    assert_select "#blog-editor-tab-settings[aria-selected='true']", count: 1
+    assert_select ".blog-link[href='#{edit_backend_blog_post_path(blog_post, status: "all", editor_tab: "settings")}']", count: 1
+    assert_select ".blog-link[data-editor-inbox-selection-url='#{backend_blog_posts_path(blog_post_id: blog_post.id, editor_tab: "settings")}']", count: 1
   end
 
   test "live blog post shows open button in topbar and keeps editor header" do

@@ -3103,6 +3103,15 @@ border: 1px dashed rgba(17, 17, 17, 0.18);
 }
 
 @media (min-width: 1100px) {
+  .backend-inbox-shell {
+  box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr);
+    height: calc(100vh - var(--app-nav-height, 0px));
+    height: calc(100dvh - var(--app-nav-height, 0px));
+    min-height: 0;
+  }
+
   .backend-split {
   grid-template-columns: minmax(334px, 0.626fr) minmax(0, 1.690fr);
   }
@@ -3116,6 +3125,41 @@ border: 1px dashed rgba(17, 17, 17, 0.18);
 
   .backend-inbox-split {
   grid-template-columns: var(--backend-inbox-list-column) var(--backend-inbox-editor-column);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .backend-inbox-shell .backend-list-column,
+  .backend-inbox-shell .backend-editor-column,
+  .backend-inbox-shell #events_list,
+  .backend-inbox-shell #blog_posts_list,
+  .backend-inbox-shell .bulk-form {
+  min-height: 0;
+  }
+
+  .backend-inbox-shell .backend-status-row,
+  .backend-inbox-shell .filter-form {
+  flex: 0 0 auto;
+  }
+
+  .backend-inbox-shell .backend-list-column,
+  .backend-inbox-shell #events_list,
+  .backend-inbox-shell #blog_posts_list {
+  overflow: hidden;
+  }
+
+  .backend-inbox-shell #events_list,
+  .backend-inbox-shell #blog_posts_list {
+  display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+  }
+
+  .backend-inbox-shell .event-list {
+  min-height: 0;
+    max-height: none;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
 
   .backend-inbox-topbar-controls {
@@ -3150,6 +3194,8 @@ border: 1px dashed rgba(17, 17, 17, 0.18);
   position: relative;
     margin-top: 0;
     padding-top: 0.85rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     border-top: 0;
     border-left-color: var(--backend-inbox-rail-line-strong);
     border-right-color: var(--backend-inbox-rail-line-strong);

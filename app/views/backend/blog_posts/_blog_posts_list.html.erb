@@ -1,4 +1,6 @@
 <div id="blog_posts_list">
+  <% active_editor_tab = local_assigns[:active_editor_tab].presence %>
+  <% editor_tab_param = active_editor_tab unless active_editor_tab == "news" %>
   <p class="event-list-count"><strong><%= blog_posts.count %></strong> gefilterte Beiträge</p>
 
   <% if blog_posts.any? %>
@@ -8,11 +10,17 @@
           <%= link_to edit_backend_blog_post_path(blog_post,
                                                  status: status_filter,
                                                  query: query_filter.presence,
-                                                 editor_tab: local_assigns[:active_editor_tab]),
+                                                 editor_tab: editor_tab_param),
                       data: {
                         turbo_frame: "blog_editor",
                         action: "click->editor-inbox#itemLinkClicked",
-                        editor_inbox_item_id: blog_post.id
+                        editor_inbox_item_id: blog_post.id,
+                        editor_inbox_selection_url: backend_blog_posts_path(
+                          status: (status_filter unless status_filter == "all"),
+                          query: query_filter.presence,
+                          blog_post_id: blog_post.id,
+                          editor_tab: editor_tab_param
+                        )
                       },
                       class: "event-link blog-link" do %>
             <div class="blog-list-main">
