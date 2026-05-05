@@ -1,20 +1,129 @@
 <% event_series_lane = local_assigns[:event_series_lane] %>
 <% browse_state = local_assigns[:browse_state] %>
 <% series_events = event_series_lane&.events.to_a.sort_by { |series_event| [series_event.start_at, series_event.id] } %>
+<% desktop_visible_series_events = series_events.first(5) %>
+<% mobile_remaining_series_events = series_events.drop(3) %>
+<% uses_calendar = mobile_remaining_series_events.any? %>
+<% german_month_names = %w[Januar Februar März April Mai Juni Juli August September Oktober November Dezember] %>
 
 <% if event_series_lane.present? && series_events.any? && browse_state.present? %>
   <section class="event-detail-series-terms" aria-labelledby="event-detail-series-terms-heading">
     <h2 id="event-detail-series-terms-heading">Weitere Termine</h2>
-    <div class="event-detail-series-term-list" role="list">
-      <% series_events.each do |series_event| %>
-        <% term_label_format = series_event.start_at.min.zero? ? "%d.%m. %H Uhr" : "%d.%m. %H:%M Uhr" %>
-        <% aria_label = "Weiterer Termin: #{l(series_event.start_at, format: '%d.%m.%Y %H:%M Uhr')}" %>
-        <%= link_to l(series_event.start_at, format: term_label_format),
-                    public_event_detail_path(series_event, browse_state),
-                    class: "event-detail-series-term-link",
-                    role: "listitem",
-                    aria: { label: aria_label } %>
-      <% end %>
-    </div>
+    <% if uses_calendar %>
+      <% calendar_months = series_events.group_by { |series_event| series_event.start_at.to_date.beginning_of_month }.sort_by { |month_date, _events| month_date } %>
+      <% active_month_date = calendar_months.first&.first %>
+      <% active_day = series_events.first.start_at.to_date %>
+      <div class="event-detail-series-terms-disclosure">
+        <div class="event-detail-series-term-list event-detail-series-term-list--visible" role="list">
+          <% desktop_visible_series_events.each_with_index do |series_event, index| %>
+            <% term_label_format = series_event.start_at.min.zero? ? "%d.%m. %H Uhr" : "%d.%m. %H:%M Uhr" %>
+            <% aria_label = "Weiterer Termin: #{l(series_event.start_at, format: '%d.%m.%Y %H:%M Uhr')}" %>
+            <% link_classes = ["event-detail-series-term-link", ("event-detail-series-term-link--mobile-hidden" if index >= 3)].compact.join(" ") %>
+            <%= link_to l(series_event.start_at, format: term_label_format),
+                        public_event_detail_path(series_event, browse_state),
+                        class: link_classes,
+                        role: "listitem",
+                        aria: { label: aria_label } %>
+          <% end %>
+        </div>
+        <details class="event-detail-series-more event-series-calendar-overlay">
+          <summary class="event-detail-series-more-summary">
+            <span>Alle Termine anzeigen</span>
+            <span class="event-detail-series-more-count"><%= mobile_remaining_series_events.size %></span>
+            <span class="event-detail-series-more-arrow" aria-hidden="true"></span>
+          </summary>
+          <div class="event-series-calendar" data-controller="event-series-calendar">
+            <div class="event-series-calendar-months" role="tablist" aria-label="Terminmonate">
+              <% calendar_months.each do |month_date, month_events| %>
+                <% month_key = month_date.strftime("%Y-%m") %>
+                <% first_month_day_key = month_events.first.start_at.to_date.iso8601 %>
+                <% month_active = month_date == active_month_date %>
+                <% month_label = "#{german_month_names.fetch(month_date.month - 1)} #{month_date.year}".upcase %>
+                <button type="button"
+                        class="event-series-calendar-month<%= " is-active" if month_active %>"
+                        data-event-series-calendar-target="monthButton"
+                        data-action="click->event-series-calendar#selectMonth"
+                        data-event-series-calendar-month-key-param="<%= month_key %>"
+                        data-event-series-calendar-day-key-param="<%= first_month_day_key %>"
+                        aria-pressed="<%= month_active %>">
+                  <%= month_label %>
+                </button>
+              <% end %>
+            </div>
+
+            <% calendar_months.each do |month_date, month_events| %>
+              <% month_key = month_date.strftime("%Y-%m") %>
+              <% month_active = month_date == active_month_date %>
+              <% month_events_by_day = month_events.group_by { |series_event| series_event.start_at.to_date } %>
+              <% first_day = month_date.beginning_of_month %>
+              <% last_day = month_date.end_of_month %>
+              <div class="event-series-calendar-month-panel"
+                   data-event-series-calendar-target="monthPanel"
+                   data-month-key="<%= month_key %>"
+                   <%= "hidden" unless month_active %>>
+                <div class="event-series-calendar-weekdays" aria-hidden="true">
+                  <% %w[M D M D F S S].each do |weekday| %>
+                    <span><%= weekday %></span>
+                  <% end %>
+                </div>
+                <div class="event-series-calendar-grid">
+                  <% (first_day.cwday - 1).times do %>
+                    <span class="event-series-calendar-day event-series-calendar-day--empty"></span>
+                  <% end %>
+                  <% (first_day..last_day).each do |date| %>
+                    <% day_events = month_events_by_day[date].to_a.sort_by { |series_event| [series_event.start_at, series_event.id] } %>
+                    <% day_key = date.iso8601 %>
+                    <% day_active = date == active_day %>
+                    <% if day_events.any? %>
+                      <button type="button"
+                              class="event-series-calendar-day event-series-calendar-day--available<%= " is-active" if day_active %>"
+                              data-event-series-calendar-target="dayButton"
+                              data-action="click->event-series-calendar#selectDay"
+                              data-event-series-calendar-day-key-param="<%= day_key %>"
+                              aria-pressed="<%= day_active %>"
+                              aria-label="<%= l(date, format: "%d.%m.%Y") %>, <%= pluralize(day_events.size, "Termin", "Termine") %>">
+                        <%= date.day %>
+                      </button>
+                    <% else %>
+                      <span class="event-series-calendar-day" aria-hidden="true"><%= date.day %></span>
+                    <% end %>
+                  <% end %>
+                </div>
+
+                <div class="event-series-calendar-times">
+                  <% month_events_by_day.sort_by { |date, _day_events| date }.each do |date, day_events| %>
+                    <% day_key = date.iso8601 %>
+                    <div class="event-series-calendar-time-panel"
+                         data-event-series-calendar-target="dayPanel"
+                         data-day-key="<%= day_key %>"
+                         <%= "hidden" unless date == active_day %>>
+                      <% day_events.sort_by { |series_event| [series_event.start_at, series_event.id] }.each do |series_event| %>
+                        <% aria_label = "Weiterer Termin: #{l(series_event.start_at, format: '%d.%m.%Y %H:%M Uhr')}" %>
+                        <%= link_to l(series_event.start_at, format: "%H:%M"),
+                                    public_event_detail_path(series_event, browse_state),
+                                    class: "event-series-calendar-time",
+                                    aria: { label: aria_label } %>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </details>
+      </div>
+    <% else %>
+      <div class="event-detail-series-term-list event-detail-series-term-list--compact" role="list">
+        <% series_events.each do |series_event| %>
+          <% term_label_format = series_event.start_at.min.zero? ? "%d.%m. %H Uhr" : "%d.%m. %H:%M Uhr" %>
+          <% aria_label = "Weiterer Termin: #{l(series_event.start_at, format: '%d.%m.%Y %H:%M Uhr')}" %>
+          <%= link_to l(series_event.start_at, format: term_label_format),
+                      public_event_detail_path(series_event, browse_state),
+                      class: "event-detail-series-term-link",
+                      role: "listitem",
+                      aria: { label: aria_label } %>
+        <% end %>
+      </div>
+    <% end %>
   </section>
 <% end %>

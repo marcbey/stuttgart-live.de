@@ -52,7 +52,7 @@
       </div>
     <% end %>
     <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-      <%= render "event_series_corner_badge" %>
+      <%= render "event_series_corner_badge", focusable: true %>
     <% end %>
   </div>
 

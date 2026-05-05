@@ -1945,7 +1945,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the target event card to be rendered in the all events slider"
-    assert_equal "Event-Reihe", target_card.at_css(".event-series-badge")&.text.to_s.strip
+    assert_equal "Event-Reihe: weitere Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
+    assert_equal "weitere Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
   end
 
   test "index does not limit highlights fallback when no sks events exist for the selected date" do
@@ -2151,7 +2152,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the series event to be rendered in Tagestipp"
-    assert_equal "Event-Reihe", target_card.at_css(".event-series-badge")&.text.to_s.strip
+    assert_equal "Event-Reihe: weitere Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
+    assert_equal "weitere Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
   end
 
   test "index can be filtered to SKS events" do
@@ -3272,13 +3274,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
+    sorted_future_events = future_events.sort_by { |event| [ event.start_at, event.id ] }
     assert_select ".event-detail-header-panel > .event-detail-series-terms", count: 1
     assert_select ".event-detail-series-terms-button", count: 0
     series_section = css_select(".event-detail-series-terms").first
     assert_not_nil series_section
     assert_equal "Weitere Termine", series_section.at_css("h2")&.text.to_s.strip
     assert_equal 0, series_section.css(".event-listing-card").size
-    assert_equal 7, series_section.css(".event-detail-series-term-link").size
+    assert_equal 1, series_section.css(".event-series-calendar-overlay.event-detail-series-more").size
+    assert_equal 1, series_section.css(".event-series-calendar-overlay .event-series-calendar[data-controller='event-series-calendar']").size
+    assert_operator series_section.css(".event-series-calendar-month").size, :>=, 1
+    assert_equal 7, series_section.css(".event-series-calendar-day--available").size
+    assert_equal 7, series_section.css(".event-series-calendar-time").size
+    assert_includes series_section.at_css(".event-series-calendar-month")&.text.to_s.strip, sorted_future_events.first.start_at.year.to_s
+    assert_no_match(/translation missing/i, series_section.text)
     assert_not_includes series_section.text, @published_event.artist_name
     assert_not_includes series_section.text, future_events.first.artist_name
     assert_not_includes series_section.text, future_events.first.title
@@ -3286,14 +3295,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes series_section.text, "Past Series Artist"
     assert_nil series_section.at_css(".event-detail-series-terms-button")
 
-    links = series_section.css(".event-detail-series-term-link")
-    sorted_future_events = future_events.sort_by { |event| [ event.start_at, event.id ] }
-    expected_labels = sorted_future_events.map do |event|
-      label_format = event.start_at.min.zero? ? "%d.%m. %H Uhr" : "%d.%m. %H:%M Uhr"
-      I18n.l(event.start_at, format: label_format)
-    end
-    assert_equal expected_labels, links.map { |link| link.text.strip }
-    assert_equal sorted_future_events.map { |event| event_path(event.slug) }, links.map { |link| link["href"] }
+    expected_time_labels = sorted_future_events.map { |event| I18n.l(event.start_at, format: "%H:%M") }
+    time_links = series_section.css(".event-series-calendar-time")
+    assert_equal expected_time_labels, time_links.map { |link| link.text.strip }
+    assert_equal sorted_future_events.map { |event| event_path(event.slug) }, time_links.map { |link| link["href"] }
+    assert_equal "true", series_section.at_css(".event-series-calendar-month.is-active")&.[]("aria-pressed")
+    assert_equal "true", series_section.at_css(".event-series-calendar-day--available.is-active")&.[]("aria-pressed")
     assert_select "section.genre-lane-section .lane-header-kicker", text: /Event-Reihe/, count: 0
 
     cta_index = response.body.index("event-detail-cta")
@@ -3301,6 +3308,37 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     genre_index = response.body.index("Das könnte dir auch gefallen")
     assert_operator cta_index, :<, series_index
     assert_operator series_index, :<, genre_index
+  end
+
+  test "show keeps short upcoming event series terms as plain buttons" do
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    @published_event.update!(event_series: series, event_series_assignment: "manual")
+
+    future_events = 2.times.map do |index|
+      Event.create!(
+        slug: "show-short-series-future-#{index}",
+        source_fingerprint: "test::public::show-short-series::future::#{index}",
+        title: "A Tribute to Frida Kahlo #{index}",
+        artist_name: "Viva la Vida #{index}",
+        start_at: @published_event.start_at + (index + 1).days,
+        venue: "Im Wizemann",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        event_series: series,
+        event_series_assignment: "manual",
+        source_snapshot: {}
+      )
+    end
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    series_section = css_select(".event-detail-series-terms").first
+    assert_not_nil series_section
+    assert_equal 0, series_section.css(".event-detail-series-more").size
+    assert_equal 2, series_section.css(".event-detail-series-term-list--compact .event-detail-series-term-link").size
+    assert_equal future_events.map { |event| event_path(event.slug) }, series_section.css(".event-detail-series-term-link").map { |link| link["href"] }
   end
 
   test "show does not render the event series lane when only one public event is visible" do

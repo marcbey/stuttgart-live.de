@@ -1,4 +1,13 @@
-<span class="event-series-badge" aria-hidden="true">
+<% badge_attributes = {
+  class: "event-series-badge",
+  role: "img",
+  aria: { label: "Event-Reihe: weitere Termine" },
+  title: "weitere Termine"
+} %>
+<% badge_attributes[:tabindex] = "0" if local_assigns[:focusable] %>
+
+<%= tag.span(**badge_attributes) do %>
   <%= image_tag "event-series-icon.svg", class: "event-series-badge-icon", alt: "" %>
-  <span class="sr-only">Event-Reihe</span>
-</span>
+  <span class="event-series-badge-tooltip" aria-hidden="true">weitere Termine</span>
+  <span class="sr-only">Event-Reihe: weitere Termine</span>
+<% end %>

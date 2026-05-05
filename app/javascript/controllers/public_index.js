@@ -9,6 +9,9 @@ application.register("consent", ConsentController)
 import ConsentMediaController from "./consent_media_controller"
 application.register("consent-media", ConsentMediaController)
 
+import EventSeriesCalendarController from "./event_series_calendar_controller"
+application.register("event-series-calendar", EventSeriesCalendarController)
+
 import FlashController from "./flash_controller"
 application.register("flash", FlashController)
 
