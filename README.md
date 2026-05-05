@@ -790,6 +790,81 @@ mise exec -- bin/rails venues:maintenance:backfill_duplicates
 
 Der Task gruppiert bestehende Venues über denselben Match-Key wie der Merge-Import, hängt Events auf eine kanonische Venue um, übernimmt fehlende Metadaten und ein vorhandenes Logo und löscht anschließend redundante Dubletten wie `LKA-Longhorn Stuttgart` neben `LKA-Longhorn`.
 
+### Produktionsdatenbank aus lokalem Dump wiederherstellen
+
+Die lokalen Dumps unter `/var/backups/stuttgart-live` werden im PostgreSQL-Custom-Format erstellt. Sie müssen deshalb mit `pg_restore` zurückgespielt werden, nicht mit `psql < dump.sql`. Ein Restore überschreibt produktive Daten und gehört in ein bewusstes Wartungsfenster.
+
+Zuerst auf dem Host prüfen, welche Dumps vorhanden sind. Für einen vollständigen Stand sollten die vier Datenbanken mit demselben Zeitstempel verwendet werden:
+
+```bash
+ssh -i ~/.ssh/stgt-live-hetzner-admin admin@46.225.224.194
+sudo find /var/backups/stuttgart-live -maxdepth 1 -type f -name "*.dump" -printf "%TY-%Tm-%Td %TH:%TM %s %f\n" | sort
+```
+
+Vor einem produktiven Restore sollte mindestens der Hauptdump einmal in eine temporäre Datenbank geladen werden:
+
+```bash
+DUMP=/var/backups/stuttgart-live/stuttgart_live_de_production-YYYYMMDD-HHMMSS.dump
+sudo -u postgres createdb --owner=stuttgart_live_de stuttgart_live_de_restore_check
+sudo -u postgres pg_restore --dbname=stuttgart_live_de_restore_check --no-owner --role=stuttgart_live_de "$DUMP"
+sudo -u postgres psql stuttgart_live_de_restore_check -c "select count(*) from events;"
+sudo -u postgres dropdb stuttgart_live_de_restore_check
+```
+
+Für den eigentlichen Restore die App zuerst stoppen, damit währenddessen keine Container in die Datenbanken schreiben:
+
+```bash
+bin/hetzner-check
+bin/kamal app stop -d hetzner
+```
+
+Dann auf dem Host die bestehenden Datenbanken trennen, neu anlegen und die passenden Dumps zurückspielen:
+
+```bash
+ssh -i ~/.ssh/stgt-live-hetzner-admin admin@46.225.224.194
+BACKUP_DIR=/var/backups/stuttgart-live
+STAMP=YYYYMMDD-HHMMSS
+
+sudo -u postgres psql -v ON_ERROR_STOP=1 <<'SQL'
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE datname IN (
+  'stuttgart_live_de_production',
+  'stuttgart_live_de_production_cache',
+  'stuttgart_live_de_production_queue',
+  'stuttgart_live_de_production_cable'
+) AND pid <> pg_backend_pid();
+
+DROP DATABASE IF EXISTS stuttgart_live_de_production;
+DROP DATABASE IF EXISTS stuttgart_live_de_production_cache;
+DROP DATABASE IF EXISTS stuttgart_live_de_production_queue;
+DROP DATABASE IF EXISTS stuttgart_live_de_production_cable;
+CREATE DATABASE stuttgart_live_de_production OWNER stuttgart_live_de;
+CREATE DATABASE stuttgart_live_de_production_cache OWNER stuttgart_live_de;
+CREATE DATABASE stuttgart_live_de_production_queue OWNER stuttgart_live_de;
+CREATE DATABASE stuttgart_live_de_production_cable OWNER stuttgart_live_de;
+SQL
+
+for db in \
+  stuttgart_live_de_production \
+  stuttgart_live_de_production_cache \
+  stuttgart_live_de_production_queue \
+  stuttgart_live_de_production_cable
+do
+  sudo -u postgres pg_restore --dbname="$db" --no-owner --role=stuttgart_live_de "$BACKUP_DIR/$db-$STAMP.dump"
+done
+exit
+```
+
+Danach die App wieder starten und prüfen:
+
+```bash
+bin/hetzner-check
+bin/kamal app start -d hetzner --version <VERSION>
+bin/kamal app logs --since 5m -d hetzner
+curl -I https://stuttgart-live.schopp3r.de
+```
+
 ### Produktionsdatenbank neu aufsetzen
 
 Ein vollständiges Neuaufsetzen der Produktionsdatenbanken ist ein Host-Eingriff und darf nicht nur als App-User per `db:setup` erfolgen. Der Datenbankbenutzer der Anwendung hat bewusst kein `CREATEDB`.
