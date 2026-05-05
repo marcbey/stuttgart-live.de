@@ -5448,6 +5448,7 @@ position: fixed;
   place-items: center;
   background: rgba(10, 10, 10, 0.9);
   padding: 1.5rem;
+  touch-action: pan-y;
 }
 
 .event-lightbox-inner {

@@ -5,6 +5,8 @@ export default class extends Controller {
 
   connect() {
     this.currentIndex = -1
+    this.swipeState = null
+    this.suppressNextClick = false
     this.handleKeydown = this.handleKeydown.bind(this)
   }
 
@@ -27,6 +29,8 @@ export default class extends Controller {
   close() {
     if (!this.hasDialogTarget || !this.hasImageTarget) return
 
+    this.swipeState = null
+    this.suppressNextClick = false
     this.dialogTarget.hidden = true
     this.imageTarget.removeAttribute("src")
     this.imageTarget.alt = ""
@@ -37,24 +41,84 @@ export default class extends Controller {
 
   previous(event) {
     event.preventDefault()
-    if (this.currentIndex <= 0) return
-
-    this.currentIndex -= 1
-    this.renderCurrentItem()
+    this.showPrevious()
   }
 
   next(event) {
     event.preventDefault()
-    if (this.currentIndex >= this.itemTargets.length - 1) return
-
-    this.currentIndex += 1
-    this.renderCurrentItem()
+    this.showNext()
   }
 
   backdropClose(event) {
+    if (this.suppressNextClick) {
+      this.suppressClick(event)
+      return
+    }
+
     if (event.target === this.dialogTarget) {
       this.close()
     }
+  }
+
+  pointerDown(event) {
+    if (this.itemTargets.length <= 1) return
+    if (event.pointerType === "mouse" && event.button !== 0) return
+
+    this.swipeState = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      currentX: event.clientX,
+      currentY: event.clientY
+    }
+  }
+
+  pointerMove(event) {
+    if (!this.swipeState || event.pointerId !== this.swipeState.pointerId) return
+
+    this.swipeState.currentX = event.clientX
+    this.swipeState.currentY = event.clientY
+
+    const deltaX = event.clientX - this.swipeState.startX
+    const deltaY = event.clientY - this.swipeState.startY
+    if (this.isHorizontalSwipe(deltaX, deltaY, 12)) {
+      event.preventDefault()
+    }
+  }
+
+  pointerUp(event) {
+    if (!this.swipeState || event.pointerId !== this.swipeState.pointerId) return
+
+    const { startX, startY } = this.swipeState
+    this.swipeState = null
+
+    const deltaX = event.clientX - startX
+    const deltaY = event.clientY - startY
+    const swipeThreshold = Math.min(80, Math.max(36, this.dialogTarget.clientWidth * 0.12))
+    if (!this.isHorizontalSwipe(deltaX, deltaY, swipeThreshold)) return
+
+    this.suppressNextClick = true
+    event.preventDefault()
+
+    if (deltaX < 0) {
+      this.showNext()
+    } else {
+      this.showPrevious()
+    }
+  }
+
+  pointerCancel(event) {
+    if (!this.swipeState || event.pointerId !== this.swipeState.pointerId) return
+
+    this.swipeState = null
+  }
+
+  suppressClick(event) {
+    if (!this.suppressNextClick) return
+
+    this.suppressNextClick = false
+    event.preventDefault()
+    event.stopImmediatePropagation()
   }
 
   handleKeydown(event) {
@@ -96,6 +160,24 @@ export default class extends Controller {
     if (this.hasNextButtonTarget) {
       this.nextButtonTarget.disabled = this.currentIndex >= this.itemTargets.length - 1
     }
+  }
+
+  showPrevious() {
+    if (this.currentIndex <= 0) return
+
+    this.currentIndex -= 1
+    this.renderCurrentItem()
+  }
+
+  showNext() {
+    if (this.currentIndex >= this.itemTargets.length - 1) return
+
+    this.currentIndex += 1
+    this.renderCurrentItem()
+  }
+
+  isHorizontalSwipe(deltaX, deltaY, threshold) {
+    return Math.abs(deltaX) >= threshold && Math.abs(deltaX) > Math.abs(deltaY) * 1.2
   }
 
   focusFirstElement() {

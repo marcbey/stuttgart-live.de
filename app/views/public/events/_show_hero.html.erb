@@ -134,7 +134,7 @@
 
           <div class="event-lightbox"
                data-lightbox-target="dialog"
-               data-action="click->lightbox#backdropClose"
+               data-action="click:capture->lightbox#suppressClick click->lightbox#backdropClose pointerdown->lightbox#pointerDown pointermove->lightbox#pointerMove pointerup->lightbox#pointerUp pointercancel->lightbox#pointerCancel"
                role="dialog"
                aria-modal="true"
                aria-label="Bildansicht"
