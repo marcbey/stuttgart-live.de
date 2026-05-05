@@ -999,6 +999,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       city: "Stuttgart",
       status: "published",
       published_at: 1.day.ago,
+      primary_source: "reservix",
       source_snapshot: {}
     )
 
