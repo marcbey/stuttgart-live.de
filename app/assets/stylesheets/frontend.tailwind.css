@@ -5888,6 +5888,12 @@ display: inline-flex;
   text-decoration: none;
 }
 
+.event-detail-sub-tag {
+  border-color: rgba(227, 27, 46, 0.34);
+  background: rgba(227, 27, 46, 0.14);
+  color: #6f1420;
+}
+
 a.event-detail-tag:hover {
   border-color: rgba(0, 150, 156, 0.68);
   background: rgba(0, 181, 188, 0.32);
