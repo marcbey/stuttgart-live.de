@@ -1,16 +1,7 @@
 <% tags = Array(local_assigns[:tags]) %>
 
 <% if tags.any? %>
-  <section class="homepage-genre-tag-cloud" aria-labelledby="homepage-genre-tag-cloud-title">
-    <div class="lane-header lane-header--genre homepage-genre-tag-cloud-header">
-      <div class="slider-window-bar" aria-hidden="true">
-        <span></span><span></span><span></span>
-      </div>
-      <div class="lane-header-heading">
-        <h2 id="homepage-genre-tag-cloud-title" class="lane-header-title">Weitere Genres</h2>
-      </div>
-    </div>
-
+  <section class="homepage-genre-tag-cloud" aria-label="Weitere Genres">
     <nav class="homepage-genre-tag-cloud-tags" aria-label="Weitere Genres">
       <% tags.each do |tag| %>
         <%= link_to tag.name,

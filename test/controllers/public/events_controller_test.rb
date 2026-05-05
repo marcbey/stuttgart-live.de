@@ -1945,8 +1945,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the target event card to be rendered in the all events slider"
-    assert_equal "Event-Reihe: weitere Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
-    assert_equal "weitere Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
+    assert_equal "Event-Reihe: 1 weiterer Termin", target_card.at_css(".event-series-badge")&.[]("aria-label")
+    assert_equal "1 weiterer Termin", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
   end
 
   test "index does not limit highlights fallback when no sks events exist for the selected date" do
@@ -2454,7 +2454,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "section.lane-page-section.search-results-section", count: 1
-    assert_select ".lane-page-topbar .event-detail-back a", text: "← Zurück"
+    assert_select ".lane-page-topbar .event-detail-back a[aria-label=?]", "Zurück" do
+      assert_select ".event-detail-back-icon svg", count: 1
+      assert_select ".sr-only", text: "Zurück"
+    end
     assert_select ".lane-header.lane-header--search", count: 1
     assert_select ".lane-header.lane-header--search .slider-window-bar", count: 1
     assert_select ".lane-header.lane-header--search .lane-header-title", text: "Suchergebnisse"
@@ -3626,6 +3629,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     )
     event.genres << genres(:pop)
     event.sub_genres << SubGenre.find_or_create_by!(slug: "deutschpop") { |sub_genre| sub_genre.name = "Deutschpop" }
+    event.sub_genres << SubGenre.find_or_create_by!(slug: "synthpop") { |sub_genre| sub_genre.name = "Synthpop" }
 
     get event_url(event.slug)
 
@@ -3633,7 +3637,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "Kuult"
     assert_select ".event-detail-title", count: 0
     assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
-    assert_select ".event-detail-sub-tag", text: "Deutschpop"
+    assert_select ".event-detail-genre-arrow", text: "→"
+    assert_select ".event-detail-sub-tag", text: "Deutschpop, Synthpop"
     assert_select "a.event-detail-tag[href=?]", genre_lane_path(genres(:pop).slug), text: "Pop, Indie & Singer-Songwriter"
     assert_select ".event-detail-tag", text: "Deutschpop", count: 0
     assert_select "a.event-detail-sub-tag", text: "Deutschpop", count: 0

@@ -38,7 +38,7 @@
         <%= render "sold_out_corner_ribbon", label: unavailable_label %>
       <% end %>
       <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-        <%= render "event_series_corner_badge" %>
+        <%= render "event_series_corner_badge", event: event %>
       <% end %>
       <div class="event-card-copy">
         <% if event.badge_text.present? %>

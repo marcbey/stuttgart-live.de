@@ -3,7 +3,11 @@
 
 <article class="event-detail news-detail">
   <div class="event-detail-topbar">
-    <p class="event-detail-back"><%= link_to "← alle news", presenter.back_path %></p>
+    <p class="event-detail-back">
+      <%= link_to presenter.back_path, aria: { label: "Zurück" } do %>
+        <%= render "public/events/back_link_icon" %>
+      <% end %>
+    </p>
     <% if authenticated? && current_user.blog_access? %>
       <div class="event-detail-topbar-actions">
         <%= link_to "Edit",

@@ -1,13 +1,14 @@
+<% tooltip_label = local_assigns[:event].present? ? public_event_series_additional_terms_label(local_assigns[:event]) : "weitere Termine" %>
 <% badge_attributes = {
   class: "event-series-badge",
   role: "img",
-  aria: { label: "Event-Reihe: weitere Termine" },
-  title: "weitere Termine"
+  aria: { label: "Event-Reihe: #{tooltip_label}" },
+  title: tooltip_label
 } %>
 <% badge_attributes[:tabindex] = "0" if local_assigns[:focusable] %>
 
 <%= tag.span(**badge_attributes) do %>
   <%= image_tag "event-series-icon.svg", class: "event-series-badge-icon", alt: "" %>
-  <span class="event-series-badge-tooltip" aria-hidden="true">weitere Termine</span>
-  <span class="sr-only">Event-Reihe: weitere Termine</span>
+  <span class="event-series-badge-tooltip" aria-hidden="true"><%= tooltip_label %></span>
+  <span class="sr-only">Event-Reihe: <%= tooltip_label %></span>
 <% end %>

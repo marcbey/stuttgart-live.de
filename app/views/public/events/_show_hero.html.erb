@@ -32,8 +32,11 @@
           <% presenter.genre_tag_links.each do |genre_tag| %>
             <%= link_to genre_tag.label, genre_tag.url, class: "event-detail-tag" %>
           <% end %>
-          <% presenter.sub_genre_tags.each do |sub_genre| %>
-            <span class="event-detail-sub-tag"><%= sub_genre %></span>
+          <% if presenter.sub_genre_tags.any? %>
+            <% if presenter.genre_tag_links.any? %>
+              <span class="event-detail-genre-arrow" aria-hidden="true">→</span>
+            <% end %>
+            <span class="event-detail-sub-tag"><%= presenter.sub_genre_tags.join(", ") %></span>
           <% end %>
         </div>
       <% end %>

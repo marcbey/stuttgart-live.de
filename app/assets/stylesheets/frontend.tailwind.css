@@ -2532,10 +2532,10 @@ position: absolute;
   min-height: 1.72rem;
   max-width: min(10rem, 54vw);
   padding: 0.3rem 0.48rem 0.26rem;
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(17, 17, 17, 0.82);
   border-radius: 4px;
-  background: rgba(17, 17, 17, 0.88);
-  box-shadow: 0 0.7rem 1.3rem rgba(17, 17, 17, 0.24);
+  background: #2bd7cf;
+  box-shadow: 0 0.7rem 1.3rem rgba(34, 116, 127, 0.24);
   color: #fff;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.74rem;
@@ -2543,7 +2543,7 @@ position: absolute;
   line-height: 1.05;
   text-align: center;
   text-transform: uppercase;
-  white-space: normal;
+  white-space: nowrap;
   opacity: 0;
   pointer-events: none;
   transform: translate(0.22rem, -50%);
@@ -3351,12 +3351,12 @@ color: #69c7c2;
 
 .homepage-genre-tag-cloud {
 display: grid;
-  gap: 0.8rem;
-  margin: 1.15rem 0 1.35rem;
-}
-
-.homepage-genre-tag-cloud-header {
-  margin-bottom: 0;
+  margin: 1.4rem 0 1.6rem;
+  padding: 1.15rem;
+  border: 1px solid rgba(33, 96, 98, 0.18);
+  border-radius: 1.4rem;
+  background: #E0F7F2;
+  overflow: hidden;
 }
 
 .homepage-genre-tag-cloud-tags {
@@ -3369,9 +3369,9 @@ display: flex;
 .homepage-genre-tag-cloud-tag {
 display: inline-flex;
   align-items: center;
-  color: var(--homepage-genre-tag-color, #d97757);
+  color: var(--homepage-genre-tag-color, #07595f);
   font-family: "Bebas Neue", "Impact", sans-serif;
-  font-size: clamp(1.55rem, 1.2rem + 1vw, 2.35rem);
+  font-size: 1.65rem;
   font-weight: 400;
   line-height: 0.94;
   letter-spacing: 0.04em;
@@ -3382,27 +3382,27 @@ display: inline-flex;
 }
 
 .homepage-genre-tag-cloud-tag:nth-child(6n + 1) {
-  --homepage-genre-tag-color: #d97757;
+  --homepage-genre-tag-color: #07595f;
 }
 
 .homepage-genre-tag-cloud-tag:nth-child(6n + 2) {
-  --homepage-genre-tag-color: #1a8c94;
+  --homepage-genre-tag-color: #0c7077;
 }
 
 .homepage-genre-tag-cloud-tag:nth-child(6n + 3) {
-  --homepage-genre-tag-color: #b78d57;
+  --homepage-genre-tag-color: #115056;
 }
 
 .homepage-genre-tag-cloud-tag:nth-child(6n + 4) {
-  --homepage-genre-tag-color: #c04f83;
+  --homepage-genre-tag-color: #16848c;
 }
 
 .homepage-genre-tag-cloud-tag:nth-child(6n + 5) {
-  --homepage-genre-tag-color: #00aeb5;
+  --homepage-genre-tag-color: #06464b;
 }
 
 .homepage-genre-tag-cloud-tag:nth-child(6n) {
-  --homepage-genre-tag-color: #9e5f34;
+  --homepage-genre-tag-color: #0f6269;
 }
 
 .homepage-genre-tag-cloud-tag::after {
@@ -3423,6 +3423,16 @@ content: "";
   text-decoration: underline;
   text-decoration-thickness: 0.08em;
   text-underline-offset: 0.12em;
+}
+
+@media (min-width: 768px) {
+  .homepage-genre-tag-cloud {
+  padding: 1.35rem 1.5rem;
+  }
+
+  .homepage-genre-tag-cloud-tag {
+  font-size: 2.15rem;
+  }
 }
 
 .home-slider-track {
@@ -5320,10 +5330,41 @@ margin: 0;
 }
 
 .event-detail-back a {
-text-decoration: none;
-  text-transform: uppercase;
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border: 2px solid var(--ink);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
+  transition: transform 160ms ease, background-color 160ms ease, color 160ms ease, border-color 160ms ease;
+}
+
+.event-detail-back a:hover,
+.event-detail-back a:focus-visible {
+background: #ffa5dc;
+  border-color: var(--ink);
+  color: var(--ink);
+  transform: translate(-1px, -1px);
+}
+
+.event-detail-back-icon,
+.event-detail-back-icon svg {
+display: block;
+}
+
+.event-detail-back-icon svg {
+width: 1.35rem;
+  height: 1.35rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2.35;
 }
 
 .event-detail-edit-link,
@@ -5578,20 +5619,29 @@ margin-top: 0.4rem;
 .event-detail-links a {
 display: inline-flex;
   align-items: center;
-  border: 1px solid #111;
-  border-radius: 5px;
+  justify-content: center;
+  min-height: 2.9rem;
+  border: 1px solid #0a484b;
+  border-radius: 999px;
   background: #fff;
-  color: #111;
+  color: #0a484b;
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1.1rem;
+  font-weight: 700;
+  line-height: 1;
   text-decoration: none;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  font-size: 0.92rem;
-  padding: 0.42rem 0.62rem;
+  letter-spacing: 0.055em;
+  padding: 0.55rem 1rem;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
-.event-detail-links a:hover {
-background: #111;
+.event-detail-links a:hover,
+.event-detail-links a:focus-visible {
+border-color: #0a484b;
+  background: #0a484b;
   color: #fff;
+  text-decoration: none;
 }
 
 .event-detail-notes {
@@ -5940,6 +5990,17 @@ display: inline-flex;
   color: #273234;
   font-size: 0.88rem;
   line-height: 1.2;
+}
+
+.event-detail-genre-arrow {
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2rem;
+  color: #00969c;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
 }
 
 a.event-detail-tag:hover {
@@ -6944,21 +7005,23 @@ display: grid;
   text-decoration-thickness: 0.14em;
 }
 
-.event-detail-venue-layout .event-detail-venue-map-link {
-  color: #111;
+.event-detail-venue-layout a.event-detail-venue-map-link[href] {
+  color: #0a484b;
   font-weight: 700;
   overflow-wrap: normal;
   text-decoration: none;
+  text-decoration-line: none;
 }
 
-.event-detail-venue-layout .event-detail-venue-map-link:hover,
-.event-detail-venue-layout .event-detail-venue-map-link:focus-visible {
-  color: #111;
+.event-detail-venue-layout a.event-detail-venue-map-link[href]:hover,
+.event-detail-venue-layout a.event-detail-venue-map-link[href]:focus-visible {
+  color: #fff;
   text-decoration: none;
+  text-decoration-line: none;
 }
 
 .event-detail-copy-flow a[href]::after,
-.event-detail-venue-layout a[href]:not(.event-detail-edit-link)::after {
+.event-detail-venue-layout a[href]:not(.event-detail-edit-link, .event-detail-venue-map-link)::after {
 content: "";
   display: inline-block;
   width: 0.82em;
@@ -6980,21 +7043,25 @@ grid-column: 1;
   width: fit-content;
   min-height: 2.9rem;
   padding: 0.55rem 1rem;
-  border: 1px solid rgba(17, 17, 17, 0.14);
+  border: 1px solid #0a484b;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.92);
-  color: #111;
-  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
-  font-size: 0.98rem;
+  background: #fff;
+  color: #0a484b;
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1.1rem;
   font-weight: 700;
-  line-height: 1.1;
+  line-height: 1;
   text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 0.055em;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
 }
 
 .event-detail-venue-map-link:hover,
 .event-detail-venue-map-link:focus-visible {
-border-color: rgba(17, 17, 17, 0.28);
-  background: #fff;
+border-color: #0a484b;
+  background: #0a484b;
+  color: #fff;
 }
 
 .event-detail-venue-link-row {
@@ -7048,6 +7115,12 @@ display: block;
   width: 1rem;
   height: 1rem;
   flex: 0 0 1rem;
+  filter: brightness(0) saturate(100%) invert(26%) sepia(93%) saturate(673%) hue-rotate(140deg) brightness(89%) contrast(101%);
+}
+
+.event-detail-venue-map-link:hover .event-detail-venue-map-pin,
+.event-detail-venue-map-link:focus-visible .event-detail-venue-map-pin {
+filter: brightness(0) invert(1);
 }
 
 .event-detail-venue-brand {
@@ -7283,6 +7356,10 @@ padding-inline: 0;
   min-height: 1.85rem;
   }
 
+  .event-detail-genre-arrow {
+  min-height: 1.85rem;
+  }
+
   .event-detail-links a {
   width: 100%;
       justify-content: center;
@@ -7403,16 +7480,7 @@ padding-inline: 0;
   }
 
   .event-detail-back a {
-  display: inline-flex;
-      align-items: center;
-      min-height: 2.2rem;
-      padding: 0.28rem 0.72rem;
-      border: 1px solid rgba(17, 17, 17, 0.14);
-      background: rgba(255, 255, 255, 0.9);
-      backdrop-filter: blur(10px);
-      color: #111;
-      box-shadow: 0 0.35rem 0.8rem rgba(17, 17, 17, 0.08);
-      pointer-events: auto;
+  pointer-events: auto;
   }
 
   .event-detail-header {
@@ -7471,11 +7539,8 @@ padding-inline: 0;
   }
 
   .event-detail-public-event .event-detail-back a {
-  border: 0;
-      background: transparent;
-      box-shadow: none;
-  font-size: 0.82rem;
-      letter-spacing: 0.06em;
+  width: 2.25rem;
+      height: 2.25rem;
   }
 
   .event-detail-image-figure-rotator .event-detail-image-stage {

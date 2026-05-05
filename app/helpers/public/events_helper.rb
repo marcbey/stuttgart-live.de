@@ -50,6 +50,13 @@ module Public::EventsHelper
     Array(effective_series_ids).include?(event.event_series_id)
   end
 
+  def public_event_series_additional_terms_label(event)
+    count = public_event_series_upcoming_count(event) - 1
+    return "weitere Termine" if count <= 0
+
+    "#{count} #{'weiterer Termin'.pluralize(count, 'weitere Termine')}"
+  end
+
   def public_event_visibility_badges(event)
     badges = []
 
@@ -102,6 +109,19 @@ module Public::EventsHelper
     when "rejected" then "status-badge-rejected"
     else "status-badge-default"
     end
+  end
+
+  def public_event_series_upcoming_count(event)
+    return 0 if event.event_series_id.blank?
+
+    @public_event_series_upcoming_counts ||= {}
+    @public_event_series_upcoming_counts[event.event_series_id] ||= Event
+      .where(event_series_id: event.event_series_id)
+      .where(status: "published")
+      .where("published_at IS NULL OR published_at <= ?", Time.current)
+      .where("start_at >= ?", Time.zone.today.beginning_of_day)
+      .distinct
+      .count(:id)
   end
 
   def public_event_detail_path(event, browse_state)

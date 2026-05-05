@@ -13,8 +13,7 @@
       <%= link_to presenter.back_path,
                   aria: { label: "Zurück" },
                   data: { controller: "history-back-link", action: "click->history-back-link#navigate" } do %>
-        <span class="event-detail-back-arrow" aria-hidden="true">←</span>
-        <span class="event-detail-back-label">Zurück</span>
+        <%= render "public/events/back_link_icon" %>
       <% end %>
     </p>
     <div class="event-detail-topbar-actions">
