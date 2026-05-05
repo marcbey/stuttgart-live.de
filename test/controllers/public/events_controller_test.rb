@@ -2706,7 +2706,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "https://easyticket.example/show-tickets"
     assert_not_includes response.body, "https://eventim.example/show-tickets"
-    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
+    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
   end
 
   test "show renders manual ticket link when imported primary offer is sold out" do
@@ -2745,7 +2745,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-cta", count: 1
-    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
+    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
     assert_includes response.body, "https://partnershop.easyticket.de/still-open"
     assert_not_includes response.body, "Ausverkauft"
     assert_not_includes response.body, "https://easyticket.example/sold-out"
@@ -2929,7 +2929,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-cta", count: 1
-    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
+    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
     assert_not_includes response.body, "Abgesagt"
     assert_not_includes response.body, "Ausverkauft"
     assert_includes response.body, "https://partnershop.easyticket.de/still-open"
@@ -3797,7 +3797,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
     expected_venue_link = backend_venues_path(venue_id: @published_event.venue_record.id).gsub("&", "&amp;")
-    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets bei Easy Ticket sichern"
+    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
     assert_includes response.body, expected_link
     assert_includes response.body, expected_venue_link
     assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit event"

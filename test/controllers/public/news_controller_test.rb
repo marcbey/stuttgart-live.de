@@ -41,7 +41,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, @live_post.title
     assert_includes response.body, @live_post.teaser
     assert_includes response.body, @live_post.display_author_name
-    assert_includes response.body, "alle news"
+    assert_select ".event-detail-back a[href='#{news_index_path}'][aria-label='Zurück']"
     assert_select "h2", text: "Artikel", count: 0
     assert_select ".event-detail-meta-line", text: /\d{2}\.\d{2}\.\d{4} von #{@live_post.display_author_name}/
   end
