@@ -389,8 +389,13 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Band", presenter.display_headline
     assert_equal "LLM Event- und Artist-Beschreibung", presenter.primary_description
     assert_equal "Venue Modell Beschreibung", presenter.venue_description
-    assert_equal [ "Homepage", "Instagram", "Facebook" ], presenter.external_links.map(&:label)
-    assert_equal [ "https://llm-homepage.example", "https://instagram.example/llm-band", "https://facebook.example/llm-band" ], presenter.external_links.map(&:url)
+    assert_equal [ "Homepage", "Instagram", "Facebook", "YouTube" ], presenter.external_links.map(&:label)
+    assert_equal [
+      "https://llm-homepage.example",
+      "https://instagram.example/llm-band",
+      "https://facebook.example/llm-band",
+      "https://www.youtube.com/watch?v=fallback"
+    ], presenter.external_links.map(&:url)
     assert_equal "https://www.youtube.com/embed/fallback", presenter.youtube_embed_url
     assert_equal [ "Pop", "Rock" ], presenter.genre_tags
     assert_equal [ "Indie", "Rock" ], presenter.sub_genre_tags
@@ -435,6 +440,26 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "YouTube" ], presenter.external_links.map(&:label)
     assert_equal "https://www.youtube.com/@BandChannel", presenter.external_links.first.url
     assert_not presenter.has_media_block?
+  end
+
+  test "adds llm youtube link while embedding event youtube url" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      youtube_url: "https://www.youtube.com/watch?v=embedded"
+    )
+    event.build_llm_enrichment(
+      youtube_link: "https://www.youtube.com/@BandChannel",
+      model: "gpt-test",
+      prompt_version: "v1",
+      raw_response: {}
+    )
+
+    presenter = build_presenter(event)
+
+    assert_equal "https://www.youtube.com/embed/embedded", presenter.youtube_embed_url
+    assert_equal [ "YouTube" ], presenter.external_links.map(&:label)
+    assert_equal "https://www.youtube.com/@BandChannel", presenter.external_links.first.url
   end
 
   test "builds static hero gallery when no slider images exist" do

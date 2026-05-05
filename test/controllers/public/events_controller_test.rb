@@ -3585,6 +3585,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "https://llm-homepage.example"
     assert_includes response.body, "https://instagram.example/llm-band"
     assert_includes response.body, "https://facebook.example/llm-band"
+    assert_select ".event-detail-links a[href='https://www.youtube.com/watch?v=llm123']", text: /YouTube/
     assert_includes response.body, "https://www.youtube.com/embed/llm123"
     assert_includes response.body, "Indie"
     assert_includes response.body, "Synthpop"

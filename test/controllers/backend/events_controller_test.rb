@@ -414,7 +414,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     get backend_event_url(@published_event, status: "published")
 
     assert_response :success
-    assert_select ".form-label-link[aria-label='YouTube URL öffnen'][href='https://youtube.example/watch?v=demo'][target='_blank']", count: 1
+    assert_select ".form-label-link[aria-label='Embedded YouTube URL öffnen'][href='https://youtube.example/watch?v=demo'][target='_blank']", count: 1
     assert_select ".form-label-link[aria-label='Homepage URL öffnen'][href='https://homepage.example/artist'][target='_blank']", count: 1
     assert_select ".form-label-link[aria-label='Instagram URL öffnen'][href='https://instagram.example/artist'][target='_blank']", count: 1
     assert_select ".form-label-link[aria-label='Facebook URL öffnen'][href='https://facebook.example/artist'][target='_blank']", count: 1

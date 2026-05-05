@@ -317,9 +317,8 @@ module Public
         @external_links ||= [
           build_link("Homepage", event.homepage_url, llm_enrichment&.homepage_link),
           build_link("Instagram", event.instagram_url, llm_enrichment&.instagram_link),
-          build_link("Facebook", event.facebook_url, llm_enrichment&.facebook_link),
-          youtube_fallback_link
-        ].compact
+          build_link("Facebook", event.facebook_url, llm_enrichment&.facebook_link)
+        ].compact.concat(youtube_links)
       end
 
       def social_links
@@ -327,7 +326,7 @@ module Public
       end
 
       def youtube_embed_url
-        embed_url_for(primary_youtube_url)
+        embed_url_for(youtube_embed_source_url)
       end
 
       def primary_description
@@ -578,15 +577,30 @@ module Public
         normalized_venue.include?(normalized_city)
       end
 
-      def primary_youtube_url
-        event.youtube_url.to_s.strip.presence || llm_enrichment&.youtube_link.to_s.strip.presence
+      def event_youtube_url
+        event.youtube_url.to_s.strip.presence
       end
 
-      def youtube_fallback_link
-        return if primary_youtube_url.blank?
-        return if youtube_embed_url.present?
+      def llm_youtube_url
+        llm_enrichment&.youtube_link.to_s.strip.presence
+      end
 
-        build_link("YouTube", primary_youtube_url)
+      def youtube_embed_source_url
+        event_youtube_url || llm_youtube_url
+      end
+
+      def youtube_links
+        [
+          youtube_event_fallback_link,
+          build_link("YouTube", llm_youtube_url)
+        ].compact.uniq(&:url)
+      end
+
+      def youtube_event_fallback_link
+        return if event_youtube_url.blank?
+        return if embed_url_for(event_youtube_url).present?
+
+        build_link("YouTube", event_youtube_url)
       end
 
       def embed_url_for(url)
