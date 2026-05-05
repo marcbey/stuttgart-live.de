@@ -9,9 +9,10 @@ module Backend
         :merge_run_id
       )
 
-      def initialize(inbox_state:, next_event_enabled:)
+      def initialize(inbox_state:, next_event_enabled:, event_loader: nil)
         @inbox_state = inbox_state
         @next_event_enabled = next_event_enabled
+        @event_loader = event_loader || ->(event) { event }
       end
 
       def events_for_status(status)
@@ -30,35 +31,36 @@ module Backend
 
       def build(preferred_event:, navigation_status:)
         target_status = navigation_status || preferred_event.status
-        fallback_event = next_event_fallback_for(preferred_event, navigation_status: navigation_status)
-        sidebar_events = events_for_status(target_status)
+        sidebar_relation = events_for_status(target_status)
+        sidebar_events = sidebar_relation.to_a
+        fallback_event = next_event_fallback_for(preferred_event, navigation_status: navigation_status, sidebar_events: sidebar_events)
+        target_event = selected_event_for_sidebar(
+          sidebar_events,
+          preferred_event: preferred_event,
+          fallback_event: fallback_event,
+          target_status: target_status
+        )
 
         Result.new(
           target_status: target_status,
           sidebar_events: sidebar_events,
-          sidebar_events_count: filtered_events_count(sidebar_events),
-          target_event: selected_event_for_sidebar(
-            sidebar_events,
-            preferred_event: preferred_event,
-            fallback_event: fallback_event,
-            target_status: target_status
-          ),
+          sidebar_events_count: filtered_events_count(sidebar_relation),
+          target_event: load_event_for_editor(target_event),
           merge_run_id: selected_merge_run_id_for_status(target_status)
         )
       end
 
       private
 
-      attr_reader :inbox_state, :next_event_enabled
+      attr_reader :event_loader, :inbox_state, :next_event_enabled
 
       def filters_for(status)
         inbox_state.filters_for(status: status)
       end
 
-      def next_filtered_event_after(event_id, status:)
-        return nil if status.blank?
+      def next_filtered_event_after(event_id, sidebar_events:)
+        events = Array(sidebar_events)
 
-        events = events_for_status(status).to_a
         index = events.index { |candidate| candidate.id == event_id }
         return nil if index.nil? || events.empty?
         return events.first if index >= events.length - 1
@@ -66,11 +68,12 @@ module Backend
         events[index + 1]
       end
 
-      def next_event_fallback_for(event, navigation_status:)
+      def next_event_fallback_for(event, navigation_status:, sidebar_events:)
         next_event_status = navigation_status || event.status
         return nil unless next_event_enabled
+        return nil if next_event_status.blank?
 
-        next_filtered_event_after(event.id, status: next_event_status)
+        next_filtered_event_after(event.id, sidebar_events: sidebar_events)
       end
 
       def selected_event_for_sidebar(sidebar_events, preferred_event:, fallback_event:, target_status:)
@@ -86,6 +89,12 @@ module Backend
         sidebar_events.find { |candidate| candidate.id == preferred_event.id } ||
           (fallback_event && sidebar_events.find { |candidate| candidate.id == fallback_event.id }) ||
           sidebar_events.first
+      end
+
+      def load_event_for_editor(event)
+        return if event.blank?
+
+        event_loader.call(event)
       end
     end
   end

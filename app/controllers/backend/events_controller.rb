@@ -267,7 +267,12 @@ module Backend
     end
 
     def set_event
-      @event = Event.includes(
+      @event = event_editor_relation.find(params[:id])
+    end
+
+    def event_editor_relation
+      Event.includes(
+        :event_series,
         :genres,
         :llm_enrichment,
         :sub_genres,
@@ -276,12 +281,13 @@ module Backend
         event_social_posts: [
           :approved_by,
           :published_by,
+          :publish_image_facebook_attachment,
           :publish_image_instagram_attachment
         ],
         promotion_banner_image_attachment: :blob,
         event_images: [ file_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
-      ).find(params[:id])
+      )
     end
 
     def set_next_event_enabled
@@ -303,7 +309,8 @@ module Backend
     def build_editor_state_builder
       Backend::Events::EditorStateBuilder.new(
         inbox_state: @inbox_state,
-        next_event_enabled: @next_event_enabled
+        next_event_enabled: @next_event_enabled,
+        event_loader: ->(event) { event_editor_relation.find_by(id: event.id) || event }
       )
     end
 
@@ -344,26 +351,10 @@ module Backend
     def selected_event_from(events)
       return prepare_new_event_state! if new_panel_requested?
 
-      if params[:event_id].present?
-        return Event.includes(
-          :genres,
-          :llm_enrichment,
-          :sub_genres,
-          :import_event_images,
-          :venue_record,
-          event_social_posts: [
-            :approved_by,
-            :published_by,
-            :publish_image_facebook_attachment,
-            :publish_image_instagram_attachment
-          ],
-          promotion_banner_image_attachment: :blob,
-          event_images: [ file_attachment: :blob ],
-          event_presenters: { presenter: [ logo_attachment: :blob ] }
-        ).find_by(id: params[:event_id])
-      end
+      selected_event_id = params[:event_id].presence || Array(events).first&.id
+      return if selected_event_id.blank?
 
-      events.first
+      event_editor_relation.find_by(id: selected_event_id)
     end
 
     def prepare_index_state!
@@ -371,8 +362,9 @@ module Backend
       @filters = @inbox_state.filters
       @merge_run_filter_options = merge_run_filter_options
       @selected_merge_run_id = @editor_state_builder.selected_merge_run_id_for_status(@filters[:status])
-      @events = @editor_state_builder.events_for_status(@filters[:status])
-      @filtered_events_count = @editor_state_builder.filtered_events_count(@events)
+      events_relation = @editor_state_builder.events_for_status(@filters[:status])
+      @filtered_events_count = @editor_state_builder.filtered_events_count(events_relation)
+      @events = events_relation.to_a
       @status_filters = status_filters
     end
 

@@ -15,6 +15,7 @@ class Venue < ApplicationRecord
 
   before_validation :normalize_attributes
   before_save :purge_logo_if_requested
+  after_commit :reset_match_key_index_cache
 
   scope :ordered_by_name, -> { order(Arel.sql("LOWER(venues.name) ASC"), :id) }
 
@@ -56,11 +57,10 @@ class Venue < ApplicationRecord
   end
 
   def self.find_by_match_key(key)
-    return if key.blank?
+    normalized_key = key.to_s
+    return if normalized_key.blank?
 
-    all
-      .select { |venue| match_key(venue.name) == key }
-      .min_by { |venue| lookup_sort_key(venue) }
+    venue_match_key_index[normalized_key]
   end
 
   def self.canonical_alias_venue_for(value)
@@ -88,6 +88,16 @@ class Venue < ApplicationRecord
     ]
   end
 
+  def self.venue_match_key_index
+    Current.venue_match_key_index ||= all.each_with_object({}) do |venue, index|
+      key = match_key(venue.name)
+      next if key.blank?
+
+      indexed_venue = index[key]
+      index[key] = venue if indexed_venue.blank? || lookup_sort_key(venue) < lookup_sort_key(indexed_venue)
+    end
+  end
+
   def self.stuttgart_suffix?(value)
     tokens = match_key_tokens(value)
 
@@ -100,6 +110,10 @@ class Venue < ApplicationRecord
       venue.external_url,
       venue.address
     ].count(&:present?) + (venue.logo.attached? ? 1 : 0)
+  end
+
+  def reset_match_key_index_cache
+    Current.venue_match_key_index = nil
   end
 
   def self.search_by_query(query, limit: 8)

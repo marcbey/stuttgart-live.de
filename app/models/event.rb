@@ -157,7 +157,7 @@ class Event < ApplicationRecord
   def canonical_venue_record
     return if venue_record.blank?
 
-    Venue.canonical_venue_for(venue_record)
+    @canonical_venue_record ||= Venue.canonical_venue_for(venue_record)
   end
 
   def venue
@@ -165,6 +165,8 @@ class Event < ApplicationRecord
   end
 
   def venue=(value)
+    @canonical_venue_record = nil
+
     if value.is_a?(Venue)
       self.venue_record = value
       @venue_name = normalize_venue_name(value.name)
@@ -180,6 +182,7 @@ class Event < ApplicationRecord
   end
 
   def venue_name=(value)
+    @canonical_venue_record = nil
     @venue_name = normalize_venue_name(value)
     self.venue_record = Venues::Resolver.call(name: @venue_name, venue_id: venue_id)
   end

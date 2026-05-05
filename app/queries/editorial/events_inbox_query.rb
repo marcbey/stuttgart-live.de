@@ -9,20 +9,12 @@ module Editorial
     end
 
     def call
-      relation = scope.with_attached_promotion_banner_image.includes(
-        :llm_enrichment,
-        :genres,
-        :event_offers,
-        :import_event_images,
-        :event_change_logs,
-        :venue_record,
-        event_social_posts: [ :approved_by, :published_by ],
-        event_images: [ file_attachment: :blob ]
-      ).left_outer_joins(:venue_record)
+      relation = scope.includes(:venue_record).left_outer_joins(:venue_record)
       relation = relation.where(status: status_filter) if status_filter.present?
       relation = relation.where("start_at >= ?", starts_after.beginning_of_day) if starts_after.present?
       relation = relation.where("start_at <= ?", starts_before.end_of_day) if starts_before.present?
       relation = apply_merge_change_filter(relation)
+      relation = relation.includes(:event_change_logs) unless merge_run_filter_disabled?
       if promoter_id.present?
         token = "%#{promoter_id.downcase}%"
         relation = relation.where("LOWER(COALESCE(promoter_id, '')) LIKE :q", q: token)

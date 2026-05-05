@@ -1,6 +1,6 @@
 <div id="events_list">
   <% merge_run_id = local_assigns[:merge_run_id] %>
-  <% filtered_events_count = local_assigns.fetch(:filtered_events_count, events.except(:limit).count) %>
+  <% filtered_events_count = local_assigns.key?(:filtered_events_count) ? local_assigns[:filtered_events_count] : events.except(:limit).count %>
   <% effective_series_ids = effective_backend_event_series_ids(events) %>
   <%= form_with url: bulk_backend_events_path(status: status), method: :patch, class: "bulk-form", data: { controller: "bulk-select" } do |form| %>
     <p class="event-list-count"><strong><%= filtered_events_count %></strong> gefilterte Events</p>
