@@ -2901,6 +2901,42 @@ width: min(100%, 24rem);
   aspect-ratio: 16 / 9;
 }
 
+.promotion-banner-color-inputs {
+display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.promotion-banner-color-picker {
+width: 3.2rem;
+  min-width: 3.2rem;
+  height: 2.35rem;
+  padding: 0.15rem;
+  border: 1px solid #d0d0d0;
+  background: #fcfcfc;
+}
+
+.promotion-banner-color-eyedropper {
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 5.8rem;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid #d0d0d0;
+  background: #fcfcfc;
+  color: #111;
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 0.96rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.promotion-banner-color-eyedropper:hover {
+border-color: #666;
+  background: #fff;
+}
+
 .event-image-crop-preview-image {
 display: block;
   width: auto;
