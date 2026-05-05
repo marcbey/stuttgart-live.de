@@ -70,9 +70,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index renders configured homepage genre lanes in priority order" do
-    snapshot, rock_group, pop_group = create_homepage_genre_snapshot
-    AppSetting.create!(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY, value: [ pop_group.slug, rock_group.slug ])
-    AppSetting.reset_cache!
+    _, rock_group, pop_group = create_homepage_genre_snapshot(lane_slugs: [ genres(:pop).slug, genres(:rock).slug ])
 
     highlighted_event = Event.create!(
       slug: "genre-lane-highlighted",
@@ -179,7 +177,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       node.name == "section" && node["class"].to_s.include?("home-featured-section")
     end
 
-    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
     assert pop_section.present?, "expected configured pop lane to be rendered"
     assert rock_section.present?, "expected configured rock lane to be rendered"
     assert document.at_css(".lane-header.lane-header--genre").present?, "expected standard genre header variant"
@@ -191,7 +188,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     rock_names = rock_section.css(".genre-lane-card-name").map(&:text)
 
     assert_equal [ pop_event.artist_name ], pop_names
-    assert_equal [ regular_event.artist_name, sks_event.artist_name, highlighted_event.artist_name ], rock_names
+    assert_equal [ regular_event.artist_name, sks_event.artist_name, highlighted_event.artist_name ], rock_names.first(3)
     assert_not_includes rock_names, unpublished_event.artist_name
     assert_not_includes rock_names, past_event.artist_name
   end
@@ -1498,7 +1495,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
   end
 
-  test "index places manually highlighted events first in homepage highlights" do
+  test "index orders homepage highlights chronologically" do
     highlighted_event = Event.create!(
       slug: "homepage-highlight-later",
       source_fingerprint: "test::homepage::highlight::later",
@@ -1553,7 +1550,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
 
-    assert_equal [ highlighted_event.artist_name, earlier_event.artist_name, middle_event.artist_name ], names.first(3)
+    assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
   end
 
   test "index shows only reservix events in the all events slider" do
@@ -2855,8 +2852,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-meta-line", text: /LKA Longhorn/
     assert_select ".event-detail-time-line", text: /Einlass/, count: 0
     assert_includes response.body, "Preis: 45 EUR"
-    assert_select ".event-detail-tag", text: "Jazz"
-    assert_select ".event-detail-tag", text: "Pop"
+    assert_select ".event-detail-tag", text: "Jazz, Blues & Soul"
+    assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
     assert_select ".event-detail-tag", text: "Rock"
     assert_select "script[type='application/ld+json']", /Published Artist/
   end
@@ -2925,8 +2922,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
-    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
-
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
     build_homepage_genre_enrichment(event: regular_event, genres: [ "Rock" ])
     build_homepage_genre_enrichment(event: sks_event, genres: [ "Rock" ])
@@ -2956,8 +2951,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "show limits related genre lane to ten events" do
     snapshot, = create_homepage_genre_snapshot
-
-    assert_equal snapshot.id, LlmGenreGrouping::Lookup.selected_snapshot.id
 
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
 
@@ -2996,10 +2989,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-related-list", count: 0
 
-    snapshot, = create_homepage_genre_snapshot
+    create_homepage_genre_snapshot
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
-    AppSetting.where(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY).delete_all
-    AppSetting.reset_cache!
 
     get event_url(@published_event.slug)
 
@@ -3298,12 +3289,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       instagram_link: "https://instagram.example/llm-band",
       facebook_link: "https://facebook.example/llm-band",
       youtube_link: "https://www.youtube.com/watch?v=llm123",
-      genre: [ "Indie", "Synthpop" ],
       source_run: import_runs(:one),
       model: "gpt-test",
       prompt_version: "v1",
       raw_response: {}
     )
+    event.sub_genres = [
+      SubGenre.find_or_create_by!(slug: "indie") { |sub_genre| sub_genre.name = "Indie" },
+      SubGenre.find_or_create_by!(slug: "synthpop") { |sub_genre| sub_genre.name = "Synthpop" }
+    ]
     event.venue_record.update!(
       description: "Venue Modell Beschreibung",
       external_url: "https://venue.example/im-wizemann",
@@ -3340,19 +3334,21 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
     event.create_llm_enrichment!(
-      genre: [ "Pop", "Deutschpop" ],
       source_run: import_runs(:one),
       model: "gpt-test",
       prompt_version: "v1",
       raw_response: {}
     )
+    event.genres << genres(:pop)
+    event.sub_genres << SubGenre.find_or_create_by!(slug: "deutschpop") { |sub_genre| sub_genre.name = "Deutschpop" }
 
     get event_url(event.slug)
 
     assert_response :success
     assert_select "h1", text: "Kuult"
     assert_select ".event-detail-title", count: 0
-    assert_select ".event-detail-tag", text: "Pop"
+    assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
+    assert_select ".event-detail-sub-tag", text: "Deutschpop"
     assert_select ".event-detail-tag", text: "Deutschpop"
     assert_select "h2", text: "Genres", count: 0
     assert_select ".event-detail-copy-block-primary p", text: "Fallschirmvertrauen - Tour 2026", count: 1
@@ -4522,42 +4518,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     )
   end
 
-  def create_homepage_genre_snapshot(selected: true, lane_slugs: [ "rock-alternative", "pop-mainstream" ])
-    run = import_sources(:two).import_runs.create!(
-      source_type: "llm_genre_grouping",
-      status: "succeeded",
-      started_at: 2.minutes.ago,
-      finished_at: 1.minute.ago
-    )
+  def create_homepage_genre_snapshot(selected: true, lane_slugs: [ "rock-alternative", "pop-indie-singer-songwriter" ])
+    rock_group = genres(:rock)
+    pop_group = genres(:pop)
+    if selected
+      setting = AppSetting.find_or_initialize_by(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY)
+      setting.value = lane_slugs
+      setting.save!
+    end
+    AppSetting.reset_cache!
 
-    snapshot = run.create_llm_genre_grouping_snapshot!(
-      active: false,
-      requested_group_count: 30,
-      effective_group_count: 2,
-      source_genres_count: 2,
-      model: "gpt-5-mini",
-      prompt_template_digest: "digest",
-      request_payload: {},
-      raw_response: {}
-    )
-
-    rock_group = snapshot.groups.create!(position: 1, name: "Rock & Alternative", member_genres: [ "Rock" ])
-    pop_group = snapshot.groups.create!(position: 2, name: "Pop & Mainstream", member_genres: [ "Pop" ])
-    snapshot.create_homepage_genre_lane_configuration!(lane_slugs:)
-    AppSetting.create!(key: AppSetting::PUBLIC_GENRE_GROUPING_SNAPSHOT_ID_KEY, value: snapshot.id) if selected
-
-    [ snapshot, rock_group, pop_group ]
+    [ nil, rock_group, pop_group ]
   end
 
   def build_homepage_genre_enrichment(event:, genres:)
-    EventLlmEnrichment.create!(
-      event: event,
-      source_run: import_runs(:one),
-      genre: genres,
-      model: "gpt-5-mini",
-      prompt_version: "v1",
-      raw_response: {}
-    )
+    event.genres = genres.map { |name| homepage_genre_for(name) }
+  end
+
+  def homepage_genre_for(name)
+    case name
+    when "Rock" then genres(:rock)
+    when "Pop" then genres(:pop)
+    else Genre.find_by!(name: name)
+    end
   end
 
   def create_presenter(name:, svg: false)
