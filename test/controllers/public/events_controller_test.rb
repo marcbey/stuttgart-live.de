@@ -1930,6 +1930,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
+    Event.create!(
+      slug: "reservix-limited-series-second-outside-limit",
+      source_fingerprint: "test::homepage::reservix::limited-series::second-outside-limit",
+      title: "Lyrische Welten",
+      artist_name: "Nora Chastain - Violine; Raphael Merlin - Leitung",
+      start_at: future_start + 101.minutes,
+      venue: "Liederhalle Beethoven-Saal",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      event_series: series,
+      event_series_assignment: "manual",
+      source_snapshot: {}
+    )
+
     get events_url(filter: "all")
 
     assert_response :success
@@ -1945,8 +1961,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the target event card to be rendered in the all events slider"
-    assert_equal "Event-Reihe: 1 weiterer Termin", target_card.at_css(".event-series-badge")&.[]("aria-label")
-    assert_equal "1 weiterer Termin", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
+    assert_equal "Event-Reihe: 2 weitere Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
+    assert_equal "2 weitere Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
   end
 
   test "index does not limit highlights fallback when no sks events exist for the selected date" do

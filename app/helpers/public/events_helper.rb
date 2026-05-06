@@ -54,7 +54,7 @@ module Public::EventsHelper
     count = public_event_series_upcoming_count(event) - 1
     return "weitere Termine" if count <= 0
 
-    "#{count} #{'weiterer Termin'.pluralize(count, 'weitere Termine')}"
+    "#{count} #{count == 1 ? 'weiterer Termin' : 'weitere Termine'}"
   end
 
   def public_event_visibility_badges(event)
