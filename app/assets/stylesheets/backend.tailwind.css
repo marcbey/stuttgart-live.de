@@ -3169,6 +3169,9 @@ border: 1px dashed rgba(17, 17, 17, 0.18);
   .backend-inbox-shell .backend-editor-column,
   .backend-inbox-shell #events_list,
   .backend-inbox-shell #blog_posts_list,
+  .backend-inbox-shell #pages_list,
+  .backend-inbox-shell #presenters_list,
+  .backend-inbox-shell #venues_list,
   .backend-inbox-shell .bulk-form {
   min-height: 0;
   }
@@ -3180,12 +3183,18 @@ border: 1px dashed rgba(17, 17, 17, 0.18);
 
   .backend-inbox-shell .backend-list-column,
   .backend-inbox-shell #events_list,
-  .backend-inbox-shell #blog_posts_list {
+  .backend-inbox-shell #blog_posts_list,
+  .backend-inbox-shell #pages_list,
+  .backend-inbox-shell #presenters_list,
+  .backend-inbox-shell #venues_list {
   overflow: hidden;
   }
 
   .backend-inbox-shell #events_list,
-  .backend-inbox-shell #blog_posts_list {
+  .backend-inbox-shell #blog_posts_list,
+  .backend-inbox-shell #pages_list,
+  .backend-inbox-shell #presenters_list,
+  .backend-inbox-shell #venues_list {
   display: flex;
     flex: 1 1 auto;
     flex-direction: column;
