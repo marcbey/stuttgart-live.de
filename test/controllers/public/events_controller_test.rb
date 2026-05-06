@@ -730,7 +730,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     get search_url(filter: "all", q: "Scheduled Search Artist")
 
-    assert_redirected_to event_url(scheduled_event.slug)
+    assert_redirected_to event_url(scheduled_event.slug, q: "Scheduled Search Artist")
     assert_equal "ready_for_publish", scheduled_event.reload.status
   end
 
@@ -2368,7 +2368,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   test "search redirects to detail page when search has a single result" do
     get search_url(filter: "all", q: @published_event.artist_name)
 
-    assert_redirected_to event_url(@published_event.slug)
+    assert_redirected_to event_url(@published_event.slug, q: @published_event.artist_name)
   end
 
   test "search redirects to detail page for normalized umlaut queries" do
@@ -2387,7 +2387,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     get search_url(filter: "all", q: "Die Aerzte")
 
-    assert_redirected_to event_url(event.slug)
+    assert_redirected_to event_url(event.slug, q: "Die Aerzte")
   end
 
   test "search ignores the default sks filter for a single result" do
@@ -2408,7 +2408,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     get search_url(q: non_sks_event.artist_name)
 
-    assert_redirected_to event_url(non_sks_event.slug)
+    assert_redirected_to event_url(non_sks_event.slug, q: non_sks_event.artist_name)
   end
 
   test "search renders flat search results without homepage sliders for multiple matches" do
@@ -4262,7 +4262,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
       get search_url(q: "Dieses Wochenende im Goldmark´s Stuttgart")
 
-      assert_redirected_to event_url(matching_event.slug)
+      assert_redirected_to event_url(matching_event.slug, q: "Dieses Wochenende im Goldmark´s Stuttgart")
     end
   end
 

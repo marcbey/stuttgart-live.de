@@ -47,7 +47,7 @@ module Public
       relation = search_results_relation
       if should_redirect_search_result?(relation)
         event = relation.limit(1).first
-        redirect_to event_path(event.slug, **@browse_state.route_params.except(:q))
+        redirect_to event_path(event.slug, **@browse_state.route_params)
         return
       end
 
