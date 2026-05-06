@@ -3653,8 +3653,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "h1", text: "Kuult"
     assert_select ".event-detail-title", count: 0
     assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
-    assert_select ".event-detail-genre-arrow", text: "→"
-    assert_select ".event-detail-sub-tag", text: "Deutschpop, Synthpop"
+    assert_select ".event-detail-sub-tag-arrow", text: "→"
+    assert_select ".event-detail-sub-tag", text: "Deutschpop"
+    assert_select ".event-detail-sub-tag", text: "Synthpop"
+    assert_select ".event-detail-sub-tag-divider", text: "/"
     assert_select "a.event-detail-tag[href=?]", genre_lane_path(genres(:pop).slug), text: "Pop, Indie & Singer-Songwriter"
     assert_select ".event-detail-tag", text: "Deutschpop", count: 0
     assert_select "a.event-detail-sub-tag", text: "Deutschpop", count: 0
