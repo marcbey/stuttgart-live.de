@@ -4,9 +4,24 @@ const PLACEHOLDER_TYPING_BASE_DELAY = 92
 const PLACEHOLDER_ENTRY_GAP_BASE_DELAY = 360
 const PLACEHOLDER_CURSOR_BLINK_DELAY = 180
 const PLACEHOLDER_TYPING_CADENCE = [-18, 14, -6, 20, -12, 10, 4, -4]
+const CALENDAR_WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
+const CALENDAR_MONTH_FORMATTER = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" })
 
 export default class extends Controller {
-  static targets = ["input", "clear", "panel", "results", "idleTemplate", "placeholder", "placeholderText", "placeholderCursor"]
+  static targets = [
+    "input",
+    "clear",
+    "panel",
+    "results",
+    "idleTemplate",
+    "placeholder",
+    "placeholderText",
+    "placeholderCursor",
+    "calendarButton",
+    "calendarPanel",
+    "calendarMonthLabel",
+    "calendarGrid"
+  ]
   static values = {
     searchUrl: String,
     debounce: { type: Number, default: 180 },
@@ -21,6 +36,8 @@ export default class extends Controller {
     this.placeholderAnimationActive = false
     this.currentPlaceholderIndex = 0
     this.hasShownInitialPlaceholder = false
+    this.calendarDate = this.initialCalendarDate()
+    this.selectedCalendarDate = this.selectedDateFromQuery()
     this.boundHandlePointerDown = this.handlePointerDown.bind(this)
     this.boundHandleDocumentKeydown = this.handleDocumentKeydown.bind(this)
     this.boundHandleReducedMotionChange = this.handleReducedMotionChange.bind(this)
@@ -30,6 +47,7 @@ export default class extends Controller {
     document.addEventListener("keydown", this.boundHandleDocumentKeydown)
     this.observeReducedMotionPreference()
     this.inputTarget.setAttribute("placeholder", this.defaultPlaceholder)
+    this.renderCalendar()
     this.syncControls()
     this.syncPlaceholderAnimation()
   }
@@ -97,6 +115,7 @@ export default class extends Controller {
     this.syncPlaceholderAnimation()
     this.loadIdleResults()
     this.showPanel()
+    this.closeCalendar()
     this.inputTarget.focus()
 
     if (this.currentLocationHasQuery()) {
@@ -109,6 +128,7 @@ export default class extends Controller {
     this.clearScheduledSearch()
     this.panelTarget.hidden = true
     this.inputTarget.setAttribute("aria-expanded", "false")
+    this.closeCalendar()
   }
 
   handlePointerDown(event) {
@@ -121,6 +141,13 @@ export default class extends Controller {
 
   handleDocumentKeydown(event) {
     if (event.defaultPrevented) {
+      return
+    }
+
+    if (event.key === "Escape" && this.calendarOpen) {
+      event.preventDefault()
+      this.closeCalendar()
+      this.calendarButtonTarget.focus()
       return
     }
 
@@ -213,6 +240,95 @@ export default class extends Controller {
     this.search()
   }
 
+  toggleCalendar(event) {
+    event.preventDefault()
+
+    if (this.calendarOpen) {
+      this.closeCalendar()
+      this.inputTarget.focus()
+      return
+    }
+
+    this.openCalendar()
+  }
+
+  previousCalendarMonth(event) {
+    event.preventDefault()
+
+    this.calendarDate = new Date(this.calendarDate.getFullYear(), this.calendarDate.getMonth() - 1, 1)
+    this.renderCalendar()
+  }
+
+  nextCalendarMonth(event) {
+    event.preventDefault()
+
+    this.calendarDate = new Date(this.calendarDate.getFullYear(), this.calendarDate.getMonth() + 1, 1)
+    this.renderCalendar()
+  }
+
+  selectCalendarDate(event) {
+    event.preventDefault()
+
+    const selectedDate = this.dateFromKey(event.currentTarget.dataset.date)
+    if (!selectedDate) {
+      return
+    }
+
+    this.selectedCalendarDate = selectedDate
+    this.calendarDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+    this.inputTarget.value = this.formatCalendarQuery(selectedDate)
+    this.syncControls()
+    this.syncPlaceholderAnimation()
+    this.closeCalendar()
+    this.closeSearchPanel()
+    this.element.requestSubmit()
+  }
+
+  handleCalendarKeydown(event) {
+    if (event.key !== "Escape") {
+      return
+    }
+
+    event.preventDefault()
+    this.closeCalendar()
+    this.calendarButtonTarget.focus()
+  }
+
+  handleCalendarDayKeydown(event) {
+    const currentDate = this.dateFromKey(event.currentTarget.dataset.date)
+    if (!currentDate) {
+      return
+    }
+
+    const offsetByKey = {
+      ArrowLeft: -1,
+      ArrowRight: 1,
+      ArrowUp: -7,
+      ArrowDown: 7,
+      PageUp: -30,
+      PageDown: 30
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault()
+      this.focusCalendarDayByOffset(event.currentTarget, -this.calendarWeekdayIndex(currentDate))
+      return
+    }
+
+    if (event.key === "End") {
+      event.preventDefault()
+      this.focusCalendarDayByOffset(event.currentTarget, 6 - this.calendarWeekdayIndex(currentDate))
+      return
+    }
+
+    if (!Object.prototype.hasOwnProperty.call(offsetByKey, event.key)) {
+      return
+    }
+
+    event.preventDefault()
+    this.focusCalendarDayByOffset(event.currentTarget, offsetByKey[event.key])
+  }
+
   async fetchResults() {
     const requestUrl = this.buildRequestUrl()
     const requestKey = this.buildRequestKey()
@@ -264,8 +380,16 @@ export default class extends Controller {
   }
 
   showPanel() {
+    this.closeCalendar()
     this.panelTarget.hidden = false
     this.inputTarget.setAttribute("aria-expanded", "true")
+  }
+
+  closeSearchPanel() {
+    this.abortPendingRequest()
+    this.clearScheduledSearch()
+    this.panelTarget.hidden = true
+    this.inputTarget.setAttribute("aria-expanded", "false")
   }
 
   syncControls() {
@@ -428,6 +552,122 @@ export default class extends Controller {
     this.placeholderTimeout = null
   }
 
+  openCalendar() {
+    this.closeSearchPanel()
+    this.pausePlaceholderForCalendar()
+    this.calendarDate = this.selectedDateFromQuery() || this.calendarDate || this.today
+    this.renderCalendar()
+    this.calendarPanelTarget.hidden = false
+    this.calendarButtonTarget.setAttribute("aria-expanded", "true")
+
+    const selectedDay = this.calendarGridTarget.querySelector(".public-search-calendar-day-selected")
+    const today = this.calendarGridTarget.querySelector(".public-search-calendar-day-today")
+    const firstCurrentMonthDay = this.calendarGridTarget.querySelector(".public-search-calendar-day:not(.public-search-calendar-day-muted)")
+    const initialFocusTarget = selectedDay || today || firstCurrentMonthDay
+
+    if (initialFocusTarget) {
+      initialFocusTarget.focus()
+    }
+  }
+
+  closeCalendar() {
+    if (!this.hasCalendarPanelTarget) {
+      return
+    }
+
+    const wasOpen = !this.calendarPanelTarget.hidden
+    this.calendarPanelTarget.hidden = true
+    this.calendarButtonTarget.setAttribute("aria-expanded", "false")
+
+    if (wasOpen && !this.query.hasValue) {
+      this.syncPlaceholderAnimation()
+    }
+  }
+
+  renderCalendar() {
+    if (!this.hasCalendarGridTarget) {
+      return
+    }
+
+    const monthStart = new Date(this.calendarDate.getFullYear(), this.calendarDate.getMonth(), 1)
+    const gridStart = this.calendarGridStart(monthStart)
+    const todayKey = this.dateKey(this.today)
+    const selectedDate = this.selectedDateFromQuery() || this.selectedCalendarDate
+    const selectedKey = selectedDate ? this.dateKey(selectedDate) : null
+    const fragment = document.createDocumentFragment()
+
+    this.calendarMonthLabelTarget.textContent = CALENDAR_MONTH_FORMATTER.format(monthStart)
+    this.calendarGridTarget.innerHTML = ""
+
+    for (let dayIndex = 0; dayIndex < 42; dayIndex += 1) {
+      const date = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + dayIndex)
+      const dateKey = this.dateKey(date)
+      const dayButton = document.createElement("button")
+
+      dayButton.type = "button"
+      dayButton.className = "public-search-calendar-day"
+      dayButton.textContent = date.getDate().toString()
+      dayButton.dataset.date = dateKey
+      dayButton.dataset.action = "click->public-search#selectCalendarDate keydown->public-search#handleCalendarDayKeydown"
+      dayButton.setAttribute("aria-label", `${CALENDAR_WEEKDAYS[this.calendarWeekdayIndex(date)]}, ${this.formatCalendarQuery(date)}`)
+
+      if (date.getMonth() !== monthStart.getMonth()) {
+        dayButton.classList.add("public-search-calendar-day-muted")
+      }
+
+      if (dateKey === todayKey) {
+        dayButton.classList.add("public-search-calendar-day-today")
+      }
+
+      if (dateKey === selectedKey) {
+        dayButton.classList.add("public-search-calendar-day-selected")
+        dayButton.setAttribute("aria-pressed", "true")
+      } else {
+        dayButton.setAttribute("aria-pressed", "false")
+      }
+
+      fragment.appendChild(dayButton)
+    }
+
+    this.calendarGridTarget.appendChild(fragment)
+  }
+
+  calendarGridStart(monthStart) {
+    const mondayOffset = this.calendarWeekdayIndex(monthStart)
+    return new Date(monthStart.getFullYear(), monthStart.getMonth(), monthStart.getDate() - mondayOffset)
+  }
+
+  calendarWeekdayIndex(date) {
+    return (date.getDay() + 6) % 7
+  }
+
+  focusCalendarDayByOffset(currentTarget, offset) {
+    const currentDate = this.dateFromKey(currentTarget.dataset.date)
+    if (!currentDate) {
+      return
+    }
+
+    const targetDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate() + offset)
+
+    if (targetDate.getMonth() !== this.calendarDate.getMonth()) {
+      this.calendarDate = new Date(targetDate.getFullYear(), targetDate.getMonth(), 1)
+      this.renderCalendar()
+    }
+
+    this.calendarGridTarget.querySelector(`[data-date="${this.dateKey(targetDate)}"]`)?.focus()
+  }
+
+  pausePlaceholderForCalendar() {
+    if (this.query.hasValue) {
+      return
+    }
+
+    this.stopPlaceholderAnimation({ reset: true })
+    this.renderPlaceholder(this.defaultPlaceholder)
+    this.setPlaceholderVisibility(true)
+    this.setCursorVisibility(false)
+  }
+
   handleReducedMotionChange() {
     this.syncPlaceholderAnimation()
   }
@@ -505,6 +745,53 @@ export default class extends Controller {
 
   currentLocationHasQuery() {
     return new URL(window.location.href).searchParams.has("q")
+  }
+
+  selectedDateFromQuery() {
+    const match = this.inputTarget.value.trim().match(/^am\s+(\d{1,2})\.(\d{1,2})\.(\d{4})$/i)
+    if (!match) {
+      return null
+    }
+
+    const date = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]))
+    if (date.getFullYear() !== Number(match[3]) || date.getMonth() !== Number(match[2]) - 1 || date.getDate() !== Number(match[1])) {
+      return null
+    }
+
+    return date
+  }
+
+  initialCalendarDate() {
+    const selectedDate = this.selectedDateFromQuery()
+    const date = selectedDate || this.today
+
+    return new Date(date.getFullYear(), date.getMonth(), 1)
+  }
+
+  dateFromKey(value) {
+    const match = value?.match(/^(\d{4})-(\d{2})-(\d{2})$/)
+    if (!match) {
+      return null
+    }
+
+    const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+    if (this.dateKey(date) !== value) {
+      return null
+    }
+
+    return date
+  }
+
+  dateKey(date) {
+    const year = date.getFullYear()
+    const month = (date.getMonth() + 1).toString().padStart(2, "0")
+    const day = date.getDate().toString().padStart(2, "0")
+
+    return `${year}-${month}-${day}`
+  }
+
+  formatCalendarQuery(date) {
+    return `am ${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
   }
 
   isTypingContext(target) {
@@ -588,5 +875,14 @@ export default class extends Controller {
 
   get prefersReducedMotion() {
     return this.reduceMotionQuery.matches
+  }
+
+  get calendarOpen() {
+    return this.hasCalendarPanelTarget && !this.calendarPanelTarget.hidden
+  }
+
+  get today() {
+    const now = new Date()
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate())
   }
 }

@@ -2300,6 +2300,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-search .public-search-placeholder", count: 1
     assert_select ".app-nav-search [data-public-search-target='placeholderText']", text: placeholder_phrases.first
     assert_select ".app-nav-search [data-public-search-target='placeholderCursor']", count: 1
+    assert_select ".app-nav-search .public-search-calendar[aria-controls='public-search-calendar'][aria-expanded='false']", count: 1
+    assert_select ".app-nav-search #public-search-calendar.public-search-calendar-overlay[hidden]", count: 1
+    assert_select ".app-nav-search [data-public-search-target='calendarMonthLabel']", count: 1
+    assert_select ".app-nav-search [data-public-search-target='calendarGrid']", count: 1
 
     assert_select ".public-filter-row", count: 0
     assert_select ".public-view-toggle", count: 0

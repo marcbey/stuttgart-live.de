@@ -46,6 +46,28 @@
                      public_search_target: "clear",
                      action: "public-search#clear"
                    } %>
+    <%= button_tag type: "button",
+                   class: "public-search-calendar",
+                   aria: {
+                     label: "Datum wählen",
+                     controls: "public-search-calendar",
+                     expanded: "false"
+                   },
+                   data: {
+                     public_search_target: "calendarButton",
+                     action: "public-search#toggleCalendar"
+                   } do %>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M7 3.5v3"></path>
+        <path d="M17 3.5v3"></path>
+        <rect x="4" y="5.5" width="16" height="15" rx="2.25"></rect>
+        <path d="M4 10h16"></path>
+        <path d="M8 14h2"></path>
+        <path d="M14 14h2"></path>
+        <path d="M8 17h2"></path>
+      </svg>
+      <span class="sr-only">Datum wählen</span>
+    <% end %>
     <%= button_tag type: "submit",
                    class: "public-search-icon",
                    aria: { label: "Suche ausführen" } do %>
@@ -65,6 +87,46 @@
            aria-live="polite"
            aria-label="Live-Suchergebnisse">
         <%= render "public/events/search_overlay", browse_state: browse_state, overlay: nil %>
+      </div>
+    </div>
+
+    <div id="public-search-calendar"
+         class="public-search-calendar-overlay"
+         data-public-search-target="calendarPanel"
+         data-action="keydown->public-search#handleCalendarKeydown"
+         role="dialog"
+         aria-label="Datum auswählen"
+         hidden>
+      <div class="public-search-calendar-card">
+        <div class="public-search-calendar-header">
+          <button type="button"
+                  class="public-search-calendar-nav"
+                  aria-label="Vorheriger Monat"
+                  data-action="public-search#previousCalendarMonth">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 6l-6 6 6 6"></path>
+            </svg>
+          </button>
+          <strong class="public-search-calendar-month" data-public-search-target="calendarMonthLabel"></strong>
+          <button type="button"
+                  class="public-search-calendar-nav"
+                  aria-label="Nächster Monat"
+                  data-action="public-search#nextCalendarMonth">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M9 6l6 6-6 6"></path>
+            </svg>
+          </button>
+        </div>
+        <div class="public-search-calendar-weekdays" aria-hidden="true">
+          <span>Mo</span>
+          <span>Di</span>
+          <span>Mi</span>
+          <span>Do</span>
+          <span>Fr</span>
+          <span>Sa</span>
+          <span>So</span>
+        </div>
+        <div class="public-search-calendar-grid" data-public-search-target="calendarGrid"></div>
       </div>
     </div>
 
