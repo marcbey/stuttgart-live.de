@@ -5325,7 +5325,7 @@ display: none;
 .section-slider-list[data-homepage-lane-target="list"] .event-listing-grid {
 grid-auto-flow: column;
   grid-auto-columns: minmax(min(18rem, calc(100vw - 2rem)), min(82vw, 24rem));
-  grid-template-rows: repeat(4, minmax(0, auto));
+  grid-template-rows: repeat(3, minmax(0, auto));
   grid-template-columns: none;
   align-items: stretch;
 }
