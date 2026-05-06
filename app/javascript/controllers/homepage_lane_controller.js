@@ -21,6 +21,8 @@ export default class extends Controller {
     this.userInteracted = false
     this.handleScroll = this.handleScroll.bind(this)
     this.markUserInteraction = this.markUserInteraction.bind(this)
+    this.handleLoadRequest = this.handleLoadRequest.bind(this)
+    this.element.addEventListener("homepage-lane:load", this.handleLoadRequest)
 
     if (this.hasTrackTarget) {
       this.trackTarget.addEventListener("scroll", this.handleScroll, { passive: true })
@@ -43,6 +45,7 @@ export default class extends Controller {
       this.trackTarget.removeEventListener("wheel", this.markUserInteraction)
     }
 
+    this.element.removeEventListener("homepage-lane:load", this.handleLoadRequest)
     if (this.raf) window.cancelAnimationFrame(this.raf)
     this.abortPendingRequest()
   }
@@ -51,6 +54,7 @@ export default class extends Controller {
     event?.preventDefault()
     if (this.loading || !this.canLoad) return
 
+    const advanceAfterLoad = event?.detail?.advance === true
     this.loading = true
     this.setPending(true)
     this.abortPendingRequest()
@@ -72,14 +76,16 @@ export default class extends Controller {
 
       const html = await response.text()
       const nextCursor = response.headers.get("X-Homepage-Lane-Next-Cursor") || ""
+      let appendedElements = []
 
       if (html.trim().length > 0) {
-        this.appendPage(html)
+        appendedElements = this.appendPage(html)
       }
 
       this.cursorValue = nextCursor
       this.updateLink()
       this.scheduleTrackWork()
+      if (advanceAfterLoad) this.scrollToAppendedPage(appendedElements)
     } catch (error) {
       if (error.name !== "AbortError") console.error(error)
     } finally {
@@ -99,6 +105,14 @@ export default class extends Controller {
     this.userInteracted = true
   }
 
+  handleLoadRequest(event) {
+    if (!this.canLoad) return
+
+    this.markUserInteraction()
+    event.preventDefault()
+    this.load(event)
+  }
+
   scheduleTrackWork() {
     if (this.raf) return
 
@@ -114,7 +128,7 @@ export default class extends Controller {
     const template = document.createElement("template")
     template.innerHTML = html.trim()
     const elements = Array.from(template.content.children).filter((element) => element instanceof HTMLElement)
-    if (elements.length === 0) return
+    if (elements.length === 0) return []
 
     const index = ++this.pageIndex
     elements.forEach((element) => {
@@ -122,6 +136,16 @@ export default class extends Controller {
       this.trackTarget.appendChild(element)
     })
     this.pages.push({ index, elements })
+    return elements
+  }
+
+  scrollToAppendedPage(elements) {
+    const firstElement = elements.find((element) => element instanceof HTMLElement)
+    if (!firstElement) return
+
+    window.requestAnimationFrame(() => {
+      this.trackTarget.scrollTo({ left: firstElement.offsetLeft, behavior: "smooth" })
+    })
   }
 
   registerInitialPage() {

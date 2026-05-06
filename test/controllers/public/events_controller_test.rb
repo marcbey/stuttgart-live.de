@@ -2055,13 +2055,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   test "index initially limits highlights fallback and exposes remaining events through lane endpoint" do
     selected_date = 20.days.from_now.to_date
 
-    12.times do |index|
+    16.times do |index|
       Event.create!(
         slug: "highlights-fallback-event-#{index}",
         source_fingerprint: "test::homepage::highlights::fallback::#{index}",
         title: "Highlights Fallback Event #{index}",
         artist_name: "Highlights Fallback Artist #{index}",
-        start_at: selected_date.in_time_zone.change(hour: 10 + index, min: 0, sec: 0),
+        start_at: selected_date.in_time_zone.change(hour: 7 + index, min: 0, sec: 0),
         venue: "Fallback Venue #{index}",
         city: "Stuttgart",
         status: "published",
@@ -2092,7 +2092,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     highlights_section = document.at_css("section.home-featured-section")
     names = highlights_section.css(".event-card-copy h2").map(&:text)
 
-    assert_equal 10, names.size
+    assert_equal 14, names.size
     assert_not_includes names, final_event.artist_name
     cursor = highlights_section["data-homepage-lane-cursor-value"]
     assert_predicate cursor, :present?
