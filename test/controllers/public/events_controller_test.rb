@@ -1830,20 +1830,32 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".lane-header.lane-header--editorial", count: 1
     assert_select "section.genre-lane-section", text: /alles aus stuttgart/ do
       assert_select ".genre-lane-card-name", text: reservix_event.artist_name
-      assert_select ".genre-lane-card-name", text: late_reservix_event.artist_name
+      assert_select ".genre-lane-card-name", text: late_reservix_event.artist_name, count: 0
       assert_select ".genre-lane-card-name", text: eventim_event.artist_name, count: 0
     end
+
+    document = Nokogiri::HTML.parse(response.body)
+    all_stuttgart_section = document.css("section.genre-lane-section").find do |section|
+      section.at_css("h2")&.text == "alles aus stuttgart"
+    end
+    next_cursor = all_stuttgart_section["data-homepage-lane-cursor-value"]
+
+    get homepage_lane_events_url(lane: "all_stuttgart", cursor: next_cursor, filter: "all")
+
+    assert_response :success
+    assert_includes response.body, late_reservix_event.artist_name
+    assert_not_includes response.body, eventim_event.artist_name
   end
 
-  test "index limits the all events slider to 15 reservix events" do
+  test "index initially limits the all events slider to 10 reservix events" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
     included_event_names = []
     excluded_event_name = nil
 
     101.times do |index|
       artist_name = "Reservix Limited Artist #{index}"
-      included_event_names << artist_name if index < 15
-      excluded_event_name = artist_name if index == 15
+      included_event_names << artist_name if index < 10
+      excluded_event_name = artist_name if index == 10
 
       Event.create!(
         slug: "reservix-home-slider-limited-#{index}",
@@ -1872,10 +1884,85 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     names = slider_section.css(".genre-lane-card-name").map(&:text)
 
-    assert_equal 15, names.size
+    assert_equal 10, names.size
     assert_includes names, included_event_names.first
     assert_includes names, included_event_names.last
     assert_not_includes names, excluded_event_name
+    assert_select "section[data-controller~='homepage-lane'][data-homepage-lane-lane-value='all_stuttgart']", count: 1
+    assert_select ".homepage-lane-load-link", count: 0
+  end
+
+  test "homepage lane endpoint loads additional genre cards" do
+    _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    25.times do |index|
+      Event.create!(
+        slug: "homepage-lane-endpoint-rock-#{index}",
+        source_fingerprint: "test::public::homepage-lane-endpoint::rock::#{index}",
+        title: "Homepage Lane Endpoint Rock #{index}",
+        artist_name: "Homepage Lane Endpoint Rock Artist #{index}",
+        start_at: (index + 2).days.from_now.change(hour: 20, min: 0, sec: 0),
+        venue: "Club Zentral",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      ).tap do |event|
+        build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+      end
+    end
+
+    get events_url(filter: "all")
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    rock_section = document.css("section.genre-lane-section").find do |section|
+      section.at_css("h2")&.text == rock_group.name
+    end
+    cursor = rock_section["data-homepage-lane-cursor-value"]
+
+    assert_equal 10, rock_section.css(".genre-lane-card-name").size
+    assert_predicate cursor, :present?
+
+    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: cursor, mode: "cards")
+
+    assert_response :success
+    assert_equal "true", response.headers["X-Homepage-Lane-Has-More"]
+    assert_select "article.genre-lane-card", count: 10
+    assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Rock Artist 10"
+    assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Rock Artist 19"
+  end
+
+  test "homepage lane endpoint renders rows and rejects invalid cursors" do
+    _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    12.times do |index|
+      Event.create!(
+        slug: "homepage-lane-endpoint-row-#{index}",
+        source_fingerprint: "test::public::homepage-lane-endpoint::row::#{index}",
+        title: "Homepage Lane Endpoint Row #{index}",
+        artist_name: "Homepage Lane Endpoint Row Artist #{index}",
+        start_at: (index + 2).days.from_now.change(hour: 19, min: 0, sec: 0),
+        venue: "Club Zentral",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      ).tap do |event|
+        build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+      end
+    end
+
+    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", mode: "rows")
+
+    assert_response :success
+    assert_select "article.event-listing-card", count: 10
+    assert_predicate response.headers["X-Homepage-Lane-Next-Cursor"], :present?
+
+    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: "invalid")
+
+    assert_response :bad_request
   end
 
   test "index keeps the event series badge in all events slider when the second series event is outside the limit" do
@@ -1965,7 +2052,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "2 weitere Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
   end
 
-  test "index does not limit highlights fallback when no sks events exist for the selected date" do
+  test "index initially limits highlights fallback and exposes remaining events through lane endpoint" do
     selected_date = 20.days.from_now.to_date
 
     12.times do |index|
@@ -2001,9 +2088,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all", event_date: selected_date.iso8601)
 
     assert_response :success
-    assert_select "section.home-featured-section", text: /Highlights/ do
-      assert_select ".event-card-copy h2", text: final_event.artist_name
-    end
+    document = Nokogiri::HTML.parse(response.body)
+    highlights_section = document.at_css("section.home-featured-section")
+    names = highlights_section.css(".event-card-copy h2").map(&:text)
+
+    assert_equal 10, names.size
+    assert_not_includes names, final_event.artist_name
+    cursor = highlights_section["data-homepage-lane-cursor-value"]
+    assert_predicate cursor, :present?
+
+    get homepage_lane_events_url(lane: "highlights", cursor: cursor, filter: "all", event_date: selected_date.iso8601)
+
+    assert_response :success
+    assert_select ".event-card-copy h2", text: final_event.artist_name
   end
 
   test "index shows only today's non-reservix events in tagestipp" do
@@ -2111,11 +2208,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     names = tagestipp_section.css(".genre-lane-card-name").map(&:text)
 
     assert_equal "Tagestipp Filler Artist 9", names.first
-    assert_includes names, today_event.artist_name
-    assert_includes names, sks_today_event.artist_name
-    assert_includes names, late_today_event.artist_name
+    assert_equal 10, names.size
+    assert_not_includes names, today_event.artist_name
+    assert_not_includes names, sks_today_event.artist_name
+    assert_not_includes names, late_today_event.artist_name
     assert_not_includes names, reservix_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
+
+    next_cursor = tagestipp_section["data-homepage-lane-cursor-value"]
+    get homepage_lane_events_url(lane: "tagestipp", cursor: next_cursor, mode: "cards", filter: "all")
+
+    assert_response :success
+    assert_includes response.body, today_event.artist_name
+    assert_includes response.body, sks_today_event.artist_name
+    assert_includes response.body, late_today_event.artist_name
+    assert_not_includes response.body, reservix_today_event.artist_name
+    assert_not_includes response.body, tomorrow_event.artist_name
   end
 
   test "tagestipp shows event series badge when the series is globally visible via a past event" do

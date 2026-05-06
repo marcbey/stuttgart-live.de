@@ -1,10 +1,10 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
+    allow_unauthenticated_access only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
-    HOME_LANE_LIMIT = 15
+    HOME_LANE_LIMIT = Public::Events::HomepageLanePager::DEFAULT_PER_PAGE
     HOME_CANDIDATE_LIMIT = 100
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
@@ -12,7 +12,7 @@ module Public
     RUSS_LIVE_PROMOTER_ID = "382".freeze
     REQUEST_PROFILE_HEADER = "X-Stuttgart-Live-Profile".freeze
 
-    before_action :set_browse_state, only: [ :index, :lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
+    before_action :set_browse_state, only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
     around_action :append_index_profile_headers, only: :index
 
     def index
@@ -22,13 +22,7 @@ module Public
       end
 
       if @browse_state.page == 1
-        homepage_relation = published_visible_events_relation(
-          scope: homepage_events_relation,
-          filter: @browse_state.filter,
-          event_date: @browse_state.event_date,
-          query: nil
-        )
-        assign_homepage_sections(homepage_relation)
+        assign_homepage_sections
         assign_homepage_promotion_banners
       end
 
@@ -59,6 +53,24 @@ module Public
       raise ActiveRecord::RecordNotFound if @lane.blank?
 
       assign_lane_page(@lane)
+    end
+
+    def homepage_lane
+      @homepage_lane_page = homepage_lane_page(params[:lane], cursor: params[:cursor])
+      raise ActiveRecord::RecordNotFound if @homepage_lane_page.blank?
+
+      response.set_header("X-Homepage-Lane-Next-Cursor", @homepage_lane_page.next_cursor.to_s)
+      response.set_header("X-Homepage-Lane-Has-More", @homepage_lane_page.next_cursor.present?.to_s)
+
+      render partial: "public/events/homepage_lane_page",
+             formats: [ :html ],
+             locals: homepage_lane_render_locals(
+               params[:lane],
+               @homepage_lane_page,
+               mode: params[:mode]
+             )
+    rescue Public::Events::HomepageLanePager::InvalidCursor
+      head :bad_request
     end
 
     def saved
@@ -238,40 +250,26 @@ module Public
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
-    def assign_homepage_sections(current_relation)
-      scoped_highlights = published_visible_events_relation(
-        scope: homepage_events_relation,
-        filter: Public::Events::BrowseState::FILTER_SKS,
-        event_date: @browse_state.event_date,
-        query: nil
-      ).reorder(:start_at, :id)
-      scoped_all = published_visible_events_relation(
-        scope: homepage_events_relation,
-        filter: Public::Events::BrowseState::FILTER_ALL,
-        event_date: @browse_state.event_date,
-        query: nil
-      )
-      scoped_reservix = scoped_all.where(primary_source: "reservix")
+    def assign_homepage_sections
       @home_featured_lane = Public::Events::LaneDirectory.highlights
       @home_all_stuttgart_lane = Public::Events::LaneDirectory.all_stuttgart
       @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
 
-      @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.limit(HOME_CANDIDATE_LIMIT).to_a)
-      @home_featured_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_featured_events)
-
-      if @home_featured_events.empty?
-        fallback_relation = current_relation.reorder(:start_at, :id)
-        @home_featured_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.limit(HOME_CANDIDATE_LIMIT).to_a)
-        @home_featured_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_featured_events)
-      end
+      featured_page = homepage_lane_page("highlights")
+      @home_featured_events = featured_page.events
+      @home_featured_effective_series_ids = featured_page.effective_series_ids
+      @home_featured_next_cursor = featured_page.next_cursor
 
       @home_genre_lanes = homepage_genre_lanes
       @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
-      @home_highlight_events = Public::Events::SeriesRepresentativeSelector.call(scoped_reservix.limit(HOME_LANE_LIMIT).to_a)
-      @home_highlight_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_highlight_events)
-      tagestipp_scope = tagestipp_relation
-      @home_tagestipp_events = Public::Events::SeriesRepresentativeSelector.call(tagestipp_scope.to_a).first(HOME_LANE_LIMIT)
-      @home_tagestipp_effective_series_ids = Public::Events::EffectiveSeriesIdsQuery.call(@home_tagestipp_events)
+      all_stuttgart_page = homepage_lane_page("all_stuttgart")
+      @home_highlight_events = all_stuttgart_page.events
+      @home_highlight_effective_series_ids = all_stuttgart_page.effective_series_ids
+      @home_highlight_next_cursor = all_stuttgart_page.next_cursor
+      tagestipp_page = homepage_lane_page("tagestipp")
+      @home_tagestipp_events = tagestipp_page.events
+      @home_tagestipp_effective_series_ids = tagestipp_page.effective_series_ids
+      @home_tagestipp_next_cursor = tagestipp_page.next_cursor
     end
 
     def should_redirect_search_result?(relation)
@@ -317,6 +315,119 @@ module Public
 
     def homepage_genre_tag_cloud_genres
       Public::Events::HomepageGenreTagCloudBuilder.new(relation: homepage_events_relation).call
+    end
+
+    def homepage_lane_page(identifier, cursor: nil)
+      cursor_payload = Public::Events::HomepageLanePager.decode_cursor(cursor)
+      raise Public::Events::HomepageLanePager::InvalidCursor if cursor.present? && cursor_payload.blank?
+
+      lane_relation, context = homepage_lane_relation_and_context(identifier, cursor_payload:)
+      return if lane_relation.nil?
+
+      Public::Events::HomepageLanePager.new(
+        relation: lane_relation,
+        context: context,
+        cursor: cursor,
+        per_page: normalized_homepage_lane_per_page
+      ).call
+    end
+
+    def homepage_lane_relation_and_context(identifier, cursor_payload: nil)
+      lane_key, lane_slug = normalized_homepage_lane_identifier(identifier)
+
+      case lane_key
+      when "highlights"
+        homepage_highlights_relation_and_context(cursor_payload:)
+      when "all_stuttgart"
+        [
+          scoped_homepage_all_relation.where(primary_source: "reservix").reorder(:start_at, :id),
+          homepage_lane_context(lane: "all_stuttgart")
+        ]
+      when "tagestipp"
+        [
+          tagestipp_relation,
+          homepage_lane_context(lane: "tagestipp")
+        ]
+      when "genre"
+        group = Genre.find_by(slug: lane_slug)
+        return if group.blank?
+
+        [
+          homepage_events_relation.joins(:genres).where(genres: { id: group.id }).distinct.reorder(:start_at, :id),
+          { lane: "genre", slug: group.slug }
+        ]
+      end
+    end
+
+    def homepage_highlights_relation_and_context(cursor_payload: nil)
+      cursor_variant = cursor_payload&.dig("context", "variant")
+      highlights_relation = scoped_homepage_highlights_relation
+      variant = cursor_variant.presence || (highlights_relation.exists? ? "primary" : "fallback")
+      relation = variant == "fallback" ? scoped_homepage_all_relation.reorder(:start_at, :id) : highlights_relation
+
+      [
+        relation,
+        homepage_lane_context(lane: "highlights", variant: variant)
+      ]
+    end
+
+    def scoped_homepage_all_relation
+      published_visible_events_relation(
+        scope: homepage_events_relation,
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: @browse_state.event_date,
+        query: nil
+      )
+    end
+
+    def scoped_homepage_highlights_relation
+      published_visible_events_relation(
+        scope: homepage_events_relation,
+        filter: Public::Events::BrowseState::FILTER_SKS,
+        event_date: @browse_state.event_date,
+        query: nil
+      ).reorder(:start_at, :id)
+    end
+
+    def normalized_homepage_lane_identifier(identifier)
+      value = identifier.to_s
+      return [ "genre", value.delete_prefix("genre:").parameterize ] if value.start_with?("genre:")
+
+      [ value, nil ]
+    end
+
+    def homepage_lane_context(**values)
+      values.merge(
+        event_date: @browse_state.event_date_param,
+        filter: @browse_state.filter
+      ).compact
+    end
+
+    def normalized_homepage_lane_per_page
+      (params[:per_page].presence || HOME_LANE_LIMIT).to_i
+    end
+
+    def homepage_lane_render_locals(identifier, lane_page, mode:)
+      lane_key, lane_slug = normalized_homepage_lane_identifier(identifier)
+      {
+        lane_key: lane_key,
+        lane_slug: lane_slug,
+        mode: mode.to_s == "rows" ? "rows" : "cards",
+        page: lane_page,
+        browse_state: @browse_state,
+        strict_proxy: helpers.homepage_media_strict_proxy?
+      }.merge(homepage_lane_card_options(lane_key))
+    end
+
+    def homepage_lane_card_options(lane_key)
+      case lane_key
+      when "all_stuttgart"
+        { card_variant: "editorial", header_variant: :editorial }
+      when "tagestipp"
+        { card_variant: "spotlight", header_variant: :tagestipp }
+      else
+        {}
+      end
     end
 
     def assign_homepage_promotion_banners

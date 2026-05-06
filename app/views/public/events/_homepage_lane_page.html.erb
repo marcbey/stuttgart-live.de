@@ -1,0 +1,30 @@
+<% if mode == "rows" %>
+  <%= render "event_rows",
+             events: page.events,
+             browse_state: browse_state,
+             effective_series_ids: page.effective_series_ids,
+             strict_proxy: strict_proxy %>
+<% else %>
+  <% page.events.each_with_index do |event, index| %>
+    <% if lane_key == "highlights" %>
+      <% absolute_index = page.card_offset + index %>
+      <% tile_variant = effective_public_grid_variant_for(event, absolute_index) %>
+      <% card_slot = card_slot_for_grid_variant(tile_variant) %>
+      <%= render "home_feature_card",
+                 event: event,
+                 browse_state: browse_state,
+                 effective_series_ids: page.effective_series_ids,
+                 strict_proxy: strict_proxy,
+                 tile_variant: tile_variant,
+                 card_slot: card_slot %>
+    <% else %>
+      <%= render "genre_lane_card",
+                 event: event,
+                 browse_state: browse_state,
+                 card_variant: local_assigns[:card_variant],
+                 strict_proxy: strict_proxy,
+                 effective_series_ids: page.effective_series_ids,
+                 show_series_badge: true %>
+    <% end %>
+  <% end %>
+<% end %>

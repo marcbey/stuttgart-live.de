@@ -100,6 +100,7 @@ Rails.application.routes.draw do
   end
 
   resources :events, only: [ :index, :show ], module: :public, param: :slug do
+    get :homepage_lane, on: :collection
     get :saved_lane, on: :collection
     get :search_overlay, on: :collection
     get :termine, on: :member

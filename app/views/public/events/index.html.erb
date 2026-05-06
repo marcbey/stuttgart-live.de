@@ -8,6 +8,7 @@
 
 <section class="public-shell">
   <% strict_proxy = homepage_media_strict_proxy? %>
+  <% homepage_lane_lazy_url = homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>
   <% promotion_banners_by_lane_position = @promotion_banners_by_lane_position || {} %>
   <% promotion_banner_lane_position = 1 %>
 
@@ -26,6 +27,9 @@
                browse_state: @browse_state,
                strict_proxy: strict_proxy,
                featured: true,
+               lazy_lane_id: "highlights",
+               lazy_next_cursor: @home_featured_next_cursor,
+               lazy_url: homepage_lane_lazy_url,
                list_aria_label: "Listenansicht für Highlights" %>
   <% end %>
   <% if @browse_state.page == 1 %>
@@ -45,6 +49,9 @@
                  effective_series_ids: genre_lanes.first.effective_series_ids,
                  browse_state: @browse_state,
                  strict_proxy: strict_proxy,
+                 lazy_lane_id: "genre:#{genre_lanes.first.group.slug}",
+                 lazy_next_cursor: genre_lanes.first.next_cursor,
+                 lazy_url: homepage_lane_lazy_url,
                  header_variant: :genre,
                  hover_lift_cards: true,
                  tone_class: "genre-lane-section--tone-1",
@@ -65,6 +72,9 @@
                  effective_series_ids: @home_tagestipp_effective_series_ids,
                  browse_state: @browse_state,
                  strict_proxy: strict_proxy,
+                 lazy_lane_id: "tagestipp",
+                 lazy_next_cursor: @home_tagestipp_next_cursor,
+                 lazy_url: homepage_lane_lazy_url,
                  header_variant: :tagestipp,
                  hover_lift_cards: true,
                  summary: "#{pluralize(@home_tagestipp_events.size, "Event", "Events")} in der heutigen Auswahl",
@@ -88,6 +98,9 @@
                  effective_series_ids: @home_highlight_effective_series_ids,
                  browse_state: @browse_state,
                  strict_proxy: strict_proxy,
+                 lazy_lane_id: "all_stuttgart",
+                 lazy_next_cursor: @home_highlight_next_cursor,
+                 lazy_url: homepage_lane_lazy_url,
                  header_variant: :editorial,
                  hover_lift_cards: true,
                  summary: "#{pluralize(@home_highlight_events.size, "Event", "Events")} aus dem aktuellen Feed",
@@ -111,6 +124,9 @@
                  effective_series_ids: lane.effective_series_ids,
                  browse_state: @browse_state,
                  strict_proxy: strict_proxy,
+                 lazy_lane_id: "genre:#{lane.group.slug}",
+                 lazy_next_cursor: lane.next_cursor,
+                 lazy_url: homepage_lane_lazy_url,
                  header_variant: :genre,
                  hover_lift_cards: true,
                  tone_class: "genre-lane-section--tone-#{((index + 1) % 4) + 1}",

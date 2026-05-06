@@ -5352,6 +5352,32 @@ margin: 0;
   text-transform: none;
 }
 
+.homepage-lane-placeholder {
+min-height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(17, 17, 17, 0.04), rgba(17, 17, 17, 0.075), rgba(17, 17, 17, 0.04));
+  background-size: 220% 100%;
+  box-shadow: none;
+  pointer-events: none;
+  animation: homepage-lane-placeholder-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes homepage-lane-placeholder-pulse {
+  0% {
+  background-position: 100% 0;
+  }
+
+  100% {
+  background-position: -100% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homepage-lane-placeholder {
+  animation: none;
+  }
+}
+
 .event-detail {
 max-width: 1220px;
   margin: 0 auto;

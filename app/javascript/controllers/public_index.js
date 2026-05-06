@@ -21,6 +21,9 @@ application.register("hero-rotator", HeroRotatorController)
 import HighlightsSliderController from "./highlights_slider_controller"
 application.register("highlights-slider", HighlightsSliderController)
 
+import HomepageLaneController from "./homepage_lane_controller"
+application.register("homepage-lane", HomepageLaneController)
+
 import HistoryBackLinkController from "./history_back_link_controller"
 application.register("history-back-link", HistoryBackLinkController)
 

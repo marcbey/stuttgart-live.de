@@ -68,7 +68,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal [ @rock_group.slug, @pop_group.slug ], lanes.map { |lane| lane.group.slug }
   end
 
-  test "uses 15 as the default limit for lane events" do
+  test "uses 10 as the default limit for lane events" do
     105.times do |index|
       event = build_lane_event(
         slug: "lane-limit-#{index}",
@@ -83,9 +83,10 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
       slugs: [ @rock_group.slug ]
     ).call
 
-    assert_equal 15, lanes.first.events.size
+    assert_equal 10, lanes.first.events.size
     assert_equal "lane-limit-0", lanes.first.events.first.slug
-    assert_equal "lane-limit-14", lanes.first.events.last.slug
+    assert_equal "lane-limit-9", lanes.first.events.last.slug
+    assert_predicate lanes.first.next_cursor, :present?
   end
 
   test "returns all lane events when limit is nil" do
