@@ -401,6 +401,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "Indie", "Rock" ], presenter.sub_genre_tags
     assert_equal [ "Pop", "Rock", "Indie" ], presenter.detail_genres
     assert_equal "Im Wizemann", presenter.venue_info.name
+    assert_not presenter.venue_vvs_ticket?
   end
 
   test "uses canonical venue for detail location and venue info" do
@@ -424,6 +425,18 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "Liederhalle Beethoven-Saal", presenter.venue_info.name
     assert_equal "Berliner Platz 1, Stuttgart", presenter.venue_info.address
     assert_equal "https://liederhalle.example", presenter.venue_info.external_url
+  end
+
+  test "exposes VVS ticket flag from canonical venue" do
+    canonical = Venue.create!(name: "Liederhalle Beethoven-Saal", vvs_ticket: true)
+    alias_venue = Venue.create!(name: "KKL Beethoven-Saal Stuttgart")
+    configure_venue_duplicate_mapping(alias_name: alias_venue.name, canonical_name: canonical.name)
+    event = build_event(venue_record: alias_venue)
+
+    presenter = build_presenter(event)
+
+    assert presenter.venue_vvs_ticket?
+    assert presenter.show_venue_section?
   end
 
   test "adds youtube fallback link when url is not embeddable" do

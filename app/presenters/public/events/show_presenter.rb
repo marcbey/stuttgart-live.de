@@ -389,7 +389,11 @@ module Public
       end
 
       def show_venue_section?
-        venue_description.present? || venue_info.present?
+        venue_description.present? || venue_info.present? || venue_vvs_ticket?
+      end
+
+      def venue_vvs_ticket?
+        event.canonical_venue_record&.vvs_ticket?
       end
 
       def has_secondary_content?

@@ -39,6 +39,14 @@
           </div>
 
           <div class="editor-grid-span-full">
+            <label class="form-checkbox form-checkbox-after-textarea">
+              <%= form.check_box :vvs_ticket %>
+              <span>VVS-Ticket</span>
+            </label>
+            <p class="form-hint">Zeigt auf Event-Detailseiten dieser Venue den Hinweis zum VVS Kombiticket an.</p>
+          </div>
+
+          <div class="editor-grid-span-full">
             <%= form.label :address, "Adresse", class: "form-label" %>
             <%= form.text_area :address, class: "form-input", rows: 3 %>
             <p class="form-hint">Freitext, z. B. Straße, Hausnummer, PLZ und Ort.</p>

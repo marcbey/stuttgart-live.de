@@ -74,7 +74,7 @@ module Backend
       end
 
       def venue_params
-        params.require(:venue).permit(:name, :description, :external_url, :address, :logo, :remove_logo)
+        params.require(:venue).permit(:name, :description, :external_url, :address, :logo, :remove_logo, :vvs_ticket)
       end
 
       def current_query

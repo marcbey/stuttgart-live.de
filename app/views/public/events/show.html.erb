@@ -131,6 +131,10 @@
                 </div>
               <% end %>
             </div>
+
+            <% if presenter.venue_vvs_ticket? %>
+              <%= render "public/events/vvs_kombi_ticket" %>
+            <% end %>
           </div>
         </section>
       <% end %>

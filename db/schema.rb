@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_04_110000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_06_143000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -552,6 +552,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_04_110000) do
     t.string "external_url"
     t.string "name", null: false
     t.datetime "updated_at", null: false
+    t.boolean "vvs_ticket", default: false, null: false
     t.index "lower((name)::text) gin_trgm_ops", name: "index_venues_on_lower_name_trgm", using: :gin
     t.index "lower((name)::text)", name: "index_venues_on_lower_name", unique: true
   end

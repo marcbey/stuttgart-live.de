@@ -3627,6 +3627,28 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_operator venue_link_row.children.index(homepage_link), :<, venue_link_row.children.index(map_link)
   end
 
+  test "show renders VVS Kombiticket notice for marked venue" do
+    @published_event.venue_record.update!(vvs_ticket: true)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-venue-block .event-detail-vvs-ticket", count: 1
+    assert_select ".event-detail-vvs-ticket-logo[alt='VVS']", count: 1
+    assert_select ".event-detail-vvs-ticket-copy h3", text: /VVS Kombiticket/i
+    assert_select ".event-detail-vvs-ticket-copy", text: /Gilt für die An- und Abreise/
+    assert_select ".event-detail-vvs-ticket-copy", text: /Nicht jede Veranstaltung beinhaltet automatisch ein KombiTicket/
+  end
+
+  test "show hides VVS Kombiticket notice for venue without VVS ticket" do
+    @published_event.venue_record.update!(vvs_ticket: false)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-vvs-ticket", count: 0
+  end
+
   test "show avoids duplicate subtitle and genre section" do
     event = Event.create!(
       slug: "published-event-with-duplicate-title",

@@ -26,6 +26,7 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-frame#venue_editor input[type='hidden'][name='venue[description]']", count: 1
     assert_select "turbo-frame#venue_editor trix-editor.backend-description-editor[input='venue_description']", count: 1
     assert_select "turbo-frame#venue_editor textarea[name='venue[description]']", count: 0
+    assert_select "turbo-frame#venue_editor input[type='checkbox'][name='venue[vvs_ticket]']", count: 1
     assert_select "select[name='sort'] option[selected='selected'][value='alphabetical']", count: 1
   end
 
@@ -124,7 +125,8 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
           name: "Porsche Arena",
           external_url: "https://example.com/porsche-arena",
           address: "Mercedesstraße 69, 70372 Stuttgart",
-          description: "Große Venue"
+          description: "Große Venue",
+          vvs_ticket: "1"
         }
       }
     end
@@ -132,6 +134,7 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     created_venue = Venue.order(:id).last
     assert_redirected_to backend_venues_url(venue_id: created_venue.id)
     assert_equal "Porsche Arena", created_venue.name
+    assert_predicate created_venue, :vvs_ticket?
   end
 
   test "backend user can update venue" do
@@ -142,7 +145,8 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
         name: "Im Wizemann Club",
         external_url: "https://example.com/wizemann-club",
         address: "Neue Adresse",
-        description: "Neue Beschreibung"
+        description: "Neue Beschreibung",
+        vvs_ticket: "1"
       }
     }
 
@@ -150,6 +154,7 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     @venue.reload
     assert_equal "Im Wizemann Club", @venue.name
     assert_equal "Neue Adresse", @venue.address
+    assert_predicate @venue, :vvs_ticket?
     assert_equal "Venue wurde gespeichert.", flash[:notice]
   end
 
