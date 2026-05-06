@@ -15,6 +15,7 @@ class Venue < ApplicationRecord
 
   before_validation :normalize_attributes
   before_save :purge_logo_if_requested
+  after_save :reset_match_key_index_cache
   after_commit :reset_match_key_index_cache
 
   scope :ordered_by_name, -> { order(Arel.sql("LOWER(venues.name) ASC"), :id) }

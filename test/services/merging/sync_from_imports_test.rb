@@ -180,6 +180,43 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_includes event.completeness_flags, "missing_image"
   end
 
+  test "reuses a new venue across import groups in the same transaction" do
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "merge-shared-venue-1:2026-12-04",
+      payload: {
+        "event_id" => "merge-shared-venue-1",
+        "date_time" => "2026-12-04 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Neue Gemeinsame Venue",
+        "title_1" => "Shared Venue Band One",
+        "title_2" => "Shared Venue Night One"
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "merge-shared-venue-2:2026-12-05",
+      payload: {
+        "event_id" => "merge-shared-venue-2",
+        "date_time" => "2026-12-05 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Neue Gemeinsame Venue",
+        "title_1" => "Shared Venue Band Two",
+        "title_2" => "Shared Venue Night Two"
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+
+    venue = Venue.find_by!(name: "Neue Gemeinsame Venue")
+    assert_equal 2, result.groups_count
+    assert_equal 1, Venue.where("LOWER(name) = ?", "neue gemeinsame venue").count
+    assert_equal [ venue.id ], Event.where(artist_name: [ "Shared Venue Band One", "Shared Venue Band Two" ]).distinct.pluck(:venue_id)
+  end
+
   test "uses reservix public organizer name for promoter_name while keeping promoter_id from the prioritized source" do
     source_reservix = ImportSource.ensure_reservix_source!
 
