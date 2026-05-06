@@ -45,7 +45,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
     assert_select ".app-nav-backend-menu", count: 0
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
-    assert_match(/Events.*News.*Präsentatoren.*Venues.*Queue.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Präsentatoren.*Locations.*Queue.*Passwort.*Logout/m, response.body)
     assert_includes response.body, "Event-Inbox"
     assert_includes response.body, "auto-next"
     assert_includes response.body, "name=\"status\""
@@ -207,7 +207,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[venue_name]'][data-venue-autocomplete-target='input']", count: 1
     assert_select "input[name='event[venue_id]'][data-venue-autocomplete-target='hidden']", count: 1
     assert_select ".venue-autocomplete[data-controller='venue-autocomplete']", count: 1
-    assert_select ".form-label-link[aria-label='Venue im Backend öffnen'][href='#{backend_venues_path(venue_id: @event.venue_record.id)}'][target='_blank']", count: 1
+    assert_select "label[for='event_venue_name']", text: "Location", count: 1
+    assert_select ".form-label-link[aria-label='Location im Backend öffnen'][href='#{backend_venues_path(venue_id: @event.venue_record.id)}'][target='_blank']", count: 1
   end
 
   test "topbar does not render direct facebook or instagram publish buttons" do

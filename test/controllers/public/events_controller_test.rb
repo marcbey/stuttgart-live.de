@@ -748,7 +748,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Queue"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Passwort"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Logout"
-    assert_match(/Events.*News.*Präsentatoren.*Venues.*Queue.*Passwort.*Logout/m, response.body)
+    assert_match(/Events.*News.*Präsentatoren.*Locations.*Queue.*Passwort.*Logout/m, response.body)
     assert_select ".app-nav-links-group-separated", count: 0
   end
 
@@ -3846,7 +3846,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, expected_venue_link
     assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit event"
     assert_select ".event-detail-topbar-actions .event-detail-edit-link", count: 1
-    assert_select ".event-detail-venue-block .event-detail-edit-link", text: "Edit venue", count: 1
+    assert_select ".event-detail-venue-block .event-detail-edit-link", text: "Edit location", count: 1
     assert_select ".event-detail-image-stage-shell .saved-event-button.saved-event-button-detail-image[data-controller='saved-event-toggle']", count: 1
   end
 

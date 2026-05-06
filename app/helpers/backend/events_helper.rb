@@ -251,9 +251,9 @@ module Backend::EventsHelper
 
   def event_venue_link_label_row(form, event)
     external_link_label_row(
-      label_html: form.label(:venue_name, "Venue", class: "form-label"),
+      label_html: form.label(:venue_name, "Location", class: "form-label"),
       url: (backend_venues_path(venue_id: event.venue_record.id) if event.venue_record.present?),
-      text: "Venue im Backend"
+      text: "Location im Backend"
     )
   end
 

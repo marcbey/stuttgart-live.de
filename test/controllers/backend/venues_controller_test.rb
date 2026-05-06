@@ -17,7 +17,7 @@ class Backend::VenuesControllerTest < ActionDispatch::IntegrationTest
     get backend_venues_url
 
     assert_response :success
-    assert_select ".app-nav-links .app-nav-link-active", text: "Venues"
+    assert_select ".app-nav-links .app-nav-link-active", text: "Locations"
     assert_select ".backend-split", count: 1
     assert_select "#venues_list", count: 1
     assert_select "turbo-frame#venue_editor", count: 1
