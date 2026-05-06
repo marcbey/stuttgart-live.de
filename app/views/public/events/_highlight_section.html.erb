@@ -5,6 +5,7 @@
 <% lazy_lane_id = local_assigns[:lazy_lane_id] %>
 <% lazy_next_cursor = local_assigns[:lazy_next_cursor] %>
 <% lazy_url = local_assigns[:lazy_url] %>
+<% list_events = lazy_lane_id.present? ? events.first(Public::EventsController::HOME_LANE_LIST_LIMIT) : events %>
 <% section_cache_key = public_events_section_cache_key(
   section: "highlight",
   browse_state: browse_state,
@@ -41,6 +42,7 @@
            data-homepage-lane-lane-value="<%= lazy_lane_id %>"
            data-homepage-lane-cursor-value="<%= lazy_next_cursor %>"
            data-homepage-lane-per-page-value="<%= Public::EventsController::HOME_LANE_LIMIT %>"
+           data-homepage-lane-list-limit-value="<%= Public::EventsController::HOME_LANE_LIST_LIMIT %>"
            <% end %>
            <% if featured %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
     <%= render "home_slider_header",
@@ -90,9 +92,12 @@
         </button>
       </div>
     </div>
-    <div class="section-slider-list" data-section-view-target="list" hidden>
+    <div class="section-slider-list"
+         data-section-view-target="list"
+         <% if lazy_lane_id.present? %>data-homepage-lane-target="list"<% end %>
+         hidden>
       <%= render "event_rows",
-                 events: events,
+                 events: list_events,
                  browse_state: browse_state,
                  effective_series_ids: effective_series_ids,
                  strict_proxy: strict_proxy %>

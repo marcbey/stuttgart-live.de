@@ -1,10 +1,11 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "track", "link" ]
+  static targets = [ "track", "link", "list" ]
   static values = {
     cursor: String,
     lane: String,
+    listLimit: { type: Number, default: 12 },
     maxPagesDesktop: { type: Number, default: 3 },
     maxPagesMobile: { type: Number, default: 2 },
     perPage: { type: Number, default: 10 },
@@ -18,11 +19,17 @@ export default class extends Controller {
     this.storedPages = new Map()
     this.raf = null
     this.abortController = null
+    this.listAbortController = null
+    this.initialCursor = this.cursorValue || ""
+    this.listLoading = false
+    this.listLoaded = false
     this.userInteracted = false
     this.handleScroll = this.handleScroll.bind(this)
     this.markUserInteraction = this.markUserInteraction.bind(this)
     this.handleLoadRequest = this.handleLoadRequest.bind(this)
+    this.handleListShown = this.handleListShown.bind(this)
     this.element.addEventListener("homepage-lane:load", this.handleLoadRequest)
+    this.element.addEventListener("section-view:list-shown", this.handleListShown)
 
     if (this.hasTrackTarget) {
       this.trackTarget.addEventListener("scroll", this.handleScroll, { passive: true })
@@ -46,8 +53,10 @@ export default class extends Controller {
     }
 
     this.element.removeEventListener("homepage-lane:load", this.handleLoadRequest)
+    this.element.removeEventListener("section-view:list-shown", this.handleListShown)
     if (this.raf) window.cancelAnimationFrame(this.raf)
     this.abortPendingRequest()
+    this.abortPendingListRequest()
   }
 
   async load(event) {
@@ -111,6 +120,53 @@ export default class extends Controller {
     this.markUserInteraction()
     event.preventDefault()
     this.load(event)
+  }
+
+  handleListShown() {
+    this.ensureListLimit()
+  }
+
+  async ensureListLimit() {
+    if (this.listLoading || this.listLoaded || !this.hasListTarget) return
+
+    const missingRows = this.listLimitValue - this.listRowCount
+    if (missingRows <= 0) {
+      this.listLoaded = true
+      return
+    }
+
+    if (!this.canLoadListRows) {
+      this.listLoaded = true
+      return
+    }
+
+    this.listLoading = true
+    this.abortPendingListRequest()
+
+    const abortController = new AbortController()
+    this.listAbortController = abortController
+
+    try {
+      const response = await fetch(this.requestUrl("rows", { cursor: this.initialCursor, perPage: missingRows }), {
+        headers: {
+          Accept: "text/html",
+          "X-Requested-With": "XMLHttpRequest"
+        },
+        credentials: "same-origin",
+        signal: abortController.signal
+      })
+
+      if (!response.ok) throw new Error(`Homepage lane row request failed (${response.status})`)
+
+      const html = await response.text()
+      if (html.trim().length > 0) this.appendListRows(html)
+      this.listLoaded = true
+    } catch (error) {
+      if (error.name !== "AbortError") console.error(error)
+    } finally {
+      if (this.listAbortController === abortController) this.listAbortController = null
+      this.listLoading = false
+    }
   }
 
   scheduleTrackWork() {
@@ -232,13 +288,25 @@ export default class extends Controller {
     return remaining < this.trackTarget.clientWidth * 1.15
   }
 
-  requestUrl(mode) {
+  requestUrl(mode, { cursor = this.cursorValue, perPage = this.perPageValue } = {}) {
     const url = new URL(this.urlValue, window.location.origin)
     url.searchParams.set("lane", this.laneValue)
-    url.searchParams.set("cursor", this.cursorValue)
-    url.searchParams.set("per_page", this.perPageValue.toString())
+    url.searchParams.set("cursor", cursor)
+    url.searchParams.set("per_page", perPage.toString())
     url.searchParams.set("mode", mode)
     return url.toString()
+  }
+
+  appendListRows(html) {
+    const template = document.createElement("template")
+    template.innerHTML = html.trim()
+    const elements = Array.from(template.content.children).filter((element) => element instanceof HTMLElement)
+    if (elements.length === 0) return
+
+    const container = this.listTarget.querySelector(".event-listing-grid") || this.listTarget
+    elements.forEach((element) => {
+      container.appendChild(element)
+    })
   }
 
   pageStart(page) {
@@ -259,6 +327,14 @@ export default class extends Controller {
 
   get canLoad() {
     return this.hasUrlValue && this.hasLaneValue && this.hasCursorValue && this.cursorValue.length > 0
+  }
+
+  get canLoadListRows() {
+    return this.hasUrlValue && this.hasLaneValue && this.initialCursor.length > 0
+  }
+
+  get listRowCount() {
+    return this.listTarget.querySelectorAll(".event-listing-card").length
   }
 
   get maxRenderedPages() {
@@ -283,5 +359,12 @@ export default class extends Controller {
 
     this.abortController.abort()
     this.abortController = null
+  }
+
+  abortPendingListRequest() {
+    if (!this.listAbortController) return
+
+    this.listAbortController.abort()
+    this.listAbortController = null
   }
 }

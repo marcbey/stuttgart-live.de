@@ -61,6 +61,7 @@
            data-homepage-lane-lane-value="<%= lazy_lane_id %>"
            data-homepage-lane-cursor-value="<%= lazy_next_cursor %>"
            data-homepage-lane-per-page-value="<%= Public::EventsController::HOME_LANE_LIMIT %>"
+           data-homepage-lane-list-limit-value="<%= Public::EventsController::HOME_LANE_LIST_LIMIT %>"
            <% end %>>
     <%= render "home_slider_header",
                title: title,
@@ -102,7 +103,10 @@
       </div>
     </div>
 
-    <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
+    <div class="section-slider-list genre-lane-list"
+         data-section-view-target="list"
+         <% if lazy_lane_id.present? %>data-homepage-lane-target="list"<% end %>
+         hidden>
       <%= render "event_rows",
                  events: events,
                  browse_state: browse_state,
