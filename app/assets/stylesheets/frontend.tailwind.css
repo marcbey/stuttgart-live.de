@@ -96,6 +96,20 @@ color: var(--ink);
   transform: none;
 }
 
+.skip-link {
+position: absolute;
+  left: 1rem;
+  top: 0.75rem;
+  z-index: 120;
+  padding: 0.65rem 0.9rem;
+  background: var(--ink);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  transform: translateY(-140%);
+  transition: transform 140ms ease;
+}
+
 .skip-link:focus-visible {
 transform: translateY(0);
 }
