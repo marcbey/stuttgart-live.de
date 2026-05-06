@@ -1,6 +1,12 @@
 <% event_series_lane = local_assigns[:event_series_lane] %>
 <% browse_state = local_assigns[:browse_state] %>
+<% current_event = local_assigns[:current_event] %>
 <% series_events = event_series_lane&.events.to_a.sort_by { |series_event| [series_event.start_at, series_event.id] } %>
+<% calendar_series_events = series_events.dup %>
+<% if current_event.present? && current_event.event_series_id == event_series_lane&.series&.id %>
+  <% calendar_series_events << current_event %>
+  <% calendar_series_events = calendar_series_events.uniq(&:id).sort_by { |series_event| [series_event.start_at, series_event.id] } %>
+<% end %>
 <% desktop_visible_series_events = series_events.first(5) %>
 <% mobile_remaining_series_events = series_events.drop(3) %>
 <% uses_calendar = mobile_remaining_series_events.any? %>
@@ -10,9 +16,10 @@
   <section class="event-detail-series-terms" aria-labelledby="event-detail-series-terms-heading">
     <h2 id="event-detail-series-terms-heading">Weitere Termine</h2>
     <% if uses_calendar %>
-      <% calendar_months = series_events.group_by { |series_event| series_event.start_at.to_date.beginning_of_month }.sort_by { |month_date, _events| month_date } %>
-      <% active_month_date = calendar_months.first&.first %>
-      <% active_day = series_events.first.start_at.to_date %>
+      <% calendar_months = calendar_series_events.group_by { |series_event| series_event.start_at.to_date.beginning_of_month }.sort_by { |month_date, _events| month_date } %>
+      <% current_series_event = calendar_series_events.find { |series_event| series_event.id == current_event&.id } %>
+      <% active_day = (current_series_event || calendar_series_events.first).start_at.to_date %>
+      <% active_month_date = active_day.beginning_of_month %>
       <div class="event-detail-series-terms-disclosure">
         <div class="event-detail-series-term-list event-detail-series-term-list--visible" role="list">
           <% desktop_visible_series_events.each_with_index do |series_event, index| %>
@@ -74,9 +81,10 @@
                     <% day_events = month_events_by_day[date].to_a.sort_by { |series_event| [series_event.start_at, series_event.id] } %>
                     <% day_key = date.iso8601 %>
                     <% day_active = date == active_day %>
+                    <% day_current = day_events.any? { |series_event| series_event.id == current_event&.id } %>
                     <% if day_events.any? %>
                       <button type="button"
-                              class="event-series-calendar-day event-series-calendar-day--available<%= " is-active" if day_active %>"
+                              class="event-series-calendar-day event-series-calendar-day--available<%= " is-active" if day_active %><%= " is-current" if day_current %>"
                               data-event-series-calendar-target="dayButton"
                               data-action="click->event-series-calendar#selectDay"
                               data-event-series-calendar-day-key-param="<%= day_key %>"
@@ -101,7 +109,7 @@
                         <% aria_label = "Weiterer Termin: #{l(series_event.start_at, format: '%d.%m.%Y %H:%M Uhr')}" %>
                         <%= link_to l(series_event.start_at, format: "%H:%M"),
                                     public_event_detail_path(series_event, browse_state),
-                                    class: "event-series-calendar-time",
+                                    class: "event-series-calendar-time#{" is-current" if series_event.id == current_event&.id}",
                                     aria: { label: aria_label } %>
                       <% end %>
                     </div>

@@ -3415,8 +3415,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, series_section.css(".event-series-calendar-overlay.event-detail-series-more").size
     assert_equal 1, series_section.css(".event-series-calendar-overlay .event-series-calendar[data-controller='event-series-calendar']").size
     assert_operator series_section.css(".event-series-calendar-month").size, :>=, 1
-    assert_equal 7, series_section.css(".event-series-calendar-day--available").size
-    assert_equal 7, series_section.css(".event-series-calendar-time").size
+    assert_equal 8, series_section.css(".event-series-calendar-day--available").size
+    assert_equal 8, series_section.css(".event-series-calendar-time").size
     assert_includes series_section.at_css(".event-series-calendar-month")&.text.to_s.strip, sorted_future_events.first.start_at.year.to_s
     assert_no_match(/translation missing/i, series_section.text)
     assert_not_includes series_section.text, @published_event.artist_name
@@ -3426,12 +3426,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes series_section.text, "Past Series Artist"
     assert_nil series_section.at_css(".event-detail-series-terms-button")
 
-    expected_time_labels = sorted_future_events.map { |event| I18n.l(event.start_at, format: "%H:%M") }
+    expected_calendar_events = ([ @published_event ] + sorted_future_events).sort_by { |event| [ event.start_at, event.id ] }
+    expected_time_labels = expected_calendar_events.map { |event| I18n.l(event.start_at, format: "%H:%M") }
     time_links = series_section.css(".event-series-calendar-time")
     assert_equal expected_time_labels, time_links.map { |link| link.text.strip }
-    assert_equal sorted_future_events.map { |event| event_path(event.slug) }, time_links.map { |link| link["href"] }
+    assert_equal expected_calendar_events.map { |event| event_path(event.slug) }, time_links.map { |link| link["href"] }
     assert_equal "true", series_section.at_css(".event-series-calendar-month.is-active")&.[]("aria-pressed")
     assert_equal "true", series_section.at_css(".event-series-calendar-day--available.is-active")&.[]("aria-pressed")
+    assert_equal @published_event.start_at.day.to_s, series_section.at_css(".event-series-calendar-day--available.is-current")&.text.to_s.strip
+    assert_equal event_path(@published_event.slug), series_section.at_css(".event-series-calendar-time.is-current")&.[]("href")
     assert_select "section.genre-lane-section .lane-header-kicker", text: /Event-Reihe/, count: 0
 
     cta_index = response.body.index("event-detail-cta")
