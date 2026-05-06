@@ -5,6 +5,7 @@ export default class extends Controller {
   static values = {
     cursor: String,
     lane: String,
+    listCursor: String,
     listLimit: { type: Number, default: 12 },
     maxPagesDesktop: { type: Number, default: 3 },
     maxPagesMobile: { type: Number, default: 2 },
@@ -18,13 +19,14 @@ export default class extends Controller {
     this.pages = []
     this.storedPages = new Map()
     this.raf = null
+    this.listRaf = null
     this.abortController = null
     this.listAbortController = null
     this.initialCursor = this.cursorValue || ""
     this.listLoading = false
-    this.listLoaded = false
     this.userInteracted = false
     this.handleScroll = this.handleScroll.bind(this)
+    this.handleListScroll = this.handleListScroll.bind(this)
     this.markUserInteraction = this.markUserInteraction.bind(this)
     this.handleLoadRequest = this.handleLoadRequest.bind(this)
     this.handleListShown = this.handleListShown.bind(this)
@@ -40,6 +42,15 @@ export default class extends Controller {
       this.registerInitialPage()
     }
 
+    if (this.hasListTarget) {
+      this.listTarget.addEventListener("scroll", this.handleListScroll, { passive: true })
+      this.listTarget.addEventListener("keydown", this.markUserInteraction)
+      this.listTarget.addEventListener("pointerdown", this.markUserInteraction, { passive: true })
+      this.listTarget.addEventListener("touchstart", this.markUserInteraction, { passive: true })
+      this.listTarget.addEventListener("wheel", this.markUserInteraction, { passive: true })
+    }
+
+    if (!this.hasListCursorValue && this.initialCursor.length > 0) this.listCursorValue = this.initialCursor
     this.updateLink()
   }
 
@@ -52,9 +63,18 @@ export default class extends Controller {
       this.trackTarget.removeEventListener("wheel", this.markUserInteraction)
     }
 
+    if (this.hasListTarget) {
+      this.listTarget.removeEventListener("scroll", this.handleListScroll)
+      this.listTarget.removeEventListener("keydown", this.markUserInteraction)
+      this.listTarget.removeEventListener("pointerdown", this.markUserInteraction)
+      this.listTarget.removeEventListener("touchstart", this.markUserInteraction)
+      this.listTarget.removeEventListener("wheel", this.markUserInteraction)
+    }
+
     this.element.removeEventListener("homepage-lane:load", this.handleLoadRequest)
     this.element.removeEventListener("section-view:list-shown", this.handleListShown)
     if (this.raf) window.cancelAnimationFrame(this.raf)
+    if (this.listRaf) window.cancelAnimationFrame(this.listRaf)
     this.abortPendingRequest()
     this.abortPendingListRequest()
   }
@@ -110,6 +130,12 @@ export default class extends Controller {
     this.scheduleTrackWork()
   }
 
+  handleListScroll() {
+    if (!this.userInteracted) return
+
+    this.scheduleListWork()
+  }
+
   markUserInteraction() {
     this.userInteracted = true
   }
@@ -122,23 +148,32 @@ export default class extends Controller {
     this.load(event)
   }
 
+  previousList(event) {
+    event.preventDefault()
+    this.scrollListByPage(-1)
+  }
+
+  nextList(event) {
+    event.preventDefault()
+    this.scrollListByPage(1)
+  }
+
   handleListShown() {
     this.ensureListLimit()
+    this.scheduleListWork()
   }
 
   async ensureListLimit() {
-    if (this.listLoading || this.listLoaded || !this.hasListTarget) return
+    if (this.listLoading || !this.hasListTarget) return
 
     const missingRows = this.listLimitValue - this.listRowCount
-    if (missingRows <= 0) {
-      this.listLoaded = true
-      return
-    }
+    if (missingRows <= 0) return
 
-    if (!this.canLoadListRows) {
-      this.listLoaded = true
-      return
-    }
+    await this.loadListRows({ perPage: missingRows })
+  }
+
+  async loadListRows({ perPage = this.listLimitValue } = {}) {
+    if (this.listLoading || !this.canLoadListRows) return
 
     this.listLoading = true
     this.abortPendingListRequest()
@@ -147,7 +182,7 @@ export default class extends Controller {
     this.listAbortController = abortController
 
     try {
-      const response = await fetch(this.requestUrl("rows", { cursor: this.initialCursor, perPage: missingRows }), {
+      const response = await fetch(this.requestUrl("rows", { cursor: this.listCursorValue, perPage: perPage }), {
         headers: {
           Accept: "text/html",
           "X-Requested-With": "XMLHttpRequest"
@@ -159,13 +194,15 @@ export default class extends Controller {
       if (!response.ok) throw new Error(`Homepage lane row request failed (${response.status})`)
 
       const html = await response.text()
+      const nextCursor = response.headers.get("X-Homepage-Lane-Next-Cursor") || ""
       if (html.trim().length > 0) this.appendListRows(html)
-      this.listLoaded = true
+      this.listCursorValue = nextCursor
     } catch (error) {
       if (error.name !== "AbortError") console.error(error)
     } finally {
       if (this.listAbortController === abortController) this.listAbortController = null
       this.listLoading = false
+      if (this.listVisible) this.scheduleListWork()
     }
   }
 
@@ -177,6 +214,15 @@ export default class extends Controller {
       this.restoreNearbyPlaceholders()
       this.pruneDistantPages()
       if (this.nearEnd()) this.load()
+    })
+  }
+
+  scheduleListWork() {
+    if (this.listRaf) return
+
+    this.listRaf = window.requestAnimationFrame(() => {
+      this.listRaf = null
+      if (this.listNearEnd()) this.loadListRows()
     })
   }
 
@@ -288,6 +334,13 @@ export default class extends Controller {
     return remaining < this.trackTarget.clientWidth * 1.15
   }
 
+  listNearEnd() {
+    if (!this.canLoadListRows || !this.hasListTarget) return false
+
+    const remaining = this.listTarget.scrollWidth - this.listTarget.clientWidth - this.listTarget.scrollLeft
+    return remaining < this.listTarget.clientWidth * 1.15
+  }
+
   requestUrl(mode, { cursor = this.cursorValue, perPage = this.perPageValue } = {}) {
     const url = new URL(this.urlValue, window.location.origin)
     url.searchParams.set("lane", this.laneValue)
@@ -307,6 +360,14 @@ export default class extends Controller {
     elements.forEach((element) => {
       container.appendChild(element)
     })
+  }
+
+  scrollListByPage(direction) {
+    if (!this.hasListTarget) return
+
+    const left = this.listTarget.scrollLeft + (this.listTarget.clientWidth * direction)
+    this.listTarget.scrollTo({ left, behavior: "smooth" })
+    if (direction > 0 && this.listNearEnd()) this.loadListRows()
   }
 
   pageStart(page) {
@@ -330,7 +391,11 @@ export default class extends Controller {
   }
 
   get canLoadListRows() {
-    return this.hasUrlValue && this.hasLaneValue && this.initialCursor.length > 0
+    return this.hasUrlValue && this.hasLaneValue && this.hasListCursorValue && this.listCursorValue.length > 0
+  }
+
+  get listVisible() {
+    return this.hasListTarget && this.listTarget.offsetParent !== null
   }
 
   get listRowCount() {

@@ -258,9 +258,11 @@ module Public
       @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
 
       featured_page = homepage_lane_page("highlights", per_page: HOME_HIGHLIGHTS_LANE_LIMIT)
+      featured_list_page = homepage_lane_page("highlights", per_page: HOME_LANE_LIST_LIMIT)
       @home_featured_events = featured_page.events
       @home_featured_effective_series_ids = featured_page.effective_series_ids
       @home_featured_next_cursor = featured_page.next_cursor
+      @home_featured_list_next_cursor = featured_list_page.next_cursor
 
       @home_genre_lanes = homepage_genre_lanes
       @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres

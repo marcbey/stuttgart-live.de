@@ -2107,7 +2107,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes row_names, "Highlights Fallback Artist 12"
     assert_not_includes names, final_event.artist_name
     cursor = highlights_section["data-homepage-lane-cursor-value"]
+    list_cursor = highlights_section["data-homepage-lane-list-cursor-value"]
     assert_predicate cursor, :present?
+    assert_predicate list_cursor, :present?
+
+    get homepage_lane_events_url(lane: "highlights", cursor: list_cursor, mode: "rows", filter: "all", event_date: selected_date.iso8601)
+
+    assert_response :success
+    assert_select "article.event-listing-card", count: 5
+    assert_select "article.event-listing-card", text: /Highlights Fallback Artist 12/
+    assert_select "article.event-listing-card", text: /Highlights Fallback Final Artist/
 
     get homepage_lane_events_url(lane: "highlights", cursor: cursor, filter: "all", event_date: selected_date.iso8601)
 
