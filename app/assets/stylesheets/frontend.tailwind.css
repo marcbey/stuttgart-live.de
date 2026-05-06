@@ -1527,6 +1527,10 @@ display: flex;
   gap: 0.55rem;
 }
 
+.consent-banner-actions .button {
+text-indent: 0.08em;
+}
+
 .consent-dialog-backdrop {
 position: fixed;
   inset: 0;
