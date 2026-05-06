@@ -1,8 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
 
-const PLACEHOLDER_TYPING_BASE_DELAY = 92
-const PLACEHOLDER_ENTRY_GAP_BASE_DELAY = 360
-const PLACEHOLDER_CURSOR_BLINK_DELAY = 180
+const PLACEHOLDER_TYPING_BASE_DELAY = 40
+const PLACEHOLDER_ENTRY_GAP_BASE_DELAY = 220
+const PLACEHOLDER_CURSOR_BLINK_DELAY = 130
+const PLACEHOLDER_SEQUENCE_START_DELAY = 2000
 const PLACEHOLDER_TYPING_CADENCE = [-18, 14, -6, 20, -12, 10, 4, -4]
 const CALENDAR_WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 const CALENDAR_MONTH_FORMATTER = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" })
@@ -33,6 +34,7 @@ export default class extends Controller {
     this.lastRequestKey = null
     this.searchTimeout = null
     this.placeholderTimeout = null
+    this.placeholderStartTimeout = null
     this.placeholderAnimationActive = false
     this.currentPlaceholderIndex = 0
     this.hasShownInitialPlaceholder = false
@@ -49,6 +51,7 @@ export default class extends Controller {
     this.inputTarget.setAttribute("placeholder", this.defaultPlaceholder)
     this.renderCalendar()
     this.syncControls()
+    this.setPlaceholderVisibility(false)
     this.syncPlaceholderAnimation()
   }
 
@@ -403,12 +406,8 @@ export default class extends Controller {
       return
     }
 
-    this.setPlaceholderVisibility(true)
-
     if (this.prefersReducedMotion || this.placeholderSequence.length <= 1) {
-      this.stopPlaceholderAnimation()
-      this.renderPlaceholder(this.defaultPlaceholder)
-      this.setCursorVisibility(true)
+      this.schedulePlaceholderAnimationStart({ animate: false })
       return
     }
 
@@ -416,7 +415,7 @@ export default class extends Controller {
       return
     }
 
-    this.startPlaceholderAnimation()
+    this.schedulePlaceholderAnimationStart()
   }
 
   buildRequestUrl() {
@@ -461,6 +460,29 @@ export default class extends Controller {
     this.runPlaceholderSequence()
   }
 
+  schedulePlaceholderAnimationStart({ animate = true } = {}) {
+    if (this.placeholderStartTimeout) {
+      return
+    }
+
+    this.placeholderStartTimeout = window.setTimeout(() => {
+      this.placeholderStartTimeout = null
+      if (this.query.hasValue) {
+        return
+      }
+
+      this.setPlaceholderVisibility(true)
+
+      if (animate) {
+        this.startPlaceholderAnimation()
+      } else {
+        this.stopPlaceholderAnimation()
+        this.renderPlaceholder(this.defaultPlaceholder)
+        this.setCursorVisibility(true)
+      }
+    }, PLACEHOLDER_SEQUENCE_START_DELAY)
+  }
+
   stopPlaceholderAnimation({ reset = false } = {}) {
     if (reset) {
       this.currentPlaceholderIndex = 0
@@ -468,6 +490,7 @@ export default class extends Controller {
     }
 
     this.placeholderAnimationActive = false
+    this.clearPlaceholderStartTimer()
     this.clearPlaceholderTimer()
   }
 
@@ -552,6 +575,11 @@ export default class extends Controller {
     this.placeholderTimeout = null
   }
 
+  clearPlaceholderStartTimer() {
+    window.clearTimeout(this.placeholderStartTimeout)
+    this.placeholderStartTimeout = null
+  }
+
   openCalendar() {
     this.closeSearchPanel()
     this.pausePlaceholderForCalendar()
@@ -603,16 +631,22 @@ export default class extends Controller {
       const date = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + dayIndex)
       const dateKey = this.dateKey(date)
       const dayButton = document.createElement("button")
+      const pastDate = date < this.today
 
       dayButton.type = "button"
       dayButton.className = "public-search-calendar-day"
       dayButton.textContent = date.getDate().toString()
       dayButton.dataset.date = dateKey
-      dayButton.dataset.action = "click->public-search#selectCalendarDate keydown->public-search#handleCalendarDayKeydown"
+      dayButton.dataset.action = pastDate ? "" : "click->public-search#selectCalendarDate keydown->public-search#handleCalendarDayKeydown"
       dayButton.setAttribute("aria-label", `${CALENDAR_WEEKDAYS[this.calendarWeekdayIndex(date)]}, ${this.formatCalendarQuery(date)}`)
 
       if (date.getMonth() !== monthStart.getMonth()) {
         dayButton.classList.add("public-search-calendar-day-muted")
+      }
+
+      if (pastDate) {
+        dayButton.disabled = true
+        dayButton.classList.add("public-search-calendar-day-disabled")
       }
 
       if (dateKey === todayKey) {
