@@ -21,10 +21,28 @@ module Merging
       attr_reader :priority_map, :threshold
 
       def match_result_for(record:, event:)
+        [
+          artist_match_result_for(record:, event:),
+          artist_title_swap_match_result_for(record:, event:)
+        ].compact.max_by(&:score)
+      end
+
+      def artist_match_result_for(record:, event:)
         score, reason = score(record.artist_name, event.artist_name)
         return nil if score <= 0
 
         Result.new(event:, score:, reason:)
+      end
+
+      def artist_title_swap_match_result_for(record:, event:)
+        return nil unless distinct_artist_title_pair?(artist_name: record.artist_name, title: record.title)
+        return nil unless distinct_artist_title_pair?(artist_name: event.artist_name, title: event.title)
+
+        artist_to_title_score, = score(record.artist_name, event.title)
+        title_to_artist_score, = score(record.title, event.artist_name)
+        return nil if artist_to_title_score < threshold || title_to_artist_score < threshold
+
+        Result.new(event:, score: [ artist_to_title_score, title_to_artist_score ].min, reason: "artist_title_swap")
       end
 
       def score(left_name, right_name)
@@ -58,6 +76,15 @@ module Merging
 
       def event_normalized_name(value)
         Merging::ArtistNameNormalizer.normalize(value)
+      end
+
+      def distinct_artist_title_pair?(artist_name:, title:)
+        normalized_artist_name = Merging::ArtistNameNormalizer.normalize(artist_name)
+        normalized_title = Merging::ArtistNameNormalizer.normalize(title)
+
+        normalized_artist_name.present? &&
+          normalized_title.present? &&
+          normalized_artist_name != normalized_title
       end
     end
   end

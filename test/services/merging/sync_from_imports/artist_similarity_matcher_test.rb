@@ -43,16 +43,106 @@ class Merging::SyncFromImports::ArtistSimilarityMatcherTest < ActiveSupport::Tes
     assert_nil matcher.call(record: build_record("Band Beta", Time.zone.local(2026, 10, 10, 20, 0, 0)))
   end
 
+  test "matches swapped artist and title names at the same start time" do
+    event = Event.create!(
+      artist_name: "Bitter",
+      title: "Daniel Sloss",
+      start_at: Time.zone.local(2026, 9, 22, 20, 0, 0),
+      venue: "Theaterhaus - T1",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_fingerprint: "matcher::daniel-sloss-swapped"
+    )
+
+    matcher = Merging::SyncFromImports::ArtistSimilarityMatcher.new(
+      priority_map: Merging::ProviderPriorityMap.call,
+      threshold: 0.74
+    )
+
+    record = build_record("Daniel Sloss", event.start_at, title: "Bitter")
+    result = matcher.call(record:)
+
+    assert_equal event, result&.event
+    assert_equal "artist_title_swap", result&.reason
+    assert_operator result&.score.to_f, :>=, 0.74
+  end
+
+  test "matches swapped quoted tour titles at the same start time" do
+    event = Event.create!(
+      artist_name: "„Alpha Maus Tour 2026“",
+      title: "Tara-Louise Wittwer",
+      start_at: Time.zone.local(2026, 10, 5, 20, 0, 0),
+      venue: "Theaterhaus - T1",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_fingerprint: "matcher::tara-louise-wittwer-swapped"
+    )
+
+    matcher = Merging::SyncFromImports::ArtistSimilarityMatcher.new(
+      priority_map: Merging::ProviderPriorityMap.call,
+      threshold: 0.74
+    )
+
+    record = build_record("Tara-Louise Wittwer", event.start_at, title: "Alpha Maus Tour 2026")
+    result = matcher.call(record:)
+
+    assert_equal event, result&.event
+    assert_equal "artist_title_swap", result&.reason
+    assert_operator result&.score.to_f, :>=, 0.74
+  end
+
+  test "does not match swapped names when only one cross comparison matches" do
+    Event.create!(
+      artist_name: "Daniel Sloss",
+      title: "Bitter",
+      start_at: Time.zone.local(2026, 9, 22, 20, 0, 0),
+      venue: "Theaterhaus - T1",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_fingerprint: "matcher::one-sided-swap"
+    )
+
+    matcher = Merging::SyncFromImports::ArtistSimilarityMatcher.new(
+      priority_map: Merging::ProviderPriorityMap.call,
+      threshold: 0.74
+    )
+
+    record = build_record("Bitter", Time.zone.local(2026, 9, 22, 20, 0, 0), title: "Different Person")
+
+    assert_nil matcher.call(record:)
+  end
+
+  test "does not match swapped names when an artist title pair is fallback-identical" do
+    Event.create!(
+      artist_name: "Daniel Sloss",
+      title: "Daniel Sloss",
+      start_at: Time.zone.local(2026, 9, 22, 20, 0, 0),
+      venue: "Theaterhaus - T1",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_fingerprint: "matcher::fallback-identical-swap"
+    )
+
+    matcher = Merging::SyncFromImports::ArtistSimilarityMatcher.new(
+      priority_map: Merging::ProviderPriorityMap.call,
+      threshold: 0.74
+    )
+
+    record = build_record("Bitter", Time.zone.local(2026, 9, 22, 20, 0, 0), title: "Daniel Sloss")
+
+    assert_nil matcher.call(record:)
+  end
+
   private
 
-  def build_record(artist_name, start_at)
+  def build_record(artist_name, start_at, title: artist_name)
     Merging::SyncFromImports::ImportRecord.new(
       source: "eventim",
-      source_identifier: "#{artist_name.parameterize}:#{start_at.to_i}",
+      source_identifier: "#{artist_name.parameterize}:#{title.parameterize}:#{start_at.to_i}",
       external_event_id: SecureRandom.uuid,
       series_reference: nil,
       artist_name: artist_name,
-      title: artist_name,
+      title: title,
       start_at: start_at,
       doors_at: nil,
       city: nil,

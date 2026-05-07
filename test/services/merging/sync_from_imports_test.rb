@@ -533,6 +533,51 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     ).where("metadata ->> 'merge_run_id' = ?", merge_run_id.to_s).order(:id).pluck(:action)
   end
 
+  test "similarity-matches swapped artist and title fields when enabled" do
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
+    AppSetting.reset_cache!
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "artist-title-swap-easy:2026-09-22",
+      payload: {
+        "event_id" => "artist-title-swap-easy",
+        "date_time" => "2026-09-22 20:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Theaterhaus - T1",
+        "title_1" => "Daniel Sloss",
+        "title_2" => "Bitter",
+        "ticket_url" => "https://example.com/easy-daniel-sloss"
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: import_sources(:two),
+      import_event_type: "eventim",
+      source_identifier: "artist-title-swap-eventim:2026-09-22",
+      payload: {
+        "eventid" => "artist-title-swap-eventim",
+        "eventdate" => "2026-09-22",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Theaterhaus - T1",
+        "eventname" => "Daniel Sloss",
+        "artistname" => "Bitter",
+        "eventlink" => "https://example.com/eventim-daniel-sloss"
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+    event = Event.find_by!(start_at: Time.zone.local(2026, 9, 22, 20, 0, 0))
+
+    assert_equal 2, result.import_records_count
+    assert_equal 2, result.groups_count
+    assert_equal 1, result.duplicate_matches_count
+    assert_equal 1, Event.where(start_at: Time.zone.local(2026, 9, 22, 20, 0, 0)).count
+    assert_equal 2, event.event_offers.count
+  end
+
   test "similarity match keeps easyticket as primary source over existing eventim event" do
     AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
     AppSetting.reset_cache!
