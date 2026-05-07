@@ -5298,6 +5298,43 @@ margin-top: -0.14rem;
   color: var(--event-price-color);
 }
 
+.section-slider-list-viewport {
+position: relative;
+  margin-top: 0.45rem;
+}
+
+.section-slider-list-viewport:hover .section-slider-list-arrow,
+.section-slider-list-viewport:focus-within .section-slider-list-arrow {
+opacity: 1;
+  pointer-events: auto;
+}
+
+.section-slider-list[data-homepage-lane-target="list"] {
+margin-top: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.35rem;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.section-slider-list[data-homepage-lane-target="list"]::-webkit-scrollbar {
+display: none;
+}
+
+.section-slider-list[data-homepage-lane-target="list"] .event-listing-grid {
+grid-auto-flow: column;
+  grid-auto-columns: minmax(min(18rem, calc(100vw - 2rem)), min(82vw, 24rem));
+  grid-template-rows: repeat(3, minmax(0, auto));
+  grid-template-columns: none;
+  align-items: stretch;
+}
+
+.section-slider-list[data-homepage-lane-target="list"] .event-listing-card {
+scroll-snap-align: start;
+}
+
 .home-slider-card .event-listing-link strong,
 .genre-lane-card .event-listing-link strong,
 .home-slider-card .event-listing-link span,

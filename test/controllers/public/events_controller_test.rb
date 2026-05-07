@@ -1937,7 +1937,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   test "homepage lane endpoint renders rows and rejects invalid cursors" do
     _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 
-    12.times do |index|
+    16.times do |index|
       Event.create!(
         slug: "homepage-lane-endpoint-row-#{index}",
         source_fingerprint: "test::public::homepage-lane-endpoint::row::#{index}",
@@ -1959,6 +1959,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "article.event-listing-card", count: 10
     assert_predicate response.headers["X-Homepage-Lane-Next-Cursor"], :present?
+    next_cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
+
+    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: next_cursor, mode: "rows", per_page: 2)
+
+    assert_response :success
+    assert_select "article.event-listing-card", count: 2
+    assert_select "article.event-listing-card", text: /Homepage Lane Endpoint Row Artist 10/
+    assert_select "article.event-listing-card", text: /Homepage Lane Endpoint Row Artist 11/
 
     get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: "invalid")
 
@@ -2055,13 +2063,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   test "index initially limits highlights fallback and exposes remaining events through lane endpoint" do
     selected_date = 20.days.from_now.to_date
 
-    12.times do |index|
+    16.times do |index|
       Event.create!(
         slug: "highlights-fallback-event-#{index}",
         source_fingerprint: "test::homepage::highlights::fallback::#{index}",
         title: "Highlights Fallback Event #{index}",
         artist_name: "Highlights Fallback Artist #{index}",
-        start_at: selected_date.in_time_zone.change(hour: 10 + index, min: 0, sec: 0),
+        start_at: selected_date.in_time_zone.change(hour: 7 + index, min: 0, sec: 0),
         venue: "Fallback Venue #{index}",
         city: "Stuttgart",
         status: "published",
@@ -2091,11 +2099,24 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     document = Nokogiri::HTML.parse(response.body)
     highlights_section = document.at_css("section.home-featured-section")
     names = highlights_section.css(".event-card-copy h2").map(&:text)
+    row_names = highlights_section.css(".section-slider-list .event-listing-link strong").map(&:text)
 
-    assert_equal 10, names.size
+    assert_equal 14, names.size
+    assert_equal 12, row_names.size
+    assert_includes row_names, "Highlights Fallback Artist 11"
+    assert_not_includes row_names, "Highlights Fallback Artist 12"
     assert_not_includes names, final_event.artist_name
     cursor = highlights_section["data-homepage-lane-cursor-value"]
+    list_cursor = highlights_section["data-homepage-lane-list-cursor-value"]
     assert_predicate cursor, :present?
+    assert_predicate list_cursor, :present?
+
+    get homepage_lane_events_url(lane: "highlights", cursor: list_cursor, mode: "rows", filter: "all", event_date: selected_date.iso8601)
+
+    assert_response :success
+    assert_select "article.event-listing-card", count: 5
+    assert_select "article.event-listing-card", text: /Highlights Fallback Artist 12/
+    assert_select "article.event-listing-card", text: /Highlights Fallback Final Artist/
 
     get homepage_lane_events_url(lane: "highlights", cursor: cursor, filter: "all", event_date: selected_date.iso8601)
 

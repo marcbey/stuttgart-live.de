@@ -5,6 +5,8 @@ module Public
 
     PER_PAGE = 12
     HOME_LANE_LIMIT = Public::Events::HomepageLanePager::DEFAULT_PER_PAGE
+    HOME_LANE_LIST_LIMIT = 12
+    HOME_HIGHLIGHTS_LANE_LIMIT = HOME_LANE_LIMIT + 4
     HOME_CANDIDATE_LIMIT = 100
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
@@ -255,10 +257,12 @@ module Public
       @home_all_stuttgart_lane = Public::Events::LaneDirectory.all_stuttgart
       @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
 
-      featured_page = homepage_lane_page("highlights")
+      featured_page = homepage_lane_page("highlights", per_page: HOME_HIGHLIGHTS_LANE_LIMIT)
+      featured_list_page = homepage_lane_page("highlights", per_page: HOME_LANE_LIST_LIMIT)
       @home_featured_events = featured_page.events
       @home_featured_effective_series_ids = featured_page.effective_series_ids
       @home_featured_next_cursor = featured_page.next_cursor
+      @home_featured_list_next_cursor = featured_list_page.next_cursor
 
       @home_genre_lanes = homepage_genre_lanes
       @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
@@ -317,7 +321,7 @@ module Public
       Public::Events::HomepageGenreTagCloudBuilder.new(relation: homepage_events_relation).call
     end
 
-    def homepage_lane_page(identifier, cursor: nil)
+    def homepage_lane_page(identifier, cursor: nil, per_page: nil)
       cursor_payload = Public::Events::HomepageLanePager.decode_cursor(cursor)
       raise Public::Events::HomepageLanePager::InvalidCursor if cursor.present? && cursor_payload.blank?
 
@@ -328,7 +332,7 @@ module Public
         relation: lane_relation,
         context: context,
         cursor: cursor,
-        per_page: normalized_homepage_lane_per_page
+        per_page: normalized_homepage_lane_per_page(per_page)
       ).call
     end
 
@@ -403,8 +407,8 @@ module Public
       ).compact
     end
 
-    def normalized_homepage_lane_per_page
-      (params[:per_page].presence || HOME_LANE_LIMIT).to_i
+    def normalized_homepage_lane_per_page(default = nil)
+      (params[:per_page].presence || default || HOME_LANE_LIMIT).to_i
     end
 
     def homepage_lane_render_locals(identifier, lane_page, mode:)

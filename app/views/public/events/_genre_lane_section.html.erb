@@ -60,7 +60,9 @@
            data-homepage-lane-url-value="<%= lazy_url %>"
            data-homepage-lane-lane-value="<%= lazy_lane_id %>"
            data-homepage-lane-cursor-value="<%= lazy_next_cursor %>"
+           data-homepage-lane-list-cursor-value="<%= lazy_next_cursor %>"
            data-homepage-lane-per-page-value="<%= Public::EventsController::HOME_LANE_LIMIT %>"
+           data-homepage-lane-list-limit-value="<%= Public::EventsController::HOME_LANE_LIST_LIMIT %>"
            <% end %>>
     <%= render "home_slider_header",
                title: title,
@@ -102,12 +104,33 @@
       </div>
     </div>
 
-    <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
-      <%= render "event_rows",
-                 events: events,
-                 browse_state: browse_state,
-                 effective_series_ids: effective_series_ids,
-                 strict_proxy: strict_proxy %>
+    <div class="section-slider-list-viewport"
+         data-section-view-target="list"
+         hidden>
+      <% if lazy_lane_id.present? %>
+        <button type="button"
+                class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev section-slider-list-arrow"
+                data-action="click->homepage-lane#previousList"
+                aria-label="Zurück">
+          ‹
+        </button>
+      <% end %>
+      <div class="section-slider-list genre-lane-list"
+           <% if lazy_lane_id.present? %>data-homepage-lane-target="list"<% end %>>
+        <%= render "event_rows",
+                   events: events,
+                   browse_state: browse_state,
+                   effective_series_ids: effective_series_ids,
+                   strict_proxy: strict_proxy %>
+      </div>
+      <% if lazy_lane_id.present? %>
+        <button type="button"
+                class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next section-slider-list-arrow"
+                data-action="click->homepage-lane#nextList"
+                aria-label="Weiter">
+          ›
+        </button>
+      <% end %>
     </div>
   </section>
 <% end %>

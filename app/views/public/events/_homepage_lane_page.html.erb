@@ -3,7 +3,8 @@
              events: page.events,
              browse_state: browse_state,
              effective_series_ids: page.effective_series_ids,
-             strict_proxy: strict_proxy %>
+             strict_proxy: strict_proxy,
+             wrap: false %>
 <% else %>
   <% page.events.each_with_index do |event, index| %>
     <% if lane_key == "highlights" %>

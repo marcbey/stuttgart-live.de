@@ -65,6 +65,8 @@ export default class extends Controller {
     if (items.length === 0) return
 
     if (direction > 0 && this.atEnd()) {
+      if (this.requestHomepageLanePage()) return
+
       this.trackTarget.scrollTo({ left: 0, behavior: "smooth" })
       return
     }
@@ -73,6 +75,8 @@ export default class extends Controller {
     const currentIndex = this.leadingVisibleColumnIndex(columns)
     const pageSize = this.visibleColumnCount(columns)
     const targetIndex = this.clampIndex(currentIndex + (pageSize * direction), columns)
+
+    if (direction > 0 && targetIndex === currentIndex && this.requestHomepageLanePage()) return
 
     this.scrollToColumn(columns[targetIndex])
   }
@@ -211,6 +215,19 @@ export default class extends Controller {
 
     const maxScrollLeft = this.trackTarget.scrollWidth - this.trackTarget.clientWidth
     return this.trackTarget.scrollLeft >= maxScrollLeft - 4
+  }
+
+  requestHomepageLanePage() {
+    if (!this.element.matches("[data-controller~='homepage-lane']")) return false
+
+    const event = new CustomEvent("homepage-lane:load", {
+      bubbles: true,
+      cancelable: true,
+      detail: { advance: true }
+    })
+    this.element.dispatchEvent(event)
+
+    return true
   }
 
   stopAutoplay() {

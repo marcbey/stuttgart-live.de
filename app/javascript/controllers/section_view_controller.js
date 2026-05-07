@@ -41,5 +41,6 @@ export default class extends Controller {
       this.buttonTarget.setAttribute("title", "Kachelansicht")
     }
     if (this.hasLabelTarget) this.labelTarget.textContent = "Kachelansicht"
+    this.element.dispatchEvent(new CustomEvent("section-view:list-shown", { bubbles: true }))
   }
 }
