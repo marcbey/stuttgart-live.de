@@ -54,7 +54,7 @@ module Backend
     end
 
     def create
-      @event = Event.new(event_attribute_params.merge(manual_event_promoter_attributes))
+      @event = Event.new(manual_event_promoter_attributes.merge(event_attribute_params))
       prepare_promotion_banner_image(@event)
       @selected_genre_ids = genre_ids_from_params
       @selected_sub_genre_ids = sub_genre_ids_from_params
@@ -109,7 +109,7 @@ module Backend
         rescue EventImage::ProcessingError => e
           creation_alert = e.message
           @event.destroy! if @event.persisted?
-          @event = Event.new(event_attribute_params.merge(manual_event_promoter_attributes))
+          @event = Event.new(manual_event_promoter_attributes.merge(event_attribute_params))
           created_successfully = false
         end
       end
@@ -394,6 +394,8 @@ module Backend
         :city,
         :event_info,
         :support,
+        :promoter_id,
+        :promoter_name,
         :organizer_notes,
         :show_organizer_notes,
         :badge_text,

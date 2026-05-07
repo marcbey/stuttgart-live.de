@@ -1,5 +1,4 @@
 <% show_promoter_id = local_assigns.fetch(:show_promoter_id, false) %>
-<% display_promoter = show_promoter_id ? (local_assigns[:display_promoter] || event_display_promoter(event)) : nil %>
 <% show_settings_section = local_assigns.fetch(:show_settings_section, true) %>
 <% selected_genre_ids = Array(local_assigns.fetch(:selected_genre_ids, event.genre_ids)).map(&:to_i) %>
 <% selected_sub_genre_ids = Array(local_assigns.fetch(:selected_sub_genre_ids, event.sub_genre_ids)).map(&:to_i) %>
@@ -67,13 +66,15 @@
     </div>
   </div>
   <% if show_promoter_id %>
-    <div>
-      <label class="form-label" for="<%= dom_id(event, :promoter_display) %>">Promoter</label>
-      <input id="<%= dom_id(event, :promoter_display) %>"
-             class="form-input"
-             type="text"
-             value="<%= display_promoter.presence || "-" %>"
-             readonly>
+    <div class="editor-grid editor-grid-span-full event-promoter-fields">
+      <div>
+        <%= form.label :promoter_id, "Promoter-ID", class: "form-label" %>
+        <%= form.text_field :promoter_id, class: "form-input" %>
+      </div>
+      <div>
+        <%= form.label :promoter_name, "Promoter-Name", class: "form-label" %>
+        <%= form.text_field :promoter_name, class: "form-input" %>
+      </div>
     </div>
   <% end %>
   <div>

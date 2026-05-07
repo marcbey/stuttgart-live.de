@@ -179,8 +179,12 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "div#event_editor", count: 0
     assert_select "div#event_editor_panel", count: 1
     assert_select "input[name='inbox_status'][value='needs_review']"
-    assert_select "input[name='event[promoter_id]']", count: 0
-    assert_select "input[readonly]#promoter_display_event_#{@event.id}[value='#{@event.promoter_id}']"
+    assert_select ".event-promoter-fields.editor-grid.editor-grid-span-full", count: 1
+    assert_select "input[name='event[promoter_id]'][value='#{@event.promoter_id}']", count: 1
+    assert_select "input[name='event[promoter_id]'][readonly]", count: 0
+    assert_select "input[name='event[promoter_name]']", count: 1
+    assert_select "input[name='event[promoter_name]'][readonly]", count: 0
+    assert_select "input[readonly]#promoter_display_event_#{@event.id}", count: 0
     assert_select ".event-editor-tabs[data-controller='event-editor-tabs']", count: 1
     assert_select ".event-editor-tabs[data-controller='event-editor-tabs event-editor-settings']", count: 0
     assert_select "#event-editor-tab-settings[aria-selected='false']", count: 1
@@ -495,9 +499,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[homepage_url]']"
     assert_select "input[name='event[instagram_url]']"
     assert_select "input[name='event[facebook_url]']"
-    assert_select "input[name='event[promoter_id]']", count: 0
-    assert_select "label.form-label", text: "Promoter"
-    assert_select "input[readonly]#promoter_display_event[value='RUSS Live']", count: 1
+    assert_select ".event-promoter-fields.editor-grid.editor-grid-span-full", count: 1
+    assert_select "label.form-label", text: "Promoter-ID"
+    assert_select "input[name='event[promoter_id]'][value='382']", count: 1
+    assert_select "input[name='event[promoter_id]'][readonly]", count: 0
+    assert_select "label.form-label", text: "Promoter-Name"
+    assert_select "input[name='event[promoter_name]'][value='RUSS Live']", count: 1
+    assert_select "input[name='event[promoter_name]'][readonly]", count: 0
+    assert_select "input[readonly]#promoter_display_event", count: 0
     assert_select "input[name='event[ticket_url]']"
     assert_select "input[name='event[ticket_sold_out]'][type='hidden'][value='0']"
     assert_select "input[name='event[ticket_sold_out]'][type='checkbox'][value='1']"
@@ -1054,6 +1063,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
             youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
             ticket_special_note: "Bitte beim Veranstalter melden",
             promoter_id: "10135",
+            promoter_name: "Manual Promoter",
             highlighted: "1",
             ticket_url: "https://tickets.example/manual-tour",
             event_info: "Lange Beschreibung",
@@ -1088,8 +1098,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://instagram.com/manual", created.instagram_url
     assert_equal "https://facebook.com/manual", created.facebook_url
     assert_equal "Bitte beim Veranstalter melden", created.ticket_special_note
-    assert_equal "382", created.promoter_id
-    assert_equal "RUSS Live", created.promoter_name
+    assert_equal "10135", created.promoter_id
+    assert_equal "Manual Promoter", created.promoter_name
     assert_predicate created, :highlighted?
     assert_equal "ready_for_publish", created.status
     assert_equal [ "Pop, Indie & Singer-Songwriter" ], created.genres.order(:name).pluck(:name)
@@ -1208,19 +1218,36 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "temporäre Upload ist ungültig oder abgelaufen"
   end
 
-  test "update ignores submitted promoter id changes" do
+  test "update persists submitted promoter changes and normalizes blanks" do
     sign_in_as(@user)
 
     patch backend_event_url(@event), params: {
       event: {
         promoter_id: "99999",
+        promoter_name: "Neuer Promoter",
         title: "Review Event aktualisiert"
       }
     }, as: :turbo_stream
 
     assert_response :success
-    assert_equal @event.promoter_id, @event.reload.promoter_id
+    @event.reload
+    assert_equal "99999", @event.promoter_id
+    assert_equal "Neuer Promoter", @event.promoter_name
     assert_equal "Review Event aktualisiert", @event.title
+
+    patch backend_event_url(@event), params: {
+      event: {
+        promoter_id: "",
+        promoter_name: "",
+        title: "Review Event ohne Promoter"
+      }
+    }, as: :turbo_stream
+
+    assert_response :success
+    @event.reload
+    assert_nil @event.promoter_id
+    assert_nil @event.promoter_name
+    assert_equal "Review Event ohne Promoter", @event.title
   end
 
   test "create validation error keeps presenters tab active and preserves presenter order" do
