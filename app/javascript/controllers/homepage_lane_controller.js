@@ -18,6 +18,9 @@ export default class extends Controller {
     this.pageIndex = 0
     this.pages = []
     this.storedPages = new Map()
+    this.listPageIndex = 0
+    this.listPages = []
+    this.storedListPages = new Map()
     this.raf = null
     this.listRaf = null
     this.abortController = null
@@ -48,6 +51,7 @@ export default class extends Controller {
       this.listTarget.addEventListener("pointerdown", this.markUserInteraction, { passive: true })
       this.listTarget.addEventListener("touchstart", this.markUserInteraction, { passive: true })
       this.listTarget.addEventListener("wheel", this.markUserInteraction, { passive: true })
+      this.registerInitialListPage()
     }
 
     if (!this.hasListCursorValue && this.initialCursor.length > 0) this.listCursorValue = this.initialCursor
@@ -169,10 +173,10 @@ export default class extends Controller {
     const missingRows = this.listLimitValue - this.listRowCount
     if (missingRows <= 0) return
 
-    await this.loadListRows({ perPage: missingRows })
+    await this.loadListRows({ perPage: missingRows, appendToInitialPage: true })
   }
 
-  async loadListRows({ perPage = this.listLimitValue } = {}) {
+  async loadListRows({ perPage = this.listLimitValue, appendToInitialPage = false } = {}) {
     if (this.listLoading || !this.canLoadListRows) return
 
     this.listLoading = true
@@ -195,7 +199,7 @@ export default class extends Controller {
 
       const html = await response.text()
       const nextCursor = response.headers.get("X-Homepage-Lane-Next-Cursor") || ""
-      if (html.trim().length > 0) this.appendListRows(html)
+      if (html.trim().length > 0) this.appendListRows(html, { appendToInitialPage })
       this.listCursorValue = nextCursor
     } catch (error) {
       if (error.name !== "AbortError") console.error(error)
@@ -222,6 +226,8 @@ export default class extends Controller {
 
     this.listRaf = window.requestAnimationFrame(() => {
       this.listRaf = null
+      this.restoreNearbyListPlaceholders()
+      this.pruneDistantListPages()
       if (this.listNearEnd()) this.loadListRows()
     })
   }
@@ -256,6 +262,14 @@ export default class extends Controller {
       element.dataset.homepageLanePage = "0"
     })
     this.pages = [{ index: 0, elements }]
+  }
+
+  registerInitialListPage() {
+    const elements = Array.from(this.listContainer.children).filter((element) => element instanceof HTMLElement)
+    elements.forEach((element) => {
+      element.dataset.homepageLaneListPage = "0"
+    })
+    this.listPages = [{ index: 0, elements }]
   }
 
   pruneDistantPages() {
@@ -327,6 +341,76 @@ export default class extends Controller {
     this.storedPages.delete(page.index)
   }
 
+  pruneDistantListPages() {
+    const activePages = this.listPages.filter((page) => !this.listPagePruned(page))
+    const removableCount = activePages.length - this.maxRenderedPages
+    if (removableCount <= 0) return
+
+    const viewportStart = this.listTarget.scrollLeft
+    const pruneBefore = viewportStart - this.listTarget.clientWidth
+    let pruned = 0
+
+    for (const page of activePages) {
+      if (pruned >= removableCount) break
+      if (this.listPageEnd(page) >= pruneBefore) continue
+
+      this.pruneListPage(page)
+      pruned += 1
+    }
+  }
+
+  pruneListPage(page) {
+    const stored = []
+
+    page.elements = page.elements.map((element) => {
+      if (!element.isConnected || this.isListPlaceholder(element)) return element
+
+      const placeholder = document.createElement(element.tagName.toLowerCase())
+      placeholder.className = `${element.className} homepage-lane-list-placeholder`
+      placeholder.dataset.homepageLaneListPage = page.index.toString()
+      placeholder.dataset.homepageLaneListPlaceholder = "true"
+      placeholder.setAttribute("aria-hidden", "true")
+      placeholder.style.minHeight = `${element.offsetHeight}px`
+      stored.push(element.outerHTML)
+      element.replaceWith(placeholder)
+      return placeholder
+    })
+
+    if (stored.length > 0) this.storedListPages.set(page.index, stored)
+  }
+
+  restoreNearbyListPlaceholders() {
+    const viewportStart = this.listTarget.scrollLeft - this.listTarget.clientWidth
+    const viewportEnd = this.listTarget.scrollLeft + (this.listTarget.clientWidth * 2)
+
+    this.listPages.forEach((page) => {
+      if (!this.listPagePruned(page)) return
+      if (this.listPageEnd(page) < viewportStart || this.listPageStart(page) > viewportEnd) return
+
+      this.restoreListPage(page)
+    })
+  }
+
+  restoreListPage(page) {
+    const stored = this.storedListPages.get(page.index)
+    if (!stored) return
+
+    page.elements = page.elements.map((placeholder, index) => {
+      if (!this.isListPlaceholder(placeholder)) return placeholder
+
+      const template = document.createElement("template")
+      template.innerHTML = stored[index] || ""
+      const restored = template.content.firstElementChild
+      if (!(restored instanceof HTMLElement)) return placeholder
+
+      restored.dataset.homepageLaneListPage = page.index.toString()
+      placeholder.replaceWith(restored)
+      return restored
+    })
+
+    this.storedListPages.delete(page.index)
+  }
+
   nearEnd() {
     if (!this.canLoad) return false
 
@@ -350,16 +434,26 @@ export default class extends Controller {
     return url.toString()
   }
 
-  appendListRows(html) {
+  appendListRows(html, { appendToInitialPage = false } = {}) {
     const template = document.createElement("template")
     template.innerHTML = html.trim()
     const elements = Array.from(template.content.children).filter((element) => element instanceof HTMLElement)
-    if (elements.length === 0) return
+    if (elements.length === 0) return []
 
-    const container = this.listTarget.querySelector(".event-listing-grid") || this.listTarget
+    const page = appendToInitialPage ? this.listPages[0] : null
+    const pageIndex = page?.index ?? ++this.listPageIndex
     elements.forEach((element) => {
-      container.appendChild(element)
+      element.dataset.homepageLaneListPage = pageIndex.toString()
+      this.listContainer.appendChild(element)
     })
+
+    if (page) {
+      page.elements.push(...elements)
+    } else {
+      this.listPages.push({ index: pageIndex, elements })
+    }
+
+    return elements
   }
 
   scrollListByPage(direction) {
@@ -386,6 +480,22 @@ export default class extends Controller {
     return element.dataset.homepageLanePlaceholder === "true"
   }
 
+  listPageStart(page) {
+    return Math.min(...page.elements.map((element) => element.offsetLeft))
+  }
+
+  listPageEnd(page) {
+    return Math.max(...page.elements.map((element) => element.offsetLeft + element.offsetWidth))
+  }
+
+  listPagePruned(page) {
+    return page.elements.some((element) => this.isListPlaceholder(element))
+  }
+
+  isListPlaceholder(element) {
+    return element.dataset.homepageLaneListPlaceholder === "true"
+  }
+
   get canLoad() {
     return this.hasUrlValue && this.hasLaneValue && this.hasCursorValue && this.cursorValue.length > 0
   }
@@ -400,6 +510,10 @@ export default class extends Controller {
 
   get listRowCount() {
     return this.listTarget.querySelectorAll(".event-listing-card").length
+  }
+
+  get listContainer() {
+    return this.listTarget.querySelector(".event-listing-grid") || this.listTarget
   }
 
   get maxRenderedPages() {
