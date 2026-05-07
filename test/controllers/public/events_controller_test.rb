@@ -425,6 +425,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "fixed lane pages render their full matching event list" do
+    highlight_event = Event.create!(
+      slug: "lane-page-highlight",
+      source_fingerprint: "test::public::lane-page::highlight",
+      title: "Lane Page Highlight",
+      artist_name: "Lane Page Highlight Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: "382",
+      source_snapshot: {}
+    )
     reservix_event = Event.create!(
       slug: "lane-page-all-stuttgart",
       source_fingerprint: "test::public::lane-page::all-stuttgart",
@@ -451,6 +464,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       primary_source: "eventim",
       source_snapshot: {}
     )
+
+    get "/highlights"
+
+    assert_response :success
+    assert_select ".lane-header.lane-header--highlights .lane-header-title", text: "Unsere Highlights"
+    assert_select "#lane-event-grid.featured-event-grid", count: 1
+    assert_select "#lane-event-grid article.event-card", minimum: 1
+    assert_select "#lane-event-grid article.genre-lane-card", count: 0
+    assert_select "#lane-event-grid .event-card-copy h2", text: highlight_event.artist_name
 
     get "/alles-aus-stuttgart"
 
@@ -930,6 +952,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, sks_event.artist_name
+    assert_select ".home-featured-section--open-grid .home-featured-track.featured-event-grid", count: 1
+    assert_select ".home-featured-section--open-grid .highlights-slider-viewport", count: 0
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
   end
@@ -2366,6 +2390,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, sks_easy_event.artist_name
     assert_includes response.body, sks_eventim_event.artist_name
     assert_includes response.body, sks_easyticket_promoter_event.artist_name
+    assert_select ".home-featured-section--open-grid .home-featured-track.featured-event-grid", count: 1
+    assert_select ".home-featured-section--open-grid .highlights-slider-viewport", count: 0
+    assert_select ".home-featured-track article.event-card", minimum: 3
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easy_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_eventim_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easyticket_promoter_event.artist_name)}/

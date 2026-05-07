@@ -6,12 +6,13 @@
 <% lazy_next_cursor = local_assigns[:lazy_next_cursor] %>
 <% lazy_list_next_cursor = local_assigns.fetch(:lazy_list_next_cursor, lazy_next_cursor) %>
 <% lazy_url = local_assigns[:lazy_url] %>
+<% open_grid = local_assigns.fetch(:open_grid, false) %>
 <% list_events = lazy_lane_id.present? ? events.first(Public::EventsController::HOME_LANE_LIST_LIMIT) : events %>
 <% section_cache_key = public_events_section_cache_key(
   section: "highlight",
   browse_state: browse_state,
   events: events,
-  context: [ title, local_assigns[:title_url], featured, list_aria_label, lazy_lane_id, lazy_next_cursor, lazy_url ],
+  context: [ title, local_assigns[:title_url], featured, open_grid, list_aria_label, lazy_lane_id, lazy_next_cursor, lazy_url ],
   strict_proxy: strict_proxy
 ) %>
 
@@ -36,9 +37,9 @@
 <% end %>
 
 <% cache section_cache_key do %>
-  <section class="<%= section_classes.join(" ") %>"
-           data-controller="<%= ["highlights-slider", "section-view", ("homepage-lane" if lazy_lane_id.present?)].compact.join(" ") %>"
-           <% if lazy_lane_id.present? %>
+  <section class="<%= section_classes.join(" ") %> <%= "home-featured-section--open-grid" if open_grid %>"
+           data-controller="<%= [("highlights-slider" unless open_grid), "section-view", ("homepage-lane" if lazy_lane_id.present? && !open_grid)].compact.join(" ") %>"
+           <% if lazy_lane_id.present? && !open_grid %>
            data-homepage-lane-url-value="<%= lazy_url %>"
            data-homepage-lane-lane-value="<%= lazy_lane_id %>"
            data-homepage-lane-cursor-value="<%= lazy_next_cursor %>"
@@ -46,7 +47,7 @@
            data-homepage-lane-per-page-value="<%= Public::EventsController::HOME_LANE_LIMIT %>"
            data-homepage-lane-list-limit-value="<%= Public::EventsController::HOME_LANE_LIST_LIMIT %>"
            <% end %>
-           <% if featured %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
+           <% if featured && !open_grid %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
     <%= render "home_slider_header",
                title: title,
                title_url: local_assigns[:title_url],
@@ -54,7 +55,8 @@
                nav_content: nav_content,
                header_class: ("lane-header--turquoise-title" if title.to_s.casecmp("Alle Veranstaltungen").zero?) %>
     <div data-section-view-target="slider">
-      <div class="highlights-slider-viewport">
+      <div class="<%= open_grid ? "featured-event-grid-viewport" : "highlights-slider-viewport" %>">
+        <% unless open_grid %>
         <button type="button"
                 class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev"
                 data-highlights-slider-target="previousButton"
@@ -62,9 +64,10 @@
                 aria-label="Zurück">
           ‹
         </button>
-        <div class="<%= track_class %>"
+        <% end %>
+        <div class="<%= [track_class, ("featured-event-grid" if open_grid)].compact.join(" ") %>"
              data-highlights-slider-target="track"
-             <% if lazy_lane_id.present? %>data-homepage-lane-target="track"<% end %>>
+             <% if lazy_lane_id.present? && !open_grid %>data-homepage-lane-target="track"<% end %>>
           <% events.each_with_index do |event, index| %>
             <% if featured %>
               <% tile_variant = effective_public_grid_variant_for(event, index) %>
@@ -85,6 +88,7 @@
             <% end %>
           <% end %>
         </div>
+        <% unless open_grid %>
         <button type="button"
                 class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next"
                 data-highlights-slider-target="nextButton"
@@ -92,6 +96,7 @@
                 aria-label="Weiter">
           ›
         </button>
+        <% end %>
       </div>
     </div>
     <div class="section-slider-list-viewport"

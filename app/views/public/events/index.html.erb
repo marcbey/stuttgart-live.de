@@ -8,6 +8,7 @@
 
 <section class="public-shell">
   <% strict_proxy = homepage_media_strict_proxy? %>
+  <% sks_filter_active = @browse_state.filter == Public::Events::BrowseState::FILTER_SKS %>
   <% homepage_lane_lazy_url = homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>
   <% promotion_banners_by_lane_position = @promotion_banners_by_lane_position || {} %>
   <% promotion_banner_lane_position = 1 %>
@@ -27,6 +28,7 @@
                browse_state: @browse_state,
                strict_proxy: strict_proxy,
                featured: true,
+               open_grid: sks_filter_active,
                lazy_lane_id: "highlights",
                lazy_next_cursor: @home_featured_next_cursor,
                lazy_list_next_cursor: @home_featured_list_next_cursor,

@@ -5,6 +5,7 @@
 <% card_partial = local_assigns.fetch(:card_partial, "event_card") %>
 <% wrap = local_assigns.fetch(:wrap, true) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 
 <% if wrap && container_id.present? %>
   <div id="<%= container_id %>" class="<%= container_class %>">
@@ -23,6 +24,7 @@
                  effective_series_ids: effective_series_ids,
                  tile_variant: tile_variant,
                  card_slot: card_slot,
+                 strict_proxy: strict_proxy,
                  card_dom_id: card_dom_id %>
     <% else %>
       <%= render card_partial,

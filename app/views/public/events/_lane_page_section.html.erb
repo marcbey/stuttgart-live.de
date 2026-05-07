@@ -1,4 +1,8 @@
 <%
+  featured_grid = lane.featured
+  grid_classes = [ "lane-page-grid" ]
+  grid_classes << "featured-event-grid" if featured_grid
+  strict_proxy = local_assigns.fetch(:strict_proxy, false)
   nav_content = capture do
 %>
   <button type="button"
@@ -18,7 +22,7 @@
   </button>
 <% end %>
 
-<section class="home-slider-section lane-page-section lane-page-section--compact-grid search-results-section"
+<section class="home-slider-section lane-page-section <%= "lane-page-section--compact-grid" unless featured_grid %> search-results-section <%= "lane-page-section--featured-grid" if featured_grid %>"
          data-controller="section-view"
          data-section-view-mobile-list-default-value="true">
   <%= render "home_slider_header",
@@ -27,13 +31,24 @@
              nav_content: nav_content %>
   <% if events.any? %>
     <div data-section-view-target="slider">
-      <div class="lane-page-grid" id="lane-event-grid">
-        <% events.each do |event| %>
-          <%= render "genre_lane_card",
-                     event: event,
+      <div class="<%= grid_classes.join(" ") %>" id="lane-event-grid">
+        <% if featured_grid %>
+          <%= render "event_cards",
+                     events: events,
                      browse_state: browse_state,
                      effective_series_ids: effective_series_ids,
-                     card_dom_id: dom_id(event, :lane_page_card) %>
+                     strict_proxy: strict_proxy,
+                     container_id: "lane-event-grid",
+                     card_dom_id_prefix: :lane_page_card,
+                     wrap: false %>
+        <% else %>
+          <% events.each do |event| %>
+            <%= render "genre_lane_card",
+                       event: event,
+                       browse_state: browse_state,
+                       effective_series_ids: effective_series_ids,
+                       card_dom_id: dom_id(event, :lane_page_card) %>
+          <% end %>
         <% end %>
       </div>
     </div>
