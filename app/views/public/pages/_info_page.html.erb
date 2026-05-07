@@ -1,4 +1,6 @@
-<section class="info-page-shell">
+<% shell_classes = [ "info-page-shell", ("info-page-shell-#{local_assigns[:page_slug].to_s.parameterize}" if local_assigns[:page_slug].present?) ].compact %>
+
+<section class="<%= shell_classes.join(" ") %>">
   <header class="info-page-hero">
     <div class="info-page-hero-topbar">
       <div class="info-page-hero-copy">

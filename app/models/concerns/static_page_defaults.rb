@@ -318,58 +318,25 @@ module StaticPageDefaults
         kicker: "Service",
         intro: "Direkte Ansprechpartner für Bestellungen, Presse und Veranstaltungsnews.",
         body: <<~HTML
-          <div class="info-page-card">
-            <h2>Bestell-Hotline</h2>
-            <dl class="info-page-list">
-              <div>
-                <dt>Telefon</dt>
-                <dd><a href="tel:+4971155066077">0711 – 550 660 77</a></dd>
-              </div>
-              <div>
-                <dt>Mailorder</dt>
-                <dd><a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a></dd>
-              </div>
-            </dl>
-          </div>
+          <h2>Bestell-Hotline</h2>
+          <p>Telefon: <a href="tel:+4971155066077">0711 – 550 660 77</a></p>
+          <p>Mailorder: <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a></p>
 
-          <div class="info-page-card">
-            <h2>Pressekontakt</h2>
-            <dl class="info-page-list">
-              <div>
-                <dt>Ansprechpartner</dt>
-                <dd>Arnulf Woock</dd>
-              </div>
-              <div>
-                <dt>Adresse</dt>
-                <dd>Charlottenplatz 17, 70173 Stuttgart</dd>
-              </div>
-              <div>
-                <dt>Fon</dt>
-                <dd><a href="tel:+497111635320">+49 (0) 711 16 353 20</a></dd>
-              </div>
-              <div>
-                <dt>Mail</dt>
-                <dd><a href="mailto:arnulfwoock@russ-live.de">arnulfwoock@russ-live.de</a></dd>
-              </div>
-            </dl>
-          </div>
+          <h2>Pressekontakt</h2>
+          <p>Arnulf Woock</p>
+          <p>Charlottenplatz 17, 70173 Stuttgart</p>
+          <p>Fon <a href="tel:+497111635320">+49 (0) 711 16 353 20</a></p>
+          <p>Mail <a href="mailto:arnulfwoock@russ-live.de">arnulfwoock@russ-live.de</a></p>
 
-          <div class="info-page-card info-page-card-wide">
-            <h2>Veranstaltungsnews</h2>
-            <p>
-              Bitte schicken Sie Ihre Veranstaltungs- und Pressenews an
-              <a href="mailto:news@stuttgart-live.de">news@stuttgart-live.de</a>.
-            </p>
-          </div>
+          <h2>Veranstaltungsnews</h2>
+          <p>Bitte schicken Sie Ihre Veranstaltungs- und Pressenews an <a href="mailto:news@stuttgart-live.de">news@stuttgart-live.de</a>.</p>
 
-          <div class="info-page-card info-page-card-wide">
-            <h2>Folgen Sie uns online</h2>
-            <div class="info-page-links">
-              <a href="https://www.facebook.com/stuttgartlive" target="_blank" rel="noopener">Facebook</a>
-              <a href="https://www.instagram.com/stuttgartlive/" target="_blank" rel="noopener">Instagram</a>
-              <a href="https://www.tiktok.com/@stuttgartlive" target="_blank" rel="noopener">TikTok</a>
-            </div>
-          </div>
+          <h2>Folgen Sie uns online</h2>
+          <p>
+            <a href="https://www.facebook.com/stuttgartlive" target="_blank" rel="noopener">Facebook</a>
+            <a href="https://www.instagram.com/stuttgartlive/" target="_blank" rel="noopener">Instagram</a>
+            <a href="https://www.tiktok.com/@stuttgartlive" target="_blank" rel="noopener">TikTok</a>
+          </p>
         HTML
       }
     ]

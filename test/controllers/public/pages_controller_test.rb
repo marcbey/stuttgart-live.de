@@ -12,8 +12,9 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-links .app-nav-link-active", text: "Kontakt"
     assert_includes response.body, "Bestell-Hotline"
     assert_includes response.body, "arnulfwoock@russ-live.de"
-    assert_select ".info-page-card", count: 4
-    assert_select ".info-page-card.info-page-card-wide", count: 2
+    assert_select ".static-page-article", count: 1
+    assert_select ".static-page-rich-copy h2", count: 4
+    assert_select ".info-page-card", count: 0
   end
 
   test "imprint page is publicly accessible" do
