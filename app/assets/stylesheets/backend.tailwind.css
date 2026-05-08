@@ -3471,3 +3471,56 @@ color: rgba(30, 41, 59, 0.78);
 .venue-autocomplete-empty {
 padding: 0.75rem 0.9rem;
 }
+
+.promoter-name-autocomplete {
+position: relative;
+}
+
+.promoter-name-autocomplete-panel {
+position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  border: 1px solid rgba(17, 24, 39, 0.14);
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.16);
+  overflow: hidden;
+  backdrop-filter: blur(12px);
+}
+
+.promoter-name-autocomplete-results {
+display: grid;
+}
+
+.promoter-name-autocomplete-item {
+display: grid;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  border: 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.16);
+  cursor: pointer;
+  background: transparent;
+}
+
+.promoter-name-autocomplete-item:first-child {
+border-top: 0;
+}
+
+.promoter-name-autocomplete-item:hover,
+.promoter-name-autocomplete-item.is-active {
+background: rgba(15, 23, 42, 0.06);
+}
+
+.promoter-name-autocomplete-item-name {
+font-weight: 700;
+}
+
+.promoter-name-autocomplete-empty {
+color: rgba(30, 41, 59, 0.78);
+  font-size: 0.93rem;
+  line-height: 1.4;
+  padding: 0.75rem 0.9rem;
+}

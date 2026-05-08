@@ -57,6 +57,9 @@ application.register("promotion-banner-color", PromotionBannerColorController)
 import PromotionBannerImagePreuploadController from "./promotion_banner_image_preupload_controller"
 application.register("promotion-banner-image-preupload", PromotionBannerImagePreuploadController)
 
+import PromoterNameAutocompleteController from "./promoter_name_autocomplete_controller"
+application.register("promoter-name-autocomplete", PromoterNameAutocompleteController)
+
 import ScrollTopController from "./scroll_top_controller"
 application.register("scroll-top", ScrollTopController)
 

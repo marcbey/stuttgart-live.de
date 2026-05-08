@@ -16,6 +16,12 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_url
   end
 
+  test "promoter name autocomplete requires authentication" do
+    get promoter_name_autocomplete_backend_events_url(q: "promoter")
+
+    assert_redirected_to new_session_url
+  end
+
   test "blogger cannot access the event backend" do
     sign_in_as(users(:blogger))
 
@@ -182,8 +188,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-promoter-fields.editor-grid.editor-grid-span-full", count: 1
     assert_select "input[name='event[promoter_id]'][value='#{@event.promoter_id}']", count: 1
     assert_select "input[name='event[promoter_id]'][readonly]", count: 0
+    assert_select ".promoter-name-autocomplete[data-controller='promoter-name-autocomplete'][data-promoter-name-autocomplete-url-value='#{promoter_name_autocomplete_backend_events_path}']", count: 1
     assert_select "input[name='event[promoter_name]']", count: 1
+    assert_select "input[name='event[promoter_name]'][autocomplete='off'][data-promoter-name-autocomplete-target='input']", count: 1
     assert_select "input[name='event[promoter_name]'][readonly]", count: 0
+    assert_select ".promoter-name-autocomplete-panel[data-promoter-name-autocomplete-target='panel'][hidden]", count: 1
     assert_select "input[readonly]#promoter_display_event_#{@event.id}", count: 0
     assert_select ".event-editor-tabs[data-controller='event-editor-tabs']", count: 1
     assert_select ".event-editor-tabs[data-controller='event-editor-tabs event-editor-settings']", count: 0
@@ -504,8 +513,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event[promoter_id]'][value='382']", count: 1
     assert_select "input[name='event[promoter_id]'][readonly]", count: 0
     assert_select "label.form-label", text: "Promoter-Name"
+    assert_select ".promoter-name-autocomplete[data-controller='promoter-name-autocomplete'][data-promoter-name-autocomplete-url-value='#{promoter_name_autocomplete_backend_events_path}']", count: 1
     assert_select "input[name='event[promoter_name]'][value='RUSS Live']", count: 1
+    assert_select "input[name='event[promoter_name]'][autocomplete='off'][data-promoter-name-autocomplete-target='input']", count: 1
     assert_select "input[name='event[promoter_name]'][readonly]", count: 0
+    assert_select ".promoter-name-autocomplete-panel[data-promoter-name-autocomplete-target='panel'][hidden]", count: 1
     assert_select "input[readonly]#promoter_display_event", count: 0
     assert_select "input[name='event[ticket_url]']"
     assert_select "input[name='event[ticket_sold_out]'][type='hidden'][value='0']"
@@ -1248,6 +1260,49 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_nil @event.promoter_id
     assert_nil @event.promoter_name
     assert_equal "Review Event ohne Promoter", @event.title
+  end
+
+  test "promoter name autocomplete returns matching distinct names" do
+    sign_in_as(@user)
+    create_promoter_event(promoter_name: "Autocomplete Exact")
+    create_promoter_event(promoter_name: "Autocomplete Exact Prefix")
+    create_promoter_event(promoter_name: "Other Autocomplete Exact")
+    create_promoter_event(promoter_name: "Unrelated Promoter")
+    create_promoter_event(promoter_name: "")
+
+    get promoter_name_autocomplete_backend_events_url(q: "autocomplete exact")
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal [
+      "Autocomplete Exact",
+      "Autocomplete Exact Prefix",
+      "Other Autocomplete Exact"
+    ], payload.map { |item| item.fetch("name") }
+  end
+
+  test "promoter name autocomplete is case insensitive" do
+    sign_in_as(@user)
+    create_promoter_event(promoter_name: "Mixed Case Promoter")
+
+    get promoter_name_autocomplete_backend_events_url(q: "mixed case")
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal [ "Mixed Case Promoter" ], payload.map { |item| item.fetch("name") }
+  end
+
+  test "promoter name autocomplete caps requested limit" do
+    sign_in_as(@user)
+    25.times do |index|
+      create_promoter_event(promoter_name: "Limit Promoter #{index.to_s.rjust(2, "0")}")
+    end
+
+    get promoter_name_autocomplete_backend_events_url(q: "limit promoter", limit: 50)
+
+    assert_response :success
+    payload = JSON.parse(response.body)
+    assert_equal 20, payload.size
   end
 
   test "create validation error keeps presenters tab active and preserves presenter order" do
@@ -2645,6 +2700,18 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     image
+  end
+
+  def create_promoter_event(promoter_name:)
+    Event.create!(
+      artist_name: "Promoter Test Artist #{SecureRandom.hex(4)}",
+      title: "Promoter Test Event",
+      start_at: 1.month.from_now,
+      venue_record: venues(:im_wizemann),
+      city: "Stuttgart",
+      status: "needs_review",
+      promoter_name: promoter_name
+    )
   end
 
   def create_llm_enrichment(event:, event_description: "LLM Event Beschreibung")

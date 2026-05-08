@@ -83,6 +83,7 @@ Rails.application.routes.draw do
       patch :publish, on: :member
       patch :unpublish, on: :member
       post :run_llm_enrichment, on: :member
+      get :promoter_name_autocomplete, on: :collection
       resources :event_social_posts, path: "social_posts", only: [ :create, :update ] do
         post :quick_publish, on: :collection
         post :publish, on: :member

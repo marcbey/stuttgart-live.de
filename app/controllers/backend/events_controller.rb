@@ -2,10 +2,12 @@ module Backend
   class EventsController < BaseController
     MANUAL_EVENT_PROMOTER_ID = "382".freeze
     MANUAL_EVENT_PROMOTER_NAME = "RUSS Live".freeze
+    PROMOTER_NAME_AUTOCOMPLETE_DEFAULT_LIMIT = 8
+    PROMOTER_NAME_AUTOCOMPLETE_MAX_LIMIT = 20
 
     before_action :set_event, only: [ :show, :update, :publish, :unpublish, :run_llm_enrichment ]
-    before_action :set_available_merge_runs
-    before_action :set_inbox_state
+    before_action :set_available_merge_runs, except: :promoter_name_autocomplete
+    before_action :set_inbox_state, except: :promoter_name_autocomplete
     before_action :set_next_event_enabled, only: [ :index, :show, :new, :create, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
     before_action :load_all_sub_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
@@ -33,6 +35,10 @@ module Backend
     def next_event_preference
       @next_event_enabled = @inbox_state.persist_next_event_preference!(params[:enabled])
       head :ok
+    end
+
+    def promoter_name_autocomplete
+      render json: promoter_name_autocomplete_suggestions(params[:q]).map { |name| { name: name } }
     end
 
     def show
@@ -380,6 +386,47 @@ module Backend
       [ [ "Alle", "all" ] ] + @available_merge_runs.map do |run|
         [ helpers.merge_run_filter_option_label(run), run.id.to_s ]
       end
+    end
+
+    def promoter_name_autocomplete_suggestions(query)
+      normalized_query = query.to_s.strip.downcase
+      return [] if normalized_query.blank?
+
+      token = ActiveRecord::Base.sanitize_sql_like(normalized_query)
+      prefix = "#{token}%"
+      infix = "%#{token}%"
+      lower_name_sql = "LOWER(TRIM(events.promoter_name))"
+      order_sql = Event.sanitize_sql_array(
+        [
+          <<~SQL.squish,
+            CASE
+              WHEN #{lower_name_sql} = ? THEN 0
+              WHEN #{lower_name_sql} LIKE ? THEN 1
+              ELSE 2
+            END,
+            #{lower_name_sql} ASC,
+            events.promoter_name ASC
+          SQL
+          normalized_query,
+          prefix
+        ]
+      )
+
+      Event
+        .where.not(promoter_name: [ nil, "" ])
+        .where("TRIM(events.promoter_name) <> ''")
+        .where("#{lower_name_sql} LIKE :infix", infix: infix)
+        .group(:promoter_name)
+        .order(Arel.sql(order_sql))
+        .limit(promoter_name_autocomplete_limit)
+        .pluck(:promoter_name)
+    end
+
+    def promoter_name_autocomplete_limit
+      requested_limit = params[:limit].to_i
+      return PROMOTER_NAME_AUTOCOMPLETE_DEFAULT_LIMIT unless requested_limit.positive?
+
+      [ requested_limit, PROMOTER_NAME_AUTOCOMPLETE_MAX_LIMIT ].min
     end
 
     def event_params
