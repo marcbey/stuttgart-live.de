@@ -1,9 +1,11 @@
 module Public
   module Events
     class RelatedGenreLaneBuilder
-      Lane = Data.define(:group, :events, :effective_series_ids)
+      Lane = Data.define(:group, :events, :effective_series_ids, :series_counts_by_id)
 
       DEFAULT_LIMIT = 20
+      MIN_CANDIDATE_LIMIT = 80
+      CANDIDATE_LIMIT_MULTIPLIER = 8
 
       def initialize(event:, relation:, limit: DEFAULT_LIMIT)
         @event = event
@@ -14,10 +16,10 @@ module Public
       def call
         return if group.blank?
 
-        events, effective_series_ids = chronological_group_events
+        events, effective_series_ids, series_counts_by_id = chronological_group_events
         return if events.empty?
 
-        Lane.new(group:, events:, effective_series_ids:)
+        Lane.new(group:, events:, effective_series_ids:, series_counts_by_id:)
       end
 
       private
@@ -31,9 +33,10 @@ module Public
       def chronological_group_events
         selected_events = ranked_events
         events = series_representatives(selected_events).first(limit)
+        series_counts_by_id = series_counts_by_id_for(events)
         effective_series_ids = effective_series_ids_for(events)
 
-        [ events, effective_series_ids ]
+        [ events, effective_series_ids, series_counts_by_id ]
       end
 
       def ranked_events
@@ -44,28 +47,38 @@ module Public
       end
 
       def candidate_events
-        relation
-          .left_outer_joins(:genres, :sub_genres)
-          .where(candidate_match_predicate, candidate_match_values)
-          .where.not(id: event.id)
-          .then { |scope| exclude_current_series(scope) }
+        preload_candidate_associations(
+          (sub_genre_candidate_events + genre_candidate_events).uniq(&:id)
+        )
+      end
+
+      def sub_genre_candidate_events
+        return [] if sub_genre_ids.empty?
+
+        base_candidate_relation
+          .joins(:sub_genres)
+          .where(sub_genres: { id: sub_genre_ids })
           .distinct
-          .preload(:genres, :sub_genres)
+          .limit(candidate_limit)
           .to_a
       end
 
-      def candidate_match_predicate
-        predicates = []
-        predicates << "genres.id IN (:genre_ids)" if genre_ids.any?
-        predicates << "sub_genres.id IN (:sub_genre_ids)" if sub_genre_ids.any?
-        predicates.join(" OR ")
+      def genre_candidate_events
+        return [] if genre_ids.empty?
+
+        base_candidate_relation
+          .joins(:genres)
+          .where(genres: { id: genre_ids })
+          .distinct
+          .limit(candidate_limit)
+          .to_a
       end
 
-      def candidate_match_values
-        {
-          genre_ids: genre_ids,
-          sub_genre_ids: sub_genre_ids
-        }
+      def base_candidate_relation
+        relation
+          .where.not(id: event.id)
+          .then { |scope| exclude_current_series(scope) }
+          .reorder(:start_at, :id)
       end
 
       def exclude_current_series(scope)
@@ -152,6 +165,24 @@ module Public
 
       def effective_series_ids_for(events)
         EffectiveSeriesIdsQuery.call(events)
+      end
+
+      def series_counts_by_id_for(events)
+        SeriesCountsByIdQuery.call(events)
+      end
+
+      def candidate_limit
+        [ limit.to_i * CANDIDATE_LIMIT_MULTIPLIER, MIN_CANDIDATE_LIMIT ].max
+      end
+
+      def preload_candidate_associations(events)
+        return events if events.empty?
+
+        ActiveRecord::Associations::Preloader.new(
+          records: events,
+          associations: [ :genres, :sub_genres ]
+        ).call
+        events
       end
 
       def genre_ids

@@ -1,7 +1,7 @@
 module Public
   module Events
     class HomepageGenreLanesBuilder
-      Lane = Data.define(:group, :events, :effective_series_ids, :public_path, :next_cursor)
+      Lane = Data.define(:group, :events, :effective_series_ids, :series_counts_by_id, :public_path, :next_cursor)
 
       DEFAULT_LIMIT = 10
       DEFAULT_GROUP_EVENTS_LIMIT = 100
@@ -21,14 +21,15 @@ module Public
           group = groups_by_slug[slug]
           next if group.blank?
 
-          events, effective_series_ids, next_cursor = chronological_group_events(group)
+          events, effective_series_ids, series_counts_by_id, next_cursor = chronological_group_events(group)
           next if events.empty?
 
           Lane.new(
             group:,
             events:,
             effective_series_ids:,
-            public_path: LaneDirectory.public_path_for_genre_slug(group.slug),
+            series_counts_by_id:,
+            public_path: public_paths_by_slug[group.slug],
             next_cursor: next_cursor
           )
         end
@@ -53,7 +54,7 @@ module Public
           per_page: limit
         ).call
 
-        [ page.events, page.effective_series_ids, page.next_cursor ]
+        [ page.events, page.effective_series_ids, page.series_counts_by_id, page.next_cursor ]
       end
 
       def unlimited_group_events(group)
@@ -61,9 +62,10 @@ module Public
 
         events = SeriesRepresentativeSelector.call(selected_events)
         events = events.first(limit) if limit.present?
+        series_counts_by_id = SeriesCountsByIdQuery.call(events)
         effective_series_ids = effective_series_ids_for(events)
 
-        [ events, effective_series_ids, nil ]
+        [ events, effective_series_ids, series_counts_by_id, nil ]
       end
 
       def effective_series_ids_for(events)
@@ -89,6 +91,10 @@ module Public
           lane: "genre",
           slug: group.slug
         }
+      end
+
+      def public_paths_by_slug
+        @public_paths_by_slug ||= LaneDirectory.public_paths_for_genre_slugs(normalized_slugs)
       end
     end
   end

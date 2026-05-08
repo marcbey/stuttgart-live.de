@@ -3,6 +3,7 @@
              events: page.events,
              browse_state: browse_state,
              effective_series_ids: page.effective_series_ids,
+             series_counts_by_id: page.series_counts_by_id,
              strict_proxy: strict_proxy,
              wrap: false %>
 <% else %>
@@ -15,6 +16,7 @@
                  event: event,
                  browse_state: browse_state,
                  effective_series_ids: page.effective_series_ids,
+                 series_counts_by_id: page.series_counts_by_id,
                  strict_proxy: strict_proxy,
                  tile_variant: tile_variant,
                  card_slot: card_slot %>
@@ -25,6 +27,7 @@
                  card_variant: local_assigns[:card_variant],
                  strict_proxy: strict_proxy,
                  effective_series_ids: page.effective_series_ids,
+                 series_counts_by_id: page.series_counts_by_id,
                  show_series_badge: true %>
     <% end %>
   <% end %>

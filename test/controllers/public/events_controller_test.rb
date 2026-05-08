@@ -1958,6 +1958,71 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Rock Artist 19"
   end
 
+  test "homepage index batches event series counts for badges" do
+    _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    series = EventSeries.create!(origin: "manual", name: "Homepage Batched Series")
+
+    2.times do |index|
+      Event.create!(
+        slug: "homepage-batched-series-#{index}",
+        source_fingerprint: "test::public::homepage-batched-series::#{index}",
+        title: "Homepage Batched Series #{index}",
+        artist_name: "Homepage Batched Artist #{index}",
+        start_at: (index + 2).days.from_now.change(hour: 20, min: 0, sec: 0),
+        venue: "Club Zentral",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        event_series: series,
+        event_series_assignment: "manual",
+        source_snapshot: {}
+      ).tap do |event|
+        build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+      end
+    end
+
+    queries = capture_sql_queries { get events_url(filter: "all") }
+
+    assert_response :success
+    assert_select "section.genre-lane-section[data-homepage-lane-lane-value='genre:#{rock_group.slug}'] .event-series-badge", count: 1
+    assert_empty per_series_count_queries(queries)
+  end
+
+  test "homepage lane endpoint batches event series counts for cards and rows" do
+    _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    series = EventSeries.create!(origin: "manual", name: "Homepage Lane Batched Series")
+
+    2.times do |index|
+      Event.create!(
+        slug: "homepage-lane-batched-series-#{index}",
+        source_fingerprint: "test::public::homepage-lane-batched-series::#{index}",
+        title: "Homepage Lane Batched Series #{index}",
+        artist_name: "Homepage Lane Batched Artist #{index}",
+        start_at: (index + 2).days.from_now.change(hour: 20, min: 0, sec: 0),
+        venue: "Club Zentral",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        event_series: series,
+        event_series_assignment: "manual",
+        source_snapshot: {}
+      ).tap do |event|
+        build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+      end
+    end
+
+    card_queries = capture_sql_queries do
+      get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", mode: "cards")
+    end
+    row_queries = capture_sql_queries do
+      get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", mode: "rows")
+    end
+
+    assert_response :success
+    assert_empty per_series_count_queries(card_queries)
+    assert_empty per_series_count_queries(row_queries)
+  end
+
   test "homepage lane endpoint renders rows and rejects invalid cursors" do
     _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 
@@ -5142,6 +5207,31 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       filename:,
       content_type: "image/svg+xml"
     )
+  end
+
+  def capture_sql_queries
+    queries = []
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      sql = payload[:sql].to_s
+      next if payload[:name] == "SCHEMA"
+      next if payload[:cached]
+      next if sql.match?(/\A(?:BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)/)
+
+      queries << sql
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      yield
+    end
+
+    queries
+  end
+
+  def per_series_count_queries(queries)
+    queries.select do |query|
+      query.match?(/COUNT\(DISTINCT "?events"?\."?id"?\).*"events"\."event_series_id" =/m) &&
+        !query.match?(/GROUP BY "events"\."event_series_id"/)
+    end
   end
 
   def with_variant_proxy_path_unavailable

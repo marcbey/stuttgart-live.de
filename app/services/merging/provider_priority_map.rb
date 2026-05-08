@@ -7,8 +7,10 @@ module Merging
     }.freeze
 
     def self.call
-      configured = ProviderPriority.active.ordered.pluck(:source_type, :priority_rank).to_h
-      FALLBACK_PRIORITIES.merge(configured)
+      Current.provider_priority_map ||= begin
+        configured = ProviderPriority.active.ordered.pluck(:source_type, :priority_rank).to_h
+        FALLBACK_PRIORITIES.merge(configured)
+      end
     end
   end
 end

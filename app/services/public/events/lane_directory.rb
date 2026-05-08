@@ -72,6 +72,15 @@ module Public
           genre(slug)&.public_path
         end
 
+        def public_paths_for_genre_slugs(slugs)
+          normalized_slugs = Array(slugs).filter_map { |slug| normalize_slug(slug) }.uniq
+          return {} if normalized_slugs.empty?
+
+          routeable_slugs(normalized_slugs).index_with { |slug| "/#{slug}" }
+        rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
+          {}
+        end
+
         def resolve(identifier)
           case identifier.to_s
           when "highlights" then highlights
@@ -84,11 +93,8 @@ module Public
         def routeable_genre_slug?(slug)
           normalized_slug = normalize_slug(slug)
           return false if normalized_slug.blank?
-          return false if reserved_public_slugs.include?(normalized_slug)
-          return false unless Genre.exists?(slug: normalized_slug)
-          return false if StaticPage.exists?(slug: normalized_slug)
 
-          true
+          routeable_slugs([ normalized_slug ]).include?(normalized_slug)
         rescue ActiveRecord::NoDatabaseError, ActiveRecord::StatementInvalid
           false
         end
@@ -105,6 +111,17 @@ module Public
 
         def reserved_public_slugs
           @reserved_public_slugs ||= (StaticPage::RESERVED_SLUGS + FIXED_PUBLIC_SLUGS).uniq
+        end
+
+        def routeable_slugs(slugs)
+          candidates = Array(slugs).filter_map { |slug| normalize_slug(slug) }.uniq
+          candidates -= reserved_public_slugs
+          return [] if candidates.empty?
+
+          genre_slugs = Genre.where(slug: candidates).pluck(:slug)
+          static_page_slugs = StaticPage.where(slug: genre_slugs).pluck(:slug)
+
+          genre_slugs - static_page_slugs
         end
       end
     end

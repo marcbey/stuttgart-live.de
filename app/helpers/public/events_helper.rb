@@ -50,8 +50,8 @@ module Public::EventsHelper
     Array(effective_series_ids).include?(event.event_series_id)
   end
 
-  def public_event_series_additional_terms_label(event)
-    count = public_event_series_upcoming_count(event) - 1
+  def public_event_series_additional_terms_label(event, series_counts_by_id: nil)
+    count = public_event_series_upcoming_count(event, series_counts_by_id:) - 1
     return "weitere Termine" if count <= 0
 
     "#{count} #{count == 1 ? 'weiterer Termin' : 'weitere Termine'}"
@@ -111,8 +111,11 @@ module Public::EventsHelper
     end
   end
 
-  def public_event_series_upcoming_count(event)
+  def public_event_series_upcoming_count(event, series_counts_by_id: nil)
     return 0 if event.event_series_id.blank?
+
+    prepared_count = series_counts_by_id&.fetch(event.event_series_id, nil)
+    return prepared_count.to_i unless prepared_count.nil?
 
     @public_event_series_upcoming_counts ||= {}
     @public_event_series_upcoming_counts[event.event_series_id] ||= Event
@@ -224,7 +227,7 @@ module Public::EventsHelper
       event.cache_key_with_version,
       cache_key_with_version_for(event.venue_record),
       cache_key_with_version_for(event.canonical_venue_record),
-      cache_key_with_version_for(AppSetting.venue_duplicate_mappings_record),
+      cache_key_with_version_for(venue_duplicate_mappings_cache_record),
       cache_key_with_version_for(event.public_ticket_offer),
       records_cache_fingerprint(event.event_offers),
       records_cache_fingerprint(event.event_images),
@@ -244,6 +247,10 @@ module Public::EventsHelper
     return if record.blank?
 
     record.respond_to?(:cache_key_with_version) ? record.cache_key_with_version : record.cache_key.to_s
+  end
+
+  def venue_duplicate_mappings_cache_record
+    @venue_duplicate_mappings_cache_record ||= AppSetting.venue_duplicate_mappings_record
   end
 
   def cache_fingerprint(parts)

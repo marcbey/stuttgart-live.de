@@ -90,7 +90,7 @@ class Venue < ApplicationRecord
   end
 
   def self.venue_match_key_index
-    Current.venue_match_key_index ||= all.each_with_object({}) do |venue, index|
+    Current.venue_match_key_index ||= includes(logo_attachment: :blob).each_with_object({}) do |venue, index|
       key = match_key(venue.name)
       next if key.blank?
 

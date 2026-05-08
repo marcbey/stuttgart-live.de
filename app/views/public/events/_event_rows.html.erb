@@ -1,6 +1,7 @@
 <% container_id = local_assigns[:container_id] %>
 <% wrap = local_assigns.fetch(:wrap, true) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 <% row_dom_id_prefix = local_assigns[:row_dom_id_prefix] %>
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 
@@ -14,6 +15,7 @@
                event: event,
                browse_state: browse_state,
                effective_series_ids: effective_series_ids,
+               series_counts_by_id: series_counts_by_id,
                strict_proxy: strict_proxy,
                row_dom_id: (row_dom_id_prefix.present? ? dom_id(event, row_dom_id_prefix) : nil) %>
   <% end %>

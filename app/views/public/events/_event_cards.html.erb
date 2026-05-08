@@ -6,6 +6,7 @@
 <% wrap = local_assigns.fetch(:wrap, true) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 
 <% if wrap && container_id.present? %>
   <div id="<%= container_id %>" class="<%= container_class %>">
@@ -22,6 +23,7 @@
                  event: event,
                  browse_state: browse_state,
                  effective_series_ids: effective_series_ids,
+                 series_counts_by_id: series_counts_by_id,
                  tile_variant: tile_variant,
                  card_slot: card_slot,
                  strict_proxy: strict_proxy,
@@ -31,6 +33,7 @@
                  event: event,
                  browse_state: browse_state,
                  effective_series_ids: effective_series_ids,
+                 series_counts_by_id: series_counts_by_id,
                  card_dom_id: card_dom_id %>
     <% end %>
   <% end %>

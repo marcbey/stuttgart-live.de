@@ -8,6 +8,7 @@
 <% image_style = event_card_image_style(desktop_image) %>
 <% card_variant = local_assigns[:card_variant] %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 <% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
 <% primary_offer = event.public_ticket_offer %>
 <% card_dom_id = local_assigns[:card_dom_id] %>
@@ -43,7 +44,7 @@
         <span class="event-card-badge event-card-badge-genre-lane"><%= event.badge_text %></span>
       <% end %>
       <% if show_series_badge && public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-        <%= render "event_series_corner_badge", event: event %>
+        <%= render "event_series_corner_badge", event: event, series_counts_by_id: series_counts_by_id %>
       <% end %>
     </div>
 

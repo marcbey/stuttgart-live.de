@@ -3,7 +3,7 @@ require "set"
 module Public
   module Events
     class HomepageLanePager
-      Result = Data.define(:events, :effective_series_ids, :next_cursor, :card_offset)
+      Result = Data.define(:events, :effective_series_ids, :series_counts_by_id, :next_cursor, :card_offset)
 
       DEFAULT_PER_PAGE = 10
       MAX_PER_PAGE = 20
@@ -35,10 +35,12 @@ module Public
 
       def call
         events, next_state = paged_events
+        series_counts_by_id = SeriesCountsByIdQuery.call(events)
 
         Result.new(
           events: events,
           effective_series_ids: EffectiveSeriesIdsQuery.call(events),
+          series_counts_by_id: series_counts_by_id,
           next_cursor: next_cursor_for(next_state),
           card_offset: position
         )

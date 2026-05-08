@@ -1,4 +1,4 @@
-<% tooltip_label = local_assigns[:event].present? ? public_event_series_additional_terms_label(local_assigns[:event]) : "weitere Termine" %>
+<% tooltip_label = local_assigns[:event].present? ? public_event_series_additional_terms_label(local_assigns[:event], series_counts_by_id: local_assigns[:series_counts_by_id]) : "weitere Termine" %>
 <% badge_attributes = {
   class: "event-series-badge",
   role: "img",

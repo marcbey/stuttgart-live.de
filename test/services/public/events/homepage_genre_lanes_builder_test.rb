@@ -68,6 +68,27 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal [ @rock_group.slug, @pop_group.slug ], lanes.map { |lane| lane.group.slug }
   end
 
+  test "resolves public lane paths in bulk" do
+    rock_event = build_lane_event(slug: "lane-bulk-path-rock", artist_name: "Bulk Path Rock", start_at: 10.days.from_now.change(hour: 20))
+    pop_event = build_lane_event(slug: "lane-bulk-path-pop", artist_name: "Bulk Path Pop", start_at: 10.days.from_now.change(hour: 21))
+
+    build_lane_enrichment(event: rock_event, genres: [ "Rock" ])
+    build_lane_enrichment(event: pop_event, genres: [ "Pop" ])
+
+    queries = capture_sql_queries do
+      Public::Events::HomepageGenreLanesBuilder.new(
+        relation: Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day),
+        slugs: [ @rock_group.slug, @pop_group.slug ]
+      ).call
+    end
+
+    single_slug_queries = queries.grep(/"genres"\."slug" =/)
+    static_page_slug_queries = queries.grep(/"static_pages"\."slug" =/)
+
+    assert_empty single_slug_queries
+    assert_empty static_page_slug_queries
+  end
+
   test "uses 10 as the default limit for lane events" do
     105.times do |index|
       event = build_lane_event(
@@ -214,5 +235,23 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     else
       Genre.find_by!(name: name)
     end
+  end
+
+  def capture_sql_queries
+    queries = []
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      sql = payload[:sql].to_s
+      next if payload[:name] == "SCHEMA"
+      next if payload[:cached]
+      next if sql.match?(/\A(?:BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)/)
+
+      queries << sql
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      yield
+    end
+
+    queries
   end
 end

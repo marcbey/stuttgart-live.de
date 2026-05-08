@@ -536,6 +536,23 @@ class EventTest < ActiveSupport::TestCase
     assert_equal 0, queries
   end
 
+  test "canonical venue loaded through duplicate mapping has logo attachment preloaded" do
+    alias_venue = Venue.create!(name: "Alias Logo Hall")
+    canonical_venue = Venue.create!(name: "Canonical Logo Hall")
+    canonical_venue.logo.attach(create_uploaded_blob(filename: "canonical-logo.png"))
+    configure_venue_duplicate_mapping(alias_name: alias_venue.name, canonical_name: canonical_venue.name)
+    events(:published_one).update!(venue_record: alias_venue)
+    event = Event.includes(venue_record: [ logo_attachment: :blob ]).find(events(:published_one).id)
+    Current.venue_match_key_index = nil
+
+    canonical = event.canonical_venue_record
+
+    assert_equal canonical_venue.id, canonical.id
+    assert canonical.association(:logo_attachment).loaded?
+  ensure
+    Current.venue_match_key_index = nil
+  end
+
   test "image_url_for returns optimized representation path for editorial images" do
     event = events(:published_one)
     event_image = create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO)

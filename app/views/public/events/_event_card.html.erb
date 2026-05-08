@@ -10,6 +10,7 @@
 <% image_style = event_card_image_style(desktop_image) %>
 <% card_dom_id = local_assigns[:card_dom_id].presence || dom_id(event, :card) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 <% unavailable_label = event.public_ticket_status_label %>
 <% unavailable = unavailable_label.present? %>
 
@@ -38,7 +39,7 @@
         <%= render "sold_out_corner_ribbon", label: unavailable_label %>
       <% end %>
       <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-        <%= render "event_series_corner_badge", event: event %>
+        <%= render "event_series_corner_badge", event: event, series_counts_by_id: series_counts_by_id %>
       <% end %>
       <div class="event-card-copy">
         <% if event.badge_text.present? %>

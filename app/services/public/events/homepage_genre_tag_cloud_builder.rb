@@ -17,7 +17,7 @@ module Public
           events_count = event_counts_by_genre_id[genre.id].to_i
           next if events_count.zero?
 
-          public_path = LaneDirectory.public_path_for_genre_slug(genre.slug)
+          public_path = public_paths_by_slug[genre.slug]
           next if public_path.blank?
 
           Tag.new(
@@ -50,6 +50,10 @@ module Public
           .where.not(genres: { slug: excluded_slug_list })
           .group("genres.id")
           .count("DISTINCT events.id")
+      end
+
+      def public_paths_by_slug
+        @public_paths_by_slug ||= LaneDirectory.public_paths_for_genre_slugs(ordered_genres.map(&:slug))
       end
     end
   end

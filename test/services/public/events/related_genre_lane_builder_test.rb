@@ -145,6 +145,28 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     assert_not_includes lane.events.map(&:id), current_event.id
   end
 
+  test "uses staged candidate queries instead of one broad outer join" do
+    current_event = build_lane_event(slug: "related-staged-current", artist_name: "Current Event", start_at: 2.days.from_now.change(hour: 20))
+    sub_genre_match = build_lane_event(slug: "related-staged-sub-genre", artist_name: "Sub Genre Match", start_at: 3.days.from_now.change(hour: 20))
+    genre_match = build_lane_event(slug: "related-staged-genre", artist_name: "Genre Match", start_at: 4.days.from_now.change(hour: 20))
+
+    build_lane_enrichment(event: current_event, genres: [ "Rock" ], sub_genres: [ "Rock" ])
+    build_lane_enrichment(event: sub_genre_match, genres: [ "Metal" ], sub_genres: [ "Rock" ])
+    build_lane_enrichment(event: genre_match, genres: [ "Rock" ], sub_genres: [ "Jazz" ])
+
+    queries = capture_sql_queries do
+      lane = build_builder(event: current_event).call
+
+      assert_equal [ sub_genre_match.id, genre_match.id ], lane.events.map(&:id)
+    end
+
+    event_load_queries = queries.select { |query| query.include?('SELECT DISTINCT "events".*') }
+
+    assert event_load_queries.any? { |query| query.include?('INNER JOIN "event_sub_genres"') }
+    assert event_load_queries.any? { |query| query.include?('INNER JOIN "event_genres"') }
+    assert_empty event_load_queries.grep(/LEFT OUTER JOIN "event_genres".*LEFT OUTER JOIN "event_sub_genres"/m)
+  end
+
   test "returns nil when no related event matches sub genres or genres" do
     current_event = build_lane_event(slug: "related-only-current", artist_name: "Current Event", start_at: 4.days.from_now.change(hour: 20))
     unrelated_event = build_lane_event(slug: "related-unrelated", artist_name: "Unrelated Event", start_at: 5.days.from_now.change(hour: 20))
@@ -202,5 +224,23 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
 
   def sub_genre_for(name)
     SubGenre.find_by!(name: name)
+  end
+
+  def capture_sql_queries
+    queries = []
+    callback = lambda do |_name, _start, _finish, _id, payload|
+      sql = payload[:sql].to_s
+      next if payload[:name] == "SCHEMA"
+      next if payload[:cached]
+      next if sql.match?(/\A(?:BEGIN|COMMIT|ROLLBACK|SAVEPOINT|RELEASE)/)
+
+      queries << sql
+    end
+
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      yield
+    end
+
+    queries
   end
 end

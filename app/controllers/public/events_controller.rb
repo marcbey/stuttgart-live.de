@@ -261,6 +261,7 @@ module Public
       featured_list_page = homepage_lane_page("highlights", per_page: HOME_LANE_LIST_LIMIT)
       @home_featured_events = featured_page.events
       @home_featured_effective_series_ids = featured_page.effective_series_ids
+      @home_featured_series_counts_by_id = featured_page.series_counts_by_id
       @home_featured_next_cursor = featured_page.next_cursor
       @home_featured_list_next_cursor = featured_list_page.next_cursor
 
@@ -269,10 +270,12 @@ module Public
       all_stuttgart_page = homepage_lane_page("all_stuttgart")
       @home_highlight_events = all_stuttgart_page.events
       @home_highlight_effective_series_ids = all_stuttgart_page.effective_series_ids
+      @home_highlight_series_counts_by_id = all_stuttgart_page.series_counts_by_id
       @home_highlight_next_cursor = all_stuttgart_page.next_cursor
       tagestipp_page = homepage_lane_page("tagestipp")
       @home_tagestipp_events = tagestipp_page.events
       @home_tagestipp_effective_series_ids = tagestipp_page.effective_series_ids
+      @home_tagestipp_series_counts_by_id = tagestipp_page.series_counts_by_id
       @home_tagestipp_next_cursor = tagestipp_page.next_cursor
     end
 
@@ -563,6 +566,7 @@ module Public
             event_date: @browse_state.event_date,
             query: nil
           ).reorder(:start_at, :id)
+          @lane_series_counts_by_id = public_series_counts_for_relation(relation)
           @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
           @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
           return
@@ -574,6 +578,7 @@ module Public
           event_date: @browse_state.event_date,
           query: nil
         ).reorder(:start_at, :id)
+        @lane_series_counts_by_id = public_series_counts_for_relation(scoped_highlights)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(scoped_highlights)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.to_a)
 
@@ -585,6 +590,7 @@ module Public
           event_date: @browse_state.event_date,
           query: nil
         ).reorder(:start_at, :id)
+        @lane_series_counts_by_id = public_series_counts_for_relation(fallback_relation)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(fallback_relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.to_a)
       when "all_stuttgart"
@@ -594,10 +600,12 @@ module Public
           event_date: @browse_state.event_date,
           query: nil
         ).where(primary_source: "reservix")
+        @lane_series_counts_by_id = public_series_counts_for_relation(relation)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
       when "tagestipp"
         relation = tagestipp_relation
+        @lane_series_counts_by_id = public_series_counts_for_relation(relation)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
       when "genre"
@@ -609,6 +617,7 @@ module Public
         raise ActiveRecord::RecordNotFound if lane_page.blank?
 
         @lane_effective_series_ids = lane_page.effective_series_ids
+        @lane_series_counts_by_id = lane_page.series_counts_by_id
         @lane_events = lane_page.events
       else
         raise ActiveRecord::RecordNotFound
@@ -634,6 +643,10 @@ module Public
 
     def effective_public_series_ids_for_relation(relation)
       Public::Events::EffectiveSeriesIdsQuery.call(relation)
+    end
+
+    def public_series_counts_for_relation(relation)
+      Public::Events::SeriesCountsByIdQuery.call(relation)
     end
 
     def explicit_sks_filter?

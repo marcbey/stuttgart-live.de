@@ -7,6 +7,7 @@
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 <% primary_offer = event.public_ticket_offer %>
 <% unavailable_label = event.public_ticket_status_label %>
 <% unavailable = unavailable_label.present? %>
@@ -52,7 +53,7 @@
       </div>
     <% end %>
     <% if public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-      <%= render "event_series_corner_badge", event: event, focusable: true %>
+      <%= render "event_series_corner_badge", event: event, focusable: true, series_counts_by_id: series_counts_by_id %>
     <% end %>
   </div>
 

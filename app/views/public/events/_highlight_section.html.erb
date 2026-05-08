@@ -1,6 +1,7 @@
 <% featured = local_assigns.fetch(:featured, false) %>
 <% track_class = featured ? "home-featured-track" : "home-slider-track" %>
 <% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% lazy_lane_id = local_assigns[:lazy_lane_id] %>
 <% lazy_next_cursor = local_assigns[:lazy_next_cursor] %>
@@ -76,6 +77,7 @@
                          event: event,
                          browse_state: browse_state,
                          effective_series_ids: effective_series_ids,
+                         series_counts_by_id: series_counts_by_id,
                          strict_proxy: strict_proxy,
                          tile_variant: tile_variant,
                          card_slot: card_slot %>
@@ -84,6 +86,7 @@
                          event: event,
                          browse_state: browse_state,
                          effective_series_ids: effective_series_ids,
+                         series_counts_by_id: series_counts_by_id,
                          strict_proxy: strict_proxy %>
             <% end %>
           <% end %>
@@ -116,6 +119,7 @@
                    events: list_events,
                    browse_state: browse_state,
                    effective_series_ids: effective_series_ids,
+                   series_counts_by_id: series_counts_by_id,
                    strict_proxy: strict_proxy %>
       </div>
       <% if lazy_lane_id.present? %>
