@@ -952,8 +952,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, sks_event.artist_name
-    assert_select ".home-featured-section--open-grid .home-featured-track.featured-event-grid", count: 1
-    assert_select ".home-featured-section--open-grid .highlights-slider-viewport", count: 0
+    assert_select ".home-featured-section--open-grid", count: 0
+    assert_select "section.home-featured-section[data-controller~='highlights-slider'][data-controller~='homepage-lane'][data-homepage-lane-lane-value='highlights']", count: 1
+    assert_select ".home-featured-section .highlights-slider-viewport", count: 1
+    assert_select ".home-featured-section .home-featured-track[data-homepage-lane-target='track']", count: 1
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
   end
@@ -2455,8 +2457,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, sks_easy_event.artist_name
     assert_includes response.body, sks_eventim_event.artist_name
     assert_includes response.body, sks_easyticket_promoter_event.artist_name
-    assert_select ".home-featured-section--open-grid .home-featured-track.featured-event-grid", count: 1
-    assert_select ".home-featured-section--open-grid .highlights-slider-viewport", count: 0
+    assert_select ".home-featured-section--open-grid", count: 0
+    assert_select "section.home-featured-section[data-controller~='highlights-slider'][data-controller~='homepage-lane'][data-homepage-lane-lane-value='highlights']", count: 1
+    assert_select ".home-featured-section .highlights-slider-viewport", count: 1
     assert_select ".home-featured-track article.event-card", minimum: 3
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easy_event.artist_name)}/
     assert_select ".home-featured-track", text: /#{Regexp.escape(sks_eventim_event.artist_name)}/

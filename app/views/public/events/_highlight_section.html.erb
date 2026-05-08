@@ -105,7 +105,7 @@
     <div class="section-slider-list-viewport"
          data-section-view-target="list"
          hidden>
-      <% if lazy_lane_id.present? %>
+      <% if lazy_lane_id.present? && !open_grid %>
         <button type="button"
                 class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev section-slider-list-arrow"
                 data-action="click->homepage-lane#previousList"
@@ -114,7 +114,7 @@
         </button>
       <% end %>
       <div class="section-slider-list"
-           <% if lazy_lane_id.present? %>data-homepage-lane-target="list"<% end %>>
+           <% if lazy_lane_id.present? && !open_grid %>data-homepage-lane-target="list"<% end %>>
         <%= render "event_rows",
                    events: list_events,
                    browse_state: browse_state,
@@ -122,7 +122,7 @@
                    series_counts_by_id: series_counts_by_id,
                    strict_proxy: strict_proxy %>
       </div>
-      <% if lazy_lane_id.present? %>
+      <% if lazy_lane_id.present? && !open_grid %>
         <button type="button"
                 class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next section-slider-list-arrow"
                 data-action="click->homepage-lane#nextList"
