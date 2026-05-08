@@ -131,7 +131,7 @@ module Public
       end
 
       def priority_sort_value(candidate)
-        candidate.promoter_id.in?(Event.sks_promoter_ids) || candidate.highlighted? ? 0 : 1
+        candidate.sks_promoter? || candidate.highlighted? ? 0 : 1
       end
 
       def series_representatives(events)

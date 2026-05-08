@@ -2,7 +2,7 @@ require "test_helper"
 
 class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
   setup do
-    AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382" ])
+    AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "10136", "382", "Russ Klassik" ])
     AppSetting.reset_cache!
   end
 
@@ -15,6 +15,18 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
   test "filters to sks promoter ids" do
     matching_event = create_visible_event(title: "SKS Query", artist_name: "SKS Artist", promoter_id: AppSetting.sks_promoter_ids.first)
     create_visible_event(title: "Other Query", artist_name: "Other Artist", promoter_id: "99999")
+
+    result = Public::VisibleEventsQuery.new(
+      scope: Event.published_live,
+      filter: Public::VisibleEventsQuery::FILTER_SKS
+    ).call
+
+    assert_equal [ matching_event ], result.to_a
+  end
+
+  test "filters to sks promoter names" do
+    matching_event = create_visible_event(title: "SKS Name Query", artist_name: "SKS Name Artist", promoter_name: "Russ Klassik")
+    create_visible_event(title: "Other Name Query", artist_name: "Other Name Artist", promoter_name: "Other Promoter")
 
     result = Public::VisibleEventsQuery.new(
       scope: Event.published_live,
@@ -387,7 +399,7 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     sks_event = create_visible_event(
       title: "Search Priority Night",
       artist_name: "SKS Search Artist",
-      promoter_id: AppSetting.sks_promoter_ids.first,
+      promoter_name: "Russ Klassik",
       start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0)
     )
 
@@ -426,7 +438,7 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
 
   private
 
-  def create_visible_event(title:, artist_name:, promoter_id: nil, highlighted: false, start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0), venue_name: "Im Wizemann")
+  def create_visible_event(title:, artist_name:, promoter_id: nil, promoter_name: nil, highlighted: false, start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0), venue_name: "Im Wizemann")
     Event.create!(
       title: title,
       artist_name: artist_name,
@@ -436,6 +448,7 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
       status: "published",
       published_at: 1.day.ago,
       promoter_id: promoter_id,
+      promoter_name: promoter_name,
       highlighted: highlighted,
       source_fingerprint: SecureRandom.uuid,
       source_snapshot: {}

@@ -5,7 +5,7 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     EventGenre.delete_all
     EventSubGenre.delete_all
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
-    AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135" ])
+    AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135", "Russ Klassik" ])
     AppSetting.reset_cache!
 
     @rock_group = genres(:rock)
@@ -68,7 +68,7 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     current_event = build_lane_event(slug: "related-priority-current", artist_name: "Current Event", start_at: 4.days.from_now.change(hour: 20))
     normal_earlier = build_lane_event(slug: "related-priority-normal-earlier", artist_name: "Normal Earlier", start_at: 5.days.from_now.change(hour: 18))
     highlighted_later = build_lane_event(slug: "related-priority-highlighted", artist_name: "Highlighted Later", start_at: 5.days.from_now.change(hour: 22), highlighted: true)
-    sks_middle = build_lane_event(slug: "related-priority-sks", artist_name: "SKS Middle", start_at: 5.days.from_now.change(hour: 20), promoter_id: "10135")
+    sks_middle = build_lane_event(slug: "related-priority-sks", artist_name: "SKS Middle", start_at: 5.days.from_now.change(hour: 20), promoter_name: "Russ Klassik")
     normal_latest = build_lane_event(slug: "related-priority-normal-latest", artist_name: "Normal Latest", start_at: 5.days.from_now.change(hour: 23))
 
     [ current_event, normal_earlier, highlighted_later, sks_middle, normal_latest ].each do |event|
@@ -164,7 +164,7 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     )
   end
 
-  def build_lane_event(slug:, artist_name:, start_at:, highlighted: false, promoter_id: nil, status: "published", published_at: 1.day.ago)
+  def build_lane_event(slug:, artist_name:, start_at:, highlighted: false, promoter_id: nil, promoter_name: nil, status: "published", published_at: 1.day.ago)
     Event.create!(
       slug: slug,
       source_fingerprint: "test::service::related-genre-lane::#{slug}",
@@ -174,6 +174,7 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
       venue: "Club Zentral",
       city: "Stuttgart",
       promoter_id: promoter_id,
+      promoter_name: promoter_name,
       highlighted: highlighted,
       status: status,
       published_at: published_at,

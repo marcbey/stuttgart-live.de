@@ -462,7 +462,7 @@ module Public
     def initial_search_overlay_events
       promotion_events = initial_search_overlay_events_for(search_overlay_idle_relation.where(promotion_banner: true))
       highlighted_events = initial_search_overlay_events_for(search_overlay_idle_relation.where(highlighted: true))
-      sks_events = initial_search_overlay_events_for(search_overlay_idle_relation.where(promoter_id: Event.sks_promoter_ids))
+      sks_events = initial_search_overlay_events_for(search_overlay_idle_relation.merge(Event.sks_promoters))
 
       deduplicate_priority_events(promotion_events, highlighted_events, sks_events).first(SEARCH_OVERLAY_IDLE_LIMIT)
     end
@@ -558,7 +558,7 @@ module Public
       when "highlights"
         if explicit_sks_filter?
           relation = published_visible_events_relation(
-            scope: homepage_events_relation.where(promoter_id: Event.sks_promoter_ids),
+            scope: homepage_events_relation.merge(Event.sks_promoters),
             filter: Public::Events::BrowseState::FILTER_ALL,
             event_date: @browse_state.event_date,
             query: nil

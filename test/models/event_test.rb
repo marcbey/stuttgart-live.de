@@ -130,6 +130,18 @@ class EventTest < ActiveSupport::TestCase
     assert_equal "Neue Test Venue", event.venue_record.name
   end
 
+  test "detects sks promoter by promoter name fallback" do
+    AppSetting.find_or_initialize_by(key: AppSetting::SKS_PROMOTER_IDS_KEY).tap do |setting|
+      setting.value = %w[10135 10136 382]
+      setting.save!
+    end
+    AppSetting.reset_cache!
+
+    event = Event.new(promoter_id: nil, promoter_name: "10135")
+
+    assert_predicate event, :sks_promoter?
+  end
+
   test "displays canonical venue name for configured alias venue records" do
     canonical = Venue.create!(
       name: "Liederhalle Beethoven-Saal",

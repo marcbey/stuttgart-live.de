@@ -110,7 +110,8 @@ class Event < ApplicationRecord
       .where("published_at IS NULL OR published_at <= ?", Time.current)
       .chronological
   }
-  scope :homepage_highlights, -> { where(promoter_id: sks_promoter_ids).or(where(highlighted: true)) }
+  scope :sks_promoters, -> { where(promoter_id: sks_promoter_ids).or(where(promoter_name: sks_promoter_ids)) }
+  scope :homepage_highlights, -> { sks_promoters.or(where(highlighted: true)) }
   scope :sks_first, -> { reorder(Arel.sql(sks_first_order_sql), :start_at, :id) }
   scope :search_priority_first, -> { reorder(Arel.sql(search_priority_order_sql), :start_at, :id) }
   scope :promotion_banner_live, lambda {
@@ -128,14 +129,18 @@ class Event < ApplicationRecord
     quoted_ids = sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
     return "1" if quoted_ids.blank?
 
-    "CASE WHEN events.promoter_id IN (#{quoted_ids}) THEN 0 ELSE 1 END"
+    "CASE WHEN #{sks_promoter_sql_condition(quoted_ids)} THEN 0 ELSE 1 END"
   end
 
   def self.search_priority_order_sql
     quoted_ids = sks_promoter_ids.map { |id| ActiveRecord::Base.connection.quote(id) }.join(", ")
-    promoter_condition = quoted_ids.present? ? "events.promoter_id IN (#{quoted_ids}) OR " : ""
+    promoter_condition = quoted_ids.present? ? "#{sks_promoter_sql_condition(quoted_ids)} OR " : ""
 
     "CASE WHEN #{promoter_condition}events.highlighted = TRUE THEN 0 ELSE 1 END"
+  end
+
+  def self.sks_promoter_sql_condition(quoted_ids)
+    "events.promoter_id IN (#{quoted_ids}) OR events.promoter_name IN (#{quoted_ids})"
   end
 
   def published?
@@ -407,7 +412,7 @@ class Event < ApplicationRecord
   end
 
   def sks_promoter?
-    self.class.sks_promoter_ids.include?(promoter_id.to_s)
+    self.class.sks_promoter_ids.include?(promoter_id.to_s) || self.class.sks_promoter_ids.include?(promoter_name.to_s)
   end
 
   def public_organizer_notes
