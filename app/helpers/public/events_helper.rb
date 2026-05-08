@@ -1,4 +1,6 @@
 module Public::EventsHelper
+  include ApplicationHelper
+
   require "digest"
 
   PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE = [
@@ -25,6 +27,11 @@ module Public::EventsHelper
   ].freeze
 
   EventDetailTextColumns = Data.define(:left, :right)
+  EventDetailOrganizerLogo = Data.define(:source, :alt)
+  DEFAULT_EVENT_DETAIL_ORGANIZER_LOGO = EventDetailOrganizerLogo.new(
+    source: "russ-live-logo.svg",
+    alt: "Russ Live"
+  ).freeze
 
   def effective_public_event_series_ids(events)
     Public::Events::EffectiveSeriesIdsQuery.call(events)
@@ -216,7 +223,23 @@ module Public::EventsHelper
     end
   end
 
+  def event_detail_organizer_logo(event)
+    promoter_name = event.promoter_name.to_s.strip
+    logo_source = event_detail_promoter_logo_source(promoter_name)
+    return DEFAULT_EVENT_DETAIL_ORGANIZER_LOGO if logo_source.blank?
+
+    EventDetailOrganizerLogo.new(source: logo_source, alt: promoter_name)
+  end
+
   private
+
+  def event_detail_promoter_logo_source(promoter_name)
+    promoter_slug = promoter_name.parameterize
+    return if promoter_slug.blank?
+
+    logo_source = "#{promoter_slug}-logo.svg"
+    logo_source if asset_available?(logo_source)
+  end
 
   def public_events_render_fingerprint(events)
     cache_fingerprint(Array(events).map { |event| public_event_render_cache_components(event) })

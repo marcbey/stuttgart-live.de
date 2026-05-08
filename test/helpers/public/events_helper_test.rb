@@ -67,6 +67,24 @@ class Public::EventsHelperTest < ActionView::TestCase
     assert_equal "39 EUR", public_event_ticket_price(event)
   end
 
+  test "event_detail_organizer_logo uses matching promoter logo asset" do
+    event = Event.new(promoter_name: "musiccircus")
+
+    logo = event_detail_organizer_logo(event)
+
+    assert_equal "musiccircus-logo.svg", logo.source
+    assert_equal "musiccircus", logo.alt
+  end
+
+  test "event_detail_organizer_logo falls back to russ live without matching promoter asset" do
+    event = Event.new(promoter_name: "Unbekannter Veranstalter")
+
+    logo = event_detail_organizer_logo(event)
+
+    assert_equal "russ-live-logo.svg", logo.source
+    assert_equal "Russ Live", logo.alt
+  end
+
   test "public_event_visibility_badges labels scheduled ready_for_publish events as geplant" do
     event = events(:needs_review_one)
     event.status = "ready_for_publish"

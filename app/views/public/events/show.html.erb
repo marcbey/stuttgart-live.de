@@ -183,7 +183,8 @@
         <div class="event-detail-organizer-sidebar">
           <div class="event-detail-organizer-brand">
             <h3 class="event-detail-organizer-sidebar-heading">Veranstalter:</h3>
-            <%= image_tag "russ-live-logo.svg", alt: "Russ Live", class: "event-detail-organizer-logo" %>
+            <% organizer_logo = event_detail_organizer_logo(@event) %>
+            <%= image_tag organizer_logo.source, alt: organizer_logo.alt, class: "event-detail-organizer-logo" %>
           </div>
           <% if presenter.has_presenters? %>
             <%= render "organizer_presenters_strip", presenters: presenter.presenters %>

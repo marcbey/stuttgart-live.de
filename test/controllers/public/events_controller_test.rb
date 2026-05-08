@@ -4035,6 +4035,30 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-organizer-presenters", count: 0
   end
 
+  test "show renders matching organizer logo for promoter name" do
+    event = Event.create!(
+      slug: "published-event-with-musiccircus-organizer-logo",
+      source_fingerprint: "test::public::published::musiccircus-organizer-logo",
+      title: "Published Event With Musiccircus Organizer Logo",
+      artist_name: "Published Artist Musiccircus Logo",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      event_info: "Öffentliche Beschreibung",
+      organizer_notes: "Sichtbare Veranstalterhinweise",
+      show_organizer_notes: true,
+      promoter_name: "musiccircus",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get event_url(event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-organizer-logo[src='#{ActionController::Base.helpers.asset_path("musiccircus-logo.svg")}'][alt='musiccircus']", count: 1
+  end
+
   test "show renders organizer notes for sks events by default" do
     event = Event.create!(
       slug: "published-sks-event-with-default-organizer-notes",
