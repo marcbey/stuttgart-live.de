@@ -533,6 +533,51 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     ).where("metadata ->> 'merge_run_id' = ?", merge_run_id.to_s).order(:id).pluck(:action)
   end
 
+  test "merges artist variants within one hour start time drift" do
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
+    AppSetting.reset_cache!
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "one-night-taylor-easy:2027-05-13",
+      payload: {
+        "event_id" => "one-night-taylor-easy",
+        "date_time" => "2027-05-13 19:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "KKL Beethoven-Saal Stuttgart",
+        "title_1" => "One Night of Taylor - The Eras Experience - Taylor Swift Tribute by Xenna",
+        "title_2" => "One Night of Taylor - The Eras Experience - Taylor Swift Tribute by Xenna",
+        "ticket_url" => "https://example.com/easy-one-night-taylor"
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: import_sources(:two),
+      import_event_type: "eventim",
+      source_identifier: "one-night-taylor-eventim:2027-05-13",
+      payload: {
+        "eventid" => "one-night-taylor-eventim",
+        "eventdate" => "2027-05-13",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Liederhalle Beethovensaal",
+        "eventname" => "One Night of Taylor - The Eras Experience - Taylor Swift Tribute by Xenna",
+        "artistname" => "One Night of Taylor",
+        "eventlink" => "https://example.com/eventim-one-night-taylor"
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+    event = Event.find_by!(start_at: Time.zone.local(2027, 5, 13, 20, 0, 0))
+
+    assert_equal 2, result.import_records_count
+    assert_equal 2, result.groups_count
+    assert_equal 1, result.events_created_count
+    assert_equal 1, Event.where(start_at: Time.zone.local(2027, 5, 13, 19, 0, 0)..Time.zone.local(2027, 5, 13, 20, 0, 0)).count
+    assert_equal %w[easyticket eventim], event.event_offers.order(:priority_rank, :id).pluck(:source)
+  end
+
   test "similarity-matches swapped artist and title fields when enabled" do
     AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
     AppSetting.reset_cache!

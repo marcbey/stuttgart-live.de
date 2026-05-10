@@ -24,6 +24,57 @@ class Merging::SyncFromImports::ArtistSimilarityMatcherTest < ActiveSupport::Tes
     assert_operator result&.score.to_f, :>=, 0.74
   end
 
+  test "matches artist variants within the start time tolerance" do
+    event = Event.create!(
+      artist_name: "One Night of Taylor",
+      title: "The Eras Experience",
+      start_at: Time.zone.local(2026, 5, 13, 19, 0, 0),
+      venue: "Liederhalle Beethoven-Saal",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_fingerprint: "matcher::one-night-of-taylor"
+    )
+
+    matcher = Merging::SyncFromImports::ArtistSimilarityMatcher.new(
+      priority_map: Merging::ProviderPriorityMap.call,
+      threshold: 0.74
+    )
+
+    record = build_record(
+      "One Night of Taylor - The Eras Experience - Taylor Swift Tribute by Xenna",
+      event.start_at + 1.hour
+    )
+    result = matcher.call(record:)
+
+    assert_equal event, result&.event
+    assert_equal "significant_tokens_subset", result&.reason
+    assert_operator result&.score.to_f, :>=, 0.74
+  end
+
+  test "does not match artist variants outside the start time tolerance" do
+    event = Event.create!(
+      artist_name: "One Night of Taylor",
+      title: "The Eras Experience",
+      start_at: Time.zone.local(2026, 5, 13, 19, 0, 0),
+      venue: "Liederhalle Beethoven-Saal",
+      city: "Stuttgart",
+      status: "needs_review",
+      source_fingerprint: "matcher::one-night-of-taylor-outside-tolerance"
+    )
+
+    matcher = Merging::SyncFromImports::ArtistSimilarityMatcher.new(
+      priority_map: Merging::ProviderPriorityMap.call,
+      threshold: 0.74
+    )
+
+    record = build_record(
+      "One Night of Taylor - The Eras Experience - Taylor Swift Tribute by Xenna",
+      event.start_at + 1.hour + 1.minute
+    )
+
+    assert_nil matcher.call(record:)
+  end
+
   test "does not match clearly different artists" do
     Event.create!(
       artist_name: "Band Alpha",

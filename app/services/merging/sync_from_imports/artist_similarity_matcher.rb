@@ -3,14 +3,21 @@ module Merging
     class ArtistSimilarityMatcher
       Result = Data.define(:event, :score, :reason)
 
-      def initialize(priority_map:, threshold: Merging::MatchConfig.similarity_match_threshold)
+      def initialize(
+        priority_map:,
+        threshold: Merging::MatchConfig.similarity_match_threshold,
+        start_at_tolerance: Merging::MatchConfig.start_at_match_tolerance
+      )
         @priority_map = priority_map
         @threshold = threshold
+        @start_at_tolerance = start_at_tolerance
       end
 
       def call(record:)
-        candidates = Event.where(start_at: record.start_at).to_a
-        best_result = candidates.filter_map { |event| match_result_for(record:, event:) }.max_by { |result| result.score }
+        candidates = Event.where(start_at: start_at_range_for(record)).to_a
+        best_result = candidates
+          .filter_map { |event| match_result_for(record:, event:) }
+          .max_by { |result| [ result.score, -start_at_distance_seconds(record:, event: result.event), -priority_for(result.event.primary_source) ] }
         return nil if best_result.nil? || best_result.score < threshold
 
         best_result
@@ -18,7 +25,7 @@ module Merging
 
       private
 
-      attr_reader :priority_map, :threshold
+      attr_reader :priority_map, :start_at_tolerance, :threshold
 
       def match_result_for(record:, event:)
         [
@@ -85,6 +92,18 @@ module Merging
         normalized_artist_name.present? &&
           normalized_title.present? &&
           normalized_artist_name != normalized_title
+      end
+
+      def priority_for(source)
+        priority_map.fetch(source, 999)
+      end
+
+      def start_at_range_for(record)
+        (record.start_at - start_at_tolerance)..(record.start_at + start_at_tolerance)
+      end
+
+      def start_at_distance_seconds(record:, event:)
+        (event.start_at - record.start_at).abs
       end
     end
   end

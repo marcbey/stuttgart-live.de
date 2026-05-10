@@ -4,14 +4,38 @@ class Merging::SyncFromImports::ExactFingerprintMatcherTest < ActiveSupport::Tes
   test "finds an event by normalized_artist_name and exact start_at" do
     event = events(:published_one)
     matcher = Merging::SyncFromImports::ExactFingerprintMatcher.new(priority_map: Merging::ProviderPriorityMap.call)
-    record = Merging::SyncFromImports::ImportRecord.new(
+    record = build_record(artist_name: "Published Artist", start_at: event.start_at)
+
+    assert_equal event, matcher.call(record:)
+  end
+
+  test "finds an event by normalized_artist_name within the start_at tolerance" do
+    event = events(:published_one)
+    matcher = Merging::SyncFromImports::ExactFingerprintMatcher.new(priority_map: Merging::ProviderPriorityMap.call)
+    record = build_record(artist_name: "Published Artist", start_at: event.start_at + 1.hour)
+
+    assert_equal event, matcher.call(record:)
+  end
+
+  test "does not match an event outside the start_at tolerance" do
+    event = events(:published_one)
+    matcher = Merging::SyncFromImports::ExactFingerprintMatcher.new(priority_map: Merging::ProviderPriorityMap.call)
+    record = build_record(artist_name: "Published Artist", start_at: event.start_at + 1.hour + 1.minute)
+
+    assert_nil matcher.call(record:)
+  end
+
+  private
+
+  def build_record(artist_name:, start_at:)
+    Merging::SyncFromImports::ImportRecord.new(
       source: "eventim",
       source_identifier: "record-1",
       external_event_id: "ext-1",
       series_reference: nil,
-      artist_name: "Published Artist",
+      artist_name: artist_name,
       title: "Published Event",
-      start_at: event.start_at,
+      start_at: start_at,
       doors_at: nil,
       city: nil,
       venue: "Other Venue",
@@ -32,7 +56,5 @@ class Merging::SyncFromImports::ExactFingerprintMatcherTest < ActiveSupport::Tes
       availability_status: "available",
       raw_payload: {}
     )
-
-    assert_equal event, matcher.call(record:)
   end
 end
