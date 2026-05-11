@@ -11,6 +11,7 @@ module Public
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
     SHOW_EVENT_SERIES_TERMS_LIMIT = 6
+    SAVED_LANE_SLUG_LIMIT = 200
     RUSS_LIVE_PROMOTER_ID = "382".freeze
     REQUEST_PROFILE_HEADER = "X-Stuttgart-Live-Profile".freeze
 
@@ -497,7 +498,7 @@ module Public
       Array(params[:slugs]).filter_map do |slug|
         normalized_slug = slug.to_s.strip
         normalized_slug if normalized_slug.present?
-      end.uniq.first(Public::Events::HomepageGenreLanesBuilder::DEFAULT_LIMIT)
+      end.uniq.first(SAVED_LANE_SLUG_LIMIT)
     end
 
     def search_filter

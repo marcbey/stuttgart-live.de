@@ -5123,6 +5123,25 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes rendered_names, past_event.artist_name
   end
 
+  test "saved lane renders more than the homepage genre lane default limit" do
+    saved_events = (Public::Events::HomepageGenreLanesBuilder::DEFAULT_LIMIT + 2).times.map do |index|
+      create_public_event(
+        slug: "saved-lane-many-#{index}",
+        artist_name: "Saved Lane Many #{index}",
+        start_at: (index + 1).days.from_now.change(hour: 19, min: 0, sec: 0)
+      )
+    end
+
+    get saved_lane_events_url, params: { slugs: saved_events.map(&:slug) }
+
+    assert_response :success
+
+    document = Nokogiri::HTML.fragment(response.body)
+    rendered_names = document.css(".genre-lane-card-name").map(&:text)
+
+    assert_equal saved_events.map(&:artist_name), rendered_names
+  end
+
   test "saved lane returns an empty response when no valid saved events remain" do
     unpublished_event = create_public_event(
       slug: "saved-lane-empty-unpublished",
