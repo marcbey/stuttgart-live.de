@@ -15,7 +15,8 @@ log() {
 log "Starting stuttgart-live database backup"
 mkdir -p "$BACKUP_DIR"
 
-{% for db_name in postgres_app_databases %}
+{% set backup_databases = postgres_app_databases + (postgres_russ_live_operational_databases if postgres_russ_live_operational_password | length > 0 else []) %}
+{% for db_name in backup_databases %}
 log "Dumping {{ db_name }}"
 sudo -u postgres pg_dump --format=custom --file "$BACKUP_DIR/{{ db_name }}-$STAMP.dump" "{{ db_name }}"
 {% endfor %}

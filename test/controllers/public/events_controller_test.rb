@@ -1919,22 +1919,23 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "homepage lane endpoint loads additional genre cards" do
-    _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    metal_group = genres(:metal)
+    create_homepage_genre_snapshot(lane_slugs: [ metal_group.slug ])
 
     25.times do |index|
       Event.create!(
-        slug: "homepage-lane-endpoint-rock-#{index}",
-        source_fingerprint: "test::public::homepage-lane-endpoint::rock::#{index}",
-        title: "Homepage Lane Endpoint Rock #{index}",
-        artist_name: "Homepage Lane Endpoint Rock Artist #{index}",
-        start_at: (index + 2).days.from_now.change(hour: 20, min: 0, sec: 0),
+        slug: "homepage-lane-endpoint-metal-#{index}",
+        source_fingerprint: "test::public::homepage-lane-endpoint::metal::#{index}",
+        title: "Homepage Lane Endpoint Metal #{index}",
+        artist_name: "Homepage Lane Endpoint Metal Artist #{index}",
+        start_at: (6.months.from_now + index.days).change(hour: 20, min: 0, sec: 0),
         venue: "Club Zentral",
         city: "Stuttgart",
         status: "published",
         published_at: 1.day.ago,
         source_snapshot: {}
       ).tap do |event|
-        build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+        build_homepage_genre_enrichment(event: event, genres: [ metal_group.name ])
       end
     end
 
@@ -1944,20 +1945,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     document = Nokogiri::HTML.parse(response.body)
     rock_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == rock_group.name
+      section.at_css("h2")&.text == metal_group.name
     end
     cursor = rock_section["data-homepage-lane-cursor-value"]
 
     assert_equal 10, rock_section.css(".genre-lane-card-name").size
     assert_predicate cursor, :present?
 
-    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: cursor, mode: "cards")
+    get homepage_lane_events_url(lane: "genre:#{metal_group.slug}", cursor: cursor, mode: "cards")
 
     assert_response :success
     assert_equal "true", response.headers["X-Homepage-Lane-Has-More"]
     assert_select "article.genre-lane-card", count: 10
-    assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Rock Artist 10"
-    assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Rock Artist 19"
+    assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Metal Artist 10"
+    assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Metal Artist 19"
   end
 
   test "homepage index batches event series counts for badges" do
@@ -2152,7 +2153,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index initially limits highlights fallback and exposes remaining events through lane endpoint" do
-    selected_date = 20.days.from_now.to_date
+    selected_date = 6.months.from_now.to_date
 
     16.times do |index|
       Event.create!(

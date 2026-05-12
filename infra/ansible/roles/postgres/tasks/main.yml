@@ -87,3 +87,120 @@
     owner: "{{ postgres_app_user }}"
     state: present
   loop: "{{ postgres_app_databases }}"
+
+- name: Russ-Live-PostgreSQL-Passwörter gemeinsam validieren
+  ansible.builtin.assert:
+    that:
+      - postgres_russ_live_readonly_password | length > 0
+      - postgres_russ_live_operational_password | length > 0
+    fail_msg: "Setze postgres_russ_live_readonly_password und postgres_russ_live_operational_password gemeinsam."
+  when: >
+    (postgres_russ_live_readonly_password | length > 0) or
+    (postgres_russ_live_operational_password | length > 0)
+
+- name: Russ-Live-Operational-Rolle in PostgreSQL anlegen
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ postgres_russ_live_operational_user }}"
+    password: "{{ postgres_russ_live_operational_password }}"
+    role_attr_flags: LOGIN
+    state: present
+  no_log: true
+  when: postgres_russ_live_operational_password | length > 0
+
+- name: Russ-Live-Operational-Datenbanken anlegen
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ item }}"
+    owner: "{{ postgres_russ_live_operational_user }}"
+    state: present
+  loop: "{{ postgres_russ_live_operational_databases }}"
+  when: postgres_russ_live_operational_password | length > 0
+
+- name: Russ-Live-Read-only-Rolle in PostgreSQL anlegen
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ postgres_russ_live_readonly_user }}"
+    password: "{{ postgres_russ_live_readonly_password }}"
+    role_attr_flags: LOGIN
+    state: present
+  no_log: true
+  when: postgres_russ_live_readonly_password | length > 0
+
+- name: Russ-Live-Read-only-Datenbankzugriff erlauben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    database: "{{ item }}"
+    type: database
+    objs: "{{ item }}"
+    roles: "{{ postgres_russ_live_readonly_user }}"
+    privs: CONNECT
+    state: present
+  loop: "{{ postgres_russ_live_readonly_databases }}"
+  when: postgres_russ_live_readonly_password | length > 0
+
+- name: Russ-Live-Read-only-Schemazugriff erlauben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    database: "{{ item }}"
+    type: schema
+    objs: public
+    roles: "{{ postgres_russ_live_readonly_user }}"
+    privs: USAGE
+    state: present
+  loop: "{{ postgres_russ_live_readonly_databases }}"
+  when: postgres_russ_live_readonly_password | length > 0
+
+- name: Russ-Live-Read-only-Tabellenzugriff erlauben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    database: "{{ item }}"
+    type: table
+    schema: public
+    objs: ALL_IN_SCHEMA
+    roles: "{{ postgres_russ_live_readonly_user }}"
+    privs: SELECT
+    state: present
+  loop: "{{ postgres_russ_live_readonly_databases }}"
+  when: postgres_russ_live_readonly_password | length > 0
+
+- name: Russ-Live-Read-only-Sequenzzugriff erlauben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    database: "{{ item }}"
+    type: sequence
+    schema: public
+    objs: ALL_IN_SCHEMA
+    roles: "{{ postgres_russ_live_readonly_user }}"
+    privs: SELECT,USAGE
+    state: present
+  loop: "{{ postgres_russ_live_readonly_databases }}"
+  when: postgres_russ_live_readonly_password | length > 0
+
+- name: Russ-Live-Read-only-Default-Tabellenrechte setzen
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    database: "{{ item }}"
+    type: default_privs
+    schema: public
+    objs: TABLES
+    target_roles: "{{ postgres_app_user }}"
+    roles: "{{ postgres_russ_live_readonly_user }}"
+    privs: SELECT
+    state: present
+  loop: "{{ postgres_russ_live_readonly_databases }}"
+  when: postgres_russ_live_readonly_password | length > 0
+
+- name: Russ-Live-Read-only-Default-Sequenzrechte setzen
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    database: "{{ item }}"
+    type: default_privs
+    schema: public
+    objs: SEQUENCES
+    target_roles: "{{ postgres_app_user }}"
+    roles: "{{ postgres_russ_live_readonly_user }}"
+    privs: SELECT,USAGE
+    state: present
+  loop: "{{ postgres_russ_live_readonly_databases }}"
+  when: postgres_russ_live_readonly_password | length > 0

@@ -8,28 +8,57 @@ PLAYBOOK="$ANSIBLE_DIR/playbooks/app_host.yml"
 SSH_KEY="${SSH_KEY:-$HOME/.ssh/stgt-live-hetzner-admin}"
 SSH_USER="${SSH_USER:-admin}"
 
+read_dotenv_value() {
+  local key="$1"
+  local dotenv_file="$ROOT_DIR/.env"
+  local line name value
+
+  [[ -f "$dotenv_file" ]] || return 1
+
+  while IFS= read -r line || [[ -n "$line" ]]; do
+    line="${line#"${line%%[![:space:]]*}"}"
+    line="${line%"${line##*[![:space:]]}"}"
+    [[ -z "$line" || "${line:0:1}" == "#" ]] && continue
+
+    line="${line#export }"
+    name="${line%%=*}"
+    value="${line#*=}"
+    [[ "$name" == "$key" ]] || continue
+
+    value="${value%$'\r'}"
+    value="${value%\"}"
+    value="${value#\"}"
+    value="${value%\'}"
+    value="${value#\'}"
+    printf '%s\n' "$value"
+    return 0
+  done < "$dotenv_file"
+
+  return 1
+}
+
 # Host-Setup und App-Deploy müssen dasselbe DB-Passwort verwenden.
 # Das Skript zieht den Wert daher direkt aus der lokalen `.env`.
-db_password="$(
-  ruby - "$ROOT_DIR/.env" <<'RUBY'
-dotenv_file = ARGV.fetch(0)
-abort "dotenv fehlt: #{dotenv_file}" unless File.exist?(dotenv_file)
+db_password="$(read_dotenv_value DB_PASSWORD || true)"
+if [[ -z "$db_password" ]]; then
+  printf 'DB_PASSWORD fehlt in .env\n' >&2
+  exit 1
+fi
 
-File.readlines(dotenv_file, chomp: true).each do |line|
-  stripped = line.strip
-  next if stripped.empty? || stripped.start_with?("#")
+extra_vars=( "-e" "postgres_app_password=$db_password" )
 
-  key, value = line.sub(/\Aexport\s+/, "").split("=", 2)
-  next unless key == "DB_PASSWORD"
-  abort "DB_PASSWORD ist leer" if value.nil? || value.empty?
+russ_live_readonly_password="$(read_dotenv_value RUSS_LIVE_PRIMARY_DB_PASSWORD || true)"
+russ_live_operational_password="$(read_dotenv_value RUSS_LIVE_OPERATIONAL_DB_PASSWORD || true)"
 
-  puts value
-  exit 0
-end
+if [[ -n "$russ_live_readonly_password" || -n "$russ_live_operational_password" ]]; then
+  if [[ -z "$russ_live_readonly_password" || -z "$russ_live_operational_password" ]]; then
+    printf 'RUSS_LIVE_PRIMARY_DB_PASSWORD und RUSS_LIVE_OPERATIONAL_DB_PASSWORD müssen gemeinsam gesetzt sein.\n' >&2
+    exit 1
+  fi
 
-abort "DB_PASSWORD fehlt in .env"
-RUBY
-)"
+  extra_vars+=( "-e" "postgres_russ_live_readonly_password=$russ_live_readonly_password" )
+  extra_vars+=( "-e" "postgres_russ_live_operational_password=$russ_live_operational_password" )
+fi
 
 cd "$ANSIBLE_DIR"
 # Zusätzliche CLI-Argumente werden unverändert an ansible-playbook weitergereicht.
@@ -38,5 +67,5 @@ exec ansible-playbook \
   -u "$SSH_USER" \
   --private-key "$SSH_KEY" \
   "$PLAYBOOK" \
-  -e "postgres_app_password=$db_password" \
+  "${extra_vars[@]}" \
   "$@"

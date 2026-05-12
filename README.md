@@ -605,6 +605,8 @@ Webprozess und Job-Verarbeitung laufen in Production getrennt. Kamal startet ein
 Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=2` und `RAILS_MAX_THREADS=3` gesetzt. Die Datenbank-Pools werden zusätzlich explizit über `DB_POOL` und `QUEUE_DB_POOL` festgelegt.
 Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt signierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
 
+Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bleibt der Eigentümer der fachlichen Produktionsdatenbank und des Docker-Volumes `stuttgart_live_de_storage`. Weitere Apps wie `russ-live.de` dürfen diese Primärdatenbank nur mit einem separaten read-only PostgreSQL-Benutzer lesen und dasselbe Storage-Volume mounten. Queue, Cache und Cable bleiben je App getrennt, damit Worker und Laufzeitdaten nicht zwischen Projekten kollidieren.
+
 Die produktive öffentliche Domain, die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
 Die Datei bleibt bewusst außerhalb des Docker-Build-Kontexts; Kamal setzt `APP_HOST` daraus zur Laufzeit in den Produktions-Container.
 
@@ -619,6 +621,7 @@ Für manuelle Produktions-Kommandos brauchst du lokal:
 - optional den SSH-Key `~/.ssh/stgt-live-hetzner-admin` für Host-Administration als `admin`
 - eine `.env` mit `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN` und `KAMAL_REGISTRY_PULL_PASSWORD`
 - eine `.env` mit `MEDIA_PROXY_SECRET`, wenn du das Produktions-Setup lokal gegen Hetzner prüfst oder deployen willst
+- optional `RUSS_LIVE_PRIMARY_DB_PASSWORD` und `RUSS_LIVE_OPERATIONAL_DB_PASSWORD`, wenn du das Host-Setup für `russ-live.de` per Ansible ergänzen willst
 
 Für lokale Sentry-Release-Meldungen zusätzlich:
 
@@ -745,6 +748,14 @@ PostgreSQL läuft direkt auf dem Host, nicht in einem separaten Container. Die A
 - `stuttgart_live_de_production_cache`
 - `stuttgart_live_de_production_queue`
 - `stuttgart_live_de_production_cable`
+
+Für `russ-live.de` legt das Host-Setup zusätzlich getrennte Operational-Datenbanken an:
+
+- `russ_live_de_production_cache`
+- `russ_live_de_production_queue`
+- `russ_live_de_production_cable`
+
+`russ-live.de` liest `stuttgart_live_de_production` nur über den PostgreSQL-Benutzer `russ_live_de_reader`. Dieser Benutzer bekommt `CONNECT`, `USAGE` und `SELECT`, aber keine Schreibrechte. Migrationen für Stuttgarts Primärdatenbank laufen ausschließlich aus diesem Repository.
 
 Uploads liegen im Docker-Volume `stuttgart_live_de_storage`. Der Host-Pfad dafür ist üblicherweise `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`. Lokale Datenbank-Backups liegen standardmäßig unter `/var/backups/stuttgart-live`; der tägliche Backup-Cronjob schreibt sein Log nach `/var/log/stuttgart-live-db-backup.log`.
 Öffentliche Bild-URLs zeigen in Production auf signierte `/media/...`-Pfade. Wenn ein Bild im Backend ersetzt oder eine Variant/Crop-Änderung gespeichert wird, rendert Rails eine neue URL. Damit wird kein manuelles Cache-Purging für den Media-Pfad benötigt.

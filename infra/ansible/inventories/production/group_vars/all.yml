@@ -43,6 +43,16 @@ postgres_app_databases:
   - stuttgart_live_de_production_cache
   - stuttgart_live_de_production_queue
   - stuttgart_live_de_production_cable
+postgres_russ_live_readonly_user: russ_live_de_reader
+postgres_russ_live_readonly_password: ""
+postgres_russ_live_readonly_databases:
+  - stuttgart_live_de_production
+postgres_russ_live_operational_user: russ_live_de
+postgres_russ_live_operational_password: ""
+postgres_russ_live_operational_databases:
+  - russ_live_de_production_cache
+  - russ_live_de_production_queue
+  - russ_live_de_production_cable
 postgres_listen_addresses: "127.0.0.1,::1,{{ kamal_docker_gateway }}"
 postgres_host_access_rules:
   - databases: all
@@ -55,6 +65,14 @@ postgres_host_access_rules:
     method: scram-sha-256
   - databases: "postgres,{{ postgres_app_databases | join(',') }}"
     users: "{{ postgres_app_user }}"
+    source: "{{ kamal_docker_subnet }}"
+    method: scram-sha-256
+  - databases: "{{ postgres_russ_live_readonly_databases | join(',') }}"
+    users: "{{ postgres_russ_live_readonly_user }}"
+    source: "{{ kamal_docker_subnet }}"
+    method: scram-sha-256
+  - databases: "{{ postgres_russ_live_operational_databases | join(',') }}"
+    users: "{{ postgres_russ_live_operational_user }}"
     source: "{{ kamal_docker_subnet }}"
     method: scram-sha-256
 postgres_legacy_host_access_rules:

@@ -55,8 +55,12 @@ Diese Werte solltest du vor dem ersten Lauf prüfen:
 
 - `deploy_user_authorized_keys`
 - `postgres_app_password`
+- `postgres_russ_live_readonly_password`, wenn `russ-live.de` auf die Stuttgart-Primärdatenbank lesen soll
+- `postgres_russ_live_operational_password`, wenn `russ-live.de` eigene Queue-/Cache-/Cable-Datenbanken auf diesem Host nutzt
 - `backup_storage_enabled`
 - `backup_storage_source`
+
+Die Russ-Live-Werte sind additiv. Ohne beide Passwörter bleibt das bestehende Stuttgart-Setup unverändert; wenn einer der beiden Werte gesetzt ist, müssen beide gesetzt sein.
 
 ## Hinweise zum Media-Proxy
 
