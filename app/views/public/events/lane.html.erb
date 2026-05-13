@@ -1,4 +1,11 @@
-<% content_for :title, "Stuttgart Live - #{@lane.title}" %>
+<%= render_public_seo title: "Stuttgart Live - #{@lane.title}",
+                      description: public_lane_seo_description(@lane),
+                      canonical_url: public_lane_canonical_url(@lane),
+                      json_ld: public_event_item_list_json_ld(
+                        @lane_events,
+                        name: @lane.title,
+                        canonical_url: public_lane_canonical_url(@lane)
+                      ) %>
 <% content_for :page_newsletter do %>
   <%= render "newsletter_signup", browse_state: @browse_state %>
 <% end %>

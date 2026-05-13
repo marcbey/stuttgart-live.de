@@ -290,7 +290,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_not presenter.show_ticket_special_note?
     assert_equal "Abgesagt", presenter.sold_out_note_text
     schema = JSON.parse(presenter.schema_json_ld)
+    assert_equal "https://stuttgart-live.de/events/band-live-canceled#event", schema["@id"]
     assert_equal "https://schema.org/EventCancelled", schema["eventStatus"]
+    assert_equal "PerformingGroup", schema.dig("performer", "@type")
+    assert_equal "Band", schema.dig("performer", "name")
   end
 
   test "shows canceled note with ticket special note for canceled sold out events" do

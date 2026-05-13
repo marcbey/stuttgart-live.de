@@ -421,6 +421,7 @@ module Public
         data = {
           "@context" => "https://schema.org",
           "@type" => schema_type,
+          "@id" => "#{canonical_url}#event",
           name: schema_name,
           description: meta_description,
           startDate: event.start_at&.iso8601,
@@ -430,6 +431,7 @@ module Public
           image: og_image_url.presence && [ og_image_url ],
           location: schema_location,
           organizer: schema_organizer,
+          performer: schema_performer,
           offers: schema_offer
         }.compact
 
@@ -668,6 +670,16 @@ module Public
         {
           "@type" => "Organization",
           name: "Russ Live"
+        }
+      end
+
+      def schema_performer
+        performer_name = event.artist_name.to_s.strip.presence
+        return if performer_name.blank?
+
+        {
+          "@type" => "PerformingGroup",
+          name: performer_name
         }
       end
 

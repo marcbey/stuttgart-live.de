@@ -12,6 +12,8 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     get news_index_url
 
     assert_response :success
+    assert_select "meta[name='description'][content=?]", "Aktuelle News, Konzertankündigungen und Vorverkäufe von Stuttgart Live."
+    assert_select "link[rel='canonical'][href=?]", news_index_url
     assert_select ".app-nav-links .app-nav-link-active", text: "News"
     assert_includes response.body, "Aktuelle News"
     assert_includes response.body, @live_post.title

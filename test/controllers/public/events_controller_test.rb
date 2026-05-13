@@ -34,6 +34,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 1
     assert_select "style[data-local-font-faces]", count: 1
+    assert_select "meta[name='description'][content=?]",
+                  "Konzerte, Shows und Events in Stuttgart und Region entdecken: aktuelle Termine, Highlights, Tickets und News bei Stuttgart Live."
+    assert_select "link[rel='canonical'][href=?]", root_url
+    assert_match(/"@type":"WebSite"/, response.body)
+    assert_match(/"@type":"ItemList"/, response.body)
     assert_includes response.body, ActionController::Base.helpers.asset_path("archivo-narrow-700.woff2")
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
@@ -468,6 +473,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get "/highlights"
 
     assert_response :success
+    assert_select "meta[name='description'][content*='Event-Highlights in Stuttgart']", count: 1
+    assert_select "link[rel='canonical'][href=?]", highlights_lane_url
+    assert_match(/"@type":"ItemList"/, response.body)
     assert_select ".lane-header.lane-header--highlights .lane-header-title", text: "Unsere Highlights"
     assert_select "#lane-event-grid.featured-event-grid", count: 1
     assert_select "#lane-event-grid article.event-card", minimum: 1
@@ -2708,6 +2716,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".lane-header.lane-header--search .lane-header-title", text: "Suchergebnisse"
     assert_select ".lane-header.lane-header--search .lane-header-meta", text: /Search Cluster/
     assert_select ".lane-header.lane-header--search .lane-header-meta", text: /2 Ergebnisse/
+    assert_select "meta[name='robots'][content='noindex, follow']", count: 1
+    assert_select "link[rel='canonical'][href=?]", search_url
     assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 1
     assert_select "#event-grid article.genre-lane-card", count: 2
     assert_select "#event-grid article.event-listing-card", count: 0
@@ -5076,6 +5086,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "title", text: "Stuttgart Live - Deine Events"
+    assert_select "meta[name='robots'][content='noindex, follow']", count: 1
+    assert_select "link[rel='canonical'][href=?]", saved_events_url
     assert_select ".app-nav-saved-events-link[href='#{saved_events_path}'][hidden]", count: 2
     assert_select ".saved-events-page-section[data-controller='saved-events-lane'][data-saved-events-lane-url-value='#{saved_lane_events_path}']", count: 1
     assert_select ".saved-events-page-section[data-saved-events-lane-show-empty-value='true']", count: 1

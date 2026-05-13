@@ -1,4 +1,7 @@
-<% content_for :title, "Stuttgart Live - Suche" %>
+<%= render_public_seo title: "Stuttgart Live - Suche",
+                      description: "Suche nach Künstlern, Events und Konzerten in Stuttgart und Region bei Stuttgart Live.",
+                      canonical_url: search_url,
+                      robots: "noindex, follow" %>
 <% content_for :page_newsletter do %>
   <%= render "newsletter_signup", browse_state: @browse_state %>
 <% end %>

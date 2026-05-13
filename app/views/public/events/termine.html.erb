@@ -1,4 +1,11 @@
-<% content_for :title, "Stuttgart Live - #{@event_series_lane.title}" %>
+<%= render_public_seo title: "Stuttgart Live - #{@event_series_lane.title}",
+                      description: "#{@event_series_lane.title}: alle aktuellen Termine in Stuttgart und Region.",
+                      canonical_url: termine_event_url(@event.slug),
+                      json_ld: public_event_item_list_json_ld(
+                        @event_series_lane.events,
+                        name: @event_series_lane.title,
+                        canonical_url: termine_event_url(@event.slug)
+                      ) %>
 <% content_for :page_newsletter do %>
   <%= render "newsletter_signup", browse_state: @browse_state %>
 <% end %>

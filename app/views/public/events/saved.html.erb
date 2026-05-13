@@ -1,4 +1,7 @@
-<% content_for :title, "Stuttgart Live - Deine Events" %>
+<%= render_public_seo title: "Stuttgart Live - Deine Events",
+                      description: "Deine gemerkten Events bei Stuttgart Live.",
+                      canonical_url: saved_events_url,
+                      robots: "noindex, follow" %>
 <% content_for :page_newsletter do %>
   <%= render "newsletter_signup", browse_state: @browse_state %>
 <% end %>

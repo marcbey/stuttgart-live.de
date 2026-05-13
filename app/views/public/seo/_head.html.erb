@@ -1,0 +1,18 @@
+<% content_for :title, presenter.page_title %>
+<% content_for :head do %>
+  <%= tag.meta name: "description", content: presenter.description %>
+  <%= tag.meta name: "robots", content: presenter.robots if presenter.robots.present? %>
+  <%= tag.meta property: "og:title", content: presenter.meta_title %>
+  <%= tag.meta property: "og:description", content: presenter.description %>
+  <%= tag.meta property: "og:type", content: presenter.og_type %>
+  <%= tag.meta property: "og:url", content: presenter.canonical_url %>
+  <%= tag.meta property: "og:image", content: presenter.og_image_url if presenter.og_image_url.present? %>
+  <%= tag.meta name: "twitter:card", content: presenter.twitter_card %>
+  <%= tag.meta name: "twitter:title", content: presenter.meta_title %>
+  <%= tag.meta name: "twitter:description", content: presenter.description %>
+  <%= tag.meta name: "twitter:image", content: presenter.og_image_url if presenter.og_image_url.present? %>
+  <%= tag.link rel: "canonical", href: presenter.canonical_url %>
+  <% presenter.json_ld_payloads.each do |json_ld_payload| %>
+    <script type="application/ld+json"><%= raw json_escape(json_ld_payload) %></script>
+  <% end %>
+<% end %>

@@ -6,7 +6,10 @@
                 rescue ArgumentError
                   nil
                 end %>
-<% content_for :title, "Begleitformular" %>
+<%= render_public_seo title: "Begleitformular | Stuttgart Live",
+                      meta_title: "Begleitformular",
+                      description: "Begleitformular für minderjährige Besucherinnen und Besucher von Veranstaltungen bei Stuttgart Live.",
+                      canonical_url: begleitformular_url %>
 
 <article class="static-page guardian-form-page">
   <div class="static-page-shell guardian-form-shell">

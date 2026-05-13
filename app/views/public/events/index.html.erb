@@ -1,4 +1,14 @@
-<% content_for :title, "Stuttgart Live - Konzerte" %>
+<%= render_public_seo title: "Stuttgart Live - Konzerte",
+                      description: Public::SeoHelper::HOMEPAGE_SEO_DESCRIPTION,
+                      canonical_url: root_url,
+                      json_ld: [
+                        public_homepage_json_ld,
+                        public_event_item_list_json_ld(
+                          public_homepage_seo_events,
+                          name: "Aktuelle Events in Stuttgart",
+                          canonical_url: root_url
+                        )
+                      ] %>
 <% content_for :page_newsletter do %>
   <%= render "newsletter_signup", browse_state: @browse_state %>
 <% end %>

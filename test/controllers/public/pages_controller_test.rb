@@ -9,6 +9,8 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     get contact_url
 
     assert_response :success
+    assert_select "meta[name='description']", count: 1
+    assert_select "link[rel='canonical'][href=?]", contact_url
     assert_select ".app-nav-links .app-nav-link-active", text: "Kontakt"
     assert_includes response.body, "Bestell-Hotline"
     assert_includes response.body, "arnulfwoock@russ-live.de"
@@ -158,6 +160,8 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "Begleitformular"
+    assert_select "meta[name='description'][content*='Begleitformular']", count: 1
+    assert_select "link[rel='canonical'][href=?]", begleitformular_url
     assert_includes response.body, "Drucken"
     assert_includes response.body, "Test Event"
   end
