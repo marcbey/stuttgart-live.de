@@ -138,20 +138,26 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Google Analytics"
   end
 
-  test "google analytics measurement id is only exposed on the production host" do
-    with_allowed_hosts("stuttgart-live.de", "stuttgart-live.schopp3r.de") do
-      host! "stuttgart-live.schopp3r.de"
+  test "google analytics measurement id is only exposed on configured production hosts" do
+    with_allowed_hosts("stuttgart-live.de", "stuttgart-live.schopp3r.de", "preview.example.com") do
+      host! "preview.example.com"
       get events_path
 
       assert_response :success
       assert_includes response.body, 'data-controller="consent scroll-top"'
-      assert_not_includes response.body, 'data-consent-measurement-id-value="G-103580617"'
+      assert_not_includes response.body, 'data-consent-measurement-id-value="G-SHSNVVEKL8"'
 
       host! "stuttgart-live.de"
       get events_path
 
       assert_response :success
-      assert_includes response.body, 'data-consent-measurement-id-value="G-103580617"'
+      assert_includes response.body, 'data-consent-measurement-id-value="G-SHSNVVEKL8"'
+
+      host! "stuttgart-live.schopp3r.de"
+      get events_path
+
+      assert_response :success
+      assert_includes response.body, 'data-consent-measurement-id-value="G-SHSNVVEKL8"'
     end
   end
 

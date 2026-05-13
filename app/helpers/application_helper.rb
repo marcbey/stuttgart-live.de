@@ -1,6 +1,7 @@
 module ApplicationHelper
   GOOGLE_ANALYTICS_ALLOWED_HOSTS = %w[
     stuttgart-live.de
+    stuttgart-live.schopp3r.de
     www.stuttgart-live.de
   ].freeze
   LOCAL_FONT_FACES = {
