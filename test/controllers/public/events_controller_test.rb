@@ -2530,6 +2530,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal placeholder_sequence.to_json, form["data-public-search-placeholder-sequence-value"]
     assert_equal placeholder_phrases.first, input["placeholder"]
+    assert_nil input["aria-expanded"]
+    assert_equal "public-search-overlay", input["aria-controls"]
     assert_select ".app-nav-search .public-search-placeholder.public-search-placeholder-hidden", count: 1
     assert_select ".app-nav-search [data-public-search-target='placeholderText']", text: placeholder_phrases.first
     assert_select ".app-nav-search [data-public-search-target='placeholderCursor']", count: 1

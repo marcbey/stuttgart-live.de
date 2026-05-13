@@ -1805,7 +1805,7 @@ position: relative;
   box-shadow: none;
   color: rgb(17 17 17);
   font-size: 1rem;
-  text-indent: 2.1rem;
+  text-indent: 2.75rem;
   padding-right: 5.45rem;
 }
 
@@ -1826,7 +1826,7 @@ position: absolute;
   z-index: 1;
   display: flex;
   align-items: center;
-  padding-left: 2.1rem;
+  padding-left: 2.75rem;
   padding-right: 5.45rem;
   color: rgba(17, 17, 17, 0.16);
   pointer-events: none;
@@ -1923,16 +1923,27 @@ width: calc(1.05rem + 2px);
 }
 
 .public-search-icon {
-left: 0.65rem;
-  width: 1.1rem;
+left: 0.18rem;
+  width: 2.5rem;
+  height: 2.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   color: rgba(17, 17, 17, 0.42);
-  font-size: 2.9rem;
+  font-size: 0;
   line-height: 1;
   cursor: pointer;
   z-index: 2;
+}
+
+.public-search-icon svg {
+width: 1.1rem;
+  height: 1.1rem;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .public-search-overlay {
@@ -3603,17 +3614,17 @@ padding: 0.9rem 0;
 }
 
 .lane-header--saved-events {
---lane-header-accent: #00c5cc;
-  --lane-header-title-color: #00c5cc;
-  --lane-header-kicker-color: color-mix(in srgb, #00c5cc 72%, white 28%);
-  --lane-header-button-bg: #00c5cc;
+--lane-header-accent: #15767d;
+  --lane-header-title-color: #15767d;
+  --lane-header-kicker-color: color-mix(in srgb, #15767d 72%, white 28%);
+  --lane-header-button-bg: #15767d;
   --lane-header-button-color: #fff;
-  --lane-header-button-border: #00c5cc;
-  --lane-header-button-hover-bg: #00aeb5;
-  --lane-header-button-hover-border: #00aeb5;
+  --lane-header-button-border: #15767d;
+  --lane-header-button-hover-bg: #105e64;
+  --lane-header-button-hover-border: #105e64;
   --lane-header-button-active-bg: #fff;
-  --lane-header-button-active-color: #00c5cc;
-  --lane-header-button-active-border: #00c5cc;
+  --lane-header-button-active-color: #15767d;
+  --lane-header-button-active-border: #15767d;
 }
 
 .lane-header--tagestipp {
@@ -9466,7 +9477,7 @@ border: 0;
   background: transparent;
   box-shadow: none;
   min-height: 2.7rem;
-  padding-inline: 2.45rem 4.75rem;
+  padding-inline: 2.9rem 4.75rem;
   color: var(--ink);
   font-family: "Oswald", "Arial Narrow", sans-serif;
   /* Prevent iOS from zooming the page when the search field receives focus. */
@@ -9479,7 +9490,7 @@ border: 0;
 }
 
 body.page-public-events-index .public-search-placeholder {
-padding-inline: 2.45rem 4.75rem;
+padding-inline: 2.9rem 4.75rem;
   color: rgb(var(--ink-rgb) / 0.18);
   font-family: "Oswald", "Arial Narrow", sans-serif;
   font-size: 0.9rem;
@@ -9506,12 +9517,12 @@ right: calc(2.35rem - 10px);
 }
 
 body.page-public-events-index .public-search-icon {
-left: 0.68rem;
-  width: 0.98rem;
-  height: 0.98rem;
+left: 0.18rem;
+  width: 2.5rem;
+  height: 2.5rem;
   color: var(--ink);
   font-size: 0;
-  transition: left 180ms ease, width 180ms ease, height 180ms ease;
+  transition: left 180ms ease;
 }
 
 body.page-public-events-index .public-search-icon svg {
@@ -9768,18 +9779,18 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .public-search-input {
-  padding-inline: 2.65rem 4.95rem;
+  padding-inline: 3.05rem 4.95rem;
       font-size: 1rem;
   }
 
   body.page-public-events-index .public-search-placeholder {
-  padding-inline: 2.65rem 4.95rem;
+  padding-inline: 3.05rem 4.95rem;
   }
 
   body.page-public-events-index .public-search-icon {
-  left: 0.74rem;
-      width: 1.04rem;
-      height: 1.04rem;
+  left: 0.22rem;
+      width: 2.5rem;
+      height: 2.5rem;
   }
 
   body.page-public-events-index .public-search-icon svg {
@@ -10279,18 +10290,18 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .public-search-input {
-  padding-inline: 2.85rem 5.2rem;
+  padding-inline: 3.25rem 5.2rem;
       font-size: 1rem;
   }
 
   body.page-public-events-index .public-search-placeholder {
-  padding-inline: 2.85rem 5.2rem;
+  padding-inline: 3.25rem 5.2rem;
   }
 
   body.page-public-events-index .public-search-icon {
-  left: 0.72rem;
-      width: 1.2rem;
-      height: 1.2rem;
+  left: 0.24rem;
+      width: 2.5rem;
+      height: 2.5rem;
   }
 
   body.page-public-events-index .public-search-icon svg {

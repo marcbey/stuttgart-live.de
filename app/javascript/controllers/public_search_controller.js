@@ -130,7 +130,6 @@ export default class extends Controller {
     this.abortPendingRequest()
     this.clearScheduledSearch()
     this.panelTarget.hidden = true
-    this.inputTarget.setAttribute("aria-expanded", "false")
     this.closeCalendar()
   }
 
@@ -385,14 +384,12 @@ export default class extends Controller {
   showPanel() {
     this.closeCalendar()
     this.panelTarget.hidden = false
-    this.inputTarget.setAttribute("aria-expanded", "true")
   }
 
   closeSearchPanel() {
     this.abortPendingRequest()
     this.clearScheduledSearch()
     this.panelTarget.hidden = true
-    this.inputTarget.setAttribute("aria-expanded", "false")
   }
 
   syncControls() {

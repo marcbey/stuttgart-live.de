@@ -43,6 +43,25 @@ class ApplicationHelperTest < ActionView::TestCase
     assert asset_available?("archivo-narrow-400.woff2")
   end
 
+  test "public frontend stylesheet keeps accessible search and saved lane styles" do
+    stylesheet = Rails.root.join("app/assets/stylesheets/frontend.tailwind.css").read
+    saved_lane_rules = stylesheet[/\.lane-header--saved-events\s*\{([^}]*)\}/m, 1]
+    public_search_icon_rules = stylesheet.scan(/body\.page-public-events-index \.public-search-icon\s*\{([^}]*)\}/m).flatten
+    base_public_search_icon_rules = stylesheet.scan(/\.public-search-icon\s*\{([^}]*)\}/m).flatten
+
+    assert_includes saved_lane_rules, "--lane-header-title-color: #15767d;"
+    assert public_search_icon_rules.any? { |rule| rule.include?("width: 2.5rem;") }
+    assert public_search_icon_rules.any? { |rule| rule.include?("height: 2.5rem;") }
+    assert base_public_search_icon_rules.any? { |rule| rule.include?("width: 2.5rem;") }
+    assert base_public_search_icon_rules.any? { |rule| rule.include?("height: 2.5rem;") }
+  end
+
+  test "public search controller keeps aria expanded off the native search input" do
+    controller = Rails.root.join("app/javascript/controllers/public_search_controller.js").read
+
+    refute_includes controller, 'inputTarget.setAttribute("aria-expanded"'
+  end
+
   test "local font face stylesheet skips unavailable fonts" do
     original_method = method(:asset_available?)
 
