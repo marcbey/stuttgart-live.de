@@ -62,6 +62,18 @@ class ApplicationHelperTest < ActionView::TestCase
     refute_includes controller, 'inputTarget.setAttribute("aria-expanded"'
   end
 
+  test "public javascript entry lazy loads optional controllers" do
+    entrypoint = Rails.root.join("app/javascript/controllers/public_index.js").read
+    package_json = Rails.root.join("package.json").read
+
+    assert_includes entrypoint, '"homepage-lane": () => import("./homepage_lane_controller")'
+    assert_includes entrypoint, '"partner-strip": () => import("./partner_strip_controller")'
+    assert_includes entrypoint, 'document.addEventListener("turbo:load", loadLazyControllers)'
+    refute_includes entrypoint, 'import HomepageLaneController from "./homepage_lane_controller"'
+    refute_includes entrypoint, 'import PartnerStripController from "./partner_strip_controller"'
+    assert_includes package_json, "--chunk-names=[name]-[hash].digested"
+  end
+
   test "local font face stylesheet skips unavailable fonts" do
     original_method = method(:asset_available?)
 

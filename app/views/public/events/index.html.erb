@@ -26,7 +26,8 @@
     <%= render "promotion_banners",
                banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
                browse_state: @browse_state,
-               strict_proxy: strict_proxy %>
+               strict_proxy: strict_proxy,
+               priority_banner: @priority_promotion_banner %>
     <% promotion_banner_lane_position += 1 %>
 
     <%= render "highlight_section",
@@ -51,7 +52,8 @@
       <%= render "promotion_banners",
                  banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
                  browse_state: @browse_state,
-                 strict_proxy: strict_proxy %>
+                 strict_proxy: strict_proxy,
+                 priority_banner: @priority_promotion_banner %>
       <% promotion_banner_lane_position += 1 %>
 
       <%= render "genre_lane_section",
@@ -75,7 +77,8 @@
       <%= render "promotion_banners",
                  banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
                  browse_state: @browse_state,
-                 strict_proxy: strict_proxy %>
+                 strict_proxy: strict_proxy,
+                 priority_banner: @priority_promotion_banner %>
       <% promotion_banner_lane_position += 1 %>
 
       <%= render "genre_lane_section",
@@ -102,7 +105,8 @@
       <%= render "promotion_banners",
                  banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
                  browse_state: @browse_state,
-                 strict_proxy: strict_proxy %>
+                 strict_proxy: strict_proxy,
+                 priority_banner: @priority_promotion_banner %>
       <% promotion_banner_lane_position += 1 %>
 
       <%= render "genre_lane_section",
@@ -129,7 +133,8 @@
       <%= render "promotion_banners",
                  banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
                  browse_state: @browse_state,
-                 strict_proxy: strict_proxy %>
+                 strict_proxy: strict_proxy,
+                 priority_banner: @priority_promotion_banner %>
       <% promotion_banner_lane_position += 1 %>
 
       <%= render "genre_lane_section",
@@ -155,7 +160,8 @@
     <%= render "promotion_banners",
                banners: trailing_promotion_banners,
                browse_state: @browse_state,
-               strict_proxy: strict_proxy %>
+               strict_proxy: strict_proxy,
+               priority_banner: @priority_promotion_banner %>
 
     <div id="saved-events-lane-slot"
          class="saved-events-lane-slot"

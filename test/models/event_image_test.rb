@@ -78,6 +78,25 @@ class EventImageTest < ActiveSupport::TestCase
     assert_equal original_binary, image.file.download
   end
 
+  test "public card variant scales down to smaller responsive size" do
+    image = EventImage.new(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO)
+    original_binary = large_test_image_binary(width: 2000, height: 1500)
+
+    image.file.attach(
+      io: StringIO.new(original_binary),
+      filename: "large-public-card.png",
+      content_type: "image/png"
+    )
+    image.save!
+
+    optimized_binary = image_binary(image.processed_optimized_public_variant(:card_mobile))
+
+    expected_dimensions = image_processing_backend_available? ? [ 384, 288 ] : [ 2000, 1500 ]
+
+    assert_equal expected_dimensions, image_dimensions(optimized_binary)
+    assert_equal [ 2000, 1500 ], image_dimensions(image.file.download)
+  end
+
   test "optimized variant raises a processing error for broken image payloads" do
     image = EventImage.new(event: @event, purpose: EventImage::PURPOSE_SLIDER)
     image.file.attach(

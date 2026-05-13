@@ -1,4 +1,6 @@
 <% strict_proxy = local_assigns.fetch(:strict_proxy, homepage_media_strict_proxy?) %>
+<% image_priority = local_assigns.fetch(:image_priority, false) %>
+<% image_dimensions = public_promotion_banner_image_dimensions %>
 
 <%= render "public/events/promotion_banner_component",
            article_classes: "promotion-banner promotion-banner-poster promotion-banner-news",
@@ -8,12 +10,16 @@
            href: news_path(blog_post.slug),
            link_classes: "promotion-banner-link promotion-banner-link-#{blog_post.promotion_banner_text_color_scheme}",
            link_style: "background: var(--promotion-banner-background)",
-           image_source: optimized_blog_post_image_source(blog_post, :promotion_banner_image, strict_proxy: strict_proxy),
+           image_source: optimized_blog_post_image_source(blog_post, :promotion_banner_image, strict_proxy: strict_proxy, size: :banner_desktop),
+           image_srcset: optimized_blog_post_image_srcset(blog_post, :promotion_banner_image, strict_proxy: strict_proxy),
+           image_sizes: "(max-width: 699px) 100vw, 56vw",
            image_alt: blog_post.title,
            image_style: blog_post_cropped_image_style(blog_post, :promotion_banner_image, frame_ratio: 16.0 / 9.0),
-           image_loading: "eager",
-           image_fetchpriority: "high",
+           image_loading: (image_priority ? "eager" : "lazy"),
+           image_fetchpriority: ("high" if image_priority),
            image_decoding: "async",
+           image_width: image_dimensions.fetch(:width),
+           image_height: image_dimensions.fetch(:height),
            credit: nil,
            kicker_text: blog_post.promotion_banner_kicker_text_value,
            heading: blog_post.title,

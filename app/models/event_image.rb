@@ -4,6 +4,13 @@ class EventImage < ApplicationRecord
   DEFAULT_CARD_ZOOM = 100.0
   WEB_MAX_DIMENSION = 1280
   WEB_QUALITY = 82
+  PUBLIC_VARIANT_MAX_DIMENSIONS = {
+    card_mobile: 384,
+    card_desktop: 768,
+    banner_mobile: 768,
+    banner_desktop: WEB_MAX_DIMENSION,
+    thumbnail: 192
+  }.freeze
   PURPOSE_SLIDER = "slider".freeze
   PURPOSE_DETAIL_HERO = "detail_hero".freeze
   PURPOSES = [
@@ -91,7 +98,31 @@ class EventImage < ApplicationRecord
     raise ProcessingError, processing_error_message(error)
   end
 
+  def optimized_public_variant(size)
+    file.variant(**variant_transformations(max_dimension: public_variant_max_dimension(size)))
+  end
+
+  def processed_optimized_public_variant(size)
+    optimized_public_variant(size).processed
+  rescue LoadError => error
+    Rails.logger.warn("EventImage optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    file
+  rescue MiniMagick::Error => error
+    Rails.logger.warn("EventImage optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    file
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
+    raise ProcessingError, processing_error_message(error)
+  end
+
   private
+
+  def public_variant_max_dimension(size)
+    PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(size.to_sym)
+  end
 
   def normalize_text_fields
     self.purpose = purpose.to_s.strip
@@ -103,10 +134,10 @@ class EventImage < ApplicationRecord
     self.card_zoom = normalize_percentage(card_zoom, fallback: DEFAULT_CARD_ZOOM)
   end
 
-  def variant_transformations
+  def variant_transformations(max_dimension: WEB_MAX_DIMENSION)
     transformations = {
       format: :webp,
-      resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
+      resize_to_limit: [ max_dimension, max_dimension ]
     }
 
     if ActiveStorage.variant_processor == :vips

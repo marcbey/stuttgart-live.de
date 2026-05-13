@@ -2,7 +2,7 @@
   "name": "app",
   "private": true,
   "scripts": {
-    "build": "esbuild app/javascript/public.js app/javascript/backend.js --bundle --minify --sourcemap --format=esm --outdir=app/assets/builds --public-path=/assets",
+    "build": "rm -f app/assets/builds/*.js app/assets/builds/*.js.map && esbuild app/javascript/public.js app/javascript/backend.js --bundle --minify --sourcemap --format=esm --splitting --outdir=app/assets/builds --public-path=/assets --chunk-names=[name]-[hash].digested",
     "build:css:shared": "npx @tailwindcss/cli -i ./app/assets/stylesheets/shared.tailwind.css -o ./app/assets/builds/shared.css --minify",
     "build:css:frontend": "npx @tailwindcss/cli -i ./app/assets/stylesheets/frontend.tailwind.css -o ./app/assets/builds/frontend.css --minify",
     "build:css:backend": "npx @tailwindcss/cli -i ./app/assets/stylesheets/backend.tailwind.css -o ./app/assets/builds/backend.css --minify",

@@ -1,61 +1,72 @@
 import { application } from "./application"
 
-import BackendNavMenuController from "./backend_nav_menu_controller"
-application.register("backend-nav-menu", BackendNavMenuController)
-
 import ConsentController from "./consent_controller"
-application.register("consent", ConsentController)
-
 import ConsentMediaController from "./consent_media_controller"
-application.register("consent-media", ConsentMediaController)
-
-import EventSeriesCalendarController from "./event_series_calendar_controller"
-application.register("event-series-calendar", EventSeriesCalendarController)
-
 import FlashController from "./flash_controller"
-application.register("flash", FlashController)
-
-import HeroRotatorController from "./hero_rotator_controller"
-application.register("hero-rotator", HeroRotatorController)
-
-import HighlightsSliderController from "./highlights_slider_controller"
-application.register("highlights-slider", HighlightsSliderController)
-
-import HomepageLaneController from "./homepage_lane_controller"
-application.register("homepage-lane", HomepageLaneController)
-
 import HistoryBackLinkController from "./history_back_link_controller"
-application.register("history-back-link", HistoryBackLinkController)
-
-import InfiniteScrollController from "./infinite_scroll_controller"
-application.register("infinite-scroll", InfiniteScrollController)
-
-import LightboxController from "./lightbox_controller"
-application.register("lightbox", LightboxController)
-
 import MobileNavController from "./mobile_nav_controller"
-application.register("mobile-nav", MobileNavController)
-
 import NavOffsetController from "./nav_offset_controller"
-application.register("nav-offset", NavOffsetController)
-
-import PartnerStripController from "./partner_strip_controller"
-application.register("partner-strip", PartnerStripController)
-
 import PublicSearchController from "./public_search_controller"
-application.register("public-search", PublicSearchController)
-
 import SavedEventToggleController from "./saved_event_toggle_controller"
-application.register("saved-event-toggle", SavedEventToggleController)
-
 import SavedEventsNavController from "./saved_events_nav_controller"
-application.register("saved-events-nav", SavedEventsNavController)
-
 import SavedEventsLaneController from "./saved_events_lane_controller"
-application.register("saved-events-lane", SavedEventsLaneController)
-
 import ScrollTopController from "./scroll_top_controller"
-application.register("scroll-top", ScrollTopController)
 
-import SectionViewController from "./section_view_controller"
-application.register("section-view", SectionViewController)
+const registeredControllers = new Set()
+
+const registerController = (identifier, controller) => {
+  if (registeredControllers.has(identifier)) return
+
+  application.register(identifier, controller)
+  registeredControllers.add(identifier)
+}
+
+registerController("consent", ConsentController)
+registerController("consent-media", ConsentMediaController)
+registerController("flash", FlashController)
+registerController("history-back-link", HistoryBackLinkController)
+registerController("mobile-nav", MobileNavController)
+registerController("nav-offset", NavOffsetController)
+registerController("public-search", PublicSearchController)
+registerController("saved-event-toggle", SavedEventToggleController)
+registerController("saved-events-nav", SavedEventsNavController)
+registerController("saved-events-lane", SavedEventsLaneController)
+registerController("scroll-top", ScrollTopController)
+
+const lazyControllers = {
+  "backend-nav-menu": () => import("./backend_nav_menu_controller"),
+  "event-series-calendar": () => import("./event_series_calendar_controller"),
+  "hero-rotator": () => import("./hero_rotator_controller"),
+  "highlights-slider": () => import("./highlights_slider_controller"),
+  "homepage-lane": () => import("./homepage_lane_controller"),
+  "infinite-scroll": () => import("./infinite_scroll_controller"),
+  "lightbox": () => import("./lightbox_controller"),
+  "partner-strip": () => import("./partner_strip_controller"),
+  "section-view": () => import("./section_view_controller")
+}
+
+const controllerNamesInDocument = () => {
+  const names = new Set()
+
+  document.querySelectorAll("[data-controller]").forEach((element) => {
+    element.dataset.controller.split(/\s+/).forEach((name) => {
+      if (name) names.add(name)
+    })
+  })
+
+  return names
+}
+
+const loadLazyControllers = () => {
+  const controllerNames = controllerNamesInDocument()
+
+  Object.entries(lazyControllers).forEach(([identifier, loadController]) => {
+    if (registeredControllers.has(identifier) || !controllerNames.has(identifier)) return
+
+    loadController().then((module) => registerController(identifier, module.default))
+  })
+}
+
+loadLazyControllers()
+document.addEventListener("DOMContentLoaded", loadLazyControllers)
+document.addEventListener("turbo:load", loadLazyControllers)

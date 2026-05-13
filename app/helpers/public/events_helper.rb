@@ -196,11 +196,35 @@ module Public::EventsHelper
     end
   end
 
-  def event_image_source(image, strict_proxy: false)
+  def event_image_source(image, strict_proxy: false, size: nil)
     return nil if image.blank?
-    return optimized_event_image_source(image, strict_proxy:) if image.is_a?(EventImage)
+    return optimized_event_image_source(image, strict_proxy:, size:) if image.is_a?(EventImage)
 
     image.image_url
+  end
+
+  def event_image_srcset(image, variant_sizes:, strict_proxy: false)
+    optimized_event_image_srcset(image, variant_sizes:, strict_proxy:)
+  end
+
+  def public_event_card_image_dimensions(grid_variant)
+    case grid_variant.to_s
+    when EventImage::GRID_VARIANT_1X2 then { width: 500, height: 1183 }
+    when EventImage::GRID_VARIANT_2X1 then { width: 1000, height: 570 }
+    else { width: 500, height: 580 }
+    end
+  end
+
+  def public_genre_lane_image_dimensions
+    { width: 490, height: 560 }
+  end
+
+  def public_promotion_banner_image_dimensions
+    { width: 1280, height: 720 }
+  end
+
+  def public_event_listing_thumbnail_dimensions
+    { width: 192, height: 192 }
   end
 
   def event_image_alt(image, event)

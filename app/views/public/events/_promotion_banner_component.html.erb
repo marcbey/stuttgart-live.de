@@ -10,6 +10,10 @@
   <% image_options[:loading] = local_assigns[:image_loading] if local_assigns[:image_loading].present? %>
   <% image_options[:fetchpriority] = local_assigns[:image_fetchpriority] if local_assigns[:image_fetchpriority].present? %>
   <% image_options[:decoding] = local_assigns[:image_decoding] if local_assigns[:image_decoding].present? %>
+  <% image_options[:srcset] = local_assigns[:image_srcset] if local_assigns[:image_srcset].present? %>
+  <% image_options[:sizes] = local_assigns[:image_sizes] if local_assigns[:image_sizes].present? %>
+  <% image_options[:width] = local_assigns[:image_width] if local_assigns[:image_width].present? %>
+  <% image_options[:height] = local_assigns[:image_height] if local_assigns[:image_height].present? %>
 
   <% if admin_link_path.present? %>
     <div class="promotion-banner-admin-controls">

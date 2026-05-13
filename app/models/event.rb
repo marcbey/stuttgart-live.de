@@ -13,6 +13,10 @@ class Event < ApplicationRecord
   DEFAULT_IMAGE_ZOOM = EventImage::DEFAULT_CARD_ZOOM
   WEB_MAX_DIMENSION = EventImage::WEB_MAX_DIMENSION
   WEB_QUALITY = EventImage::WEB_QUALITY
+  PUBLIC_PROMOTION_BANNER_VARIANT_MAX_DIMENSIONS = {
+    banner_mobile: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:banner_mobile),
+    banner_desktop: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:banner_desktop)
+  }.freeze
   ProcessingError = Class.new(StandardError)
   IMAGE_SLOT_PREFERENCES = {
     [ :grid_default, :desktop ] => [
@@ -502,6 +506,24 @@ class Event < ApplicationRecord
     raise ProcessingError, processing_error_message(error)
   end
 
+  def processed_optimized_public_promotion_banner_image_variant(size)
+    max_dimension = PUBLIC_PROMOTION_BANNER_VARIANT_MAX_DIMENSIONS.fetch(size.to_sym)
+
+    promotion_banner_image.variant(**variant_transformations(max_dimension: max_dimension)).processed
+  rescue LoadError => error
+    Rails.logger.warn("Event promotion banner optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    promotion_banner_image
+  rescue MiniMagick::Error => error
+    Rails.logger.warn("Event promotion banner optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    promotion_banner_image
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
+    raise ProcessingError, processing_error_message(error)
+  end
+
   def youtube_embed_url
     return "" if youtube_url.blank?
 
@@ -712,10 +734,10 @@ class Event < ApplicationRecord
     value.to_f.round(2)
   end
 
-  def variant_transformations
+  def variant_transformations(max_dimension: WEB_MAX_DIMENSION)
     transformations = {
       format: :webp,
-      resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
+      resize_to_limit: [ max_dimension, max_dimension ]
     }
 
     if ActiveStorage.variant_processor == :vips

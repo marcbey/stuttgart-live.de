@@ -15,6 +15,13 @@ module ApplicationHelper
       { family: "Bebas Neue", weight: 400, logical_path: "bebas-neue-400.woff2" }
     ]
   }.freeze
+  PUBLIC_IMAGE_SRCSET_WIDTHS = {
+    card_mobile: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:card_mobile),
+    card_desktop: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:card_desktop),
+    banner_mobile: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:banner_mobile),
+    banner_desktop: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:banner_desktop),
+    thumbnail: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:thumbnail)
+  }.freeze
 
   def app_nav_link_class(active: false, accent: false)
     classes = [ "app-nav-link" ]
@@ -136,25 +143,33 @@ module ApplicationHelper
     ].join("; ")
   end
 
-  def optimized_event_image_representation(image)
+  def optimized_event_image_representation(image, size: nil)
     return if image.blank?
     return image unless image.is_a?(EventImage)
 
-    image.processed_optimized_variant
+    size.present? ? image.processed_optimized_public_variant(size) : image.processed_optimized_variant
   rescue EventImage::ProcessingError, LoadError
     image.file
   end
 
-  def optimized_event_image_source(image, strict_proxy: false)
+  def optimized_event_image_source(image, strict_proxy: false, size: nil)
     return if image.blank?
     return image.image_url unless image.is_a?(EventImage)
 
-    representation = optimized_event_image_representation(image)
+    representation = optimized_event_image_representation(image, size:)
     return if representation.blank?
 
     return strict_public_media_path(representation, image.file) if strict_proxy
 
     public_media_path(representation)
+  end
+
+  def optimized_event_image_srcset(image, variant_sizes:, strict_proxy: false)
+    return unless image.is_a?(EventImage)
+
+    public_image_srcset(variant_sizes, strict_proxy:, fallback_record: image.file) do |size|
+      optimized_event_image_representation(image, size:)
+    end
   end
 
   def optimized_event_image_url(image)
@@ -181,21 +196,33 @@ module ApplicationHelper
     )
   end
 
-  def optimized_event_promotion_banner_image_representation(event)
+  def optimized_event_promotion_banner_image_representation(event, size: nil)
     return unless event.promotion_banner_image.attached?
 
-    event.processed_optimized_promotion_banner_image_variant
+    if size.present?
+      event.processed_optimized_public_promotion_banner_image_variant(size)
+    else
+      event.processed_optimized_promotion_banner_image_variant
+    end
   rescue Event::ProcessingError, LoadError
     event.promotion_banner_image
   end
 
-  def optimized_event_promotion_banner_image_source(event, strict_proxy: false)
-    representation = optimized_event_promotion_banner_image_representation(event)
+  def optimized_event_promotion_banner_image_source(event, strict_proxy: false, size: nil)
+    representation = optimized_event_promotion_banner_image_representation(event, size:)
     return if representation.blank?
 
     return strict_public_media_path(representation, event.promotion_banner_image) if strict_proxy
 
     public_media_path(representation)
+  end
+
+  def optimized_event_promotion_banner_image_srcset(event, strict_proxy: false)
+    return unless event.promotion_banner_image.attached?
+
+    public_image_srcset(%i[banner_mobile banner_desktop], strict_proxy:, fallback_record: event.promotion_banner_image) do |size|
+      optimized_event_promotion_banner_image_representation(event, size:)
+    end
   end
 
   def event_promotion_banner_image_style(event, frame_ratio:)
@@ -257,13 +284,13 @@ module ApplicationHelper
     )
   end
 
-  def optimized_blog_post_image_representation(blog_post, slot)
+  def optimized_blog_post_image_representation(blog_post, slot, size: nil)
     return unless blog_post.present?
 
     attachment = blog_post.public_send(slot)
     return attachment unless attachment.attached?
 
-    blog_post.processed_optimized_image_variant(slot)
+    size.present? ? blog_post.processed_optimized_public_image_variant(slot, size) : blog_post.processed_optimized_image_variant(slot)
   rescue BlogPost::ProcessingError, LoadError
     attachment
   end
@@ -275,13 +302,22 @@ module ApplicationHelper
     public_media_url(representation)
   end
 
-  def optimized_blog_post_image_source(blog_post, slot, strict_proxy: false)
-    representation = optimized_blog_post_image_representation(blog_post, slot)
+  def optimized_blog_post_image_source(blog_post, slot, strict_proxy: false, size: nil)
+    representation = optimized_blog_post_image_representation(blog_post, slot, size:)
     return if representation.blank?
 
     return strict_public_media_path(representation, blog_post.public_send(slot)) if strict_proxy
 
     public_media_path(representation)
+  end
+
+  def optimized_blog_post_image_srcset(blog_post, slot, strict_proxy: false)
+    attachment = blog_post.public_send(slot)
+    return unless attachment.attached?
+
+    public_image_srcset(%i[banner_mobile banner_desktop], strict_proxy:, fallback_record: attachment) do |size|
+      optimized_blog_post_image_representation(blog_post, slot, size:)
+    end
   end
 
   def formatted_venue_address(address)
@@ -330,6 +366,22 @@ module ApplicationHelper
     return if strict_proxy
 
     rails_storage_proxy_url(record)
+  end
+
+  def public_image_srcset(variant_sizes, strict_proxy:, fallback_record:)
+    entries = Array(variant_sizes).filter_map do |size|
+      representation = yield(size)
+      path = if strict_proxy
+        strict_public_media_path(representation, fallback_record)
+      else
+        public_media_path(representation)
+      end
+      next if path.blank?
+
+      "#{path} #{PUBLIC_IMAGE_SRCSET_WIDTHS.fetch(size.to_sym)}w"
+    end
+
+    entries.uniq.join(", ").presence
   end
 
   def public_rich_text_representation_source(blob, in_gallery: false)

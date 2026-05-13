@@ -332,6 +332,28 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_equal expected_dimensions, image_dimensions(optimized_binary)
   end
 
+  test "public promotion banner variant scales down to responsive mobile size" do
+    blog_post = BlogPost.create!(
+      title: "Responsives Banner",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft"
+    )
+
+    blog_post.promotion_banner_image.attach(
+      io: StringIO.new(solid_png_binary(width: 2400, height: 1200)),
+      filename: "responsive-banner.png",
+      content_type: "image/png"
+    )
+
+    optimized_binary = image_binary(blog_post.processed_optimized_public_image_variant(:promotion_banner_image, :banner_mobile))
+
+    expected_dimensions = image_processing_backend_available? ? [ 768, 384 ] : [ 2400, 1200 ]
+
+    assert_equal expected_dimensions, image_dimensions(optimized_binary)
+  end
+
   test "optimized image variant raises a processing error for broken image payloads" do
     blog_post = BlogPost.create!(
       title: "Defektes Bild",

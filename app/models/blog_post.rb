@@ -12,6 +12,10 @@ class BlogPost < ApplicationRecord
   DEFAULT_IMAGE_ZOOM = 100.0
   WEB_MAX_DIMENSION = 1280
   WEB_QUALITY = 82
+  PUBLIC_VARIANT_MAX_DIMENSIONS = {
+    banner_mobile: 768,
+    banner_desktop: WEB_MAX_DIMENSION
+  }.freeze
   IMAGE_SLOTS = %i[cover_image promotion_banner_image].freeze
   ProcessingError = Class.new(StandardError)
 
@@ -153,6 +157,24 @@ class BlogPost < ApplicationRecord
 
   def processed_optimized_image_variant(slot)
     optimized_image_variant(slot).processed
+  rescue LoadError => error
+    Rails.logger.warn("BlogPost image optimization fallback for ##{id || 'new'} (#{slot}): #{error.class}: #{error.message}")
+    attachment_for_slot(slot)
+  rescue MiniMagick::Error => error
+    Rails.logger.warn("BlogPost image optimization fallback for ##{id || 'new'} (#{slot}): #{error.class}: #{error.message}")
+    attachment_for_slot(slot)
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(slot, error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
+    raise ProcessingError, processing_error_message(slot, error)
+  end
+
+  def processed_optimized_public_image_variant(slot, size)
+    max_dimension = PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(size.to_sym)
+
+    attachment_for_slot(slot).variant(**variant_transformations(max_dimension: max_dimension)).processed
   rescue LoadError => error
     Rails.logger.warn("BlogPost image optimization fallback for ##{id || 'new'} (#{slot}): #{error.class}: #{error.message}")
     attachment_for_slot(slot)
@@ -347,10 +369,10 @@ class BlogPost < ApplicationRecord
       value.to_i
     end
 
-    def variant_transformations
+    def variant_transformations(max_dimension: WEB_MAX_DIMENSION)
       transformations = {
         format: :webp,
-        resize_to_limit: [ WEB_MAX_DIMENSION, WEB_MAX_DIMENSION ]
+        resize_to_limit: [ max_dimension, max_dimension ]
       }
 
       if ActiveStorage.variant_processor == :vips

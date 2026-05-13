@@ -4,10 +4,13 @@
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% desktop_image = event.image_for(slot: card_slot, breakpoint: :desktop) %>
 <% mobile_image = desktop_image.is_a?(EventImage) ? desktop_image : (event.image_for(slot: :grid_default, breakpoint: :mobile) || desktop_image) %>
-<% desktop_image_source = event_image_source(desktop_image, strict_proxy: strict_proxy) %>
-<% mobile_image_source = event_image_source(mobile_image, strict_proxy: strict_proxy) %>
+<% desktop_image_source = event_image_source(desktop_image, strict_proxy: strict_proxy, size: :card_desktop) %>
+<% mobile_image_source = event_image_source(mobile_image, strict_proxy: strict_proxy, size: :card_mobile) %>
+<% desktop_image_srcset = event_image_srcset(desktop_image, variant_sizes: %i[card_mobile card_desktop], strict_proxy: strict_proxy) %>
+<% mobile_image_srcset = event_image_srcset(mobile_image, variant_sizes: %i[card_mobile], strict_proxy: strict_proxy) %>
 <% image_alt_text = event_image_alt(desktop_image, event) %>
 <% image_style = event_card_image_style(desktop_image) %>
+<% image_dimensions = public_event_card_image_dimensions(tile_variant) %>
 <% card_dom_id = local_assigns[:card_dom_id].presence || dom_id(event, :card) %>
 <% effective_series_ids = local_assigns[:effective_series_ids] %>
 <% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
@@ -21,9 +24,20 @@
       <% if desktop_image_source.present? %>
         <picture>
           <% if mobile_image_source.present? %>
-            <source media="(max-width: 699px)" srcset="<%= mobile_image_source %>">
+            <source media="(max-width: 699px)"
+                    srcset="<%= mobile_image_srcset.presence || mobile_image_source %>"
+                    sizes="100vw">
           <% end %>
-          <%= image_tag desktop_image_source, alt: image_alt_text, loading: "lazy", class: "event-card-image", style: image_style %>
+          <%= image_tag desktop_image_source,
+                        alt: image_alt_text,
+                        loading: "lazy",
+                        decoding: "async",
+                        class: "event-card-image",
+                        style: image_style,
+                        width: image_dimensions.fetch(:width),
+                        height: image_dimensions.fetch(:height),
+                        srcset: desktop_image_srcset,
+                        sizes: "(max-width: 699px) 100vw, 25vw" %>
         </picture>
       <% else %>
         <div class="event-card-image event-card-placeholder"></div>

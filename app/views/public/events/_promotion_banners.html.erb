@@ -1,12 +1,16 @@
+<% priority_banner = local_assigns[:priority_banner] %>
 <% Array(banners).each do |banner| %>
+  <% image_priority = priority_banner.present? && banner == priority_banner %>
   <% if banner[:type] == :event %>
     <%= render "event_promotion_banner",
                event: banner[:record],
                browse_state: browse_state,
-               strict_proxy: strict_proxy %>
+               strict_proxy: strict_proxy,
+               image_priority: image_priority %>
   <% else %>
     <%= render "promotion_banner",
                blog_post: banner[:record],
-               strict_proxy: strict_proxy %>
+               strict_proxy: strict_proxy,
+               image_priority: image_priority %>
   <% end %>
 <% end %>

@@ -1,7 +1,9 @@
 <% browse_state = local_assigns.fetch(:browse_state) %>
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% thumbnail_image = event.image_for(slot: :grid_default, breakpoint: :mobile) || event.image_for(slot: :grid_default, breakpoint: :desktop) %>
-<% thumbnail_source = event_image_source(thumbnail_image, strict_proxy: strict_proxy) %>
+<% thumbnail_source = event_image_source(thumbnail_image, strict_proxy: strict_proxy, size: :thumbnail) %>
+<% thumbnail_srcset = event_image_srcset(thumbnail_image, variant_sizes: %i[thumbnail card_mobile], strict_proxy: strict_proxy) %>
+<% thumbnail_dimensions = public_event_listing_thumbnail_dimensions %>
 <% event_url = public_event_detail_path(event, browse_state) %>
 <% primary_offer = event.public_ticket_offer %>
 <% row_dom_id = local_assigns[:row_dom_id] %>
@@ -20,7 +22,15 @@
 
   <div class="event-listing-thumb-link">
     <% if thumbnail_source.present? %>
-      <%= image_tag thumbnail_source, alt: event_image_alt(thumbnail_image, event), loading: "lazy", class: "event-listing-thumb-image" %>
+      <%= image_tag thumbnail_source,
+                    alt: event_image_alt(thumbnail_image, event),
+                    loading: "lazy",
+                    decoding: "async",
+                    class: "event-listing-thumb-image",
+                    width: thumbnail_dimensions.fetch(:width),
+                    height: thumbnail_dimensions.fetch(:height),
+                    srcset: thumbnail_srcset,
+                    sizes: "4.4rem" %>
     <% else %>
       <div class="event-listing-thumb-image event-card-placeholder" aria-hidden="true"></div>
     <% end %>

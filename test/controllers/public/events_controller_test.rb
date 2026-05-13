@@ -50,6 +50,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-socials-poster[data-controller='saved-events-nav'] .app-nav-saved-events-link-desktop[hidden]", count: 1
     assert_select ".app-nav-hotline", text: /Dein Ticketportal für Stuttgart und Region -\s*0711 550 660 77/
     assert_select ".app-nav-hotline-contact .app-nav-link", text: "Kontakt"
+    assert_select ".partner-strip-image[width][height]", count: 6
     assert_includes response.body, "Published Artist"
     assert_not_includes response.body, "Past Artist"
     assert_not_includes response.body, "Review Artist"
@@ -1431,6 +1432,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
           promotion_banner_image_focus_y: 72,
           promotion_banner_image_zoom: 145
         )
+        second_blog_post = BlogPost.create!(
+          title: "Lazy Promo-Post",
+          teaser: "Teaser",
+          body: "<div>Inhalt</div>",
+          author: @user,
+          status: "published",
+          published_at: 30.minutes.ago,
+          published_by: @user,
+          promotion_banner_lane_position: 2
+        )
+        second_blog_post.promotion_banner_image.attach(
+          io: StringIO.new(solid_png_binary(width: 1800, height: 1000)),
+          filename: "homepage-banner-lazy.png",
+          content_type: "image/png"
+        )
+        second_blog_post.update!(promotion_banner: true)
 
         get events_url(filter: "all")
         expected_path = PublicMediaUrl.path_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
@@ -1441,16 +1458,24 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, expected_path
     refute_includes response.body, "/rails/active_storage/"
     document = Nokogiri::HTML.parse(response.body)
-    promotion_banner_image = document.at_css(".promotion-banner:not(.promotion-banner-event) .promotion-banner-image")
+    promotion_banner_images = document.css(".promotion-banner:not(.promotion-banner-event) .promotion-banner-image")
+    promotion_banner_image = promotion_banner_images.first
     assert_not_nil promotion_banner_image
     assert_equal "eager", promotion_banner_image["loading"]
     assert_equal "high", promotion_banner_image["fetchpriority"]
     assert_equal "async", promotion_banner_image["decoding"]
+    assert_equal "1280", promotion_banner_image["width"]
+    assert_equal "720", promotion_banner_image["height"]
+    assert_includes promotion_banner_image["srcset"], "768w"
+    assert_includes promotion_banner_image["srcset"], "1280w"
+    assert_equal "(max-width: 699px) 100vw, 56vw", promotion_banner_image["sizes"]
     assert_includes promotion_banner_image["style"], "left:"
     assert_includes promotion_banner_image["style"], "top:"
     assert_includes promotion_banner_image["style"], "width:"
     assert_includes promotion_banner_image["style"], "height:"
     refute_match(/top:\s*0(?:\.0+)?%/, promotion_banner_image["style"])
+    assert_equal "lazy", promotion_banner_images.last["loading"]
+    assert_nil promotion_banner_images.last["fetchpriority"]
   end
 
   test "homepage falls back to original news promotion banner image when optimized proxy path is unavailable" do
@@ -1622,6 +1647,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "eager", promotion_banner_image["loading"]
     assert_equal "high", promotion_banner_image["fetchpriority"]
     assert_equal "async", promotion_banner_image["decoding"]
+    assert_equal "1280", promotion_banner_image["width"]
+    assert_equal "720", promotion_banner_image["height"]
+    assert_includes promotion_banner_image["srcset"], "768w"
+    assert_includes promotion_banner_image["srcset"], "1280w"
     assert_includes promotion_banner_image["style"], "left:"
     assert_includes promotion_banner_image["style"], "top:"
     assert_includes promotion_banner_image["style"], "width:"
@@ -5032,7 +5061,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     with_media_proxy do
       travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
         get events_url(filter: "all")
-        expected_path = PublicMediaUrl.path_for(image.processed_optimized_variant)
+        expected_path = PublicMediaUrl.path_for(image.processed_optimized_public_variant(:card_desktop))
       end
     end
 
@@ -5041,6 +5070,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Grid 2x2 Alt"
     assert_includes response.body, expected_path
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
+    document = Nokogiri::HTML.parse(response.body)
+    image_node = document.at_css("img.event-card-image[alt='Grid 2x2 Alt']")
+    assert_not_nil image_node
+    assert_equal "500", image_node["width"]
+    assert_equal "580", image_node["height"]
+    assert_includes image_node["srcset"], "384w"
+    assert_includes image_node["srcset"], "768w"
+    assert_equal "(max-width: 699px) 100vw, 25vw", image_node["sizes"]
   end
 
   test "index uses event image crop variant outside the old pattern slot" do
@@ -5058,6 +5095,41 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "event-card-grid-1-2"
     assert_includes response.body, "Grid 1x2 Alt"
+  end
+
+  test "index keeps external import images without responsive source sets" do
+    event = Event.create!(
+      slug: "external-import-image-performance",
+      source_fingerprint: "test::public::external-import-image-performance",
+      title: "External Import Image",
+      artist_name: "External Import Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    event.import_event_images.create!(
+      source: "eventim",
+      image_type: "image_url",
+      image_url: "https://img.example.test/external-cover_1200x800.jpg",
+      role: "cover",
+      aspect_hint: "landscape",
+      position: 0
+    )
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    image_node = document.at_css("img.event-card-image[src='https://img.example.test/external-cover_1200x800.jpg']")
+
+    assert_not_nil image_node
+    assert_nil image_node["srcset"]
+    assert_equal "500", image_node["width"]
+    assert_equal "580", image_node["height"]
   end
 
   test "index defaults to 1x1 when event image has no crop variant" do

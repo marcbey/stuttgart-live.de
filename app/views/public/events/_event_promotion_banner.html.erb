@@ -1,10 +1,13 @@
 <% strict_proxy = local_assigns.fetch(:strict_proxy, homepage_media_strict_proxy?) %>
+<% image_priority = local_assigns.fetch(:image_priority, false) %>
 <% event_image = event.event_image %>
 <% uses_promotion_banner_image = event.promotion_banner_image.attached? %>
-<% event_image_source = uses_promotion_banner_image ? optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy) : event_image_source(event_image, strict_proxy: strict_proxy) %>
+<% event_image_source = uses_promotion_banner_image ? optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) : event_image_source(event_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
+<% event_image_srcset = uses_promotion_banner_image ? optimized_event_promotion_banner_image_srcset(event, strict_proxy: strict_proxy) : event_image_srcset(event_image, variant_sizes: %i[banner_mobile banner_desktop], strict_proxy: strict_proxy) %>
 <% event_image_style = uses_promotion_banner_image ? event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0) : event_cropped_image_style(event_image, frame_ratio: 16.0 / 9.0) %>
 <% event_image_credit = uses_promotion_banner_image ? event.promotion_banner_image_copyright : event_image&.sub_text %>
 <% image_alt = uses_promotion_banner_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(event_image, event) %>
+<% image_dimensions = public_promotion_banner_image_dimensions %>
 
 <%= render "public/events/promotion_banner_component",
            article_classes: "promotion-banner promotion-banner-event promotion-banner-poster",
@@ -15,11 +18,15 @@
            link_classes: "promotion-banner-link promotion-banner-link-#{event.promotion_banner_text_color_scheme}",
            link_style: "background: var(--promotion-banner-background)",
            image_source: event_image_source,
+           image_srcset: event_image_srcset,
+           image_sizes: "(max-width: 699px) 100vw, 56vw",
            image_alt: image_alt,
            image_style: event_image_style,
-           image_loading: "eager",
-           image_fetchpriority: "high",
+           image_loading: (image_priority ? "eager" : "lazy"),
+           image_fetchpriority: ("high" if image_priority),
            image_decoding: "async",
+           image_width: image_dimensions.fetch(:width),
+           image_height: image_dimensions.fetch(:height),
            credit: event_image_credit,
            kicker_text: event.promotion_banner_kicker_text_value,
            heading: event.artist_name,
