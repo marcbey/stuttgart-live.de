@@ -1608,8 +1608,25 @@ display: flex;
   gap: 0.55rem;
 }
 
-.consent-banner-actions .button {
-text-indent: 0.08em;
+.consent-banner-actions .button,
+.consent-dialog-actions .button {
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.15rem;
+  padding-block: 0.6rem 0.5rem;
+  text-indent: 0.08em;
+}
+
+.consent-banner-actions .button-save-primary,
+.consent-dialog-actions .button-save-primary {
+border-color: var(--ink);
+  background: var(--ink);
+}
+
+.consent-banner-actions .button-save-primary:hover,
+.consent-dialog-actions .button-save-primary:hover {
+background: var(--ink-soft);
 }
 
 .consent-dialog-backdrop {
