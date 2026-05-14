@@ -1,11 +1,23 @@
 <% slider_images = event.event_images.slider.ordered.to_a %>
 <% editor_form_id = local_assigns.fetch(:editor_form_id, dom_id(event, :editor_form)) %>
+<% press_text_input_id = "#{editor_form_id}_press_text" %>
+<% press_text_value = params.dig(:event, :press_text).presence || event.press_text&.body&.to_trix_html %>
 
 <section id="<%= dom_id(event, :slider_images_section) %>" class="offer-section backend-section backend-section-media">
   <div class="backend-section-header">
-    <h3>Slider-Bilder</h3>
+    <h3>Presse</h3>
   </div>
   <div class="backend-section-body">
+    <div class="press-text-editor-field">
+      <%= label_tag press_text_input_id, "Presse Text", class: "form-label" %>
+      <%= hidden_field_tag "event[press_text]",
+                           press_text_value,
+                           id: press_text_input_id,
+                           form: editor_form_id %>
+      <trix-editor input="<%= press_text_input_id %>" class="blog-rich-text static-page-rich-text press-rich-text"></trix-editor>
+      <p class="form-hint">Wenn kein Presse Text angegeben, wird die Event Beschreibung verwendet.</p>
+    </div>
+
     <% if slider_images.any? %>
       <ul class="slider-image-editor-grid">
         <% slider_images.each do |image| %>
@@ -35,7 +47,7 @@
                     } do %>
         <%= hidden_field_tag :status, editor_status %>
         <%= hidden_field_tag "event_image[purpose]", EventImage::PURPOSE_SLIDER %>
-        <h4>Slider-Bilder hochladen</h4>
+        <h4>Presse-Bilder hochladen</h4>
         <p>Unbegrenzt, Reihenfolge ohne Bedeutung. Upload startet direkt nach der Auswahl.</p>
         <%= file_field_tag "event_image[files][]",
                            multiple: true,
@@ -50,6 +62,23 @@
         <div class="preuploaded-image-list" data-event-image-editor-upload-target="preview"></div>
         <p class="preuploaded-image-live-region" data-event-image-editor-upload-target="status" role="status" aria-live="polite"></p>
       <% end %>
+    </div>
+
+    <div class="press-checkbox-block">
+      <label class="form-checkbox">
+        <%= hidden_field_tag "event[publish_slider_images_on_stuttgart_live]", "0", form: editor_form_id, id: nil %>
+        <%= check_box_tag "event[publish_slider_images_on_stuttgart_live]",
+                          "1",
+                          event.publish_slider_images_on_stuttgart_live?,
+                          form: editor_form_id %>
+        <span>Bilder als Slider auf Stuttgart Live veröffentlichen</span>
+      </label>
+
+      <label class="form-checkbox">
+        <%= hidden_field_tag "event[publish_on_russ_live]", "0", form: editor_form_id, id: nil %>
+        <%= check_box_tag "event[publish_on_russ_live]", "1", event.publish_on_russ_live?, form: editor_form_id %>
+        <span>Auf Russ Live veröffentlichen</span>
+      </label>
     </div>
   </div>
 </section>

@@ -102,7 +102,7 @@
                 data-event-editor-tabs-target="tab"
                 data-event-editor-tabs-tab-key-param="slider_images"
                 data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
-          Slider-Bilder
+          Presse
         </button>
         <button type="button"
                 id="event-editor-tab-presenters"
@@ -203,6 +203,8 @@
                  data-event-editor-tabs-target="panel"
                  data-event-editor-tabs-panel-key="slider_images">
         <%= render "backend/events/manual_slider_images_section",
+                     event: event,
+                     form: form,
                      slider_alt_text: slider_alt_text,
                      slider_sub_text: slider_sub_text,
                      slider_signed_ids: slider_signed_ids %>

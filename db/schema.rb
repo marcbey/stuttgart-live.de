@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_05_08_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_14_121000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -263,6 +263,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_100000) do
     t.float "promotion_banner_image_zoom"
     t.string "promotion_banner_kicker_text"
     t.integer "promotion_banner_lane_position"
+    t.boolean "publish_on_russ_live"
+    t.boolean "publish_slider_images_on_stuttgart_live"
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.boolean "show_organizer_notes", default: false, null: false
@@ -305,10 +307,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_100000) do
 
   create_table "import_event_images", force: :cascade do |t|
     t.string "aspect_hint", default: "unknown", null: false
-    t.datetime "cache_attempted_at"
-    t.text "cache_error"
-    t.string "cache_status", default: "pending", null: false
-    t.datetime "cached_at"
     t.datetime "created_at", null: false
     t.string "image_type", null: false
     t.text "image_url", null: false
@@ -318,7 +316,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_05_08_100000) do
     t.string "role", default: "gallery", null: false
     t.string "source", null: false
     t.datetime "updated_at", null: false
-    t.index ["cache_status"], name: "index_import_event_images_on_cache_status"
     t.index ["import_class", "import_event_id", "source", "image_type", "image_url"], name: "index_import_event_images_on_unique_image_per_owner", unique: true
     t.index ["import_class", "import_event_id"], name: "index_import_event_images_on_class_and_event"
   end

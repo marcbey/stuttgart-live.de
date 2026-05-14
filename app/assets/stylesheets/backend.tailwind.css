@@ -1953,6 +1953,16 @@ display: inline-flex;
   margin-top: 0.6rem;
 }
 
+.press-checkbox-block,
+.press-text-editor-field {
+margin-bottom: 1rem;
+}
+
+.press-checkbox-block {
+display: grid;
+  gap: 0.45rem;
+}
+
 .form-input,
 .form-textarea {
 width: 100%;
@@ -2010,6 +2020,12 @@ padding: 1.35rem 1.25rem 1.45rem;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 1.08rem;
   line-height: 1.78;
+}
+
+trix-editor.press-rich-text {
+border: 1px solid #8f887d;
+  background: #fff;
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.04);
 }
 
 .static-page-body-editor-field trix-toolbar {

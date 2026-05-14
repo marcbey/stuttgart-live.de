@@ -401,6 +401,8 @@ module Public
       end
 
       def slider_items
+        return [] unless event.publish_slider_images_on_stuttgart_live?
+
         @slider_items ||= event.slider_images.to_a.filter_map do |image|
           source = view_context.event_image_source(image)
           next if source.blank?

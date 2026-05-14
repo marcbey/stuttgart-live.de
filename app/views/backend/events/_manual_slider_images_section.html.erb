@@ -1,11 +1,17 @@
 <section class="offer-section backend-section backend-section-media">
   <div class="backend-section-header">
-    <h3>Slider-Bilder</h3>
+    <h3>Presse</h3>
   </div>
   <div class="backend-section-body">
+    <div class="press-text-editor-field">
+      <%= form.label :press_text, "Presse Text", class: "form-label" %>
+      <%= form.rich_textarea :press_text, class: "blog-rich-text static-page-rich-text press-rich-text" %>
+      <p class="form-hint">Wenn kein Presse Text angegeben, wird die Event Beschreibung verwendet.</p>
+    </div>
+
     <div class="event-image-upload-grid">
       <div class="event-image-upload-form">
-        <h4>Slider-Bilder hochladen</h4>
+        <h4>Presse-Bilder hochladen</h4>
         <p>Werden vorab hochgeladen und direkt im Formular angezeigt. Weitere Auswahl ergänzt die Vorschau.</p>
         <%= file_field_tag "event_image[slider_files][]",
                            multiple: true,
@@ -35,6 +41,18 @@
           <% end %>
         </div>
       </div>
+    </div>
+
+    <div class="press-checkbox-block">
+      <label class="form-checkbox">
+        <%= form.check_box :publish_slider_images_on_stuttgart_live %>
+        <span>Bilder als Slider auf Stuttgart Live veröffentlichen</span>
+      </label>
+
+      <label class="form-checkbox">
+        <%= form.check_box :publish_on_russ_live %>
+        <span>Auf Russ Live veröffentlichen</span>
+      </label>
     </div>
   </div>
 </section>

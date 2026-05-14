@@ -68,6 +68,7 @@ class Event < ApplicationRecord
   has_many :presenters, -> { order("event_presenters.position ASC", "event_presenters.id ASC") }, through: :event_presenters
   has_one :llm_enrichment, class_name: "EventLlmEnrichment", dependent: :destroy
   has_one_attached :promotion_banner_image
+  has_rich_text :press_text
   has_many :import_event_images,
     as: :import_event,
     foreign_key: :import_event_id,
@@ -585,6 +586,8 @@ class Event < ApplicationRecord
   end
 
   def slider_images
+    return [] unless publish_slider_images_on_stuttgart_live?
+
     if association(:event_images).loaded?
       return event_images.select(&:slider?).sort_by { |image| [ image.created_at || Time.at(0), image.id.to_i ] }
     end

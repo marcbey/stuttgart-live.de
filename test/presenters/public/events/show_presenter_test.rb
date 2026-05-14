@@ -137,7 +137,8 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       homepage_url: "https://band.example",
       instagram_url: "https://instagram.example/band",
       facebook_url: "",
-      youtube_url: "https://www.youtube.com/watch?v=demo"
+      youtube_url: "https://www.youtube.com/watch?v=demo",
+      publish_slider_images_on_stuttgart_live: true
     )
     primary_offer = OpenStruct.new(
       resolved_ticket_url: "https://tickets.example/band",
@@ -487,6 +488,32 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal 1, presenter.hero_gallery_slides.size
     assert_not presenter.hero_gallery_rotates?
     assert_equal "/hero-desktop.jpg", presenter.hero_gallery_slides.first.desktop_source
+  end
+
+  test "does not expose slider items when stuttgart live slider publishing is disabled" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      publish_slider_images_on_stuttgart_live: false
+    )
+
+    presenter = build_presenter(event)
+
+    assert_empty presenter.slider_items
+    assert_equal 1, presenter.hero_gallery_slides.size
+    assert_not presenter.hero_gallery_rotates?
+  end
+
+  test "does not expose slider items when stuttgart live slider publishing is unset" do
+    event = build_event(
+      artist_name: "Band",
+      title: "Live",
+      publish_slider_images_on_stuttgart_live: nil
+    )
+
+    presenter = build_presenter(event)
+
+    assert_empty presenter.slider_items
   end
 
   test "hides duplicate title lines and deduplicates repeated paragraphs" do

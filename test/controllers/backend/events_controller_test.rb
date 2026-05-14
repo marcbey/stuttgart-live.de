@@ -493,7 +493,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_no_match(/Event-Inbox/, response.body)
     assert_select "#event-editor-tab-event[aria-selected='true']", count: 1
     assert_select "#event-editor-tab-event-image[aria-selected='false']", count: 1
-    assert_select "#event-editor-tab-slider-images[aria-selected='false']", count: 1
+    assert_select "#event-editor-tab-slider-images[aria-selected='false']", text: "Presse", count: 1
     assert_select "#event-editor-tab-presenters[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-llm-enrichment[aria-selected='false']", count: 1
     assert_select "#event-editor-tab-settings[aria-selected='false']", count: 1
@@ -554,6 +554,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='event_image[slider_files][]'][type='file']"
     assert_select "input[name='event_image[slider_alt_text]']"
     assert_select "input[name='event_image[slider_sub_text]'][placeholder='Copyright (optional)']"
+    assert_select "#event-editor-panel-slider-images h3", text: "Presse", count: 1
+    assert_select "#event-editor-panel-slider-images h4", text: "Presse-Bilder hochladen", count: 1
+    assert_select "#event-editor-panel-slider-images .press-checkbox-block input[name='event[publish_on_russ_live]'][type='checkbox'][checked]", count: 0
+    assert_select "#event-editor-panel-slider-images .press-checkbox-block input[name='event[publish_slider_images_on_stuttgart_live]'][type='checkbox'][checked]", count: 0
+    assert_select "#event-editor-panel-slider-images trix-editor.blog-rich-text.static-page-rich-text", count: 1
+    assert_select "#event-editor-panel-slider-images .form-hint", text: "Wenn kein Presse Text angegeben, wird die Event Beschreibung verwendet.", count: 1
+    assert_operator response.body.index("Presse-Bilder hochladen"), :<, response.body.index("Bilder als Slider auf Stuttgart Live veröffentlichen")
+    assert_operator response.body.index("Bilder als Slider auf Stuttgart Live veröffentlichen"), :<, response.body.index("Auf Russ Live veröffentlichen")
     assert_select "[data-controller='event-image-preupload']"
     assert_select "[data-event-image-crop-preview-target='previewBox']", count: 2
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
@@ -632,6 +640,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         start_at: @event.start_at,
         venue: @event.venue,
         city: @event.city,
+        publish_on_russ_live: "1",
+        publish_slider_images_on_stuttgart_live: "0",
+        press_text: "<div>Presse Inhalt</div>",
         status: "needs_review"
       },
       event_image_updates: {
@@ -647,7 +658,22 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_equal "Neuer Alt-Text", image.reload.alt_text
     assert_equal "Neue Subline", image.reload.sub_text
+    @event.reload
+    assert_predicate @event, :publish_on_russ_live?
+    assert_not_predicate @event, :publish_slider_images_on_stuttgart_live?
+    assert_equal "Presse Inhalt", @event.press_text.to_plain_text.strip
     assert_includes response.body, "Event wurde gespeichert."
+  end
+
+  test "existing event keeps russ live checkbox unchecked when value is nil" do
+    sign_in_as(@user)
+    @event.update_column(:publish_on_russ_live, nil)
+
+    get backend_events_url(status: "needs_review", event_id: @event.id, editor_tab: "slider_images")
+
+    assert_response :success
+    assert_select "#event-editor-tab-slider-images[aria-selected='true']", text: "Presse", count: 1
+    assert_select "#event-editor-panel-slider-images .press-checkbox-block input[name='event[publish_on_russ_live]'][type='checkbox'][checked]", count: 0
   end
 
   test "show includes event image crop fields in the main editor form" do
@@ -1079,6 +1105,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
             highlighted: "1",
             ticket_url: "https://tickets.example/manual-tour",
             event_info: "Lange Beschreibung",
+            publish_on_russ_live: "0",
+            publish_slider_images_on_stuttgart_live: "1",
+            press_text: "<div>Eigener Presse Text</div>",
             editor_notes: "Interne Notiz",
             status: "needs_review",
             genre_ids: [ genres(:pop).id.to_s ],
@@ -1110,6 +1139,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "https://instagram.com/manual", created.instagram_url
     assert_equal "https://facebook.com/manual", created.facebook_url
     assert_equal "Bitte beim Veranstalter melden", created.ticket_special_note
+    assert_not_predicate created, :publish_on_russ_live?
+    assert_predicate created, :publish_slider_images_on_stuttgart_live?
+    assert_equal "Eigener Presse Text", created.press_text.to_plain_text.strip
     assert_equal "10135", created.promoter_id
     assert_equal "Manual Promoter", created.promoter_name
     assert_predicate created, :highlighted?
@@ -2456,6 +2488,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         start_at: @published_event.start_at.strftime("%Y-%m-%dT%H:%M"),
         venue: @published_event.venue,
         city: @published_event.city,
+        publish_on_russ_live: "1",
+        publish_slider_images_on_stuttgart_live: "1",
+        press_text: "<div>Fehler Presse Text</div>",
         status: "published"
       }
     }, as: :turbo_stream
@@ -2466,6 +2501,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, 'name="editor_tab"'
     assert_includes response.body, 'value="slider_images"'
     assert_match(/id="event-editor-tab-slider-images"[^>]*aria-selected="true"/, response.body)
+    assert_includes response.body, "Fehler Presse Text"
     assert_includes response.body, "Event konnte nicht gespeichert werden."
     assert_equal "Published Artist", @published_event.reload.artist_name
   end

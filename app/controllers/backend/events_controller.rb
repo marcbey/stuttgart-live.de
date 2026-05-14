@@ -277,7 +277,7 @@ module Backend
     end
 
     def event_editor_relation
-      Event.includes(
+      Event.with_rich_text_press_text_and_embeds.includes(
         :event_series,
         :genres,
         :llm_enrichment,
@@ -453,6 +453,8 @@ module Backend
         :ticket_special_note,
         :highlighted,
         :promotion_banner,
+        :publish_on_russ_live,
+        :publish_slider_images_on_stuttgart_live,
         :promotion_banner_lane_position,
         :promotion_banner_kicker_text,
         :promotion_banner_cta_text,
@@ -462,6 +464,7 @@ module Backend
         :promotion_banner_image_focus_y,
         :promotion_banner_image_zoom,
         :published_at,
+        :press_text,
         :status,
         :editor_notes,
         presenter_ids: [],

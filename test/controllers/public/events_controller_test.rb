@@ -4991,6 +4991,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       alt_text: "Slider Alt",
       sub_text: "Slider Subline"
     )
+    @published_event.update!(publish_slider_images_on_stuttgart_live: true)
 
     get event_url(@published_event.slug)
 
@@ -5015,6 +5016,51 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, rails_storage_proxy_path(hero_image.processed_optimized_variant, only_path: true)
     assert_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_variant, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
+  end
+
+  test "show hides slider images when stuttgart live slider publishing is disabled" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
+      sub_text: "Foto Max Mustermann",
+      grid_variant: EventImage::GRID_VARIANT_1X1
+    )
+    slider_image = create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_SLIDER,
+      alt_text: "Slider Alt",
+      sub_text: "Slider Subline"
+    )
+    @published_event.update!(publish_slider_images_on_stuttgart_live: false)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-image-figure-rotator", count: 0
+    assert_select ".event-detail-image-stage-static", count: 1
+    assert_not_includes response.body, "© Slider Subline"
+    assert_not_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_variant, only_path: true)
+  end
+
+  test "show hides slider images when stuttgart live slider publishing is unset" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
+      grid_variant: EventImage::GRID_VARIANT_1X1
+    )
+    slider_image = create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_SLIDER,
+      alt_text: "Slider Alt",
+      sub_text: "Slider Subline"
+    )
+    @published_event.update_column(:publish_slider_images_on_stuttgart_live, nil)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-image-stage-static", count: 1
+    assert_not_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_variant, only_path: true)
   end
 
   test "show renders single event hero image in the shared stage with attached credit" do
