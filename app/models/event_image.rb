@@ -11,6 +11,12 @@ class EventImage < ApplicationRecord
     banner_desktop: WEB_MAX_DIMENSION,
     thumbnail: 192
   }.freeze
+  PRESS_VARIANT_MAX_DIMENSIONS = {
+    hero_mobile: 768,
+    hero_desktop: WEB_MAX_DIMENSION,
+    gallery_mobile: 384,
+    gallery_desktop: 768
+  }.freeze
   PURPOSE_SLIDER = "slider".freeze
   PURPOSE_DETAIL_HERO = "detail_hero".freeze
   PURPOSES = [
@@ -118,10 +124,28 @@ class EventImage < ApplicationRecord
     raise ProcessingError, processing_error_message(error)
   end
 
+  def press_variant(size)
+    file.variant(**variant_transformations(max_dimension: press_variant_max_dimension(size)))
+  end
+
+  def processed_press_variant(size)
+    press_variant(size).processed
+  rescue LoadError, MiniMagick::Error, ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
+    raise ProcessingError, processing_error_message(error)
+  end
+
   private
 
   def public_variant_max_dimension(size)
     PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(size.to_sym)
+  end
+
+  def press_variant_max_dimension(size)
+    PRESS_VARIANT_MAX_DIMENSIONS.fetch(size.to_sym)
   end
 
   def normalize_text_fields

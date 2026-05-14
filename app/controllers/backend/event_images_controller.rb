@@ -59,6 +59,7 @@ module Backend
       if errors.any?
         respond_with_create_error(errors.uniq.join(" | "))
       else
+        enqueue_press_variant_preprocessing_for(created_images)
         social_draft_alert = refresh_social_drafts_after_event_image_change(purpose: purpose)
         notice =
           if created == 1
@@ -107,7 +108,7 @@ module Backend
       purpose = import_image_params[:purpose].to_s
       grid_variant = import_image_params[:grid_variant]
 
-      EventImage.transaction do
+      event_image = EventImage.transaction do
         replace_unique_images!(purpose: purpose, grid_variant: grid_variant)
 
         Backend::ImportEventImageImporter.call(
@@ -118,6 +119,7 @@ module Backend
         )
       end
 
+      enqueue_press_variant_preprocessing_for([ event_image ])
       social_draft_alert = refresh_social_drafts_after_event_image_change(purpose: purpose)
       redirect_to editor_redirect_path,
                   **redirect_flash(
@@ -204,6 +206,12 @@ module Backend
 
     def social_draft_sync
       @social_draft_sync ||= Meta::EventSocialPostDraftSync.new
+    end
+
+    def enqueue_press_variant_preprocessing_for(images)
+      images.select(&:slider?).each do |image|
+        EventImages::PreprocessPressVariantsJob.perform_later(image)
+      end
     end
 
     def redirect_flash(notice:, alert:)

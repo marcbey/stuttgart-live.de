@@ -97,6 +97,33 @@ class EventImageTest < ActiveSupport::TestCase
     assert_equal [ 2000, 1500 ], image_dimensions(image.file.download)
   end
 
+  test "press variants scale down to russ live dimensions" do
+    expected_dimensions = {
+      hero_mobile: [ 768, 576 ],
+      hero_desktop: [ 1280, 960 ],
+      gallery_mobile: [ 384, 288 ],
+      gallery_desktop: [ 768, 576 ]
+    }
+
+    expected_dimensions.each do |size, expected_processed_dimensions|
+      image = EventImage.new(event: @event, purpose: EventImage::PURPOSE_SLIDER)
+      original_binary = large_test_image_binary(width: 2000, height: 1500)
+
+      image.file.attach(
+        io: StringIO.new(original_binary),
+        filename: "large-press-#{size}.png",
+        content_type: "image/png"
+      )
+      image.save!
+
+      optimized_binary = image_binary(image.processed_press_variant(size))
+      expected = image_processing_backend_available? ? expected_processed_dimensions : [ 2000, 1500 ]
+
+      assert_equal expected, image_dimensions(optimized_binary), "expected #{size} to use Russ Live dimensions"
+      assert_equal [ 2000, 1500 ], image_dimensions(image.file.download)
+    end
+  end
+
   test "optimized variant raises a processing error for broken image payloads" do
     image = EventImage.new(event: @event, purpose: EventImage::PURPOSE_SLIDER)
     image.file.attach(

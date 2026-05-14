@@ -1,6 +1,8 @@
 require "test_helper"
 
 class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
+  include ActiveJob::TestHelper
+
   setup do
     @event = events(:needs_review_one)
     @user = users(:one)
@@ -26,16 +28,18 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   test "creates multiple slider images" do
     sign_in_as(@user)
 
-    assert_difference -> { @event.event_images.slider.count }, 2 do
-      post backend_event_event_images_url(@event), params: {
-        status: "needs_review",
-        event_image: {
-          purpose: EventImage::PURPOSE_SLIDER,
-          alt_text: "Slider Alt",
-          sub_text: "Slider Sub",
-          files: [ uploaded_image, uploaded_image ]
+    assert_enqueued_jobs 2, only: EventImages::PreprocessPressVariantsJob do
+      assert_difference -> { @event.event_images.slider.count }, 2 do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: EventImage::PURPOSE_SLIDER,
+            alt_text: "Slider Alt",
+            sub_text: "Slider Sub",
+            files: [ uploaded_image, uploaded_image ]
+          }
         }
-      }
+      end
     end
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
@@ -47,16 +51,18 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   test "creates multiple slider images via turbo stream without reload" do
     sign_in_as(@user)
 
-    assert_difference -> { @event.event_images.slider.count }, 2 do
-      post backend_event_event_images_url(@event), params: {
-        status: "needs_review",
-        event_image: {
-          purpose: EventImage::PURPOSE_SLIDER,
-          alt_text: "Slider Alt",
-          sub_text: "Slider Sub",
-          files: [ uploaded_image, uploaded_image ]
-        }
-      }, as: :turbo_stream
+    assert_enqueued_jobs 2, only: EventImages::PreprocessPressVariantsJob do
+      assert_difference -> { @event.event_images.slider.count }, 2 do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: EventImage::PURPOSE_SLIDER,
+            alt_text: "Slider Alt",
+            sub_text: "Slider Sub",
+            files: [ uploaded_image, uploaded_image ]
+          }
+        }, as: :turbo_stream
+      end
     end
 
     assert_response :success
@@ -74,16 +80,18 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     slider_blob_one = direct_uploaded_blob(filename: "slider-1.png")
     slider_blob_two = direct_uploaded_blob(filename: "slider-2.png")
 
-    assert_difference -> { @event.event_images.slider.count }, 2 do
-      post backend_event_event_images_url(@event), params: {
-        status: "needs_review",
-        event_image: {
-          purpose: EventImage::PURPOSE_SLIDER,
-          alt_text: "Slider Alt",
-          sub_text: "Slider Sub",
-          signed_ids: [ slider_blob_one.signed_id, slider_blob_two.signed_id ]
-        }
-      }, as: :turbo_stream
+    assert_enqueued_jobs 2, only: EventImages::PreprocessPressVariantsJob do
+      assert_difference -> { @event.event_images.slider.count }, 2 do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: EventImage::PURPOSE_SLIDER,
+            alt_text: "Slider Alt",
+            sub_text: "Slider Sub",
+            signed_ids: [ slider_blob_one.signed_id, slider_blob_two.signed_id ]
+          }
+        }, as: :turbo_stream
+      end
     end
 
     assert_response :success
@@ -94,14 +102,16 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   test "ignores filename strings and redirects with alert" do
     sign_in_as(@user)
 
-    assert_no_difference -> { @event.event_images.count } do
-      post backend_event_event_images_url(@event), params: {
-        status: "needs_review",
-        event_image: {
-          purpose: EventImage::PURPOSE_SLIDER,
-          files: [ "foo.jpg", "bar.png" ]
+    assert_no_enqueued_jobs only: EventImages::PreprocessPressVariantsJob do
+      assert_no_difference -> { @event.event_images.count } do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: EventImage::PURPOSE_SLIDER,
+            files: [ "foo.jpg", "bar.png" ]
+          }
         }
-      }
+      end
     end
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
@@ -128,20 +138,22 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   test "creates event image with optional grid settings" do
     sign_in_as(@user)
 
-    assert_difference -> { @event.event_images.detail_hero.count }, 1 do
-      post backend_event_event_images_url(@event), params: {
-        status: "needs_review",
-        event_image: {
-          purpose: EventImage::PURPOSE_DETAIL_HERO,
-          alt_text: "Eventbild Alt",
-          sub_text: "Eventbild Sub",
-          grid_variant: EventImage::GRID_VARIANT_2X1,
-          card_focus_x: "18",
-          card_focus_y: "72",
-          card_zoom: "145",
-          files: [ uploaded_image ]
+    assert_no_enqueued_jobs only: EventImages::PreprocessPressVariantsJob do
+      assert_difference -> { @event.event_images.detail_hero.count }, 1 do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: EventImage::PURPOSE_DETAIL_HERO,
+            alt_text: "Eventbild Alt",
+            sub_text: "Eventbild Sub",
+            grid_variant: EventImage::GRID_VARIANT_2X1,
+            card_focus_x: "18",
+            card_focus_y: "72",
+            card_zoom: "145",
+            files: [ uploaded_image ]
+          }
         }
-      }
+      end
     end
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
@@ -242,14 +254,16 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
   test "returns turbo stream error for invalid upload payload" do
     sign_in_as(@user)
 
-    assert_no_difference -> { @event.event_images.count } do
-      post backend_event_event_images_url(@event), params: {
-        status: "needs_review",
-        event_image: {
-          purpose: EventImage::PURPOSE_SLIDER,
-          files: [ "foo.jpg" ]
-        }
-      }, as: :turbo_stream
+    assert_no_enqueued_jobs only: EventImages::PreprocessPressVariantsJob do
+      assert_no_difference -> { @event.event_images.count } do
+        post backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            purpose: EventImage::PURPOSE_SLIDER,
+            files: [ "foo.jpg" ]
+          }
+        }, as: :turbo_stream
+      end
     end
 
     assert_response :unprocessable_entity
@@ -331,13 +345,15 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
     image = create_event_image(purpose: EventImage::PURPOSE_SLIDER, alt_text: nil, sub_text: nil)
 
-    patch backend_event_event_image_url(@event, image), params: {
-      status: "needs_review",
-      event_image: {
-        alt_text: "Neuer Alt",
-        sub_text: "Neue Subline"
+    assert_no_enqueued_jobs only: EventImages::PreprocessPressVariantsJob do
+      patch backend_event_event_image_url(@event, image), params: {
+        status: "needs_review",
+        event_image: {
+          alt_text: "Neuer Alt",
+          sub_text: "Neue Subline"
+        }
       }
-    }
+    end
 
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
     image.reload
@@ -429,6 +445,26 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
 
     count_after = EventImage.where(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO).count
     assert_equal count_before + 1, count_after, flash[:alert].presence || "expected imported image to be created"
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+  end
+
+  test "enqueues press variant preprocessing when slider image is created from import image" do
+    sign_in_as(@user)
+    import_image = create_import_event_image
+    response = fake_image_response
+
+    with_fake_image_response(response) do
+      assert_enqueued_jobs 1, only: EventImages::PreprocessPressVariantsJob do
+        post create_from_import_backend_event_event_images_url(@event), params: {
+          status: "needs_review",
+          event_image: {
+            import_event_image_id: import_image.id,
+            purpose: EventImage::PURPOSE_SLIDER
+          }
+        }
+      end
+    end
+
     assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
   end
 
@@ -604,5 +640,15 @@ class Backend::EventImagesControllerTest < ActionDispatch::IntegrationTest
       content_type: "image/png",
       code: "200"
     )
+  end
+
+  def with_fake_image_response(response)
+    http_singleton = Net::HTTP.singleton_class
+    original_get_response = Net::HTTP.method(:get_response)
+
+    http_singleton.define_method(:get_response, ->(_uri) { response })
+    yield
+  ensure
+    http_singleton.define_method(:get_response, original_get_response)
   end
 end
