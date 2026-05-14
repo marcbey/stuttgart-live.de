@@ -50,6 +50,7 @@ postgres_russ_live_readonly_databases:
 postgres_russ_live_operational_user: russ_live_de
 postgres_russ_live_operational_password: ""
 postgres_russ_live_operational_databases:
+  - russ_live_de_production
   - russ_live_de_production_cache
   - russ_live_de_production_queue
   - russ_live_de_production_cable
