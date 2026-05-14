@@ -2898,8 +2898,9 @@ margin: 0.7rem 0 0;
   padding: 0;
   list-style: none;
   display: grid;
-  gap: 0.75rem;
-  grid-template-columns: repeat(auto-fit, minmax(17.5rem, 1fr));
+  gap: 0.4rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 15rem));
+  justify-content: start;
 }
 
 .slider-image-editor-grid + .event-image-upload-grid {
@@ -2909,20 +2910,36 @@ margin-top: 1.25rem;
 .slider-image-editor-card {
 display: grid;
   grid-template-columns: 56px minmax(0, 1fr);
-  gap: 0.9rem;
+  gap: 0.4rem;
   align-items: start;
   border: 1px solid #ededed;
   background: #fbfbfb;
-  padding: 0.75rem;
+  padding: 0.45rem;
 }
 
 .slider-image-editor-thumb {
 align-items: flex-start;
 }
 
+.slider-image-editor-thumb-link {
+display: block;
+  width: 56px;
+  height: 56px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  background: #fff;
+}
+
+.slider-image-editor-thumb-image {
+display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 .slider-image-editor-meta {
 display: grid;
-  gap: 0.55rem;
+  gap: 0.3rem;
   min-width: 0;
 }
 
@@ -2935,12 +2952,37 @@ display: block;
 
 .slider-image-meta-form {
 display: grid;
-  gap: 0.4rem;
-  width: min(100%, 15.5rem);
+  gap: 0.25rem;
+  width: 100%;
 }
 
 .slider-image-meta-form .form-input {
 width: 100%;
+}
+
+.slider-image-file-details {
+display: grid;
+  gap: 0.1rem;
+  margin: 0.05rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.25;
+  color: #57534e;
+}
+
+.slider-image-file-details div {
+display: flex;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.slider-image-file-details dt {
+font-weight: 650;
+}
+
+.slider-image-file-details dd {
+margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .slider-image-meta-actions {
@@ -3001,7 +3043,7 @@ display: inline-flex;
 
 @media (max-width: 560px) {
   .slider-image-editor-card {
-  grid-template-columns: 1fr;
+  grid-template-columns: 56px minmax(0, 1fr);
   }
 }
 

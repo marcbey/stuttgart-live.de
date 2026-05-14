@@ -623,6 +623,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".slider-image-editor-card .slider-image-meta-form input[name='event_image_updates[#{image.id}][alt_text]'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select ".slider-image-editor-card .slider-image-meta-form input[name='event_image_updates[#{image.id}][sub_text]'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select ".slider-image-editor-card .slider-image-meta-form input[name='event_image_updates[#{image.id}][sub_text]'][placeholder='Copyright (optional)']", count: 1
+    assert_select ".slider-image-editor-card .slider-image-file-details dt", text: "Dateigröße", count: 1
+    assert_select ".slider-image-editor-card .slider-image-file-details dd", text: ActiveSupport::NumberHelper.number_to_human_size(image.file.blob.byte_size), count: 1
+    assert_select ".slider-image-editor-card .slider-image-file-details dt", text: "Dateityp", count: 1
+    assert_select ".slider-image-editor-card .slider-image-file-details dd", text: "image/png", count: 1
     assert_select ".slider-image-editor-card .slider-image-meta-actions .button_to", count: 1
     assert_select ".slider-image-editor-card .slider-image-meta-form button", count: 0
     assert_select ".slider-image-editor-card .slider-image-meta-form input[type='submit']", count: 0
