@@ -11,6 +11,7 @@
 - After a pull, fast-forward, or rebase, `bin/ci` must be run successfully again before pushing.
 - A `git push` must not be performed if updating the branch fails or if `bin/ci` or any individual check is failing.
 - If new migrations enter the working tree after a `git pull`, rebase, or branch switch, the local database must be brought up to date before running further tests, starting the app, or performing deployment steps.
+- Die lokale Entwicklungsumgebung für stuttgart-live wird standardmäßig auf Port `3000` gestartet. Wenn kein anderer Port ausdrücklich benötigt wird, muss `bin/dev` ohne abweichendes `PORT` verwendet werden.
 - Changes to the app, new features, workflows, deployments, or infrastructure must always be checked to determine whether `README.md` also needs to be updated. If usage, operations, setup, architecture, dependencies, or troubleshooting change, `README.md` must be updated in the same workflow.
 - `README.md` should primarily be written for humans: clear, understandable, concise, and practical. Documentation should explain relationships and describe concrete steps, rather than merely listing internal implementation details or file inventories.
 - CSS and JavaScript are split by surface. Public-facing pages must use the `frontend`/`public` assets, while backoffice and auth pages must use the `backend` assets. Do not reintroduce a single global CSS or JavaScript bundle for all surfaces.
