@@ -154,53 +154,14 @@
 - name: Russ-Live-Read-only-Tabellenzugriff erlauben
   become_user: postgres
   community.postgresql.postgresql_privs:
-    database: "{{ item }}"
+    database: "{{ item.0 }}"
     type: table
     schema: public
-    objs: ALL_IN_SCHEMA
+    objs: "{{ item.1 }}"
     roles: "{{ postgres_russ_live_readonly_user }}"
     privs: SELECT
     state: present
-  loop: "{{ postgres_russ_live_readonly_databases }}"
-  when: postgres_russ_live_readonly_password | length > 0
-
-- name: Russ-Live-Read-only-Sequenzzugriff erlauben
-  become_user: postgres
-  community.postgresql.postgresql_privs:
-    database: "{{ item }}"
-    type: sequence
-    schema: public
-    objs: ALL_IN_SCHEMA
-    roles: "{{ postgres_russ_live_readonly_user }}"
-    privs: SELECT,USAGE
-    state: present
-  loop: "{{ postgres_russ_live_readonly_databases }}"
-  when: postgres_russ_live_readonly_password | length > 0
-
-- name: Russ-Live-Read-only-Default-Tabellenrechte setzen
-  become_user: postgres
-  community.postgresql.postgresql_privs:
-    database: "{{ item }}"
-    type: default_privs
-    schema: public
-    objs: TABLES
-    target_roles: "{{ postgres_app_user }}"
-    roles: "{{ postgres_russ_live_readonly_user }}"
-    privs: SELECT
-    state: present
-  loop: "{{ postgres_russ_live_readonly_databases }}"
-  when: postgres_russ_live_readonly_password | length > 0
-
-- name: Russ-Live-Read-only-Default-Sequenzrechte setzen
-  become_user: postgres
-  community.postgresql.postgresql_privs:
-    database: "{{ item }}"
-    type: default_privs
-    schema: public
-    objs: SEQUENCES
-    target_roles: "{{ postgres_app_user }}"
-    roles: "{{ postgres_russ_live_readonly_user }}"
-    privs: SELECT,USAGE
-    state: present
-  loop: "{{ postgres_russ_live_readonly_databases }}"
-  when: postgres_russ_live_readonly_password | length > 0
+  loop: "{{ postgres_russ_live_readonly_databases | product(postgres_russ_live_readonly_tables) | list }}"
+  when:
+    - postgres_russ_live_readonly_password | length > 0
+    - postgres_russ_live_readonly_tables | length > 0

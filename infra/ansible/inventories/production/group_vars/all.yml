@@ -47,6 +47,7 @@ postgres_russ_live_readonly_user: russ_live_de_reader
 postgres_russ_live_readonly_password: ""
 postgres_russ_live_readonly_databases:
   - stuttgart_live_de_production
+postgres_russ_live_readonly_tables: []
 postgres_russ_live_operational_user: russ_live_de
 postgres_russ_live_operational_password: ""
 postgres_russ_live_operational_databases:

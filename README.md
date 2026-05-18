@@ -759,9 +759,12 @@ Für `russ-live.de` legt das Host-Setup zusätzlich getrennte Operational-Datenb
 `russ_live_de_production` ist die writable Russ-Domain-Datenbank für eigene
 Russ-Live-Modelle, Sessions und Login-Audit-Daten. `russ-live.de` liest
 `stuttgart_live_de_production` zusätzlich nur über den PostgreSQL-Benutzer
-`russ_live_de_reader`. Dieser Benutzer bekommt `CONNECT`, `USAGE` und `SELECT`,
-aber keine Schreibrechte. Migrationen für Stuttgarts Primärdatenbank laufen
-ausschließlich aus diesem Repository.
+`russ_live_de_reader`. Dieser Benutzer bekommt `CONNECT` und `USAGE`; `SELECT`
+wird nur für explizit freigegebene Tabellen über
+`postgres_russ_live_readonly_tables` vergeben. Es gibt keine pauschalen
+Schema-/Default-Privilegien für alle aktuellen und zukünftigen Tabellen oder
+Sequenzen. Migrationen für Stuttgarts Primärdatenbank laufen ausschließlich aus
+diesem Repository.
 
 Uploads liegen im Docker-Volume `stuttgart_live_de_storage`. Der Host-Pfad dafür ist üblicherweise `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`. Lokale Datenbank-Backups liegen standardmäßig unter `/var/backups/stuttgart-live`; der tägliche Backup-Cronjob schreibt sein Log nach `/var/log/stuttgart-live-db-backup.log`.
 Öffentliche Bild-URLs zeigen in Production auf signierte `/media/...`-Pfade. Wenn ein Bild im Backend ersetzt oder eine Variant/Crop-Änderung gespeichert wird, rendert Rails eine neue URL. Damit wird kein manuelles Cache-Purging für den Media-Pfad benötigt.
