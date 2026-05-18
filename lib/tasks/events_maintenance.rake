@@ -27,6 +27,16 @@ namespace :events do
       puts "Event-Veröffentlichungsdaten zurückgesetzt."
       puts "events_updated=#{updated_count}"
     end
+
+    desc "Reset publish_on_russ_live for all events"
+    task reset_publish_on_russ_live: :environment do
+      relation = Event.where.not(publish_on_russ_live: nil)
+      updated_count = relation.count
+      relation.update_all(publish_on_russ_live: nil, updated_at: Time.current)
+
+      puts "Russ-Live-Veröffentlichungsstatus zurückgesetzt."
+      puts "events_updated=#{updated_count}"
+    end
   end
 end
 

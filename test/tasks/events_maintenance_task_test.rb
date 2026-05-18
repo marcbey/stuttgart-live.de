@@ -7,6 +7,7 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
     Rake::Task["events:maintenance:purge_all_with_imports"].reenable
     Rake::Task["events:maintenance:reset_llm_enrichment"].reenable
     Rake::Task["events:maintenance:reset_published_at"].reenable
+    Rake::Task["events:maintenance:reset_publish_on_russ_live"].reenable
   end
 
   test "purge_all_with_imports delegates to the full purger mode" do
@@ -101,6 +102,56 @@ class EventsMaintenanceTaskTest < ActiveSupport::TestCase
     assert_nil published_event.reload.published_at
     assert_nil review_event.reload.published_at
     assert_includes output, "Event-Veröffentlichungsdaten zurückgesetzt."
+    assert_includes output, "events_updated=#{expected_updated_count}"
+  end
+
+  test "reset_publish_on_russ_live clears russ live publication flags for all events" do
+    published_event = Event.create!(
+      slug: "maintenance-russ-live-published",
+      source_fingerprint: "test::maintenance::russ_live::published",
+      title: "Maintenance Russ Live Published",
+      artist_name: "Maintenance Artist Published",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      publish_on_russ_live: true,
+      source_snapshot: {}
+    )
+    hidden_event = Event.create!(
+      slug: "maintenance-russ-live-hidden",
+      source_fingerprint: "test::maintenance::russ_live::hidden",
+      title: "Maintenance Russ Live Hidden",
+      artist_name: "Maintenance Artist Hidden",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      publish_on_russ_live: false,
+      source_snapshot: {}
+    )
+    unchanged_event = Event.create!(
+      slug: "maintenance-russ-live-unchanged",
+      source_fingerprint: "test::maintenance::russ_live::unchanged",
+      title: "Maintenance Russ Live Unchanged",
+      artist_name: "Maintenance Artist Unchanged",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review",
+      publish_on_russ_live: nil,
+      source_snapshot: {}
+    )
+    expected_updated_count = Event.where.not(publish_on_russ_live: nil).count
+
+    output = capture_io do
+      Rake::Task["events:maintenance:reset_publish_on_russ_live"].invoke
+    end.first
+
+    assert_nil published_event.reload.publish_on_russ_live
+    assert_nil hidden_event.reload.publish_on_russ_live
+    assert_nil unchanged_event.reload.publish_on_russ_live
+    assert_includes output, "Russ-Live-Veröffentlichungsstatus zurückgesetzt."
     assert_includes output, "events_updated=#{expected_updated_count}"
   end
 end

@@ -799,6 +799,14 @@ bin/rails events:maintenance:reset_llm_enrichment
 
 Der Task löscht alle Einträge aus `event_llm_enrichments`, `event_genres` und `event_sub_genres`, entfernt die zugehörigen `import_runs` mit `source_type = "llm_enrichment"` samt `import_run_errors` und räumt passende `solid_queue_jobs` inklusive ihrer Laufzeitzustände ab. Andere Importläufe und Queue-Jobs bleiben erhalten.
 
+Russ-Live-Freigaben für alle Events zurücksetzen:
+
+```bash
+mise exec -- bin/rails events:maintenance:reset_publish_on_russ_live
+```
+
+Der Task setzt `events.publish_on_russ_live` überall auf `NULL`. Damit sind bestehende Events nicht mehr explizit für Russ Live freigegeben oder gesperrt und müssen redaktionell neu bewertet werden.
+
 Bestehende Venue-Dubletten anhand des flexiblen Venue-Matchings zusammenführen:
 
 ```bash
