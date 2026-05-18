@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: ${{ github.event_name != 'workflow_dispatch' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: production
     timeout-minutes: 30
@@ -25,6 +26,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && 'refs/heads/main' || github.sha }}
 
       - name: Load versioned Hetzner deploy config
         run: |
