@@ -253,6 +253,36 @@ module Importing
         assert_equal "rejected_invalid_url", result.status
       end
 
+      test "rejects localhost and private ip urls" do
+        validator = build_validator
+
+        localhost_result = validator.call(url: "http://localhost/internal", field_name: :homepage_link)
+        loopback_result = validator.call(url: "http://127.0.0.1/internal", field_name: :homepage_link)
+        metadata_result = validator.call(url: "http://169.254.169.254/latest/meta-data", field_name: :homepage_link)
+
+        assert_equal false, localhost_result.accepted?
+        assert_equal "rejected_invalid_url", localhost_result.status
+        assert_equal false, loopback_result.accepted?
+        assert_equal "rejected_invalid_url", loopback_result.status
+        assert_equal false, metadata_result.accepted?
+        assert_equal "rejected_invalid_url", metadata_result.status
+      end
+
+      test "rejects redirects to blocked hosts" do
+        validator = build_validator(
+          "https://example.com/start" => FakeResponse.new(
+            code: "302",
+            body: "",
+            headers: { "location" => "http://127.0.0.1/internal" }
+          )
+        )
+
+        result = validator.call(url: "https://example.com/start", field_name: :homepage_link)
+
+        assert_equal false, result.accepted?
+        assert_equal "rejected_invalid_url", result.status
+      end
+
       private
 
       def build_validator(responses = {})

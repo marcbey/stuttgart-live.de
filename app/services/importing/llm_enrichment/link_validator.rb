@@ -1,5 +1,6 @@
 require "net/http"
 require "uri"
+require "ipaddr"
 
 module Importing
   module LlmEnrichment
@@ -150,6 +151,7 @@ module Importing
         uri = URI.parse(value)
         return unless uri.is_a?(URI::HTTP) || uri.is_a?(URI::HTTPS)
         return if uri.host.blank?
+        return if blocked_host?(uri.host)
 
         uri
       rescue URI::InvalidURIError
@@ -191,6 +193,12 @@ module Importing
             ) if redirects > REDIRECT_LIMIT
 
             current_uri = current_uri.merge(location)
+            return rejected_result(
+              status: "rejected_invalid_url",
+              original_url: original_url,
+              final_url: current_uri,
+              http_status: code
+            ) if blocked_host?(current_uri.host)
           when 404, 410
             return rejected_result(
               status: "rejected_http_error",
@@ -219,6 +227,18 @@ module Importing
             )
           end
         end
+      end
+
+      def blocked_host?(host)
+        normalized_host = host.to_s.downcase
+        return true if normalized_host.blank? || normalized_host == "localhost"
+
+        ip = IPAddr.new(normalized_host)
+        return true if ip.loopback? || ip.private? || ip.link_local? || ip.multicast? || ip.unspecified?
+
+        false
+      rescue IPAddr::InvalidAddressError
+        false
       end
 
       def perform_get(uri)
