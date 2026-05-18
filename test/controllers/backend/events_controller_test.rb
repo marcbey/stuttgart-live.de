@@ -80,6 +80,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "index keeps the social tab active for a selected event" do
     sign_in_as(@user)
+    @published_event.event_social_posts.create!(
+      platform: "instagram",
+      status: "draft",
+      caption: "Bestehender Draft"
+    )
 
     get backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "social")
 
@@ -2843,10 +2848,20 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     with_singleton_return_value(Meta::ConnectionResolver, :new, resolver) do
-      yield
+      with_singleton_return_value(Meta::SocialCardRenderer, :new, stubbed_social_card_renderer) do
+        yield
+      end
     end
   ensure
     Meta::AccessStatus.define_singleton_method(:new, original_access_status_new) if original_access_status_new
+  end
+
+  def stubbed_social_card_renderer
+    renderer = Object.new
+    renderer.define_singleton_method(:render_set) do |background_source:, card_payload:, slug:|
+      {}
+    end
+    renderer
   end
 
   def with_singleton_return_value(target, method_name, value)
