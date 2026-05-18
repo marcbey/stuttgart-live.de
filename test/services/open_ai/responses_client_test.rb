@@ -59,11 +59,31 @@ module OpenAi
 
       with_stubbed_credentials(fake_credentials) do
         error = assert_raises(ResponsesClient::Error) do
-          ResponsesClient.new(model: "gpt-5-mini").create!(input: [], text_format: {})
+          ResponsesClient.new(model: "gpt-5-mini").create!(input: [], text_format: structured_text_format)
         end
 
         assert_equal "openai.api_key ist nicht in den Rails Credentials gesetzt.", error.message
       end
+    end
+
+    test "creates responses api request with structured output text format" do
+      captured_request = nil
+      fake_sdk_client = build_fake_sdk_client do |request|
+        captured_request = request
+        { "id" => "resp_123" }
+      end
+      fake_credentials = fake_credentials_with_api_key
+
+      with_stubbed_credentials(fake_credentials) do
+        ResponsesClient.new(model: "gpt-5-mini", sdk_client: fake_sdk_client)
+          .create!(input: "Prompt", text_format: structured_text_format)
+      end
+
+      assert_equal "gpt-5-mini", captured_request.fetch(:model)
+      assert_equal "Prompt", captured_request.fetch(:input)
+      assert_equal structured_text_format, captured_request.dig(:text, :format)
+      assert_equal "json_schema", captured_request.dig(:text, :format, :type)
+      assert_equal true, captured_request.dig(:text, :format, :strict)
     end
 
     test "forwards temperature when configured" do
@@ -76,7 +96,7 @@ module OpenAi
 
       with_stubbed_credentials(fake_credentials) do
         ResponsesClient.new(model: "gpt-5-mini", temperature: 0.4, sdk_client: fake_sdk_client)
-          .create!(input: "Prompt", text_format: { type: "json_schema" })
+          .create!(input: "Prompt", text_format: structured_text_format)
       end
 
       assert_equal 0.4, captured_request[:temperature]
@@ -92,7 +112,7 @@ module OpenAi
 
       with_stubbed_credentials(fake_credentials) do
         ResponsesClient.new(model: "gpt-5-mini", sdk_client: fake_sdk_client)
-          .create!(input: "Prompt", text_format: { type: "json_schema" })
+          .create!(input: "Prompt", text_format: structured_text_format)
       end
 
       assert_not_includes captured_request.keys, :temperature
@@ -113,7 +133,7 @@ module OpenAi
 
       with_stubbed_credentials(fake_credentials) do
         ResponsesClient.new(model: "gpt-5-mini", temperature: 1.0, sdk_client: fake_sdk_client)
-          .create!(input: "Prompt", text_format: { type: "json_schema" })
+          .create!(input: "Prompt", text_format: structured_text_format)
       end
 
       assert_equal 2, captured_requests.size
@@ -141,7 +161,7 @@ module OpenAi
       with_stubbed_credentials(fake_credentials) do
         error = assert_raises(ResponsesClient::Error) do
           ResponsesClient.new(model: "gpt-5-mini", sdk_client: fake_sdk_client)
-            .create!(input: "Prompt", text_format: { type: "json_schema" })
+            .create!(input: "Prompt", text_format: structured_text_format)
         end
 
         assert_equal "OpenAI-Kontingent überschritten (HTTP 429): You exceeded your current quota.", error.message
@@ -164,6 +184,10 @@ module OpenAi
     end
 
     private
+
+    def structured_text_format
+      Importing::LlmEnrichment::OutputSchema.format
+    end
 
     def build_fake_sdk_client(&block)
       responses_resource = Object.new

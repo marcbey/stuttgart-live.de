@@ -3,13 +3,15 @@ require "test_helper"
 module Importing
   module LlmEnrichment
     class ImporterTest < ActiveSupport::TestCase
-      FakeClient = Struct.new(:responses, :model, :captured_inputs, keyword_init: true) do
+      FakeClient = Struct.new(:responses, :model, :captured_inputs, :captured_text_formats, keyword_init: true) do
         def create!(input:, text_format:)
           raise "missing input" if input.blank?
           raise "missing schema" if text_format.blank?
 
           self.captured_inputs ||= []
+          self.captured_text_formats ||= []
           captured_inputs << input
+          captured_text_formats << text_format
           responses.shift || raise("no fake response left")
         end
       end
@@ -151,6 +153,7 @@ module Importing
         assert_equal 3, result.api_calls_count
         assert_equal 3, result.api_calls_completed_count
         assert_equal 3, client.captured_inputs.size
+        assert_equal [ OutputSchema.format, OutputSchema.format, OutputSchema.format ], client.captured_text_formats
         published_enrichment = events(:published_one).reload.llm_enrichment
         assert_equal [ "Pop, Indie & Singer-Songwriter" ], events(:published_one).genres.order(:name).pluck(:name)
         assert_equal [ "Indie", "Pop" ], events(:published_one).sub_genres.order(:name).pluck(:name)
@@ -159,6 +162,18 @@ module Importing
         assert_equal events(:published_one).id, published_enrichment.raw_response.dig("llm_raw_result", "event_id")
         assert_equal [ "Performance" ], events(:needs_review_two).sub_genres.order(:name).pluck(:name)
         assert_nil events(:published_past_one).reload.llm_enrichment
+      end
+
+      test "centralized output schema enforces structured output contract" do
+        text_format = OutputSchema.format
+        schema = text_format.fetch(:schema)
+
+        assert_equal "json_schema", text_format.fetch(:type)
+        assert_equal "event_llm_enrichment", text_format.fetch(:name)
+        assert_equal true, text_format.fetch(:strict)
+        assert_equal false, schema.fetch(:additionalProperties)
+        assert_equal OutputSchema::REQUIRED_FIELDS.sort, schema.fetch(:required).sort
+        assert_equal Genre::STATIC_NAMES, schema.dig(:properties, :genres, :items, :enum)
       end
 
       test "repairs legacy static genre names before assigning llm genres" do
@@ -571,6 +586,110 @@ module Importing
         assert_nil events(:published_one).reload.llm_enrichment
       end
 
+      test "uses parsed structured output from responses sdk objects" do
+        event = events(:published_one)
+        @run.update!(metadata: @run.metadata.merge("target_event_id" => event.id, "refresh_existing" => true))
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            parsed_response_object_for(
+              response_payload_for(
+                event_id: event.id,
+                genre: [ "Indie" ],
+                venue: "LKA Longhorn",
+                event_description: "Aus parsed",
+                venue_description: "Venue eins"
+              )
+            )
+          ]
+        )
+
+        build_importer(client: client).call
+
+        assert_equal "Aus parsed", event.reload.llm_enrichment.event_description
+      end
+
+      test "uses output_text from responses content when parsed payload is absent" do
+        event = events(:published_one)
+        @run.update!(metadata: @run.metadata.merge("target_event_id" => event.id, "refresh_existing" => true))
+        payload = response_payload_for(
+          event_id: event.id,
+          genre: [ "Indie" ],
+          venue: "LKA Longhorn",
+          event_description: "Aus output_text",
+          venue_description: "Venue eins"
+        )
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "output" => [
+                {
+                  "content" => [
+                    {
+                      "type" => "output_text",
+                      "text" => payload.to_json
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        )
+
+        build_importer(client: client).call
+
+        assert_equal "Aus output_text", event.reload.llm_enrichment.event_description
+      end
+
+      test "raises a clear error for responses api refusals" do
+        event = events(:published_one)
+        @run.update!(metadata: @run.metadata.merge("target_event_id" => event.id, "refresh_existing" => true))
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "output" => [
+                {
+                  "content" => [
+                    {
+                      "type" => "refusal",
+                      "refusal" => "Cannot enrich this event."
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        )
+
+        error = assert_raises(Importer::Error) do
+          build_importer(client: client).call
+        end
+
+        assert_equal "OpenAI-Antwort wurde verweigert: Cannot enrich this event.", error.message
+      end
+
+      test "raises a clear error for incomplete responses api results" do
+        event = events(:published_one)
+        @run.update!(metadata: @run.metadata.merge("target_event_id" => event.id, "refresh_existing" => true))
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            {
+              "status" => "incomplete",
+              "output" => []
+            }
+          ]
+        )
+
+        error = assert_raises(Importer::Error) do
+          build_importer(client: client).call
+        end
+
+        assert_equal "OpenAI-Antwort wurde nicht abgeschlossen: incomplete", error.message
+      end
+
       test "runs successfully with zero api calls when no future events need enrichment" do
         [ events(:published_one), events(:needs_review_one), events(:needs_review_two) ].each do |event|
           EventLlmEnrichment.create!(
@@ -703,10 +822,10 @@ module Importing
         venue_address: nil
       )
         {
-          "output_text" => {
+          "output_text" => response_payload_for(
             event_id: event_id,
+            genre: genre,
             genres: genres,
-            sub_genres: genre,
             venue: venue,
             event_description: event_description,
             venue_description: venue_description,
@@ -716,8 +835,55 @@ module Importing
             youtube_link: youtube_link,
             venue_external_url: venue_external_url,
             venue_address: venue_address
-          }.to_json
+          ).to_json
         }
+      end
+
+      def response_payload_for(
+        event_id:,
+        genre:,
+        genres: [ "Pop, Indie & Singer-Songwriter" ],
+        venue:,
+        event_description:,
+        venue_description:,
+        homepage_link: nil,
+        instagram_link: nil,
+        facebook_link: nil,
+        youtube_link: nil,
+        venue_external_url: nil,
+        venue_address: nil
+      )
+        {
+          event_id: event_id,
+          genres: genres,
+          sub_genres: genre,
+          venue: venue,
+          event_description: event_description,
+          venue_description: venue_description,
+          homepage_link: homepage_link,
+          instagram_link: instagram_link,
+          facebook_link: facebook_link,
+          youtube_link: youtube_link,
+          venue_external_url: venue_external_url,
+          venue_address: venue_address
+        }
+      end
+
+      def parsed_response_object_for(payload)
+        content_class = Struct.new(:type, :parsed)
+        output_item_class = Struct.new(:content)
+        response_class = Struct.new(:status, :output)
+
+        response_class.new(
+          "completed",
+          [
+            output_item_class.new(
+              [
+                content_class.new(:output_text, payload)
+              ]
+            )
+          ]
+        )
       end
 
       def search_context_result(**field_candidates)

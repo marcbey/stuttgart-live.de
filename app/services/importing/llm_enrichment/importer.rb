@@ -7,7 +7,6 @@ module Importing
       RUN_HEARTBEAT_STALE_AFTER = 10.minutes
       EVENT_INFO_MAX_LENGTH = 1000
       PROMPT_VERSION = "v9"
-      OUTPUT_SCHEMA_NAME = "event_llm_enrichment".freeze
       SEARCH_LINK_FIELDS = %i[youtube_link instagram_link homepage_link facebook_link].freeze
       VALIDATED_LINK_FIELDS = %i[venue_external_url].freeze
       META_GENRE_TERMS = [
@@ -241,56 +240,12 @@ module Importing
       end
 
       def output_format
-        {
-          type: "json_schema",
-          name: OUTPUT_SCHEMA_NAME,
-          strict: true,
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            required: %w[
-              event_id
-              genres
-              sub_genres
-              venue
-              event_description
-              venue_description
-              venue_external_url
-              venue_address
-              youtube_link
-              instagram_link
-              homepage_link
-              facebook_link
-            ],
-            properties: {
-              event_id: { type: "integer" },
-              genres: {
-                type: "array",
-                minItems: 1,
-                maxItems: 3,
-                items: { type: "string", enum: Genre::STATIC_NAMES }
-              },
-              sub_genres: {
-                type: "array",
-                minItems: 1,
-                maxItems: 4,
-                items: { type: "string" }
-              },
-              venue: { type: [ "string", "null" ] },
-              event_description: { type: [ "string", "null" ] },
-              venue_description: { type: [ "string", "null" ] },
-              venue_external_url: { type: [ "string", "null" ] },
-              venue_address: { type: [ "string", "null" ] },
-              youtube_link: { type: [ "string", "null" ] },
-              instagram_link: { type: [ "string", "null" ] },
-              homepage_link: { type: [ "string", "null" ] },
-              facebook_link: { type: [ "string", "null" ] }
-            }
-          }
-        }
+        OutputSchema.format
       end
 
       def extract_payload!(response)
+        raise_response_failure!(response)
+
         parsed_payload = extract_parsed_payload(response)
         return extract_item_payload(parsed_payload) if parsed_payload.present?
 
@@ -302,6 +257,31 @@ module Importing
       rescue JSON::ParserError => e
         logger.error("[LlmEnrichmentImporter] run_id=#{run.id} invalid json response=#{safe_response_dump(response)}")
         raise Error, "OpenAI-Antwort enthält ungültiges JSON: #{e.message}"
+      end
+
+      def raise_response_failure!(response)
+        status = response_value(response, :status).to_s
+        raise Error, "OpenAI-Antwort wurde nicht abgeschlossen: #{status}" if %w[failed incomplete canceled cancelled].include?(status)
+
+        refusal = extract_refusal(response)
+        raise Error, "OpenAI-Antwort wurde verweigert: #{refusal}" if refusal.present?
+      end
+
+      def extract_refusal(response)
+        return response_value(response, :refusal).to_s.presence if response_value(response, :refusal).present?
+
+        response_output_items(response).each do |item|
+          response_content_items(item).each do |content|
+            next unless response_value(content, :type).to_s == "refusal"
+
+            return response_value(content, :refusal).to_s.presence ||
+              response_value(content, :text).to_s.presence ||
+              response_value(content, :content).to_s.presence ||
+              "ohne Begründung"
+          end
+        end
+
+        nil
       end
 
       def extract_item_payload(payload)
@@ -317,11 +297,9 @@ module Importing
       end
 
       def extract_parsed_payload_from_object(response)
-        Array(response.output).each do |item|
-          next unless item.respond_to?(:content)
-
-          Array(item.content).each do |content|
-            next unless content.respond_to?(:type) && content.type.to_sym == :output_text
+        response_output_items(response).each do |item|
+          response_content_items(item).each do |content|
+            next unless response_value(content, :type).to_s == "output_text"
 
             parsed = content.respond_to?(:parsed) ? content.parsed : nil
             next if parsed.blank?
@@ -334,11 +312,11 @@ module Importing
       end
 
       def extract_parsed_payload_from_hash(response)
-        Array(response["output"]).each do |item|
-          Array(item["content"]).each do |content|
-            next unless content["type"].to_s == "output_text"
+        response_output_items(response).each do |item|
+          response_content_items(item).each do |content|
+            next unless response_value(content, :type).to_s == "output_text"
 
-            parsed = content["parsed"] || content[:parsed]
+            parsed = response_value(content, :parsed)
             return parsed if parsed.present?
           end
         end
@@ -349,14 +327,35 @@ module Importing
       def extract_output_text(response)
         return response.output_text.to_s if response.respond_to?(:output_text)
 
-        response["output_text"].to_s.presence || extract_output_text_from_hash_content(response)
+        response_value(response, :output_text).to_s.presence || extract_output_text_from_content(response)
       end
 
-      def extract_output_text_from_hash_content(response)
-        Array(response["output"]).flat_map { |item| Array(item["content"]) }
-          .find { |content| content["type"] == "output_text" }
-          &.fetch("text", "")
-          .to_s
+      def extract_output_text_from_content(response)
+        response_output_items(response).each do |item|
+          response_content_items(item).each do |content|
+            next unless response_value(content, :type).to_s == "output_text"
+
+            return response_value(content, :text).to_s
+          end
+        end
+
+        ""
+      end
+
+      def response_output_items(response)
+        Array(response_value(response, :output))
+      end
+
+      def response_content_items(item)
+        Array(response_value(item, :content))
+      end
+
+      def response_value(object, key)
+        return object.public_send(key) if object.respond_to?(key)
+        return object[key.to_s] if object.is_a?(Hash) && object.key?(key.to_s)
+        return object[key.to_sym] if object.is_a?(Hash) && object.key?(key.to_sym)
+
+        nil
       end
 
       def safe_response_dump(response)
