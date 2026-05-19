@@ -349,7 +349,7 @@ export default class extends Controller {
 
     const script = document.createElement("script")
     script.async = true
-    script.src = "https://connect.facebook.net/en_US/fbevents.js"
+    script.src = "https://connect.facebook.net/de_DE/fbevents.js"
     script.dataset.metaPixelId = this.metaPixelIdValue
     document.head.appendChild(script)
   }
