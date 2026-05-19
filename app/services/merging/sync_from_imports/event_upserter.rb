@@ -195,7 +195,7 @@ module Merging
       end
 
       def build_offer_attributes(records)
-        records.map do |record|
+        unique_offer_records(records).map do |record|
           {
             source: record.source,
             source_event_id: record.external_event_id,
@@ -205,6 +205,12 @@ module Merging
             priority_rank: priority_for(record.source),
             metadata: build_offer_metadata(record)
           }
+        end
+      end
+
+      def unique_offer_records(records)
+        records.uniq do |record|
+          [ record.source.to_s, record.external_event_id.to_s ]
         end
       end
 

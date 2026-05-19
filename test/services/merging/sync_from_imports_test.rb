@@ -117,8 +117,72 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     event = Event.find_by!(artist_name: "Starbenders", start_at: Time.zone.local(2026, 6, 16, 20, 0, 0))
     offer = event.event_offers.find_by!(source: "easyticket")
 
-    assert_equal "104364", offer.source_event_id
+    assert_equal "105758", offer.source_event_id
     assert_equal "https://tickets.example/event/105758", offer.ticket_url
+  end
+
+  test "keeps easyticket occurrences with shared event id as separate event series dates" do
+    source_easyticket = import_sources(:one)
+
+    [
+      [ "105508", "2026-12-19 14:30:00" ],
+      [ "105509", "2026-12-19 19:30:00" ]
+    ].each do |occurrence_id, date_time|
+      RawEventImport.create!(
+        import_source: source_easyticket,
+        import_event_type: "easyticket",
+        source_identifier: occurrence_id,
+        payload: {
+          "id" => occurrence_id,
+          "event_id" => "62597",
+          "date_time" => date_time,
+          "loc_city" => "Stuttgart",
+          "loc_name" => "Cannstatter Wasen",
+          "title_1" => "Weltweihnachtscircus 2026/2027",
+          "title_2" => "Weltweihnachtscircus 2026/2027",
+          "data" => {
+            "images" => {
+              "62597" => {
+                "large" => "https://example.com/weltweihnachtscircus.jpg"
+              }
+            }
+          }
+        }
+      )
+    end
+    RawEventImport.create!(
+      import_source: source_easyticket,
+      import_event_type: "easyticket",
+      source_identifier: "62597:2026-12-19",
+      payload: {
+        "id" => "105509",
+        "event_id" => "62597",
+        "date_time" => "2026-12-19 19:30:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Cannstatter Wasen",
+        "title_1" => "Weltweihnachtscircus 2026/2027",
+        "title_2" => "Weltweihnachtscircus 2026/2027",
+        "data" => {
+          "images" => {
+            "62597" => {
+              "large" => "https://example.com/weltweihnachtscircus.jpg"
+            }
+          }
+        }
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+
+    assert_equal 2, result.groups_count
+
+    events = Event.where(artist_name: "Weltweihnachtscircus 2026/2027").order(:start_at).to_a
+    assert_equal 2, events.size
+    assert_equal [ "105508", "105509" ], events.map { |event| event.event_offers.find_by!(source: "easyticket").source_event_id }
+    assert_equal [ 1, 1 ], events.map { |event| event.event_offers.where(source: "easyticket").count }
+    assert_equal [ Time.zone.local(2026, 12, 19, 14, 30, 0), Time.zone.local(2026, 12, 19, 19, 30, 0) ], events.map(&:start_at)
+    assert_equal 1, events.map(&:event_series_id).uniq.size
+    assert_equal "62597", events.first.event_series.source_key
   end
 
   test "persists canceled availability from eventim status codes separately from sold out" do

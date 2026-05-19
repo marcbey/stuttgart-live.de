@@ -167,6 +167,9 @@ module Importing
       end
 
       def source_identifier_for(dump_payload, event_id:)
+        occurrence_id = dump_payload["id"].to_s.strip.presence
+        return occurrence_id if occurrence_id.present?
+
         date_token =
           parse_concert_date_from_dump(dump_payload)&.iso8601 ||
           dump_payload["date"].to_s.strip.presence ||

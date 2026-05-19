@@ -7,6 +7,8 @@ module Importing
         normalized_payload = payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
 
         case source_type.to_s
+        when "easyticket"
+          easyticket_reference(normalized_payload)
         when "eventim"
           eventim_reference(normalized_payload)
         when "reservix"
@@ -15,6 +17,19 @@ module Importing
       end
 
       private
+
+      def easyticket_reference(payload)
+        source_key = payload["event_id"].to_s.strip.presence
+        return if source_key.blank?
+
+        Result.new(
+          source_type: "easyticket",
+          source_key: source_key,
+          name: payload["title_1"].to_s.strip.presence ||
+            payload.dig("data", "event", "title_1").to_s.strip.presence ||
+            payload["title"].to_s.strip.presence
+        )
+      end
 
       def eventim_reference(payload)
         source_key = payload["esid"].to_s.strip.presence

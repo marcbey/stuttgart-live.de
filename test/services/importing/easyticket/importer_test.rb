@@ -84,6 +84,34 @@ module Importing
         assert_equal({}, imported.detail_payload)
       end
 
+      test "uses easyticket occurrence id as source identifier when present" do
+        dump_events = [
+          {
+            "id" => "105508",
+            "event_id" => "62597",
+            "date_time" => "2026-12-19 14:30:00",
+            "location_name" => "Cannstatter Wasen Stuttgart",
+            "title_1" => "Weltweihnachtscircus 2026/2027"
+          },
+          {
+            "id" => "105509",
+            "event_id" => "62597",
+            "date_time" => "2026-12-19 19:30:00",
+            "location_name" => "Cannstatter Wasen Stuttgart",
+            "title_1" => "Weltweihnachtscircus 2026/2027"
+          }
+        ]
+
+        Importer.new(
+          import_source: @source,
+          dump_fetcher: StubDumpFetcher.new(dump_events),
+          detail_fetcher: StubDetailFetcher.new({})
+        ).call
+
+        assert RawEventImport.exists?(source_identifier: "105508")
+        assert RawEventImport.exists?(source_identifier: "105509")
+      end
+
       test "does not start a second run while one is already active" do
         active_run = @source.import_runs.create!(
           status: "running",
