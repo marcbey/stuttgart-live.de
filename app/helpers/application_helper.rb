@@ -113,6 +113,12 @@ module ApplicationHelper
     Rails.configuration.x.google_analytics_measurement_id.to_s.strip.presence
   end
 
+  def meta_pixel_id
+    return unless google_analytics_allowed_host?
+
+    Rails.configuration.x.meta_pixel_id.to_s.strip.presence
+  end
+
   def local_font_face_rule(family:, weight:, logical_path:)
     <<~CSS.html_safe
       @font-face {
@@ -127,6 +133,10 @@ module ApplicationHelper
 
   def google_analytics_enabled?
     google_analytics_measurement_id.present?
+  end
+
+  def meta_pixel_enabled?
+    meta_pixel_id.present?
   end
 
   def google_analytics_allowed_host?

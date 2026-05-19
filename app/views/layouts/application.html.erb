@@ -70,6 +70,9 @@
     data-controller="<%= body_controllers.join(" ") %>"
     <% if !controller_path.start_with?("backend/") && google_analytics_enabled? %>
       data-consent-measurement-id-value="<%= google_analytics_measurement_id %>"
+    <% end %>
+    <% if frontend_context && meta_pixel_enabled? %>
+      data-consent-meta-pixel-id-value="<%= meta_pixel_id %>"
     <% end %>>
     <% nav_inner_classes = [ "app-nav-inner" ] %>
     <% nav_inner_classes << "app-nav-inner-backend" if backend_context %>

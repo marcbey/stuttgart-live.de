@@ -9,7 +9,7 @@ const DEFAULT_PREFERENCES = {
 
 export default class extends Controller {
   static targets = ["banner", "dialog", "panel", "analyticsInput", "mediaInput", "closeButton"]
-  static values = { measurementId: String }
+  static values = { measurementId: String, metaPixelId: String }
 
   connect() {
     this.trackPageView = this.trackPageView.bind(this)
@@ -79,16 +79,22 @@ export default class extends Controller {
   }
 
   trackPageView() {
-    if (!this.analyticsEnabled()) return
+    if (!this.analyticsConsentGranted()) return
 
     const currentLocation = `${window.location.pathname}${window.location.search}`
     if (window.StuttgartLiveLastTrackedLocation === currentLocation) return
 
-    window.gtag("event", "page_view", {
-      page_title: document.title,
-      page_location: window.location.href,
-      page_path: currentLocation
-    })
+    if (this.googleAnalyticsEnabled()) {
+      window.gtag("event", "page_view", {
+        page_title: document.title,
+        page_location: window.location.href,
+        page_path: currentLocation
+      })
+    }
+
+    if (this.metaPixelEnabled()) {
+      window.fbq("track", "PageView")
+    }
 
     window.StuttgartLiveLastTrackedLocation = currentLocation
   }
@@ -263,20 +269,38 @@ export default class extends Controller {
     }
   }
 
-  analyticsEnabled() {
+  analyticsConsentGranted() {
+    return this.preferences.analytics
+  }
+
+  googleAnalyticsEnabled() {
     return this.hasMeasurementIdValue && this.measurementIdValue.length > 0 && this.preferences.analytics
   }
 
-  updateAnalytics() {
-    if (!this.hasMeasurementIdValue) return
+  metaPixelEnabled() {
+    return this.hasMetaPixelIdValue && this.metaPixelIdValue.length > 0 && this.preferences.analytics
+  }
 
-    const disabledKey = `ga-disable-${this.measurementIdValue}`
-    window[disabledKey] = !this.preferences.analytics
+  updateAnalytics() {
+    if (this.hasMeasurementIdValue) {
+      const disabledKey = `ga-disable-${this.measurementIdValue}`
+      window[disabledKey] = !this.preferences.analytics
+    }
+
+    this.updateMetaPixelConsent()
 
     if (!this.preferences.analytics) return
 
-    this.loadAnalyticsScript()
-    this.configureAnalytics()
+    if (this.hasMeasurementIdValue) {
+      this.loadAnalyticsScript()
+      this.configureAnalytics()
+    }
+
+    if (this.hasMetaPixelIdValue) {
+      this.loadMetaPixelScript()
+      this.configureMetaPixel()
+    }
+
     this.trackPageView()
   }
 
@@ -309,5 +333,59 @@ export default class extends Controller {
     })
 
     window.StuttgartLiveGaConfiguredId = this.measurementIdValue
+  }
+
+  loadMetaPixelScript() {
+    this.ensureMetaPixel()
+
+    if (
+      window.StuttgartLiveMetaPixelScriptRequested ||
+      document.querySelector(`[data-meta-pixel-id="${this.metaPixelIdValue}"]`)
+    ) {
+      return
+    }
+
+    window.StuttgartLiveMetaPixelScriptRequested = true
+
+    const script = document.createElement("script")
+    script.async = true
+    script.src = "https://connect.facebook.net/en_US/fbevents.js"
+    script.dataset.metaPixelId = this.metaPixelIdValue
+    document.head.appendChild(script)
+  }
+
+  configureMetaPixel() {
+    this.ensureMetaPixel()
+
+    if (window.StuttgartLiveMetaPixelConfiguredId === this.metaPixelIdValue) return
+
+    window.fbq("init", this.metaPixelIdValue)
+    window.StuttgartLiveMetaPixelConfiguredId = this.metaPixelIdValue
+  }
+
+  updateMetaPixelConsent() {
+    if (!window.fbq) return
+
+    window.fbq("consent", this.preferences.analytics ? "grant" : "revoke")
+  }
+
+  ensureMetaPixel() {
+    if (window.fbq) return
+
+    const fbq = function fbq() {
+      if (fbq.callMethod) {
+        fbq.callMethod.apply(fbq, arguments)
+      } else {
+        fbq.queue.push(arguments)
+      }
+    }
+    fbq.push = fbq
+    fbq.loaded = true
+    fbq.version = "2.0"
+    fbq.queue = []
+    window.fbq = fbq
+    window._fbq = fbq
+
+    this.updateMetaPixelConsent()
   }
 }
