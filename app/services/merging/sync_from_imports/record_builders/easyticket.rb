@@ -16,7 +16,8 @@ module Merging
         end
 
         def external_event_id
-          projected_attributes[:external_event_id].to_s.strip.presence ||
+          payload["id"].to_s.strip.presence ||
+            projected_attributes[:external_event_id].to_s.strip.presence ||
             source_identifier.split(":").first.to_s.strip
         end
 

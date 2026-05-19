@@ -11,7 +11,7 @@ module Events
         event = create_event
         offer = event.event_offers.create!(
           source: "easyticket",
-          source_event_id: "62721",
+          source_event_id: "105758",
           ticket_url: "https://partnershop.easyticket.de/shop/event/The Beast Goes On",
           ticket_price_text: "24,95 EUR",
           priority_rank: 0
@@ -35,7 +35,7 @@ module Events
         event = create_event
         offer = event.event_offers.create!(
           source: "easyticket",
-          source_event_id: "62721",
+          source_event_id: "105758",
           ticket_url: "https://partnershop.easyticket.de/shop/event/The Beast Goes On",
           priority_rank: 0
         )
@@ -51,6 +51,28 @@ module Events
           assert result.dry_run
           assert_equal 1, result.updated_count
           assert_equal "https://partnershop.easyticket.de/shop/event/The Beast Goes On", offer.reload.ticket_url
+        end
+      end
+
+      test "matches raw imports by occurrence source event id" do
+        event = create_event
+        offer = event.event_offers.create!(
+          source: "easyticket",
+          source_event_id: "105758",
+          ticket_url: "https://partnershop.easyticket.de/shop/event/old",
+          priority_rank: 0
+        )
+        raw_import = create_raw_import
+
+        with_easyticket_ticket_base_url("https://partnershop.easyticket.de/shop/event/{event_id}") do
+          result = EasyticketTicketUrlRepairer.call(
+            offer_relation: EventOffer.where(id: offer.id),
+            raw_import_relation: RawEventImport.where(id: raw_import.id)
+          )
+
+          assert_equal 1, result.checked_count
+          assert_equal 1, result.updated_count
+          assert_equal "https://partnershop.easyticket.de/shop/event/105758", offer.reload.ticket_url
         end
       end
 
@@ -90,7 +112,7 @@ module Events
         RawEventImport.create!(
           import_source: import_sources(:one),
           import_event_type: "easyticket",
-          source_identifier: "62721:2026-06-16",
+          source_identifier: "105758",
           payload: {
             "id" => "105758",
             "event_id" => "62721",

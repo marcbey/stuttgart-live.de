@@ -74,14 +74,20 @@ module Events
       end
 
       def raw_import_for(offer)
-        source_identifier = source_identifier_for(offer)
-        raw_imports_by_source_identifier[source_identifier] if source_identifier.present?
+        source_identifiers_for(offer).lazy.filter_map do |source_identifier|
+          raw_imports_by_source_identifier[source_identifier]
+        end.first
       end
 
-      def source_identifier_for(offer)
-        return if offer.source_event_id.blank? || offer.event&.start_at.blank?
+      def source_identifiers_for(offer)
+        source_event_id = offer.source_event_id.to_s.strip
+        return [] if source_event_id.blank?
 
-        "#{offer.source_event_id}:#{offer.event.start_at.to_date.iso8601}"
+        identifiers = [ source_event_id ]
+        if offer.event&.start_at.present?
+          identifiers << "#{source_event_id}:#{offer.event.start_at.to_date.iso8601}"
+        end
+        identifiers
       end
 
       def raw_imports_by_source_identifier
