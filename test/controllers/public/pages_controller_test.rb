@@ -136,9 +136,10 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".site-footer-nav a", text: "Barrierefreiheit"
     assert_select "#site-footer > .privacy-settings-button[aria-label='Datenschutzeinstellungen öffnen']", count: 1
     assert_includes response.body, "Google Analytics"
+    assert_includes response.body, "Meta Pixel"
   end
 
-  test "google analytics measurement id is only exposed on configured production hosts" do
+  test "analytics ids are only exposed on configured production hosts" do
     with_allowed_hosts("stuttgart-live.de", "stuttgart-live.schopp3r.de", "preview.example.com") do
       host! "preview.example.com"
       get events_path
@@ -146,18 +147,21 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
       assert_response :success
       assert_includes response.body, 'data-controller="consent scroll-top"'
       assert_not_includes response.body, 'data-consent-measurement-id-value="G-SHSNVVEKL8"'
+      assert_not_includes response.body, 'data-consent-meta-pixel-id-value="841645720192467"'
 
       host! "stuttgart-live.de"
       get events_path
 
       assert_response :success
       assert_includes response.body, 'data-consent-measurement-id-value="G-SHSNVVEKL8"'
+      assert_includes response.body, 'data-consent-meta-pixel-id-value="841645720192467"'
 
       host! "stuttgart-live.schopp3r.de"
       get events_path
 
       assert_response :success
       assert_includes response.body, 'data-consent-measurement-id-value="G-SHSNVVEKL8"'
+      assert_includes response.body, 'data-consent-meta-pixel-id-value="841645720192467"'
     end
   end
 

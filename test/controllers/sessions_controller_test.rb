@@ -18,6 +18,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
     assert_not_includes response.body, ActionController::Base.helpers.asset_path("bebas-neue-400.woff2")
+    assert_not_includes response.body, 'data-consent-meta-pixel-id-value="841645720192467"'
     assert_select "body.page-auth-backoffice"
     assert_select ".app-nav-inner.app-nav-inner-backend.app-nav-inner-auth-backoffice", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Login"

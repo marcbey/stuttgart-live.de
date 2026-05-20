@@ -33,6 +33,7 @@ module StuttgartLiveDe
         :mini_magick
       end
     config.x.google_analytics_measurement_id = "G-SHSNVVEKL8"
+    config.x.meta_pixel_id = "841645720192467"
     config.x.mailer_from = "Stuttgart Live <no-reply@stuttgart-live.schopp3r.de>"
     config.x.openai.llm_enrichment_model = ENV["OPENAI_LLM_ENRICHMENT_MODEL"].to_s.strip.presence || "gpt-5.1"
     config.x.media_proxy.enabled = ProductionServerConfig.media_proxy_enabled?
