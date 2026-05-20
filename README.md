@@ -610,6 +610,12 @@ Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bl
 Die produktive öffentliche Domain, die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
 Die Datei bleibt bewusst außerhalb des Docker-Build-Kontexts; Kamal setzt `APP_HOST` daraus zur Laufzeit in den Produktions-Container.
 
+### Staging und Suchindex
+
+Die Staging-Domain `https://stuttgart-live.schopp3r.de/` wird in der Hetzner-Deployment-Konfiguration mit `STAGING_NOINDEX=true` ausgeliefert. `nginx` setzt dadurch global den Header `X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien und den Healthcheck `/up`. `robots.txt` wird dafür bewusst nicht gesperrt, damit Google das `noindex` crawlen kann.
+
+Die Search-Console-Verifizierung läuft über die HTML-Datei [public/google8f1bf564d79d9e2c.html](/Users/marc/Projects/stuttgart-live.de/public/google8f1bf564d79d9e2c.html). Nach einem Deploy muss sie unter `https://stuttgart-live.schopp3r.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Erst danach die URL-Präfix-Property `https://stuttgart-live.schopp3r.de/` in der Search Console bestätigen, die temporäre Entfernung beantragen und anschließend Basic Auth aktivieren.
+
 ### Was lokal wichtig ist
 
 Für manuelle Produktions-Kommandos brauchst du lokal:

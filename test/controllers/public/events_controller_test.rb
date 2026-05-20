@@ -2064,42 +2064,44 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "homepage lane endpoint renders rows and rejects invalid cursors" do
-    _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    travel_to Time.zone.local(2026, 5, 1, 12, 0, 0) do
+      _, rock_group, = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 
-    16.times do |index|
-      Event.create!(
-        slug: "homepage-lane-endpoint-row-#{index}",
-        source_fingerprint: "test::public::homepage-lane-endpoint::row::#{index}",
-        title: "Homepage Lane Endpoint Row #{index}",
-        artist_name: "Homepage Lane Endpoint Row Artist #{index}",
-        start_at: (index + 2).days.from_now.change(hour: 19, min: 0, sec: 0),
-        venue: "Club Zentral",
-        city: "Stuttgart",
-        status: "published",
-        published_at: 1.day.ago,
-        source_snapshot: {}
-      ).tap do |event|
-        build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+      16.times do |index|
+        Event.create!(
+          slug: "homepage-lane-endpoint-row-#{index}",
+          source_fingerprint: "test::public::homepage-lane-endpoint::row::#{index}",
+          title: "Homepage Lane Endpoint Row #{index}",
+          artist_name: "Homepage Lane Endpoint Row Artist #{index}",
+          start_at: (index + 2).days.from_now.change(hour: 19, min: 0, sec: 0),
+          venue: "Club Zentral",
+          city: "Stuttgart",
+          status: "published",
+          published_at: 1.day.ago,
+          source_snapshot: {}
+        ).tap do |event|
+          build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+        end
       end
+
+      get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", mode: "rows")
+
+      assert_response :success
+      assert_select "article.event-listing-card", count: 10
+      assert_predicate response.headers["X-Homepage-Lane-Next-Cursor"], :present?
+      next_cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
+
+      get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: next_cursor, mode: "rows", per_page: 2)
+
+      assert_response :success
+      assert_select "article.event-listing-card", count: 2
+      assert_includes response.body, "Homepage Lane Endpoint Row Artist 10"
+      assert_includes response.body, "Homepage Lane Endpoint Row Artist 11"
+
+      get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: "invalid")
+
+      assert_response :bad_request
     end
-
-    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", mode: "rows")
-
-    assert_response :success
-    assert_select "article.event-listing-card", count: 10
-    assert_predicate response.headers["X-Homepage-Lane-Next-Cursor"], :present?
-    next_cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
-
-    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: next_cursor, mode: "rows", per_page: 2)
-
-    assert_response :success
-    assert_select "article.event-listing-card", count: 2
-    assert_select "article.event-listing-card", text: /Homepage Lane Endpoint Row Artist 10/
-    assert_select "article.event-listing-card", text: /Homepage Lane Endpoint Row Artist 11/
-
-    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", cursor: "invalid")
-
-    assert_response :bad_request
   end
 
   test "index keeps the event series badge in all events slider when the second series event is outside the limit" do
