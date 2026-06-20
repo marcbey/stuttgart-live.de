@@ -201,9 +201,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     rock_names = rock_section.css(".genre-lane-card-name").map(&:text)
 
     assert_equal [ pop_event.artist_name ], pop_names
-    assert_equal [ regular_event.artist_name, sks_event.artist_name, highlighted_event.artist_name ], rock_names.first(3)
+    assert_empty rock_names
+    assert_equal "true", rock_section["data-homepage-lane-deferred-value"]
     assert_not_includes rock_names, unpublished_event.artist_name
     assert_not_includes rock_names, past_event.artist_name
+
+    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    lazy_rock_names = document.css(".genre-lane-card-name").map(&:text)
+
+    assert_equal [ regular_event.artist_name, sks_event.artist_name, highlighted_event.artist_name ], lazy_rock_names.first(3)
+    assert_not_includes lazy_rock_names, unpublished_event.artist_name
+    assert_not_includes lazy_rock_names, past_event.artist_name
   end
 
   test "index does not render homepage genre lanes without selected snapshot" do
@@ -213,6 +224,82 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".genre-lane-section", count: 0
+  end
+
+  test "index defers lower homepage lanes from the initial payload" do
+    _base_group, rock_group, _pop_group = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
+    genre_event = Event.create!(
+      slug: "deferred-homepage-rock-event",
+      source_fingerprint: "test::homepage::deferred::rock",
+      title: "Deferred Homepage Rock",
+      artist_name: "Deferred Homepage Rock Artist",
+      start_at: future_start,
+      venue: "Club Cann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    all_stuttgart_event = Event.create!(
+      slug: "deferred-homepage-all-stuttgart-event",
+      source_fingerprint: "test::homepage::deferred::all-stuttgart",
+      title: "Deferred Homepage All Stuttgart",
+      artist_name: "Deferred Homepage All Stuttgart Artist",
+      start_at: future_start + 1.hour,
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    tagestipp_event = Event.create!(
+      slug: "deferred-homepage-tagestipp-event",
+      source_fingerprint: "test::homepage::deferred::tagestipp",
+      title: "Deferred Homepage Tagestipp",
+      artist_name: "Deferred Homepage Tagestipp Artist",
+      start_at: Time.zone.today.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
+    build_homepage_genre_enrichment(event: genre_event, genres: [ "Rock" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    rock_section = document.css("section.genre-lane-section").find { |section| section.at_css("h2")&.text == rock_group.name }
+    all_stuttgart_section = document.css("section.genre-lane-section").find { |section| section.at_css("h2")&.text == "alles aus stuttgart" }
+    tagestipp_section = document.css("section.genre-lane-section").find { |section| section.at_css("h2")&.text == "Tagestipp" }
+
+    assert rock_section.present?, "expected first configured genre lane to stay in the initial payload"
+    assert all_stuttgart_section.present?, "expected all Stuttgart lane shell"
+    assert tagestipp_section.present?, "expected Tagestipp lane shell"
+    assert_nil rock_section["data-homepage-lane-deferred-value"]
+    assert_equal "true", all_stuttgart_section["data-homepage-lane-deferred-value"]
+    assert_equal "true", tagestipp_section["data-homepage-lane-deferred-value"]
+    assert_includes rock_section.css(".genre-lane-card-name").map(&:text), genre_event.artist_name
+    assert_empty all_stuttgart_section.css(".genre-lane-card-name")
+    assert_empty tagestipp_section.css(".genre-lane-card-name")
+    assert_not_includes all_stuttgart_section.text, all_stuttgart_event.artist_name
+    assert_not_includes tagestipp_section.text, tagestipp_event.artist_name
+
+    get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
+
+    assert_response :success
+    assert_includes response.body, all_stuttgart_event.artist_name
+
+    get homepage_lane_events_url(lane: "tagestipp", filter: "all")
+
+    assert_response :success
+    assert_includes response.body, tagestipp_event.artist_name
   end
 
   test "index does not render homepage genre tag cloud while disabled" do
@@ -891,15 +978,27 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert highlights_section.present?, "expected Highlights section to be rendered"
     assert all_events_section.present?, "expected all events section to be rendered"
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
+    assert_equal "true", all_events_section["data-homepage-lane-deferred-value"]
+    assert_equal "true", tagestipp_section["data-homepage-lane-deferred-value"]
 
     highlight_names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
-    all_event_names = all_events_section.css(".genre-lane-card-name").map(&:text)
-    tagestipp_names = tagestipp_section.css(".genre-lane-card-name").map(&:text)
 
     assert_includes highlight_names, published_highlight.artist_name
     assert_not_includes highlight_names, unpublished_highlight.artist_name
+
+    get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
+
+    assert_response :success
+    all_event_names = Nokogiri::HTML.parse(response.body).css(".genre-lane-card-name").map(&:text)
+
     assert_includes all_event_names, published_slider.artist_name
     assert_not_includes all_event_names, unpublished_slider.artist_name
+
+    get homepage_lane_events_url(lane: "tagestipp", filter: "all")
+
+    assert_response :success
+    tagestipp_names = Nokogiri::HTML.parse(response.body).css(".genre-lane-card-name").map(&:text)
+
     assert_includes tagestipp_names, published_tagestipp.artist_name
     assert_not_includes tagestipp_names, unpublished_tagestipp.artist_name
   end
@@ -1896,17 +1995,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".lane-header.lane-header--editorial", count: 1
-    assert_select "section.genre-lane-section", text: /alles aus stuttgart/ do
-      assert_select ".genre-lane-card-name", text: reservix_event.artist_name
-      assert_select ".genre-lane-card-name", text: late_reservix_event.artist_name, count: 0
-      assert_select ".genre-lane-card-name", text: eventim_event.artist_name, count: 0
-    end
 
     document = Nokogiri::HTML.parse(response.body)
     all_stuttgart_section = document.css("section.genre-lane-section").find do |section|
       section.at_css("h2")&.text == "alles aus stuttgart"
     end
-    next_cursor = all_stuttgart_section["data-homepage-lane-cursor-value"]
+
+    assert_equal "true", all_stuttgart_section["data-homepage-lane-deferred-value"]
+
+    get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
+
+    assert_response :success
+    assert_includes response.body, reservix_event.artist_name
+    assert_not_includes response.body, late_reservix_event.artist_name
+    assert_not_includes response.body, eventim_event.artist_name
+
+    next_cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
 
     get homepage_lane_events_url(lane: "all_stuttgart", cursor: next_cursor, filter: "all")
 
@@ -1949,14 +2053,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert slider_section.present?, "expected all events slider section to be rendered"
+    assert_equal "true", slider_section["data-homepage-lane-deferred-value"]
+    assert_equal 4, slider_section.css(".homepage-lane-initial-placeholder").size
 
-    names = slider_section.css(".genre-lane-card-name").map(&:text)
+    get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
+
+    assert_response :success
+    names = Nokogiri::HTML.parse(response.body).css(".genre-lane-card-name").map(&:text)
 
     assert_equal 10, names.size
     assert_includes names, included_event_names.first
     assert_includes names, included_event_names.last
     assert_not_includes names, excluded_event_name
-    assert_select "section[data-controller~='homepage-lane'][data-homepage-lane-lane-value='all_stuttgart']", count: 1
+    assert_includes slider_section["data-controller"], "homepage-lane"
+    assert_equal "all_stuttgart", slider_section["data-homepage-lane-lane-value"]
     assert_select ".homepage-lane-load-link", count: 0
   end
 
@@ -2186,8 +2296,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert slider_section.present?, "expected all events slider section to be rendered"
+    assert_equal "true", slider_section["data-homepage-lane-deferred-value"]
 
-    target_card = slider_section.css("article.genre-lane-card").find do |card|
+    get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    target_card = document.css("article.genre-lane-card").find do |card|
       card.at_css(".genre-lane-card-name")&.text == target_event.artist_name
     end
 
@@ -2361,8 +2476,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
     assert tagestipp_section.at_css(".lane-header.lane-header--tagestipp").present?, "expected Tagestipp header variant"
+    assert_equal "true", tagestipp_section["data-homepage-lane-deferred-value"]
 
-    names = tagestipp_section.css(".genre-lane-card-name").map(&:text)
+    get homepage_lane_events_url(lane: "tagestipp", mode: "cards", filter: "all")
+
+    assert_response :success
+    names = Nokogiri::HTML.parse(response.body).css(".genre-lane-card-name").map(&:text)
 
     assert_equal "Tagestipp Filler Artist 9", names.first
     assert_equal 10, names.size
@@ -2372,7 +2491,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes names, reservix_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
 
-    next_cursor = tagestipp_section["data-homepage-lane-cursor-value"]
+    next_cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
     get homepage_lane_events_url(lane: "tagestipp", cursor: next_cursor, mode: "cards", filter: "all")
 
     assert_response :success
@@ -2427,8 +2546,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
+    assert_equal "true", tagestipp_section["data-homepage-lane-deferred-value"]
 
-    target_card = tagestipp_section.css("article.genre-lane-card").find do |card|
+    get homepage_lane_events_url(lane: "tagestipp", filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    target_card = document.css("article.genre-lane-card").find do |card|
       card.at_css(".genre-lane-card-name")&.text == today_event.artist_name
     end
 

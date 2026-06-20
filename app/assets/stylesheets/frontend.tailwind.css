@@ -5549,6 +5549,10 @@ min-height: 100%;
   animation: homepage-lane-placeholder-pulse 1.4s ease-in-out infinite;
 }
 
+.genre-lane-card.homepage-lane-initial-placeholder {
+min-height: 22rem;
+}
+
 @keyframes homepage-lane-placeholder-pulse {
   0% {
   background-position: 100% 0;
@@ -5562,6 +5566,12 @@ min-height: 100%;
 @media (prefers-reduced-motion: reduce) {
   .homepage-lane-placeholder {
   animation: none;
+  }
+}
+
+@media (max-width: 699px) {
+  .genre-lane-card.homepage-lane-initial-placeholder {
+  min-height: 17.5rem;
   }
 }
 

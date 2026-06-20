@@ -4,6 +4,7 @@ export default class extends Controller {
   static targets = [ "track", "link", "list" ]
   static values = {
     cursor: String,
+    deferred: { type: Boolean, default: false },
     lane: String,
     listCursor: String,
     listLimit: { type: Number, default: 12 },
@@ -26,6 +27,8 @@ export default class extends Controller {
     this.abortController = null
     this.listAbortController = null
     this.initialCursor = this.cursorValue || ""
+    this.initialPagePending = this.deferredValue
+    this.initialListPagePending = this.deferredValue
     this.listLoading = false
     this.userInteracted = false
     this.handleScroll = this.handleScroll.bind(this)
@@ -55,6 +58,7 @@ export default class extends Controller {
     }
 
     if (!this.hasListCursorValue && this.initialCursor.length > 0) this.listCursorValue = this.initialCursor
+    this.installDeferredObserver()
     this.updateLink()
   }
 
@@ -77,6 +81,7 @@ export default class extends Controller {
 
     this.element.removeEventListener("homepage-lane:load", this.handleLoadRequest)
     this.element.removeEventListener("section-view:list-shown", this.handleListShown)
+    this.deferredObserver?.disconnect()
     if (this.raf) window.cancelAnimationFrame(this.raf)
     if (this.listRaf) window.cancelAnimationFrame(this.listRaf)
     this.abortPendingRequest()
@@ -110,11 +115,14 @@ export default class extends Controller {
       const html = await response.text()
       const nextCursor = response.headers.get("X-Homepage-Lane-Next-Cursor") || ""
       let appendedElements = []
+      const initialPage = this.initialPagePending
 
+      if (initialPage) this.clearInitialPage()
       if (html.trim().length > 0) {
-        appendedElements = this.appendPage(html)
+        appendedElements = this.appendPage(html, { initial: initialPage })
       }
 
+      if (initialPage) this.initialPagePending = false
       this.cursorValue = nextCursor
       this.updateLink()
       this.scheduleTrackWork()
@@ -199,7 +207,12 @@ export default class extends Controller {
 
       const html = await response.text()
       const nextCursor = response.headers.get("X-Homepage-Lane-Next-Cursor") || ""
-      if (html.trim().length > 0) this.appendListRows(html, { appendToInitialPage })
+      const initialPage = this.initialListPagePending
+      if (initialPage) this.clearInitialListPage()
+      if (html.trim().length > 0) {
+        this.appendListRows(html, { appendToInitialPage, initial: initialPage })
+      }
+      if (initialPage) this.initialListPagePending = false
       this.listCursorValue = nextCursor
     } catch (error) {
       if (error.name !== "AbortError") console.error(error)
@@ -232,18 +245,23 @@ export default class extends Controller {
     })
   }
 
-  appendPage(html) {
+  appendPage(html, { initial = false } = {}) {
     const template = document.createElement("template")
     template.innerHTML = html.trim()
     const elements = Array.from(template.content.children).filter((element) => element instanceof HTMLElement)
     if (elements.length === 0) return []
 
-    const index = ++this.pageIndex
+    const index = initial ? 0 : ++this.pageIndex
+    if (initial) this.pageIndex = 0
     elements.forEach((element) => {
       element.dataset.homepageLanePage = index.toString()
       this.trackTarget.appendChild(element)
     })
-    this.pages.push({ index, elements })
+    if (initial) {
+      this.pages = [{ index, elements }]
+    } else {
+      this.pages.push({ index, elements })
+    }
     return elements
   }
 
@@ -434,20 +452,23 @@ export default class extends Controller {
     return url.toString()
   }
 
-  appendListRows(html, { appendToInitialPage = false } = {}) {
+  appendListRows(html, { appendToInitialPage = false, initial = false } = {}) {
     const template = document.createElement("template")
     template.innerHTML = html.trim()
     const elements = Array.from(template.content.children).filter((element) => element instanceof HTMLElement)
     if (elements.length === 0) return []
 
-    const page = appendToInitialPage ? this.listPages[0] : null
-    const pageIndex = page?.index ?? ++this.listPageIndex
+    const page = appendToInitialPage && !initial ? this.listPages[0] : null
+    const pageIndex = initial ? 0 : (page?.index ?? ++this.listPageIndex)
+    if (initial) this.listPageIndex = 0
     elements.forEach((element) => {
       element.dataset.homepageLaneListPage = pageIndex.toString()
       this.listContainer.appendChild(element)
     })
 
-    if (page) {
+    if (initial) {
+      this.listPages = [{ index: pageIndex, elements }]
+    } else if (page) {
       page.elements.push(...elements)
     } else {
       this.listPages.push({ index: pageIndex, elements })
@@ -497,11 +518,15 @@ export default class extends Controller {
   }
 
   get canLoad() {
-    return this.hasUrlValue && this.hasLaneValue && this.hasCursorValue && this.cursorValue.length > 0
+    if (!this.hasUrlValue || !this.hasLaneValue) return false
+
+    return this.initialPagePending || (this.hasCursorValue && this.cursorValue.length > 0)
   }
 
   get canLoadListRows() {
-    return this.hasUrlValue && this.hasLaneValue && this.hasListCursorValue && this.listCursorValue.length > 0
+    if (!this.hasUrlValue || !this.hasLaneValue) return false
+
+    return this.initialListPagePending || (this.hasListCursorValue && this.listCursorValue.length > 0)
   }
 
   get listVisible() {
@@ -525,6 +550,35 @@ export default class extends Controller {
 
     this.linkTarget.setAttribute("aria-disabled", pending ? "true" : "false")
     this.linkTarget.classList.toggle("is-loading", pending)
+  }
+
+  installDeferredObserver() {
+    if (!this.deferredValue || !this.hasTrackTarget || !this.initialPagePending) return
+
+    if (!("IntersectionObserver" in window)) {
+      this.load()
+      return
+    }
+
+    this.deferredObserver = new IntersectionObserver((entries) => {
+      if (!entries.some((entry) => entry.isIntersecting)) return
+
+      this.deferredObserver.disconnect()
+      this.load()
+    }, { rootMargin: "900px 0px" })
+    this.deferredObserver.observe(this.element)
+  }
+
+  clearInitialPage() {
+    this.trackTarget.querySelectorAll(".homepage-lane-initial-placeholder").forEach((element) => element.remove())
+    this.pages = []
+    this.storedPages.clear()
+  }
+
+  clearInitialListPage() {
+    this.listContainer.querySelectorAll(".homepage-lane-initial-placeholder").forEach((element) => element.remove())
+    this.listPages = []
+    this.storedListPages.clear()
   }
 
   updateLink() {

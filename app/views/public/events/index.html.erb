@@ -98,6 +98,7 @@
                  tone_class: "genre-lane-section--tone-3",
                  section_variant: "spotlight",
                  card_variant: "spotlight",
+                 defer_initial_page: true,
                  list_aria_label: "Listenansicht für Tagestipp" %>
     <% end %>
 
@@ -126,6 +127,7 @@
                  tone_class: "genre-lane-section--tone-2",
                  section_variant: "editorial",
                  card_variant: "editorial",
+                 defer_initial_page: true,
                  list_aria_label: "Listenansicht für alles aus stuttgart" %>
     <% end %>
 
@@ -151,6 +153,7 @@
                  header_variant: :genre,
                  hover_lift_cards: true,
                  tone_class: "genre-lane-section--tone-#{((index + 1) % 4) + 1}",
+                 defer_initial_page: true,
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>
     <% end %>
 
