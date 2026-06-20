@@ -168,6 +168,35 @@ module Importing
         assert_nil events(:published_past_one).reload.llm_enrichment
       end
 
+      test "records openai calls in run metadata" do
+        event = events(:published_one)
+        @run.update!(metadata: @run.metadata.merge("target_event_id" => event.id, "refresh_existing" => true))
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: event.id,
+              genre: [ "Indie" ],
+              venue: "LKA Longhorn",
+              event_description: "Event eins",
+              venue_description: "Venue eins"
+            )
+          ]
+        )
+
+        build_importer(client: client).call
+
+        api_call = @run.reload.metadata.fetch("api_calls").first
+        assert_equal "openai", api_call.fetch("provider")
+        assert_equal "responses.create", api_call.fetch("operation")
+        assert_equal "succeeded", api_call.fetch("status")
+        assert_equal false, api_call.fetch("cached")
+        assert_equal event.id, api_call.fetch("event_id")
+        assert_equal "gpt-5-mini", api_call.dig("request_payload", "model")
+        assert_includes api_call.dig("request_payload", "input"), event.title
+        assert_equal "completed", api_call.dig("response_payload", "status")
+      end
+
       test "centralized output schema enforces structured output contract" do
         text_format = OutputSchema.format
         schema = text_format.fetch(:schema)

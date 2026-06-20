@@ -182,6 +182,50 @@
         <p>Für diesen LLM-Enrichment-Run wurden keine Enrichment-Details gespeichert.</p>
       <% end %>
     </section>
+
+    <% api_calls = import_run_api_calls(@import_run) %>
+    <section class="import-run-section backend-section backend-table-section">
+      <h2>API Calls (<%= api_calls.size %>)</h2>
+      <% if api_calls.any? %>
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Zeit</th>
+                <th>Provider</th>
+                <th>Operation</th>
+                <th>Status</th>
+                <th>Cache</th>
+                <th>Event</th>
+                <th>Dauer</th>
+                <th>Payload</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% api_calls.each do |api_call| %>
+                <tr>
+                  <td><%= import_run_api_call_time_label(api_call, "started_at") %></td>
+                  <td><code><%= api_call["provider"].presence || "-" %></code></td>
+                  <td><code><%= api_call["operation"].presence || "-" %></code></td>
+                  <td><%= api_call["status"].presence || "-" %></td>
+                  <td><%= import_run_api_call_cache_label(api_call) %></td>
+                  <td><code><%= api_call["event_id"].presence || "-" %></code></td>
+                  <td><%= import_run_api_call_duration_label(api_call) %></td>
+                  <td>
+                    <details>
+                      <summary>anzeigen</summary>
+                      <pre class="payload-json"><%= import_run_json_payload(import_run_api_call_payload(api_call)) %></pre>
+                    </details>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p>Für diesen LLM-Enrichment-Run wurden keine API-Call-Details gespeichert.</p>
+      <% end %>
+    </section>
   <% end %>
 
   <section class="import-run-section backend-section backend-table-section">

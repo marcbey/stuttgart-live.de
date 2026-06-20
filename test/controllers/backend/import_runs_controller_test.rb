@@ -203,6 +203,65 @@ class Backend::ImportRunsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "&quot;sub_genres&quot;: ["
   end
 
+  test "shows llm api call audit details on detail page" do
+    run = import_sources(:two).import_runs.create!(
+      status: "succeeded",
+      source_type: "llm_enrichment",
+      started_at: 2.minutes.ago,
+      finished_at: 1.minute.ago,
+      fetched_count: 1,
+      filtered_count: 0,
+      imported_count: 1,
+      failed_count: 0,
+      metadata: {
+        "api_calls_completed_count" => 1,
+        "api_calls" => [
+          {
+            "provider" => "openai",
+            "operation" => "responses.create",
+            "status" => "succeeded",
+            "cached" => false,
+            "event_id" => events(:published_one).id,
+            "duration_ms" => 123,
+            "started_at" => "2026-04-15T12:00:00Z",
+            "request_payload" => {
+              "model" => "gpt-5-mini",
+              "input" => "Prompttext"
+            },
+            "response_payload" => {
+              "status" => "completed"
+            }
+          },
+          {
+            "provider" => "openwebninja",
+            "operation" => "web_search",
+            "status" => "succeeded",
+            "cached" => true,
+            "event_id" => events(:published_one).id,
+            "request_payload" => {
+              "query" => "Luca Noel",
+              "field_name" => "homepage_link"
+            },
+            "response_payload" => {
+              "search_id" => "search-1"
+            }
+          }
+        ]
+      }
+    )
+
+    get backend_import_run_url(run)
+
+    assert_response :success
+    assert_includes response.body, "API Calls"
+    assert_includes response.body, "openai"
+    assert_includes response.body, "responses.create"
+    assert_includes response.body, "openwebninja"
+    assert_includes response.body, "Cache-Hit"
+    assert_includes response.body, "Prompttext"
+    assert_includes response.body, "Luca Noel"
+  end
+
   test "shows llm run error message and payload details on detail page" do
     run = import_sources(:two).import_runs.create!(
       status: "failed",

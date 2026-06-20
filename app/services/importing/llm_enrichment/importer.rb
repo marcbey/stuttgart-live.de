@@ -77,7 +77,8 @@ module Importing
         )
         @logger = logger
         @link_validator = link_validator || LinkValidator.new
-        @link_finder = link_finder || LinkFinder.new
+        @api_call_recorder = ApiCallRecorder.new(run: run)
+        @link_finder = link_finder || LinkFinder.new(api_call_recorder: api_call_recorder)
       end
 
       def call
@@ -129,10 +130,7 @@ module Importing
 
           search_context_result = resolve_links_for(event)
           prompt_input = request_input(item_for(event, search_context_result.payload))
-          response = client.create!(
-            input: prompt_input,
-            text_format: output_format
-          )
+          response = create_openai_response!(event: event, prompt_input: prompt_input)
           api_calls_completed_count += 1
 
           check_stop_requested!(message: "after response", current_event_index:)
@@ -202,7 +200,7 @@ module Importing
 
       Error = Class.new(StandardError)
 
-      attr_reader :client, :link_finder, :link_validator, :logger, :run
+      attr_reader :api_call_recorder, :client, :link_finder, :link_validator, :logger, :run
 
       def selected_events_scope(selection_started_at)
         return Event.where(id: target_event_ids) if target_event_ids.present?
@@ -241,6 +239,96 @@ module Importing
 
       def output_format
         OutputSchema.format
+      end
+
+      def create_openai_response!(event:, prompt_input:)
+        started_at = Time.current
+        response = client.create!(
+          input: prompt_input,
+          text_format: output_format
+        )
+        finished_at = Time.current
+        record_openai_api_call!(
+          event:,
+          prompt_input:,
+          started_at:,
+          finished_at:,
+          status: "succeeded",
+          response_payload: openai_response_payload(response)
+        )
+        response
+      rescue StandardError => e
+        finished_at = Time.current
+        record_openai_api_call!(
+          event:,
+          prompt_input:,
+          started_at:,
+          finished_at:,
+          status: "failed",
+          error_class: e.class.to_s,
+          error_message: e.message,
+          response_payload: openai_error_payload(e)
+        )
+        raise
+      end
+
+      def record_openai_api_call!(
+        event:,
+        prompt_input:,
+        started_at:,
+        finished_at:,
+        status:,
+        response_payload: {},
+        error_class: nil,
+        error_message: nil
+      )
+        api_call_recorder.record(
+          provider: "openai",
+          operation: "responses.create",
+          status: status,
+          cached: false,
+          event_id: event.id,
+          started_at: started_at,
+          finished_at: finished_at,
+          duration_ms: ((finished_at - started_at) * 1000).round,
+          request_payload: {
+            model: client_model,
+            temperature: client.respond_to?(:temperature) ? client.temperature : nil,
+            input: prompt_input,
+            text_format: output_format
+          }.compact,
+          response_payload: response_payload,
+          error_class: error_class,
+          error_message: error_message
+        )
+      end
+
+      def openai_response_payload(response)
+        payload = safe_response_hash(response)
+        status = response_value(response, :status).to_s.presence || "completed"
+
+        {
+          status: status,
+          response: payload
+        }
+      end
+
+      def openai_error_payload(error)
+        return error.details_payload if error.respond_to?(:details_payload)
+
+        {}
+      end
+
+      def safe_response_hash(response)
+        if response.respond_to?(:deep_to_h)
+          response.deep_to_h
+        elsif response.respond_to?(:to_h)
+          response.to_h
+        elsif response.is_a?(Hash)
+          response
+        else
+          { "inspect" => response.inspect }
+        end
       end
 
       def extract_payload!(response)

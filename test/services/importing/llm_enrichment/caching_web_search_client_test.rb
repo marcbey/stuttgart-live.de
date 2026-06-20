@@ -12,6 +12,12 @@ module Importing
         end
       end
 
+      FakeRecorder = Struct.new(:calls, keyword_init: true) do
+        def record(**attributes)
+          calls << attributes
+        end
+      end
+
       setup do
         @cache = ActiveSupport::Cache::MemoryStore.new
       end
@@ -78,6 +84,23 @@ module Importing
         assert_equal [ true, true ], fake_client.calls.map { |call| call.fetch(:no_cache) }
       end
 
+      test "records cache misses and cache hits as api calls" do
+        recorder = FakeRecorder.new(calls: [])
+        fake_client = fake_client_with_result(search_result("search-1", [ organic_result(1, "https://example.com") ]))
+        client = build_client(client: fake_client, api_call_recorder: recorder)
+
+        client.search(query: "Luca Noel", audit_context: { event_id: 42, field_name: "homepage_link" })
+        client.search(query: "Luca Noel", audit_context: { event_id: 42, field_name: "homepage_link" })
+
+        assert_equal 1, fake_client.calls.size
+        assert_equal 2, recorder.calls.size
+        assert_equal [ false, true ], recorder.calls.map { |call| call.fetch(:cached) }
+        assert_equal [ "succeeded", "succeeded" ], recorder.calls.map { |call| call.fetch(:status) }
+        assert_equal [ 42, 42 ], recorder.calls.map { |call| call.fetch(:event_id) }
+        assert_equal "homepage_link", recorder.calls.first.dig(:request_payload, :field_name)
+        assert_equal "search-1", recorder.calls.first.dig(:response_payload, :search_id)
+      end
+
       test "deserializes cached results into web search response objects" do
         fake_client = fake_client_with_result(
           search_result(
@@ -112,8 +135,8 @@ module Importing
 
       private
 
-      def build_client(provider: "serpapi", client:)
-        CachingWebSearchClient.new(provider:, client:, cache: @cache)
+      def build_client(provider: "serpapi", client:, api_call_recorder: nil)
+        CachingWebSearchClient.new(provider:, client:, cache: @cache, api_call_recorder:)
       end
 
       def fake_client_with_result(result)

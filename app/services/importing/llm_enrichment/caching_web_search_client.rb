@@ -8,29 +8,143 @@ module Importing
 
       attr_reader :client, :provider
 
-      def initialize(provider:, client:, cache: Rails.cache, expires_in: CACHE_TTL)
+      def initialize(provider:, client:, cache: Rails.cache, expires_in: CACHE_TTL, api_call_recorder: nil)
         @provider = provider.to_s
         @client = client
         @cache = cache
         @expires_in = expires_in
+        @api_call_recorder = api_call_recorder
       end
 
-      def search(query:, num: 10, location: "Germany", hl: "de", gl: "de", no_cache: false, **options)
-        return uncached_search(query:, num:, location:, hl:, gl:, no_cache:, **options) if no_cache
+      def search(query:, num: 10, location: "Germany", hl: "de", gl: "de", no_cache: false, audit_context: {}, **options)
+        return recorded_uncached_search(query:, num:, location:, hl:, gl:, no_cache:, audit_context:, options:) if no_cache
 
-        payload = cache.fetch(cache_key(query:, num:, location:, hl:, gl:, options:), expires_in: expires_in) do
-          serialize_search_result(uncached_search(query:, num:, location:, hl:, gl:, no_cache:, **options))
+        key = cache_key(query:, num:, location:, hl:, gl:, options:)
+        cached_payload = cache.read(key)
+        if cached_payload.present?
+          record_api_call!(
+            query:,
+            num:,
+            location:,
+            hl:,
+            gl:,
+            audit_context:,
+            options:,
+            cached: true,
+            status: "succeeded",
+            response_payload: response_payload_for(cached_payload)
+          )
+          return deserialize_search_result(cached_payload)
         end
 
+        result = recorded_uncached_search(query:, num:, location:, hl:, gl:, no_cache:, audit_context:, options:)
+        payload = serialize_search_result(result)
+        cache.write(key, payload, expires_in: expires_in)
         deserialize_search_result(payload)
       end
 
       private
 
-      attr_reader :cache, :expires_in
+      attr_reader :api_call_recorder, :cache, :expires_in
 
       def uncached_search(query:, num:, location:, hl:, gl:, no_cache:, **options)
         client.search(query:, num:, location:, hl:, gl:, no_cache:, **options)
+      end
+
+      def recorded_uncached_search(query:, num:, location:, hl:, gl:, no_cache:, audit_context:, options:)
+        started_at = Time.current
+        result = uncached_search(query:, num:, location:, hl:, gl:, no_cache:, **options)
+        finished_at = Time.current
+        record_api_call!(
+          query:,
+          num:,
+          location:,
+          hl:,
+          gl:,
+          audit_context:,
+          options:,
+          cached: false,
+          status: "succeeded",
+          started_at:,
+          finished_at:,
+          response_payload: response_payload_for(serialize_search_result(result))
+        )
+        result
+      rescue StandardError => e
+        finished_at = Time.current
+        record_api_call!(
+          query:,
+          num:,
+          location:,
+          hl:,
+          gl:,
+          audit_context:,
+          options:,
+          cached: false,
+          status: "failed",
+          started_at:,
+          finished_at:,
+          error_class: e.class.to_s,
+          error_message: e.message
+        )
+        raise
+      end
+
+      def record_api_call!(
+        query:,
+        num:,
+        location:,
+        hl:,
+        gl:,
+        audit_context:,
+        options:,
+        cached:,
+        status:,
+        started_at: nil,
+        finished_at: nil,
+        response_payload: {},
+        error_class: nil,
+        error_message: nil
+      )
+        return if api_call_recorder.blank?
+
+        started_at ||= Time.current
+        finished_at ||= started_at
+        request_payload = {
+          query: query,
+          num: num,
+          location: location,
+          hl: hl,
+          gl: gl
+        }.merge(audit_context.to_h).merge(options.to_h)
+
+        api_call_recorder.record(
+          provider: provider,
+          operation: "web_search",
+          status: status,
+          cached: cached,
+          event_id: audit_context.to_h[:event_id] || audit_context.to_h["event_id"],
+          started_at: started_at,
+          finished_at: finished_at,
+          duration_ms: duration_ms(started_at, finished_at),
+          request_payload: request_payload,
+          response_payload: response_payload,
+          error_class: error_class,
+          error_message: error_message
+        )
+      end
+
+      def response_payload_for(payload)
+        normalized_payload = payload.is_a?(Hash) ? payload.deep_stringify_keys : {}
+
+        {
+          search_id: normalized_payload["search_id"],
+          organic_results_count: Array(normalized_payload["organic_results"]).size
+        }
+      end
+
+      def duration_ms(started_at, finished_at)
+        ((finished_at - started_at) * 1000).round
       end
 
       def cache_key(query:, num:, location:, hl:, gl:, options:)

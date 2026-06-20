@@ -56,11 +56,15 @@ module Importing
 
       def initialize(
         web_search_provider: AppSetting.llm_enrichment_web_search_provider,
-        web_search_client: WebSearchClientFactory.build(provider: web_search_provider),
+        api_call_recorder: nil,
+        web_search_client: nil,
         query_builder: QueryBuilder.new
       )
         @web_search_provider = web_search_provider
-        @web_search_client = web_search_client
+        @web_search_client = web_search_client || WebSearchClientFactory.build(
+          provider: web_search_provider,
+          api_call_recorder: api_call_recorder
+        )
         @query_builder = query_builder
       end
 
@@ -70,7 +74,7 @@ module Importing
         web_search_candidate_count = 0
 
         query_builder.call(event:).each do |query|
-          search_payload, field_payload, candidate_count = run_web_search_query(query:)
+          search_payload, field_payload, candidate_count = run_web_search_query(query:, event:)
           web_queries_payload << search_payload
           fields_payload[query.field_name.to_s] = field_payload
           web_search_candidate_count += candidate_count
@@ -103,8 +107,16 @@ module Importing
         end.deep_stringify_keys
       end
 
-      def run_web_search_query(query:)
-        search_result = web_search_client.search(query: query.query, num: GOOGLE_RESULT_LIMIT)
+      def run_web_search_query(query:, event:)
+        search_result = web_search_client.search(
+          query: query.query,
+          num: GOOGLE_RESULT_LIMIT,
+          audit_context: {
+            event_id: event.id,
+            field_name: query.field_name.to_s,
+            query_name: query.name
+          }
+        )
         candidates = Array(search_result.organic_results)
           .filter_map { |organic_result| build_candidate(organic_result:, query:, search_id: search_result.search_id) }
 
