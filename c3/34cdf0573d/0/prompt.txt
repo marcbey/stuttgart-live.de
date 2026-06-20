@@ -1,0 +1,6 @@
+Füge der README.md, AGENTS.md (oder wo es sonst nötig ist) hinzu, dass in dem Projekt entire (https://docs.entire.io/) und das superpowers plugin ([obra/Superpowers](https://github.com/obra/Superpowers)) in Codex verwendet wird. 
+Füge auch entsprechende .gitignores hinzu. Erzeuge dazu einen commit in main.
+
+---
+
+Für Skills mit Subagents solltest du Multi-Agent-Support für codex aktivieren
