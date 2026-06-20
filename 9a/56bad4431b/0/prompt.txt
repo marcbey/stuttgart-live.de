@@ -1,0 +1,13 @@
+Beim LLM Enrichment werden Instagram-Links zu zu Events selten gefunden
+
+---
+
+stash
+
+---
+
+Beim LLM Enrichment sollen passende Instagram-Links zum Artist, Band, Künstler, Musiker, etc. zu dem Event zuverlässiger und häufiger gefunden werden.
+
+---
+
+"Eventtitel als zusätzliche Queries" als extra Suchlauf machen

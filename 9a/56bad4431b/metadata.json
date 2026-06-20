@@ -1,0 +1,25 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "9a56bad4431b",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 5,
+  "files_touched": [
+    "app/services/importing/llm_enrichment/link_finder.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/9a/56bad4431b/0/metadata.json",
+      "transcript": "/9a/56bad4431b/0/full.jsonl",
+      "content_hash": "/9a/56bad4431b/0/content_hash.txt",
+      "prompt": "/9a/56bad4431b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 349116,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 5263360,
+    "output_tokens": 26836,
+    "api_call_count": 60
+  }
+}
