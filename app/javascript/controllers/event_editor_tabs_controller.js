@@ -56,6 +56,16 @@ export default class extends Controller {
     if (!nextTab) return
 
     const resolvedKey = nextTab.dataset.eventEditorTabsTabKeyParam
+    const nextPanel = this.panelTargets.find((panel) => panel.dataset.eventEditorTabsPanelKey === resolvedKey)
+    const lazyUrl = nextTab.dataset.eventEditorTabsUrlParam
+
+    if (lazyUrl && nextPanel && nextPanel.childElementCount === 0 && nextPanel.textContent.trim() === "") {
+      const frame = this.element.closest("turbo-frame")
+      if (frame) {
+        frame.src = lazyUrl
+        return
+      }
+    }
 
     this.tabTargets.forEach((tab) => {
       const active = tab === nextTab

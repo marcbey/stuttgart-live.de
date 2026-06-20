@@ -9,6 +9,7 @@
                  next_event_enabled: next_event_enabled,
                  filter_status: filter_status,
                  active_editor_tab: local_assigns[:active_editor_tab],
+                 lazy_inactive_tabs: local_assigns.fetch(:lazy_inactive_tabs, false),
                  manual_ticket_url: local_assigns[:manual_ticket_url],
                  manual_ticket_sold_out: local_assigns[:manual_ticket_sold_out] %>
     <% else %>
