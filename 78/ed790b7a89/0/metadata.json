@@ -1,0 +1,62 @@
+{
+  "cli_version": "0.6.2",
+  "checkpoint_id": "78ed790b7a89",
+  "session_id": "019e5029-eed9-7282-a421-14addbcaf250",
+  "strategy": "manual-commit",
+  "created_at": "2026-05-22T14:54:16.009354Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".agents/skills/explain/SKILL.md",
+    ".agents/skills/search/SKILL.md",
+    ".agents/skills/session-crosslink/SKILL.md",
+    ".agents/skills/session-handoff/SKILL.md",
+    ".agents/skills/session-to-skill/SKILL.md",
+    ".agents/skills/what-happened/SKILL.md"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "df74b311151d",
+  "token_usage": {
+    "input_tokens": 19577,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 62464,
+    "output_tokens": 1422,
+    "api_call_count": 4
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-05-22T14:54:16.004412Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 1,
+    "total_committed": 0,
+    "total_lines_changed": 2,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1003,
+      "user_lines_removed": 1,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        ".agents/skills/explain/SKILL.md": 34,
+        ".agents/skills/search/SKILL.md": 70,
+        ".agents/skills/session-crosslink/SKILL.md": 141,
+        ".agents/skills/session-handoff/SKILL.md": 137,
+        ".agents/skills/session-to-skill/SKILL.md": 210,
+        ".agents/skills/what-happened/SKILL.md": 333,
+        ".codex/agents/entire-search.toml": 23,
+        ".codex/config.toml": 3,
+        ".codex/hooks.json": 52
+      },
+      "user_removed_per_file": {
+        ".claude/skills/sentry-fix-issues": 1
+      }
+    }
+  ]
+}
