@@ -90,12 +90,7 @@ module Meta
       )
       meta_line = fitted_meta_line_text(card_payload.fetch(:meta_line), variant:)
 
-      overlay = Vips::Image.new_from_buffer(
-        overlay_svg(variant:),
-        "",
-        access: :sequential
-      )
-      card = background.composite2(overlay, :over)
+      card = background.composite2(overlay_image(variant:), :over)
       card = composite_text_layers(
         card,
         text_layers_for(
@@ -160,21 +155,30 @@ module Meta
       raise Error, "Social-Post-Bild konnte nicht gerendert werden: #{error.message}"
     end
 
-    def overlay_svg(variant:)
-      <<~SVG
-        <svg xmlns="http://www.w3.org/2000/svg" width="#{variant.width}" height="#{variant.height}" viewBox="0 0 #{variant.width} #{variant.height}">
-          <defs>
-            <linearGradient id="social-card-shade" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="rgba(0,0,0,0.02)" />
-              <stop offset="40%" stop-color="rgba(0,0,0,0.10)" />
-              <stop offset="72%" stop-color="rgba(0,0,0,0.34)" />
-              <stop offset="100%" stop-color="rgba(0,0,0,0.62)" />
-            </linearGradient>
-          </defs>
-          <rect x="0" y="0" width="#{variant.width}" height="#{variant.height}" fill="url(#social-card-shade)" />
-          <rect x="#{variant.frame_inset}" y="#{variant.frame_inset}" width="#{variant.width - (variant.frame_inset * 2)}" height="#{variant.height - (variant.frame_inset * 2)}" fill="none" stroke="rgba(255,255,255,0.98)" stroke-width="3" />
-        </svg>
-      SVG
+    def overlay_image(variant:)
+      shade = vertical_shade_overlay(variant)
+      frame = Vips::Image
+        .black(variant.width, variant.height, bands: 4)
+        .copy(interpretation: :srgb)
+        .draw_rect(
+          [ 255, 255, 255, (255 * 0.98).round ],
+          variant.frame_inset,
+          variant.frame_inset,
+          variant.width - (variant.frame_inset * 2),
+          variant.height - (variant.frame_inset * 2),
+          fill: false
+        )
+
+      shade.composite2(frame, :over)
+    end
+
+    def vertical_shade_overlay(variant)
+      y_positions = Vips::Image.xyz(variant.width, variant.height).extract_band(1)
+      alpha = y_positions.linear((255 * 0.60) / (variant.height - 1), 255 * 0.02)
+      alpha = alpha.cast(:uchar)
+      rgb = alpha.new_from_image([ 0, 0, 0 ])
+
+      rgb.bandjoin(alpha).copy(interpretation: :srgb)
     end
 
     def text_layers_for(variant:, artist_lines:, meta_line:)
