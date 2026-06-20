@@ -80,3 +80,10 @@ test/locust/__pycache__/*
 .playwright-mcp/**
 openwebninja-*.png
 TODO.md
+
+# Codex / agent local runtime data
+/.codex/cache/
+/.codex/logs/
+/.codex/plugins/
+/.codex/sessions/
+/.codex/tmp/

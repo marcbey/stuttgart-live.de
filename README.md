@@ -416,6 +416,14 @@ bin/rake -T
 bin/ci
 ```
 
+### KI-gestützte Entwicklung
+
+Das Repository ist für Codex mit [Entire](https://docs.entire.io/) und dem [Superpowers-Plugin](https://github.com/obra/Superpowers) vorbereitet.
+
+Entire zeichnet Codex-Sessions über die versionierten Hooks in `.codex/` auf und verknüpft die Agent-Kontexte mit Git-Checkpoints. Die gemeinsam genutzte Projektkonfiguration liegt in `.entire/settings.json`; lokale Laufzeitdaten, Logs, Metadaten und persönliche Overrides bleiben über `.entire/.gitignore` unversioniert.
+
+Superpowers ergänzt Codex um verpflichtende Skill-Workflows für Planung, Umsetzung, Debugging und Verifikation. Wenn ein Skill auf eine Aufgabe passt, muss er vor der eigentlichen Arbeit gelesen und befolgt werden.
+
 ### Locust / Lasttest
 
 Für vorsichtige Read-only-Lasttests gibt es ein manuelles Locust-Skript unter `test/locust/locustfile.py`. Es ist bewusst nicht Teil von `bin/ci` und testet nur öffentliche `GET`-Seiten.
