@@ -422,7 +422,7 @@ Das Repository ist für Codex mit [Entire](https://docs.entire.io/) und dem [Sup
 
 Entire zeichnet Codex-Sessions über die versionierten Hooks in `.codex/` auf und verknüpft die Agent-Kontexte mit Git-Checkpoints. Die gemeinsam genutzte Projektkonfiguration liegt in `.entire/settings.json`; lokale Laufzeitdaten, Logs, Metadaten und persönliche Overrides bleiben über `.entire/.gitignore` unversioniert.
 
-Superpowers ergänzt Codex um verpflichtende Skill-Workflows für Planung, Umsetzung, Debugging und Verifikation. Wenn ein Skill auf eine Aufgabe passt, muss er vor der eigentlichen Arbeit gelesen und befolgt werden.
+Superpowers ergänzt Codex um verpflichtende Skill-Workflows für Planung, Umsetzung, Debugging und Verifikation. Die Codex-Feature-Flag `multi_agent = true` ist aktiviert, damit Skills mit Subagents wie `dispatching-parallel-agents` und `subagent-driven-development` `spawn_agent`, `wait_agent` und `close_agent` nutzen können. Wenn ein Skill auf eine Aufgabe passt, muss er vor der eigentlichen Arbeit gelesen und befolgt werden.
 
 ### Locust / Lasttest
 
