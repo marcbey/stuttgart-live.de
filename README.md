@@ -324,7 +324,7 @@ Fachlich ist wichtig:
 - Weicht `EventLlmEnrichment.venue` von der bereits zugeordneten `Venue` ab, bleibt die bestehende Venue vollständig unverändert.
 - Hat ein Event noch keine zugeordnete `Venue`, darf aus `EventLlmEnrichment.venue` eine passende Venue gesucht oder neu angelegt und dem Event zugeordnet werden.
 - In genau diesem Fallback-Fall dürfen zusätzlich `Venue.description`, `Venue.external_url` und `Venue.address` aus `EventLlmEnrichment.venue_description`, `venue_external_url` und `venue_address` gesetzt werden; auch hier werden bereits vorhandene Werte der gefundenen oder neu angelegten Venue nicht überschrieben.
-- Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
+- Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst, umgeht den Web-Search-Cache und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
 - Fehlgeschlagene oder abgebrochene manuelle Voll-Läufe können im Backend fortgesetzt werden. Die Fortsetzung erzeugt einen neuen `ImportRun`, übernimmt den ursprünglichen Auswahlzeitpunkt und startet beim zuletzt begonnenen Event erneut; wenn kein aktuelles Event gespeichert wurde, geht es nach dem letzten erfolgreich abgeschlossenen Event weiter.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.

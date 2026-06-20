@@ -606,7 +606,7 @@ module Importing
       end
 
       def resolve_links_for(event)
-        result = link_finder.call(event:)
+        result = link_finder.call(event:, no_cache: no_cache?)
         increment_search_context_counts!(result)
         result
       rescue StandardError => e
@@ -908,6 +908,10 @@ module Importing
 
       def refresh_existing?
         ActiveModel::Type::Boolean.new.cast(current_run_metadata["refresh_existing"])
+      end
+
+      def no_cache?
+        ActiveModel::Type::Boolean.new.cast(current_run_metadata["no_cache"])
       end
 
       def skip_existing_enrichments?

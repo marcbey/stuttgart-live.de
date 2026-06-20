@@ -2138,6 +2138,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "single_event", run.metadata["trigger_scope"]
     assert_equal @published_event.id, run.metadata["target_event_id"]
     assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["refresh_existing"])
+    assert_equal true, ActiveModel::Type::Boolean.new.cast(run.metadata["no_cache"])
     assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id, editor_tab: "llm_enrichment")
     follow_redirect!
     assert_includes response.body, "LLM-Enrichment für dieses Event wurde gestartet."

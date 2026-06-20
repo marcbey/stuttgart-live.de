@@ -60,10 +60,12 @@ module Importing
         end
       end
 
-      FakeLinkFinder = Struct.new(:results_by_event_id, :calls, keyword_init: true) do
-        def call(event:)
+      FakeLinkFinder = Struct.new(:results_by_event_id, :calls, :no_cache_calls, keyword_init: true) do
+        def call(event:, no_cache: false)
           self.calls ||= []
+          self.no_cache_calls ||= []
           calls << event.id
+          no_cache_calls << { event_id: event.id, no_cache: no_cache }
           results_by_event_id.fetch(event.id) { default_result }
         end
 
@@ -91,7 +93,7 @@ module Importing
       end
 
       FatalLinkFinder = Struct.new(:error) do
-        def call(event:)
+        def call(event:, no_cache: false)
           raise error
         end
       end
@@ -450,6 +452,34 @@ module Importing
         assert_equal existing_enrichment.id, updated_enrichment.id
         assert_equal [ "Jazz" ], event.sub_genres.order(:name).pluck(:name)
         assert_equal "https://example.com/past", updated_enrichment.homepage_link
+      end
+
+      test "passes no_cache metadata to link finder" do
+        event = events(:published_one)
+        @run.update!(
+          metadata: @run.metadata.merge(
+            "target_event_id" => event.id,
+            "refresh_existing" => true,
+            "no_cache" => true
+          )
+        )
+        client = FakeClient.new(
+          model: "gpt-5-mini",
+          responses: [
+            response_for(
+              event_id: event.id,
+              genre: [ "Indie" ],
+              venue: "LKA Longhorn",
+              event_description: "Event eins",
+              venue_description: "Venue eins"
+            )
+          ]
+        )
+        link_finder = FakeLinkFinder.new(results_by_event_id: {}, calls: [])
+
+        build_importer(client: client, link_finder: link_finder).call
+
+        assert_equal [ { event_id: event.id, no_cache: true } ], link_finder.no_cache_calls
       end
 
       test "refresh_existing overwrites existing future enrichments in full run" do
