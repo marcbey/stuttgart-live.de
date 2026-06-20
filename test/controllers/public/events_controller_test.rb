@@ -36,6 +36,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[type='module'][src*='/assets/backend']", count: 0
     assert_select "script[type='module'][src*='/assets/application']", count: 0
     assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
+    assert_select "link[rel='preload'][as='font'][href*='oswald-700']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 1
     assert_select "style[data-local-font-faces]", count: 1
     assert_select "meta[name='description'][content=?]",

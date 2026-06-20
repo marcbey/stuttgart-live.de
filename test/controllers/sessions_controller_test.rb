@@ -12,6 +12,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "fonts.googleapis.com"
     assert_not_includes response.body, "fonts.gstatic.com"
     assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
+    assert_select "link[rel='preload'][as='font'][href*='oswald-700']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 0
     assert_select "style[data-local-font-faces]", count: 1
     assert_includes response.body, ActionController::Base.helpers.asset_path("archivo-narrow-700.woff2")
