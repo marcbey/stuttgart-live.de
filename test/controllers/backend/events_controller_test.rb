@@ -81,6 +81,21 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event_topbar_editor_actions", count: 1
   end
 
+  test "index defers inactive editor tab bodies" do
+    sign_in_as(@user)
+    create_event_image(event: @event, purpose: EventImage::PURPOSE_SLIDER)
+    create_presenter(name: "Alpha Presenter")
+
+    get backend_events_url(status: "needs_review", event_id: @event.id)
+
+    assert_response :success
+    assert_select "#event-editor-panel-event:not([hidden])", count: 1
+    assert_select "#event-editor-panel-slider-images[hidden]", count: 1
+    assert_select "#event-editor-panel-presenters[hidden]", count: 1
+    assert_select "#event-editor-panel-slider-images .slider-image-editor-card", count: 0
+    assert_select "#event-editor-panel-presenters input[name='event[presenter_ids][]']", count: 0
+  end
+
   test "index keeps the social tab active for a selected event" do
     sign_in_as(@user)
     @published_event.event_social_posts.create!(
@@ -644,7 +659,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
     image = create_event_image(event: @event, purpose: EventImage::PURPOSE_SLIDER)
 
-    get backend_events_url(status: "needs_review", event_id: @event.id)
+    get backend_events_url(status: "needs_review", event_id: @event.id, editor_tab: "slider_images")
 
     assert_response :success
     assert_select ".slider-image-editor-card .slider-image-meta-form", count: 1
@@ -713,7 +728,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     sign_in_as(@user)
     image = create_event_image(event: @event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
 
-    get backend_events_url(status: "needs_review", event_id: @event.id)
+    get backend_events_url(status: "needs_review", event_id: @event.id, editor_tab: "event_image")
 
     assert_response :success
     assert_select "label[for='event_image_sub_text']", text: "Copyright"
@@ -728,7 +743,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input#event_image_#{image.id}_card_focus_x[name]", count: 0
     assert_select "input#event_image_#{image.id}_card_focus_y[name]", count: 0
     assert_select "input#event_image_#{image.id}_card_zoom[name]", count: 0
-    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 2
+    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 1
     assert_includes response.body, "<code>1x1</code> ist der Standard"
   end
 
