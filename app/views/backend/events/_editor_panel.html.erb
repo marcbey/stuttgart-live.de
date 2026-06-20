@@ -2,6 +2,8 @@
 <% filter_status = local_assigns[:filter_status] %>
 <% editor_status = filter_status.presence || event.status %>
 <% active_editor_tab = local_assigns[:active_editor_tab].presence || "event" %>
+<% lazy_inactive_tabs = local_assigns.fetch(:lazy_inactive_tabs, false) %>
+<% all_presenters = local_assigns[:all_presenters] || [] %>
 <% llm_enrichment = event.llm_enrichment %>
 <% form_errors = event_editor_errors(event) %>
 <% event_tab_active = active_editor_tab == "event" %>
@@ -14,6 +16,12 @@
 <% llm_tab_available = event.persisted? %>
 <% social_tab_available = event.persisted? %>
 <% editor_form_id = dom_id(event, :editor_form) %>
+<% editor_tab_url_attribute = lambda do |tab_key, active|
+     if lazy_inactive_tabs && !active
+       url = backend_event_path(event, status: filter_status.presence, editor_tab: (tab_key == "event" ? nil : tab_key))
+       %(data-event-editor-tabs-url-param="#{ERB::Util.html_escape(url)}").html_safe
+     end
+   end %>
 
 <div class="editor-panel backend-panel"
      id="event_editor_panel">
@@ -62,6 +70,7 @@
               tabindex="<%= event_tab_active ? 0 : -1 %>"
               data-event-editor-tabs-target="tab"
               data-event-editor-tabs-tab-key-param="event"
+              <%= editor_tab_url_attribute.call("event", event_tab_active) %>
               data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
         Event
       </button>
@@ -74,6 +83,7 @@
               tabindex="<%= event_image_tab_active ? 0 : -1 %>"
               data-event-editor-tabs-target="tab"
               data-event-editor-tabs-tab-key-param="event_image"
+              <%= editor_tab_url_attribute.call("event_image", event_image_tab_active) %>
               data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
         Eventbild
       </button>
@@ -86,6 +96,7 @@
               tabindex="<%= slider_images_tab_active ? 0 : -1 %>"
               data-event-editor-tabs-target="tab"
               data-event-editor-tabs-tab-key-param="slider_images"
+              <%= editor_tab_url_attribute.call("slider_images", slider_images_tab_active) %>
               data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
         Presse
       </button>
@@ -98,6 +109,7 @@
               tabindex="<%= presenters_tab_active ? 0 : -1 %>"
               data-event-editor-tabs-target="tab"
               data-event-editor-tabs-tab-key-param="presenters"
+              <%= editor_tab_url_attribute.call("presenters", presenters_tab_active) %>
               data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
         Präsentatoren
       </button>
@@ -111,6 +123,7 @@
                 tabindex="<%= llm_tab_active ? 0 : -1 %>"
                 data-event-editor-tabs-target="tab"
                 data-event-editor-tabs-tab-key-param="llm_enrichment"
+                <%= editor_tab_url_attribute.call("llm_enrichment", llm_tab_active) %>
                 data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
           LLM-Enrichment
         </button>
@@ -125,6 +138,7 @@
                 tabindex="<%= social_tab_active ? 0 : -1 %>"
                 data-event-editor-tabs-target="tab"
                 data-event-editor-tabs-tab-key-param="social"
+                <%= editor_tab_url_attribute.call("social", social_tab_active) %>
                 data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
           Social
         </button>
@@ -138,6 +152,7 @@
               tabindex="<%= settings_tab_active ? 0 : -1 %>"
               data-event-editor-tabs-target="tab"
               data-event-editor-tabs-tab-key-param="settings"
+              <%= editor_tab_url_attribute.call("settings", settings_tab_active) %>
               data-action="click->event-editor-tabs#activate keydown->event-editor-tabs#keydown">
         Einstellungen
       </button>
@@ -171,10 +186,12 @@
                <%= "hidden" unless event_image_tab_active %>
                data-event-editor-tabs-target="panel"
                data-event-editor-tabs-panel-key="event_image">
-        <%= render "backend/events/event_image_section",
-                   event: event,
-                   editor_status: editor_status,
-                   editor_form_id: editor_form_id %>
+        <% if event_image_tab_active || !lazy_inactive_tabs %>
+          <%= render "backend/events/event_image_section",
+                     event: event,
+                     editor_status: editor_status,
+                     editor_form_id: editor_form_id %>
+        <% end %>
       </section>
 
       <section id="event-editor-panel-slider-images"
@@ -185,10 +202,12 @@
                <%= "hidden" unless slider_images_tab_active %>
                data-event-editor-tabs-target="panel"
                data-event-editor-tabs-panel-key="slider_images">
-        <%= render "backend/events/slider_images_section",
-                   event: event,
-                   editor_status: editor_status,
-                   editor_form_id: editor_form_id %>
+        <% if slider_images_tab_active || !lazy_inactive_tabs %>
+          <%= render "backend/events/slider_images_section",
+                     event: event,
+                     editor_status: editor_status,
+                     editor_form_id: editor_form_id %>
+        <% end %>
       </section>
 
       <section id="event-editor-panel-presenters"
@@ -199,10 +218,12 @@
                <%= "hidden" unless presenters_tab_active %>
                data-event-editor-tabs-target="panel"
                data-event-editor-tabs-panel-key="presenters">
-        <%= render "backend/events/presenters_section",
-                   event: event,
-                   all_presenters: all_presenters,
-                   editor_form_id: editor_form_id %>
+        <% if presenters_tab_active || !lazy_inactive_tabs %>
+          <%= render "backend/events/presenters_section",
+                     event: event,
+                     all_presenters: all_presenters,
+                     editor_form_id: editor_form_id %>
+        <% end %>
       </section>
 
       <% if llm_tab_available %>
@@ -214,12 +235,14 @@
                  <%= "hidden" unless llm_tab_active %>
                  data-event-editor-tabs-target="panel"
                  data-event-editor-tabs-panel-key="llm_enrichment">
-          <%= render "backend/events/llm_enrichment_fields",
-                     event: event,
-                     llm_enrichment: llm_enrichment,
-                     all_genres: all_genres,
-                     editor_form_id: editor_form_id,
-                     filter_status: filter_status %>
+          <% if llm_tab_active || !lazy_inactive_tabs %>
+            <%= render "backend/events/llm_enrichment_fields",
+                       event: event,
+                       llm_enrichment: llm_enrichment,
+                       all_genres: all_genres,
+                       editor_form_id: editor_form_id,
+                       filter_status: filter_status %>
+          <% end %>
         </section>
       <% end %>
 
@@ -232,9 +255,11 @@
                  <%= "hidden" unless social_tab_active %>
                  data-event-editor-tabs-target="panel"
                  data-event-editor-tabs-panel-key="social">
-          <%= render "backend/events/social_posts_section",
-                     event: event,
-                     filter_status: filter_status %>
+          <% if social_tab_active || !lazy_inactive_tabs %>
+            <%= render "backend/events/social_posts_section",
+                       event: event,
+                       filter_status: filter_status %>
+          <% end %>
         </section>
       <% end %>
 
@@ -246,11 +271,13 @@
                <%= "hidden" unless settings_tab_active %>
                data-event-editor-tabs-target="panel"
                data-event-editor-tabs-panel-key="settings">
-        <%= render "backend/events/settings_fields",
-                   event: event,
-                   all_genres: all_genres,
-                   all_sub_genres: all_sub_genres,
-                   editor_form_id: editor_form_id %>
+        <% if settings_tab_active || !lazy_inactive_tabs %>
+          <%= render "backend/events/settings_fields",
+                     event: event,
+                     all_genres: all_genres,
+                     all_sub_genres: all_sub_genres,
+                     editor_form_id: editor_form_id %>
+        <% end %>
       </section>
     </div>
   </section>

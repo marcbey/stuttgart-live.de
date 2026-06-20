@@ -11,7 +11,7 @@ module Backend
     before_action :set_next_event_enabled, only: [ :index, :show, :new, :create, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
     before_action :load_all_sub_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
-    before_action :load_all_presenters, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
+    before_action :load_all_presenters, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ], if: :presenter_options_required?
 
     def index
       prepare_index_state!
@@ -44,6 +44,7 @@ module Backend
     def show
       @filter_status = @inbox_state.navigation_status || params[:status].to_s.presence_in(status_filters)
       @active_editor_tab = editor_tab_for(@event)
+      @lazy_inactive_editor_tabs = turbo_frame_request?
       ensure_social_drafts_for!(@event) if @active_editor_tab == "social"
     end
 
@@ -312,6 +313,12 @@ module Backend
       @all_presenters = Presenter.with_attached_logo.ordered_by_name.to_a
     end
 
+    def presenter_options_required?
+      return false if action_name == "show" && turbo_frame_request? && editor_tab_param != "presenters"
+
+      true
+    end
+
     def build_editor_state_builder
       Backend::Events::EditorStateBuilder.new(
         inbox_state: @inbox_state,
@@ -495,7 +502,11 @@ module Backend
     def editor_tab_for(event)
       return "event" if event.blank?
 
-      params[:editor_tab].to_s.presence_in(allowed_editor_tabs_for(event)) || "event"
+      editor_tab_param.presence_in(allowed_editor_tabs_for(event)) || "event"
+    end
+
+    def editor_tab_param
+      params[:editor_tab].to_s
     end
 
     def new_editor_tab

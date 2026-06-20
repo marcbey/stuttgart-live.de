@@ -232,6 +232,27 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".form-label-link[aria-label='Location im Backend öffnen'][href='#{backend_venues_path(venue_id: @event.venue_record.id)}'][target='_blank']", count: 1
   end
 
+  test "default turbo frame show defers inactive editor tab bodies" do
+    sign_in_as(@user)
+    create_event_image(event: @event, purpose: EventImage::PURPOSE_SLIDER)
+    create_presenter(name: "Alpha Presenter")
+
+    get backend_event_url(@event, status: "needs_review"), headers: { "Turbo-Frame" => "event_editor" }
+
+    assert_response :success
+    assert_select "turbo-frame#event_editor", count: 1
+    assert_select "#event-editor-panel-event:not([hidden])", count: 1
+    assert_select "#event-editor-panel-slider-images[hidden]", count: 1
+    assert_select "#event-editor-panel-presenters[hidden]", count: 1
+    assert_select "#event-editor-panel-settings[hidden]", count: 1
+    assert_select "#event-editor-tab-slider-images[data-event-editor-tabs-url-param='#{backend_event_path(@event, status: "needs_review", editor_tab: "slider_images")}']", count: 1
+    assert_select "#event-editor-tab-presenters[data-event-editor-tabs-url-param='#{backend_event_path(@event, status: "needs_review", editor_tab: "presenters")}']", count: 1
+    assert_select "#event-editor-panel-slider-images .slider-image-editor-card", count: 0
+    assert_select "#event-editor-panel-slider-images h4", text: "Presse-Bilder hochladen", count: 0
+    assert_select "#event-editor-panel-presenters input[name='event[presenter_ids][]']", count: 0
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner]']", count: 0
+  end
+
   test "topbar does not render direct facebook or instagram publish buttons" do
     sign_in_as(@user)
 
