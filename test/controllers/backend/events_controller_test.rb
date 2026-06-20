@@ -2,6 +2,7 @@ require "test_helper"
 
 class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   include ActiveJob::TestHelper
+  FIXTURE_NOW = Time.zone.local(2026, 4, 15, 12, 0, 0)
 
   setup do
     @event = events(:needs_review_one)
@@ -31,41 +32,43 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "index is available for signed in users" do
-    sign_in_as(@user)
+    travel_to FIXTURE_NOW do
+      sign_in_as(@user)
 
-    get backend_events_url
+      get backend_events_url
 
-    assert_response :success
-    assert_not_includes response.body, "fonts.googleapis.com"
-    assert_not_includes response.body, "fonts.gstatic.com"
-    assert_select "script[type='module'][src*='/assets/backend']", count: 1
-    assert_select "script[type='module'][src*='/assets/public']", count: 0
-    assert_select "script[type='module'][src*='/assets/application']", count: 0
-    assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
-    assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 0
-    assert_select "style[data-local-font-faces]", count: 1
-    assert_includes response.body, ActionController::Base.helpers.asset_path("archivo-narrow-700.woff2")
-    assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
-    assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
-    assert_not_includes response.body, ActionController::Base.helpers.asset_path("bebas-neue-400.woff2")
-    assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
-    assert_select ".app-nav-backend-menu", count: 0
-    assert_select ".app-nav-links .app-nav-link-active", text: "Events"
-    assert_match(/Events.*News.*Präsentatoren.*Locations.*Queue.*Passwort.*Logout/m, response.body)
-    assert_includes response.body, "Event-Inbox"
-    assert_includes response.body, "auto-next"
-    assert_includes response.body, "name=\"status\""
-    assert_includes response.body, "value=\"published\""
-    assert_includes response.body, "Promoter-ID"
-    assert_includes response.body, "Beginn"
-    assert_select "button[aria-label='Suche löschen']"
-    assert_select "button[aria-label='Promoter-ID löschen']"
-    assert_includes response.body, "Bilder aus Import"
-    assert_not_includes response.body, "Ticket-Angebote"
-    assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
-    assert_includes response.body, "data-next-event-enabled-value=\"false\""
-    assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
-    assert_select "#event_topbar_editor_actions a.button", text: "Open"
+      assert_response :success
+      assert_not_includes response.body, "fonts.googleapis.com"
+      assert_not_includes response.body, "fonts.gstatic.com"
+      assert_select "script[type='module'][src*='/assets/backend']", count: 1
+      assert_select "script[type='module'][src*='/assets/public']", count: 0
+      assert_select "script[type='module'][src*='/assets/application']", count: 0
+      assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
+      assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 0
+      assert_select "style[data-local-font-faces]", count: 1
+      assert_includes response.body, ActionController::Base.helpers.asset_path("archivo-narrow-700.woff2")
+      assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
+      assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
+      assert_not_includes response.body, ActionController::Base.helpers.asset_path("bebas-neue-400.woff2")
+      assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
+      assert_select ".app-nav-backend-menu", count: 0
+      assert_select ".app-nav-links .app-nav-link-active", text: "Events"
+      assert_match(/Events.*News.*Präsentatoren.*Locations.*Queue.*Passwort.*Logout/m, response.body)
+      assert_includes response.body, "Event-Inbox"
+      assert_includes response.body, "auto-next"
+      assert_includes response.body, "name=\"status\""
+      assert_includes response.body, "value=\"published\""
+      assert_includes response.body, "Promoter-ID"
+      assert_includes response.body, "Beginn"
+      assert_select "button[aria-label='Suche löschen']"
+      assert_select "button[aria-label='Promoter-ID löschen']"
+      assert_includes response.body, "Bilder aus Import"
+      assert_not_includes response.body, "Ticket-Angebote"
+      assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
+      assert_includes response.body, "data-next-event-enabled-value=\"false\""
+      assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
+      assert_select "#event_topbar_editor_actions a.button", text: "Open"
+    end
   end
 
   test "index does not render a separate topbar context" do
@@ -2594,29 +2597,31 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "turbo unpublish keeps active published filter and refreshes inbox" do
-    sign_in_as(@user)
-    other_published_event = Event.create!(
-      artist_name: "Another Published Artist",
-      title: "Another Published Event",
-      start_at: Time.zone.parse("2026-06-02 20:00:00"),
-      venue: "Im Wizemann",
-      city: "Stuttgart",
-      status: "published",
-      published_at: 2.days.ago,
-      published_by: @user,
-      completeness_score: 100
-    )
+    travel_to FIXTURE_NOW do
+      sign_in_as(@user)
+      other_published_event = Event.create!(
+        artist_name: "Another Published Artist",
+        title: "Another Published Event",
+        start_at: Time.zone.parse("2026-06-02 20:00:00"),
+        venue: "Im Wizemann",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 2.days.ago,
+        published_by: @user,
+        completeness_score: 100
+      )
 
-    patch unpublish_backend_event_url(@published_event), params: { inbox_status: "published" }, as: :turbo_stream
+      patch unpublish_backend_event_url(@published_event), params: { inbox_status: "published" }, as: :turbo_stream
 
-    assert_response :success
-    assert_equal "ready_for_publish", @published_event.reload.status
-    assert_includes response.body, 'target="event_topbar_editor_actions"'
-    assert_includes response.body, 'target="events_list"'
-    assert_includes response.body, other_published_event.artist_name
-    assert_includes response.body, 'target="event_editor"'
-    assert_includes response.body, "editor_form_event_#{other_published_event.id}"
-    assert_includes response.body, "/backend/events/#{other_published_event.id}/unpublish"
+      assert_response :success
+      assert_equal "ready_for_publish", @published_event.reload.status
+      assert_includes response.body, 'target="event_topbar_editor_actions"'
+      assert_includes response.body, 'target="events_list"'
+      assert_includes response.body, other_published_event.artist_name
+      assert_includes response.body, 'target="event_editor"'
+      assert_includes response.body, "editor_form_event_#{other_published_event.id}"
+      assert_includes response.body, "/backend/events/#{other_published_event.id}/unpublish"
+    end
   end
 
   test "bulk publish updates selected events" do

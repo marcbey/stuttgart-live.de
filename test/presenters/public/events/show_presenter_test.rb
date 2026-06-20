@@ -3,6 +3,8 @@ require "ostruct"
 require "action_view/helpers/number_helper"
 
 class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
+  FIXTURE_NOW = Time.zone.local(2026, 4, 15, 12, 0, 0)
+
   class FakeGenres
     def initialize(names)
       @names = names
@@ -78,8 +80,13 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
   end
 
   teardown do
+    travel_back
     AppSetting.where(key: AppSetting::VENUE_DUPLICATE_MAPPINGS_KEY).delete_all
     AppSetting.reset_cache!
+  end
+
+  setup do
+    travel_to FIXTURE_NOW
   end
 
   test "exposes hero, meta and navigation data" do

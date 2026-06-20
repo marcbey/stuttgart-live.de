@@ -1,7 +1,10 @@
 require "test_helper"
 
 class Public::EventsControllerTest < ActionDispatch::IntegrationTest
+  FIXTURE_NOW = Time.zone.local(2026, 4, 15, 12, 0, 0)
+
   setup do
+    travel_to FIXTURE_NOW
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
     AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_LANE_SLUGS_KEY).delete_all
@@ -15,6 +18,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   teardown do
+    travel_back
     AppSetting.reset_cache!
     AppSetting.where(key: AppSetting::SKS_PROMOTER_IDS_KEY).delete_all
     AppSetting.where(key: AppSetting::SKS_ORGANIZER_NOTES_KEY).delete_all
