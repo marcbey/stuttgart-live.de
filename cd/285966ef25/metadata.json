@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "cd285966ef25",
+  "strategy": "manual-commit",
+  "branch": "codex/defer-homepage-lanes",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/assets/stylesheets/frontend.tailwind.css",
+    "app/javascript/controllers/homepage_lane_controller.js",
+    "app/views/public/events/_genre_lane_section.html.erb",
+    "app/views/public/events/index.html.erb",
+    "test/controllers/public/events_controller_test.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/cd/285966ef25/0/metadata.json",
+      "transcript": "/cd/285966ef25/0/full.jsonl",
+      "content_hash": "/cd/285966ef25/0/content_hash.txt",
+      "prompt": "/cd/285966ef25/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 454788,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 5760896,
+    "output_tokens": 21534,
+    "api_call_count": 58
+  }
+}
