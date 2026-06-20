@@ -1,1 +1,1 @@
-[@superpowers](plugin://superpowers@openai-curated-remote) Der event-editor im Backend verhält sich sehr langsam, braucht lange zum laden. Wenn links in der event-list Liste auf ein Event geklickt wird, dauert es sehr lange bis der event im event-editor angezeigt wird. Schau dir an, an was das liegt und versucht das backend schneller zu machen sodass die UX besser wird.
+commit, push & PR
