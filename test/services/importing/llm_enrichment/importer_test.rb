@@ -3,6 +3,8 @@ require "test_helper"
 module Importing
   module LlmEnrichment
     class ImporterTest < ActiveSupport::TestCase
+      FIXTURE_NOW = Time.zone.local(2026, 4, 15, 12, 0, 0)
+
       FakeClient = Struct.new(:responses, :model, :captured_inputs, :captured_text_formats, keyword_init: true) do
         def create!(input:, text_format:)
           raise "missing input" if input.blank?
@@ -95,6 +97,7 @@ module Importing
       end
 
       setup do
+        travel_to FIXTURE_NOW
         @source = import_sources(:two)
         @run = @source.import_runs.create!(
           source_type: "llm_enrichment",
@@ -105,6 +108,7 @@ module Importing
       end
 
       teardown do
+        travel_back
         AppSetting.reset_cache!
       end
 
