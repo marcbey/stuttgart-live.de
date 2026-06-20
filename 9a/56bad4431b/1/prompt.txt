@@ -1,0 +1,9 @@
+Beim LLM Enrichment sollen alle API Calls (openai, open web ninja) am Job dokumentiert sein, sodass ich sie auf der Detail Page zum Job sehen kann
+
+---
+
+Cache-Hits sollen also solche sichtbar sein
+
+---
+
+wählen einen einfachen Ansatz

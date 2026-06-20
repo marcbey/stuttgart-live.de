@@ -1,0 +1,64 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "9a56bad4431b",
+  "session_id": "019ee54d-d1c4-7432-a739-b8770d940cf1",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-20T14:10:34.244728Z",
+  "branch": "main",
+  "checkpoints_count": 3,
+  "save_step_count": 1,
+  "files_touched": [
+    "README.md",
+    "app/helpers/backend/import_runs_helper.rb",
+    "app/services/importing/llm_enrichment/api_call_recorder.rb",
+    "app/services/importing/llm_enrichment/caching_web_search_client.rb",
+    "app/services/importing/llm_enrichment/importer.rb",
+    "app/services/importing/llm_enrichment/link_finder.rb",
+    "app/services/importing/llm_enrichment/web_search_client_factory.rb",
+    "app/views/backend/import_runs/show.html.erb",
+    "test/controllers/backend/import_runs_controller_test.rb",
+    "test/services/importing/llm_enrichment/caching_web_search_client_test.rb",
+    "test/services/importing/llm_enrichment/importer_test.rb"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "653293df7964",
+  "token_usage": {
+    "input_tokens": 423127,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 3733248,
+    "output_tokens": 19652,
+    "api_call_count": 42
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-06-20T14:10:34.22437Z",
+    "agent_lines": 510,
+    "agent_removed": 24,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 510,
+    "total_lines_changed": 534,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 510,
+      "agent_lines_removed": 24
+    }
+  ]
+}
