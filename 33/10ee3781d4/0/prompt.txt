@@ -1,0 +1,26 @@
+Rebase den branch mit main zuerst.
+Dann behebe die Brakeman Fails in einem eigenen Branch & PR zuvor, schau dir auch diese dependabot PRs dazu an [https://github.com/marcbey/stuttgart-live.de/pulls](https://github.com/marcbey/stuttgart-live.de/pulls)  und komme dann zurück und beende deine arbeit
+
+---
+
+Was sind as für Rails/Bullet-Tests bleiben rot mit 21 Failures und 4 Errors ?
+
+---
+
+fix die tests in einem seperaten branch und komme dann zurück
+
+---
+
+commit & push
+
+---
+
+dann merge doch erstmal codex/fix-date-sensitive-tests in main und rebase diesen branch auf main, dann sollte doch wieder als grün sein
+
+---
+
+ok, mach das mit brakeman
+
+---
+
+merge & push  [entire/checkpoints/v1](https://github.com/marcbey/stuttgart-live.de/tree/entire/checkpoints/v1)  & [codex/speed-up-event-editor](https://github.com/marcbey/stuttgart-live.de/tree/codex/speed-up-event-editor) und dann arbeite alle PRs in [https://github.com/marcbey/stuttgart-live.de/pulls](https://github.com/marcbey/stuttgart-live.de/pulls) ab
