@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "0c0a1f947fbc",
+  "session_id": "019ee407-6d00-7ca2-913b-886b7209d8f4",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-20T08:09:14.358743Z",
+  "branch": "codex/performance-ux-audit",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/views/layouts/application.html.erb",
+    "test/controllers/backend/events_controller_test.rb",
+    "test/controllers/public/events_controller_test.rb",
+    "test/controllers/sessions_controller_test.rb"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "37371de8776e",
+  "checkpoint_transcript_start": 386,
+  "transcript_lines_at_start": 386,
+  "token_usage": {
+    "input_tokens": 11765,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1848960,
+    "output_tokens": 3632,
+    "api_call_count": 11
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-06-20T08:09:14.33159Z",
+    "agent_lines": 6,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 6,
+    "total_lines_changed": 6,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}

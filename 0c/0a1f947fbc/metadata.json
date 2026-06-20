@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "0c0a1f947fbc",
+  "strategy": "manual-commit",
+  "branch": "codex/performance-ux-audit",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/views/layouts/application.html.erb",
+    "test/controllers/backend/events_controller_test.rb",
+    "test/controllers/public/events_controller_test.rb",
+    "test/controllers/sessions_controller_test.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/0c/0a1f947fbc/0/metadata.json",
+      "transcript": "/0c/0a1f947fbc/0/full.jsonl",
+      "content_hash": "/0c/0a1f947fbc/0/content_hash.txt",
+      "prompt": ""
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 11765,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1848960,
+    "output_tokens": 3632,
+    "api_call_count": 11
+  }
+}
