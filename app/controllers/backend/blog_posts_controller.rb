@@ -121,6 +121,7 @@ module Backend
           :body,
           :published_at,
           :author_name,
+          :youtube_video_url,
           :promotion_banner,
           :promotion_banner_lane_position,
           :promotion_banner_kicker_text,
