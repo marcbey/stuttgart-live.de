@@ -1,9 +1,1 @@
-Die News brauchen noch eine Integration für Youtube videos
-
----
-
-Es soll eine YouTube url pro news sein
-
----
-
 Ok
