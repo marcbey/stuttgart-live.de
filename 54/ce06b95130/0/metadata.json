@@ -1,0 +1,44 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "54ce06b95130",
+  "session_id": "019ee90d-f8d4-70b3-b28e-004b15277883",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-21T16:25:51.982721Z",
+  "branch": "codex/news-youtube-video",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "app/controllers/backend/blog_posts_controller.rb",
+    "app/models/blog_post.rb",
+    "app/views/backend/blog_posts/_news_fields.html.erb",
+    "docs/superpowers/plans/2026-06-21-news-youtube-video.md",
+    "test/controllers/backend/blog_posts_controller_test.rb",
+    "test/models/blog_post_test.rb"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "5f1adc8ca162",
+  "checkpoint_transcript_start": 167,
+  "transcript_lines_at_start": 167,
+  "token_usage": {
+    "input_tokens": 278587,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 2679680,
+    "output_tokens": 9774,
+    "api_call_count": 37
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-06-21T16:25:51.92677Z",
+    "agent_lines": 251,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 251,
+    "total_lines_changed": 251,
+    "agent_percentage": 100,
+    "metric_version": 2
+  }
+}
