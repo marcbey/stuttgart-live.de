@@ -20,7 +20,7 @@ module Importing
 
         assert_equal [ "broad", "instagram", "facebook", "youtube" ], queries.map(&:name)
         assert_equal "\"Luca Noel\" offizielle website", queries.first.query
-        assert_equal "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/", queries.second.query
+        assert_equal "site:instagram.com (official OR band OR music OR artist) Luca Noel", queries.second.query
         assert_equal "\"Luca Noel\" (official OR band OR music OR artist) site:facebook.com", queries.third.query
         assert_equal "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel", queries.fourth.query
       end
@@ -45,6 +45,22 @@ module Importing
         assert_nil query
       end
 
+      test "builds instagram query with site and intent terms before unquoted artist name" do
+        event = EventStub.new(
+          artist_name: "saga",
+          title: "Tour 2026",
+          venue: "Im Wizemann",
+          venue_name: "Im Wizemann",
+          city: "Stuttgart",
+          source_snapshot: {},
+          start_at: Time.zone.parse("2026-04-16 20:00:00")
+        )
+
+        query = QueryBuilder.new.web_search_query(event: event, field_name: :instagram_link)
+
+        assert_equal "site:instagram.com (official OR band OR music OR artist) saga", query.query
+      end
+
       test "falls back to title when artist name looks like a quoted tour label" do
         event = EventStub.new(
           artist_name: "„Generation Dating Burnout“ - Lesetour",
@@ -59,7 +75,7 @@ module Importing
         queries = QueryBuilder.new.call(event: event)
 
         assert_equal "\"Michael Nast\" offizielle website", queries.first.query
-        assert_equal "\"Michael Nast\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/", queries.second.query
+        assert_equal "site:instagram.com (official OR band OR music OR artist) Michael Nast", queries.second.query
         assert_equal "\"Michael Nast\" (official OR band OR music OR artist) site:facebook.com", queries.third.query
         assert_equal "\"Michael Nast\" site:youtube.com/@ OR site:youtube.com/channel", queries.fourth.query
       end

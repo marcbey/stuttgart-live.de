@@ -54,7 +54,7 @@ module Importing
                 )
               ]
             ),
-            "\"Luca Noel\" (official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/" => search_result("ig-1", []),
+            "site:instagram.com (official OR band OR music OR artist) Luca Noel" => search_result("ig-1", []),
             "\"Luca Noel\" (official OR band OR music OR artist) site:facebook.com" => search_result("fb-1", []),
             "\"Luca Noel\" site:youtube.com/@ OR site:youtube.com/channel" => search_result("yt-1", [])
           }

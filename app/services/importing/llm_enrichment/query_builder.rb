@@ -4,7 +4,7 @@ module Importing
       Query = Data.define(:name, :field_name, :query)
       FACEBOOK_SITE_QUERY = "(official OR band OR music OR artist) site:facebook.com".freeze
       HOMEPAGE_SITE_QUERY = "offizielle website".freeze
-      INSTAGRAM_SITE_QUERY = "(official OR band OR music OR artist) Instagram site:instagram.com -inurl:/p/ -inurl:/reel/".freeze
+      INSTAGRAM_SITE_QUERY = "site:instagram.com (official OR band OR music OR artist)".freeze
       YOUTUBE_SITE_QUERY = "site:youtube.com/@ OR site:youtube.com/channel".freeze
 
       def call(event:, field_names: nil)
@@ -14,14 +14,15 @@ module Importing
       end
 
       def web_search_query(event:, field_name:)
-        artist_query = quoted_term(Events::ArtistTitleSanitizer.artist_name_for_query(artist_name: event.artist_name, title: event.title))
+        artist_name_for_query = Events::ArtistTitleSanitizer.artist_name_for_query(artist_name: event.artist_name, title: event.title)
+        artist_query = quoted_term(artist_name_for_query)
         return if artist_query.blank?
 
         case field_name.to_sym
         when :homepage_link
           build_query(name: "broad", field_name: :homepage_link, artist_query:, suffix: HOMEPAGE_SITE_QUERY)
         when :instagram_link
-          build_query(name: "instagram", field_name: :instagram_link, artist_query:, suffix: INSTAGRAM_SITE_QUERY)
+          build_query(name: "instagram", field_name: :instagram_link, artist_query: unquoted_term(artist_name_for_query), prefix: INSTAGRAM_SITE_QUERY)
         when :facebook_link
           build_query(name: "facebook", field_name: :facebook_link, artist_query:, suffix: FACEBOOK_SITE_QUERY)
         when :youtube_link
@@ -42,8 +43,12 @@ module Importing
         %("#{sanitized}")
       end
 
-      def build_query(name:, field_name:, artist_query:, suffix:)
-        Query.new(name:, field_name:, query: [ artist_query, suffix ].join(" "))
+      def unquoted_term(value)
+        value.to_s.gsub("\"", " ").squish.presence
+      end
+
+      def build_query(name:, field_name:, artist_query:, suffix: nil, prefix: nil)
+        Query.new(name:, field_name:, query: [ prefix, artist_query, suffix ].compact.join(" "))
       end
     end
   end
