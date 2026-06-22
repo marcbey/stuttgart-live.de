@@ -1,13 +1,1 @@
-Ok
-
----
-
-was sind das für markdown files in docs?
-
----
-
 commit & push
-
----
-
-das backend ui für die blog news brauch auch ein eingabe feld für diese youtube url
