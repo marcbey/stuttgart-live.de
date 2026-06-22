@@ -242,6 +242,15 @@ class BlogPost < ApplicationRecord
     nil
   end
 
+  def youtube_video_url
+    youtube_video_urls.first
+  end
+
+  def youtube_video_url=(value)
+    normalized_url = normalize_youtube_url(value)
+    self.youtube_video_urls = normalized_url.present? ? [ normalized_url ] : []
+  end
+
   private
     def normalize_attributes
       self.title = title.to_s.strip

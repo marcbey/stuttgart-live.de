@@ -121,6 +121,37 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_nil blog_post.published_by
   end
 
+  test "youtube video url stores one normalized embed url" do
+    blog_post = BlogPost.new(
+      title: "Video News",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      youtube_video_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+    )
+
+    assert_predicate blog_post, :valid?
+    assert_equal [ "https://www.youtube.com/embed/dQw4w9WgXcQ" ], blog_post.youtube_video_urls
+    assert_equal "https://www.youtube.com/embed/dQw4w9WgXcQ", blog_post.youtube_video_url
+  end
+
+  test "blank youtube video url clears stored videos" do
+    blog_post = BlogPost.new(
+      title: "Video News",
+      teaser: "Teaser",
+      body: "<div>Inhalt</div>",
+      author: @author,
+      status: "draft",
+      youtube_video_urls: [ "https://www.youtube.com/embed/dQw4w9WgXcQ" ]
+    )
+
+    blog_post.youtube_video_url = ""
+
+    assert_empty blog_post.youtube_video_urls
+    assert_nil blog_post.youtube_video_url
+  end
+
   test "promotion banner requires banner image" do
     blog_post = BlogPost.new(
       title: "Banner Entwurf",

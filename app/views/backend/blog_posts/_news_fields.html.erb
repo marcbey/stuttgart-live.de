@@ -27,6 +27,14 @@
                                 class: "form-input" %>
 </div>
 
+<div>
+  <%= form.label :youtube_video_url, "YouTube-URL", class: "form-label" %>
+  <%= form.url_field :youtube_video_url,
+                     class: "form-input",
+                     placeholder: "https://www.youtube.com/watch?v=..." %>
+  <p class="blog-editor-hint">Optional. Pro News-Beitrag wird ein YouTube-Video angezeigt.</p>
+</div>
+
 <div class="blog-body-editor-field">
   <%= form.label :body, "Inhalt", class: "form-label" %>
   <p class="blog-editor-hint">Bilder können direkt über die Toolbar in den Text eingefügt werden.</p>

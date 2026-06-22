@@ -122,6 +122,25 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_nil blog_post.published_by
   end
 
+  test "editor can save one youtube video url for a blog post" do
+    sign_in_as(@editor)
+    blog_post = create_blog_post(author: @editor, status: "draft")
+
+    patch backend_blog_post_url(blog_post), params: {
+      blog_post: {
+        title: blog_post.title,
+        teaser: blog_post.teaser,
+        slug: blog_post.slug,
+        body: "<div>Mit Video.</div>",
+        youtube_video_url: "https://youtu.be/dQw4w9WgXcQ"
+      },
+      publication_action: "save"
+    }
+
+    assert_redirected_to backend_blog_posts_url(blog_post_id: blog_post.id)
+    assert_equal [ "https://www.youtube.com/embed/dQw4w9WgXcQ" ], blog_post.reload.youtube_video_urls
+  end
+
   test "editor can publish a promotion banner without replacing previous banners" do
     sign_in_as(@editor)
     previous_banner = create_blog_post(author: @editor, status: "published", published_at: 2.days.ago, published_by: @editor)
@@ -259,6 +278,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog-editor-panel-settings[hidden]", count: 1
     assert_select "#blog-editor-panel-news .backend-section-stack", count: 1
     assert_select "#blog-editor-panel-news .backend-section.backend-section-form", count: 1
+    assert_select "#blog-editor-panel-news input[name='blog_post[youtube_video_url]']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_kicker_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_background_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
