@@ -1105,14 +1105,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner a[href='#{news_path(blog_post.slug)}']"
 
     document = Nokogiri::HTML.parse(response.body)
-    shell_children = document.css("section.public-shell > *")
-    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
-    promotion_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("promotion-banner-slider-section") }
+    slider_section = document.at_css("section.promotion-banner-slider-section")
+    public_shell = document.at_css("section.public-shell")
+    highlights_section = document.at_css("section.public-shell > section.home-featured-section")
 
-    assert highlights_index.present?, "expected Highlights section to be rendered"
-    assert promotion_index.present?, "expected Promotion Banner slider to be rendered"
-    assert_equal 0, promotion_index
-    assert_operator promotion_index, :<, highlights_index
+    assert slider_section.present?, "expected Promotion Banner slider to be rendered"
+    assert public_shell.present?, "expected public shell to be rendered"
+    assert highlights_section.present?, "expected Highlights section to be rendered"
+    assert_equal slider_section, public_shell.previous_element
+    assert_equal highlights_section, public_shell.element_children.first
   end
 
   test "homepage renders event promotion banner above highlights when no news banner is configured" do
@@ -1151,16 +1152,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".promotion-banner-slider-track .promotion-banner-event h2", text: "Promotion Only Banner Artist"
+    assert_select "section.public-shell > article.promotion-banner:not(.promotion-banner-event)", count: 0
 
     document = Nokogiri::HTML.parse(response.body)
-    shell_children = document.css("section.public-shell > *")
-    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
-    slider_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("promotion-banner-slider-section") }
-    news_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") && !node["class"].to_s.include?("promotion-banner-event") }
+    slider_section = document.at_css("section.promotion-banner-slider-section")
+    public_shell = document.at_css("section.public-shell")
+    highlights_section = document.at_css("section.public-shell > section.home-featured-section")
 
-    assert_equal 0, slider_index
-    assert_equal slider_index + 1, highlights_index
-    assert_nil news_banner_index
+    assert slider_section.present?, "expected Promotion Banner slider to be rendered"
+    assert public_shell.present?, "expected public shell to be rendered"
+    assert highlights_section.present?, "expected Highlights section to be rendered"
+    assert_equal slider_section, public_shell.previous_element
+    assert_equal highlights_section, public_shell.element_children.first
   end
 
   test "homepage renders event promotion banner before news banner at the top" do
@@ -1218,12 +1221,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner-slider-track .promotion-banner:not(.promotion-banner-event) a[href='#{news_path(blog_post.slug)}']", count: 1
 
     document = Nokogiri::HTML.parse(response.body)
-    shell_children = document.css("section.public-shell > *")
-    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
-    slider_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("promotion-banner-slider-section") }
+    slider_section = document.at_css("section.promotion-banner-slider-section")
+    public_shell = document.at_css("section.public-shell")
+    highlights_section = document.at_css("section.public-shell > section.home-featured-section")
 
-    assert_equal 0, slider_index
-    assert_operator slider_index, :<, highlights_index
+    assert slider_section.present?, "expected Promotion Banner slider to be rendered"
+    assert public_shell.present?, "expected public shell to be rendered"
+    assert highlights_section.present?, "expected Highlights section to be rendered"
+    assert_equal slider_section, public_shell.previous_element
+    assert_equal highlights_section, public_shell.element_children.first
 
     slider_links = document.css(".promotion-banner-slider-track a.promotion-banner-link").map { |node| node["href"] }
     assert_equal [ event_path(event.slug), news_path(blog_post.slug) ], slider_links
@@ -1314,14 +1320,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ news_path(top_blog_post.slug), event_path(event.slug), news_path(trailing_blog_post.slug) ], slider_links
 
     document = Nokogiri::HTML.parse(response.body)
+    public_shell = document.at_css("section.public-shell")
+    slider_section = document.at_css("section.promotion-banner-slider-section")
     shell_children = document.css("section.public-shell > *").to_a
-    slider_index = shell_children.index { |node| node["class"].to_s.include?("promotion-banner-slider-section") }
-    highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
+    highlights_section = document.at_css("section.public-shell > section.home-featured-section")
     event_banner_index = shell_children.index { |node| node.name == "article" && node.at_css("a[href='#{event_path(event.slug)}']") }
     trailing_banner_index = shell_children.index { |node| node.name == "article" && node.at_css("a[href='#{news_path(trailing_blog_post.slug)}']") }
     saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
 
-    assert_equal slider_index + 1, highlights_index
+    assert public_shell.present?, "expected public shell to be rendered"
+    assert slider_section.present?, "expected Promotion Banner slider to be rendered"
+    assert highlights_section.present?, "expected Highlights section to be rendered"
+    assert_equal slider_section, public_shell.previous_element
+    assert_equal highlights_section, public_shell.element_children.first
     assert_equal event_banner_index + 1, trailing_banner_index
     assert_equal trailing_banner_index + 1, saved_lane_slot_index
   end

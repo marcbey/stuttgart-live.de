@@ -16,23 +16,25 @@
   <%= render "partner_strip" %>
 <% end %>
 
-<section class="public-shell">
-  <% strict_proxy = homepage_media_strict_proxy? %>
-  <% homepage_lane_lazy_url = homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>
-  <% all_promotion_banners = Array(@all_promotion_banners) %>
-  <% promotion_banners_by_lane_position = @promotion_banners_by_lane_position || {} %>
-  <% promotion_banner_lane_position = 1 %>
-  <% show_all_stuttgart_lane = false %>
-  <% show_homepage_genre_tag_cloud = false %>
+<% strict_proxy = homepage_media_strict_proxy? %>
+<% homepage_lane_lazy_url = homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>
+<% all_promotion_banners = Array(@all_promotion_banners) %>
+<% promotion_banners_by_lane_position = @promotion_banners_by_lane_position || {} %>
+<% promotion_banner_lane_position = 1 %>
+<% show_all_stuttgart_lane = false %>
+<% show_homepage_genre_tag_cloud = false %>
 
-  <% if @browse_state.page == 1 && all_promotion_banners.present? %>
-    <%= render "promotion_banner_slider",
-               banners: all_promotion_banners,
-               browse_state: @browse_state,
-               strict_proxy: strict_proxy,
-               priority_banner: @priority_promotion_banner %>
-    <% promotion_banner_lane_position = 2 %>
-  <% end %>
+<% if @browse_state.page == 1 && all_promotion_banners.present? %>
+  <%= render "promotion_banner_slider",
+             banners: all_promotion_banners,
+             browse_state: @browse_state,
+             strict_proxy: strict_proxy,
+             priority_banner: @priority_promotion_banner,
+             hero: true %>
+  <% promotion_banner_lane_position = 2 %>
+<% end %>
+
+<section class="public-shell public-shell-homepage">
 
   <% if @browse_state.page == 1 && @home_featured_events.present? %>
     <%= render "highlight_section",

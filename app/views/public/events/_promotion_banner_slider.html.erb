@@ -1,7 +1,10 @@
 <% strict_proxy = local_assigns.fetch(:strict_proxy, homepage_media_strict_proxy?) %>
 <% priority_banner = local_assigns[:priority_banner] %>
+<% hero = local_assigns.fetch(:hero, false) %>
+<% section_classes = [ "promotion-banner-slider-section" ] %>
+<% section_classes << "promotion-banner-slider-section--hero" if hero %>
 
-<section class="promotion-banner-slider-section"
+<section class="<%= section_classes.join(" ") %>"
          aria-label="Promotion Banner"
          data-controller="highlights-slider"
          data-highlights-slider-autoplay-value="true"
