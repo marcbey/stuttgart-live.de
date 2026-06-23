@@ -44,7 +44,9 @@
       <% if subheading.present? %>
         <p class="promotion-banner-event-title"><%= subheading %></p>
       <% end %>
-      <span class="promotion-banner-cta"><%= cta_text %></span>
+      <% cta_options = { class: "promotion-banner-cta" } %>
+      <% cta_options[:style] = local_assigns[:cta_style] if local_assigns[:cta_style].present? %>
+      <%= content_tag :span, cta_text, **cta_options %>
     </div>
   <% end %>
 <% end %>

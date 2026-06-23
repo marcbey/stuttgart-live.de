@@ -648,6 +648,8 @@ class EventTest < ActiveSupport::TestCase
     assert_equal "Promotion", event.promotion_banner_kicker_text_value
     assert_equal "Zum Event", event.promotion_banner_cta_text_value
     assert_equal "#E0F7F2", event.promotion_banner_background_color_value
+    assert_equal "#111111", event.promotion_banner_cta_color_value
+    assert_equal "#F8F8F8", event.promotion_banner_cta_text_color_value
     assert_equal "dark", event.promotion_banner_text_color_scheme
   end
 
@@ -672,6 +674,25 @@ class EventTest < ActiveSupport::TestCase
 
     assert_equal "#18333A", event.promotion_banner_background_color
     assert_equal "#18333A", event.promotion_banner_background_color_value
+  end
+
+  test "promotion banner cta color is normalized" do
+    event = events(:published_one)
+
+    event.update!(promotion_banner_cta_color: "  f97316 ")
+
+    assert_equal "#F97316", event.promotion_banner_cta_color
+    assert_equal "#F97316", event.promotion_banner_cta_color_value
+    assert_equal "#F8F8F8", event.promotion_banner_cta_text_color_value
+  end
+
+  test "promotion banner cta color rejects invalid values" do
+    event = events(:published_one)
+
+    event.promotion_banner_cta_color = "#ABC"
+
+    assert_not event.valid?
+    assert_includes event.errors[:promotion_banner_cta_color], "ist ungültig"
   end
 
   test "promotion banner background color rejects invalid values" do

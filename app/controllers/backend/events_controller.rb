@@ -466,6 +466,7 @@ module Backend
         :promotion_banner_kicker_text,
         :promotion_banner_cta_text,
         :promotion_banner_background_color,
+        :promotion_banner_cta_color,
         :promotion_banner_image_copyright,
         :promotion_banner_image_focus_x,
         :promotion_banner_image_focus_y,

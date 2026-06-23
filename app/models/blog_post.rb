@@ -3,6 +3,8 @@ class BlogPost < ApplicationRecord
   DEFAULT_PROMOTION_BANNER_KICKER_TEXT = "Promotion"
   DEFAULT_PROMOTION_BANNER_CTA_TEXT = "Zum Beitrag"
   DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR = "#E0F7F2"
+  DEFAULT_PROMOTION_BANNER_CTA_COLOR_DARK = "#111111"
+  DEFAULT_PROMOTION_BANNER_CTA_COLOR_LIGHT = "#F8FAF9"
   DEFAULT_PROMOTION_BANNER_LANE_POSITION = 1
   PROMOTION_BANNER_TEXT_COLOR_LIGHT = "light"
   PROMOTION_BANNER_TEXT_COLOR_DARK = "dark"
@@ -42,6 +44,7 @@ class BlogPost < ApplicationRecord
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_background_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
+  validates :promotion_banner_cta_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
   validates :promotion_banner_lane_position, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :cover_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :cover_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
@@ -140,15 +143,20 @@ class BlogPost < ApplicationRecord
     promotion_banner_background_color.presence || DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR
   end
 
+  def promotion_banner_cta_color_value
+    promotion_banner_cta_color.presence || promotion_banner_default_cta_color_value
+  end
+
+  def promotion_banner_cta_text_color_value
+    hex_color_bright?(promotion_banner_cta_color_value) ? "#111111" : "#F8F8F8"
+  end
+
   def promotion_banner_text_color_scheme
     promotion_banner_background_bright? ? PROMOTION_BANNER_TEXT_COLOR_DARK : PROMOTION_BANNER_TEXT_COLOR_LIGHT
   end
 
   def promotion_banner_background_bright?
-    red, green, blue = promotion_banner_background_color_value.delete_prefix("#").scan(/../).map { |channel| channel.to_i(16) }
-    brightness = ((red * 299) + (green * 587) + (blue * 114)) / 1000.0
-
-    brightness >= 160
+    hex_color_bright?(promotion_banner_background_color_value)
   end
 
   def optimized_image_variant(slot)
@@ -264,6 +272,7 @@ class BlogPost < ApplicationRecord
       self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
       self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
       self.promotion_banner_background_color = normalize_hex_color(promotion_banner_background_color)
+      self.promotion_banner_cta_color = normalize_hex_color(promotion_banner_cta_color)
       self.promotion_banner_lane_position = normalize_promotion_banner_lane_position
       self.cover_image_focus_x = normalize_percentage(cover_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
       self.cover_image_focus_y = normalize_percentage(cover_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
@@ -376,6 +385,17 @@ class BlogPost < ApplicationRecord
       return nil if value.blank?
 
       value.to_i
+    end
+
+    def promotion_banner_default_cta_color_value
+      promotion_banner_background_bright? ? DEFAULT_PROMOTION_BANNER_CTA_COLOR_DARK : DEFAULT_PROMOTION_BANNER_CTA_COLOR_LIGHT
+    end
+
+    def hex_color_bright?(value)
+      red, green, blue = value.delete_prefix("#").scan(/../).map { |channel| channel.to_i(16) }
+      brightness = ((red * 299) + (green * 587) + (blue * 114)) / 1000.0
+
+      brightness >= 160
     end
 
     def variant_transformations(max_dimension: WEB_MAX_DIMENSION)
