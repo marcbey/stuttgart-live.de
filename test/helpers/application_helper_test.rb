@@ -49,7 +49,7 @@ class ApplicationHelperTest < ActionView::TestCase
     public_search_icon_rules = stylesheet.scan(/body\.page-public-events-index \.public-search-icon\s*\{([^}]*)\}/m).flatten
     base_public_search_icon_rules = stylesheet.scan(/\.public-search-icon\s*\{([^}]*)\}/m).flatten
 
-    assert_includes saved_lane_rules, "--lane-header-title-color: #15767d;"
+    assert_includes saved_lane_rules, "--lane-header-title-color: #0a2324;"
     assert public_search_icon_rules.any? { |rule| rule.include?("width: 2.5rem;") }
     assert public_search_icon_rules.any? { |rule| rule.include?("height: 2.5rem;") }
     assert base_public_search_icon_rules.any? { |rule| rule.include?("width: 2.5rem;") }
