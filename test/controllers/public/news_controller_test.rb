@@ -54,7 +54,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     get news_url(@live_post.slug)
 
     assert_response :success
-    assert_select ".event-detail-topbar-actions .button.event-detail-edit-link[href='#{edit_backend_blog_post_path(@live_post)}']",
+    assert_select ".public-backend-shortcut.button.event-detail-edit-link[href='#{edit_backend_blog_post_path(@live_post)}']",
                   text: "Edit"
     assert_no_match(/Bearbeiten/, response.body)
   end

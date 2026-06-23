@@ -1,5 +1,13 @@
 <% presenter = public_news_show_presenter(@blog_post) %>
 <%= render "show_meta", presenter: presenter %>
+<% if authenticated? && current_user.blog_access? %>
+  <% content_for :public_backend_actions do %>
+    <%= link_to "Edit",
+                edit_backend_blog_post_path(@blog_post),
+                class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
+                data: { turbo: false } %>
+  <% end %>
+<% end %>
 
 <article class="event-detail news-detail">
   <div class="event-detail-topbar">
@@ -8,14 +16,6 @@
         <%= render "public/events/back_link_icon" %>
       <% end %>
     </p>
-    <% if authenticated? && current_user.blog_access? %>
-      <div class="event-detail-topbar-actions">
-        <%= link_to "Edit",
-                    edit_backend_blog_post_path(@blog_post),
-                    class: "button button-secondary button-compact event-detail-edit-link public-edit-link",
-                    data: { turbo: false } %>
-      </div>
-    <% end %>
   </div>
 
   <% if presenter.hero_image? %>

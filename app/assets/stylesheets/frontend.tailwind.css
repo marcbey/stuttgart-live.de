@@ -3216,6 +3216,10 @@ color: #111;
 color: #f8faf9;
 }
 
+.promotion-banner-link-light .promotion-banner-copy {
+color: #f8faf9;
+}
+
 .promotion-banner-link:hover {
 transform: translateY(-1px);
 }
@@ -3283,6 +3287,10 @@ color: rgba(17, 17, 17, 0.64);
 .promotion-banner-link-light .promotion-banner-kicker,
 .promotion-banner-link-light .promotion-banner-event-title {
 color: rgba(248, 250, 249, 0.82);
+}
+
+.promotion-banner-link-light .promotion-banner-credit {
+color: #fff;
 }
 
 .promotion-banner-link-dark .promotion-banner-copy h2 {

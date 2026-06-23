@@ -2020,10 +2020,12 @@ width: 100%;
   min-height: 24rem;
   border: 1px solid #d0d0d0;
   background: #fcfcfc;
-  padding: 1.15rem 1.05rem 1.35rem;
+  padding: 1.35rem 1.4rem 1.65rem;
+  color: var(--ink);
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
-  font-size: 1.06rem;
-  line-height: 1.75;
+  font-size: 1.04rem;
+  line-height: 1.58;
+  caret-color: var(--ink);
 }
 
 trix-editor.blog-rich-text:focus,
@@ -2064,6 +2066,32 @@ position: relative;
   max-height: clamp(24rem, calc(100dvh - 30rem), 46rem);
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+trix-editor.blog-rich-text h1,
+trix-editor.blog-rich-text h2,
+trix-editor.blog-rich-text h3,
+trix-editor.blog-rich-text h4 {
+margin: 2.2rem 0 0.85rem;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+trix-editor.blog-rich-text h1:first-child,
+trix-editor.blog-rich-text h2:first-child,
+trix-editor.blog-rich-text h3:first-child,
+trix-editor.blog-rich-text h4:first-child,
+trix-editor.blog-rich-text > div:first-child > h1:first-child,
+trix-editor.blog-rich-text > div:first-child > h2:first-child,
+trix-editor.blog-rich-text > div:first-child > h3:first-child,
+trix-editor.blog-rich-text > div:first-child > h4:first-child {
+margin-top: 0;
 }
 
 trix-editor.form-rich-text-editor {
@@ -2122,20 +2150,58 @@ margin-top: 0;
 
 trix-editor.blog-rich-text h2,
 trix-editor.form-rich-text-editor h2 {
-font-size: 2.5rem;
-  line-height: 0.98;
+font-size: 2.65rem;
 }
 
 trix-editor.blog-rich-text h3,
 trix-editor.form-rich-text-editor h3 {
-font-size: 2rem;
-  line-height: 0.98;
+font-size: 2.1rem;
 }
 
 trix-editor.blog-rich-text h4,
 trix-editor.form-rich-text-editor h4 {
-font-size: 1.5rem;
-  line-height: 0.98;
+font-size: 1.6rem;
+}
+
+trix-editor.blog-rich-text p,
+trix-editor.blog-rich-text ul,
+trix-editor.blog-rich-text ol,
+trix-editor.blog-rich-text blockquote {
+margin: 0 0 1.05rem;
+}
+
+trix-editor.blog-rich-text ul,
+trix-editor.blog-rich-text ol {
+padding-left: 1.4rem;
+}
+
+trix-editor.blog-rich-text li {
+margin: 0;
+  line-height: 1.58;
+}
+
+trix-editor.blog-rich-text li + li {
+margin-top: 0.35rem;
+}
+
+trix-editor.blog-rich-text strong {
+font-weight: 700;
+}
+
+trix-editor.blog-rich-text a {
+color: var(--accent-dark);
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.12em;
+}
+
+trix-editor.blog-rich-text blockquote {
+padding: 0.9rem 1rem;
+  border-left: 4px solid rgba(17, 17, 17, 0.14);
+  background: rgba(17, 17, 17, 0.035);
+}
+
+trix-editor.blog-rich-text > :last-child {
+margin-bottom: 0;
 }
 
 trix-editor.static-page-rich-text p,

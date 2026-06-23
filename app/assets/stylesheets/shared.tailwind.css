@@ -561,17 +561,102 @@ width: 100%;
 
 .news-detail-copy .trix-content {
 font-size: 1.04rem;
+  line-height: 1.58;
 }
 
 .news-detail-copy .trix-content > :first-child {
 margin-top: 0;
 }
 
-.news-detail-copy .trix-content h1,
 .news-detail-copy .trix-content h2,
 .news-detail-copy .trix-content h3,
 .news-detail-copy .trix-content h4 {
-text-transform: uppercase;
+margin: 2rem 0 0.72rem;
+  color: var(--ink);
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 0.92;
+  text-transform: uppercase;
+}
+
+.news-detail-copy .trix-content h2 {
+font-size: clamp(2.3rem, 3.6vw, 2.85rem);
+  margin-top: 2rem;
+}
+
+.news-detail-copy .trix-content h3 {
+font-size: clamp(1.88rem, 3vw, 2.2rem);
+  margin-top: 1.5rem;
+}
+
+.news-detail-copy .trix-content h4 {
+font-size: clamp(1.48rem, 2.15vw, 1.72rem);
+  margin-top: 1.5rem;
+}
+
+.news-detail-copy .trix-content h2:first-child,
+.news-detail-copy .trix-content h3:first-child,
+.news-detail-copy .trix-content h4:first-child,
+.news-detail-copy .trix-content > div:first-child > h2:first-child,
+.news-detail-copy .trix-content > div:first-child > h3:first-child,
+.news-detail-copy .trix-content > div:first-child > h4:first-child {
+margin-top: 0;
+}
+
+.news-detail-copy .trix-content h2 + p,
+.news-detail-copy .trix-content h3 + p,
+.news-detail-copy .trix-content h4 + p,
+.news-detail-copy .trix-content h2 + ul,
+.news-detail-copy .trix-content h3 + ul,
+.news-detail-copy .trix-content h4 + ul,
+.news-detail-copy .trix-content h2 + ol,
+.news-detail-copy .trix-content h3 + ol,
+.news-detail-copy .trix-content h4 + ol {
+margin-top: 0.15rem;
+}
+
+.news-detail-copy .trix-content p,
+.news-detail-copy .trix-content ul,
+.news-detail-copy .trix-content ol,
+.news-detail-copy .trix-content blockquote {
+margin-bottom: 1.15rem;
+}
+
+.news-detail-copy .trix-content p + h2,
+.news-detail-copy .trix-content p + h3,
+.news-detail-copy .trix-content p + h4,
+.news-detail-copy .trix-content ul + h2,
+.news-detail-copy .trix-content ul + h3,
+.news-detail-copy .trix-content ul + h4,
+.news-detail-copy .trix-content ol + h2,
+.news-detail-copy .trix-content ol + h3,
+.news-detail-copy .trix-content ol + h4,
+.news-detail-copy .trix-content blockquote + h2,
+.news-detail-copy .trix-content blockquote + h3,
+.news-detail-copy .trix-content blockquote + h4 {
+margin-top: 2rem;
+}
+
+.news-detail-copy .trix-content p + h2,
+.news-detail-copy .trix-content ul + h2,
+.news-detail-copy .trix-content ol + h2,
+.news-detail-copy .trix-content blockquote + h2 {
+margin-top: 2rem;
+}
+
+.news-detail-copy .trix-content p + h3,
+.news-detail-copy .trix-content ul + h3,
+.news-detail-copy .trix-content ol + h3,
+.news-detail-copy .trix-content blockquote + h3 {
+margin-top: 1.5rem;
+}
+
+.news-detail-copy .trix-content p + h4,
+.news-detail-copy .trix-content ul + h4,
+.news-detail-copy .trix-content ol + h4,
+.news-detail-copy .trix-content blockquote + h4 {
+margin-top: 1.5rem;
 }
 
 .app-nav-flash {
