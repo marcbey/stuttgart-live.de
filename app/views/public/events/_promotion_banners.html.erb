@@ -1,16 +1,19 @@
 <% priority_banner = local_assigns[:priority_banner] %>
-<% Array(banners).each do |banner| %>
+<% Array(banners).each_with_index do |banner, index| %>
   <% image_priority = priority_banner.present? && banner == priority_banner %>
+  <% layout_variant = index.odd? ? :reversed : :default %>
   <% if banner[:type] == :event %>
     <%= render "event_promotion_banner",
                event: banner[:record],
                browse_state: browse_state,
                strict_proxy: strict_proxy,
-               image_priority: image_priority %>
+               image_priority: image_priority,
+               layout_variant: layout_variant %>
   <% else %>
     <%= render "promotion_banner",
                blog_post: banner[:record],
                strict_proxy: strict_proxy,
-               image_priority: image_priority %>
+               image_priority: image_priority,
+               layout_variant: layout_variant %>
   <% end %>
 <% end %>

@@ -56,8 +56,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('pop-indie-singer-songwriter')}']", text: "POP", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('rock-alternative')}']", text: "ROCK", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('metal-punk-hardcore')}']", text: "PUNK", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('metal-punk-hardcore')}']", text: "METAL", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('metal-punk-hardcore')}']", text: "PUNK & METAL", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('jazz-blues-soul')}']", text: "JAZZ", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('musical-theater')}']", text: "THEATER", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('klassik-oper')}']", text: "KLASSIK", count: 1

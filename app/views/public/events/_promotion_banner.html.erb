@@ -1,9 +1,11 @@
 <% strict_proxy = local_assigns.fetch(:strict_proxy, homepage_media_strict_proxy?) %>
 <% image_priority = local_assigns.fetch(:image_priority, false) %>
+<% article_classes = "promotion-banner promotion-banner-poster promotion-banner-news" %>
+<% article_classes = "#{article_classes} promotion-banner-layout-reversed" if local_assigns[:layout_variant] == :reversed %>
 <% image_dimensions = public_promotion_banner_image_dimensions %>
 
 <%= render "public/events/promotion_banner_component",
-           article_classes: "promotion-banner promotion-banner-poster promotion-banner-news",
+           article_classes: article_classes,
            article_style: "--promotion-banner-background: #{blog_post.promotion_banner_background_color_value}",
            admin_link_path: (authenticated? && current_user.blog_access? ? edit_backend_blog_post_path(blog_post) : nil),
            admin_link_label: "Edit",

@@ -3248,6 +3248,15 @@ border-color: rgba(125, 66, 28, 0.22);
     linear-gradient(135deg, rgba(255, 244, 224, 0.97) 0%, rgba(245, 214, 176, 0.93) 42%, rgba(255, 249, 241, 0.98) 100%);
 }
 
+.promotion-banner-layout-reversed .promotion-banner-visual {
+grid-column: 2;
+}
+
+.promotion-banner-layout-reversed .promotion-banner-copy {
+grid-column: 1;
+grid-row: 1;
+}
+
 .promotion-banner-media {
 position: relative;
   aspect-ratio: 16 / 9;
@@ -10625,6 +10634,10 @@ align-items: stretch;
   background: transparent;
 }
 
+body.page-public-events-index .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-link {
+grid-template-columns: minmax(26rem, 1.18fr) minmax(0, 1fr);
+}
+
 body.page-public-events-index .promotion-banner-poster .promotion-banner-visual {
 position: relative;
   display: flex;
@@ -10773,6 +10786,10 @@ position: relative;
   border-radius: 0;
 }
 
+body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-link {
+grid-template-columns: minmax(26rem, 1.18fr) minmax(0, 1fr);
+}
+
 body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-visual {
 padding: 1.15rem 0;
 }
@@ -10784,7 +10801,21 @@ display: flex;
   padding: 1.35rem 0 1.35rem 1.3rem;
 }
 
+body.page-public-events-index .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-copy {
+padding: 1rem 1rem 1rem 1.15rem;
+}
+
+body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-copy {
+padding: 1.35rem 1.3rem 1.35rem 0;
+}
+
 @media (max-width: 720px) {
+  .promotion-banner-layout-reversed .promotion-banner-visual,
+  .promotion-banner-layout-reversed .promotion-banner-copy {
+  grid-column: auto;
+      grid-row: auto;
+  }
+
   body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
   grid-template-columns: minmax(0, 1fr);
       gap: 0;
@@ -10828,19 +10859,26 @@ display: flex;
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link {
   min-height: 0;
-      padding-inline: var(--homepage-header-padding-inline, 1rem);
+      margin-top: 0;
+      padding-inline: 0;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-visual {
-  padding-block: 0.85rem 0;
+  padding-block: 0;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-copy {
-  padding: 1rem var(--homepage-header-padding-inline, 1rem) 1.15rem;
+  padding: 1rem;
   }
 }
 
 @media (min-width: 721px) and (max-width: 1023px) {
+  .promotion-banner-layout-reversed .promotion-banner-visual,
+  .promotion-banner-layout-reversed .promotion-banner-copy {
+  grid-column: auto;
+      grid-row: auto;
+  }
+
   body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
   grid-template-columns: minmax(0, 1fr);
       gap: 0;
