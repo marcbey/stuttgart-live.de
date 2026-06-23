@@ -18,14 +18,34 @@
     <% end %>
   </div>
 
-  <%= render "show_hero", presenter: presenter %>
+  <% if presenter.hero_image? %>
+    <section class="news-detail-primary">
+      <div class="news-detail-media-column">
+        <%= render "show_image", presenter: presenter %>
+      </div>
+
+      <div class="news-detail-text-column">
+        <%= render "show_header_copy", presenter: presenter %>
+
+        <section class="event-detail-panel event-detail-copy event-detail-copy-primary news-detail-copy news-detail-body-copy">
+          <%= presenter.body %>
+        </section>
+      </div>
+    </section>
+  <% else %>
+    <%= render "show_hero", presenter: presenter %>
+
+    <div class="event-detail-body">
+      <div class="event-detail-main">
+        <section class="event-detail-panel event-detail-copy event-detail-copy-primary news-detail-copy news-detail-body-copy">
+          <%= presenter.body %>
+        </section>
+      </div>
+    </div>
+  <% end %>
 
   <div class="event-detail-body">
     <div class="event-detail-main">
-      <section class="event-detail-panel event-detail-copy event-detail-copy-primary news-detail-copy">
-        <%= presenter.body %>
-      </section>
-
       <% if presenter.has_video_block? %>
         <%= render "show_media", presenter: presenter %>
       <% end %>

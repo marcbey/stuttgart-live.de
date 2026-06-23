@@ -1,0 +1,13 @@
+<div class="event-detail-header-panel news-detail-header-panel">
+  <div class="event-detail-header-copy">
+    <div class="event-detail-header-intro">
+      <% if presenter.meta_line.present? %>
+        <p class="event-detail-meta-line"><%= presenter.meta_line %></p>
+      <% end %>
+      <h1><%= presenter.headline %></h1>
+      <% if presenter.teaser.present? %>
+        <p class="event-detail-title"><%= presenter.teaser %></p>
+      <% end %>
+    </div>
+  </div>
+</div>

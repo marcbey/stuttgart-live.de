@@ -1,35 +1,7 @@
 <header class="<%= presenter.header_classes %>">
-  <div class="event-detail-header-panel">
-    <div class="event-detail-header-copy">
-      <div class="event-detail-header-intro">
-        <% if presenter.meta_line.present? %>
-          <p class="event-detail-meta-line"><%= presenter.meta_line %></p>
-        <% end %>
-        <h1><%= presenter.headline %></h1>
-        <% if presenter.teaser.present? %>
-          <p class="event-detail-title"><%= presenter.teaser %></p>
-        <% end %>
-      </div>
-    </div>
-  </div>
+  <%= render "show_header_copy", presenter: presenter %>
 
   <% if presenter.hero_image? %>
-    <div class="event-detail-image-wrap">
-      <div class="event-detail-image-figure">
-        <div class="event-detail-image-stage-shell">
-          <div class="event-detail-image-stage event-detail-image-stage-static" style="<%= presenter.hero_stage_style %>">
-            <picture class="event-detail-image-picture" style="<%= presenter.hero_picture_style %>">
-              <%= image_tag presenter.hero_image_source,
-                            alt: presenter.hero_alt_text,
-                            class: "event-detail-image",
-                            style: presenter.hero_image_style %>
-            </picture>
-          </div>
-          <% if presenter.hero_image_credit.present? %>
-            <p class="event-detail-image-credit"><%= presenter.hero_image_credit %></p>
-          <% end %>
-        </div>
-      </div>
-    </div>
+    <%= render "show_image", presenter: presenter %>
   <% end %>
 </header>

@@ -1,12 +1,33 @@
 body.page-auth-backoffice {
---ink: #062f31;
-  --ink-soft: #0b4346;
-  --ink-deep: #031d1f;
-  --ink-rgb: 6, 47, 49;
-  --ink-banner: linear-gradient(135deg, #062f31 0%, #0a484b 58%, #116266 100%);
+--ink: #0a2324;
+  --ink-soft: #0a2324;
+  --ink-deep: #0a2324;
+  --ink-rgb: 10, 35, 36;
+  --text-ink: #0a2324;
+  --ink-banner: linear-gradient(135deg, #0a2324 0%, #0a2324 58%, #0a2324 100%);
+  color: var(--text-ink);
   background:
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.68), transparent 18%),
     linear-gradient(180deg, #f7f2ec 0%, #f1ebe5 100%);
+}
+
+body.page-auth-backoffice :where(
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  p,
+  li,
+  dt,
+  dd,
+  label,
+  legend,
+  blockquote,
+  figcaption
+) {
+color: var(--text-ink);
 }
 
 .app-nav-inner-backend {
