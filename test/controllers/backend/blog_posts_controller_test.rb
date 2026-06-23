@@ -361,10 +361,16 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "#blog-editor-panel-settings .backend-section-stack", count: 1
     assert_select "#blog-editor-panel-settings .backend-section .backend-section-header h3", text: "Promotion Banner", count: 1
+    assert_select "#blog-editor-panel-settings .editor-grid.promotion-banner-settings-grid", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner]'][type='checkbox'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
+    assert_operator response.body.index('name="blog_post[promotion_banner]"'), :<, response.body.index('name="blog_post[promotion_banner_lane_position]"')
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_lane_position]'][type='number'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_kicker_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
+    assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_title]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
+    assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
+    assert_select "#blog-editor-panel-settings label.form-label", text: "Button", count: 1
+    assert_select "#blog-editor-panel-settings label.form-label", text: "CTA-Text", count: 0
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_background_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[type='color']#blog_post_promotion_banner_background_color_picker[form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
@@ -399,6 +405,8 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         promotion_banner: "1",
         promotion_banner_lane_position: "3",
         promotion_banner_kicker_text: "Empfehlung",
+        promotion_banner_title: "Großer Banner-Titel",
+        promotion_banner_text: "Kleiner Banner-Text",
         promotion_banner_cta_text: "Jetzt lesen",
         promotion_banner_background_color: "18333a",
         promotion_banner_cta_color: "f97316"
@@ -412,6 +420,8 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate blog_post.reload, :promotion_banner?
     assert_equal 3, blog_post.promotion_banner_lane_position
     assert_equal "Empfehlung", blog_post.promotion_banner_kicker_text
+    assert_equal "Großer Banner-Titel", blog_post.promotion_banner_title
+    assert_equal "Kleiner Banner-Text", blog_post.promotion_banner_text
     assert_equal "Jetzt lesen", blog_post.promotion_banner_cta_text
     assert_equal "#18333A", blog_post.promotion_banner_background_color
     assert_equal "#F97316", blog_post.promotion_banner_cta_color

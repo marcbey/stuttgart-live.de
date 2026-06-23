@@ -93,6 +93,8 @@ class Event < ApplicationRecord
   validates :completeness_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100, only_integer: true }
   validates :min_price, :max_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
+  validates :promotion_banner_title, length: { maximum: 120 }, allow_blank: true
+  validates :promotion_banner_text, length: { maximum: 320 }, allow_blank: true
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_background_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
   validates :promotion_banner_cta_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
@@ -441,6 +443,14 @@ class Event < ApplicationRecord
     promotion_banner_kicker_text.presence || DEFAULT_PROMOTION_BANNER_KICKER_TEXT
   end
 
+  def promotion_banner_title_value
+    promotion_banner_title.presence || artist_name.to_s.strip
+  end
+
+  def promotion_banner_text_value
+    promotion_banner_text.presence || default_promotion_banner_text
+  end
+
   def promotion_banner_cta_text_value
     promotion_banner_cta_text.presence || DEFAULT_PROMOTION_BANNER_CTA_TEXT
   end
@@ -661,6 +671,8 @@ class Event < ApplicationRecord
     self.city = normalized_city.casecmp("Unbekannt").zero? ? nil : normalized_city.presence
     self.badge_text = badge_text.to_s.strip.presence
     self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
+    self.promotion_banner_title = promotion_banner_title.to_s.strip.presence
+    self.promotion_banner_text = promotion_banner_text.to_s.strip.presence
     self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
     self.promotion_banner_background_color = normalize_hex_color(promotion_banner_background_color)
     self.promotion_banner_cta_color = normalize_hex_color(promotion_banner_cta_color)
@@ -737,6 +749,13 @@ class Event < ApplicationRecord
 
   def promotion_banner_default_cta_color_value
     promotion_banner_background_bright? ? DEFAULT_PROMOTION_BANNER_CTA_COLOR_DARK : DEFAULT_PROMOTION_BANNER_CTA_COLOR_LIGHT
+  end
+
+  def default_promotion_banner_text
+    normalized_title = title.to_s.strip
+    return if normalized_title.blank? || normalized_title == artist_name.to_s.strip
+
+    normalized_title
   end
 
   def hex_color_bright?(value)

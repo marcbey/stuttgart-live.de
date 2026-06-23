@@ -464,6 +464,8 @@ module Backend
         :publish_slider_images_on_stuttgart_live,
         :promotion_banner_lane_position,
         :promotion_banner_kicker_text,
+        :promotion_banner_title,
+        :promotion_banner_text,
         :promotion_banner_cta_text,
         :promotion_banner_background_color,
         :promotion_banner_cta_color,

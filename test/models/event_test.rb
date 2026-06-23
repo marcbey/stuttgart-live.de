@@ -646,6 +646,8 @@ class EventTest < ActiveSupport::TestCase
     event = events(:published_one)
 
     assert_equal "Promotion", event.promotion_banner_kicker_text_value
+    assert_equal event.artist_name, event.promotion_banner_title_value
+    assert_equal event.title, event.promotion_banner_text_value
     assert_equal "Zum Event", event.promotion_banner_cta_text_value
     assert_equal "#E0F7F2", event.promotion_banner_background_color_value
     assert_equal "#111111", event.promotion_banner_cta_color_value
@@ -660,10 +662,14 @@ class EventTest < ActiveSupport::TestCase
     event.update!(
       promotion_banner: true,
       promotion_banner_kicker_text: "  Szene Tipp  ",
+      promotion_banner_title: "  Eigener Titel  ",
+      promotion_banner_text: "  Eigener Text  ",
       promotion_banner_cta_text: "  Jetzt ansehen  "
     )
 
     assert_equal "Szene Tipp", event.promotion_banner_kicker_text
+    assert_equal "Eigener Titel", event.promotion_banner_title
+    assert_equal "Eigener Text", event.promotion_banner_text
     assert_equal "Jetzt ansehen", event.promotion_banner_cta_text
   end
 

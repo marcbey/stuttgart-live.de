@@ -42,6 +42,8 @@ class BlogPost < ApplicationRecord
   validates :cover_image_copyright, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
+  validates :promotion_banner_title, length: { maximum: 120 }, allow_blank: true
+  validates :promotion_banner_text, length: { maximum: 320 }, allow_blank: true
   validates :promotion_banner_cta_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_background_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
   validates :promotion_banner_cta_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
@@ -133,6 +135,14 @@ class BlogPost < ApplicationRecord
 
   def promotion_banner_kicker_text_value
     promotion_banner_kicker_text.presence || DEFAULT_PROMOTION_BANNER_KICKER_TEXT
+  end
+
+  def promotion_banner_title_value
+    promotion_banner_title.presence || title.to_s.strip
+  end
+
+  def promotion_banner_text_value
+    promotion_banner_text.presence || teaser.to_s.strip
   end
 
   def promotion_banner_cta_text_value
@@ -270,6 +280,8 @@ class BlogPost < ApplicationRecord
       self.cover_image_copyright = cover_image_copyright.to_s.strip.presence
       self.promotion_banner_image_copyright = promotion_banner_image_copyright.to_s.strip.presence
       self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
+      self.promotion_banner_title = promotion_banner_title.to_s.strip.presence
+      self.promotion_banner_text = promotion_banner_text.to_s.strip.presence
       self.promotion_banner_cta_text = promotion_banner_cta_text.to_s.strip.presence
       self.promotion_banner_background_color = normalize_hex_color(promotion_banner_background_color)
       self.promotion_banner_cta_color = normalize_hex_color(promotion_banner_cta_color)

@@ -1,23 +1,18 @@
 <div class="backend-section-stack">
-  <section class="backend-section backend-section-form blog-editor-section-promotion" aria-labelledby="promotion-banner-section-title">
+  <section class="backend-section backend-section-compact editor-subsection" aria-labelledby="promotion-banner-section-title">
     <div class="backend-section-header">
-      <div>
-        <h3 id="promotion-banner-section-title">Promotion Banner</h3>
-        <p>Diese Inhalte erscheinen auf der Startseite direkt unter den Highlights.</p>
-      </div>
+      <h3 id="promotion-banner-section-title">Promotion Banner</h3>
     </div>
 
     <div class="backend-section-body">
-      <div class="editor-grid blog-editor-section-grid">
-        <div>
-          <label class="blog-editor-checkbox">
-            <%= hidden_field_tag "blog_post[promotion_banner]", "0", form: form_id, id: nil %>
-            <%= check_box_tag "blog_post[promotion_banner]", "1", blog_post.promotion_banner?, form: form_id %>
-            <span>Als Promotion Banner markieren</span>
-          </label>
-          <p class="blog-editor-hint">Mehrere Events und News können gleichzeitig als Promotion Banner aktiv sein. Die Lane-Position steuert, vor welcher sichtbaren Startseiten-Lane der Banner erscheint.</p>
-        </div>
+      <label class="form-checkbox form-checkbox-after-textarea">
+        <%= hidden_field_tag "blog_post[promotion_banner]", "0", form: form_id, id: nil %>
+        <%= check_box_tag "blog_post[promotion_banner]", "1", blog_post.promotion_banner?, form: form_id %>
+        <span>Als Promotion Banner markieren</span>
+      </label>
+      <p class="form-hint">Mehrere Events und News können gleichzeitig als Promotion Banner aktiv sein. Die Lane-Position steuert, vor welcher sichtbaren Startseiten-Lane der Banner erscheint. Auf der Startseite wird der Banner nur angezeigt, wenn auch ein Promotion-Banner-Bild vorhanden ist.</p>
 
+      <div class="editor-grid promotion-banner-settings-grid">
         <div>
           <%= label_tag "blog_post_promotion_banner_lane_position", "Lane-Position", class: "form-label" %>
           <%= number_field_tag "blog_post[promotion_banner_lane_position]",
@@ -27,67 +22,47 @@
                                min: 1,
                                step: 1,
                                form: form_id %>
-          <p class="blog-editor-hint">1 bedeutet vor der ersten sichtbaren Startseiten-Lane.</p>
+          <p class="form-hint">1 bedeutet vor der ersten sichtbaren Startseiten-Lane.</p>
         </div>
 
         <div>
           <%= label_tag "blog_post_promotion_banner_kicker_text", "Kicker", class: "form-label" %>
           <%= text_field_tag "blog_post[promotion_banner_kicker_text]",
-                             blog_post.promotion_banner_kicker_text,
+                             blog_post.promotion_banner_kicker_text_value,
                              id: "blog_post_promotion_banner_kicker_text",
                              class: "form-input",
                              maxlength: 80,
-                             placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_KICKER_TEXT,
                              form: form_id %>
         </div>
 
         <div>
-          <%= label_tag "blog_post_promotion_banner_cta_text", "CTA-Text", class: "form-label" %>
-          <%= text_field_tag "blog_post[promotion_banner_cta_text]",
-                             blog_post.promotion_banner_cta_text,
-                             id: "blog_post_promotion_banner_cta_text",
+          <%= label_tag "blog_post_promotion_banner_title", "Titel", class: "form-label" %>
+          <%= text_field_tag "blog_post[promotion_banner_title]",
+                             blog_post.promotion_banner_title_value,
+                             id: "blog_post_promotion_banner_title",
                              class: "form-input",
-                             maxlength: 80,
-                             placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_CTA_TEXT,
+                             maxlength: 120,
                              form: form_id %>
         </div>
 
-        <div data-controller="promotion-banner-color"
-             data-promotion-banner-color-default-color-value="<%= blog_post.promotion_banner_background_color_value %>">
-          <%= label_tag "blog_post_promotion_banner_background_color", "Hintergrundfarbe", class: "form-label" %>
-          <div class="promotion-banner-color-inputs">
-            <%= text_field_tag "blog_post[promotion_banner_background_color]",
-                               blog_post.promotion_banner_background_color,
-                               id: "blog_post_promotion_banner_background_color",
-                               class: "form-input",
-                               inputmode: "text",
-                               maxlength: 7,
-                               placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR,
-                               form: form_id,
-                               data: {
-                                 action: "input->promotion-banner-color#syncFromHex blur->promotion-banner-color#normalizeHex",
-                                 promotion_banner_color_target: "hex"
-                               } %>
-            <%= color_field_tag "blog_post_promotion_banner_background_color_picker",
-                                blog_post.promotion_banner_background_color_value,
-                                id: "blog_post_promotion_banner_background_color_picker",
-                                class: "promotion-banner-color-picker",
-                                form: form_id,
-                                data: {
-                                  action: "input->promotion-banner-color#syncFromPicker change->promotion-banner-color#syncFromPicker",
-                                  promotion_banner_color_target: "picker"
-                                } %>
-            <button type="button"
-                    class="promotion-banner-color-eyedropper"
-                    hidden
-                    title="Farbe aus dem Browserfenster aufnehmen"
-                    aria-label="Farbe aus dem Browserfenster aufnehmen"
-                    data-action="click->promotion-banner-color#pickFromScreen"
-                    data-promotion-banner-color-target="eyedropper">
-              Pipette
-            </button>
-          </div>
-          <p class="form-hint">Optional. Leer nutzt <%= BlogPost::DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR %>.</p>
+        <div>
+          <%= label_tag "blog_post_promotion_banner_text", "Text", class: "form-label" %>
+          <%= text_field_tag "blog_post[promotion_banner_text]",
+                             blog_post.promotion_banner_text_value,
+                             id: "blog_post_promotion_banner_text",
+                             class: "form-input",
+                             maxlength: 320,
+                             form: form_id %>
+        </div>
+
+        <div>
+          <%= label_tag "blog_post_promotion_banner_cta_text", "Button", class: "form-label" %>
+          <%= text_field_tag "blog_post[promotion_banner_cta_text]",
+                             blog_post.promotion_banner_cta_text_value,
+                             id: "blog_post_promotion_banner_cta_text",
+                             class: "form-input",
+                             maxlength: 80,
+                             form: form_id %>
         </div>
 
         <div data-controller="promotion-banner-color"
@@ -127,9 +102,47 @@
           </div>
           <p class="form-hint">Optional. Leer nutzt automatisch die Standard-Buttonfarbe.</p>
         </div>
+
+        <div data-controller="promotion-banner-color"
+             data-promotion-banner-color-default-color-value="<%= blog_post.promotion_banner_background_color_value %>">
+          <%= label_tag "blog_post_promotion_banner_background_color", "Hintergrundfarbe", class: "form-label" %>
+          <div class="promotion-banner-color-inputs">
+            <%= text_field_tag "blog_post[promotion_banner_background_color]",
+                               blog_post.promotion_banner_background_color,
+                               id: "blog_post_promotion_banner_background_color",
+                               class: "form-input",
+                               inputmode: "text",
+                               maxlength: 7,
+                               placeholder: BlogPost::DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR,
+                               form: form_id,
+                               data: {
+                                 action: "input->promotion-banner-color#syncFromHex blur->promotion-banner-color#normalizeHex",
+                                 promotion_banner_color_target: "hex"
+                               } %>
+            <%= color_field_tag "blog_post_promotion_banner_background_color_picker",
+                                blog_post.promotion_banner_background_color_value,
+                                id: "blog_post_promotion_banner_background_color_picker",
+                                class: "promotion-banner-color-picker",
+                                form: form_id,
+                                data: {
+                                  action: "input->promotion-banner-color#syncFromPicker change->promotion-banner-color#syncFromPicker",
+                                  promotion_banner_color_target: "picker"
+                                } %>
+            <button type="button"
+                    class="promotion-banner-color-eyedropper"
+                    hidden
+                    title="Farbe aus dem Browserfenster aufnehmen"
+                    aria-label="Farbe aus dem Browserfenster aufnehmen"
+                    data-action="click->promotion-banner-color#pickFromScreen"
+                    data-promotion-banner-color-target="eyedropper">
+              Pipette
+            </button>
+          </div>
+          <p class="form-hint">Optional. Leer nutzt <%= BlogPost::DEFAULT_PROMOTION_BANNER_BACKGROUND_COLOR %>.</p>
+        </div>
       </div>
 
-      <p class="blog-editor-hint">Leer gelassene Texte fallen automatisch auf die Standardwerte zurück.</p>
+      <p class="form-hint">Leer gelassene Texte fallen automatisch auf die Standardwerte zurück.</p>
 
       <%= fields_for :blog_post, blog_post do |form| %>
         <%= render "backend/shared/promotion_banner_image_editor",

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_23_080500) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_23_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -79,6 +79,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_080500) do
     t.float "promotion_banner_image_zoom"
     t.string "promotion_banner_kicker_text"
     t.integer "promotion_banner_lane_position"
+    t.string "promotion_banner_text"
+    t.string "promotion_banner_title"
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.string "slug", null: false
@@ -265,6 +267,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_23_080500) do
     t.float "promotion_banner_image_zoom"
     t.string "promotion_banner_kicker_text"
     t.integer "promotion_banner_lane_position"
+    t.string "promotion_banner_text"
+    t.string "promotion_banner_title"
     t.boolean "publish_on_russ_live"
     t.boolean "publish_slider_images_on_stuttgart_live"
     t.datetime "published_at"

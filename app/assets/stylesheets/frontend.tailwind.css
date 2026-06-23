@@ -5154,6 +5154,15 @@ white-space: normal;
   overflow: hidden;
 }
 
+.home-featured-track .event-card-copy,
+.home-featured-track .event-card h2,
+.home-featured-track .event-card-title,
+.home-featured-track .event-card-meta,
+.home-featured-track .event-card-meta-date,
+.home-featured-track .event-card-meta-venue {
+color: #fff;
+}
+
 .home-featured-track .event-card-title {
 white-space: nowrap;
   overflow: hidden;

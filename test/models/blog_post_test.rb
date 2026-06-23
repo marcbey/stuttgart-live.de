@@ -244,6 +244,8 @@ class BlogPostTest < ActiveSupport::TestCase
     )
 
     assert_equal "Promotion", blog_post.promotion_banner_kicker_text_value
+    assert_equal "Banner Defaults", blog_post.promotion_banner_title_value
+    assert_equal "Teaser", blog_post.promotion_banner_text_value
     assert_equal "Zum Beitrag", blog_post.promotion_banner_cta_text_value
     assert_equal "#E0F7F2", blog_post.promotion_banner_background_color_value
     assert_equal "#111111", blog_post.promotion_banner_cta_color_value
@@ -259,10 +261,14 @@ class BlogPostTest < ActiveSupport::TestCase
       author: @author,
       status: "draft",
       promotion_banner_kicker_text: "  Szene Tipp  ",
+      promotion_banner_title: "  Eigener Titel  ",
+      promotion_banner_text: "  Eigener Text  ",
       promotion_banner_cta_text: "  Mehr lesen  "
     )
 
     assert_equal "Szene Tipp", blog_post.promotion_banner_kicker_text
+    assert_equal "Eigener Titel", blog_post.promotion_banner_title
+    assert_equal "Eigener Text", blog_post.promotion_banner_text
     assert_equal "Mehr lesen", blog_post.promotion_banner_cta_text
   end
 

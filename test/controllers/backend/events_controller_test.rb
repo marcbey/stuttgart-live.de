@@ -578,7 +578,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_lane_position]'][type='number'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_title]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_text]'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event']", count: 1
+    assert_select "#event-editor-panel-settings label.form-label", text: "Button", count: 1
+    assert_select "#event-editor-panel-settings label.form-label", text: "CTA-Text", count: 0
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_copyright]'][form='editor_form_event']", count: 1
@@ -1434,6 +1438,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
           highlighted: "1",
           promotion_banner: "1",
           promotion_banner_kicker_text: "Szene Tipp",
+          promotion_banner_title: "Großer Banner-Titel",
+          promotion_banner_text: "Kleiner Banner-Text",
           promotion_banner_cta_text: "Jetzt ansehen"
         }
       }
@@ -1444,6 +1450,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate created, :highlighted?
     assert_predicate created, :promotion_banner?
     assert_equal "Szene Tipp", created.promotion_banner_kicker_text
+    assert_equal "Großer Banner-Titel", created.promotion_banner_title
+    assert_equal "Kleiner Banner-Text", created.promotion_banner_text
     assert_equal "Jetzt ansehen", created.promotion_banner_cta_text
   end
 
@@ -2022,7 +2030,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_lane_position]'][type='number'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_title]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_text]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings label.form-label", text: "Button", count: 1
+    assert_select "#event-editor-panel-settings label.form-label", text: "CTA-Text", count: 0
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_background_color]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[type='color']#event_promotion_banner_background_color_picker[form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_color]'][form='editor_form_event_#{@published_event.id}']", count: 1
@@ -2057,6 +2069,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         promotion_banner: "1",
         promotion_banner_lane_position: "2",
         promotion_banner_kicker_text: "Empfehlung",
+        promotion_banner_title: "Großer Banner-Titel",
+        promotion_banner_text: "Kleiner Banner-Text",
         promotion_banner_cta_text: "Jetzt ansehen",
         promotion_banner_background_color: "#18333A",
         promotion_banner_cta_color: "#F97316",
@@ -2076,6 +2090,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_predicate @published_event.reload.promotion_banner_image, :attached?
     assert_equal 2, @published_event.promotion_banner_lane_position
+    assert_equal "Großer Banner-Titel", @published_event.promotion_banner_title
+    assert_equal "Kleiner Banner-Text", @published_event.promotion_banner_text
     assert_equal "Foto: Haus", @published_event.promotion_banner_image_copyright
     assert_equal 18.0, @published_event.promotion_banner_image_focus_x_value
     assert_equal 72.0, @published_event.promotion_banner_image_focus_y_value
@@ -2311,6 +2327,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         highlighted: "1",
         promotion_banner: "1",
         promotion_banner_kicker_text: "Szene Tipp",
+        promotion_banner_title: "Großer Banner-Titel",
+        promotion_banner_text: "Kleiner Banner-Text",
         promotion_banner_cta_text: "Jetzt ansehen",
         promotion_banner_background_color: "18333a",
         promotion_banner_cta_color: "f97316"
@@ -2324,6 +2342,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate @published_event.reload, :highlighted?
     assert_predicate @published_event, :promotion_banner?
     assert_equal "Szene Tipp", @published_event.promotion_banner_kicker_text
+    assert_equal "Großer Banner-Titel", @published_event.promotion_banner_title
+    assert_equal "Kleiner Banner-Text", @published_event.promotion_banner_text
     assert_equal "Jetzt ansehen", @published_event.promotion_banner_cta_text
     assert_equal "#18333A", @published_event.promotion_banner_background_color
     assert_equal "#F97316", @published_event.promotion_banner_cta_color
