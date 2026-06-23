@@ -158,11 +158,25 @@
         <% end %>
 
         <% if public_homepage_chrome && public_events_search_visible %>
+          <% homepage_header_genres = [
+               { label: "POP", slug: "pop-indie-singer-songwriter" },
+               { label: "ROCK", slug: "rock-alternative" },
+               { label: "PUNK", slug: "metal-punk-hardcore" },
+               { label: "METAL", slug: "metal-punk-hardcore" },
+               { label: "JAZZ", slug: "jazz-blues-soul" },
+               { label: "THEATER", slug: "musical-theater" },
+               { label: "KLASSIK", slug: "klassik-oper" },
+               { label: "ELECTRONIC", slug: "electronic-music-edm" }
+             ] %>
           <div class="app-nav-hotline">
-            <span class="app-nav-hotline-copy">
-              Dein Ticketportal für Stuttgart und Region -
-              <%= link_to "0711 550 660 77", "tel:+4971155066077", class: "app-nav-hotline-phone" %>
-            </span>
+            <nav class="app-nav-hotline-copy" aria-label="Genre-Navigation">
+              <% homepage_header_genres.each_with_index do |genre, index| %>
+                <%= link_to genre[:label],
+                            genre_lane_path(genre[:slug]),
+                            class: "app-nav-hotline-genre",
+                            data: { genre_index: index + 1 } %>
+              <% end %>
+            </nav>
             <div class="app-nav-hotline-contact">
               <%= link_to "Kontakt",
                           contact_path,

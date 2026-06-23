@@ -53,7 +53,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-homepage-center[data-controller='saved-events-nav']", count: 1
     assert_select ".app-nav-saved-events-link[href='#{saved_events_path}'][data-saved-events-nav-target='link'][hidden]", count: 2
     assert_select ".app-nav-socials-poster[data-controller='saved-events-nav'] .app-nav-saved-events-link-desktop[hidden]", count: 1
-    assert_select ".app-nav-hotline", text: /Dein Ticketportal für Stuttgart und Region -\s*0711 550 660 77/
+    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('pop-indie-singer-songwriter')}']", text: "POP", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('rock-alternative')}']", text: "ROCK", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('metal-punk-hardcore')}']", text: "PUNK", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('metal-punk-hardcore')}']", text: "METAL", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('jazz-blues-soul')}']", text: "JAZZ", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('musical-theater')}']", text: "THEATER", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('klassik-oper')}']", text: "KLASSIK", count: 1
+    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('electronic-music-edm')}']", text: "ELECTRONIC", count: 1
     assert_select ".app-nav-hotline-contact .app-nav-link", text: "Kontakt"
     assert_select ".partner-strip-image[width][height]", count: 6
     assert_includes response.body, "Published Artist"
@@ -182,9 +190,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
     saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
     first_genre_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("genre-lane-section") }
-    all_events_index = shell_children.index do |node|
-      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "alles aus stuttgart"
-    end
     last_homepage_lane_index = shell_children.rindex do |node|
       next true if node.name == "section" && node["class"].to_s.include?("genre-lane-section")
       node.name == "section" && node["class"].to_s.include?("home-featured-section")
@@ -194,7 +199,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert rock_section.present?, "expected configured rock lane to be rendered"
     assert document.at_css(".lane-header.lane-header--genre").present?, "expected standard genre header variant"
     assert_equal highlights_index + 1, first_genre_index
-    assert_operator all_events_index, :>, first_genre_index
     assert_equal last_homepage_lane_index + 1, saved_lane_slot_index
 
     pop_names = pop_section.css(".genre-lane-card-name").map(&:text)
@@ -276,19 +280,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     document = Nokogiri::HTML.parse(response.body)
     rock_section = document.css("section.genre-lane-section").find { |section| section.at_css("h2")&.text == rock_group.name }
-    all_stuttgart_section = document.css("section.genre-lane-section").find { |section| section.at_css("h2")&.text == "alles aus stuttgart" }
     tagestipp_section = document.css("section.genre-lane-section").find { |section| section.at_css("h2")&.text == "Tagestipp" }
 
     assert rock_section.present?, "expected first configured genre lane to stay in the initial payload"
-    assert all_stuttgart_section.present?, "expected all Stuttgart lane shell"
     assert tagestipp_section.present?, "expected Tagestipp lane shell"
     assert_nil rock_section["data-homepage-lane-deferred-value"]
-    assert_equal "true", all_stuttgart_section["data-homepage-lane-deferred-value"]
     assert_equal "true", tagestipp_section["data-homepage-lane-deferred-value"]
     assert_includes rock_section.css(".genre-lane-card-name").map(&:text), genre_event.artist_name
-    assert_empty all_stuttgart_section.css(".genre-lane-card-name")
     assert_empty tagestipp_section.css(".genre-lane-card-name")
-    assert_not_includes all_stuttgart_section.text, all_stuttgart_event.artist_name
     assert_not_includes tagestipp_section.text, tagestipp_event.artist_name
 
     get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
@@ -384,10 +383,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     tag_cloud_index = shell_children.index { |node| node["class"].to_s.include?("homepage-genre-tag-cloud") }
     saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
 
-    assert tag_cloud_index.present?, "expected enabled genre tag cloud to be rendered"
-    assert_operator tag_cloud_index, :>, rock_lane_index
-    assert_equal saved_lane_slot_index - 1, tag_cloud_index
-    assert_select ".homepage-genre-tag-cloud-tag[href='/#{pop_group.slug}']", text: pop_group.name, count: 1
+    assert_nil tag_cloud_index
+    assert rock_lane_index.present?, "expected configured rock lane to be rendered"
+    assert_equal rock_lane_index + 1, saved_lane_slot_index
+    assert_select ".homepage-genre-tag-cloud", count: 0
+    assert_select ".homepage-genre-tag-cloud-tag[href='/#{pop_group.slug}']", count: 0
     assert_select ".homepage-genre-tag-cloud-tag[href='/#{rock_group.slug}']", count: 0
     assert_select ".homepage-genre-tag-cloud-tag[href='/metal-punk-hardcore']", count: 0
   end
@@ -415,8 +415,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".genre-lane-section", count: 0
-    assert_select ".homepage-genre-tag-cloud", count: 1
-    assert_select ".homepage-genre-tag-cloud-tag[href='/pop-indie-singer-songwriter']", text: "Pop, Indie & Singer-Songwriter", count: 1
+    assert_select ".homepage-genre-tag-cloud", count: 0
+    assert_select ".homepage-genre-tag-cloud-tag[href='/pop-indie-singer-songwriter']", count: 0
   end
 
   test "homepage lane header titles link to their landing pages when available" do
@@ -485,7 +485,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".lane-header--highlights .lane-header-title-link[href='/highlights']", count: 1
-    assert_select ".lane-header--editorial .lane-header-title-link[href='/alles-aus-stuttgart']", count: 1
+    assert_select ".lane-header--editorial .lane-header-title-link[href='/alles-aus-stuttgart']", count: 0
     assert_select ".lane-header--tagestipp .lane-header-title-link[href='/tagestipp']", count: 1
     assert_select ".lane-header--genre .lane-header-title-link[href='/#{rock_group.slug}']", text: rock_group.name, count: 1
   end
@@ -968,17 +968,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     document = Nokogiri::HTML.parse(response.body)
     highlights_section = document.at_css("section.home-featured-section")
-    all_events_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "alles aus stuttgart"
-    end
     tagestipp_section = document.css("section.genre-lane-section").find do |section|
       section.at_css("h2")&.text == "Tagestipp"
     end
 
     assert highlights_section.present?, "expected Highlights section to be rendered"
-    assert all_events_section.present?, "expected all events section to be rendered"
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
-    assert_equal "true", all_events_section["data-homepage-lane-deferred-value"]
     assert_equal "true", tagestipp_section["data-homepage-lane-deferred-value"]
 
     highlight_names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
@@ -1323,14 +1318,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     slider_index = shell_children.index { |node| node["class"].to_s.include?("promotion-banner-slider-section") }
     highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
     event_banner_index = shell_children.index { |node| node.name == "article" && node.at_css("a[href='#{event_path(event.slug)}']") }
-    all_stuttgart_index = shell_children.index do |node|
-      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "alles aus stuttgart"
-    end
     trailing_banner_index = shell_children.index { |node| node.name == "article" && node.at_css("a[href='#{news_path(trailing_blog_post.slug)}']") }
     saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
 
     assert_equal slider_index + 1, highlights_index
-    assert_equal event_banner_index + 1, all_stuttgart_index
+    assert_equal event_banner_index + 1, trailing_banner_index
     assert_equal trailing_banner_index + 1, saved_lane_slot_index
   end
 
@@ -2005,14 +1997,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select ".lane-header.lane-header--editorial", count: 1
-
-    document = Nokogiri::HTML.parse(response.body)
-    all_stuttgart_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "alles aus stuttgart"
-    end
-
-    assert_equal "true", all_stuttgart_section["data-homepage-lane-deferred-value"]
+    assert_select ".lane-header.lane-header--editorial", count: 0
 
     get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
 
@@ -2063,9 +2048,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       section.at_css("h2")&.text == "alles aus stuttgart"
     end
 
-    assert slider_section.present?, "expected all events slider section to be rendered"
-    assert_equal "true", slider_section["data-homepage-lane-deferred-value"]
-    assert_equal 4, slider_section.css(".homepage-lane-initial-placeholder").size
+    assert_nil slider_section
 
     get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
 
@@ -2076,8 +2059,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes names, included_event_names.first
     assert_includes names, included_event_names.last
     assert_not_includes names, excluded_event_name
-    assert_includes slider_section["data-controller"], "homepage-lane"
-    assert_equal "all_stuttgart", slider_section["data-homepage-lane-lane-value"]
     assert_select ".homepage-lane-load-link", count: 0
   end
 
@@ -2301,13 +2282,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    document = Nokogiri::HTML.parse(response.body)
-    slider_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "alles aus stuttgart"
-    end
-
-    assert slider_section.present?, "expected all events slider section to be rendered"
-    assert_equal "true", slider_section["data-homepage-lane-deferred-value"]
+    assert_not_includes response.body, "alles aus stuttgart"
 
     get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
 

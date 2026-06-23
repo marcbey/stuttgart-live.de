@@ -8723,7 +8723,7 @@ display: flex;
   }
 
   .lane-header-title {
-  font-size: 2rem;
+  font-size: 1.7rem;
       line-height: 1.2;
   }
 
@@ -9839,19 +9839,50 @@ display: none;
 }
 
 body.page-public-events-index .app-nav-hotline-copy {
-margin-left: 0;
-  color: inherit;
-  text-decoration: none;
-  text-wrap: balance;
+  margin-left: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
-body.page-public-events-index .app-nav-hotline-phone {
-color: inherit;
+body.page-public-events-index .app-nav-hotline-genre {
+display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  min-height: 1.66rem;
+  padding: 0.08rem 0.6rem 0.1rem;
+  border: 1px solid rgba(0, 150, 156, 0.38);
+  border-radius: 999px;
+  background: rgba(220, 245, 247, 0.8);
+  color: rgba(12, 63, 66, 0.82);
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  line-height: 1;
   text-decoration: none;
+  text-transform: uppercase;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
 }
 
-body.page-public-events-index .app-nav-hotline-phone:hover {
-color: var(--ink);
+body.page-public-events-index .app-nav-hotline-genre:hover,
+body.page-public-events-index .app-nav-hotline-genre:focus-visible {
+border-color: rgba(0, 150, 156, 0.62);
+  background: rgba(204, 240, 243, 0.96);
+  color: rgba(7, 47, 50, 0.92);
+  transform: translateY(-1px);
+}
+
+body.page-public-events-index .app-nav-hotline-genre:focus-visible {
+outline: 2px solid rgba(255, 255, 255, 0.75);
+  outline-offset: 2px;
 }
 
 body.page-public-events-index .app-nav-hotline-contact {
@@ -10007,8 +10038,36 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  padding: 0.8rem 1rem 0.9rem;
+  padding: 0.8rem;
+      grid-template-areas:
+        "brand brand"
+        "center meta"
+        "hotline hotline";
       gap: 0.65rem 0.85rem;
+  }
+
+  body.page-public-events-index .app-nav-hotline {
+  grid-area: hotline;
+      display: block;
+      width: 100%;
+      margin-top: 0.1rem;
+      align-self: center;
+  }
+
+  body.page-public-events-index .app-nav-hotline-copy {
+  display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      align-content: center;
+      gap: 0.42rem 0.38rem;
+      white-space: normal;
+      overflow: visible;
+  }
+
+  body.page-public-events-index .app-nav-hotline-genre {
+  min-height: 1.46rem;
+      padding: 0.07rem 0.54rem 0.09rem;
+      font-size: 0.72rem;
   }
 
   body.page-public-events-index .app-nav-socials-poster .app-nav-saved-events-link-desktop:not([hidden]) {
@@ -10228,7 +10287,6 @@ top: 1.18rem;
   body.page-public-events-index .app-nav-hotline-copy {
   margin-left: 0;
     min-width: 0;
-    white-space: nowrap;
     align-self: baseline;
   }
 
@@ -10362,8 +10420,13 @@ top: 1.18rem;
   body.page-public-events-index .app-nav-hotline-copy {
   margin-left: 0;
       min-width: 0;
-      white-space: nowrap;
       align-self: baseline;
+  }
+
+  body.page-public-events-index .app-nav-hotline-genre {
+  min-height: 1.72rem;
+      padding-inline: 0.64rem;
+      font-size: 0.81rem;
   }
 
   body.page-public-events-index .app-nav-hotline-contact {
@@ -10472,6 +10535,17 @@ top: 1.18rem;
   font-size: clamp(1.35rem, 1.55vw, 1.65rem);
       letter-spacing: 0.14em;
   }
+
+  body.page-public-events-index .app-nav-hotline-genre {
+  min-height: 1.82rem;
+      padding-inline: 0.7rem;
+      font-size: 0.85rem;
+  }
+
+  body.page-public-events-index .app-nav-hotline-genre[data-genre-index="7"],
+  body.page-public-events-index .app-nav-hotline-genre[data-genre-index="8"] {
+  display: inline-flex;
+  }
 }
 
 @media (min-width: 1500px) {
@@ -10482,6 +10556,16 @@ top: 1.18rem;
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
   max-width: var(--homepage-header-max-width, 1480px);
+  }
+
+  body.page-public-events-index .app-nav-hotline-copy {
+  gap: 0.5rem;
+  }
+
+  body.page-public-events-index .app-nav-hotline-genre {
+  min-height: 1.88rem;
+      padding-inline: 0.78rem;
+      font-size: 0.88rem;
   }
 }
 

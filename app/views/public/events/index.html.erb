@@ -22,6 +22,8 @@
   <% all_promotion_banners = Array(@all_promotion_banners) %>
   <% promotion_banners_by_lane_position = @promotion_banners_by_lane_position || {} %>
   <% promotion_banner_lane_position = 1 %>
+  <% show_all_stuttgart_lane = false %>
+  <% show_homepage_genre_tag_cloud = false %>
 
   <% if @browse_state.page == 1 && all_promotion_banners.present? %>
     <%= render "promotion_banner_slider",
@@ -105,7 +107,7 @@
                  list_aria_label: "Listenansicht für Tagestipp" %>
     <% end %>
 
-    <% if @home_highlight_events.present? %>
+    <% if show_all_stuttgart_lane && @home_highlight_events.present? %>
       <%= render "promotion_banners",
                  banners: promotion_banners_by_lane_position[promotion_banner_lane_position],
                  browse_state: @browse_state,
@@ -160,7 +162,9 @@
                  list_aria_label: "Listenansicht für #{lane.group.name}" %>
     <% end %>
 
-    <%= render "homepage_genre_tag_cloud", tags: @home_genre_tag_cloud_genres %>
+    <% if show_homepage_genre_tag_cloud %>
+      <%= render "homepage_genre_tag_cloud", tags: @home_genre_tag_cloud_genres %>
+    <% end %>
 
     <% trailing_promotion_banners = promotion_banners_by_lane_position.select { |position, _banners| position >= promotion_banner_lane_position }.values.flatten %>
     <%= render "promotion_banners",
