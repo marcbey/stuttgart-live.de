@@ -3739,6 +3739,7 @@ padding: 0.9rem 0;
 }
 
 .lane-header--saved-events {
+  --lane-header-title-color: #0a2324;
 }
 
 .lane-header--tagestipp {
