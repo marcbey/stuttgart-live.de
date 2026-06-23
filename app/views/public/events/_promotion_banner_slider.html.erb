@@ -1,0 +1,48 @@
+<% strict_proxy = local_assigns.fetch(:strict_proxy, homepage_media_strict_proxy?) %>
+<% priority_banner = local_assigns[:priority_banner] %>
+
+<section class="promotion-banner-slider-section"
+         aria-label="Promotion Banner"
+         data-controller="highlights-slider"
+         data-highlights-slider-autoplay-value="true"
+         data-highlights-slider-interval-value="5000">
+  <h2 class="sr-only">Promotion Banner</h2>
+
+  <div class="highlights-slider-viewport promotion-banner-slider-viewport">
+    <button type="button"
+            class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev promotion-banner-slider-arrow"
+            data-highlights-slider-target="previousButton"
+            data-action="click->highlights-slider#previous"
+            aria-label="Vorheriger Promotion Banner">
+      ‹
+    </button>
+
+    <div class="promotion-banner-slider-track" data-highlights-slider-target="track">
+      <% Array(banners).each do |banner| %>
+        <% image_priority = priority_banner.present? && banner == priority_banner %>
+        <div class="promotion-banner-slider-slide">
+          <% if banner[:type] == :event %>
+            <%= render "event_promotion_banner",
+                       event: banner[:record],
+                       browse_state: browse_state,
+                       strict_proxy: strict_proxy,
+                       image_priority: image_priority %>
+          <% else %>
+            <%= render "promotion_banner",
+                       blog_post: banner[:record],
+                       strict_proxy: strict_proxy,
+                       image_priority: image_priority %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <button type="button"
+            class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next promotion-banner-slider-arrow"
+            data-highlights-slider-target="nextButton"
+            data-action="click->highlights-slider#next"
+            aria-label="Nächster Promotion Banner">
+      ›
+    </button>
+  </div>
+</section>

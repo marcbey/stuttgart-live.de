@@ -1104,16 +1104,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
+    assert_select ".promotion-banner-slider-section[data-controller='highlights-slider'][data-highlights-slider-autoplay-value='true']", count: 1
+    assert_select ".promotion-banner-slider-track .promotion-banner h2", text: "Großer Promo-Post"
     assert_select ".promotion-banner h2", text: "Großer Promo-Post"
     assert_select ".promotion-banner a[href='#{news_path(blog_post.slug)}']"
 
     document = Nokogiri::HTML.parse(response.body)
     shell_children = document.css("section.public-shell > *")
     highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
-    promotion_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") }
+    promotion_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("promotion-banner-slider-section") }
 
     assert highlights_index.present?, "expected Highlights section to be rendered"
-    assert promotion_index.present?, "expected Promotion Banner to be rendered"
+    assert promotion_index.present?, "expected Promotion Banner slider to be rendered"
     assert_equal 0, promotion_index
     assert_operator promotion_index, :<, highlights_index
   end
@@ -1153,16 +1155,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".promotion-banner-event h2", text: "Promotion Only Banner Artist"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event h2", text: "Promotion Only Banner Artist"
 
     document = Nokogiri::HTML.parse(response.body)
     shell_children = document.css("section.public-shell > *")
     highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
-    event_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner-event") }
+    slider_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("promotion-banner-slider-section") }
     news_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") && !node["class"].to_s.include?("promotion-banner-event") }
 
-    assert_equal 0, event_banner_index
-    assert_equal event_banner_index + 1, highlights_index
+    assert_equal 0, slider_index
+    assert_equal slider_index + 1, highlights_index
     assert_nil news_banner_index
   end
 
@@ -1213,23 +1215,23 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".promotion-banner-event h2", text: "Promotion Banner Artist"
-    assert_select ".promotion-banner-event .promotion-banner-event-title", text: "Promotion Banner Event"
-    assert_select ".promotion-banner-event .promotion-banner-kicker", text: "Event Tipp"
-    assert_select ".promotion-banner-event .promotion-banner-cta", text: "Zum Event"
-    assert_select ".promotion-banner-event a[href='#{event_path(event.slug)}']"
-    assert_select ".promotion-banner:not(.promotion-banner-event) a[href='#{news_path(blog_post.slug)}']"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event h2", text: "Promotion Banner Artist"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-event-title", text: "Promotion Banner Event"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-kicker", text: "Event Tipp"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-cta", text: "Zum Event"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event a[href='#{event_path(event.slug)}']", count: 1
+    assert_select ".promotion-banner-slider-track .promotion-banner:not(.promotion-banner-event) a[href='#{news_path(blog_post.slug)}']", count: 1
 
     document = Nokogiri::HTML.parse(response.body)
     shell_children = document.css("section.public-shell > *")
     highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
-    event_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner-event") }
-    news_banner_index = shell_children.index { |node| node.name == "article" && node["class"].to_s.include?("promotion-banner") && !node["class"].to_s.include?("promotion-banner-event") }
+    slider_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("promotion-banner-slider-section") }
 
-    assert_equal 0, event_banner_index
-    assert_equal event_banner_index + 1, news_banner_index
-    assert_operator event_banner_index, :<, highlights_index
-    assert_operator news_banner_index, :<, highlights_index
+    assert_equal 0, slider_index
+    assert_operator slider_index, :<, highlights_index
+
+    slider_links = document.css(".promotion-banner-slider-track a.promotion-banner-link").map { |node| node["href"] }
+    assert_equal [ event_path(event.slug), news_path(blog_post.slug) ], slider_links
   end
 
   test "homepage inserts multiple promotion banners before configured visible lanes" do
@@ -1306,19 +1308,28 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
+    assert_select ".promotion-banner-slider-track a[href='#{news_path(top_blog_post.slug)}']", count: 1
+    assert_select "section.public-shell > .promotion-banner a[href='#{news_path(top_blog_post.slug)}']", count: 0
+    assert_select "a[href='#{event_path(event.slug)}']", count: 2
+    assert_select ".promotion-banner-slider-track a[href='#{event_path(event.slug)}']", count: 1
+    assert_select "section.public-shell > article.promotion-banner-event a[href='#{event_path(event.slug)}']", count: 1
+    assert_select "a[href='#{news_path(trailing_blog_post.slug)}']", count: 2
+
+    slider_links = Nokogiri::HTML.parse(response.body).css(".promotion-banner-slider-track a.promotion-banner-link").map { |node| node["href"] }
+    assert_equal [ news_path(top_blog_post.slug), event_path(event.slug), news_path(trailing_blog_post.slug) ], slider_links
 
     document = Nokogiri::HTML.parse(response.body)
     shell_children = document.css("section.public-shell > *").to_a
-    top_banner_index = shell_children.index { |node| node.at_css("a[href='#{news_path(top_blog_post.slug)}']") }
+    slider_index = shell_children.index { |node| node["class"].to_s.include?("promotion-banner-slider-section") }
     highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
-    event_banner_index = shell_children.index { |node| node.at_css("a[href='#{event_path(event.slug)}']") }
+    event_banner_index = shell_children.index { |node| node.name == "article" && node.at_css("a[href='#{event_path(event.slug)}']") }
     all_stuttgart_index = shell_children.index do |node|
       node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == "alles aus stuttgart"
     end
-    trailing_banner_index = shell_children.index { |node| node.at_css("a[href='#{news_path(trailing_blog_post.slug)}']") }
+    trailing_banner_index = shell_children.index { |node| node.name == "article" && node.at_css("a[href='#{news_path(trailing_blog_post.slug)}']") }
     saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
 
-    assert_equal top_banner_index + 1, highlights_index
+    assert_equal slider_index + 1, highlights_index
     assert_equal event_banner_index + 1, all_stuttgart_index
     assert_equal trailing_banner_index + 1, saved_lane_slot_index
   end

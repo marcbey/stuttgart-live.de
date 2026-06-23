@@ -3063,6 +3063,37 @@ margin: 1.4rem 0 1.6rem;
   overflow: hidden;
 }
 
+.promotion-banner-slider-section {
+margin: 1.4rem 0 1.6rem;
+}
+
+.promotion-banner-slider-track {
+display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(100%, 100%);
+  gap: 1rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+.promotion-banner-slider-track::-webkit-scrollbar {
+display: none;
+}
+
+.promotion-banner-slider-slide {
+scroll-snap-align: start;
+}
+
+.promotion-banner-slider-slide .promotion-banner {
+margin: 0;
+  height: 100%;
+}
+
+.promotion-banner-slider-slide .promotion-banner-link {
+height: 100%;
+}
+
 .promotion-banner-news {
 --promotion-banner-background: #E0F7F2;
 }
@@ -8747,6 +8778,19 @@ display: flex;
 }
 
 @media (max-width: 820px) {
+  .promotion-banner-slider-section {
+  margin-inline: calc(var(--homepage-content-padding-inline, 1rem) * -1);
+  }
+
+  .promotion-banner-slider-track {
+  gap: 0.75rem;
+      padding-inline: var(--homepage-content-padding-inline, 1rem);
+  }
+
+  .promotion-banner-slider-slide .promotion-banner {
+  margin: 0;
+  }
+
   .event-detail-venue-block {
   padding: 0.85rem;
   }

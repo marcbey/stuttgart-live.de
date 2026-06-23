@@ -448,8 +448,9 @@ module Public
 
       sorted_banners = (event_banners + news_banners).sort_by { |banner| promotion_banner_sort_key(banner) }
 
-      @priority_promotion_banner = sorted_banners.first
-      @promotion_banners_by_lane_position = sorted_banners.group_by do |banner|
+      @all_promotion_banners = sorted_banners
+      @priority_promotion_banner = @all_promotion_banners.first
+      @promotion_banners_by_lane_position = @all_promotion_banners.group_by do |banner|
         banner[:record].promotion_banner_lane_position || Event::DEFAULT_PROMOTION_BANNER_LANE_POSITION
       end
     end
