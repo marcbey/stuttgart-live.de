@@ -12,6 +12,8 @@ export default class extends Controller {
     this.handleFocusIn = this.handleFocusIn.bind(this)
     this.handleFocusOut = this.handleFocusOut.bind(this)
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
+    this.handleViewportChange = this.handleViewportChange.bind(this)
+    this.mobileHeroMediaQuery = window.matchMedia("(max-width: 767px)")
     this.userPaused = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
     this.trackTarget?.addEventListener("scroll", this.updateButtons, { passive: true })
@@ -22,8 +24,11 @@ export default class extends Controller {
     this.element.addEventListener("focusin", this.handleFocusIn)
     this.element.addEventListener("focusout", this.handleFocusOut)
     document.addEventListener("visibilitychange", this.handleVisibilityChange)
+    this.mobileHeroMediaQuery.addEventListener("change", this.handleViewportChange)
     this.updateButtons()
     this.updateToggleButton()
+    this.handleViewportChange()
+    window.requestAnimationFrame(() => this.resetMobileHeroTrack())
     this.startAutoplay()
   }
 
@@ -34,6 +39,7 @@ export default class extends Controller {
     this.element.removeEventListener("focusin", this.handleFocusIn)
     this.element.removeEventListener("focusout", this.handleFocusOut)
     document.removeEventListener("visibilitychange", this.handleVisibilityChange)
+    this.mobileHeroMediaQuery?.removeEventListener("change", this.handleViewportChange)
     this.stopAutoplay()
   }
 
@@ -98,6 +104,7 @@ export default class extends Controller {
 
   startAutoplay() {
     if (!this.autoplayValue || !this.hasTrackTarget) return
+    if (!this.autoplayAllowed()) return
     if (this.userPaused || document.hidden) return
     if (this.autoplayTimer) return
 
@@ -201,13 +208,13 @@ export default class extends Controller {
   scrollToItem(item) {
     if (!(item instanceof HTMLElement)) return
 
-    this.trackTarget.scrollTo({ left: item.offsetLeft, behavior: "smooth" })
+    this.trackTarget.scrollTo({ left: Math.round(item.offsetLeft), behavior: "smooth" })
   }
 
   scrollToColumn(column) {
     if (!column) return
 
-    this.trackTarget.scrollTo({ left: column.left, behavior: "smooth" })
+    this.trackTarget.scrollTo({ left: Math.round(column.left), behavior: "smooth" })
   }
 
   atEnd() {
@@ -261,5 +268,44 @@ export default class extends Controller {
     } else {
       this.startAutoplay()
     }
+  }
+
+  autoplayAllowed() {
+    return true
+  }
+
+  handleViewportChange() {
+    if (!this.hasTrackTarget) return
+    if (this.isMobileHeroSlider()) {
+      this.resetMobileHeroTrack()
+    }
+
+    this.stopAutoplay()
+    this.startAutoplay()
+    this.updateButtons()
+  }
+
+  resetMobileHeroTrack() {
+    if (!this.isMobileHeroSlider()) return
+
+    const resetTrackPosition = () => {
+      if (!this.hasTrackTarget) return
+      this.trackTarget.scrollLeft = 0
+      this.trackTarget.scrollTo({ left: 0, behavior: "auto" })
+      this.updateButtons()
+    }
+
+    resetTrackPosition()
+    window.requestAnimationFrame(() => {
+      resetTrackPosition()
+      window.requestAnimationFrame(resetTrackPosition)
+    })
+    window.setTimeout(resetTrackPosition, 120)
+  }
+
+  isMobileHeroSlider() {
+    return this.hasTrackTarget &&
+      this.mobileHeroMediaQuery?.matches &&
+      this.element.matches(".promotion-banner-slider-section--hero")
   }
 }

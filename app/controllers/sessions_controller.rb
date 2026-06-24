@@ -11,7 +11,7 @@ class SessionsController < ApplicationController
     if candidate_user&.login_locked?
       log_login_attempt(user: candidate_user, outcome: "locked")
       redirect_to new_session_path, alert: "Zu viele Fehlversuche. Bitte später erneut versuchen."
-    elsif authenticated_user = User.authenticate_by(params.permit(:email_address, :password))
+    elsif authenticated_user = User.authenticate_by(email_address: normalized_email_address, password: params[:password].to_s)
       authenticated_user.clear_failed_login_attempts! if authenticated_user.failed_login_attempts.positive? || authenticated_user.locked_until.present?
       log_login_attempt(user: authenticated_user, outcome: "successful")
       start_new_session_for(authenticated_user)

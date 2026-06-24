@@ -42,6 +42,14 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "successful", LoginAttempt.recent_first.first.outcome
   end
 
+  test "create normalizes the email address before authentication" do
+    post session_path, params: { email_address: "  #{@editor.email_address.upcase}  ", password: "password" }
+
+    assert_redirected_to backend_root_path
+    assert cookies[:session_id]
+    assert_equal "successful", LoginAttempt.recent_first.first.outcome
+  end
+
   test "create with blogger credentials redirects to the blog backend" do
     post session_path, params: { email_address: @blogger.email_address, password: "password" }
 

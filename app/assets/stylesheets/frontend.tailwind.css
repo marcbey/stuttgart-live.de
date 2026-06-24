@@ -307,7 +307,7 @@ margin-bottom: 0.7rem;
 }
 
 .news-index-card-teaser {
-color: rgba(17, 17, 17, 0.68);
+color: #0a2324;
   font-size: 0.84rem;
   letter-spacing: 0.01em;
 }
@@ -892,7 +892,7 @@ color: var(--ink);
 }
 
 .app-error-status span {
-color: rgba(17, 17, 17, 0.56);
+color: #0a2324;
   font-size: 0.84rem;
   font-weight: 700;
   letter-spacing: 0.16em;
@@ -2174,12 +2174,12 @@ background: rgba(255, 165, 220, 0.34);
 }
 
 .public-search-calendar-day-muted {
-color: rgba(17, 17, 17, 0.32);
+color: #0a2324;
 }
 
 .public-search-calendar-day-disabled,
 .public-search-calendar-day:disabled {
-color: rgba(17, 17, 17, 0.2);
+color: #0a2324;
   cursor: not-allowed;
 }
 
@@ -2348,7 +2348,7 @@ color: var(--ink-soft);
 }
 
 .public-search-result-arrow {
-color: rgba(17, 17, 17, 0.45);
+color: #0a2324;
   font-size: 1.15rem;
 }
 
@@ -2794,6 +2794,13 @@ opacity: 1;
   }
 }
 
+@media (max-width: 479px) {
+  .event-detail-links a {
+  width: 100%;
+      justify-content: center;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .genre-lane-card-link {
   transition-duration: 0.01ms;
@@ -3226,7 +3233,7 @@ display: grid;
 }
 
 .promotion-banner-link-dark {
-color: #111;
+color: #0a2324;
 }
 
 .promotion-banner-link-light {
@@ -3307,7 +3314,7 @@ display: grid;
 
 .promotion-banner-link-dark .promotion-banner-kicker,
 .promotion-banner-link-dark .promotion-banner-event-title {
-color: rgba(17, 17, 17, 0.64);
+color: #0a2324;
 }
 
 .promotion-banner-link-light .promotion-banner-kicker,
@@ -3320,7 +3327,7 @@ color: #fff;
 }
 
 .promotion-banner-link-dark .promotion-banner-copy h2 {
-color: #111;
+color: #0a2324;
 }
 
 .promotion-banner-link-light .promotion-banner-copy h2 {
@@ -4670,7 +4677,7 @@ border-color: rgba(199, 53, 66, 0.85);
 }
 
 .newsletter-signup-section .newsletter-signup-input::placeholder {
-color: rgba(17, 17, 17, 0.46);
+color: #0a2324;
 }
 
 .newsletter-signup-section .newsletter-signup-input:focus,
@@ -6150,7 +6157,7 @@ display: inline-flex;
   color: #0a2324;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.1rem;
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1;
   text-decoration: none;
   text-transform: uppercase;
@@ -6241,7 +6248,7 @@ font-size: 1rem;
 }
 
 .event-detail-notes-list-neutral .event-detail-notes-list-marker {
-color: rgba(17, 17, 17, 0.58);
+color: #0a2324;
 }
 
 .event-detail-organizer-logo {
@@ -6364,18 +6371,6 @@ max-width: 1280px;
 
 .event-detail-topbar {
 margin-bottom: 1.35rem;
-}
-
-@media (min-width: 1200px) {
-  .event-detail-public-event .event-detail-topbar-actions > .event-detail-edit-link {
-  position: fixed;
-    top: calc(var(--app-nav-height, 0px) + 0.85rem);
-    left: max(
-      var(--homepage-content-padding-inline, 1rem),
-      calc(((100vw - var(--homepage-content-max-width, 1480px)) / 2) + var(--homepage-content-padding-inline, 1rem))
-    );
-    z-index: 55;
-  }
 }
 
 .event-detail-header {
@@ -6795,7 +6790,7 @@ border-block: 1px solid #e3ded3;
 }
 
 .event-series-calendar-weekdays span {
-color: rgba(8, 47, 49, 0.7);
+color: #0a2324;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.78rem;
   font-weight: 700;
@@ -7167,7 +7162,7 @@ position: relative;
 }
 
 .event-detail-source-badge {
-color: #111;
+color: #0a2324;
   background: rgba(17, 17, 17, 0.04);
   border-color: rgba(17, 17, 17, 0.16);
 }
@@ -7578,7 +7573,7 @@ display: grid;
 
 .event-detail-venue-layout a.event-detail-venue-map-link[href] {
   color: #0a2324;
-  font-weight: 700;
+  font-weight: 400;
   overflow-wrap: normal;
   text-decoration: none;
   text-decoration-line: none;
@@ -7674,7 +7669,7 @@ display: block;
 }
 
 .event-detail-venue-label {
-color: rgba(17, 17, 17, 0.62);
+color: #0a2324;
   font-size: 0.84rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -7879,6 +7874,44 @@ font-size: 0.82rem;
   -webkit-box-orient: unset;
 }
 
+.event-detail-related-more {
+display: flex;
+  justify-content: center;
+  margin-top: 0.55rem;
+}
+
+.event-detail-related-more:empty {
+display: none;
+}
+
+.event-detail-related-more-button {
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.85rem;
+  padding: 0.55rem 1.15rem;
+  border: 1px solid #0a484b;
+  border-radius: 999px;
+  background: #fff;
+  color: #0a2324;
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1.05rem;
+  font-weight: 400;
+  letter-spacing: 0.055em;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+
+.event-detail-related-more-button:hover,
+.event-detail-related-more-button:focus-visible {
+border-color: #0a484b;
+  background: #0a484b;
+  color: #fff;
+  text-decoration: none;
+}
+
 @media (min-width: 981px) {
   .event-detail-copy-block-primary,
   .event-detail-venue-block {
@@ -7989,11 +8022,6 @@ padding-inline: 0;
   .event-detail-sub-tag-arrow,
   .event-detail-sub-tag-divider {
   min-height: 1.85rem;
-  }
-
-  .event-detail-links a {
-  width: 100%;
-      justify-content: center;
   }
 
   .event-detail-cta-card {
@@ -10724,7 +10752,7 @@ padding: 1rem 1.15rem 1rem;
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-kicker,
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-event-title {
-color: rgba(17, 17, 17, 0.72);
+color: #0a2324;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-kicker,
@@ -10733,7 +10761,7 @@ color: rgba(248, 250, 249, 0.82);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-kicker {
-color: rgba(17, 17, 17, 0.72);
+color: #0a2324;
   font-family: "Oswald", "Arial Narrow", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
@@ -10749,7 +10777,7 @@ color: var(--ink);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-copy h2 {
-color: #111;
+color: #0a2324;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-copy h2 {
@@ -10757,13 +10785,14 @@ color: #f8faf9;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-event-title {
-color: rgba(var(--ink-rgb), 0.8);
+color: #0a2324;
   font-size: 1rem;
   font-weight: 700;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-cta {
 justify-self: start;
+  box-sizing: border-box;
   border: 2px solid var(--ink);
   border-radius: 9999px;
   background: var(--ink);
@@ -10834,6 +10863,10 @@ padding: 1.35rem 1.3rem 1.35rem 0;
 }
 
 @media (max-width: 720px) {
+  .promotion-banner-copy h2 {
+  padding-top: 0;
+  }
+
   .promotion-banner-layout-reversed .promotion-banner-visual,
   .promotion-banner-layout-reversed .promotion-banner-copy {
   grid-column: auto;
@@ -10879,6 +10912,12 @@ padding: 1.35rem 1.3rem 1.35rem 0;
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-copy {
   padding: 1rem;
+  }
+
+  body.page-public-events-index .promotion-banner-poster .promotion-banner-cta {
+  width: fit-content;
+      max-width: 100%;
+      padding: 1rem 2rem;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link {
@@ -10955,6 +10994,154 @@ padding: 1.35rem 1.3rem 1.35rem 0;
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-copy {
   padding: 1rem var(--homepage-header-padding-inline, 1.4rem) 1.2rem;
+  }
+}
+
+@media (max-width: 767px) {
+  body.page-public-events-index .app-nav-inner-homepage-poster {
+  grid-template-areas:
+        "brand brand"
+        "center meta";
+  }
+
+  body.page-public-events-index .app-nav-hotline {
+  display: none;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero {
+  margin: 0.35rem calc(50% - 50vw) 0;
+      width: 100vw;
+      max-width: 100vw;
+      overflow: clip;
+      background: transparent;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-slider-viewport {
+  overflow: hidden;
+      width: 100vw;
+      max-width: 100vw;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-slider-slide,
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-slider-slide .promotion-banner,
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-slider-slide .promotion-banner-link {
+  height: auto;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-slider-arrow {
+  display: none;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-slider-track {
+  display: flex;
+  gap: 0;
+      width: 100vw;
+      max-width: 100vw;
+      scroll-padding-inline: 0;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-slider-slide {
+  flex: 0 0 100vw;
+      width: 100vw;
+      min-width: 100vw;
+      max-width: 100vw;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster {
+  width: 100%;
+      border: 0;
+      border-radius: 0;
+      background: var(--promotion-banner-background);
+      box-shadow: none;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+      width: 100%;
+      padding: 0.9rem 1rem 1.2rem;
+      min-height: 0;
+      border: 0;
+      border-radius: 0;
+      box-shadow: none;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-link {
+  grid-template-columns: minmax(0, 1fr);
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-visual {
+  gap: 0;
+      padding: 0;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-media {
+  border-radius: 1.7rem;
+      aspect-ratio: 1.72 / 1;
+      min-height: 0;
+      height: auto;
+      background: rgba(12, 45, 54, 0.16);
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-image {
+  height: 100%;
+      min-height: 0;
+      object-fit: cover;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-copy {
+  display: grid;
+      align-content: start;
+      grid-template-rows: auto auto minmax(0, 1fr) auto;
+  gap: 1.05rem;
+      height: 13.5rem;
+      padding: 1.2rem 0.3rem 0 0.3rem;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-kicker {
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+      font-size: clamp(1.05rem, 4vw, 1.28rem);
+      letter-spacing: 0.16em;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-copy h2 {
+  font-size: clamp(3rem, 11vw, 4.65rem);
+      line-height: 0.88;
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-kicker {
+  color: #0a2324;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link-light .promotion-banner-kicker {
+  color: rgba(248, 250, 249, 0.82);
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-copy h2 {
+  color: #0a2324;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link-light .promotion-banner-copy h2 {
+  color: #f8faf9;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-event-title {
+  display: none;
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-cta {
+  width: fit-content;
+      max-width: 100%;
+      padding: 1.5rem 2rem;
+      border-width: 2px;
+      font-size: 1rem;
+      line-height: 1;
+      letter-spacing: 0.08em;
+      justify-content: center;
   }
 }
 
@@ -11153,7 +11340,7 @@ border-color: transparent;
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-input::placeholder,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input::placeholder {
-color: rgba(17, 17, 17, 0.58);
+color: #0a2324;
 }
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button,

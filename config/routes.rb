@@ -104,6 +104,7 @@ Rails.application.routes.draw do
     get :homepage_lane, on: :collection
     get :saved_lane, on: :collection
     get :search_overlay, on: :collection
+    get :related, on: :member
     get :termine, on: :member
     patch :status, on: :member
   end

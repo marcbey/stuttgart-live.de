@@ -3629,7 +3629,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     ], related_names.first(3)
   end
 
-  test "show limits related genre lane to twenty events" do
+  test "show renders first eight related genre lane events with load more button" do
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
 
     related_events = 22.times.map do |index|
@@ -3653,12 +3653,51 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
 
-    related_names = Nokogiri::HTML.parse(response.body).css(".event-detail-related-list .event-listing-link strong").map(&:text)
+    document = Nokogiri::HTML.parse(response.body)
+    related_names = document.css(".event-detail-related-list .event-listing-link strong").map(&:text)
+    more_link = document.at_css("#event-detail-related-more a")
 
-    assert_equal 20, related_names.size
-    assert_equal related_events.first(20).map(&:artist_name), related_names
-    assert_not_includes related_names, related_events.last(2).first.artist_name
-    assert_not_includes related_names, related_events.last.artist_name
+    assert_equal 8, related_names.size
+    assert_equal related_events.first(8).map(&:artist_name), related_names
+    assert_equal "Mehr laden", more_link&.text&.strip
+    assert_equal related_event_path(@published_event.slug, offset: 8, format: :turbo_stream), more_link&.[]("href")
+    assert_equal "true", more_link&.[]("data-turbo-stream")
+  end
+
+  test "related appends the next eight related genre lane events" do
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
+
+    related_events = 18.times.map do |index|
+      event = Event.create!(
+        slug: "show-related-genre-next-#{index}",
+        source_fingerprint: "test::public::show-related-genre::next::#{index}",
+        title: "Show Related Next #{index}",
+        artist_name: "Related Next Artist #{index}",
+        start_at: (index + 2).days.from_now.change(hour: 20, min: 0, sec: 0),
+        venue: "Im Wizemann",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        source_snapshot: {}
+      )
+      build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+      event
+    end
+
+    get related_event_url(@published_event.slug, offset: 8), as: :turbo_stream
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    append_stream = document.at_css("turbo-stream[action='append'][target='event-detail-related-events']")
+    replace_stream = document.at_css("turbo-stream[action='replace'][target='event-detail-related-more']")
+    appended_names = append_stream.css(".event-listing-link strong").map(&:text)
+    next_more_link = replace_stream.at_css("a")
+
+    assert_equal related_events[8, 8].map(&:artist_name), appended_names
+    assert_equal related_event_path(@published_event.slug, offset: 16, format: :turbo_stream), next_more_link&.[]("href")
+    assert_not_includes appended_names, related_events.first.artist_name
+    assert_not_includes appended_names, related_events.last.artist_name
   end
 
   test "show does not render related genre lane without selected snapshot or additional matches" do

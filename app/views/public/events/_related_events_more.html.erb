@@ -1,0 +1,12 @@
+<div class="event-detail-related-more" id="event-detail-related-more">
+  <% if has_more %>
+    <%= link_to "Mehr laden",
+                related_event_path(
+                  event.slug,
+                  **browse_state.route_params(format: :turbo_stream),
+                  offset: next_offset
+                ),
+                class: "event-detail-related-more-button",
+                data: { turbo_stream: true } %>
+  <% end %>
+</div>

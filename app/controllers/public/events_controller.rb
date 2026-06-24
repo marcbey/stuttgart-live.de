@@ -1,6 +1,6 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
+    allow_unauthenticated_access only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
@@ -10,12 +10,13 @@ module Public
     HOME_CANDIDATE_LIMIT = 100
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
+    RELATED_EVENTS_PAGE_SIZE = 8
     SHOW_EVENT_SERIES_TERMS_LIMIT = 6
     SAVED_LANE_SLUG_LIMIT = 200
     RUSS_LIVE_PROMOTER_ID = "382".freeze
     REQUEST_PROFILE_HEADER = "X-Stuttgart-Live-Profile".freeze
 
-    before_action :set_browse_state, only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :search_overlay, :termine ]
+    before_action :set_browse_state, only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
     around_action :append_index_profile_headers, only: :index
 
     def index
@@ -109,8 +110,44 @@ module Public
       ).call
       @related_genre_lane = Public::Events::RelatedGenreLaneBuilder.new(
         event: @event,
-        relation: show_related_genre_lane_events_relation
+        relation: show_related_genre_lane_events_relation,
+        limit: RELATED_EVENTS_PAGE_SIZE + 1
       ).call
+      assign_related_events_page(offset: 0)
+    end
+
+    def related
+      @event = show_events_relation.find_by!(slug: params[:slug])
+      offset = related_events_offset
+      @related_genre_lane = Public::Events::RelatedGenreLaneBuilder.new(
+        event: @event,
+        relation: show_related_genre_lane_events_relation,
+        limit: offset + RELATED_EVENTS_PAGE_SIZE + 1
+      ).call
+      assign_related_events_page(offset:)
+
+      if @related_events.empty?
+        head :no_content
+        return
+      end
+
+      respond_to do |format|
+        format.turbo_stream do
+          render turbo_stream: [
+            turbo_stream.append(
+              "event-detail-related-events",
+              partial: "public/events/event_rows",
+              locals: related_event_rows_locals(@related_events, wrap: false)
+            ),
+            turbo_stream.replace(
+              "event-detail-related-more",
+              partial: "public/events/related_events_more",
+              locals: related_events_more_locals
+            )
+          ]
+        end
+        format.html { redirect_to event_path(@event.slug, **@browse_state.route_params) }
+      end
     end
 
     def termine
@@ -527,6 +564,37 @@ module Public
       relation = list_events_relation
 
       authenticated? ? relation : relation.published_live
+    end
+
+    def assign_related_events_page(offset:)
+      @related_events = @related_genre_lane&.events&.slice(offset, RELATED_EVENTS_PAGE_SIZE) || []
+      @related_events_next_offset = offset + @related_events.size
+      @related_events_has_more =
+        @related_genre_lane.present? && @related_genre_lane.events.size > @related_events_next_offset
+    end
+
+    def related_events_offset
+      [ params[:offset].to_i, 0 ].max
+    end
+
+    def related_event_rows_locals(events, wrap:)
+      {
+        events: events,
+        browse_state: @browse_state,
+        wrap: wrap,
+        container_id: (wrap ? "event-detail-related-events" : nil),
+        effective_series_ids: @related_genre_lane.effective_series_ids,
+        series_counts_by_id: @related_genre_lane.series_counts_by_id
+      }
+    end
+
+    def related_events_more_locals
+      {
+        event: @event,
+        browse_state: @browse_state,
+        next_offset: @related_events_next_offset,
+        has_more: @related_events_has_more
+      }
     end
 
     def detail_events_relation

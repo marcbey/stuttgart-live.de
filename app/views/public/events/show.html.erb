@@ -6,6 +6,14 @@
 <% content_for :page_partner_strip do %>
   <%= render "partner_strip" %>
 <% end %>
+<% if authenticated? %>
+  <% content_for :public_backend_actions do %>
+    <%= link_to "Edit event",
+                backend_events_path(status: @event.status, event_id: @event.id),
+                class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
+                data: { turbo: false } %>
+  <% end %>
+<% end %>
 
 <article class="event-detail event-detail-public-event"<%= %( style="--event-detail-right-column-width: #{presenter.hero_stage_max_width || "46rem"};") %>>
   <div class="event-detail-topbar">
@@ -21,12 +29,6 @@
         <%= render "public/events/saved_event_button",
                    event: @event,
                    button_class: "saved-event-button-detail" %>
-      <% end %>
-      <% if authenticated? %>
-        <%= link_to "Edit event",
-                    backend_events_path(status: @event.status, event_id: @event.id),
-                    class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
-                    data: { turbo: false } %>
       <% end %>
     </div>
   </div>
@@ -150,18 +152,24 @@
 
     </div>
 
-    <% if @related_genre_lane.present? %>
+    <% if @related_genre_lane.present? && @related_events.any? %>
       <aside class="event-detail-sidebar" aria-label="Weitere Event-Empfehlungen">
         <section class="event-detail-related-list" aria-label="Das könnte dir auch gefallen">
           <div class="event-detail-related-list-heading">
             <h2>Das könnte dir auch gefallen</h2>
           </div>
           <%= render "event_rows",
-                     events: @related_genre_lane.events,
+                     events: @related_events,
                      browse_state: @browse_state,
                      wrap: true,
+                     container_id: "event-detail-related-events",
                      effective_series_ids: @related_genre_lane.effective_series_ids,
                      series_counts_by_id: @related_genre_lane.series_counts_by_id %>
+          <%= render "related_events_more",
+                     event: @event,
+                     browse_state: @browse_state,
+                     next_offset: @related_events_next_offset,
+                     has_more: @related_events_has_more %>
         </section>
       </aside>
     <% end %>
