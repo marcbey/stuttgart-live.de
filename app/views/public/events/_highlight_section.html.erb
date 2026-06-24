@@ -47,8 +47,7 @@
            data-homepage-lane-list-cursor-value="<%= lazy_list_next_cursor %>"
            data-homepage-lane-per-page-value="<%= Public::EventsController::HOME_LANE_LIMIT %>"
            data-homepage-lane-list-limit-value="<%= Public::EventsController::HOME_LANE_LIST_LIMIT %>"
-           <% end %>
-           <% if featured && !open_grid %>data-highlights-slider-autoplay-value="true" data-highlights-slider-interval-value="5000"<% end %>>
+           <% end %>>
     <%= render "home_slider_header",
                title: title,
                title_url: local_assigns[:title_url],

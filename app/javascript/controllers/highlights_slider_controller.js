@@ -73,7 +73,7 @@ export default class extends Controller {
     if (direction > 0 && this.atEnd()) {
       if (this.requestHomepageLanePage()) return
 
-      this.trackTarget.scrollTo({ left: 0, behavior: "smooth" })
+      this.returnToStart()
       return
     }
 
@@ -113,7 +113,7 @@ export default class extends Controller {
       const currentScroll = this.trackTarget.scrollLeft
 
       if (currentScroll >= maxScrollLeft - 4) {
-        this.trackTarget.scrollTo({ left: 0, behavior: "smooth" })
+        this.returnToStart()
       } else {
         this.scrollBySingleItem()
       }
@@ -215,6 +215,10 @@ export default class extends Controller {
     if (!column) return
 
     this.trackTarget.scrollTo({ left: Math.round(column.left), behavior: "smooth" })
+  }
+
+  returnToStart() {
+    this.trackTarget.scrollTo({ left: 0, behavior: "auto" })
   }
 
   atEnd() {
