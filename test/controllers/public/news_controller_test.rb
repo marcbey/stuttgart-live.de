@@ -36,6 +36,69 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".news-index-newsletter-slot", count: 0
   end
 
+  test "index renders the first eleven live posts with load more button" do
+    blog_posts = 14.times.map do |index|
+      create_blog_post(
+        title: "Paged News #{index}",
+        status: "published",
+        published_at: (index + 3).hours.ago
+      )
+    end
+
+    get news_index_url
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    titles = document.css(".news-index-card:not(.news-index-card-newsletter) h2").map(&:text)
+    more_link = document.at_css("#news-index-more a")
+
+    assert_equal [ @live_post.title, *blog_posts.first(10).map(&:title) ], titles
+    assert_not_includes titles, blog_posts[10].title
+    assert_equal "Mehr laden", more_link&.text&.strip
+    assert_equal news_index_path(offset: 11, format: :turbo_stream), more_link&.[]("href")
+    assert_equal "true", more_link&.[]("data-turbo-stream")
+  end
+
+  test "index hides load more button when there are no additional posts" do
+    10.times do |index|
+      create_blog_post(
+        title: "Limited News #{index}",
+        status: "published",
+        published_at: (index + 3).hours.ago
+      )
+    end
+
+    get news_index_url
+
+    assert_response :success
+    assert_select "#news-index-more a", count: 0
+  end
+
+  test "index turbo stream appends the next eleven live posts" do
+    blog_posts = 25.times.map do |index|
+      create_blog_post(
+        title: "Stream News #{index}",
+        status: "published",
+        published_at: (index + 3).hours.ago
+      )
+    end
+
+    get news_index_url(offset: 11), as: :turbo_stream
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    append_stream = document.at_css("turbo-stream[action='append'][target='news-index-grid']")
+    replace_stream = document.at_css("turbo-stream[action='replace'][target='news-index-more']")
+    appended_titles = append_stream.css(".news-index-card:not(.news-index-card-newsletter) h2").map(&:text)
+    next_more_link = replace_stream.at_css("a")
+
+    assert_equal blog_posts[10, 11].map(&:title), appended_titles
+    assert_equal news_index_path(offset: 22, format: :turbo_stream), next_more_link&.[]("href")
+    assert_select "turbo-stream[action='append'][target='news-index-grid'] .news-index-card-newsletter", count: 0
+  end
+
   test "show renders a published post" do
     get news_url(@live_post.slug)
 

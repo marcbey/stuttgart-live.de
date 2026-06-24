@@ -1,0 +1,11 @@
+<% blog_posts.each_with_index do |blog_post, index| %>
+  <%= render "public/news/card", blog_post: blog_post %>
+
+  <% if include_newsletter && index == 4 %>
+    <%= render "public/news/newsletter_card" %>
+  <% end %>
+<% end %>
+
+<% if include_newsletter && blog_posts.size < 5 %>
+  <%= render "public/news/newsletter_card" %>
+<% end %>

@@ -1,0 +1,7 @@
+<%= turbo_stream.append "news-index-grid" do %>
+  <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false %>
+<% end %>
+
+<%= turbo_stream.replace "news-index-more" do %>
+  <%= render "public/news/more", has_more: @has_more_blog_posts, next_offset: @next_offset %>
+<% end %>

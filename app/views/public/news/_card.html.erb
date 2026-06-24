@@ -1,0 +1,12 @@
+<article class="news-card news-index-card">
+  <%= link_to news_path(blog_post.slug), class: "news-index-card-link" do %>
+    <div class="news-card-body news-index-card-body">
+      <span class="news-index-accent" aria-hidden="true"></span>
+      <p class="news-card-meta">
+        <span><%= l(blog_post.published_at.to_date, format: "%d.%m.%Y") %></span>
+      </p>
+      <h2><%= blog_post.title %></h2>
+      <p class="news-index-card-teaser"><%= blog_post.teaser %></p>
+    </div>
+  <% end %>
+</article>

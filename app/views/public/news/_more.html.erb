@@ -1,0 +1,8 @@
+<div class="news-index-more" id="news-index-more">
+  <% if has_more %>
+    <%= link_to "Mehr laden",
+                news_index_path(format: :turbo_stream, offset: next_offset),
+                class: "news-index-more-button",
+                data: { turbo_stream: true } %>
+  <% end %>
+</div>
