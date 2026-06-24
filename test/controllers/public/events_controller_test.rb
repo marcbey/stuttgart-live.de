@@ -184,8 +184,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     document = Nokogiri::HTML.parse(response.body)
     shell_children = document.css("section.public-shell > *").to_a
     genre_sections = document.css("section.genre-lane-section")
-    pop_section = genre_sections.find { |section| section.at_css("h2")&.text == pop_group.name }
-    rock_section = genre_sections.find { |section| section.at_css("h2")&.text == rock_group.name }
+    pop_section = genre_sections.find { |section| lane_heading_text(section) == pop_group.name }
+    rock_section = genre_sections.find { |section| lane_heading_text(section) == rock_group.name }
     highlights_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("home-featured-section") }
     saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
     first_genre_index = shell_children.index { |node| node.name == "section" && node["class"].to_s.include?("genre-lane-section") }
@@ -278,8 +278,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.parse(response.body)
-    rock_section = document.css("section.genre-lane-section").find { |section| section.at_css("h2")&.text == rock_group.name }
-    tagestipp_section = document.css("section.genre-lane-section").find { |section| section.at_css("h2")&.text == "Tagestipp" }
+    rock_section = document.css("section.genre-lane-section").find { |section| lane_heading_text(section) == rock_group.name }
+    tagestipp_section = document.css("section.genre-lane-section").find { |section| lane_heading_text(section) == "Tagestipp" }
 
     assert rock_section.present?, "expected first configured genre lane to stay in the initial payload"
     assert tagestipp_section.present?, "expected Tagestipp lane shell"
@@ -377,7 +377,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     document = Nokogiri::HTML.parse(response.body)
     shell_children = document.css("section.public-shell > *").to_a
     rock_lane_index = shell_children.index do |node|
-      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && node.at_css("h2")&.text == rock_group.name
+      node.name == "section" && node["class"].to_s.include?("genre-lane-section") && lane_heading_text(node) == rock_group.name
     end
     tag_cloud_index = shell_children.index { |node| node["class"].to_s.include?("homepage-genre-tag-cloud") }
     saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
@@ -968,7 +968,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     document = Nokogiri::HTML.parse(response.body)
     highlights_section = document.at_css("section.home-featured-section")
     tagestipp_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "Tagestipp"
+      lane_heading_text(section) == "Tagestipp"
     end
 
     assert highlights_section.present?, "expected Highlights section to be rendered"
@@ -2104,7 +2104,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     document = Nokogiri::HTML.parse(response.body)
     slider_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "alles aus stuttgart"
+      lane_heading_text(section) == "alles aus stuttgart"
     end
 
     assert_nil slider_section
@@ -2148,7 +2148,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     document = Nokogiri::HTML.parse(response.body)
     rock_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == metal_group.name
+      lane_heading_text(section) == metal_group.name
     end
     cursor = rock_section["data-homepage-lane-cursor-value"]
 
@@ -2516,7 +2516,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     document = Nokogiri::HTML.parse(response.body)
     tagestipp_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "Tagestipp"
+      lane_heading_text(section) == "Tagestipp"
     end
 
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
@@ -2587,7 +2587,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     document = Nokogiri::HTML.parse(response.body)
     tagestipp_section = document.css("section.genre-lane-section").find do |section|
-      section.at_css("h2")&.text == "Tagestipp"
+      lane_heading_text(section) == "Tagestipp"
     end
 
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
@@ -5580,6 +5580,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     when "Pop" then genres(:pop)
     else Genre.find_by!(name: name)
     end
+  end
+
+  def lane_heading_text(section)
+    section.at_css("h2")&.text.to_s.squish
   end
 
   def create_presenter(name:, svg: false)
