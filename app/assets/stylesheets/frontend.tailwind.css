@@ -10134,6 +10134,11 @@ top: 1.18rem;
 }
 
 @media (max-width: 767px) {
+  body.page-public-events-index .app-nav-meta {
+  right: var(--homepage-header-padding-inline, 1rem);
+      max-width: calc(100vw - (var(--homepage-header-padding-inline, 1rem) * 2));
+  }
+
   body.page-public-events-index .public-search-overlay {
   left: 0;
       width: 100%;
