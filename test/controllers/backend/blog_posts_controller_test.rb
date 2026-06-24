@@ -365,6 +365,11 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner]'][type='checkbox'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_operator response.body.index('name="blog_post[promotion_banner]"'), :<, response.body.index('name="blog_post[promotion_banner_lane_position]"')
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_lane_position]'][type='number'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
+    lane_input = Nokogiri::HTML.parse(response.body).at_css("#blog-editor-panel-settings input[name='blog_post[promotion_banner_lane_position]']")
+    assert_not_nil lane_input
+    assert_nil lane_input["value"]
+    assert_select "#blog-editor-panel-settings .form-hint", text: /Ohne Lane-Position erscheint der Banner nur im Slider oben\./, count: 1
+    assert_select "#blog-editor-panel-settings .form-hint", text: /Leer bedeutet nur Slider\./, count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_kicker_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_title]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1

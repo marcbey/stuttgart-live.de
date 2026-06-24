@@ -16,7 +16,15 @@
     <% if local_assigns[:kicker].present? %>
       <p class="lane-header-kicker"><%= kicker %></p>
     <% end %>
-    <h2 class="lane-header-title"><% if local_assigns[:title_url].present? %><%= link_to title, title_url, class: "lane-header-title-link" %><% else %><%= title %><% end %></h2>
+    <h2 class="lane-header-title">
+      <% if local_assigns[:title_url].present? %>
+        <%= link_to title_url, class: "lane-header-title-link" do %>
+          <span class="lane-header-title-text"><%= title %></span>
+        <% end %>
+      <% else %>
+        <span class="lane-header-title-text"><%= title %></span>
+      <% end %>
+    </h2>
     <% if local_assigns[:meta].present? %>
       <p class="lane-header-meta"><%= meta %></p>
     <% end %>

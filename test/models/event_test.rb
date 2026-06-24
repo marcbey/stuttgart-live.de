@@ -628,13 +628,13 @@ class EventTest < ActiveSupport::TestCase
     assert_equal 3, second.promotion_banner_lane_position
   end
 
-  test "promotion banner lane position defaults to first lane and rejects invalid values" do
+  test "promotion banner lane position may stay empty and rejects invalid values" do
     event = events(:published_one)
     create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO)
 
     event.update!(promotion_banner: true, promotion_banner_lane_position: nil)
 
-    assert_equal 1, event.promotion_banner_lane_position
+    assert_nil event.promotion_banner_lane_position
 
     event.promotion_banner_lane_position = 0
 

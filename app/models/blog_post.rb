@@ -393,7 +393,6 @@ class BlogPost < ApplicationRecord
 
     def normalize_promotion_banner_lane_position
       value = promotion_banner_lane_position.to_s.strip
-      return DEFAULT_PROMOTION_BANNER_LANE_POSITION if value.blank? && promotion_banner?
       return nil if value.blank?
 
       value.to_i

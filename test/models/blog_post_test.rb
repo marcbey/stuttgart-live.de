@@ -200,7 +200,7 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_equal 3, second.promotion_banner_lane_position
   end
 
-  test "promotion banner lane position defaults to first lane and rejects invalid values" do
+  test "promotion banner lane position may stay empty and rejects invalid values" do
     blog_post = BlogPost.new(
       title: "Banner Position",
       teaser: "Teaser",
@@ -212,7 +212,7 @@ class BlogPostTest < ActiveSupport::TestCase
     blog_post.pending_promotion_banner_image_blob = create_uploaded_blob(filename: "banner-position.png")
 
     assert_predicate blog_post, :valid?
-    assert_equal 1, blog_post.promotion_banner_lane_position
+    assert_nil blog_post.promotion_banner_lane_position
 
     blog_post.promotion_banner_lane_position = 0
 

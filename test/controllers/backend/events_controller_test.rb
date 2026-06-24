@@ -577,6 +577,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings input[name='event[highlighted]'][type='checkbox'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner]'][type='checkbox'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_lane_position]'][type='number'][form='editor_form_event']", count: 1
+    lane_input = Nokogiri::HTML.parse(response.body).at_css("#event-editor-panel-settings input[name='event[promotion_banner_lane_position]']")
+    assert_not_nil lane_input
+    assert_nil lane_input["value"]
+    assert_select "#event-editor-panel-settings .form-hint", text: /Ohne Lane-Position erscheint der Banner nur im Slider oben\./, count: 1
+    assert_select "#event-editor-panel-settings .form-hint", text: /Leer bedeutet nur Slider\./, count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_kicker_text]'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_title]'][form='editor_form_event']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_text]'][form='editor_form_event']", count: 1

@@ -1165,6 +1165,55 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal highlights_section, public_shell.element_children.first
   end
 
+  test "homepage keeps slider-only and lane-positioned promotion banners separate" do
+    Event.create!(
+      slug: "homepage-slider-only-highlight",
+      source_fingerprint: "test::homepage::slider-only::highlight",
+      title: "Slider Only Highlight",
+      artist_name: "Slider Only Highlight Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    slider_only_post = BlogPost.create!(
+      title: "Slider Only Promotion News",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 2.hours.ago,
+      published_by: @user
+    )
+    slider_only_post.promotion_banner_image.attach(png_upload(filename: "slider-only-promotion-news.png"))
+    slider_only_post.update!(promotion_banner: true)
+
+    lane_post = BlogPost.create!(
+      title: "Lane Promotion News",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user,
+      promotion_banner_lane_position: 2
+    )
+    lane_post.promotion_banner_image.attach(png_upload(filename: "lane-promotion-news.png"))
+    lane_post.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner-slider-track a[href='#{news_path(slider_only_post.slug)}']", count: 1
+    assert_select ".promotion-banner-slider-track a[href='#{news_path(lane_post.slug)}']", count: 1
+    assert_select "section.public-shell > article.promotion-banner a[href='#{news_path(slider_only_post.slug)}']", count: 0
+    assert_select "section.public-shell > article.promotion-banner a[href='#{news_path(lane_post.slug)}']", count: 1
+  end
+
   test "homepage renders event promotion banner before news banner at the top" do
     Event.create!(
       slug: "homepage-event-promotion-highlight",

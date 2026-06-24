@@ -10,19 +10,19 @@
         <%= check_box_tag "blog_post[promotion_banner]", "1", blog_post.promotion_banner?, form: form_id %>
         <span>Als Promotion Banner markieren</span>
       </label>
-      <p class="form-hint">Mehrere Events und News können gleichzeitig als Promotion Banner aktiv sein. Die Lane-Position steuert, vor welcher sichtbaren Startseiten-Lane der Banner erscheint. Auf der Startseite wird der Banner nur angezeigt, wenn auch ein Promotion-Banner-Bild vorhanden ist.</p>
+      <p class="form-hint">Mehrere Events und News können gleichzeitig als Promotion Banner aktiv sein. Ohne Lane-Position erscheint der Banner nur im Slider oben. Mit Lane-Position erscheint er zusätzlich vor der gewählten sichtbaren Startseiten-Lane. Auf der Startseite wird der Banner nur angezeigt, wenn auch ein Promotion-Banner-Bild vorhanden ist.</p>
 
       <div class="editor-grid promotion-banner-settings-grid">
         <div>
           <%= label_tag "blog_post_promotion_banner_lane_position", "Lane-Position", class: "form-label" %>
           <%= number_field_tag "blog_post[promotion_banner_lane_position]",
-                               blog_post.promotion_banner_lane_position || BlogPost::DEFAULT_PROMOTION_BANNER_LANE_POSITION,
+                               blog_post.promotion_banner_lane_position,
                                id: "blog_post_promotion_banner_lane_position",
                                class: "form-input",
                                min: 1,
                                step: 1,
                                form: form_id %>
-          <p class="form-hint">1 bedeutet vor der ersten sichtbaren Startseiten-Lane.</p>
+          <p class="form-hint">Leer bedeutet nur Slider. 1 bedeutet zusätzlich vor der ersten sichtbaren Startseiten-Lane.</p>
         </div>
 
         <div>
