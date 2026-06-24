@@ -4,7 +4,7 @@ body.page-public {
   --ink-deep: #0a2324;
   --ink-rgb: 10, 35, 36;
   --text-ink: #0a2324;
-  --event-price-color: rgba(var(--ink-rgb), 0.68);
+  --event-price-color: #0a2324;
   --ink-banner: linear-gradient(135deg, #0a2324 0%, #0a2324 58%, #0a2324 100%);
   color: var(--text-ink);
   overflow-x: hidden;
@@ -95,7 +95,7 @@ min-height: 2.35rem;
   padding: 0.45rem 0;
   border: 0;
   background: transparent;
-  color: rgba(17, 17, 17, 0.78);
+  color: #0a2324;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.96rem;
   font-weight: 700;
@@ -186,7 +186,7 @@ margin: 0;
 .info-page-hero p {
 max-width: 52rem;
   margin: 0.75rem 0 0;
-  color: rgba(17, 17, 17, 0.82);
+  color: #0a2324;
   font-size: 1.08rem;
   font-weight: 400;
   line-height: 1.5rem;
@@ -559,7 +559,7 @@ max-width: 82ch;
 .info-page-card p,
 .info-page-card li {
 margin: 0;
-  color: rgba(17, 17, 17, 0.82);
+  color: #0a2324;
   font-size: 1.02rem;
   line-height: 1.7;
 }
@@ -672,7 +672,7 @@ padding: 0.85rem 1rem;
   border: 0;
   border-radius: 6px;
   background: rgba(17, 17, 17, 0.05);
-  color: rgba(17, 17, 17, 0.76);
+  color: #0a2324;
 }
 
 .static-page-rich-copy .trix-content > :last-child {
@@ -739,7 +739,7 @@ margin-bottom: 0;
 
   body.page-public .info-page-hero p {
   max-width: 100%;
-    color: rgba(17, 17, 17, 0.82);
+    color: #0a2324;
     font-size: 1.08rem;
     font-weight: 400;
     line-height: 1.5rem;
@@ -806,7 +806,7 @@ display: grid;
 
 .info-page-list dt {
 margin: 0 0 0.18rem;
-  color: rgba(17, 17, 17, 0.56);
+  color: #0a2324;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -815,7 +815,7 @@ margin: 0 0 0.18rem;
 
 .info-page-list dd {
 margin: 0;
-  color: rgba(17, 17, 17, 0.86);
+  color: #0a2324;
   font-size: 1.02rem;
   line-height: 1.65;
 }
@@ -976,7 +976,7 @@ display: flex;
   align-items: center;
   flex-wrap: wrap;
   margin-bottom: 0.65rem;
-  color: rgba(17, 17, 17, 0.58);
+  color: #0a2324;
   font-size: 0.86rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
@@ -1018,7 +1018,7 @@ border-bottom: 0;
 
 trix-toolbar .trix-button.trix-active {
 background: rgba(227, 27, 46, 0.12);
-  color: #111;
+  color: #0a2324;
 }
 
 trix-editor.blog-rich-text {
@@ -1292,7 +1292,7 @@ margin: 0;
 
 .auth-card-lead {
 margin: 0;
-  color: rgba(17, 17, 17, 0.68);
+  color: #0a2324;
   font-size: 1rem;
   line-height: 1.5;
 }
@@ -1323,7 +1323,7 @@ margin: 0.2rem 0 0.9rem;
 max-width: 44rem;
   margin: 0 0 1.25rem;
   font-size: 1.08rem;
-  color: rgba(17, 17, 17, 0.76);
+  color: #0a2324;
 }
 
 .static-page-section {
@@ -1417,7 +1417,7 @@ display: grid;
 text-transform: uppercase;
   letter-spacing: 0.05em;
   font-size: 0.82rem;
-  color: rgba(17, 17, 17, 0.7);
+  color: #0a2324;
 }
 
 .guardian-form-field-wide {
@@ -1448,7 +1448,7 @@ margin-top: 0.85rem;
 margin: 0;
   font-size: 0.84rem;
   line-height: 1.45;
-  color: rgba(17, 17, 17, 0.72);
+  color: #0a2324;
 }
 
 .guardian-form-second-page .guardian-form-footnote,
@@ -1458,7 +1458,7 @@ margin: 0;
 font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.98rem;
   line-height: 1.45;
-  color: rgba(17, 17, 17, 0.86);
+  color: #0a2324;
 }
 
 .guardian-form-second-page .guardian-form-footnote-group {
@@ -1499,7 +1499,7 @@ display: inline;
 .guardian-form-subheader-copy p {
 margin: 0.55rem 0 0;
   max-width: 36rem;
-  color: rgba(17, 17, 17, 0.72);
+  color: #0a2324;
   font-size: 0.98rem;
   line-height: 1.4;
 }
@@ -1613,7 +1613,7 @@ display: inline-flex;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 12px 28px rgba(17, 17, 17, 0.14);
-  color: #111;
+  color: #0a2324;
   font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
@@ -1630,7 +1630,7 @@ position: fixed;
   height: 3.1rem;
   border: 2px solid #111;
   background: rgba(255, 255, 255, 0.95);
-  color: #111;
+  color: #0a2324;
   font-size: 1.65rem;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
   backdrop-filter: none;
@@ -1753,7 +1753,7 @@ grid-column: 2;
   align-self: start;
   border: 0;
   background: transparent;
-  color: rgba(17, 17, 17, 0.7);
+  color: #0a2324;
   font-size: 2rem;
   line-height: 1;
   cursor: pointer;
@@ -1906,7 +1906,7 @@ position: relative;
   border: 0;
   background: transparent;
   box-shadow: none;
-  color: rgb(17 17 17);
+  color: #0a2324;
   font-size: 1rem;
   text-indent: 2.75rem;
   padding-right: 5.45rem;
@@ -1931,7 +1931,7 @@ position: absolute;
   align-items: center;
   padding-left: 2.75rem;
   padding-right: 5.45rem;
-  color: rgba(17, 17, 17, 0.16);
+  color: #0a2324;
   pointer-events: none;
   transition: opacity 140ms ease;
 }
@@ -1975,7 +1975,7 @@ position: absolute;
   transform: translateY(-50%);
   border: 0;
   background: transparent;
-  color: rgba(17, 17, 17, 0.58);
+  color: #0a2324;
   line-height: 1;
 }
 
@@ -2007,7 +2007,7 @@ right: calc(2.55rem - 10px);
 .public-search-calendar:focus-visible,
 .public-search-calendar[aria-expanded="true"] {
 background: rgba(17, 17, 17, 0.08);
-  color: rgba(17, 17, 17, 0.82);
+  color: #0a2324;
 }
 
 .public-search-calendar:focus-visible {
@@ -2032,7 +2032,7 @@ left: 0.18rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: rgba(17, 17, 17, 0.42);
+  color: #0a2324;
   font-size: 0;
   line-height: 1;
   cursor: pointer;
@@ -2095,7 +2095,7 @@ display: grid;
 
 .public-search-calendar-month {
 min-width: 0;
-  color: rgb(17 17 17);
+  color: #0a2324;
   font-family: "Oswald", "Arial Narrow", sans-serif;
   font-size: 0.98rem;
   font-weight: 700;
@@ -2113,14 +2113,14 @@ width: 2rem;
   border: 0;
   border-radius: 9999px;
   background: rgba(17, 17, 17, 0.06);
-  color: rgba(17, 17, 17, 0.72);
+  color: #0a2324;
   cursor: pointer;
 }
 
 .public-search-calendar-nav:hover,
 .public-search-calendar-nav:focus-visible {
 background: rgba(17, 17, 17, 0.12);
-  color: rgb(17 17 17);
+  color: #0a2324;
 }
 
 .public-search-calendar-nav:focus-visible,
@@ -2148,7 +2148,7 @@ display: grid;
 
 .public-search-calendar-weekdays {
 margin-bottom: 0.25rem;
-  color: rgba(17, 17, 17, 0.45);
+  color: #0a2324;
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0;
@@ -2162,7 +2162,7 @@ aspect-ratio: 1;
   border: 0;
   border-radius: 0.45rem;
   background: transparent;
-  color: rgb(17 17 17);
+  color: #0a2324;
   font-size: 0.86rem;
   font-weight: 700;
   line-height: 1;
@@ -2194,7 +2194,7 @@ box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.26);
 
 .public-search-calendar-day-selected {
 background: #ffa5dc;
-  color: rgb(17 17 17);
+  color: #0a2324;
   box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.2);
 }
 
@@ -2904,7 +2904,7 @@ position: absolute;
   border-radius: 999px 0.35rem 0.35rem 999px;
   background: #2bd7cf;
   box-shadow: 0 0.7rem 1.3rem rgba(34, 116, 127, 0.24);
-  color: #082f31;
+  color: #0a2324;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.74rem;
   font-weight: 700;
@@ -3329,7 +3329,7 @@ color: #f8faf9;
 
 .promotion-banner-kicker {
 margin: 0;
-  color: rgba(17, 17, 17, 0.58);
+  color: #0a2324;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.18em;
@@ -3348,7 +3348,7 @@ margin: 0;
 
 .promotion-banner-event-title {
 margin: -0.35rem 0 0;
-  color: rgba(17, 17, 17, 0.74);
+  color: #0a2324;
   font-size: 1rem;
   line-height: 1.35;
 }
@@ -3386,7 +3386,7 @@ border-color: #111;
 .promotion-banner-link-light .promotion-banner-cta {
 border-color: #f8faf9;
   background: #f8faf9;
-  color: #111;
+  color: #0a2324;
 }
 
 .promotion-banner-color-inputs {
@@ -3413,7 +3413,7 @@ display: inline-flex;
   padding: 0.45rem 0.75rem;
   border: 1px solid #d0d0d0;
   background: #fcfcfc;
-  color: #111;
+  color: #0a2324;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.96rem;
   line-height: 1;
@@ -4125,7 +4125,7 @@ flex: 1 1 0;
   min-height: 2.4rem;
   padding: 0.05rem 0.3rem;
   border-radius: 0.9rem;
-  color: #111;
+  color: #0a2324;
   text-align: center;
   text-decoration: none;
   opacity: 1;
@@ -4488,7 +4488,7 @@ margin: 0;
   max-width: 32rem;
   font-size: 0.98rem;
   line-height: 1.55;
-  color: rgba(17, 17, 17, 0.76);
+  color: #0a2324;
 }
 
 .newsletter-signup-highlights {
@@ -4510,7 +4510,7 @@ display: grid;
   border-bottom: 1px solid rgba(17, 17, 17, 0.08);
   font-size: 0.92rem;
   line-height: 1.4;
-  color: rgba(17, 17, 17, 0.84);
+  color: #0a2324;
 }
 
 .newsletter-signup-highlights li::before {
@@ -4556,14 +4556,14 @@ margin: 0;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(17, 17, 17, 0.56);
+  color: #0a2324;
 }
 
 .newsletter-signup-note {
 margin: 0;
   font-size: 0.82rem;
   line-height: 1.45;
-  color: rgba(17, 17, 17, 0.62);
+  color: #0a2324;
 }
 
 .newsletter-signup-form {
@@ -4960,7 +4960,7 @@ display: inline-flex;
   border: 1px solid rgba(17, 17, 17, 0.24);
   background: rgba(248, 248, 248, 0.14);
   backdrop-filter: blur(2px);
-  color: #111;
+  color: #0a2324;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.7rem;
@@ -4975,7 +4975,7 @@ text-decoration: none;
 .event-card-admin-link-attention {
 border-color: #00a84f;
   background: #21e36f;
-  color: #111;
+  color: #0a2324;
   box-shadow: 0 10px 24px rgba(0, 168, 79, 0.28);
 }
 
@@ -4983,7 +4983,7 @@ border-color: #00a84f;
 .event-card-admin-link-attention:focus-visible {
 background: #10c85d;
   border-color: #008d42;
-  color: #111;
+  color: #0a2324;
 }
 
 .event-card-admin-link:hover {
@@ -5232,7 +5232,7 @@ width: 2rem;
   border: 2px solid #111;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.95);
-  color: #111;
+  color: #0a2324;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
   font-size: 1.05rem;
   line-height: 1;
@@ -5243,7 +5243,7 @@ width: 2rem;
 .highlights-slider-arrow:hover:not(:disabled) {
 transform: translateY(-1px);
   background: #ffa5dc;
-  color: #111;
+  color: #0a2324;
   border-color: #111;
 }
 
@@ -5262,7 +5262,7 @@ position: absolute;
   border: 2px solid #111;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.95);
-  color: #111;
+  color: #0a2324;
   font-size: 1.65rem;
   line-height: 1;
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.85);
@@ -5296,7 +5296,7 @@ opacity: 1;
 .highlights-slider-arrow-overlay:hover:not(:disabled) {
 transform: translateY(-50%);
   background: #ffa5dc;
-  color: #111;
+  color: #0a2324;
   border-color: #111;
 }
 
@@ -5791,7 +5791,7 @@ content: "";
 
 .app-error-code {
 margin: 0;
-  color: rgba(17, 17, 17, 0.14);
+  color: #0a2324;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: clamp(5rem, 18vw, 11rem);
   line-height: 0.85;
@@ -5899,7 +5899,7 @@ display: inline-flex;
   justify-self: start;
   background: #21e36f;
   border-color: #00a84f;
-  color: #111;
+  color: #0a2324;
   box-shadow: 0 12px 28px rgba(0, 168, 79, 0.24);
 }
 
@@ -5909,7 +5909,7 @@ display: inline-flex;
 .public-edit-link:focus-visible {
 background: #10c85d;
   border-color: #008d42;
-  color: #111;
+  color: #0a2324;
 }
 
 .public-edit-link {
@@ -5971,7 +5971,7 @@ margin-top: 1.9rem;
 
 .event-detail-meta-strong {
 font-size: 1.18rem;
-  color: #111;
+  color: #0a2324;
 }
 
 .event-detail-image {
@@ -6041,7 +6041,7 @@ margin: 0;
 .event-slider-sub {
 margin-top: 0.35rem;
   font-size: 0.84rem;
-  color: #5d5d5d;
+  color: #0a2324;
 }
 
 .lightbox-open {
@@ -6147,7 +6147,7 @@ display: inline-flex;
   border: 1px solid #0a484b;
   border-radius: 999px;
   background: #fff;
-  color: #0a484b;
+  color: #0a2324;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
@@ -6280,7 +6280,7 @@ display: grid;
 .event-detail-organizer-sidebar-heading {
 margin: 0;
   width: 100%;
-  color: #111;
+  color: #0a2324;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.98rem;
@@ -6436,7 +6436,7 @@ max-width: none;
 .event-detail-time-line {
 margin: 0;
   max-width: 42rem;
-  color: #111;
+  color: #0a2324;
   font-size: clamp(1.05rem, 1.7vw, 1.22rem);
   line-height: 1.6;
   font-weight: 500;
@@ -6445,14 +6445,14 @@ margin: 0;
 .event-detail-meta-line {
 margin: 0;
   max-width: 42rem;
-  color: #111;
+  color: #0a2324;
   line-height: 1.4;
   font-weight: 500;
 }
 
 .event-detail-time-line {
 margin: -0.1rem 0 0;
-  color: rgba(17, 17, 17, 0.82);
+  color: #0a2324;
 }
 
 .event-detail-facts {
@@ -6470,7 +6470,7 @@ min-width: 0;
 
 .event-detail-fact-card dt {
 margin: 0;
-  color: rgba(17, 17, 17, 0.6);
+  color: #0a2324;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   font-size: 0.72rem;
@@ -6479,7 +6479,7 @@ margin: 0;
 
 .event-detail-fact-card dd {
 margin: 0.32rem 0 0;
-  color: #111;
+  color: #0a2324;
   font-size: 1rem;
   line-height: 1.35;
   font-weight: 700;
@@ -6500,7 +6500,7 @@ display: inline-flex;
   border: 1px solid rgba(0, 150, 156, 0.42);
   border-radius: 999px;
   background: rgba(0, 181, 188, 0.22);
-  color: #0c3f42;
+  color: #0a2324;
   font-size: 0.88rem;
   line-height: 1.2;
   text-decoration: none;
@@ -6531,7 +6531,7 @@ display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   min-width: 0;
-  color: #0c3f42;
+  color: #0a2324;
   line-height: 1.2;
 }
 
@@ -6575,7 +6575,7 @@ display: inline-flex;
   justify-content: center;
   min-height: 2rem;
   padding-inline: 0.1rem 0.2rem;
-  color: rgba(17, 17, 17, 0.52);
+  color: #0a2324;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.1rem;
   line-height: 1;
@@ -6589,7 +6589,7 @@ margin-top: 0;
 margin-top: 0;
   border: 0;
   background: transparent;
-  color: #111;
+  color: #0a2324;
   padding: 0;
 }
 
@@ -6684,7 +6684,7 @@ display: inline-flex;
 .event-detail-sold-out-hint {
 max-width: 34rem;
   margin: 0.7rem 0 0;
-  color: rgba(var(--ink-rgb), 0.82);
+  color: #0a2324;
   font-size: 1rem;
   line-height: 1.45;
   font-weight: 500;
@@ -6700,7 +6700,7 @@ display: inline-flex;
   border-radius: 0;
   background: #00c5cc;
   clip-path: polygon(1.2rem 0, calc(100% - 1.2rem) 0, 100% 50%, calc(100% - 1.2rem) 100%, 1.2rem 100%, 0 50%);
-  color: #111;
+  color: #0a2324;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.28rem;
   font-weight: 700;
@@ -6718,7 +6718,7 @@ display: grid;
 
 .event-detail-series-terms h2 {
 margin: 0;
-  color: #082f31;
+  color: #0a2324;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: clamp(1.34rem, 2vw, 1.72rem);
   font-weight: 700;
@@ -6755,7 +6755,7 @@ display: inline-flex;
   border: 1px solid #e3ded3;
   border-radius: 999px;
   background: #fffdfa;
-  color: #082f31;
+  color: #0a2324;
   cursor: pointer;
   flex: 0 0 auto;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
@@ -6812,7 +6812,7 @@ display: inline-flex;
   border: 1px solid transparent;
   border-radius: 5px;
   background: transparent;
-  color: rgba(8, 47, 49, 0.32);
+  color: #0a2324;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.92rem;
   font-weight: 700;
@@ -6825,7 +6825,7 @@ visibility: hidden;
 
 .event-series-calendar-day--available {
 background: #dff8f5;
-  color: #082f31;
+  color: #0a2324;
   cursor: pointer;
 }
 
@@ -6843,7 +6843,7 @@ border-color: #13bfc4;
 .event-series-calendar-day--available.is-current {
   background: #ffd6ec;
   border-color: #f06baa;
-  color: #082f31;
+  color: #0a2324;
 }
 
 .event-series-calendar-day--available.is-current.is-active {
@@ -6877,7 +6877,7 @@ display: inline-flex;
   border: 1px solid #e3ded3;
   border-radius: 4px;
   background: #fffdfa;
-  color: #082f31;
+  color: #0a2324;
   flex: 0 0 auto;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.9rem;
@@ -6896,7 +6896,7 @@ border-color: #13bfc4;
 .event-series-calendar-time.is-current {
   border-color: #f06baa;
   background: #ffd6ec;
-  color: #082f31;
+  color: #0a2324;
 }
 
 .event-series-calendar-overlay .event-series-calendar {
@@ -7005,7 +7005,7 @@ display: inline-flex;
   border: 1px solid #e8e2d6;
   border-radius: 6px;
   background: #f6f2ea;
-  color: #082f31;
+  color: #0a2324;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.94rem;
   font-weight: 700;
@@ -7028,7 +7028,7 @@ display: none;
 .event-detail-series-term-link:focus-visible {
 border-color: rgba(43, 215, 207, 0.5);
   background: #f0ece2;
-  color: #082f31;
+  color: #0a2324;
 }
 
 .event-detail-series-terms-disclosure {
@@ -7059,7 +7059,7 @@ display: inline-flex;
   border: 1px solid #e8e2d6;
   border-radius: 6px;
   background: #f6f2ea;
-  color: #082f31;
+  color: #0a2324;
   cursor: pointer;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.88rem;
@@ -7090,7 +7090,7 @@ display: inline-flex;
   padding: 0 0.28rem;
   border-radius: 999px;
   background: #9ee7df;
-  color: #4f8f89;
+  color: #0a2324;
   font-size: 0.78rem;
   margin-left: auto;
 }
@@ -7370,7 +7370,7 @@ display: grid;
 
 .event-detail-image-caption {
 margin: 0;
-  color: rgba(17, 17, 17, 0.76);
+  color: #0a2324;
   font-size: 0.84rem;
   line-height: 1.35;
   text-align: center;
@@ -7441,7 +7441,7 @@ position: absolute;
   border: 2px solid #111;
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.95);
-  color: #111;
+  color: #0a2324;
   font-size: 1.65rem;
   line-height: 1;
   opacity: 0;
@@ -7560,7 +7560,7 @@ display: grid;
 
 .event-detail-copy-flow a[href],
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link) {
-  color: #006970;
+  color: #0a2324;
   font-weight: 700;
   overflow-wrap: anywhere;
   text-decoration-line: underline;
@@ -7572,12 +7572,12 @@ display: grid;
 .event-detail-copy-flow a[href]:focus-visible,
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link):hover,
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link):focus-visible {
-  color: #00464a;
+  color: #0a2324;
   text-decoration-thickness: 0.14em;
 }
 
 .event-detail-venue-layout a.event-detail-venue-map-link[href] {
-  color: #0a484b;
+  color: #0a2324;
   font-weight: 700;
   overflow-wrap: normal;
   text-decoration: none;
@@ -7617,7 +7617,7 @@ grid-column: 1;
   border: 1px solid #0a484b;
   border-radius: 999px;
   background: #fff;
-  color: #0a484b;
+  color: #0a2324;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.1rem;
   font-weight: 700;
@@ -7739,7 +7739,7 @@ display: block;
 .event-detail-vvs-ticket-copy {
 display: grid;
   gap: 0.6rem;
-  color: #0b1012;
+  color: #0a2324;
 }
 
 .event-detail-vvs-ticket-copy h3 {
@@ -8408,7 +8408,7 @@ display: inline-flex;
   line-height: 1.1;
   letter-spacing: 0.04em;
   vertical-align: middle;
-  color: rgba(17, 17, 17, 0.68);
+  color: #0a2324;
 }
 
 .inline-arrow {
@@ -8497,32 +8497,32 @@ min-width: 0;
 margin: 0;
   font-size: 1.15rem;
   line-height: 1.2;
-  color: #171717;
+  color: #0a2324;
   text-wrap: balance;
 }
 
 .venue-card-kicker {
 margin: 0;
-  color: #6d665d;
+  color: #0a2324;
   font-size: 0.95rem;
   line-height: 1.35;
 }
 
 .venue-card-summary {
 margin: 0;
-  color: rgba(17, 17, 17, 0.72);
+  color: #0a2324;
   line-height: 1.55;
 }
 
 .venue-card-link {
 display: inline-block;
-  color: rgba(17, 17, 17, 0.72);
+  color: #0a2324;
   overflow-wrap: anywhere;
 }
 
 .venue-card-stats {
 margin: 0;
-  color: #4a443d;
+  color: #0a2324;
   font-size: 0.88rem;
   line-height: 1.4;
 }
@@ -9693,7 +9693,7 @@ border: 0;
 
 body.page-public-events-index .public-search-placeholder {
 padding-inline: 2.9rem 4.75rem;
-  color: rgb(var(--ink-rgb) / 0.18);
+  color: #0a2324;
   font-family: "Oswald", "Arial Narrow", sans-serif;
   font-size: 0.9rem;
   font-weight: 700;
@@ -9912,7 +9912,7 @@ display: inline-flex;
   border: 1px solid rgba(0, 150, 156, 0.38);
   border-radius: 999px;
   background: rgba(220, 245, 247, 0.8);
-  color: rgba(12, 63, 66, 0.82);
+  color: #0a2324;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.78rem;
   font-weight: 700;
@@ -9931,7 +9931,7 @@ body.page-public-events-index .app-nav-hotline-genre:hover,
 body.page-public-events-index .app-nav-hotline-genre:focus-visible {
 border-color: rgba(0, 150, 156, 0.62);
   background: rgba(204, 240, 243, 0.96);
-  color: rgba(7, 47, 50, 0.92);
+  color: #0a2324;
   transform: translateY(-1px);
 }
 
@@ -10780,7 +10780,7 @@ border-color: #111;
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-cta {
 border-color: #f8faf9;
   background: #f8faf9;
-  color: #111;
+  color: #0a2324;
 }
 
 body.page-public-events-index .promotion-banner-slider-section--hero {
@@ -11277,7 +11277,7 @@ color: var(--ink);
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button-arrow:hover,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-button-arrow:hover {
 background: transparent;
-  color: #111;
+  color: #0a2324;
   opacity: 0.76;
 }
 
