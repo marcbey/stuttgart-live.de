@@ -5,11 +5,12 @@ class HomepagePromotionBannerStylesheetTest < ActiveSupport::TestCase
     stylesheet = Rails.root.join("app/assets/stylesheets/frontend.tailwind.css").read
     image_rules = stylesheet.scan(/body\.page-public-events-index \.promotion-banner-poster \.promotion-banner-image \{([^}]*)\}/m).flatten
     media_rules = stylesheet.scan(/body\.page-public-events-index \.promotion-banner-poster \.promotion-banner-media \{([^}]*)\}/m).flatten
+    desktop_image_rules = image_rules.reject { |rule| rule.match?(/position:\s*static\b/) || rule.match?(/object-fit:\s*contain\b/) }
 
-    assert image_rules.any?, "expected homepage promotion banner image rules"
+    assert desktop_image_rules.any?, "expected homepage promotion banner desktop image rules"
     assert media_rules.any?, "expected homepage promotion banner media rules"
 
-    image_rules.each do |rule|
+    desktop_image_rules.each do |rule|
       refute_match(/position:\s*static\b/, rule)
       refute_match(/object-fit:\s*contain\b/, rule)
       refute_match(/width:\s*100%\s*!important/, rule)
@@ -19,5 +20,15 @@ class HomepagePromotionBannerStylesheetTest < ActiveSupport::TestCase
     media_rules.each do |rule|
       refute_match(/overflow:\s*visible\b/, rule)
     end
+  end
+
+  test "mobile promotion banners render images at natural width" do
+    stylesheet = Rails.root.join("app/assets/stylesheets/frontend.tailwind.css").read
+    mobile_stylesheet = stylesheet.split("@media (max-width: 720px)").second
+
+    assert_match(/position:\s*static\s*!important/, mobile_stylesheet)
+    assert_match(/width:\s*100%\s*!important/, mobile_stylesheet)
+    assert_match(/height:\s*auto\s*!important/, mobile_stylesheet)
+    assert_match(/object-fit:\s*contain\s*!important/, mobile_stylesheet)
   end
 end

@@ -2973,6 +2973,13 @@ position: absolute;
   transform: translate(0, -50%) scaleX(1);
 }
 
+.event-series-badge:hover,
+.event-series-badge:focus-visible,
+.event-card-link:focus-visible .event-series-badge,
+.genre-lane-card-link:focus-visible .event-series-badge {
+  z-index: 16;
+}
+
 @media (max-width: 699px) {
   .event-series-badge {
   top: 0.36rem;
@@ -3472,6 +3479,13 @@ display: inline-flex;
 content: none;
 }
 
+.promotion-banner-cta:hover,
+.promotion-banner-link:focus-visible .promotion-banner-cta {
+border-color: var(--promotion-banner-cta-color) !important;
+  background: var(--promotion-banner-cta-color) !important;
+  color: #fff !important;
+}
+
 .promotion-banner-link-dark .promotion-banner-cta {
 border-color: #111;
   background: #111;
@@ -3668,8 +3682,7 @@ display: grid;
   padding-left: 0.12rem;
 }
 
-.lane-page-section--compact-grid .genre-lane-card .event-card-badge-genre-lane,
-.lane-page-section--compact-grid .genre-lane-card .event-listing-venue {
+.lane-page-section--compact-grid .genre-lane-card .event-card-badge-genre-lane {
   display: none;
 }
 
@@ -5591,7 +5604,7 @@ display: grid;
 .event-listing-link strong {
 font-size: 1.05rem;
   line-height: 1.12;
-  font-weight: 500;
+  font-weight: 600;
   display: block;
 }
 
@@ -5619,6 +5632,7 @@ display: inline-flex;
 .genre-lane-card .event-listing-date {
 overflow: hidden;
   white-space: nowrap;
+  opacity: 0.7;
 }
 
 .home-slider-card .event-listing-meta,
@@ -5705,6 +5719,7 @@ min-width: 0;
 display: block;
   -webkit-line-clamp: unset;
   -webkit-box-orient: unset;
+  opacity: 0.7;
 }
 
 @media (min-width: 900px) {
@@ -10280,11 +10295,24 @@ top: 1.18rem;
       margin: 0;
       padding: 0;
       overflow: hidden;
-      aspect-ratio: 16 / 9;
+      aspect-ratio: auto;
+      min-height: 0;
+      height: auto;
+      background: var(--promotion-banner-background);
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-image {
   display: block;
+      position: static !important;
+      left: auto !important;
+      top: auto !important;
+      width: 100% !important;
+      height: auto !important;
+      max-width: 100% !important;
+      max-height: none !important;
+      transform: none !important;
+      object-fit: contain !important;
+      border-radius: 0;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-credit {
@@ -10302,7 +10330,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-copy {
-  padding: 1rem 0 0;
+  padding: 0.55rem 0 0;
   }
 
   .lane-header {
@@ -11193,7 +11221,7 @@ padding: 1.35rem 1.3rem 1.35rem 0;
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-media {
   width: 100%;
       border-radius: 0;
-      aspect-ratio: 1.05 / 1;
+      aspect-ratio: auto;
       min-height: 0;
       height: auto;
       margin-bottom: -1px;
@@ -11218,9 +11246,16 @@ padding: 1.35rem 1.3rem 1.35rem 0;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-image {
-  height: 100%;
+  position: static !important;
+      left: auto !important;
+      top: auto !important;
+      width: 100% !important;
+      height: auto !important;
       min-height: 0;
-      object-fit: cover;
+      max-width: 100% !important;
+      max-height: none !important;
+      transform: none !important;
+      object-fit: contain !important;
       border-radius: 0;
   }
 
@@ -11228,17 +11263,17 @@ padding: 1.35rem 1.3rem 1.35rem 0;
   display: grid;
       align-content: start;
       grid-template-rows: auto auto minmax(0, 1fr) auto;
-  gap: 1.05rem;
+  gap: 0.82rem;
       position: relative;
       z-index: 3;
       min-height: 0;
-      margin-top: 0;
-      padding: 1px 1.35rem 1.7rem;
+      margin-top: -0.45rem;
+      padding: 0.45rem 1.35rem 1.35rem;
       background: var(--promotion-banner-background);
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-copy {
-  padding: 1px 1.35rem 1.7rem;
+  padding: 0.45rem 1.35rem 1.35rem;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-kicker {
@@ -11247,7 +11282,7 @@ padding: 1.35rem 1.3rem 1.35rem 0;
       font-size: clamp(0.82rem, 3.15vw, 1rem);
       font-weight: 500;
       letter-spacing: 0.095em;
-      margin-bottom: -0.42rem;
+      margin-bottom: -0.5rem;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-copy h2 {
