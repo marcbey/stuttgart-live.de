@@ -103,6 +103,14 @@ display: inline-flex;
   text-decoration: none;
 }
 
+.app-brand-with-tagline {
+align-items: flex-start;
+  flex-direction: column;
+  gap: 0;
+  padding-bottom: 1.42rem;
+  position: relative;
+}
+
 .app-nav-search {
 flex: 1 1 24rem;
   min-width: 16rem;
@@ -129,6 +137,37 @@ font-weight: 200;
 .brand-wordmark-live {
 font-weight: 700;
   letter-spacing: 0.01em;
+}
+
+.brand-tagline {
+color: rgba(0, 0, 0, 0.72);
+  display: block;
+  height: 0.78rem;
+  left: 0;
+  overflow: visible;
+  position: absolute;
+  right: 0;
+  top: calc(100% - 0.86rem);
+}
+
+.brand-tagline-svg {
+display: block;
+  height: 100%;
+  overflow: visible;
+  width: 100%;
+}
+
+.brand-tagline-text {
+fill: currentColor;
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 82px;
+  font-weight: 700;
+}
+
+@media (min-width: 1024px) {
+  .brand-tagline-text {
+  font-size: 100px;
+  }
 }
 
 .app-brand:hover .brand-wordmark {
@@ -822,6 +861,11 @@ width: clamp(7rem, 24vw, 10rem);
 
   .brand-wordmark {
   font-size: 1.95rem;
+  }
+
+  .brand-tagline {
+  height: 0.68rem;
+      top: calc(100% - 0.78rem);
   }
 
   .app-brand {

@@ -122,7 +122,7 @@
          data-mobile-nav-desktop-min-width-value="1024"
          <% end %>>
       <div class="<%= nav_inner_classes.join(" ") %>">
-        <%= link_to root_path, class: "app-brand" do %>
+        <%= link_to root_path, class: [ "app-brand", ("app-brand-with-tagline" if frontend_context) ].compact.join(" ") do %>
           <% if public_homepage_chrome || backend_context || auth_chrome %>
             <span class="brand-wordmark brand-wordmark-poster" aria-label="Stuttgart Live">
               <span class="brand-wordmark-city"><span class="brand-wordmark-city-initial">S</span>TUTTGART</span><span class="brand-wordmark-live">LIVE</span>
@@ -130,6 +130,13 @@
           <% else %>
             <span class="brand-wordmark" aria-label="Stuttgart Live">
               <span class="brand-wordmark-city">STUTTGART</span><span class="brand-wordmark-live">LIVE</span>
+            </span>
+          <% end %>
+          <% if frontend_context %>
+            <span class="brand-tagline" aria-label="Veranstaltungshighlights in Stuttgart">
+              <svg class="brand-tagline-svg" viewBox="0 0 1000 92" preserveAspectRatio="none" focusable="false" aria-hidden="true">
+                <text class="brand-tagline-text" x="0" y="69" textLength="1000" lengthAdjust="spacingAndGlyphs">VERANSTALTUNGSHIGHLIGHTS IN STUTTGART</text>
+              </svg>
             </span>
           <% end %>
         <% end %>

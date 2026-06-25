@@ -9599,6 +9599,7 @@ max-width: var(--homepage-header-max-width, 1480px);
 body.page-public-events-index .app-brand {
 grid-area: brand;
   align-self: start;
+  justify-self: start;
   text-decoration: none;
   min-width: 0;
   transition: transform 180ms ease, opacity 180ms ease;
@@ -9636,6 +9637,10 @@ color: var(--ink);
   line-height: 0.88;
   text-shadow: none;
   transition: font-size 180ms ease, letter-spacing 180ms ease;
+}
+
+body.page-public-events-index .brand-tagline {
+color: rgba(255, 255, 255, 0.82);
 }
 
 body.page-public-events-index .app-nav-homepage-center {
