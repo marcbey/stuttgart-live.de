@@ -2420,7 +2420,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-card-copy h2", text: final_event.artist_name
   end
 
-  test "index shows only today's non-reservix events in tagestipp" do
+  test "index shows today's events including reservix in tagestipp" do
     today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
 
     sks_today_event = Event.create!(
@@ -2543,7 +2543,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, today_event.artist_name
     assert_includes response.body, sks_today_event.artist_name
     assert_includes response.body, late_today_event.artist_name
-    assert_not_includes response.body, reservix_today_event.artist_name
+    assert_includes response.body, reservix_today_event.artist_name
     assert_not_includes response.body, tomorrow_event.artist_name
   end
 

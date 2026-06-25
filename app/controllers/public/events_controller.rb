@@ -625,7 +625,6 @@ module Public
         event_date: Time.zone.today,
         query: nil
       )
-        .where.not(primary_source: "reservix")
         .reorder(:start_at, :id)
     end
 

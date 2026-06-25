@@ -140,9 +140,7 @@ h2,
 h3,
 .eyebrow,
 .button,
-.hero-mark,
-.event-card h2,
-.event-detail h1 {
+.hero-mark {
 font-family: "Bebas Neue", "Impact", sans-serif;
   letter-spacing: 0.04em;
 }
@@ -3309,8 +3307,52 @@ position: relative;
   background: #111;
   overflow: hidden;
   border-radius: inherit;
-  padding: 1rem 1rem 1rem 2.6rem;
+  padding: 0;
   box-sizing: border-box;
+}
+
+.promotion-banner-media::after {
+content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  z-index: 2;
+  width: 34%;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(0, 0, 0, 0) 0%,
+    color-mix(in srgb, var(--promotion-banner-background) 58%, transparent) 62%,
+    var(--promotion-banner-background) 100%
+  );
+}
+
+.promotion-banner-layout-reversed .promotion-banner-media::after {
+inset: 0 auto 0 0;
+  background: linear-gradient(
+    to left,
+    rgba(0, 0, 0, 0) 0%,
+    color-mix(in srgb, var(--promotion-banner-background) 58%, transparent) 62%,
+    var(--promotion-banner-background) 100%
+  );
+}
+
+@media (max-width: 767px) {
+  .promotion-banner-media::after {
+  content: "";
+    position: absolute;
+    inset: auto 0 -1px;
+    z-index: 2;
+    width: 100%;
+    height: calc(54% + 2px);
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      color-mix(in srgb, var(--promotion-banner-background) 48%, transparent) 42%,
+      color-mix(in srgb, var(--promotion-banner-background) 82%, transparent) 70%,
+      var(--promotion-banner-background) 100%
+    );
+  }
 }
 
 .promotion-banner-image {
@@ -3374,18 +3416,26 @@ color: #f8faf9;
 
 .promotion-banner-kicker {
 margin: 0;
-  color: #0a2324;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.18em;
+  color: var(--promotion-banner-cta-color);
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: clamp(0.82rem, 1.35vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.095em;
   line-height: 1.2;
   text-transform: uppercase;
 }
 
+.promotion-banner-link-dark .promotion-banner-kicker,
+.promotion-banner-link-light .promotion-banner-kicker {
+color: var(--promotion-banner-cta-color);
+}
+
 .promotion-banner-copy h2 {
 margin: 0;
-  font-size: clamp(2.3rem, 4vw, 4.2rem);
-  line-height: 1.04;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: clamp(1.8rem, 3.15vw, 3.2rem);
+  line-height: 1.12;
+  letter-spacing: 0;
   padding-top: 0;
   overflow: visible;
   text-transform: uppercase;
@@ -5060,8 +5110,10 @@ position: absolute;
 
 .event-card h2 {
 margin: 0;
-  font-size: clamp(2rem, 4vw, 3.15rem);
-  line-height: 0.87;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: clamp(1.65rem, 3.25vw, 2.45rem);
+  line-height: 1.12;
+  letter-spacing: 0;
   text-transform: uppercase;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -5971,9 +6023,11 @@ display: grid;
 
 .event-detail h1 {
 margin: 0.35rem 0 0;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
   text-transform: uppercase;
-  line-height: 0.9;
-  font-size: clamp(2.6rem, 7vw, 5.5rem);
+  line-height: 1.12;
+  letter-spacing: 0;
+  font-size: clamp(2.25rem, 5.8vw, 4.6rem);
 }
 
 .event-detail-title {
@@ -6451,8 +6505,8 @@ margin: 0;
 
 .event-detail-header-intro h1 {
 max-width: none;
-  font-size: clamp(2.35rem, 5vw, 3.75rem);
-  line-height: 0.92;
+  font-size: clamp(2.15rem, 4.4vw, 3.25rem);
+  line-height: 1.12;
 }
 
 .event-detail-header-copy h1,
@@ -8782,8 +8836,8 @@ display: flex;
   }
 
   body.page-public-events-index .home-featured-track .event-card h2 {
-  font-size: 1.65rem;
-      line-height: 0.92;
+  font-size: 1.42rem;
+      line-height: 1.12;
   }
 
   body.page-public-events-index .home-featured-track .event-card-meta {
@@ -9524,8 +9578,8 @@ display: flex;
   }
 
   .promotion-banner-copy h2 {
-  font-size: clamp(2rem, 11vw, 3.2rem);
-      line-height: 1.04;
+  font-size: clamp(1.75rem, 9vw, 2.85rem);
+      line-height: 1.12;
       padding-top: 0.14em;
   }
 
@@ -10743,7 +10797,7 @@ position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  padding: 10px;
+  padding: 0;
   align-self: stretch;
   justify-content: flex-start;
   min-width: 0;
@@ -10756,7 +10810,7 @@ position: relative;
   width: 100%;
   background: transparent;
   overflow: hidden;
-  border-radius: 1rem;
+  border-radius: inherit;
   padding: 0;
   aspect-ratio: auto;
   min-height: 100%;
@@ -10809,18 +10863,23 @@ color: rgba(248, 250, 249, 0.82);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-kicker {
-color: #0a2324;
+color: var(--promotion-banner-cta-color);
   font-family: "Oswald", "Arial Narrow", sans-serif;
-  font-size: 1.1rem;
-  font-weight: 700;
-  letter-spacing: 0.16em;
+  font-size: clamp(0.82rem, 1.35vw, 1rem);
+  font-weight: 500;
+  letter-spacing: 0.095em;
   text-transform: uppercase;
+}
+
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-kicker,
+body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-kicker {
+color: var(--promotion-banner-cta-color);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-copy h2 {
 color: var(--ink);
-  font-size: clamp(2.6rem, 5vw, 4.8rem);
-  line-height: 0.9;
+  font-size: clamp(2rem, 3.5vw, 3.35rem);
+  line-height: 1.12;
   max-width: none;
 }
 
@@ -10841,23 +10900,23 @@ color: #0a2324;
 body.page-public-events-index .promotion-banner-poster .promotion-banner-cta {
 justify-self: start;
   box-sizing: border-box;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--promotion-banner-cta-color);
   border-radius: 9999px;
-  background: var(--ink);
-  color: #fff;
+  background: transparent;
+  color: var(--promotion-banner-cta-color);
   box-shadow: none;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-cta {
-border-color: #111;
-  background: #111;
-  color: #fff;
+border-color: var(--promotion-banner-cta-color);
+  background: transparent;
+  color: var(--promotion-banner-cta-color);
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-link-light .promotion-banner-cta {
-border-color: #f8faf9;
-  background: #f8faf9;
-  color: #0a2324;
+border-color: var(--promotion-banner-cta-color);
+  background: transparent;
+  color: var(--promotion-banner-cta-color);
 }
 
 body.page-public-events-index .promotion-banner-slider-section--hero {
@@ -10892,7 +10951,7 @@ grid-template-columns: minmax(26rem, 1.18fr) minmax(0, 1fr);
 }
 
 body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-visual {
-padding: 1.15rem 0;
+padding: 0;
 }
 
 body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-copy {
@@ -11110,11 +11169,13 @@ padding: 1.35rem 1.3rem 1.35rem 0;
   gap: 0;
       width: 100%;
       height: 100%;
-      padding: 0.9rem 1rem 1.2rem;
+      padding: 0;
       min-height: 0;
       border: 0;
       border-radius: 0;
       box-shadow: none;
+      background: var(--promotion-banner-background);
+      overflow: hidden;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-link {
@@ -11122,22 +11183,45 @@ padding: 1.35rem 1.3rem 1.35rem 0;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-visual {
-  gap: 0;
+  grid-column: 1;
+      grid-row: auto;
+      width: 100%;
+      gap: 0;
       padding: 0;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-media {
-  border-radius: 1.7rem;
-      aspect-ratio: 1.72 / 1;
+  width: 100%;
+      border-radius: 0;
+      aspect-ratio: 1.05 / 1;
       min-height: 0;
       height: auto;
-      background: rgba(12, 45, 54, 0.16);
+      margin-bottom: -1px;
+      background: var(--promotion-banner-background);
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-media::after {
+  content: "";
+      position: absolute;
+      inset: auto 0 -1px;
+      z-index: 2;
+      width: 100%;
+      height: calc(54% + 2px);
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(0, 0, 0, 0) 0%,
+        color-mix(in srgb, var(--promotion-banner-background) 48%, transparent) 42%,
+        color-mix(in srgb, var(--promotion-banner-background) 82%, transparent) 70%,
+        var(--promotion-banner-background) 100%
+      );
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-image {
   height: 100%;
       min-height: 0;
       object-fit: cover;
+      border-radius: 0;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-copy {
@@ -11145,19 +11229,30 @@ padding: 1.35rem 1.3rem 1.35rem 0;
       align-content: start;
       grid-template-rows: auto auto minmax(0, 1fr) auto;
   gap: 1.05rem;
-      min-height: 13.5rem;
-      padding: 1.2rem 0.3rem 0 0.3rem;
+      position: relative;
+      z-index: 3;
+      min-height: 0;
+      margin-top: 0;
+      padding: 1px 1.35rem 1.7rem;
+      background: var(--promotion-banner-background);
+  }
+
+  body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-copy {
+  padding: 1px 1.35rem 1.7rem;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-kicker {
+  color: var(--promotion-banner-cta-color);
   font-family: "Oswald", "Arial Narrow", sans-serif;
-      font-size: clamp(1.05rem, 4vw, 1.28rem);
-      letter-spacing: 0.16em;
+      font-size: clamp(0.82rem, 3.15vw, 1rem);
+      font-weight: 500;
+      letter-spacing: 0.095em;
+      margin-bottom: -0.42rem;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-copy h2 {
-  font-size: clamp(3rem, 11vw, 4.65rem);
-      line-height: 0.88;
+  font-size: clamp(2.15rem, 8vw, 3.45rem);
+      line-height: 1.12;
       display: -webkit-box;
       overflow: hidden;
       -webkit-box-orient: vertical;
@@ -11165,11 +11260,11 @@ padding: 1.35rem 1.3rem 1.35rem 0;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-kicker {
-  color: #0a2324;
+  color: var(--promotion-banner-cta-color);
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link-light .promotion-banner-kicker {
-  color: rgba(248, 250, 249, 0.82);
+  color: var(--promotion-banner-cta-color);
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-link-dark .promotion-banner-copy h2 {
@@ -11191,6 +11286,9 @@ padding: 1.35rem 1.3rem 1.35rem 0;
       min-height: 0;
       padding: 1rem 2rem;
       border-width: 2px;
+      border-color: var(--promotion-banner-cta-color) !important;
+      background: transparent !important;
+      color: var(--promotion-banner-cta-color) !important;
       font-size: 1rem;
       line-height: 1;
       letter-spacing: 0.08em;
@@ -11271,10 +11369,10 @@ body.page-public-newsletter-poster .newsletter-signup-copy h2 {
 margin: 0;
   color: #fff8fc;
   font-family: "Oswald", "Arial Narrow", sans-serif;
-  font-size: clamp(2.55rem, 4.9vw, 4.1rem);
+  font-size: clamp(2.2rem, 4.2vw, 3.45rem);
   font-weight: 700;
-  line-height: 0.94;
-  letter-spacing: 0.03em;
+  line-height: 1.12;
+  letter-spacing: 0;
   text-transform: uppercase;
 }
 
@@ -11282,10 +11380,10 @@ body.page-public-events-index .newsletter-signup-lead,
 body.page-public-newsletter-poster .newsletter-signup-lead {
 max-width: 100%;
   color: rgba(253, 247, 252, 0.94);
-  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
   font-size: 1.32rem;
-  line-height: 1.02;
-  letter-spacing: 0.04em;
+  line-height: 1.15;
+  letter-spacing: 0;
   text-transform: uppercase;
   margin: 0;
 }
@@ -11301,10 +11399,10 @@ body.page-public-newsletter-poster .newsletter-signup-highlights li {
 padding: 0.24rem 0;
   border-bottom: 0;
   color: rgba(253, 248, 252, 0.96);
-  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
   font-size: 1.14rem;
-  letter-spacing: 0.05em;
-  line-height: 1.05;
+  letter-spacing: 0;
+  line-height: 1.12;
 }
 
 body.page-public-events-index .newsletter-signup-highlights li::before,

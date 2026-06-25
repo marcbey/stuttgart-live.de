@@ -6,7 +6,7 @@
 
 <%= render "public/events/promotion_banner_component",
            article_classes: article_classes,
-           article_style: "--promotion-banner-background: #{blog_post.promotion_banner_background_color_value}",
+           article_style: "--promotion-banner-background: #{blog_post.promotion_banner_background_color_value}; --promotion-banner-cta-color: #{blog_post.promotion_banner_cta_color_value}; --promotion-banner-cta-text-color: #{blog_post.promotion_banner_cta_text_color_value}",
            admin_link_path: (authenticated? && current_user.blog_access? ? edit_backend_blog_post_path(blog_post) : nil),
            admin_link_label: "Edit",
            href: news_path(blog_post.slug),
@@ -26,5 +26,5 @@
            kicker_text: blog_post.promotion_banner_kicker_text_value,
            heading: blog_post.promotion_banner_title_value,
            subheading: blog_post.promotion_banner_text_value,
-           cta_style: "background: #{blog_post.promotion_banner_cta_color_value}; border-color: #{blog_post.promotion_banner_cta_color_value}; color: #{blog_post.promotion_banner_cta_text_color_value}",
+           cta_style: "background: transparent; border-color: var(--promotion-banner-cta-color); color: var(--promotion-banner-cta-color)",
            cta_text: blog_post.promotion_banner_cta_text_value %>

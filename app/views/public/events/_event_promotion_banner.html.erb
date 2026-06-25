@@ -13,7 +13,7 @@
 
 <%= render "public/events/promotion_banner_component",
            article_classes: article_classes,
-           article_style: "--promotion-banner-background: #{event.promotion_banner_background_color_value}",
+           article_style: "--promotion-banner-background: #{event.promotion_banner_background_color_value}; --promotion-banner-cta-color: #{event.promotion_banner_cta_color_value}; --promotion-banner-cta-text-color: #{event.promotion_banner_cta_text_color_value}",
            admin_link_path: (authenticated? ? backend_events_path(status: event.status, event_id: event.id) : nil),
            admin_link_label: "Edit",
            href: public_event_detail_path(event, browse_state),
@@ -33,5 +33,5 @@
            kicker_text: event.promotion_banner_kicker_text_value,
            heading: event.promotion_banner_title_value,
            subheading: event.promotion_banner_text_value,
-           cta_style: "background: #{event.promotion_banner_cta_color_value}; border-color: #{event.promotion_banner_cta_color_value}; color: #{event.promotion_banner_cta_text_color_value}",
+           cta_style: "background: transparent; border-color: var(--promotion-banner-cta-color); color: var(--promotion-banner-cta-color)",
            cta_text: event.promotion_banner_cta_text_value %>

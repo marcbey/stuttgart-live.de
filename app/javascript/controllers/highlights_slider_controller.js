@@ -13,9 +13,11 @@ export default class extends Controller {
     this.handleFocusOut = this.handleFocusOut.bind(this)
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
     this.handleViewportChange = this.handleViewportChange.bind(this)
+    this.finishLoopReset = this.finishLoopReset.bind(this)
     this.mobileHeroMediaQuery = window.matchMedia("(max-width: 767px)")
     this.userPaused = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
+    this.setupLoopClone()
     this.trackTarget?.addEventListener("scroll", this.updateButtons, { passive: true })
     this.handleMouseEnter = () => this.stopAutoplay()
     this.handleMouseLeave = () => this.startAutoplay()
@@ -40,7 +42,9 @@ export default class extends Controller {
     this.element.removeEventListener("focusout", this.handleFocusOut)
     document.removeEventListener("visibilitychange", this.handleVisibilityChange)
     this.mobileHeroMediaQuery?.removeEventListener("change", this.handleViewportChange)
+    this.removeLoopClone()
     this.stopAutoplay()
+    this.clearLoopResetTimer()
   }
 
   previous(event) {
@@ -109,11 +113,11 @@ export default class extends Controller {
     if (this.autoplayTimer) return
 
     this.autoplayTimer = window.setInterval(() => {
-      const maxScrollLeft = this.trackTarget.scrollWidth - this.trackTarget.clientWidth
-      const currentScroll = this.trackTarget.scrollLeft
+      const items = this.sliderItems()
+      if (items.length === 0) return
 
-      if (currentScroll >= maxScrollLeft - 4) {
-        this.returnToStart()
+      if (this.loopClone && this.leadingVisibleIndex(items) >= items.length - 1) {
+        this.scrollToLoopClone()
       } else {
         this.scrollBySingleItem()
       }
@@ -132,7 +136,9 @@ export default class extends Controller {
   sliderItems() {
     if (!this.hasTrackTarget) return []
 
-    return Array.from(this.trackTarget.children).filter((item) => item instanceof HTMLElement)
+    return Array.from(this.trackTarget.children).filter((item) => (
+      item instanceof HTMLElement && item.dataset.highlightsSliderClone !== "true"
+    ))
   }
 
   leadingVisibleIndex(items) {
@@ -219,6 +225,66 @@ export default class extends Controller {
 
   returnToStart() {
     this.trackTarget.scrollTo({ left: 0, behavior: "auto" })
+  }
+
+  setupLoopClone() {
+    if (!this.loopCloneAllowed()) return
+
+    const firstItem = this.trackTarget.children[0]
+    if (!(firstItem instanceof HTMLElement)) return
+
+    this.loopClone = firstItem.cloneNode(true)
+    this.loopClone.dataset.highlightsSliderClone = "true"
+    this.loopClone.setAttribute("aria-hidden", "true")
+    this.loopClone.querySelectorAll("[id]").forEach((element) => element.removeAttribute("id"))
+    this.loopClone.querySelectorAll("a, button, input, select, textarea, [tabindex]").forEach((element) => {
+      element.setAttribute("tabindex", "-1")
+    })
+
+    if ("inert" in this.loopClone) {
+      this.loopClone.inert = true
+    }
+
+    this.trackTarget.appendChild(this.loopClone)
+  }
+
+  removeLoopClone() {
+    this.loopClone?.remove()
+    this.loopClone = null
+  }
+
+  loopCloneAllowed() {
+    return this.autoplayValue &&
+      this.hasTrackTarget &&
+      this.element.matches(".promotion-banner-slider-section") &&
+      this.trackTarget.children.length > 1
+  }
+
+  scrollToLoopClone() {
+    if (!this.loopClone) {
+      this.returnToStart()
+      return
+    }
+
+    this.pendingLoopReset = true
+    this.trackTarget.addEventListener("scrollend", this.finishLoopReset, { once: true })
+    this.trackTarget.scrollTo({ left: Math.round(this.loopClone.offsetLeft), behavior: "smooth" })
+    this.loopResetTimer = window.setTimeout(this.finishLoopReset, 900)
+  }
+
+  finishLoopReset() {
+    if (!this.pendingLoopReset) return
+
+    this.pendingLoopReset = false
+    this.trackTarget?.removeEventListener("scrollend", this.finishLoopReset)
+    this.clearLoopResetTimer()
+    this.returnToStart()
+    this.updateButtons()
+  }
+
+  clearLoopResetTimer() {
+    window.clearTimeout(this.loopResetTimer)
+    this.loopResetTimer = null
   }
 
   atEnd() {
