@@ -1,0 +1,39 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "95ede8bc5edf",
+  "session_id": "019efe4f-42d7-7d02-bb44-12a9fd013cba",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-26T10:14:33.298986Z",
+  "branch": "main",
+  "checkpoints_count": 4,
+  "save_step_count": 1,
+  "files_touched": [],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "7e9addcac3a6",
+  "token_usage": {
+    "input_tokens": 3122193,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 44854400,
+    "output_tokens": 240526,
+    "api_call_count": 344
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 1,
+      "user_lines_removed": 1,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "config/credentials.yml.enc": 1
+      },
+      "user_removed_per_file": {
+        "config/credentials.yml.enc": 1
+      }
+    }
+  ]
+}
