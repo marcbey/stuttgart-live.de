@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "7131a0914c4f",
+  "session_id": "019efe4f-42d7-7d02-bb44-12a9fd013cba",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-26T06:14:00.575937Z",
+  "branch": "codex/backend-handbuch-html",
+  "checkpoints_count": 4,
+  "save_step_count": 1,
+  "files_touched": [],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "d974fb249eff",
+  "token_usage": {
+    "input_tokens": 2466532,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 33128192,
+    "output_tokens": 199531,
+    "api_call_count": 258
+  },
+  "session_metrics": {
+    "turn_count": 4
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 127,
+      "user_lines_removed": 1,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "app/models/concerns/backend_handbook_defaults.rb": 126,
+        "config/credentials.yml.enc": 1
+      },
+      "user_removed_per_file": {
+        "config/credentials.yml.enc": 1
+      }
+    }
+  ]
+}

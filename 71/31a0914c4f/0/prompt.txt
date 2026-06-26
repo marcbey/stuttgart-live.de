@@ -1,0 +1,202 @@
+Erstelle ein ausführliches Benutzerhandbuch für Anwender des Stuttgart-Live Backends.
+Benutze wo sinnvoll Diagramme, Bilder oder Screenshots. 
+Die Sprache muss für non-Techies/Coder verständlich sein.
+Es sollen alle Zusammenhänge & Auswirkungen zwischen Code, Frontend, Backend (Event-Inbox, News-Inbox, Pages, Präsentatoren, Locations, Settings, Queue, Benutzer) erklärt werden. 
+Insbesondere Fälle, Edgecases die nur im Code abgebildet oder sich schlecht aus dem UI ablesen lassen.
+Erkläre auch wie Queue/Importer/Importer-Konfiguration funktionieren und deren Auswirkungen auf backend & Frontend.
+Erkläre auch folgende Komponenten: Meta Publishing, SKS Promoter IDs, SKS Standard ,Veranstalterhinweise, Homepage Genre-Lanes, LLM-Enrichment, Ähnlichkeits-Matching, Venue-Dubletten, Queue/Importer/Importer-Konfiguration.
+
+---
+
+Erstelle ein ausführliches Benutzerhandbuch für Anwender des Stuttgart-Live Backends.
+Benutze wo sinnvoll Diagramme, Bilder oder Screenshots. 
+Die Sprache muss für non-Techies/Coder verständlich sein.
+Es sollen alle Zusammenhänge & Auswirkungen zwischen Code, Frontend, Backend (Event-Inbox, News-Inbox, Pages, Präsentatoren, Locations, Settings, Queue, Benutzer) erklärt werden. 
+Insbesondere Fälle, Edgecases die nur im Code abgebildet oder sich schlecht aus dem UI ablesen lassen.
+Erkläre auch wie Queue/Importer/Importer-Konfiguration funktionieren und deren Auswirkungen auf backend & Frontend.
+Erkläre auch folgende Komponenten: Meta Publishing, SKS Promoter IDs, SKS Standard ,Veranstalterhinweise, Homepage Genre-Lanes, LLM-Enrichment, Ähnlichkeits-Matching, Venue-Dubletten, Queue/Importer/Importer-Konfiguration.
+Konsultiere dazu den Quellcode, Projekt Dokumentationen & die laufende Applikation, externen Dokumentationen für APIs und Services die stuttgart-live verwendet.
+
+---
+
+Erstelle ein ausführliches Benutzerhandbuch für Anwender des Stuttgart-Live Backends.
+Benutze wo sinnvoll Diagramme, Bilder oder Screenshots. 
+Die Sprache muss für non-Techies/Coder verständlich sein.
+Das Handbuch soll als strukturierte HTML Page gebaut werden.
+Es sollen alle Zusammenhänge & Auswirkungen zwischen Code, Frontend, Backend (Event-Inbox, News-Inbox, Pages, Präsentatoren, Locations, Settings, Queue, Benutzer) erklärt werden. 
+Insbesondere Fälle, Edgecases die nur im Code abgebildet oder sich schlecht aus dem UI ablesen lassen.
+Erkläre auch wie Queue/Importer/Importer-Konfiguration funktionieren und deren Auswirkungen auf backend & Frontend.
+Erkläre auch folgende Komponenten: Meta Publishing, SKS Promoter IDs, SKS Standard ,Veranstalterhinweise, Homepage Genre-Lanes, LLM-Enrichment, Ähnlichkeits-Matching, Venue-Dubletten, Queue/Importer/Importer-Konfiguration.
+Konsultiere dazu den Quellcode, Projekt Dokumentationen & die laufende Applikation, externen Dokumentationen für APIs und Services die stuttgart-live verwendet.
+
+---
+
+PLEASE IMPLEMENT THIS PLAN:
+# Stuttgart-Live Backend-Handbuch als statische HTML-Seite
+
+**Summary**
+- Erstelle eine eigenständige, deutschsprachige HTML-Dokumentation unter [docs/backend-handbuch/index.html](/Users/marc/Projects/stuttgart-live.de/docs/backend-handbuch/index.html), mit Assets unter `docs/backend-handbuch/assets/`.
+- Keine neue Rails-Route, keine neue Backend-Navigation. README bekommt nur einen kurzen Link auf das Handbuch.
+- Sprache: verständlich für Anwender, mit echten Umlauten und `ß`, ohne Codejargon als Voraussetzung.
+
+**Implementation Changes**
+- Baue eine responsive HTML-Seite mit Inhaltsverzeichnis, Such-/Sprungnavigation, Glossar, Warn-/Hinweisboxen, Vergleichstabellen und selbst gezeichneten Diagrammen ohne externe CDNs.
+- Dokumentiere die Backend-Bereiche: Event-Inbox, News-Inbox, Pages, Präsentatoren, Locations, Settings, Queue/Importer und Benutzer.
+- Erkläre die wichtigsten Wirkzusammenhänge:
+  - Raw-Importer → `RawEventImport` → Merge → `Event`, `EventOffer`, Bilder, Status, Frontend.
+  - LLM-Enrichment → Genres/Sub-Genres, Beschreibungen, Links, Venue-Fallbacks, Run-Protokolle.
+  - Settings → SKS, Veranstalterhinweise, Homepage-Genre-Lanes, Ähnlichkeits-Matching, Venue-Dubletten.
+  - Meta Publishing → Instagram/Facebook-Verbindung, Social-Drafts, Publish-Fehler, Token-Health.
+- Nimm Code-Edgecases explizit auf: geplante Veröffentlichung, `rejected`-Schutz, auto-published Rückfall, manuelle Ticket-Overrides, `Abgesagt` vor `Ausverkauft`, reservierte Page-Slugs, Systemseiten-Schutz, Presenter/Venue-Löschregeln, Venue-Alias-Ausblendung, LLM-Queue-Status, Single-Event-Enrichment parallel bis 10.
+- Nutze lokale Screenshots nach DB-Migration: Backend-Start, Event-Editor-Tabs, News, Pages, Präsentatoren, Locations, Settings, Queue-Panels, öffentliche Homepage/Eventdetail. Falls ein Screenshot nicht erreichbar ist, ersetze ihn durch ein beschriftetes Diagramm.
+
+**Source Work**
+- Lokale Quellen: README, `docs/IMPORTER_*`, `docs/META_ONBOARDING.md`, Backend/Public Controller, Modelle, Importer-, Merge-, LLM-, Meta- und Lane-Services.
+- Externe Quellen für Kontext und korrekte Begriffe:
+  - [Meta Instagram Content Publishing](https://developers.facebook.com/docs/instagram-platform/content-publishing/)
+  - [Meta Pages API Posts](https://developers.facebook.com/docs/pages-api/posts/)
+  - [OpenAI Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)
+  - [OpenAI Responses API](https://developers.openai.com/api/reference/resources/responses/methods/create/)
+  - [Rails Active Job / Solid Queue recurring tasks](https://guides.rubyonrails.org/active_job_basics.html)
+  - [SerpApi Google Search API](https://serpapi.com/search-api)
+  - [OpenWebNinja](https://www.openwebninja.com/)
+  - [Mailchimp Marketing API](https://mailchimp.com/developer/marketing/)
+
+**Verification**
+- Vor Screenshots lokal ausführen: `mise exec -- bin/rails db:migrate`, weil `/up` aktuell wegen zwei ausstehender Migrationen 500 liefert.
+- App mit `bin/dev` auf Standard-Port 3000 starten; keine abweichende `PORT`-Variable verwenden.
+- Login lokal über Seed-Admin prüfen: `admin@stuttgart-live.de` / `PleaseChangeMe123!`, falls kein anderer lokaler Login vorgegeben ist.
+- Playwright-Screenshots in Desktop und Mobile aufnehmen und prüfen, dass alle eingebundenen Bilder laden.
+- Static QA: HTML im Browser öffnen, interne Anker testen, Pflichtbegriffe per `rg` prüfen, Links/Screenshot-Dateipfade prüfen.
+- Da nur HTML/Doku/Assets geändert werden, keine RuboCop-Pflicht. `README.md` nur minimal verlinken; `bin/ci` ist nicht nötig, solange nicht gepusht wird.
+
+**Assumptions**
+- Gewählte Ablage: statische Doku im Repository, nicht als geschützte Rails-Seite.
+- Screenshot-Quelle: lokale App nach Migration, nicht Production.
+- Ticketanbieter-Dokumentation wird primär aus Projektcode, vorhandenen Payload-Beispielen und lokalen Importer-Dokumenten abgeleitet, da öffentliche Provider-Doku nicht vollständig verfügbar ist.
+
+---
+
+Mir fehlen da noch Feinheiten wie zB. welche Events werden in welchen Lanes angezeigt oder eben auch nicht; oder wann & wie haben wir welches Veranstalter Logo bei den Veranstalltungshinweisen unter einem Event; wie wirkt sich Caching auf die Sichbarkeit aus.
+Mir scheint du hast nicht tief genug in die Implementierung geschaut und Sonderfälle ermittelt. 
+Geh das nochmal präziser & tiefer an.
+
+---
+
+Folgende Themen müssen auch erklärt werden:
+Consent banner; Suchbox im Frontend; Die Felder "Import-Änderungen", "Änderungstyp" - eigentlich das ganze UI (Filter & Tabs) an der Event-Inbox und auch an der News-Inbox.
+Bei den ganzen Frontend-Screenshots muss der consent banner weg geklickt werden - da wo die noch zusehen sind mache die screenshots nochmal
+
+---
+
+Der Screenshot zu "Settings: Der erste Bereich ist Meta Publishing mit getrennten Verbindungen für Instagram und Facebook." zeigt die 404er Seite
+
+---
+
+genauso für "Homepage Genre-Lanes"
+
+---
+
+überprüfe alle screenshots dass keine 404er error page gezeigt wird
+
+---
+
+Die Event-Reihen im Handbuch erklären
+
+---
+
+Refactore das Handbuch: 
+Das Handbuch soll im Backend für eingeloggte Benutzer zur Verfügung stehen; 
+Der Inhalt des Handbuchs soll aus der DB kommen und indiziert sein um eine gezielte Suche durch das Handbuch zu ermöglichen.
+Verlinke es mit einem kleinen Icon in der entsprechenden Navi. 
+Statt Screenshots verwende Links auf die Seite (Frontend & Backend). 
+Erweitere die AGENTS.md so, dass Änderungen an UI oder Code mit in das Handbuch übernommen werden und generell soll immer mit überprüft werden ob ein Thema schon im Handbuch erkläre wird - wenn nicht wird es mit angelegt.
+
+---
+
+PLEASE IMPLEMENT THIS PLAN:
+# Backend-Handbuch aus DB mit Volltextsuche
+
+## Summary
+- Das statische `docs/backend-handbuch/index.html` wird durch ein geschütztes Backend-Handbuch unter `/backend/handbook` ersetzt.
+- Inhalt bleibt versionierte Repo-Quelle, wird aber in DB-Abschnitte synchronisiert und aus der DB gerendert.
+- Zugriff erhalten alle eingeloggten Rollen: Admin, Editor und Blogger.
+- Screenshots entfallen; stattdessen bekommt jeder relevante Abschnitt direkte Links zu Backend-/Frontend-Seiten.
+- `AGENTS.md` wird erweitert: UI-/Code-Änderungen müssen gegen das Handbuch geprüft und bei Bedarf dort ergänzt werden.
+
+## Key Changes
+- Neue DB-Tabelle `backend_handbook_sections`:
+  - Felder: `slug`, `parent_slug`, `position`, `section_label`, `title`, `summary`, `body_html`, `body_text`, `keywords[]`, `links jsonb`, `source_digest`, `search_vector`.
+  - Indexe: unique `slug`, normaler `position`, GIN auf `search_vector`.
+  - `search_vector` als PostgreSQL Generated Column mit gewichteter deutscher Volltextsuche: Titel/Keywords stärker, Body schwächer.
+- Neue Repo-Quelle, z. B. `app/models/concerns/backend_handbook_defaults.rb`:
+  - enthält die aktuellen Handbuchabschnitte als strukturierte Definitionen.
+  - übernimmt die bestehenden Inhalte aus `docs/backend-handbuch/index.html`.
+  - ersetzt alle Screenshot-Figures durch Linklisten wie `/backend/events`, `/backend/blog`, `/backend/settings/edit?section=meta_connection`, `/`, `/events`, `/search`.
+- Synchronisierung:
+  - `BackendHandbookSection.sync_defaults!` upsertet alle Definitionen, berechnet `body_text` und entfernt veraltete Slugs.
+  - Initiale Migration erstellt Tabelle und synchronisiert den aktuellen Inhalt.
+  - `db/seeds.rb` ruft ebenfalls `BackendHandbookSection.sync_defaults!` idempotent auf.
+  - Neuer Task `backend_handbook:sync` für manuelle Produktions-/Staging-Synchronisierung.
+  - Für spätere Handbuch-Content-Änderungen muss zusätzlich eine kleine Datenmigration den Sync auslösen, damit Production über `db:prepare` aktualisiert wird.
+
+## Backend UI
+- Neue Route: `GET /backend/handbook`, Helper `backend_handbook_path`.
+- Neuer Controller `Backend::HandbookController`, bewusst nicht von `Backend::BaseController`, weil Blogger sonst ausgeschlossen wären.
+  - Zugriff erlaubt, wenn `current_user.blog_access?`.
+  - Ohne Query: zeigt TOC und ersten/gewählten Abschnitt.
+  - Mit `q`: sucht per `websearch_to_tsquery('german', q)` in `search_vector`, sortiert nach Rank und Position.
+- Neue View:
+  - kompakte Backend-Seite mit Suchfeld, linkem Inhalts-/Trefferbereich und rechtem Abschnitt.
+  - Treffer zeigen Titel, Kurzbeschreibung und markierte Textauszüge.
+  - Abschnittslinks werden als kleine „Direkt öffnen“-Buttons gerendert.
+  - HTML-Body wird aus DB gerendert, aber auf erlaubte Handbuch-Tags sanitizt: Überschriften, Absätze, Listen, Tabellen, Details/Summary, Code, Links, Hinweisboxen.
+- Navigation:
+  - In `app/views/layouts/application.html.erb` wird ein kleiner Hilfe-/Handbuch-Icon-Link in `backend_nav_links` ergänzt.
+  - Aktiver Zustand über `handbook_nav_active?`.
+  - Keine neue externe Icon-Bibliothek; ein kleines lokales Inline-SVG mit `aria-label="Handbuch"` und `title="Handbuch"`.
+
+## Documentation Changes
+- `README.md`:
+  - Link auf statische HTML-Datei ersetzen durch Hinweis auf `/backend/handbook`.
+  - Kurzer Betriebsabschnitt für `mise exec -- bin/rails backend_handbook:sync`.
+- `AGENTS.md`:
+  - Bei jeder UI-, Backend-, Workflow- oder Codeänderung zuerst im Handbuch suchen, ob das Thema bereits erklärt ist.
+  - Wenn ein Verhalten neu, geändert oder ein Edgecase betroffen ist: passende Handbuch-Definition ergänzen.
+  - Screenshots im Handbuch nicht neu einführen; stattdessen direkte Backend-/Frontend-Links verwenden.
+  - Bei Handbuchänderungen Sync-/Suchtests ausführen.
+- Entfernen:
+  - `docs/backend-handbuch/index.html`
+  - `docs/backend-handbuch/assets/screenshots/*`
+  - README-Verweis auf die statische Datei.
+
+## Test Plan
+- Modeltests:
+  - `BackendHandbookSection.sync_defaults!` legt Abschnitte an, aktualisiert geänderte Inhalte und entfernt veraltete Slugs.
+  - `body_text` enthält keinen HTML-Markup-Müll.
+  - Volltextsuche findet zentrale Begriffe wie `Event-Reihen`, `Consent-Banner`, `Queue`, `Meta Publishing`, `Venue-Dubletten`.
+  - Links-JSON validiert Label und Pfad.
+- Controllertests:
+  - Nicht eingeloggte Nutzer werden zum Login umgeleitet.
+  - Admin, Editor und Blogger können `/backend/handbook` öffnen.
+  - Suche nach `Event-Reihen` liefert den richtigen Abschnitt.
+  - Ungültiger `section`-Parameter fällt auf ersten Treffer oder Überblick zurück.
+- View-/Integrationstests:
+  - Backend-Navigation enthält den Icon-Link zum Handbuch.
+  - Handbuchseite enthält keine Screenshot-Assets und keine `docs/backend-handbuch/assets`-Referenzen.
+  - Direkte Links zu Backend-/Frontend-Seiten werden gerendert.
+- Befehle:
+  - `mise exec -- bin/rails db:migrate`
+  - `mise exec -- bin/rails test test/models/backend_handbook_section_test.rb test/controllers/backend/handbook_controller_test.rb`
+  - `mise exec -- bundle exec rubocop app/models/backend_handbook_section.rb app/controllers/backend/handbook_controller.rb app/models/concerns/backend_handbook_defaults.rb`
+  - Vor Push: `mise exec -- bin/ci`
+
+## Assumptions
+- Kein Admin-Editor für Handbuchinhalte in v1; die Repo-Quelle ist die autoritative Pflegeoberfläche.
+- Suchindex ist PostgreSQL-Volltextsuche, keine externe Search-Engine.
+- Alle eingeloggten Rollen sollen lesen dürfen, auch Blogger.
+- Bestehende unrelated Newsletter/Mailjet-Änderungen im Worktree werden nicht angefasst.
+
+---
+
+das problem ist ein paralleler agent  - wir warten bis er fertig ist...
