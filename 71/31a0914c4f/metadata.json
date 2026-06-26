@@ -3,7 +3,7 @@
   "checkpoint_id": "7131a0914c4f",
   "strategy": "manual-commit",
   "branch": "codex/backend-handbuch-html",
-  "checkpoints_count": 4,
+  "checkpoints_count": 10,
   "files_touched": null,
   "sessions": [
     {
@@ -11,13 +11,19 @@
       "transcript": "/71/31a0914c4f/0/full.jsonl",
       "content_hash": "/71/31a0914c4f/0/content_hash.txt",
       "prompt": "/71/31a0914c4f/0/prompt.txt"
+    },
+    {
+      "metadata": "/71/31a0914c4f/1/metadata.json",
+      "transcript": "/71/31a0914c4f/1/full.jsonl",
+      "content_hash": "/71/31a0914c4f/1/content_hash.txt",
+      "prompt": "/71/31a0914c4f/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 2466532,
+    "input_tokens": 2525015,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 33128192,
-    "output_tokens": 199531,
-    "api_call_count": 258
+    "cache_read_tokens": 34805248,
+    "output_tokens": 202887,
+    "api_call_count": 273
   }
 }
