@@ -1,0 +1,24 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "0e079655a634",
+  "session_id": "019efe4f-42d7-7d02-bb44-12a9fd013cba",
+  "strategy": "manual-commit",
+  "created_at": "2026-06-26T06:08:11.593001Z",
+  "branch": "codex/backend-handbuch-html",
+  "checkpoints_count": 4,
+  "save_step_count": 1,
+  "files_touched": [],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "450f87a08f12",
+  "token_usage": {
+    "input_tokens": 2294851,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 31218688,
+    "output_tokens": 190407,
+    "api_call_count": 247
+  },
+  "session_metrics": {
+    "turn_count": 4
+  }
+}

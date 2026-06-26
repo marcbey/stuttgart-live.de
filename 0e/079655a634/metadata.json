@@ -1,0 +1,23 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "0e079655a634",
+  "strategy": "manual-commit",
+  "branch": "codex/backend-handbuch-html",
+  "checkpoints_count": 4,
+  "files_touched": null,
+  "sessions": [
+    {
+      "metadata": "/0e/079655a634/0/metadata.json",
+      "transcript": "/0e/079655a634/0/full.jsonl",
+      "content_hash": "/0e/079655a634/0/content_hash.txt",
+      "prompt": "/0e/079655a634/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2294851,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 31218688,
+    "output_tokens": 190407,
+    "api_call_count": 247
+  }
+}
