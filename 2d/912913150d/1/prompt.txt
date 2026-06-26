@@ -1,0 +1,78 @@
+wir haben ja die newsletter-signup-section: Was passiert bisher mit den erfassten email addressen?
+
+---
+
+Statt mainchimp soll mailjet verwendet werden: https://www.mailjet.com/de/
+Hier die Dokus dazu: https://dev.mailjet.com/
+Für Ruby gibt dieses Gem: [mailjet/mailjet-gem](https://github.com/mailjet/mailjet-gem)
+
+Die mailjet API soll async über einen Job angesprochen werden.
+
+---
+
+ich habe noch keine api keys / secrets eingetragen
+
+---
+
+Ich bin mir nicht sicher ob es schon eine Mailjet Liste gibt für mailjet.list_id
+
+---
+
+PLEASE IMPLEMENT THIS PLAN:
+# Mailjet Newsletter-Sync statt Mailchimp
+
+## Summary
+- Newsletter-Anmeldung bleibt unverändert: E-Mail wird lokal als `NewsletterSubscriber` gespeichert.
+- Externer Sync läuft nur async über `Newsletter::SyncSubscriberJob` mit Solid Queue.
+- Ohne vollständige Mailjet-Konfiguration wird kein Sync-Job queued; lokale Speicherung bleibt aktiv.
+- Fehlende `MAILJET_LIST_ID` wird nicht automatisch erstellt. Du legst die Liste in Mailjet manuell an und trägst danach die ID ein.
+- Neue Anmeldungen werden mit Mailjet `addnoforce` in die konfigurierte Liste aufgenommen, damit frühere Abmeldungen nicht überschrieben werden.
+- Bestehende lokale Subscriber werden nicht automatisch zu Mailjet übertragen.
+
+## Key Changes
+- `Gemfile`: offizielles `mailjet` Gem ergänzen, Version `~> 1.8`.
+- Konfiguration ersetzen:
+  - Credentials: `mailjet.api_key`, `mailjet.secret_key`, `mailjet.list_id`, optional `mailjet.api_endpoint`
+  - ENV-Fallbacks: `MAILJET_API_KEY`/`MJ_APIKEY_PUBLIC`, `MAILJET_SECRET_KEY`/`MJ_APIKEY_PRIVATE`, `MAILJET_LIST_ID`, optional `MAILJET_API_ENDPOINT`
+- Datenbank generisch machen:
+  - `mailchimp_status` -> `external_sync_status`
+  - `mailchimp_member_id` -> `external_contact_id`
+  - `mailchimp_last_synced_at` -> `external_last_synced_at`
+  - `mailchimp_error_message` -> `external_error_message`
+  - `external_sync_provider` ergänzen
+- Mailchimp-Service/Task durch Mailjet-Service ersetzen:
+  - `Newsletter::MailjetClient` kapselt Gem-Konfiguration und API-Aufruf.
+  - `Newsletter::MailjetSync` nutzt `Contactslist_managecontact` mit `action: "addnoforce"`, `email` und konfigurierter List ID.
+  - Erfolg setzt `external_sync_status = "synced"`, `external_sync_provider = "mailjet"`, Kontakt-ID und Zeitstempel.
+  - Fehler setzt `external_sync_status = "failed"` und `external_error_message`; der Job retryt weiter.
+- `source` (`homepage`, `news_index`) bleibt nur lokal und wird nicht als Mailjet Custom Property übertragen.
+- README und `.env`-Kommentarblock von Mailchimp auf Mailjet aktualisieren, inklusive Hinweis: Liste manuell in Mailjet anlegen, ID in Credentials/ENV setzen.
+
+## Test Plan
+- Model-Test: Subscriber normalisiert E-Mail weiter, verhindert Dubletten, queued nur bei vollständiger Mailjet-Konfiguration inklusive List ID.
+- Service-Test: erfolgreicher Mailjet-Sync setzt generische Sync-Felder; unvollständige Config bleibt pending; API-Fehler setzt failed.
+- Job-Test: `Newsletter::SyncSubscriberJob` delegiert an `Newsletter::MailjetSync`.
+- Controller-Tests: Signup-Flow und Turbo-Frame-Verhalten bleiben unverändert.
+- AppConfig-Test: Credentials vor ENV, ENV-Fallbacks für Mailjet.
+- Verifikation: `mise exec -- bundle exec rubocop` für geänderte Ruby-Dateien, danach `mise exec -- bin/ci`.
+
+## Assumptions
+- API Key, Secret Key und Mailjet List ID werden später eingetragen; bis dahin bleibt der externe Sync deaktiviert.
+- Keine automatische Listenerstellung in der App.
+- Kein Double-Opt-in-Flow in der App.
+- Doku-Basis: [Mailjet Contact List](https://dev.mailjet.com/email/reference/contacts/contact-list/), [Mailjet Contact Subscriptions](https://dev.mailjet.com/email/reference/contacts/subscriptions/), [Mailjet Ruby Gem](https://github.com/mailjet/mailjet-gem), [RubyGems mailjet](https://rubygems.org/gems/mailjet).
+
+---
+
+Kann es sein, dass die API nur ein token verlangt?
+Ich habe etwas was diese Form hat "9353....607c1"
+
+---
+
+Mann hat mir so was gegeben:
+
+1.	9353.....607c1
+2.	 9b88...04a9
+
+
+kann das api key & secret sein ?
