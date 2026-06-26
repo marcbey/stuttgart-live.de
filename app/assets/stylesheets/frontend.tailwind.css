@@ -3323,12 +3323,12 @@ content: "";
   position: absolute;
   inset: 0 0 0 auto;
   z-index: 2;
-  width: 34%;
+  width: 32.5%;
   pointer-events: none;
   background: linear-gradient(
     to right,
     rgba(0, 0, 0, 0) 0%,
-    color-mix(in srgb, var(--promotion-banner-background) 58%, transparent) 62%,
+    color-mix(in srgb, var(--promotion-banner-background) 54%, transparent) 64%,
     var(--promotion-banner-background) 100%
   );
 }
@@ -3338,7 +3338,7 @@ inset: 0 auto 0 0;
   background: linear-gradient(
     to left,
     rgba(0, 0, 0, 0) 0%,
-    color-mix(in srgb, var(--promotion-banner-background) 58%, transparent) 62%,
+    color-mix(in srgb, var(--promotion-banner-background) 54%, transparent) 64%,
     var(--promotion-banner-background) 100%
   );
 }
@@ -3350,13 +3350,13 @@ inset: 0 auto 0 0;
     inset: auto 0 -1px;
     z-index: 2;
     width: 100%;
-    height: calc(54% + 2px);
+    height: calc(51% + 2px);
     pointer-events: none;
     background: linear-gradient(
       to bottom,
       rgba(0, 0, 0, 0) 0%,
-      color-mix(in srgb, var(--promotion-banner-background) 48%, transparent) 42%,
-      color-mix(in srgb, var(--promotion-banner-background) 82%, transparent) 70%,
+      color-mix(in srgb, var(--promotion-banner-background) 44%, transparent) 44%,
+      color-mix(in srgb, var(--promotion-banner-background) 78%, transparent) 72%,
       var(--promotion-banner-background) 100%
     );
   }
@@ -10286,7 +10286,7 @@ top: 1.18rem;
   body.page-public-events-index .promotion-banner-poster .promotion-banner-link {
   grid-template-columns: minmax(0, 1fr);
       gap: 0;
-      padding: 1rem;
+      padding: 0;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-media {
@@ -10295,7 +10295,7 @@ top: 1.18rem;
       margin: 0;
       padding: 0;
       overflow: hidden;
-      aspect-ratio: auto;
+      aspect-ratio: 1.08 / 1;
       min-height: 0;
       height: auto;
       background: var(--promotion-banner-background);
@@ -10307,11 +10307,11 @@ top: 1.18rem;
       left: auto !important;
       top: auto !important;
       width: 100% !important;
-      height: auto !important;
+      height: 100% !important;
       max-width: 100% !important;
       max-height: none !important;
       transform: none !important;
-      object-fit: contain !important;
+      object-fit: cover !important;
       border-radius: 0;
   }
 
@@ -10330,7 +10330,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .promotion-banner-poster .promotion-banner-copy {
-  padding: 0.55rem 0 0;
+  padding: 0.55rem 1rem 1rem;
   }
 
   .lane-header {
@@ -10876,7 +10876,7 @@ position: absolute;
 }
 
 body.page-public-events-index .promotion-banner-poster .promotion-banner-copy {
-padding: 1rem 1.15rem 1rem;
+padding: 1rem 1.65rem 1rem;
   background: transparent;
 }
 
@@ -10893,7 +10893,7 @@ color: rgba(248, 250, 249, 0.82);
 body.page-public-events-index .promotion-banner-poster .promotion-banner-kicker {
 color: var(--promotion-banner-cta-color);
   font-family: "Oswald", "Arial Narrow", sans-serif;
-  font-size: clamp(0.82rem, 1.35vw, 1rem);
+  font-size: clamp(0.94rem, 1.45vw, 1.08rem);
   font-weight: 500;
   letter-spacing: 0.095em;
   text-transform: uppercase;
@@ -10908,6 +10908,7 @@ body.page-public-events-index .promotion-banner-poster .promotion-banner-copy h2
 color: var(--ink);
   font-size: clamp(2rem, 3.5vw, 3.35rem);
   line-height: 1.12;
+  margin-top: -0.28rem;
   max-width: none;
 }
 
@@ -10986,15 +10987,15 @@ body.page-public-events-index .promotion-banner-slider-section--hero .promotion-
 display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 1.35rem 0 1.35rem 1.3rem;
+  padding: 1.35rem 0 1.35rem 1.8rem;
 }
 
 body.page-public-events-index .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-copy {
-padding: 1rem 1rem 1rem 1.15rem;
+padding: 1rem 1.65rem 1rem 1.15rem;
 }
 
 body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-copy {
-padding: 1.35rem 1.3rem 1.35rem 0;
+padding: 1.35rem 1.8rem 1.35rem 0;
 }
 
 @media (max-width: 720px) {
@@ -11221,7 +11222,7 @@ padding: 1.35rem 1.3rem 1.35rem 0;
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-media {
   width: 100%;
       border-radius: 0;
-      aspect-ratio: auto;
+      aspect-ratio: 1.08 / 1;
       min-height: 0;
       height: auto;
       margin-bottom: -1px;
@@ -11234,13 +11235,13 @@ padding: 1.35rem 1.3rem 1.35rem 0;
       inset: auto 0 -1px;
       z-index: 2;
       width: 100%;
-      height: calc(54% + 2px);
+      height: calc(51% + 2px);
       pointer-events: none;
       background: linear-gradient(
         to bottom,
         rgba(0, 0, 0, 0) 0%,
-        color-mix(in srgb, var(--promotion-banner-background) 48%, transparent) 42%,
-        color-mix(in srgb, var(--promotion-banner-background) 82%, transparent) 70%,
+        color-mix(in srgb, var(--promotion-banner-background) 44%, transparent) 44%,
+        color-mix(in srgb, var(--promotion-banner-background) 78%, transparent) 72%,
         var(--promotion-banner-background) 100%
       );
   }
@@ -11250,12 +11251,12 @@ padding: 1.35rem 1.3rem 1.35rem 0;
       left: auto !important;
       top: auto !important;
       width: 100% !important;
-      height: auto !important;
+      height: 100% !important;
       min-height: 0;
       max-width: 100% !important;
       max-height: none !important;
       transform: none !important;
-      object-fit: contain !important;
+      object-fit: cover !important;
       border-radius: 0;
   }
 
@@ -11267,13 +11268,13 @@ padding: 1.35rem 1.3rem 1.35rem 0;
       position: relative;
       z-index: 3;
       min-height: 0;
-      margin-top: -0.45rem;
-      padding: 0.45rem 1.35rem 1.35rem;
+      margin-top: -1px;
+      padding: 0.25rem 1.35rem 1.35rem;
       background: var(--promotion-banner-background);
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-copy {
-  padding: 0.45rem 1.35rem 1.35rem;
+  padding: 0.25rem 1.35rem 1.35rem;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-kicker {
