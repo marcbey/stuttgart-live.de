@@ -6,7 +6,7 @@ module Newsletter
     discard_on ActiveJob::DeserializationError
 
     def perform(subscriber)
-      Newsletter::MailchimpSync.call(subscriber)
+      Newsletter::MailjetSync.call(subscriber)
     end
   end
 end

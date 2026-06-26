@@ -50,17 +50,22 @@ module AppConfig
       fetch(:easyticket, :ticket_link_event_base_url, env: "EASYTICKET_TICKET_LINK_EVENT_BASE_URL")
     end
 
-    def mailchimp_api_key
-      fetch(:mailchimp, :api_key, env: "MAILCHIMP_API_KEY")
+    def mailjet_api_key
+      fetch(:mailjet, :api_key, env: "MAILJET_API_KEY") ||
+        ENV["MJ_APIKEY_PUBLIC"].to_s.strip.presence
     end
 
-    def mailchimp_list_id
-      fetch(:mailchimp, :list_id, env: "MAILCHIMP_LIST_ID") ||
-        fetch(:mailchimp, :audience_id, env: "MAILCHIMP_AUDIENCE_ID")
+    def mailjet_secret_key
+      fetch(:mailjet, :secret_key, env: "MAILJET_SECRET_KEY") ||
+        ENV["MJ_APIKEY_PRIVATE"].to_s.strip.presence
     end
 
-    def mailchimp_server_prefix
-      fetch(:mailchimp, :server_prefix, env: "MAILCHIMP_SERVER_PREFIX")
+    def mailjet_list_id
+      fetch(:mailjet, :list_id, env: "MAILJET_LIST_ID")
+    end
+
+    def mailjet_api_endpoint
+      fetch(:mailjet, :api_endpoint, env: "MAILJET_API_ENDPOINT")
     end
 
     def smtp_address

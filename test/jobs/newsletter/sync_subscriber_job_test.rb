@@ -1,11 +1,11 @@
 require "test_helper"
 
 class Newsletter::SyncSubscriberJobTest < ActiveJob::TestCase
-  test "delegates to mailchimp sync service" do
+  test "delegates to mailjet sync service" do
     subscriber = NewsletterSubscriber.create!(email: "job@example.com", source: "homepage")
     captured_subscriber = nil
 
-    sync_class = Newsletter::MailchimpSync.singleton_class
+    sync_class = Newsletter::MailjetSync.singleton_class
     sync_class.alias_method :__original_call_for_test, :call
     sync_class.define_method(:call) do |record, **|
       captured_subscriber = record

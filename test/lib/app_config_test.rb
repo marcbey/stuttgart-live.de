@@ -15,10 +15,53 @@ class AppConfigTest < ActiveSupport::TestCase
     end
   end
 
-  test "falls back to env when credentials are missing" do
-    with_env("MAILCHIMP_API_KEY" => "env-api-key") do
+  test "reads mailjet config from credentials" do
+    with_env(
+      "MAILJET_API_KEY" => "env-api-key",
+      "MAILJET_SECRET_KEY" => "env-secret-key",
+      "MAILJET_LIST_ID" => "env-list-id",
+      "MAILJET_API_ENDPOINT" => "https://api.us.mailjet.com"
+    ) do
+      with_credentials(mailjet: {
+        api_key: "credentials-api-key",
+        secret_key: "credentials-secret-key",
+        list_id: "credentials-list-id",
+        api_endpoint: "https://api.mailjet.com"
+      }) do
+        assert_equal "credentials-api-key", AppConfig.mailjet_api_key
+        assert_equal "credentials-secret-key", AppConfig.mailjet_secret_key
+        assert_equal "credentials-list-id", AppConfig.mailjet_list_id
+        assert_equal "https://api.mailjet.com", AppConfig.mailjet_api_endpoint
+      end
+    end
+  end
+
+  test "falls back to mailjet env values when credentials are missing" do
+    with_env(
+      "MAILJET_API_KEY" => "env-api-key",
+      "MAILJET_SECRET_KEY" => "env-secret-key",
+      "MAILJET_LIST_ID" => "env-list-id",
+      "MAILJET_API_ENDPOINT" => "https://api.us.mailjet.com"
+    ) do
       with_credentials({}) do
-        assert_equal "env-api-key", AppConfig.mailchimp_api_key
+        assert_equal "env-api-key", AppConfig.mailjet_api_key
+        assert_equal "env-secret-key", AppConfig.mailjet_secret_key
+        assert_equal "env-list-id", AppConfig.mailjet_list_id
+        assert_equal "https://api.us.mailjet.com", AppConfig.mailjet_api_endpoint
+      end
+    end
+  end
+
+  test "falls back to mailjet default env key names" do
+    with_env(
+      "MAILJET_API_KEY" => nil,
+      "MAILJET_SECRET_KEY" => nil,
+      "MJ_APIKEY_PUBLIC" => "mj-public-key",
+      "MJ_APIKEY_PRIVATE" => "mj-private-key"
+    ) do
+      with_credentials({}) do
+        assert_equal "mj-public-key", AppConfig.mailjet_api_key
+        assert_equal "mj-private-key", AppConfig.mailjet_secret_key
       end
     end
   end

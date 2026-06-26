@@ -25,7 +25,7 @@ Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität n
 - Import-Pipeline für externe Anbieter wie Easyticket, Eventim und Reservix
 - Redaktionelle Qualitätssicherung mit Inbox, Änderungsprotokollen und Vollständigkeitsprüfungen
 - Manuelles Social-Publishing für Event-Posts auf Facebook und Instagram
-- Newsletter-Anmeldung mit optionalem Mailchimp-Sync
+- Newsletter-Anmeldung mit optionalem Mailjet-Sync
 
 ## Wie das System grob funktioniert
 
@@ -479,7 +479,7 @@ Die Antwort enthält dann `X-Stuttgart-Live-Profile` und `Server-Timing` mit Wal
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `MAILCHIMP_*`, `SMTP_*`, `mailer.from`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, optional `meta.instagram_app_id`, `meta.instagram_app_secret`, `meta.instagram_redirect_uri`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `mailjet.api_key`, `mailjet.secret_key`, `mailjet.list_id`, optional `mailjet.api_endpoint`, `SMTP_*`, `mailer.from`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, optional `meta.instagram_app_id`, `meta.instagram_app_secret`, `meta.instagram_redirect_uri`
 - Google Analytics Measurement-ID: `config.x.google_analytics_measurement_id` in `config/application.rb`; sie wird nur auf den erlaubten Produktionshosts an das öffentliche Consent-Frontend durchgereicht.
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
@@ -488,7 +488,7 @@ Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese
 - GitHub-Repository-Secret für den Codex-Issue-Workflow: `OPENAI_API_KEY`
 - GitHub-Variablen für Sentry-Releases: `SENTRY_ORG`, `SENTRY_PROJECT`
 
-Ohne Mailchimp-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus.
+Ohne vollständige Mailjet-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus. Die Mailjet-Kontaktliste wird nicht automatisch angelegt; lege sie in Mailjet an und trage die List-ID als `mailjet.list_id` oder `MAILJET_LIST_ID` ein.
 Beim SMTP-Versand muss `mailer.from` oder der ENV-Fallback `MAILER_FROM` auf eine Absenderadresse zeigen, die vom konfigurierten SMTP-Konto akzeptiert wird.
 
 ### Credentials bearbeiten
