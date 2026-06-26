@@ -52,6 +52,24 @@ class AppConfigTest < ActiveSupport::TestCase
     end
   end
 
+  test "reads mailjet config from prefixed credential keys" do
+    with_env(
+      "MAILJET_API_KEY" => "env-api-key",
+      "MAILJET_SECRET_KEY" => "env-secret-key",
+      "MAILJET_LIST_ID" => "env-list-id"
+    ) do
+      with_credentials(mailjet: {
+        mailjet_api_key: "credentials-api-key",
+        mailjet_secret_key: "credentials-secret-key",
+        mailjet_list_id: "credentials-list-id"
+      }) do
+        assert_equal "credentials-api-key", AppConfig.mailjet_api_key
+        assert_equal "credentials-secret-key", AppConfig.mailjet_secret_key
+        assert_equal "credentials-list-id", AppConfig.mailjet_list_id
+      end
+    end
+  end
+
   test "falls back to mailjet default env key names" do
     with_env(
       "MAILJET_API_KEY" => nil,

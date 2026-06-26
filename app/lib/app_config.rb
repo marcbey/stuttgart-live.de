@@ -51,21 +51,25 @@ module AppConfig
     end
 
     def mailjet_api_key
-      fetch(:mailjet, :api_key, env: "MAILJET_API_KEY") ||
-        ENV["MJ_APIKEY_PUBLIC"].to_s.strip.presence
+      mailjet_credential(:api_key, :mailjet_api_key) ||
+        configured_value(ENV["MAILJET_API_KEY"]) ||
+        configured_value(ENV["MJ_APIKEY_PUBLIC"])
     end
 
     def mailjet_secret_key
-      fetch(:mailjet, :secret_key, env: "MAILJET_SECRET_KEY") ||
-        ENV["MJ_APIKEY_PRIVATE"].to_s.strip.presence
+      mailjet_credential(:secret_key, :mailjet_secret_key) ||
+        configured_value(ENV["MAILJET_SECRET_KEY"]) ||
+        configured_value(ENV["MJ_APIKEY_PRIVATE"])
     end
 
     def mailjet_list_id
-      fetch(:mailjet, :list_id, env: "MAILJET_LIST_ID")
+      mailjet_credential(:list_id, :mailjet_list_id) ||
+        configured_value(ENV["MAILJET_LIST_ID"])
     end
 
     def mailjet_api_endpoint
-      fetch(:mailjet, :api_endpoint, env: "MAILJET_API_ENDPOINT")
+      mailjet_credential(:api_endpoint, :mailjet_api_endpoint) ||
+        configured_value(ENV["MAILJET_API_ENDPOINT"])
     end
 
     def smtp_address
@@ -126,6 +130,12 @@ module AppConfig
     def fetch(*keys, env:)
       configured_value(Rails.application.credentials.dig(*keys)) ||
         configured_value(ENV[env])
+    end
+
+    def mailjet_credential(*keys)
+      keys.lazy
+        .map { |key| configured_value(Rails.application.credentials.dig(:mailjet, key)) }
+        .find(&:present?)
     end
 
     def configured_value(value)
