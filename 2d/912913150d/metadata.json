@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "2d912913150d",
+  "strategy": "manual-commit",
+  "branch": "codex/backend-handbuch-html",
+  "checkpoints_count": 4,
+  "files_touched": [
+    "README.md",
+    "db/schema.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/2d/912913150d/0/metadata.json",
+      "transcript": "/2d/912913150d/0/full.jsonl",
+      "content_hash": "/2d/912913150d/0/content_hash.txt",
+      "prompt": "/2d/912913150d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2224109,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 27375488,
+    "output_tokens": 159073,
+    "api_call_count": 224
+  }
+}
