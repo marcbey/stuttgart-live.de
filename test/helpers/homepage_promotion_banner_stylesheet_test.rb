@@ -22,13 +22,13 @@ class HomepagePromotionBannerStylesheetTest < ActiveSupport::TestCase
     end
   end
 
-  test "mobile promotion banners render images at natural width" do
+  test "mobile promotion banners render taller image crops" do
     stylesheet = Rails.root.join("app/assets/stylesheets/frontend.tailwind.css").read
     mobile_stylesheet = stylesheet.split("@media (max-width: 720px)").second
 
     assert_match(/position:\s*static\s*!important/, mobile_stylesheet)
     assert_match(/width:\s*100%\s*!important/, mobile_stylesheet)
-    assert_match(/height:\s*auto\s*!important/, mobile_stylesheet)
-    assert_match(/object-fit:\s*contain\s*!important/, mobile_stylesheet)
+    assert_match(/height:\s*100%\s*!important/, mobile_stylesheet)
+    assert_match(/object-fit:\s*cover\s*!important/, mobile_stylesheet)
   end
 end
