@@ -42,6 +42,7 @@ export default class extends Controller {
     this.calendarDate = this.initialCalendarDate()
     this.selectedCalendarDate = this.selectedDateFromQuery()
     this.selectedCalendarRange = this.selectedRangeFromQuery()
+    this.previewCalendarRangeSelection = null
     this.pendingRangeStart = this.selectedCalendarRange?.start || this.selectedCalendarDate
     this.boundHandlePointerDown = this.handlePointerDown.bind(this)
     this.boundHandleDocumentKeydown = this.handleDocumentKeydown.bind(this)
@@ -283,6 +284,7 @@ export default class extends Controller {
       this.pendingRangeStart = selectedDate
       this.selectedCalendarDate = selectedDate
       this.selectedCalendarRange = null
+      this.previewCalendarRangeSelection = null
       this.renderCalendar()
       return
     }
@@ -291,6 +293,7 @@ export default class extends Controller {
     const rangeEnd = this.laterDate(this.pendingRangeStart, selectedDate)
     this.selectedCalendarRange = { start: rangeStart, end: rangeEnd }
     this.selectedCalendarDate = null
+    this.previewCalendarRangeSelection = null
     this.pendingRangeStart = rangeStart
     this.calendarDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
     this.inputTarget.value = this.formatCalendarRangeQuery(rangeStart, rangeEnd)
@@ -300,6 +303,34 @@ export default class extends Controller {
     this.closeCalendar()
     this.closeSearchPanel()
     this.element.requestSubmit()
+  }
+
+  previewCalendarRange(event) {
+    if (!this.pendingRangeStart || this.rangeComplete) {
+      return
+    }
+
+    const previewDate = this.dateFromKey(event.currentTarget.dataset.date)
+    if (!previewDate) {
+      return
+    }
+
+    const nextPreviewRange = this.calendarRangeFor(this.pendingRangeStart, previewDate)
+    if (this.sameCalendarRange(this.previewCalendarRangeSelection, nextPreviewRange)) {
+      return
+    }
+
+    this.previewCalendarRangeSelection = nextPreviewRange
+    this.renderCalendar()
+  }
+
+  clearCalendarRangePreview() {
+    if (!this.previewCalendarRangeSelection || this.rangeComplete) {
+      return
+    }
+
+    this.previewCalendarRangeSelection = null
+    this.renderCalendar()
   }
 
   handleCalendarKeydown(event) {
@@ -598,6 +629,7 @@ export default class extends Controller {
     this.pausePlaceholderForCalendar()
     this.selectedCalendarRange = this.selectedRangeFromQuery()
     this.selectedCalendarDate = this.selectedDateFromQuery()
+    this.previewCalendarRangeSelection = null
     this.pendingRangeStart = this.selectedCalendarRange?.start || this.selectedCalendarDate
     this.calendarDate = this.selectedCalendarRange?.start || this.selectedCalendarDate || this.calendarDate || this.today
     this.renderCalendar()
@@ -636,8 +668,10 @@ export default class extends Controller {
     const monthStart = new Date(this.calendarDate.getFullYear(), this.calendarDate.getMonth(), 1)
     const gridStart = this.calendarGridStart(monthStart)
     const todayKey = this.dateKey(this.today)
-    const selectedRange = this.selectedRangeFromQuery() || this.selectedCalendarRange
-    const selectedDate = selectedRange?.start || this.selectedDateFromQuery() || this.selectedCalendarDate
+    const querySelectedDate = this.selectedDateFromQuery()
+    const committedRange = this.selectedRangeFromQuery() || this.selectedCalendarRange
+    const selectedRange = committedRange || this.previewCalendarRangeSelection
+    const selectedDate = querySelectedDate || this.selectedCalendarDate || selectedRange?.start
     const selectedKey = selectedDate ? this.dateKey(selectedDate) : null
     const selectedRangeStartKey = selectedRange ? this.dateKey(selectedRange.start) : null
     const selectedRangeEndKey = selectedRange ? this.dateKey(selectedRange.end) : null
@@ -656,7 +690,7 @@ export default class extends Controller {
       dayButton.className = "public-search-calendar-day"
       dayButton.textContent = date.getDate().toString()
       dayButton.dataset.date = dateKey
-      dayButton.dataset.action = pastDate ? "" : "click->public-search#selectCalendarDate keydown->public-search#handleCalendarDayKeydown"
+      dayButton.dataset.action = pastDate ? "" : "click->public-search#selectCalendarDate keydown->public-search#handleCalendarDayKeydown mouseenter->public-search#previewCalendarRange focus->public-search#previewCalendarRange"
       dayButton.setAttribute("aria-label", `${CALENDAR_WEEKDAYS[this.calendarWeekdayIndex(date)]}, ${this.formatCalendarQuery(date)}`)
 
       if (date.getMonth() !== monthStart.getMonth()) {
@@ -888,6 +922,21 @@ export default class extends Controller {
   dateInRange(date, range) {
     const key = this.dateKey(date)
     return key >= this.dateKey(range.start) && key <= this.dateKey(range.end)
+  }
+
+  calendarRangeFor(first, second) {
+    return {
+      start: this.earlierDate(first, second),
+      end: this.laterDate(first, second)
+    }
+  }
+
+  sameCalendarRange(first, second) {
+    if (!first || !second) {
+      return false
+    }
+
+    return this.dateKey(first.start) === this.dateKey(second.start) && this.dateKey(first.end) === this.dateKey(second.end)
   }
 
   earlierDate(first, second) {
