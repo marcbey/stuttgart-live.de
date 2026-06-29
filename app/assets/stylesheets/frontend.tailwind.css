@@ -8256,6 +8256,14 @@ padding-inline: 0;
       pointer-events: none;
   }
 
+  .news-detail .event-detail-topbar {
+  position: static;
+      inset: auto;
+      z-index: auto;
+      margin: 0 0 0.95rem;
+      pointer-events: auto;
+  }
+
   .event-detail-topbar-actions {
   margin-top: 0;
   }

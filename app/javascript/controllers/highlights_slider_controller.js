@@ -1,5 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
+const SCROLL_STORAGE_PREFIX = "highlights-slider:scroll"
+
 export default class extends Controller {
   static targets = [ "track", "previousButton", "nextButton", "toggleButton" ]
   static values = {
@@ -9,6 +11,7 @@ export default class extends Controller {
 
   connect() {
     this.updateButtons = this.updateButtons.bind(this)
+    this.handleTrackScroll = this.handleTrackScroll.bind(this)
     this.handleFocusIn = this.handleFocusIn.bind(this)
     this.handleFocusOut = this.handleFocusOut.bind(this)
     this.handleVisibilityChange = this.handleVisibilityChange.bind(this)
@@ -18,7 +21,7 @@ export default class extends Controller {
     this.userPaused = window.matchMedia("(prefers-reduced-motion: reduce)").matches
 
     this.setupLoopClone()
-    this.trackTarget?.addEventListener("scroll", this.updateButtons, { passive: true })
+    this.trackTarget?.addEventListener("scroll", this.handleTrackScroll, { passive: true })
     this.handleMouseEnter = () => this.stopAutoplay()
     this.handleMouseLeave = () => this.startAutoplay()
     this.element.addEventListener("mouseenter", this.handleMouseEnter)
@@ -30,12 +33,13 @@ export default class extends Controller {
     this.updateButtons()
     this.updateToggleButton()
     this.handleViewportChange()
+    this.restoreScrollPosition()
     window.requestAnimationFrame(() => this.resetMobileHeroTrack())
     this.startAutoplay()
   }
 
   disconnect() {
-    this.trackTarget?.removeEventListener("scroll", this.updateButtons)
+    this.trackTarget?.removeEventListener("scroll", this.handleTrackScroll)
     this.element.removeEventListener("mouseenter", this.handleMouseEnter)
     this.element.removeEventListener("mouseleave", this.handleMouseLeave)
     this.element.removeEventListener("focusin", this.handleFocusIn)
@@ -45,6 +49,8 @@ export default class extends Controller {
     this.removeLoopClone()
     this.stopAutoplay()
     this.clearLoopResetTimer()
+    this.storeScrollPosition()
+    this.clearScrollStoreTimer()
   }
 
   previous(event) {
@@ -104,6 +110,11 @@ export default class extends Controller {
     if (this.hasNextButtonTarget) {
       this.nextButtonTarget.disabled = maxScrollLeft <= 4
     }
+  }
+
+  handleTrackScroll() {
+    this.updateButtons()
+    this.queueStoreScrollPosition()
   }
 
   startAutoplay() {
@@ -377,5 +388,65 @@ export default class extends Controller {
     return this.hasTrackTarget &&
       this.mobileHeroMediaQuery?.matches &&
       this.element.matches(".promotion-banner-slider-section--hero")
+  }
+
+  queueStoreScrollPosition() {
+    if (!this.shouldRememberScrollPosition()) return
+
+    window.clearTimeout(this.scrollStoreTimer)
+    this.scrollStoreTimer = window.setTimeout(() => this.storeScrollPosition(), 80)
+  }
+
+  storeScrollPosition() {
+    if (!this.shouldRememberScrollPosition()) return
+
+    const scrollLeft = Math.round(this.trackTarget.scrollLeft)
+    if (scrollLeft <= 0) {
+      window.sessionStorage.removeItem(this.scrollStorageKey())
+      return
+    }
+
+    window.sessionStorage.setItem(this.scrollStorageKey(), String(scrollLeft))
+  }
+
+  restoreScrollPosition() {
+    if (!this.shouldRememberScrollPosition()) return
+
+    const storedScroll = Number.parseInt(window.sessionStorage.getItem(this.scrollStorageKey()), 10)
+    if (!Number.isFinite(storedScroll) || storedScroll <= 0) return
+
+    const restore = () => {
+      if (!this.hasTrackTarget) return
+      this.trackTarget.scrollLeft = storedScroll
+      this.trackTarget.scrollTo({ left: storedScroll, behavior: "auto" })
+      this.updateButtons()
+    }
+
+    window.requestAnimationFrame(() => {
+      restore()
+      window.requestAnimationFrame(restore)
+    })
+  }
+
+  shouldRememberScrollPosition() {
+    return this.hasTrackTarget && !this.isMobileHeroSlider()
+  }
+
+  scrollStorageKey() {
+    const pageKey = `${window.location.pathname}${window.location.search}`
+    const sliderKey = this.element.dataset.homepageLaneLaneValue ||
+      this.element.querySelector(".lane-header h2, .highlights-slider-header h2")?.textContent?.trim() ||
+      this.sliderIndex()
+
+    return `${SCROLL_STORAGE_PREFIX}:${pageKey}:${sliderKey}`
+  }
+
+  sliderIndex() {
+    return Array.from(document.querySelectorAll("[data-controller~='highlights-slider']")).indexOf(this.element)
+  }
+
+  clearScrollStoreTimer() {
+    window.clearTimeout(this.scrollStoreTimer)
+    this.scrollStoreTimer = null
   }
 }
