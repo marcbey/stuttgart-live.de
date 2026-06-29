@@ -52,7 +52,7 @@ export default class extends Controller {
     const gridVariant = this.hasGridVariantTarget ? this.gridVariantTarget.value : "1x1"
 
     this.updateFrameVariant(gridVariant)
-    this.updateCropBox({ focusX, focusY, zoom })
+    this.updatePreviewImage({ focusX, focusY, zoom })
 
     if (this.hasFocusXOutputTarget) this.focusXOutputTarget.textContent = `${Math.round(focusX)}%`
     if (this.hasFocusYOutputTarget) this.focusYOutputTarget.textContent = `${Math.round(focusY)}%`
@@ -76,46 +76,24 @@ export default class extends Controller {
     this.previewFrameTarget.dataset.gridVariant = gridVariant
   }
 
-  updateCropBox({ focusX, focusY, zoom }) {
+  updatePreviewImage({ focusX, focusY, zoom }) {
     if (!this.hasPreviewFrameTarget || !this.hasPreviewImageTarget || !this.hasPreviewBoxTarget) return
 
-    const naturalWidth = this.previewImageTarget.naturalWidth
-    const naturalHeight = this.previewImageTarget.naturalHeight
-
-    if (!naturalWidth || !naturalHeight) {
+    const cropMetrics = this.cropMetrics({ focusX, focusY, zoom })
+    if (!cropMetrics) {
       this.previewBoxTarget.classList.add("is-hidden")
       return
     }
 
-    const frameRect = this.previewFrameTarget.getBoundingClientRect()
-    const imageRect = this.previewImageTarget.getBoundingClientRect()
+    this.previewImageTarget.style.left = `${cropMetrics.offsetX * 100}%`
+    this.previewImageTarget.style.top = `${cropMetrics.offsetY * 100}%`
+    this.previewImageTarget.style.width = `${cropMetrics.widthFactor * 100}%`
+    this.previewImageTarget.style.height = `${cropMetrics.heightFactor * 100}%`
 
-    if (!frameRect.width || !frameRect.height || !imageRect.width || !imageRect.height) {
-      this.previewBoxTarget.classList.add("is-hidden")
-      return
-    }
-
-    const zoomScale = Math.max(zoom, 100) / 100
-    const naturalRatio = naturalWidth / naturalHeight
-    const frameRatio = frameRect.width / frameRect.height
-    const coverScale = naturalRatio > frameRatio ? frameRect.height / naturalHeight : frameRect.width / naturalWidth
-
-    const visibleNaturalWidth = Math.min(naturalWidth, frameRect.width / (coverScale * zoomScale))
-    const visibleNaturalHeight = Math.min(naturalHeight, frameRect.height / (coverScale * zoomScale))
-    const focusNaturalX = (focusX / 100) * naturalWidth
-    const focusNaturalY = (focusY / 100) * naturalHeight
-    const cropNaturalLeft = this.clamp(focusNaturalX - (visibleNaturalWidth / 2), 0, naturalWidth - visibleNaturalWidth)
-    const cropNaturalTop = this.clamp(focusNaturalY - (visibleNaturalHeight / 2), 0, naturalHeight - visibleNaturalHeight)
-
-    const left = (imageRect.left - frameRect.left) + ((cropNaturalLeft / naturalWidth) * imageRect.width)
-    const top = (imageRect.top - frameRect.top) + ((cropNaturalTop / naturalHeight) * imageRect.height)
-    const width = (visibleNaturalWidth / naturalWidth) * imageRect.width
-    const height = (visibleNaturalHeight / naturalHeight) * imageRect.height
-
-    this.previewBoxTarget.style.left = `${left}px`
-    this.previewBoxTarget.style.top = `${top}px`
-    this.previewBoxTarget.style.width = `${width}px`
-    this.previewBoxTarget.style.height = `${height}px`
+    this.previewBoxTarget.style.left = "0"
+    this.previewBoxTarget.style.top = "0"
+    this.previewBoxTarget.style.width = "100%"
+    this.previewBoxTarget.style.height = "100%"
     this.previewBoxTarget.classList.remove("is-hidden")
   }
 
@@ -124,38 +102,21 @@ export default class extends Controller {
     if (!this.hasPreviewFrameTarget || !this.hasPreviewImageTarget || !this.hasPreviewBoxTarget) return
     if (event.button !== undefined && event.button !== 0) return
 
-    const naturalWidth = this.previewImageTarget.naturalWidth
-    const naturalHeight = this.previewImageTarget.naturalHeight
-    if (!naturalWidth || !naturalHeight || this.previewBoxTarget.classList.contains("is-hidden")) return
-
-    const frameRect = this.previewFrameTarget.getBoundingClientRect()
-    const imageRect = this.previewImageTarget.getBoundingClientRect()
-    if (!frameRect.width || !frameRect.height || !imageRect.width || !imageRect.height) return
-
     const focusX = this.readValue("focusX", 50)
     const focusY = this.readValue("focusY", 50)
-    const zoomScale = Math.max(this.readValue("zoom", 100), 100) / 100
-    const naturalRatio = naturalWidth / naturalHeight
-    const frameRatio = frameRect.width / frameRect.height
-    const coverScale = naturalRatio > frameRatio ? frameRect.height / naturalHeight : frameRect.width / naturalWidth
-    const visibleNaturalWidth = Math.min(naturalWidth, frameRect.width / (coverScale * zoomScale))
-    const visibleNaturalHeight = Math.min(naturalHeight, frameRect.height / (coverScale * zoomScale))
-    const focusNaturalX = (focusX / 100) * naturalWidth
-    const focusNaturalY = (focusY / 100) * naturalHeight
-    const cropNaturalLeft = this.clamp(focusNaturalX - (visibleNaturalWidth / 2), 0, naturalWidth - visibleNaturalWidth)
-    const cropNaturalTop = this.clamp(focusNaturalY - (visibleNaturalHeight / 2), 0, naturalHeight - visibleNaturalHeight)
+    const zoom = this.readValue("zoom", 100)
+    const cropMetrics = this.cropMetrics({ focusX, focusY, zoom })
+    if (!cropMetrics || this.previewBoxTarget.classList.contains("is-hidden")) return
 
     this.dragState = {
       startClientX: event.clientX,
       startClientY: event.clientY,
-      naturalWidth,
-      naturalHeight,
-      imageRectWidth: imageRect.width,
-      imageRectHeight: imageRect.height,
-      visibleNaturalWidth,
-      visibleNaturalHeight,
-      cropNaturalLeft,
-      cropNaturalTop
+      frameWidth: cropMetrics.frameWidth,
+      frameHeight: cropMetrics.frameHeight,
+      widthFactor: cropMetrics.widthFactor,
+      heightFactor: cropMetrics.heightFactor,
+      offsetX: cropMetrics.offsetX,
+      offsetY: cropMetrics.offsetY
     }
 
     this.previewFrameTarget.classList.add("is-dragging")
@@ -170,19 +131,17 @@ export default class extends Controller {
 
     const deltaX = event.clientX - this.dragState.startClientX
     const deltaY = event.clientY - this.dragState.startClientY
-    const cropNaturalLeft = this.clamp(
-      this.dragState.cropNaturalLeft + ((deltaX / this.dragState.imageRectWidth) * this.dragState.naturalWidth),
-      0,
-      this.dragState.naturalWidth - this.dragState.visibleNaturalWidth
+    const offsetX = this.clampCropOffset(
+      this.dragState.offsetX + (deltaX / this.dragState.frameWidth),
+      this.dragState.widthFactor
     )
-    const cropNaturalTop = this.clamp(
-      this.dragState.cropNaturalTop + ((deltaY / this.dragState.imageRectHeight) * this.dragState.naturalHeight),
-      0,
-      this.dragState.naturalHeight - this.dragState.visibleNaturalHeight
+    const offsetY = this.clampCropOffset(
+      this.dragState.offsetY + (deltaY / this.dragState.frameHeight),
+      this.dragState.heightFactor
     )
 
-    const focusX = ((cropNaturalLeft + (this.dragState.visibleNaturalWidth / 2)) / this.dragState.naturalWidth) * 100
-    const focusY = ((cropNaturalTop + (this.dragState.visibleNaturalHeight / 2)) / this.dragState.naturalHeight) * 100
+    const focusX = ((0.5 - offsetX) / this.dragState.widthFactor) * 100
+    const focusY = ((0.5 - offsetY) / this.dragState.heightFactor) * 100
 
     this.focusXTarget.value = focusX
     this.focusYTarget.value = focusY
@@ -199,5 +158,38 @@ export default class extends Controller {
 
   clamp(value, min, max) {
     return Math.min(Math.max(value, min), max)
+  }
+
+  cropMetrics({ focusX, focusY, zoom }) {
+    const naturalWidth = this.previewImageTarget.naturalWidth
+    const naturalHeight = this.previewImageTarget.naturalHeight
+
+    if (!naturalWidth || !naturalHeight) return null
+
+    const frameRect = this.previewFrameTarget.getBoundingClientRect()
+    if (!frameRect.width || !frameRect.height) return null
+
+    const zoomScale = Math.max(zoom, 100) / 100
+    const imageRatio = naturalWidth / naturalHeight
+    const frameRatio = frameRect.width / frameRect.height
+    const focusXRatio = focusX / 100
+    const focusYRatio = focusY / 100
+
+    const [widthFactor, heightFactor] = imageRatio > frameRatio
+      ? [ (imageRatio / frameRatio) * zoomScale, zoomScale ]
+      : [ zoomScale, (frameRatio / imageRatio) * zoomScale ]
+
+    return {
+      frameWidth: frameRect.width,
+      frameHeight: frameRect.height,
+      widthFactor,
+      heightFactor,
+      offsetX: this.clampCropOffset(0.5 - (focusXRatio * widthFactor), widthFactor),
+      offsetY: this.clampCropOffset(0.5 - (focusYRatio * heightFactor), heightFactor)
+    }
+  }
+
+  clampCropOffset(offset, sizeFactor) {
+    return Math.max(Math.min(offset, 0), 1 - sizeFactor)
   }
 }
