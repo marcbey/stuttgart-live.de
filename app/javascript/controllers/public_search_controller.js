@@ -450,7 +450,7 @@ export default class extends Controller {
       return
     }
 
-    if (this.prefersReducedMotion || this.placeholderSequence.length <= 1) {
+    if (this.prefersReducedMotion || this.placeholderSequence.length === 0) {
       this.schedulePlaceholderAnimationStart({ animate: false })
       return
     }
@@ -786,7 +786,7 @@ export default class extends Controller {
   }
 
   shouldAnimatePlaceholder() {
-    return this.placeholderAnimationActive && !this.query.hasValue && !this.prefersReducedMotion && this.placeholderSequence.length > 1
+    return this.placeholderAnimationActive && !this.query.hasValue && !this.prefersReducedMotion && this.placeholderSequence.length > 0
   }
 
   renderPlaceholder(value) {
@@ -802,6 +802,10 @@ export default class extends Controller {
   }
 
   cursorBlinkSteps(entry) {
+    if (entry.cursorBlinks === null) {
+      return Number.POSITIVE_INFINITY
+    }
+
     if (entry.holdMs > 0) {
       return Math.max(Math.round(entry.holdMs / PLACEHOLDER_CURSOR_BLINK_DELAY), 0)
     }
@@ -1007,7 +1011,7 @@ export default class extends Controller {
     return (this.hasPlaceholderSequenceValue ? this.placeholderSequenceValue : [])
       .map((entry) => ({
         text: typeof entry?.text === "string" ? entry.text : "",
-        cursorBlinks: Number(entry?.cursor_blinks ?? entry?.cursorBlinks ?? 0),
+        cursorBlinks: entry?.cursor_blinks === null || entry?.cursorBlinks === null ? null : Number(entry?.cursor_blinks ?? entry?.cursorBlinks ?? 0),
         holdMs: Number(entry?.hold_ms ?? entry?.holdMs ?? 0),
         instant: entry?.instant === true,
         repeat: entry?.repeat !== false

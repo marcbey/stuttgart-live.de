@@ -4,22 +4,7 @@ module Public::EventsHelper
   require "digest"
 
   PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE = [
-    { text: "Suche nach Künstlern und Events in Stuttgart", cursor_blinks: 2, hold_ms: 5000, repeat: false },
-    { text: "Diesen Freitag im Wizemann", cursor_blinks: 6 },
-    { text: "Heute im Goldmarks", cursor_blinks: 0 },
-    { text: "Diese Woche in der Porsche-Arena", cursor_blinks: 0 },
-    { text: "Rock", cursor_blinks: 2 },
-    { text: "Übermorgen im LKA Longhorn", cursor_blinks: 2 },
-    { text: "Morgen in der Liederhalle", cursor_blinks: 0 },
-    { text: "Theater", cursor_blinks: 4 },
-    { text: "Am 12.04. in der Schleyer-Halle", cursor_blinks: 8 },
-    { text: "Dieses Wochenende im Club Zentral", cursor_blinks: 4 },
-    { text: "Am 12.04.", cursor_blinks: 2 },
-    { text: "Nächsten Monat im Theaterhaus", cursor_blinks: 4 },
-    { text: "Nächste Woche in der Schleyer-Halle", cursor_blinks: 5 },
-    { text: "Im Juni im Kulturquartier", cursor_blinks: 3 },
-    { text: "Am Wochenende in der Staatsoper", cursor_blinks: 4 },
-    { text: "Im April in der Wagenhallen", cursor_blinks: 3 }
+    { text: "Suche nach Künstlern und Events in Stuttgart", cursor_blinks: nil, repeat: false }
   ].freeze
 
   PUBLIC_SEARCH_PLACEHOLDER_PHRASES = [

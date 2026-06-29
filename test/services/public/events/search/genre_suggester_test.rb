@@ -8,13 +8,21 @@ class Public::Events::Search::GenreSuggesterTest < ActiveSupport::TestCase
       "Pop, Indie & Singer-Songwriter",
       "Rock & Alternative",
       "Metal, Punk & Hardcore",
-      "Hip-Hop & R’n’B"
+      "Hip-Hop & R’n’B",
+      "Electronic Music & EDM",
+      "Jazz, Blues & Soul",
+      "Klassik & Oper",
+      "Musical & Theater"
     ], suggestions.map(&:name)
     assert_equal [
       "/pop-indie-singer-songwriter",
       "/rock-alternative",
       "/metal-punk-hardcore",
-      "/hip-hop-r-n-b"
+      "/hip-hop-r-n-b",
+      "/electronic-music-edm",
+      "/jazz-blues-soul",
+      "/klassik-oper",
+      "/musical-theater"
     ], suggestions.map(&:path)
   end
 

@@ -2,12 +2,16 @@ module Public
   module Events
     module Search
       class GenreSuggester
-        DEFAULT_LIMIT = 5
+        DEFAULT_LIMIT = 8
         DEFAULT_GENRE_NAMES = [
           "Pop, Indie & Singer-Songwriter",
           "Rock & Alternative",
           "Metal, Punk & Hardcore",
-          "Hip-Hop & R’n’B"
+          "Hip-Hop & R’n’B",
+          "Electronic Music & EDM",
+          "Jazz, Blues & Soul",
+          "Klassik & Oper",
+          "Musical & Theater"
         ].freeze
 
         Suggestion = Data.define(:name, :slug, :path)

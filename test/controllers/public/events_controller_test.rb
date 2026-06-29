@@ -2728,6 +2728,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all", view: "list")
 
     assert_response :success
+    assert_equal [ "Suche nach Künstlern und Events in Stuttgart" ], placeholder_phrases
+    assert_equal [ { text: "Suche nach Künstlern und Events in Stuttgart", cursor_blinks: nil, repeat: false } ], placeholder_sequence
     assert_select ".app-nav-search .public-search-filter", count: 1
     assert_select ".app-nav-search .public-search-filter[action='#{search_path}']"
     form = css_select(".app-nav-search .public-search-filter").first
@@ -2744,6 +2746,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-search #public-search-calendar.public-search-calendar-overlay[hidden]", count: 1
     assert_select ".app-nav-search [data-public-search-target='calendarMonthLabel']", count: 1
     assert_select ".app-nav-search [data-public-search-target='calendarGrid']", count: 1
+    header_genres = css_select(".app-nav-hotline-genre").map { |link| link.text.strip }
+    assert_equal "PUNK & METAL", header_genres[2]
+    assert_equal "HIP-HOP", header_genres[3]
+    assert_select ".app-nav-hotline-genre[href='#{genre_lane_path('hip-hop-r-n-b')}']", text: "HIP-HOP", count: 1
 
     assert_select ".public-filter-row", count: 0
     assert_select ".public-view-toggle", count: 0

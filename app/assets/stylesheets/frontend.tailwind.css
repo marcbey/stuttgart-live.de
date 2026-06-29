@@ -10081,9 +10081,8 @@ display: inline-flex;
 body.page-public-events-index .app-nav-hotline-genre:hover,
 body.page-public-events-index .app-nav-hotline-genre:focus-visible {
 border-color: rgba(0, 150, 156, 0.62);
-  background: rgba(204, 240, 243, 0.96);
+  background: #fff;
   color: #0a2324;
-  transform: translateY(-1px);
 }
 
 body.page-public-events-index .app-nav-hotline-genre:focus-visible {
