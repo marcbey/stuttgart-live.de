@@ -91,6 +91,34 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     assert_equal [ matching_event ], result.to_a
   end
 
+  test "filters by structured date range query" do
+    travel_to(Time.zone.parse("2026-04-07 10:00:00")) do
+      first_event = create_visible_event(
+        title: "Range First",
+        artist_name: "Range Artist One",
+        start_at: Time.zone.parse("2026-04-10 20:00:00")
+      )
+      second_event = create_visible_event(
+        title: "Range Second",
+        artist_name: "Range Artist Two",
+        start_at: Time.zone.parse("2026-04-12 20:00:00")
+      )
+      create_visible_event(
+        title: "Range Later",
+        artist_name: "Range Artist Later",
+        start_at: Time.zone.parse("2026-04-13 20:00:00")
+      )
+
+      result = Public::VisibleEventsQuery.new(
+        scope: Event.published_live,
+        filter: Public::VisibleEventsQuery::FILTER_ALL,
+        query: "von 10.4.2026 bis 12.4.2026"
+      ).call
+
+      assert_equal [ first_event, second_event ], result.to_a
+    end
+  end
+
   test "matches german umlaut spellings via normalized query variants" do
     matching_event = create_visible_event(
       title: "Die Ärzte live",

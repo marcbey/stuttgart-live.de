@@ -62,11 +62,14 @@ class Public::Events::Search::AnalyzerTest < ActiveSupport::TestCase
   test "resolves complete month and date phrases" do
     month = analyze("im April")
     date = analyze("am 1.4.2026")
+    date_range = analyze("von 1.4.2026 bis 3.4.2026")
 
     assert month.time_complete?
     assert_equal :month, month.resolution.type
     assert date.time_complete?
     assert_equal :date, date.resolution.type
+    assert date_range.time_complete?
+    assert_equal :date_range, date_range.resolution.type
   end
 
   test "parses structured queries with venue glue" do
@@ -84,6 +87,7 @@ class Public::Events::Search::AnalyzerTest < ActiveSupport::TestCase
     assert_equal [ :venue_fragment, "im", "wi" ], state_summary("im April im Wi")
     assert_equal [ :venue_fragment, "in der", "wi" ], state_summary("im April in der Wi")
     assert_equal [ :venue_fragment, "im", "li" ], state_summary("am 1.4. im Li")
+    assert_equal [ :venue_fragment, "im", "li" ], state_summary("von 1.4.2026 bis 3.4.2026 im Li")
   end
 
   private

@@ -67,6 +67,7 @@ module Public
           static_result ||
             weekday_result ||
             month_result ||
+            date_range_result ||
             date_result ||
             fallback_result
         end
@@ -163,6 +164,14 @@ module Public
           return incomplete_result(suggestions: []) if fragment.match?(/\A\d{1,2}(?:\.\d{0,2}(?:\.\d{0,4})?)?\z/)
 
           nil
+        end
+
+        def date_range_result
+          match = canonical_query.match(/\Avon\s+(\d{1,2}\.\d{1,2}\.(?:\d{4})?)\s+bis\s+(\d{1,2}\.\d{1,2}\.(?:\d{4})?)(?:\s+(.*))?\z/)
+          return unless match
+
+          resolution = TimePhraseResolver.resolve(type: :date_range, value: [ match[1], match[2] ])
+          maybe_match_venue_tail(resolution, remainder: match[3].to_s.strip)
         end
 
         def match_resolution(canonical_phrase:, resolution_type:, label:)

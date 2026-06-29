@@ -2234,6 +2234,17 @@ background: #ffa5dc;
   box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.2);
 }
 
+.public-search-calendar-day-in-range {
+background: rgba(255, 165, 220, 0.22);
+}
+
+.public-search-calendar-day-range-edge,
+.public-search-calendar-day-selected.public-search-calendar-day-range-edge {
+background: #ffa5dc;
+  color: #0a2324;
+  box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.2);
+}
+
 .public-search-overlay-empty {
 padding-left: 1rem;
   padding-right: 1rem;

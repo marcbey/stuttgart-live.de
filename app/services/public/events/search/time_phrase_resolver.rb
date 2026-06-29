@@ -109,6 +109,8 @@ module Public
             month_resolution(month_key: value)
           when :date
             explicit_date_resolution(raw_date: value)
+          when :date_range
+            explicit_date_range_resolution(raw_range: value)
           else
             raise ArgumentError, "Unsupported time phrase type: #{type.inspect}"
           end
@@ -226,6 +228,22 @@ module Public
             to: date.end_of_day.in_time_zone,
             label: "Am #{display_date(raw_date)}",
             canonical_phrase: "am #{Normalizer.normalize_parser(raw_date)}"
+          )
+        end
+
+        def explicit_date_range_resolution(raw_range:)
+          from_date, to_date = raw_range
+          from_resolution = explicit_date_resolution(raw_date: from_date)
+          to_resolution = explicit_date_resolution(raw_date: to_date)
+          range_start = [ from_resolution.from, to_resolution.from ].min
+          range_end = [ from_resolution.to, to_resolution.to ].max
+
+          Resolution.new(
+            type:,
+            from: range_start,
+            to: range_end,
+            label: "Von #{display_date(from_date)} bis #{display_date(to_date)}",
+            canonical_phrase: "von #{Normalizer.normalize_parser(from_date)} bis #{Normalizer.normalize_parser(to_date)}"
           )
         end
 

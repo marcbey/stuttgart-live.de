@@ -2941,6 +2941,55 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".newsletter-signup-section", count: 1
   end
 
+  test "search renders events within a selected date range" do
+    range_start = 10.days.from_now.to_date
+    range_end = range_start + 2.days
+    range_query = "von #{range_start.day}.#{range_start.month}.#{range_start.year} bis #{range_end.day}.#{range_end.month}.#{range_end.year}"
+    first_event = Event.create!(
+      slug: "search-range-first",
+      source_fingerprint: "test::search::range::first",
+      title: "Search Range First",
+      artist_name: "Search Range First Artist",
+      start_at: range_start.in_time_zone.change(hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    second_event = Event.create!(
+      slug: "search-range-second",
+      source_fingerprint: "test::search::range::second",
+      title: "Search Range Second",
+      artist_name: "Search Range Second Artist",
+      start_at: range_end.in_time_zone.change(hour: 20, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    Event.create!(
+      slug: "search-range-later",
+      source_fingerprint: "test::search::range::later",
+      title: "Search Range Later",
+      artist_name: "Search Range Later Artist",
+      start_at: (range_end + 1.day).in_time_zone.change(hour: 20, min: 0, sec: 0),
+      venue: "Theaterhaus",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get search_url(q: range_query)
+
+    assert_response :success
+    assert_includes response.body, first_event.artist_name
+    assert_includes response.body, second_event.artist_name
+    assert_not_includes response.body, "Search Range Later Artist"
+  end
+
   test "search renders all matching results without pagination" do
     13.times do |index|
       Event.create!(

@@ -21,7 +21,8 @@ export default class extends Controller {
     "calendarButton",
     "calendarPanel",
     "calendarMonthLabel",
-    "calendarGrid"
+    "calendarGrid",
+    "eventDateInput"
   ]
   static values = {
     searchUrl: String,
@@ -40,6 +41,8 @@ export default class extends Controller {
     this.hasShownInitialPlaceholder = false
     this.calendarDate = this.initialCalendarDate()
     this.selectedCalendarDate = this.selectedDateFromQuery()
+    this.selectedCalendarRange = this.selectedRangeFromQuery()
+    this.pendingRangeStart = this.selectedCalendarRange?.start || this.selectedCalendarDate
     this.boundHandlePointerDown = this.handlePointerDown.bind(this)
     this.boundHandleDocumentKeydown = this.handleDocumentKeydown.bind(this)
     this.boundHandleReducedMotionChange = this.handleReducedMotionChange.bind(this)
@@ -276,9 +279,22 @@ export default class extends Controller {
       return
     }
 
-    this.selectedCalendarDate = selectedDate
+    if (!this.pendingRangeStart || this.rangeComplete) {
+      this.pendingRangeStart = selectedDate
+      this.selectedCalendarDate = selectedDate
+      this.selectedCalendarRange = null
+      this.renderCalendar()
+      return
+    }
+
+    const rangeStart = this.earlierDate(this.pendingRangeStart, selectedDate)
+    const rangeEnd = this.laterDate(this.pendingRangeStart, selectedDate)
+    this.selectedCalendarRange = { start: rangeStart, end: rangeEnd }
+    this.selectedCalendarDate = null
+    this.pendingRangeStart = rangeStart
     this.calendarDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
-    this.inputTarget.value = this.formatCalendarQuery(selectedDate)
+    this.inputTarget.value = this.formatCalendarRangeQuery(rangeStart, rangeEnd)
+    this.clearEventDateInput()
     this.syncControls()
     this.syncPlaceholderAnimation()
     this.closeCalendar()
@@ -580,7 +596,10 @@ export default class extends Controller {
   openCalendar() {
     this.closeSearchPanel()
     this.pausePlaceholderForCalendar()
-    this.calendarDate = this.selectedDateFromQuery() || this.calendarDate || this.today
+    this.selectedCalendarRange = this.selectedRangeFromQuery()
+    this.selectedCalendarDate = this.selectedDateFromQuery()
+    this.pendingRangeStart = this.selectedCalendarRange?.start || this.selectedCalendarDate
+    this.calendarDate = this.selectedCalendarRange?.start || this.selectedCalendarDate || this.calendarDate || this.today
     this.renderCalendar()
     this.calendarPanelTarget.hidden = false
     this.calendarButtonTarget.setAttribute("aria-expanded", "true")
@@ -617,8 +636,11 @@ export default class extends Controller {
     const monthStart = new Date(this.calendarDate.getFullYear(), this.calendarDate.getMonth(), 1)
     const gridStart = this.calendarGridStart(monthStart)
     const todayKey = this.dateKey(this.today)
-    const selectedDate = this.selectedDateFromQuery() || this.selectedCalendarDate
+    const selectedRange = this.selectedRangeFromQuery() || this.selectedCalendarRange
+    const selectedDate = selectedRange?.start || this.selectedDateFromQuery() || this.selectedCalendarDate
     const selectedKey = selectedDate ? this.dateKey(selectedDate) : null
+    const selectedRangeStartKey = selectedRange ? this.dateKey(selectedRange.start) : null
+    const selectedRangeEndKey = selectedRange ? this.dateKey(selectedRange.end) : null
     const fragment = document.createDocumentFragment()
 
     this.calendarMonthLabelTarget.textContent = CALENDAR_MONTH_FORMATTER.format(monthStart)
@@ -648,6 +670,14 @@ export default class extends Controller {
 
       if (dateKey === todayKey) {
         dayButton.classList.add("public-search-calendar-day-today")
+      }
+
+      if (selectedRange && this.dateInRange(date, selectedRange)) {
+        dayButton.classList.add("public-search-calendar-day-in-range")
+      }
+
+      if (dateKey === selectedRangeStartKey || dateKey === selectedRangeEndKey) {
+        dayButton.classList.add("public-search-calendar-day-range-edge")
       }
 
       if (dateKey === selectedKey) {
@@ -792,6 +822,24 @@ export default class extends Controller {
     return date
   }
 
+  selectedRangeFromQuery() {
+    const match = this.inputTarget.value.trim().match(/^von\s+(\d{1,2})\.(\d{1,2})\.(\d{4})\s+bis\s+(\d{1,2})\.(\d{1,2})\.(\d{4})$/i)
+    if (!match) {
+      return null
+    }
+
+    const start = new Date(Number(match[3]), Number(match[2]) - 1, Number(match[1]))
+    const end = new Date(Number(match[6]), Number(match[5]) - 1, Number(match[4]))
+    if (!this.validDateParts(start, Number(match[3]), Number(match[2]), Number(match[1])) || !this.validDateParts(end, Number(match[6]), Number(match[5]), Number(match[4]))) {
+      return null
+    }
+
+    return {
+      start: this.earlierDate(start, end),
+      end: this.laterDate(start, end)
+    }
+  }
+
   initialCalendarDate() {
     const selectedDate = this.selectedDateFromQuery()
     const date = selectedDate || this.today
@@ -823,6 +871,41 @@ export default class extends Controller {
 
   formatCalendarQuery(date) {
     return `am ${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`
+  }
+
+  formatCalendarRangeQuery(start, end) {
+    if (this.dateKey(start) === this.dateKey(end)) {
+      return this.formatCalendarQuery(start)
+    }
+
+    return `von ${start.getDate()}.${start.getMonth() + 1}.${start.getFullYear()} bis ${end.getDate()}.${end.getMonth() + 1}.${end.getFullYear()}`
+  }
+
+  validDateParts(date, year, month, day) {
+    return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
+  }
+
+  dateInRange(date, range) {
+    const key = this.dateKey(date)
+    return key >= this.dateKey(range.start) && key <= this.dateKey(range.end)
+  }
+
+  earlierDate(first, second) {
+    return this.dateKey(first) <= this.dateKey(second) ? first : second
+  }
+
+  laterDate(first, second) {
+    return this.dateKey(first) >= this.dateKey(second) ? first : second
+  }
+
+  clearEventDateInput() {
+    if (this.hasEventDateInputTarget) {
+      this.eventDateInputTarget.value = ""
+    }
+  }
+
+  get rangeComplete() {
+    return this.selectedCalendarRange?.start && this.selectedCalendarRange?.end
   }
 
   isTypingContext(target) {

@@ -10,7 +10,9 @@
                 public_search_search_url_value: search_overlay_events_path,
                 public_search_placeholder_sequence_value: placeholder_sequence.to_json
               } do %>
-  <%= hidden_field_tag :event_date, browse_state.event_date_param %>
+  <%= hidden_field_tag :event_date,
+                       browse_state.event_date_param,
+                       data: { public_search_target: "eventDateInput" } %>
   <div class="public-search-field">
     <p class="sr-only" id="public-search-help">
       Beim Tippen erscheint eine Ergebnisliste mit zukünftigen Events.

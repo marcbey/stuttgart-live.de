@@ -100,6 +100,16 @@ class Public::Events::Search::TimePhraseResolverTest < ActiveSupport::TestCase
     end
   end
 
+  test "resolves explicit date ranges" do
+    travel_to(Time.zone.parse("2026-04-07 12:00:00")) do
+      resolution = resolve(type: :date_range, value: [ "10.4.2026", "12.4.2026" ])
+
+      assert_equal Date.new(2026, 4, 10), resolution.from.to_date
+      assert_equal Date.new(2026, 4, 12), resolution.to.to_date
+      assert_equal "Von 10.4.2026 bis 12.4.2026", resolution.label
+    end
+  end
+
   private
 
   def resolve(type:, value: nil)
