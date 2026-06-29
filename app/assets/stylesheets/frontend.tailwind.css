@@ -5265,6 +5265,10 @@ white-space: nowrap;
   text-overflow: ellipsis;
 }
 
+.home-featured-track .event-card-grid-1-2 .event-card-copy {
+padding-bottom: calc(20px + 1.35rem);
+}
+
 .home-featured-track .event-card-ticket-overlay {
 align-content: start;
   gap: 0.52rem;
