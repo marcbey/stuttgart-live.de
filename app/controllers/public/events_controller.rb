@@ -625,7 +625,7 @@ module Public
         event_date: Time.zone.today,
         query: nil
       )
-        .reorder(:start_at, :id)
+        .reorder(Arel.sql(Event.search_priority_order_sql), :start_at, :id)
     end
 
     def assign_lane_page(lane)

@@ -11,12 +11,25 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "meta[name='description']", count: 1
     assert_select "link[rel='canonical'][href=?]", contact_url
-    assert_select ".app-nav-links .app-nav-link-active", text: "Kontakt"
-    assert_includes response.body, "Bestell-Hotline"
+    assert_select ".app-nav-links .app-nav-link[href=?]", tickets_path, text: "Tickets"
+    assert_select ".app-nav-links .app-nav-link-active", text: "Tickets", count: 0
+    assert_includes response.body, "Ticketservice"
+    assert_includes response.body, "E-Mail vorbereiten"
     assert_includes response.body, "arnulfwoock@russ-live.de"
-    assert_select ".static-page-article", count: 1
-    assert_select ".static-page-rich-copy h2", count: 4
-    assert_select ".info-page-card", count: 0
+    assert_select ".static-page-article", count: 0
+    assert_select ".info-page-card", count: 5
+  end
+
+  test "contact page renders form when stored content has no form" do
+    StaticPage.find_by!(slug: "kontakt").update!(
+      body: "<h2>Bestell-Hotline</h2><p>Telefon: 0711 – 550 660 77</p>"
+    )
+
+    get contact_url
+
+    assert_response :success
+    assert_select "form.contact-mail-form[action='mailto:info@stuttgart-live.de']", count: 1
+    assert_select ".contact-mail-form textarea[name='Nachricht']", count: 1
   end
 
   test "imprint page is publicly accessible" do
@@ -54,6 +67,26 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "Kontakt"
     assert_includes response.body, "0711"
+
+    get tickets_url
+
+    assert_response :success
+    assert_includes response.body, "Tickets"
+    assert_includes response.body, "Tickets online kaufen"
+    assert_includes response.body, "Easy Ticket"
+    assert_select "link[rel='canonical'][href=?]", tickets_url
+
+    get faq_url
+
+    assert_response :success
+    assert_includes response.body, "FAQ"
+    assert_includes response.body, "Wie kann ich sehen, wo mein Platz ist?"
+
+    get about_url
+
+    assert_response :success
+    assert_includes response.body, "Über uns"
+    assert_includes response.body, "Südwestdeutschen Konzertdirektion"
 
     get barrierefreiheit_url
 
@@ -134,6 +167,9 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".site-footer-nav a", text: "Impressum"
     assert_select ".site-footer-nav a", text: "AGB"
     assert_select ".site-footer-nav a", text: "Barrierefreiheit"
+    assert_select ".site-footer-nav a", text: "FAQ"
+    assert_select ".site-footer-nav a", text: "Über uns"
+    assert_select ".site-footer-nav a", text: "Kontakt"
     assert_select "#site-footer > .privacy-settings-button[aria-label='Datenschutzeinstellungen öffnen']", count: 1
     assert_includes response.body, "Google Analytics"
     assert_includes response.body, "Meta Pixel"

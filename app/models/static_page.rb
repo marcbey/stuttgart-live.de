@@ -4,7 +4,10 @@ class StaticPage < ApplicationRecord
     "imprint" => "impressum",
     "terms" => "agb",
     "accessibility" => "barrierefreiheit",
-    "contact" => "kontakt"
+    "contact" => "kontakt",
+    "faq" => "faq",
+    "about" => "ueber-uns",
+    "tickets" => "tickets"
   }.freeze
 
   RESERVED_SLUGS = %w[
@@ -21,6 +24,8 @@ class StaticPage < ApplicationRecord
     highlights
     impressum
     kontakt
+    faq
+    ueber-uns
     login
     news
     passwords
@@ -28,6 +33,7 @@ class StaticPage < ApplicationRecord
     search
     session
     tagestipp
+    tickets
     up
     agb
     alles-aus-stuttgart

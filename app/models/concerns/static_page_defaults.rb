@@ -312,31 +312,224 @@ module StaticPageDefaults
         HTML
       },
       {
+        system_key: "tickets",
+        slug: "tickets",
+        title: "Tickets",
+        kicker: nil,
+        intro: "Informationen zu Ticketkauf, Partnershops und dem direkten Ticketservice von Stuttgart Live.",
+        body: <<~HTML
+          <div class="info-page-card">
+            <h2>Tickets online kaufen</h2>
+            <p>Tickets für viele Veranstaltungen sind direkt über unsere angebundenen Partnershops erhältlich. Die Links führen jeweils zum passenden Ticketanbieter.</p>
+            <p>
+              <a href="https://partnershop.easyticket.de/3b38659fef6bcc38e100c728435ba8e9/" target="_blank" rel="noopener">Easy Ticket</a><br>
+              <a href="https://www.eventim.de/?affiliate=SRU" target="_blank" rel="noopener">Eventim</a><br>
+              <a href="https://stuttgart-live.reservix.de/events" target="_blank" rel="noopener">Reservix</a>
+            </p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Ticketservice</h2>
+            <p>Bei Fragen zu Bestellungen, Versand oder Abholung hilft unser Ticketservice gerne weiter.</p>
+            <p>Telefon: <a href="tel:+4971155066077">0711 – 550 660 77</a></p>
+            <p>E-Mail: <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a></p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Tickets an der Abendkasse</h2>
+            <p>Ob es eine Abendkasse gibt, hängt von der jeweiligen Veranstaltung ab. Hinweise dazu stehen nach Möglichkeit direkt beim Event.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Verlegte oder abgesagte Veranstaltungen</h2>
+            <p>Bei Terminänderungen gelten die Informationen des jeweiligen Veranstalters oder Ticketanbieters. Bereits gekaufte Tickets behalten in der Regel ihre Gültigkeit, sofern nichts anderes angegeben ist.</p>
+          </div>
+        HTML
+      },
+      {
         system_key: "contact",
         slug: "kontakt",
         title: "Kontakt",
-        kicker: "Service",
-        intro: "Direkte Ansprechpartner für Bestellungen, Presse und Veranstaltungsnews.",
+        kicker: nil,
+        intro: "Direkte Ansprechpartner für Tickets, Presse und Veranstaltungsnews.",
         body: <<~HTML
-          <h2>Bestell-Hotline</h2>
-          <p>Telefon: <a href="tel:+4971155066077">0711 – 550 660 77</a></p>
-          <p>Mailorder: <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a></p>
+          <div class="info-page-card info-page-card-wide contact-form-card">
+            <h2>Nachricht schreiben</h2>
+            <form class="contact-mail-form" action="mailto:info@stuttgart-live.de" method="post" enctype="text/plain">
+              <label>
+                <span>Name</span>
+                <input type="text" name="Name" autocomplete="name">
+              </label>
+              <label>
+                <span>E-Mail</span>
+                <input type="email" name="E-Mail" autocomplete="email">
+              </label>
+              <label class="contact-mail-form-full">
+                <span>Nachricht</span>
+                <textarea name="Nachricht" rows="6"></textarea>
+              </label>
+              <button type="submit">E-Mail vorbereiten</button>
+            </form>
+          </div>
 
-          <h2>Pressekontakt</h2>
-          <p>Arnulf Woock</p>
-          <p>Charlottenplatz 17, 70173 Stuttgart</p>
-          <p>Fon <a href="tel:+497111635320">+49 (0) 711 16 353 20</a></p>
-          <p>Mail <a href="mailto:arnulfwoock@russ-live.de">arnulfwoock@russ-live.de</a></p>
+          <div class="info-page-card">
+            <h2>Ticketservice</h2>
+            <p>Telefon: <a href="tel:+4971155066077">0711 – 550 660 77</a></p>
+            <p>Mailorder: <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a></p>
+          </div>
 
-          <h2>Veranstaltungsnews</h2>
-          <p>Bitte schicken Sie Ihre Veranstaltungs- und Pressenews an <a href="mailto:news@stuttgart-live.de">news@stuttgart-live.de</a>.</p>
+          <div class="info-page-card">
+            <h2>Pressekontakt</h2>
+            <p>Arnulf Woock</p>
+            <p>Charlottenplatz 17, 70173 Stuttgart</p>
+            <p>Fon <a href="tel:+497111635320">+49 (0) 711 16 353 20</a></p>
+            <p>Mail <a href="mailto:arnulfwoock@russ-live.de">arnulfwoock@russ-live.de</a></p>
+          </div>
 
-          <h2>Folgen Sie uns online</h2>
-          <p>
-            <a href="https://www.facebook.com/stuttgartlive" target="_blank" rel="noopener">Facebook</a>
-            <a href="https://www.instagram.com/stuttgartlive/" target="_blank" rel="noopener">Instagram</a>
-            <a href="https://www.tiktok.com/@stuttgartlive" target="_blank" rel="noopener">TikTok</a>
-          </p>
+          <div class="info-page-card">
+            <h2>Veranstaltungsnews</h2>
+            <p>Bitte schicken Sie Ihre Veranstaltungs- und Pressenews an <a href="mailto:news@stuttgart-live.de">news@stuttgart-live.de</a>.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Social Media</h2>
+            <p>
+              <a href="https://www.facebook.com/stuttgartlive" target="_blank" rel="noopener">Facebook</a><br>
+              <a href="https://www.instagram.com/stuttgart.live.concert/" target="_blank" rel="noopener">Instagram</a><br>
+              <a href="https://www.tiktok.com/@stuttgart.live.concert" target="_blank" rel="noopener">TikTok</a>
+            </p>
+          </div>
+        HTML
+      },
+      {
+        system_key: "faq",
+        slug: "faq",
+        title: "FAQ",
+        kicker: nil,
+        intro: "Antworten auf die häufigsten Fragen rund um Tickets, Versand, Abholung und Ermäßigungen.",
+        body: <<~HTML
+          <div class="info-page-card">
+            <h2>Wie kann ich sehen, wo mein Platz ist?</h2>
+            <p>Bei vielen Veranstaltungen können Plätze direkt über eine Saalplanbuchung ausgewählt werden. Dort wählen Sie Kategorie, Platz und bei Bedarf weitere Plätze aus.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Wann und wie erhalte ich meine Tickets?</h2>
+            <p>Online- und Mailorder-Bestellungen werden in der Regel postalisch zugestellt. Wir empfehlen versicherten Versand, da verlorene Tickets nicht immer ersetzt werden können.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Was passiert mit meinen Daten?</h2>
+            <p>Die Daten werden beim jeweiligen Ticketsystem für den Bestellvorgang verarbeitet. Hinterlegte E-Mail-Adressen oder Telefonnummern helfen, wenn es Verlegungen, Absagen oder Rückfragen zur Bestellung gibt.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Was passiert bei Verlegung oder Absage?</h2>
+            <p>Bereits gekaufte Karten behalten bei Verlegungen in der Regel ihre Gültigkeit. Informationen kommen vom Veranstalter, vom Veranstaltungsort oder über den jeweiligen Ticketanbieter.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Kann ich zu viel gekaufte Karten zurückgeben?</h2>
+            <p>Eintrittskarten sind grundsätzlich von Umtausch und Rückgabe ausgeschlossen. Privater Weiterverkauf ist nur ohne Preisaufschlag zulässig.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Wie finde ich den Veranstaltungsort?</h2>
+            <p>Der Veranstaltungsort ist bei jeder Veranstaltung aufgeführt. Dort finden Sie Adresse, Karte und meist auch weitere Anfahrtsinformationen des jeweiligen Hauses.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Darf ich Ton, Film oder Video aufnehmen?</h2>
+            <p>Ton-, Film- und Videoaufzeichnungen sind bei Veranstaltungen in der Regel nicht gestattet.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Dürfen Kinder oder Jugendliche alleine kommen?</h2>
+            <p>Altersfreigaben und Begleitregelungen hängen von Veranstaltung, Uhrzeit und Lautstärke ab. Wenn nichts Konkretes angegeben ist, fragen Sie bitte beim Team oder Veranstalter nach.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Ist die Fahrt mit öffentlichen Verkehrsmitteln inklusive?</h2>
+            <p>Ob ein Ticket zur kostenfreien ÖPNV-Nutzung berechtigt, steht auf der jeweiligen Veranstaltungsseite oder im Ticketshop.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Was darf ich mitnehmen?</h2>
+            <p>Glas, Dosen, pyrotechnische Gegenstände, Waffen sowie große Taschen oder Rucksäcke sind häufig untersagt. Details können je nach Veranstaltung und Veranstaltungsort abweichen.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Darf ich Getränke, Verpflegung oder Regenschirme mitnehmen?</h2>
+            <p>Eigene Getränke und Verpflegung sind im Allgemeinen nicht erlaubt. Regenschirme sind bei Open-Air-Veranstaltungen aus Sicherheits- und Sichtgründen meist ausgeschlossen.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Was tun bei Kartenverlust?</h2>
+            <p>Bitte wenden Sie sich mit Ihren Bestelldaten an den Kartenservice unter <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a>.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Rollstuhlfahrer und Menschen mit Behinderung</h2>
+            <p>Für Rollstuhlfahrerbereiche werden meist gesonderte Tickets benötigt. Informationen dazu finden Sie beim Veranstalter, Veranstaltungsort oder über den Ticketservice.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Feedback zu einer Veranstaltung</h2>
+            <p>Bei Problemen vor Ort wenden Sie sich bitte direkt an Kasse, Ordner oder Hallen- bzw. Clubverwaltung. Spätere Reklamationen lassen sich oft nur eingeschränkt klären.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Übernachtungen in Stuttgart</h2>
+            <p>Informationen zu Übernachtungen bietet die Touristik-Information Stuttgart. Für Wohnmobile empfiehlt sich der Stuttgarter Campingplatz.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Gesundheit und Sicherheit</h2>
+            <p>Bitte achten Sie auf Gehörschutz, besonders bei Kindern, und trinken Sie ausreichend. Für medizinische Notfälle sind Sanitäter oder Ärzte vor Ort über das Ordnungspersonal erreichbar.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Ich habe weitere Fragen</h2>
+            <p>Der Ticketservice hilft telefonisch unter <a href="tel:+4971155066077">0711 – 550 660 77</a> oder per E-Mail an <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a>.</p>
+          </div>
+        HTML
+      },
+      {
+        system_key: "about",
+        slug: "ueber-uns",
+        title: "Über uns",
+        kicker: nil,
+        intro: "Stuttgart Live bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region.",
+        body: <<~HTML
+          <div class="info-page-card">
+            <h2>Stuttgart Live</h2>
+            <p>Stuttgart Live ist ein Angebot der Südwestdeutschen Konzertdirektion Erwin Russ GmbH und Teil der Konzertdirektion Russ, einer der ältesten Konzertdirektionen in Deutschland.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Russ Klassik und Russ Live</h2>
+            <p>Die SKS Erwin Russ steht für hochwertige Klassik. Die SKS Michael Russ realisiert Unterhaltung vom kleinen Club bis zum Open Air, von Shows bis zu internationalen Stars.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Events und Dienstleistungen</h2>
+            <p>Neben eigenen Veranstaltungen unterstützt Russ Unternehmen bei großen Shows und Events, Produkteinführungen, Industriemessen und Firmenjubiläen inklusive individueller Organisation und Sicherheitskonzepten.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Premiumpartner</h2>
+            <p>Zu den Ticketpartnern gehören Easy Ticket, Reservix und Eventim. Weitere Partner kommen unter anderem aus Mobilität, Hören, Optik und Gastronomie.</p>
+          </div>
+
+          <div class="info-page-card">
+            <h2>Engagement</h2>
+            <p>Stuttgart Live und die Konzertdirektion Russ unterstützen regionale Kultur-, Sozial- und Bildungsprojekte sowie Branchenverbände.</p>
+          </div>
+
+          <div class="info-page-card info-page-card-wide">
+            <h2>Kontakt</h2>
+            <p>Fragen zur Website, zu Tickets oder zu Veranstaltungen beantwortet das Stuttgart-Live-Team unter <a href="mailto:info@stuttgart-live.de">info@stuttgart-live.de</a>.</p>
+          </div>
         HTML
       }
     ]

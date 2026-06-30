@@ -100,8 +100,26 @@
     </div>
   <% end %>
 <% else %>
-  <% if overlay.genre_suggestions? %>
+  <% show_today_link = overlay.idle? %>
+
+  <% if show_today_link || overlay.genre_suggestions? %>
     <ul class="public-search-overlay-list" role="list">
+      <% if show_today_link %>
+        <li>
+          <%= link_to tagestipp_lane_path,
+                      class: "public-search-result public-search-result-compact",
+                      data: {
+                        public_search_result: true,
+                        action: "keydown->public-search#handleResultKeydown"
+                      } do %>
+            <span class="public-search-result-copy">
+              <strong class="public-search-result-artist">HEUTE</strong>
+            </span>
+            <span class="public-search-result-arrow" aria-hidden="true">→</span>
+          <% end %>
+        </li>
+      <% end %>
+
       <% overlay.genres.each do |genre| %>
         <li>
           <%= link_to genre.path,
@@ -132,7 +150,7 @@
         </li>
       <% end %>
     </ul>
-  <% elsif !overlay.genre_suggestions? %>
+  <% elsif !overlay.genre_suggestions? && !show_today_link %>
     <div class="public-search-overlay-empty">
       <h2>Empfohlen für dich</h2>
       <p>Aktuell sind keine empfohlenen Events verfügbar.</p>

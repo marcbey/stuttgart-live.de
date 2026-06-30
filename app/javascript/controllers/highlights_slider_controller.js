@@ -108,7 +108,7 @@ export default class extends Controller {
     }
 
     if (this.hasNextButtonTarget) {
-      this.nextButtonTarget.disabled = maxScrollLeft <= 4
+      this.nextButtonTarget.disabled = maxScrollLeft <= 4 && !this.canRequestHomepageLanePage()
     }
   }
 
@@ -306,7 +306,7 @@ export default class extends Controller {
   }
 
   requestHomepageLanePage() {
-    if (!this.element.matches("[data-controller~='homepage-lane']")) return false
+    if (!this.canRequestHomepageLanePage()) return false
 
     const event = new CustomEvent("homepage-lane:load", {
       bubbles: true,
@@ -316,6 +316,14 @@ export default class extends Controller {
     this.element.dispatchEvent(event)
 
     return true
+  }
+
+  canRequestHomepageLanePage() {
+    return this.element.matches("[data-controller~='homepage-lane']") &&
+      (
+        this.element.dataset.homepageLaneDeferredValue === "true" ||
+        (this.element.dataset.homepageLaneCursorValue || "").length > 0
+      )
   }
 
   stopAutoplay() {

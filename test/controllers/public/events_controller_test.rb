@@ -61,7 +61,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('musical-theater')}']", text: "THEATER", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('klassik-oper')}']", text: "KLASSIK", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('electronic-music-edm')}']", text: "ELECTRONIC", count: 1
-    assert_select ".app-nav-hotline-contact .app-nav-link", text: "Kontakt"
+    assert_select ".app-nav-hotline-contact .app-nav-link", text: "Tickets"
     assert_select ".partner-strip-image[width][height]", count: 6
     assert_includes response.body, "Published Artist"
     assert_not_includes response.body, "Past Artist"
@@ -2528,10 +2528,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     names = Nokogiri::HTML.parse(response.body).css(".genre-lane-card-name").map(&:text)
 
-    assert_equal "Tagestipp Filler Artist 9", names.first
+    assert_equal "SKS Today Artist", names.first
     assert_equal 10, names.size
     assert_not_includes names, today_event.artist_name
-    assert_not_includes names, sks_today_event.artist_name
+    assert_includes names, sks_today_event.artist_name
     assert_not_includes names, late_today_event.artist_name
     assert_not_includes names, reservix_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
@@ -2728,8 +2728,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all", view: "list")
 
     assert_response :success
-    assert_equal [ "Suche nach Künstlern und Events in Stuttgart" ], placeholder_phrases
-    assert_equal [ { text: "Suche nach Künstlern und Events in Stuttgart", cursor_blinks: nil, repeat: false } ], placeholder_sequence
+    assert_equal [ "Suche nach Veranstaltungen in Stuttgart ..." ], placeholder_phrases
+    assert_equal [ { text: "Suche nach Veranstaltungen in Stuttgart ...", cursor_blinks: nil, repeat: false } ], placeholder_sequence
     assert_select ".app-nav-search .public-search-filter", count: 1
     assert_select ".app-nav-search .public-search-filter[action='#{search_path}']"
     form = css_select(".app-nav-search .public-search-filter").first
@@ -4735,16 +4735,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     genre_links = css_select("a.public-search-result.public-search-result-compact")
     assert_equal [
+      "HEUTE",
       "Pop, Indie & Singer-Songwriter",
       "Rock & Alternative",
-      "Metal, Punk & Hardcore",
-      "Hip-Hop & R’n’B"
+      "Metal, Punk & Hardcore"
     ], genre_links.first(4).map { |link| link.at_css(".public-search-result-artist").text }
     assert_equal [
+      "/tagestipp",
       "/pop-indie-singer-songwriter",
       "/rock-alternative",
-      "/metal-punk-hardcore",
-      "/hip-hop-r-n-b"
+      "/metal-punk-hardcore"
     ], genre_links.first(4).map { |link| link["href"] }
   end
 

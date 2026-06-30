@@ -4,7 +4,7 @@ module Public::EventsHelper
   require "digest"
 
   PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE = [
-    { text: "Suche nach Künstlern und Events in Stuttgart", cursor_blinks: nil, repeat: false }
+    { text: "Suche nach Veranstaltungen in Stuttgart ...", cursor_blinks: nil, repeat: false }
   ].freeze
 
   PUBLIC_SEARCH_PLACEHOLDER_PHRASES = [

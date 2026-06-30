@@ -115,7 +115,10 @@ Rails.application.routes.draw do
   get "alles-aus-stuttgart", to: "public/events#lane", defaults: { lane: "all_stuttgart" }, as: :all_stuttgart_lane
   get "tagestipp", to: "public/events#lane", defaults: { lane: "tagestipp" }, as: :tagestipp_lane
   resources :newsletter_subscribers, only: [ :create ], module: :public
+  get "tickets", to: "public/pages#show", defaults: { slug: "tickets" }, as: :tickets
   get "kontakt", to: "public/pages#show", defaults: { slug: "kontakt" }, as: :contact
+  get "faq", to: "public/pages#show", defaults: { slug: "faq" }, as: :faq
+  get "ueber-uns", to: "public/pages#show", defaults: { slug: "ueber-uns" }, as: :about
   get "impressum", to: "public/pages#show", defaults: { slug: "impressum" }, as: :imprint
   get "blog/:slug", to: "public/legacy_blog_redirects#show", as: :legacy_blog_redirect
   resources :news, only: [ :index, :show ], module: :public, param: :slug

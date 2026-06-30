@@ -9,6 +9,10 @@
            intro: @page.intro.to_s,
            page_slug: @page.slug,
            admin_link_path: (authenticated? && current_user.backend_access? ? edit_backend_page_path(@page) : nil) do %>
+  <% if @page.slug == "kontakt" && !@page.body.body.to_html.include?("contact-mail-form") %>
+    <%= render "public/pages/contact_form" %>
+  <% end %>
+
   <% if @page.card_layout? %>
     <%= @page.body %>
   <% else %>
