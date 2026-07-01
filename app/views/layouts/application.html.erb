@@ -187,7 +187,8 @@
             <div class="app-nav-hotline-contact">
               <%= link_to "Tickets",
                           tickets_path,
-                          class: app_nav_link_class %>
+                          class: app_nav_link_class(active: tickets_nav_active?),
+                          aria: { current: ("page" if tickets_nav_active?) } %>
             </div>
           </div>
         <% end %>
@@ -270,7 +271,8 @@
                 <% if public_homepage_chrome %>
                   <%= link_to "Tickets",
                               tickets_path,
-                              class: [ app_nav_link_class, "app-nav-link-poster-contact" ].join(" ") %>
+                              class: [ app_nav_link_class(active: tickets_nav_active?), "app-nav-link-poster-contact" ].join(" "),
+                              aria: { current: ("page" if tickets_nav_active?) } %>
                     </div>
                   </div>
                 <% else %>

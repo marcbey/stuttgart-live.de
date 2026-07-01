@@ -4,7 +4,9 @@
   <header class="info-page-hero">
     <div class="info-page-hero-topbar">
       <div class="info-page-hero-copy">
-        <p class="news-kicker"><%= kicker %></p>
+        <% if local_assigns[:kicker].present? %>
+          <p class="news-kicker"><%= kicker %></p>
+        <% end %>
         <h1><%= title %></h1>
         <p><%= intro %></p>
       </div>

@@ -4,7 +4,7 @@
                       canonical_url: static_page_url(@page.slug) %>
 
 <%= render "public/pages/info_page",
-           kicker: @page.kicker.presence || "Service",
+           kicker: @page.kicker.presence,
            title: @page.title,
            intro: @page.intro.to_s,
            page_slug: @page.slug,

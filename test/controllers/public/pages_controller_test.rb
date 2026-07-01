@@ -75,6 +75,8 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Tickets online kaufen"
     assert_includes response.body, "Easy Ticket"
     assert_select "link[rel='canonical'][href=?]", tickets_url
+    assert_select ".info-page-hero .news-kicker", count: 0
+    assert_select ".app-nav-links .app-nav-link-active[href=?]", tickets_path, text: "Tickets"
 
     get faq_url
 

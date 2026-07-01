@@ -46,6 +46,10 @@ module ApplicationHelper
     controller_path == "public/news"
   end
 
+  def tickets_nav_active?
+    controller_path == "public/pages" && public_page_slug == "tickets"
+  end
+
   def contact_nav_active?
     controller_path == "public/pages" && public_page_slug == "kontakt"
   end

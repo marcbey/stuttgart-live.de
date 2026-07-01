@@ -932,6 +932,34 @@ text-decoration: none;
 border-bottom: 0;
 }
 
+body.page-public :where(p, li, dd, blockquote) a[href]:not(.button):not(.button-secondary):not(.button-ghost):not(.event-detail-venue-map-link),
+body.page-public :where(.static-page-rich-copy .trix-content, .news-detail-copy .trix-content) div a[href]:not(.button):not(.button-secondary):not(.button-ghost),
+body.page-public .info-page-card a[href^="mailto:"]:not(.button):not(.button-secondary):not(.button-ghost),
+body.page-public .info-page-card a[href^="tel:"]:not(.button):not(.button-secondary):not(.button-ghost),
+body.page-public .info-page-card a[href^="http://"]:not(.button):not(.button-secondary):not(.button-ghost),
+body.page-public .info-page-card a[href^="https://"]:not(.button):not(.button-secondary):not(.button-ghost) {
+color: #0a2324;
+  overflow-wrap: anywhere;
+  text-decoration: none;
+  border-bottom: 0;
+}
+
+body.page-public :where(p, li, dd, blockquote) a[href]:not(.button):not(.button-secondary):not(.button-ghost):not(.event-detail-venue-map-link):hover,
+body.page-public :where(p, li, dd, blockquote) a[href]:not(.button):not(.button-secondary):not(.button-ghost):not(.event-detail-venue-map-link):focus-visible,
+body.page-public :where(.static-page-rich-copy .trix-content, .news-detail-copy .trix-content) div a[href]:not(.button):not(.button-secondary):not(.button-ghost):hover,
+body.page-public :where(.static-page-rich-copy .trix-content, .news-detail-copy .trix-content) div a[href]:not(.button):not(.button-secondary):not(.button-ghost):focus-visible,
+body.page-public .info-page-card a[href^="mailto:"]:not(.button):not(.button-secondary):not(.button-ghost):hover,
+body.page-public .info-page-card a[href^="mailto:"]:not(.button):not(.button-secondary):not(.button-ghost):focus-visible,
+body.page-public .info-page-card a[href^="tel:"]:not(.button):not(.button-secondary):not(.button-ghost):hover,
+body.page-public .info-page-card a[href^="tel:"]:not(.button):not(.button-secondary):not(.button-ghost):focus-visible,
+body.page-public .info-page-card a[href^="http://"]:not(.button):not(.button-secondary):not(.button-ghost):hover,
+body.page-public .info-page-card a[href^="http://"]:not(.button):not(.button-secondary):not(.button-ghost):focus-visible,
+body.page-public .info-page-card a[href^="https://"]:not(.button):not(.button-secondary):not(.button-ghost):hover,
+body.page-public .info-page-card a[href^="https://"]:not(.button):not(.button-secondary):not(.button-ghost):focus-visible {
+color: #cc4d8f;
+text-decoration: none;
+}
+
 .info-page-links a:focus-visible,
 .info-page-card a:focus-visible,
 .inline-link-button:focus-visible {
@@ -7737,19 +7765,16 @@ display: grid;
 .event-detail-copy-flow a[href],
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link) {
   color: #0a2324;
-  font-weight: 700;
   overflow-wrap: anywhere;
-  text-decoration-line: underline;
-  text-decoration-thickness: 0.1em;
-  text-underline-offset: 0.16em;
+  text-decoration: none;
 }
 
 .event-detail-copy-flow a[href]:hover,
 .event-detail-copy-flow a[href]:focus-visible,
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link):hover,
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link):focus-visible {
-  color: #0a2324;
-  text-decoration-thickness: 0.14em;
+  color: #cc4d8f;
+  text-decoration: none;
 }
 
 .event-detail-venue-layout a.event-detail-venue-map-link[href] {
