@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 const PLACEHOLDER_TYPING_BASE_DELAY = 40
 const PLACEHOLDER_ENTRY_GAP_BASE_DELAY = 220
-const PLACEHOLDER_CURSOR_BLINK_DELAY = 130
+const PLACEHOLDER_CURSOR_BLINK_DELAY = 500
 const PLACEHOLDER_SEQUENCE_START_DELAY = 2000
 const PLACEHOLDER_TYPING_CADENCE = [-18, 14, -6, 20, -12, 10, 4, -4]
 const CALENDAR_WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
