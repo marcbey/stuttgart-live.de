@@ -969,13 +969,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
   test "clear filters removes session filter values" do
     sign_in_as(@user)
+    stored_starts_after = (Date.current + 1.month).iso8601
+    stored_starts_before = (Date.current + 2.months).iso8601
 
     post apply_filters_backend_events_url, params: {
       status: "needs_review",
       query: "Review Artist",
       promoter_id: "36",
-      starts_after: "2026-07-01",
-      starts_before: "2026-07-31"
+      starts_after: stored_starts_after,
+      starts_before: stored_starts_before
     }
 
     post apply_filters_backend_events_url, params: {
@@ -991,9 +993,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[name='starts_before']"
     assert_select "input#query[value='Review Artist']", count: 0
     assert_select "input#promoter_id[value='36']", count: 0
-    assert_select "input#starts_after[value='2026-07-01']", count: 0
+    assert_select "input#starts_after[value='#{stored_starts_after}']", count: 0
     assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
-    assert_select "input#starts_before[value='2026-07-31']", count: 0
+    assert_select "input#starts_before[value='#{stored_starts_before}']", count: 0
   end
 
   test "promoter_id filter matches promoter_id" do

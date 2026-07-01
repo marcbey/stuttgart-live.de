@@ -2728,8 +2728,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all", view: "list")
 
     assert_response :success
-    assert_equal [ "Suche nach Veranstaltungen in Stuttgart ..." ], placeholder_phrases
-    assert_equal [ { text: "Suche nach Veranstaltungen in Stuttgart ...", cursor_blinks: nil, repeat: false } ], placeholder_sequence
+    assert_equal [ "Suche nach Veranstaltungen in Stuttgart" ], placeholder_phrases
+    assert_equal [ { text: "Suche nach Veranstaltungen in Stuttgart", cursor_blinks: nil, repeat: false } ], placeholder_sequence
     assert_select ".app-nav-search .public-search-filter", count: 1
     assert_select ".app-nav-search .public-search-filter[action='#{search_path}']"
     form = css_select(".app-nav-search .public-search-filter").first
