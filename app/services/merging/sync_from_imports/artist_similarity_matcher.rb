@@ -30,7 +30,8 @@ module Merging
       def match_result_for(record:, event:)
         [
           artist_match_result_for(record:, event:),
-          artist_title_swap_match_result_for(record:, event:)
+          artist_title_swap_match_result_for(record:, event:),
+          title_subset_match_result_for(record:, event:)
         ].compact.max_by(&:score)
       end
 
@@ -50,6 +51,17 @@ module Merging
         return nil if artist_to_title_score < threshold || title_to_artist_score < threshold
 
         Result.new(event:, score: [ artist_to_title_score, title_to_artist_score ].min, reason: "artist_title_swap")
+      end
+
+      def title_subset_match_result_for(record:, event:)
+        return nil unless matching_venue?(record:, event:)
+        return nil unless distinctive_title?(record.title) && distinctive_title?(event.title)
+
+        title_score, reason = score(record.title, event.title)
+        return nil if title_score < threshold
+        return nil unless title_subset_reason?(reason)
+
+        Result.new(event:, score: title_score, reason: "title_#{reason}_same_venue")
       end
 
       def score(left_name, right_name)
@@ -92,6 +104,28 @@ module Merging
         normalized_artist_name.present? &&
           normalized_title.present? &&
           normalized_artist_name != normalized_title
+      end
+
+      def matching_venue?(record:, event:)
+        record_key = Venue.canonical_match_key(record.venue)
+        event_key = Venue.canonical_match_key(event.venue)
+
+        record_key.present? && record_key == event_key
+      end
+
+      def distinctive_title?(value)
+        tokens = Merging::ArtistNameNormalizer.significant_tokens(value).uniq
+        return false if tokens.empty?
+
+        tokens.sum(&:length) >= 8 && tokens.any? { |token| token.length >= 5 }
+      end
+
+      def title_subset_reason?(reason)
+        %w[
+          normalized_artist_name_exact
+          significant_tokens_exact
+          significant_tokens_subset
+        ].include?(reason)
       end
 
       def priority_for(source)

@@ -687,6 +687,142 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal 2, event.event_offers.count
   end
 
+  test "similarity-matches title subset duplicates for the same venue" do
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
+    AppSetting.reset_cache!
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "issue-98-beethoven-easy:2026-12-30",
+      payload: {
+        "event_id" => "issue-98-beethoven-easy",
+        "date_time" => "2026-12-30 19:00:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Liederhalle Beethoven-Saal",
+        "title_1" => "Beethovens 9. Sinfonie",
+        "title_2" => "Beethovens 9. Sinfonie",
+        "ticket_url" => "https://example.com/easy-beethoven"
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: import_sources(:two),
+      import_event_type: "eventim",
+      source_identifier: "issue-98-beethoven-eventim:2026-12-30",
+      payload: {
+        "eventid" => "issue-98-beethoven-eventim",
+        "eventdate" => "2026-12-30",
+        "eventtime" => "19:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Liederhalle Beethoven-Saal",
+        "eventname" => "Stuttgarter Philharmoniker – Beethovens 9. Sinfonie | Stuttgarter Philharmoniker, Beethoven Chor Stuttgart",
+        "artistname" => "Stuttgarter Philharmoniker",
+        "eventlink" => "https://example.com/eventim-beethoven"
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+    event = Event.find_by!(start_at: Time.zone.local(2026, 12, 30, 19, 0, 0))
+
+    assert_equal 2, result.import_records_count
+    assert_equal 2, result.groups_count
+    assert_equal 1, result.duplicate_matches_count
+    assert_equal 1, Event.where(start_at: Time.zone.local(2026, 12, 30, 19, 0, 0)).count
+    assert_equal "easyticket", event.primary_source
+    assert_equal %w[easyticket eventim], event.event_offers.order(:priority_rank, :id).pluck(:source)
+  end
+
+  test "similarity-matches title subset duplicates from reservix for the same venue" do
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
+    AppSetting.reset_cache!
+
+    source_reservix = ImportSource.ensure_reservix_source!
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "issue-98-nussknacker-easy:2026-12-30",
+      payload: {
+        "event_id" => "issue-98-nussknacker-easy",
+        "date_time" => "2026-12-30 19:30:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Porsche-Arena",
+        "title_1" => "Der Nussknacker",
+        "title_2" => "Der Nussknacker",
+        "ticket_url" => "https://example.com/easy-nussknacker"
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: source_reservix,
+      import_event_type: "reservix",
+      source_identifier: "issue-98-nussknacker-reservix",
+      payload: {
+        "id" => "issue-98-nussknacker-reservix",
+        "name" => "FRANCECONCERT – DER NUSSKNACKER - BALLETT MIT ORCHESTER - FRANCECONCERT",
+        "artist" => "FRANCECONCERT",
+        "bookable" => true,
+        "startdate" => "2026-12-30",
+        "starttime" => "19:30",
+        "affiliateSaleUrl" => "https://example.com/reservix-nussknacker",
+        "references" => {
+          "venue" => [ { "name" => "Porsche-Arena", "city" => "Stuttgart" } ]
+        }
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+    event = Event.find_by!(start_at: Time.zone.local(2026, 12, 30, 19, 30, 0))
+
+    assert_equal 2, result.import_records_count
+    assert_equal 2, result.groups_count
+    assert_equal 1, result.duplicate_matches_count
+    assert_equal 1, Event.where(start_at: Time.zone.local(2026, 12, 30, 19, 30, 0)).count
+    assert_equal "easyticket", event.primary_source
+    assert_equal %w[easyticket reservix], event.event_offers.order(:priority_rank, :id).pluck(:source)
+  end
+
+  test "does not title-match similar records at different venues" do
+    AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
+    AppSetting.reset_cache!
+
+    RawEventImport.create!(
+      import_source: import_sources(:one),
+      import_event_type: "easyticket",
+      source_identifier: "title-subset-different-venue-easy:2026-12-30",
+      payload: {
+        "event_id" => "title-subset-different-venue-easy",
+        "date_time" => "2026-12-30 19:30:00",
+        "loc_city" => "Stuttgart",
+        "loc_name" => "Porsche-Arena",
+        "title_1" => "Der Nussknacker",
+        "title_2" => "Der Nussknacker"
+      }
+    )
+
+    RawEventImport.create!(
+      import_source: import_sources(:two),
+      import_event_type: "eventim",
+      source_identifier: "title-subset-different-venue-eventim:2026-12-30",
+      payload: {
+        "eventid" => "title-subset-different-venue-eventim",
+        "eventdate" => "2026-12-30",
+        "eventtime" => "19:30",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Liederhalle Beethoven-Saal",
+        "eventname" => "Der Nussknacker - Ballett mit Orchester",
+        "artistname" => "Touring Ballet"
+      }
+    )
+
+    result = Merging::SyncFromImports.new.call
+
+    assert_equal 2, result.groups_count
+    assert_equal 0, result.duplicate_matches_count
+    assert_equal 2, Event.where(start_at: Time.zone.local(2026, 12, 30, 19, 30, 0)).count
+  end
+
   test "similarity match keeps easyticket as primary source over existing eventim event" do
     AppSetting.find_or_initialize_by(key: AppSetting::MERGE_ARTIST_SIMILARITY_MATCHING_ENABLED_KEY).update!(value: true)
     AppSetting.reset_cache!
