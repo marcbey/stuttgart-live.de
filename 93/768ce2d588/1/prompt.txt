@@ -1,0 +1,2 @@
+[$superpowers:receiving-code-review](/Users/marc/.codex/plugins/cache/openai-curated-remote/superpowers/5.1.4/skills/receiving-code-review/SKILL.md) 
+Überprüfe ob die im workspace liegenden Changes korrekt sind und auch nichts kaputt machen und einen  Fix für das Problem liefern in [https://github.com/marcbey/stuttgart-live.de/issues/97](https://github.com/marcbey/stuttgart-live.de/issues/97) ganz genau

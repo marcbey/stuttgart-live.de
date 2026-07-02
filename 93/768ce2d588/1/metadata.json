@@ -1,0 +1,78 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "93768ce2d588",
+  "session_id": "019f21fc-5312-7403-b263-3279702c6642",
+  "strategy": "manual-commit",
+  "created_at": "2026-07-02T09:07:39.327164Z",
+  "branch": "codex/eventim-ticket-offer-repair",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "README.md",
+    "app/services/importing/eventim/ticket_offer_classifier.rb",
+    "app/services/merging/sync_from_imports.rb",
+    "app/services/merging/sync_from_imports/event_upserter.rb",
+    "app/services/merging/sync_from_imports/record_builders/base.rb",
+    "lib/tasks/importing_eventim.rake",
+    "test/services/importing/eventim/ticket_offer_classifier_test.rb",
+    "test/services/merging/sync_from_imports/artist_similarity_matcher_test.rb",
+    "test/services/merging/sync_from_imports/exact_fingerprint_matcher_test.rb",
+    "test/services/merging/sync_from_imports/match_strategy_test.rb",
+    "test/services/merging/sync_from_imports_test.rb"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "9720aed73b1f",
+  "token_usage": {
+    "input_tokens": 196225,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 3419648,
+    "output_tokens": 17097,
+    "api_call_count": 32
+  },
+  "session_metrics": {
+    "turn_count": 1
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-07-02T09:07:39.309064Z",
+    "agent_lines": 27,
+    "agent_removed": 0,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 1,
+    "total_committed": 27,
+    "total_lines_changed": 28,
+    "agent_percentage": 96.42857142857143,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 1080,
+      "user_lines_removed": 1,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "README.md": 12,
+        "app/services/events/maintenance/eventim_ticket_offer_repairer.rb": 237,
+        "app/services/importing/eventim/ticket_offer_classifier.rb": 72,
+        "app/services/merging/sync_from_imports.rb": 2,
+        "app/services/merging/sync_from_imports/event_upserter.rb": 10,
+        "app/services/merging/sync_from_imports/eventim_offer_consolidator.rb": 72,
+        "app/services/merging/sync_from_imports/record_builders/base.rb": 2,
+        "docs/superpowers/plans/2026-07-02-eventim-ticket-offer-repair.md": 214,
+        "lib/tasks/importing_eventim.rake": 27,
+        "test/services/events/maintenance/eventim_ticket_offer_repairer_test.rb": 152,
+        "test/services/importing/eventim/ticket_offer_classifier_test.rb": 98,
+        "test/services/merging/sync_from_imports/artist_similarity_matcher_test.rb": 2,
+        "test/services/merging/sync_from_imports/exact_fingerprint_matcher_test.rb": 2,
+        "test/services/merging/sync_from_imports/match_strategy_test.rb": 2,
+        "test/services/merging/sync_from_imports_test.rb": 123,
+        "test/tasks/importing_eventim_task_test.rb": 53
+      },
+      "user_removed_per_file": {
+        "app/services/merging/sync_from_imports/event_upserter.rb": 1
+      }
+    }
+  ]
+}

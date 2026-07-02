@@ -3,7 +3,7 @@
   "checkpoint_id": "93768ce2d588",
   "strategy": "manual-commit",
   "branch": "codex/eventim-ticket-offer-repair",
-  "checkpoints_count": 9,
+  "checkpoints_count": 10,
   "files_touched": [
     "README.md",
     "app/services/events/maintenance/eventim_ticket_offer_repairer.rb",
@@ -28,13 +28,19 @@
       "transcript": "/93/768ce2d588/0/full.jsonl",
       "content_hash": "/93/768ce2d588/0/content_hash.txt",
       "prompt": "/93/768ce2d588/0/prompt.txt"
+    },
+    {
+      "metadata": "/93/768ce2d588/1/metadata.json",
+      "transcript": "/93/768ce2d588/1/full.jsonl",
+      "content_hash": "/93/768ce2d588/1/content_hash.txt",
+      "prompt": "/93/768ce2d588/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 1210232,
+    "input_tokens": 1406457,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 23198336,
-    "output_tokens": 86016,
-    "api_call_count": 188
+    "cache_read_tokens": 26617984,
+    "output_tokens": 103113,
+    "api_call_count": 220
   }
 }
