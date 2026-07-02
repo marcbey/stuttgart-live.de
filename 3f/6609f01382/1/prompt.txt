@@ -4,3 +4,7 @@ Können wir die Event Dubletten Erkennung verbessern, sodass solche aus dem Issu
 ---
 
 ja, mach das so
+
+---
+
+commit & push & close issue with comment
