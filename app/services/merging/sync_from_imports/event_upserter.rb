@@ -209,7 +209,7 @@ module Merging
       end
 
       def unique_offer_records(records)
-        records.uniq do |record|
+        EventimOfferConsolidator.call(records).uniq do |record|
           [ record.source.to_s, record.external_event_id.to_s ]
         end
       end
@@ -386,6 +386,15 @@ module Merging
 
         source_status_code = record.raw_payload["eventStatus"].to_s.strip
         metadata["source_status_code"] = source_status_code if source_status_code.present?
+        metadata["raw_import_id"] = record.raw_import_id if record.raw_import_id.present?
+        metadata["raw_import_created_at"] = record.raw_import_created_at&.iso8601 if record.raw_import_created_at.present?
+
+        if record.source.to_s == "eventim"
+          eventim_classification = Importing::Eventim::TicketOfferClassifier.call(record)
+          metadata["eventim_series_id"] = eventim_classification.series_id if eventim_classification.series_id.present?
+          metadata["eventim_series_name"] = eventim_classification.series_name if eventim_classification.series_name.present?
+          metadata["eventim_offer_kind"] = eventim_classification.kind
+        end
 
         metadata
       end

@@ -85,6 +85,8 @@ Der Easyticket-Importer lädt zunächst einen Event-Dump und verarbeitet anschli
 
 Der Eventim-Importer verarbeitet den Feed streamend. Dadurch muss nicht erst die komplette Quelle im Speicher liegen, bevor der Lauf beginnen kann. Auch hier wird pro passendem Feed-Eintrag ein `RawEventImport` geschrieben; die `source_identifier` setzt sich typischerweise aus externer Event-ID und Datum zusammen.
 
+Wenn Eventim für dieselbe Vorstellung eine neue externe Event-ID liefert, bleiben alte und neue Rohimporte nachvollziehbar erhalten. Der Merge konsolidiert daraus aber nur ein öffentliches Haupt-Ticketangebot, sofern `esid`, Startzeit und Venue dieselbe Eventim-Vorstellung beschreiben. Zusatzprodukte wie VIP-, Package- oder Upgrade-Angebote werden dabei nicht als führender öffentlicher Ticketlink verwendet, solange ein Hauptangebot vorhanden ist.
+
 ### Reservix
 
 Der Reservix-Importer arbeitet inkrementell. Er merkt sich in der `ImportSourceConfig` einen Checkpoint aus `lastupdate` und der zuletzt verarbeiteten Event-ID. Der nächste Lauf fragt die API mit leichtem Zeitüberlapp erneut ab, überspringt aber bereits bekannte Datensätze anhand dieses Checkpoints. Zusätzlich werden nur buchbare Events übernommen.
@@ -136,6 +138,7 @@ Wichtig für Updates bestehender Events:
 - `primary_source` bleibt bei bereits zusammengeführten Events auf der höchst priorisierten vorhandenen Quelle. Standardmäßig gilt dabei `easyticket` vor `eventim` vor `reservix`.
 - `source_snapshot` wird quellenübergreifend zusammengeführt, statt bei späteren Merges nur noch den zuletzt verarbeiteten Provider zu enthalten.
 - `event_offers` werden quellenweise auf den aktuellen Importstand synchronisiert: bestehende passende Offers werden aktualisiert, neue angelegt und nur Offers derselben gerade verarbeiteten Quelle entfernt, wenn sie dort nicht mehr vorkommen.
+- Eventim-Offers werden innerhalb desselben Merges zusätzlich konsolidiert: Mehrere Hauptangebote derselben Eventim-Vorstellung werden auf den neuesten Rohimport reduziert; erkannte Zusatzprodukte wie VIP- oder Package-Angebote ersetzen dieses Hauptangebot nicht.
 - Im Event-Editor kann die sichtbare Ticket-URL zusätzlich als manueller Override gespeichert werden. Dieser Override wird als eigenes `event_offer` mit `source = manual` angelegt oder aktualisiert und überschreibt keine importierten Offers direkt.
 - Ein bloßes erneutes Speichern einer unveränderten importierten Ticket-URL erzeugt dabei bewusst kein zusätzliches manuelles Offer.
 - Im Backend zeigt der Editor bei vorhandenem manuellem Override künftig diesen Wert an. Für die öffentliche Ticketlogik bleiben importierte Offers und deren Priorisierung weiterhin maßgeblich.
@@ -829,6 +832,15 @@ mise exec -- bin/rails venues:maintenance:backfill_duplicates
 ```
 
 Der Task gruppiert bestehende Venues über denselben Match-Key wie der Merge-Import, hängt Events auf eine kanonische Venue um, übernimmt fehlende Metadaten und ein vorhandenes Logo und löscht anschließend redundante Dubletten wie `LKA-Longhorn Stuttgart` neben `LKA-Longhorn`.
+
+Bestehende Eventim-Ticketangebote aus aktuellen Rohimporten reparieren:
+
+```bash
+DRY_RUN=1 mise exec -- bin/rails importing:eventim:repair_ticket_offers
+mise exec -- bin/rails importing:eventim:repair_ticket_offers
+```
+
+Der Task nutzt dieselbe Eventim-Konsolidierung wie der Merge. Im Dry-Run meldet er pro Event-Reihe, welche stale Offers entfernt, welche fehlenden Offers angelegt und welche gemischten Eventim-Serien als uneindeutig übersprungen würden. Manuelle Ticket-Overrides werden dabei nicht verändert.
 
 ### Produktionsdatenbank aus lokalem Dump wiederherstellen
 

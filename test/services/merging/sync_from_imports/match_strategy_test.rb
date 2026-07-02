@@ -48,6 +48,8 @@ class Merging::SyncFromImports::MatchStrategyTest < ActiveSupport::TestCase
   def build_record(artist_name, start_at, external_event_id)
     Merging::SyncFromImports::ImportRecord.new(
       source: "eventim",
+      raw_import_id: 1,
+      raw_import_created_at: Time.zone.local(2026, 1, 1, 0, 0, 0),
       source_identifier: "#{artist_name.parameterize}:#{external_event_id}",
       external_event_id: external_event_id,
       series_reference: nil,

@@ -30,6 +30,8 @@ class Merging::SyncFromImports::ExactFingerprintMatcherTest < ActiveSupport::Tes
   def build_record(artist_name:, start_at:)
     Merging::SyncFromImports::ImportRecord.new(
       source: "eventim",
+      raw_import_id: 1,
+      raw_import_created_at: Time.zone.local(2026, 1, 1, 0, 0, 0),
       source_identifier: "record-1",
       external_event_id: "ext-1",
       series_reference: nil,

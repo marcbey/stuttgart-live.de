@@ -221,6 +221,97 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal "Abgesagt", event.public_ticket_status_label
   end
 
+  test "replaces stale eventim offer when the same series occurrence receives a new event id" do
+    source_eventim = import_sources(:two)
+
+    create_eventim_raw_import(
+      import_source: source_eventim,
+      event_id: "old-eventim-id",
+      event_link: "https://tickets.example/old-eventim-id",
+      created_at: Time.zone.local(2026, 1, 10, 8, 0, 0)
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(
+      artist_name: "Eventim Replacement Band",
+      start_at: Time.zone.local(2026, 11, 10, 20, 0, 0)
+    )
+    assert_equal [ "old-eventim-id" ], event.event_offers.where(source: "eventim").pluck(:source_event_id)
+
+    create_eventim_raw_import(
+      import_source: source_eventim,
+      event_id: "new-eventim-id",
+      event_link: "https://tickets.example/new-eventim-id",
+      created_at: Time.zone.local(2026, 1, 11, 8, 0, 0)
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event.reload
+    offers = event.event_offers.where(source: "eventim").order(:source_event_id)
+    assert_equal [ "new-eventim-id" ], offers.pluck(:source_event_id)
+    assert_equal "https://tickets.example/new-eventim-id", event.imported_primary_ticket_offer.ticket_url
+  end
+
+  test "does not let a newer eventim auxiliary package replace the main offer" do
+    source_eventim = import_sources(:two)
+
+    create_eventim_raw_import(
+      import_source: source_eventim,
+      event_id: "main-eventim-id",
+      event_link: "https://tickets.example/main-eventim-id",
+      created_at: Time.zone.local(2026, 1, 10, 8, 0, 0)
+    )
+    create_eventim_raw_import(
+      import_source: source_eventim,
+      event_id: "vip-eventim-id",
+      event_name: "Eventim Replacement Show VIP Package",
+      event_link: "https://tickets.example/vip-eventim-id",
+      created_at: Time.zone.local(2026, 1, 11, 8, 0, 0)
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(
+      artist_name: "Eventim Replacement Band",
+      start_at: Time.zone.local(2026, 11, 10, 20, 0, 0)
+    )
+    offers = event.event_offers.where(source: "eventim").order(:source_event_id)
+
+    assert_equal [ "main-eventim-id" ], offers.pluck(:source_event_id)
+    assert_equal "https://tickets.example/main-eventim-id", event.imported_primary_ticket_offer.ticket_url
+  end
+
+  test "keeps eventim offers with different series ids separate" do
+    source_eventim = import_sources(:two)
+
+    create_eventim_raw_import(
+      import_source: source_eventim,
+      event_id: "eventim-series-a",
+      event_link: "https://tickets.example/eventim-series-a",
+      series_id: "eventim-series-a",
+      created_at: Time.zone.local(2026, 1, 10, 8, 0, 0)
+    )
+    create_eventim_raw_import(
+      import_source: source_eventim,
+      event_id: "eventim-series-b",
+      event_link: "https://tickets.example/eventim-series-b",
+      series_id: "eventim-series-b",
+      created_at: Time.zone.local(2026, 1, 11, 8, 0, 0)
+    )
+
+    Merging::SyncFromImports.new.call
+
+    event = Event.find_by!(
+      artist_name: "Eventim Replacement Band",
+      start_at: Time.zone.local(2026, 11, 10, 20, 0, 0)
+    )
+    offers = event.event_offers.where(source: "eventim").order(:source_event_id)
+
+    assert_equal [ "eventim-series-a", "eventim-series-b" ], offers.pluck(:source_event_id)
+  end
+
   test "sets needs_review when merged raw imports do not provide an image" do
     RawEventImport.create!(
       import_source: import_sources(:one),
@@ -1440,5 +1531,37 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
 
     assert_nil event.reload.event_series_id
     assert_equal "manual_none", event.event_series_assignment
+  end
+
+  private
+
+  def create_eventim_raw_import(
+    import_source:,
+    event_id:,
+    event_link:,
+    created_at:,
+    event_name: "Eventim Replacement Show",
+    series_id: "eventim-replacement-series",
+    series_name: "Eventim Replacement Series"
+  )
+    RawEventImport.create!(
+      import_source: import_source,
+      import_event_type: "eventim",
+      source_identifier: "#{event_id}:2026-11-10",
+      created_at: created_at,
+      updated_at: created_at,
+      payload: {
+        "eventid" => event_id,
+        "eventdate" => "2026-11-10",
+        "eventtime" => "20:00",
+        "eventplace" => "Stuttgart",
+        "eventvenue" => "Im Wizemann",
+        "eventname" => event_name,
+        "artistname" => "Eventim Replacement Band",
+        "esid" => series_id,
+        "esname" => series_name,
+        "eventlink" => event_link
+      }
+    )
   end
 end

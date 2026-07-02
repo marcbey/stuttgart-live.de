@@ -12,6 +12,8 @@ module Merging
 
     ImportRecord = Data.define(
       :source,
+      :raw_import_id,
+      :raw_import_created_at,
       :source_identifier,
       :external_event_id,
       :series_reference,

@@ -189,6 +189,8 @@ class Merging::SyncFromImports::ArtistSimilarityMatcherTest < ActiveSupport::Tes
   def build_record(artist_name, start_at, title: artist_name)
     Merging::SyncFromImports::ImportRecord.new(
       source: "eventim",
+      raw_import_id: 1,
+      raw_import_created_at: Time.zone.local(2026, 1, 1, 0, 0, 0),
       source_identifier: "#{artist_name.parameterize}:#{title.parameterize}:#{start_at.to_i}",
       external_event_id: SecureRandom.uuid,
       series_reference: nil,

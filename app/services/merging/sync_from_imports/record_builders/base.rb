@@ -25,6 +25,8 @@ module Merging
 
           ImportRecord.new(
             source: source,
+            raw_import_id: raw_event_import.id,
+            raw_import_created_at: raw_event_import.created_at,
             source_identifier: source_identifier,
             external_event_id: external_event_id,
             series_reference: series_reference,
