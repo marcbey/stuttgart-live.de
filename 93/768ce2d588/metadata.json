@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "93768ce2d588",
+  "strategy": "manual-commit",
+  "branch": "codex/eventim-ticket-offer-repair",
+  "checkpoints_count": 9,
+  "files_touched": [
+    "README.md",
+    "app/services/events/maintenance/eventim_ticket_offer_repairer.rb",
+    "app/services/importing/eventim/ticket_offer_classifier.rb",
+    "app/services/merging/sync_from_imports.rb",
+    "app/services/merging/sync_from_imports/event_upserter.rb",
+    "app/services/merging/sync_from_imports/eventim_offer_consolidator.rb",
+    "app/services/merging/sync_from_imports/record_builders/base.rb",
+    "docs/superpowers/plans/2026-07-02-eventim-ticket-offer-repair.md",
+    "lib/tasks/importing_eventim.rake",
+    "test/services/events/maintenance/eventim_ticket_offer_repairer_test.rb",
+    "test/services/importing/eventim/ticket_offer_classifier_test.rb",
+    "test/services/merging/sync_from_imports/artist_similarity_matcher_test.rb",
+    "test/services/merging/sync_from_imports/exact_fingerprint_matcher_test.rb",
+    "test/services/merging/sync_from_imports/match_strategy_test.rb",
+    "test/services/merging/sync_from_imports_test.rb",
+    "test/tasks/importing_eventim_task_test.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/93/768ce2d588/0/metadata.json",
+      "transcript": "/93/768ce2d588/0/full.jsonl",
+      "content_hash": "/93/768ce2d588/0/content_hash.txt",
+      "prompt": "/93/768ce2d588/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 1210232,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 23198336,
+    "output_tokens": 86016,
+    "api_call_count": 188
+  }
+}

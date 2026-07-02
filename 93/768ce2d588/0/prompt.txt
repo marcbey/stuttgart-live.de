@@ -1,0 +1,41 @@
+schau dir dieses issue an [https://github.com/marcbey/stuttgart-live.de/issues/97](https://github.com/marcbey/stuttgart-live.de/issues/97)
+
+---
+
+Erkläre das Problem und den vorgeschlagenen Fix noch mal, erst in einfachen Worten, dann technisch präzise
+
+---
+
+Überprüfe vorab, ob der Fix dann Ticket Links zeigt die den korrekten Eventim Event Seiten führt.
+
+---
+
+Der vorgeschlagene Fix ist ein backfill für die beiden event-reihen der aber erst bei einem nächste merge greift. Ist das so korrekt?
+
+Und:  Hilft der fix auch in Zukunft oder kann das Problem in Zukunft wieder auf treten?
+Und: Was ist mit anderen Events? Könnten wir das Problem noch an anderer Stelle haben und haben es nur bisher nicht bemerkt?
+
+---
+
+Wie kommst du auf "die zwei gemeldeten Reihen erklären davon 139 Fälle" ? 
+Die Zahlen sind doch Event-Reihen "Eiskönigin" => ~245 und "we will rock you" => ~67
+
+---
+
+Bei diesen beiden Events aus den Event-Reihen wird kein Ticket Link angezeigt. 
+Evtl. wurden diese manuell deaktiviert?
+https://stuttgart-live.schopp3r.de/events/we-will-rock-you-das-musical-von-queen-und-ben-elton-2026-07-01
+https://stuttgart-live.schopp3r.de/events/disneys-die-eiskonigin-2026-07-01
+
+---
+
+Berücksichtige in den Fix auch Events der Event-Reihe "Julia - Das Pop-Musical in Stuttgart".
+Gibt es noch andere die zu berücksichtigen sind?
+
+---
+
+Ok, plane den Fix
+
+---
+
+ja, mach das so
