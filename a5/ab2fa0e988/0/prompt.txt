@@ -1,0 +1,10 @@
+Schau dir dieses Issue an [https://github.com/marcbey/stuttgart-live.de/issues/98](https://github.com/marcbey/stuttgart-live.de/issues/98)
+Können wir die Event Dubletten Erkennung verbessern, sodass solche aus dem Issue auch gefunden werden
+
+---
+
+ja, mach das so
+
+---
+
+commit & push & close issue with comment
