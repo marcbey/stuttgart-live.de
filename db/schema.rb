@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_30_153000) do
+ActiveRecord::Schema[8.1].define(version: 2026_07_06_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -462,6 +462,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_06_30_153000) do
     t.string "source_identifier", null: false
     t.datetime "updated_at", null: false
     t.index ["import_event_type", "created_at"], name: "index_raw_event_imports_on_import_event_type_and_created_at"
+    t.index ["import_event_type", "source_identifier", "created_at", "id"], name: "idx_raw_event_imports_latest_lookup", order: { created_at: :desc, id: :desc }
     t.index ["import_event_type", "source_identifier", "created_at"], name: "index_raw_event_imports_on_type_identifier_created_at"
     t.index ["import_source_id"], name: "index_raw_event_imports_on_import_source_id"
   end
