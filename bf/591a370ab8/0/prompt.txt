@@ -1,0 +1,26 @@
+Optimiere https://stuttgart-live.schopp3r.de/ das "Largest Contentful Paint (LCP)" mit "LCP element
+img.promotion-banner-image"
+
+---
+
+mach mal lokal eine vorher/nachher Messung mit lighthouse
+
+---
+
+ok, und was können wir aus dieser messung schliessen? Das dein fix nix bringt ?
+
+---
+
+Finde einen Fix der den LCP Wert signifikant verbessert und belege das mit lokalen Tests
+
+---
+
+Hast du sonst noch Verbesserungsvorschläge die LCP verbessern könnten?
+
+---
+
+ja, mach das
+
+---
+
+Ok - aber überprüfe den aktuellen Fix nochmal, dass er nichts kaputt macht

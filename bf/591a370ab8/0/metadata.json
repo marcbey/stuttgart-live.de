@@ -1,0 +1,105 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "bf591a370ab8",
+  "session_id": "019f3afd-7f73-7923-96fd-cc7f2ab671fd",
+  "strategy": "manual-commit",
+  "created_at": "2026-07-07T11:21:37.238968Z",
+  "branch": "main",
+  "checkpoints_count": 7,
+  "save_step_count": 7,
+  "files_touched": [
+    "app/assets/stylesheets/frontend.tailwind.css",
+    "app/controllers/public/events_controller.rb",
+    "app/helpers/public/seo_helper.rb",
+    "app/javascript/controllers/homepage_lane_controller.js",
+    "app/views/layouts/application.html.erb",
+    "app/views/public/events/_highlight_section.html.erb",
+    "app/views/public/events/_promotion_banner_preload.html.erb",
+    "app/views/public/events/_promotion_banner_slider.html.erb",
+    "app/views/public/events/index.html.erb",
+    "test/controllers/public/events_controller_test.rb"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "57683eb82a64",
+  "token_usage": {
+    "input_tokens": 2892725,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 49132416,
+    "output_tokens": 208659,
+    "api_call_count": 385
+  },
+  "session_metrics": {
+    "turn_count": 7
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-07-07T11:21:37.125699Z",
+    "agent_lines": 569,
+    "agent_removed": 80,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 569,
+    "total_lines_changed": 649,
+    "agent_percentage": 100,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 125,
+      "agent_lines_removed": 14
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 125,
+      "agent_lines_removed": 14
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 125,
+      "agent_lines_removed": 14
+    },
+    {
+      "checkpoint_number": 5,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 569,
+      "agent_lines_removed": 80
+    },
+    {
+      "checkpoint_number": 6,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 569,
+      "agent_lines_removed": 80
+    },
+    {
+      "checkpoint_number": 7,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 569,
+      "agent_lines_removed": 80
+    },
+    {
+      "checkpoint_number": 8,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 569,
+      "agent_lines_removed": 80
+    }
+  ]
+}

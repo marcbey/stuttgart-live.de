@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "bf591a370ab8",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 7,
+  "files_touched": [
+    "app/assets/stylesheets/frontend.tailwind.css",
+    "app/controllers/public/events_controller.rb",
+    "app/helpers/public/seo_helper.rb",
+    "app/javascript/controllers/homepage_lane_controller.js",
+    "app/views/layouts/application.html.erb",
+    "app/views/public/events/_highlight_section.html.erb",
+    "app/views/public/events/_promotion_banner_preload.html.erb",
+    "app/views/public/events/_promotion_banner_slider.html.erb",
+    "app/views/public/events/index.html.erb",
+    "test/controllers/public/events_controller_test.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/bf/591a370ab8/0/metadata.json",
+      "transcript": "/bf/591a370ab8/0/full.jsonl",
+      "content_hash": "/bf/591a370ab8/0/content_hash.txt",
+      "prompt": "/bf/591a370ab8/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 2892725,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 49132416,
+    "output_tokens": 208659,
+    "api_call_count": 385
+  }
+}
