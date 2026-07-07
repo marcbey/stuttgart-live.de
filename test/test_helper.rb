@@ -164,22 +164,19 @@ module ActiveSupport
       )
     end
 
-    def with_media_proxy(enabled: true, secret: "test-media-secret", ttl: 1.year.to_i)
+    def with_media_proxy(enabled: true, secret: "test-media-secret")
       media_proxy_config = Rails.configuration.x.media_proxy
       previous = {
         enabled: media_proxy_config.enabled,
-        secret: media_proxy_config.secret,
-        ttl: media_proxy_config.ttl
+        secret: media_proxy_config.secret
       }
 
       media_proxy_config.enabled = enabled
       media_proxy_config.secret = secret
-      media_proxy_config.ttl = ttl
       yield
     ensure
       media_proxy_config.enabled = previous[:enabled]
       media_proxy_config.secret = previous[:secret]
-      media_proxy_config.ttl = previous[:ttl]
     end
 
     private

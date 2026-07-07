@@ -7,10 +7,11 @@ class PublicMediaUrlTest < ActiveSupport::TestCase
 
     with_media_proxy do
       travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
-        expires_at = Time.current.to_i + 1.year.to_i
         path = PublicMediaUrl.path_for(blob)
+        match = path.match(%r{\A/media/([-_A-Za-z0-9]+)/#{Regexp.escape(relative_path)}/hero%20image\.png\z})
 
-        assert_equal "/media/#{expires_at}/#{PublicMediaUrl.signature_for(expires_at:, relative_path:)}/#{relative_path}--hero%20image.png", path
+        assert match, "expected signed media path, got #{path.inspect}"
+        assert_equal stable_signature_for(relative_path), match[1]
       end
     end
   end
@@ -22,6 +23,42 @@ class PublicMediaUrlTest < ActiveSupport::TestCase
     with_media_proxy do
       travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
         refute_equal PublicMediaUrl.path_for(first_blob), PublicMediaUrl.path_for(second_blob)
+      end
+    end
+  end
+
+  test "builds different signed paths when an image file is replaced with the same filename" do
+    first_blob = create_uploaded_blob(filename: "event-image.png")
+    replacement_blob = create_uploaded_blob(filename: "event-image.png")
+
+    with_media_proxy do
+      assert_not_equal PublicMediaUrl.path_for(first_blob), PublicMediaUrl.path_for(replacement_blob)
+    end
+  end
+
+  test "keeps signed storage path stable when filename contains url delimiter characters" do
+    blob = create_uploaded_blob(filename: "hero--image.png")
+    relative_path = File.join(blob.key.first(2), blob.key[2, 2], blob.key)
+
+    with_media_proxy do
+      path = PublicMediaUrl.path_for(blob)
+      match = path.match(%r{\A/media/[-_A-Za-z0-9]+/(?<media_path>.+)/hero--image\.png\z})
+
+      assert match, "expected slash-separated signed media path, got #{path.inspect}"
+      assert_equal relative_path, match[:media_path]
+    end
+  end
+
+  test "keeps signed paths stable over time" do
+    blob = create_uploaded_blob(filename: "stable.png")
+
+    with_media_proxy do
+      travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        first_path = PublicMediaUrl.path_for(blob)
+
+        travel 30.days
+
+        assert_equal first_path, PublicMediaUrl.path_for(blob)
       end
     end
   end
@@ -57,5 +94,11 @@ class PublicMediaUrlTest < ActiveSupport::TestCase
     with_media_proxy(enabled: false) do
       assert_nil PublicMediaUrl.path_for(blob)
     end
+  end
+
+  private
+
+  def stable_signature_for(relative_path)
+    Base64.strict_encode64(OpenSSL::Digest::MD5.digest("#{relative_path}test-media-secret")).tr("+/", "-_").delete("=")
   end
 end

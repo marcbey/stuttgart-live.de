@@ -38,11 +38,10 @@ module PublicMediaUrl
     media_file = media_file_for(record)
     return unless media_file
 
-    expires_at = Time.current.to_i + config.ttl
-    signature = signature_for(expires_at:, relative_path: media_file.relative_path)
+    signature = signature_for(relative_path: media_file.relative_path)
     filename = ERB::Util.url_encode(media_file.filename.to_s)
 
-    "/media/#{expires_at}/#{signature}/#{media_file.relative_path}--#{filename}"
+    "/media/#{signature}/#{media_file.relative_path}/#{filename}"
   rescue StandardError => error
     Rails.logger.warn("PublicMediaUrl fallback for #{record.class}: #{error.class}: #{error.message}")
     nil
@@ -87,8 +86,8 @@ module PublicMediaUrl
     end
   end
 
-  def signature_for(expires_at:, relative_path:)
-    digest = OpenSSL::Digest::MD5.digest("#{expires_at}/#{relative_path}#{secret}")
+  def signature_for(relative_path:)
+    digest = OpenSSL::Digest::MD5.digest("#{relative_path}#{secret}")
 
     Base64.strict_encode64(digest).tr("+/", "-_").delete("=")
   end

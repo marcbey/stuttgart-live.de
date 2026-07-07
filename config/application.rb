@@ -38,7 +38,6 @@ module StuttgartLiveDe
     config.x.openai.llm_enrichment_model = ENV["OPENAI_LLM_ENRICHMENT_MODEL"].to_s.strip.presence || "gpt-5.1"
     config.x.media_proxy.enabled = ProductionServerConfig.media_proxy_enabled?
     config.x.media_proxy.secret = ProductionServerConfig.media_proxy_secret
-    config.x.media_proxy.ttl = ProductionServerConfig.media_proxy_ttl
     config.active_storage.content_types_to_serve_as_binary -= [ "image/svg+xml" ]
     config.active_storage.content_types_allowed_inline += [ "image/svg+xml" ]
     # config.eager_load_paths << Rails.root.join("extras")

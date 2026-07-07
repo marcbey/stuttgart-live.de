@@ -161,7 +161,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_match %r{/media/\d+/[-A-Za-z0-9_]+/.+--news-cover\.webp}, response.body
+    assert_match %r{/media/[-A-Za-z0-9_]+/.+/news-cover\.webp}, response.body
   end
 
   test "show renders hero image with shared event detail figure markup and crop inline styles" do

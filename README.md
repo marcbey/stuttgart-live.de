@@ -615,7 +615,7 @@ Das Skript `script/github_set_production_secrets` setzt dafür sowohl die benöt
 
 Webprozess und Job-Verarbeitung laufen in Production getrennt. Kamal startet eine `web`-Rolle für den öffentlichen Traffic und zusätzlich eine `job`-Rolle mit `bin/jobs`, damit Queue-Arbeit nicht mehr im selben Puma-Prozess um dieselben Threads konkurriert.
 Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=2` und `RAILS_MAX_THREADS=3` gesetzt. Die Datenbank-Pools werden zusätzlich explizit über `DB_POOL` und `QUEUE_DB_POOL` festgelegt.
-Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt signierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
+Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt pfadsignierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Die URL bleibt für dieselbe gespeicherte Datei oder Variante dauerhaft stabil, damit Browser-Caches zwischen frischen HTML-Renders greifen. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
 
 Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bleibt der Eigentümer der fachlichen Produktionsdatenbank und des Docker-Volumes `stuttgart_live_de_storage`. Weitere Apps wie `russ-live.de` dürfen diese Primärdatenbank nur mit einem separaten read-only PostgreSQL-Benutzer lesen und dasselbe Storage-Volume mounten. Queue, Cache und Cable bleiben je App getrennt, damit Worker und Laufzeitdaten nicht zwischen Projekten kollidieren.
 
@@ -782,7 +782,7 @@ aber keine Schreibrechte. Migrationen für Stuttgarts Primärdatenbank laufen
 ausschließlich aus diesem Repository.
 
 Uploads liegen im Docker-Volume `stuttgart_live_de_storage`. Der Host-Pfad dafür ist üblicherweise `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`. Lokale Datenbank-Backups liegen standardmäßig unter `/var/backups/stuttgart-live`; der tägliche Backup-Cronjob schreibt sein Log nach `/var/log/stuttgart-live-db-backup.log`.
-Öffentliche Bild-URLs zeigen in Production auf signierte `/media/...`-Pfade. Wenn ein Bild im Backend ersetzt oder eine Variant/Crop-Änderung gespeichert wird, rendert Rails eine neue URL. Damit wird kein manuelles Cache-Purging für den Media-Pfad benötigt.
+Öffentliche Bild-URLs zeigen in Production auf signierte `/media/...`-Pfade. Dieselbe gespeicherte Datei oder Variante bleibt URL-stabil; wenn ein Bild im Backend ersetzt wird oder eine neue Active-Storage-Variante entsteht, rendert Rails eine neue URL. Damit wird kein manuelles Cache-Purging für den Media-Pfad benötigt.
 
 Datenbankzugriff auf dem Host:
 
