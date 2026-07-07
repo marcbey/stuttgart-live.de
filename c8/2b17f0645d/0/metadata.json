@@ -1,0 +1,60 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "c82b17f0645d",
+  "session_id": "019f3d23-ba19-7a63-8800-1622d77523a3",
+  "strategy": "manual-commit",
+  "created_at": "2026-07-07T19:41:02.470335Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "save_step_count": 1,
+  "files_touched": [
+    "app/controllers/public/events_controller.rb",
+    "app/javascript/controllers/public_index.js",
+    "app/views/public/events/_lane_page_section.html.erb",
+    "app/views/public/events/lane.html.erb",
+    "test/controllers/public/events_controller_test.rb"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "08acabed63c7",
+  "checkpoint_transcript_start": 1035,
+  "transcript_lines_at_start": 1035,
+  "token_usage": {
+    "input_tokens": 153042,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 2744960,
+    "output_tokens": 5858,
+    "api_call_count": 23
+  },
+  "session_metrics": {
+    "turn_count": 9
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-07-07T19:41:02.417582Z",
+    "agent_lines": 92,
+    "agent_removed": 10,
+    "human_added": 105,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 197,
+    "total_lines_changed": 207,
+    "agent_percentage": 49.275362318840585,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 197,
+      "agent_lines_removed": 10
+    }
+  ]
+}

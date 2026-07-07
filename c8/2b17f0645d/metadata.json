@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "c82b17f0645d",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "app/controllers/public/events_controller.rb",
+    "app/javascript/controllers/public_index.js",
+    "app/views/public/events/_lane_page_section.html.erb",
+    "app/views/public/events/lane.html.erb",
+    "test/controllers/public/events_controller_test.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/c8/2b17f0645d/0/metadata.json",
+      "transcript": "/c8/2b17f0645d/0/full.jsonl",
+      "content_hash": "/c8/2b17f0645d/0/content_hash.txt",
+      "prompt": "/c8/2b17f0645d/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 153042,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 2744960,
+    "output_tokens": 5858,
+    "api_call_count": 23
+  }
+}
