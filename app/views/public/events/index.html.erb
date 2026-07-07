@@ -58,7 +58,7 @@
                lazy_next_cursor: @home_featured_next_cursor,
                lazy_list_next_cursor: @home_featured_list_next_cursor,
                lazy_url: homepage_lane_lazy_url,
-               defer_initial_page: true,
+               defer_initial_page: false,
                list_aria_label: "Listenansicht für Highlights" %>
   <% end %>
   <% if @browse_state.page == 1 %>
@@ -85,7 +85,7 @@
                  header_variant: :genre,
                  hover_lift_cards: true,
                  tone_class: "genre-lane-section--tone-1",
-                 defer_initial_page: true,
+                 defer_initial_page: false,
                  list_aria_label: "Listenansicht für #{genre_lanes.first.group.name}" %>
     <% end %>
 
@@ -113,7 +113,7 @@
                  tone_class: "genre-lane-section--tone-3",
                  section_variant: "spotlight",
                  card_variant: "spotlight",
-                 defer_initial_page: true,
+                 defer_initial_page: false,
                  list_aria_label: "Listenansicht für Tagestipp" %>
     <% end %>
 

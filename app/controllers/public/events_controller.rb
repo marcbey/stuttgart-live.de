@@ -299,23 +299,26 @@ module Public
 
       empty_lane = empty_homepage_lane_shell
       @home_featured_available = homepage_highlights_available?
-      @home_featured_events = empty_lane.events
-      @home_featured_effective_series_ids = empty_lane.effective_series_ids
-      @home_featured_series_counts_by_id = empty_lane.series_counts_by_id
-      @home_featured_next_cursor = empty_lane.next_cursor
-      @home_featured_list_next_cursor = empty_lane.next_cursor
+      home_featured_page = @home_featured_available ? homepage_lane_page_or_empty("highlights", per_page: HOME_HIGHLIGHTS_LANE_LIMIT) : empty_lane
+      home_featured_list_page = @home_featured_available ? homepage_lane_page_or_empty("highlights", per_page: HOME_LANE_LIST_LIMIT) : empty_lane
+      @home_featured_events = home_featured_page.events
+      @home_featured_effective_series_ids = home_featured_page.effective_series_ids
+      @home_featured_series_counts_by_id = home_featured_page.series_counts_by_id
+      @home_featured_next_cursor = home_featured_page.next_cursor
+      @home_featured_list_next_cursor = home_featured_list_page.next_cursor
 
-      @home_genre_lanes = homepage_genre_lane_shells
+      @home_genre_lanes = homepage_genre_lane_sections
       @home_genre_tag_cloud_genres = []
       @home_highlight_events = empty_lane.events
       @home_highlight_effective_series_ids = empty_lane.effective_series_ids
       @home_highlight_series_counts_by_id = empty_lane.series_counts_by_id
       @home_highlight_next_cursor = empty_lane.next_cursor
       @home_tagestipp_available = tagestipp_available?
-      @home_tagestipp_events = empty_lane.events
-      @home_tagestipp_effective_series_ids = empty_lane.effective_series_ids
-      @home_tagestipp_series_counts_by_id = empty_lane.series_counts_by_id
-      @home_tagestipp_next_cursor = empty_lane.next_cursor
+      home_tagestipp_page = @home_tagestipp_available ? homepage_lane_page_or_empty("tagestipp", per_page: HOME_LANE_LIMIT) : empty_lane
+      @home_tagestipp_events = home_tagestipp_page.events
+      @home_tagestipp_effective_series_ids = home_tagestipp_page.effective_series_ids
+      @home_tagestipp_series_counts_by_id = home_tagestipp_page.series_counts_by_id
+      @home_tagestipp_next_cursor = home_tagestipp_page.next_cursor
       @home_seo_events = homepage_seo_events
     end
 
@@ -356,29 +359,29 @@ module Public
       list_events_relation
     end
 
-    def homepage_genre_lanes
-      Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
-    end
-
-    def homepage_genre_lane_shells
+    def homepage_genre_lane_sections
       slugs = AppSetting.normalize_slug_list(AppSetting.homepage_genre_lane_slugs)
       return [] if slugs.empty?
 
       groups_by_slug = Genre.where(slug: slugs).index_by(&:slug)
       public_paths_by_slug = Public::Events::LaneDirectory.public_paths_for_genre_slugs(slugs)
+      initial_lane_rendered = false
 
       slugs.filter_map do |slug|
         group = groups_by_slug[slug]
         next if group.blank?
         next unless homepage_genre_lane_available?(group)
 
+        lane_page = initial_lane_rendered ? empty_homepage_lane_shell : homepage_lane_page_or_empty("genre:#{group.slug}", per_page: HOME_LANE_LIMIT)
+        initial_lane_rendered ||= lane_page.events.present?
+
         Public::Events::HomepageGenreLanesBuilder::Lane.new(
           group: group,
-          events: [],
-          effective_series_ids: [],
-          series_counts_by_id: {},
+          events: lane_page.events,
+          effective_series_ids: lane_page.effective_series_ids,
+          series_counts_by_id: lane_page.series_counts_by_id,
           public_path: public_paths_by_slug[group.slug],
-          next_cursor: nil
+          next_cursor: lane_page.next_cursor
         )
       end
     end
@@ -433,6 +436,10 @@ module Public
         cursor: cursor,
         per_page: normalized_homepage_lane_per_page(per_page)
       ).call
+    end
+
+    def homepage_lane_page_or_empty(identifier, per_page:)
+      homepage_lane_page(identifier, per_page:) || empty_homepage_lane_shell
     end
 
     def homepage_lane_relation_and_context(identifier, cursor_payload: nil)
