@@ -2,7 +2,6 @@
 <% priority_banner = local_assigns[:priority_banner] %>
 <% hero = local_assigns.fetch(:hero, false) %>
 <% slider_banners = Array(banners) %>
-<% slider_banners = slider_banners.rotate(rand(slider_banners.length)) if slider_banners.many? && !Rails.env.test? %>
 <% section_classes = [ "promotion-banner-slider-section" ] %>
 <% section_classes << "promotion-banner-slider-section--hero" if hero %>
 
@@ -24,7 +23,7 @@
 
     <div class="promotion-banner-slider-track" data-highlights-slider-target="track">
       <% slider_banners.each_with_index do |banner, index| %>
-        <% image_priority = index.zero? || (priority_banner.present? && banner == priority_banner) %>
+        <% image_priority = priority_banner.present? ? banner == priority_banner : index.zero? %>
         <% layout_variant = index.odd? ? :reversed : :default %>
         <div class="promotion-banner-slider-slide">
           <% if banner[:type] == :event %>

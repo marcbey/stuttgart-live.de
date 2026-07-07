@@ -1,0 +1,29 @@
+<% strict_proxy = local_assigns.fetch(:strict_proxy, homepage_media_strict_proxy?) %>
+<% image_source = nil %>
+<% image_srcset = nil %>
+
+<% case banner&.fetch(:type, nil) %>
+<% when :event %>
+  <% event = banner.fetch(:record) %>
+  <% event_image = event.event_image %>
+  <% if event.promotion_banner_image.attached? %>
+    <% image_source = optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) %>
+    <% image_srcset = optimized_event_promotion_banner_image_srcset(event, strict_proxy: strict_proxy) %>
+  <% else %>
+    <% image_source = event_image_source(event_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
+    <% image_srcset = event_image_srcset(event_image, variant_sizes: %i[banner_mobile banner_desktop], strict_proxy: strict_proxy) %>
+  <% end %>
+<% when :news %>
+  <% blog_post = banner.fetch(:record) %>
+  <% image_source = optimized_blog_post_image_source(blog_post, :promotion_banner_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
+  <% image_srcset = optimized_blog_post_image_srcset(blog_post, :promotion_banner_image, strict_proxy: strict_proxy) %>
+<% end %>
+
+<% if image_source.present? %>
+  <%= tag.link rel: "preload",
+               as: "image",
+               href: image_source,
+               imagesrcset: image_srcset,
+               imagesizes: "(max-width: 699px) 100vw, 56vw",
+               fetchpriority: "high" %>
+<% end %>

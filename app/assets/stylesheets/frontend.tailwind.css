@@ -5876,6 +5876,10 @@ min-height: 100%;
 min-height: 22rem;
 }
 
+.home-featured-track .event-card.homepage-lane-initial-placeholder {
+min-height: 18rem;
+}
+
 @keyframes homepage-lane-placeholder-pulse {
   0% {
   background-position: 100% 0;
@@ -5895,6 +5899,10 @@ min-height: 22rem;
 @media (max-width: 699px) {
   .genre-lane-card.homepage-lane-initial-placeholder {
   min-height: 17.5rem;
+  }
+
+  .home-featured-track .event-card.homepage-lane-initial-placeholder {
+  min-height: 15rem;
   }
 }
 

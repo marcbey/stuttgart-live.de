@@ -15,6 +15,7 @@ module Public
     SAVED_LANE_SLUG_LIMIT = 200
     RUSS_LIVE_PROMOTER_ID = "382".freeze
     REQUEST_PROFILE_HEADER = "X-Stuttgart-Live-Profile".freeze
+    HomepageLaneShell = Data.define(:events, :effective_series_ids, :series_counts_by_id, :next_cursor)
 
     before_action :set_browse_state, only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
     around_action :append_index_profile_headers, only: :index
@@ -295,26 +296,26 @@ module Public
       @home_all_stuttgart_lane = Public::Events::LaneDirectory.all_stuttgart
       @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
 
-      featured_page = homepage_lane_page("highlights", per_page: HOME_HIGHLIGHTS_LANE_LIMIT)
-      featured_list_page = homepage_lane_page("highlights", per_page: HOME_LANE_LIST_LIMIT)
-      @home_featured_events = featured_page.events
-      @home_featured_effective_series_ids = featured_page.effective_series_ids
-      @home_featured_series_counts_by_id = featured_page.series_counts_by_id
-      @home_featured_next_cursor = featured_page.next_cursor
-      @home_featured_list_next_cursor = featured_list_page.next_cursor
+      empty_lane = empty_homepage_lane_shell
+      @home_featured_available = homepage_highlights_available?
+      @home_featured_events = empty_lane.events
+      @home_featured_effective_series_ids = empty_lane.effective_series_ids
+      @home_featured_series_counts_by_id = empty_lane.series_counts_by_id
+      @home_featured_next_cursor = empty_lane.next_cursor
+      @home_featured_list_next_cursor = empty_lane.next_cursor
 
-      @home_genre_lanes = homepage_genre_lanes
-      @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
-      all_stuttgart_page = homepage_lane_page("all_stuttgart")
-      @home_highlight_events = all_stuttgart_page.events
-      @home_highlight_effective_series_ids = all_stuttgart_page.effective_series_ids
-      @home_highlight_series_counts_by_id = all_stuttgart_page.series_counts_by_id
-      @home_highlight_next_cursor = all_stuttgart_page.next_cursor
-      tagestipp_page = homepage_lane_page("tagestipp")
-      @home_tagestipp_events = tagestipp_page.events
-      @home_tagestipp_effective_series_ids = tagestipp_page.effective_series_ids
-      @home_tagestipp_series_counts_by_id = tagestipp_page.series_counts_by_id
-      @home_tagestipp_next_cursor = tagestipp_page.next_cursor
+      @home_genre_lanes = homepage_genre_lane_shells
+      @home_genre_tag_cloud_genres = []
+      @home_highlight_events = empty_lane.events
+      @home_highlight_effective_series_ids = empty_lane.effective_series_ids
+      @home_highlight_series_counts_by_id = empty_lane.series_counts_by_id
+      @home_highlight_next_cursor = empty_lane.next_cursor
+      @home_tagestipp_available = tagestipp_available?
+      @home_tagestipp_events = empty_lane.events
+      @home_tagestipp_effective_series_ids = empty_lane.effective_series_ids
+      @home_tagestipp_series_counts_by_id = empty_lane.series_counts_by_id
+      @home_tagestipp_next_cursor = empty_lane.next_cursor
+      @home_seo_events = homepage_seo_events
     end
 
     def should_redirect_search_result?(relation)
@@ -358,8 +359,64 @@ module Public
       Public::Events::HomepageGenreLanesBuilder.new(relation: homepage_events_relation).call
     end
 
+    def homepage_genre_lane_shells
+      slugs = AppSetting.normalize_slug_list(AppSetting.homepage_genre_lane_slugs)
+      return [] if slugs.empty?
+
+      groups_by_slug = Genre.where(slug: slugs).index_by(&:slug)
+      public_paths_by_slug = Public::Events::LaneDirectory.public_paths_for_genre_slugs(slugs)
+
+      slugs.filter_map do |slug|
+        group = groups_by_slug[slug]
+        next if group.blank?
+        next unless homepage_genre_lane_available?(group)
+
+        Public::Events::HomepageGenreLanesBuilder::Lane.new(
+          group: group,
+          events: [],
+          effective_series_ids: [],
+          series_counts_by_id: {},
+          public_path: public_paths_by_slug[group.slug],
+          next_cursor: nil
+        )
+      end
+    end
+
     def homepage_genre_tag_cloud_genres
       Public::Events::HomepageGenreTagCloudBuilder.new(relation: homepage_events_relation).call
+    end
+
+    def empty_homepage_lane_shell
+      HomepageLaneShell.new(
+        events: [],
+        effective_series_ids: [],
+        series_counts_by_id: {},
+        next_cursor: nil
+      )
+    end
+
+    def homepage_highlights_available?
+      lean_homepage_highlights_relation.exists? || lean_homepage_all_relation.exists?
+    end
+
+    def tagestipp_available?
+      lean_tagestipp_relation.exists?
+    end
+
+    def homepage_genre_lane_available?(group)
+      lean_homepage_events_relation
+        .joins(:genres)
+        .where(genres: { id: group.id })
+        .distinct
+        .exists?
+    end
+
+    def homepage_seo_events
+      lean_homepage_all_relation
+        .reorder(:start_at, :id)
+        .select(:id, :slug, :artist_name, :title, :start_at)
+        .limit(50)
+        .to_a
     end
 
     def homepage_lane_page(identifier, cursor: nil, per_page: nil)
@@ -434,6 +491,39 @@ module Public
       ).reorder(:start_at, :id)
     end
 
+    def lean_homepage_events_relation
+      Event.published_live
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+    end
+
+    def lean_homepage_all_relation
+      published_visible_events_relation(
+        scope: lean_homepage_events_relation,
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: @browse_state.event_date,
+        query: nil
+      )
+    end
+
+    def lean_homepage_highlights_relation
+      published_visible_events_relation(
+        scope: lean_homepage_events_relation,
+        filter: Public::Events::BrowseState::FILTER_SKS,
+        event_date: @browse_state.event_date,
+        query: nil
+      ).reorder(:start_at, :id)
+    end
+
+    def lean_tagestipp_relation
+      published_visible_events_relation(
+        scope: Event.published_live,
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: Time.zone.today,
+        query: nil
+      )
+        .reorder(Arel.sql(Event.search_priority_order_sql), :start_at, :id)
+    end
+
     def normalized_homepage_lane_identifier(identifier)
       value = identifier.to_s
       return [ "genre", value.delete_prefix("genre:").parameterize ] if value.start_with?("genre:")
@@ -485,11 +575,21 @@ module Public
 
       sorted_banners = (event_banners + news_banners).sort_by { |banner| promotion_banner_sort_key(banner) }
 
-      @all_promotion_banners = sorted_banners
+      @all_promotion_banners = homepage_promotion_slider_banners(sorted_banners)
       @priority_promotion_banner = @all_promotion_banners.first
-      @promotion_banners_by_lane_position = @all_promotion_banners
+      @promotion_banners_by_lane_position = sorted_banners
         .select { |banner| banner[:record].promotion_banner_lane_position.present? }
         .group_by { |banner| banner[:record].promotion_banner_lane_position }
+    end
+
+    def homepage_promotion_slider_banners(banners)
+      return banners unless banners.many? && !Rails.env.test?
+
+      banners.rotate(homepage_promotion_banner_rotation_offset(banners.length))
+    end
+
+    def homepage_promotion_banner_rotation_offset(length)
+      Time.zone.today.yday % length
     end
 
     def promotion_banner_sort_key(banner)

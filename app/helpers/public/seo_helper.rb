@@ -64,6 +64,8 @@ module Public::SeoHelper
   end
 
   def public_homepage_seo_events
+    return @home_seo_events if defined?(@home_seo_events) && @home_seo_events.present?
+
     [
       @home_featured_events,
       @home_tagestipp_events,

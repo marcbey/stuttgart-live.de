@@ -1,5 +1,8 @@
 import { Controller } from "@hotwired/stimulus"
 
+const DEFERRED_INITIAL_PAGE_DELAY = 4000
+const DEFERRED_INITIAL_PAGE_IDLE_TIMEOUT = 1500
+
 export default class extends Controller {
   static targets = [ "track", "link", "list" ]
   static values = {
@@ -31,11 +34,15 @@ export default class extends Controller {
     this.initialListPagePending = this.deferredValue
     this.listLoading = false
     this.userInteracted = false
+    this.deferredLoadScheduled = false
+    this.deferredIdleCallback = null
+    this.deferredLoadTimer = null
     this.handleScroll = this.handleScroll.bind(this)
     this.handleListScroll = this.handleListScroll.bind(this)
     this.markUserInteraction = this.markUserInteraction.bind(this)
     this.handleLoadRequest = this.handleLoadRequest.bind(this)
     this.handleListShown = this.handleListShown.bind(this)
+    this.loadDeferredInitialPage = this.loadDeferredInitialPage.bind(this)
     this.element.addEventListener("homepage-lane:load", this.handleLoadRequest)
     this.element.addEventListener("section-view:list-shown", this.handleListShown)
 
@@ -82,6 +89,7 @@ export default class extends Controller {
     this.element.removeEventListener("homepage-lane:load", this.handleLoadRequest)
     this.element.removeEventListener("section-view:list-shown", this.handleListShown)
     this.deferredObserver?.disconnect()
+    this.cancelDeferredInitialPageLoad()
     if (this.raf) window.cancelAnimationFrame(this.raf)
     if (this.listRaf) window.cancelAnimationFrame(this.listRaf)
     this.abortPendingRequest()
@@ -90,6 +98,7 @@ export default class extends Controller {
 
   async load(event) {
     event?.preventDefault()
+    this.cancelDeferredInitialPageLoad()
     if (this.loading || !this.canLoad) return
 
     const advanceAfterLoad = event?.detail?.advance === true
@@ -564,9 +573,58 @@ export default class extends Controller {
       if (!entries.some((entry) => entry.isIntersecting)) return
 
       this.deferredObserver.disconnect()
-      this.load()
+      this.scheduleDeferredInitialPageLoad()
     }, { rootMargin: "900px 0px" })
     this.deferredObserver.observe(this.element)
+  }
+
+  scheduleDeferredInitialPageLoad() {
+    if (this.deferredLoadScheduled) return
+
+    this.deferredLoadScheduled = true
+    if (document.readyState === "complete") {
+      this.queueDeferredInitialPageLoad()
+      return
+    }
+
+    window.addEventListener("load", this.loadDeferredInitialPage, { once: true })
+  }
+
+  loadDeferredInitialPage() {
+    this.queueDeferredInitialPageLoad()
+  }
+
+  queueDeferredInitialPageLoad() {
+    if (!this.canLoad) return
+
+    this.deferredLoadTimer = window.setTimeout(() => {
+      this.deferredLoadTimer = null
+      if ("requestIdleCallback" in window) {
+        this.deferredIdleCallback = window.requestIdleCallback(() => {
+          this.deferredIdleCallback = null
+          this.load()
+        }, { timeout: DEFERRED_INITIAL_PAGE_IDLE_TIMEOUT })
+        return
+      }
+
+      this.load()
+    }, DEFERRED_INITIAL_PAGE_DELAY)
+  }
+
+  cancelDeferredInitialPageLoad() {
+    window.removeEventListener("load", this.loadDeferredInitialPage)
+
+    if (this.deferredIdleCallback) {
+      window.cancelIdleCallback?.(this.deferredIdleCallback)
+      this.deferredIdleCallback = null
+    }
+
+    if (this.deferredLoadTimer) {
+      window.clearTimeout(this.deferredLoadTimer)
+      this.deferredLoadTimer = null
+    }
+
+    this.deferredLoadScheduled = false
   }
 
   clearInitialPage() {

@@ -32,9 +32,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_not_includes response.body, "fonts.googleapis.com"
     assert_not_includes response.body, "fonts.gstatic.com"
-    assert_select "script[type='module'][src*='/assets/public']", count: 1
+    assert_select "script[type='module'][src*='/assets/public']", count: 0
     assert_select "script[type='module'][src*='/assets/backend']", count: 0
     assert_select "script[type='module'][src*='/assets/application']", count: 0
+    assert_includes response.body, "loadPublicJavascript"
+    assert_includes response.body, ActionController::Base.helpers.asset_path("public.js")
+    assert_includes response.body, "requestIdleCallback"
     assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='oswald-700']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 1
@@ -203,11 +206,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     pop_names = pop_section.css(".genre-lane-card-name").map(&:text)
     rock_names = rock_section.css(".genre-lane-card-name").map(&:text)
 
-    assert_equal [ pop_event.artist_name ], pop_names
+    assert_empty pop_names
     assert_empty rock_names
+    assert_equal "true", pop_section["data-homepage-lane-deferred-value"]
     assert_equal "true", rock_section["data-homepage-lane-deferred-value"]
     assert_not_includes rock_names, unpublished_event.artist_name
     assert_not_includes rock_names, past_event.artist_name
+
+    get homepage_lane_events_url(lane: "genre:#{pop_group.slug}", filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    lazy_pop_names = document.css(".genre-lane-card-name").map(&:text)
+
+    assert_equal [ pop_event.artist_name ], lazy_pop_names
 
     get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", filter: "all")
 
@@ -229,9 +241,23 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".genre-lane-section", count: 0
   end
 
-  test "index defers lower homepage lanes from the initial payload" do
+  test "index defers homepage lanes below the promotion hero from the initial payload" do
     _base_group, rock_group, _pop_group = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
+    highlighted_event = Event.create!(
+      slug: "deferred-homepage-highlight-event",
+      source_fingerprint: "test::homepage::deferred::highlight",
+      title: "Deferred Homepage Highlight",
+      artist_name: "Deferred Homepage Highlight Artist",
+      start_at: future_start - 1.hour,
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "eventim",
+      source_snapshot: {}
+    )
     genre_event = Event.create!(
       slug: "deferred-homepage-rock-event",
       source_fingerprint: "test::homepage::deferred::rock",
@@ -278,16 +304,32 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.parse(response.body)
+    highlights_section = document.at_css("section.home-featured-section")
     rock_section = document.css("section.genre-lane-section").find { |section| lane_heading_text(section) == rock_group.name }
     tagestipp_section = document.css("section.genre-lane-section").find { |section| lane_heading_text(section) == "Tagestipp" }
 
-    assert rock_section.present?, "expected first configured genre lane to stay in the initial payload"
+    assert highlights_section.present?, "expected highlights lane shell"
+    assert rock_section.present?, "expected first configured genre lane shell"
     assert tagestipp_section.present?, "expected Tagestipp lane shell"
-    assert_nil rock_section["data-homepage-lane-deferred-value"]
+    assert_equal "true", highlights_section["data-homepage-lane-deferred-value"]
+    assert_equal "true", rock_section["data-homepage-lane-deferred-value"]
     assert_equal "true", tagestipp_section["data-homepage-lane-deferred-value"]
-    assert_includes rock_section.css(".genre-lane-card-name").map(&:text), genre_event.artist_name
+    assert_empty highlights_section.css(".event-card h2")
+    assert_empty rock_section.css(".genre-lane-card-name")
     assert_empty tagestipp_section.css(".genre-lane-card-name")
+    assert_not_includes highlights_section.text, highlighted_event.artist_name
+    assert_not_includes rock_section.text, genre_event.artist_name
     assert_not_includes tagestipp_section.text, tagestipp_event.artist_name
+
+    get homepage_lane_events_url(lane: "highlights", filter: "all")
+
+    assert_response :success
+    assert_includes response.body, highlighted_event.artist_name
+
+    get homepage_lane_events_url(lane: "genre:#{rock_group.slug}", filter: "all")
+
+    assert_response :success
+    assert_includes response.body, genre_event.artist_name
 
     get homepage_lane_events_url(lane: "all_stuttgart", filter: "all")
 
@@ -682,6 +724,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+
+    get homepage_lane_events_url(lane: "genre:rock-alternative", filter: "all")
+
+    assert_response :success
     assert_includes response.body, visible_event.artist_name
     assert_select ".event-series-badge", count: 0
   end
@@ -723,6 +769,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     build_homepage_genre_enrichment(event: later_event, genres: [ "Rock" ])
 
     get events_url(filter: "all")
+
+    assert_response :success
+
+    get homepage_lane_events_url(lane: "genre:rock-alternative", filter: "all")
 
     assert_response :success
     assert_includes response.body, earlier_event.artist_name
@@ -768,9 +818,17 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+
+    get homepage_lane_events_url(lane: "genre:rock-alternative", filter: "all")
+
+    assert_response :success
     assert_select ".genre-lane-card .event-series-badge", minimum: 1
-    assert_select ".section-slider-list .event-listing-series-pill", minimum: 1
-    assert_select ".section-slider-list .event-series-badge", count: 0
+
+    get homepage_lane_events_url(lane: "genre:rock-alternative", mode: "rows", filter: "all")
+
+    assert_response :success
+    assert_select ".event-listing-series-pill", minimum: 1
+    assert_select ".event-series-badge", count: 0
   end
 
   test "index hides future unpublished events for guests" do
@@ -973,9 +1031,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert highlights_section.present?, "expected Highlights section to be rendered"
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
+    assert_equal "true", highlights_section["data-homepage-lane-deferred-value"]
     assert_equal "true", tagestipp_section["data-homepage-lane-deferred-value"]
 
-    highlight_names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
+    assert_empty highlights_section.css(".home-featured-track .event-card-copy h2")
+
+    get homepage_lane_events_url(lane: "highlights", filter: "all")
+
+    assert_response :success
+    highlight_names = Nokogiri::HTML.parse(response.body).css(".event-card-copy h2").map(&:text)
 
     assert_includes highlight_names, published_highlight.artist_name
     assert_not_includes highlight_names, unpublished_highlight.artist_name
@@ -1017,10 +1081,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    document = Nokogiri::HTML.parse(response.body)
-    highlights_section = document.at_css("section.home-featured-section")
-    highlight_names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
+    get homepage_lane_events_url(lane: "highlights", filter: "all")
 
+    assert_response :success
+    highlight_names = Nokogiri::HTML.parse(response.body).css(".event-card-copy h2").map(&:text)
     assert_not_includes highlight_names, scheduled_highlight.artist_name
   end
 
@@ -1063,8 +1127,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "section.home-featured-section[data-controller~='highlights-slider'][data-controller~='homepage-lane'][data-homepage-lane-lane-value='highlights']", count: 1
     assert_select ".home-featured-section .highlights-slider-viewport", count: 1
     assert_select ".home-featured-section .home-featured-track[data-homepage-lane-target='track']", count: 1
-    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_event.artist_name)}/
+    assert_select ".home-featured-track .homepage-lane-initial-placeholder", minimum: 1
+    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_event.artist_name)}/, count: 0
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
+
+    get homepage_lane_events_url(lane: "highlights")
+
+    assert_response :success
+    assert_select ".event-card-copy h2", text: sks_event.artist_name
+    assert_select ".event-card-copy h2", text: non_sks_event.artist_name, count: 0
   end
 
   test "homepage renders promotion banner at the top when configured" do
@@ -1556,7 +1627,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "homepage renders optimized promotion banner image" do
-    banner_time = Time.zone.local(2026, 4, 6, 12, 0, 0)
+    banner_time = Time.zone.local(2026, 4, 7, 12, 0, 0)
     expected_path = nil
 
     with_media_proxy do
@@ -1642,6 +1713,77 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     refute_match(/top:\s*0(?:\.0+)?%/, promotion_banner_image["style"])
     assert_equal "lazy", promotion_banner_images.last["loading"]
     assert_nil promotion_banner_images.last["fetchpriority"]
+  end
+
+  test "homepage preloads and prioritizes the visible promotion banner slider image" do
+    banner_time = Time.zone.local(2026, 4, 7, 12, 0, 0)
+
+    with_media_proxy do
+      travel_to banner_time do
+        Event.update_all(promotion_banner: false)
+        BlogPost.update_all(promotion_banner: false)
+
+        older_blog_post = BlogPost.create!(
+          title: "Rotated Visible Promotion News",
+          teaser: "Teaser",
+          body: "<div>Inhalt</div>",
+          author: @user,
+          status: "published",
+          published_at: 2.hours.ago,
+          published_by: @user
+        )
+        older_blog_post.promotion_banner_image.attach(
+          io: StringIO.new(solid_png_binary(width: 1800, height: 1000)),
+          filename: "rotated-visible-promotion-news.png",
+          content_type: "image/png"
+        )
+        older_blog_post.update!(promotion_banner: true)
+
+        newer_blog_post = BlogPost.create!(
+          title: "Sorted First Promotion News",
+          teaser: "Teaser",
+          body: "<div>Inhalt</div>",
+          author: @user,
+          status: "published",
+          published_at: 1.hour.ago,
+          published_by: @user
+        )
+        newer_blog_post.promotion_banner_image.attach(
+          io: StringIO.new(solid_png_binary(width: 1800, height: 1000)),
+          filename: "sorted-first-promotion-news.png",
+          content_type: "image/png"
+        )
+        newer_blog_post.update!(promotion_banner: true)
+
+        original_env = Rails.env
+        production_env = ActiveSupport::StringInquirer.new("production")
+        begin
+          Rails.singleton_class.define_method(:env) { production_env }
+          get events_url(filter: "all")
+        ensure
+          Rails.singleton_class.define_method(:env) { original_env }
+        end
+      end
+    end
+
+    assert_response :success
+
+    document = Nokogiri::HTML.parse(response.body)
+    slider_links = document.css(".promotion-banner-slider-track a.promotion-banner-link")
+    slider_images = document.css(".promotion-banner-slider-track img.promotion-banner-image")
+    first_slider_image = slider_images.first
+    preload = document.at_css("head link[rel='preload'][as='image'][fetchpriority='high']")
+
+    assert_not_nil first_slider_image
+    assert_not_nil preload
+    assert_predicate slider_links.first["href"], :present?
+    assert_equal first_slider_image["src"], preload["href"]
+    assert_equal first_slider_image["srcset"], preload["imagesrcset"]
+    assert_equal first_slider_image["sizes"], preload["imagesizes"]
+    assert_equal "high", first_slider_image["fetchpriority"]
+    assert_equal "eager", first_slider_image["loading"]
+    assert_equal 1, slider_images.count { |image| image["fetchpriority"] == "high" }
+    assert_equal 1, slider_images.count { |image| image["loading"] == "eager" }
   end
 
   test "homepage falls back to original news promotion banner image when optimized proxy path is unavailable" do
@@ -1907,7 +2049,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
+    assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/, count: 0
+
+    get homepage_lane_events_url(lane: "highlights")
+
+    assert_response :success
+    assert_select ".event-card-copy h2", text: highlighted_event.artist_name
   end
 
   test "index includes manually highlighted non-sks events in homepage highlights" do
@@ -1931,7 +2078,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/
+    assert_select ".home-featured-track", text: /#{Regexp.escape(highlighted_event.artist_name)}/, count: 0
+
+    get homepage_lane_events_url(lane: "highlights")
+
+    assert_response :success
+    assert_select ".event-card-copy h2", text: highlighted_event.artist_name
   end
 
   test "index orders homepage highlights chronologically" do
@@ -1987,7 +2139,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert highlights_section.present?, "expected Highlights section to be rendered"
 
-    names = highlights_section.css(".home-featured-track .event-card-copy h2").map(&:text)
+    assert_empty highlights_section.css(".home-featured-track .event-card-copy h2")
+
+    get homepage_lane_events_url(lane: "highlights")
+
+    assert_response :success
+    names = Nokogiri::HTML.parse(response.body).css(".event-card-copy h2").map(&:text)
 
     assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
   end
@@ -2150,16 +2307,23 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     rock_section = document.css("section.genre-lane-section").find do |section|
       lane_heading_text(section) == metal_group.name
     end
-    cursor = rock_section["data-homepage-lane-cursor-value"]
 
-    assert_equal 10, rock_section.css(".genre-lane-card-name").size
+    assert_equal "true", rock_section["data-homepage-lane-deferred-value"]
+    assert_empty rock_section.css(".genre-lane-card-name")
+
+    get homepage_lane_events_url(lane: "genre:#{metal_group.slug}", mode: "cards")
+
+    assert_response :success
+    assert_equal "true", response.headers["X-Homepage-Lane-Has-More"]
+    assert_select "article.genre-lane-card", count: 10
+    assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Metal Artist 0"
+    assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Metal Artist 9"
+    cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
     assert_predicate cursor, :present?
 
     get homepage_lane_events_url(lane: "genre:#{metal_group.slug}", cursor: cursor, mode: "cards")
 
     assert_response :success
-    assert_equal "true", response.headers["X-Homepage-Lane-Has-More"]
-    assert_select "article.genre-lane-card", count: 10
     assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Metal Artist 10"
     assert_select ".genre-lane-card-name", text: "Homepage Lane Endpoint Metal Artist 19"
   end
@@ -2190,7 +2354,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     queries = capture_sql_queries { get events_url(filter: "all") }
 
     assert_response :success
-    assert_select "section.genre-lane-section[data-homepage-lane-lane-value='genre:#{rock_group.slug}'] .event-series-badge", count: 1
+    assert_select "section.genre-lane-section[data-homepage-lane-lane-value='genre:#{rock_group.slug}'][data-homepage-lane-deferred-value='true']", count: 1
+    assert_select "section.genre-lane-section[data-homepage-lane-lane-value='genre:#{rock_group.slug}'] .event-series-badge", count: 0
     assert_empty per_series_count_queries(queries)
   end
 
@@ -2397,22 +2562,55 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     names = highlights_section.css(".event-card-copy h2").map(&:text)
     row_names = highlights_section.css(".section-slider-list .event-listing-link strong").map(&:text)
 
-    assert_equal 14, names.size
-    assert_equal 12, row_names.size
-    assert_includes row_names, "Highlights Fallback Artist 11"
-    assert_not_includes row_names, "Highlights Fallback Artist 12"
+    assert_empty names
+    assert_empty row_names
     assert_not_includes names, final_event.artist_name
     cursor = highlights_section["data-homepage-lane-cursor-value"]
     list_cursor = highlights_section["data-homepage-lane-list-cursor-value"]
-    assert_predicate cursor, :present?
+    assert_empty cursor.to_s
+    assert_empty list_cursor.to_s
+
+    get homepage_lane_events_url(
+      lane: "highlights",
+      mode: "rows",
+      per_page: Public::EventsController::HOME_LANE_LIST_LIMIT,
+      filter: "all",
+      event_date: selected_date.iso8601
+    )
+
+    assert_response :success
+    assert_select "article.event-listing-card", count: 12
+    assert_select "article.event-listing-card", text: /Highlights Fallback Artist 11/
+    assert_select "article.event-listing-card", text: /Highlights Fallback Artist 12/, count: 0
+    list_cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
     assert_predicate list_cursor, :present?
 
-    get homepage_lane_events_url(lane: "highlights", cursor: list_cursor, mode: "rows", filter: "all", event_date: selected_date.iso8601)
+    get homepage_lane_events_url(
+      lane: "highlights",
+      cursor: list_cursor,
+      mode: "rows",
+      filter: "all",
+      event_date: selected_date.iso8601
+    )
 
     assert_response :success
     assert_select "article.event-listing-card", count: 5
     assert_select "article.event-listing-card", text: /Highlights Fallback Artist 12/
     assert_select "article.event-listing-card", text: /Highlights Fallback Final Artist/
+
+    get homepage_lane_events_url(
+      lane: "highlights",
+      per_page: Public::EventsController::HOME_HIGHLIGHTS_LANE_LIMIT,
+      filter: "all",
+      event_date: selected_date.iso8601
+    )
+
+    assert_response :success
+    names = Nokogiri::HTML.parse(response.body).css(".event-card-copy h2").map(&:text)
+    assert_equal 14, names.size
+    assert_not_includes names, final_event.artist_name
+    cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
+    assert_predicate cursor, :present?
 
     get homepage_lane_events_url(lane: "highlights", cursor: cursor, filter: "all", event_date: selected_date.iso8601)
 
@@ -2674,11 +2872,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".home-featured-section--open-grid", count: 0
     assert_select "section.home-featured-section[data-controller~='highlights-slider'][data-controller~='homepage-lane'][data-homepage-lane-lane-value='highlights']", count: 1
     assert_select ".home-featured-section .highlights-slider-viewport", count: 1
-    assert_select ".home-featured-track article.event-card", minimum: 3
-    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easy_event.artist_name)}/
-    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_eventim_event.artist_name)}/
-    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easyticket_promoter_event.artist_name)}/
+    assert_select ".home-featured-track article.homepage-lane-initial-placeholder", minimum: 1
+    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easy_event.artist_name)}/, count: 0
+    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_eventim_event.artist_name)}/, count: 0
+    assert_select ".home-featured-track", text: /#{Regexp.escape(sks_easyticket_promoter_event.artist_name)}/, count: 0
     assert_select ".home-featured-track", text: /#{Regexp.escape(non_sks_event.artist_name)}/, count: 0
+
+    get homepage_lane_events_url(lane: "highlights", filter: "sks")
+
+    assert_response :success
+    assert_select ".event-card-copy h2", text: sks_easy_event.artist_name
+    assert_select ".event-card-copy h2", text: sks_eventim_event.artist_name
+    assert_select ".event-card-copy h2", text: sks_easyticket_promoter_event.artist_name
+    assert_select ".event-card-copy h2", text: non_sks_event.artist_name, count: 0
   end
 
   test "index can be filtered to a specific day" do
@@ -2804,9 +3010,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select ".section-slider-list .event-listing-status-pill", text: "Ausverkauft", minimum: 1
-    assert_select ".section-slider-list .event-listing-status-pill", text: "Abgesagt", minimum: 1
-    assert_select ".section-slider-list .event-sold-out-ribbon", count: 0
+
+    get homepage_lane_events_url(lane: "highlights", mode: "rows", filter: "all")
+
+    assert_response :success
+    assert_select ".event-listing-status-pill", text: "Ausverkauft", minimum: 1
+    assert_select ".event-listing-status-pill", text: "Abgesagt", minimum: 1
+    assert_select ".event-sold-out-ribbon", count: 0
   end
 
   test "index redirects old search links to the dedicated search page" do
@@ -3549,6 +3759,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
 
+    get homepage_lane_events_url(lane: "genre:rock-alternative", filter: "all")
+
+    assert_response :success
+
     document = Nokogiri::HTML.parse(response.body)
     card = document.css("article.genre-lane-card").find do |node|
       node.at_css(".genre-lane-card-name")&.text == event.artist_name
@@ -3559,7 +3773,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 1, card.css(".event-series-badge").size
     assert_equal 0, card.css(".genre-lane-card-ticket-overlay").size
 
-    list_row = document.css(".section-slider-list .event-listing-card").find do |node|
+    get homepage_lane_events_url(lane: "genre:rock-alternative", mode: "rows", filter: "all")
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    list_row = document.css(".event-listing-card").find do |node|
       node.at_css(".event-listing-link strong")&.text == event.artist_name
     end
 
@@ -4666,6 +4884,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+
+    get homepage_lane_events_url(lane: "highlights", filter: "all")
+
+    assert_response :success
     assert_includes response.body, "event-card-admin-controls"
     assert_includes response.body, "/backend/events?event_id=#{event.id}&amp;status=#{event.status}"
   end
@@ -5378,6 +5600,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     with_media_proxy do
       travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
         get events_url(filter: "all")
+        assert_response :success
+        get homepage_lane_events_url(lane: "highlights", filter: "all")
         expected_path = PublicMediaUrl.path_for(image.processed_optimized_public_variant(:card_desktop))
       end
     end
@@ -5407,6 +5631,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     with_media_proxy do
       get events_url(filter: "all")
+      assert_response :success
+      get homepage_lane_events_url(lane: "highlights", filter: "all")
     end
 
     assert_response :success
@@ -5440,6 +5666,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+    get homepage_lane_events_url(lane: "highlights", filter: "all")
+
+    assert_response :success
     document = Nokogiri::HTML.parse(response.body)
     image_node = document.at_css("img.event-card-image[src='https://img.example.test/external-cover_1200x800.jpg']")
 
@@ -5458,6 +5687,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     with_media_proxy do
       get events_url(filter: "all")
+      assert_response :success
+      get homepage_lane_events_url(lane: "highlights", filter: "all")
     end
 
     assert_response :success
@@ -5573,7 +5804,17 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+    assert_select ".home-featured-track .saved-event-button[data-controller='saved-event-toggle']", count: 0
+    assert_select ".genre-lane-card .saved-event-button[data-controller='saved-event-toggle']", count: 0
+
+    get homepage_lane_events_url(lane: "highlights", filter: "all")
+
+    assert_response :success
     assert_select ".event-card .saved-event-button[data-controller='saved-event-toggle']", minimum: 1
+
+    get homepage_lane_events_url(lane: "genre:rock-alternative", filter: "all")
+
+    assert_response :success
     assert_select ".genre-lane-card .saved-event-button[data-controller='saved-event-toggle']", minimum: 1
     assert_includes response.body, @published_event.slug
   end

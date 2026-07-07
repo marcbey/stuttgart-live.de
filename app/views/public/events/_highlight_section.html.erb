@@ -8,12 +8,16 @@
 <% lazy_list_next_cursor = local_assigns.fetch(:lazy_list_next_cursor, lazy_next_cursor) %>
 <% lazy_url = local_assigns[:lazy_url] %>
 <% open_grid = local_assigns.fetch(:open_grid, false) %>
-<% list_events = lazy_lane_id.present? ? events.first(Public::EventsController::HOME_LANE_LIST_LIMIT) : events %>
+<% defer_initial_page = local_assigns.fetch(:defer_initial_page, false) %>
+<% rendered_events = defer_initial_page ? [] : events %>
+<% list_events = defer_initial_page ? [] : (lazy_lane_id.present? ? events.first(Public::EventsController::HOME_LANE_LIST_LIMIT) : events) %>
+<% section_lazy_next_cursor = defer_initial_page ? nil : lazy_next_cursor %>
+<% section_lazy_list_next_cursor = defer_initial_page ? nil : lazy_list_next_cursor %>
 <% section_cache_key = public_events_section_cache_key(
   section: "highlight",
   browse_state: browse_state,
   events: events,
-  context: [ title, local_assigns[:title_url], featured, open_grid, list_aria_label, lazy_lane_id, lazy_next_cursor, lazy_url ],
+  context: [ title, local_assigns[:title_url], featured, open_grid, list_aria_label, lazy_lane_id, lazy_next_cursor, lazy_url, defer_initial_page ],
   strict_proxy: strict_proxy
 ) %>
 
@@ -43,10 +47,11 @@
            <% if lazy_lane_id.present? && !open_grid %>
            data-homepage-lane-url-value="<%= lazy_url %>"
            data-homepage-lane-lane-value="<%= lazy_lane_id %>"
-           data-homepage-lane-cursor-value="<%= lazy_next_cursor %>"
-           data-homepage-lane-list-cursor-value="<%= lazy_list_next_cursor %>"
-           data-homepage-lane-per-page-value="<%= Public::EventsController::HOME_LANE_LIMIT %>"
+           data-homepage-lane-cursor-value="<%= section_lazy_next_cursor %>"
+           data-homepage-lane-list-cursor-value="<%= section_lazy_list_next_cursor %>"
+           data-homepage-lane-per-page-value="<%= featured ? Public::EventsController::HOME_HIGHLIGHTS_LANE_LIMIT : Public::EventsController::HOME_LANE_LIMIT %>"
            data-homepage-lane-list-limit-value="<%= Public::EventsController::HOME_LANE_LIST_LIMIT %>"
+           <% if defer_initial_page %>data-homepage-lane-deferred-value="true"<% end %>
            <% end %>>
     <%= render "home_slider_header",
                title: title,
@@ -68,7 +73,12 @@
         <div class="<%= [track_class, ("featured-event-grid" if open_grid)].compact.join(" ") %>"
              data-highlights-slider-target="track"
              <% if lazy_lane_id.present? && !open_grid %>data-homepage-lane-target="track"<% end %>>
-          <% events.each_with_index do |event, index| %>
+          <% if defer_initial_page %>
+            <% 4.times do %>
+              <article class="event-card homepage-lane-placeholder homepage-lane-initial-placeholder" aria-hidden="true"></article>
+            <% end %>
+          <% end %>
+          <% rendered_events.each_with_index do |event, index| %>
             <% if featured %>
               <% tile_variant = effective_public_grid_variant_for(event, index) %>
               <% card_slot = card_slot_for_grid_variant(tile_variant) %>
