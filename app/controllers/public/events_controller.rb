@@ -7,6 +7,7 @@ module Public
     HOME_LANE_LIMIT = Public::Events::HomepageLanePager::DEFAULT_PER_PAGE
     HOME_LANE_LIST_LIMIT = 12
     HOME_HIGHLIGHTS_LANE_LIMIT = HOME_LANE_LIMIT + 4
+    LANE_PAGE_LIMIT = Public::Events::HomepageLanePager::MAX_PER_PAGE
     HOME_CANDIDATE_LIMIT = 100
     SEARCH_OVERLAY_LIMIT = 6
     SEARCH_OVERLAY_IDLE_LIMIT = 10
@@ -781,16 +782,19 @@ module Public
         @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
       when "genre"
-        lane_page = Public::Events::HomepageGenreLanesBuilder.new(
-          relation: homepage_events_relation,
-          slugs: [ lane.group.slug ],
-          limit: nil
-        ).call.first
+        lane_page = homepage_lane_page("genre:#{lane.group.slug}", per_page: LANE_PAGE_LIMIT)
         raise ActiveRecord::RecordNotFound if lane_page.blank?
 
         @lane_effective_series_ids = lane_page.effective_series_ids
         @lane_series_counts_by_id = lane_page.series_counts_by_id
         @lane_events = lane_page.events
+        @lane_next_cursor = lane_page.next_cursor
+        @lane_list_next_cursor = lane_page.next_cursor
+        @lane_lazy_id = "genre:#{lane.group.slug}" if @lane_next_cursor.present?
+        @lane_lazy_url = helpers.homepage_lane_events_path(
+          event_date: @browse_state.event_date_param,
+          filter: @browse_state.filter
+        ) if @lane_lazy_id.present?
       else
         raise ActiveRecord::RecordNotFound
       end

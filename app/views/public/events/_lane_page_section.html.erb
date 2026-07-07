@@ -3,6 +3,12 @@
   grid_classes = [ "lane-page-grid" ]
   grid_classes << "featured-event-grid" if featured_grid
   strict_proxy = local_assigns.fetch(:strict_proxy, false)
+  lazy_lane_id = local_assigns[:lazy_lane_id]
+  lazy_url = local_assigns[:lazy_url]
+  lazy_next_cursor = local_assigns[:lazy_next_cursor]
+  lazy_list_next_cursor = local_assigns[:lazy_list_next_cursor].presence || lazy_next_cursor
+  lazy_per_page = local_assigns.fetch(:lazy_per_page, Public::EventsController::LANE_PAGE_LIMIT)
+  section_controllers = [ "section-view", ("lane-page" if lazy_lane_id.present?) ].compact
   nav_content = capture do
 %>
   <button type="button"
@@ -23,15 +29,24 @@
 <% end %>
 
 <section class="home-slider-section lane-page-section <%= "lane-page-section--compact-grid" unless featured_grid %> search-results-section <%= "lane-page-section--featured-grid" if featured_grid %>"
-         data-controller="section-view"
-         data-section-view-mobile-list-default-value="true">
+         data-controller="<%= section_controllers.join(" ") %>"
+         data-section-view-mobile-list-default-value="true"
+         <% if lazy_lane_id.present? %>
+         data-lane-page-url-value="<%= lazy_url %>"
+         data-lane-page-lane-value="<%= lazy_lane_id %>"
+         data-lane-page-cursor-value="<%= lazy_next_cursor %>"
+         data-lane-page-list-cursor-value="<%= lazy_list_next_cursor %>"
+         data-lane-page-per-page-value="<%= lazy_per_page %>"
+         <% end %>>
   <%= render "home_slider_header",
              title: lane.title,
              variant: lane.header_variant,
              nav_content: nav_content %>
   <% if events.any? %>
     <div data-section-view-target="slider">
-      <div class="<%= grid_classes.join(" ") %>" id="lane-event-grid">
+      <div class="<%= grid_classes.join(" ") %>"
+           id="lane-event-grid"
+           <% if lazy_lane_id.present? %>data-lane-page-target="grid"<% end %>>
         <% if featured_grid %>
           <%= render "event_cards",
                      events: events,
@@ -54,7 +69,10 @@
         <% end %>
       </div>
     </div>
-    <div class="section-slider-list genre-lane-list" data-section-view-target="list" hidden>
+    <div class="section-slider-list genre-lane-list"
+         data-section-view-target="list"
+         <% if lazy_lane_id.present? %>data-lane-page-target="list"<% end %>
+         hidden>
       <%= render "event_rows",
                  events: events,
                  browse_state: browse_state,
@@ -62,6 +80,18 @@
                  series_counts_by_id: local_assigns[:series_counts_by_id],
                  row_dom_id_prefix: :lane_page_row %>
     </div>
+    <% if lazy_lane_id.present? %>
+      <div class="pagination-sentinel lane-page-pagination" data-lane-page-target="pagination">
+        <button type="button"
+                class="button button-secondary button-compact pagination-link"
+                data-action="click->lane-page#load"
+                data-lane-page-target="button"
+                aria-controls="lane-event-grid">
+          Mehr Events laden
+        </button>
+        <p class="pagination-copy" data-lane-page-target="status" aria-live="polite"></p>
+      </div>
+    <% end %>
   <% else %>
     <div class="search-results-empty">
       <h2>Aktuell nichts in dieser Lane</h2>

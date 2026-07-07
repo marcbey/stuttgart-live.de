@@ -27,5 +27,10 @@
              effective_series_ids: @lane_effective_series_ids,
              series_counts_by_id: @lane_series_counts_by_id,
              browse_state: @browse_state,
-             strict_proxy: homepage_media_strict_proxy? %>
+             strict_proxy: homepage_media_strict_proxy?,
+             lazy_lane_id: @lane_lazy_id,
+             lazy_url: @lane_lazy_url,
+             lazy_next_cursor: @lane_next_cursor,
+             lazy_list_next_cursor: @lane_list_next_cursor,
+             lazy_per_page: Public::EventsController::LANE_PAGE_LIMIT %>
 </section>

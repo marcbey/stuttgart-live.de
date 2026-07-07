@@ -40,6 +40,7 @@ const lazyControllers = {
   "highlights-slider": () => import("./highlights_slider_controller"),
   "homepage-lane": () => import("./homepage_lane_controller"),
   "infinite-scroll": () => import("./infinite_scroll_controller"),
+  "lane-page": () => import("./lane_page_controller"),
   "lightbox": () => import("./lightbox_controller"),
   "partner-strip": () => import("./partner_strip_controller"),
   "section-view": () => import("./section_view_controller")

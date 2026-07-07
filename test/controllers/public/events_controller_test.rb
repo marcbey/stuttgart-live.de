@@ -662,6 +662,48 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#lane-event-grid .genre-lane-card-name", text: "Lane Page Pop Artist 17"
   end
 
+  test "genre lane page limits initial payload and exposes cursor for more events" do
+    _, _, pop_group = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+
+    25.times do |index|
+      Event.create!(
+        slug: "lane-page-pop-paged-#{index}",
+        source_fingerprint: "test::public::lane-page::pop-paged::#{index}",
+        title: "Lane Page Pop Paged #{index}",
+        artist_name: "Lane Page Pop Paged Artist #{index}",
+        start_at: (index + 2).days.from_now.change(hour: 18, min: 0, sec: 0),
+        venue: "Porsche-Arena",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        primary_source: "eventim",
+        source_snapshot: {}
+      ).tap do |event|
+        build_homepage_genre_enrichment(event: event, genres: [ "Pop" ])
+      end
+    end
+
+    get "/#{pop_group.slug}"
+
+    assert_response :success
+    assert_select "section.lane-page-section[data-controller~='lane-page']", count: 1
+    assert_select "section.lane-page-section[data-lane-page-lane-value='genre:#{pop_group.slug}']", count: 1
+    assert_select "#lane-event-grid article.genre-lane-card", count: Public::Events::HomepageLanePager::MAX_PER_PAGE
+    assert_select ".genre-lane-card-name", text: "Lane Page Pop Paged Artist 19"
+    assert_select ".genre-lane-card-name", text: "Lane Page Pop Paged Artist 20", count: 0
+    assert_select "button[data-action='click->lane-page#load']", count: 1
+
+    document = Nokogiri::HTML.parse(response.body)
+    cursor = document.at_css("section.lane-page-section")["data-lane-page-cursor-value"]
+    assert_predicate cursor, :present?
+
+    get homepage_lane_events_url(lane: "genre:#{pop_group.slug}", cursor: cursor, mode: "cards")
+
+    assert_response :success
+    assert_select ".genre-lane-card-name", text: "Lane Page Pop Paged Artist 20"
+    assert_select ".genre-lane-card-name", text: "Lane Page Pop Paged Artist 24"
+  end
+
   test "genre lane route falls through to a static page on slug collision" do
     create_homepage_genre_snapshot
     StaticPage.create!(
