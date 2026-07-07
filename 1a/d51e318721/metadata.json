@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "1ad51e318721",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "config/nginx.conf.template",
+    "test/lib/nginx_config_test.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/1a/d51e318721/0/metadata.json",
+      "transcript": "/1a/d51e318721/0/full.jsonl",
+      "content_hash": "/1a/d51e318721/0/content_hash.txt",
+      "prompt": "/1a/d51e318721/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 32152,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 1567872,
+    "output_tokens": 8561,
+    "api_call_count": 15
+  }
+}
