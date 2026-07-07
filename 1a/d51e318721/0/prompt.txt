@@ -1,5 +1,1 @@
-Commit und Push
-
----
-
 Der letzte fix funktioniert nicht, zumindest nicht im mobile browser
