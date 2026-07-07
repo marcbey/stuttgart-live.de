@@ -1,0 +1,29 @@
+Wieso werden denn die teaser kachel images nicht im browser gecached?
+
+---
+
+Wieso sind die Image URLs nicht stablil? Woher kommt diese Änderung?
+
+---
+
+Ok, fix das
+
+---
+
+wie ? und jetzt hält die URL einen Tag ?
+
+---
+
+Das ist doch scheisse, wieso können die URLs nicht dauerhaft stabil bleiben?
+
+---
+
+wenn im backend was an den Event Images geändert wird darf die Bild URL sich ändern, aber ansonsten stabil bleiben
+
+---
+
+Und was passiert wenn im backend das Bild getauscht oder ein anderes crop gemacht wird?
+
+---
+
+Sind die offenen changes wasserdicht und verbessern die Performance der seit?
