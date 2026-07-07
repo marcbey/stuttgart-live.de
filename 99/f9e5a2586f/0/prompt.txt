@@ -1,0 +1,11 @@
+wenn ich einen mehrfachen reload auf https://stuttgart-live.schopp3r.de/ sind die teaser kachel bilder der lanes erst einmal leer und brauchen mehrere sekunden um zu laden obwohl diese doch im browser cache liegen sollten.
+Finde heraus warum diese bilder der teaser kacheln bei jedem reload neu geladen werden
+
+---
+
+Das klingt sehr over-engineered und hat eine schlechte UX / performance.
+Finde eine einfache, performante Lösung für das Problem
+
+---
+
+Ja, setzte die empfohlene Variante um aber finde toten, unnötigen code und entferne diesen.
