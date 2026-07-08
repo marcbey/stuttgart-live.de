@@ -1,13 +1,1 @@
 commit & push
-
----
-
-finde eine Lösung für das Retention-Problem
-
----
-
-überprüfe diese Vorschlag nochmals, damit wir sicher gehen können das nichts kaputt geht
-
----
-
-OK, mach das so
