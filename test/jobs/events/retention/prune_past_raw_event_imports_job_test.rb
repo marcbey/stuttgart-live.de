@@ -11,7 +11,11 @@ class Events::Retention::PrunePastRawEventImportsJobTest < ActiveJob::TestCase
         deleted_count: 0,
         deleted_by_source: {},
         skipped_count: 0,
-        cutoff_at: Time.zone.parse("2026-03-15 00:00:00")
+        cutoff_at: Time.zone.parse("2026-03-15 00:00:00"),
+        deleted_past_event_count: 0,
+        deleted_superseded_count: 0,
+        superseded_cutoff_at: Time.zone.parse("2026-04-01 00:00:00"),
+        superseded_delete_limit_reached: false
       )
     end
 
