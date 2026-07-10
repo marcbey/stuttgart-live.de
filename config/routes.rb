@@ -114,6 +114,7 @@ Rails.application.routes.draw do
   get "highlights", to: "public/events#lane", defaults: { lane: "highlights" }, as: :highlights_lane
   get "alles-aus-stuttgart", to: "public/events#lane", defaults: { lane: "all_stuttgart" }, as: :all_stuttgart_lane
   get "tagestipp", to: "public/events#lane", defaults: { lane: "tagestipp" }, as: :tagestipp_lane
+  get "russ-live", to: "public/events#lane", defaults: { lane: "russ_live" }, as: :russ_live_lane
   resources :newsletter_subscribers, only: [ :create ], module: :public
   get "tickets", to: "public/pages#show", defaults: { slug: "tickets" }, as: :tickets
   get "kontakt", to: "public/pages#show", defaults: { slug: "kontakt" }, as: :contact

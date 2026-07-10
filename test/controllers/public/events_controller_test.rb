@@ -630,6 +630,45 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#lane-event-grid .genre-lane-card-name", text: today_event.artist_name
   end
 
+  test "russ live lane page renders only sks promoter events" do
+    russ_live_event = Event.create!(
+      slug: "russ-live-lane-event",
+      source_fingerprint: "test::public::lane-page::russ-live",
+      title: "Russ Live Lane Event",
+      artist_name: "Russ Live Lane Artist",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      source_snapshot: {}
+    )
+    other_event = Event.create!(
+      slug: "non-russ-live-lane-event",
+      source_fingerprint: "test::public::lane-page::non-russ-live",
+      title: "Non Russ Live Lane Event",
+      artist_name: "Non Russ Live Lane Artist",
+      start_at: 10.days.from_now.change(hour: 21, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: "99999",
+      source_snapshot: {}
+    )
+
+    get "/russ-live"
+
+    assert_response :success
+    assert_select "meta[name='description'][content*='Russ Live Veranstaltungen']", count: 1
+    assert_select "link[rel='canonical'][href=?]", russ_live_lane_url
+    assert_select ".lane-header.lane-header--editorial .lane-header-title", text: "Russ Live"
+    assert_select "#lane-event-grid article.genre-lane-card", minimum: 1
+    assert_select "#lane-event-grid .genre-lane-card-name", text: russ_live_event.artist_name
+    assert_select "#lane-event-grid .genre-lane-card-name", text: other_event.artist_name, count: 0
+  end
+
   test "genre lane page resolves by snapshot group slug even when it is not on the homepage" do
     _, _, pop_group = create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 

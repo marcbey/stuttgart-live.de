@@ -5337,12 +5337,26 @@ white-space: normal;
   overflow: hidden;
 }
 
+.featured-event-grid .event-card h2 {
+display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  color: #fff;
+  white-space: normal;
+  overflow: hidden;
+}
+
 .home-featured-track .event-card-copy,
 .home-featured-track .event-card h2,
 .home-featured-track .event-card-title,
 .home-featured-track .event-card-meta,
 .home-featured-track .event-card-meta-date,
-.home-featured-track .event-card-meta-venue {
+.home-featured-track .event-card-meta-venue,
+.featured-event-grid .event-card-copy,
+.featured-event-grid .event-card-title,
+.featured-event-grid .event-card-meta,
+.featured-event-grid .event-card-meta-date,
+.featured-event-grid .event-card-meta-venue {
 color: #fff;
 }
 
@@ -6886,11 +6900,16 @@ display: inline-flex;
   color: #fff;
   font-family: "Bebas Neue", "Oswald", sans-serif;
   font-size: 1.18rem;
-  font-weight: 700;
+  font-weight: 400;
   letter-spacing: 0.08em;
   line-height: 1;
   text-transform: uppercase;
   text-shadow: 0 1px 2px rgba(17, 17, 17, 0.22);
+}
+
+body.page-public .event-detail-sold-out-note {
+  color: #fff;
+  font-weight: 400;
 }
 
 .event-detail-sold-out-hint {

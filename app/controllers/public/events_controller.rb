@@ -788,6 +788,16 @@ module Public
         @lane_series_counts_by_id = public_series_counts_for_relation(relation)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
+      when "russ_live"
+        relation = published_visible_events_relation(
+          scope: homepage_events_relation.merge(Event.sks_promoters),
+          filter: Public::Events::BrowseState::FILTER_ALL,
+          event_date: @browse_state.event_date,
+          query: nil
+        ).reorder(:start_at, :id)
+        @lane_series_counts_by_id = public_series_counts_for_relation(relation)
+        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
+        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
       when "genre"
         lane_page = homepage_lane_page("genre:#{lane.group.slug}", per_page: LANE_PAGE_LIMIT)
         raise ActiveRecord::RecordNotFound if lane_page.blank?

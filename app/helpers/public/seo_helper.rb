@@ -82,6 +82,8 @@ module Public::SeoHelper
       "Alle aktuellen Veranstaltungen aus Stuttgart: Konzerte, Shows und Events mit Terminen, Locations und Tickets."
     when "tagestipp"
       "Der Tagestipp von Stuttgart Live: ausgewählte Events und Konzerte für heute in Stuttgart und Region."
+    when "russ_live"
+      "Russ Live Veranstaltungen in Stuttgart und Region: aktuelle Konzerte, Shows, Termine und Tickets."
     else
       "#{lane.title}: aktuelle Konzerte, Shows und Events in Stuttgart und Region entdecken."
     end

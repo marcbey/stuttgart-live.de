@@ -21,6 +21,12 @@ module Public
           header_variant: :tagestipp,
           public_path: "/tagestipp",
           featured: false
+        },
+        "russ_live" => {
+          title: "Russ Live",
+          header_variant: :editorial,
+          public_path: "/russ-live",
+          featured: false
         }
       }.freeze
 
@@ -86,6 +92,7 @@ module Public
           when "highlights" then highlights
           when "all_stuttgart" then all_stuttgart
           when "tagestipp" then tagestipp
+          when "russ_live" then russ_live
           else genre(identifier)
           end
         end
@@ -101,6 +108,10 @@ module Public
 
         def tagestipp
           fixed("tagestipp")
+        end
+
+        def russ_live
+          fixed("russ_live")
         end
 
         private
