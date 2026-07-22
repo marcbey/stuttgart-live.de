@@ -88,6 +88,7 @@ class Public::EventsHelperTest < ActionView::TestCase
   test "public_event_visibility_badges labels scheduled ready_for_publish events as geplant" do
     event = events(:needs_review_one)
     event.status = "ready_for_publish"
+    event.start_at = 1.day.from_now
     event.published_at = 2.hours.from_now
 
     assert_equal [ { label: "Geplant", css_class: "status-badge-ready" } ], public_event_visibility_badges(event)
