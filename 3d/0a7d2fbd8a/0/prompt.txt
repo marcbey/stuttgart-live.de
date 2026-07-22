@@ -1,0 +1,67 @@
+[https://github.com/marcbey/stuttgart-live.de/issues/100](https://github.com/marcbey/stuttgart-live.de/issues/100)
+
+---
+
+plan in deutsch
+
+---
+
+wird dieses eventbild teil des download zips?
+
+---
+
+kommentier das so auch in die readme, oder machst du das sowieso?
+
+---
+
+PLEASE IMPLEMENT THIS PLAN:
+# Issue #100: Russ-Live-Fallback für Pressebilder
+
+**Zusammenfassung**
+- Fix in `/Users/marc/Projects/russ-live.de` umsetzen; in Stuttgart Live ist keine Migration oder Schemaänderung nötig.
+- Russ Live filtert Presse-Events bereits über `Event.published_on_russ_live`; der Haken „Auf Russ Live veröffentlichen“ bleibt die zentrale Freigabe.
+- Pressebilder kommen zuerst aus Sliderbildern. Wenn keine Sliderbilder vorhanden sind, wird das Eventbild zusätzlich zum Header als Download angeboten und Teil des ZIPs.
+
+**Änderungen**
+- `PressArtist#press_images_for(event)` in `/Users/marc/Projects/russ-live.de/app/models/press_artist.rb` anpassen:
+  - angehängte Sliderbilder sammeln
+  - Sliderbilder zurückgeben, wenn vorhanden
+  - sonst das angehängte `event.event_image` zurückgeben
+  - bestehende Blob-Deduplizierung in `gallery_images` beibehalten
+- Header-Verhalten unverändert lassen: `hero_image` nutzt weiterhin das Eventbild.
+- `/Users/marc/Projects/russ-live.de/README.md` ergänzen, wahrscheinlich als kurzer Abschnitt „Pressebilder aus Stuttgart Live“ nach „Mehrsprachigkeit“:
+  - nur Russ-Live-freigegebene Events erscheinen im Pressebereich
+  - Sliderbilder sind die bevorzugten Pressebilder
+  - ohne Sliderbilder wird das Eventbild zusätzlich als Pressebild angezeigt und ins ZIP aufgenommen
+  - ohne angehängte Bilder gibt es weiterhin keinen Bilder-Download
+
+**Schnittstellen**
+- Keine Änderung an Routes, Parametern oder Datenbankstruktur.
+- Interne Semantik ändert sich: `PressArtist#gallery_images` darf künftig ein `detail_hero`-Eventbild enthalten, aber nur als Fallback, wenn keine Sliderbilder vorhanden sind.
+
+**Testplan**
+- `/Users/marc/Projects/russ-live.de/test/controllers/press_controller_test.rb` anpassen:
+  - bestehende Abdeckung behalten, dass Sliderbilder bevorzugt werden und das Eventbild dabei nicht doppelt in der Galerie landet
+  - bisherigen Test „nur Eventbild gibt 404“ ersetzen: Detailseite zeigt Downloads und ZIP enthält das Eventbild
+  - echten Negativfall behalten oder ergänzen: Event ohne angehängte Bilder liefert beim Download weiter `404`
+- Zieltest ausführen:
+  - `mise exec -- bin/rails test test/controllers/press_controller_test.rb`
+- Wegen Ruby-Änderungen RuboCop ausführen:
+  - `mise exec -- bundle exec rubocop app/models/press_artist.rb test/controllers/press_controller_test.rb`
+- Dokumentationsänderung prüfen:
+  - `git diff --check`
+- Vor einem Push vollständige CI in `/Users/marc/Projects/russ-live.de` ausführen:
+  - `mise exec -- bin/ci`
+
+**Annahmen**
+- „Zusätzlich zum Header“ bedeutet: Das Eventbild bleibt Hero/Header-Bild und erscheint zusätzlich als herunterladbares Pressebild.
+- Der Fallback gilt pro Event: Hat ein Künstler mehrere freigegebene Events, liefern Events mit Sliderbildern ihre Sliderbilder, Events ohne Sliderbilder ihr Eventbild.
+- Issue #100 kann nach Merge/Deploy und Verifikation mit Kommentar geschlossen werden.
+
+---
+
+Wurde dazu ein PR erstellt und gemergt, ist das auf prod?
+
+---
+
+ja, mach das so

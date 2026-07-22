@@ -1,0 +1,27 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "3d0a7d2fbd8a",
+  "strategy": "manual-commit",
+  "branch": "codex/fix-bundler-audit-vulnerabilities",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "Gemfile.lock",
+    "test/controllers/backend/events_controller_test.rb",
+    "test/helpers/public/events_helper_test.rb"
+  ],
+  "sessions": [
+    {
+      "metadata": "/3d/0a7d2fbd8a/0/metadata.json",
+      "transcript": "/3d/0a7d2fbd8a/0/full.jsonl",
+      "content_hash": "/3d/0a7d2fbd8a/0/content_hash.txt",
+      "prompt": "/3d/0a7d2fbd8a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 645138,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 12730112,
+    "output_tokens": 44114,
+    "api_call_count": 119
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "3d0a7d2fbd8a",
+  "session_id": "019f4040-88be-75c3-b5cf-a5b93adaf8f4",
+  "strategy": "manual-commit",
+  "created_at": "2026-07-22T05:44:41.074246Z",
+  "branch": "codex/fix-bundler-audit-vulnerabilities",
+  "checkpoints_count": 2,
+  "save_step_count": 2,
+  "files_touched": [
+    "Gemfile.lock",
+    "test/controllers/backend/events_controller_test.rb",
+    "test/helpers/public/events_helper_test.rb"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.5",
+  "turn_id": "aa8a18c1155e",
+  "token_usage": {
+    "input_tokens": 645138,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 12730112,
+    "output_tokens": 44114,
+    "api_call_count": 119
+  },
+  "session_metrics": {
+    "turn_count": 2
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-07-22T05:44:41.026633Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 70,
+    "human_modified": 66,
+    "human_removed": 0,
+    "total_committed": 70,
+    "total_lines_changed": 136,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 126,
+      "user_lines_removed": 9,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "Gemfile.lock": 13,
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 113
+      },
+      "user_removed_per_file": {
+        "Gemfile.lock": 9
+      }
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 136,
+      "user_lines_removed": 57,
+      "agent_lines_added": 108,
+      "agent_lines_removed": 11,
+      "user_added_per_file": {
+        "Gemfile.lock": 24,
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 76,
+        "test/controllers/backend/events_controller_test.rb": 35,
+        "test/helpers/public/events_helper_test.rb": 1
+      },
+      "user_removed_per_file": {
+        "Gemfile.lock": 20,
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 6,
+        "test/controllers/backend/events_controller_test.rb": 31
+      }
+    }
+  ]
+}
