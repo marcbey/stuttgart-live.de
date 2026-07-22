@@ -1,0 +1,94 @@
+{
+  "cli_version": "0.7.7",
+  "checkpoint_id": "3d0a7d2fbd8a",
+  "session_id": "019f883f-85d5-7ef0-b405-d9a533a0f9a5",
+  "strategy": "manual-commit",
+  "created_at": "2026-07-22T05:44:41.599665Z",
+  "branch": "codex/fix-bundler-audit-vulnerabilities",
+  "checkpoints_count": 3,
+  "save_step_count": 3,
+  "files_touched": [
+    "Gemfile.lock",
+    "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md",
+    "test/controllers/backend/events_controller_test.rb",
+    "test/helpers/public/events_helper_test.rb"
+  ],
+  "agent": "Codex",
+  "model": "gpt-5.6-sol",
+  "turn_id": "e4bb183d4c64",
+  "token_usage": {
+    "input_tokens": 264287,
+    "cache_creation_tokens": 0,
+    "cache_read_tokens": 8894464,
+    "output_tokens": 34763,
+    "api_call_count": 76
+  },
+  "session_metrics": {
+    "turn_count": 3
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-07-22T05:44:41.571402Z",
+    "agent_lines": 0,
+    "agent_removed": 0,
+    "human_added": 289,
+    "human_modified": 81,
+    "human_removed": 0,
+    "total_committed": 289,
+    "total_lines_changed": 370,
+    "agent_percentage": 0,
+    "metric_version": 2
+  },
+  "prompt_attributions": [
+    {
+      "checkpoint_number": 1,
+      "user_lines_added": 0,
+      "user_lines_removed": 0,
+      "agent_lines_added": 0,
+      "agent_lines_removed": 0
+    },
+    {
+      "checkpoint_number": 2,
+      "user_lines_added": 136,
+      "user_lines_removed": 57,
+      "agent_lines_added": 97,
+      "agent_lines_removed": 0,
+      "user_added_per_file": {
+        "Gemfile.lock": 24,
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 76,
+        "test/controllers/backend/events_controller_test.rb": 35,
+        "test/helpers/public/events_helper_test.rb": 1
+      },
+      "user_removed_per_file": {
+        "Gemfile.lock": 20,
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 6,
+        "test/controllers/backend/events_controller_test.rb": 31
+      }
+    },
+    {
+      "checkpoint_number": 3,
+      "user_lines_added": 78,
+      "user_lines_removed": 8,
+      "agent_lines_added": 146,
+      "agent_lines_removed": 40,
+      "user_added_per_file": {
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 78
+      },
+      "user_removed_per_file": {
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 8
+      }
+    },
+    {
+      "checkpoint_number": 4,
+      "user_lines_added": 78,
+      "user_lines_removed": 8,
+      "agent_lines_added": 146,
+      "agent_lines_removed": 40,
+      "user_added_per_file": {
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 78
+      },
+      "user_removed_per_file": {
+        "docs/superpowers/plans/2026-07-22-fix-bundler-audit-vulnerabilities.md": 8
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+Fix das [https://github.com/marcbey/stuttgart-live.de/actions/runs/29893079131/job/88837305764](https://github.com/marcbey/stuttgart-live.de/actions/runs/29893079131/job/88837305764)
+
+---
+
+2, ausführen
+
+---
+
+Das selbe Issue gibt es auch bei [marcbey/russ-live.de](https://github.com/marcbey/russ-live.de), schau es dir an und fixe es
+
+---
+
+ja,mach das so
