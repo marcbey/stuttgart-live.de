@@ -10,7 +10,10 @@
             <p class="event-detail-cta-price">Preis: <%= presenter.ticket_price_text %></p>
           <% end %>
           <% if presenter.show_ticket_link? %>
-            <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
+            <div class="event-detail-cta-actions">
+              <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "button event-detail-cta-button" %>
+              <%= render "public/events/share_event_button", presenter: presenter, class: "event-share-cta" %>
+            </div>
           <% elsif presenter.show_unavailable_note? %>
             <p class="event-detail-meta-strong event-detail-sold-out-note"><%= presenter.sold_out_note_text %></p>
           <% end %>

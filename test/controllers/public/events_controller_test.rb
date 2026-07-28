@@ -3887,7 +3887,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".event-detail-image-actions .event-share[data-controller='share-event'][data-share-event-url-value=?]",
+    assert_select ".event-detail-cta-actions .event-share.event-share-cta[data-controller='share-event'][data-share-event-url-value=?]",
                   event_url(@published_event.slug),
                   count: 1
     assert_select ".event-share[data-share-event-title-value=?]",

@@ -1,8 +1,9 @@
 <% share_title = "#{presenter.display_headline} | Stuttgart Live" %>
 <% share_text = presenter.hero_meta_line.to_s.strip.presence %>
 <% share_label = "#{presenter.display_headline} teilen" %>
+<% share_classes = [ "event-share", local_assigns[:class] ].compact.join(" ") %>
 
-<div class="event-share"
+<div class="<%= share_classes %>"
      data-controller="share-event"
      data-share-event-title-value="<%= share_title %>"
      data-share-event-text-value="<%= share_text %>"

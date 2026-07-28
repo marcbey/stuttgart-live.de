@@ -78,7 +78,9 @@
               <%= render "public/events/saved_event_button",
                          event: presenter.event,
                          button_class: "saved-event-button-detail-image" %>
-              <%= render "public/events/share_event_button", presenter: presenter %>
+              <% unless presenter.show_ticket_link? %>
+                <%= render "public/events/share_event_button", presenter: presenter %>
+              <% end %>
             </div>
             <div class="event-detail-image-stage"
                  data-hero-rotator-target="stage">
@@ -178,7 +180,9 @@
               <%= render "public/events/saved_event_button",
                          event: presenter.event,
                          button_class: "saved-event-button-detail-image" %>
-              <%= render "public/events/share_event_button", presenter: presenter %>
+              <% unless presenter.show_ticket_link? %>
+                <%= render "public/events/share_event_button", presenter: presenter %>
+              <% end %>
             </div>
             <div class="event-detail-image-stage event-detail-image-stage-static">
               <span class="event-detail-image-stage-glow" aria-hidden="true"></span>

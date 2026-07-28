@@ -25,7 +25,7 @@
       <% end %>
     </p>
     <div class="event-detail-topbar-actions">
-      <% unless presenter.has_hero_gallery? %>
+      <% unless presenter.has_hero_gallery? || presenter.show_ticket_link? %>
         <%= render "public/events/share_event_button", presenter: presenter %>
         <%= render "public/events/saved_event_button",
                    event: @event,
