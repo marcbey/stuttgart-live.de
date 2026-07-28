@@ -3883,6 +3883,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "script[type='application/ld+json']", /Published Artist/
   end
 
+  test "show renders share button with canonical event url" do
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".event-detail-image-actions .event-share[data-controller='share-event'][data-share-event-url-value=?]",
+                  event_url(@published_event.slug),
+                  count: 1
+    assert_select ".event-share[data-share-event-title-value=?]",
+                  "Published Artist | Stuttgart Live",
+                  count: 1
+    assert_select "button.event-share-button[aria-label='Published Artist teilen'][data-action='click->share-event#share']", count: 1
+    assert_select ".event-share-status[role='status'][aria-live='polite'][data-share-event-target='status']", count: 1
+  end
+
   test "show renders related genre lane with sks and highlight priority" do
     snapshot, rock_group, = create_homepage_genre_snapshot
     regular_event = Event.create!(

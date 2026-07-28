@@ -1,0 +1,31 @@
+<% share_title = "#{presenter.display_headline} | Stuttgart Live" %>
+<% share_text = presenter.hero_meta_line.to_s.strip.presence %>
+<% share_label = "#{presenter.display_headline} teilen" %>
+
+<div class="event-share"
+     data-controller="share-event"
+     data-share-event-title-value="<%= share_title %>"
+     data-share-event-text-value="<%= share_text %>"
+     data-share-event-url-value="<%= presenter.canonical_url %>"
+     data-share-event-copied-label-value="Link kopiert"
+     data-share-event-error-label-value="Link konnte nicht kopiert werden">
+  <%= button_tag type: "button",
+                 class: "event-share-button",
+                 title: share_label,
+                 aria: { label: share_label },
+                 data: {
+                   action: "click->share-event#share",
+                   share_event_target: "button"
+                 } do %>
+    <svg class="event-share-button-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M16 5.5 12 1.75 8 5.5"></path>
+      <path d="M12 2v13"></path>
+      <path d="M5.25 10.5v8.25h13.5V10.5"></path>
+    </svg>
+    <span class="sr-only">Teilen</span>
+  <% end %>
+  <span class="event-share-status"
+        role="status"
+        aria-live="polite"
+        data-share-event-target="status"></span>
+</div>

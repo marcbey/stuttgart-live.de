@@ -26,6 +26,7 @@
     </p>
     <div class="event-detail-topbar-actions">
       <% unless presenter.has_hero_gallery? %>
+        <%= render "public/events/share_event_button", presenter: presenter %>
         <%= render "public/events/saved_event_button",
                    event: @event,
                    button_class: "saved-event-button-detail" %>

@@ -11,6 +11,7 @@ import SavedEventToggleController from "./saved_event_toggle_controller"
 import SavedEventsNavController from "./saved_events_nav_controller"
 import SavedEventsLaneController from "./saved_events_lane_controller"
 import ScrollTopController from "./scroll_top_controller"
+import ShareEventController from "./share_event_controller"
 
 const registeredControllers = new Set()
 
@@ -32,6 +33,7 @@ registerController("saved-event-toggle", SavedEventToggleController)
 registerController("saved-events-nav", SavedEventsNavController)
 registerController("saved-events-lane", SavedEventsLaneController)
 registerController("scroll-top", ScrollTopController)
+registerController("share-event", ShareEventController)
 
 const lazyControllers = {
   "backend-nav-menu": () => import("./backend_nav_menu_controller"),
