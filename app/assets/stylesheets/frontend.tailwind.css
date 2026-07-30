@@ -10096,24 +10096,24 @@ body.page-public-events-index.header-color-pastel-red {
 body.page-public-events-index .header-color-switcher {
 position: fixed;
   top: 50%;
-  right: 0.55rem;
+  right: 0.7rem;
   z-index: 80;
   display: grid;
-  gap: 0.32rem;
+  gap: 0.58rem;
   transform: translateY(-50%);
 }
 
 body.page-public-events-index .header-color-switcher-link {
 display: inline-grid;
   place-items: center;
-  width: 1.72rem;
-  height: 1.72rem;
+  width: 2.35rem;
+  height: 2.35rem;
   border: 1px solid rgba(5, 5, 5, 0.24);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.82);
   color: #0a2324;
   font-family: "Oswald", "Arial Narrow", sans-serif;
-  font-size: 0.9rem;
+  font-size: 1.08rem;
   font-weight: 700;
   line-height: 1;
   text-decoration: none;
@@ -10148,6 +10148,19 @@ background: #092231;
 
 body.page-public-events-index .header-color-switcher-link-pastel-red {
 background: #efd0cc;
+}
+
+@media (pointer: coarse) {
+  body.page-public-events-index .header-color-switcher {
+  right: 0.5rem;
+    gap: 0.68rem;
+  }
+
+  body.page-public-events-index .header-color-switcher-link {
+  width: 2.75rem;
+    height: 2.75rem;
+    font-size: 1.18rem;
+  }
 }
 
 body.page-public-events-index .public-shell {
@@ -10754,7 +10767,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  padding: 0.8rem;
+  padding: 0.8rem 0.8rem 0;
       grid-template-areas:
         "brand brand"
         "center meta"
