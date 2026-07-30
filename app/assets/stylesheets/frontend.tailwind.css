@@ -10767,7 +10767,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  padding: 0.8rem 0.8rem 0;
+  padding: 0.8rem;
       grid-template-areas:
         "brand brand"
         "center meta"
@@ -11675,7 +11675,7 @@ padding: 1.35rem 1.8rem 1.35rem 0;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero {
-  margin: 0.35rem calc(50% - 50vw) 0;
+  margin: 0 calc(50% - 50vw) 0;
       width: 100vw;
       max-width: 100vw;
       overflow: clip;
