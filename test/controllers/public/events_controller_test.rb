@@ -40,6 +40,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "requestIdleCallback"
     assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='oswald-700']", count: 1
+    assert_select "link[rel='preload'][as='font'][href*='oswald-300']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 1
     assert_select "style[data-local-font-faces]", count: 1
     assert_select "meta[name='description'][content=?]",
@@ -48,9 +49,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_match(/"@type":"WebSite"/, response.body)
     assert_match(/"@type":"ItemList"/, response.body)
     assert_includes response.body, ActionController::Base.helpers.asset_path("archivo-narrow-700.woff2")
+    assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-300.ttf")
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
     assert_includes response.body, ActionController::Base.helpers.asset_path("bebas-neue-400.woff2")
+    assert_not_includes response.body, "VERANSTALTUNGSHIGHLIGHTS IN STUTTGART"
     assert_select ".lane-header.lane-header--highlights", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_select ".app-nav-homepage-center[data-controller='saved-events-nav']", count: 1

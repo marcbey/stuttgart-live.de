@@ -85,6 +85,7 @@ class ApplicationHelperTest < ActionView::TestCase
 
     refute_includes stylesheet, "archivo-narrow-400"
     assert_includes stylesheet, "archivo-narrow-700"
+    assert_includes stylesheet, "oswald-300"
   ensure
     singleton_class.define_method(:asset_available?, original_method)
   end

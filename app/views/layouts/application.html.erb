@@ -42,6 +42,9 @@
     <% if asset_available?("oswald-700.woff2") %>
       <link rel="preload" href="<%= asset_path("oswald-700.woff2") %>" as="font" type="font/woff2" crossorigin>
     <% end %>
+    <% if asset_available?("oswald-300.ttf") %>
+      <link rel="preload" href="<%= asset_path("oswald-300.ttf") %>" as="font" type="font/ttf" crossorigin>
+    <% end %>
     <% if frontend_context %>
       <% if asset_available?("bebas-neue-400.woff2") %>
         <link rel="preload" href="<%= asset_path("bebas-neue-400.woff2") %>" as="font" type="font/woff2" crossorigin>
@@ -99,6 +102,16 @@
   <% body_classes << "page-public-newsletter-poster" if public_frontend %>
   <% body_classes << "page-public-events-index" if public_homepage_chrome %>
   <% body_classes << "page-public-detail" if public_frontend && action_name == "show" %>
+  <% header_color_variants = [
+       { key: "turquoise", label: "1", name: "Türkis" },
+       { key: "gray", label: "2", name: "Grau" },
+       { key: "black", label: "3", name: "Schwarz" },
+       { key: "pastel-red", label: "4", name: "Rot" },
+       { key: "navy", label: "5", name: "Dunkelblau" }
+     ] %>
+  <% header_color_variant_keys = header_color_variants.map { |variant| variant[:key] } %>
+  <% header_color_variant = params[:header_variant].presence_in(header_color_variant_keys) || "turquoise" %>
+  <% body_classes << "header-color-#{header_color_variant}" if public_homepage_chrome %>
 
   <body
     class="<%= body_classes.join(" ") %>"
@@ -159,7 +172,7 @@
          data-mobile-nav-desktop-min-width-value="1024"
          <% end %>>
       <div class="<%= nav_inner_classes.join(" ") %>">
-        <%= link_to root_path, class: [ "app-brand", ("app-brand-with-tagline" if frontend_context) ].compact.join(" ") do %>
+        <%= link_to root_path, class: [ "app-brand", ("app-brand-with-tagline" if frontend_context && !public_homepage_chrome) ].compact.join(" ") do %>
           <% if public_homepage_chrome || backend_context || auth_chrome %>
             <span class="brand-wordmark brand-wordmark-poster" aria-label="Stuttgart Live">
               <span class="brand-wordmark-city"><span class="brand-wordmark-city-initial">S</span>TUTTGART</span><span class="brand-wordmark-live">LIVE</span>
@@ -169,7 +182,7 @@
               <span class="brand-wordmark-city">STUTTGART</span><span class="brand-wordmark-live">LIVE</span>
             </span>
           <% end %>
-          <% if frontend_context %>
+          <% if frontend_context && !public_homepage_chrome %>
             <span class="brand-tagline" aria-label="Veranstaltungshighlights in Stuttgart">
               <svg class="brand-tagline-svg" viewBox="0 0 1000 92" preserveAspectRatio="none" focusable="false" aria-hidden="true">
                 <text class="brand-tagline-text" x="0" y="69" textLength="1000" lengthAdjust="spacingAndGlyphs">VERANSTALTUNGSHIGHLIGHTS IN STUTTGART</text>
@@ -354,6 +367,17 @@
         </div>
       </div>
     </nav>
+    <% if public_homepage_chrome %>
+      <aside class="header-color-switcher" aria-label="Headerfarben testen">
+        <% header_color_variants.each do |variant| %>
+          <%= link_to variant[:label],
+                      url_for(request.query_parameters.merge(header_variant: variant[:key])),
+                      class: [ "header-color-switcher-link", "header-color-switcher-link-#{variant[:key]}", ("is-active" if header_color_variant == variant[:key]) ].compact.join(" "),
+                      title: "Headerfarbe #{variant[:label]}: #{variant[:name]}",
+                      aria: { label: "Headerfarbe #{variant[:label]}: #{variant[:name]}", current: ("true" if header_color_variant == variant[:key]) } %>
+        <% end %>
+      </aside>
+    <% end %>
 
     <% if public_frontend && authenticated? %>
       <aside class="public-backend-float" aria-label="Backend-Navigation">
