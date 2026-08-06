@@ -73,7 +73,7 @@
              data-controller="hero-rotator lightbox"
              data-hero-rotator-delay-value="3000"
              data-hero-rotator-interval-value="5000">
-          <div class="event-detail-image-stage-shell highlights-slider-viewport">
+          <div class="event-detail-image-stage-shell highlights-slider-viewport" data-controller="image-credit">
             <div class="event-detail-image-actions">
               <%= render "public/events/saved_event_button",
                          event: presenter.event,
@@ -175,7 +175,7 @@
       <% else %>
         <% slide = hero_slides.first %>
         <div class="event-detail-image-figure"<%= %( style="#{hero_stage_style}") if hero_stage_style.present? %>>
-          <div class="event-detail-image-stage-shell">
+          <div class="event-detail-image-stage-shell" data-controller="image-credit">
             <div class="event-detail-image-actions">
               <%= render "public/events/saved_event_button",
                          event: presenter.event,

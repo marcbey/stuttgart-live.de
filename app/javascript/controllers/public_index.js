@@ -40,6 +40,7 @@ const lazyControllers = {
   "event-series-calendar": () => import("./event_series_calendar_controller"),
   "hero-rotator": () => import("./hero_rotator_controller"),
   "highlights-slider": () => import("./highlights_slider_controller"),
+  "image-credit": () => import("./image_credit_controller"),
   "homepage-lane": () => import("./homepage_lane_controller"),
   "infinite-scroll": () => import("./infinite_scroll_controller"),
   "lane-page": () => import("./lane_page_controller"),
