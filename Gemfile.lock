@@ -232,7 +232,7 @@ GEM
       racc (~> 1.4)
     nokogiri (1.19.4-x86_64-linux-musl)
       racc (~> 1.4)
-    openai (0.70.0)
+    openai (0.77.0)
       base64
       cgi
       connection_pool
@@ -446,7 +446,7 @@ DEPENDENCIES
   kamal
   mailjet (~> 1.8)
   mini_magick (~> 5.3)
-  openai (~> 0.70)
+  openai (~> 0.77)
   pg (~> 1.1)
   propshaft
   puma (>= 5.0)
