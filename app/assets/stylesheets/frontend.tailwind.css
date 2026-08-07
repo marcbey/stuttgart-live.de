@@ -6016,9 +6016,10 @@ min-height: 18rem;
 }
 
 .event-detail {
-max-width: 1220px;
+width: calc(100% - var(--homepage-header-padding-inline, 0.8rem) - var(--homepage-header-padding-inline, 0.8rem));
+  max-width: calc(var(--homepage-content-max-width, 1360px) - var(--homepage-header-padding-inline, 0.8rem) - var(--homepage-header-padding-inline, 0.8rem));
   margin: 0 auto;
-  padding: 1.2rem 2rem 3.5rem;
+  padding: 1.2rem 0 3.5rem;
 }
 
 .event-not-found {
@@ -6836,10 +6837,10 @@ display: block;
 }
 
 .event-detail {
-max-width: 1280px;
+width: calc(100% - var(--homepage-header-padding-inline, 0.8rem) - var(--homepage-header-padding-inline, 0.8rem));
+  max-width: calc(var(--homepage-content-max-width, 1360px) - var(--homepage-header-padding-inline, 0.8rem) - var(--homepage-header-padding-inline, 0.8rem));
   position: relative;
-  padding: 1.2rem 2rem 3.5rem;
-  padding-bottom: 4rem;
+  padding: 1.2rem 0 4rem;
 }
 
 .event-detail-topbar {
@@ -8709,6 +8710,12 @@ padding-inline: 0;
   .event-detail-public-event .event-detail-back a {
   width: 2.25rem;
       height: 2.25rem;
+      transform: translateY(-0.28rem);
+  }
+
+  .event-detail-public-event .event-detail-back a:hover,
+  .event-detail-public-event .event-detail-back a:focus-visible {
+  transform: translate(-1px, calc(-0.28rem - 1px));
   }
 
   .event-detail-image-figure-rotator .event-detail-image-stage {
@@ -9922,14 +9929,12 @@ display: flex;
 
 @media (min-width: 1500px) {
   .public-shell,
-  .site-footer-shell,
-  .event-detail {
+  .site-footer-shell {
   max-width: 1480px;
   }
 
   body.page-public .public-shell,
   body.page-public .site-footer-shell,
-  body.page-public .event-detail,
   body.page-public .event-not-found,
   body.page-public .news-shell,
   body.page-public .news-article-shell {
@@ -10270,7 +10275,8 @@ background: #efd0cc;
 }
 
 body.page-public-events-index .public-shell {
-padding: 1.1rem 0.8rem 3rem;
+max-width: var(--homepage-content-max-width, 1360px);
+  padding: 1.1rem var(--homepage-header-padding-inline, 0.8rem) 3rem;
 }
 
 body.page-public-events-index .public-shell-homepage {
@@ -11653,7 +11659,7 @@ position: relative;
   grid-template-columns: minmax(0, 1fr) minmax(26rem, 1.18fr);
   width: 100%;
   min-height: clamp(20rem, 42vw, 24rem);
-  padding-inline: max(var(--homepage-header-padding-inline, 0.8rem), calc((100vw - var(--homepage-header-max-width, 1480px)) / 2 + var(--homepage-header-padding-inline, 0.8rem)));
+  padding-inline: max(var(--homepage-header-padding-inline, 0.8rem), calc((100vw - var(--homepage-content-max-width, 1360px)) / 2 + var(--homepage-header-padding-inline, 0.8rem)));
   border-radius: 0;
 }
 
@@ -11818,6 +11824,7 @@ padding: 1.35rem 1.8rem 1.35rem 0;
 @media (max-width: 767px) {
   body.page-public-events-index .app-nav-inner-homepage-poster {
   padding-top: 1.05rem;
+  padding-inline: var(--homepage-header-padding-inline, 1rem);
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas:
         "brand brand"
@@ -11965,12 +11972,12 @@ padding: 1.35rem 1.8rem 1.35rem 0;
       z-index: 3;
       min-height: 0;
       margin-top: -1px;
-      padding: 0.25rem 1.35rem 1.35rem;
+      padding: 0.25rem var(--homepage-header-padding-inline, 1rem) 1.35rem;
       background: var(--promotion-banner-background);
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster.promotion-banner-layout-reversed .promotion-banner-copy {
-  padding: 0.25rem 1.35rem 1.35rem;
+  padding: 0.25rem var(--homepage-header-padding-inline, 1rem) 1.35rem;
   }
 
   body.page-public-events-index .promotion-banner-slider-section--hero .promotion-banner-poster .promotion-banner-kicker {
@@ -12081,7 +12088,7 @@ position: relative;
   width: 100%;
   max-width: var(--homepage-content-max-width, 1360px);
   margin-inline: auto;
-  padding-inline: var(--homepage-content-padding-inline, 0.8rem);
+  padding-inline: var(--homepage-header-padding-inline, 0.8rem);
   grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.98fr);
   gap: 1.6rem 2rem;
   align-items: start;
@@ -12092,6 +12099,7 @@ body.page-public-newsletter-poster .newsletter-signup-copy {
 align-content: start;
   gap: 1.05rem;
   padding: 0.2rem 0 0.1rem;
+  position: relative;
 }
 
 body.page-public-events-index .newsletter-signup-copy-intro,
@@ -12291,13 +12299,18 @@ background: #2c0d20;
 
 body.page-public-events-index .newsletter-signup-drops,
 body.page-public-newsletter-poster .newsletter-signup-drops {
+display: none;
+}
+
+body.page-public-events-index .newsletter-signup-drops-panel,
+body.page-public-newsletter-poster .newsletter-signup-drops-panel {
 display: block;
   justify-self: end;
   width: clamp(8.5rem, 18vw, 15.5rem);
   max-width: 42%;
   height: auto;
   margin: -0.6rem clamp(1.8rem, 8vw, 6.5rem) -2.45rem 0;
-  opacity: 0.4;
+  opacity: 0.32;
   filter: saturate(0.78) contrast(0.9);
   mix-blend-mode: soft-light;
   pointer-events: none;
@@ -12517,8 +12530,39 @@ display: none;
       height: 1.85rem;
   }
 
-  body.page-public-events-index .newsletter-signup-drops,
-  body.page-public-newsletter-poster .newsletter-signup-drops {
+  body.page-public-events-index .newsletter-signup-drops-panel,
+  body.page-public-newsletter-poster .newsletter-signup-drops-panel {
   display: none;
   }
+
+  body.page-public-events-index .newsletter-signup-drops-copy,
+  body.page-public-newsletter-poster .newsletter-signup-drops-copy {
+  display: block;
+      position: absolute;
+      top: 4.65rem;
+      right: 0.4rem;
+      width: clamp(5.8rem, 23vw, 8.5rem);
+      max-width: 25%;
+      opacity: 0.34;
+  }
+}
+
+body.page-public {
+--homepage-aligned-max-width: calc(var(--homepage-content-max-width, 1360px) - var(--homepage-header-padding-inline, 0.8rem) - var(--homepage-header-padding-inline, 0.8rem));
+}
+
+body.page-public .public-shell,
+body.page-public .event-detail,
+body.page-public .news-shell,
+body.page-public .news-article-shell,
+body.page-public .info-page-shell,
+body.page-public .event-not-found,
+body.page-public .app-error-page,
+body.page-public .partner-strip,
+body.page-public .site-footer-shell,
+body.page-public .newsletter-signup-inner {
+width: calc(100% - var(--homepage-header-padding-inline, 0.8rem) - var(--homepage-header-padding-inline, 0.8rem));
+  max-width: var(--homepage-aligned-max-width);
+  margin-inline: auto;
+  padding-inline: 0;
 }

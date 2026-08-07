@@ -17,6 +17,12 @@
         <li>Highlights. Redaktionell sortiert.</li>
         <li>Kurz. Direkt. Ohne Feed-Chaos.</li>
       </ul>
+
+      <%= image_tag "newsletter-drops.png",
+                    alt: "",
+                    class: "newsletter-signup-drops newsletter-signup-drops-copy",
+                    loading: "eager",
+                    aria: { hidden: true } %>
     </div>
 
     <div class="newsletter-signup-panel">
@@ -29,7 +35,7 @@
 
         <%= image_tag "newsletter-drops.png",
                       alt: "",
-                      class: "newsletter-signup-drops",
+                      class: "newsletter-signup-drops newsletter-signup-drops-panel",
                       loading: "eager",
                       aria: { hidden: true } %>
 
