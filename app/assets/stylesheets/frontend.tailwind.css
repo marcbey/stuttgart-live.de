@@ -10808,11 +10808,12 @@ top: 1.18rem;
 
   body.page-public-events-index .public-search-input {
   padding-inline: 3.05rem 4.95rem;
-      font-size: 1rem;
+      font-size: 1.12rem;
   }
 
   body.page-public-events-index .public-search-placeholder {
   padding-inline: 3.05rem 4.95rem;
+      font-size: 1.12rem;
   }
 
   body.page-public-events-index .public-search-icon {
@@ -11022,10 +11023,12 @@ top: 1.18rem;
   body.page-public-events-index .app-nav-inner-homepage-poster {
   padding: 0.56rem 1.8rem 0;
       --poster-nav-column-width: 8rem;
-      grid-template-columns: auto minmax(22rem, 1fr) auto;
+      --poster-header-primary-height: 3.45rem;
+      --poster-social-column-width: 7.6rem;
+      grid-template-columns: auto minmax(22rem, 1fr) var(--poster-social-column-width) var(--poster-nav-column-width);
       grid-template-areas:
-        "brand center meta"
-        "hotline hotline hotline";
+        "brand center socials meta"
+        "hotline hotline hotline hotline";
       align-items: start;
       gap: 0 1.25rem;
   }
@@ -11043,6 +11046,11 @@ top: 1.18rem;
 
   body.page-public-events-index .app-nav-search {
   width: 100%;
+  }
+
+  body.page-public-events-index .public-search-field,
+  body.page-public-events-index .public-search-input {
+  min-height: var(--poster-header-primary-height);
   }
 
   body.page-public-events-index .app-nav-toggle {
@@ -11067,7 +11075,6 @@ top: 1.18rem;
 
   body.page-public-events-index .app-nav-meta {
   position: static;
-      grid-area: meta;
       align-self: stretch;
       width: max-content;
       min-width: 0;
@@ -11084,10 +11091,11 @@ top: 1.18rem;
       clip-path: none;
       transition: none;
       will-change: auto;
+      display: contents;
   }
 
   body.page-public-events-index .app-nav-links {
-  display: block;
+  display: contents;
       width: max-content;
       min-width: 0;
       max-width: none;
@@ -11095,20 +11103,22 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-poster-links-wrap {
-  display: flex;
-      align-items: flex-start;
-      gap: 0.7rem;
+  display: contents;
   }
 
   body.page-public-events-index .app-nav-poster-links-stack {
-  gap: 0.5rem;
+  grid-area: meta;
+      justify-self: start;
+      align-self: start;
+      gap: 0.5rem;
       align-content: space-between;
       width: var(--poster-nav-column-width);
       height: 100%;
   }
 
   body.page-public-events-index .app-nav-links-group {
-  width: max-content;
+  display: contents;
+      width: max-content;
       min-width: 0;
       max-width: none;
   }
@@ -11117,6 +11127,24 @@ top: 1.18rem;
   min-height: 0;
       font-size: clamp(2.2rem, 2.42vw, 2.78rem);
       line-height: 0.86;
+  }
+
+  body.page-public-events-index .app-nav-socials-poster {
+  grid-area: socials;
+      align-self: start;
+      justify-self: end;
+      align-items: center;
+      min-height: 0;
+  }
+
+  body.page-public-events-index .app-nav-socials-poster .app-nav-saved-events-link-desktop {
+  order: -1;
+  }
+
+  body.page-public-events-index .app-nav-socials-poster .app-nav-saved-events-link-desktop[hidden] {
+  display: inline-flex;
+      visibility: hidden;
+      pointer-events: none;
   }
 
   body.page-public-events-index .app-nav-socials-poster .app-nav-social-link {
@@ -11213,13 +11241,15 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-inner-homepage-poster {
-  --poster-nav-column-width: 8.5rem;
+      --poster-nav-column-width: 8.5rem;
+      --poster-header-primary-height: 3.75rem;
+      --poster-social-column-width: 8.4rem;
       max-width: var(--homepage-content-max-width, 1360px);
       padding: 0.56rem 2.1rem 0;
-      grid-template-columns: auto minmax(24rem, 1fr) auto;
+      grid-template-columns: auto minmax(24rem, 1fr) var(--poster-social-column-width) var(--poster-nav-column-width);
       grid-template-areas:
-        "brand center meta"
-        "hotline hotline hotline";
+        "brand center socials meta"
+        "hotline hotline hotline hotline";
       gap: 0 1.4rem;
   }
 
@@ -11235,11 +11265,15 @@ top: 1.18rem;
 
   body.page-public-events-index .public-search-field,
   body.page-public-events-index .public-search-input {
-  min-height: 3.1rem;
+  min-height: var(--poster-header-primary-height);
   }
 
   body.page-public-events-index .public-search-input {
-  font-size: 1rem;
+  font-size: 1.16rem;
+  }
+
+  body.page-public-events-index .public-search-placeholder {
+  font-size: 1.16rem;
   }
 
   body.page-public-events-index .app-nav-meta {
@@ -11247,9 +11281,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-poster-links-wrap {
-  display: flex;
-      align-items: flex-start;
-      gap: 1rem;
+  display: contents;
   }
 
   body.page-public-events-index .app-nav-poster-links-stack {
@@ -11347,7 +11379,9 @@ top: 1.18rem;
   body.page-public-events-index .app-nav-inner-homepage-poster {
   max-width: var(--homepage-content-max-width, 1360px);
       padding: 0.56rem 2.55rem 0;
-      grid-template-columns: auto minmax(28rem, 1fr) auto;
+      --poster-header-primary-height: 4.1rem;
+      --poster-social-column-width: 8rem;
+      grid-template-columns: auto minmax(28rem, 1fr) var(--poster-social-column-width) var(--poster-nav-column-width);
       gap: 0 2rem;
   }
 
@@ -11366,16 +11400,17 @@ top: 1.18rem;
 
   body.page-public-events-index .public-search-field,
   body.page-public-events-index .public-search-input {
-  min-height: 3.2rem;
+  min-height: var(--poster-header-primary-height);
   }
 
   body.page-public-events-index .public-search-input {
   padding-inline: 3.25rem 5.2rem;
-      font-size: 1rem;
+      font-size: 1.16rem;
   }
 
   body.page-public-events-index .public-search-placeholder {
   padding-inline: 3.25rem 5.2rem;
+      font-size: 1.16rem;
   }
 
   body.page-public-events-index .public-search-icon {
@@ -11390,7 +11425,7 @@ top: 1.18rem;
   }
 
   body.page-public-events-index .app-nav-poster-links-wrap {
-  gap: 1.5rem;
+  column-gap: 0;
   }
 
   body.page-public-events-index .app-nav-link {
