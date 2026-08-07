@@ -2,6 +2,7 @@
   featured_grid = lane.featured
   grid_classes = [ "lane-page-grid" ]
   grid_classes << "featured-event-grid" if featured_grid
+  lane_key_class = "lane-page-section--#{lane.key.tr("_", "-")}"
   strict_proxy = local_assigns.fetch(:strict_proxy, false)
   lazy_lane_id = local_assigns[:lazy_lane_id]
   lazy_url = local_assigns[:lazy_url]
@@ -28,7 +29,7 @@
   </button>
 <% end %>
 
-<section class="home-slider-section lane-page-section <%= "lane-page-section--compact-grid" unless featured_grid %> search-results-section <%= "lane-page-section--featured-grid" if featured_grid %>"
+<section class="home-slider-section lane-page-section <%= lane_key_class %> <%= "lane-page-section--compact-grid" unless featured_grid %> search-results-section <%= "lane-page-section--featured-grid" if featured_grid %>"
          data-controller="<%= section_controllers.join(" ") %>"
          data-section-view-mobile-list-default-value="true"
          <% if lazy_lane_id.present? %>

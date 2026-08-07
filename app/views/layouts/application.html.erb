@@ -112,9 +112,16 @@
   <% header_color_variant_keys = header_color_variants.map { |variant| variant[:key] } %>
   <% header_color_variant = params[:header_variant].presence_in(header_color_variant_keys) || "turquoise" %>
   <% body_classes << "header-color-#{header_color_variant}" if public_homepage_chrome %>
+  <% body_styles = [] %>
+  <% if public_homepage_chrome && asset_available?("homepage-header-drops.png") %>
+    <% body_styles << "--homepage-header-drops-image: url('#{asset_path("homepage-header-drops.png")}')" %>
+  <% end %>
 
   <body
     class="<%= body_classes.join(" ") %>"
+    <% if body_styles.any? %>
+      style="<%= body_styles.join("; ") %>"
+    <% end %>
     <% body_controllers = [] %>
     <% unless controller_path.start_with?("backend/") %>
       <% body_controllers << "consent" %>
