@@ -3,6 +3,24 @@ body.page-public {
   --ink-soft: #0a2324;
   --ink-deep: #0a2324;
   --ink-rgb: 10, 35, 36;
+  --public-accent: #2bd7cf;
+  --public-accent-strong: #00c5cc;
+  --public-accent-soft: #59e8de;
+  --public-accent-rgb: 43 215 207;
+  --accent: var(--public-accent);
+  --public-gray-header-background:
+    radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.28), transparent 18%),
+    radial-gradient(circle at 52% 10%, rgba(255, 255, 255, 0.16), transparent 24%),
+    linear-gradient(105deg, #1b1c1c 0%, #383a3a 36%, #949898 66%, #555858 100%);
+  --public-gray-header-glow-background:
+    linear-gradient(
+      112deg,
+      transparent 28%,
+      rgba(255, 255, 255, 0.02) 40%,
+      rgba(255, 255, 255, 0.38) 52%,
+      rgba(255, 255, 255, 0.08) 62%,
+      transparent 72%
+    );
   --text-ink: #0a2324;
   --event-price-color: #0a2324;
   --ink-banner: linear-gradient(135deg, #0a2324 0%, #0a2324 58%, #0a2324 100%);
@@ -191,7 +209,7 @@ max-width: 52rem;
 }
 
 .news-index-shell {
---news-header-accent: #cc4d8f;
+--news-header-accent: #0a2324;
   max-width: 1180px;
 }
 
@@ -205,20 +223,17 @@ display: grid;
 }
 
 .news-index-hero-bar {
-display: block;
+display: none;
   width: 100%;
   height: 10px;
   background: var(--news-header-accent);
 }
 
 .news-index-hero h1 {
-margin: 1rem 0 0;
+margin: 0;
   color: var(--news-header-accent);
-  font-family: "Bebas Neue", "Impact", sans-serif;
-  font-size: 2.5rem;
-  font-weight: 400;
+  font-size: clamp(2.6rem, 6vw, 5.2rem);
   line-height: 0.92;
-  letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
@@ -328,7 +343,7 @@ display: inline-block;
   width: 2.4rem;
   height: 3px;
   margin-bottom: 1rem;
-  background: linear-gradient(90deg, #ff7ac4, #ffd5eb);
+  background: linear-gradient(90deg, var(--public-accent-strong), var(--public-accent-soft));
   transform-origin: left center;
   transition: width 420ms ease, transform 420ms ease;
 }
@@ -349,7 +364,7 @@ color: #0a2324;
 }
 
 .news-index-card-newsletter .news-index-accent {
-background: linear-gradient(90deg, #de78cf, #f3c8ec);
+background: linear-gradient(90deg, var(--public-accent-strong), var(--public-accent-soft));
 }
 
 .news-index-newsletter-card-link {
@@ -360,17 +375,17 @@ display: grid;
   border-radius: 1.4rem;
   background:
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.28), transparent 20%),
-    linear-gradient(180deg, #86497d 0%, #bf68b3 48%, #de78cf 100%);
-  color: #fff8fc;
-  box-shadow: 0 18px 34px rgba(126, 60, 117, 0.24);
+    linear-gradient(105deg, #1b1c1c 0%, #383a3a 42%, #707575 100%);
+  color: #fff;
+  box-shadow: 0 18px 34px rgba(17, 17, 17, 0.18);
 }
 
 .news-index-card:hover .news-index-newsletter-card-link,
 .news-index-card:focus-within .news-index-newsletter-card-link {
 background:
     radial-gradient(circle at top right, rgba(255, 255, 255, 0.34), transparent 22%),
-    linear-gradient(180deg, #96558c 0%, #cf76c2 48%, #e693db 100%);
-  box-shadow: 0 22px 38px rgba(126, 60, 117, 0.3);
+    linear-gradient(105deg, #252727 0%, #494c4c 42%, #858989 100%);
+  box-shadow: 0 22px 38px rgba(17, 17, 17, 0.22);
 }
 
 .news-index-newsletter-card-body {
@@ -956,7 +971,7 @@ body.page-public .info-page-card a[href^="http://"]:not(.button):not(.button-sec
 body.page-public .info-page-card a[href^="http://"]:not(.button):not(.button-secondary):not(.button-ghost):focus-visible,
 body.page-public .info-page-card a[href^="https://"]:not(.button):not(.button-secondary):not(.button-ghost):hover,
 body.page-public .info-page-card a[href^="https://"]:not(.button):not(.button-secondary):not(.button-ghost):focus-visible {
-color: #cc4d8f;
+color: var(--public-accent-strong);
 text-decoration: none;
 }
 
@@ -1395,7 +1410,7 @@ width: min(100%, 34rem);
   padding: clamp(1.2rem, 3vw, 2rem);
   border: 1px solid rgba(17, 17, 17, 0.12);
   background:
-    radial-gradient(circle at top left, rgba(255, 165, 220, 0.14), transparent 34%),
+    radial-gradient(circle at top left, rgb(var(--public-accent-rgb) / 0.14), transparent 34%),
     linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 245, 239, 0.98));
   box-shadow: 0 18px 40px rgba(17, 17, 17, 0.08);
 }
@@ -2009,13 +2024,12 @@ position: relative;
 
 .public-search-field:focus-within {
 border-color: transparent;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 243, 249, 0.96) 46%, rgba(255, 255, 255, 0.98) 100%);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.96),
-    inset 0 0 0 1px rgba(255, 214, 235, 0.94),
+    inset 0 0 0 1px rgb(var(--public-accent-rgb) / 0.28),
     0 0 0 3px rgba(255, 255, 255, 0.14),
-    0 0 24px rgba(255, 184, 221, 0.42);
+    0 0 24px rgb(var(--public-accent-rgb) / 0.32);
   outline: none;
 }
 
@@ -2292,7 +2306,7 @@ aspect-ratio: 1;
 }
 
 .public-search-calendar-day:hover {
-background: rgba(255, 165, 220, 0.34);
+background: rgb(var(--public-accent-rgb) / 0.34);
 }
 
 .public-search-calendar-day-muted {
@@ -2315,18 +2329,18 @@ box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.26);
 }
 
 .public-search-calendar-day-selected {
-background: #ffa5dc;
+background: var(--public-accent);
   color: #0a2324;
   box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.2);
 }
 
 .public-search-calendar-day-in-range {
-background: rgba(255, 165, 220, 0.22);
+background: rgb(var(--public-accent-rgb) / 0.22);
 }
 
 .public-search-calendar-day-range-edge,
 .public-search-calendar-day-selected.public-search-calendar-day-range-edge {
-background: #ffa5dc;
+background: var(--public-accent);
   color: #0a2324;
   box-shadow: inset 0 0 0 1px rgba(17, 17, 17, 0.2);
 }
@@ -3001,7 +3015,7 @@ position: absolute;
   padding: 0.6rem 0 0.44rem;
   border: 1px solid rgba(255, 255, 255, 0.18);
   background:
-    linear-gradient(135deg, rgba(243, 140, 227, 0.98) 0%, rgba(222, 120, 207, 0.98) 48%, rgba(184, 66, 167, 0.98) 100%);
+    linear-gradient(135deg, rgb(var(--public-accent-rgb) / 0.98) 0%, var(--public-accent) 48%, var(--public-accent-strong) 100%);
   box-shadow: 0 0.85rem 1.9rem rgba(17, 17, 17, 0.3);
   color: #fff;
   font-family: "Bebas Neue", "Oswald", sans-serif;
@@ -4562,10 +4576,10 @@ margin-top: 2.2rem;
   display: grid;
   gap: 1rem;
   background:
-    radial-gradient(circle at top left, rgba(255, 105, 180, 0.26) 0, rgba(255, 105, 180, 0) 34%),
-    radial-gradient(circle at right 20%, rgba(255, 182, 219, 0.28) 0, rgba(255, 182, 219, 0) 30%),
-    linear-gradient(135deg, rgba(255, 238, 247, 0.96) 0%, rgba(255, 247, 252, 0.98) 46%, rgba(255, 255, 255, 1) 100%);
-  box-shadow: 0 16px 40px rgba(17, 17, 17, 0.08);
+    radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.28), transparent 18%),
+    radial-gradient(circle at 52% 10%, rgba(255, 255, 255, 0.16), transparent 24%),
+    linear-gradient(105deg, #1b1c1c 0%, #383a3a 36%, #949898 66%, #555858 100%);
+  box-shadow: 0 18px 44px rgba(17, 17, 17, 0.16), 0 0 36px rgba(255, 255, 255, 0.08);
 }
 
 .newsletter-signup-inner {
@@ -4593,7 +4607,7 @@ position: absolute;
   aspect-ratio: 1;
   border-radius: 999px;
   background:
-    radial-gradient(circle, rgba(255, 105, 180, 0.22) 0, rgba(255, 105, 180, 0.06) 42%, rgba(255, 105, 180, 0) 72%);
+    radial-gradient(circle, rgba(255, 255, 255, 0.24) 0, rgba(255, 255, 255, 0.08) 42%, rgba(255, 255, 255, 0) 72%);
   pointer-events: none;
   opacity: 0.68;
 }
@@ -4607,10 +4621,10 @@ position: absolute;
   border-radius: 999px;
   background:
     radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95) 0, rgba(255, 255, 255, 0.7) 16%, rgba(255, 255, 255, 0.08) 42%, rgba(255, 255, 255, 0) 70%),
-    linear-gradient(135deg, rgba(255, 64, 162, 0.95) 0%, rgba(255, 182, 219, 0.92) 100%);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.66) 0%, rgba(210, 216, 218, 0.44) 100%);
   box-shadow:
-    0 0 12px rgba(255, 64, 162, 0.2),
-    0 0 24px rgba(255, 182, 219, 0.16);
+    0 0 12px rgba(255, 255, 255, 0.18),
+    0 0 24px rgba(210, 216, 218, 0.14);
   opacity: 0;
   filter: blur(0.2px);
   animation: newsletter-particle-storm 12s linear infinite;
@@ -4763,6 +4777,7 @@ display: grid;
 .newsletter-signup-copy h2 {
 margin: 0.12rem 0 0;
   max-width: none;
+  color: #fff;
   font-size: clamp(1.6rem, 10vw, 3.25rem);
   line-height: 0.9;
   text-transform: uppercase;
@@ -4773,7 +4788,7 @@ margin: 0;
   max-width: 32rem;
   font-size: 0.98rem;
   line-height: 1.55;
-  color: #0a2324;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .newsletter-signup-highlights {
@@ -4792,17 +4807,17 @@ display: grid;
   gap: 0.65rem;
   min-height: 0;
   padding: 0.48rem 0.2rem 0.48rem 0;
-  border-bottom: 1px solid rgba(17, 17, 17, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.16);
   font-size: 0.92rem;
   line-height: 1.4;
-  color: #0a2324;
+  color: rgba(255, 255, 255, 0.88);
 }
 
 .newsletter-signup-highlights li::before {
 content: "/";
   display: inline-block;
   transform: translateY(-0.02em);
-  color: rgba(255, 64, 162, 0.92);
+  color: #fff;
   font-family: "Bebas Neue", "Impact", sans-serif;
   font-size: 1.25rem;
   line-height: 1;
@@ -4822,11 +4837,11 @@ display: grid;
   justify-self: stretch;
   min-width: 0;
   padding: 0.95rem;
-  border: 1px solid rgba(17, 17, 17, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.24);
   border-radius: 1.15rem;
-  background: rgba(255, 244, 250, 0.84);
+  background: rgba(255, 255, 255, 0.16);
   backdrop-filter: blur(10px);
-  box-shadow: 0 10px 24px rgba(17, 17, 17, 0.08);
+  box-shadow: 0 10px 24px rgba(17, 17, 17, 0.14);
 }
 
 .newsletter-signup-panel-content {
@@ -4841,14 +4856,14 @@ margin: 0;
   font-weight: 700;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #0a2324;
+  color: #fff;
 }
 
 .newsletter-signup-note {
 margin: 0;
   font-size: 0.82rem;
   line-height: 1.45;
-  color: #0a2324;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 .newsletter-signup-form {
@@ -4955,19 +4970,16 @@ border-color: rgba(199, 53, 66, 0.85);
 }
 
 .newsletter-signup-section .newsletter-signup-input::placeholder {
-color: #0a2324;
+color: rgba(10, 35, 36, 0.48);
 }
 
 .newsletter-signup-section .newsletter-signup-input:focus,
 .newsletter-signup-section .newsletter-signup-input:focus-visible {
-border-color: transparent;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 243, 249, 0.96) 46%, rgba(255, 255, 255, 0.98) 100%);
+border-color: rgba(210, 216, 218, 0.94);
+  background: rgba(255, 255, 255, 0.92);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.96),
-    inset 0 0 0 1px rgba(255, 214, 235, 0.94),
-    0 0 0 3px rgba(255, 255, 255, 0.14),
-    0 0 24px rgba(255, 184, 221, 0.42);
+    inset 0 0 0 1px rgba(210, 216, 218, 0.68);
   outline: none;
 }
 
@@ -5547,7 +5559,7 @@ width: 2rem;
 
 .highlights-slider-arrow:hover:not(:disabled) {
 transform: translateY(-1px);
-  background: #ffa5dc;
+  background: var(--public-accent);
   color: #0a2324;
   border-color: #111;
 }
@@ -5600,7 +5612,7 @@ opacity: 1;
 
 .highlights-slider-arrow-overlay:hover:not(:disabled) {
 transform: translateY(-50%);
-  background: #ffa5dc;
+  background: var(--public-accent);
   color: #0a2324;
   border-color: #111;
 }
@@ -5731,7 +5743,7 @@ display: inline-flex;
   min-height: 1rem;
   padding: 0.15rem 0.34rem 0.1rem;
   border-radius: 2px;
-  background: linear-gradient(135deg, rgba(243, 140, 227, 0.98), rgba(184, 66, 167, 0.98));
+  background: linear-gradient(135deg, rgb(var(--public-accent-rgb) / 0.98), var(--public-accent-strong));
   color: #fff;
   font-family: "Bebas Neue", "Oswald", sans-serif;
   font-size: 0.72rem;
@@ -6188,7 +6200,7 @@ display: inline-flex;
 
 .event-share-button:hover,
 .event-share-button:focus-visible {
-background: #ffa5dc;
+background: var(--public-accent);
   border-color: var(--ink);
   color: var(--ink);
   outline: none;
@@ -6331,7 +6343,7 @@ display: inline-flex;
 
 .event-detail-back a:hover,
 .event-detail-back a:focus-visible {
-background: #ffa5dc;
+background: var(--public-accent);
   border-color: var(--ink);
   color: var(--ink);
   transform: translate(-1px, -1px);
@@ -7121,7 +7133,7 @@ display: inline-flex;
   padding: 0.8rem 1.25rem 0.56rem;
   border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(243, 140, 227, 0.98) 0%, rgba(222, 120, 207, 0.98) 48%, rgba(184, 66, 167, 0.98) 100%);
+  background: linear-gradient(135deg, rgb(var(--public-accent-rgb) / 0.98) 0%, var(--public-accent) 48%, var(--public-accent-strong) 100%);
   box-shadow: 0 0.85rem 1.9rem rgba(17, 17, 17, 0.16);
   color: #fff;
   font-family: "Bebas Neue", "Oswald", sans-serif;
@@ -7298,13 +7310,13 @@ border-color: #13bfc4;
 }
 
 .event-series-calendar-day--available.is-current {
-  background: #ffd6ec;
-  border-color: #f06baa;
+  background: rgb(var(--public-accent-rgb) / 0.22);
+  border-color: var(--public-accent-strong);
   color: #0a2324;
 }
 
 .event-series-calendar-day--available.is-current.is-active {
-  box-shadow: inset -0.42rem 0.42rem 0 #f06baa;
+  box-shadow: inset -0.42rem 0.42rem 0 var(--public-accent-strong);
 }
 
 .event-series-calendar-times {
@@ -7351,8 +7363,8 @@ border-color: #13bfc4;
 }
 
 .event-series-calendar-time.is-current {
-  border-color: #f06baa;
-  background: #ffd6ec;
+  border-color: var(--public-accent-strong);
+  background: rgb(var(--public-accent-rgb) / 0.22);
   color: #0a2324;
 }
 
@@ -7421,7 +7433,7 @@ z-index: 20;
   }
 
   .event-series-calendar-day--available.is-current.is-active {
-  box-shadow: inset -0.34rem 0.34rem 0 #f06baa;
+  box-shadow: inset -0.34rem 0.34rem 0 var(--public-accent-strong);
   }
 
   .event-series-calendar-times {
@@ -8031,7 +8043,7 @@ display: grid;
 .event-detail-copy-flow a[href]:focus-visible,
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link):hover,
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link):focus-visible {
-  color: #cc4d8f;
+  color: var(--public-accent-strong);
   text-decoration: none;
 }
 
@@ -10120,10 +10132,7 @@ body.page-public-events-index.header-color-navy {
 }
 
 body.page-public-events-index.header-color-black {
-  --homepage-header-background:
-    radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.28), transparent 18%),
-    radial-gradient(circle at 52% 10%, rgba(255, 255, 255, 0.16), transparent 24%),
-    linear-gradient(105deg, #1b1c1c 0%, #383a3a 36%, #949898 66%, #555858 100%);
+  --homepage-header-background: var(--public-gray-header-background);
   --homepage-header-menu-background:
     radial-gradient(circle at 60% 20%, rgba(255, 255, 255, 0.2), transparent 18%),
     linear-gradient(180deg, #5c6060 0%, #262828 100%);
@@ -10134,15 +10143,7 @@ body.page-public-events-index.header-color-black {
   --homepage-header-control-border: rgba(16, 19, 20, 0.76);
   --homepage-header-control-color: #101314;
   --homepage-header-icon-color: #101314;
-  --homepage-header-glow-background:
-    linear-gradient(
-      112deg,
-      transparent 28%,
-      rgba(255, 255, 255, 0.02) 40%,
-      rgba(255, 255, 255, 0.38) 52%,
-      rgba(255, 255, 255, 0.08) 62%,
-      transparent 72%
-    );
+  --homepage-header-glow-background: var(--public-gray-header-glow-background);
   --homepage-header-glow-opacity: 0.62;
   --homepage-header-heart-color: #00c5cc;
 }
@@ -10158,9 +10159,9 @@ body.page-public-events-index.header-color-turquoise {
   --homepage-header-live: #050505;
   --homepage-header-nav: #fff;
   --homepage-header-nav-active: var(--ink);
-  --homepage-header-control-bg-hover: #ffa5dc;
-  --homepage-header-icon-color: #00c5cc;
-  --homepage-header-heart-color: #00c5cc;
+  --homepage-header-control-bg-hover: var(--public-accent-soft);
+  --homepage-header-icon-color: var(--public-accent-strong);
+  --homepage-header-heart-color: var(--public-accent-strong);
   --homepage-header-genre-bg: rgba(220, 245, 247, 0.8);
   --homepage-header-genre-border: rgba(0, 150, 156, 0.38);
   --homepage-header-genre-border-hover: rgba(0, 150, 156, 0.62);
@@ -10427,8 +10428,7 @@ position: relative;
 
 body.page-public-events-index .public-search-field:focus-within {
 border-color: transparent;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(242, 244, 244, 0.98) 45%, rgba(255, 255, 255, 1) 100%);
+  background: rgba(255, 255, 255, 0.96);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.98),
     inset 0 0 0 1px rgba(210, 216, 218, 0.98),
@@ -12013,13 +12013,10 @@ margin-top: var(--homepage-section-gap);
   border-radius: 0;
   padding: 40px 0;
   gap: 0.9rem;
-  background:
-    radial-gradient(circle at 74% 18%, rgba(237, 174, 170, 0.18), transparent 22%),
-    radial-gradient(circle at 16% 28%, rgba(255, 255, 255, 0.08), transparent 24%),
-    linear-gradient(135deg, #050505 0%, #151515 52%, #080808 100%);
+  background: var(--public-gray-header-background);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 -18px 52px rgba(237, 174, 170, 0.1),
+    0 -18px 52px rgba(255, 255, 255, 0.08),
     0 18px 58px rgba(5, 5, 5, 0.18);
 }
 
@@ -12033,9 +12030,9 @@ content: "";
   background: linear-gradient(
     115deg,
     rgba(255, 255, 255, 0) 28%,
-    rgba(237, 174, 170, 0.08) 39%,
+    rgba(255, 255, 255, 0.08) 39%,
     rgba(255, 255, 255, 0.36) 50%,
-    rgba(237, 174, 170, 0.1) 61%,
+    rgba(255, 255, 255, 0.1) 61%,
     rgba(255, 255, 255, 0) 72%
   );
   mix-blend-mode: screen;
@@ -12161,7 +12158,7 @@ grid-template-columns: minmax(0, 1fr);
 
 body.page-public-events-index .newsletter-signup-note,
 body.page-public-newsletter-poster .newsletter-signup-note {
-color: rgba(252, 236, 249, 0.82);
+color: rgba(255, 255, 255, 0.82);
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
   font-size: 0.96rem;
   line-height: 1.25;
@@ -12189,20 +12186,17 @@ body.page-public-events-index .newsletter-signup-section .newsletter-signup-inpu
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-input:focus-visible,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input:focus,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input:focus-visible {
-border-color: transparent;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(252, 236, 249, 0.98) 45%, rgba(255, 255, 255, 1) 100%);
+border-color: rgba(210, 216, 218, 0.94);
+  background: rgba(255, 255, 255, 0.96);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.98),
-    inset 0 0 0 1px rgba(243, 200, 236, 0.98),
-    0 0 0 4px rgba(255, 255, 255, 0.16),
-    0 0 28px rgba(222, 120, 207, 0.38);
+    inset 0 0 0 1px rgba(210, 216, 218, 0.68);
   outline: none;
 }
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-input::placeholder,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input::placeholder {
-color: #0a2324;
+color: rgba(10, 35, 36, 0.48);
 }
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button,

@@ -9,7 +9,7 @@
 
   <% if @blog_posts.any? %>
     <div class="news-grid news-index-grid" id="news-index-grid">
-      <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: true %>
+      <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false %>
     </div>
     <%= render "public/news/more", has_more: @has_more_blog_posts, next_offset: @next_offset %>
   <% else %>
