@@ -4850,6 +4850,10 @@ display: grid;
   min-width: 0;
 }
 
+.newsletter-signup-drops {
+display: none;
+}
+
 .newsletter-signup-panel-kicker {
 margin: 0;
   font-size: 0.82rem;
@@ -11825,6 +11829,17 @@ padding: 1.35rem 1.8rem 1.35rem 0;
   display: none;
   }
 
+  body.page-public-events-index .app-nav-inner-homepage-poster .public-search-placeholder-text {
+  overflow: visible;
+      text-overflow: clip;
+      font-size: 0;
+  }
+
+  body.page-public-events-index .app-nav-inner-homepage-poster .public-search-placeholder-text::before {
+  content: "Suche nach Veranstaltungen";
+      font-size: 1rem;
+  }
+
   body.page-public-events-index .promotion-banner-slider-section--hero {
   margin: 0 calc(50% - 50vw) 0;
       width: 100vw;
@@ -12023,7 +12038,10 @@ margin-top: var(--homepage-section-gap);
   border-radius: 0;
   padding: 40px 0;
   gap: 0.9rem;
-  background: var(--public-gray-header-background);
+  background:
+    radial-gradient(ellipse at 18% 76%, rgba(255, 255, 255, 0.16) 0%, transparent 32%),
+    radial-gradient(ellipse at 78% 18%, rgba(255, 255, 255, 0.2) 0%, transparent 28%),
+    linear-gradient(22deg, #171919 0%, #343838 38%, #8b908f 72%, #565c5a 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.08),
     0 -18px 52px rgba(255, 255, 255, 0.08),
@@ -12150,6 +12168,7 @@ body.page-public-newsletter-poster .newsletter-signup-panel-content {
 display: grid;
   gap: 1rem;
   padding: 0;
+  position: relative;
   justify-items: stretch;
 }
 
@@ -12268,6 +12287,20 @@ width: 2rem;
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button:hover,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-button:hover {
 background: #2c0d20;
+}
+
+body.page-public-events-index .newsletter-signup-drops,
+body.page-public-newsletter-poster .newsletter-signup-drops {
+display: block;
+  justify-self: end;
+  width: clamp(8.5rem, 18vw, 15.5rem);
+  max-width: 42%;
+  height: auto;
+  margin: -0.6rem clamp(1.8rem, 8vw, 6.5rem) -2.45rem 0;
+  opacity: 0.4;
+  filter: saturate(0.78) contrast(0.9);
+  mix-blend-mode: soft-light;
+  pointer-events: none;
 }
 
 body.page-public-events-index .newsletter-signup-confirmation,
@@ -12482,5 +12515,10 @@ display: none;
   body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-button-arrow-icon {
   width: 1.85rem;
       height: 1.85rem;
+  }
+
+  body.page-public-events-index .newsletter-signup-drops,
+  body.page-public-newsletter-poster .newsletter-signup-drops {
+  display: none;
   }
 }
