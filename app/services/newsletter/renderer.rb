@@ -448,8 +448,9 @@ module Newsletter
 
       <<~HTML
         <nav aria-label="Genres im Newsletter" style="margin:0;">
-          <a id="#{GENRE_NAV_ANCHOR}" name="#{GENRE_NAV_ANCHOR}" style="display:block;"></a>
-          <p class="newsletter-jump-title" style="margin:0 0 9px;font-size:14px;line-height:1.25;font-weight:600;color:#{question_color};">#{escape(issue.display_jump_menu_title)}</p>
+          <p class="newsletter-jump-title" style="margin:0 0 9px;font-size:14px;line-height:1.25;font-weight:600;color:#{question_color};">
+            <a id="#{GENRE_NAV_ANCHOR}" name="#{GENRE_NAV_ANCHOR}" style="color:#{question_color};text-decoration:none;">#{escape(issue.display_jump_menu_title)}</a>
+          </p>
           <div>
             #{links}
           </div>
@@ -458,10 +459,13 @@ module Newsletter
     end
 
     def genre_section_html(section)
+      anchor = genre_anchor(section[:group])
+
       <<~HTML
         <section style="padding-top:18px;">
-          <a id="#{genre_anchor(section[:group])}" name="#{genre_anchor(section[:group])}" style="display:block;"></a>
-          <h2 class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">#{escape(section[:group].label)}</h2>
+          <h2 id="#{anchor}" class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">
+            <a name="#{anchor}" style="color:#102223;text-decoration:none;">#{escape(section[:group].label)}</a>
+          </h2>
           #{genre_item_cards_html(section[:items])}
           #{genre_back_to_nav_html}
         </section>

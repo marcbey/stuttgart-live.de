@@ -303,8 +303,10 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
     assert_includes rendered.html, 'id="newsletter-genres"'
     assert_includes rendered.html, 'name="newsletter-genres"'
+    assert_includes rendered.html, 'style="color:#263334;text-decoration:none;">Für was interessierst du dich? Spring hinein ins Vergnügen :-)</a>'
     assert_includes rendered.html, 'href="#genre-pop-indie-singer-songwriter"'
     assert_includes rendered.html, 'id="genre-pop-indie-singer-songwriter"'
+    assert_includes rendered.html, '<a name="genre-pop-indie-singer-songwriter" style="color:#102223;text-decoration:none;">Pop</a>'
     assert_includes rendered.html, 'href="#newsletter-genres"'
     assert_includes rendered.html, "Zur Genre-Auswahl ↑"
     assert_includes rendered.html, ">Pop</a>"
