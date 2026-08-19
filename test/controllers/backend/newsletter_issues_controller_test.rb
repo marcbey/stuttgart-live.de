@@ -107,6 +107,7 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Speichern"
     assert_select "a[href='#newsletter-preview']", text: "Vorschau"
     assert_select "#newsletter-preview a[href='#newsletter-editor']", text: "Bearbeiten"
+    assert_equal 3, response.body.scan("Hast du vorher gespeichert und den Mailjet-Draft aktualisiert?").length
     assert_includes response.body, "newsletter-item-summary"
     assert_includes response.body, "newsletter-item-editor-body"
     assert_includes response.body, "newsletter-item-summary-remove"

@@ -77,13 +77,22 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
 
     rendered = Newsletter::Renderer.call(issue)
 
-    assert_includes rendered.html, "Newsletter abbestellen"
+    assert_includes rendered.html, "Du willst mehr? Wir haben mehr!"
+    assert_includes rendered.html, "Mehr Events entdecken"
+    assert_includes rendered.html, "www.stuttgart-live.de"
+    assert_includes rendered.html, "hier abmelden"
     assert_includes rendered.html, 'href="[[UNSUB_LINK_DE]]"'
     assert_includes rendered.html, "Datenschutz"
     assert_includes rendered.html, "Impressum"
     assert_includes rendered.html, "SKS Michael Russ GmbH"
     assert_includes rendered.html, "Charlottenplatz 17, 70173 Stuttgart"
+    assert_includes rendered.html, "Dies ist eine automatisch generierte E-Mail."
+    assert_includes rendered.html, "newsletter/instagram"
+    assert_includes rendered.html, "newsletter/tiktok"
+    assert_includes rendered.html, "newsletter/facebook"
+    assert_includes rendered.text, "Mehr Events entdecken: https://example.com/"
     assert_includes rendered.text, "Newsletter abbestellen: [[UNSUB_LINK_DE]]"
+    assert_includes rendered.text, "Dies ist eine automatisch generierte E-Mail."
     assert_includes rendered.text, "info@stuttgart-live.de"
   end
 
@@ -247,11 +256,27 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
 
     rendered = Newsletter::Renderer.call(issue)
 
+    assert_includes rendered.html, '<meta name="viewport" content="width=device-width, initial-scale=1">'
+    assert_includes rendered.html, 'class="newsletter-shell"'
     assert_includes rendered.html, "width:640px;max-width:640px;border-collapse:collapse;background:#fff;margin:0 auto"
+    assert_includes rendered.html, ".newsletter-shell"
+    assert_includes rendered.html, "width: 100% !important"
+    assert_includes rendered.html, "max-width: 100% !important"
     assert_includes rendered.html, "margin:0 0 20px;padding:22px 24px 14px;background:#303636;color:#fff"
     assert_includes rendered.html, "margin:0;padding:0"
     assert_includes rendered.html, ".newsletter-genre-link:hover"
     assert_includes rendered.html, ".newsletter-event-button:hover"
+    assert_includes rendered.html, ".newsletter-card-row"
+    assert_includes rendered.html, ".newsletter-mobile-item-row"
+    assert_includes rendered.html, "display: table-row !important"
+    assert_includes rendered.html, "width: 104px !important"
+    assert_includes rendered.html, "font-size: 17px !important"
+    assert_includes rendered.html, "font-size: 18px !important"
+    assert_includes rendered.html, "font-size: 24px !important"
+    assert_includes rendered.html, "font-size: 13px !important"
+    assert_includes rendered.html, "newsletter-footer-headline"
+    assert_includes rendered.html, "newsletter-footer-cta"
+    assert_includes rendered.html, "font-size: 22px !important"
     assert_includes rendered.html, "background: #303636"
     assert_includes rendered.html, "border-color: #303636"
     assert_includes rendered.html, "color: #ffffff"
@@ -265,6 +290,14 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, 'id="genre-pop-indie-singer-songwriter"'
     assert_includes rendered.html, ">Pop</a>"
     assert_includes rendered.html, "newsletter-card-column"
+    assert_includes rendered.html, "newsletter-card-row"
+    assert_includes rendered.html, "newsletter-mobile-item-row"
+    assert_includes rendered.html, "newsletter-mobile-image"
+    assert_includes rendered.html, "newsletter-mobile-title"
+    assert_includes rendered.html, "newsletter-intro"
+    assert_includes rendered.html, "newsletter-jump-title"
+    assert_includes rendered.html, "newsletter-section-heading-title"
+    assert_includes rendered.html, "newsletter-footer-copy"
     assert_includes rendered.html, "newsletter-card-image"
     assert_includes rendered.html, 'class="newsletter-event-button"'
     assert_includes rendered.html, "font-size:9px;letter-spacing:.05em;color:#667071"
@@ -274,7 +307,10 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_not_includes rendered.html, 'width="50%"'
     assert_includes rendered.html, 'width="176"'
     assert_includes rendered.html, 'height="176"'
+    assert_includes rendered.html, 'width="104"'
+    assert_includes rendered.html, 'height="104"'
     assert_includes rendered.html, "width:176px;max-width:100%;height:176px"
+    assert_includes rendered.html, "width:104px;max-width:104px;height:104px"
     assert_includes rendered.html, "height:186px"
     assert_includes rendered.html, "height:72px"
     assert_includes rendered.html, "height:36px;vertical-align:top;padding-top:5px"

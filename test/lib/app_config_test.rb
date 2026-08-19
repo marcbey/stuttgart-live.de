@@ -84,6 +84,22 @@ class AppConfigTest < ActiveSupport::TestCase
     end
   end
 
+  test "enables newsletter test list send when mailjet list id is configured" do
+    with_env("NEWSLETTER_TEST_LIST_SEND_ENABLED" => nil) do
+      with_credentials(mailjet: { list_id: "123456" }) do
+        assert_predicate AppConfig, :newsletter_test_list_send_enabled?
+      end
+    end
+  end
+
+  test "allows explicitly disabling newsletter test list send" do
+    with_env("NEWSLETTER_TEST_LIST_SEND_ENABLED" => "false") do
+      with_credentials(mailjet: { list_id: "123456" }) do
+        assert_not AppConfig.newsletter_test_list_send_enabled?
+      end
+    end
+  end
+
   test "reads openwebninja api key from credentials" do
     with_credentials(openwebninja: { api_key: "openweb-secret" }) do
       assert_equal "openweb-secret", AppConfig.openwebninja_api_key

@@ -37,21 +37,21 @@
                     method: :post,
                     title: "Testmail an die festen Testadressen senden",
                     class: "button button-compact",
-                    data: { turbo_confirm: send_confirm } %>
+                    form: { data: { turbo_confirm: send_confirm } } %>
       <%= button_to "Testliste senden",
                     send_test_list_backend_newsletter_path(issue),
                     method: :post,
                     title: "Newsletter an die konfigurierte interne Mailjet-Testliste senden",
                     class: "button button-secondary button-compact",
                     disabled: !AppConfig.newsletter_test_list_send_enabled?,
-                    data: { turbo_confirm: send_confirm } %>
+                    form: { data: { turbo_confirm: send_confirm } } %>
       <%= button_to "Final senden",
                     send_now_backend_newsletter_path(issue),
                     method: :post,
                     title: "Finalen Versand starten",
                     class: "button button-ghost button-compact",
                     disabled: !AppConfig.newsletter_final_send_enabled?,
-                    data: { turbo_confirm: "#{send_confirm} Wirklich final senden?" } %>
+                    form: { data: { turbo_confirm: "#{send_confirm} Wirklich final senden?" } } %>
     </div>
 
     <div class="newsletter-action-group newsletter-action-group-navigation" aria-label="Ansicht wechseln">
@@ -131,15 +131,32 @@
   </section>
 
   <section id="newsletter-preview" class="editor-form-section newsletter-editor-section newsletter-preview-section">
+    <input class="newsletter-preview-mode-input"
+           type="radio"
+           name="newsletter_preview_mode"
+           id="newsletter-preview-mode-desktop"
+           checked>
+    <input class="newsletter-preview-mode-input"
+           type="radio"
+           name="newsletter_preview_mode"
+           id="newsletter-preview-mode-mobile">
     <div class="newsletter-preview-heading">
       <h3 class="newsletter-section-title newsletter-section-title-strong">Vorschau</h3>
-      <%= link_to "Bearbeiten", "#newsletter-editor", class: "button button-secondary button-compact" %>
+      <div class="newsletter-preview-actions">
+        <div class="newsletter-preview-mode-toggle" aria-label="Vorschaugröße wählen">
+          <label for="newsletter-preview-mode-desktop">Desktop</label>
+          <label for="newsletter-preview-mode-mobile">Mobil</label>
+        </div>
+        <%= link_to "Bearbeiten", "#newsletter-editor", class: "button button-secondary button-compact" %>
+      </div>
     </div>
     <% if issue.newsletter_issue_items.any? %>
       <% rendered = Newsletter::Renderer.call(issue) %>
-      <iframe title="Newsletter-Vorschau"
-              class="newsletter-preview-frame"
-              srcdoc="<%= rendered.html %>"></iframe>
+      <div class="newsletter-preview-frame-shell">
+        <iframe title="Newsletter-Vorschau"
+                class="newsletter-preview-frame"
+                srcdoc="<%= rendered.html %>"></iframe>
+      </div>
     <% else %>
       <p class="empty-state">Noch keine Inhalte ausgewählt.</p>
     <% end %>

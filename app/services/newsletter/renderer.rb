@@ -26,6 +26,8 @@ module Newsletter
     GENRE_CARD_COLUMNS = 3
     CARD_IMAGE_WIDTH = 176
     CARD_IMAGE_HEIGHT = 176
+    MOBILE_CARD_IMAGE_WIDTH = 104
+    MOBILE_CARD_IMAGE_HEIGHT = 104
     CARD_IMAGE_VARIANT_WIDTH = CARD_IMAGE_WIDTH * 2
     CARD_IMAGE_VARIANT_HEIGHT = CARD_IMAGE_HEIGHT * 2
     IMAGE_QUALITY = 82
@@ -55,6 +57,7 @@ module Newsletter
         <!doctype html>
         <html>
           <head>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
               .newsletter-genre-link:hover {
                 background: #303636 !important;
@@ -72,7 +75,126 @@ module Newsletter
                 .newsletter-item-media,
                 .newsletter-item-spacer,
                 .newsletter-item-content,
-                .newsletter-card-column {
+                .newsletter-card-column,
+                .newsletter-card-row {
+                  display: none !important;
+                }
+
+                .newsletter-shell {
+                  width: 100% !important;
+                  max-width: 100% !important;
+                }
+
+                .newsletter-mobile-item-row {
+                  display: table-row !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  mso-hide: none !important;
+                }
+
+                .newsletter-mobile-image-cell {
+                  width: 104px !important;
+                  padding: 12px 12px 12px 0 !important;
+                }
+
+                .newsletter-mobile-image {
+                  width: 104px !important;
+                  max-width: 104px !important;
+                  height: 104px !important;
+                }
+
+                .newsletter-mobile-content-cell {
+                  padding: 12px 0 !important;
+                }
+
+                .newsletter-mobile-label {
+                  font-size: 12px !important;
+                  line-height: 1.25 !important;
+                }
+
+                .newsletter-mobile-title {
+                  font-size: 18px !important;
+                  line-height: 1.18 !important;
+                }
+
+                .newsletter-mobile-teaser {
+                  font-size: 15px !important;
+                  line-height: 1.35 !important;
+                }
+
+                .newsletter-mobile-button-wrap {
+                  padding-top: 8px !important;
+                }
+
+                .newsletter-event-button {
+                  font-size: 14px !important;
+                  line-height: 1.2 !important;
+                  padding: 8px 13px !important;
+                }
+
+                .newsletter-intro {
+                  font-size: 17px !important;
+                  line-height: 1.48 !important;
+                }
+
+                .newsletter-team-tip-title {
+                  font-size: 19px !important;
+                  line-height: 1.18 !important;
+                }
+
+                .newsletter-team-tip-text {
+                  font-size: 15px !important;
+                  line-height: 1.42 !important;
+                }
+
+                .newsletter-jump-title {
+                  font-size: 17px !important;
+                  line-height: 1.3 !important;
+                }
+
+                .newsletter-genre-link {
+                  font-size: 13px !important;
+                  line-height: 1.2 !important;
+                  padding: 6px 9px !important;
+                }
+
+                .newsletter-section-heading-title {
+                  font-size: 24px !important;
+                  line-height: 1.1 !important;
+                }
+
+                .newsletter-footer-copy,
+                .newsletter-footer-link-row,
+                .newsletter-footer-address,
+                .newsletter-footer-auto-note {
+                  font-size: 13px !important;
+                  line-height: 1.45 !important;
+                }
+
+                .newsletter-footer-headline {
+                  font-size: 22px !important;
+                  line-height: 1.2 !important;
+                }
+
+                .newsletter-footer-teaser {
+                  font-size: 17px !important;
+                  line-height: 1.35 !important;
+                }
+
+                .newsletter-footer-cta {
+                  font-size: 17px !important;
+                  line-height: 1.2 !important;
+                  padding: 13px 18px !important;
+                }
+
+                .newsletter-footer-cta-table,
+                .newsletter-footer-legal-table {
+                  width: 100% !important;
+                }
+
+                .newsletter-item-media,
+                .newsletter-item-spacer,
+                .newsletter-item-content {
                   display: block !important;
                   width: 100% !important;
                 }
@@ -82,8 +204,7 @@ module Newsletter
                   height: 14px !important;
                 }
 
-                .newsletter-item-image,
-                .newsletter-card-image {
+                .newsletter-item-image {
                   width: 100% !important;
                   max-width: 100% !important;
                   height: auto !important;
@@ -96,7 +217,7 @@ module Newsletter
             <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;background:#f6f6f3;margin:0;padding:0;">
               <tr>
                 <td align="center" style="padding:0;">
-                  <table role="presentation" width="640" cellspacing="0" cellpadding="0" border="0" style="width:640px;max-width:640px;border-collapse:collapse;background:#fff;margin:0 auto;">
+                  <table class="newsletter-shell" role="presentation" width="640" cellspacing="0" cellpadding="0" border="0" style="width:640px;max-width:640px;border-collapse:collapse;background:#fff;margin:0 auto;">
                     <tr>
                       <td style="padding:0;">
                         #{opening_html}
@@ -205,7 +326,7 @@ module Newsletter
 
       color = dark ? "#fff" : "#263334"
 
-      %(<p style="font-size:15px;line-height:1.45;margin:0 0 20px;color:#{color};">#{escape_with_line_breaks(issue.intro)}</p>)
+      %(<p class="newsletter-intro" style="font-size:15px;line-height:1.45;margin:0 0 20px;color:#{color};">#{escape_with_line_breaks(issue.intro)}</p>)
     end
 
     def team_tip_html
@@ -220,7 +341,7 @@ module Newsletter
               </td>
               <td width="16" style="width:16px;font-size:1px;line-height:1px;">&nbsp;</td>
               <td valign="top" style="vertical-align:top;">
-                <h2 style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
+                <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
                 #{team_tip_quote_html}
               </td>
           </tr>
@@ -276,7 +397,7 @@ module Newsletter
 
       <<~HTML
         <nav aria-label="Genres im Newsletter" style="margin:0;">
-          <p style="margin:0 0 9px;font-size:14px;line-height:1.25;font-weight:600;color:#{question_color};">#{escape(issue.display_jump_menu_title)}</p>
+          <p class="newsletter-jump-title" style="margin:0 0 9px;font-size:14px;line-height:1.25;font-weight:600;color:#{question_color};">#{escape(issue.display_jump_menu_title)}</p>
           <div>
             #{links}
           </div>
@@ -288,7 +409,7 @@ module Newsletter
       <<~HTML
         <section style="padding-top:18px;">
           <a id="#{genre_anchor(section[:group])}" name="#{genre_anchor(section[:group])}" style="display:block;"></a>
-          <h2 style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">#{escape(section[:group].label)}</h2>
+          <h2 class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">#{escape(section[:group].label)}</h2>
           #{genre_item_cards_html(section[:items])}
         </section>
       HTML
@@ -297,16 +418,18 @@ module Newsletter
     def genre_item_cards_html(items)
       rows = items.each_slice(GENRE_CARD_COLUMNS).map do |row_items|
         <<~HTML
-          <tr>
+          <tr class="newsletter-card-row">
             #{row_items.map.with_index { |item, index| genre_item_card_column_html(item, index) }.join}
             #{empty_genre_item_card_columns_html(row_items.length)}
           </tr>
         HTML
       end
+      mobile_rows = items.map { |item| genre_item_mobile_row_html(item) }
 
       <<~HTML
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
           #{rows.join}
+          #{mobile_rows.join}
         </table>
       HTML
     end
@@ -343,9 +466,50 @@ module Newsletter
 
       (items_count...GENRE_CARD_COLUMNS).map do |index|
         <<~HTML
-          <td class="newsletter-card-column" width="33.33%" style="width:33.33%;padding:#{genre_item_card_column_padding(index)};">&nbsp;</td>
+          <td class="newsletter-card-column newsletter-card-empty" width="33.33%" style="width:33.33%;padding:#{genre_item_card_column_padding(index)};">&nbsp;</td>
         HTML
       end.join
+    end
+
+    def genre_item_mobile_row_html(item)
+      <<~HTML
+        <tr class="newsletter-mobile-item-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
+          <td colspan="#{GENRE_CARD_COLUMNS}" style="padding:0;border-bottom:1px solid #eceeee;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
+              <tr>
+                #{genre_item_mobile_image_cell_html(item)}
+                <td class="newsletter-mobile-content-cell" valign="top" style="vertical-align:top;padding:12px 0;">
+                  #{genre_item_mobile_content_html(item)}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      HTML
+    end
+
+    def genre_item_mobile_image_cell_html(item)
+      image_url = item_image_url(item)
+      return "" if image_url.blank?
+
+      <<~HTML
+        <td class="newsletter-mobile-image-cell" width="#{MOBILE_CARD_IMAGE_WIDTH}" valign="top" style="width:#{MOBILE_CARD_IMAGE_WIDTH}px;vertical-align:top;padding:12px 12px 12px 0;">
+          <a href="#{escape(item_url(item))}" style="display:block;text-decoration:none;">
+            <img class="newsletter-mobile-image" src="#{escape(image_url)}" width="#{MOBILE_CARD_IMAGE_WIDTH}" height="#{MOBILE_CARD_IMAGE_HEIGHT}" alt="#{escape(item.display_headline)}" style="display:block;width:#{MOBILE_CARD_IMAGE_WIDTH}px;max-width:#{MOBILE_CARD_IMAGE_WIDTH}px;height:#{MOBILE_CARD_IMAGE_HEIGHT}px;border:0;border-radius:8px;">
+          </a>
+        </td>
+      HTML
+    end
+
+    def genre_item_mobile_content_html(item)
+      <<~HTML
+        <p class="newsletter-mobile-label" style="margin:0 0 4px;font-size:11px;line-height:1.25;color:#667071;">#{escape(item_label(item))}</p>
+        <h3 class="newsletter-mobile-title" style="margin:0 0 5px;font-size:16px;line-height:1.18;font-weight:600;">#{escape(item.display_headline)}</h3>
+        <p class="newsletter-mobile-teaser" style="margin:0;font-size:13px;line-height:1.3;color:#263334;">#{escape(item.display_teaser)}</p>
+        <div class="newsletter-mobile-button-wrap" style="padding-top:8px;">
+          #{genre_item_card_button_html(item)}
+        </div>
+      HTML
     end
 
     def genre_item_card_column_padding(index)
@@ -455,7 +619,7 @@ module Newsletter
           <tr>
             <td width="26" valign="top" style="width:26px;vertical-align:top;color:#111;font-size:44px;line-height:36px;font-family:Georgia,serif;">&#8220;</td>
             <td valign="top" style="vertical-align:top;">
-              <p style="margin:0;font-size:14px;line-height:1.42;color:#263334;">#{escape(issue.team_tip_text)}</p>
+              <p class="newsletter-team-tip-text" style="margin:0;font-size:14px;line-height:1.42;color:#263334;">#{escape(issue.team_tip_text)}</p>
             </td>
           </tr>
         </table>
@@ -504,41 +668,109 @@ module Newsletter
 
     def footer_html
       <<~HTML
-        <footer style="margin:24px 0 0;padding:18px 0 0;border-top:1px solid #cfd3d1;color:#596364;">
-          <p style="margin:0 0 12px;font-size:11px;line-height:1.45;">
-            Du erhältst diese E-Mail, weil du dich für den Stuttgart Live Newsletter angemeldet hast.
-            Du kannst dich jederzeit über den Abmeldelink vom Newsletter abmelden.
-          </p>
-          <p style="margin:0 0 12px;font-size:11px;line-height:1.45;">
-            <a href="[[UNSUB_LINK_DE]]" style="color:#102223;text-decoration:underline;">Newsletter abbestellen</a>
-            <span style="color:#a5adad;">&nbsp;&middot;&nbsp;</span>
-            <a href="#{escape(datenschutz_url(**route_url_options))}" style="color:#102223;text-decoration:underline;">Datenschutz</a>
-            <span style="color:#a5adad;">&nbsp;&middot;&nbsp;</span>
-            <a href="#{escape(imprint_url(**route_url_options))}" style="color:#102223;text-decoration:underline;">Impressum</a>
-          </p>
-          <p style="margin:0;font-size:11px;line-height:1.5;">
-            Stuttgart Live ist eine Marke der SKS Michael Russ GmbH<br>
-            Charlottenplatz 17, 70173 Stuttgart, Deutschland<br>
-            Telefon: <a href="tel:+497111635327" style="color:#102223;text-decoration:underline;">0711 - 16353-27</a>
-            &nbsp;&middot;&nbsp;
-            E-Mail: <a href="mailto:info@stuttgart-live.de" style="color:#102223;text-decoration:underline;">info@stuttgart-live.de</a>
-          </p>
+        <footer style="margin:32px 0 0;padding:28px 0 0;border-top:1px solid #cfd3d1;color:#596364;text-align:center;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td align="center" style="padding:0 22px 20px;">
+                <p class="newsletter-footer-headline" style="margin:0 0 8px;font-size:25px;line-height:1.2;font-weight:700;color:#263334;">Du willst mehr? Wir haben mehr!</p>
+                <p class="newsletter-footer-teaser" style="margin:0;font-size:18px;line-height:1.35;color:#263334;">
+                  Auf unserer <strong style="font-weight:700;">Website</strong> warten noch jede Menge Highlights auf dich.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:0 0 24px;">
+                <table class="newsletter-footer-cta-table" role="presentation" width="430" cellspacing="0" cellpadding="0" border="0" style="width:430px;max-width:100%;border-collapse:collapse;">
+                  <tr>
+                    <td align="center" bgcolor="#28c7c2" style="border-radius:6px;background:#28c7c2;">
+                      <a class="newsletter-footer-cta" href="#{escape(website_url)}" target="_blank" rel="noopener" style="display:block;background:#28c7c2;color:#102223;text-decoration:none;font-size:18px;line-height:1.2;font-weight:700;border-radius:6px;padding:15px 22px;">Mehr Events entdecken</a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:0 0 26px;">
+                <a href="#{escape(website_url)}" target="_blank" rel="noopener" style="color:#102223;text-decoration:underline;font-size:15px;line-height:1.4;">www.stuttgart-live.de</a>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:20px 0;border-top:1px solid #cfd3d1;border-bottom:1px solid #cfd3d1;">
+                #{footer_social_icons_html}
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:22px 0 0;color:#a5adad;">
+                <table class="newsletter-footer-legal-table" role="presentation" width="540" cellspacing="0" cellpadding="0" border="0" style="width:540px;max-width:100%;border-collapse:collapse;">
+                  <tr>
+                    <td align="center" style="padding:0;color:#a5adad;">
+                      <p class="newsletter-footer-copy" style="margin:0 0 12px;font-size:12px;line-height:1.6;">
+                        Du erhältst diese E-Mail, weil du dich für den Stuttgart Live Newsletter angemeldet hast.
+                        Wenn du unseren Event-Newsletter nicht mehr erhalten möchtest, kannst du dich
+                        <a href="[[UNSUB_LINK_DE]]" style="color:#596364;text-decoration:underline;">hier abmelden</a>.
+                      </p>
+                      <p class="newsletter-footer-auto-note" style="margin:0 0 12px;font-size:12px;line-height:1.6;">
+                        Dies ist eine automatisch generierte E-Mail.<br>
+                        Bitte antworte nicht auf diese E-Mail, da uns deine Anfrage hier nicht erreicht.
+                      </p>
+                      <p class="newsletter-footer-link-row" style="margin:0 0 12px;font-size:12px;line-height:1.45;">
+                        <a href="#{escape(datenschutz_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Datenschutz</a>
+                        <span style="color:#c2c7c7;">&nbsp;&middot;&nbsp;</span>
+                        <a href="#{escape(imprint_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Impressum</a>
+                      </p>
+                      <p class="newsletter-footer-address" style="margin:0;font-size:12px;line-height:1.5;">
+                        Stuttgart Live ist eine Marke der SKS Michael Russ GmbH<br>
+                        Charlottenplatz 17, 70173 Stuttgart, Deutschland<br>
+                        Telefon: <a href="tel:+497111635327" style="color:#596364;text-decoration:underline;">0711 - 16353-27</a>
+                        &nbsp;&middot;&nbsp;
+                        E-Mail: <a href="mailto:info@stuttgart-live.de" style="color:#596364;text-decoration:underline;">info@stuttgart-live.de</a>
+                      </p>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+          </table>
         </footer>
       HTML
     end
 
     def footer_text
       <<~TEXT.strip
+        Du willst mehr? Wir haben mehr!
+        Auf unserer Website warten noch jede Menge Highlights auf dich.
+        Mehr Events entdecken: #{website_url}
+
         Du erhältst diese E-Mail, weil du dich für den Stuttgart Live Newsletter angemeldet hast.
         Newsletter abbestellen: [[UNSUB_LINK_DE]]
         Datenschutz: #{datenschutz_url(**route_url_options)}
         Impressum: #{imprint_url(**route_url_options)}
+
+        Dies ist eine automatisch generierte E-Mail.
+        Bitte antworte nicht auf diese E-Mail, da uns deine Anfrage hier nicht erreicht.
 
         Stuttgart Live ist eine Marke der SKS Michael Russ GmbH
         Charlottenplatz 17, 70173 Stuttgart, Deutschland
         Telefon: 0711 - 16353-27
         E-Mail: info@stuttgart-live.de
       TEXT
+    end
+
+    def footer_social_icons_html
+      SOCIAL_LINKS.map do |link|
+        image_url = absolute_media_url(ActionController::Base.helpers.asset_path(link.fetch(:image_path)))
+        next if image_url.blank?
+
+        <<~HTML
+          <a href="#{escape(link.fetch(:url))}" target="_blank" rel="noopener" style="display:inline-block;margin:0 7px;text-decoration:none;">
+            <img src="#{escape(image_url)}" width="38" height="38" alt="#{escape(link.fetch(:name))}" style="display:block;width:38px;height:38px;border:0;outline:none;text-decoration:none;">
+          </a>
+        HTML
+      end.compact.join
+    end
+
+    def website_url
+      root_url(**route_url_options)
     end
 
     def item_label(item)

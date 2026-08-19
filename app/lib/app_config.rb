@@ -85,7 +85,7 @@ module AppConfig
 
     def newsletter_test_list_send_enabled?
       value = fetch(:newsletter, :test_list_send_enabled, env: "NEWSLETTER_TEST_LIST_SEND_ENABLED")
-      return Rails.env.development? || Rails.env.test? if value.nil?
+      return Rails.env.development? || Rails.env.test? || mailjet_list_id.present? if value.nil?
 
       ActiveModel::Type::Boolean.new.cast(value)
     end
