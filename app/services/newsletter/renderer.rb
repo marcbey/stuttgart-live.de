@@ -102,7 +102,7 @@ module Newsletter
                         #{opening_html}
                         <div style="padding:0 24px 24px;">
                           #{items_html}
-                          <p style="font-size:12px;line-height:1.45;color:#606a6b;margin:24px 0 0;">Du erhältst diese E-Mail, weil du den Stuttgart Live Newsletter abonniert hast. Du kannst dich über den Abmeldelink in Mailjet jederzeit abmelden.</p>
+                          #{footer_html}
                         </div>
                       </td>
                     </tr>
@@ -116,7 +116,7 @@ module Newsletter
     end
 
     def render_text
-      parts = [ "STUTTGART LIVE", issue.subject, issue.intro.to_s.strip.presence, text_items ]
+      parts = [ "STUTTGART LIVE", issue.subject, issue.intro.to_s.strip.presence, text_items, footer_text ]
       parts.compact.join("\n\n")
     end
 
@@ -328,7 +328,7 @@ module Newsletter
               </td>
             </tr>
             <tr>
-              <td height="32" valign="top" style="height:32px;vertical-align:top;padding-top:2px;">
+              <td height="36" valign="top" style="height:36px;vertical-align:top;padding-top:5px;">
                 #{genre_item_card_button_html(item)}
               </td>
             </tr>
@@ -500,6 +500,45 @@ module Newsletter
       items.map do |item|
         [ item_label(item), item.display_headline, item.display_teaser, item_url(item) ].join("\n")
       end.join("\n\n")
+    end
+
+    def footer_html
+      <<~HTML
+        <footer style="margin:24px 0 0;padding:18px 0 0;border-top:1px solid #cfd3d1;color:#596364;">
+          <p style="margin:0 0 12px;font-size:11px;line-height:1.45;">
+            Du erhältst diese E-Mail, weil du dich für den Stuttgart Live Newsletter angemeldet hast.
+            Du kannst dich jederzeit über den Abmeldelink vom Newsletter abmelden.
+          </p>
+          <p style="margin:0 0 12px;font-size:11px;line-height:1.45;">
+            <a href="[[UNSUB_LINK_DE]]" style="color:#102223;text-decoration:underline;">Newsletter abbestellen</a>
+            <span style="color:#a5adad;">&nbsp;&middot;&nbsp;</span>
+            <a href="#{escape(datenschutz_url(**route_url_options))}" style="color:#102223;text-decoration:underline;">Datenschutz</a>
+            <span style="color:#a5adad;">&nbsp;&middot;&nbsp;</span>
+            <a href="#{escape(imprint_url(**route_url_options))}" style="color:#102223;text-decoration:underline;">Impressum</a>
+          </p>
+          <p style="margin:0;font-size:11px;line-height:1.5;">
+            Stuttgart Live ist eine Marke der SKS Michael Russ GmbH<br>
+            Charlottenplatz 17, 70173 Stuttgart, Deutschland<br>
+            Telefon: <a href="tel:+497111635327" style="color:#102223;text-decoration:underline;">0711 - 16353-27</a>
+            &nbsp;&middot;&nbsp;
+            E-Mail: <a href="mailto:info@stuttgart-live.de" style="color:#102223;text-decoration:underline;">info@stuttgart-live.de</a>
+          </p>
+        </footer>
+      HTML
+    end
+
+    def footer_text
+      <<~TEXT.strip
+        Du erhältst diese E-Mail, weil du dich für den Stuttgart Live Newsletter angemeldet hast.
+        Newsletter abbestellen: [[UNSUB_LINK_DE]]
+        Datenschutz: #{datenschutz_url(**route_url_options)}
+        Impressum: #{imprint_url(**route_url_options)}
+
+        Stuttgart Live ist eine Marke der SKS Michael Russ GmbH
+        Charlottenplatz 17, 70173 Stuttgart, Deutschland
+        Telefon: 0711 - 16353-27
+        E-Mail: info@stuttgart-live.de
+      TEXT
     end
 
     def item_label(item)

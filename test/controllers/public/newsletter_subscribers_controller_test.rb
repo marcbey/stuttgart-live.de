@@ -214,13 +214,12 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     refute_includes response.body, "newsletter-signup-confirmation-error"
   end
 
-  test "renders optional interest dropdown in newsletter form" do
+  test "hides optional interest dropdown in newsletter form" do
     get root_url
 
     assert_response :success
-    assert_includes response.body, "newsletter-signup-interests"
-    assert_includes response.body, "Interessen auswählen"
-    assert_includes response.body, "Pop"
-    assert_includes response.body, "Punk &amp; Metal"
+    assert_includes response.body, "newsletter-signup-field"
+    refute_includes response.body, "newsletter-signup-interests"
+    refute_includes response.body, "Interessen auswählen"
   end
 end

@@ -72,6 +72,21 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.text, "Persönlich für dich 💜"
   end
 
+  test "renders legal footer with unsubscribe and company details" do
+    issue = newsletter_issue_with_items
+
+    rendered = Newsletter::Renderer.call(issue)
+
+    assert_includes rendered.html, "Newsletter abbestellen"
+    assert_includes rendered.html, 'href="[[UNSUB_LINK_DE]]"'
+    assert_includes rendered.html, "Datenschutz"
+    assert_includes rendered.html, "Impressum"
+    assert_includes rendered.html, "SKS Michael Russ GmbH"
+    assert_includes rendered.html, "Charlottenplatz 17, 70173 Stuttgart"
+    assert_includes rendered.text, "Newsletter abbestellen: [[UNSUB_LINK_DE]]"
+    assert_includes rendered.text, "info@stuttgart-live.de"
+  end
+
   test "renders a more understated Stuttgart Live branded layout" do
     issue = newsletter_issue_with_items
 
@@ -262,7 +277,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "width:176px;max-width:100%;height:176px"
     assert_includes rendered.html, "height:186px"
     assert_includes rendered.html, "height:72px"
-    assert_includes rendered.html, "height:32px;vertical-align:top;padding-top:2px"
+    assert_includes rendered.html, "height:36px;vertical-align:top;padding-top:5px"
     assert_not_includes rendered.html, "object-fit:cover"
     assert_includes rendered.html, "border-radius:10px"
     assert_includes rendered.text, "POP"
