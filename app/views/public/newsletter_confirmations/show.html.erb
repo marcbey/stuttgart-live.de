@@ -1,0 +1,27 @@
+<% content_for :title, @confirmed ? "Newsletter bestätigt | Stuttgart Live" : "Bestätigungslink ungültig | Stuttgart Live" %>
+<% content_for :page_newsletter, tag.span("", hidden: true) %>
+
+<div class="newsletter-confirmation-page">
+  <section class="newsletter-confirmation-shell" aria-labelledby="newsletter-confirmation-title">
+    <div class="<%= class_names("newsletter-confirmation-panel", "newsletter-confirmation-panel-error": !@confirmed) %>">
+      <p class="newsletter-confirmation-eyebrow">Stuttgart Live Newsletter</p>
+
+      <% if @confirmed %>
+        <h1 id="newsletter-confirmation-title" class="newsletter-confirmation-title">Du bist jetzt eingetragen</h1>
+        <p class="newsletter-confirmation-copy">
+          Danke! Deine Newsletter-Anmeldung ist bestätigt. Ab jetzt bekommst du unsere Konzert- und News-Auswahl direkt per Mail.
+        </p>
+      <% else %>
+        <h1 id="newsletter-confirmation-title" class="newsletter-confirmation-title">Link ungültig oder abgelaufen</h1>
+        <p class="newsletter-confirmation-copy">
+          Dieser Bestätigungslink kann nicht mehr verwendet werden. Bitte trag dich einfach noch einmal für den Newsletter ein.
+        </p>
+      <% end %>
+
+      <div class="newsletter-confirmation-actions">
+        <%= link_to "Zur Startseite", root_path, class: "newsletter-confirmation-button newsletter-confirmation-button-primary" %>
+        <%= link_to "Events ansehen", events_path, class: "newsletter-confirmation-button newsletter-confirmation-button-secondary" %>
+      </div>
+    </div>
+  </section>
+</div>

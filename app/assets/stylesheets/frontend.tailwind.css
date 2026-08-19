@@ -57,17 +57,50 @@ position: fixed;
   );
   left: auto;
   z-index: 40;
+  width: max-content;
+  max-width: calc(100vw - 2rem);
   pointer-events: none;
 }
 
 .public-backend-float-inner {
-max-width: 1480px;
+width: max-content;
+  max-width: calc(100vw - 2rem);
   margin: 0 auto;
   padding: 0.8rem 1rem 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+
+.public-backend-float .app-nav-backend-panel.app-nav-links-group {
+position: absolute;
+  right: 0;
+  left: auto;
+  top: calc(100% + 0.45rem);
+  display: grid;
+  width: max-content;
+  min-width: 12rem;
+  max-width: calc(100vw - 2rem);
+  margin-top: 0;
+  padding: 0.75rem 0.9rem 0.85rem;
+  border: 1px solid rgba(17, 17, 17, 0.1);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 18px 36px rgba(17, 17, 17, 0.14);
+  backdrop-filter: blur(10px);
+}
+
+.public-backend-float .app-nav-backend-panel.app-nav-links-group[hidden] {
+display: none;
+}
+
+.public-backend-float .app-nav-backend-panel .app-nav-link,
+.public-backend-float .app-nav-backend-panel .app-nav-link-form .app-nav-link {
+display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  white-space: nowrap;
 }
 
 .public-backend-shortcut {
@@ -101,7 +134,8 @@ width: max-content;
   padding-left: 0;
 }
 
-body.page-public-events-index .app-nav:has(.app-nav-meta[data-open="true"]) + .public-backend-float {
+body.page-public-events-index .app-nav:has(.app-nav-meta[data-open="true"]) + .public-backend-float,
+body.page-public-events-index .app-nav:has(.app-nav-toggle[aria-expanded="true"]) + .public-backend-float {
 opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -4907,6 +4941,96 @@ grid-column: 1 / -1;
 display: contents;
 }
 
+.newsletter-signup-control {
+grid-column: 1 / -1;
+  display: grid;
+  gap: 0;
+}
+
+.newsletter-signup-interests {
+max-height: 0;
+  overflow: hidden;
+  transition: max-height 220ms ease;
+}
+
+.newsletter-signup-form:focus-within .newsletter-signup-interests,
+.newsletter-signup-form[data-interests-open="true"] .newsletter-signup-interests {
+max-height: 16rem;
+}
+
+.newsletter-signup-interests-summary {
+display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  min-height: 0;
+  padding: 0 0.85rem;
+  color: #0a2324;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  opacity: 0;
+  text-transform: uppercase;
+  transform: translateY(-0.25rem);
+  transition: min-height 180ms ease, opacity 160ms ease, padding 180ms ease, transform 180ms ease;
+}
+
+.newsletter-signup-form:focus-within .newsletter-signup-interests-summary,
+.newsletter-signup-form[data-interests-open="true"] .newsletter-signup-interests-summary {
+min-height: 2.25rem;
+  padding-top: 0.1rem;
+  padding-bottom: 0.35rem;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.newsletter-signup-interests-note {
+margin-left: auto;
+  color: rgba(10, 35, 36, 0.48);
+  font-family: "Archivo Narrow", Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.newsletter-signup-interest-options {
+display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 0.85rem;
+  opacity: 0;
+  transform: translateY(-0.25rem);
+  transition: max-height 220ms ease, opacity 160ms ease, padding 180ms ease, transform 180ms ease;
+}
+
+.newsletter-signup-form:focus-within .newsletter-signup-interest-options,
+.newsletter-signup-form[data-interests-open="true"] .newsletter-signup-interest-options {
+max-height: 12rem;
+  padding-bottom: 0.85rem;
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.newsletter-signup-interest-option {
+display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  min-height: 2rem;
+  border: 1px solid rgba(10, 35, 36, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 0.42rem 0.62rem;
+  color: rgba(10, 35, 36, 0.8);
+  font-size: 0.92rem;
+  line-height: 1;
+}
+
+.newsletter-signup-interest-option input {
+accent-color: #23d3ca;
+}
+
 .newsletter-signup-confirmation {
 max-width: none;
   border: 1px solid rgba(36, 131, 79, 0.28);
@@ -4950,6 +5074,104 @@ font-family: "Oswald", "Arial Narrow", sans-serif;
 .newsletter-signup-confirmation p,
 .newsletter-signup-confirmation .eyebrow {
 margin: 0;
+}
+
+.newsletter-confirmation-page {
+display: grid;
+  min-height: min(36rem, 72vh);
+  padding: clamp(2rem, 6vw, 5rem) var(--page-gutter, 1rem);
+  place-items: center;
+}
+
+.newsletter-confirmation-shell {
+width: min(100%, 58rem);
+}
+
+.newsletter-confirmation-panel {
+border: 1px solid rgba(35, 211, 202, 0.38);
+  border-radius: 0.5rem;
+  background:
+    linear-gradient(135deg, rgba(35, 211, 202, 0.18), rgba(255, 241, 86, 0.16) 45%, rgba(255, 255, 255, 0.96) 46%),
+    #ffffff;
+  box-shadow: 0 1.25rem 3rem rgba(9, 24, 25, 0.1);
+  padding: clamp(1.35rem, 4vw, 3rem);
+}
+
+.newsletter-confirmation-panel-error {
+border-color: rgba(238, 60, 136, 0.38);
+  background:
+    linear-gradient(135deg, rgba(238, 60, 136, 0.14), rgba(255, 241, 86, 0.14) 45%, rgba(255, 255, 255, 0.96) 46%),
+    #ffffff;
+}
+
+.newsletter-confirmation-eyebrow {
+margin: 0 0 0.65rem;
+  color: rgba(10, 35, 36, 0.66);
+  font-family: "Archivo Narrow", Arial, sans-serif;
+  font-size: 0.88rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.newsletter-confirmation-title {
+max-width: 12ch;
+  margin: 0;
+  color: #092324;
+  font-family: "Bebas Neue", "Oswald", "Arial Narrow", sans-serif;
+  font-size: clamp(3.2rem, 10vw, 6.8rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 0.86;
+  text-transform: uppercase;
+}
+
+.newsletter-confirmation-copy {
+max-width: 39rem;
+  margin: 1.15rem 0 0;
+  color: rgba(10, 35, 36, 0.78);
+  font-size: clamp(1.05rem, 2vw, 1.28rem);
+  line-height: 1.45;
+}
+
+.newsletter-confirmation-actions {
+display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.55rem;
+}
+
+.newsletter-confirmation-button {
+display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.9rem;
+  border-radius: 999px;
+  padding: 0.7rem 1.15rem;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: 0.98rem;
+  font-weight: 700;
+  line-height: 1;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: transform 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.newsletter-confirmation-button:hover,
+.newsletter-confirmation-button:focus-visible {
+transform: translateY(-1px);
+}
+
+.newsletter-confirmation-button-primary {
+background: #23d3ca;
+  box-shadow: 0 0.85rem 1.3rem rgba(35, 211, 202, 0.22);
+  color: #092324;
+}
+
+.newsletter-confirmation-button-secondary {
+border: 1px solid rgba(10, 35, 36, 0.22);
+  background: #ffffff;
+  color: #092324;
 }
 
 .newsletter-signup-section .newsletter-signup-input {
@@ -7192,13 +7414,8 @@ display: grid;
 
 .event-detail-series-terms h2 {
 margin: 0;
-  color: #0a2324;
-  font-family: "Bebas Neue", "Impact", sans-serif;
-  font-size: clamp(1.34rem, 2vw, 1.72rem);
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  line-height: 0.98;
-  text-transform: uppercase;
+  font-size: clamp(1.28rem, 1.9vw, 1.65rem);
+  line-height: 1.08;
 }
 
 .event-series-calendar {
@@ -10143,8 +10360,9 @@ body.page-public-events-index.header-color-navy {
 body.page-public-events-index.header-color-black {
   --homepage-header-background: var(--public-gray-header-background);
   --homepage-header-menu-background:
-    radial-gradient(circle at 60% 20%, rgba(255, 255, 255, 0.2), transparent 18%),
-    linear-gradient(180deg, #5c6060 0%, #262828 100%);
+    radial-gradient(circle at 72% 18%, rgba(255, 255, 255, 0.28), transparent 18%),
+    radial-gradient(circle at 28% 6%, rgba(255, 255, 255, 0.12), transparent 24%),
+    linear-gradient(145deg, #888e8e 0%, #5c6262 52%, #3d4141 100%);
   --homepage-header-nav: #fff;
   --homepage-header-nav-active: #050505;
   --homepage-header-control-bg: rgba(255, 255, 255, 0.96);
@@ -10558,7 +10776,7 @@ position: absolute;
   min-width: 0;
   max-width: calc(100vw - 6.7rem);
   overflow-x: clip;
-  padding: 0.76rem 0.68rem 0.78rem;
+  padding: 1rem 0.9rem 1.05rem;
   border-top: 0;
   border-radius: 0 0 1rem 1rem;
   background: var(--homepage-header-menu-background);
@@ -10589,7 +10807,7 @@ opacity: 1;
 
 body.page-public-events-index .app-nav-links {
 display: grid;
-  gap: 0.68rem;
+  gap: 0.95rem;
   align-items: start;
   justify-items: start;
   width: max-content;
@@ -10601,7 +10819,7 @@ body.page-public-events-index .app-nav-links-group {
 display: grid;
   align-content: start;
   justify-items: start;
-  gap: 0.15rem;
+  gap: 0.24rem;
   height: auto;
   width: max-content;
   min-width: 0;
@@ -10610,19 +10828,19 @@ display: grid;
 
 body.page-public-events-index .app-nav-poster-links-wrap {
 display: grid;
-  gap: 0.62rem;
+  gap: 1.05rem;
 }
 
 body.page-public-events-index .app-nav-poster-links-stack {
 display: grid;
   justify-items: start;
-  gap: 0.1rem;
+  gap: 0.3rem;
   align-content: start;
   height: auto;
 }
 
 body.page-public-events-index .app-nav-link {
-min-height: 2rem;
+min-height: 2.25rem;
   padding: 0;
   border: 0;
   background: transparent;
@@ -10630,7 +10848,7 @@ min-height: 2rem;
   font-family: "Oswald", "Arial Narrow", sans-serif;
   font-size: clamp(2.3rem, 2.3vw, 2.5rem);
   font-weight: 700;
-  line-height: 0.9;
+  line-height: 0.94;
   letter-spacing: 0;
   text-decoration: none;
   text-transform: uppercase;
@@ -12193,6 +12411,28 @@ grid-template-columns: minmax(0, 1fr);
   align-items: start;
 }
 
+body.page-public-events-index .newsletter-signup-control,
+body.page-public-newsletter-poster .newsletter-signup-control {
+position: relative;
+  border: 2px solid transparent;
+  border-radius: 2.1rem;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: none;
+  overflow: hidden;
+  transition: border-color 180ms ease, box-shadow 180ms ease, border-radius 180ms ease;
+}
+
+body.page-public-events-index .newsletter-signup-form:focus-within .newsletter-signup-control,
+body.page-public-events-index .newsletter-signup-form[data-interests-open="true"] .newsletter-signup-control,
+body.page-public-newsletter-poster .newsletter-signup-form:focus-within .newsletter-signup-control,
+body.page-public-newsletter-poster .newsletter-signup-form[data-interests-open="true"] .newsletter-signup-control {
+border-color: rgba(210, 216, 218, 0.94);
+  border-radius: 2.1rem 2.1rem 0.2rem 0.2rem;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.98),
+    inset 0 0 0 1px rgba(210, 216, 218, 0.68);
+}
+
 body.page-public-events-index .newsletter-signup-note,
 body.page-public-newsletter-poster .newsletter-signup-note {
 color: rgba(255, 255, 255, 0.82);
@@ -12207,9 +12447,9 @@ height: 4.1rem;
   min-height: 4.1rem;
   min-width: 0;
   width: 100%;
-  border: 2px solid transparent;
-  border-radius: 9999px;
-  background: rgba(255, 255, 255, 0.96);
+  border: 0;
+  border-radius: 0;
+  background: transparent;
   padding-inline: 1.4rem 4.8rem;
   box-shadow: none;
   color: var(--ink);
@@ -12223,11 +12463,8 @@ body.page-public-events-index .newsletter-signup-section .newsletter-signup-inpu
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-input:focus-visible,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input:focus,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-input:focus-visible {
-border-color: rgba(210, 216, 218, 0.94);
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.98),
-    inset 0 0 0 1px rgba(210, 216, 218, 0.68);
+background: transparent;
+  box-shadow: none;
   outline: none;
 }
 
@@ -12261,8 +12498,7 @@ min-height: 4.1rem;
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button-arrow,
 body.page-public-newsletter-poster .newsletter-signup-section .newsletter-signup-button-arrow {
 position: absolute;
-  top: 0.2rem;
-  bottom: 0.2rem;
+  top: 0.15rem;
   right: 0.35rem;
   z-index: 1;
   justify-self: auto;
@@ -12271,6 +12507,7 @@ position: absolute;
   align-items: center;
   justify-content: center;
   width: 3.8rem;
+  height: 3.8rem;
   min-width: 0;
   min-height: auto;
   border: 0;
@@ -12278,6 +12515,44 @@ position: absolute;
   background: transparent;
   padding: 0;
   color: var(--ink);
+}
+
+body.page-public-events-index .newsletter-signup-interests,
+body.page-public-newsletter-poster .newsletter-signup-interests {
+background: transparent;
+}
+
+body.page-public-events-index .newsletter-signup-interests-summary,
+body.page-public-newsletter-poster .newsletter-signup-interests-summary {
+padding-inline: 1.4rem;
+  color: var(--ink);
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-size: 1.18rem;
+  letter-spacing: 0;
+}
+
+body.page-public-events-index .newsletter-signup-interest-options,
+body.page-public-newsletter-poster .newsletter-signup-interest-options {
+gap: 1rem 1.9rem;
+  padding-inline: 1.4rem;
+}
+
+body.page-public-events-index .newsletter-signup-form:focus-within .newsletter-signup-interest-options,
+body.page-public-events-index .newsletter-signup-form[data-interests-open="true"] .newsletter-signup-interest-options,
+body.page-public-newsletter-poster .newsletter-signup-form:focus-within .newsletter-signup-interest-options,
+body.page-public-newsletter-poster .newsletter-signup-form[data-interests-open="true"] .newsletter-signup-interest-options {
+padding-bottom: 1.3rem;
+}
+
+body.page-public-events-index .newsletter-signup-interest-option,
+body.page-public-newsletter-poster .newsletter-signup-interest-option {
+border: 0;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.18rem 0;
+  color: var(--ink);
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 1.05rem;
 }
 
 body.page-public-events-index .newsletter-signup-section .newsletter-signup-button-arrow-icon,

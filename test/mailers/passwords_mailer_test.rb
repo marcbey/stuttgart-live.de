@@ -6,7 +6,7 @@ class PasswordsMailerTest < ActionMailer::TestCase
     mail = PasswordsMailer.magic_link(user)
 
     assert_equal [ user.email_address ], mail.to
-    assert_equal "Dein Magic-Link fuer Stuttgart Live", mail.subject
+    assert_equal "Dein Magic-Link für Stuttgart Live", mail.subject
     assert_match %r{http://example\.com/passwords/}, mail.text_part.body.to_s
     assert_match %r{http://example\.com/passwords/}, mail.html_part.body.to_s
     assert_includes mail.text_part.body.to_s, "15 Minuten"

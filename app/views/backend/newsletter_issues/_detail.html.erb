@@ -1,0 +1,147 @@
+<div id="newsletter-editor" class="backend-editor-panel newsletter-editor-panel">
+  <div class="backend-editor-panel-header newsletter-issue-toolbar">
+    <div class="newsletter-issue-toolbar-meta">
+      <p class="eyebrow">Status: <%= issue.status %></p>
+      <h2><%= issue.subject %></h2>
+      <% if issue.newsletter_interest.present? %>
+        <p class="backend-muted">Thema: <%= issue.newsletter_interest.name %></p>
+      <% end %>
+      <% if issue.genre_weekly_mix? %>
+        <p class="backend-muted">Layout: Wochenmix nach Header-Genres mit Sprungmenü</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="backend-topbar-actions newsletter-issue-actions">
+    <% send_confirm = "Hast du vorher gespeichert und den Mailjet-Draft aktualisiert? Sonst wird ein älterer Stand gesendet." %>
+    <div class="newsletter-action-group newsletter-action-group-back" aria-label="Zur Newsletter-Liste">
+      <%= link_to "Alle", backend_newsletters_path(newsletter_id: issue.id), class: "button button-secondary button-compact" %>
+    </div>
+
+    <div class="newsletter-action-group newsletter-action-group-primary" aria-label="Speichern und Mailjet-Draft aktualisieren">
+      <%= button_tag "Speichern",
+                     type: "submit",
+                     form: dom_id(issue, :newsletter_form),
+                     class: "button button-save-primary button-compact" %>
+      <span class="newsletter-action-arrow" aria-hidden="true">→</span>
+      <%= button_to "Mailjet-Draft aktualisieren",
+                    sync_mailjet_backend_newsletter_path(issue),
+                    method: :post,
+                    title: "Mailjet-Draft erstellen oder aktualisieren",
+                    class: "button button-secondary button-compact" %>
+    </div>
+
+    <div class="newsletter-action-group newsletter-action-group-send" aria-label="Testmail oder Versand senden">
+      <%= button_to "Testmail",
+                    send_test_backend_newsletter_path(issue),
+                    method: :post,
+                    title: "Testmail an die festen Testadressen senden",
+                    class: "button button-compact",
+                    data: { turbo_confirm: send_confirm } %>
+      <%= button_to "Testliste senden",
+                    send_test_list_backend_newsletter_path(issue),
+                    method: :post,
+                    title: "Newsletter an die konfigurierte interne Mailjet-Testliste senden",
+                    class: "button button-secondary button-compact",
+                    disabled: !AppConfig.newsletter_test_list_send_enabled?,
+                    data: { turbo_confirm: send_confirm } %>
+      <%= button_to "Final senden",
+                    send_now_backend_newsletter_path(issue),
+                    method: :post,
+                    title: "Finalen Versand starten",
+                    class: "button button-ghost button-compact",
+                    disabled: !AppConfig.newsletter_final_send_enabled?,
+                    data: { turbo_confirm: "#{send_confirm} Wirklich final senden?" } %>
+    </div>
+
+    <div class="newsletter-action-group newsletter-action-group-navigation" aria-label="Ansicht wechseln">
+      <%= link_to "Vorschau", "#newsletter-preview", class: "button button-secondary button-compact" %>
+      <%= link_to "Löschen",
+                  backend_newsletter_path(issue),
+                  data: { turbo_method: :delete, turbo_confirm: "Newsletter-Ausgabe wirklich dauerhaft löschen?" },
+                  title: "Newsletter-Ausgabe löschen",
+                  class: "button button-danger-subtle button-compact" %>
+    </div>
+  </div>
+
+  <% if issue.mailjet_error_message.present? %>
+    <div class="flash flash-alert"><%= issue.mailjet_error_message %></div>
+  <% end %>
+
+  <%= render "form", issue: issue %>
+
+  <section class="editor-form-section newsletter-editor-section newsletter-add-content-section">
+    <% newsletter_genre_options = Newsletter::HeaderGenreGroups.all.map { |group| [ group.label, group.slug ] } %>
+    <div class="newsletter-section-heading">
+      <h3 class="newsletter-section-title newsletter-section-title-strong">Inhalte hinzufügen</h3>
+    </div>
+
+    <div class="newsletter-add-content-grid">
+      <%= form_with url: backend_newsletter_items_path(issue), method: :post, class: "newsletter-add-card newsletter-add-card-event" do |form| %>
+        <%= hidden_field_tag :item_type, "Event" %>
+        <div class="newsletter-add-card-header">
+          <span class="newsletter-add-card-type">Event</span>
+        </div>
+        <div class="newsletter-add-fields">
+          <label class="newsletter-add-field">
+            <span>Auswahl</span>
+            <%= form.select :item_id,
+                            options_for_select(available_events.map { |event|
+                              [ newsletter_event_option_label(event), event.id ]
+                            }),
+                            {},
+                            class: "form-input newsletter-add-input" %>
+          </label>
+          <% if issue.genre_weekly_mix? %>
+            <label class="newsletter-add-field">
+              <span>Genre</span>
+              <%= form.select :section_key,
+                              options_for_select(
+                                [ [ "Genre auswählen", "", { disabled: true } ] ] + newsletter_genre_options,
+                                ""
+                              ),
+                              {},
+                              class: "form-input newsletter-add-input",
+                              required: true %>
+            </label>
+          <% end %>
+        </div>
+        <div class="newsletter-add-card-actions">
+          <%= form.submit "Event hinzufügen", class: "button button-secondary button-compact" %>
+        </div>
+      <% end %>
+
+      <%= form_with url: backend_newsletter_items_path(issue), method: :post, class: "newsletter-add-card newsletter-add-card-news" do |form| %>
+        <%= hidden_field_tag :item_type, "BlogPost" %>
+        <div class="newsletter-add-card-header">
+          <span class="newsletter-add-card-type">News</span>
+        </div>
+        <label class="newsletter-add-field">
+          <span>Auswahl</span>
+          <%= form.select :item_id,
+                          options_from_collection_for_select(available_blog_posts, :id, :title),
+                          {},
+                          class: "form-input newsletter-add-input" %>
+        </label>
+        <div class="newsletter-add-card-actions">
+          <%= form.submit "News hinzufügen", class: "button button-secondary button-compact" %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <section id="newsletter-preview" class="editor-form-section newsletter-editor-section newsletter-preview-section">
+    <div class="newsletter-preview-heading">
+      <h3 class="newsletter-section-title newsletter-section-title-strong">Vorschau</h3>
+      <%= link_to "Bearbeiten", "#newsletter-editor", class: "button button-secondary button-compact" %>
+    </div>
+    <% if issue.newsletter_issue_items.any? %>
+      <% rendered = Newsletter::Renderer.call(issue) %>
+      <iframe title="Newsletter-Vorschau"
+              class="newsletter-preview-frame"
+              srcdoc="<%= rendered.html %>"></iframe>
+    <% else %>
+      <p class="empty-state">Noch keine Inhalte ausgewählt.</p>
+    <% end %>
+  </section>
+</div>

@@ -6,6 +6,7 @@ import FlashController from "./flash_controller"
 import HistoryBackLinkController from "./history_back_link_controller"
 import MobileNavController from "./mobile_nav_controller"
 import NavOffsetController from "./nav_offset_controller"
+import NewsletterInterestsController from "./newsletter_interests_controller"
 import PublicSearchController from "./public_search_controller"
 import SavedEventToggleController from "./saved_event_toggle_controller"
 import SavedEventsNavController from "./saved_events_nav_controller"
@@ -28,6 +29,7 @@ registerController("flash", FlashController)
 registerController("history-back-link", HistoryBackLinkController)
 registerController("mobile-nav", MobileNavController)
 registerController("nav-offset", NavOffsetController)
+registerController("newsletter-interests", NewsletterInterestsController)
 registerController("public-search", PublicSearchController)
 registerController("saved-event-toggle", SavedEventToggleController)
 registerController("saved-events-nav", SavedEventsNavController)

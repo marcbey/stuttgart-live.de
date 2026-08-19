@@ -6,6 +6,8 @@ module Newsletter
     discard_on ActiveJob::DeserializationError
 
     def perform(subscriber)
+      return unless subscriber.confirmed?
+
       Newsletter::MailjetSync.call(subscriber)
     end
   end

@@ -1,0 +1,11 @@
+<% content_for :title, @issue.title %>
+
+<section class="backend-shell">
+  <header class="backend-topbar">
+    <div class="backend-topbar-title">
+      <h1><%= @issue.title %></h1>
+    </div>
+  </header>
+
+  <%= render "detail", issue: @issue, available_events: @available_events, available_blog_posts: @available_blog_posts %>
+</section>

@@ -425,6 +425,10 @@ class Event < ApplicationRecord
     self.class.sks_promoter_ids.include?(promoter_id.to_s) || self.class.sks_promoter_ids.include?(promoter_name.to_s)
   end
 
+  def homepage_highlight?
+    highlighted? || sks_promoter?
+  end
+
   def public_organizer_notes
     notes = organizer_notes.to_s.strip
     return notes if notes.present?

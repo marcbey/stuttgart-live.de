@@ -1,0 +1,45 @@
+<% content_for :title, "Newsletter" %>
+
+<section class="backend-shell backend-inbox-shell">
+  <header class="backend-topbar backend-topbar-sticky backend-inbox-topbar">
+    <div class="backend-topbar-title">
+      <h1>Newsletter</h1>
+    </div>
+  </header>
+
+  <div class="backend-split backend-inbox-split">
+    <aside class="backend-list-column newsletter-issues-list-column">
+      <div class="backend-status-row newsletter-issues-list-header">
+        <span class="status-chip status-chip-active"><%= pluralize(@issues.size, "Ausgabe", "Ausgaben") %></span>
+        <%= button_to "Wochenmix erstellen",
+                      create_weekly_genre_mix_backend_newsletters_path,
+                      method: :post,
+                      title: "Neuen Wochenmix-Testdraft erstellen",
+                      class: "button button-secondary button-compact newsletter-issues-create-button" %>
+      </div>
+      <div class="backend-list newsletter-issues-list">
+        <% @issues.each do |issue| %>
+          <%= link_to backend_newsletter_path(issue), class: "backend-list-row newsletter-issue-list-row #{'backend-list-row-active newsletter-issue-list-row-active' if @issue == issue}" do %>
+            <span class="newsletter-issue-list-main">
+              <strong class="newsletter-issue-list-title"><%= issue.title %></strong>
+              <span class="newsletter-issue-list-meta">
+                Aktualisiert <%= l(issue.updated_at, format: "%d.%m.%y %H:%M") %>
+              </span>
+            </span>
+            <span class="newsletter-issue-list-status <%= newsletter_issue_status_class(issue) %>">
+              <%= newsletter_issue_status_label(issue) %>
+            </span>
+          <% end %>
+        <% end %>
+      </div>
+    </aside>
+
+    <section class="backend-editor-column backend-inbox-editor-column">
+      <% if @issue.persisted? %>
+        <%= render "detail", issue: @issue, available_events: @available_events, available_blog_posts: @available_blog_posts %>
+      <% else %>
+        <div class="empty-state">Noch keine Newsletter-Ausgabe ausgewählt.</div>
+      <% end %>
+    </section>
+  </div>
+</section>

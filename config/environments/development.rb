@@ -1,4 +1,14 @@
 require "active_support/core_ext/integer/time"
+require Rails.root.join("app/lib/app_config").to_s
+
+smtp_address = AppConfig.smtp_address
+smtp_port = AppConfig.smtp_port
+smtp_user_name = AppConfig.smtp_user_name
+smtp_password = AppConfig.smtp_password
+smtp_domain = AppConfig.smtp_domain || "localhost"
+smtp_authentication = AppConfig.smtp_authentication
+smtp_enable_starttls_auto = AppConfig.smtp_enable_starttls_auto
+mailer_from = AppConfig.mailer_from
 
 Rails.application.configure do
   # Settings specified here will take precedence over those in config/application.rb.
@@ -31,14 +41,28 @@ Rails.application.configure do
   # Store uploaded files on the local file system (see config/storage.yml for options).
   config.active_storage.service = :local
 
-  # Don't care if the mailer can't send.
-  config.action_mailer.raise_delivery_errors = false
+  config.x.mailer_from = mailer_from if mailer_from.present?
+
+  # Surface SMTP problems locally when real SMTP credentials are configured.
+  config.action_mailer.raise_delivery_errors = smtp_address.present?
 
   # Make template changes take effect immediately.
   config.action_mailer.perform_caching = false
 
   # Set localhost to be used by links generated in mailer templates.
   config.action_mailer.default_url_options = { host: "localhost", port: 3000 }
+  if smtp_address.present?
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = {
+      address: smtp_address,
+      port: smtp_port&.to_i,
+      domain: smtp_domain,
+      user_name: smtp_user_name,
+      password: smtp_password,
+      authentication: smtp_authentication&.to_sym,
+      enable_starttls_auto: ActiveModel::Type::Boolean.new.cast(smtp_enable_starttls_auto)
+    }.compact
+  end
   # Print deprecation notices to the Rails logger.
   config.active_support.deprecation = :log
 

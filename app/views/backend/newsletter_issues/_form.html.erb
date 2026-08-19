@@ -1,0 +1,154 @@
+<%= form_with model: issue,
+              url: issue.persisted? ? backend_newsletter_path(issue) : backend_newsletters_path,
+              method: issue.persisted? ? :patch : :post,
+              id: dom_id(issue, :newsletter_form),
+              class: "editor-form" do |form| %>
+  <% if issue.errors.any? %>
+    <div class="flash flash-alert"><%= issue.errors.full_messages.to_sentence %></div>
+  <% end %>
+
+  <section class="editor-form-section newsletter-editor-section">
+    <h3 class="newsletter-section-title newsletter-section-title-strong">Basis</h3>
+    <div class="form-grid">
+      <label class="form-field">
+        <span>Titel intern</span>
+        <%= form.text_field :title, class: "form-input", required: true %>
+      </label>
+      <label class="form-field">
+        <span>Betreff</span>
+        <%= form.text_field :subject, class: "form-input", required: true %>
+      </label>
+      <label class="form-field form-field-full">
+        <span>Intro</span>
+        <%= form.text_area :intro, class: "form-input", rows: 4 %>
+      </label>
+      <label class="form-field form-field-full">
+        <span>Text über den Genres</span>
+        <%= form.text_field :jump_menu_title, class: "form-input", maxlength: 140, placeholder: "Für was interessierst du dich? Spring hinein ins Vergnügen :-)" %>
+      </label>
+    </div>
+  </section>
+
+  <section class="editor-form-section newsletter-editor-section">
+    <h3 class="newsletter-section-title newsletter-section-title-strong">Persönlicher Tipp</h3>
+    <div class="form-grid">
+      <label class="form-field">
+        <span>Team</span>
+        <%= form.select :team_tip_profile_key,
+                        options_for_select(
+                          Newsletter::TeamTipProfiles.all.map { |profile| [ profile.name, profile.key ] },
+                          issue.team_tip_profile_key
+                        ),
+                        { include_blank: "Kein persönlicher Tipp" },
+                        class: "form-input" %>
+      </label>
+      <label class="form-field">
+        <span>Name</span>
+        <%= form.text_field :team_tip_name, class: "form-input", placeholder: "Sarah" %>
+      </label>
+      <label class="form-field">
+        <span>Rolle</span>
+        <%= form.text_field :team_tip_role, class: "form-input", placeholder: "Marketing" %>
+      </label>
+      <label class="form-field form-field-full">
+        <span>Bild-URL</span>
+        <%= form.url_field :team_tip_image_url, class: "form-input", placeholder: "https://..." %>
+      </label>
+      <label class="form-field form-field-full">
+        <span>Tipp-Text</span>
+        <%= form.text_area :team_tip_text, class: "form-input", rows: 5, placeholder: "Ca. 5 Zeilen Wochentipp" %>
+      </label>
+    </div>
+  </section>
+
+  <% if issue.persisted? %>
+    <section class="editor-form-section newsletter-editor-section">
+      <div class="newsletter-items-heading">
+        <div>
+          <h3 class="newsletter-section-title newsletter-section-title-strong">Ausgewählte Inhalte</h3>
+          <p><%= pluralize(issue.newsletter_issue_items.size, "Inhalt", "Inhalte") %> im Newsletter</p>
+        </div>
+        <% if issue.newsletter_issue_items.many? %>
+          <%= link_to "Nach Datum sortieren",
+                      sort_by_date_backend_newsletter_path(issue),
+                      data: { turbo_method: :post },
+                      class: "button button-secondary button-compact" %>
+        <% end %>
+        <% if issue.newsletter_interest.present? %>
+          <%= link_to "Mit 10 #{issue.newsletter_interest.name}-Events füllen",
+                      populate_from_interest_backend_newsletter_path(issue),
+                      data: { turbo_method: :post },
+                      class: "button button-secondary button-compact" %>
+        <% end %>
+      </div>
+      <% if issue.newsletter_issue_items.any? %>
+        <div class="newsletter-items-list">
+          <% issue.grouped_items_for_backend.each do |group| %>
+            <% if group[:label].present? %>
+              <h4 class="newsletter-section-title newsletter-items-group-title"><%= group[:label] %></h4>
+            <% end %>
+            <% group[:items].each do |item| %>
+              <%= form.fields_for :newsletter_issue_items, item do |item_form| %>
+                <% item_date = item.display_date %>
+                <details class="newsletter-item-editor">
+                  <summary class="newsletter-item-summary">
+                    <span class="newsletter-item-position"><%= item.position %></span>
+                    <span class="status-chip"><%= item.display_kind %></span>
+                    <span class="newsletter-item-summary-title"><%= item.display_headline %></span>
+                    <% if item_date.present? %>
+                      <span class="newsletter-item-summary-date"><%= l(item_date, format: "%d.%m.%Y %H:%M") %></span>
+                    <% end %>
+                    <%= link_to "Entfernen",
+                                backend_newsletter_item_path(issue, item),
+                                data: { turbo_method: :delete, turbo_confirm: "Inhalt entfernen?" },
+                                class: "newsletter-item-summary-remove",
+                                title: "Inhalt entfernen" %>
+                  </summary>
+
+                  <div class="newsletter-item-editor-body">
+                    <%= item_form.hidden_field :id %>
+                    <div class="form-grid">
+                      <label class="form-field">
+                        <span>Position</span>
+                        <%= item_form.number_field :position, class: "form-input", min: 0 %>
+                      </label>
+                      <label class="form-field">
+                        <span>CTA</span>
+                        <%= item_form.text_field :cta_label, class: "form-input", placeholder: item.display_cta_label %>
+                      </label>
+                      <% if issue.genre_weekly_mix? && item.item.is_a?(Event) %>
+                        <label class="form-field">
+                          <span>Genre im Wochenmix</span>
+                          <%= item_form.select :section_key,
+                                               options_for_select(
+                                                 [ [ "Genre auswählen", "", { disabled: true } ] ] +
+                                                   Newsletter::HeaderGenreGroups.all.map { |group| [ group.label, group.slug ] },
+                                                 item.section_key.presence || ""
+                                               ),
+                                               {},
+                                               class: "form-input",
+                                               required: true %>
+                        </label>
+                      <% end %>
+                      <label class="form-field form-field-full">
+                        <span>Headline</span>
+                        <%= item_form.text_field :headline_override, class: "form-input", placeholder: item.display_headline %>
+                      </label>
+                      <label class="form-field form-field-full">
+                        <span>Teaser</span>
+                        <%= item_form.text_area :teaser_override, class: "form-input", rows: 3, placeholder: item.display_teaser %>
+                      </label>
+                    </div>
+                  </div>
+                </details>
+              <% end %>
+            <% end %>
+          <% end %>
+        </div>
+      <% else %>
+        <p class="empty-state">Noch keine Inhalte ausgewählt.</p>
+      <% end %>
+    </section>
+  <% end %>
+
+<% end %>

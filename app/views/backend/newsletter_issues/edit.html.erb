@@ -1,0 +1,14 @@
+<% content_for :title, "Newsletter bearbeiten" %>
+
+<section class="backend-shell">
+  <header class="backend-topbar backend-topbar-sticky">
+    <div class="backend-topbar-title">
+      <h1>Newsletter bearbeiten</h1>
+    </div>
+    <div class="backend-topbar-actions">
+      <%= link_to "Zurück", backend_newsletter_path(@issue), class: "button button-secondary button-compact" %>
+    </div>
+  </header>
+
+  <%= render "detail", issue: @issue, available_events: @available_events, available_blog_posts: @available_blog_posts %>
+</section>

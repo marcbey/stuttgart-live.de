@@ -25,7 +25,7 @@ Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität n
 - Import-Pipeline für externe Anbieter wie Easyticket, Eventim und Reservix
 - Redaktionelle Qualitätssicherung mit Inbox, Änderungsprotokollen und Vollständigkeitsprüfungen
 - Manuelles Social-Publishing für Event-Posts auf Facebook und Instagram
-- Newsletter-Anmeldung mit optionalem Mailjet-Sync
+- Newsletter-Anmeldung mit Double-Opt-In, optionalem Mailjet-Sync und redaktionellen Newsletter-Drafts
 
 ## Wie das System grob funktioniert
 
@@ -45,7 +45,7 @@ Wichtige fachliche Bausteine sind dabei:
 - `ImportSource`, `ImportRun` und `RawEventImport` für Rohdaten, Importläufe und Laufprotokolle
 - `EventLlmEnrichment`, statische `Genre`-Zuordnungen und freie `SubGenre`-Zuordnungen für nachgelagerte LLM-basierte Qualitäts- und Strukturierungsschritte
 - `BlogPost` für redaktionelle Inhalte
-- `NewsletterSubscriber` für Newsletter-Anmeldungen
+- `NewsletterSubscriber` für Newsletter-Anmeldungen und `NewsletterIssue` für redaktionelle Newsletter-Ausgaben
 
 ## Wie die Importer funktionieren
 
@@ -482,7 +482,7 @@ Die Antwort enthält dann `X-Stuttgart-Live-Profile` und `Server-Timing` mit Wal
 
 Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese Gruppen wichtig:
 
-- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `mailjet.api_key`, `mailjet.secret_key`, `mailjet.list_id`, optional `mailjet.api_endpoint`, `SMTP_*`, `mailer.from`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, optional `meta.instagram_app_id`, `meta.instagram_app_secret`, `meta.instagram_redirect_uri`
+- `config/credentials.yml.enc`: `EASYTICKET_*`, `EVENTIM_USER`, `EVENTIM_PASS`, `EVENTIM_FEED_KEY`, `RESERVIX_API_KEY`, `RESERVIX_EVENTS_API`, `SERPAPI_API_KEY`, `openwebninja.api_key`, `mailjet.api_key`, `mailjet.secret_key`, `mailjet.list_id`, optional `mailjet.api_endpoint`, optional `mailjet.sender`, `SMTP_*`, `mailer.from`, `sentry.dsn`, `meta.app_id`, `meta.app_secret`, optional `meta.instagram_app_id`, `meta.instagram_app_secret`, `meta.instagram_redirect_uri`
 - Google Analytics Measurement-ID: `config.x.google_analytics_measurement_id` in `config/application.rb`; sie wird nur auf den erlaubten Produktionshosts an das öffentliche Consent-Frontend durchgereicht.
 - `config/deploy.hetzner.shared.yml`: `APP_HOST`, `KAMAL_WEB_HOST`, `KAMAL_SSH_HOST_KEY`
 - lokale `.env`: `DB_PASSWORD`, `KAMAL_REGISTRY_PUSH_TOKEN`, `KAMAL_REGISTRY_PULL_PASSWORD`, optional `HCLOUD_TOKEN` für Hetzner-Terraform und optional `SENTRY_AUTH_TOKEN` für lokale Sentry-Release-Kommandos
@@ -491,8 +491,13 @@ Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese
 - GitHub-Repository-Secret für den Codex-Issue-Workflow: `OPENAI_API_KEY`
 - GitHub-Variablen für Sentry-Releases: `SENTRY_ORG`, `SENTRY_PROJECT`
 
-Ohne vollständige Mailjet-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus. Die Mailjet-Kontaktliste wird nicht automatisch angelegt; lege sie in Mailjet an und trage die List-ID als `mailjet.list_id` oder `MAILJET_LIST_ID` ein.
+Ohne vollständige Mailjet-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus. Die Mailjet-Kontaktliste wird nicht automatisch angelegt; lege sie in Mailjet an und trage die List-ID als `mailjet.list_id` oder `MAILJET_LIST_ID` ein. Für Kampagnen-Drafts versucht die App die passende aktive Mailjet-Sender-ID automatisch über `mailer.from` oder `MAILER_FROM` zu finden. Falls diese Adresse in Mailjet nicht aktiv ist, nutzt sie den ersten aktiven Mailjet-Sender des API-Keys. Alternativ kann die Sender-ID direkt als `mailjet.sender` oder `MAILJET_SENDER` gesetzt werden. Newsletter-Anmeldungen nutzen Double-Opt-In: Erst nach Klick auf den Bestätigungslink wird die Adresse als bestätigt markiert und zu Mailjet synchronisiert. Optional gewählte Newsletter-Interessen werden lokal gespeichert und als Mailjet-Contact-Properties synchronisiert.
+
+Newsletter-Ausgaben werden im Backend unter `Newsletter` gepflegt. Dort lassen sich Events und News auswählen, sortieren, als Mailjet-Kampagnenentwurf erstellen oder aktualisieren und als Testmail versenden. Eine Ausgabe kann technisch optional ein Thema aus den öffentlichen Hauptgenres bekommen. Bei thematischen Ausgaben kann der Button `Mit 10 ...-Events füllen` passende kommende Events automatisch ergänzen; vorhandene redaktionell ausgewählte Inhalte bleiben erhalten. Zusätzlich kann ein Wochenmix-Testdraft erzeugt werden: Er nimmt die Header-Genres in der Website-Reihenfolge, wählt pro Genre bis zu sechs kommende veröffentlichte Events aus, setzt Highlights zuerst und rendert oben ein Sprungmenü zu den Genre-Abschnitten. Der Betreff wird auch als Header-Text unter dem Logo verwendet. Der Text über den Genre-Sprungmarken kann pro Ausgabe separat gepflegt werden. Der Wochenmix unterstützt außerdem einen persönlichen heißen Team-Tipp mit Vorname, rundem Teamfoto und Text. Wenn für ein Newsletter-Interesse eine Mailjet-Segment-ID gespeichert ist oder erfolgreich angelegt werden kann, wird diese beim Kampagnen-Draft als Segmentierung genutzt. In dieser ersten Version gehen Testmails fest nur an `katharinaschopper@russ-live.de` und `mail@inorange.org`; es gibt bewusst kein freies Testmail-Feld. Lokal kann zusätzlich der Button `Testliste senden` genutzt werden, um den Newsletter an die konfigurierte interne Mailjet-Liste zu schicken. Außerhalb der lokalen Entwicklungsumgebung ist dieser Testlistenversand nur aktiv, wenn `newsletter.test_list_send_enabled` in den Credentials oder `NEWSLETTER_TEST_LIST_SEND_ENABLED=true` gesetzt ist. Der finale Versand an die Mailjet-Liste ist technisch vorbereitet, aber standardmäßig blockiert. Er funktioniert erst, wenn `newsletter.final_send_enabled` in den Credentials oder `NEWSLETTER_FINAL_SEND_ENABLED=true` gesetzt ist.
+Für echte lokale Mailjet-Testmails an externe Geräte muss der Newsletter eine öffentlich erreichbare Basis-URL für Bilder und Links bekommen. Setze dafür lokal `NEWSLETTER_PUBLIC_URL`, zum Beispiel auf eine Tunnel-URL von ngrok oder Cloudflare Tunnel. Ohne diese Variable zeigen Newsletter-Bilder in lokalen Testmails auf `localhost:3000` und sind auf dem Handy oder in weitergeleiteten Mails nicht erreichbar.
+Die Double-Opt-In-Bestätigungsmails für Newsletter-Anmeldungen werden bei vorhandener Mailjet-Konfiguration direkt über die Mailjet-Send-API verschickt. Dadurch funktionieren lokale Tests auch dann, wenn SMTP vom lokalen Netzwerk blockiert wird.
 Beim SMTP-Versand muss `mailer.from` oder der ENV-Fallback `MAILER_FROM` auf eine Absenderadresse zeigen, die vom konfigurierten SMTP-Konto akzeptiert wird.
+In der lokalen Entwicklungsumgebung werden echte E-Mails verschickt, sobald `SMTP_*` konfiguriert ist. Ohne SMTP-Konfiguration rendert Rails die Mails nur lokal und es kommt keine Nachricht im Postfach an.
 
 ### Credentials bearbeiten
 

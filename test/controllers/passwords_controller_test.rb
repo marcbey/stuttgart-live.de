@@ -49,7 +49,7 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
     assert cookies[:session_id]
 
     follow_redirect!
-    assert_notice "Magic-Link bestaetigt"
+    assert_notice "Magic-Link bestätigt"
   end
 
   test "edit" do

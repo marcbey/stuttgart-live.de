@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_07_06_220000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_19_113000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -396,7 +396,87 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_220000) do
     t.index ["user_id"], name: "index_login_attempts_on_user_id"
   end
 
+  create_table "newsletter_interests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "genre_id", null: false
+    t.string "mailjet_property_name", null: false
+    t.bigint "mailjet_segment_id"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "public_enabled", default: true, null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["genre_id"], name: "index_newsletter_interests_on_genre_id"
+    t.index ["mailjet_property_name"], name: "index_newsletter_interests_on_mailjet_property_name", unique: true
+    t.index ["mailjet_segment_id"], name: "index_newsletter_interests_on_mailjet_segment_id"
+    t.index ["public_enabled", "position"], name: "index_newsletter_interests_on_public_enabled_and_position"
+    t.index ["slug"], name: "index_newsletter_interests_on_slug", unique: true
+  end
+
+  create_table "newsletter_issue_items", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "cta_label"
+    t.string "headline_override"
+    t.bigint "item_id", null: false
+    t.string "item_type", null: false
+    t.bigint "newsletter_issue_id", null: false
+    t.integer "position", default: 0, null: false
+    t.string "section_key"
+    t.text "teaser_override"
+    t.datetime "updated_at", null: false
+    t.index ["item_type", "item_id"], name: "index_newsletter_issue_items_on_item"
+    t.index ["newsletter_issue_id", "item_type", "item_id"], name: "index_newsletter_issue_items_on_unique_item", unique: true
+    t.index ["newsletter_issue_id", "position", "id"], name: "index_newsletter_issue_items_on_issue_position"
+    t.index ["newsletter_issue_id", "section_key"], name: "index_newsletter_issue_items_on_issue_section"
+    t.index ["newsletter_issue_id"], name: "index_newsletter_issue_items_on_newsletter_issue_id"
+  end
+
+  create_table "newsletter_issues", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "created_by_id"
+    t.string "header_title"
+    t.text "intro"
+    t.string "jump_menu_title"
+    t.string "layout_variant", default: "standard", null: false
+    t.bigint "mailjet_campaign_draft_id"
+    t.bigint "mailjet_campaign_id"
+    t.text "mailjet_error_message"
+    t.datetime "mailjet_last_synced_at"
+    t.bigint "newsletter_interest_id"
+    t.string "preheader"
+    t.datetime "sent_at"
+    t.bigint "sent_by_id"
+    t.string "status", default: "draft", null: false
+    t.string "subject", null: false
+    t.string "team_tip_image_url"
+    t.string "team_tip_name"
+    t.string "team_tip_profile_key"
+    t.string "team_tip_role"
+    t.text "team_tip_text"
+    t.datetime "test_sent_at"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_id"], name: "index_newsletter_issues_on_created_by_id"
+    t.index ["layout_variant"], name: "index_newsletter_issues_on_layout_variant"
+    t.index ["mailjet_campaign_draft_id"], name: "index_newsletter_issues_on_mailjet_campaign_draft_id"
+    t.index ["newsletter_interest_id"], name: "index_newsletter_issues_on_newsletter_interest_id"
+    t.index ["sent_by_id"], name: "index_newsletter_issues_on_sent_by_id"
+    t.index ["status"], name: "index_newsletter_issues_on_status"
+  end
+
+  create_table "newsletter_subscriber_interests", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "newsletter_interest_id", null: false
+    t.bigint "newsletter_subscriber_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["newsletter_interest_id"], name: "idx_newsletter_subscriber_interests_on_interest"
+    t.index ["newsletter_subscriber_id", "newsletter_interest_id"], name: "idx_newsletter_subscriber_interests_on_unique_pair", unique: true
+    t.index ["newsletter_subscriber_id"], name: "idx_newsletter_subscriber_interests_on_subscriber"
+  end
+
   create_table "newsletter_subscribers", force: :cascade do |t|
+    t.datetime "confirmation_sent_at"
+    t.datetime "confirmed_at"
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "external_contact_id"
@@ -407,6 +487,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_220000) do
     t.string "source", default: "homepage", null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_newsletter_subscribers_on_lower_email", unique: true
+    t.index ["confirmed_at"], name: "index_newsletter_subscribers_on_confirmed_at"
     t.index ["external_contact_id"], name: "index_newsletter_subscribers_on_external_contact_id"
     t.index ["external_sync_status"], name: "index_newsletter_subscribers_on_external_sync_status"
   end
@@ -594,6 +675,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_07_06_220000) do
   add_foreign_key "import_runs", "import_sources"
   add_foreign_key "import_source_configs", "import_sources"
   add_foreign_key "login_attempts", "users"
+  add_foreign_key "newsletter_interests", "genres"
+  add_foreign_key "newsletter_issue_items", "newsletter_issues"
+  add_foreign_key "newsletter_issues", "newsletter_interests"
+  add_foreign_key "newsletter_issues", "users", column: "created_by_id"
+  add_foreign_key "newsletter_issues", "users", column: "sent_by_id"
+  add_foreign_key "newsletter_subscriber_interests", "newsletter_interests"
+  add_foreign_key "newsletter_subscriber_interests", "newsletter_subscribers"
   add_foreign_key "publish_attempts", "event_social_posts"
   add_foreign_key "publish_attempts", "social_connection_targets"
   add_foreign_key "publish_attempts", "social_connections"

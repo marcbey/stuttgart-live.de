@@ -72,6 +72,24 @@ module AppConfig
         configured_value(ENV["MAILJET_API_ENDPOINT"])
     end
 
+    def mailjet_sender
+      mailjet_credential(:sender, :mailjet_sender) ||
+        configured_value(ENV["MAILJET_SENDER"])
+    end
+
+    def newsletter_final_send_enabled?
+      ActiveModel::Type::Boolean.new.cast(
+        fetch(:newsletter, :final_send_enabled, env: "NEWSLETTER_FINAL_SEND_ENABLED")
+      )
+    end
+
+    def newsletter_test_list_send_enabled?
+      value = fetch(:newsletter, :test_list_send_enabled, env: "NEWSLETTER_TEST_LIST_SEND_ENABLED")
+      return Rails.env.development? || Rails.env.test? if value.nil?
+
+      ActiveModel::Type::Boolean.new.cast(value)
+    end
+
     def smtp_address
       fetch(:smtp, :address, env: "SMTP_ADDRESS")
     end

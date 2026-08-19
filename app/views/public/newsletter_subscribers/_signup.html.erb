@@ -7,6 +7,8 @@
 <% form_error_message = homepage_signup ? homepage_error_message : subscriber.errors.full_messages.to_sentence %>
 <% show_error_before_field = !homepage_signup && subscriber.errors.any? %>
 <% show_error_after_field = homepage_signup && has_email_errors %>
+<% newsletter_interests = NewsletterInterest.publicly_selectable %>
+<% selected_interest_ids = subscriber.newsletter_interest_ids.map(&:to_i) %>
 
 <%= turbo_frame_tag signup[:frame_id], class: "newsletter-signup-frame" do %>
   <% if subscribed %>
@@ -14,7 +16,7 @@
       <div class="newsletter-signup-feedback newsletter-signup-confirmation newsletter-signup-confirmation-home" role="status" aria-live="polite">
         <div class="newsletter-signup-confirmation-copy">
           <p class="eyebrow">Danke!</p>
-          <p>Du bist jetzt eingetragen!</p>
+          <p>Bitte bestätige deine E-Mail-Adresse.</p>
         </div>
         <div class="newsletter-signup-confirmation-icon" aria-hidden="true">
           <svg class="newsletter-signup-confirmation-check" viewBox="0 0 40 40" focusable="false">
@@ -26,7 +28,7 @@
       <div class="newsletter-signup-feedback newsletter-signup-confirmation" role="status" aria-live="polite">
         <div class="newsletter-signup-confirmation-copy">
           <p class="eyebrow">Danke!</p>
-          <p>Du bist jetzt für den Newsletter eingetragen.</p>
+          <p>Bitte bestätige deine E-Mail-Adresse.</p>
         </div>
       </div>
     <% end %>
@@ -55,7 +57,11 @@
     <%= form_with model: subscriber,
                   url: newsletter_subscribers_path,
                   method: :post,
-                  class: form_classes.join(" ") do |form| %>
+                  class: form_classes.join(" "),
+                  data: {
+                    controller: "newsletter-interests",
+                    action: "focusin->newsletter-interests#open click->newsletter-interests#open submit->newsletter-interests#close turbo:submit-start->newsletter-interests#close"
+                  } do |form| %>
       <%= hidden_field_tag :context, signup[:context] %>
       <%= hidden_field_tag :return_to, signup[:return_to] %>
       <%= hidden_field_tag :source, signup[:source] %>
@@ -67,16 +73,35 @@
         </div>
       <% end %>
 
-      <div class="newsletter-signup-field">
-        <%= form.email_field :email, **email_field_options %>
-        <% if homepage_signup %>
-          <%= form.button type: :submit, **submit_options do %>
-            <span class="sr-only"><%= signup[:submit_label] %></span>
-            <svg class="newsletter-signup-button-arrow-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-              <path d="M6 16h18" />
-              <path d="m18 8 8 8-8 8" />
-            </svg>
+      <div class="newsletter-signup-control">
+        <div class="newsletter-signup-field">
+          <%= form.email_field :email, **email_field_options %>
+          <% if homepage_signup %>
+            <%= form.button type: :submit, **submit_options do %>
+              <span class="sr-only"><%= signup[:submit_label] %></span>
+              <svg class="newsletter-signup-button-arrow-icon" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                <path d="M6 16h18" />
+                <path d="m18 8 8 8-8 8" />
+              </svg>
+            <% end %>
           <% end %>
+        </div>
+
+        <% if newsletter_interests.any? %>
+          <div class="newsletter-signup-interests">
+            <div class="newsletter-signup-interests-summary">
+              <span>Interessen auswählen</span>
+              <span class="newsletter-signup-interests-note">optional</span>
+            </div>
+            <div class="newsletter-signup-interest-options">
+              <%= form.collection_check_boxes :newsletter_interest_ids, newsletter_interests, :id, :name do |builder| %>
+                <label class="newsletter-signup-interest-option">
+                  <%= builder.check_box(checked: selected_interest_ids.include?(builder.value.to_i)) %>
+                  <span><%= builder.text %></span>
+                </label>
+              <% end %>
+            </div>
+          </div>
         <% end %>
       </div>
 

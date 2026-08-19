@@ -18,7 +18,7 @@ class PasswordsController < ApplicationController
     terminate_session if authenticated?
     start_new_session_for(@user)
 
-    redirect_to edit_backend_account_password_path, notice: "Magic-Link bestaetigt. Bitte setze jetzt ein neues Passwort."
+    redirect_to edit_backend_account_password_path, notice: "Magic-Link bestätigt. Bitte setze jetzt ein neues Passwort."
   end
 
   def edit

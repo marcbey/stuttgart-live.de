@@ -2,7 +2,7 @@ require "test_helper"
 
 class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
   test "marks subscriber as synced after successful mailjet subscription" do
-    subscriber = NewsletterSubscriber.create!(email: "sync@example.com", source: "homepage")
+    subscriber = NewsletterSubscriber.create!(email: "sync@example.com", source: "homepage", confirmed_at: Time.current)
     client = SuccessfulMailjetClient.new
 
     assert Newsletter::MailjetSync.call(subscriber, client: client)
@@ -13,11 +13,29 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
     assert_equal "mailjet-contact-1", subscriber.external_contact_id
     assert_not_nil subscriber.external_last_synced_at
     assert_nil subscriber.external_error_message
-    assert_equal [ { email: "sync@example.com" } ], client.requests
+    assert_equal [ { email: "sync@example.com", properties: {} } ], client.requests
+  end
+
+  test "syncs selected interests as mailjet properties" do
+    subscriber = NewsletterSubscriber.create!(email: "interests@example.com", source: "homepage", confirmed_at: Time.current)
+    subscriber.newsletter_interests << newsletter_interests(:pop)
+    client = SuccessfulMailjetClient.new
+
+    assert Newsletter::MailjetSync.call(subscriber, client: client)
+
+    assert_equal(
+      [
+        {
+          email: "interests@example.com",
+          properties: { "interest_pop_indie_singer_songwriter" => true }
+        }
+      ],
+      client.requests
+    )
   end
 
   test "marks subscriber as failed when mailjet sync raises" do
-    subscriber = NewsletterSubscriber.create!(email: "failed@example.com", source: "homepage")
+    subscriber = NewsletterSubscriber.create!(email: "failed@example.com", source: "homepage", confirmed_at: Time.current)
     client = FailingMailjetClient.new
 
     assert_raises Newsletter::MailjetClient::Error do
@@ -31,7 +49,7 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
   end
 
   test "returns false without changing subscriber when client is not configured" do
-    subscriber = NewsletterSubscriber.create!(email: "pending@example.com", source: "homepage")
+    subscriber = NewsletterSubscriber.create!(email: "pending@example.com", source: "homepage", confirmed_at: Time.current)
     client = UnconfiguredMailjetClient.new
 
     assert_equal false, Newsletter::MailjetSync.call(subscriber, client: client)
@@ -42,13 +60,21 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
     assert_nil subscriber.external_sync_provider
   end
 
+  test "returns false for unconfirmed subscriber" do
+    subscriber = NewsletterSubscriber.create!(email: "unconfirmed@example.com", source: "homepage")
+    client = SuccessfulMailjetClient.new
+
+    assert_equal false, Newsletter::MailjetSync.call(subscriber, client: client)
+    assert_empty client.requests
+  end
+
   SuccessfulMailjetClient = Struct.new(:configured?, :requests) do
     def initialize
       super(true, [])
     end
 
-    def subscribe(email:)
-      requests << { email: email }
+    def subscribe(email:, properties: {})
+      requests << { email: email, properties: properties }
 
       {
         "ContactID" => "mailjet-contact-1",

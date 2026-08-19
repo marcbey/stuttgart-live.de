@@ -20,8 +20,12 @@ module Newsletter
 
     def call(subscriber)
       return false unless configured?
+      return false unless subscriber.confirmed?
 
-      response = client.subscribe(email: subscriber.email)
+      response = client.subscribe(
+        email: subscriber.email,
+        properties: subscriber.interest_mailjet_properties
+      )
 
       subscriber.update!(
         external_sync_status: NewsletterSubscriber::EXTERNAL_SYNC_STATUS_SYNCED,

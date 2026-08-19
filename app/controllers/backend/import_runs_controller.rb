@@ -13,7 +13,7 @@ module Backend
     def add_filtered_city
       city = params[:city].to_s.strip
       if city.blank?
-        redirect_to backend_import_run_path(@import_run), alert: "Keine Stadt uebergeben."
+        redirect_to backend_import_run_path(@import_run), alert: "Keine Stadt übergeben."
         return
       end
 
@@ -31,7 +31,7 @@ module Backend
     def remove_whitelist_city
       city = params[:city].to_s.strip
       if city.blank?
-        redirect_to backend_import_run_path(@import_run), alert: "Keine Stadt uebergeben."
+        redirect_to backend_import_run_path(@import_run), alert: "Keine Stadt übergeben."
         return
       end
 

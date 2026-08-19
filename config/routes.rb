@@ -49,6 +49,16 @@ Rails.application.routes.draw do
       get :section, on: :collection
     end
     resources :blog_posts, path: "blog", except: [ :show ]
+    resources :newsletters, controller: "newsletter_issues" do
+      post :create_weekly_genre_mix, on: :collection
+      post :sync_mailjet, on: :member
+      post :send_test, on: :member
+      post :send_test_list, on: :member
+      post :send_now, on: :member
+      post :sort_by_date, on: :member
+      post :populate_from_interest, on: :member
+      resources :items, controller: "newsletter_issue_items", only: [ :create, :destroy ]
+    end
     resources :pages, except: [ :show ]
     resources :presenters, except: [ :show ] do
       get :bulk_new, on: :collection
@@ -116,6 +126,7 @@ Rails.application.routes.draw do
   get "tagestipp", to: "public/events#lane", defaults: { lane: "tagestipp" }, as: :tagestipp_lane
   get "russ-live", to: "public/events#lane", defaults: { lane: "russ_live" }, as: :russ_live_lane
   resources :newsletter_subscribers, only: [ :create ], module: :public
+  get "newsletter/confirm/:token", to: "public/newsletter_confirmations#show", as: :newsletter_confirmation
   get "tickets", to: "public/pages#show", defaults: { slug: "tickets" }, as: :tickets
   get "kontakt", to: "public/pages#show", defaults: { slug: "kontakt" }, as: :contact
   get "faq", to: "public/pages#show", defaults: { slug: "faq" }, as: :faq

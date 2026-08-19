@@ -67,6 +67,10 @@ module ApplicationHelper
     controller_path == "backend/blog_posts"
   end
 
+  def newsletter_nav_active?
+    controller_path.start_with?("backend/newsletter")
+  end
+
   def pages_nav_active?
     controller_path == "backend/pages"
   end

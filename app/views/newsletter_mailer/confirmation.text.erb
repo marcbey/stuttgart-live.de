@@ -1,0 +1,7 @@
+Bitte bestätige deine Anmeldung zum Stuttgart Live Newsletter:
+
+<%= @confirmation_url %>
+
+Der Link ist <%= distance_of_time_in_words(0, NewsletterSubscriber::CONFIRMATION_TOKEN_EXPIRY) %> gültig.
+
+Falls du dich nicht angemeldet hast, kannst du diese E-Mail ignorieren.

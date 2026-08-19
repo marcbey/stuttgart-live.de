@@ -3,9 +3,13 @@ module Public
     allow_unauthenticated_access only: [ :create ]
 
     def create
-      subscriber = NewsletterSubscriber.new(newsletter_subscriber_params.merge(source: newsletter_signup[:source]))
+      subscriber = existing_or_new_subscriber
 
-      if subscriber.save
+      if subscriber.persisted? && subscriber.pending_confirmation?
+        subscriber.newsletter_interest_ids = newsletter_subscriber_params[:newsletter_interest_ids]
+        subscriber.send_confirmation_email
+        respond_to_success(subscriber)
+      elsif subscriber.save
         respond_to_success(subscriber)
       else
         respond_to_error(subscriber)
@@ -15,7 +19,14 @@ module Public
     private
 
     def newsletter_subscriber_params
-      params.require(:newsletter_subscriber).permit(:email)
+      params.require(:newsletter_subscriber).permit(:email, newsletter_interest_ids: [])
+    end
+
+    def existing_or_new_subscriber
+      existing = NewsletterSubscriber.find_by_normalized_email(newsletter_subscriber_params[:email])
+      return existing if existing&.pending_confirmation?
+
+      NewsletterSubscriber.new(newsletter_subscriber_params.merge(source: newsletter_signup[:source]))
     end
 
     def newsletter_signup
@@ -36,25 +47,25 @@ module Public
 
     def respond_to_success(subscriber)
       if newsletter_frame_request?
-        render_signup(subscriber:, subscribed: true, status: :ok)
+        render_signup(subscriber:, confirmation_pending: subscriber.pending_confirmation?, status: :ok)
       else
         redirect_to newsletter_redirect_target,
-                    notice: "Danke! Du bist jetzt für den Newsletter eingetragen."
+                    notice: "Danke! Bitte bestätige jetzt deine E-Mail-Adresse."
       end
     end
 
     def respond_to_error(subscriber)
       if newsletter_frame_request?
-        render_signup(subscriber:, subscribed: false, status: :unprocessable_entity)
+        render_signup(subscriber:, confirmation_pending: false, status: :unprocessable_entity)
       else
         redirect_to newsletter_redirect_target,
                     alert: subscriber.errors.full_messages.to_sentence
       end
     end
 
-    def render_signup(subscriber:, subscribed:, status:)
+    def render_signup(subscriber:, confirmation_pending:, status:)
       render partial: "public/newsletter_subscribers/signup",
-             locals: { subscriber:, signup: newsletter_signup, subscribed: },
+             locals: { subscriber:, signup: newsletter_signup, subscribed: confirmation_pending },
              status:
     end
   end

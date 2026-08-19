@@ -1,0 +1,71 @@
+pop:
+  genre: pop
+  name: Pop
+  slug: pop-indie-singer-songwriter
+  mailjet_property_name: interest_pop_indie_singer_songwriter
+  mailjet_segment_id: 1001
+  position: 1
+  public_enabled: true
+
+rock:
+  genre: rock
+  name: Rock
+  slug: rock-alternative
+  mailjet_property_name: interest_rock_alternative
+  mailjet_segment_id: 1002
+  position: 2
+  public_enabled: true
+
+metal:
+  genre: metal
+  name: Punk & Metal
+  slug: metal-punk-hardcore
+  mailjet_property_name: interest_metal_punk_hardcore
+  mailjet_segment_id: 1003
+  position: 3
+  public_enabled: true
+
+hip_hop:
+  genre: hip_hop
+  name: Hip-Hop
+  slug: hip-hop-r-n-b
+  mailjet_property_name: interest_hip_hop_r_n_b
+  mailjet_segment_id: 1004
+  position: 4
+  public_enabled: true
+
+electro:
+  genre: electro
+  name: Electronic
+  slug: electronic-music-edm
+  mailjet_property_name: interest_electronic_music_edm
+  mailjet_segment_id: 1005
+  position: 5
+  public_enabled: true
+
+jazz:
+  genre: jazz
+  name: Jazz
+  slug: jazz-blues-soul
+  mailjet_property_name: interest_jazz_blues_soul
+  mailjet_segment_id: 1006
+  position: 6
+  public_enabled: true
+
+klassik:
+  genre: klassik
+  name: Klassik
+  slug: klassik-oper
+  mailjet_property_name: interest_klassik_oper
+  mailjet_segment_id: 1007
+  position: 7
+  public_enabled: true
+
+theater:
+  genre: musical
+  name: Theater
+  slug: musical-theater
+  mailjet_property_name: interest_musical_theater
+  mailjet_segment_id: 1008
+  position: 8
+  public_enabled: true

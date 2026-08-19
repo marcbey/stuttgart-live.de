@@ -13,11 +13,18 @@ de:
   time:
     formats:
       default: "%d.%m.%Y %H:%M"
+    distance_in_words:
+      x_days:
+        one: "1 Tag"
+        other: "%{count} Tage"
   datetime:
     distance_in_words:
       x_minutes:
         one: "1 Minute"
         other: "%{count} Minuten"
+      x_days:
+        one: "1 Tag"
+        other: "%{count} Tage"
   errors:
     messages:
       accepted: "muss akzeptiert werden"
