@@ -71,13 +71,31 @@ module Newsletter
                 color: #ffffff !important;
               }
 
-              @media only screen and (max-width: 560px) {
+              @media only screen and (max-width: 680px) {
                 .newsletter-item-media,
                 .newsletter-item-spacer,
                 .newsletter-item-content,
                 .newsletter-card-column,
                 .newsletter-card-row {
                   display: none !important;
+                }
+
+                .newsletter-header-social-icons {
+                  display: none !important;
+                }
+
+                .newsletter-header-title {
+                  display: none !important;
+                }
+
+                .newsletter-weekly-header {
+                  padding-top: 15px !important;
+                  padding-bottom: 8px !important;
+                  margin-bottom: 20px !important;
+                }
+
+                .newsletter-logo-table {
+                  margin-bottom: 0 !important;
                 }
 
                 .newsletter-shell {
@@ -145,6 +163,25 @@ module Newsletter
                 .newsletter-team-tip-text {
                   font-size: 15px !important;
                   line-height: 1.42 !important;
+                }
+
+                .newsletter-team-tip-desktop-row {
+                  display: none !important;
+                }
+
+                .newsletter-team-tip-mobile-row {
+                  display: table-row !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  mso-hide: none !important;
+                }
+
+                .newsletter-team-tip-mobile-content {
+                  text-align: left !important;
+                }
+
+                .newsletter-team-tip-mobile-avatar-wrap {
+                  padding-bottom: 12px !important;
                 }
 
                 .newsletter-jump-title {
@@ -254,7 +291,7 @@ module Newsletter
 
     def weekly_mix_header_html
       <<~HTML
-        <section style="margin:0 0 20px;padding:22px 24px 14px;background:#303636;color:#fff;">
+        <section class="newsletter-weekly-header" style="margin:0 0 20px;padding:22px 24px 14px;background:#303636;color:#fff;">
           #{header_html(dark: true)}
         </section>
       HTML
@@ -274,10 +311,10 @@ module Newsletter
 
     def header_title_html(dark:, heading_color:)
       unless dark
-        return %(<h1 style="margin:0;font-size:24px;line-height:1.15;font-weight:600;color:#{heading_color};">#{escape(issue.display_header_title)}</h1>)
+        return %(<h1 class="newsletter-header-title" style="margin:0;font-size:24px;line-height:1.15;font-weight:600;color:#{heading_color};">#{escape(issue.display_header_title)}</h1>)
       end
 
-      %(<h1 style="margin:0;font-size:20px;line-height:1.1;font-weight:300;text-transform:uppercase;letter-spacing:.08em;color:#dbe0df;">#{escape(issue.display_header_title)}</h1>)
+      %(<h1 class="newsletter-header-title" style="margin:0;font-size:20px;line-height:1.1;font-weight:300;text-transform:uppercase;letter-spacing:.08em;color:#dbe0df;">#{escape(issue.display_header_title)}</h1>)
     end
 
     def brand_logo_html(dark:, heading_color:)
@@ -287,12 +324,12 @@ module Newsletter
       return text_logo_html(heading_color) if logo_url.blank?
 
       <<~HTML
-        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 10px;border-collapse:collapse;">
+        <table class="newsletter-logo-table" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 10px;border-collapse:collapse;">
           <tr>
             <td align="left" valign="middle" style="padding:0;">
               <img src="#{logo_url}" width="260" alt="Stuttgart Live" style="display:block;width:260px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;">
             </td>
-            <td align="right" valign="middle" style="padding:0;">
+            <td class="newsletter-header-social-icons" align="right" valign="middle" style="padding:0;">
               #{social_icons_html}
             </td>
           </tr>
@@ -335,7 +372,7 @@ module Newsletter
       <<~HTML
         <aside style="margin:12px 0 24px;padding:18px;border:1px solid #d4d7d4;border-radius:14px;background:#fbfbfa;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
-            <tr>
+            <tr class="newsletter-team-tip-desktop-row">
               <td width="70" valign="top" style="width:70px;vertical-align:top;">
                 #{team_tip_avatar_html}
               </td>
@@ -345,6 +382,17 @@ module Newsletter
                 #{team_tip_quote_html}
               </td>
           </tr>
+            <tr class="newsletter-team-tip-mobile-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
+              <td colspan="3" align="center" style="padding:0;">
+                <div class="newsletter-team-tip-mobile-avatar-wrap" style="padding-bottom:12px;">
+                  #{team_tip_avatar_html}
+                </div>
+                <div class="newsletter-team-tip-mobile-content" style="text-align:left;">
+                  <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
+                  #{team_tip_quote_html}
+                </div>
+              </td>
+            </tr>
         </table>
         </aside>
       HTML
@@ -672,7 +720,7 @@ module Newsletter
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;">
             <tr>
               <td align="center" style="padding:0 22px 20px;">
-                <p class="newsletter-footer-headline" style="margin:0 0 8px;font-size:25px;line-height:1.2;font-weight:700;color:#263334;">Du willst mehr? Wir haben mehr!</p>
+                <p class="newsletter-footer-headline" style="margin:0 0 8px;font-size:25px;line-height:1.2;font-weight:700;color:#263334;">Noch nicht genug?</p>
                 <p class="newsletter-footer-teaser" style="margin:0;font-size:18px;line-height:1.35;color:#263334;">
                   Auf unserer <strong style="font-weight:700;">Website</strong> warten noch jede Menge Highlights auf dich.
                 </p>
@@ -737,7 +785,7 @@ module Newsletter
 
     def footer_text
       <<~TEXT.strip
-        Du willst mehr? Wir haben mehr!
+        Noch nicht genug?
         Auf unserer Website warten noch jede Menge Highlights auf dich.
         Mehr Events entdecken: #{website_url}
 
