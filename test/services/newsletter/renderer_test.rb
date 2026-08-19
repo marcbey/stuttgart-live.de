@@ -281,6 +281,8 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, ".newsletter-team-tip-desktop-row"
     assert_includes rendered.html, ".newsletter-team-tip-mobile-row"
     assert_includes rendered.html, ".newsletter-team-tip-mobile-content"
+    assert_includes rendered.html, "<!--[if !mso]><!-->"
+    assert_includes rendered.html, "<!--<![endif]-->"
     assert_includes rendered.html, "display: none !important"
     assert_includes rendered.html, "width: 104px !important"
     assert_includes rendered.html, "font-size: 17px !important"
@@ -299,8 +301,12 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "background:#fff;color:#102223"
     assert_includes rendered.html, "font-size:12px;font-weight:bold;line-height:1.2"
     assert_includes rendered.html, "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
+    assert_includes rendered.html, 'id="newsletter-genres"'
+    assert_includes rendered.html, 'name="newsletter-genres"'
     assert_includes rendered.html, 'href="#genre-pop-indie-singer-songwriter"'
     assert_includes rendered.html, 'id="genre-pop-indie-singer-songwriter"'
+    assert_includes rendered.html, 'href="#newsletter-genres"'
+    assert_includes rendered.html, "Zur Genre-Auswahl ↑"
     assert_includes rendered.html, ">Pop</a>"
     assert_includes rendered.html, "newsletter-card-column"
     assert_includes rendered.html, "newsletter-card-row"

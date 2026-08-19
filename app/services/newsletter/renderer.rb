@@ -32,6 +32,7 @@ module Newsletter
     CARD_IMAGE_VARIANT_HEIGHT = CARD_IMAGE_HEIGHT * 2
     IMAGE_QUALITY = 82
     NEWSLETTER_LOGO_PATH = "newsletter/logo-sl.png"
+    GENRE_NAV_ANCHOR = "newsletter-genres"
     HEART_MARKERS = [ "\u{1FA75}", "\u{1F49C}", "\u{1F49A}" ].freeze
     TURQUOISE_HEART_HTML = '<span style="color:#28c7c2;font-size:1.5em;line-height:0;">&#9829;</span>'
     SOCIAL_LINKS = [
@@ -382,17 +383,19 @@ module Newsletter
                 #{team_tip_quote_html}
               </td>
           </tr>
-            <tr class="newsletter-team-tip-mobile-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
-              <td colspan="3" align="center" style="padding:0;">
-                <div class="newsletter-team-tip-mobile-avatar-wrap" style="padding-bottom:12px;">
-                  #{team_tip_avatar_html}
-                </div>
-                <div class="newsletter-team-tip-mobile-content" style="text-align:left;">
-                  <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
-                  #{team_tip_quote_html}
-                </div>
-              </td>
-            </tr>
+            <!--[if !mso]><!-->
+              <tr class="newsletter-team-tip-mobile-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
+                <td colspan="3" align="center" style="padding:0;">
+                  <div class="newsletter-team-tip-mobile-avatar-wrap" style="padding-bottom:12px;">
+                    #{team_tip_avatar_html}
+                  </div>
+                  <div class="newsletter-team-tip-mobile-content" style="text-align:left;">
+                    <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
+                    #{team_tip_quote_html}
+                  </div>
+                </td>
+              </tr>
+            <!--<![endif]-->
         </table>
         </aside>
       HTML
@@ -445,6 +448,7 @@ module Newsletter
 
       <<~HTML
         <nav aria-label="Genres im Newsletter" style="margin:0;">
+          <a id="#{GENRE_NAV_ANCHOR}" name="#{GENRE_NAV_ANCHOR}" style="display:block;"></a>
           <p class="newsletter-jump-title" style="margin:0 0 9px;font-size:14px;line-height:1.25;font-weight:600;color:#{question_color};">#{escape(issue.display_jump_menu_title)}</p>
           <div>
             #{links}
@@ -459,7 +463,16 @@ module Newsletter
           <a id="#{genre_anchor(section[:group])}" name="#{genre_anchor(section[:group])}" style="display:block;"></a>
           <h2 class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">#{escape(section[:group].label)}</h2>
           #{genre_item_cards_html(section[:items])}
+          #{genre_back_to_nav_html}
         </section>
+      HTML
+    end
+
+    def genre_back_to_nav_html
+      <<~HTML
+        <p style="margin:4px 0 0;text-align:right;font-size:12px;line-height:1.3;">
+          <a href="##{GENRE_NAV_ANCHOR}" style="color:#102223;text-decoration:underline;font-weight:bold;">Zur Genre-Auswahl ↑</a>
+        </p>
       HTML
     end
 
@@ -521,18 +534,20 @@ module Newsletter
 
     def genre_item_mobile_row_html(item)
       <<~HTML
-        <tr class="newsletter-mobile-item-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
-          <td colspan="#{GENRE_CARD_COLUMNS}" style="padding:0;border-bottom:1px solid #eceeee;">
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
-              <tr>
-                #{genre_item_mobile_image_cell_html(item)}
-                <td class="newsletter-mobile-content-cell" valign="top" style="vertical-align:top;padding:12px 0;">
-                  #{genre_item_mobile_content_html(item)}
-                </td>
-              </tr>
-            </table>
-          </td>
-        </tr>
+        <!--[if !mso]><!-->
+          <tr class="newsletter-mobile-item-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
+            <td colspan="#{GENRE_CARD_COLUMNS}" style="padding:0;border-bottom:1px solid #eceeee;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
+                <tr>
+                  #{genre_item_mobile_image_cell_html(item)}
+                  <td class="newsletter-mobile-content-cell" valign="top" style="vertical-align:top;padding:12px 0;">
+                    #{genre_item_mobile_content_html(item)}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        <!--<![endif]-->
       HTML
     end
 
