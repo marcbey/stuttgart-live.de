@@ -136,6 +136,49 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_nil image["onerror"]
   end
 
+  test "formatted venue description preserves rich text headings" do
+    fragment = Nokogiri::HTML.fragment(
+      formatted_venue_description(
+        "<h3>Ticketoptionen</h3><h4>Flying-High Upgrade | Cirque du Soleil - OVO</h4><p>Infos.</p>"
+      )
+    )
+
+    assert_equal "Ticketoptionen", fragment.at_css("h3")&.text
+    assert_equal "Flying-High Upgrade | Cirque du Soleil - OVO", fragment.at_css("h4")&.text
+    assert_equal "Infos.", fragment.at_css("p")&.text
+  end
+
+  test "formatted venue description preserves linked rich text images" do
+    fragment = Nokogiri::HTML.fragment(
+      formatted_venue_description(
+        '<a href="https://ticket.example/event" onclick="alert(1)"><figure class="attachment"><img src="/rails/active_storage/blobs/proxy/signed/photo.jpg" alt="Bühne"></figure></a>'
+      )
+    )
+
+    link = fragment.at_css("a.event-detail-image-link")
+    image = link.at_css("figure.attachment img")
+
+    assert_equal "https://ticket.example/event", link["href"]
+    assert_equal "_blank", link["target"]
+    assert_equal "noopener", link["rel"]
+    assert_nil link["onclick"]
+    assert_equal "/rails/active_storage/blobs/proxy/signed/photo.jpg", image["src"]
+    assert_equal "Bühne", image["alt"]
+    assert_nil fragment.at_css("a.event-detail-inline-link")
+  end
+
+  test "formatted venue description removes self links from rich text images" do
+    image_path = "/rails/active_storage/blobs/proxy/signed/photo.jpg"
+    fragment = Nokogiri::HTML.fragment(
+      formatted_venue_description(
+        %(<a href="#{image_path}"><figure class="attachment"><img src="#{image_path}" alt="Bühne"></figure></a>)
+      )
+    )
+
+    assert_nil fragment.at_css("a")
+    assert_equal image_path, fragment.at_css("figure.attachment img")["src"]
+  end
+
   test "formatted venue description links plain text urls" do
     fragment = Nokogiri::HTML.fragment(
       formatted_venue_description("Infos unter https://venue.example/programm.")

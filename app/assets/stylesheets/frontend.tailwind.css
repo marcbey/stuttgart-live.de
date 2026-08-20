@@ -8242,6 +8242,36 @@ margin-top: 0;
 margin-bottom: 0;
 }
 
+.event-detail-copy-flow h2,
+.event-detail-copy-flow h3,
+.event-detail-copy-flow h4 {
+  margin: 1.2rem 0 0.35rem;
+  color: #0a2324;
+  font-family: "Bebas Neue", "Impact", sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  line-height: 0.96;
+  text-transform: uppercase;
+}
+
+.event-detail-copy-flow h2 {
+  font-size: clamp(1.8rem, 2.9vw, 2.3rem);
+}
+
+.event-detail-copy-flow h3 {
+  font-size: clamp(1.45rem, 2.25vw, 1.78rem);
+}
+
+.event-detail-copy-flow h4 {
+  font-size: clamp(1.15rem, 1.65vw, 1.35rem);
+}
+
+.event-detail-copy-flow h2 + *,
+.event-detail-copy-flow h3 + *,
+.event-detail-copy-flow h4 + * {
+  margin-top: 0;
+}
+
 .event-detail-venue-layout {
 display: grid;
   gap: 1rem;
@@ -8259,6 +8289,11 @@ display: grid;
   color: #0a2324;
   overflow-wrap: anywhere;
   text-decoration: none;
+}
+
+.event-detail-copy-flow a.event-detail-image-link[href] {
+  display: block;
+  color: inherit;
 }
 
 .event-detail-copy-flow a[href]:hover,
@@ -8284,7 +8319,7 @@ display: grid;
   text-decoration-line: none;
 }
 
-.event-detail-copy-flow a[href]::after,
+.event-detail-copy-flow a[href]:not(.event-detail-image-link)::after,
 .event-detail-venue-layout a[href]:not(.event-detail-edit-link, .event-detail-venue-map-link)::after {
 content: "";
   display: inline-block;

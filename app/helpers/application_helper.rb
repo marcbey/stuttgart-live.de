@@ -444,7 +444,7 @@ module ApplicationHelper
 
   EXTERNAL_URL_PATTERN = %r{https?://[^\s<]+}i
   RICH_TEXT_TAG_PATTERN = %r{</?[a-z][^>]*>}i
-  PUBLIC_RICH_TEXT_TAGS = %w[a br div strong b em i u strike del ul ol li blockquote pre figure figcaption img].freeze
+  PUBLIC_RICH_TEXT_TAGS = %w[a br div p h2 h3 h4 strong b em i u strike del ul ol li blockquote pre figure figcaption img].freeze
   PUBLIC_RICH_TEXT_ATTRIBUTES = %w[href src alt width height class].freeze
 
   def strict_public_media_path(*records)
@@ -675,12 +675,40 @@ module ApplicationHelper
     fragment = Nokogiri::HTML::DocumentFragment.parse(html)
 
     fragment.css("a[href]").each do |link|
+      if self_linked_rich_text_image?(link)
+        link.replace(link.children)
+        next
+      end
+
       link["target"] = "_blank"
       link["rel"] = "noopener"
-      link["class"] = [ link["class"], link_class ].compact_blank.join(" ")
+      link["class"] = [ link["class"], public_rich_text_link_class(link, link_class:) ].compact_blank.join(" ")
     end
 
     fragment.to_html.html_safe
+  end
+
+  def self_linked_rich_text_image?(link)
+    image = link.at_css("img")
+    return false if image.blank?
+
+    link_href = comparable_public_rich_text_url(link["href"])
+    image_src = comparable_public_rich_text_url(image["src"])
+
+    link_href.present? && image_src.present? && link_href == image_src
+  end
+
+  def comparable_public_rich_text_url(value)
+    uri = URI.parse(value.to_s)
+    uri.path.presence || value.to_s
+  rescue URI::InvalidURIError
+    value.to_s
+  end
+
+  def public_rich_text_link_class(link, link_class:)
+    return "event-detail-image-link" if link.at_css("img, figure, .attachment")
+
+    link_class
   end
 
   def linked_plain_text(text, link_class:)
