@@ -303,13 +303,14 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
     assert_includes rendered.html, 'id="newsletter-genres"'
     assert_includes rendered.html, 'name="newsletter-genres"'
-    assert_includes rendered.html, 'style="color:#263334;text-decoration:none;">Für was interessierst du dich? Spring hinein ins Vergnügen :-)</a>'
-    assert_includes rendered.html, 'href="#genre-pop-indie-singer-songwriter"'
+    assert_includes rendered.html, 'style="display:block;font-size:1px;line-height:1px;mso-line-height-rule:exactly;color:transparent;text-decoration:none;">&nbsp;</a>'
+    assert_includes rendered.html, 'href="#genre-pop-indie-singer-songwriter" target="_self"'
     assert_includes rendered.html, 'id="genre-pop-indie-singer-songwriter"'
-    assert_includes rendered.html, '<a name="genre-pop-indie-singer-songwriter" style="color:#102223;text-decoration:none;">Pop</a>'
-    assert_includes rendered.html, 'href="#newsletter-genres"'
+    assert_includes rendered.html, '<h2 class="newsletter-section-heading-title"'
+    assert_includes rendered.html, ">Pop</h2>"
+    assert_includes rendered.html, 'href="#newsletter-genres" target="_self"'
     assert_includes rendered.html, "Zur Genre-Auswahl ↑"
-    assert_includes rendered.html, ">Pop</a>"
+    assert_includes rendered.html, ">Pop</h2>"
     assert_includes rendered.html, "newsletter-card-column"
     assert_includes rendered.html, "newsletter-card-row"
     assert_includes rendered.html, "newsletter-mobile-item-row"

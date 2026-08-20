@@ -442,14 +442,15 @@ module Newsletter
 
       links = sections.map do |section|
         <<~HTML
-          <a class="newsletter-genre-link" href="##{genre_anchor(section[:group])}" style="display:inline-block;margin:0 4px 5px 0;padding:5px 8px;border:1px solid #{link_border};border-radius:999px;background:#{link_background};color:#{link_color};text-decoration:none;font-size:12px;font-weight:bold;line-height:1.2;">#{escape(section[:group].label)}</a>
+          <a class="newsletter-genre-link" href="##{genre_anchor(section[:group])}" target="_self" style="display:inline-block;margin:0 4px 5px 0;padding:5px 8px;border:1px solid #{link_border};border-radius:999px;background:#{link_background};color:#{link_color};text-decoration:none;font-size:12px;font-weight:bold;line-height:1.2;">#{escape(section[:group].label)}</a>
         HTML
       end.join
 
       <<~HTML
         <nav aria-label="Genres im Newsletter" style="margin:0;">
+          #{email_anchor_html(GENRE_NAV_ANCHOR)}
           <p class="newsletter-jump-title" style="margin:0 0 9px;font-size:14px;line-height:1.25;font-weight:600;color:#{question_color};">
-            <a id="#{GENRE_NAV_ANCHOR}" name="#{GENRE_NAV_ANCHOR}" style="color:#{question_color};text-decoration:none;">#{escape(issue.display_jump_menu_title)}</a>
+            #{escape(issue.display_jump_menu_title)}
           </p>
           <div>
             #{links}
@@ -463,9 +464,8 @@ module Newsletter
 
       <<~HTML
         <section style="padding-top:18px;">
-          <h2 id="#{anchor}" class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">
-            <a name="#{anchor}" style="color:#102223;text-decoration:none;">#{escape(section[:group].label)}</a>
-          </h2>
+          #{email_anchor_html(anchor)}
+          <h2 class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">#{escape(section[:group].label)}</h2>
           #{genre_item_cards_html(section[:items])}
           #{genre_back_to_nav_html}
         </section>
@@ -475,9 +475,13 @@ module Newsletter
     def genre_back_to_nav_html
       <<~HTML
         <p style="margin:4px 0 0;text-align:right;font-size:12px;line-height:1.3;">
-          <a href="##{GENRE_NAV_ANCHOR}" style="color:#102223;text-decoration:underline;font-weight:bold;">Zur Genre-Auswahl ↑</a>
+          <a href="##{GENRE_NAV_ANCHOR}" target="_self" style="color:#102223;text-decoration:underline;font-weight:bold;">Zur Genre-Auswahl ↑</a>
         </p>
       HTML
+    end
+
+    def email_anchor_html(anchor)
+      %(<a id="#{anchor}" name="#{anchor}" style="display:block;font-size:1px;line-height:1px;mso-line-height-rule:exactly;color:transparent;text-decoration:none;">&nbsp;</a>)
     end
 
     def genre_item_cards_html(items)
