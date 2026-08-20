@@ -15,6 +15,9 @@ application.register("bulk-select", BulkSelectController)
 import ClipboardController from "./clipboard_controller"
 application.register("clipboard", ClipboardController)
 
+import DescriptionImageUploadController from "./description_image_upload_controller"
+application.register("description-image-upload", DescriptionImageUploadController)
+
 import EditorInboxController from "./editor_inbox_controller"
 application.register("editor-inbox", EditorInboxController)
 

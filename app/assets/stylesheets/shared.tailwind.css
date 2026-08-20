@@ -598,6 +598,22 @@ width: 100%;
   height: auto;
 }
 
+.event-detail-copy-flow figure,
+.event-detail-copy-flow .attachment {
+margin: 1.35rem 0;
+}
+
+.event-detail-copy-flow img {
+display: block;
+max-width: 100%;
+height: auto;
+}
+
+.event-detail-copy-flow figcaption,
+.event-detail-copy-flow .attachment__caption {
+display: none;
+}
+
 .news-detail-copy .trix-content {
 font-size: 1.04rem;
   line-height: 1.58;

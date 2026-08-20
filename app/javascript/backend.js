@@ -47,6 +47,36 @@ const installRichTextHeadingButtons = (editor) => {
   headingButton?.remove()
 }
 
+const installDescriptionImageButton = (editor) => {
+  const toolbar = editor.toolbarElement
+  if (!toolbar || toolbar.dataset.descriptionImageButtonEnhanced === "true") return
+
+  const attachButton = toolbar.querySelector(".trix-button--icon-attach")
+  const linkButton = toolbar.querySelector("[data-trix-attribute='href']")
+  if (!attachButton || !linkButton) return
+
+  toolbar.dataset.descriptionImageButtonEnhanced = "true"
+  attachButton.title = "Bild einfügen"
+  attachButton.setAttribute("aria-label", "Bild einfügen")
+  attachButton.classList.add("backend-description-image-button")
+  attachButton.innerHTML = `
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="3" y="5" width="18" height="14" rx="2"></rect>
+      <circle cx="8" cy="10" r="2"></circle>
+      <path d="M5 17l5-5 3 3 2-2 4 4"></path>
+    </svg>
+  `
+
+  const fileTools = attachButton.closest(".trix-button-group")
+  const textTools = linkButton.closest(".trix-button-group")
+
+  textTools?.insertBefore(attachButton, linkButton.nextSibling)
+
+  if (fileTools && fileTools !== textTools && fileTools.querySelectorAll(".trix-button").length === 0) {
+    fileTools.remove()
+  }
+}
+
 configureHeadingAttributes()
 
 document.addEventListener("trix-initialize", (event) => {
@@ -58,11 +88,6 @@ document.addEventListener("trix-initialize", (event) => {
 
   if (editor.classList.contains("backend-description-editor")) {
     editor.toolbarElement?.classList.add("backend-description-toolbar")
-  }
-})
-
-document.addEventListener("trix-file-accept", (event) => {
-  if (event.target.classList.contains("backend-description-editor")) {
-    event.preventDefault()
+    installDescriptionImageButton(editor)
   }
 })

@@ -119,6 +119,23 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_empty fragment.css("script")
   end
 
+  test "formatted venue description preserves sanitized rich text images" do
+    fragment = Nokogiri::HTML.fragment(
+      formatted_venue_description(
+        '<div>Intro</div><figure class="attachment"><img src="/rails/active_storage/blobs/proxy/signed/photo.jpg" alt="Bühne" width="1200" height="800" style="width:999px" onerror="alert(1)"></figure>'
+      )
+    )
+
+    image = fragment.at_css("figure.attachment img")
+
+    assert_equal "/rails/active_storage/blobs/proxy/signed/photo.jpg", image["src"]
+    assert_equal "Bühne", image["alt"]
+    assert_equal "1200", image["width"]
+    assert_equal "800", image["height"]
+    assert_nil image["style"]
+    assert_nil image["onerror"]
+  end
+
   test "formatted venue description links plain text urls" do
     fragment = Nokogiri::HTML.fragment(
       formatted_venue_description("Infos unter https://venue.example/programm.")

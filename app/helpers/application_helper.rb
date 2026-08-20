@@ -444,8 +444,8 @@ module ApplicationHelper
 
   EXTERNAL_URL_PATTERN = %r{https?://[^\s<]+}i
   RICH_TEXT_TAG_PATTERN = %r{</?[a-z][^>]*>}i
-  PUBLIC_RICH_TEXT_TAGS = %w[a br div strong b em i u strike del ul ol li blockquote pre].freeze
-  PUBLIC_RICH_TEXT_ATTRIBUTES = %w[href].freeze
+  PUBLIC_RICH_TEXT_TAGS = %w[a br div strong b em i u strike del ul ol li blockquote pre figure figcaption img].freeze
+  PUBLIC_RICH_TEXT_ATTRIBUTES = %w[href src alt width height class].freeze
 
   def strict_public_media_path(*records)
     records.compact.each do |record|

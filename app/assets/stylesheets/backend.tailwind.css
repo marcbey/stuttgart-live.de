@@ -2112,6 +2112,39 @@ trix-editor.form-rich-text-editor:focus-visible {
   outline-offset: 2px;
 }
 
+.backend-description-toolbar .backend-description-image-button {
+width: 2.4rem;
+min-width: 2.4rem;
+padding: 0;
+text-indent: 0;
+}
+
+.backend-description-toolbar .backend-description-image-button::before {
+display: none;
+}
+
+.backend-description-toolbar .backend-description-image-button svg {
+display: block;
+width: 1.12rem;
+height: 1.12rem;
+margin: 0 auto;
+fill: none;
+stroke: #111;
+stroke-linecap: round;
+stroke-linejoin: round;
+stroke-width: 2;
+}
+
+.backend-description-toolbar .backend-description-image-button circle {
+fill: #111;
+stroke: none;
+}
+
+trix-editor.backend-description-editor .attachment__caption,
+trix-editor.backend-description-editor figcaption {
+display: none;
+}
+
 trix-editor.static-page-rich-text h1,
 trix-editor.static-page-rich-text h2,
 trix-editor.static-page-rich-text h3,
@@ -2257,7 +2290,6 @@ margin-bottom: 0;
   display: none;
 }
 
-.backend-description-toolbar .trix-button--icon-attach,
 .backend-description-toolbar .trix-button--icon-italic,
 .backend-description-toolbar .trix-button--icon-strike,
 .backend-description-toolbar .trix-button--icon-quote,
