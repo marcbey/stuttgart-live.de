@@ -278,6 +278,9 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "display: table-row !important"
     assert_includes rendered.html, ".newsletter-header-social-icons"
     assert_includes rendered.html, ".newsletter-header-title"
+    assert_includes rendered.html, ".newsletter-genre-jump-nav"
+    assert_includes rendered.html, ".newsletter-genre-back-link"
+    assert_includes rendered.html, ".newsletter-mobile-more-row"
     assert_includes rendered.html, ".newsletter-team-tip-desktop-row"
     assert_includes rendered.html, ".newsletter-team-tip-mobile-row"
     assert_includes rendered.html, ".newsletter-team-tip-mobile-content"
@@ -301,6 +304,8 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "background:#fff;color:#102223"
     assert_includes rendered.html, "font-size:12px;font-weight:bold;line-height:1.2"
     assert_includes rendered.html, "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
+    assert_includes rendered.html, "Newsletter im Browser öffnen"
+    assert_includes rendered.html, 'href="[[PERMALINK]]"'
     assert_includes rendered.html, 'id="newsletter-genres"'
     assert_includes rendered.html, 'name="newsletter-genres"'
     assert_includes rendered.html, 'style="display:block;font-size:1px;line-height:1px;mso-line-height-rule:exactly;color:transparent;text-decoration:none;">&nbsp;</a>'
@@ -311,6 +316,8 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, 'href="#newsletter-genres" target="_self"'
     assert_includes rendered.html, "Zur Genre-Auswahl ↑"
     assert_includes rendered.html, ">Pop</h2>"
+    assert_includes rendered.html, "Mehr Pop auf Stuttgart Live"
+    assert_includes rendered.html, 'href="https://example.com/pop-indie-singer-songwriter"'
     assert_includes rendered.html, "newsletter-card-column"
     assert_includes rendered.html, "newsletter-card-row"
     assert_includes rendered.html, "newsletter-mobile-item-row"
@@ -339,6 +346,37 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_not_includes rendered.html, "object-fit:cover"
     assert_includes rendered.html, "border-radius:10px"
     assert_includes rendered.text, "POP"
+  end
+
+  test "limits mobile genre rows and links to the website genre page" do
+    events = 3.times.map do |index|
+      create_published_event(
+        slug: "newsletter-mobile-pop-#{index}",
+        title: "Mobile Pop #{index}",
+        artist_name: "Mobile Pop Artist #{index}",
+        start_at: (index + 1).days.from_now,
+        genre: genres(:pop)
+      )
+    end
+    issue = NewsletterIssue.create!(
+      title: "Wochenmix",
+      subject: "Dein Wochenmix",
+      layout_variant: "genre_weekly_mix",
+      created_by: users(:one)
+    )
+    events.each.with_index(1) do |event, position|
+      issue.newsletter_issue_items.create!(item: event, position:, section_key: genres(:pop).slug)
+    end
+
+    rendered = Newsletter::Renderer.call(issue)
+
+    assert_equal 3, rendered.html.scan('class="newsletter-card-column"').length
+    assert_equal 2, rendered.html.scan('class="newsletter-mobile-item-row"').length
+    assert_includes rendered.html, "Mobile Pop Artist 0"
+    assert_includes rendered.html, "Mobile Pop Artist 1"
+    assert_not_includes rendered.html, "newsletter-mobile-title\" style=\"margin:0 0 5px;font-size:16px;line-height:1.18;font-weight:600;\">Mobile Pop Artist 2"
+    assert_includes rendered.html, "Mehr Pop auf Stuttgart Live"
+    assert_includes rendered.html, 'href="https://example.com/pop-indie-singer-songwriter"'
   end
 
   test "renders weekly genre mix card image variants with padded background" do

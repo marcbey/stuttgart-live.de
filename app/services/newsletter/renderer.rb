@@ -31,8 +31,10 @@ module Newsletter
     CARD_IMAGE_VARIANT_WIDTH = CARD_IMAGE_WIDTH * 2
     CARD_IMAGE_VARIANT_HEIGHT = CARD_IMAGE_HEIGHT * 2
     IMAGE_QUALITY = 82
+    MOBILE_GENRE_ITEM_LIMIT = 2
     NEWSLETTER_LOGO_PATH = "newsletter/logo-sl.png"
     GENRE_NAV_ANCHOR = "newsletter-genres"
+    MAILJET_PERMALINK_PLACEHOLDER = "[[PERMALINK]]"
     HEART_MARKERS = [ "\u{1FA75}", "\u{1F49C}", "\u{1F49A}" ].freeze
     TURQUOISE_HEART_HTML = '<span style="color:#28c7c2;font-size:1.5em;line-height:0;">&#9829;</span>'
     SOCIAL_LINKS = [
@@ -89,6 +91,13 @@ module Newsletter
                   display: none !important;
                 }
 
+                .newsletter-genre-jump-nav,
+                .newsletter-genre-back-link {
+                  display: none !important;
+                  max-height: 0 !important;
+                  overflow: hidden !important;
+                }
+
                 .newsletter-weekly-header {
                   padding-top: 15px !important;
                   padding-bottom: 8px !important;
@@ -105,6 +114,13 @@ module Newsletter
                 }
 
                 .newsletter-mobile-item-row {
+                  display: table-row !important;
+                  max-height: none !important;
+                  overflow: visible !important;
+                  mso-hide: none !important;
+                }
+
+                .newsletter-mobile-more-row {
                   display: table-row !important;
                   max-height: none !important;
                   overflow: visible !important;
@@ -258,6 +274,7 @@ module Newsletter
                   <table class="newsletter-shell" role="presentation" width="640" cellspacing="0" cellpadding="0" border="0" style="width:640px;max-width:640px;border-collapse:collapse;background:#fff;margin:0 auto;">
                     <tr>
                       <td style="padding:0;">
+                        #{browser_view_link_html}
                         #{opening_html}
                         <div style="padding:0 24px 24px;">
                           #{items_html}
@@ -447,7 +464,7 @@ module Newsletter
       end.join
 
       <<~HTML
-        <nav aria-label="Genres im Newsletter" style="margin:0;">
+        <nav class="newsletter-genre-jump-nav" aria-label="Genres im Newsletter" style="margin:0;">
           #{email_anchor_html(GENRE_NAV_ANCHOR)}
           <p class="newsletter-jump-title" style="margin:0 0 9px;font-size:14px;line-height:1.25;font-weight:600;color:#{question_color};">
             #{escape(issue.display_jump_menu_title)}
@@ -466,7 +483,7 @@ module Newsletter
         <section style="padding-top:18px;">
           #{email_anchor_html(anchor)}
           <h2 class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">#{escape(section[:group].label)}</h2>
-          #{genre_item_cards_html(section[:items])}
+          #{genre_item_cards_html(section)}
           #{genre_back_to_nav_html}
         </section>
       HTML
@@ -474,7 +491,7 @@ module Newsletter
 
     def genre_back_to_nav_html
       <<~HTML
-        <p style="margin:4px 0 0;text-align:right;font-size:12px;line-height:1.3;">
+        <p class="newsletter-genre-back-link" style="margin:4px 0 0;text-align:right;font-size:12px;line-height:1.3;">
           <a href="##{GENRE_NAV_ANCHOR}" target="_self" style="color:#102223;text-decoration:underline;font-weight:bold;">Zur Genre-Auswahl ↑</a>
         </p>
       HTML
@@ -484,7 +501,8 @@ module Newsletter
       %(<a id="#{anchor}" name="#{anchor}" style="display:block;font-size:1px;line-height:1px;mso-line-height-rule:exactly;color:transparent;text-decoration:none;">&nbsp;</a>)
     end
 
-    def genre_item_cards_html(items)
+    def genre_item_cards_html(section)
+      items = section[:items]
       rows = items.each_slice(GENRE_CARD_COLUMNS).map do |row_items|
         <<~HTML
           <tr class="newsletter-card-row">
@@ -493,13 +511,22 @@ module Newsletter
           </tr>
         HTML
       end
-      mobile_rows = items.map { |item| genre_item_mobile_row_html(item) }
+      mobile_rows = items.first(MOBILE_GENRE_ITEM_LIMIT).map { |item| genre_item_mobile_row_html(item) }
 
       <<~HTML
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
           #{rows.join}
           #{mobile_rows.join}
+          #{genre_mobile_more_link_row_html(section)}
         </table>
+      HTML
+    end
+
+    def browser_view_link_html
+      <<~HTML
+        <p style="margin:0;padding:10px 24px 8px;text-align:right;font-size:11px;line-height:1.3;color:#596364;">
+          <a href="#{MAILJET_PERMALINK_PLACEHOLDER}" target="_blank" rel="noopener" style="color:#596364;text-decoration:underline;">Newsletter im Browser öffnen</a>
+        </p>
       HTML
     end
 
@@ -553,6 +580,20 @@ module Newsletter
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
+        <!--<![endif]-->
+      HTML
+    end
+
+    def genre_mobile_more_link_row_html(section)
+      group = section.fetch(:group)
+
+      <<~HTML
+        <!--[if !mso]><!-->
+          <tr class="newsletter-mobile-more-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
+            <td colspan="#{GENRE_CARD_COLUMNS}" style="padding:14px 0 22px;">
+              <a href="#{escape(genre_lane_url(group.slug, **route_url_options))}" target="_blank" rel="noopener" style="display:inline-block;color:#102223;text-decoration:underline;font-size:14px;line-height:1.3;font-weight:bold;">Mehr #{escape(group.label)} auf Stuttgart Live</a>
             </td>
           </tr>
         <!--<![endif]-->
