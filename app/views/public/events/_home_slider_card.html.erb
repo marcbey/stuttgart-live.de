@@ -54,7 +54,7 @@
       <% end %>
     <% end %>
 
-    <% if authenticated? %>
+    <% if authenticated? && event.sks_promoter? %>
       <div class="event-card-admin-controls home-slider-card-admin-controls">
         <%= link_to "Edit",
                     backend_events_path(status: event.status, event_id: event.id),

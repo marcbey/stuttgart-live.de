@@ -44,8 +44,8 @@ module Newsletter
 
     def default_intro
       <<~TEXT.strip
-        deine Event-Highlights der Woche, passend zu deinen Interessen und handverlesen statt wahllos zusammengestellt.
-        Regelmäßig frisch. Persönlich für dich 🩵
+        unsere Event-Highlights der Woche, passend zu deinen Interessen und handverlesen statt wahllos zusammengestellt.
+        Regelmäßig frisch. Persönlich für dich ♥
       TEXT
     end
 

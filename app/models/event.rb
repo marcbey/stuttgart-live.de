@@ -70,6 +70,9 @@ class Event < ApplicationRecord
   has_many :presenters, -> { order("event_presenters.position ASC", "event_presenters.id ASC") }, through: :event_presenters
   has_one :llm_enrichment, class_name: "EventLlmEnrichment", dependent: :destroy
   has_one_attached :promotion_banner_image
+  has_one_attached :promotion_banner_landscape_image
+  has_one_attached :highlight_video_file
+  has_one_attached :highlight_landscape_video_file
   has_rich_text :press_text
   has_many :import_event_images,
     as: :import_event,
@@ -79,7 +82,13 @@ class Event < ApplicationRecord
     inverse_of: :import_event
 
   attr_accessor :pending_promotion_banner_image_blob,
+                :pending_promotion_banner_landscape_image_blob,
+                :pending_highlight_video_blob,
+                :pending_highlight_landscape_video_blob,
                 :remove_promotion_banner_image,
+                :remove_promotion_banner_landscape_image,
+                :remove_highlight_video,
+                :remove_highlight_landscape_video,
                 :venue_name,
                 :validate_immediate_publication
 
@@ -99,13 +108,20 @@ class Event < ApplicationRecord
   validates :promotion_banner_background_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
   validates :promotion_banner_cta_color, format: { with: HEX_COLOR_FORMAT }, allow_blank: true
   validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
+  validates :promotion_banner_landscape_image_copyright, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_lane_position, numericality: { only_integer: true, greater_than: 0 }, allow_nil: true
   validates :ticket_special_note, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
+  validates :promotion_banner_landscape_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :promotion_banner_landscape_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :promotion_banner_landscape_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
   validates :venue_record, presence: true
   validate :promotion_banner_image_must_be_image
+  validate :promotion_banner_landscape_image_must_be_image
+  validate :highlight_video_file_must_be_video
+  validate :highlight_landscape_video_file_must_be_video
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
@@ -128,7 +144,14 @@ class Event < ApplicationRecord
     published_live
       .where(promotion_banner: true)
       .reorder(:promotion_banner_lane_position, :start_at, :id)
-      .includes(:venue_record, promotion_banner_image_attachment: :blob, event_images: [ file_attachment: :blob ])
+      .includes(
+        :venue_record,
+        promotion_banner_image_attachment: :blob,
+        promotion_banner_landscape_image_attachment: :blob,
+        highlight_video_file_attachment: :blob,
+        highlight_landscape_video_file_attachment: :blob,
+        event_images: [ file_attachment: :blob ]
+      )
   }
 
   def self.sks_promoter_ids
@@ -388,10 +411,16 @@ class Event < ApplicationRecord
   end
 
   def public_ticket_offer
+    return if public_expired?
+
     offer = editor_ticket_offer
     return offer if ticket_offer_active?(offer)
 
     nil
+  end
+
+  def public_expired?
+    past?
   end
 
   def public_canceled?
@@ -404,6 +433,7 @@ class Event < ApplicationRecord
 
   def public_ticket_status_label
     return "Abgesagt" if public_canceled?
+    return "Abgelaufen" if public_expired?
     return "Ausverkauft" if public_sold_out?
 
     nil
@@ -491,6 +521,42 @@ class Event < ApplicationRecord
     ActiveModel::Type::Boolean.new.cast(remove_promotion_banner_image)
   end
 
+  def promotion_banner_landscape_image_blob_for_editor
+    pending_blob = pending_promotion_banner_landscape_image_blob
+    return pending_blob if pending_blob.present?
+    return if remove_promotion_banner_landscape_image?
+
+    promotion_banner_landscape_image.blob if promotion_banner_landscape_image.attached?
+  end
+
+  def remove_promotion_banner_landscape_image?
+    ActiveModel::Type::Boolean.new.cast(remove_promotion_banner_landscape_image)
+  end
+
+  def highlight_video_file_blob_for_editor
+    pending_blob = pending_highlight_video_blob
+    return pending_blob if pending_blob.present?
+    return if remove_highlight_video?
+
+    highlight_video_file.blob if highlight_video_file.attached?
+  end
+
+  def remove_highlight_video?
+    ActiveModel::Type::Boolean.new.cast(remove_highlight_video)
+  end
+
+  def highlight_landscape_video_file_blob_for_editor
+    pending_blob = pending_highlight_landscape_video_blob
+    return pending_blob if pending_blob.present?
+    return if remove_highlight_landscape_video?
+
+    highlight_landscape_video_file.blob if highlight_landscape_video_file.attached?
+  end
+
+  def remove_highlight_landscape_video?
+    ActiveModel::Type::Boolean.new.cast(remove_highlight_landscape_video)
+  end
+
   def promotion_banner_image_focus_x_value
     image_focus_value(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
   end
@@ -503,8 +569,20 @@ class Event < ApplicationRecord
     image_focus_value(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
   end
 
+  def promotion_banner_landscape_image_focus_x_value
+    image_focus_value(promotion_banner_landscape_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+  end
+
+  def promotion_banner_landscape_image_focus_y_value
+    image_focus_value(promotion_banner_landscape_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+  end
+
+  def promotion_banner_landscape_image_zoom_value
+    image_focus_value(promotion_banner_landscape_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
+  end
+
   def promotion_banner_display_image_present?
-    return true if promotion_banner_image.attached?
+    return true if promotion_banner_image.attached? || promotion_banner_landscape_image.attached?
 
     if association(:event_images).loaded?
       event_images.any?
@@ -539,6 +617,40 @@ class Event < ApplicationRecord
   rescue MiniMagick::Error => error
     Rails.logger.warn("Event promotion banner optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
     promotion_banner_image
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
+    raise ProcessingError, processing_error_message(error)
+  end
+
+  def processed_optimized_promotion_banner_landscape_image_variant
+    promotion_banner_landscape_image.variant(**variant_transformations).processed
+  rescue LoadError => error
+    Rails.logger.warn("Event promotion banner landscape optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    promotion_banner_landscape_image
+  rescue MiniMagick::Error => error
+    Rails.logger.warn("Event promotion banner landscape optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    promotion_banner_landscape_image
+  rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
+    raise ProcessingError, processing_error_message(error)
+  rescue StandardError => error
+    raise unless vips_processing_error?(error)
+
+    raise ProcessingError, processing_error_message(error)
+  end
+
+  def processed_optimized_public_promotion_banner_landscape_image_variant(size)
+    max_dimension = PUBLIC_PROMOTION_BANNER_VARIANT_MAX_DIMENSIONS.fetch(size.to_sym)
+
+    promotion_banner_landscape_image.variant(**variant_transformations(max_dimension: max_dimension)).processed
+  rescue LoadError => error
+    Rails.logger.warn("Event promotion banner landscape optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    promotion_banner_landscape_image
+  rescue MiniMagick::Error => error
+    Rails.logger.warn("Event promotion banner landscape optimization fallback for ##{id || 'new'}: #{error.class}: #{error.message}")
+    promotion_banner_landscape_image
   rescue ActiveStorage::InvariableError, ImageProcessing::Error => error
     raise ProcessingError, processing_error_message(error)
   rescue StandardError => error
@@ -682,9 +794,13 @@ class Event < ApplicationRecord
     self.promotion_banner_cta_color = normalize_hex_color(promotion_banner_cta_color)
     self.promotion_banner_lane_position = normalize_promotion_banner_lane_position
     self.promotion_banner_image_copyright = promotion_banner_image_copyright.to_s.strip.presence
+    self.promotion_banner_landscape_image_copyright = promotion_banner_landscape_image_copyright.to_s.strip.presence
     self.promotion_banner_image_focus_x = normalize_percentage(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
     self.promotion_banner_image_focus_y = normalize_percentage(promotion_banner_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
     self.promotion_banner_image_zoom = normalize_percentage(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
+    self.promotion_banner_landscape_image_focus_x = normalize_percentage(promotion_banner_landscape_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+    self.promotion_banner_landscape_image_focus_y = normalize_percentage(promotion_banner_landscape_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+    self.promotion_banner_landscape_image_zoom = normalize_percentage(promotion_banner_landscape_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
     normalized_organizer_notes = organizer_notes.to_s.strip.presence
     self.organizer_notes = normalized_organizer_notes.presence || (sks_promoter? ? AppSetting.sks_organizer_notes : nil)
     self.homepage_url = homepage_url.to_s.strip.presence
@@ -709,6 +825,29 @@ class Event < ApplicationRecord
     return if image_blob.content_type.to_s.start_with?("image/")
 
     errors.add(:promotion_banner_image, "muss ein Bild sein")
+  end
+
+  def promotion_banner_landscape_image_must_be_image
+    image_blob = promotion_banner_landscape_image_blob_for_editor
+    return unless image_blob.present?
+    return if image_blob.content_type.to_s.start_with?("image/")
+
+    errors.add(:promotion_banner_landscape_image, "muss ein Bild sein")
+  end
+
+  def highlight_video_file_must_be_video
+    validate_highlight_video_blob(highlight_video_file_blob_for_editor, :highlight_video_file)
+  end
+
+  def highlight_landscape_video_file_must_be_video
+    validate_highlight_video_blob(highlight_landscape_video_file_blob_for_editor, :highlight_landscape_video_file)
+  end
+
+  def validate_highlight_video_blob(video_blob, attribute)
+    return unless video_blob.present?
+    return if AppSetting::HOMEPAGE_HIGHLIGHT_VIDEO_CONTENT_TYPES.include?(video_blob.content_type.to_s)
+
+    errors.add(attribute, "muss MP4, MOV oder WebM sein")
   end
 
   def split_artist_and_tour_from_title!

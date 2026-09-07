@@ -1,5 +1,9 @@
 <% blog_posts.each_with_index do |blog_post, index| %>
-  <%= render "public/news/card", blog_post: blog_post %>
+  <%= render "public/news/card",
+             blog_post: blog_post,
+             strict_proxy: local_assigns[:strict_proxy],
+             show_admin_edit: local_assigns.fetch(:show_admin_edit, false),
+             hide_media: local_assigns.fetch(:hide_media, false) %>
 
   <% if include_newsletter && index == 4 %>
     <%= render "public/news/newsletter_card" %>

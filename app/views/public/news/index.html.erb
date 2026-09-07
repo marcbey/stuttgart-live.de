@@ -1,18 +1,44 @@
 <%= render_public_seo title: "Stuttgart Live - News",
                       description: "Aktuelle News, Konzertankündigungen und Vorverkäufe von Stuttgart Live.",
                       canonical_url: news_index_url %>
-<section class="news-shell news-index-shell">
-  <header class="news-hero news-index-hero">
-    <div class="news-index-hero-bar" aria-hidden="true"></div>
-    <h1>Aktuelle News</h1>
-  </header>
+<% content_for :page_newsletter do %><% end %>
+<% content_for :page_partner_strip do %><% end %>
+<% strict_proxy = homepage_media_strict_proxy? %>
+<% genre_lanes = public_design_navigation_lanes(Array(@news_preview_genre_lanes).first(5), highlight_events: @news_preview_highlight_events) %>
+<% design_chrome_saved_events = (Array(@news_preview_highlight_events) + genre_lanes.flat_map { |lane| Array(lane.events) }).compact.uniq(&:id) %>
 
-  <% if @blog_posts.any? %>
-    <div class="news-grid news-index-grid" id="news-index-grid">
-      <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false %>
-    </div>
-    <%= render "public/news/more", has_more: @has_more_blog_posts, next_offset: @next_offset %>
-  <% else %>
-    <div class="empty-state">Keine passenden News gefunden.</div>
-  <% end %>
-</section>
+<div class="design-preview design-news-preview-shell"
+     data-controller="design-preview-menu design-preview-filterbar">
+  <%= render "public/events/design_preview_header",
+             browse_state: @browse_state,
+             genre_lanes: genre_lanes,
+             search_overlay: @design_preview_search_overlay,
+             menu_groups: public_design_menu_groups,
+             saved_events: design_chrome_saved_events,
+             strict_proxy: strict_proxy %>
+
+  <main class="design-service-preview design-news-preview">
+    <header class="design-service-preview-hero">
+      <div>
+        <h1 id="design-news-preview-title">Aktuelle News</h1>
+      </div>
+    </header>
+
+    <section class="design-service-preview-layout design-news-preview-layout design-news-preview-layout--index" aria-label="News Inhalt">
+      <article class="design-service-preview-content">
+        <section class="news-shell news-index-shell design-news-preview-content">
+          <% if @blog_posts.any? %>
+            <div class="news-grid news-index-grid" id="news-index-grid">
+              <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false, strict_proxy: strict_proxy %>
+            </div>
+            <%= render "public/news/more", has_more: @has_more_blog_posts, next_offset: @next_offset %>
+          <% else %>
+            <div class="empty-state">Keine passenden News gefunden.</div>
+          <% end %>
+        </section>
+      </article>
+    </section>
+  </main>
+
+  <%= render "public/events/design_preview_footer", menu_groups: public_design_menu_groups %>
+</div>

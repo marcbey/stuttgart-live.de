@@ -1,0 +1,93 @@
+<% setting = local_assigns[:setting] || AppSetting.homepage_highlight_video_record %>
+<% event = local_assigns[:event] %>
+<% config = setting.homepage_highlight_video_config %>
+<% fallback_video = local_assigns[:fallback_video] %>
+<% fallback_poster = local_assigns[:fallback_poster] %>
+<% event_video_attached = event&.highlight_video_file&.attached? %>
+<% video_source = event_video_attached ? url_for(event.highlight_video_file) : (setting.homepage_highlight_video_file.attached? ? url_for(setting.homepage_highlight_video_file) : fallback_video) %>
+<% event_poster = event_image_source(event&.event_image, strict_proxy: local_assigns.fetch(:strict_proxy, false), size: :banner_mobile) if event_video_attached %>
+<% poster_source = event_video_attached ? event_poster : (setting.homepage_highlight_video_poster_image.attached? ? url_for(setting.homepage_highlight_video_poster_image) : fallback_poster) %>
+<% enabled = event_video_attached || setting.homepage_highlight_video_enabled %>
+<% overlay_enabled = event_video_attached ? event.highlight_video_overlay_enabled? : setting.homepage_highlight_video_overlay_enabled %>
+<% title = event_video_attached ? event.promotion_banner_title_value.presence : config.fetch("title").presence %>
+<% subtitle = event_video_attached ? event.title.to_s.strip.presence : config.fetch("subtitle").presence %>
+<% date = event_video_attached ? l(event.start_at.to_date, format: "%d.%m.%Y") : config.fetch("date").presence %>
+<% location = event_video_attached ? event.venue.to_s.strip.presence : config.fetch("location").presence %>
+<% href = event_video_attached ? public_event_detail_path(event, local_assigns.fetch(:browse_state)) : nil %>
+<% show_overlay = overlay_enabled && [title, subtitle, date, location].any?(&:present?) %>
+
+<% if enabled && video_source.present? %>
+  <article class="homepage-highlight-video-card design-preview-highlight-video-card"
+           data-controller="video-sound">
+    <% video_content = capture do %>
+      <%= video_tag video_source,
+                    poster: poster_source,
+                    autoplay: true,
+                    muted: true,
+                    loop: true,
+                    playsinline: true,
+                    preload: "metadata",
+                    class: "homepage-highlight-video design-preview-highlight-video",
+                    data: { video_sound_target: "video" } %>
+
+      <% if show_overlay %>
+        <span class="homepage-highlight-video-copy">
+          <% if date.present? || location.present? %>
+            <span class="homepage-highlight-video-meta">
+              <% if date.present? %>
+                <strong><%= date %></strong>
+              <% end %>
+              <% if location.present? %>
+                <span><%= location %></span>
+              <% end %>
+            </span>
+          <% end %>
+          <% if title.present? %>
+            <strong class="homepage-highlight-video-title"><%= title %></strong>
+          <% end %>
+          <% if subtitle.present? %>
+            <span class="homepage-highlight-video-subtitle"><%= subtitle %></span>
+          <% end %>
+        </span>
+      <% end %>
+    <% end %>
+
+    <% if href.present? %>
+      <%= link_to href,
+                  class: "homepage-highlight-video-link design-preview-highlight-video-link",
+                  aria: { label: title.present? ? "#{title} ansehen" : "Highlight-Video ansehen" } do %>
+        <%= video_content %>
+      <% end %>
+    <% else %>
+      <div class="homepage-highlight-video-link design-preview-highlight-video-link homepage-highlight-video-link--static"
+           aria-label="Highlight-Video">
+        <%= video_content %>
+      </div>
+    <% end %>
+
+    <button type="button"
+            class="homepage-highlight-video-sound-toggle"
+            data-video-sound-target="button"
+            data-action="click->video-sound#toggle"
+            aria-label="Ton einschalten"
+            aria-pressed="false">
+      <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-muted" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path>
+        <path d="m16.2 9.2 4.1 4.1m0-4.1-4.1 4.1"></path>
+      </svg>
+      <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-on" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path>
+        <path d="M16 8.4c1 .9 1.6 2.2 1.6 3.6S17 14.7 16 15.6"></path>
+        <path d="M18.4 6.2A7.7 7.7 0 0 1 21 12a7.7 7.7 0 0 1-2.6 5.8"></path>
+      </svg>
+    </button>
+
+    <% if authenticated? %>
+      <% admin_path = event_video_attached ? backend_events_path(status: event.status, event_id: event.id) : edit_backend_settings_path(section: "homepage_highlight_video") %>
+      <%= link_to "Edit",
+                  admin_path,
+                  class: "design-preview-card-admin-link homepage-highlight-video-admin-link",
+                  data: { turbo: false } %>
+    <% end %>
+  </article>
+<% end %>

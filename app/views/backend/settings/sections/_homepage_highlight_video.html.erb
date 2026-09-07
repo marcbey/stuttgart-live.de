@@ -1,0 +1,206 @@
+<%= render "backend/settings/sections/section_errors", settings_records: settings_records %>
+
+<section class="settings-group">
+  <div class="settings-group-header">
+    <div class="settings-group-header-main">
+      <h2>Homepage Highlight-Video</h2>
+      <p>Pflegt das Hochformatvideo rechts im Highlightbereich der Startseite. Die Texteinblendung ist optional.</p>
+    </div>
+  </div>
+
+  <div class="settings-group-body">
+    <%= form_with model: @homepage_highlight_video_setting,
+                  url: backend_settings_path(section: section_key),
+                  method: :patch,
+                  class: "editor-form" do |form| %>
+      <label class="check-inline">
+        <%= hidden_field_tag "app_setting[homepage_highlight_video_enabled]", "0" %>
+        <%= check_box_tag "app_setting[homepage_highlight_video_enabled]",
+                          "1",
+                          @homepage_highlight_video_setting.homepage_highlight_video_enabled,
+                          id: "app_setting_homepage_highlight_video_enabled" %>
+        <span>Video auf der Startseite anzeigen</span>
+      </label>
+
+      <div class="settings-highlight-video-grid">
+        <section class="settings-highlight-video-upload"
+                 data-controller="homepage-highlight-video-upload"
+                 data-homepage-highlight-video-upload-direct-upload-url-value="<%= rails_direct_uploads_url %>"
+                 data-homepage-highlight-video-upload-media-type-value="video">
+          <div>
+            <h3>Hochformatvideo</h3>
+            <p class="form-hint">MP4, MOV oder WebM. Für die Startseite bitte möglichst weboptimiert halten.</p>
+          </div>
+
+          <div class="settings-highlight-video-preview settings-highlight-video-preview--portrait">
+            <% if @homepage_highlight_video_setting.homepage_highlight_video_file.attached? %>
+              <%= video_tag url_for(@homepage_highlight_video_setting.homepage_highlight_video_file),
+                            controls: true,
+                            muted: true,
+                            playsinline: true,
+                            preload: "metadata",
+                            class: "settings-highlight-video-preview-media",
+                            data: { homepage_highlight_video_upload_target: "preview" } %>
+            <% else %>
+              <video class="settings-highlight-video-preview-media is-hidden"
+                     controls
+                     muted
+                     playsinline
+                     data-homepage-highlight-video-upload-target="preview"></video>
+            <% end %>
+          </div>
+
+          <% homepage_highlight_video_input_id = "homepage_highlight_video_file_upload" %>
+          <div class="settings-highlight-video-actions">
+            <%= hidden_field_tag "app_setting[homepage_highlight_video_signed_id]",
+                                 "",
+                                 data: { homepage_highlight_video_upload_target: "signedInput" } %>
+            <%= hidden_field_tag "app_setting[remove_homepage_highlight_video]",
+                                 (@homepage_highlight_video_setting.remove_homepage_highlight_video? ? "1" : "0"),
+                                 data: { homepage_highlight_video_upload_target: "removeInput" } %>
+            <%= file_field_tag "homepage_highlight_video_file",
+                               id: homepage_highlight_video_input_id,
+                               accept: "video/mp4,video/quicktime,video/webm",
+                               class: "settings-highlight-video-file-input",
+                               data: {
+                                 homepage_highlight_video_upload_target: "input",
+                                 action: "change->homepage-highlight-video-upload#select"
+                               } %>
+            <label class="button button-secondary button-compact settings-highlight-video-file-button"
+                   for="<%= homepage_highlight_video_input_id %>">
+              Datei auswählen
+            </label>
+            <span class="settings-highlight-video-file-name"
+                  data-homepage-highlight-video-upload-target="fileName">
+              <%= @homepage_highlight_video_setting.homepage_highlight_video_file.attached? ? "Video vorhanden" : "Keine Datei ausgewählt" %>
+            </span>
+            <button type="button"
+                    class="button button-ghost button-compact"
+                    data-homepage-highlight-video-upload-target="removeButton"
+                    data-action="homepage-highlight-video-upload#remove">
+              Entfernen
+            </button>
+          </div>
+          <p class="form-hint" data-homepage-highlight-video-upload-target="status"></p>
+        </section>
+
+        <section class="settings-highlight-video-upload"
+                 data-controller="homepage-highlight-video-upload"
+                 data-homepage-highlight-video-upload-direct-upload-url-value="<%= rails_direct_uploads_url %>"
+                 data-homepage-highlight-video-upload-media-type-value="poster">
+          <div>
+            <h3>Posterbild</h3>
+            <p class="form-hint">Optionales Standbild für Ladezustand und Browser ohne Autoplay.</p>
+          </div>
+
+          <div class="settings-highlight-video-preview settings-highlight-video-preview--poster">
+            <% if @homepage_highlight_video_setting.homepage_highlight_video_poster_image.attached? %>
+              <%= image_tag url_for(@homepage_highlight_video_setting.homepage_highlight_video_poster_image),
+                            alt: "",
+                            class: "settings-highlight-video-preview-media",
+                            data: { homepage_highlight_video_upload_target: "preview" } %>
+            <% else %>
+              <img alt=""
+                   class="settings-highlight-video-preview-media is-hidden"
+                   data-homepage-highlight-video-upload-target="preview">
+            <% end %>
+          </div>
+
+          <% homepage_highlight_video_poster_input_id = "homepage_highlight_video_poster_upload" %>
+          <div class="settings-highlight-video-actions">
+            <%= hidden_field_tag "app_setting[homepage_highlight_video_poster_signed_id]",
+                                 "",
+                                 data: { homepage_highlight_video_upload_target: "signedInput" } %>
+            <%= hidden_field_tag "app_setting[remove_homepage_highlight_video_poster]",
+                                 (@homepage_highlight_video_setting.remove_homepage_highlight_video_poster? ? "1" : "0"),
+                                 data: { homepage_highlight_video_upload_target: "removeInput" } %>
+            <%= file_field_tag "homepage_highlight_video_poster_image",
+                               id: homepage_highlight_video_poster_input_id,
+                               accept: "image/jpeg,image/png,image/webp",
+                               class: "settings-highlight-video-file-input",
+                               data: {
+                                 homepage_highlight_video_upload_target: "input",
+                                 action: "change->homepage-highlight-video-upload#select"
+                               } %>
+            <label class="button button-secondary button-compact settings-highlight-video-file-button"
+                   for="<%= homepage_highlight_video_poster_input_id %>">
+              Datei auswählen
+            </label>
+            <span class="settings-highlight-video-file-name"
+                  data-homepage-highlight-video-upload-target="fileName">
+              <%= @homepage_highlight_video_setting.homepage_highlight_video_poster_image.attached? ? "Poster vorhanden" : "Keine Datei ausgewählt" %>
+            </span>
+            <button type="button"
+                    class="button button-ghost button-compact"
+                    data-homepage-highlight-video-upload-target="removeButton"
+                    data-action="homepage-highlight-video-upload#remove">
+              Entfernen
+            </button>
+          </div>
+          <p class="form-hint" data-homepage-highlight-video-upload-target="status"></p>
+        </section>
+      </div>
+
+      <div class="form-grid form-grid-two">
+        <label class="form-field">
+          <span class="form-label">Linkziel</span>
+          <%= text_field_tag "app_setting[homepage_highlight_video_url]",
+                             @homepage_highlight_video_setting.homepage_highlight_video_url,
+                             placeholder: "/events/...",
+                             class: "form-input" %>
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Buttontext</span>
+          <%= text_field_tag "app_setting[homepage_highlight_video_cta_text]",
+                             @homepage_highlight_video_setting.homepage_highlight_video_cta_text,
+                             placeholder: "Zum Event",
+                             class: "form-input" %>
+        </label>
+      </div>
+
+      <label class="check-inline">
+        <%= hidden_field_tag "app_setting[homepage_highlight_video_overlay_enabled]", "0" %>
+        <%= check_box_tag "app_setting[homepage_highlight_video_overlay_enabled]",
+                          "1",
+                          @homepage_highlight_video_setting.homepage_highlight_video_overlay_enabled,
+                          id: "app_setting_homepage_highlight_video_overlay_enabled" %>
+        <span>Texteinblendung über Video anzeigen</span>
+      </label>
+
+      <div class="form-grid form-grid-two">
+        <label class="form-field">
+          <span class="form-label">Titel</span>
+          <%= text_field_tag "app_setting[homepage_highlight_video_title]",
+                             @homepage_highlight_video_setting.homepage_highlight_video_title,
+                             class: "form-input" %>
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Tour / Untertitel</span>
+          <%= text_field_tag "app_setting[homepage_highlight_video_subtitle]",
+                             @homepage_highlight_video_setting.homepage_highlight_video_subtitle,
+                             class: "form-input" %>
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Datum</span>
+          <%= text_field_tag "app_setting[homepage_highlight_video_date]",
+                             @homepage_highlight_video_setting.homepage_highlight_video_date,
+                             class: "form-input" %>
+        </label>
+
+        <label class="form-field">
+          <span class="form-label">Location</span>
+          <%= text_field_tag "app_setting[homepage_highlight_video_location]",
+                             @homepage_highlight_video_setting.homepage_highlight_video_location,
+                             class: "form-input" %>
+        </label>
+      </div>
+
+      <div class="settings-group-footer">
+        <%= form.submit "Save", class: "button button-save-primary button-compact" %>
+      </div>
+    <% end %>
+  </div>
+</section>

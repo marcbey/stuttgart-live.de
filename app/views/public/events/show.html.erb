@@ -1,20 +1,19 @@
 <% presenter = public_event_show_presenter(@event, primary_offer: @primary_offer, browse_state: @browse_state) %>
 <%= render "show_meta", presenter: presenter %>
+<% if authenticated? && current_user.backend_access? %>
+  <% content_for :public_backend_actions do %>
+    <%= link_to "Edit",
+                backend_events_path(status: @event.status, event_id: @event.id),
+                class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
+                data: { turbo: false } %>
+  <% end %>
+<% end %>
 <% content_for :page_newsletter do %>
   <%= render "newsletter_signup", browse_state: @browse_state %>
 <% end %>
 <% content_for :page_partner_strip do %>
   <%= render "partner_strip" %>
 <% end %>
-<% if authenticated? %>
-  <% content_for :public_backend_actions do %>
-    <%= link_to "Edit event",
-                backend_events_path(status: @event.status, event_id: @event.id),
-                class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
-                data: { turbo: false } %>
-  <% end %>
-<% end %>
-
 <article class="event-detail event-detail-public-event"<%= %( style="--event-detail-right-column-width: #{presenter.hero_stage_max_width || "46rem"};") %>>
   <div class="event-detail-topbar">
     <p class="event-detail-back">
@@ -75,8 +74,8 @@
         <section class="event-detail-copy-block event-detail-venue-block">
           <div class="event-detail-venue-layout">
             <h2>Über die Location</h2>
-            <% if authenticated? && @event.venue_record.present? %>
-              <%= link_to "Edit location",
+            <% if authenticated? && current_user.backend_access? && @event.venue_record.present? %>
+              <%= link_to "Edit",
                           backend_venues_path(venue_id: @event.venue_record.id),
                           class: "button button-secondary button-compact event-detail-edit-link public-edit-link",
                           data: { turbo: false } %>
@@ -89,28 +88,33 @@
             <% end %>
 
             <div class="event-detail-venue-main">
-              <% if presenter.venue_info.present? && (presenter.venue_info.address.present? || presenter.venue_info.external_url.present? || presenter.venue_info.map_url.present? || presenter.venue_info.logo_source.present?) %>
+              <% if (presenter.venue_info.present? && (presenter.venue_info.address.present? || presenter.venue_info.external_url.present? || presenter.venue_info.map_url.present? || presenter.venue_info.logo_source.present?)) || presenter.venue_vvs_ticket? %>
                 <div class="event-detail-venue-meta">
-                  <% if presenter.venue_info.address.present? || presenter.venue_info.logo_source.present? %>
+                  <% if presenter.venue_info&.address.present? || presenter.venue_info&.logo_source.present? || presenter.venue_vvs_ticket? %>
                     <div class="event-detail-venue-meta-header">
-                      <% if presenter.venue_info.address.present? %>
+                      <% if presenter.venue_info&.address.present? %>
                         <div class="event-detail-venue-address">
                           <p class="event-detail-venue-label">Adresse:</p>
                           <p><%= formatted_venue_address(presenter.venue_info.address) %></p>
                         </div>
                       <% end %>
 
-                      <% if presenter.venue_info.logo_source.present? %>
+                      <% if presenter.venue_info&.logo_source.present? || presenter.venue_vvs_ticket? %>
                         <div class="event-detail-venue-brand">
-                          <%= image_tag presenter.venue_info.logo_source,
-                                        alt: presenter.venue_info.name,
-                                        class: "event-detail-venue-logo" %>
+                          <% if presenter.venue_info&.logo_source.present? %>
+                            <%= image_tag presenter.venue_info.logo_source,
+                                          alt: presenter.venue_info.name.presence || @event.venue,
+                                          class: "event-detail-venue-logo" %>
+                          <% end %>
+                          <% if presenter.venue_vvs_ticket? %>
+                            <%= render "public/events/vvs_kombi_ticket" %>
+                          <% end %>
                         </div>
                       <% end %>
                     </div>
                   <% end %>
 
-                  <% if presenter.venue_info.external_url.present? || presenter.venue_info.map_url.present? %>
+                  <% if presenter.venue_info.present? && (presenter.venue_info.external_url.present? || presenter.venue_info.map_url.present?) %>
                     <div class="event-detail-venue-link-row">
                       <% if presenter.venue_info.external_url.present? %>
                         <%= link_to presenter.venue_info.name,
@@ -135,9 +139,6 @@
               <% end %>
             </div>
 
-            <% if presenter.venue_vvs_ticket? %>
-              <%= render "public/events/vvs_kombi_ticket" %>
-            <% end %>
           </div>
         </section>
       <% end %>

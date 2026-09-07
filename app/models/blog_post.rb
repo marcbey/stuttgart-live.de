@@ -18,7 +18,7 @@ class BlogPost < ApplicationRecord
     banner_mobile: 768,
     banner_desktop: WEB_MAX_DIMENSION
   }.freeze
-  IMAGE_SLOTS = %i[cover_image promotion_banner_image].freeze
+  IMAGE_SLOTS = %i[cover_image promotion_banner_image promotion_banner_landscape_image].freeze
   ProcessingError = Class.new(StandardError)
 
   belongs_to :author, class_name: "User"
@@ -26,12 +26,15 @@ class BlogPost < ApplicationRecord
 
   has_one_attached :cover_image
   has_one_attached :promotion_banner_image
+  has_one_attached :promotion_banner_landscape_image
   has_rich_text :body
 
   attr_accessor :pending_cover_image_blob,
                 :pending_promotion_banner_image_blob,
+                :pending_promotion_banner_landscape_image_blob,
                 :remove_cover_image,
-                :remove_promotion_banner_image
+                :remove_promotion_banner_image,
+                :remove_promotion_banner_landscape_image
 
   validates :title, presence: true, length: { maximum: 180 }
   validates :teaser, presence: true, length: { maximum: 320 }
@@ -41,6 +44,7 @@ class BlogPost < ApplicationRecord
   validates :published_at, presence: true, if: :published?
   validates :cover_image_copyright, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_image_copyright, length: { maximum: 500 }, allow_blank: true
+  validates :promotion_banner_landscape_image_copyright, length: { maximum: 500 }, allow_blank: true
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_title, length: { maximum: 120 }, allow_blank: true
   validates :promotion_banner_text, length: { maximum: 320 }, allow_blank: true
@@ -54,17 +58,21 @@ class BlogPost < ApplicationRecord
   validates :promotion_banner_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
   validates :promotion_banner_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
+  validates :promotion_banner_landscape_image_focus_x, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :promotion_banner_landscape_image_focus_y, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100 }
+  validates :promotion_banner_landscape_image_zoom, numericality: { greater_than_or_equal_to: 100, less_than_or_equal_to: 300 }
   validate :body_must_be_present
   validate :cover_image_must_be_image
   validate :promotion_banner_image_must_be_image
+  validate :promotion_banner_landscape_image_must_be_image
   validate :promotion_banner_requires_image
 
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
 
-  scope :ordered_for_backend, -> { includes(:author, :published_by).with_attached_cover_image.with_attached_promotion_banner_image.order(updated_at: :desc, id: :desc) }
+  scope :ordered_for_backend, -> { includes(:author, :published_by).with_attached_cover_image.with_attached_promotion_banner_image.with_attached_promotion_banner_landscape_image.order(updated_at: :desc, id: :desc) }
   scope :published_live, -> { where(status: "published").where("published_at <= ?", Time.current).order(published_at: :desc, id: :desc) }
-  scope :promotion_banner_live, -> { published_live.where(promotion_banner: true).reorder(:promotion_banner_lane_position, published_at: :desc, id: :desc).with_attached_promotion_banner_image }
+  scope :promotion_banner_live, -> { published_live.where(promotion_banner: true).reorder(:promotion_banner_lane_position, published_at: :desc, id: :desc).with_attached_promotion_banner_image.with_attached_promotion_banner_landscape_image }
 
   def self.find_live_by_source_path!(source_path)
     published_live.find_by!(source_url: source_url_candidates_for(source_path))
@@ -101,12 +109,20 @@ class BlogPost < ApplicationRecord
     image_blob_for_editor(:promotion_banner_image)
   end
 
+  def promotion_banner_landscape_image_blob_for_editor
+    image_blob_for_editor(:promotion_banner_landscape_image)
+  end
+
   def remove_cover_image?
     ActiveModel::Type::Boolean.new.cast(remove_cover_image)
   end
 
   def remove_promotion_banner_image?
     ActiveModel::Type::Boolean.new.cast(remove_promotion_banner_image)
+  end
+
+  def remove_promotion_banner_landscape_image?
+    ActiveModel::Type::Boolean.new.cast(remove_promotion_banner_landscape_image)
   end
 
   def cover_image_focus_x_value
@@ -131,6 +147,18 @@ class BlogPost < ApplicationRecord
 
   def promotion_banner_image_zoom_value
     image_focus_value(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
+  end
+
+  def promotion_banner_landscape_image_focus_x_value
+    image_focus_value(promotion_banner_landscape_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+  end
+
+  def promotion_banner_landscape_image_focus_y_value
+    image_focus_value(promotion_banner_landscape_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+  end
+
+  def promotion_banner_landscape_image_zoom_value
+    image_focus_value(promotion_banner_landscape_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
   end
 
   def promotion_banner_kicker_text_value
@@ -279,6 +307,7 @@ class BlogPost < ApplicationRecord
       self.source_url = source_url.to_s.strip.presence
       self.cover_image_copyright = cover_image_copyright.to_s.strip.presence
       self.promotion_banner_image_copyright = promotion_banner_image_copyright.to_s.strip.presence
+      self.promotion_banner_landscape_image_copyright = promotion_banner_landscape_image_copyright.to_s.strip.presence
       self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
       self.promotion_banner_title = promotion_banner_title.to_s.strip.presence
       self.promotion_banner_text = promotion_banner_text.to_s.strip.presence
@@ -292,6 +321,9 @@ class BlogPost < ApplicationRecord
       self.promotion_banner_image_focus_x = normalize_percentage(promotion_banner_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
       self.promotion_banner_image_focus_y = normalize_percentage(promotion_banner_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
       self.promotion_banner_image_zoom = normalize_percentage(promotion_banner_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
+      self.promotion_banner_landscape_image_focus_x = normalize_percentage(promotion_banner_landscape_image_focus_x, fallback: DEFAULT_IMAGE_FOCUS_X)
+      self.promotion_banner_landscape_image_focus_y = normalize_percentage(promotion_banner_landscape_image_focus_y, fallback: DEFAULT_IMAGE_FOCUS_Y)
+      self.promotion_banner_landscape_image_zoom = normalize_percentage(promotion_banner_landscape_image_zoom, fallback: DEFAULT_IMAGE_ZOOM)
       self.youtube_video_urls = Array(youtube_video_urls).filter_map { |value| normalize_youtube_url(value) }.uniq
     end
 
@@ -336,20 +368,28 @@ class BlogPost < ApplicationRecord
       errors.add(:cover_image, "muss ein Bild sein")
     end
 
-    def promotion_banner_image_must_be_image
-      image_blob = promotion_banner_image_blob_for_editor
-      return unless image_blob.present?
-      return if image_blob.content_type.to_s.start_with?("image/")
+  def promotion_banner_image_must_be_image
+    image_blob = promotion_banner_image_blob_for_editor
+    return unless image_blob.present?
+    return if image_blob.content_type.to_s.start_with?("image/")
 
-      errors.add(:promotion_banner_image, "muss ein Bild sein")
-    end
+    errors.add(:promotion_banner_image, "muss ein Bild sein")
+  end
 
-    def promotion_banner_requires_image
-      return unless promotion_banner?
-      return if promotion_banner_image_blob_for_editor.present?
+  def promotion_banner_landscape_image_must_be_image
+    image_blob = promotion_banner_landscape_image_blob_for_editor
+    return unless image_blob.present?
+    return if image_blob.content_type.to_s.start_with?("image/")
 
-      errors.add(:promotion_banner_image, "muss für einen Promotion Banner vorhanden sein")
-    end
+    errors.add(:promotion_banner_landscape_image, "muss ein Bild sein")
+  end
+
+  def promotion_banner_requires_image
+    return unless promotion_banner?
+    return if promotion_banner_image_blob_for_editor.present? || promotion_banner_landscape_image_blob_for_editor.present?
+
+    errors.add(:promotion_banner_image, "muss für einen Promotion Banner vorhanden sein")
+  end
 
     def image_blob_for_editor(slot)
       pending_blob = pending_blob_for(slot)
@@ -366,6 +406,8 @@ class BlogPost < ApplicationRecord
         pending_cover_image_blob
       when :promotion_banner_image
         pending_promotion_banner_image_blob
+      when :promotion_banner_landscape_image
+        pending_promotion_banner_landscape_image_blob
       end
     end
 
@@ -375,6 +417,8 @@ class BlogPost < ApplicationRecord
         remove_cover_image?
       when :promotion_banner_image
         remove_promotion_banner_image?
+      when :promotion_banner_landscape_image
+        remove_promotion_banner_landscape_image?
       else
         false
       end

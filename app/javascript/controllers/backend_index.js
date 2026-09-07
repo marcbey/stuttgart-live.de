@@ -36,6 +36,9 @@ application.register("event-image-preupload", EventImagePreuploadController)
 import FlashController from "./flash_controller"
 application.register("flash", FlashController)
 
+import HomepageHighlightVideoUploadController from "./homepage_highlight_video_upload_controller"
+application.register("homepage-highlight-video-upload", HomepageHighlightVideoUploadController)
+
 import KeyboardShortcutsController from "./keyboard_shortcuts_controller"
 application.register("keyboard-shortcuts", KeyboardShortcutsController)
 

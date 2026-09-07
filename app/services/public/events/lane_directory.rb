@@ -17,9 +17,15 @@ module Public
           featured: false
         },
         "tagestipp" => {
-          title: "Tagestipp",
+          title: "Heute in Stuttgart",
           header_variant: :tagestipp,
           public_path: "/tagestipp",
+          featured: false
+        },
+        "under_30" => {
+          title: "Kleine Preise, große Abende - unter 30€",
+          header_variant: :editorial,
+          public_path: "/unter-30",
           featured: false
         },
         "russ_live" => {
@@ -35,6 +41,10 @@ module Public
       class << self
         def all_stuttgart
           fixed("all_stuttgart")
+        end
+
+        def under_30
+          fixed("under_30")
         end
 
         def fixed(key)
@@ -92,6 +102,7 @@ module Public
           when "highlights" then highlights
           when "all_stuttgart" then all_stuttgart
           when "tagestipp" then tagestipp
+          when "under_30" then under_30
           when "russ_live" then russ_live
           else genre(identifier)
           end

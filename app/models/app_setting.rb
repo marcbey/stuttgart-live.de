@@ -8,6 +8,7 @@ class AppSetting < ApplicationRecord
   VENUE_DUPLICATE_MAPPINGS_KEY = "venue_duplicate_mappings".freeze
   HOMEPAGE_GENRE_LANE_SLUGS_KEY = "homepage_genre_lane_slugs".freeze
   HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY = "homepage_genre_tag_cloud_enabled".freeze
+  HOMEPAGE_HIGHLIGHT_VIDEO_KEY = "homepage_highlight_video".freeze
   LLM_ENRICHMENT_MODEL_KEY = "llm_enrichment_model".freeze
   LLM_ENRICHMENT_PROMPT_TEMPLATE_KEY = "llm_enrichment_prompt_template".freeze
   LLM_ENRICHMENT_TEMPERATURE_KEY = "llm_enrichment_temperature".freeze
@@ -37,6 +38,26 @@ class AppSetting < ApplicationRecord
     "search_results",
     "candidates"
   ].freeze
+  HOMEPAGE_HIGHLIGHT_VIDEO_DEFAULTS = {
+    "enabled" => true,
+    "overlay_enabled" => false,
+    "title" => "",
+    "subtitle" => "",
+    "date" => "",
+    "location" => "",
+    "url" => "",
+    "cta_text" => "Zum Event"
+  }.freeze
+  HOMEPAGE_HIGHLIGHT_VIDEO_CONTENT_TYPES = %w[video/mp4 video/quicktime video/webm].freeze
+  HOMEPAGE_HIGHLIGHT_VIDEO_POSTER_CONTENT_TYPES = %w[image/jpeg image/png image/webp].freeze
+
+  has_one_attached :homepage_highlight_video_file
+  has_one_attached :homepage_highlight_video_poster_image
+
+  attr_accessor :pending_homepage_highlight_video_blob,
+                :pending_homepage_highlight_video_poster_blob,
+                :remove_homepage_highlight_video,
+                :remove_homepage_highlight_video_poster
 
   LLM_ENRICHMENT_PROMPT_TEMPLATE = <<~TEXT.strip
     Ermittle für genau ein Event aus `Input` die fehlenden Felder
@@ -137,6 +158,7 @@ class AppSetting < ApplicationRecord
   validate :llm_enrichment_temperature_must_be_valid
   validate :llm_enrichment_web_search_provider_must_be_valid
   validate :venue_duplicate_mappings_must_be_valid
+  validate :homepage_highlight_video_assets_must_be_valid
 
   before_validation :normalize_valid_venue_duplicate_mappings_value
   after_commit { self.class.reset_cache! }
@@ -246,6 +268,16 @@ class AppSetting < ApplicationRecord
 
     def homepage_genre_tag_cloud_enabled_record
       find_or_initialize_by(key: HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY)
+    end
+
+    def homepage_highlight_video_record
+      find_or_initialize_by(key: HOMEPAGE_HIGHLIGHT_VIDEO_KEY).tap do |setting|
+        setting.value = HOMEPAGE_HIGHLIGHT_VIDEO_DEFAULTS if setting.new_record? && !setting.value.is_a?(Hash)
+      end
+    end
+
+    def homepage_highlight_video_config
+      @homepage_highlight_video_config ||= homepage_highlight_video_record.homepage_highlight_video_config
     end
 
     def llm_enrichment_prompt_template_record
@@ -533,6 +565,7 @@ class AppSetting < ApplicationRecord
       @sks_organizer_notes = nil
       @homepage_genre_lane_slugs = nil
       @homepage_genre_tag_cloud_enabled = nil
+      @homepage_highlight_video_config = nil
       @venue_duplicate_mappings = nil
       @venue_duplicate_mapping_by_alias_key = nil
       @llm_enrichment_model = nil
@@ -602,6 +635,44 @@ class AppSetting < ApplicationRecord
 
   def homepage_genre_tag_cloud_enabled=(raw_value)
     self.value = self.class.normalize_boolean(raw_value)
+  end
+
+  def homepage_highlight_video_config
+    HOMEPAGE_HIGHLIGHT_VIDEO_DEFAULTS.merge(value.is_a?(Hash) ? value : {})
+  end
+
+  def homepage_highlight_video_enabled
+    self.class.normalize_boolean(homepage_highlight_video_config.fetch("enabled"))
+  end
+
+  def homepage_highlight_video_enabled=(raw_value)
+    write_homepage_highlight_video_config("enabled", self.class.normalize_boolean(raw_value))
+  end
+
+  def homepage_highlight_video_overlay_enabled
+    self.class.normalize_boolean(homepage_highlight_video_config.fetch("overlay_enabled"))
+  end
+
+  def homepage_highlight_video_overlay_enabled=(raw_value)
+    write_homepage_highlight_video_config("overlay_enabled", self.class.normalize_boolean(raw_value))
+  end
+
+  %w[title subtitle date location url cta_text].each do |field|
+    define_method("homepage_highlight_video_#{field}") do
+      homepage_highlight_video_config.fetch(field).to_s
+    end
+
+    define_method("homepage_highlight_video_#{field}=") do |raw_value|
+      write_homepage_highlight_video_config(field, self.class.normalize_text(raw_value).to_s)
+    end
+  end
+
+  def remove_homepage_highlight_video?
+    self.class.normalize_boolean(remove_homepage_highlight_video)
+  end
+
+  def remove_homepage_highlight_video_poster?
+    self.class.normalize_boolean(remove_homepage_highlight_video_poster)
   end
 
   def venue_duplicate_mappings
@@ -712,6 +783,32 @@ class AppSetting < ApplicationRecord
 
   def venue_duplicate_mappings_setting?
     key == VENUE_DUPLICATE_MAPPINGS_KEY
+  end
+
+  def homepage_highlight_video_setting?
+    key == HOMEPAGE_HIGHLIGHT_VIDEO_KEY
+  end
+
+  def write_homepage_highlight_video_config(field, field_value)
+    self.value = homepage_highlight_video_config.merge(field => field_value)
+  end
+
+  def homepage_highlight_video_assets_must_be_valid
+    return unless homepage_highlight_video_setting?
+
+    video_blob =
+      pending_homepage_highlight_video_blob || (homepage_highlight_video_file.blob unless remove_homepage_highlight_video?)
+    poster_blob =
+      pending_homepage_highlight_video_poster_blob ||
+      (homepage_highlight_video_poster_image.blob unless remove_homepage_highlight_video_poster?)
+
+    if video_blob.present? && !HOMEPAGE_HIGHLIGHT_VIDEO_CONTENT_TYPES.include?(video_blob.content_type)
+      errors.add(:homepage_highlight_video_file, "muss MP4, MOV oder WebM sein")
+    end
+
+    return if poster_blob.blank? || HOMEPAGE_HIGHLIGHT_VIDEO_POSTER_CONTENT_TYPES.include?(poster_blob.content_type)
+
+    errors.add(:homepage_highlight_video_poster_image, "muss JPG, PNG oder WebP sein")
   end
 
   def sks_promoter_ids_must_be_present

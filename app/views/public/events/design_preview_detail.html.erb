@@ -1,0 +1,373 @@
+<% presenter = public_event_show_presenter(@event, primary_offer: @primary_offer, browse_state: @browse_state) %>
+<% strict_proxy = homepage_media_strict_proxy? %>
+<% hero_slide = presenter.hero_gallery_slides.first %>
+<% fallback_image = @event.image_for(slot: :grid_default, breakpoint: :desktop) %>
+<% fallback_source = event_image_source(fallback_image, strict_proxy: strict_proxy, size: :card_desktop) %>
+<% hero_source = hero_slide&.desktop_source.presence || fallback_source %>
+<% hero_alt = hero_slide&.alt_text.presence || event_image_alt(fallback_image, @event) %>
+<% hero_credit = hero_slide&.credit.presence || presenter.hero_image_credit %>
+<% hero_preview_slides = Array(@design_preview_detail_format_images).filter_map do |item|
+  image = item[:image]
+  source = event_image_source(image, strict_proxy: strict_proxy, size: :card_desktop)
+  next if source.blank?
+
+  {
+    label: item[:label],
+    kind: item[:kind],
+    source: source,
+    alt: event_image_alt(image, (image.event if image.respond_to?(:event)) || @event),
+    credit: (image.sub_text.to_s.strip.presence if image.respond_to?(:sub_text))
+  }
+end %>
+<% if hero_preview_slides.blank? && hero_source.present? %>
+  <% hero_preview_slides = [ { label: "Bild", source: hero_source, alt: hero_alt, credit: hero_credit } ] %>
+<% end %>
+<% display_price = public_event_ticket_price(@event, @primary_offer, format: :detail) %>
+<% description = presenter.primary_description.presence || "Mehr Informationen zu diesem Event folgen in Kürze." %>
+<% description_plain_text = strip_tags(description).squish %>
+<% description_word_count = description_plain_text.split.size %>
+<% venue_info = presenter.venue_info %>
+<% organizer_notes = @event.public_organizer_notes.to_s.strip.presence %>
+<% related_events = Array(@related_events).first(12) %>
+<% related_preview_events = related_events.first(8) %>
+<% related_effective_series_ids = @related_genre_lane&.effective_series_ids || effective_public_event_series_ids(related_events) %>
+<% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: @home_featured_events) %>
+<% design_preview_menu_groups = public_design_menu_groups %>
+<% design_preview_shell_saved_events = (
+  [ @event ] +
+  related_events +
+  Array(@home_featured_events) +
+  Array(@home_tagestipp_events) +
+  genre_lanes.flat_map { |lane| Array(lane.events) }
+).compact.uniq(&:id) %>
+<% design_detail_preview_mode = action_name == "design_preview_detail" %>
+<% design_detail_back_path = design_detail_preview_mode ? design_preview_path : root_path %>
+<% if authenticated? && current_user.backend_access? %>
+  <% content_for :public_backend_actions do %>
+    <%= link_to "Edit",
+                backend_events_path(status: @event.status, event_id: @event.id),
+                class: "button button-secondary button-compact event-detail-edit-link public-edit-link public-backend-shortcut",
+                data: { turbo: false } %>
+  <% end %>
+<% end %>
+<% content_for :page_newsletter do %><% end %>
+<% content_for :page_partner_strip do %><% end %>
+<%= render_public_seo title: (design_detail_preview_mode ? "Detailseite Preview - Stuttgart Live" : presenter.page_title),
+                      meta_title: (presenter.meta_title unless design_detail_preview_mode),
+                      description: (design_detail_preview_mode ? "Interne Layoutvorschau für eine Event-Detailseite." : presenter.meta_description),
+                      canonical_url: (design_detail_preview_mode ? design_preview_detail_url : presenter.canonical_url),
+                      og_image_url: (presenter.og_image_url unless design_detail_preview_mode),
+                      json_ld: (presenter.schema_json_ld unless design_detail_preview_mode) %>
+
+<div class="design-preview design-detail-preview-shell"
+     data-controller="design-preview-menu design-preview-filterbar"
+     aria-labelledby="design-detail-preview-title">
+  <%= render "design_preview_header",
+             browse_state: @browse_state,
+             genre_lanes: genre_lanes,
+             search_overlay: @design_preview_search_overlay,
+             menu_groups: design_preview_menu_groups,
+             saved_events: design_preview_shell_saved_events,
+             strict_proxy: strict_proxy %>
+
+  <article class="design-detail-preview" aria-labelledby="design-detail-preview-title">
+    <%= link_to design_detail_back_path, class: "design-detail-preview-back" do %>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 12H6"></path>
+        <path d="m11 6-6 6 6 6"></path>
+      </svg>
+      Zurück
+    <% end %>
+
+    <% detail_fact_items = presenter.fact_items %>
+    <% detail_mobile_date_item = detail_fact_items.find { |fact_item| fact_item.label == "Datum" } %>
+    <% detail_mobile_location_item = detail_fact_items.find { |fact_item| ["Location", "Ort"].include?(fact_item.label) } %>
+    <% detail_mobile_date_value = detail_mobile_date_item&.value.to_s.sub(/\A[^,]+,\s*/, "") %>
+    <% detail_mobile_location_value = detail_mobile_location_item&.value.to_s.sub(/,\s*stuttgart\z/i, "") %>
+
+  <section class="design-detail-preview-hero">
+    <figure class="design-detail-preview-image design-detail-preview-image-slider">
+      <div class="design-detail-preview-image-track" aria-label="Eventbild">
+        <% hero_preview_slides.each_with_index do |slide, index| %>
+          <div class="design-detail-preview-image-slide design-detail-preview-image-slide--<%= slide.fetch(:kind, :image) %>">
+            <div class="design-detail-preview-image-frame">
+              <%= image_tag slide.fetch(:source),
+                            alt: index.zero? ? slide.fetch(:alt) : "",
+                            loading: index.zero? ? "eager" : "lazy",
+                            decoding: "async" %>
+              <% image_credit = slide[:credit].presence || hero_credit %>
+              <% if image_credit.present? %>
+                <span class="design-detail-preview-image-credit"><%= image_credit %></span>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="design-detail-preview-image-title-overlay" aria-hidden="true">
+        <% if detail_mobile_date_value.present? || detail_mobile_location_value.present? %>
+          <p class="design-detail-preview-mobile-meta">
+            <% if detail_mobile_date_value.present? %>
+              <span><%= detail_mobile_date_value %></span>
+            <% end %>
+            <% if detail_mobile_location_value.present? %>
+              <span><%= detail_mobile_location_value %></span>
+            <% end %>
+          </p>
+        <% end %>
+        <p class="design-detail-preview-image-title"><%= presenter.display_headline %></p>
+        <% if presenter.title_line.present? %>
+          <p class="design-detail-preview-image-subtitle"><%= presenter.title_line %></p>
+        <% end %>
+      </div>
+    </figure>
+
+    <div class="design-detail-preview-summary">
+      <div class="design-detail-preview-title-block">
+        <% if detail_mobile_date_value.present? || detail_mobile_location_value.present? %>
+          <p class="design-detail-preview-mobile-meta">
+            <% if detail_mobile_date_value.present? %>
+              <span><%= detail_mobile_date_value %></span>
+            <% end %>
+            <% if detail_mobile_location_value.present? %>
+              <span><%= detail_mobile_location_value %></span>
+            <% end %>
+          </p>
+        <% end %>
+        <h1 id="design-detail-preview-title"><%= presenter.display_headline %></h1>
+        <% if presenter.title_line.present? %>
+          <p class="design-detail-preview-subtitle"><%= presenter.title_line %></p>
+        <% end %>
+      </div>
+      <% detail_primary_genre_tag = presenter.genre_tag_links.first %>
+      <% if detail_primary_genre_tag.present? %>
+        <div class="design-detail-preview-tags" aria-label="Genres und Sub-Genres">
+          <%= link_to detail_primary_genre_tag.label,
+                      detail_primary_genre_tag.url,
+                      class: "design-detail-preview-tag" %>
+        </div>
+      <% end %>
+
+      <% detail_doors_item = detail_fact_items.find { |fact_item| fact_item.label == "Einlass" } %>
+      <dl class="design-detail-preview-facts">
+        <% detail_fact_items.each do |item| %>
+          <% next if item.value.blank? %>
+          <% next if item.label == "Einlass" && detail_fact_items.any? { |fact_item| fact_item.label == "Beginn" && fact_item.value.present? } %>
+          <div class="design-detail-preview-fact design-detail-preview-fact-<%= item.label.parameterize %>">
+            <dt><%= item.label %></dt>
+            <dd>
+              <span class="design-detail-preview-fact-icon" aria-hidden="true">
+                <% case item.label %>
+                <% when "Datum" %>
+                  <svg viewBox="0 0 24 24">
+                    <path d="M7 2.75v3.5"></path>
+                    <path d="M17 2.75v3.5"></path>
+                    <path d="M3.75 9h16.5"></path>
+                    <rect x="4" y="5" width="16" height="16" rx="2.5"></rect>
+                  </svg>
+                <% when "Beginn", "Einlass" %>
+                  <svg viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="8.25"></circle>
+                    <path d="M12 7.75v4.65l3.2 1.9"></path>
+                  </svg>
+                <% else %>
+                  <svg viewBox="0 0 24 24">
+                    <path d="M19 10.2c0 5.5-7 10.05-7 10.05s-7-4.55-7-10.05a7 7 0 1 1 14 0Z"></path>
+                    <circle cx="12" cy="10.2" r="2.25"></circle>
+                  </svg>
+                <% end %>
+              </span>
+              <span class="design-detail-preview-fact-value">
+                <% if item.label == "Beginn" %>
+                  Beginn: <%= item.value %>
+                <% else %>
+                  <%= item.value %>
+                <% end %>
+                <% if item.label == "Beginn" && detail_doors_item&.value.present? %>
+                  <span class="design-detail-preview-fact-inline">Einlass: <%= detail_doors_item.value %></span>
+                <% end %>
+              </span>
+              <% if item.label == "Datum" && @event_series_lane.present? %>
+                <div class="design-detail-preview-date-series design-detail-preview-series">
+                  <%= render "event_series_term_links",
+                             event_series_lane: @event_series_lane,
+                             browse_state: @browse_state,
+                             current_event: @event,
+                             show_visible_terms: false,
+                             summary_label: "Weitere Termine" %>
+                </div>
+              <% end %>
+            </dd>
+          </div>
+        <% end %>
+        <% if display_price.present? && presenter.show_ticket_link? %>
+          <div class="design-detail-preview-fact design-detail-preview-fact-preis">
+            <dt>Preis</dt>
+            <dd>
+              <span class="design-detail-preview-fact-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24">
+                  <path d="M4.75 6.5h14.5v3a2 2 0 0 0 0 4v3H4.75v-3a2 2 0 0 0 0-4v-3Z"></path>
+                  <path d="M8.25 8.5v7"></path>
+                </svg>
+              </span>
+              <span class="design-detail-preview-fact-value"><%= display_price %></span>
+            </dd>
+          </div>
+        <% end %>
+      </dl>
+
+      <div class="design-detail-preview-actions">
+        <% if presenter.show_ticket_link? %>
+          <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "design-detail-preview-action-button design-detail-preview-action-button--primary" %>
+        <% else %>
+          <span class="design-detail-preview-action-button design-detail-preview-action-button--primary design-detail-preview-action-button--status"><%= (@event.public_ticket_status_label.presence || presenter.sold_out_note_text.presence || "Tickets aktuell nicht verfügbar").upcase %></span>
+        <% end %>
+        <%= render "public/events/saved_event_button",
+                   event: @event,
+                   button_class: "design-detail-preview-action-button" %>
+        <button type="button" class="design-detail-preview-action-button">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M16 5.5 12 1.75 8 5.5"></path>
+            <path d="M12 2v13"></path>
+            <path d="M5.25 10.5v8.25h13.5V10.5"></path>
+          </svg>
+          Teilen
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="design-detail-preview-content">
+    <div class="design-detail-preview-copy">
+      <section class="design-detail-preview-panel design-detail-preview-description">
+        <div class="design-detail-preview-description-main">
+          <% if presenter.external_links.any? %>
+            <div class="design-detail-preview-links-group" aria-label="Event/Künstler Infos">
+              <p class="design-detail-preview-links-title">Event/Künstler Infos</p>
+              <div class="design-detail-preview-links">
+                <% presenter.external_links.each do |link| %>
+                  <%= link_to link.url, target: "_blank", rel: "noopener" do %>
+                    <span class="design-detail-preview-link-icon design-detail-preview-link-icon--<%= link.label.to_s.parameterize %>" aria-hidden="true">
+                      <% case link.label.to_s.downcase %>
+                      <% when "homepage" %>
+                        <svg viewBox="0 0 24 24">
+                          <circle cx="12" cy="12" r="8.5"></circle>
+                          <path d="M3.75 12h16.5"></path>
+                          <path d="M12 3.5c2.2 2.28 3.3 5.1 3.3 8.5s-1.1 6.22-3.3 8.5"></path>
+                          <path d="M12 3.5C9.8 5.78 8.7 8.6 8.7 12s1.1 6.22 3.3 8.5"></path>
+                        </svg>
+                      <% when "instagram" %>
+                        <svg viewBox="0 0 24 24">
+                          <rect x="5" y="5" width="14" height="14" rx="4"></rect>
+                          <circle cx="12" cy="12" r="3.25"></circle>
+                          <path d="M16.45 7.75h.01"></path>
+                        </svg>
+                      <% when "facebook" %>
+                        <svg viewBox="0 0 24 24">
+                          <path d="M14.6 8.25h-1.35c-.86 0-1.25.52-1.25 1.34v1.44h2.35l-.36 2.28H12v5.19H9.62v-5.19H7.75v-2.28h1.87V9.34c0-2.07 1.24-3.34 3.22-3.34.72 0 1.34.06 1.76.13v2.12Z"></path>
+                        </svg>
+                      <% when "youtube" %>
+                        <svg viewBox="0 0 24 24">
+                          <path d="M4.75 8.35c.16-1.08.96-1.86 2.02-2.02C8.2 6.1 10.3 6 12 6s3.8.1 5.23.33c1.06.16 1.86.94 2.02 2.02.17 1.07.25 2.3.25 3.65s-.08 2.58-.25 3.65c-.16 1.08-.96 1.86-2.02 2.02C15.8 17.9 13.7 18 12 18s-3.8-.1-5.23-.33c-1.06-.16-1.86-.94-2.02-2.02A23.85 23.85 0 0 1 4.5 12c0-1.35.08-2.58.25-3.65Z"></path>
+                          <path d="m10.6 9.65 3.8 2.35-3.8 2.35V9.65Z"></path>
+                        </svg>
+                      <% else %>
+                        <svg viewBox="0 0 24 24">
+                          <path d="M9.75 14.25 14.25 9.75"></path>
+                          <path d="M12.8 6.9 14.25 5.45a4.1 4.1 0 0 1 5.8 5.8l-1.45 1.45"></path>
+                          <path d="M11.2 17.1 9.75 18.55a4.1 4.1 0 0 1-5.8-5.8L5.4 11.3"></path>
+                        </svg>
+                      <% end %>
+                    </span>
+                    <span><%= link.label %></span>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          <div class="design-detail-preview-description-toggle"
+               data-controller="design-preview-description-toggle">
+            <input type="checkbox"
+                   id="design-detail-preview-description-toggle"
+                   class="design-detail-preview-description-checkbox"
+                   data-design-preview-description-toggle-target="checkbox"
+                   aria-label="Beschreibung vollständig anzeigen">
+            <div class="design-detail-preview-description-body"
+                 data-design-preview-description-toggle-target="body">
+              <div class="design-detail-preview-flow<%= " design-detail-preview-flow--long" if description_word_count > 110 %>">
+                <%= formatted_event_detail_copy(description, link_class: "design-detail-preview-inline-link") %>
+              </div>
+            </div>
+            <label for="design-detail-preview-description-toggle"
+                   class="design-detail-preview-more-button"
+                   data-design-preview-description-toggle-target="button"
+                   hidden>
+              <span class="design-detail-preview-more-open">Mehr anzeigen</span>
+              <span class="design-detail-preview-more-close">Weniger anzeigen</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </label>
+          </div>
+        </div>
+
+        <%= render "design_preview_detail_side",
+                   event: @event,
+                   venue_info: venue_info,
+                   organizer_notes: organizer_notes,
+                   vvs_ticket: presenter.venue_vvs_ticket?,
+                   wrapper_class: "design-detail-preview-side design-detail-preview-side--desktop-inline" %>
+
+        <% if related_events.any? %>
+          <%= render "design_preview_detail_related",
+                     related_preview_events: related_preview_events,
+                     browse_state: @browse_state,
+                     strict_proxy: strict_proxy,
+                     related_effective_series_ids: related_effective_series_ids,
+                     wrapper_class: "design-preview-section design-detail-preview-related design-detail-preview-related--mobile-inline",
+                     title_id: "design-detail-preview-related-title-mobile" %>
+        <% end %>
+      </section>
+    </div>
+
+    <%= render "design_preview_detail_side",
+               event: @event,
+               venue_info: venue_info,
+               organizer_notes: organizer_notes,
+               vvs_ticket: presenter.venue_vvs_ticket?,
+               wrapper_class: "design-detail-preview-side design-detail-preview-side--mobile-regular" %>
+
+    <% if related_events.any? %>
+      <%= render "design_preview_detail_related",
+                 related_preview_events: related_preview_events,
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy,
+                 related_effective_series_ids: related_effective_series_ids,
+                 wrapper_class: "design-preview-section design-detail-preview-related design-detail-preview-related--desktop-side",
+                 title_id: "design-detail-preview-related-title-desktop" %>
+    <% end %>
+  </section>
+
+  <% design_preview_fallback_video = "design_preview/david-garrett-highlight.mp4" %>
+  <% design_preview_fallback_video_poster = "design_preview/david-garrett-highlight-poster.jpg" %>
+  <% if presenter.has_media_block? || design_preview_fallback_video.present? %>
+    <section class="design-detail-preview-panel design-detail-preview-media">
+      <p class="design-detail-preview-panel-label">VIDEO</p>
+      <% if presenter.has_media_block? %>
+        <%= render "shared/consent_video_embed",
+                   title: "#{presenter.meta_title} auf YouTube",
+                   url: presenter.youtube_embed_url %>
+      <% else %>
+        <%= video_tag asset_path(design_preview_fallback_video),
+                      controls: true,
+                      preload: "metadata",
+                      playsinline: true,
+                      poster: asset_path(design_preview_fallback_video_poster),
+                      class: "design-detail-preview-local-video" %>
+      <% end %>
+    </section>
+  <% end %>
+  </article>
+
+  <%= render "design_preview_footer", menu_groups: design_preview_menu_groups %>
+</div>

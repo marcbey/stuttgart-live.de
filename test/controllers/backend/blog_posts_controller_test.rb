@@ -39,7 +39,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".blog-link[data-editor-inbox-selection-url*='editor_tab=news']", count: 0
     assert_select "section.blog-post-image-section", count: 1
     assert_select "[data-controller='event-image-crop-preview blog-post-image-preupload']", count: 1
-    assert_select "[data-controller='event-image-crop-preview promotion-banner-image-preupload']", count: 1
+    assert_select "[data-controller='event-image-crop-preview promotion-banner-image-preupload']", count: 2
   end
 
   test "index keeps requested tab in blog list selection links" do
@@ -373,6 +373,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_kicker_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_title]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
+    assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_slider_text_hidden]'][type='checkbox'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings label.form-label", text: "Button", count: 1
     assert_select "#blog-editor-panel-settings label.form-label", text: "CTA-Text", count: 0
@@ -412,6 +413,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         promotion_banner_kicker_text: "Empfehlung",
         promotion_banner_title: "Großer Banner-Titel",
         promotion_banner_text: "Kleiner Banner-Text",
+        promotion_banner_slider_text_hidden: "1",
         promotion_banner_cta_text: "Jetzt lesen",
         promotion_banner_background_color: "18333a",
         promotion_banner_cta_color: "f97316"
@@ -427,6 +429,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Empfehlung", blog_post.promotion_banner_kicker_text
     assert_equal "Großer Banner-Titel", blog_post.promotion_banner_title
     assert_equal "Kleiner Banner-Text", blog_post.promotion_banner_text
+    assert_predicate blog_post, :promotion_banner_slider_text_hidden?
     assert_equal "Jetzt lesen", blog_post.promotion_banner_cta_text
     assert_equal "#18333A", blog_post.promotion_banner_background_color
     assert_equal "#F97316", blog_post.promotion_banner_cta_color

@@ -25,6 +25,10 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     def blog_post_image_copyright(blog_post, slot)
       blog_post.public_send("#{slot}_copyright")
     end
+
+    def asset_path(logical_path)
+      "/assets/#{logical_path}"
+    end
   end
 
   test "exposes meta and hero data" do
@@ -52,7 +56,11 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "event-detail-header news-detail-header event-detail-header-with-image news-detail-header-with-image", presenter.header_classes
     assert_equal "Neue Headline", presenter.headline
     assert_equal "Kurzbeschreibung", presenter.teaser
-    assert_equal "17.03.2026 von Autor Eins", presenter.meta_line
+    assert_equal "17.03.2026", presenter.meta_line
+    assert_equal "Autor Eins", presenter.author_label
+    assert_equal "Redaktion", presenter.author_role
+    assert_nil presenter.author_image_source
+    assert_equal "AE", presenter.author_initials
     assert_equal "https://cdn.example.test/news-cover.webp", presenter.hero_image_source
     assert_equal "crop-style-1.6-margin-0.06", presenter.hero_image_style
     assert_equal "aspect-ratio: 16 / 10; height: auto; min-height: 0; background: transparent; box-shadow: none", presenter.hero_stage_style
@@ -81,6 +89,23 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "aspect-ratio: 16 / 10; height: auto; min-height: 0; background: transparent; box-shadow: none", presenter.hero_stage_style
     assert_equal "inset: 0;", presenter.hero_picture_style
     assert_nil presenter.hero_image_credit
+  end
+
+  test "uses newsletter team profile for matching author details" do
+    blog_post = build_post(
+      title: "Team News",
+      teaser: "Aus dem Team",
+      slug: "team-news",
+      published_at: Time.zone.local(2026, 3, 18, 12, 0),
+      cover_image_copyright: nil
+    )
+    blog_post.author_name = "Sarah Sandner"
+
+    presenter = build_presenter(blog_post)
+
+    assert_equal "Sarah Sandner", presenter.author_label
+    assert_equal "Marketing", presenter.author_role
+    assert_equal "/assets/newsletter/team/sarah.jpg", presenter.author_image_source
   end
 
   private

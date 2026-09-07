@@ -8,49 +8,69 @@
                 data: { turbo: false } %>
   <% end %>
 <% end %>
+<% content_for :page_newsletter do %><% end %>
+<% content_for :page_partner_strip do %><% end %>
+<% strict_proxy = homepage_media_strict_proxy? %>
+<% genre_lanes = public_design_navigation_lanes(Array(@news_preview_genre_lanes).first(5), highlight_events: @news_preview_highlight_events) %>
+<% design_chrome_saved_events = (Array(@news_preview_highlight_events) + genre_lanes.flat_map { |lane| Array(lane.events) }).compact.uniq(&:id) %>
 
-<article class="event-detail news-detail">
-  <div class="event-detail-topbar">
-    <p class="event-detail-back">
-      <%= link_to presenter.back_path,
-                  aria: { label: "Zurück" },
-                  data: { controller: "history-back-link", action: "click->history-back-link#navigate" } do %>
-        <%= render "public/events/back_link_icon" %>
-      <% end %>
-    </p>
-  </div>
+<div class="design-preview design-news-preview-shell"
+     data-controller="design-preview-menu design-preview-filterbar">
+  <%= render "public/events/design_preview_header",
+             browse_state: @browse_state,
+             genre_lanes: genre_lanes,
+             search_overlay: @design_preview_search_overlay,
+             menu_groups: public_design_menu_groups,
+             saved_events: design_chrome_saved_events,
+             strict_proxy: strict_proxy %>
 
-  <% if presenter.hero_image? %>
-    <section class="news-detail-primary">
-      <div class="news-detail-media-column">
-        <%= render "show_image", presenter: presenter %>
-      </div>
+  <article class="event-detail news-detail design-news-preview-detail">
+    <div class="event-detail-topbar">
+      <p class="event-detail-back">
+        <%= link_to presenter.back_path,
+                    class: "design-detail-preview-back",
+                    aria: { label: "Zurück" },
+                    data: { controller: "history-back-link", action: "click->history-back-link#navigate" } do %>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19 12H6"></path>
+            <path d="m11 6-6 6 6 6"></path>
+          </svg>
+          Zurück
+        <% end %>
+      </p>
+    </div>
 
-      <div class="news-detail-text-column">
+    <section class="design-service-preview-layout design-news-preview-layout design-news-preview-layout--article" aria-label="News Inhalt">
+      <div class="design-service-preview-content design-news-preview-article">
         <%= render "show_header_copy", presenter: presenter %>
 
         <section class="event-detail-panel event-detail-copy event-detail-copy-primary news-detail-copy news-detail-body-copy">
           <%= presenter.body %>
         </section>
-      </div>
-    </section>
-  <% else %>
-    <%= render "show_hero", presenter: presenter %>
 
-    <div class="event-detail-body">
-      <div class="event-detail-main">
-        <section class="event-detail-panel event-detail-copy event-detail-copy-primary news-detail-copy news-detail-body-copy">
-          <%= presenter.body %>
-        </section>
+        <% if presenter.has_video_block? %>
+          <div class="design-news-preview-media">
+            <%= render "show_media", presenter: presenter %>
+          </div>
+        <% elsif presenter.hero_image? %>
+          <div class="design-news-preview-media design-news-preview-media--image">
+            <%= render "show_image", presenter: presenter %>
+          </div>
+        <% end %>
       </div>
-    </div>
-  <% end %>
 
-  <div class="event-detail-body">
-    <div class="event-detail-main">
-      <% if presenter.has_video_block? %>
-        <%= render "show_media", presenter: presenter %>
+      <% if @news_preview_highlight_events.any? %>
+        <%= render "public/events/design_preview_detail_related",
+                   title: "Unsere Highlights",
+                   title_id: "design-news-preview-related-title",
+                   wrapper_class: "design-preview-section design-detail-preview-related design-news-preview-highlights",
+                   related_preview_events: @news_preview_highlight_events,
+                   related_effective_series_ids: @news_preview_effective_series_ids,
+                   browse_state: @browse_state,
+                   strict_proxy: strict_proxy %>
       <% end %>
-    </div>
-  </div>
-</article>
+    </section>
+  </article>
+
+  <%= render "public/events/design_preview_footer", menu_groups: public_design_menu_groups %>
+</div>

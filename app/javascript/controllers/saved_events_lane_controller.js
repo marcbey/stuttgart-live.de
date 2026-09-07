@@ -33,7 +33,7 @@ export default class extends Controller {
       return
     }
 
-    const slugs = savedEventSlugs()
+    const slugs = this.currentSlugs()
     if (slugs.length === 0) {
       this.renderEmpty()
       return
@@ -88,6 +88,19 @@ export default class extends Controller {
   handleStorage(event) {
     if (event.key && event.key !== STORAGE_KEY) return
     this.load()
+  }
+
+  currentSlugs() {
+    const urlSlugs = this.urlSlugs()
+    return urlSlugs.length > 0 ? urlSlugs : savedEventSlugs()
+  }
+
+  urlSlugs() {
+    const params = new URL(window.location.href).searchParams
+    const slugs = params.getAll("slugs[]").flatMap((value) => value.split(","))
+    const compactSlugs = slugs.map((slug) => slug.trim()).filter(Boolean)
+
+    return Array.from(new Set(compactSlugs))
   }
 
   clear() {

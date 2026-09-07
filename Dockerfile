@@ -16,7 +16,7 @@ WORKDIR /rails
 
 # Install base packages
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl fontconfig gettext-base libjemalloc2 libvips nginx postgresql-client && \
+    apt-get install --no-install-recommends -y curl ffmpeg fontconfig gettext-base libjemalloc2 libvips nginx postgresql-client && \
     ln -s /usr/lib/$(uname -m)-linux-gnu/libjemalloc.so.2 /usr/local/lib/libjemalloc.so && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
 
@@ -77,7 +77,7 @@ FROM base
 
 COPY vendor/fonts/runtime /usr/local/share/fonts/stuttgart-live
 RUN fc-cache -f && \
-    fc-match "Bebas Neue" && \
+    fc-match "Oswald" && \
     fc-match "Archivo Narrow"
 
 # Run and own only the runtime files as a non-root user for security

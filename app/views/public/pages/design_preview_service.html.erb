@@ -1,0 +1,90 @@
+<% strict_proxy = homepage_media_strict_proxy? %>
+<% genre_lanes = public_design_navigation_lanes(Array(@service_preview_genre_lanes).first(5), highlight_events: @service_preview_highlight_events) %>
+<% related_events = Array(@service_preview_highlight_events).first(7) %>
+<% design_preview_menu_groups = public_design_menu_groups %>
+<% design_preview_shell_saved_events = (
+  related_events +
+  genre_lanes.flat_map { |lane| Array(lane.events) }
+).compact.uniq(&:id) %>
+<% fallback_title = "Datenschutz" %>
+<% fallback_intro = "Stuttgart Live bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region." %>
+<% page_title = @page&.title.presence || fallback_title %>
+<% page_intro = @page&.intro.to_s.presence || fallback_intro %>
+<% hero_intro = "Stuttgart Live bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region." %>
+<% page_body_present = @page&.body&.to_plain_text.to_s.strip.present? %>
+<% design_service_preview_mode = action_name == "design_preview_service" %>
+<% design_service_back_path = design_service_preview_mode ? design_preview_path : root_path %>
+<% content_for :page_newsletter do %><% end %>
+<% content_for :page_partner_strip do %><% end %>
+<%= render_public_seo title: "#{page_title}#{' Preview' if design_service_preview_mode} - Stuttgart Live",
+                      description: @page.present? ? public_static_page_description(@page) : page_intro,
+                      canonical_url: (design_service_preview_mode || @page.blank? ? design_preview_service_url : static_page_url(@page.slug)) %>
+
+<div class="design-preview design-service-preview-shell"
+     data-controller="design-preview-menu design-preview-filterbar"
+     aria-labelledby="design-service-preview-title">
+  <%= render "public/events/design_preview_header",
+             browse_state: @browse_state,
+             genre_lanes: genre_lanes,
+             search_overlay: @design_preview_search_overlay,
+             menu_groups: design_preview_menu_groups,
+             saved_events: design_preview_shell_saved_events,
+             strict_proxy: strict_proxy %>
+
+  <main class="design-service-preview">
+    <%= link_to design_service_back_path, class: "design-detail-preview-back design-service-preview-back" do %>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19 12H6"></path>
+        <path d="m11 6-6 6 6 6"></path>
+      </svg>
+      Zurück
+    <% end %>
+
+    <header class="design-service-preview-hero">
+      <div>
+        <h1 id="design-service-preview-title"><%= page_title %></h1>
+      </div>
+      <div class="design-preview-hero-side design-service-preview-hero-side">
+        <p><%= hero_intro %></p>
+        <%= link_to events_path(anchor: "design-preview-news"), class: "design-preview-text-link" do %>
+          Nichts verpassen mit unserem Newsletter
+          <span aria-hidden="true">↓</span>
+        <% end %>
+      </div>
+    </header>
+
+    <section class="design-service-preview-layout" aria-label="Service Inhalt">
+      <article class="design-service-preview-content">
+        <div class="design-service-preview-rich-copy">
+          <% if @page&.slug == "kontakt" && !@page.body.body.to_html.include?("contact-mail-form") %>
+            <%= render "public/pages/contact_form" %>
+          <% end %>
+
+          <% if page_body_present %>
+            <%= @page.body %>
+          <% else %>
+            <h2>Events in deiner Stadt</h2>
+            <p>Stuttgart Live ist die Plattform für Veranstaltungen in Stuttgart und der Region. Hier findest du Konzerte, Festivals, Musicals, Comedy, Kultur und besondere Abende, die man nicht verpassen möchte.</p>
+            <p>Unser Ziel ist eine Seite, die schnell Orientierung gibt und trotzdem Lust macht, weiterzustöbern. Deshalb stehen die Events im Mittelpunkt: klare Informationen, starke Bilder und kurze Wege zu Tickets, Terminen und wichtigen Hinweisen.</p>
+            <h2>Was uns wichtig ist</h2>
+            <p>Wir kuratieren Veranstaltungen so, dass du nicht lange suchen musst. Aktuelle Highlights, kommende Termine und passende Empfehlungen helfen dabei, neue Lieblingsabende zu entdecken.</p>
+            <p>Für Veranstalter, Locations und Partner schaffen wir eine Bühne, die hochwertig wirkt, aber bewusst ruhig bleibt. Das Design soll die Inhalte tragen und nicht überdecken.</p>
+          <% end %>
+        </div>
+      </article>
+
+      <% if related_events.any? %>
+        <%= render "public/events/design_preview_detail_related",
+                   related_preview_events: related_events,
+                   browse_state: @browse_state,
+                   strict_proxy: strict_proxy,
+                   related_effective_series_ids: @service_preview_effective_series_ids,
+                   wrapper_class: "design-preview-section design-detail-preview-related design-service-preview-highlights",
+                   title_id: "design-service-preview-highlights-title",
+                   title: "Unsere Highlights" %>
+      <% end %>
+    </section>
+  </main>
+
+  <%= render "public/events/design_preview_footer", menu_groups: design_preview_menu_groups %>
+</div>

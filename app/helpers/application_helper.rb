@@ -9,12 +9,11 @@ module ApplicationHelper
       { family: "Archivo Narrow", weight: 400, logical_path: "archivo-narrow-400.woff2" },
       { family: "Archivo Narrow", weight: 700, logical_path: "archivo-narrow-700.woff2" },
       { family: "Oswald", weight: 300, logical_path: "oswald-300.ttf", format: "truetype" },
+      { family: "Oswald", weight: 400, logical_path: "oswald-400.ttf", format: "truetype" },
       { family: "Oswald", weight: 500, logical_path: "oswald-500.woff2" },
       { family: "Oswald", weight: 700, logical_path: "oswald-700.woff2" }
     ],
-    frontend: [
-      { family: "Bebas Neue", weight: 400, logical_path: "bebas-neue-400.woff2" }
-    ]
+    frontend: []
   }.freeze
   PUBLIC_IMAGE_SRCSET_WIDTHS = {
     card_mobile: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:card_mobile),
@@ -23,6 +22,60 @@ module ApplicationHelper
     banner_desktop: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:banner_desktop),
     thumbnail: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:thumbnail)
   }.freeze
+  ORGANIZER_NOTES_PREVIEW_HEADING_LABELS = {
+    "ERHÖHTE SICHERHEITSMASSNAHMEN" => "Erhöhte Sicherheitsmaßnahmen",
+    "DAS DÜRFT IHR MITBRINGEN" => "Das dürft ihr mitbringen",
+    "DAS DÜRFT IHR NICHT MITBRINGEN" => "Das dürft ihr nicht mitbringen",
+    "WAS DU MITBRINGEN DARFST" => "Was du mitbringen darfst",
+    "WAS DU NICHT MITBRINGEN DARFST" => "Was du nicht mitbringen darfst",
+    "KONTROLLEN BEIM EINLASS" => "Kontrollen beim Einlass",
+    "ALTERSFREIGABE" => "Altersfreigabe",
+    "TICKET-HOTLINE" => "Ticket-Hotline",
+    "TELEFONISCHER TICKETKAUF" => "Telefonischer Ticketkauf"
+  }.freeze
+
+  def public_design_menu_groups
+    [
+      [ "Entdecken", [
+        [ "Alle Events", all_stuttgart_lane_path ],
+        [ "Unsere Highlights", highlights_lane_path ],
+        [ "News", news_index_path ],
+        [ "Tickets", tickets_path ]
+      ] ],
+      [ "Service", [
+        [ "Über uns", about_path ],
+        [ "FAQ", faq_path ],
+        [ "Kontakt", contact_path ],
+        [ "Barrierefreiheit", barrierefreiheit_path ]
+      ] ],
+      [ "Rechtliches", [
+        [ "AGB", agb_path ],
+        [ "Datenschutz", datenschutz_path ],
+        [ "Impressum", imprint_path ]
+      ] ]
+    ]
+  end
+
+  def public_design_navigation_lanes(genre_lanes, highlight_events:)
+    lanes = Array(genre_lanes).compact
+    return lanes if lanes.any?
+
+    events = Array(highlight_events).compact
+    return [] if events.empty?
+
+    [
+      Public::Events::HomepageGenreLanesBuilder::Lane.new(
+        group: PublicDesignNavigationGroup.new(name: "Unsere Highlights", slug: "highlights"),
+        events: events,
+        effective_series_ids: [],
+        series_counts_by_id: {},
+        public_path: highlights_lane_path,
+        next_cursor: nil
+      )
+    ]
+  end
+
+  PublicDesignNavigationGroup = Data.define(:name, :slug)
 
   def app_nav_link_class(active: false, accent: false)
     classes = [ "app-nav-link" ]
@@ -252,6 +305,35 @@ module ApplicationHelper
     end
   end
 
+  def optimized_event_promotion_banner_landscape_image_representation(event, size: nil)
+    return unless event.promotion_banner_landscape_image.attached?
+
+    if size.present?
+      event.processed_optimized_public_promotion_banner_landscape_image_variant(size)
+    else
+      event.processed_optimized_promotion_banner_landscape_image_variant
+    end
+  rescue Event::ProcessingError, LoadError
+    event.promotion_banner_landscape_image
+  end
+
+  def optimized_event_promotion_banner_landscape_image_source(event, strict_proxy: false, size: nil)
+    representation = optimized_event_promotion_banner_landscape_image_representation(event, size:)
+    return if representation.blank?
+
+    return strict_public_media_path(representation, event.promotion_banner_landscape_image) if strict_proxy
+
+    public_media_path(representation)
+  end
+
+  def optimized_event_promotion_banner_landscape_image_srcset(event, strict_proxy: false)
+    return unless event.promotion_banner_landscape_image.attached?
+
+    public_image_srcset(%i[banner_mobile banner_desktop], strict_proxy:, fallback_record: event.promotion_banner_landscape_image) do |size|
+      optimized_event_promotion_banner_landscape_image_representation(event, size:)
+    end
+  end
+
   def event_promotion_banner_image_style(event, frame_ratio:)
     cropped_attachment_style(
       attachment: event.promotion_banner_image,
@@ -263,6 +345,21 @@ module ApplicationHelper
         focus_x: event.promotion_banner_image_focus_x_value,
         focus_y: event.promotion_banner_image_focus_y_value,
         zoom: event.promotion_banner_image_zoom_value
+      )
+    )
+  end
+
+  def event_promotion_banner_landscape_image_style(event, frame_ratio:)
+    cropped_attachment_style(
+      attachment: event.promotion_banner_landscape_image,
+      focus_x: event.promotion_banner_landscape_image_focus_x_value,
+      focus_y: event.promotion_banner_landscape_image_focus_y_value,
+      zoom: event.promotion_banner_landscape_image_zoom_value,
+      frame_ratio: frame_ratio,
+      fallback_style: focused_cropped_fallback_style(
+        focus_x: event.promotion_banner_landscape_image_focus_x_value,
+        focus_y: event.promotion_banner_landscape_image_focus_y_value,
+        zoom: event.promotion_banner_landscape_image_zoom_value
       )
     )
   end
@@ -362,6 +459,13 @@ module ApplicationHelper
         tag.span(formatted_line, class: "event-detail-venue-address-line")
       end
     )
+  end
+
+  def formatted_design_preview_venue_address(address, venue_name:)
+    lines = address.to_s.split(",").map(&:strip).reject(&:blank?)
+    lines.shift if venue_name.present? && lines.first.to_s.casecmp?(venue_name.to_s.strip)
+
+    formatted_venue_address(lines.join(", "))
   end
 
   def formatted_venue_description(description)
@@ -557,11 +661,12 @@ module ApplicationHelper
     crop_top <= edge_lock_margin.to_f
   end
 
-  def formatted_organizer_notes_with_link(notes, event: nil)
+  def formatted_organizer_notes_with_link(notes, event: nil, normalize_headings: false)
     lines = notes.to_s.lines.map(&:rstrip)
     blocks = []
     paragraph_lines = []
     current_list = nil
+    skip_preview_notes_section = false
 
     flush_paragraph = lambda do
       next if paragraph_lines.empty?
@@ -587,6 +692,16 @@ module ApplicationHelper
 
     lines.each_with_index do |raw_line, index|
       line = raw_line.strip
+
+      if skip_preview_notes_section
+        next if line.blank?
+
+        unless organizer_notes_heading?(line, lines[(index + 1)..]) || (normalize_headings && organizer_notes_preview_heading?(line))
+          next
+        end
+
+        skip_preview_notes_section = false
+      end
 
       if line.blank?
         flush_paragraph.call
@@ -614,9 +729,17 @@ module ApplicationHelper
 
       flush_list.call
 
-      if organizer_notes_heading?(line, lines[(index + 1)..])
+      if organizer_notes_heading?(line, lines[(index + 1)..]) || (normalize_headings && organizer_notes_preview_heading?(line))
         flush_paragraph.call
-        blocks << content_tag(:h3, line.delete_suffix(":"), class: "event-detail-notes-heading")
+        heading = line.delete_suffix(":")
+
+        if normalize_headings && organizer_notes_preview_heading_label(heading) == "Kontrollen beim Einlass"
+          skip_preview_notes_section = true
+          next
+        end
+
+        heading = organizer_notes_preview_heading_label(heading) if normalize_headings
+        blocks << content_tag(:h3, heading, class: "event-detail-notes-heading")
       else
         paragraph_lines << line
       end
@@ -752,6 +875,23 @@ module ApplicationHelper
 
   private
 
+  def organizer_notes_preview_heading?(heading)
+    key = heading.to_s.delete_suffix(":").squish.upcase.gsub("ẞ", "SS")
+
+    ORGANIZER_NOTES_PREVIEW_HEADING_LABELS.key?(key)
+  end
+
+  def organizer_notes_preview_heading_label(heading)
+    heading = heading.to_s.squish
+    key = heading.upcase.gsub("ẞ", "SS")
+
+    ORGANIZER_NOTES_PREVIEW_HEADING_LABELS.fetch(key) do
+      next heading unless heading == heading.upcase
+
+      heading.downcase.sub(/\A\p{L}/) { |character| character.upcase }
+    end
+  end
+
   def organizer_notes_inline_content(text, event:)
     escaped = ERB::Util.html_escape(text.to_s)
     escaped
@@ -762,13 +902,18 @@ module ApplicationHelper
   end
 
   def organizer_notes_begleitformular_link(event:)
-    link_to(
-      "<span class=\"inline-arrow\">→</span> Begleitformular <span class=\"inline-file-badge\">PDF</span>".html_safe,
-      begleitformular_path(
-        event: [ event&.artist_name, event&.title ].compact.join(" - ").presence,
-        venue: event&.venue,
-        date: event&.start_at&.to_date&.iso8601
-      )
+    safe_join(
+      [
+        tag.br,
+        link_to(
+          "<span class=\"inline-arrow\">→</span> Begleitformular <span class=\"inline-file-badge\">PDF</span>".html_safe,
+          begleitformular_path(
+            event: [ event&.artist_name, event&.title ].compact.join(" - ").presence,
+            venue: event&.venue,
+            date: event&.start_at&.to_date&.iso8601
+          )
+        )
+      ]
     )
   end
 

@@ -1,0 +1,16 @@
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
+<% variant = local_assigns.fetch(:variant, "compact") %>
+<% effective_series_ids = local_assigns[:effective_series_ids] || effective_public_event_series_ids(events) %>
+<% show_card_kicker = local_assigns.fetch(:show_card_kicker, true) %>
+<% show_admin_edit = local_assigns.fetch(:show_admin_edit, false) %>
+
+<% events.each do |event| %>
+  <%= render "design_preview_card",
+             event: event,
+             browse_state: browse_state,
+             strict_proxy: strict_proxy,
+             variant: variant,
+             effective_series_ids: effective_series_ids,
+             show_card_kicker: show_card_kicker,
+             show_admin_edit: show_admin_edit && event.sks_promoter? %>
+<% end %>

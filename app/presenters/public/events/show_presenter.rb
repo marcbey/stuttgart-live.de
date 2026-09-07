@@ -229,8 +229,12 @@ module Public
         !event.past? && event.public_canceled?
       end
 
+      def show_expired_note?
+        event.public_expired?
+      end
+
       def show_unavailable_note?
-        show_canceled_note? || show_sold_out_note?
+        show_canceled_note? || show_expired_note? || show_sold_out_note?
       end
 
       def ticket_badge_text

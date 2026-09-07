@@ -1,5 +1,5 @@
 <%= turbo_stream.append "news-index-grid" do %>
-  <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false %>
+  <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false, strict_proxy: homepage_media_strict_proxy? %>
 <% end %>
 
 <%= turbo_stream.replace "news-index-more" do %>

@@ -32,13 +32,15 @@
                        browse_state: browse_state,
                        strict_proxy: strict_proxy,
                        image_priority: image_priority,
-                       layout_variant: layout_variant %>
+                       layout_variant: layout_variant,
+                       slider: true %>
           <% else %>
             <%= render "promotion_banner",
                        blog_post: banner[:record],
                        strict_proxy: strict_proxy,
                        image_priority: image_priority,
-                       layout_variant: layout_variant %>
+                       layout_variant: layout_variant,
+                       slider: true %>
           <% end %>
         </div>
       <% end %>

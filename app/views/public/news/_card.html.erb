@@ -1,4 +1,9 @@
-<article class="news-card news-index-card">
+<% hide_media = local_assigns.fetch(:hide_media, false) %>
+<% has_cover_image = blog_post.cover_image.attached? && !hide_media %>
+<% strict_proxy = local_assigns.key?(:strict_proxy) ? local_assigns[:strict_proxy] : homepage_media_strict_proxy? %>
+<% show_admin_edit = local_assigns.fetch(:show_admin_edit, false) && authenticated? %>
+
+<article class="<%= class_names("news-card news-index-card", "news-index-card--with-image": has_cover_image, "news-index-card-no-image": !has_cover_image) %>">
   <%= link_to news_path(blog_post.slug), class: "news-index-card-link" do %>
     <div class="news-card-body news-index-card-body">
       <span class="news-index-accent" aria-hidden="true"></span>
@@ -8,5 +13,23 @@
       <h2><%= blog_post.title %></h2>
       <p class="news-index-card-teaser"><%= blog_post.teaser %></p>
     </div>
+
+    <% if has_cover_image %>
+      <span class="news-card-media news-index-card-media">
+        <%= image_tag optimized_blog_post_image_source(blog_post, :cover_image, strict_proxy:, size: :banner_mobile),
+                      alt: blog_post.title,
+                      loading: "lazy",
+                      srcset: optimized_blog_post_image_srcset(blog_post, :cover_image, strict_proxy:),
+                      sizes: "(max-width: 767px) calc(100vw - 2rem), 18rem",
+                      style: blog_post_image_style(blog_post, :cover_image) %>
+      </span>
+    <% end %>
+  <% end %>
+
+  <% if show_admin_edit %>
+    <%= link_to "Edit",
+                edit_backend_blog_post_path(blog_post),
+                class: "event-card-admin-link event-card-admin-link-attention news-index-card-admin-link",
+                data: { turbo: false } %>
   <% end %>
 </article>

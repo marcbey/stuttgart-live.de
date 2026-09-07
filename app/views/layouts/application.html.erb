@@ -32,8 +32,8 @@
 
     <%= yield :head %>
 
-    <link rel="icon" href="/icon.png" type="image/png">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <link rel="alternate icon" href="/icon.png" type="image/png">
     <link rel="apple-touch-icon" href="/icon.png">
 
     <% if asset_available?("archivo-narrow-400.woff2") %>
@@ -44,11 +44,6 @@
     <% end %>
     <% if asset_available?("oswald-300.ttf") %>
       <link rel="preload" href="<%= asset_path("oswald-300.ttf") %>" as="font" type="font/ttf" crossorigin>
-    <% end %>
-    <% if frontend_context %>
-      <% if asset_available?("bebas-neue-400.woff2") %>
-        <link rel="preload" href="<%= asset_path("bebas-neue-400.woff2") %>" as="font" type="font/woff2" crossorigin>
-      <% end %>
     <% end %>
     <% if frontend_context || backend_context || auth_chrome %>
       <style data-local-font-faces>
@@ -96,12 +91,19 @@
 
   <% public_frontend = controller_path.start_with?("public/") || controller_path == "errors" %>
   <% public_homepage_chrome = controller_path.start_with?("public/") || controller_path == "errors" %>
+  <% public_design_preview = (controller_path == "public/events" && action_name.in?(%w[design_preview design_preview_detail])) ||
+                             (controller_path == "public/pages" && action_name == "design_preview_service") %>
+  <% public_modern_design = public_design_preview ||
+                            (controller_path == "public/events" && action_name.in?(%w[index show search lane saved])) ||
+                            (controller_path == "public/news" && action_name.in?(%w[index show])) ||
+                            (controller_path == "public/pages" && action_name == "show") %>
   <% body_classes = [] %>
   <% body_classes << "page-auth-backoffice" if auth_chrome %>
   <% body_classes << "page-public" if public_frontend %>
   <% body_classes << "page-public-newsletter-poster" if public_frontend %>
   <% body_classes << "page-public-events-index" if public_homepage_chrome %>
   <% body_classes << "page-public-detail" if public_frontend && action_name == "show" %>
+  <% body_classes << "page-public-design-preview" if public_modern_design %>
   <% header_color_variants = [
        { key: "black", label: "1", name: "Dunkelgrau" },
        { key: "gray", label: "2", name: "Grau" },
@@ -116,7 +118,7 @@
   <body
     class="<%= body_classes.join(" ") %>"
     <% body_controllers = [] %>
-    <% unless controller_path.start_with?("backend/") %>
+    <% unless controller_path.start_with?("backend/") || public_design_preview %>
       <% body_controllers << "consent" %>
     <% end %>
     <% body_controllers << "scroll-top" %>
@@ -201,11 +203,11 @@
                         class: "app-nav-saved-events-link app-nav-saved-events-link-mobile",
                         title: "Deine Events",
                         aria: { label: "Deine Events", current: ("page" if controller_path == "public/events" && action_name == "saved") },
-                        data: { saved_events_nav_target: "link" },
-                        hidden: true do %>
+                        data: { saved_events_nav_target: "link" } do %>
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"></path>
               </svg>
+              <span class="app-nav-saved-events-count" data-saved-events-nav-target="count">0</span>
               <span class="sr-only">Deine Events</span>
             <% end %>
           </div>
@@ -275,11 +277,11 @@
                                   class: "app-nav-social-link app-nav-saved-events-link app-nav-saved-events-link-desktop",
                                   title: "Deine Events",
                                   aria: { label: "Deine Events", current: ("page" if controller_path == "public/events" && action_name == "saved") },
-                                  data: { saved_events_nav_target: "link" },
-                                  hidden: true do %>
+                                  data: { saved_events_nav_target: "link" } do %>
                         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                           <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"></path>
                         </svg>
+                        <span class="app-nav-saved-events-count" data-saved-events-nav-target="count">0</span>
                         <span class="sr-only">Deine Events</span>
                       <% end %>
                       <%= link_to "https://www.instagram.com/stuttgart.live.concert/",
@@ -317,7 +319,8 @@
                     </div>
                     <div class="app-nav-poster-links-stack">
                 <% end %>
-                <%= link_to "Events", root_path, class: app_nav_link_class(active: events_nav_active?), aria: { current: ("page" if events_nav_active?) } %>
+                <%= link_to "Alle Events", all_stuttgart_lane_path, class: app_nav_link_class(active: events_nav_active?), aria: { current: ("page" if events_nav_active?) } %>
+                <%= link_to "Unsere Highlights", highlights_lane_path, class: app_nav_link_class(active: current_page?(highlights_lane_path)), aria: { current: ("page" if current_page?(highlights_lane_path)) } %>
                 <%= link_to "News", news_index_path, class: app_nav_link_class(active: news_nav_active?), aria: { current: ("page" if news_nav_active?) } %>
                 <% if public_homepage_chrome %>
                   <%= link_to "Tickets",
@@ -425,9 +428,12 @@
       ↑
     </button>
 
-    <% unless controller_path.start_with?("backend/") %>
+    <% if !controller_path.start_with?("backend/") && !public_design_preview %>
       <%= render "layouts/consent_banner" %>
       <%= render "layouts/consent_dialog" %>
+    <% end %>
+
+    <% unless controller_path.start_with?("backend/") || public_modern_design || auth_chrome %>
       <% unless auth_chrome %>
         <%= yield :page_newsletter %>
         <% unless content_for?(:page_newsletter) %>
@@ -456,6 +462,10 @@
           </button>
           <div class="site-footer-shell">
             <nav class="site-footer-nav" aria-label="Footer">
+              <%= link_to "Alle Events", all_stuttgart_lane_path %>
+              <%= link_to "Unsere Highlights", highlights_lane_path %>
+              <%= link_to "News", news_index_path %>
+              <%= link_to "Tickets", tickets_path %>
               <%= link_to "Über uns", about_path %>
               <%= link_to "FAQ", faq_path %>
               <%= link_to "Kontakt", contact_path %>

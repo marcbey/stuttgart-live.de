@@ -6,7 +6,7 @@ module Meta
   class SocialCardRenderer
     RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :meta_line)
     TextLayer = Data.define(:image, :x, :y)
-    ARTIST_FONT_NAME = "Bebas Neue".freeze
+    ARTIST_FONT_NAME = "Oswald".freeze
     BODY_FONT_NAME = "Archivo Narrow".freeze
     Variant = Data.define(
       :key,

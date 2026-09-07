@@ -1,12 +1,13 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
+    allow_unauthenticated_access only: [ :index, :design_preview, :design_preview_detail, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
     HOME_LANE_LIMIT = Public::Events::HomepageLanePager::DEFAULT_PER_PAGE
     HOME_LANE_LIST_LIMIT = 12
     HOME_HIGHLIGHTS_LANE_LIMIT = HOME_LANE_LIMIT + 4
+    HOME_UNDER_30_PRICE_LIMIT = 30
     LANE_PAGE_LIMIT = Public::Events::HomepageLanePager::MAX_PER_PAGE
     HOME_CANDIDATE_LIMIT = 100
     SEARCH_OVERLAY_LIMIT = 6
@@ -16,9 +17,10 @@ module Public
     SAVED_LANE_SLUG_LIMIT = 200
     RUSS_LIVE_PROMOTER_ID = "382".freeze
     REQUEST_PROFILE_HEADER = "X-Stuttgart-Live-Profile".freeze
+    GERMAN_MONTH_NAMES = %w[Januar Februar März April Mai Juni Juli August September Oktober November Dezember].freeze
     HomepageLaneShell = Data.define(:events, :effective_series_ids, :series_counts_by_id, :next_cursor)
 
-    before_action :set_browse_state, only: [ :index, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
+    before_action :set_browse_state, only: [ :index, :design_preview, :design_preview_detail, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
     around_action :append_index_profile_headers, only: :index
 
     def index
@@ -27,15 +29,26 @@ module Public
         return
       end
 
-      if @browse_state.page == 1
-        assign_homepage_sections
-        assign_homepage_promotion_banners
-      end
-
       respond_to do |format|
-        format.html
+        format.html do
+          assign_design_homepage
+          render :design_preview
+        end
         format.turbo_stream
       end
+    end
+
+    def design_preview
+      if params[:q].present?
+        redirect_to(search_redirect_path, allow_other_host: false)
+        return
+      end
+
+      assign_design_homepage
+    end
+
+    def design_preview_detail
+      assign_design_detail_event(design_preview_detail_event)
     end
 
     def search
@@ -52,6 +65,7 @@ module Public
       end
 
       @events = relation.to_a
+      assign_design_chrome(saved_events: @events)
     end
 
     def lane
@@ -59,6 +73,7 @@ module Public
       raise ActiveRecord::RecordNotFound if @lane.blank?
 
       assign_lane_page(@lane)
+      assign_design_chrome(saved_events: @lane_events)
     end
 
     def homepage_lane
@@ -80,6 +95,7 @@ module Public
     end
 
     def saved
+      assign_design_chrome
     end
 
     def saved_lane
@@ -103,19 +119,11 @@ module Public
     end
 
     def show
-      @event = show_events_relation.find_by!(slug: params[:slug])
-      @primary_offer = @event.public_ticket_offer
-      @event_series_lane = Public::Events::EventSeriesLaneBuilder.new(
-        event: @event,
-        relation: show_event_series_lane_relation,
-        exclude_event: @event
-      ).call
-      @related_genre_lane = Public::Events::RelatedGenreLaneBuilder.new(
-        event: @event,
-        relation: show_related_genre_lane_events_relation,
-        limit: RELATED_EVENTS_PAGE_SIZE + 1
-      ).call
-      assign_related_events_page(offset: 0)
+      assign_design_detail_event(show_events_relation.find_by!(slug: params[:slug]))
+
+      respond_to do |format|
+        format.html { render :design_preview_detail }
+      end
     end
 
     def related
@@ -163,35 +171,13 @@ module Public
     end
 
     def search_overlay
-      @overlay = Public::Events::Search::OverlayBuilder.build(
-        query: @browse_state.query,
-        idle_loader: -> { initial_search_overlay_events },
-        event_loader: lambda {
-          visible_events_relation(
-            scope: searchable_index_events_relation,
-            filter: Public::Events::BrowseState::FILTER_ALL,
-            event_date: @browse_state.event_date,
-            query: @browse_state.query
-          ).limit(SEARCH_OVERLAY_LIMIT).to_a
-        },
-        standard_event_loader: lambda {
-          visible_events_relation(
-            scope: searchable_index_events_relation,
-            filter: Public::Events::BrowseState::FILTER_ALL,
-            event_date: @browse_state.event_date,
-            query: @browse_state.query,
-            structured: false
-          ).limit(SEARCH_OVERLAY_LIMIT).to_a
-        },
-        genre_loader: lambda {
-          Public::Events::Search::GenreSuggester.call(@browse_state.query)
-        }
-      )
+      @overlay = build_search_overlay
 
       render partial: "public/events/search_overlay",
              locals: {
                browse_state: @browse_state,
-               overlay: @overlay
+               overlay: @overlay,
+               preview_results_only: params[:preview_results_only] == "true"
              }
     end
 
@@ -241,6 +227,33 @@ module Public
     end
 
     private
+
+    def build_search_overlay
+      Public::Events::Search::OverlayBuilder.build(
+        query: @browse_state.query,
+        idle_loader: -> { initial_search_overlay_events },
+        event_loader: lambda {
+          visible_events_relation(
+            scope: searchable_index_events_relation,
+            filter: Public::Events::BrowseState::FILTER_ALL,
+            event_date: @browse_state.event_date,
+            query: @browse_state.query
+          ).limit(SEARCH_OVERLAY_LIMIT).to_a
+        },
+        standard_event_loader: lambda {
+          visible_events_relation(
+            scope: searchable_index_events_relation,
+            filter: Public::Events::BrowseState::FILTER_ALL,
+            event_date: @browse_state.event_date,
+            query: @browse_state.query,
+            structured: false
+          ).limit(SEARCH_OVERLAY_LIMIT).to_a
+        },
+        genre_loader: lambda {
+          Public::Events::Search::GenreSuggester.call(@browse_state.query)
+        }
+      )
+    end
 
     def set_browse_state
       @browse_state = Public::Events::BrowseState.new(params)
@@ -296,6 +309,7 @@ module Public
       @home_featured_lane = Public::Events::LaneDirectory.highlights
       @home_all_stuttgart_lane = Public::Events::LaneDirectory.all_stuttgart
       @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
+      @home_under_30_lane = Public::Events::LaneDirectory.under_30
 
       empty_lane = empty_homepage_lane_shell
       @home_featured_available = homepage_highlights_available?
@@ -319,7 +333,53 @@ module Public
       @home_tagestipp_effective_series_ids = home_tagestipp_page.effective_series_ids
       @home_tagestipp_series_counts_by_id = home_tagestipp_page.series_counts_by_id
       @home_tagestipp_next_cursor = home_tagestipp_page.next_cursor
+      @home_under_30_available = under_30_available?
+      home_under_30_page = @home_under_30_available ? homepage_lane_page_or_empty("under_30", per_page: HOME_LANE_LIMIT) : empty_lane
+      @home_under_30_events = home_under_30_page.events
+      @home_under_30_effective_series_ids = home_under_30_page.effective_series_ids
+      @home_under_30_series_counts_by_id = home_under_30_page.series_counts_by_id
+      @home_under_30_next_cursor = home_under_30_page.next_cursor
       @home_seo_events = homepage_seo_events
+    end
+
+    def assign_design_homepage
+      assign_homepage_sections
+      assign_homepage_promotion_banners
+      @design_preview_news_posts = BlogPost.published_live.with_attached_cover_image.limit(6).to_a
+      @design_preview_mix_events = design_preview_mix_events
+      @design_preview_search_overlay = build_search_overlay
+    end
+
+    def assign_design_detail_event(event)
+      assign_homepage_sections
+      @design_preview_search_overlay = build_search_overlay
+      @event = event
+      @design_preview_detail_format_images = design_preview_detail_format_images(@event)
+      @primary_offer = @event.public_ticket_offer
+      @event_series_lane = Public::Events::EventSeriesLaneBuilder.new(
+        event: @event,
+        relation: show_event_series_lane_relation,
+        exclude_event: @event
+      ).call
+      @related_genre_lane = Public::Events::RelatedGenreLaneBuilder.new(
+        event: @event,
+        relation: show_related_genre_lane_events_relation,
+        limit: RELATED_EVENTS_PAGE_SIZE + 1
+      ).call
+      assign_related_events_page(offset: 0)
+    end
+
+    def assign_design_chrome(saved_events: [])
+      assign_homepage_sections
+      @design_preview_search_overlay = build_search_overlay
+      @design_chrome_genre_lanes = @home_genre_lanes
+      @design_chrome_saved_events = (
+        Array(saved_events) +
+        Array(@home_featured_events) +
+        Array(@home_tagestipp_events) +
+        Array(@home_under_30_events) +
+        Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) }
+      ).compact.uniq(&:id)
     end
 
     def should_redirect_search_result?(relation)
@@ -353,6 +413,98 @@ module Public
       list_events_relation
         .published_live
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
+    end
+
+    def design_preview_mix_events
+      lanes = Public::Events::HomepageGenreLanesBuilder.new(
+        relation: homepage_events_relation,
+        limit: HOME_LANE_LIMIT
+      ).call
+
+      interleave_design_preview_mix_lanes(lanes)
+    end
+
+    def interleave_design_preview_mix_lanes(lanes)
+      event_groups = lanes.map { |lane| shuffled_design_preview_mix_events(lane) }.reject(&:empty?)
+      mixed_events = []
+
+      event_groups.cycle do |events|
+        break if event_groups.all?(&:empty?) || mixed_events.size >= HOME_LANE_LIMIT * 2
+
+        event = events.shift
+        mixed_events << event if event.present? && mixed_events.none? { |mixed_event| mixed_event.id == event.id }
+      end
+
+      mixed_events
+    end
+
+    def shuffled_design_preview_mix_events(lane)
+      seed = "#{Time.zone.today.iso8601}:#{lane.group.slug}"
+      lane.events.shuffle(random: Random.new(seed.bytes.sum))
+    end
+
+    def design_preview_detail_event
+      return show_events_relation.find_by!(slug: params[:slug]) if params[:slug].present?
+
+      preferred_event = design_preview_detail_preferred_event
+      return preferred_event if preferred_event.present?
+
+      upcoming_events = show_events_relation
+        .published_live
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+        .reorder(:start_at, :id)
+        .limit(80)
+        .to_a
+
+      upcoming_events.find { |event| event.image_for(slot: :detail_hero, breakpoint: :desktop).present? } ||
+        upcoming_events.first ||
+        show_events_relation.published_live.reorder(start_at: :desc, id: :desc).first!
+    end
+
+    def design_preview_detail_preferred_event
+      preferred_slugs = %w[
+        mamma-mia-das-musical-2027-05-05
+        jolle-2026-09-16
+        twin-noir-2026-10-02
+        levka-2027-03-04
+      ]
+      scope = show_events_relation
+        .published_live
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
+
+      preferred_slugs.filter_map { |slug| scope.find_by(slug:) }.first
+    end
+
+    def design_preview_detail_format_images(event)
+      current_image = event.image_for(slot: :detail_hero, breakpoint: :desktop) ||
+        event.image_for(slot: :grid_default, breakpoint: :desktop)
+      return [] if current_image.blank?
+
+      [
+        {
+          kind: design_preview_detail_image_bucket(current_image) || :image,
+          image: current_image
+        }
+      ]
+    end
+
+    def design_preview_detail_image_bucket(image)
+      return image.aspect_hint.to_sym if image.respond_to?(:aspect_hint) && buckets_aspect_hint?(image.aspect_hint)
+      return unless image.respond_to?(:file) && image.file.attached?
+
+      width = image.file.blob.metadata["width"].to_f
+      height = image.file.blob.metadata["height"].to_f
+      return if width <= 0 || height <= 0
+
+      ratio = width / height
+      return :portrait if ratio < 0.9
+      return :landscape if ratio > 1.12
+
+      :square
+    end
+
+    def buckets_aspect_hint?(aspect_hint)
+      %w[portrait square landscape].include?(aspect_hint.to_s)
     end
 
     def search_events_relation
@@ -407,6 +559,10 @@ module Public
       lean_tagestipp_relation.exists?
     end
 
+    def under_30_available?
+      lean_under_30_relation.exists?
+    end
+
     def homepage_genre_lane_available?(group)
       lean_homepage_events_relation
         .joins(:genres)
@@ -450,13 +606,18 @@ module Public
         homepage_highlights_relation_and_context(cursor_payload:)
       when "all_stuttgart"
         [
-          scoped_homepage_all_relation.where(primary_source: "reservix").reorder(:start_at, :id),
+          scoped_homepage_all_relation.reorder(:start_at, :id),
           homepage_lane_context(lane: "all_stuttgart")
         ]
       when "tagestipp"
         [
           tagestipp_relation,
           homepage_lane_context(lane: "tagestipp")
+        ]
+      when "under_30"
+        [
+          under_30_relation,
+          homepage_lane_context(lane: "under_30")
         ]
       when "genre"
         group = Genre.find_by(slug: lane_slug)
@@ -499,6 +660,17 @@ module Public
       ).reorder(:start_at, :id)
     end
 
+    def under_30_relation
+      scoped_homepage_all_relation
+        .joins(:event_offers)
+        .merge(EventOffer.active_ticket)
+        .where.not(min_price: nil)
+        .where("events.min_price > 0")
+        .where("events.min_price <= ?", HOME_UNDER_30_PRICE_LIMIT)
+        .distinct
+        .reorder(:start_at, :id)
+    end
+
     def lean_homepage_events_relation
       Event.published_live
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
@@ -532,6 +704,16 @@ module Public
         .reorder(Arel.sql(Event.search_priority_order_sql), :start_at, :id)
     end
 
+    def lean_under_30_relation
+      lean_homepage_all_relation
+        .joins(:event_offers)
+        .merge(EventOffer.active_ticket)
+        .where.not(min_price: nil)
+        .where("events.min_price > 0")
+        .where("events.min_price <= ?", HOME_UNDER_30_PRICE_LIMIT)
+        .distinct
+    end
+
     def normalized_homepage_lane_identifier(identifier)
       value = identifier.to_s
       return [ "genre", value.delete_prefix("genre:").parameterize ] if value.start_with?("genre:")
@@ -555,11 +737,18 @@ module Public
       {
         lane_key: lane_key,
         lane_slug: lane_slug,
-        mode: mode.to_s == "rows" ? "rows" : "cards",
+        mode: normalized_homepage_lane_render_mode(mode),
         page: lane_page,
         browse_state: @browse_state,
         strict_proxy: helpers.homepage_media_strict_proxy?
       }.merge(homepage_lane_card_options(lane_key))
+    end
+
+    def normalized_homepage_lane_render_mode(mode)
+      return "rows" if mode.to_s == "rows"
+      return "design_cards" if mode.to_s == "design_cards"
+
+      "cards"
     end
 
     def homepage_lane_card_options(lane_key)
@@ -568,6 +757,8 @@ module Public
         { card_variant: "editorial", header_variant: :editorial }
       when "tagestipp"
         { card_variant: "spotlight", header_variant: :tagestipp }
+      when "under_30"
+        { card_variant: "compact", header_variant: :editorial }
       else
         {}
       end
@@ -577,13 +768,28 @@ module Public
       event_banners = Event.promotion_banner_live
         .select(&:promotion_banner_display_image_present?)
         .map { |event| { type: :event, record: event } }
+      highlight_slider_event_banners = Event.published_live
+        .where(highlighted: true)
+        .includes(
+          :venue_record,
+          promotion_banner_image_attachment: :blob,
+          promotion_banner_landscape_image_attachment: :blob,
+          highlight_video_file_attachment: :blob,
+          highlight_landscape_video_file_attachment: :blob,
+          event_images: [ file_attachment: :blob ]
+        )
+        .select(&:promotion_banner_display_image_present?)
+        .map { |event| { type: :event, record: event } }
       news_banners = BlogPost.promotion_banner_live
-        .select { |blog_post| blog_post.promotion_banner_image.attached? }
+        .select { |blog_post| blog_post.promotion_banner_image.attached? || blog_post.promotion_banner_landscape_image.attached? }
         .map { |blog_post| { type: :news, record: blog_post } }
 
       sorted_banners = (event_banners + news_banners).sort_by { |banner| promotion_banner_sort_key(banner) }
+      slider_banners = (event_banners + highlight_slider_event_banners + news_banners)
+        .uniq { |banner| [ banner[:type], banner[:record].id ] }
+        .sort_by { |banner| promotion_banner_sort_key(banner) }
 
-      @all_promotion_banners = homepage_promotion_slider_banners(sorted_banners)
+      @all_promotion_banners = homepage_promotion_slider_banners(slider_banners)
       @priority_promotion_banner = @all_promotion_banners.first
       @promotion_banners_by_lane_position = sorted_banners
         .select { |banner| banner[:record].promotion_banner_lane_position.present? }
@@ -712,6 +918,8 @@ module Public
         :sub_genres,
         :event_offers,
         :import_event_images,
+        highlight_video_file_attachment: :blob,
+        highlight_landscape_video_file_attachment: :blob,
         event_images: [ file_attachment: :blob ],
         venue_record: [ logo_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
@@ -723,6 +931,8 @@ module Public
         :venue_record,
         :event_offers,
         :import_event_images,
+        highlight_video_file_attachment: :blob,
+        highlight_landscape_video_file_attachment: :blob,
         event_images: [ file_attachment: :blob ]
       )
     end
@@ -774,17 +984,17 @@ module Public
         @lane_effective_series_ids = effective_public_series_ids_for_relation(fallback_relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.to_a)
       when "all_stuttgart"
-        relation = published_visible_events_relation(
-          scope: homepage_events_relation,
-          filter: Public::Events::BrowseState::FILTER_ALL,
-          event_date: @browse_state.event_date,
-          query: nil
-        ).where(primary_source: "reservix")
+        relation = all_stuttgart_month_relation
         @lane_series_counts_by_id = public_series_counts_for_relation(relation)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
       when "tagestipp"
         relation = tagestipp_relation
+        @lane_series_counts_by_id = public_series_counts_for_relation(relation)
+        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
+        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
+      when "under_30"
+        relation = under_30_relation
         @lane_series_counts_by_id = public_series_counts_for_relation(relation)
         @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
@@ -821,6 +1031,93 @@ module Public
       return Public::Events::LaneDirectory.resolve(params[:lane]) if params[:lane].present?
 
       Public::Events::LaneDirectory.resolve(params[:lane_slug])
+    end
+
+    def all_stuttgart_relation
+      published_visible_events_relation(
+        scope: homepage_events_relation,
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: nil,
+        query: nil
+      ).reorder(:start_at, :id)
+    end
+
+    def all_stuttgart_month_relation
+      relation = all_stuttgart_relation
+      @lane_months = all_stuttgart_months_for(relation)
+      @lane_month_labels_by_value = all_stuttgart_month_labels_by_value(@lane_months)
+      @lane_selected_month = selected_all_stuttgart_month(@lane_months)
+      @lane_title = all_stuttgart_month_title(@lane_selected_month)
+
+      month_relation = if @lane_selected_month.blank?
+        relation
+      else
+        relation.where(
+          start_at: @lane_selected_month.beginning_of_month.beginning_of_day..@lane_selected_month.end_of_month.end_of_day
+        )
+      end
+
+      @all_stuttgart_selected_genre = selected_all_stuttgart_genre
+      @all_stuttgart_genres = all_stuttgart_genres_for(month_relation)
+      @all_stuttgart_genres |= [ @all_stuttgart_selected_genre ] if @all_stuttgart_selected_genre.present?
+
+      return month_relation if @all_stuttgart_selected_genre.blank?
+
+      month_relation.joins(:genres).where(genres: { id: @all_stuttgart_selected_genre.id }).distinct
+    end
+
+    def all_stuttgart_genres_for(relation)
+      genre_ids = relation.except(:order).joins(:genres).distinct.pluck("genres.id")
+
+      Genre.where(id: genre_ids).order(:name).to_a
+    end
+
+    def selected_all_stuttgart_genre
+      requested_genre = params[:event_genre].to_s.strip.parameterize
+      return if requested_genre.blank?
+
+      Genre.find_by(slug: requested_genre)
+    end
+
+    def all_stuttgart_months_for(relation)
+      relation.pluck(:start_at).filter_map do |start_at|
+        start_at&.to_date&.beginning_of_month
+      end.uniq
+    end
+
+    def selected_all_stuttgart_month(months)
+      requested_month = parsed_all_stuttgart_month(params[:event_month])
+      return requested_month if requested_month.present?
+
+      next_month = Time.zone.today.next_month.beginning_of_month
+      return next_month if months.include?(next_month)
+
+      current_month = Time.zone.today.beginning_of_month
+      return current_month if months.include?(current_month)
+
+      months.first || current_month
+    end
+
+    def parsed_all_stuttgart_month(value)
+      return if value.blank?
+
+      Date.strptime(value.to_s, "%Y-%m").beginning_of_month
+    rescue ArgumentError
+      nil
+    end
+
+    def all_stuttgart_month_title(month)
+      return Public::Events::LaneDirectory.all_stuttgart.title if month.blank?
+
+      "#{all_stuttgart_month_label(month)} #{month.year}"
+    end
+
+    def all_stuttgart_month_labels_by_value(months)
+      months.index_with { |month| all_stuttgart_month_label(month) }
+    end
+
+    def all_stuttgart_month_label(month)
+      GERMAN_MONTH_NAMES.fetch(month.month - 1)
     end
 
     def apply_status!(event, status)

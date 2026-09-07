@@ -1,0 +1,95 @@
+<% browse_state = local_assigns.fetch(:browse_state) %>
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
+<% variant = local_assigns.fetch(:variant, "standard") %>
+<% category = event.primary_genre&.name.presence || event.badge_text.presence || "Event" %>
+<% tile_variant = local_assigns[:tile_variant].presence || (variant == "wide" ? EventImage::GRID_VARIANT_2X1 : EventImage::GRID_VARIANT_1X1) %>
+<% image_slot = (local_assigns[:card_slot].presence || card_slot_for_grid_variant(tile_variant)).to_sym %>
+<% event_image = event.image_for(slot: image_slot, breakpoint: :desktop) || event.image_for(slot: :grid_default, breakpoint: :desktop) %>
+<% image_source = event_image_source(event_image, strict_proxy: strict_proxy, size: (variant == "feature" ? :card_desktop : :card_mobile)) %>
+<% image_srcset = event_image_srcset(event_image, variant_sizes: %i[card_mobile card_desktop], strict_proxy: strict_proxy) %>
+<% image_style = event_card_image_style(event_image) %>
+<% image_dimensions = public_event_card_image_dimensions(tile_variant) %>
+<% card_classes = [ "design-preview-card", "design-preview-card--#{variant}", "design-preview-card--grid-#{tile_variant.tr("x", "-")}" ].join(" ") %>
+<% effective_series_ids = local_assigns[:effective_series_ids] || [] %>
+<% show_series_pill = public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
+<% series_count_label = public_event_series_additional_terms_label(event) %>
+<% primary_offer = event.public_ticket_offer %>
+<% display_price = public_event_ticket_price(event, primary_offer) %>
+<% show_card_actions = variant != "feature" %>
+<% show_card_kicker = local_assigns.fetch(:show_card_kicker, true) %>
+<% show_body_price = show_card_actions && display_price.present? && !%w[poster format].include?(variant) %>
+<% status_pill_label = local_assigns[:status_label].presence || event.public_ticket_status_label.presence || event.badge_text.presence %>
+<% local_unavailable_status_label = status_pill_label if %w[Ausverkauft Abgelaufen].any? { |label| status_pill_label.to_s.casecmp(label).zero? } %>
+<% ticket_status_label = event.public_ticket_status_label.presence || local_unavailable_status_label %>
+<% unavailable_preview = ticket_status_label.present? || status_pill_label.to_s.casecmp("Ausverkauft").zero? || status_pill_label.to_s.casecmp("Abgelaufen").zero? %>
+<% show_admin_edit = local_assigns.fetch(:show_admin_edit, false) && authenticated? %>
+<% card_classes = [ card_classes, ("design-preview-card--has-actions" if show_card_actions), ("design-preview-card--sold-out" if unavailable_preview), ("design-preview-card--unavailable" if ticket_status_label.present?) ].compact.join(" ") %>
+
+<article class="<%= card_classes %>">
+  <%= link_to public_event_detail_path(event, browse_state), class: "design-preview-card-link" do %>
+    <span class="design-preview-card-media">
+      <% if image_source.present? %>
+        <%= image_tag image_source,
+                      alt: event_image_alt(event_image, event),
+                      loading: "lazy",
+                      decoding: "async",
+                      class: "design-preview-card-image",
+                      style: image_style,
+                      width: image_dimensions.fetch(:width),
+                      height: image_dimensions.fetch(:height),
+                      srcset: image_srcset,
+                      sizes: variant == "feature" ? "(max-width: 767px) 92vw, 42vw" : "(max-width: 767px) 46vw, 18vw" %>
+      <% else %>
+        <span class="design-preview-card-image design-preview-card-image--placeholder"></span>
+      <% end %>
+    </span>
+
+    <% if status_pill_label.present? && %w[feature poster format].include?(variant) %>
+      <span class="design-preview-card-status-pill"><%= status_pill_label %></span>
+    <% end %>
+
+    <span class="design-preview-card-copy">
+      <% if show_card_kicker %>
+        <span class="design-preview-card-kicker"><%= category %></span>
+      <% end %>
+      <strong class="design-preview-card-title"><%= event.artist_name %></strong>
+      <% if event.title.present? %>
+        <span class="design-preview-card-subtitle"><%= event.title %></span>
+      <% end %>
+      <span class="design-preview-card-meta">
+        <span class="design-preview-card-date-location-row">
+          <span class="design-preview-card-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+          <% if event.venue.present? %>
+            <span class="design-preview-card-location"><%= event.venue %></span>
+          <% end %>
+        </span>
+      </span>
+      <% if show_body_price %>
+        <span class="design-preview-card-price design-preview-card-price--body"><%= display_price %></span>
+      <% end %>
+      <% if variant == "feature" %>
+        <span class="<%= [ "design-preview-card-cta", ("design-preview-card-cta--status" if ticket_status_label.present?) ].compact.join(" ") %>"><%= ticket_status_label.presence&.upcase || "Tickets sichern" %></span>
+      <% end %>
+    </span>
+  <% end %>
+  <% if show_card_actions %>
+    <span class="design-preview-card-actions">
+      <span class="design-preview-card-actions-left">
+        <%= render "public/events/saved_event_button",
+                   event: event,
+                   button_class: "design-preview-card-save" %>
+        <% if show_series_pill %>
+          <span class="design-preview-card-series-pill" aria-label="Event-Reihe mit <%= series_count_label %>">
+            <%= series_count_label %>
+          </span>
+        <% end %>
+      </span>
+    </span>
+  <% end %>
+  <% if show_admin_edit %>
+    <%= link_to "Edit",
+                backend_events_path(status: event.status, event_id: event.id),
+                class: "design-preview-card-admin-link",
+                data: { turbo: false } %>
+  <% end %>
+</article>

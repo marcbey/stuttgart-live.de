@@ -4,7 +4,7 @@
 <%= content_tag :article, **article_options do %>
   <% image_options = {
     alt: image_alt,
-    class: "promotion-banner-image",
+    class: [ "promotion-banner-image", local_assigns[:image_classes] ].compact.join(" "),
     style: image_style
   } %>
   <% image_options[:loading] = local_assigns[:image_loading] if local_assigns[:image_loading].present? %>
@@ -14,6 +14,8 @@
   <% image_options[:sizes] = local_assigns[:image_sizes] if local_assigns[:image_sizes].present? %>
   <% image_options[:width] = local_assigns[:image_width] if local_assigns[:image_width].present? %>
   <% image_options[:height] = local_assigns[:image_height] if local_assigns[:image_height].present? %>
+  <% show_meta = local_assigns[:kicker_date].present? || local_assigns[:kicker_location].present? %>
+  <% meta_after_subheading = local_assigns.fetch(:meta_after_subheading, false) %>
 
   <% if admin_link_path.present? %>
     <div class="promotion-banner-admin-controls">
@@ -39,14 +41,37 @@
     </div>
 
     <div class="promotion-banner-copy">
-      <p class="promotion-banner-kicker"><%= kicker_text %></p>
+      <% if show_meta && !meta_after_subheading %>
+        <p class="promotion-banner-kicker promotion-banner-kicker-meta">
+          <% if local_assigns[:kicker_date].present? %>
+            <strong><%= local_assigns[:kicker_date] %></strong>
+          <% end %>
+          <% if local_assigns[:kicker_location].present? %>
+            <span><%= local_assigns[:kicker_location] %></span>
+          <% end %>
+        </p>
+      <% elsif kicker_text.present? %>
+        <p class="promotion-banner-kicker"><%= kicker_text %></p>
+      <% end %>
       <h2><%= heading %></h2>
       <% if subheading.present? %>
         <p class="promotion-banner-event-title"><%= subheading %></p>
       <% end %>
-      <% cta_options = { class: "promotion-banner-cta" } %>
-      <% cta_options[:style] = local_assigns[:cta_style] if local_assigns[:cta_style].present? %>
-      <%= content_tag :span, cta_text, **cta_options %>
+      <% if show_meta && meta_after_subheading %>
+        <p class="promotion-banner-kicker promotion-banner-kicker-meta">
+          <% if local_assigns[:kicker_date].present? %>
+            <strong><%= local_assigns[:kicker_date] %></strong>
+          <% end %>
+          <% if local_assigns[:kicker_location].present? %>
+            <span><%= local_assigns[:kicker_location] %></span>
+          <% end %>
+        </p>
+      <% end %>
+      <% if cta_text.present? %>
+        <% cta_options = { class: "promotion-banner-cta" } %>
+        <% cta_options[:style] = local_assigns[:cta_style] if local_assigns[:cta_style].present? %>
+        <%= content_tag :span, cta_text, **cta_options %>
+      <% end %>
     </div>
   <% end %>
 <% end %>

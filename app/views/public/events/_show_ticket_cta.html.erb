@@ -15,7 +15,7 @@
               <%= render "public/events/share_event_button", presenter: presenter, class: "event-share-cta" %>
             </div>
           <% elsif presenter.show_unavailable_note? %>
-            <p class="event-detail-meta-strong event-detail-sold-out-note"><%= presenter.sold_out_note_text %></p>
+            <p class="event-detail-meta-strong event-detail-sold-out-note"><%= presenter.sold_out_note_text.to_s.upcase %></p>
           <% end %>
           <% if presenter.show_ticket_special_note? %>
             <p class="event-detail-sold-out-hint"><%= presenter.ticket_special_note_text %></p>

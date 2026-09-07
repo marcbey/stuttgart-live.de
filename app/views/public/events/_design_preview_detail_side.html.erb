@@ -1,0 +1,98 @@
+<% wrapper_class = local_assigns.fetch(:wrapper_class, "design-detail-preview-side") %>
+<% highlight_event = event.respond_to?(:homepage_highlight?) && event.homepage_highlight? %>
+<% vvs_ticket = local_assigns.fetch(:vvs_ticket, false) %>
+
+<aside class="<%= wrapper_class %>" aria-label="Eventinformationen">
+  <% if venue_info.present? || event.venue.present? || event.city.present? %>
+    <section class="design-detail-preview-panel design-detail-preview-location">
+      <p class="design-detail-preview-panel-label">LOCATION</p>
+      <% if authenticated? && current_user.backend_access? && event.venue_record.present? %>
+        <%= link_to "Edit",
+                    backend_venues_path(venue_id: event.venue_record.id),
+                    class: "button button-secondary button-compact event-detail-edit-link public-edit-link design-detail-preview-location-edit",
+                    data: { turbo: false } %>
+      <% end %>
+      <% if vvs_ticket %>
+        <div class="design-detail-preview-vvs">
+          <button type="button"
+                  class="design-detail-preview-vvs-button"
+                  aria-label="VVS Kombiticket Informationen anzeigen">
+            <%= image_tag "vvs.png", alt: "VVS", class: "design-detail-preview-vvs-logo" %>
+          </button>
+          <div class="design-detail-preview-vvs-popover" role="tooltip">
+            <h3>VVS Kombiticket</h3>
+            <p>Gilt für die An- und Abreise zur Veranstaltung im gesamten VVS-Gebiet.</p>
+            <p>Ob dein Ticket als VVS-Ticket gültig ist, erkennst du am entsprechenden Hinweis auf dem Ticket oder in den Veranstaltungsinformationen.</p>
+          </div>
+        </div>
+      <% end %>
+      <div class="design-detail-preview-location-address">
+        <p class="design-detail-preview-location-name"><%= venue_info&.name.presence || event.venue %></p>
+        <% if venue_info&.address.present? %>
+          <p><%= formatted_design_preview_venue_address(venue_info.address, venue_name: venue_info.name) %></p>
+        <% elsif event.city.present? %>
+          <p><%= event.city %></p>
+        <% end %>
+      </div>
+      <% if venue_info&.logo_source.present? %>
+        <div class="design-detail-preview-location-brand">
+          <%= image_tag venue_info.logo_source,
+                        alt: venue_info.name.presence || event.venue,
+                        class: "design-detail-preview-location-logo" %>
+        </div>
+      <% end %>
+      <% if venue_info&.map_url.present? %>
+        <%= link_to venue_info.map_url, target: "_blank", rel: "noopener", class: "design-detail-preview-side-link" do %>
+          Route anzeigen
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M7 17 17 7"></path>
+            <path d="M9 7h8v8"></path>
+          </svg>
+        <% end %>
+      <% end %>
+    </section>
+  <% end %>
+
+  <section class="design-detail-preview-panel design-detail-preview-notes">
+    <% organizer_logo = event_detail_organizer_logo(event) %>
+    <p class="design-detail-preview-panel-label"><%= highlight_event ? "VERANSTALTERHINWEISE" : "ALLGEMEINE HINWEISE" %></p>
+    <% if highlight_event && organizer_notes.present? %>
+      <div class="design-detail-preview-flow">
+        <%= formatted_organizer_notes_with_link(organizer_notes, event: event, normalize_headings: true) %>
+      </div>
+    <% elsif highlight_event %>
+      <ul>
+        <li>Bitte beachte die Hinweise des Veranstalters.</li>
+        <li>Einlass- und Sicherheitsregeln können je nach Veranstaltung abweichen.</li>
+        <li>Bei Fragen hilft dir unsere Ticket-Hotline weiter.</li>
+      </ul>
+    <% else %>
+      <div class="design-detail-preview-flow design-detail-preview-flow--default-notes">
+        <p>Manche Locations haben strenge Einlasskontrollen. Wenn du dich an folgende Regeln hältst bist du auf der sicheren Seite:</p>
+
+        <p class="event-detail-notes-heading">Was du meist mitbringen darfst</p>
+        <p>Handy, Schlüssel, Geldbeutel, Medikamente, Kleine Kosmetikartikel, kleine Taschen (maximal Größe DIN A4)</p>
+
+        <p class="event-detail-notes-heading">Was du meist nicht mitbringen darfst</p>
+        <p>Handtaschen, Rucksäcke, Helme, Behälter aller Art, Keine großen Taschen</p>
+
+        <p class="design-detail-preview-panel-label design-detail-preview-flow-heading design-detail-preview-flow-heading--hotlines">HOTLINES/TICKETVERKAUF</p>
+
+        <p class="event-detail-notes-heading">Easy Ticket</p>
+        <p>Mo bis Fr 10 - 16 Uhr<br><strong>+49 (0) 711 - 2 555 555</strong></p>
+
+        <p class="event-detail-notes-heading">Eventim</p>
+        <p>Mo bis Fr 09 - 18 Uhr<br><strong>+49 (0) 1806-570070</strong></p>
+
+        <p class="event-detail-notes-heading">Reservix</p>
+        <p>Mo bis Sa 08 - 20 Uhr<br><strong>+49 761 888499 99</strong></p>
+      </div>
+    <% end %>
+    <% if highlight_event %>
+      <div class="design-detail-preview-organizer-brand">
+        <span>Veranstalter</span>
+        <%= image_tag organizer_logo.source, alt: organizer_logo.alt %>
+      </div>
+    <% end %>
+  </section>
+</aside>

@@ -1,0 +1,75 @@
+<%
+  months_for_nav = Array(months).compact
+  selected_month ||= months_for_nav.first || Time.zone.today.beginning_of_month
+  months_for_nav = [ selected_month ] if months_for_nav.empty?
+  month_groups = months_for_nav.group_by(&:year)
+  visible_months_for_nav = months_for_nav.size > 1 ? months_for_nav.first(months_for_nav.size - 1) : months_for_nav
+  visible_month_groups = visible_months_for_nav.group_by(&:year)
+  month_labels_by_value = local_assigns.fetch(:month_labels_by_value, {})
+  selected_month_label = month_labels_by_value[selected_month] || selected_month.strftime("%m/%Y")
+  selected_genre = local_assigns[:selected_genre]
+  month_path_params = ->(month) {
+    {
+      event_month: month.strftime("%Y-%m"),
+      event_genre: selected_genre&.slug
+    }.compact
+  }
+%>
+
+<section class="design-preview-filterbar design-preview-filterbar--lane-page design-preview-filterbar--months"
+         aria-label="Alles aus Stuttgart filtern">
+  <details class="design-preview-month-dropdown design-preview-month-dropdown--mobile">
+    <summary class="design-preview-filter-pill design-preview-filter-month is-active">
+      <%= selected_month_label %>
+      <span aria-hidden="true"></span>
+    </summary>
+    <div class="design-preview-month-menu">
+      <% month_groups.each do |year, grouped_months| %>
+        <span class="design-preview-month-menu-year"><%= year %></span>
+        <% grouped_months.each do |month| %>
+          <% month_label = month_labels_by_value[month] || month.strftime("%m/%Y") %>
+          <%= link_to month_label,
+                      all_stuttgart_lane_path(month_path_params.call(month)),
+                      class: ("is-active" if month == selected_month),
+                      aria: { current: ("page" if month == selected_month) } %>
+        <% end %>
+      <% end %>
+    </div>
+  </details>
+
+  <nav class="design-preview-month-list" aria-label="Monate">
+    <% visible_month_groups.each do |year, grouped_months| %>
+      <span class="design-preview-month-year"><%= year %></span>
+      <% grouped_months.each do |month| %>
+        <% month_label = month_labels_by_value[month] || month.strftime("%m/%Y") %>
+        <%= link_to month_label,
+                    all_stuttgart_lane_path(month_path_params.call(month)),
+                    class: [ "design-preview-filter-pill", "design-preview-filter-month-pill", ("is-active" if month == selected_month) ].compact.join(" "),
+                    aria: { current: ("page" if month == selected_month) } %>
+      <% end %>
+    <% end %>
+  </nav>
+
+  <details class="design-preview-month-dropdown design-preview-month-dropdown--calendar">
+    <summary class="design-preview-filter-pill design-preview-filter-calendar" aria-label="Monat auswählen">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 2v4"></path>
+        <path d="M16 2v4"></path>
+        <path d="M3 10h18"></path>
+        <rect x="3" y="4" width="18" height="18" rx="2"></rect>
+      </svg>
+    </summary>
+    <div class="design-preview-month-menu design-preview-month-menu--right">
+      <% month_groups.each do |year, grouped_months| %>
+        <span class="design-preview-month-menu-year"><%= year %></span>
+        <% grouped_months.each do |month| %>
+          <% month_label = month_labels_by_value[month] || month.strftime("%m/%Y") %>
+          <%= link_to month_label,
+                      all_stuttgart_lane_path(month_path_params.call(month)),
+                      class: ("is-active" if month == selected_month),
+                      aria: { current: ("page" if month == selected_month) } %>
+        <% end %>
+      <% end %>
+    </div>
+  </details>
+</section>

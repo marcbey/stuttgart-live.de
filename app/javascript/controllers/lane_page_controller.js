@@ -25,13 +25,11 @@ export default class extends Controller {
     this.updateStatus("Weitere Events werden geladen ...")
 
     try {
-      const [cardPage, rowPage] = await Promise.all([
-        this.fetchPage("cards", this.cursorValue),
-        this.fetchPage("rows", this.listCursorValue)
-      ])
+      const cardPage = await this.fetchPage("design_cards", this.cursorValue)
+      const rowPage = this.hasListTarget ? await this.fetchPage("rows", this.listCursorValue) : { html: "", nextCursor: "" }
 
       this.appendHtml(this.gridTarget, cardPage.html)
-      this.appendHtml(this.listTarget, rowPage.html)
+      if (this.hasListTarget) this.appendHtml(this.listTarget, rowPage.html)
       this.cursorValue = cardPage.nextCursor
       this.listCursorValue = rowPage.nextCursor
       this.updateStatus(cardPage.html.trim().length > 0 ? "Weitere Events wurden geladen." : "")

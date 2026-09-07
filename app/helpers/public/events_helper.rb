@@ -13,6 +13,7 @@ module Public::EventsHelper
 
   EventDetailTextColumns = Data.define(:left, :right)
   EventDetailOrganizerLogo = Data.define(:source, :alt)
+  DesignHighlightTile = Data.define(:event, :grid_variant)
   DEFAULT_EVENT_DETAIL_ORGANIZER_LOGO = EventDetailOrganizerLogo.new(
     source: "russ-live-logo.svg",
     alt: "Russ Live"
@@ -171,6 +172,19 @@ module Public::EventsHelper
     editorial_image&.grid_variant.presence || EventImage::GRID_VARIANT_1X1
   end
 
+  def public_design_highlight_tiles(events, capacity: 8)
+    remaining_slots = capacity.to_i
+
+    Array(events).filter_map.with_index do |event, index|
+      grid_variant = effective_public_grid_variant_for(event, index)
+      slot_count = public_design_grid_variant_slot_count(grid_variant)
+      next if slot_count > remaining_slots
+
+      remaining_slots -= slot_count
+      DesignHighlightTile.new(event:, grid_variant:)
+    end
+  end
+
   def card_slot_for_grid_variant(grid_variant)
     case grid_variant.to_s
     when EventImage::GRID_VARIANT_1X1 then :grid_default
@@ -197,6 +211,14 @@ module Public::EventsHelper
     when EventImage::GRID_VARIANT_1X2 then { width: 500, height: 1183 }
     when EventImage::GRID_VARIANT_2X1 then { width: 1000, height: 570 }
     else { width: 500, height: 580 }
+    end
+  end
+
+  def public_design_grid_variant_slot_count(grid_variant)
+    case grid_variant.to_s
+    when EventImage::GRID_VARIANT_2X2 then 4
+    when EventImage::GRID_VARIANT_1X2, EventImage::GRID_VARIANT_2X1 then 2
+    else 1
     end
   end
 

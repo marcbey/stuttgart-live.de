@@ -27,7 +27,7 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".app-nav-links .app-nav-link-active", text: "Einstellungen"
     assert_select "[data-controller='settings-tabs']", count: 1
-    assert_select "[role='tab']", count: 7
+    assert_select "[role='tab']", count: 8
     assert_select "#settings-tab-meta-connection[aria-selected='true']", count: 1
     assert_select "article.social-post-card", count: 2
     assert_select "form[action='#{backend_settings_path(section: :sks_promoter_ids)}'] textarea[name='app_setting[sks_promoter_ids_text]']", count: 0
@@ -191,6 +191,55 @@ class Backend::SettingsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to edit_backend_settings_url(section: :homepage_genre_lanes)
     assert_equal false, AppSetting.homepage_genre_tag_cloud_enabled?
+  end
+
+  test "admin can update homepage highlight video section" do
+    sign_in_as(@admin)
+
+    patch backend_settings_url(section: :homepage_highlight_video), params: {
+      app_setting: {
+        homepage_highlight_video_enabled: "1",
+        homepage_highlight_video_overlay_enabled: "1",
+        homepage_highlight_video_title: "Video Highlight",
+        homepage_highlight_video_subtitle: "Live Tour",
+        homepage_highlight_video_date: "12.09.2026",
+        homepage_highlight_video_location: "Im Wizemann",
+        homepage_highlight_video_url: "/events/video-highlight",
+        homepage_highlight_video_cta_text: "Zum Event",
+        remove_homepage_highlight_video: "0",
+        remove_homepage_highlight_video_poster: "0"
+      }
+    }
+
+    assert_redirected_to edit_backend_settings_url(section: :homepage_highlight_video)
+
+    config = AppSetting.homepage_highlight_video_config
+    assert_equal true, config.fetch("enabled")
+    assert_equal true, config.fetch("overlay_enabled")
+    assert_equal "Video Highlight", config.fetch("title")
+    assert_equal "Live Tour", config.fetch("subtitle")
+    assert_equal "12.09.2026", config.fetch("date")
+    assert_equal "Im Wizemann", config.fetch("location")
+    assert_equal "/events/video-highlight", config.fetch("url")
+    assert_equal "Zum Event", config.fetch("cta_text")
+  end
+
+  test "homepage highlight video section shows stored configuration" do
+    sign_in_as(@admin)
+    AppSetting.homepage_highlight_video_record.tap do |setting|
+      setting.homepage_highlight_video_enabled = "1"
+      setting.homepage_highlight_video_overlay_enabled = "0"
+      setting.homepage_highlight_video_title = "Gespeichertes Video"
+      setting.save!
+    end
+
+    get edit_backend_settings_url(section: :homepage_highlight_video)
+
+    assert_response :success
+    assert_select "#settings-tab-homepage-highlight-video[aria-selected='true']", count: 1
+    assert_select "form[action='#{backend_settings_path(section: :homepage_highlight_video)}']", count: 1
+    assert_select "input[name='app_setting[homepage_highlight_video_enabled]'][value='1'][checked='checked']", count: 1
+    assert_select "input[name='app_setting[homepage_highlight_video_title]'][value='Gespeichertes Video']", count: 1
   end
 
   test "homepage genre lanes section shows the stored configuration" do

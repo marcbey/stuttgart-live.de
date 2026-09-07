@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { STORAGE_KEY, savedEventSlugs } from "../lib/saved_events_storage"
 
 export default class extends Controller {
-  static targets = [ "link" ]
+  static targets = [ "link", "count" ]
 
   connect() {
     this.handleSavedEventsChanged = this.render.bind(this)
@@ -19,12 +19,17 @@ export default class extends Controller {
   }
 
   render() {
-    const visible = savedEventSlugs().length > 0
-    this.element.classList.toggle("has-saved-events-link", visible)
+    const count = savedEventSlugs().length
+    this.element.classList.toggle("has-saved-events-link", count > 0)
 
-    if (this.hasLinkTarget) {
-      this.linkTarget.hidden = !visible
-    }
+    this.linkTargets.forEach((link) => {
+      link.hidden = false
+      link.setAttribute("aria-label", count === 1 ? "1 gemerktes Event anzeigen" : `${count} gemerkte Events anzeigen`)
+    })
+
+    this.countTargets.forEach((countTarget) => {
+      countTarget.textContent = count.toString()
+    })
   }
 
   handleStorage(event) {

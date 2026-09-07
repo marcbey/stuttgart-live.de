@@ -9,14 +9,18 @@
   <% if event.promotion_banner_image.attached? %>
     <% image_source = optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) %>
     <% image_srcset = optimized_event_promotion_banner_image_srcset(event, strict_proxy: strict_proxy) %>
+  <% elsif event.promotion_banner_landscape_image.attached? %>
+    <% image_source = optimized_event_promotion_banner_landscape_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) %>
+    <% image_srcset = optimized_event_promotion_banner_landscape_image_srcset(event, strict_proxy: strict_proxy) %>
   <% else %>
     <% image_source = event_image_source(event_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
     <% image_srcset = event_image_srcset(event_image, variant_sizes: %i[banner_mobile banner_desktop], strict_proxy: strict_proxy) %>
   <% end %>
 <% when :news %>
   <% blog_post = banner.fetch(:record) %>
-  <% image_source = optimized_blog_post_image_source(blog_post, :promotion_banner_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
-  <% image_srcset = optimized_blog_post_image_srcset(blog_post, :promotion_banner_image, strict_proxy: strict_proxy) %>
+  <% image_slot = blog_post.promotion_banner_image.attached? ? :promotion_banner_image : :promotion_banner_landscape_image %>
+  <% image_source = optimized_blog_post_image_source(blog_post, image_slot, strict_proxy: strict_proxy, size: :banner_desktop) %>
+  <% image_srcset = optimized_blog_post_image_srcset(blog_post, image_slot, strict_proxy: strict_proxy) %>
 <% end %>
 
 <% if image_source.present? %>

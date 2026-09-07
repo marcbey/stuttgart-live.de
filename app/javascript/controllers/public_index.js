@@ -13,6 +13,7 @@ import SavedEventsNavController from "./saved_events_nav_controller"
 import SavedEventsLaneController from "./saved_events_lane_controller"
 import ScrollTopController from "./scroll_top_controller"
 import ShareEventController from "./share_event_controller"
+import DesignPreviewSavedDropdownController from "./design_preview_saved_dropdown_controller"
 
 const registeredControllers = new Set()
 
@@ -36,9 +37,14 @@ registerController("saved-events-nav", SavedEventsNavController)
 registerController("saved-events-lane", SavedEventsLaneController)
 registerController("scroll-top", ScrollTopController)
 registerController("share-event", ShareEventController)
+registerController("design-preview-saved-dropdown", DesignPreviewSavedDropdownController)
 
 const lazyControllers = {
+  "design-preview-description-toggle": () => import("./design_preview_description_toggle_controller"),
+  "design-preview-menu": () => import("./design_preview_menu_controller"),
+  "design-preview-filterbar": () => import("./design_preview_filterbar_controller"),
   "backend-nav-menu": () => import("./backend_nav_menu_controller"),
+  "design-preview-feature-slider": () => import("./design_preview_feature_slider_controller"),
   "event-series-calendar": () => import("./event_series_calendar_controller"),
   "hero-rotator": () => import("./hero_rotator_controller"),
   "highlights-slider": () => import("./highlights_slider_controller"),
@@ -48,7 +54,8 @@ const lazyControllers = {
   "lane-page": () => import("./lane_page_controller"),
   "lightbox": () => import("./lightbox_controller"),
   "partner-strip": () => import("./partner_strip_controller"),
-  "section-view": () => import("./section_view_controller")
+  "section-view": () => import("./section_view_controller"),
+  "video-sound": () => import("./video_sound_controller")
 }
 
 const controllerNamesInDocument = () => {

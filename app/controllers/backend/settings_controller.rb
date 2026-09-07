@@ -32,6 +32,13 @@ module Backend
         partial: "backend/settings/sections/homepage_genre_lanes"
       },
       {
+        key: "homepage_highlight_video",
+        label: "Homepage Highlight-Video",
+        panel_id: "settings-panel-homepage-highlight-video",
+        tab_id: "settings-tab-homepage-highlight-video",
+        partial: "backend/settings/sections/homepage_highlight_video"
+      },
+      {
         key: "llm_enrichment",
         label: "LLM-Enrichment",
         panel_id: "settings-panel-llm-enrichment",
@@ -76,6 +83,7 @@ module Backend
       if section_is_valid
         AppSetting.transaction do
           active_section_records.each(&:save!)
+          persist_homepage_highlight_video_attachments!
         end
 
         redirect_to active_section_redirect_path, notice: "Einstellungen wurden gespeichert."
@@ -126,6 +134,8 @@ module Backend
         @homepage_genre_tag_cloud_setting = AppSetting.homepage_genre_tag_cloud_enabled_record
         @homepage_genre_lane_reference_genres =
           homepage_genre_lane_reference_genres(@homepage_genre_lane_setting.homepage_genre_lane_slugs)
+      when "homepage_highlight_video"
+        @homepage_highlight_video_setting = AppSetting.homepage_highlight_video_record
       when "llm_enrichment"
         @llm_enrichment_model_setting = AppSetting.llm_enrichment_model_record
         @llm_enrichment_prompt_template_setting = AppSetting.llm_enrichment_prompt_template_record
@@ -148,6 +158,8 @@ module Backend
         @homepage_genre_lane_setting.homepage_genre_lane_slugs = active_settings_params.fetch(:homepage_genre_lane_slugs, [])
         @homepage_genre_tag_cloud_setting.homepage_genre_tag_cloud_enabled =
           active_settings_params[:homepage_genre_tag_cloud_enabled]
+      when "homepage_highlight_video"
+        assign_homepage_highlight_video_attributes
       when "llm_enrichment"
         @llm_enrichment_model_setting.llm_enrichment_model = active_settings_params[:llm_enrichment_model]
         @llm_enrichment_prompt_template_setting.llm_enrichment_prompt_template_text =
@@ -175,6 +187,8 @@ module Backend
         [ @sks_organizer_notes_setting ]
       when "homepage_genre_lanes"
         [ @homepage_genre_lane_setting, @homepage_genre_tag_cloud_setting ]
+      when "homepage_highlight_video"
+        [ @homepage_highlight_video_setting ]
       when "llm_enrichment"
         [
           @llm_enrichment_model_setting,
@@ -201,6 +215,21 @@ module Backend
         params.require(:app_setting).permit(:sks_organizer_notes_text)
       when "homepage_genre_lanes"
         params.require(:app_setting).permit(:homepage_genre_tag_cloud_enabled, homepage_genre_lane_slugs: [])
+      when "homepage_highlight_video"
+        params.require(:app_setting).permit(
+          :homepage_highlight_video_enabled,
+          :homepage_highlight_video_overlay_enabled,
+          :homepage_highlight_video_title,
+          :homepage_highlight_video_subtitle,
+          :homepage_highlight_video_date,
+          :homepage_highlight_video_location,
+          :homepage_highlight_video_url,
+          :homepage_highlight_video_cta_text,
+          :homepage_highlight_video_signed_id,
+          :homepage_highlight_video_poster_signed_id,
+          :remove_homepage_highlight_video,
+          :remove_homepage_highlight_video_poster
+        )
       when "llm_enrichment"
         params.require(:app_setting).permit(
           :llm_enrichment_model,
@@ -248,6 +277,67 @@ module Backend
           genre[:position]
         ]
       end
+    end
+
+    def assign_homepage_highlight_video_attributes
+      settings_params = active_settings_params
+
+      @homepage_highlight_video_setting.homepage_highlight_video_enabled =
+        settings_params[:homepage_highlight_video_enabled]
+      @homepage_highlight_video_setting.homepage_highlight_video_overlay_enabled =
+        settings_params[:homepage_highlight_video_overlay_enabled]
+      @homepage_highlight_video_setting.homepage_highlight_video_title =
+        settings_params[:homepage_highlight_video_title]
+      @homepage_highlight_video_setting.homepage_highlight_video_subtitle =
+        settings_params[:homepage_highlight_video_subtitle]
+      @homepage_highlight_video_setting.homepage_highlight_video_date =
+        settings_params[:homepage_highlight_video_date]
+      @homepage_highlight_video_setting.homepage_highlight_video_location =
+        settings_params[:homepage_highlight_video_location]
+      @homepage_highlight_video_setting.homepage_highlight_video_url =
+        settings_params[:homepage_highlight_video_url]
+      @homepage_highlight_video_setting.homepage_highlight_video_cta_text =
+        settings_params[:homepage_highlight_video_cta_text]
+      @homepage_highlight_video_setting.remove_homepage_highlight_video =
+        settings_params[:remove_homepage_highlight_video]
+      @homepage_highlight_video_setting.remove_homepage_highlight_video_poster =
+        settings_params[:remove_homepage_highlight_video_poster]
+      @homepage_highlight_video_setting.pending_homepage_highlight_video_blob =
+        active_storage_blob_from_signed_id(settings_params[:homepage_highlight_video_signed_id])
+      @homepage_highlight_video_setting.pending_homepage_highlight_video_poster_blob =
+        active_storage_blob_from_signed_id(settings_params[:homepage_highlight_video_poster_signed_id])
+    end
+
+    def persist_homepage_highlight_video_attachments!
+      return unless @active_section_key == "homepage_highlight_video"
+
+      if @homepage_highlight_video_setting.remove_homepage_highlight_video?
+        @homepage_highlight_video_setting.homepage_highlight_video_file.purge_later
+      elsif @homepage_highlight_video_setting.pending_homepage_highlight_video_blob.present?
+        compressed_blob = Media::VideoCompressor.call(
+          @homepage_highlight_video_setting.pending_homepage_highlight_video_blob
+        )
+        @homepage_highlight_video_setting.homepage_highlight_video_file.attach(
+          compressed_blob
+        )
+        if compressed_blob.id != @homepage_highlight_video_setting.pending_homepage_highlight_video_blob.id
+          @homepage_highlight_video_setting.pending_homepage_highlight_video_blob.purge_later
+        end
+      end
+
+      if @homepage_highlight_video_setting.remove_homepage_highlight_video_poster?
+        @homepage_highlight_video_setting.homepage_highlight_video_poster_image.purge_later
+      elsif @homepage_highlight_video_setting.pending_homepage_highlight_video_poster_blob.present?
+        @homepage_highlight_video_setting.homepage_highlight_video_poster_image.attach(
+          @homepage_highlight_video_setting.pending_homepage_highlight_video_poster_blob
+        )
+      end
+    end
+
+    def active_storage_blob_from_signed_id(signed_id)
+      return if signed_id.blank?
+
+      ActiveStorage::Blob.find_signed(signed_id)
     end
   end
 end

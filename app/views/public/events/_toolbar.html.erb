@@ -1,5 +1,14 @@
 <% placeholder_phrases = Public::EventsHelper::PUBLIC_SEARCH_PLACEHOLDER_PHRASES %>
 <% placeholder_sequence = Public::EventsHelper::PUBLIC_SEARCH_PLACEHOLDER_SEQUENCE %>
+<% dom_id_suffix = local_assigns[:dom_id_suffix].present? ? "-#{local_assigns[:dom_id_suffix]}" : "" %>
+<% search_input_id = "q#{dom_id_suffix}" %>
+<% event_date_input_id = "event_date#{dom_id_suffix}" %>
+<% search_help_id = "public-search-help#{dom_id_suffix}" %>
+<% search_overlay_id = "public-search-overlay#{dom_id_suffix}" %>
+<% search_calendar_id = "public-search-calendar#{dom_id_suffix}" %>
+<% preview_genre_lanes = Array(local_assigns[:preview_genre_lanes]) %>
+<% preview_overlay = local_assigns[:preview_overlay] %>
+<% search_overlay_path = preview_genre_lanes.any? ? search_overlay_events_path(preview_results_only: true) : search_overlay_events_path %>
 
 <%= form_with url: search_path,
               method: :get,
@@ -7,18 +16,20 @@
               class: "public-search-filter",
               data: {
                 controller: "public-search",
-                public_search_search_url_value: search_overlay_events_path,
+                public_search_search_url_value: search_overlay_path,
                 public_search_placeholder_sequence_value: placeholder_sequence.to_json
               } do %>
   <%= hidden_field_tag :event_date,
                        browse_state.event_date_param,
+                       id: event_date_input_id,
                        data: { public_search_target: "eventDateInput" } %>
   <div class="public-search-field">
-    <p class="sr-only" id="public-search-help">
+    <p class="sr-only" id="<%= search_help_id %>">
       Beim Tippen erscheint eine Ergebnisliste mit zukünftigen Events.
     </p>
     <%= text_field_tag :q,
                        browse_state.query,
+                       id: search_input_id,
                        type: "search",
                        class: "form-input public-search-input",
                        placeholder: placeholder_phrases.first,
@@ -30,8 +41,8 @@
                        },
                        aria: {
                          label: "Events durchsuchen",
-                         controls: "public-search-overlay",
-                         describedby: "public-search-help"
+                         controls: search_overlay_id,
+                         describedby: search_help_id
                        } %>
     <div class="public-search-placeholder public-search-placeholder-hidden"
          data-public-search-target="placeholder"
@@ -51,7 +62,7 @@
                    class: "public-search-calendar",
                    aria: {
                      label: "Datum wählen",
-                     controls: "public-search-calendar",
+                     controls: search_calendar_id,
                      expanded: "false"
                    },
                    data: {
@@ -71,27 +82,84 @@
     <% end %>
     <%= button_tag type: "submit",
                    class: "public-search-icon",
-                   aria: { label: "Suche ausführen" } do %>
+                   aria: { label: "Suche ausführen" },
+                   data: { action: "public-search#activateSearch" } do %>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <circle cx="10.5" cy="10.5" r="5.75"></circle>
         <path d="M15 15l4.5 4.5"></path>
       </svg>
+      <span class="public-search-icon-close" aria-hidden="true"></span>
       <span class="sr-only">Suche ausführen</span>
     <% end %>
 
-    <div id="public-search-overlay"
+    <div id="<%= search_overlay_id %>"
          class="public-search-overlay"
          data-public-search-target="panel"
          hidden>
+      <% if preview_genre_lanes.any? %>
+        <div class="design-preview-search-controls">
+          <div class="design-preview-search-today-row">
+            <%= link_to tagestipp_lane_path,
+                        class: "public-search-result public-search-result-compact design-preview-search-today-link",
+                        data: {
+                          public_search_result: true,
+                          action: "keydown->public-search#handleResultKeydown"
+                        } do %>
+              <span class="public-search-result-copy">
+                <strong class="public-search-result-artist">HEUTE</strong>
+              </span>
+            <% end %>
+            <button type="button"
+                    class="design-preview-search-today-calendar"
+                    aria-label="Datum wählen"
+                    data-public-search-keep-panel-param="true"
+                    data-action="public-search#toggleCalendar">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 3.5v3"></path>
+                <path d="M17 3.5v3"></path>
+                <rect x="4" y="5.5" width="16" height="15" rx="2.25"></rect>
+                <path d="M4 10h16"></path>
+              </svg>
+            </button>
+          </div>
+          <details class="design-preview-search-genres-dropdown">
+            <summary class="public-search-result public-search-result-compact">
+              <span class="public-search-result-copy">
+                <strong class="public-search-result-artist">Genres</strong>
+              </span>
+              <span class="design-preview-search-genres-arrow" aria-hidden="true"></span>
+            </summary>
+            <div class="design-preview-search-genres-menu">
+              <% preview_genre_lanes.each do |lane| %>
+                <%= link_to lane.group.name,
+                            lane.public_path,
+                            data: {
+                              public_search_result: true,
+                              action: "keydown->public-search#handleResultKeydown"
+                            } %>
+              <% end %>
+              <%= link_to "Alle Genres",
+                          events_path,
+                          data: {
+                            public_search_result: true,
+                            action: "keydown->public-search#handleResultKeydown"
+                          } %>
+            </div>
+          </details>
+        </div>
+      <% end %>
       <div class="public-search-overlay-results"
            data-public-search-target="results"
            aria-live="polite"
            aria-label="Live-Suchergebnisse">
-        <%= render "public/events/search_overlay", browse_state: browse_state, overlay: nil %>
+        <%= render "public/events/search_overlay",
+                   browse_state: browse_state,
+                   overlay: preview_overlay,
+                   preview_results_only: preview_genre_lanes.any? %>
       </div>
     </div>
 
-    <div id="public-search-calendar"
+    <div id="<%= search_calendar_id %>"
          class="public-search-calendar-overlay"
          data-public-search-target="calendarPanel"
          data-action="keydown->public-search#handleCalendarKeydown"
@@ -134,7 +202,10 @@
     </div>
 
     <template data-public-search-target="idleTemplate">
-      <%= render "public/events/search_overlay", browse_state: browse_state, overlay: nil %>
+      <%= render "public/events/search_overlay",
+                 browse_state: browse_state,
+                 overlay: preview_overlay,
+                 preview_results_only: preview_genre_lanes.any? %>
     </template>
   </div>
 <% end %>

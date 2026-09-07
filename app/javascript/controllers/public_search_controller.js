@@ -5,6 +5,8 @@ const PLACEHOLDER_ENTRY_GAP_BASE_DELAY = 220
 const PLACEHOLDER_CURSOR_BLINK_DELAY = 500
 const PLACEHOLDER_SEQUENCE_START_DELAY = 2000
 const PLACEHOLDER_TYPING_CADENCE = [-18, 14, -6, 20, -12, 10, 4, -4]
+const OVERLAY_OPENED_EVENT = "design-preview:overlay-opened"
+const OVERLAY_SOURCE = "search"
 const CALENDAR_WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 const CALENDAR_MONTH_FORMATTER = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" })
 
@@ -46,22 +48,25 @@ export default class extends Controller {
     this.pendingRangeStart = this.selectedCalendarRange?.start || this.selectedCalendarDate
     this.boundHandlePointerDown = this.handlePointerDown.bind(this)
     this.boundHandleDocumentKeydown = this.handleDocumentKeydown.bind(this)
+    this.boundHandleOverlayOpened = this.handleOverlayOpened.bind(this)
     this.boundHandleReducedMotionChange = this.handleReducedMotionChange.bind(this)
     this.reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
 
     document.addEventListener("pointerdown", this.boundHandlePointerDown)
     document.addEventListener("keydown", this.boundHandleDocumentKeydown)
+    window.addEventListener(OVERLAY_OPENED_EVENT, this.boundHandleOverlayOpened)
     this.observeReducedMotionPreference()
     this.inputTarget.setAttribute("placeholder", this.defaultPlaceholder)
     this.renderCalendar()
     this.syncControls()
-    this.setPlaceholderVisibility(false)
+    this.setPlaceholderVisibility(!this.query.hasValue)
     this.syncPlaceholderAnimation()
   }
 
   disconnect() {
     document.removeEventListener("pointerdown", this.boundHandlePointerDown)
     document.removeEventListener("keydown", this.boundHandleDocumentKeydown)
+    window.removeEventListener(OVERLAY_OPENED_EVENT, this.boundHandleOverlayOpened)
     this.unobserveReducedMotionPreference()
     this.abortPendingRequest()
     this.clearScheduledSearch()
@@ -112,6 +117,23 @@ export default class extends Controller {
     this.scheduleSearch()
   }
 
+  activateSearch(event) {
+    if (!this.panelTarget.hidden && !this.query.hasValue) {
+      event.preventDefault()
+      this.close()
+      this.inputTarget.blur()
+      return
+    }
+
+    if (this.query.hasValue) {
+      return
+    }
+
+    event.preventDefault()
+    this.inputTarget.focus()
+    this.open()
+  }
+
   clear(event) {
     event.preventDefault()
 
@@ -135,12 +157,19 @@ export default class extends Controller {
     this.clearScheduledSearch()
     this.panelTarget.hidden = true
     this.closeCalendar()
+    this.syncOpenState()
   }
 
   handlePointerDown(event) {
     if (this.element.contains(event.target)) {
       return
     }
+
+    this.close()
+  }
+
+  handleOverlayOpened(event) {
+    if (event.detail?.source === OVERLAY_SOURCE) return
 
     this.close()
   }
@@ -248,6 +277,7 @@ export default class extends Controller {
 
   toggleCalendar(event) {
     event.preventDefault()
+    const keepSearchPanelOpen = event.params.keepPanel === true
 
     if (this.calendarOpen) {
       this.closeCalendar()
@@ -255,7 +285,7 @@ export default class extends Controller {
       return
     }
 
-    this.openCalendar()
+    this.openCalendar({ keepSearchPanelOpen })
   }
 
   previousCalendarMonth(event) {
@@ -430,13 +460,26 @@ export default class extends Controller {
 
   showPanel() {
     this.closeCalendar()
+    this.announceOpen()
     this.panelTarget.hidden = false
+    this.syncOpenState()
   }
 
   closeSearchPanel() {
     this.abortPendingRequest()
     this.clearScheduledSearch()
     this.panelTarget.hidden = true
+    this.syncOpenState()
+  }
+
+  announceOpen() {
+    window.dispatchEvent(new CustomEvent(OVERLAY_OPENED_EVENT, {
+      detail: { source: OVERLAY_SOURCE }
+    }))
+  }
+
+  syncOpenState() {
+    this.element.classList.toggle("public-search-filter-open", !this.panelTarget.hidden)
   }
 
   syncControls() {
@@ -464,7 +507,11 @@ export default class extends Controller {
 
   buildRequestUrl() {
     const url = new URL(this.searchUrlValue, window.location.origin)
-    const params = new URLSearchParams(new FormData(this.element))
+    const params = new URLSearchParams(url.search)
+
+    new FormData(this.element).forEach((value, key) => {
+      params.set(key, value)
+    })
 
     params.set("q", this.query.value)
     params.delete("page")
@@ -475,7 +522,11 @@ export default class extends Controller {
 
   buildRequestKey() {
     const url = new URL(this.searchUrlValue, window.location.origin)
-    const params = new URLSearchParams(new FormData(this.element))
+    const params = new URLSearchParams(url.search)
+
+    new FormData(this.element).forEach((value, key) => {
+      params.set(key, value)
+    })
 
     params.set("q", this.query.normalizedValue)
     params.delete("page")
@@ -624,8 +675,11 @@ export default class extends Controller {
     this.placeholderStartTimeout = null
   }
 
-  openCalendar() {
-    this.closeSearchPanel()
+  openCalendar({ keepSearchPanelOpen = false } = {}) {
+    if (!keepSearchPanelOpen) {
+      this.closeSearchPanel()
+    }
+
     this.pausePlaceholderForCalendar()
     this.selectedCalendarRange = this.selectedRangeFromQuery()
     this.selectedCalendarDate = this.selectedDateFromQuery()

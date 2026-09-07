@@ -1,4 +1,5 @@
 <% overlay ||= Public::Events::Search::OverlayBuilder::Result.new(mode: :idle, query: nil, events: [], suggestions: [], venues: [], genres: []) %>
+<% preview_results_only = local_assigns[:preview_results_only] == true %>
 
 <% if overlay.parser_suggestions? %>
   <% if overlay.suggestions? && overlay.suggestions.any? %>
@@ -55,13 +56,13 @@
     <ul class="public-search-overlay-list" role="list">
       <% overlay.events.each do |event| %>
         <li>
-          <%= render "search_overlay_event", event: event, browse_state: browse_state %>
+          <%= render "public/events/search_overlay_event", event: event, browse_state: browse_state %>
         </li>
       <% end %>
     </ul>
   <% end %>
 <% elsif overlay.query.present? %>
-  <% if overlay.genre_suggestions? %>
+  <% if overlay.genre_suggestions? && !preview_results_only %>
     <ul class="public-search-overlay-list" role="list">
       <% overlay.genres.each do |genre| %>
         <li>
@@ -81,7 +82,7 @@
     </ul>
   <% end %>
 
-  <% if overlay.genre_suggestions? && overlay.events.any? %>
+  <% if overlay.genre_suggestions? && overlay.events.any? && !preview_results_only %>
     <div class="public-search-overlay-separator" role="presentation"></div>
   <% end %>
 
@@ -89,7 +90,7 @@
     <ul class="public-search-overlay-list" role="list">
       <% overlay.events.each do |event| %>
         <li>
-          <%= render "search_overlay_event", event: event, browse_state: browse_state %>
+          <%= render "public/events/search_overlay_event", event: event, browse_state: browse_state %>
         </li>
       <% end %>
     </ul>
@@ -102,7 +103,7 @@
 <% else %>
   <% show_today_link = overlay.idle? %>
 
-  <% if show_today_link || overlay.genre_suggestions? %>
+  <% if (show_today_link || overlay.genre_suggestions?) && !preview_results_only %>
     <ul class="public-search-overlay-list" role="list">
       <% if show_today_link %>
         <li>
@@ -138,7 +139,7 @@
     </ul>
   <% end %>
 
-  <% if overlay.genre_suggestions? && overlay.events.any? %>
+  <% if overlay.genre_suggestions? && overlay.events.any? && !preview_results_only %>
     <div class="public-search-overlay-separator" role="presentation"></div>
   <% end %>
 
@@ -146,7 +147,7 @@
     <ul class="public-search-overlay-list" role="list">
       <% overlay.events.each do |event| %>
         <li>
-          <%= render "search_overlay_event", event: event, browse_state: browse_state %>
+          <%= render "public/events/search_overlay_event", event: event, browse_state: browse_state %>
         </li>
       <% end %>
     </ul>

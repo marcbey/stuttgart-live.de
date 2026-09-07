@@ -64,12 +64,12 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
 
   test "renders intro heart markers in turquoise" do
     issue = newsletter_issue_with_items
-    issue.update!(intro: "Persönlich für dich 💜")
+    issue.update!(intro: "Persönlich für dich ♥")
 
     rendered = Newsletter::Renderer.call(issue)
 
     assert_includes rendered.html, 'Persönlich für dich <span style="color:#28c7c2;font-size:1.5em;line-height:0;">&#9829;</span>'
-    assert_includes rendered.text, "Persönlich für dich 💜"
+    assert_includes rendered.text, "Persönlich für dich ♥"
   end
 
   test "renders legal footer with unsubscribe and company details" do
@@ -136,7 +136,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "https://www.instagram.com/stuttgart.live.concert/"
     assert_includes rendered.html, "https://www.tiktok.com/@stuttgart.live.concert"
     assert_includes rendered.html, "https://www.facebook.com/stuttgartlive"
-    assert_includes rendered.html, "Dein Stuttgart Live Wochenmix"
+    assert_includes rendered.html, "DEIN STUTTGART LIVE WOCHENMIX"
     assert_not_includes rendered.html, "Alter ausgeblendeter Header"
     assert_includes rendered.html, "Wähle dein Genre"
   end
@@ -159,7 +159,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
 
     rendered = Newsletter::Renderer.call(issue)
 
-    assert_includes rendered.html, "Dein Wochenmix"
+    assert_includes rendered.html, "DEIN WOCHENMIX"
     assert_includes rendered.html, "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
   end
 
@@ -198,7 +198,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
 
     rendered = Newsletter::Renderer.call(issue)
 
-    assert_operator rendered.html.index("Dein Wochenmix"), :<, rendered.html.index("Intro unter dem Kopfbereich.")
+    assert_operator rendered.html.index("DEIN WOCHENMIX"), :<, rendered.html.index("Intro unter dem Kopfbereich.")
     assert_operator rendered.html.index("Intro unter dem Kopfbereich."), :<, rendered.html.index("Sarahs Wochentipp")
     assert_operator rendered.html.index("Sarahs Wochentipp"), :<, rendered.html.index("Für was interessierst du dich? Spring hinein ins Vergnügen :-)")
     assert_operator rendered.html.index("Für was interessierst du dich? Spring hinein ins Vergnügen :-)"), :<, rendered.html.index('id="genre-pop-indie-singer-songwriter"')
@@ -264,13 +264,14 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "width: 100% !important"
     assert_includes rendered.html, "max-width: 100% !important"
     assert_includes rendered.html, "newsletter-weekly-header"
-    assert_includes rendered.html, "margin:0 0 20px;padding:22px 24px 14px;background:#303636;color:#fff"
+    assert_includes rendered.html, "margin:0 0 20px;padding:24px 24px 22px;background:#fff;color:#102223;border-bottom:1px solid #dfe6e4"
     assert_includes rendered.html, "margin:0;padding:0"
     assert_includes rendered.html, "@media only screen and (max-width: 680px)"
     assert_includes rendered.html, ".newsletter-weekly-header"
-    assert_includes rendered.html, "padding-top: 15px !important"
-    assert_includes rendered.html, "padding-bottom: 8px !important"
+    assert_includes rendered.html, "padding-top: 18px !important"
+    assert_includes rendered.html, "padding-bottom: 20px !important"
     assert_includes rendered.html, ".newsletter-logo-table"
+    assert_includes rendered.html, ".newsletter-weekly-copy"
     assert_includes rendered.html, ".newsletter-genre-link:hover"
     assert_includes rendered.html, ".newsletter-event-button:hover"
     assert_includes rendered.html, ".newsletter-card-row"
@@ -323,7 +324,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "newsletter-mobile-item-row"
     assert_includes rendered.html, "newsletter-mobile-image"
     assert_includes rendered.html, "newsletter-mobile-title"
-    assert_includes rendered.html, "newsletter-intro"
+    assert_includes rendered.html, "newsletter-weekly-copy"
     assert_includes rendered.html, "newsletter-jump-title"
     assert_includes rendered.html, "newsletter-section-heading-title"
     assert_includes rendered.html, "newsletter-footer-copy"

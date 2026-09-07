@@ -1,0 +1,26 @@
+<% wrapper_class = local_assigns.fetch(:wrapper_class, "design-preview-section design-detail-preview-related") %>
+<% title_id = local_assigns.fetch(:title_id, "design-detail-preview-related-title") %>
+<% title = local_assigns.fetch(:title, "Das könnte dir auch gefallen") %>
+
+<aside class="<%= wrapper_class %>" aria-labelledby="<%= title_id %>">
+  <div class="design-preview-section-header">
+    <h2 id="<%= title_id %>"><%= title %></h2>
+  </div>
+  <div class="design-preview-card-row">
+    <% related_preview_events.each do |event| %>
+      <%= render "public/events/design_preview_card",
+                 event: event,
+                 browse_state: browse_state,
+                 strict_proxy: strict_proxy,
+                 variant: "compact",
+                 effective_series_ids: related_effective_series_ids %>
+    <% end %>
+  </div>
+  <%= link_to events_path, class: "design-preview-section-link design-detail-preview-related-link" do %>
+    Alle anzeigen
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M5 12h13"></path>
+      <path d="m13 6 6 6-6 6"></path>
+    </svg>
+  <% end %>
+</aside>

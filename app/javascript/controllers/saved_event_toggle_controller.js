@@ -101,6 +101,6 @@ export default class extends Controller {
   }
 
   get cardElement() {
-    return this.element.closest(".event-card, .genre-lane-card, .home-slider-card")
+    return this.element.closest(".event-card, .genre-lane-card, .home-slider-card, .design-preview-card")
   }
 }

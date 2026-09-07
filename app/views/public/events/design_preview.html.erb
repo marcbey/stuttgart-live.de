@@ -1,0 +1,741 @@
+<% design_preview_mode = action_name == "design_preview" %>
+<% design_homepage_canonical_url = design_preview_mode ? design_preview_url : root_url %>
+<%= render_public_seo title: (design_preview_mode ? "Stuttgart Live - Design Preview" : "Stuttgart Live - Konzerte"),
+                      description: (design_preview_mode ? "Interne Layoutvorschau für die Stuttgart Live Startseite." : Public::SeoHelper::HOMEPAGE_SEO_DESCRIPTION),
+                      canonical_url: design_homepage_canonical_url,
+                      json_ld: (unless design_preview_mode
+                        [
+                          public_homepage_json_ld,
+                          public_event_item_list_json_ld(
+                            public_homepage_seo_events,
+                            name: "Aktuelle Events in Stuttgart",
+                            canonical_url: design_homepage_canonical_url
+                          )
+                        ]
+                      end) %>
+
+<% content_for :page_newsletter do %><% end %>
+<% content_for :page_partner_strip do %><% end %>
+
+<% strict_proxy = homepage_media_strict_proxy? %>
+<% highlight_events = Array(@home_featured_events) %>
+<% highlights = highlight_events.first(8) %>
+<% news_posts = Array(@design_preview_news_posts).first(6) %>
+<% promotion_banners = Array(@all_promotion_banners) %>
+<% content_promotion_banners_by_position = @promotion_banners_by_lane_position || {} %>
+<% feature_promotion_banners = promotion_banners %>
+<% homepage_highlight_video_event = highlight_events.find { |event| event.highlight_video_file.attached? } %>
+<% design_preview_video_slide_enabled = false %>
+<% feature_slide_count = (feature_promotion_banners.presence&.size || [ highlights.size, 6 ].min) + (design_preview_video_slide_enabled ? 1 : 0) %>
+<% lane_pool = Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) } %>
+<% highlight_tiles = public_design_highlight_tiles(highlight_events, capacity: 8) %>
+<% today_events = (Array(@home_tagestipp_events) + Array(@home_featured_events).drop(4) + lane_pool).uniq(&:id) %>
+<% under_30_events = Array(@home_under_30_events) %>
+<% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: highlights) %>
+<% promotion_banner_events = promotion_banners.filter_map { |banner| banner.fetch(:record) if banner.fetch(:type) == :event } %>
+<% stuttgart_mix_pool = (lane_pool + highlights + today_events + under_30_events + promotion_banner_events).compact.uniq(&:id) %>
+<% stuttgart_mix_events = Array(@design_preview_mix_events).presence || stuttgart_mix_pool %>
+<% stuttgart_mix_events = stuttgart_mix_pool if stuttgart_mix_events.blank? %>
+<% stuttgart_mix_video_event = stuttgart_mix_events.find { |event| event.highlight_landscape_video_file.attached? } %>
+<% design_preview_series_events = (highlight_events + promotion_banner_events + highlight_tiles.map(&:event) + today_events + under_30_events + stuttgart_mix_events).compact.uniq(&:id) %>
+<% design_preview_effective_series_ids = effective_public_event_series_ids(design_preview_series_events) %>
+<% design_preview_menu_groups = public_design_menu_groups %>
+
+<div class="design-preview" data-controller="design-preview-menu design-preview-filterbar" aria-labelledby="design-preview-title">
+  <header class="design-preview-topbar">
+    <%= link_to root_path, class: "design-preview-logo", aria: { label: "Stuttgart Live Startseite" } do %>
+      <span>Stuttgart</span>
+      <span>Live</span>
+    <% end %>
+
+    <div class="design-preview-mobile-toolbar">
+      <%= render "toolbar",
+                 browse_state: @browse_state,
+                 dom_id_suffix: "mobile-header",
+                 preview_genre_lanes: genre_lanes,
+                 preview_overlay: @design_preview_search_overlay %>
+    </div>
+
+    <nav class="design-preview-header-genres"
+         aria-label="Genres"
+         data-design-preview-filterbar-target="headerGenres">
+      <%= link_to "Alles",
+                  (@home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path),
+                  class: "design-preview-header-genre-link design-preview-header-genre-link--all",
+                  data: { design_preview_filterbar_target: "headerGenreItem" } %>
+      <% genre_lanes.each do |lane| %>
+        <%= link_to lane.group.name,
+                    lane.public_path,
+                    class: "design-preview-header-genre-link",
+                    data: { design_preview_filterbar_target: "headerGenreItem" } %>
+      <% end %>
+      <%= link_to "News",
+                  news_index_path,
+                  class: "design-preview-header-genre-link design-preview-header-genre-link--news",
+                  data: { design_preview_filterbar_target: "headerGenreItem" } %>
+      <details class="design-preview-header-genres-more">
+        <summary>
+          Alle Genres
+          <span aria-hidden="true"></span>
+        </summary>
+        <div class="design-preview-header-genres-menu">
+          <%= link_to "Alles", (@home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path) %>
+          <% genre_lanes.each do |lane| %>
+            <%= link_to lane.group.name, lane.public_path %>
+          <% end %>
+          <%= link_to "News", news_index_path %>
+          <%= link_to "Alle Genres anzeigen", events_path %>
+        </div>
+      </details>
+    </nav>
+
+    <nav class="design-preview-actions" aria-label="Vorschau Navigation">
+      <div class="design-preview-header-toolbar">
+        <%= render "toolbar",
+                   browse_state: @browse_state,
+                   dom_id_suffix: "desktop-header",
+                   preview_genre_lanes: genre_lanes,
+                   preview_overlay: @design_preview_search_overlay %>
+      </div>
+      <div class="design-preview-saved-dropdown"
+           data-controller="design-preview-saved-dropdown"
+           data-design-preview-saved-dropdown-share-url-value="<%= saved_events_url %>">
+        <button type="button"
+                class="design-preview-saved-link"
+                aria-label="Gemerkte Events anzeigen"
+                aria-controls="design-preview-saved-panel"
+                aria-expanded="false"
+                data-design-preview-saved-dropdown-target="button"
+                data-action="design-preview-saved-dropdown#toggle">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"></path>
+          </svg>
+          <span class="design-preview-saved-link-close" aria-hidden="true"></span>
+          <span data-design-preview-saved-dropdown-target="label">0</span>
+        </button>
+
+        <div id="design-preview-saved-panel"
+             class="design-preview-saved-panel"
+             data-design-preview-saved-dropdown-target="panel"
+             hidden>
+          <div class="design-preview-saved-panel-header">
+            <strong>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"></path>
+              </svg>
+              Gemerkte Events
+            </strong>
+            <%= link_to "Alle ansehen", saved_events_path %>
+          </div>
+          <ul class="public-search-overlay-list design-preview-saved-list" role="list">
+            <% design_preview_series_events.each do |event| %>
+              <li data-design-preview-saved-dropdown-target="item" data-slug="<%= event.slug %>" hidden>
+                <%= render "design_preview_saved_event",
+                           event: event,
+                           browse_state: @browse_state,
+                           strict_proxy: strict_proxy %>
+              </li>
+            <% end %>
+          </ul>
+          <div class="public-search-overlay-empty design-preview-saved-empty"
+               data-design-preview-saved-dropdown-target="empty">
+            <h2>Noch nichts gemerkt</h2>
+            <p>Tippe bei einem Event auf das Herz, dann erscheint es hier.</p>
+          </div>
+          <div class="design-preview-saved-panel-footer"
+               data-design-preview-saved-dropdown-target="footer"
+               hidden>
+            <button type="button"
+                    class="design-preview-saved-share"
+                    data-action="design-preview-saved-dropdown#share">
+              <span>Merkliste teilen</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 12h10"></path>
+                <path d="m13 8 4 4-4 4"></path>
+              </svg>
+            </button>
+            <span class="design-preview-saved-share-status"
+                  data-design-preview-saved-dropdown-target="shareStatus"
+                  hidden></span>
+          </div>
+        </div>
+      </div>
+      <button type="button"
+              class="design-preview-menu-button"
+              aria-label="Menü öffnen"
+              aria-controls="design-preview-menu"
+              aria-expanded="false"
+              data-design-preview-menu-target="button"
+              data-action="design-preview-menu#toggle">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </header>
+
+  <div id="design-preview-menu"
+       class="design-preview-menu-panel"
+       data-design-preview-menu-target="panel"
+       hidden>
+    <nav class="design-preview-menu-nav" aria-label="Menü Navigation">
+      <% design_preview_menu_groups.each do |group_label, links| %>
+        <section class="design-preview-menu-group" aria-labelledby="design-preview-menu-<%= group_label.parameterize %>">
+          <h2 id="design-preview-menu-<%= group_label.parameterize %>"><%= group_label %></h2>
+          <div class="design-preview-menu-links">
+            <% links.each do |label, path| %>
+              <%= link_to path do %>
+                <span><%= label %></span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h13"></path>
+                  <path d="m13 6 6 6-6 6"></path>
+                </svg>
+              <% end %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </nav>
+    <div class="design-preview-menu-footer">
+      <%= form_with model: NewsletterSubscriber.new,
+                    url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath, source: "menu"),
+                    local: true,
+                    id: "design-preview-menu-newsletter-form",
+                    class: "design-preview-menu-newsletter-form" do |form| %>
+        <div class="design-preview-menu-newsletter-copy">
+          <strong>Newsletter</strong>
+          <span>Neue Events direkt per Mail.</span>
+        </div>
+        <div class="design-preview-menu-newsletter-control">
+          <%= form.email_field :email,
+                               id: "design-preview-menu-newsletter-email",
+                               placeholder: "E-Mail-Adresse",
+                               autocomplete: "email",
+                               aria: { label: "E-Mail-Adresse für Newsletter" } %>
+          <%= button_tag type: "submit", aria: { label: "Zum Newsletter anmelden" } do %>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h13"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <section class="design-preview-hero">
+    <div class="design-preview-hero-copy">
+      <h1 id="design-preview-title">Events in Stuttgart.</h1>
+    </div>
+    <div class="design-preview-hero-side">
+      <p>Stuttgart Live bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region.</p>
+      <%= link_to "#design-preview-news", class: "design-preview-text-link" do %>
+        Nichts verpassen mit unserem Newsletter
+        <span aria-hidden="true">↓</span>
+      <% end %>
+    </div>
+  </section>
+
+  <% if highlights.any? || promotion_banners.any? %>
+    <section class="design-preview-section design-preview-highlights" aria-labelledby="design-preview-highlights-title">
+      <div class="design-preview-section-header">
+        <h2 id="design-preview-highlights-title">Unsere Highlights</h2>
+        <%= link_to highlights_lane_path, class: "design-preview-section-link" do %>
+          Alle anzeigen
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h13"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        <% end %>
+      </div>
+
+      <div class="design-preview-highlight-grid design-preview-highlight-grid--with-video">
+        <div class="design-preview-feature-stack"
+             data-controller="design-preview-feature-slider"
+             data-design-preview-feature-slider-interval-value="4200"
+             data-design-preview-feature-slider-duration-value="560">
+          <div class="design-preview-feature-slider">
+            <div class="design-preview-feature-track" data-design-preview-feature-slider-target="track">
+              <% if design_preview_video_slide_enabled %>
+                <div class="design-preview-feature-slide" data-design-preview-slide-interval="12000">
+                  <article class="design-preview-card design-preview-card--feature design-preview-banner-card design-preview-video-card">
+                    <%= link_to events_path(q: "Taylor Swift Tribute"), class: "design-preview-card-link", aria: { label: "Taylor Swift Tribute Events ansehen" } do %>
+                      <span class="design-preview-card-media" aria-hidden="true">
+                        <%= video_tag asset_path("design_preview/lover-highlight.mp4"),
+                                      poster: asset_path("design_preview/lover-highlight-poster.jpg"),
+                                      autoplay: true,
+                                      muted: true,
+                                      loop: true,
+                                      playsinline: true,
+                                      preload: "metadata",
+                                      class: "design-preview-card-video" %>
+                      </span>
+
+                      <span class="design-preview-card-copy">
+                        <span class="design-preview-card-meta">
+                          <span class="design-preview-card-date-location-row">
+                            <span class="design-preview-card-date">18.02.2027</span>
+                            <span class="design-preview-card-location">MHP Arena</span>
+                          </span>
+                        </span>
+                        <strong class="design-preview-card-title">Taylor Swift Tribute</strong>
+                        <span class="design-preview-card-subtitle">Lover Trailer</span>
+                      </span>
+                    <% end %>
+                  </article>
+                </div>
+              <% end %>
+
+              <% if feature_promotion_banners.any? %>
+                <% feature_promotion_banners.each do |banner| %>
+                  <div class="design-preview-feature-slide">
+                    <%= render "design_preview_banner_card",
+                               banner: banner,
+                               browse_state: @browse_state,
+                               strict_proxy: strict_proxy,
+                               effective_series_ids: design_preview_effective_series_ids,
+                               show_admin_edit: true %>
+                  </div>
+                <% end %>
+              <% else %>
+                <% highlights.each do |event| %>
+                  <div class="design-preview-feature-slide">
+                    <%= render "design_preview_card",
+                               event: event,
+                               browse_state: @browse_state,
+                               strict_proxy: strict_proxy,
+                               variant: "feature",
+                               category: "Highlight",
+                               effective_series_ids: design_preview_effective_series_ids,
+                               show_admin_edit: true %>
+                  </div>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <div class="design-preview-feature-nav">
+            <% if feature_slide_count > 1 %>
+              <div class="design-preview-feature-arrows" aria-label="Highlight Slider steuern">
+                <button type="button"
+                        class="design-preview-feature-arrow"
+                        aria-label="Vorheriges Highlight"
+                        data-action="design-preview-feature-slider#previous">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M15 6 9 12l6 6"></path>
+                  </svg>
+                </button>
+                <button type="button"
+                        class="design-preview-feature-arrow"
+                        aria-label="Nächstes Highlight"
+                        data-action="design-preview-feature-slider#next">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="m9 6 6 6-6 6"></path>
+                  </svg>
+                </button>
+              </div>
+            <% end %>
+            <%= link_to highlights_lane_path, class: "design-preview-section-link design-preview-feature-all-link" do %>
+              Alle anzeigen
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h13"></path>
+                <path d="m13 6 6 6-6 6"></path>
+              </svg>
+            <% end %>
+          </div>
+        </div>
+
+        <% if highlight_events.any? %>
+          <div class="design-preview-mobile-highlight-row" aria-label="Weitere Highlights">
+            <% highlight_events.each do |event| %>
+              <%= render "design_preview_card",
+                         event: event,
+                         browse_state: @browse_state,
+                         strict_proxy: strict_proxy,
+                         variant: "format",
+                         tile_variant: EventImage::GRID_VARIANT_1X1,
+                         card_slot: :grid_default,
+                         effective_series_ids: design_preview_effective_series_ids,
+                         show_admin_edit: true %>
+            <% end %>
+          </div>
+        <% end %>
+
+        <% if highlight_tiles.any? %>
+          <div class="design-preview-format-grid" aria-label="Aktuelle Highlight-Events">
+            <% highlight_tiles.each do |tile| %>
+              <% card_slot = card_slot_for_grid_variant(tile.grid_variant) %>
+              <%= render "design_preview_card",
+                         event: tile.event,
+                         browse_state: @browse_state,
+                         strict_proxy: strict_proxy,
+                         variant: "format",
+                         tile_variant: tile.grid_variant,
+                         card_slot: card_slot,
+                         effective_series_ids: design_preview_effective_series_ids,
+                         show_admin_edit: true %>
+            <% end %>
+          </div>
+        <% else %>
+          <% highlights.drop(1).first(3).each do |event| %>
+            <%= render "design_preview_card",
+                       event: event,
+                       browse_state: @browse_state,
+                       strict_proxy: strict_proxy,
+                       variant: "poster",
+                       category: "Event",
+                       effective_series_ids: design_preview_effective_series_ids,
+                       show_admin_edit: true %>
+          <% end %>
+        <% end %>
+
+        <%= render "homepage_highlight_video",
+                   event: homepage_highlight_video_event,
+                   browse_state: @browse_state,
+                   strict_proxy: strict_proxy,
+                   setting: AppSetting.homepage_highlight_video_record,
+                   fallback_video: asset_path("design_preview/walk-off-the-earth-portrait.mp4"),
+                   fallback_poster: asset_path("design_preview/walk-off-the-earth-portrait-poster.jpg") %>
+      </div>
+
+    </section>
+  <% end %>
+
+  <%= render "design_preview_tagestipp_lane",
+             events: today_events,
+             browse_state: @browse_state,
+             strict_proxy: strict_proxy,
+             effective_series_ids: design_preview_effective_series_ids,
+             link_path: (@home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path),
+             link_label: "Alles aus Stuttgart" %>
+
+  <% if content_promotion_banners_by_position[1].present? %>
+    <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
+      <%= render "promotion_banners",
+                 banners: content_promotion_banners_by_position[1],
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy %>
+    </section>
+  <% end %>
+
+  <% if news_posts.any? %>
+    <section id="design-preview-news"
+             class="design-preview-section design-preview-lane design-preview-news-lane"
+             aria-labelledby="design-preview-news-title"
+             data-controller="highlights-slider">
+      <div class="design-preview-section-header">
+        <h2 id="design-preview-news-title">News</h2>
+        <%= link_to news_index_path, class: "design-preview-section-link" do %>
+          Alle anzeigen
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h13"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        <% end %>
+      </div>
+      <div class="design-preview-lane-viewport">
+        <button type="button"
+                class="design-preview-lane-arrow design-preview-lane-arrow--prev"
+                aria-label="News zurück"
+                data-highlights-slider-target="previousButton"
+                data-action="highlights-slider#previous">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 6 9 12l6 6"></path>
+          </svg>
+        </button>
+        <div class="design-preview-news-row" data-highlights-slider-target="track">
+          <%= render "public/news/cards",
+                     blog_posts: news_posts,
+                     include_newsletter: false,
+                     strict_proxy: strict_proxy,
+                     show_admin_edit: true,
+                     hide_media: true %>
+        </div>
+        <button type="button"
+                class="design-preview-lane-arrow design-preview-lane-arrow--next"
+                aria-label="News weiter"
+                data-highlights-slider-target="nextButton"
+                data-action="highlights-slider#next">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m9 6 6 6-6 6"></path>
+          </svg>
+        </button>
+      </div>
+      <%= form_with model: NewsletterSubscriber.new,
+                    url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath, source: "news_lane"),
+                    local: true,
+                    id: "design-preview-news-lane-newsletter-form",
+                    class: "design-preview-news-lane-newsletter" do |form| %>
+        <div class="design-preview-news-lane-newsletter-copy">
+          <strong>Alle News direkt ins Postfach.</strong>
+          <span>Dein wöchentliches Best-of: die spannendsten Events, exklusive Specials und Highlights aus allen Genres.</span>
+        </div>
+        <div class="design-preview-news-lane-newsletter-control">
+          <%= form.email_field :email,
+                               id: "design-preview-news-lane-newsletter-email",
+                               placeholder: "E-Mail-Adresse",
+                               autocomplete: "email",
+                               aria: { label: "E-Mail-Adresse für News-Newsletter" } %>
+          <%= button_tag type: "submit", aria: { label: "Zum Newsletter anmelden" } do %>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h13"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
+          <% end %>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
+
+  <% if content_promotion_banners_by_position[2].present? %>
+    <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
+      <%= render "promotion_banners",
+                 banners: content_promotion_banners_by_position[2],
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy %>
+    </section>
+  <% end %>
+
+  <% if stuttgart_mix_events.any? %>
+    <section class="design-preview-section design-preview-lane design-preview-section--summer-party"
+             aria-labelledby="design-preview-summer-party-title"
+             data-controller="highlights-slider">
+      <div class="design-preview-section-header">
+        <h2 id="design-preview-summer-party-title">Stuttgart im Mix</h2>
+      </div>
+      <div class="design-preview-lane-viewport">
+        <button type="button"
+                class="design-preview-lane-arrow design-preview-lane-arrow--prev"
+                aria-label="Stuttgart im Mix zurück"
+                data-highlights-slider-target="previousButton"
+                data-action="highlights-slider#previous">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 6 9 12l6 6"></path>
+          </svg>
+        </button>
+        <div class="design-preview-card-row" data-highlights-slider-target="track">
+          <article class="design-preview-card design-preview-card--compact design-preview-card--lane-video"
+                   data-controller="video-sound">
+            <% lane_video_source = stuttgart_mix_video_event&.highlight_landscape_video_file&.attached? ? url_for(stuttgart_mix_video_event.highlight_landscape_video_file) : asset_path("design_preview/david-garrett-highlight.mp4") %>
+            <% lane_video_poster = stuttgart_mix_video_event.present? ? event_image_source(stuttgart_mix_video_event.event_image, strict_proxy: strict_proxy, size: :banner_mobile) : asset_path("design_preview/david-garrett-highlight-poster.jpg") %>
+            <% lane_video_href = stuttgart_mix_video_event.present? ? public_event_detail_path(stuttgart_mix_video_event, @browse_state) : nil %>
+            <% lane_video_content = capture do %>
+              <span class="design-preview-card-media" aria-hidden="true">
+                <%= video_tag lane_video_source,
+                              poster: lane_video_poster,
+                              autoplay: true,
+                              muted: true,
+                              loop: true,
+                              playsinline: true,
+                              preload: "metadata",
+                              class: "design-preview-card-video",
+                              data: { video_sound_target: "video" } %>
+              </span>
+            <% end %>
+            <% if lane_video_href.present? %>
+              <%= link_to lane_video_href,
+                          class: "design-preview-card-link",
+                          aria: { label: "#{stuttgart_mix_video_event.artist_name} ansehen" } do %>
+                <%= lane_video_content %>
+              <% end %>
+            <% else %>
+              <div class="design-preview-card-link">
+                <%= lane_video_content %>
+              </div>
+            <% end %>
+            <button type="button"
+                    class="homepage-highlight-video-sound-toggle"
+                    data-video-sound-target="button"
+                    data-action="click->video-sound#toggle"
+                    aria-label="Ton einschalten"
+                    aria-pressed="false">
+              <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-muted" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path>
+                <path d="m16.2 9.2 4.1 4.1m0-4.1-4.1 4.1"></path>
+              </svg>
+              <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-on" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path>
+                <path d="M16 8.4c1 .9 1.6 2.2 1.6 3.6S17 14.7 16 15.6"></path>
+                <path d="M18.4 6.2A7.7 7.7 0 0 1 21 12a7.7 7.7 0 0 1-2.6 5.8"></path>
+              </svg>
+            </button>
+          </article>
+          <% stuttgart_mix_events.each do |event| %>
+            <%= render "design_preview_card",
+                       event: event,
+                       browse_state: @browse_state,
+                       strict_proxy: strict_proxy,
+                       variant: "compact",
+                       category: "Festivals & Partys",
+                       effective_series_ids: design_preview_effective_series_ids %>
+          <% end %>
+        </div>
+        <button type="button"
+                class="design-preview-lane-arrow design-preview-lane-arrow--next"
+                aria-label="Stuttgart im Mix weiter"
+                data-highlights-slider-target="nextButton"
+                data-action="highlights-slider#next">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m9 6 6 6-6 6"></path>
+          </svg>
+        </button>
+      </div>
+    </section>
+  <% end %>
+
+  <% if content_promotion_banners_by_position[3].present? %>
+    <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
+      <%= render "promotion_banners",
+                 banners: content_promotion_banners_by_position[3],
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy %>
+    </section>
+  <% end %>
+
+  <% if under_30_events.any? %>
+    <section class="design-preview-section design-preview-lane"
+             aria-labelledby="design-preview-under-30-title"
+             data-controller="highlights-slider">
+      <div class="design-preview-section-header">
+        <h2 id="design-preview-under-30-title">
+          <span class="design-preview-heading-desktop">Kleine Preise, große Abende - unter 30€</span>
+          <span class="design-preview-heading-mobile">Unter 30€</span>
+        </h2>
+        <%= link_to (@home_under_30_lane&.public_path || under_30_lane_path), class: "design-preview-section-link" do %>
+          Alle anzeigen
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h13"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        <% end %>
+      </div>
+      <div class="design-preview-lane-viewport">
+        <button type="button"
+                class="design-preview-lane-arrow design-preview-lane-arrow--prev"
+                aria-label="Unter 30€ zurück"
+                data-highlights-slider-target="previousButton"
+                data-action="highlights-slider#previous">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M15 6 9 12l6 6"></path>
+          </svg>
+        </button>
+        <div class="design-preview-card-row" data-highlights-slider-target="track">
+          <% under_30_events.each do |event| %>
+            <%= render "design_preview_card",
+                       event: event,
+                       browse_state: @browse_state,
+                       strict_proxy: strict_proxy,
+                       variant: "compact",
+                       effective_series_ids: design_preview_effective_series_ids %>
+          <% end %>
+        </div>
+        <button type="button"
+                class="design-preview-lane-arrow design-preview-lane-arrow--next"
+                aria-label="Unter 30€ weiter"
+                data-highlights-slider-target="nextButton"
+                data-action="highlights-slider#next">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m9 6 6 6-6 6"></path>
+          </svg>
+        </button>
+      </div>
+    </section>
+  <% end %>
+
+  <% if content_promotion_banners_by_position[4].present? %>
+    <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
+      <%= render "promotion_banners",
+                 banners: content_promotion_banners_by_position[4],
+                 browse_state: @browse_state,
+                 strict_proxy: strict_proxy %>
+    </section>
+  <% end %>
+
+  <section class="design-preview-newsletter design-preview-newsletter--standalone" aria-labelledby="design-preview-newsletter-title">
+    <div>
+      <p>Stuttgart Live direkt ins Postfach.</p>
+      <h2 id="design-preview-newsletter-title">Nichts verpassen. Stuttgart Live im Postfach.</h2>
+    </div>
+    <%= form_with model: NewsletterSubscriber.new,
+                  url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath),
+                  local: true,
+                  class: "design-preview-newsletter-form" do |form| %>
+      <%= form.email_field :email,
+                           placeholder: "E-Mail-Adresse eingeben",
+                           autocomplete: "email",
+                           aria: { label: "E-Mail-Adresse" } %>
+      <%= form.submit "Anmelden" %>
+    <% end %>
+  </section>
+
+  <footer class="design-preview-footer">
+    <div class="design-preview-footer-brand">
+      <strong>Stuttgart<br>Live</strong>
+      <p>Events in deiner Stadt.</p>
+      <div class="design-preview-footer-socials" aria-label="Soziale Medien">
+        <%= link_to "https://www.instagram.com/stuttgart.live.concert/",
+                    class: "design-preview-footer-social-link",
+                    target: "_blank",
+                    rel: "noopener",
+                    title: "Instagram",
+                    aria: { label: "Instagram" } do %>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect>
+            <circle cx="12" cy="12" r="4"></circle>
+            <circle cx="17.4" cy="6.7" r="1.2" class="design-preview-footer-social-fill"></circle>
+          </svg>
+        <% end %>
+        <%= link_to "https://www.tiktok.com/@stuttgart.live.concert",
+                    class: "design-preview-footer-social-link",
+                    target: "_blank",
+                    rel: "noopener",
+                    title: "TikTok",
+                    aria: { label: "TikTok" } do %>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M14.2 4.2c.36 1.82 1.44 3.18 3.26 4.06.63.3 1.3.48 2.04.55v2.56a8.18 8.18 0 0 1-3.01-.67v5.06c0 3.1-2.48 5.53-5.74 5.53-3.05 0-5.56-2.3-5.56-5.27 0-3.1 2.72-5.5 5.91-5.22v2.66a2.67 2.67 0 0 0-3.21 2.56c0 1.47 1.2 2.66 2.72 2.66 1.66 0 2.74-1.26 2.74-3.02V4.2h2.85Z" class="design-preview-footer-social-fill"></path>
+          </svg>
+        <% end %>
+        <%= link_to "https://www.facebook.com/stuttgartlive",
+                    class: "design-preview-footer-social-link",
+                    target: "_blank",
+                    rel: "noopener",
+                    title: "Facebook",
+                    aria: { label: "Facebook" } do %>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M13.4 20.5v-7h2.3l.35-2.75H13.4V9c0-.8.22-1.35 1.37-1.35h1.46V5.2c-.25-.03-1.1-.1-2.1-.1-2.08 0-3.5 1.27-3.5 3.62v2.03H8.3v2.75h2.37v7h2.73Z" class="design-preview-footer-social-fill"></path>
+          </svg>
+        <% end %>
+      </div>
+    </div>
+    <nav class="design-preview-footer-nav" aria-label="Footer Navigation">
+      <% design_preview_menu_groups.each do |group_label, links| %>
+        <section class="design-preview-footer-nav-group" aria-labelledby="design-preview-footer-<%= group_label.parameterize %>">
+          <h2 id="design-preview-footer-<%= group_label.parameterize %>"><%= group_label %></h2>
+          <div>
+            <% links.each do |label, path| %>
+              <%= link_to label, path %>
+            <% end %>
+          </div>
+        </section>
+      <% end %>
+    </nav>
+    <section id="design-preview-newsletter" class="design-preview-footer-newsletter" aria-labelledby="design-preview-footer-newsletter-title">
+      <p>Newsletter</p>
+      <h2 id="design-preview-footer-newsletter-title">Nichts verpassen.</h2>
+      <span>Neue Events direkt per Mail.</span>
+      <%= form_with model: NewsletterSubscriber.new,
+                    url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath, source: "footer"),
+                    local: true,
+                    class: "design-preview-footer-newsletter-form" do |form| %>
+        <%= form.email_field :email,
+                             placeholder: "E-Mail-Adresse",
+                             autocomplete: "email",
+                             aria: { label: "E-Mail-Adresse für Newsletter" } %>
+        <%= form.submit "Anmelden" %>
+      <% end %>
+    </section>
+    <div class="design-preview-footer-partners">
+      <%= render "partner_strip" %>
+    </div>
+  </footer>
+</div>

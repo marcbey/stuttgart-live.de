@@ -1,0 +1,184 @@
+<% genre_lanes = Array(local_assigns[:genre_lanes]) %>
+<% saved_events = Array(local_assigns[:saved_events]) %>
+<% menu_groups = Array(local_assigns[:menu_groups]) %>
+
+<header class="design-preview-topbar">
+  <%= link_to root_path, class: "design-preview-logo", aria: { label: "Stuttgart Live Startseite" } do %>
+    <span>Stuttgart</span>
+    <span>Live</span>
+  <% end %>
+
+  <div class="design-preview-mobile-toolbar">
+    <%= render "public/events/toolbar",
+               browse_state: browse_state,
+               dom_id_suffix: "mobile-header",
+               preview_genre_lanes: genre_lanes,
+               preview_overlay: search_overlay %>
+  </div>
+
+  <nav class="design-preview-header-genres"
+       aria-label="Genres"
+       data-design-preview-filterbar-target="headerGenres">
+    <%= link_to "Alles",
+                all_stuttgart_lane_path,
+                class: "design-preview-header-genre-link design-preview-header-genre-link--all",
+                data: { design_preview_filterbar_target: "headerGenreItem" } %>
+    <% genre_lanes.each do |lane| %>
+      <%= link_to lane.group.name,
+                  lane.public_path,
+                  class: "design-preview-header-genre-link",
+                  data: { design_preview_filterbar_target: "headerGenreItem" } %>
+    <% end %>
+    <%= link_to "News",
+                news_index_path,
+                class: "design-preview-header-genre-link design-preview-header-genre-link--news",
+                data: { design_preview_filterbar_target: "headerGenreItem" } %>
+    <details class="design-preview-header-genres-more">
+      <summary>
+        Alle Genres
+        <span aria-hidden="true"></span>
+      </summary>
+      <div class="design-preview-header-genres-menu">
+        <%= link_to "Alles", all_stuttgart_lane_path %>
+        <% genre_lanes.each do |lane| %>
+          <%= link_to lane.group.name, lane.public_path %>
+        <% end %>
+        <%= link_to "News", news_index_path %>
+        <%= link_to "Alle Genres anzeigen", events_path %>
+      </div>
+    </details>
+  </nav>
+
+  <nav class="design-preview-actions" aria-label="Vorschau Navigation">
+    <div class="design-preview-header-toolbar">
+      <%= render "public/events/toolbar",
+                 browse_state: browse_state,
+                 dom_id_suffix: "desktop-header",
+                 preview_genre_lanes: genre_lanes,
+                 preview_overlay: search_overlay %>
+    </div>
+    <div class="design-preview-saved-dropdown"
+         data-controller="design-preview-saved-dropdown"
+         data-design-preview-saved-dropdown-share-url-value="<%= saved_events_url %>">
+      <button type="button"
+              class="design-preview-saved-link"
+              aria-label="Gemerkte Events anzeigen"
+              aria-controls="design-preview-saved-panel"
+              aria-expanded="false"
+              data-design-preview-saved-dropdown-target="button"
+              data-action="design-preview-saved-dropdown#toggle">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"></path>
+        </svg>
+        <span class="design-preview-saved-link-close" aria-hidden="true"></span>
+        <span data-design-preview-saved-dropdown-target="label">0</span>
+      </button>
+
+      <div id="design-preview-saved-panel"
+           class="design-preview-saved-panel"
+           data-design-preview-saved-dropdown-target="panel"
+           hidden>
+        <div class="design-preview-saved-panel-header">
+          <strong>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z"></path>
+            </svg>
+            Gemerkte Events
+          </strong>
+          <%= link_to "Alle ansehen", saved_events_path %>
+        </div>
+        <ul class="public-search-overlay-list design-preview-saved-list" role="list">
+          <% saved_events.each do |event| %>
+            <li data-design-preview-saved-dropdown-target="item" data-slug="<%= event.slug %>" hidden>
+              <%= render "public/events/design_preview_saved_event",
+                         event: event,
+                         browse_state: browse_state,
+                         strict_proxy: strict_proxy %>
+            </li>
+          <% end %>
+        </ul>
+        <div class="public-search-overlay-empty design-preview-saved-empty"
+             data-design-preview-saved-dropdown-target="empty">
+          <h2>Noch nichts gemerkt</h2>
+          <p>Tippe bei einem Event auf das Herz, dann erscheint es hier.</p>
+        </div>
+        <div class="design-preview-saved-panel-footer"
+             data-design-preview-saved-dropdown-target="footer"
+             hidden>
+          <button type="button"
+                  class="design-preview-saved-share"
+                  data-action="design-preview-saved-dropdown#share">
+            <span>Merkliste teilen</span>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M7 12h10"></path>
+              <path d="m13 8 4 4-4 4"></path>
+            </svg>
+          </button>
+          <span class="design-preview-saved-share-status"
+                data-design-preview-saved-dropdown-target="shareStatus"
+                hidden></span>
+        </div>
+      </div>
+    </div>
+    <button type="button"
+            class="design-preview-menu-button"
+            aria-label="Menü öffnen"
+            aria-controls="design-preview-menu"
+            aria-expanded="false"
+            data-design-preview-menu-target="button"
+            data-action="design-preview-menu#toggle">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+</header>
+
+<div id="design-preview-menu"
+     class="design-preview-menu-panel"
+     data-design-preview-menu-target="panel"
+     hidden>
+  <nav class="design-preview-menu-nav" aria-label="Menü Navigation">
+    <% menu_groups.each do |group_label, links| %>
+      <section class="design-preview-menu-group" aria-labelledby="design-preview-menu-<%= group_label.parameterize %>">
+        <h2 id="design-preview-menu-<%= group_label.parameterize %>"><%= group_label %></h2>
+        <div class="design-preview-menu-links">
+          <% links.each do |label, path| %>
+            <%= link_to path do %>
+              <span><%= label %></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M5 12h13"></path>
+                <path d="m13 6 6 6-6 6"></path>
+              </svg>
+            <% end %>
+          <% end %>
+        </div>
+      </section>
+    <% end %>
+  </nav>
+  <div class="design-preview-menu-footer">
+    <%= form_with model: NewsletterSubscriber.new,
+                  url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath, source: "menu"),
+                  local: true,
+                  id: "design-preview-menu-newsletter-form",
+                  class: "design-preview-menu-newsletter-form" do |form| %>
+      <div class="design-preview-menu-newsletter-copy">
+        <strong>Newsletter</strong>
+        <span>Neue Events direkt per Mail.</span>
+      </div>
+      <div class="design-preview-menu-newsletter-control">
+        <%= form.email_field :email,
+                             id: "design-preview-menu-newsletter-email",
+                             placeholder: "E-Mail-Adresse",
+                             autocomplete: "email",
+                             aria: { label: "E-Mail-Adresse für Newsletter" } %>
+        <%= button_tag type: "submit", aria: { label: "Zum Newsletter anmelden" } do %>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h13"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+</div>

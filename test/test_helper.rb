@@ -70,7 +70,7 @@ if RUBY_PLATFORM.include?("darwin")
     require "vips"
 
     Meta::SocialCardRenderer.new.send(:ensure_font_config!)
-    Vips::Image.text("Warmup", font: "Bebas Neue 12", rgba: true).width
+    Vips::Image.text("Warmup", font: "Oswald 12", rgba: true).width
   rescue LoadError, StandardError => error
     warn("Skipping SocialCardRenderer warmup: #{error.class}: #{error.message}")
   end

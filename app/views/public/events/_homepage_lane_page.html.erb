@@ -6,6 +6,13 @@
              series_counts_by_id: page.series_counts_by_id,
              strict_proxy: strict_proxy,
              wrap: false %>
+<% elsif mode == "design_cards" %>
+  <%= render "design_preview_event_grid",
+             events: page.events,
+             browse_state: browse_state,
+             strict_proxy: strict_proxy,
+             effective_series_ids: page.effective_series_ids,
+             show_card_kicker: lane_key != "genre" %>
 <% else %>
   <% page.events.each_with_index do |event, index| %>
     <% if lane_key == "highlights" %>

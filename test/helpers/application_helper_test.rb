@@ -123,6 +123,20 @@ class ApplicationHelperTest < ActionView::TestCase
     ], fragment.css(".event-detail-venue-address-line").map(&:text)
   end
 
+  test "formatted design preview venue address omits duplicated venue name" do
+    fragment = Nokogiri::HTML.fragment(
+      formatted_design_preview_venue_address(
+        "Porsche-Arena, Mercedesstraße 69, 70372 Stuttgart, Deutschland",
+        venue_name: "Porsche-Arena"
+      )
+    )
+
+    assert_equal [
+      "Mercedesstraße 69,",
+      "70372 Stuttgart, Deutschland"
+    ], fragment.css(".event-detail-venue-address-line").map(&:text)
+  end
+
   test "formatted venue description preserves sanitized rich text links" do
     fragment = Nokogiri::HTML.fragment(
       formatted_venue_description(
@@ -239,6 +253,29 @@ class ApplicationHelperTest < ActionView::TestCase
                  fragment.css(".event-detail-notes-list-positive .event-detail-notes-list-text").map(&:text)
   end
 
+  test "formatted organizer notes hides preview entry controls section when normalizing headings" do
+    notes = <<~TEXT
+      Was du mitbringen darfst
+      Handy, Schlüssel, Geldbeutel
+
+      Kontrollen beim Einlass
+      Alle Besucher werden abgetastet (Bodycheck)
+      Es gibt strengere Sicherheitskontrollen als sonst
+      Die Einhaltung dieser Regeln und Hinweise sowie ein rechtzeitiges Eintreffen helfen dabei, den Einlass so zügig wie möglich zu organisieren.
+      Danke für euer Verständnis!
+
+      Altersfreigabe
+      kein Zutritt: unter 6 Jahren
+    TEXT
+
+    fragment = Nokogiri::HTML.fragment(formatted_organizer_notes_with_link(notes, normalize_headings: true))
+
+    assert_equal [ "Was du mitbringen darfst", "Altersfreigabe" ],
+                 fragment.css(".event-detail-notes-heading").map(&:text)
+    assert_no_match "Bodycheck", fragment.text
+    assert_includes fragment.text, "kein Zutritt: unter 6 Jahren"
+  end
+
   test "formatted organizer notes replaces begleiformular shortcut with link" do
     notes = <<~TEXT
       Altersfreigabe:
@@ -249,6 +286,7 @@ class ApplicationHelperTest < ActionView::TestCase
 
     assert_equal "Altersfreigabe", fragment.at_css(".event-detail-notes-heading")&.text
     assert_includes fragment.text, "nur in Begleitung: bis 14 Jahren"
+    assert fragment.at_css("p br + a"), "expected the guardian form link to start on a new line"
     assert_equal "→ Begleitformular PDF", fragment.at_css("a")&.text&.squish
   end
 

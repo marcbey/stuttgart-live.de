@@ -41,7 +41,6 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='oswald-700']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='oswald-300']", count: 1
-    assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 1
     assert_select "style[data-local-font-faces]", count: 1
     assert_select "meta[name='description'][content=?]",
                   "Konzerte, Shows und Events in Stuttgart und Region entdecken: aktuelle Termine, Highlights, Tickets und News bei Stuttgart Live."
@@ -52,13 +51,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-300.ttf")
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
-    assert_includes response.body, ActionController::Base.helpers.asset_path("bebas-neue-400.woff2")
     assert_not_includes response.body, "VERANSTALTUNGSHIGHLIGHTS IN STUTTGART"
     assert_select ".lane-header.lane-header--highlights", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Events"
     assert_select ".app-nav-homepage-center[data-controller='saved-events-nav']", count: 1
-    assert_select ".app-nav-saved-events-link[href='#{saved_events_path}'][data-saved-events-nav-target='link'][hidden]", count: 2
-    assert_select ".app-nav-socials-poster[data-controller='saved-events-nav'] .app-nav-saved-events-link-desktop[hidden]", count: 1
+    assert_select ".app-nav-saved-events-link[href='#{saved_events_path}'][data-saved-events-nav-target='link']", count: 2
+    assert_select ".app-nav-saved-events-link[hidden]", count: 0
+    assert_select ".app-nav-saved-events-count", text: "0", count: 2
+    assert_select ".app-nav-socials-poster[data-controller='saved-events-nav'] .app-nav-saved-events-link-desktop", count: 1
     assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('pop-indie-singer-songwriter')}']", text: "POP", count: 1
     assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('rock-alternative')}']", text: "ROCK", count: 1
@@ -631,6 +631,119 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".lane-header.lane-header--tagestipp .lane-header-title", text: "Tagestipp"
     assert_select "#lane-event-grid .genre-lane-card-name", text: today_event.artist_name
+  end
+
+  test "under 30 lane renders only affordable events with active tickets" do
+    earlier_under_30_event = Event.create!(
+      slug: "lane-page-earlier-under-30",
+      source_fingerprint: "test::public::lane-page::earlier-under-30",
+      title: "Lane Page Earlier Under 30",
+      artist_name: "Lane Page Earlier Under 30 Artist",
+      start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      min_price: 30,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    earlier_under_30_event.event_offers.create!(
+      source: "reservix",
+      source_event_id: "lane-page-earlier-under-30",
+      ticket_url: "https://reservix.example/lane-page-earlier-under-30"
+    )
+    under_30_event = Event.create!(
+      slug: "lane-page-under-30",
+      source_fingerprint: "test::public::lane-page::under-30",
+      title: "Lane Page Under 30",
+      artist_name: "Lane Page Under 30 Artist",
+      start_at: 11.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      min_price: 29.99,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    under_30_event.event_offers.create!(
+      source: "reservix",
+      source_event_id: "lane-page-under-30",
+      ticket_url: "https://reservix.example/lane-page-under-30"
+    )
+    over_30_event = Event.create!(
+      slug: "lane-page-over-30",
+      source_fingerprint: "test::public::lane-page::over-30",
+      title: "Lane Page Over 30",
+      artist_name: "Lane Page Over 30 Artist",
+      start_at: 12.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      min_price: 35,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    over_30_event.event_offers.create!(
+      source: "reservix",
+      source_event_id: "lane-page-over-30",
+      ticket_url: "https://reservix.example/lane-page-over-30"
+    )
+    inactive_under_30_event = Event.create!(
+      slug: "lane-page-inactive-under-30",
+      source_fingerprint: "test::public::lane-page::inactive-under-30",
+      title: "Lane Page Inactive Under 30",
+      artist_name: "Lane Page Inactive Under 30 Artist",
+      start_at: 13.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      min_price: 25,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    inactive_under_30_event.event_offers.create!(
+      source: "reservix",
+      source_event_id: "lane-page-inactive-under-30",
+      sold_out: true,
+      ticket_url: "https://reservix.example/lane-page-inactive-under-30"
+    )
+    zero_price_event = Event.create!(
+      slug: "lane-page-zero-price",
+      source_fingerprint: "test::public::lane-page::zero-price",
+      title: "Lane Page Zero Price",
+      artist_name: "Lane Page Zero Price Artist",
+      start_at: 14.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      min_price: 0,
+      max_price: 0,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    zero_price_event.event_offers.create!(
+      source: "reservix",
+      source_event_id: "lane-page-zero-price",
+      ticket_url: "https://reservix.example/lane-page-zero-price"
+    )
+
+    get "/unter-30"
+
+    assert_response :success
+    document = Nokogiri::HTML.parse(response.body)
+    lane_grid_text = document.at_css("#lane-event-grid").text
+
+    assert_operator lane_grid_text.index(earlier_under_30_event.artist_name), :<, lane_grid_text.index(under_30_event.artist_name)
+    assert_includes lane_grid_text, earlier_under_30_event.artist_name
+    assert_includes lane_grid_text, under_30_event.artist_name
+    assert_not_includes lane_grid_text, over_30_event.artist_name
+    assert_not_includes lane_grid_text, inactive_under_30_event.artist_name
+    assert_not_includes lane_grid_text, zero_price_event.artist_name
   end
 
   test "russ live lane page renders only sks promoter events" do
@@ -1319,6 +1432,31 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal highlights_section, public_shell.element_children.first
   end
 
+  test "homepage renders manually highlighted events in promotion slider without promotion banner flag" do
+    event = Event.create!(
+      slug: "homepage-highlight-slider-without-promotion-banner",
+      source_fingerprint: "test::homepage::highlight-slider-without-promotion-banner",
+      title: "Highlight Slider Event",
+      artist_name: "Highlight Slider Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      highlighted: true,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    create_event_image(event: event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".promotion-banner-slider-track .promotion-banner-event h2", text: "Highlight Slider Artist"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-event-title", text: "Highlight Slider Event"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event a[href='#{event_path(event.slug)}']", count: 1
+    assert_select "section.public-shell > article.promotion-banner-event a[href='#{event_path(event.slug)}']", count: 0
+  end
+
   test "homepage keeps slider-only and lane-positioned promotion banners separate" do
     Event.create!(
       slug: "homepage-slider-only-highlight",
@@ -1417,8 +1555,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".promotion-banner-slider-track .promotion-banner-event h2", text: "Promotion Banner Artist"
     assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-event-title", text: "Promotion Banner Event"
-    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-kicker", text: "Event Tipp"
-    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-cta", text: "Zum Event"
+    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-kicker-meta", text: /23\.04\.2026/
+    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-kicker-meta", text: /Liederhalle/
+    assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-cta", count: 0
     assert_select ".promotion-banner-slider-track .promotion-banner-event a[href='#{event_path(event.slug)}']", count: 1
     assert_select ".promotion-banner-slider-track .promotion-banner:not(.promotion-banner-event) a[href='#{news_path(blog_post.slug)}']", count: 1
 
@@ -1672,7 +1811,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner-event .promotion-banner-link-light[style='background: var(--promotion-banner-background)']"
   end
 
-  test "homepage falls back to the default event promotion banner background color" do
+  test "homepage falls back to black event promotion slider background color" do
     Event.create!(
       slug: "promotion-banner-event-default-highlight",
       source_fingerprint: "test::homepage::promotion-banner-event-default-highlight",
@@ -1705,8 +1844,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".promotion-banner-event[style*='--promotion-banner-background: #E0F7F2']"
-    assert_select ".promotion-banner-event .promotion-banner-link-dark[style='background: var(--promotion-banner-background)']"
+    assert_select ".promotion-banner-event[style*='--promotion-banner-background: #080909']"
+    assert_select ".promotion-banner-event .promotion-banner-link-light[style='background: var(--promotion-banner-background)']"
   end
 
   test "homepage renders optimized promotion banner image" do
@@ -4479,11 +4618,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".event-detail-venue-block .event-detail-vvs-ticket", count: 1
-    assert_select ".event-detail-vvs-ticket-logo[alt='VVS']", count: 1
-    assert_select ".event-detail-vvs-ticket-copy h3", text: /VVS Kombiticket/i
-    assert_select ".event-detail-vvs-ticket-copy", text: /Gilt für die An- und Abreise/
-    assert_select ".event-detail-vvs-ticket-copy", text: /Nicht jede Veranstaltung beinhaltet automatisch ein KombiTicket/
+    assert_select ".design-detail-preview-location .design-detail-preview-vvs", count: 2
+    assert_select ".design-detail-preview-vvs-logo[alt='VVS']", count: 2
+    assert_select ".design-detail-preview-vvs-popover h3", text: /VVS Kombiticket/i
+    assert_select ".design-detail-preview-vvs-popover", text: /Gilt für die An- und Abreise/
+    assert_select ".design-detail-preview-vvs-popover", text: /Ob dein Ticket als VVS-Ticket gültig ist/
   end
 
   test "show hides VVS Kombiticket notice for venue without VVS ticket" do
@@ -4492,7 +4631,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".event-detail-vvs-ticket", count: 0
+    assert_select ".design-detail-preview-vvs", count: 0
   end
 
   test "show avoids duplicate subtitle and genre section" do
@@ -4703,22 +4842,32 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Konfigurierter SKS Hinweis"
   end
 
-  test "show includes edit link for authenticated users" do
+  test "show includes detail and location edit links for authenticated backend users" do
     sign_in_as(@user)
 
     get event_url(@published_event.slug)
 
     assert_response :success
-    expected_link = backend_events_path(status: @published_event.status, event_id: @published_event.id).gsub("&", "&amp;")
-    expected_venue_link = backend_venues_path(venue_id: @published_event.venue_record.id).gsub("&", "&amp;")
-    assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
-    assert_includes response.body, expected_link
-    assert_includes response.body, expected_venue_link
-    assert_select ".public-backend-shortcut.event-detail-edit-link", text: "Edit event"
-    assert_select ".public-backend-float .event-detail-edit-link", text: "Edit event", count: 1
+    expected_href = backend_events_path(status: @published_event.status, event_id: @published_event.id)
+    expected_html_link = expected_href.gsub("&", "&amp;")
+    expected_venue_href = backend_venues_path(venue_id: @published_event.venue_record.id)
+    assert_includes response.body, expected_html_link
+    assert_select ".public-backend-shortcut.event-detail-edit-link[href='#{expected_href}']", text: "Edit", count: 1
+    assert_select ".public-backend-float .event-detail-edit-link", text: "Edit", count: 1
     assert_select ".event-detail-topbar-actions .event-detail-edit-link", count: 0
-    assert_select ".event-detail-venue-block .event-detail-edit-link", text: "Edit location", count: 1
-    assert_select ".event-detail-image-stage-shell .saved-event-button.saved-event-button-detail-image[data-controller='saved-event-toggle']", count: 1
+    assert_select ".design-detail-preview-location .design-detail-preview-location-edit[href='#{expected_venue_href}']", text: "Edit", count: 2
+    assert_select ".design-detail-preview-image .design-detail-preview-image-edit-link", text: "Edit", count: 0
+
+    @published_event.update!(highlighted: true)
+    create_event_image(event: @published_event, purpose: EventImage::PURPOSE_DETAIL_HERO)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_includes response.body, expected_html_link
+    assert_select ".design-detail-preview-image .design-detail-preview-image-edit-link", text: "Edit", count: 0
+    assert_select ".public-backend-shortcut.event-detail-edit-link[href='#{expected_href}']", text: "Edit", count: 1
+    assert_select ".public-backend-float .event-detail-edit-link", text: "Edit", count: 1
   end
 
   test "show renders presenter logos inside organizer notes when presenters exist" do
@@ -5799,7 +5948,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "title", text: "Stuttgart Live - Deine Events"
     assert_select "meta[name='robots'][content='noindex, follow']", count: 1
     assert_select "link[rel='canonical'][href=?]", saved_events_url
-    assert_select ".app-nav-saved-events-link[href='#{saved_events_path}'][hidden]", count: 2
+    assert_select ".app-nav-saved-events-link[href='#{saved_events_path}']", count: 2
+    assert_select ".app-nav-saved-events-link[hidden]", count: 0
+    assert_select ".app-nav-saved-events-count", text: "0", count: 2
     assert_select ".saved-events-page-section[data-controller='saved-events-lane'][data-saved-events-lane-url-value='#{saved_lane_events_path}']", count: 1
     assert_select ".saved-events-page-section[data-saved-events-lane-show-empty-value='true']", count: 1
     assert_select "noscript .saved-events-empty", text: /Gemerkte Events werden in diesem Browser gespeichert/

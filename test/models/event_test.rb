@@ -69,6 +69,21 @@ class EventTest < ActiveSupport::TestCase
     assert_equal "Kulturquartier", event.venue
   end
 
+  test "validates highlight landscape video upload content type" do
+    event = Event.new(
+      artist_name: "Test Artist",
+      title: "Test Tour",
+      start_at: Time.zone.local(2026, 10, 10, 20, 0, 0),
+      venue_name: "Im Wizemann",
+      city: "Stuttgart",
+      status: "needs_review"
+    )
+    event.pending_highlight_landscape_video_blob = create_uploaded_blob(filename: "not-a-video.png")
+
+    assert_not event.valid?
+    assert_includes event.errors[:highlight_landscape_video_file], "muss MP4, MOV oder WebM sein"
+  end
+
   test "reuses an existing venue by name" do
     event = Event.new(
       artist_name: "Test Artist",
@@ -196,6 +211,28 @@ class EventTest < ActiveSupport::TestCase
 
     assert event.valid?
     assert_equal "bandx", event.normalized_artist_name
+  end
+
+  test "marks past public events as expired and hides ticket offer" do
+    event = Event.create!(
+      artist_name: "Past Artist",
+      title: "Past Tour",
+      start_at: 1.day.ago,
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 2.days.ago
+    )
+    event.event_offers.create!(
+      source: "manual",
+      source_event_id: "past-test-offer",
+      ticket_url: "https://tickets.example/past",
+      ticket_price_text: "42,00 EUR"
+    )
+
+    assert_predicate event, :public_expired?
+    assert_equal "Abgelaufen", event.public_ticket_status_label
+    assert_nil event.public_ticket_offer
   end
 
   test "normal save downgrades published events with a future publication date to ready_for_publish" do

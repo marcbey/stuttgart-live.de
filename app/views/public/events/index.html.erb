@@ -97,7 +97,7 @@
       <% promotion_banner_lane_position += 1 %>
 
       <%= render "genre_lane_section",
-                 title: "Tagestipp",
+                 title: "Heute in Stuttgart",
                  title_url: @home_tagestipp_lane&.public_path,
                  events: @home_tagestipp_events,
                  effective_series_ids: @home_tagestipp_effective_series_ids,
@@ -114,7 +114,7 @@
                  section_variant: "spotlight",
                  card_variant: "spotlight",
                  defer_initial_page: false,
-                 list_aria_label: "Listenansicht für Tagestipp" %>
+                 list_aria_label: "Listenansicht für Heute in Stuttgart" %>
     <% end %>
 
     <% if show_all_stuttgart_lane && @home_highlight_events.present? %>

@@ -1,6 +1,8 @@
 <% event_series_lane = local_assigns[:event_series_lane] %>
 <% browse_state = local_assigns[:browse_state] %>
 <% current_event = local_assigns[:current_event] %>
+<% show_visible_terms = local_assigns.fetch(:show_visible_terms, true) %>
+<% summary_label = local_assigns[:summary_label].presence || "Alle Termine anzeigen" %>
 <% series_events = event_series_lane&.events.to_a.sort_by { |series_event| [series_event.start_at, series_event.id] } %>
 <% calendar_series_events = series_events.dup %>
 <% if current_event.present? && current_event.event_series_id == event_series_lane&.series&.id %>
@@ -9,7 +11,8 @@
 <% end %>
 <% desktop_visible_series_events = series_events.first(5) %>
 <% mobile_remaining_series_events = series_events.drop(3) %>
-<% uses_calendar = mobile_remaining_series_events.any? %>
+<% uses_calendar = mobile_remaining_series_events.any? || !show_visible_terms %>
+<% summary_count = show_visible_terms ? mobile_remaining_series_events.size : series_events.size %>
 <% german_month_names = %w[Januar Februar März April Mai Juni Juli August September Oktober November Dezember] %>
 
 <% if event_series_lane.present? && series_events.any? && browse_state.present? %>
@@ -21,22 +24,24 @@
       <% active_day = (current_series_event || calendar_series_events.first).start_at.to_date %>
       <% active_month_date = active_day.beginning_of_month %>
       <div class="event-detail-series-terms-disclosure">
-        <div class="event-detail-series-term-list event-detail-series-term-list--visible" role="list">
-          <% desktop_visible_series_events.each_with_index do |series_event, index| %>
-            <% term_label_format = series_event.start_at.min.zero? ? "%d.%m. %H Uhr" : "%d.%m. %H:%M Uhr" %>
-            <% aria_label = "Weiterer Termin: #{l(series_event.start_at, format: '%d.%m.%Y %H:%M Uhr')}" %>
-            <% link_classes = ["event-detail-series-term-link", ("event-detail-series-term-link--mobile-hidden" if index >= 3)].compact.join(" ") %>
-            <%= link_to l(series_event.start_at, format: term_label_format),
-                        public_event_detail_path(series_event, browse_state),
-                        class: link_classes,
-                        role: "listitem",
-                        aria: { label: aria_label } %>
-          <% end %>
-        </div>
+        <% if show_visible_terms %>
+          <div class="event-detail-series-term-list event-detail-series-term-list--visible" role="list">
+            <% desktop_visible_series_events.each_with_index do |series_event, index| %>
+              <% term_label_format = series_event.start_at.min.zero? ? "%d.%m. %H Uhr" : "%d.%m. %H:%M Uhr" %>
+              <% aria_label = "Weiterer Termin: #{l(series_event.start_at, format: '%d.%m.%Y %H:%M Uhr')}" %>
+              <% link_classes = ["event-detail-series-term-link", ("event-detail-series-term-link--mobile-hidden" if index >= 3)].compact.join(" ") %>
+              <%= link_to l(series_event.start_at, format: term_label_format),
+                          public_event_detail_path(series_event, browse_state),
+                          class: link_classes,
+                          role: "listitem",
+                          aria: { label: aria_label } %>
+            <% end %>
+          </div>
+        <% end %>
         <details class="event-detail-series-more event-series-calendar-overlay">
           <summary class="event-detail-series-more-summary">
-            <span>Alle Termine anzeigen</span>
-            <span class="event-detail-series-more-count"><%= mobile_remaining_series_events.size %></span>
+            <span><%= summary_label %></span>
+            <span class="event-detail-series-more-count"><%= summary_count %></span>
             <span class="event-detail-series-more-arrow" aria-hidden="true"></span>
           </summary>
           <div class="event-series-calendar" data-controller="event-series-calendar">

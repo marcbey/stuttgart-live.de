@@ -63,6 +63,9 @@ module Backend
     def create
       @event = Event.new(manual_event_promoter_attributes.merge(event_attribute_params))
       prepare_promotion_banner_image(@event)
+      prepare_promotion_banner_landscape_image(@event)
+      prepare_highlight_video(@event)
+      prepare_highlight_landscape_video(@event)
       @selected_genre_ids = genre_ids_from_params
       @selected_sub_genre_ids = sub_genre_ids_from_params
       @selected_presenter_ids = presenter_ids_from_params
@@ -84,6 +87,9 @@ module Backend
 
         sync_venue_from_llm_fallback!(@event)
         persist_promotion_banner_image!(@event)
+        persist_promotion_banner_landscape_image!(@event)
+        persist_highlight_video!(@event)
+        persist_highlight_landscape_video!(@event)
 
         assign_genres!(@event)
         assign_sub_genres!(@event)
@@ -140,6 +146,9 @@ module Backend
 
       @event.assign_attributes(event_attribute_params)
       prepare_promotion_banner_image(@event)
+      prepare_promotion_banner_landscape_image(@event)
+      prepare_highlight_video(@event)
+      prepare_highlight_landscape_video(@event)
       prepare_publication_intent!(@event)
       validate_manual_ticket_url!(@event)
 
@@ -152,6 +161,9 @@ module Backend
       elsif @event.save
         sync_venue_from_llm_fallback!(@event)
         persist_promotion_banner_image!(@event)
+        persist_promotion_banner_landscape_image!(@event)
+        persist_highlight_video!(@event)
+        persist_highlight_landscape_video!(@event)
         begin
           update_detail_hero_crop!
           update_slider_image_metadata!
@@ -292,6 +304,8 @@ module Backend
           :publish_image_instagram_attachment
         ],
         promotion_banner_image_attachment: :blob,
+        highlight_video_file_attachment: :blob,
+        highlight_landscape_video_file_attachment: :blob,
         event_images: [ file_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
       )
@@ -473,6 +487,11 @@ module Backend
         :promotion_banner_image_focus_x,
         :promotion_banner_image_focus_y,
         :promotion_banner_image_zoom,
+        :promotion_banner_landscape_image_copyright,
+        :promotion_banner_landscape_image_focus_x,
+        :promotion_banner_landscape_image_focus_y,
+        :promotion_banner_landscape_image_zoom,
+        :highlight_video_overlay_enabled,
         :published_at,
         :press_text,
         :status,
@@ -761,6 +780,27 @@ module Backend
       )
     end
 
+    def promotion_banner_landscape_image_params
+      params.fetch(:event_promotion_banner_landscape_image, ActionController::Parameters.new).permit(
+        :promotion_banner_landscape_image_signed_id,
+        :remove_promotion_banner_landscape_image
+      )
+    end
+
+    def highlight_video_params
+      params.fetch(:event_highlight_video, ActionController::Parameters.new).permit(
+        :highlight_video_signed_id,
+        :remove_highlight_video
+      )
+    end
+
+    def highlight_landscape_video_params
+      params.fetch(:event_highlight_landscape_video, ActionController::Parameters.new).permit(
+        :highlight_landscape_video_signed_id,
+        :remove_highlight_landscape_video
+      )
+    end
+
     def manual_image_form_values
       permitted = manual_image_params.to_h.deep_symbolize_keys
 
@@ -909,11 +949,71 @@ module Backend
       event.remove_promotion_banner_image = ActiveModel::Type::Boolean.new.cast(image_params[:remove_promotion_banner_image])
     end
 
+    def prepare_promotion_banner_landscape_image(event)
+      image_params = promotion_banner_landscape_image_params
+
+      event.pending_promotion_banner_landscape_image_blob = resolve_promotion_banner_signed_blob(
+        image_params[:promotion_banner_landscape_image_signed_id],
+        event: event
+      )
+      event.remove_promotion_banner_landscape_image =
+        ActiveModel::Type::Boolean.new.cast(image_params[:remove_promotion_banner_landscape_image])
+    end
+
+    def prepare_highlight_video(event)
+      video_params = highlight_video_params
+
+      event.pending_highlight_video_blob = resolve_highlight_video_signed_blob(
+        video_params[:highlight_video_signed_id],
+        event: event
+      )
+      event.remove_highlight_video = ActiveModel::Type::Boolean.new.cast(video_params[:remove_highlight_video])
+    end
+
+    def prepare_highlight_landscape_video(event)
+      video_params = highlight_landscape_video_params
+
+      event.pending_highlight_landscape_video_blob = resolve_highlight_video_signed_blob(
+        video_params[:highlight_landscape_video_signed_id],
+        event: event
+      )
+      event.remove_highlight_landscape_video =
+        ActiveModel::Type::Boolean.new.cast(video_params[:remove_highlight_landscape_video])
+    end
+
     def persist_promotion_banner_image!(event)
       if event.pending_promotion_banner_image_blob.present?
         event.promotion_banner_image.attach(event.pending_promotion_banner_image_blob)
       elsif event.remove_promotion_banner_image? && event.promotion_banner_image.attached?
         event.promotion_banner_image.purge_later
+      end
+    end
+
+    def persist_promotion_banner_landscape_image!(event)
+      if event.pending_promotion_banner_landscape_image_blob.present?
+        event.promotion_banner_landscape_image.attach(event.pending_promotion_banner_landscape_image_blob)
+      elsif event.remove_promotion_banner_landscape_image? && event.promotion_banner_landscape_image.attached?
+        event.promotion_banner_landscape_image.purge_later
+      end
+    end
+
+    def persist_highlight_video!(event)
+      if event.pending_highlight_video_blob.present?
+        compressed_blob = Media::VideoCompressor.call(event.pending_highlight_video_blob)
+        event.highlight_video_file.attach(compressed_blob)
+        event.pending_highlight_video_blob.purge_later if compressed_blob.id != event.pending_highlight_video_blob.id
+      elsif event.remove_highlight_video? && event.highlight_video_file.attached?
+        event.highlight_video_file.purge_later
+      end
+    end
+
+    def persist_highlight_landscape_video!(event)
+      if event.pending_highlight_landscape_video_blob.present?
+        compressed_blob = Media::VideoCompressor.call(event.pending_highlight_landscape_video_blob)
+        event.highlight_landscape_video_file.attach(compressed_blob)
+        event.pending_highlight_landscape_video_blob.purge_later if compressed_blob.id != event.pending_highlight_landscape_video_blob.id
+      elsif event.remove_highlight_landscape_video? && event.highlight_landscape_video_file.attached?
+        event.highlight_landscape_video_file.purge_later
       end
     end
 
@@ -923,6 +1023,15 @@ module Backend
       ActiveStorage::Blob.find_signed!(signed_id)
     rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
       event.errors.add(:base, "Promotion-Banner-Bild: Der temporäre Upload ist ungültig oder abgelaufen.")
+      nil
+    end
+
+    def resolve_highlight_video_signed_blob(signed_id, event:)
+      return if signed_id.blank?
+
+      ActiveStorage::Blob.find_signed!(signed_id)
+    rescue ActiveSupport::MessageVerifier::InvalidSignature, ActiveRecord::RecordNotFound
+      event.errors.add(:base, "Highlight-Video: Der temporäre Upload ist ungültig oder abgelaufen.")
       nil
     end
 

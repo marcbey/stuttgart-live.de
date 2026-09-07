@@ -26,7 +26,7 @@ class Newsletter::CreateWeeklyGenreMixIssueTest < ActiveSupport::TestCase
     assert_equal "Dein Stuttgart Live Wochenmix", issue.subject
     assert_equal "Für was interessierst du dich? Spring hinein ins Vergnügen :-)", issue.jump_menu_title
     assert_equal "Sarah", issue.team_tip_name
-    assert_equal "deine Event-Highlights der Woche, passend zu deinen Interessen und handverlesen statt wahllos zusammengestellt.\nRegelmäßig frisch. Persönlich für dich 🩵",
+    assert_equal "unsere Event-Highlights der Woche, passend zu deinen Interessen und handverlesen statt wahllos zusammengestellt.\nRegelmäßig frisch. Persönlich für dich ♥",
                  issue.intro
     assert_equal "Mein ganz persönlicher Tipp für euch: Lorem ipsum dolor sit amet, consetetur sadipscing elitr, " \
                  "sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. " \

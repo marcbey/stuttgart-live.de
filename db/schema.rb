@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_19_113000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_29_093000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -78,7 +78,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_113000) do
     t.float "promotion_banner_image_focus_y"
     t.float "promotion_banner_image_zoom"
     t.string "promotion_banner_kicker_text"
+    t.text "promotion_banner_landscape_image_copyright"
+    t.float "promotion_banner_landscape_image_focus_x", default: 50.0, null: false
+    t.float "promotion_banner_landscape_image_focus_y", default: 50.0, null: false
+    t.float "promotion_banner_landscape_image_zoom", default: 100.0, null: false
     t.integer "promotion_banner_lane_position"
+    t.boolean "promotion_banner_slider_text_hidden", default: false, null: false
     t.string "promotion_banner_text"
     t.string "promotion_banner_title"
     t.datetime "published_at"
@@ -247,6 +252,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_113000) do
     t.string "event_series_assignment", default: "auto", null: false
     t.bigint "event_series_id"
     t.string "facebook_url"
+    t.boolean "highlight_video_overlay_enabled", default: false, null: false
     t.boolean "highlighted", default: false, null: false
     t.string "homepage_url"
     t.string "instagram_url"
@@ -266,6 +272,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_19_113000) do
     t.float "promotion_banner_image_focus_y"
     t.float "promotion_banner_image_zoom"
     t.string "promotion_banner_kicker_text"
+    t.text "promotion_banner_landscape_image_copyright"
+    t.float "promotion_banner_landscape_image_focus_x", default: 50.0, null: false
+    t.float "promotion_banner_landscape_image_focus_y", default: 50.0, null: false
+    t.float "promotion_banner_landscape_image_zoom", default: 100.0, null: false
     t.integer "promotion_banner_lane_position"
     t.string "promotion_banner_text"
     t.string "promotion_banner_title"

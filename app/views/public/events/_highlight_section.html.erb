@@ -13,11 +13,27 @@
 <% list_events = defer_initial_page ? [] : (lazy_lane_id.present? ? events.first(Public::EventsController::HOME_LANE_LIST_LIMIT) : events) %>
 <% section_lazy_next_cursor = defer_initial_page ? nil : lazy_next_cursor %>
 <% section_lazy_list_next_cursor = defer_initial_page ? nil : lazy_list_next_cursor %>
+<% homepage_highlight_video_event = featured ? rendered_events.find { |event| event.highlight_video_file.attached? } : nil %>
+<% homepage_highlight_video_setting = featured ? AppSetting.homepage_highlight_video_record : nil %>
+<% homepage_highlight_video_cache_key = homepage_highlight_video_setting&.cache_key_with_version %>
+<% if homepage_highlight_video_event&.highlight_video_file&.attached? %>
+  <% homepage_highlight_video_cache_key = [
+    homepage_highlight_video_cache_key,
+    homepage_highlight_video_event.cache_key_with_version,
+    homepage_highlight_video_event.highlight_video_file.blob.cache_key_with_version
+  ] %>
+<% end %>
+<% if homepage_highlight_video_setting&.homepage_highlight_video_file&.attached? %>
+  <% homepage_highlight_video_cache_key = [ homepage_highlight_video_cache_key, homepage_highlight_video_setting.homepage_highlight_video_file.blob.cache_key_with_version ] %>
+<% end %>
+<% if homepage_highlight_video_setting&.homepage_highlight_video_poster_image&.attached? %>
+  <% homepage_highlight_video_cache_key = [ homepage_highlight_video_cache_key, homepage_highlight_video_setting.homepage_highlight_video_poster_image.blob.cache_key_with_version ] %>
+<% end %>
 <% section_cache_key = public_events_section_cache_key(
   section: "highlight",
   browse_state: browse_state,
   events: events,
-  context: [ title, local_assigns[:title_url], featured, open_grid, list_aria_label, lazy_lane_id, lazy_next_cursor, lazy_url, defer_initial_page ],
+  context: [ title, local_assigns[:title_url], featured, open_grid, list_aria_label, lazy_lane_id, lazy_next_cursor, lazy_url, defer_initial_page, authenticated?, homepage_highlight_video_cache_key ],
   strict_proxy: strict_proxy
 ) %>
 
@@ -98,6 +114,13 @@
                          series_counts_by_id: series_counts_by_id,
                          strict_proxy: strict_proxy %>
             <% end %>
+          <% end %>
+          <% if featured %>
+            <%= render "homepage_highlight_video",
+                       setting: homepage_highlight_video_setting,
+                       event: homepage_highlight_video_event,
+                       browse_state: browse_state,
+                       strict_proxy: strict_proxy %>
           <% end %>
         </div>
         <% unless open_grid %>

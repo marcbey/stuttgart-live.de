@@ -78,7 +78,7 @@ module Backend
 
     private
       def set_blog_post
-        @blog_post = BlogPost.with_rich_text_body_and_embeds.includes(:author, :published_by).with_attached_cover_image.with_attached_promotion_banner_image.find(params[:id])
+        @blog_post = BlogPost.with_rich_text_body_and_embeds.includes(:author, :published_by).with_attached_cover_image.with_attached_promotion_banner_image.with_attached_promotion_banner_landscape_image.find(params[:id])
       end
 
       def set_filters
@@ -127,6 +127,7 @@ module Backend
           :promotion_banner_kicker_text,
           :promotion_banner_title,
           :promotion_banner_text,
+          :promotion_banner_slider_text_hidden,
           :promotion_banner_cta_text,
           :promotion_banner_background_color,
           :promotion_banner_cta_color,
@@ -137,7 +138,11 @@ module Backend
           :promotion_banner_image_copyright,
           :promotion_banner_image_focus_x,
           :promotion_banner_image_focus_y,
-          :promotion_banner_image_zoom
+          :promotion_banner_image_zoom,
+          :promotion_banner_landscape_image_copyright,
+          :promotion_banner_landscape_image_focus_x,
+          :promotion_banner_landscape_image_focus_y,
+          :promotion_banner_landscape_image_zoom
         )
       end
 
@@ -175,8 +180,10 @@ module Backend
 
         blog_post.pending_cover_image_blob = resolve_signed_blob(image_params[:cover_image_signed_id], label: "Titelbild", blog_post: blog_post)
         blog_post.pending_promotion_banner_image_blob = resolve_signed_blob(image_params[:promotion_banner_image_signed_id], label: "Promotion-Banner-Bild", blog_post: blog_post)
+        blog_post.pending_promotion_banner_landscape_image_blob = resolve_signed_blob(image_params[:promotion_banner_landscape_image_signed_id], label: "Promotion-Banner-Querformat", blog_post: blog_post)
         blog_post.remove_cover_image = remove_cover_image_requested?
         blog_post.remove_promotion_banner_image = remove_promotion_banner_image_requested?
+        blog_post.remove_promotion_banner_landscape_image = remove_promotion_banner_landscape_image_requested?
       end
 
       def persist_blog_post_images!(blog_post)
@@ -191,6 +198,12 @@ module Backend
           attachment_name: :promotion_banner_image,
           pending_blob: blog_post.pending_promotion_banner_image_blob,
           remove: blog_post.remove_promotion_banner_image?
+        )
+        persist_blog_post_image!(
+          blog_post: blog_post,
+          attachment_name: :promotion_banner_landscape_image,
+          pending_blob: blog_post.pending_promotion_banner_landscape_image_blob,
+          remove: blog_post.remove_promotion_banner_landscape_image?
         )
       end
 
@@ -208,8 +221,10 @@ module Backend
         params.fetch(:blog_post_images, ActionController::Parameters.new).permit(
           :cover_image_signed_id,
           :promotion_banner_image_signed_id,
+          :promotion_banner_landscape_image_signed_id,
           :remove_cover_image,
-          :remove_promotion_banner_image
+          :remove_promotion_banner_image,
+          :remove_promotion_banner_landscape_image
         )
       end
 
@@ -219,6 +234,10 @@ module Backend
 
       def remove_promotion_banner_image_requested?
         ActiveModel::Type::Boolean.new.cast(blog_post_image_params[:remove_promotion_banner_image])
+      end
+
+      def remove_promotion_banner_landscape_image_requested?
+        ActiveModel::Type::Boolean.new.cast(blog_post_image_params[:remove_promotion_banner_landscape_image])
       end
 
       def resolve_signed_blob(signed_id, label:, blog_post:)

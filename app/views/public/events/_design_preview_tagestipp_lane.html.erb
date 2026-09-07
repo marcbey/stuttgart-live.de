@@ -1,0 +1,58 @@
+<% events = Array(local_assigns[:events]) %>
+<% browse_state = local_assigns.fetch(:browse_state) %>
+<% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
+<% effective_series_ids = local_assigns.fetch(:effective_series_ids, []) %>
+<% title = local_assigns.fetch(:title, "Heute in Stuttgart") %>
+<% title_id = local_assigns.fetch(:title_id, "design-preview-today-title") %>
+<% link_path = local_assigns[:link_path] %>
+<% link_label = local_assigns.fetch(:link_label, "Alles aus Stuttgart") %>
+
+<% if events.any? %>
+  <section class="design-preview-section design-preview-lane design-preview-tagestipp-lane"
+           aria-labelledby="<%= title_id %>"
+           data-controller="highlights-slider">
+    <div class="design-preview-section-header">
+      <h2 id="<%= title_id %>"><%= title %></h2>
+      <% if link_path.present? %>
+        <%= link_to link_path, class: "design-preview-section-link" do %>
+          <%= link_label %>
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12h13"></path>
+            <path d="m13 6 6 6-6 6"></path>
+          </svg>
+        <% end %>
+      <% end %>
+    </div>
+    <div class="design-preview-lane-viewport">
+      <button type="button"
+              class="design-preview-lane-arrow design-preview-lane-arrow--prev"
+              aria-label="<%= title %> zurück"
+              data-highlights-slider-target="previousButton"
+              data-action="highlights-slider#previous">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M15 6 9 12l6 6"></path>
+        </svg>
+      </button>
+      <div class="design-preview-card-row" data-highlights-slider-target="track">
+        <% events.each do |event| %>
+          <%= render "design_preview_card",
+                     event: event,
+                     browse_state: browse_state,
+                     strict_proxy: strict_proxy,
+                     variant: "compact",
+                     category: "Heute",
+                     effective_series_ids: effective_series_ids %>
+        <% end %>
+      </div>
+      <button type="button"
+              class="design-preview-lane-arrow design-preview-lane-arrow--next"
+              aria-label="<%= title %> weiter"
+              data-highlights-slider-target="nextButton"
+              data-action="highlights-slider#next">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="m9 6 6 6-6 6"></path>
+        </svg>
+      </button>
+    </div>
+  </section>
+<% end %>

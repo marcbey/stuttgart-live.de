@@ -1,10 +1,15 @@
-<div class="event-detail-vvs-ticket" aria-label="VVS Kombiticket">
-  <div class="event-detail-vvs-ticket-logo-wrap">
-    <%= image_tag "vvs.png", alt: "VVS", class: "event-detail-vvs-ticket-logo" %>
-  </div>
-  <div class="event-detail-vvs-ticket-copy">
-    <h3>VVS Kombiticket <span>/</span> Ticket = Fahrschein</h3>
+<div class="event-detail-vvs-ticket">
+  <button type="button"
+          class="event-detail-vvs-ticket-button"
+          aria-describedby="event-detail-vvs-ticket-info">
+    <%= image_tag "vvs.png", alt: "VVS Kombiticket", class: "event-detail-vvs-ticket-logo" %>
+  </button>
+  <div id="event-detail-vvs-ticket-info"
+       class="event-detail-vvs-ticket-popover"
+       role="tooltip">
+    <strong>VVS Kombiticket</strong>
+    <span>Ticket = Fahrschein</span>
     <p>Gilt für die An- und Abreise zur Veranstaltung im gesamten VVS-Gebiet.</p>
-    <p>Bitte beachten: Nicht jede Veranstaltung beinhaltet automatisch ein KombiTicket. Ob das Ticket als VVS-Ticket gültig ist, erkennt ihr am entsprechenden Hinweis auf dem Ticket oder in den Veranstaltungsinformationen.</p>
+    <p>Ob dein Ticket als VVS-Ticket gültig ist, erkennst du am Hinweis auf dem Ticket oder in den Veranstaltungsinformationen.</p>
   </div>
 </div>

@@ -15,10 +15,16 @@
 <% show_series_badge = local_assigns.fetch(:show_series_badge, true) %>
 <% primary_offer = event.public_ticket_offer %>
 <% card_dom_id = local_assigns[:card_dom_id] %>
-<% article_attributes = { class: ["genre-lane-card", ("genre-lane-card--#{card_variant}" if card_variant.present?)].compact.join(" ") } %>
-<% article_attributes[:id] = card_dom_id if card_dom_id.present? %>
 <% unavailable_label = event.public_ticket_status_label %>
 <% unavailable = unavailable_label.present? %>
+<% article_attributes = {
+  class: [
+    "genre-lane-card",
+    ("genre-lane-card--#{card_variant}" if card_variant.present?),
+    ("genre-lane-card--sold-out-preview" if unavailable)
+  ].compact.join(" ")
+} %>
+<% article_attributes[:id] = card_dom_id if card_dom_id.present? %>
 
 <article <%= tag.attributes(article_attributes) %>>
   <%= render "public/events/saved_event_button", event: event %>
@@ -64,25 +70,25 @@
 
     <div class="<%= ["genre-lane-card-copy", ("genre-lane-card-copy--#{card_variant}" if card_variant.present?)].compact.join(" ") %>">
       <div class="event-listing-body">
-        <p class="event-listing-date">
-          <span class="event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
-          <% if event.venue.present? %>
-            <span class="event-listing-venue"><%= event.venue %></span>
-          <% end %>
-        </p>
         <div class="event-listing-link">
           <strong class="genre-lane-card-name"><%= event.artist_name %></strong>
           <% if event.title.present? %>
             <span><%= event.title %></span>
           <% end %>
         </div>
+        <p class="event-listing-date">
+          <span class="event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+          <% if event.venue.present? %>
+            <span class="event-listing-venue"><%= event.venue %></span>
+          <% end %>
+        </p>
       </div>
       <% if (display_price = public_event_ticket_price(event, primary_offer)).present? %>
         <p class="genre-lane-card-price event-listing-price"><%= display_price %></p>
       <% end %>
     </div>
   <% end %>
-  <% if authenticated? %>
+  <% if authenticated? && event.sks_promoter? %>
     <div class="event-card-admin-controls genre-lane-card-admin-controls">
       <%= link_to "Edit",
                   backend_events_path(status: event.status, event_id: event.id),

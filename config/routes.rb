@@ -119,11 +119,15 @@ Rails.application.routes.draw do
     patch :status, on: :member
   end
   get "search", to: "public/events#search", as: :search
+  get "design-preview", to: "public/events#design_preview", as: :design_preview
+  get "design-preview/detail", to: "public/events#design_preview_detail", as: :design_preview_detail
+  get "design-preview/service", to: "public/pages#design_preview_service", as: :design_preview_service
   get "sitemap.xml", to: "public/sitemaps#show", defaults: { format: :xml }, as: :sitemap
   get "deine-events", to: "public/events#saved", as: :saved_events
   get "highlights", to: "public/events#lane", defaults: { lane: "highlights" }, as: :highlights_lane
   get "alles-aus-stuttgart", to: "public/events#lane", defaults: { lane: "all_stuttgart" }, as: :all_stuttgart_lane
   get "tagestipp", to: "public/events#lane", defaults: { lane: "tagestipp" }, as: :tagestipp_lane
+  get "unter-30", to: "public/events#lane", defaults: { lane: "under_30" }, as: :under_30_lane
   get "russ-live", to: "public/events#lane", defaults: { lane: "russ_live" }, as: :russ_live_lane
   resources :newsletter_subscribers, only: [ :create ], module: :public
   get "newsletter/confirm/:token", to: "public/newsletter_confirmations#show", as: :newsletter_confirmation

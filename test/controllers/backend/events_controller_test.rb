@@ -46,13 +46,11 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
       assert_select "link[rel='preload'][as='font'][href*='oswald-700']", count: 1
       assert_select "link[rel='preload'][as='font'][href*='oswald-300']", count: 1
-      assert_select "link[rel='preload'][as='font'][href*='bebas-neue-400']", count: 0
       assert_select "style[data-local-font-faces]", count: 1
       assert_includes response.body, ActionController::Base.helpers.asset_path("archivo-narrow-700.woff2")
       assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-300.ttf")
       assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
       assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
-      assert_not_includes response.body, ActionController::Base.helpers.asset_path("bebas-neue-400.woff2")
       assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"
       assert_select ".app-nav-backend-menu", count: 0
       assert_select ".app-nav-links .app-nav-link-active", text: "Events"
@@ -229,6 +227,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_lane_position]'][type='number'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event_#{@event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_highlight_video[highlight_video_signed_id]'][form='editor_form_event_#{@event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_highlight_landscape_video[highlight_landscape_video_signed_id]'][form='editor_form_event_#{@event.id}']", count: 1
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner]']", count: 0
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
@@ -622,7 +622,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_operator response.body.index("Presse-Bilder hochladen"), :<, response.body.index("Bilder als Slider auf Stuttgart Live veröffentlichen")
     assert_operator response.body.index("Bilder als Slider auf Stuttgart Live veröffentlichen"), :<, response.body.index("Auf Russ Live veröffentlichen")
     assert_select "[data-controller='event-image-preupload']"
-    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 2
+    assert_select "[data-event-image-crop-preview-target='previewBox']", count: 3
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
     assert_includes response.body, "LLM-Enrichment ist für neue Events erst nach dem ersten Speichern verfügbar."
   end
@@ -2054,6 +2054,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings button[data-promotion-banner-color-target='eyedropper']", count: 2
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_highlight_video[highlight_video_signed_id]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_highlight_video[remove_highlight_video]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_highlight_landscape_video[highlight_landscape_video_signed_id]'][form='editor_form_event_#{@published_event.id}']", count: 1
+    assert_select "#event-editor-panel-settings input[name='event_highlight_landscape_video[remove_highlight_landscape_video]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_copyright]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_focus_x]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_image_focus_y]'][form='editor_form_event_#{@published_event.id}']", count: 1
@@ -2110,6 +2114,33 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 145.0, @published_event.promotion_banner_image_zoom_value
     assert_equal "#18333A", @published_event.promotion_banner_background_color
     assert_equal "#F97316", @published_event.promotion_banner_cta_color
+    assert_includes response.body, 'value="settings"'
+  end
+
+  test "editor can save an event landscape highlight video from settings" do
+    sign_in_as(@user)
+    video_blob = direct_uploaded_video_blob(filename: "stuttgart-mix-video.mp4")
+
+    patch backend_event_url(@published_event), params: {
+      event: {
+        title: @published_event.title,
+        artist_name: @published_event.artist_name,
+        start_at: @published_event.start_at,
+        venue: @published_event.venue,
+        city: @published_event.city,
+        status: @published_event.status,
+        highlight_video_overlay_enabled: "0"
+      },
+      event_highlight_landscape_video: {
+        highlight_landscape_video_signed_id: video_blob.signed_id,
+        remove_highlight_landscape_video: "0"
+      },
+      editor_tab: "settings",
+      next_event_enabled: "0"
+    }, as: :turbo_stream
+
+    assert_response :success
+    assert_predicate @published_event.reload.highlight_landscape_video_file, :attached?
     assert_includes response.body, 'value="settings"'
   end
 
@@ -2810,6 +2841,14 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         content_type: "image/png"
       )
     end
+  end
+
+  def direct_uploaded_video_blob(filename:)
+    ActiveStorage::Blob.create_and_upload!(
+      io: StringIO.new("fake video content"),
+      filename: filename,
+      content_type: "video/mp4"
+    )
   end
 
   def create_event_image(event:, purpose:, grid_variant: nil, alt_text: "Alt", sub_text: "Sub")

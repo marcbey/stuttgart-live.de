@@ -51,11 +51,30 @@ module Public
       end
 
       def meta_line
-        [ published_on_label, author_meta_label ].compact.join(" ")
+        published_on_label
       end
 
       def author_label
         blog_post.display_author_name.to_s.strip.presence || "Redaktion"
+      end
+
+      def author_role
+        author_profile&.role.presence || "Redaktion"
+      end
+
+      def author_image_source
+        return if author_profile&.image_path.blank?
+
+        view_context.asset_path(author_profile.image_path)
+      end
+
+      def author_initials
+        author_label
+          .split
+          .filter_map { |part| part.first&.upcase }
+          .join
+          .first(2)
+          .presence || "SL"
       end
 
       def published_on_label
@@ -149,8 +168,22 @@ module Public
         teaser.presence || blog_post.body.to_plain_text.squish.presence || headline.to_s
       end
 
-      def author_meta_label
-        "von #{author_label}"
+      def author_profile
+        @author_profile ||= Newsletter::TeamTipProfiles.all.find { |profile| author_matches_profile?(profile) }
+      end
+
+      def author_matches_profile?(profile)
+        profile_tokens = [
+          profile.name,
+          profile.key.to_s.tr("-", " ")
+        ].join(" ").downcase.scan(/[[:alnum:]]+/)
+        author_tokens = [
+          author_label,
+          blog_post.author&.name,
+          blog_post.author&.email_address
+        ].compact.join(" ").downcase.scan(/[[:alnum:]]+/)
+
+        (profile_tokens & author_tokens).any?
       end
     end
   end

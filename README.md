@@ -183,7 +183,7 @@ Wichtig für die Generierung:
 
 - Als Ziel-URL wird die kanonische öffentliche Event-URL verwendet.
 - Als Bildquelle gilt zuerst das redaktionelle Eventbild, danach ein Promotion-Banner und danach ein Import-/Fallback-Bild.
-- Der serverseitig gerenderte Bildtext folgt typografisch der `Unsere Highlights`-Kachel: `Bebas Neue` für den Artist und `Archivo Narrow` für Datum und Venue; der Event-Titel wird im Bild nicht separat gerendert.
+- Der serverseitig gerenderte Bildtext folgt typografisch der `Unsere Highlights`-Kachel: `Oswald` für den Artist und `Archivo Narrow` für Datum und Venue; der Event-Titel wird im Bild nicht separat gerendert.
 - Die Caption enthält Artist oder Titel, Datum, Venue, einen kurzen Call-to-Action und die Event-URL.
 - Damit das auf Production stabil funktioniert, werden die Runtime-Fonts zusätzlich im Docker-Image für Fontconfig/Pango installiert; die Browser-Webfonts bleiben davon unberührt.
 
@@ -397,10 +397,13 @@ Wichtig für die Interpretation:
 - PostgreSQL
 - Node.js und npm
 - ein lokales Bildverarbeitungs-Backend für Active Storage, bevorzugt `libvips`, alternativ ImageMagick
+- FFmpeg für die serverseitige Komprimierung redaktionell hochgeladener Highlight-Videos
 
 Für die lokale Entwicklung und für den Produktionscontainer gilt dieselbe Ruby-Version. Kamal rollt die App als Docker-Image aus; der Produktionshost selbst braucht deshalb kein separates systemweites Ruby 4.
 
 Wenn beim Laden von Bildvarianten Fehler wie `executable not found: "convert"` auftreten, fehlt lokal meist das ImageMagick-Kommandozeilenwerkzeug. In diesem Projekt ist `libvips` die bevorzugte Option; ohne `libvips` oder ImageMagick können verkleinerte Vorschaubilder und Web-Varianten nicht erzeugt werden.
+
+Highlight-Videos werden beim Speichern mit FFmpeg als weboptimiertes MP4 neu geschrieben. Die resultierende Größe hängt stark von Länge und Motiv ab; ein 80-MB-Upload landet typischerweise deutlich darunter, bleibt aber bei sehr bewegtem Material größer als ein ruhiges Teaser-Video.
 
 ### Schnellstart
 

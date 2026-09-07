@@ -1,37 +1,69 @@
 <% strict_proxy = local_assigns.fetch(:strict_proxy, homepage_media_strict_proxy?) %>
 <% image_priority = local_assigns.fetch(:image_priority, false) %>
+<% slider = local_assigns.fetch(:slider, false) %>
 <% event_image = event.event_image %>
+<% event_image_classes = nil %>
 <% uses_promotion_banner_image = event.promotion_banner_image.attached? %>
-<% event_image_source = uses_promotion_banner_image ? optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) : event_image_source(event_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
-<% event_image_srcset = uses_promotion_banner_image ? optimized_event_promotion_banner_image_srcset(event, strict_proxy: strict_proxy) : event_image_srcset(event_image, variant_sizes: %i[banner_mobile banner_desktop], strict_proxy: strict_proxy) %>
-<% event_image_style = uses_promotion_banner_image ? event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0) : event_cropped_image_style(event_image, frame_ratio: 16.0 / 9.0) %>
-<% event_image_credit = uses_promotion_banner_image ? event.promotion_banner_image_copyright : event_image&.sub_text %>
-<% image_alt = uses_promotion_banner_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(event_image, event) %>
+<% uses_landscape_banner_image = event.promotion_banner_landscape_image.attached? && (!slider || !uses_promotion_banner_image) %>
+<% uses_event_image = event_image.present? %>
+<% if uses_landscape_banner_image %>
+  <% event_image_source = optimized_event_promotion_banner_landscape_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) %>
+  <% event_image_srcset = optimized_event_promotion_banner_landscape_image_srcset(event, strict_proxy: strict_proxy) %>
+  <% event_image_style = event_promotion_banner_landscape_image_style(event, frame_ratio: 16.0 / 9.0) %>
+  <% event_image_credit = event.promotion_banner_landscape_image_copyright.presence || event.promotion_banner_image_copyright %>
+  <% image_alt = "#{event.artist_name} - #{event.title}" %>
+<% elsif slider && uses_promotion_banner_image %>
+  <% event_image_source = optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) %>
+  <% event_image_srcset = optimized_event_promotion_banner_image_srcset(event, strict_proxy: strict_proxy) %>
+  <% event_image_style = event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0) %>
+  <% event_image_credit = event.promotion_banner_image_copyright %>
+  <% image_alt = "#{event.artist_name} - #{event.title}" %>
+<% elsif uses_event_image %>
+  <% event_image_source = event_image_source(event_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
+  <% event_image_srcset = event_image_srcset(event_image, variant_sizes: %i[banner_mobile banner_desktop], strict_proxy: strict_proxy) %>
+  <% event_image_style = event_card_image_style(event_image) %>
+  <% event_image_classes = "promotion-banner-image--contain" unless slider %>
+  <% event_image_credit = event_image&.sub_text %>
+  <% image_alt = event_image_alt(event_image, event) %>
+<% else %>
+  <% event_image_source = optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) if uses_promotion_banner_image %>
+  <% event_image_srcset = optimized_event_promotion_banner_image_srcset(event, strict_proxy: strict_proxy) if uses_promotion_banner_image %>
+  <% event_image_style = event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0) if uses_promotion_banner_image %>
+  <% event_image_credit = event.promotion_banner_image_copyright %>
+  <% image_alt = "#{event.artist_name} - #{event.title}" %>
+<% end %>
 <% article_classes = "promotion-banner promotion-banner-event promotion-banner-poster" %>
 <% article_classes = "#{article_classes} promotion-banner-layout-reversed" if local_assigns[:layout_variant] == :reversed %>
 <% image_dimensions = public_promotion_banner_image_dimensions %>
+<% default_slider_background = slider && event.promotion_banner_background_color.blank? %>
+<% banner_background_color = default_slider_background ? "#080909" : event.promotion_banner_background_color_value %>
+<% banner_text_color_scheme = default_slider_background ? Event::PROMOTION_BANNER_TEXT_COLOR_LIGHT : event.promotion_banner_text_color_scheme %>
 
 <%= render "public/events/promotion_banner_component",
            article_classes: article_classes,
-           article_style: "--promotion-banner-background: #{event.promotion_banner_background_color_value}; --promotion-banner-cta-color: #{event.promotion_banner_cta_color_value}; --promotion-banner-cta-text-color: #{event.promotion_banner_cta_text_color_value}",
+           article_style: "--promotion-banner-background: #{banner_background_color}; --promotion-banner-cta-color: #{event.promotion_banner_cta_color_value}; --promotion-banner-cta-text-color: #{event.promotion_banner_cta_text_color_value}",
            admin_link_path: (authenticated? ? backend_events_path(status: event.status, event_id: event.id) : nil),
            admin_link_label: "Edit",
            href: public_event_detail_path(event, browse_state),
-           link_classes: "promotion-banner-link promotion-banner-link-#{event.promotion_banner_text_color_scheme}",
+           link_classes: "promotion-banner-link promotion-banner-link-#{banner_text_color_scheme}",
            link_style: "background: var(--promotion-banner-background)",
            image_source: event_image_source,
            image_srcset: event_image_srcset,
            image_sizes: "(max-width: 699px) 100vw, 56vw",
            image_alt: image_alt,
            image_style: event_image_style,
+           image_classes: event_image_classes,
            image_loading: (image_priority ? "eager" : "lazy"),
            image_fetchpriority: ("high" if image_priority),
            image_decoding: "async",
            image_width: image_dimensions.fetch(:width),
            image_height: image_dimensions.fetch(:height),
            credit: event_image_credit,
-           kicker_text: event.promotion_banner_kicker_text_value,
-           heading: event.promotion_banner_title_value,
-           subheading: event.promotion_banner_text_value,
+           kicker_text: (slider ? nil : event.promotion_banner_kicker_text_value),
+           kicker_date: (l(event.start_at.to_date, format: "%d.%m.%Y") if slider),
+           kicker_location: (event.venue.to_s.strip.presence if slider),
+           meta_after_subheading: slider,
+           heading: (slider ? (event.artist_name.presence || event.promotion_banner_title_value) : event.promotion_banner_title_value),
+           subheading: (slider ? event.title.to_s.strip.presence : event.promotion_banner_text_value),
            cta_style: "background: transparent; border-color: var(--promotion-banner-cta-color); color: var(--promotion-banner-cta-color)",
-           cta_text: event.promotion_banner_cta_text_value %>
+           cta_text: (slider ? (event.public_ticket_status_label.presence || "Tickets sichern") : event.promotion_banner_cta_text_value) %>

@@ -35,7 +35,7 @@ module Newsletter
     NEWSLETTER_LOGO_PATH = "newsletter/logo-sl.png"
     GENRE_NAV_ANCHOR = "newsletter-genres"
     MAILJET_PERMALINK_PLACEHOLDER = "[[PERMALINK]]"
-    HEART_MARKERS = [ "\u{1FA75}", "\u{1F49C}", "\u{1F49A}" ].freeze
+    HEART_MARKERS = [ "\u{1FA75}", "\u{1F49C}", "\u{1F49A}", "\u{2665}" ].freeze
     TURQUOISE_HEART_HTML = '<span style="color:#28c7c2;font-size:1.5em;line-height:0;">&#9829;</span>'
     SOCIAL_LINKS = [
       {
@@ -87,10 +87,6 @@ module Newsletter
                   display: none !important;
                 }
 
-                .newsletter-header-title {
-                  display: none !important;
-                }
-
                 .newsletter-genre-jump-nav,
                 .newsletter-genre-back-link {
                   display: none !important;
@@ -99,13 +95,23 @@ module Newsletter
                 }
 
                 .newsletter-weekly-header {
-                  padding-top: 15px !important;
-                  padding-bottom: 8px !important;
+                  padding-top: 18px !important;
+                  padding-bottom: 20px !important;
                   margin-bottom: 20px !important;
                 }
 
                 .newsletter-logo-table {
-                  margin-bottom: 0 !important;
+                  margin-bottom: 22px !important;
+                }
+
+                .newsletter-header-title {
+                  font-size: 19px !important;
+                  line-height: 1.08 !important;
+                }
+
+                .newsletter-weekly-copy {
+                  font-size: 16px !important;
+                  line-height: 1.38 !important;
                 }
 
                 .newsletter-shell {
@@ -309,8 +315,12 @@ module Newsletter
 
     def weekly_mix_header_html
       <<~HTML
-        <section class="newsletter-weekly-header" style="margin:0 0 20px;padding:22px 24px 14px;background:#303636;color:#fff;">
-          #{header_html(dark: true)}
+        <section class="newsletter-weekly-header" style="margin:0 0 20px;padding:24px 24px 22px;background:#fff;color:#102223;border-bottom:1px solid #dfe6e4;">
+          <header style="margin:0;padding:0;">
+            #{weekly_brand_logo_html}
+            <h1 class="newsletter-header-title" style="margin:0 0 10px;font-size:20px;line-height:1.08;font-weight:800;letter-spacing:.01em;text-transform:uppercase;color:#102223;">#{escape(issue.display_header_title.to_s.upcase)}</h1>
+            #{weekly_intro_html}
+          </header>
         </section>
       HTML
     end
@@ -352,6 +362,34 @@ module Newsletter
             </td>
           </tr>
         </table>
+      HTML
+    end
+
+    def weekly_brand_logo_html
+      logo_url = absolute_media_url(ActionController::Base.helpers.asset_path(NEWSLETTER_LOGO_PATH))
+      return text_logo_html("#102223") if logo_url.blank?
+
+      <<~HTML
+        <table class="newsletter-logo-table" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 28px;border-collapse:collapse;">
+          <tr>
+            <td align="left" valign="middle" style="padding:0;">
+              <img src="#{logo_url}" width="116" alt="Stuttgart Live" style="display:block;width:116px;max-width:116px;height:auto;border:0;outline:none;text-decoration:none;background:transparent;">
+            </td>
+            <td class="newsletter-header-social-icons" align="right" valign="middle" style="padding:0;">
+              #{social_icons_html}
+            </td>
+          </tr>
+        </table>
+      HTML
+    end
+
+    def weekly_intro_html
+      return "" if issue.intro.blank?
+
+      <<~HTML
+        <p class="newsletter-weekly-copy" style="margin:0;max-width:520px;font-size:17px;line-height:1.4;font-weight:400;color:#263334;">
+          #{escape_with_line_breaks(issue.intro)}
+        </p>
       HTML
     end
 
@@ -432,7 +470,6 @@ module Newsletter
       news_items = genre_weekly_mix_news_items
 
       [
-        intro_html,
         team_tip_html,
         (genre_jump_nav_html(grouped_sections) if grouped_sections.any?),
         news_section_html(news_items),
@@ -794,8 +831,8 @@ module Newsletter
               <td align="center" style="padding:0 0 24px;">
                 <table class="newsletter-footer-cta-table" role="presentation" width="430" cellspacing="0" cellpadding="0" border="0" style="width:430px;max-width:100%;border-collapse:collapse;">
                   <tr>
-                    <td align="center" bgcolor="#28c7c2" style="border-radius:6px;background:#28c7c2;">
-                      <a class="newsletter-footer-cta" href="#{escape(website_url)}" target="_blank" rel="noopener" style="display:block;background:#28c7c2;color:#102223;text-decoration:none;font-size:18px;line-height:1.2;font-weight:700;border-radius:6px;padding:15px 22px;">Mehr Events entdecken</a>
+                    <td align="center" bgcolor="#000000" style="border-radius:999px;background:#000000;">
+                      <a class="newsletter-footer-cta" href="#{escape(website_url)}" target="_blank" rel="noopener" style="display:block;background:#000000;color:#ffffff;text-decoration:none;font-size:18px;line-height:1.2;font-weight:700;border-radius:999px;padding:15px 22px;">Mehr Events entdecken</a>
                     </td>
                   </tr>
                 </table>
