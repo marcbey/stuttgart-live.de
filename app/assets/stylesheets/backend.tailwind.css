@@ -3226,8 +3226,8 @@ width: min(100%, 24rem);
 }
 
 .event-image-crop-frame[data-grid-variant="promotion-banner"] {
-width: min(100%, 24rem);
-  aspect-ratio: 16 / 9;
+width: min(100%, 18rem);
+  aspect-ratio: 1 / 1.16;
 }
 
 .promotion-banner-color-inputs {

@@ -31,4 +31,14 @@ class HomepagePromotionBannerStylesheetTest < ActiveSupport::TestCase
     assert_match(/height:\s*100%\s*!important/, mobile_stylesheet)
     assert_match(/object-fit:\s*cover\s*!important/, mobile_stylesheet)
   end
+
+  test "backend promotion banner editor previews the portrait crop" do
+    stylesheet = Rails.root.join("app/assets/stylesheets/backend.tailwind.css").read
+    rule = stylesheet[/\.event-image-crop-frame\[data-grid-variant="promotion-banner"\]\s*\{([^}]*)\}/m, 1]
+
+    assert_not_nil rule
+    assert_match(/width:\s*min\(100%,\s*18rem\)/, rule)
+    assert_match(%r{aspect-ratio:\s*1\s*/\s*1\.16}, rule)
+    refute_match(%r{aspect-ratio:\s*16\s*/\s*9}, rule)
+  end
 end

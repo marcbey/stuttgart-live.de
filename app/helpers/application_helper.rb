@@ -162,6 +162,14 @@ module ApplicationHelper
     ].join("; ")
   end
 
+  def event_promotion_banner_card_image_style(event)
+    focused_image_style(
+      focus_x: event.promotion_banner_image_focus_x_value,
+      focus_y: event.promotion_banner_image_focus_y_value,
+      zoom: event.promotion_banner_image_zoom_value
+    )
+  end
+
   def optimized_event_image_representation(image, size: nil)
     return if image.blank?
     return image unless image.is_a?(EventImage)
