@@ -6,8 +6,7 @@ module Public
     allow_unauthenticated_access only: %i[index show]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
-    INDEX_SLOT_BUDGET = 16
-    IMAGE_CARD_SLOT_SPAN = 2
+    INDEX_PAGE_SIZE = 10
     before_action :set_browse_state
 
     def index
@@ -32,30 +31,11 @@ module Public
 
       def assign_blog_posts_page
         @offset = [ params[:offset].to_i, 0 ].max
-        records = BlogPost.published_live.with_attached_cover_image.offset(@offset).limit(INDEX_SLOT_BUDGET + 1).to_a
+        records = BlogPost.published_live.with_attached_cover_image.offset(@offset).limit(INDEX_PAGE_SIZE + 1).to_a
 
-        @blog_posts = records_for_index_slots(records)
+        @blog_posts = records.first(INDEX_PAGE_SIZE)
         @has_more_blog_posts = records.size > @blog_posts.size
         @next_offset = @offset + @blog_posts.size
-      end
-
-      def records_for_index_slots(records)
-        selected_records = []
-        used_slots = 0
-
-        records.each do |record|
-          slot_span = index_card_slot_span(record)
-          break if used_slots + slot_span > INDEX_SLOT_BUDGET
-
-          selected_records << record
-          used_slots += slot_span
-        end
-
-        selected_records
-      end
-
-      def index_card_slot_span(blog_post)
-        blog_post.cover_image.attached? ? IMAGE_CARD_SLOT_SPAN : 1
       end
 
       def assign_design_news_chrome

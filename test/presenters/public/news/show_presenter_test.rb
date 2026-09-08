@@ -108,6 +108,24 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "/assets/newsletter/team/sarah.jpg", presenter.author_image_source
   end
 
+  test "prefers the matching author name over an email domain" do
+    blog_post = build_post(
+      title: "Supporter News",
+      teaser: "Aus dem Team",
+      slug: "supporter-news",
+      published_at: Time.zone.local(2026, 3, 18, 12, 0),
+      cover_image_copyright: nil
+    )
+    blog_post.author_name = nil
+    blog_post.author = User.new(name: "Katharina Schopper", email_address: "katharinaschopper@russ-live.de")
+
+    presenter = build_presenter(blog_post)
+
+    assert_equal "Katharina Schopper", presenter.author_label
+    assert_equal "Grafik/Layout", presenter.author_role
+    assert_equal "/assets/newsletter/team/kathi.jpg", presenter.author_image_source
+  end
+
   test "normalizes stored youtube embed urls for display" do
     blog_post = build_post(
       title: "Video News",

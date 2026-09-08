@@ -1,6 +1,12 @@
 <% genre_lanes = Array(local_assigns[:genre_lanes]) %>
 <% saved_events = Array(local_assigns[:saved_events]) %>
 <% menu_groups = Array(local_assigns[:menu_groups]) %>
+<% all_events_path = all_stuttgart_lane_path %>
+<% genre_paths = genre_lanes.map(&:public_path) %>
+<% active_path = request.path %>
+<% all_events_active = active_path == all_events_path %>
+<% news_active = active_path == news_index_path || active_path.start_with?("#{news_index_path}/") %>
+<% genres_active = genre_paths.include?(active_path) %>
 
 <header class="design-preview-topbar">
   <%= link_to root_path, class: "design-preview-logo", aria: { label: "Stuttgart Live Startseite" } do %>
@@ -20,33 +26,32 @@
        aria-label="Genres"
        data-design-preview-filterbar-target="headerGenres">
     <%= link_to "Alles",
-                all_stuttgart_lane_path,
-                class: "design-preview-header-genre-link design-preview-header-genre-link--all",
+                all_events_path,
+                class: [
+                  "design-preview-header-genre-link",
+                  "design-preview-header-genre-link--all",
+                  ("is-active" if all_events_active)
+                ],
                 data: { design_preview_filterbar_target: "headerGenreItem" } %>
-    <% genre_lanes.each do |lane| %>
-      <%= link_to lane.group.name,
-                  lane.public_path,
-                  class: "design-preview-header-genre-link",
-                  data: { design_preview_filterbar_target: "headerGenreItem" } %>
-    <% end %>
-    <%= link_to "News",
-                news_index_path,
-                class: "design-preview-header-genre-link design-preview-header-genre-link--news",
-                data: { design_preview_filterbar_target: "headerGenreItem" } %>
-    <details class="design-preview-header-genres-more">
+    <details class="<%= class_names("design-preview-header-genres-more", "is-active": genres_active) %>">
       <summary>
         Alle Genres
         <span aria-hidden="true"></span>
       </summary>
       <div class="design-preview-header-genres-menu">
-        <%= link_to "Alles", all_stuttgart_lane_path %>
         <% genre_lanes.each do |lane| %>
           <%= link_to lane.group.name, lane.public_path %>
         <% end %>
-        <%= link_to "News", news_index_path %>
-        <%= link_to "Alle Genres anzeigen", events_path %>
       </div>
     </details>
+    <%= link_to "News",
+                news_index_path,
+                class: [
+                  "design-preview-header-genre-link",
+                  "design-preview-header-genre-link--news",
+                  ("is-active" if news_active)
+                ],
+                data: { design_preview_filterbar_target: "headerGenreItem" } %>
   </nav>
 
   <nav class="design-preview-actions" aria-label="Vorschau Navigation">

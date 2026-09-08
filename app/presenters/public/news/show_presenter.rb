@@ -169,19 +169,23 @@ module Public
       end
 
       def author_profile
-        @author_profile ||= Newsletter::TeamTipProfiles.all.find { |profile| author_matches_profile?(profile) }
+        @author_profile ||= begin
+          profile = Newsletter::TeamTipProfiles.all.find do |candidate|
+            author_matches_profile?(candidate, sources: [ author_label, blog_post.author&.name ])
+          end
+
+          profile || Newsletter::TeamTipProfiles.all.find do |candidate|
+            author_matches_profile?(candidate, sources: [ blog_post.author&.email_address ])
+          end
+        end
       end
 
-      def author_matches_profile?(profile)
+      def author_matches_profile?(profile, sources: [ author_label, blog_post.author&.name, blog_post.author&.email_address ])
         profile_tokens = [
           profile.name,
           profile.key.to_s.tr("-", " ")
         ].join(" ").downcase.scan(/[[:alnum:]]+/)
-        author_tokens = [
-          author_label,
-          blog_post.author&.name,
-          blog_post.author&.email_address
-        ].compact.join(" ").downcase.scan(/[[:alnum:]]+/)
+        author_tokens = sources.compact.join(" ").downcase.scan(/[[:alnum:]]+/)
 
         (profile_tokens & author_tokens).any?
       end

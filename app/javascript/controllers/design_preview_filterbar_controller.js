@@ -70,33 +70,9 @@ export default class extends Controller {
     const more = this.headerGenresTarget.querySelector(".design-preview-header-genres-more")
     if (!(more instanceof HTMLElement)) return
 
-    more.hidden = true
+    more.hidden = false
     this.headerGenreItemTargets.forEach((item) => {
       item.hidden = false
-    })
-
-    const availableWidth = this.headerGenresTarget.clientWidth
-    if (availableWidth <= 0) return
-
-    const gap = Number.parseFloat(window.getComputedStyle(this.headerGenresTarget).columnGap) || 0
-    const allGenresWidth = this.headerGenreItemTargets.reduce((sum, item, index) => (
-      sum + item.offsetWidth + (index > 0 ? gap : 0)
-    ), 0)
-
-    if (allGenresWidth <= availableWidth) return
-
-    more.hidden = false
-    let usedWidth = more.offsetWidth
-
-    this.headerGenreItemTargets.forEach((item) => {
-      const itemWidth = item.offsetWidth
-      const nextWidth = usedWidth + gap + itemWidth
-
-      if (nextWidth <= availableWidth) {
-        usedWidth = nextWidth
-      } else {
-        item.hidden = true
-      }
     })
   }
 

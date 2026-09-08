@@ -36,7 +36,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".news-index-newsletter-slot", count: 0
   end
 
-  test "index renders the first four rows of live posts with load more button" do
+  test "index renders the first ten live posts with load more button" do
     blog_posts = 18.times.map do |index|
       create_blog_post(
         title: "Paged News #{index}",
@@ -53,14 +53,14 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     titles = document.css(".news-index-card:not(.news-index-card-newsletter) h2").map(&:text)
     more_link = document.at_css("#news-index-more a")
 
-    assert_equal [ @live_post.title, *blog_posts.first(15).map(&:title) ], titles
-    assert_not_includes titles, blog_posts[15].title
+    assert_equal [ @live_post.title, *blog_posts.first(9).map(&:title) ], titles
+    assert_not_includes titles, blog_posts[9].title
     assert_equal "Mehr laden", more_link&.text&.strip
-    assert_equal news_index_path(offset: 16, format: :turbo_stream), more_link&.[]("href")
+    assert_equal news_index_path(offset: 10, format: :turbo_stream), more_link&.[]("href")
     assert_equal "true", more_link&.[]("data-turbo-stream")
   end
 
-  test "index counts image news as wider cards in the four row budget" do
+  test "index keeps image news within the ten post page size" do
     @live_post.cover_image.attach(
       io: StringIO.new(solid_png_binary(width: 2000, height: 1500)),
       filename: "news-cover.png",
@@ -83,13 +83,13 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     titles = document.css(".news-index-card:not(.news-index-card-newsletter) h2").map(&:text)
     more_link = document.at_css("#news-index-more a")
 
-    assert_equal [ @live_post.title, *blog_posts.first(14).map(&:title) ], titles
-    assert_not_includes titles, blog_posts[14].title
-    assert_equal news_index_path(offset: 15, format: :turbo_stream), more_link&.[]("href")
+    assert_equal [ @live_post.title, *blog_posts.first(9).map(&:title) ], titles
+    assert_not_includes titles, blog_posts[9].title
+    assert_equal news_index_path(offset: 10, format: :turbo_stream), more_link&.[]("href")
   end
 
   test "index hides load more button when there are no additional posts" do
-    10.times do |index|
+    9.times do |index|
       create_blog_post(
         title: "Limited News #{index}",
         status: "published",
@@ -103,7 +103,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#news-index-more a", count: 0
   end
 
-  test "index turbo stream appends the next four rows of live posts" do
+  test "index turbo stream appends the next ten live posts" do
     blog_posts = 35.times.map do |index|
       create_blog_post(
         title: "Stream News #{index}",
@@ -112,7 +112,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
       )
     end
 
-    get news_index_url(offset: 16), as: :turbo_stream
+    get news_index_url(offset: 10), as: :turbo_stream
 
     assert_response :success
 
@@ -122,8 +122,8 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     appended_titles = append_stream.css(".news-index-card:not(.news-index-card-newsletter) h2").map(&:text)
     next_more_link = replace_stream.at_css("a")
 
-    assert_equal blog_posts[15, 16].map(&:title), appended_titles
-    assert_equal news_index_path(offset: 32, format: :turbo_stream), next_more_link&.[]("href")
+    assert_equal blog_posts[9, 10].map(&:title), appended_titles
+    assert_equal news_index_path(offset: 20, format: :turbo_stream), next_more_link&.[]("href")
     assert_select "turbo-stream[action='append'][target='news-index-grid'] .news-index-card-newsletter", count: 0
   end
 

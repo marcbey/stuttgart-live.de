@@ -32,6 +32,12 @@
 <% today_events = Array(@home_tagestipp_events) %>
 <% under_30_events = Array(@home_under_30_events) %>
 <% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: highlights) %>
+<% all_events_path = @home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path %>
+<% genre_paths = genre_lanes.map(&:public_path) %>
+<% active_path = request.path %>
+<% all_events_active = active_path == all_events_path %>
+<% news_active = active_path == news_index_path || active_path.start_with?("#{news_index_path}/") %>
+<% genres_active = genre_paths.include?(active_path) %>
 <% promotion_banner_events = promotion_banners.filter_map { |banner| banner.fetch(:record) if banner.fetch(:type) == :event } %>
 <% stuttgart_mix_pool = (lane_pool + highlights + today_events + under_30_events + promotion_banner_events).compact.uniq(&:id) %>
 <% stuttgart_mix_events = Array(@design_preview_mix_events).presence || stuttgart_mix_pool %>
@@ -60,33 +66,32 @@
          aria-label="Genres"
          data-design-preview-filterbar-target="headerGenres">
       <%= link_to "Alles",
-                  (@home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path),
-                  class: "design-preview-header-genre-link design-preview-header-genre-link--all",
+                  all_events_path,
+                  class: [
+                    "design-preview-header-genre-link",
+                    "design-preview-header-genre-link--all",
+                    ("is-active" if all_events_active)
+                  ],
                   data: { design_preview_filterbar_target: "headerGenreItem" } %>
-      <% genre_lanes.each do |lane| %>
-        <%= link_to lane.group.name,
-                    lane.public_path,
-                    class: "design-preview-header-genre-link",
-                    data: { design_preview_filterbar_target: "headerGenreItem" } %>
-      <% end %>
-      <%= link_to "News",
-                  news_index_path,
-                  class: "design-preview-header-genre-link design-preview-header-genre-link--news",
-                  data: { design_preview_filterbar_target: "headerGenreItem" } %>
-      <details class="design-preview-header-genres-more">
+      <details class="<%= class_names("design-preview-header-genres-more", "is-active": genres_active) %>">
         <summary>
           Alle Genres
           <span aria-hidden="true"></span>
         </summary>
         <div class="design-preview-header-genres-menu">
-          <%= link_to "Alles", (@home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path) %>
           <% genre_lanes.each do |lane| %>
             <%= link_to lane.group.name, lane.public_path %>
           <% end %>
-          <%= link_to "News", news_index_path %>
-          <%= link_to "Alle Genres anzeigen", events_path %>
         </div>
       </details>
+      <%= link_to "News",
+                  news_index_path,
+                  class: [
+                    "design-preview-header-genre-link",
+                    "design-preview-header-genre-link--news",
+                    ("is-active" if news_active)
+                  ],
+                  data: { design_preview_filterbar_target: "headerGenreItem" } %>
     </nav>
 
     <nav class="design-preview-actions" aria-label="Vorschau Navigation">
