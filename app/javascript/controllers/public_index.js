@@ -43,6 +43,7 @@ const lazyControllers = {
   "design-preview-description-toggle": () => import("./design_preview_description_toggle_controller"),
   "design-preview-menu": () => import("./design_preview_menu_controller"),
   "design-preview-filterbar": () => import("./design_preview_filterbar_controller"),
+  "all-stuttgart-filters": () => import("./all_stuttgart_filters_controller"),
   "backend-nav-menu": () => import("./backend_nav_menu_controller"),
   "design-preview-feature-slider": () => import("./design_preview_feature_slider_controller"),
   "event-series-calendar": () => import("./event_series_calendar_controller"),

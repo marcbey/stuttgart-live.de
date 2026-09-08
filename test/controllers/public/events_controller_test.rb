@@ -633,6 +633,45 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#lane-event-grid .genre-lane-card-name", text: today_event.artist_name
   end
 
+  test "all stuttgart lane filters monthly events by location" do
+    event_month = Time.zone.today.next_month.beginning_of_month
+    matching_event = Event.create!(
+      slug: "all-stuttgart-location-match",
+      source_fingerprint: "test::public::all-stuttgart::location-match",
+      title: "Location Match Tour",
+      artist_name: "Location Match Artist",
+      start_at: event_month.change(day: 3, hour: 20, min: 0, sec: 0),
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    other_event = Event.create!(
+      slug: "all-stuttgart-location-other",
+      source_fingerprint: "test::public::all-stuttgart::location-other",
+      title: "Location Other Tour",
+      artist_name: "Location Other Artist",
+      start_at: event_month.change(day: 4, hour: 20, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+
+    get all_stuttgart_lane_url(event_month: event_month.strftime("%Y-%m"), event_location: matching_event.venue)
+
+    assert_response :success
+    assert_select ".all-stuttgart-event-title a", text: matching_event.artist_name
+    assert_select ".all-stuttgart-event-title a", text: other_event.artist_name, count: 0
+    assert_select ".all-stuttgart-location-summary span", text: matching_event.venue
+    assert_select ".all-stuttgart-location-menu a", text: "Alle Locations"
+    assert_select ".all-stuttgart-location-menu a", text: other_event.venue
+  end
+
   test "under 30 lane renders only affordable events with active tickets" do
     earlier_under_30_event = Event.create!(
       slug: "lane-page-earlier-under-30",
@@ -2846,8 +2885,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the target event card to be rendered in the all events slider"
-    assert_equal "Event-Reihe: 2 weitere Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
-    assert_equal "2 weitere Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
+    assert_equal "Event-Reihe: 2 Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
+    assert_equal "2 Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
   end
 
   test "index initially limits highlights fallback and exposes remaining events through lane endpoint" do
@@ -3115,8 +3154,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the series event to be rendered in Tagestipp"
-    assert_equal "Event-Reihe: weitere Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
-    assert_equal "weitere Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
+    assert_equal "Event-Reihe: Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
+    assert_equal "Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
   end
 
   test "index can be filtered to SKS events" do

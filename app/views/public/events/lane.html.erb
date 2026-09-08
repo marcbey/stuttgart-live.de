@@ -48,14 +48,17 @@
                  months: @lane_months,
                  selected_month: @lane_selected_month,
                  month_labels_by_value: @lane_month_labels_by_value,
-                 selected_genre: @all_stuttgart_selected_genre %>
+                 selected_genre: @all_stuttgart_selected_genre,
+                 selected_location: @all_stuttgart_selected_location %>
 
       <%= render "all_stuttgart_event_list",
                  title: lane_display_title,
                  events: @lane_events,
                  browse_state: @browse_state,
                  genres: @all_stuttgart_genres,
+                 locations: @all_stuttgart_locations,
                  selected_genre: @all_stuttgart_selected_genre,
+                 selected_location: @all_stuttgart_selected_location,
                  selected_month: @lane_selected_month %>
     <% else %>
       <%= render "lane_page_section",

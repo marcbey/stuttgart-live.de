@@ -8,10 +8,12 @@
   month_labels_by_value = local_assigns.fetch(:month_labels_by_value, {})
   selected_month_label = month_labels_by_value[selected_month] || selected_month.strftime("%m/%Y")
   selected_genre = local_assigns[:selected_genre]
+  selected_location = local_assigns[:selected_location].to_s.presence
   month_path_params = ->(month) {
     {
       event_month: month.strftime("%Y-%m"),
-      event_genre: selected_genre&.slug
+      event_genre: selected_genre&.slug,
+      event_location: selected_location
     }.compact
   }
 %>

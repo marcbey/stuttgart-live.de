@@ -1059,10 +1059,15 @@ module Public
       @all_stuttgart_selected_genre = selected_all_stuttgart_genre
       @all_stuttgart_genres = all_stuttgart_genres_for(month_relation)
       @all_stuttgart_genres |= [ @all_stuttgart_selected_genre ] if @all_stuttgart_selected_genre.present?
+      @all_stuttgart_selected_location = selected_all_stuttgart_location(month_relation)
+      @all_stuttgart_locations = all_stuttgart_locations_for(month_relation)
+      @all_stuttgart_locations |= [ @all_stuttgart_selected_location ] if @all_stuttgart_selected_location.present?
 
-      return month_relation if @all_stuttgart_selected_genre.blank?
+      filtered_relation = month_relation
+      filtered_relation = filtered_relation.joins(:genres).where(genres: { id: @all_stuttgart_selected_genre.id }).distinct if @all_stuttgart_selected_genre.present?
+      filtered_relation = filtered_relation.left_outer_joins(:venue_record).where(venues: { name: @all_stuttgart_selected_location }) if @all_stuttgart_selected_location.present?
 
-      month_relation.joins(:genres).where(genres: { id: @all_stuttgart_selected_genre.id }).distinct
+      filtered_relation
     end
 
     def all_stuttgart_genres_for(relation)
@@ -1071,11 +1076,30 @@ module Public
       Genre.where(id: genre_ids).order(:name).to_a
     end
 
+    def all_stuttgart_locations_for(relation)
+      relation
+        .except(:order)
+        .left_outer_joins(:venue_record)
+        .where.not(venues: { name: [ nil, "" ] })
+        .pluck("venues.name")
+        .map { |venue| venue.to_s.strip }
+        .reject(&:blank?)
+        .uniq
+        .sort_by(&:downcase)
+    end
+
     def selected_all_stuttgart_genre
       requested_genre = params[:event_genre].to_s.strip.parameterize
       return if requested_genre.blank?
 
       Genre.find_by(slug: requested_genre)
+    end
+
+    def selected_all_stuttgart_location(relation)
+      requested_location = params[:event_location].to_s.strip
+      return if requested_location.blank?
+
+      all_stuttgart_locations_for(relation).find { |location| location == requested_location }
     end
 
     def all_stuttgart_months_for(relation)

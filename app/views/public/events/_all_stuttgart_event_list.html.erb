@@ -1,38 +1,80 @@
 <%
   display_title = local_assigns[:title].presence || "Events"
   genres = Array(local_assigns[:genres]).compact
+  locations = Array(local_assigns[:locations]).compact
   selected_genre = local_assigns[:selected_genre]
+  selected_location = local_assigns[:selected_location].to_s.presence
   selected_month = local_assigns[:selected_month]
   selected_month_param = selected_month&.strftime("%Y-%m")
   genre_label = selected_genre&.name.presence || "Genre"
-  base_genre_params = { event_month: selected_month_param }.compact
+  location_label = selected_location.presence || "Location"
+  base_filter_params = {
+    event_month: selected_month_param,
+    event_genre: selected_genre&.slug,
+    event_location: selected_location
+  }.compact
+  base_genre_params = base_filter_params.except(:event_genre)
+  base_location_params = base_filter_params.except(:event_location)
 %>
 
 <section class="design-preview-section all-stuttgart-event-section">
   <div class="design-preview-section-header all-stuttgart-event-header">
     <h2><%= display_title %></h2>
-    <% if genres.any? %>
-      <details class="all-stuttgart-genre-dropdown">
-        <summary class="all-stuttgart-genre-summary">
-          <span><%= genre_label %></span>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m6 9 6 6 6-6"></path>
-          </svg>
-        </summary>
-        <div class="all-stuttgart-genre-menu">
-          <%= link_to "Alle Genres",
-                      all_stuttgart_lane_path(base_genre_params),
-                      class: ("is-active" if selected_genre.blank?),
-                      aria: { current: ("page" if selected_genre.blank?) } %>
-          <% genres.each do |genre| %>
-            <% genre_active = selected_genre.present? && genre.slug == selected_genre.slug %>
-            <%= link_to genre.name,
-                        all_stuttgart_lane_path(base_genre_params.merge(event_genre: genre.slug)),
-                        class: ("is-active" if genre_active),
-                        aria: { current: ("page" if genre_active) } %>
-          <% end %>
-        </div>
-      </details>
+    <% if genres.any? || locations.any? %>
+      <div class="all-stuttgart-event-filters" data-controller="all-stuttgart-filters">
+        <% if genres.any? %>
+          <details class="all-stuttgart-filter-dropdown all-stuttgart-genre-dropdown"
+                   name="all-stuttgart-filter"
+                   data-all-stuttgart-filters-target="dropdown"
+                   data-action="toggle->all-stuttgart-filters#sync">
+            <summary class="all-stuttgart-filter-summary all-stuttgart-genre-summary">
+              <span><%= genre_label %></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </summary>
+            <div class="all-stuttgart-filter-menu all-stuttgart-genre-menu">
+              <%= link_to "Alle Genres",
+                          all_stuttgart_lane_path(base_genre_params),
+                          class: ("is-active" if selected_genre.blank?),
+                          aria: { current: ("page" if selected_genre.blank?) } %>
+              <% genres.each do |genre| %>
+                <% genre_active = selected_genre.present? && genre.slug == selected_genre.slug %>
+                <%= link_to genre.name,
+                            all_stuttgart_lane_path(base_genre_params.merge(event_genre: genre.slug)),
+                            class: ("is-active" if genre_active),
+                            aria: { current: ("page" if genre_active) } %>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+        <% if locations.any? %>
+          <details class="all-stuttgart-filter-dropdown all-stuttgart-location-dropdown"
+                   name="all-stuttgart-filter"
+                   data-all-stuttgart-filters-target="dropdown"
+                   data-action="toggle->all-stuttgart-filters#sync">
+            <summary class="all-stuttgart-filter-summary all-stuttgart-location-summary">
+              <span><%= location_label %></span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </summary>
+            <div class="all-stuttgart-filter-menu all-stuttgart-location-menu">
+              <%= link_to "Alle Locations",
+                          all_stuttgart_lane_path(base_location_params),
+                          class: ("is-active" if selected_location.blank?),
+                          aria: { current: ("page" if selected_location.blank?) } %>
+              <% locations.each do |location| %>
+                <% location_active = selected_location == location %>
+                <%= link_to location,
+                            all_stuttgart_lane_path(base_location_params.merge(event_location: location)),
+                            class: ("is-active" if location_active),
+                            aria: { current: ("page" if location_active) } %>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+      </div>
     <% end %>
   </div>
 

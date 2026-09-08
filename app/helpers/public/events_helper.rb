@@ -45,9 +45,9 @@ module Public::EventsHelper
 
   def public_event_series_additional_terms_label(event, series_counts_by_id: nil)
     count = public_event_series_upcoming_count(event, series_counts_by_id:) - 1
-    return "weitere Termine" if count <= 0
+    return "Termine" if count <= 0
 
-    "#{count} #{count == 1 ? 'weiterer Termin' : 'weitere Termine'}"
+    "#{count} #{count == 1 ? 'Termin' : 'Termine'}"
   end
 
   def public_event_visibility_badges(event)
