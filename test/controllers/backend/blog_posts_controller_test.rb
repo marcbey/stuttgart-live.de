@@ -138,7 +138,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     }
 
     assert_redirected_to backend_blog_posts_url(blog_post_id: blog_post.id)
-    assert_equal [ "https://www.youtube.com/embed/dQw4w9WgXcQ" ], blog_post.reload.youtube_video_urls
+    assert_equal [ "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" ], blog_post.reload.youtube_video_urls
   end
 
   test "editor can publish a promotion banner without replacing previous banners" do
@@ -161,7 +161,6 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         promotion_banner_kicker_text: "Empfehlung",
         promotion_banner_cta_text: "Jetzt lesen",
         promotion_banner_background_color: "#18333A",
-        promotion_banner_cta_color: "#F97316",
         promotion_banner_image_copyright: "Foto: Redaktion",
         promotion_banner_image_focus_x: "18",
         promotion_banner_image_focus_y: "72",
@@ -182,7 +181,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Empfehlung", blog_post.promotion_banner_kicker_text
     assert_equal "Jetzt lesen", blog_post.promotion_banner_cta_text
     assert_equal "#18333A", blog_post.promotion_banner_background_color
-    assert_equal "#F97316", blog_post.promotion_banner_cta_color
+    assert_nil blog_post.promotion_banner_cta_color
     assert_equal "Foto: Redaktion", blog_post.promotion_banner_image_copyright
     assert_equal 18.0, blog_post.promotion_banner_image_focus_x_value
     assert_equal 72.0, blog_post.promotion_banner_image_focus_y_value
@@ -285,9 +284,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_text]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_background_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[type='color']#blog_post_promotion_banner_background_color_picker[form='editor_form_blog_post_#{blog_post.id}']", count: 1
-    assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
-    assert_select "#blog-editor-panel-settings input[type='color']#blog_post_promotion_banner_cta_color_picker[form='editor_form_blog_post_#{blog_post.id}']", count: 1
-    assert_select "#blog-editor-panel-settings button[data-promotion-banner-color-target='eyedropper']", count: 2
+    assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 0
+    assert_select "#blog-editor-panel-settings input[type='color']#blog_post_promotion_banner_cta_color_picker[form='editor_form_blog_post_#{blog_post.id}']", count: 0
+    assert_select "#blog-editor-panel-settings button[data-promotion-banner-color-target='eyedropper']", count: 1
     assert_no_match(/News-Inbox/, response.body)
   end
 
@@ -379,9 +378,9 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#blog-editor-panel-settings label.form-label", text: "CTA-Text", count: 0
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_background_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[type='color']#blog_post_promotion_banner_background_color_picker[form='editor_form_blog_post_#{blog_post.id}']", count: 1
-    assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
-    assert_select "#blog-editor-panel-settings input[type='color']#blog_post_promotion_banner_cta_color_picker[form='editor_form_blog_post_#{blog_post.id}']", count: 1
-    assert_select "#blog-editor-panel-settings button[data-promotion-banner-color-target='eyedropper']", count: 2
+    assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_cta_color]'][form='editor_form_blog_post_#{blog_post.id}']", count: 0
+    assert_select "#blog-editor-panel-settings input[type='color']#blog_post_promotion_banner_cta_color_picker[form='editor_form_blog_post_#{blog_post.id}']", count: 0
+    assert_select "#blog-editor-panel-settings button[data-promotion-banner-color-target='eyedropper']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post_images[promotion_banner_image_signed_id]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post_images[remove_promotion_banner_image]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
     assert_select "#blog-editor-panel-settings input[name='blog_post[promotion_banner_image_copyright]'][form='editor_form_blog_post_#{blog_post.id}']", count: 1
@@ -415,8 +414,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
         promotion_banner_text: "Kleiner Banner-Text",
         promotion_banner_slider_text_hidden: "1",
         promotion_banner_cta_text: "Jetzt lesen",
-        promotion_banner_background_color: "18333a",
-        promotion_banner_cta_color: "f97316"
+        promotion_banner_background_color: "18333a"
       },
       publication_action: "save"
     }, as: :turbo_stream
@@ -432,7 +430,7 @@ class Backend::BlogPostsControllerTest < ActionDispatch::IntegrationTest
     assert_predicate blog_post, :promotion_banner_slider_text_hidden?
     assert_equal "Jetzt lesen", blog_post.promotion_banner_cta_text
     assert_equal "#18333A", blog_post.promotion_banner_background_color
-    assert_equal "#F97316", blog_post.promotion_banner_cta_color
+    assert_nil blog_post.promotion_banner_cta_color
   end
 
   test "turbo validation error keeps settings tab active" do

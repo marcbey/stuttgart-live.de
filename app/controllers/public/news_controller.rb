@@ -62,8 +62,9 @@ module Public
         @design_preview_search_overlay = build_search_overlay
         @news_preview_genre_lanes = news_preview_genre_lanes
         @news_preview_highlight_events = news_preview_highlight_events
+        assign_news_preview_sidebar_events
         @news_preview_effective_series_ids =
-          Public::Events::EffectiveSeriesIdsQuery.call(@news_preview_highlight_events)
+          Public::Events::EffectiveSeriesIdsQuery.call(@news_preview_sidebar_events)
       end
 
       def build_search_overlay
@@ -111,6 +112,38 @@ module Public
         ).limit(24).to_a
 
         Public::Events::SeriesRepresentativeSelector.call(selected_events).first(7)
+      end
+
+      def assign_news_preview_sidebar_events
+        @news_preview_sidebar_genre = news_preview_sidebar_genre
+        @news_preview_sidebar_events = news_preview_sidebar_events
+        @news_preview_sidebar_title = @news_preview_sidebar_genre&.name || "Unsere Highlights"
+      end
+
+      def news_preview_sidebar_genre
+        return if @blog_post.blank?
+
+        Public::News::RelatedGenreResolver.call(
+          blog_post: @blog_post,
+          relation: news_preview_events_relation
+        )
+      end
+
+      def news_preview_sidebar_events
+        return @news_preview_highlight_events if @news_preview_sidebar_genre.blank?
+
+        selected_events = visible_events_relation(
+          scope: news_preview_events_relation.joins(:genres).where(genres: { id: @news_preview_sidebar_genre.id }).distinct,
+          event_date: @browse_state.event_date,
+          query: nil,
+          structured: true
+        ).limit(24).to_a
+
+        events = Public::Events::SeriesRepresentativeSelector.call(selected_events).first(7)
+        return events if events.any?
+
+        @news_preview_sidebar_genre = nil
+        @news_preview_highlight_events
       end
 
       def news_preview_genre_lanes

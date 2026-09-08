@@ -23,7 +23,7 @@ module Public
           featured: false
         },
         "under_30" => {
-          title: "Kleine Preise, große Abende - unter 30€",
+          title: "Unter 30€ - Kleine Preise, große Abende",
           header_variant: :editorial,
           public_path: "/unter-30",
           featured: false

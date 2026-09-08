@@ -696,12 +696,11 @@ module Public
 
     def lean_tagestipp_relation
       published_visible_events_relation(
-        scope: Event.published_live,
+        scope: lean_homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_ALL,
-        event_date: Time.zone.today,
+        event_date: nil,
         query: nil
-      )
-        .reorder(Arel.sql(Event.search_priority_order_sql), :start_at, :id)
+      ).reorder(:start_at, :id)
     end
 
     def lean_under_30_relation
@@ -939,11 +938,11 @@ module Public
 
     def tagestipp_relation
       published_visible_events_relation(
+        scope: homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_ALL,
-        event_date: Time.zone.today,
+        event_date: nil,
         query: nil
-      )
-        .reorder(Arel.sql(Event.search_priority_order_sql), :start_at, :id)
+      ).reorder(:start_at, :id)
     end
 
     def assign_lane_page(lane)

@@ -26,6 +26,11 @@ export default class extends Controller {
     window.removeEventListener("resize", this.updateCalendarPosition)
     document.body.classList.remove("is-design-preview-header-scrolled")
     document.body.classList.remove("is-design-preview-header-genres-snapped")
+    document.body.style.removeProperty("--design-preview-logo-progress")
+    document.body.style.removeProperty("--design-preview-logo-hero-y")
+    document.body.style.removeProperty("--design-preview-logo-hero-scale")
+    document.body.style.removeProperty("--design-preview-logo-header-y")
+    document.body.style.removeProperty("--design-preview-logo-header-scale")
   }
 
   openDate() {
@@ -45,8 +50,15 @@ export default class extends Controller {
   }
 
   updateChromeState() {
+    const logoProgress = Math.min(1, Math.max(0, window.scrollY / 88))
+
     document.body.classList.toggle("is-design-preview-header-scrolled", window.scrollY > 8)
     document.body.classList.toggle("is-design-preview-header-genres-snapped", this.headerGenresShouldSnap)
+    document.body.style.setProperty("--design-preview-logo-progress", logoProgress.toFixed(3))
+    document.body.style.setProperty("--design-preview-logo-hero-y", `${(-2.6 * logoProgress).toFixed(3)}rem`)
+    document.body.style.setProperty("--design-preview-logo-hero-scale", (1 - 0.18 * logoProgress).toFixed(3))
+    document.body.style.setProperty("--design-preview-logo-header-y", `${(1.1 * (1 - logoProgress)).toFixed(3)}rem`)
+    document.body.style.setProperty("--design-preview-logo-header-scale", (1 + 0.28 * (1 - logoProgress)).toFixed(3))
     this.updateCalendarPosition()
     window.requestAnimationFrame(this.updateHeaderGenres)
   }

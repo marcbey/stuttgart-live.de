@@ -130,7 +130,6 @@ module Backend
           :promotion_banner_slider_text_hidden,
           :promotion_banner_cta_text,
           :promotion_banner_background_color,
-          :promotion_banner_cta_color,
           :cover_image_copyright,
           :cover_image_focus_x,
           :cover_image_focus_y,

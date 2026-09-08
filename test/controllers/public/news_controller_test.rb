@@ -140,6 +140,88 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".news-detail-author-name", text: @live_post.display_author_name
   end
 
+  test "show renders genre specific sidebar events when news genre is clear from matching event" do
+    rock_event = create_sidebar_event(
+      slug: "news-sidebar-rock-match",
+      artist_name: "Crystal Feedback",
+      title: "Distortion Night",
+      genre: genres(:rock),
+      start_at: 3.days.from_now
+    )
+    pop_event = create_sidebar_event(
+      slug: "news-sidebar-pop-other",
+      artist_name: "Soft Signal",
+      title: "Bright Tour",
+      genre: genres(:pop),
+      start_at: 4.days.from_now
+    )
+    highlight_event = create_sidebar_event(
+      slug: "news-sidebar-highlight-fallback",
+      artist_name: "Fallback Highlight",
+      title: "Featured Night",
+      genre: genres(:pop),
+      start_at: 5.days.from_now,
+      highlighted: true
+    )
+    post = create_blog_post(
+      title: "Crystal Feedback kündigen Distortion Night an",
+      status: "published",
+      published_at: 1.hour.ago
+    )
+
+    get news_url(post.slug)
+
+    assert_response :success
+
+    sidebar = Nokogiri::HTML.parse(response.body).at_css(".design-news-preview-highlights")
+    sidebar_titles = sidebar.css(".design-preview-card-title").map { |title| title.text.squish }
+
+    assert_equal "Rock & Alternative", sidebar.at_css("h2").text.squish
+    assert_includes sidebar_titles, rock_event.artist_name
+    assert_not_includes sidebar_titles, pop_event.artist_name
+    assert_not_includes sidebar_titles, highlight_event.artist_name
+  end
+
+  test "show falls back to highlights when news genre is ambiguous" do
+    create_sidebar_event(
+      slug: "news-sidebar-ambiguous-rock",
+      artist_name: "Ambiguous Rock",
+      title: "Club Tour",
+      genre: genres(:rock),
+      start_at: 3.days.from_now
+    )
+    create_sidebar_event(
+      slug: "news-sidebar-ambiguous-pop",
+      artist_name: "Ambiguous Pop",
+      title: "Club Tour",
+      genre: genres(:pop),
+      start_at: 4.days.from_now
+    )
+    highlight_event = create_sidebar_event(
+      slug: "news-sidebar-ambiguous-highlight",
+      artist_name: "Ambiguous Highlight",
+      title: "Featured Night",
+      genre: genres(:jazz),
+      start_at: 5.days.from_now,
+      highlighted: true
+    )
+    post = create_blog_post(
+      title: "Rock und Pop in Stuttgart",
+      status: "published",
+      published_at: 1.hour.ago
+    )
+
+    get news_url(post.slug)
+
+    assert_response :success
+
+    sidebar = Nokogiri::HTML.parse(response.body).at_css(".design-news-preview-highlights")
+    sidebar_titles = sidebar.css(".design-preview-card-title").map { |title| title.text.squish }
+
+    assert_equal "Unsere Highlights", sidebar.at_css("h2").text.squish
+    assert_includes sidebar_titles, highlight_event.artist_name
+  end
+
   test "show includes edit link for authenticated blog users" do
     sign_in_as(users(:blogger))
 
@@ -265,7 +347,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "YouTube laden"
     assert_select "[data-consent-media-target='frame'] iframe", count: 0
-    assert_select "template iframe[src=?]", "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    assert_select "template iframe[src=?]", "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
   end
 
   test "show renders embedded rich text images through media proxy when enabled" do
@@ -300,5 +382,23 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
         published_by: (status == "published" ? @author : nil),
         youtube_video_urls: youtube_video_urls
       )
+    end
+
+    def create_sidebar_event(slug:, artist_name:, title:, genre:, start_at:, highlighted: false)
+      Event.create!(
+        slug: slug,
+        source_fingerprint: "test::public::news-sidebar::#{slug}",
+        title: title,
+        artist_name: artist_name,
+        start_at: start_at,
+        venue: "LKA Longhorn",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        highlighted: highlighted,
+        source_snapshot: {}
+      ).tap do |event|
+        event.genres = [ genre ]
+      end
     end
 end

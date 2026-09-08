@@ -779,10 +779,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "meta[name='description'][content*='Russ Live Veranstaltungen']", count: 1
     assert_select "link[rel='canonical'][href=?]", russ_live_lane_url
-    assert_select ".lane-header.lane-header--editorial .lane-header-title", text: "Russ Live"
-    assert_select "#lane-event-grid article.genre-lane-card", minimum: 1
-    assert_select "#lane-event-grid .genre-lane-card-name", text: russ_live_event.artist_name
-    assert_select "#lane-event-grid .genre-lane-card-name", text: other_event.artist_name, count: 0
+    assert_select ".lane-page-section--russ-live .lane-page-russ-live-logo[alt='Russ Live'][src*='russ-live-logo']", count: 1
+    assert_select "#lane-event-grid article.design-preview-card", minimum: 1
+    assert_select "#lane-event-grid .design-preview-card-title", text: russ_live_event.artist_name
+    assert_select "#lane-event-grid .design-preview-card-title", text: other_event.artist_name, count: 0
   end
 
   test "genre lane page resolves by snapshot group slug even when it is not on the homepage" do
@@ -1848,6 +1848,33 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner-event .promotion-banner-link-light[style='background: var(--promotion-banner-background)']"
   end
 
+  test "homepage highlight video uses stable storage proxy path" do
+    event = Event.create!(
+      slug: "homepage-highlight-video-event",
+      source_fingerprint: "test::homepage::highlight-video",
+      title: "Highlight Video Event",
+      artist_name: "Highlight Video Artist",
+      start_at: 8.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    event.highlight_video_file.attach(
+      io: StringIO.new("fake video content"),
+      filename: "highlight-video.mp4",
+      content_type: "video/mp4"
+    )
+
+    get events_url
+
+    assert_response :success
+    assert_select ".homepage-highlight-video[src=?]", rails_storage_proxy_path(event.highlight_video_file, only_path: true)
+    refute_includes response.body, "/rails/active_storage/disk/"
+  end
+
   test "homepage renders optimized promotion banner image" do
     banner_time = Time.zone.local(2026, 4, 7, 12, 0, 0)
     expected_path = nil
@@ -2372,6 +2399,84 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
   end
 
+  test "tagestipp lane continues chronologically after today" do
+    later_today_event = Event.create!(
+      slug: "tagestipp-later-today",
+      source_fingerprint: "test::homepage::tagestipp::later-today",
+      title: "Tagestipp Later Today",
+      artist_name: "Later Today Artist",
+      start_at: FIXTURE_NOW.change(hour: 21, min: 0, sec: 0),
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    tomorrow_event = Event.create!(
+      slug: "tagestipp-tomorrow",
+      source_fingerprint: "test::homepage::tagestipp::tomorrow",
+      title: "Tagestipp Tomorrow",
+      artist_name: "Tomorrow Artist",
+      start_at: (FIXTURE_NOW + 1.day).change(hour: 18, min: 0, sec: 0),
+      venue: "LKA Longhorn",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    much_later_event = Event.create!(
+      slug: "tagestipp-much-later",
+      source_fingerprint: "test::homepage::tagestipp::much-later",
+      title: "Tagestipp Much Later",
+      artist_name: "Much Later Artist",
+      start_at: (FIXTURE_NOW + 9.days).change(hour: 20, min: 0, sec: 0),
+      venue: "Theaterhaus",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      source_snapshot: {}
+    )
+    earlier_today_event = Event.create!(
+      slug: "tagestipp-earlier-today",
+      source_fingerprint: "test::homepage::tagestipp::earlier-today",
+      title: "Tagestipp Earlier Today",
+      artist_name: "Earlier Today Artist",
+      start_at: FIXTURE_NOW.change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get design_preview_url
+
+    assert_response :success
+
+    tagestipp_section = Nokogiri::HTML.parse(response.body).css(".design-preview-tagestipp-lane").first
+    names = tagestipp_section.css(".design-preview-card-title").map { |title| title.text.squish }
+
+    assert_equal [
+      earlier_today_event.artist_name,
+      later_today_event.artist_name,
+      tomorrow_event.artist_name,
+      much_later_event.artist_name
+    ], names.first(4)
+
+    get homepage_lane_events_url(lane: "tagestipp")
+
+    assert_response :success
+    names = Nokogiri::HTML.parse(response.body).css(".genre-lane-card-name").map { |title| title.text.squish }
+
+    assert_equal [
+      earlier_today_event.artist_name,
+      later_today_event.artist_name,
+      tomorrow_event.artist_name,
+      much_later_event.artist_name
+    ], names.first(4)
+  end
+
   test "index shows only reservix events in the all events slider" do
     future_start = 10.days.from_now.change(hour: 20, min: 0, sec: 0)
 
@@ -2827,7 +2932,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-card-copy h2", text: final_event.artist_name
   end
 
-  test "index shows today's events including reservix in tagestipp" do
+  test "index orders tagestipp lane chronologically including reservix" do
     today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
 
     sks_today_event = Event.create!(
@@ -2922,21 +3027,17 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.parse(response.body)
-    tagestipp_section = document.css("section.genre-lane-section").find do |section|
-      lane_heading_text(section) == "Tagestipp"
-    end
+    tagestipp_section = document.css(".design-preview-tagestipp-lane").first
 
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
-    assert tagestipp_section.at_css(".lane-header.lane-header--tagestipp").present?, "expected Tagestipp header variant"
-    assert_nil tagestipp_section["data-homepage-lane-deferred-value"]
-    names = tagestipp_section.css(".genre-lane-card-name").map(&:text)
+    names = tagestipp_section.css(".design-preview-card-title").map { |title| title.text.squish }
 
-    assert_equal "SKS Today Artist", names.first
     assert_equal 10, names.size
+    assert_equal (0..9).to_a.reverse.map { |index| "Tagestipp Filler Artist #{index}" }, names
     assert_not_includes names, today_event.artist_name
-    assert_includes names, sks_today_event.artist_name
     assert_not_includes names, late_today_event.artist_name
     assert_not_includes names, reservix_today_event.artist_name
+    assert_not_includes names, sks_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
 
     get homepage_lane_events_url(lane: "tagestipp", mode: "cards", filter: "all")
@@ -2944,12 +3045,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     names = Nokogiri::HTML.parse(response.body).css(".genre-lane-card-name").map(&:text)
 
-    assert_equal "SKS Today Artist", names.first
     assert_equal 10, names.size
+    assert_equal (0..9).to_a.reverse.map { |index| "Tagestipp Filler Artist #{index}" }, names
     assert_not_includes names, today_event.artist_name
-    assert_includes names, sks_today_event.artist_name
     assert_not_includes names, late_today_event.artist_name
     assert_not_includes names, reservix_today_event.artist_name
+    assert_not_includes names, sks_today_event.artist_name
     assert_not_includes names, tomorrow_event.artist_name
 
     next_cursor = response.headers["X-Homepage-Lane-Next-Cursor"]
@@ -2960,7 +3061,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, sks_today_event.artist_name
     assert_includes response.body, late_today_event.artist_name
     assert_includes response.body, reservix_today_event.artist_name
-    assert_not_includes response.body, tomorrow_event.artist_name
+    assert_includes response.body, tomorrow_event.artist_name
   end
 
   test "tagestipp shows event series badge when the series is globally visible via a past event" do
@@ -4440,7 +4541,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "YouTube laden"
     assert_includes response.body, "Datenschutzeinstellungen"
     assert_select "[data-consent-media-target='frame'] iframe", count: 0
-    assert_select "template iframe[src=?]", "https://www.youtube.com/embed/dQw4w9WgXcQ"
+    assert_select "template iframe[src=?]", "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ"
   end
 
   test "show renders youtube fallback link when video is not embeddable" do
@@ -4594,7 +4695,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "https://instagram.example/llm-band"
     assert_includes response.body, "https://facebook.example/llm-band"
     assert_select ".event-detail-links a[href='https://www.youtube.com/watch?v=llm123']", text: /YouTube/
-    assert_includes response.body, "https://www.youtube.com/embed/llm123"
+    assert_includes response.body, "https://www.youtube-nocookie.com/embed/llm123"
     assert_includes response.body, "Indie"
     assert_includes response.body, "Synthpop"
 

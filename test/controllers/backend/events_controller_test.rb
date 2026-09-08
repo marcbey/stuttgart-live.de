@@ -2049,9 +2049,9 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-settings label.form-label", text: "CTA-Text", count: 0
     assert_select "#event-editor-panel-settings input[name='event[promotion_banner_background_color]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[type='color']#event_promotion_banner_background_color_picker[form='editor_form_event_#{@published_event.id}']", count: 1
-    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_color]'][form='editor_form_event_#{@published_event.id}']", count: 1
-    assert_select "#event-editor-panel-settings input[type='color']#event_promotion_banner_cta_color_picker[form='editor_form_event_#{@published_event.id}']", count: 1
-    assert_select "#event-editor-panel-settings button[data-promotion-banner-color-target='eyedropper']", count: 2
+    assert_select "#event-editor-panel-settings input[name='event[promotion_banner_cta_color]'][form='editor_form_event_#{@published_event.id}']", count: 0
+    assert_select "#event-editor-panel-settings input[type='color']#event_promotion_banner_cta_color_picker[form='editor_form_event_#{@published_event.id}']", count: 0
+    assert_select "#event-editor-panel-settings button[data-promotion-banner-color-target='eyedropper']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[promotion_banner_image_signed_id]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_promotion_banner_image[remove_promotion_banner_image]'][form='editor_form_event_#{@published_event.id}']", count: 1
     assert_select "#event-editor-panel-settings input[name='event_highlight_video[highlight_video_signed_id]'][form='editor_form_event_#{@published_event.id}']", count: 1
@@ -2089,7 +2089,6 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         promotion_banner_text: "Kleiner Banner-Text",
         promotion_banner_cta_text: "Jetzt ansehen",
         promotion_banner_background_color: "#18333A",
-        promotion_banner_cta_color: "#F97316",
         promotion_banner_image_copyright: "Foto: Haus",
         promotion_banner_image_focus_x: "18",
         promotion_banner_image_focus_y: "72",
@@ -2113,7 +2112,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 72.0, @published_event.promotion_banner_image_focus_y_value
     assert_equal 145.0, @published_event.promotion_banner_image_zoom_value
     assert_equal "#18333A", @published_event.promotion_banner_background_color
-    assert_equal "#F97316", @published_event.promotion_banner_cta_color
+    assert_nil @published_event.promotion_banner_cta_color
     assert_includes response.body, 'value="settings"'
   end
 
@@ -2373,8 +2372,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         promotion_banner_title: "Großer Banner-Titel",
         promotion_banner_text: "Kleiner Banner-Text",
         promotion_banner_cta_text: "Jetzt ansehen",
-        promotion_banner_background_color: "18333a",
-        promotion_banner_cta_color: "f97316"
+        promotion_banner_background_color: "18333a"
       }
     }, as: :turbo_stream
 
@@ -2389,7 +2387,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Kleiner Banner-Text", @published_event.promotion_banner_text
     assert_equal "Jetzt ansehen", @published_event.promotion_banner_cta_text
     assert_equal "#18333A", @published_event.promotion_banner_background_color
-    assert_equal "#F97316", @published_event.promotion_banner_cta_color
+    assert_nil @published_event.promotion_banner_cta_color
   end
 
   test "update stores a scheduled publication date" do

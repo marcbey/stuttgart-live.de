@@ -622,7 +622,7 @@ module Public
         id = event.send(:extract_youtube_id, normalized_url)
         return if id.blank?
 
-        "https://www.youtube.com/embed/#{id}"
+        "https://www.youtube-nocookie.com/embed/#{id}"
       end
 
       def build_link(label, *urls)

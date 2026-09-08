@@ -12,7 +12,8 @@
 <% content_for :page_partner_strip do %><% end %>
 <% strict_proxy = homepage_media_strict_proxy? %>
 <% genre_lanes = public_design_navigation_lanes(Array(@news_preview_genre_lanes).first(5), highlight_events: @news_preview_highlight_events) %>
-<% design_chrome_saved_events = (Array(@news_preview_highlight_events) + genre_lanes.flat_map { |lane| Array(lane.events) }).compact.uniq(&:id) %>
+<% sidebar_events = Array(@news_preview_sidebar_events) %>
+<% design_chrome_saved_events = (sidebar_events + Array(@news_preview_highlight_events) + genre_lanes.flat_map { |lane| Array(lane.events) }).compact.uniq(&:id) %>
 
 <div class="design-preview design-news-preview-shell"
      data-controller="design-preview-menu design-preview-filterbar">
@@ -59,12 +60,12 @@
         <% end %>
       </div>
 
-      <% if @news_preview_highlight_events.any? %>
+      <% if sidebar_events.any? %>
         <%= render "public/events/design_preview_detail_related",
-                   title: "Unsere Highlights",
+                   title: @news_preview_sidebar_title,
                    title_id: "design-news-preview-related-title",
                    wrapper_class: "design-preview-section design-detail-preview-related design-news-preview-highlights",
-                   related_preview_events: @news_preview_highlight_events,
+                   related_preview_events: sidebar_events,
                    related_effective_series_ids: @news_preview_effective_series_ids,
                    browse_state: @browse_state,
                    strict_proxy: strict_proxy %>

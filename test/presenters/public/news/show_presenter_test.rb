@@ -108,6 +108,21 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "/assets/newsletter/team/sarah.jpg", presenter.author_image_source
   end
 
+  test "normalizes stored youtube embed urls for display" do
+    blog_post = build_post(
+      title: "Video News",
+      teaser: "Video Teaser",
+      slug: "video-news",
+      published_at: Time.zone.local(2026, 3, 18, 12, 0),
+      cover_image_copyright: nil
+    )
+    blog_post.youtube_video_urls = [ "https://www.youtube.com/embed/dQw4w9WgXcQ" ]
+
+    presenter = build_presenter(blog_post)
+
+    assert_equal [ "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" ], presenter.video_urls
+  end
+
   private
 
   def build_presenter(blog_post)

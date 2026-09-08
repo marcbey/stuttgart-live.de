@@ -12,14 +12,17 @@
   else
     :promotion_banner_landscape_image
   end %>
+<% banner_text_color_scheme = slider ? BlogPost::PROMOTION_BANNER_TEXT_COLOR_LIGHT : blog_post.promotion_banner_text_color_scheme %>
+<% banner_cta_color = banner_text_color_scheme == BlogPost::PROMOTION_BANNER_TEXT_COLOR_LIGHT ? "#F8F8F8" : "#111111" %>
+<% banner_cta_text_color = banner_text_color_scheme == BlogPost::PROMOTION_BANNER_TEXT_COLOR_LIGHT ? "#111111" : "#F8F8F8" %>
 
 <%= render "public/events/promotion_banner_component",
            article_classes: article_classes,
-           article_style: "--promotion-banner-background: #{blog_post.promotion_banner_background_color_value}; --promotion-banner-cta-color: #{blog_post.promotion_banner_cta_color_value}; --promotion-banner-cta-text-color: #{blog_post.promotion_banner_cta_text_color_value}",
+           article_style: "--promotion-banner-background: #{blog_post.promotion_banner_background_color_value}; --promotion-banner-cta-color: #{banner_cta_color}; --promotion-banner-cta-text-color: #{banner_cta_text_color}",
            admin_link_path: (authenticated? && current_user.blog_access? ? edit_backend_blog_post_path(blog_post) : nil),
            admin_link_label: "Edit",
            href: news_path(blog_post.slug),
-           link_classes: "promotion-banner-link promotion-banner-link-#{blog_post.promotion_banner_text_color_scheme}",
+           link_classes: "promotion-banner-link promotion-banner-link-#{banner_text_color_scheme}",
            link_style: "background: var(--promotion-banner-background)",
            image_source: optimized_blog_post_image_source(blog_post, image_slot, strict_proxy: strict_proxy, size: :banner_desktop),
            image_srcset: optimized_blog_post_image_srcset(blog_post, image_slot, strict_proxy: strict_proxy),
@@ -35,5 +38,5 @@
            kicker_text: blog_post.promotion_banner_kicker_text_value,
            heading: blog_post.promotion_banner_title_value,
            subheading: (slider ? nil : blog_post.promotion_banner_text_value),
-           cta_style: "background: transparent; border-color: var(--promotion-banner-cta-color); color: var(--promotion-banner-cta-color)",
+           cta_style: nil,
            cta_text: (slider ? "Zum Beitrag" : blog_post.promotion_banner_cta_text_value) %>

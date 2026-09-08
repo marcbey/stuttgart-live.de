@@ -29,7 +29,7 @@
 <% feature_slide_count = (feature_promotion_banners.presence&.size || [ highlights.size, 6 ].min) + (design_preview_video_slide_enabled ? 1 : 0) %>
 <% lane_pool = Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) } %>
 <% highlight_tiles = public_design_highlight_tiles(highlight_events, capacity: 8) %>
-<% today_events = (Array(@home_tagestipp_events) + Array(@home_featured_events).drop(4) + lane_pool).uniq(&:id) %>
+<% today_events = Array(@home_tagestipp_events) %>
 <% under_30_events = Array(@home_under_30_events) %>
 <% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: highlights) %>
 <% promotion_banner_events = promotion_banners.filter_map { |banner| banner.fetch(:record) if banner.fetch(:type) == :event } %>
@@ -225,7 +225,10 @@
 
   <section class="design-preview-hero">
     <div class="design-preview-hero-copy">
-      <h1 id="design-preview-title">Events in Stuttgart.</h1>
+      <h1 id="design-preview-title" class="design-preview-start-logo-title" aria-label="Stuttgart Live">
+        <span>Stuttgart</span>
+        <span>Live</span>
+      </h1>
     </div>
     <div class="design-preview-hero-side">
       <p>Stuttgart Live bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region.</p>
@@ -516,7 +519,7 @@
         <div class="design-preview-card-row" data-highlights-slider-target="track">
           <article class="design-preview-card design-preview-card--compact design-preview-card--lane-video"
                    data-controller="video-sound">
-            <% lane_video_source = stuttgart_mix_video_event&.highlight_landscape_video_file&.attached? ? url_for(stuttgart_mix_video_event.highlight_landscape_video_file) : asset_path("design_preview/david-garrett-highlight.mp4") %>
+            <% lane_video_source = stuttgart_mix_video_event&.highlight_landscape_video_file&.attached? ? public_media_path(stuttgart_mix_video_event.highlight_landscape_video_file) : asset_path("design_preview/david-garrett-highlight.mp4") %>
             <% lane_video_poster = stuttgart_mix_video_event.present? ? event_image_source(stuttgart_mix_video_event.event_image, strict_proxy: strict_proxy, size: :banner_mobile) : asset_path("design_preview/david-garrett-highlight-poster.jpg") %>
             <% lane_video_href = stuttgart_mix_video_event.present? ? public_event_detail_path(stuttgart_mix_video_event, @browse_state) : nil %>
             <% lane_video_content = capture do %>
@@ -598,7 +601,7 @@
              data-controller="highlights-slider">
       <div class="design-preview-section-header">
         <h2 id="design-preview-under-30-title">
-          <span class="design-preview-heading-desktop">Kleine Preise, große Abende - unter 30€</span>
+          <span class="design-preview-heading-desktop">Unter 30€ - Kleine Preise, große Abende</span>
           <span class="design-preview-heading-mobile">Unter 30€</span>
         </h2>
         <%= link_to (@home_under_30_lane&.public_path || under_30_lane_path), class: "design-preview-section-link" do %>

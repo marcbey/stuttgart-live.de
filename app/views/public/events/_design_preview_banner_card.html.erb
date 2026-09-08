@@ -48,11 +48,9 @@
   end %>
 <% default_event_background = banner_type == :event && record.promotion_banner_background_color.blank? %>
 <% banner_background_color = default_event_background ? "#080909" : record.promotion_banner_background_color_value %>
-<% banner_cta_color = record.promotion_banner_cta_color_value %>
 <% banner_mobile_surface_color = default_event_background ? "#080909" : banner_background_color %>
-<% banner_text_color_scheme = default_event_background ? Event::PROMOTION_BANNER_TEXT_COLOR_LIGHT : record.promotion_banner_text_color_scheme %>
-<% banner_card_classes = [ "design-preview-card", "design-preview-card--feature", "design-preview-banner-card", "design-preview-banner-card--text-#{banner_text_color_scheme}", ("design-preview-card--unavailable" if ticket_status_label.present?), ("design-preview-card--sold-out" if ticket_status_label.present?) ].compact.join(" ") %>
-<% banner_card_style = "--promotion-banner-background: #{banner_background_color}; --promotion-banner-mobile-surface: #{banner_mobile_surface_color}; --promotion-banner-cta-color: #{banner_cta_color}; --promotion-banner-cta-text-color: #{record.promotion_banner_cta_text_color_value}" %>
+<% banner_card_classes = [ "design-preview-card", "design-preview-card--feature", "design-preview-banner-card", "design-preview-banner-card--text-light", ("design-preview-card--unavailable" if ticket_status_label.present?), ("design-preview-card--sold-out" if ticket_status_label.present?) ].compact.join(" ") %>
+<% banner_card_style = "--promotion-banner-background: #{banner_background_color}; --promotion-banner-mobile-surface: #{banner_mobile_surface_color}" %>
 
 <article class="<%= banner_card_classes %>" style="<%= banner_card_style %>">
   <%= link_to href, class: "design-preview-card-link" do %>

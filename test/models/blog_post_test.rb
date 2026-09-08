@@ -132,8 +132,8 @@ class BlogPostTest < ActiveSupport::TestCase
     )
 
     assert_predicate blog_post, :valid?
-    assert_equal [ "https://www.youtube.com/embed/dQw4w9WgXcQ" ], blog_post.youtube_video_urls
-    assert_equal "https://www.youtube.com/embed/dQw4w9WgXcQ", blog_post.youtube_video_url
+    assert_equal [ "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" ], blog_post.youtube_video_urls
+    assert_equal "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ", blog_post.youtube_video_url
   end
 
   test "blank youtube video url clears stored videos" do
@@ -143,7 +143,7 @@ class BlogPostTest < ActiveSupport::TestCase
       body: "<div>Inhalt</div>",
       author: @author,
       status: "draft",
-      youtube_video_urls: [ "https://www.youtube.com/embed/dQw4w9WgXcQ" ]
+      youtube_video_urls: [ "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ" ]
     )
 
     blog_post.youtube_video_url = ""

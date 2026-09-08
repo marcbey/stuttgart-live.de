@@ -78,6 +78,30 @@ class BlogPost < ApplicationRecord
     published_live.find_by!(source_url: source_url_candidates_for(source_path))
   end
 
+  def self.normalized_youtube_embed_url(value)
+    url = value.to_s.strip
+    return if url.blank?
+
+    uri = URI.parse(url)
+    host = uri.host.to_s.downcase
+
+    if host.include?("youtu.be")
+      video_id = uri.path.delete_prefix("/").split("/").first
+    elsif host.include?("youtube.com") || host.include?("youtube-nocookie.com")
+      if uri.path.include?("/embed/")
+        video_id = uri.path.split("/embed/").last.to_s.split("/").first
+      else
+        video_id = CGI.parse(uri.query.to_s)["v"]&.first
+      end
+    end
+
+    return if video_id.blank?
+
+    "https://www.youtube-nocookie.com/embed/#{video_id}"
+  rescue URI::InvalidURIError
+    nil
+  end
+
   def published?
     status == "published"
   end
@@ -489,26 +513,6 @@ class BlogPost < ApplicationRecord
     end
 
     def normalize_youtube_url(value)
-      url = value.to_s.strip
-      return if url.blank?
-
-      uri = URI.parse(url)
-      host = uri.host.to_s.downcase
-
-      if host.include?("youtu.be")
-        video_id = uri.path.delete_prefix("/").split("/").first
-      elsif host.include?("youtube.com") || host.include?("youtube-nocookie.com")
-        if uri.path.include?("/embed/")
-          video_id = uri.path.split("/embed/").last.to_s.split("/").first
-        else
-          video_id = CGI.parse(uri.query.to_s)["v"]&.first
-        end
-      end
-
-      return if video_id.blank?
-
-      "https://www.youtube.com/embed/#{video_id}"
-    rescue URI::InvalidURIError
-      nil
+      self.class.normalized_youtube_embed_url(value)
     end
 end

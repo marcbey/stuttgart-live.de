@@ -4,9 +4,10 @@
 <% fallback_video = local_assigns[:fallback_video] %>
 <% fallback_poster = local_assigns[:fallback_poster] %>
 <% event_video_attached = event&.highlight_video_file&.attached? %>
-<% video_source = event_video_attached ? url_for(event.highlight_video_file) : (setting.homepage_highlight_video_file.attached? ? url_for(setting.homepage_highlight_video_file) : fallback_video) %>
+<% setting_video_attached = setting.homepage_highlight_video_file.attached? %>
+<% video_source = event_video_attached ? public_media_path(event.highlight_video_file) : (setting_video_attached ? public_media_path(setting.homepage_highlight_video_file) : fallback_video) %>
 <% event_poster = event_image_source(event&.event_image, strict_proxy: local_assigns.fetch(:strict_proxy, false), size: :banner_mobile) if event_video_attached %>
-<% poster_source = event_video_attached ? event_poster : (setting.homepage_highlight_video_poster_image.attached? ? url_for(setting.homepage_highlight_video_poster_image) : fallback_poster) %>
+<% poster_source = event_video_attached ? event_poster : (setting.homepage_highlight_video_poster_image.attached? ? public_media_path(setting.homepage_highlight_video_poster_image) : fallback_poster) %>
 <% enabled = event_video_attached || setting.homepage_highlight_video_enabled %>
 <% overlay_enabled = event_video_attached ? event.highlight_video_overlay_enabled? : setting.homepage_highlight_video_overlay_enabled %>
 <% title = event_video_attached ? event.promotion_banner_title_value.presence : config.fetch("title").presence %>

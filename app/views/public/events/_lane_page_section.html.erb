@@ -18,7 +18,17 @@
          data-lane-page-per-page-value="<%= lazy_per_page %>"
          <% end %>>
   <div class="design-preview-section-header">
-    <h2><%= display_title %></h2>
+    <% if lane.key == "russ_live" %>
+      <h2 class="lane-page-russ-live-logo-title">
+        <%= image_tag "russ-live-logo.svg",
+                      alt: display_title,
+                      class: "lane-page-russ-live-logo",
+                      width: 786,
+                      height: 174 %>
+      </h2>
+    <% else %>
+      <h2><%= display_title %></h2>
+    <% end %>
   </div>
   <% if events.any? %>
     <div class="<%= grid_classes.join(" ") %>"

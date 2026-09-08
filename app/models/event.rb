@@ -665,7 +665,7 @@ class Event < ApplicationRecord
     id = extract_youtube_id(youtube_url)
     return "" if id.blank?
 
-    "https://www.youtube.com/embed/#{id}"
+    "https://www.youtube-nocookie.com/embed/#{id}"
   end
 
   def image_for(slot: :grid_default, breakpoint: :desktop)

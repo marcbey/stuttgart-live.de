@@ -165,7 +165,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal [ "Pop", "Rock" ], presenter.genre_tags
     assert_equal [ "Homepage", "Instagram" ], presenter.external_links.map(&:label)
     assert_equal [ "https://band.example", "https://instagram.example/band" ], presenter.external_links.map(&:url)
-    assert_equal "https://www.youtube.com/embed/demo", presenter.youtube_embed_url
+    assert_equal "https://www.youtube-nocookie.com/embed/demo", presenter.youtube_embed_url
     assert_equal "Special Guest", presenter.support_text
     assert presenter.has_media_block?
     assert presenter.has_secondary_content?
@@ -407,7 +407,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
       "https://facebook.example/llm-band",
       "https://www.youtube.com/watch?v=fallback"
     ], presenter.external_links.map(&:url)
-    assert_equal "https://www.youtube.com/embed/fallback", presenter.youtube_embed_url
+    assert_equal "https://www.youtube-nocookie.com/embed/fallback", presenter.youtube_embed_url
     assert_equal [ "Pop", "Rock" ], presenter.genre_tags
     assert_equal [ "Indie", "Rock" ], presenter.sub_genre_tags
     assert_equal [ "Pop", "Rock", "Indie" ], presenter.detail_genres
@@ -481,7 +481,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event)
 
-    assert_equal "https://www.youtube.com/embed/embedded", presenter.youtube_embed_url
+    assert_equal "https://www.youtube-nocookie.com/embed/embedded", presenter.youtube_embed_url
     assert_equal [ "YouTube" ], presenter.external_links.map(&:label)
     assert_equal "https://www.youtube.com/@BandChannel", presenter.external_links.first.url
   end

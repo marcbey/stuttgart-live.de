@@ -37,11 +37,13 @@
 <% image_dimensions = public_promotion_banner_image_dimensions %>
 <% default_slider_background = slider && event.promotion_banner_background_color.blank? %>
 <% banner_background_color = default_slider_background ? "#080909" : event.promotion_banner_background_color_value %>
-<% banner_text_color_scheme = default_slider_background ? Event::PROMOTION_BANNER_TEXT_COLOR_LIGHT : event.promotion_banner_text_color_scheme %>
+<% banner_text_color_scheme = slider ? Event::PROMOTION_BANNER_TEXT_COLOR_LIGHT : event.promotion_banner_text_color_scheme %>
+<% banner_cta_color = banner_text_color_scheme == Event::PROMOTION_BANNER_TEXT_COLOR_LIGHT ? "#F8F8F8" : "#111111" %>
+<% banner_cta_text_color = banner_text_color_scheme == Event::PROMOTION_BANNER_TEXT_COLOR_LIGHT ? "#111111" : "#F8F8F8" %>
 
 <%= render "public/events/promotion_banner_component",
            article_classes: article_classes,
-           article_style: "--promotion-banner-background: #{banner_background_color}; --promotion-banner-cta-color: #{event.promotion_banner_cta_color_value}; --promotion-banner-cta-text-color: #{event.promotion_banner_cta_text_color_value}",
+           article_style: "--promotion-banner-background: #{banner_background_color}; --promotion-banner-cta-color: #{banner_cta_color}; --promotion-banner-cta-text-color: #{banner_cta_text_color}",
            admin_link_path: (authenticated? ? backend_events_path(status: event.status, event_id: event.id) : nil),
            admin_link_label: "Edit",
            href: public_event_detail_path(event, browse_state),
@@ -65,5 +67,5 @@
            meta_after_subheading: slider,
            heading: (slider ? (event.artist_name.presence || event.promotion_banner_title_value) : event.promotion_banner_title_value),
            subheading: (slider ? event.title.to_s.strip.presence : event.promotion_banner_text_value),
-           cta_style: "background: transparent; border-color: var(--promotion-banner-cta-color); color: var(--promotion-banner-cta-color)",
+           cta_style: nil,
            cta_text: (slider ? (event.public_ticket_status_label.presence || "Tickets sichern") : event.promotion_banner_cta_text_value) %>

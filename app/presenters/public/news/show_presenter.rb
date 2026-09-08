@@ -139,7 +139,7 @@ module Public
       end
 
       def video_urls
-        blog_post.youtube_video_urls
+        Array(blog_post.youtube_video_urls).filter_map { |url| BlogPost.normalized_youtube_embed_url(url) }.uniq
       end
 
       def schema_json_ld
