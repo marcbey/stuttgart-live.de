@@ -49,6 +49,7 @@
 <% default_event_background = banner_type == :event && record.promotion_banner_background_color.blank? %>
 <% banner_background_color = default_event_background ? "#080909" : record.promotion_banner_background_color_value %>
 <% banner_mobile_surface_color = default_event_background ? "#080909" : banner_background_color %>
+<% show_kicker_only = hide_slider_text && banner_type == :news && kicker.present? %>
 <% banner_card_classes = [ "design-preview-card", "design-preview-card--feature", "design-preview-banner-card", "design-preview-banner-card--text-light", ("design-preview-card--unavailable" if ticket_status_label.present?), ("design-preview-card--sold-out" if ticket_status_label.present?) ].compact.join(" ") %>
 <% banner_card_style = "--promotion-banner-background: #{banner_background_color}; --promotion-banner-mobile-surface: #{banner_mobile_surface_color}" %>
 
@@ -70,6 +71,12 @@
         <span class="design-preview-card-image design-preview-card-image--placeholder"></span>
       <% end %>
     </span>
+
+    <% if show_kicker_only %>
+      <span class="design-preview-card-copy design-preview-card-copy--kicker-only">
+        <span class="design-preview-card-kicker"><%= kicker %></span>
+      </span>
+    <% end %>
 
     <% unless hide_slider_text %>
       <span class="design-preview-card-copy">

@@ -30,6 +30,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
+    assert_select ".design-preview-footer-privacy-button[data-action='click->consent#openSettings'][aria-label='Datenschutzeinstellungen öffnen']", count: 1
     assert_not_includes response.body, "fonts.googleapis.com"
     assert_not_includes response.body, "fonts.gstatic.com"
     assert_select "script[type='module'][src*='/assets/public']", count: 0
@@ -1751,10 +1752,47 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".promotion-banner-kicker", text: "Lesetipp"
-    assert_select ".promotion-banner-cta", text: "Beitrag öffnen"
-    assert_select ".promotion-banner-news[style*='--promotion-banner-background: #18333A']"
-    assert_select ".promotion-banner-link-light[style='background: var(--promotion-banner-background)']"
+    assert_select ".design-preview-feature-slider .design-preview-banner-card[style*='--promotion-banner-background: #18333A']"
+    assert_select ".design-preview-feature-slider .design-preview-banner-card a[href='#{news_path(blog_post.slug)}'] .design-preview-card-kicker", text: "Lesetipp"
+    assert_select ".design-preview-feature-slider .design-preview-banner-card a[href='#{news_path(blog_post.slug)}'] .design-preview-card-title", text: "Promo mit Copy"
+    assert_select ".design-preview-feature-slider .design-preview-banner-card a[href='#{news_path(blog_post.slug)}'] .design-preview-card-cta", text: "Zum Beitrag"
+  end
+
+  test "homepage keeps news kicker visible in highlight slider when news slider text is hidden" do
+    Event.create!(
+      slug: "promotion-banner-kicker-only-event",
+      source_fingerprint: "test::homepage::promotion-banner-kicker-only",
+      title: "Promotion Banner Kicker Only Event",
+      artist_name: "Promotion Banner Kicker Only Artist",
+      start_at: 9.days.from_now.change(hour: 20, min: 0, sec: 0),
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      promoter_id: AppSetting.sks_promoter_ids.first,
+      primary_source: "eventim",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    blog_post = BlogPost.create!(
+      title: "Promo mit verstecktem Slidertext",
+      teaser: "Teaser",
+      body: "<div>Promo</div>",
+      author: @user,
+      status: "published",
+      published_at: 1.hour.ago,
+      published_by: @user,
+      promotion_banner_kicker_text: "Lesetipp",
+      promotion_banner_slider_text_hidden: true
+    )
+    blog_post.promotion_banner_image.attach(png_upload(filename: "homepage-banner-kicker-only.png"))
+    blog_post.update!(promotion_banner: true)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".design-preview-feature-slider .design-preview-banner-card a[href='#{news_path(blog_post.slug)}'] .design-preview-card-copy--kicker-only .design-preview-card-kicker", text: "Lesetipp"
+    assert_select ".design-preview-feature-slider .design-preview-banner-card a[href='#{news_path(blog_post.slug)}'] .design-preview-card-title", text: "Promo mit verstecktem Slidertext", count: 0
   end
 
   test "homepage falls back to the default news promotion banner background color" do
@@ -4169,14 +4207,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".event-detail-cta-actions .event-share.event-share-cta[data-controller='share-event'][data-share-event-url-value=?]",
+    assert_select ".design-detail-preview-actions .event-share[data-controller='share-event'][data-share-event-url-value=?]",
                   event_url(@published_event.slug),
                   count: 1
     assert_select ".event-share[data-share-event-title-value=?]",
                   "Published Artist | Stuttgart Live",
                   count: 1
-    assert_select "button.event-share-button[aria-label='Published Artist teilen'][data-action='click->share-event#share']", count: 1
+    assert_select "button.event-share-button.design-detail-preview-action-button[aria-label='Published Artist teilen'][data-action='click->share-event#share']", count: 1
     assert_select ".event-share-status[role='status'][aria-live='polite'][data-share-event-target='status']", count: 1
+    assert_select ".design-preview-footer-privacy-button[data-action='click->consent#openSettings'][aria-label='Datenschutzeinstellungen öffnen']", count: 1
   end
 
   test "show renders related genre lane with sks and highlight priority" do
@@ -4593,6 +4632,16 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-links a[href='https://www.youtube.com/@publishedartist']"
     assert_select "template iframe", count: 0
     assert_not_includes response.body, "YouTube laden"
+  end
+
+  test "show does not render a fallback video when no event video exists" do
+    @published_event.update!(youtube_url: nil)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-preview-media", count: 0
+    assert_not_includes response.body, "david-garrett-highlight"
   end
 
   test "show does not render dangling comma when city is blank" do
@@ -5887,6 +5936,56 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, rails_storage_proxy_path(hero_image.processed_optimized_variant, only_path: true)
     assert_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_variant, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
+  end
+
+  test "show appends published press images to the design detail image slider" do
+    hero_image = create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
+      sub_text: "Foto Max Mustermann",
+      grid_variant: EventImage::GRID_VARIANT_1X1
+    )
+    slider_image = create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_SLIDER,
+      alt_text: "Slider Alt",
+      sub_text: "Slider Subline"
+    )
+    @published_event.update!(publish_slider_images_on_stuttgart_live: true)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-preview-image-slide", count: 2
+    assert_select ".design-detail-preview-image-dot", count: 2
+    assert_select ".design-detail-preview-image-arrow", count: 2
+    assert_includes response.body, "Foto Max Mustermann"
+    assert_includes response.body, "Slider Subline"
+    assert_includes response.body, rails_storage_proxy_path(hero_image.processed_optimized_public_variant(:card_desktop), only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_public_variant(:card_desktop), only_path: true)
+  end
+
+  test "show keeps press images out of the design detail image slider when publishing is disabled" do
+    create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_DETAIL_HERO,
+      sub_text: "Foto Max Mustermann",
+      grid_variant: EventImage::GRID_VARIANT_1X1
+    )
+    slider_image = create_event_image(
+      event: @published_event,
+      purpose: EventImage::PURPOSE_SLIDER,
+      alt_text: "Slider Alt",
+      sub_text: "Slider Subline"
+    )
+    @published_event.update!(publish_slider_images_on_stuttgart_live: false)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-preview-image-slide", count: 1
+    assert_not_includes response.body, "Slider Subline"
+    assert_not_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_public_variant(:card_desktop), only_path: true)
   end
 
   test "show hides slider images when stuttgart live slider publishing is disabled" do

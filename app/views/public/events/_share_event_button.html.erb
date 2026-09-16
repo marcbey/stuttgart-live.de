@@ -1,17 +1,20 @@
-<% share_title = "#{presenter.display_headline} | Stuttgart Live" %>
-<% share_text = presenter.hero_meta_line.to_s.strip.presence %>
-<% share_label = "#{presenter.display_headline} teilen" %>
+<% share_headline = local_assigns[:share_headline].presence || presenter.display_headline %>
+<% share_title = local_assigns[:share_title].presence || "#{share_headline} | Stuttgart Live" %>
+<% share_text = local_assigns.key?(:share_text) ? local_assigns[:share_text].to_s.strip.presence : presenter.hero_meta_line.to_s.strip.presence %>
+<% share_url = local_assigns[:share_url].presence || presenter.canonical_url %>
+<% share_label = local_assigns[:share_label].presence || "#{share_headline} teilen" %>
 <% share_classes = [ "event-share", local_assigns[:class] ].compact.join(" ") %>
+<% share_button_classes = [ "event-share-button", local_assigns[:button_class] ].compact.join(" ") %>
 
 <div class="<%= share_classes %>"
      data-controller="share-event"
      data-share-event-title-value="<%= share_title %>"
      data-share-event-text-value="<%= share_text %>"
-     data-share-event-url-value="<%= presenter.canonical_url %>"
+     data-share-event-url-value="<%= share_url %>"
      data-share-event-copied-label-value="Link kopiert"
      data-share-event-error-label-value="Link konnte nicht kopiert werden">
   <%= button_tag type: "button",
-                 class: "event-share-button",
+                 class: share_button_classes,
                  title: share_label,
                  aria: { label: share_label },
                  data: {
@@ -23,7 +26,11 @@
       <path d="M12 2v13"></path>
       <path d="M5.25 10.5v8.25h13.5V10.5"></path>
     </svg>
-    <span class="sr-only">Teilen</span>
+    <% if local_assigns[:show_text] %>
+      <span aria-hidden="true">Teilen</span>
+    <% else %>
+      <span class="sr-only">Teilen</span>
+    <% end %>
   <% end %>
   <span class="event-share-status"
         role="status"

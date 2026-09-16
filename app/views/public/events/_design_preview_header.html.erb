@@ -31,8 +31,17 @@
                   "design-preview-header-genre-link",
                   "design-preview-header-genre-link--all",
                   ("is-active" if all_events_active)
-                ],
-                data: { design_preview_filterbar_target: "headerGenreItem" } %>
+                  ],
+                  data: { design_preview_filterbar_target: "headerGenreItem" } %>
+    <% genre_lanes.each do |lane| %>
+      <%= link_to lane.group.name,
+                  lane.public_path,
+                  class: [
+                    "design-preview-header-genre-link",
+                    "design-preview-header-genre-link--full",
+                    ("is-active" if active_path == lane.public_path)
+                  ] %>
+    <% end %>
     <details class="<%= class_names("design-preview-header-genres-more", "is-active": genres_active) %>">
       <summary>
         Alle Genres
@@ -155,6 +164,18 @@
                 <path d="M5 12h13"></path>
                 <path d="m13 6 6 6-6 6"></path>
               </svg>
+            <% end %>
+            <% if group_label == "Rechtliches" && label == "Datenschutz" %>
+              <button type="button"
+                      class="design-preview-menu-privacy-button"
+                      data-action="click->consent#openSettings"
+                      aria-label="Datenschutzeinstellungen öffnen">
+                <span>Datenschutzeinstellungen</span>
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M5 12h13"></path>
+                  <path d="m13 6 6 6-6 6"></path>
+                </svg>
+              </button>
             <% end %>
           <% end %>
         </div>

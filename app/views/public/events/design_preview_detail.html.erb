@@ -86,10 +86,20 @@ end %>
     <% detail_mobile_location_value = detail_mobile_location_item&.value.to_s.sub(/,\s*stuttgart\z/i, "") %>
 
   <section class="design-detail-preview-hero">
-    <figure class="design-detail-preview-image design-detail-preview-image-slider">
-      <div class="design-detail-preview-image-track" aria-label="Eventbild">
+    <figure class="design-detail-preview-image design-detail-preview-image-slider"
+            data-controller="hero-rotator"
+            data-hero-rotator-delay-value="4500"
+            data-hero-rotator-interval-value="6500">
+      <div class="design-detail-preview-image-track"
+           data-hero-rotator-target="stage"
+           aria-label="Eventbild">
         <% hero_preview_slides.each_with_index do |slide, index| %>
-          <div class="design-detail-preview-image-slide design-detail-preview-image-slide--<%= slide.fetch(:kind, :image) %>">
+          <div class="design-detail-preview-image-slide design-detail-preview-image-slide--<%= slide.fetch(:kind, :image) %>"
+               data-hero-rotator-target="slide"
+               data-hero-rotator-caption="<%= slide[:caption] %>"
+               data-hero-rotator-credit="<%= slide[:credit].presence || hero_credit %>"
+               aria-label="<%= "Bild #{index + 1} von #{hero_preview_slides.size}" %>"
+               <%= "hidden" if index.positive? %>>
             <div class="design-detail-preview-image-frame">
               <%= image_tag slide.fetch(:source),
                             alt: index.zero? ? slide.fetch(:alt) : "",
@@ -102,24 +112,57 @@ end %>
             </div>
           </div>
         <% end %>
+
+        <div class="design-detail-preview-image-title-overlay" aria-hidden="true">
+          <% if detail_mobile_date_value.present? || detail_mobile_location_value.present? %>
+            <p class="design-detail-preview-mobile-meta">
+              <% if detail_mobile_date_value.present? %>
+                <span><%= detail_mobile_date_value %></span>
+              <% end %>
+              <% if detail_mobile_location_value.present? %>
+                <span><%= detail_mobile_location_value %></span>
+              <% end %>
+            </p>
+          <% end %>
+          <p class="design-detail-preview-image-title"><%= presenter.display_headline %></p>
+          <% if presenter.title_line.present? %>
+            <p class="design-detail-preview-image-subtitle"><%= presenter.title_line %></p>
+          <% end %>
+        </div>
       </div>
 
-      <div class="design-detail-preview-image-title-overlay" aria-hidden="true">
-        <% if detail_mobile_date_value.present? || detail_mobile_location_value.present? %>
-          <p class="design-detail-preview-mobile-meta">
-            <% if detail_mobile_date_value.present? %>
-              <span><%= detail_mobile_date_value %></span>
+      <% if hero_preview_slides.many? %>
+        <div class="design-detail-preview-image-controls" aria-label="Bildslider steuern">
+          <div class="design-detail-preview-image-dots" aria-label="Bildauswahl">
+            <% hero_preview_slides.each_with_index do |_slide, index| %>
+              <button type="button"
+                      class="design-detail-preview-image-dot"
+                      data-hero-rotator-target="dot"
+                      data-hero-rotator-index-param="<%= index %>"
+                      data-action="hero-rotator#select"
+                      aria-label="<%= "Bild #{index + 1} anzeigen" %>"
+                      aria-current="<%= index.zero? %>"></button>
             <% end %>
-            <% if detail_mobile_location_value.present? %>
-              <span><%= detail_mobile_location_value %></span>
-            <% end %>
-          </p>
-        <% end %>
-        <p class="design-detail-preview-image-title"><%= presenter.display_headline %></p>
-        <% if presenter.title_line.present? %>
-          <p class="design-detail-preview-image-subtitle"><%= presenter.title_line %></p>
-        <% end %>
-      </div>
+          </div>
+
+          <div class="design-detail-preview-image-arrows">
+            <button type="button"
+                    class="design-detail-preview-image-arrow design-detail-preview-image-arrow--prev"
+                    data-hero-rotator-target="previousButton"
+                    data-action="hero-rotator#previous"
+                    aria-label="Vorheriges Bild">
+              ‹
+            </button>
+            <button type="button"
+                    class="design-detail-preview-image-arrow design-detail-preview-image-arrow--next"
+                    data-hero-rotator-target="nextButton"
+                    data-action="hero-rotator#next"
+                    aria-label="Nächstes Bild">
+              ›
+            </button>
+          </div>
+        </div>
+      <% end %>
     </figure>
 
     <div class="design-detail-preview-summary">
@@ -225,14 +268,10 @@ end %>
         <%= render "public/events/saved_event_button",
                    event: @event,
                    button_class: "design-detail-preview-action-button" %>
-        <button type="button" class="design-detail-preview-action-button">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M16 5.5 12 1.75 8 5.5"></path>
-            <path d="M12 2v13"></path>
-            <path d="M5.25 10.5v8.25h13.5V10.5"></path>
-          </svg>
-          Teilen
-        </button>
+        <%= render "public/events/share_event_button",
+                   presenter: presenter,
+                   button_class: "design-detail-preview-action-button",
+                   show_text: true %>
       </div>
     </div>
   </section>
@@ -348,23 +387,12 @@ end %>
     <% end %>
   </section>
 
-  <% design_preview_fallback_video = "design_preview/david-garrett-highlight.mp4" %>
-  <% design_preview_fallback_video_poster = "design_preview/david-garrett-highlight-poster.jpg" %>
-  <% if presenter.has_media_block? || design_preview_fallback_video.present? %>
+  <% if presenter.has_media_block? %>
     <section class="design-detail-preview-panel design-detail-preview-media">
       <p class="design-detail-preview-panel-label">VIDEO</p>
-      <% if presenter.has_media_block? %>
-        <%= render "shared/consent_video_embed",
-                   title: "#{presenter.meta_title} auf YouTube",
-                   url: presenter.youtube_embed_url %>
-      <% else %>
-        <%= video_tag asset_path(design_preview_fallback_video),
-                      controls: true,
-                      preload: "metadata",
-                      playsinline: true,
-                      poster: asset_path(design_preview_fallback_video_poster),
-                      class: "design-detail-preview-local-video" %>
-      <% end %>
+      <%= render "shared/consent_video_embed",
+                 title: "#{presenter.meta_title} auf YouTube",
+                 url: presenter.youtube_embed_url %>
     </section>
   <% end %>
   </article>

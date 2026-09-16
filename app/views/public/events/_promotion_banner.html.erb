@@ -23,7 +23,7 @@
            admin_link_label: "Edit",
            href: news_path(blog_post.slug),
            link_classes: "promotion-banner-link promotion-banner-link-#{banner_text_color_scheme}",
-           link_style: "background: var(--promotion-banner-background)",
+           link_style: nil,
            image_source: optimized_blog_post_image_source(blog_post, image_slot, strict_proxy: strict_proxy, size: :banner_desktop),
            image_srcset: optimized_blog_post_image_srcset(blog_post, image_slot, strict_proxy: strict_proxy),
            image_sizes: "(max-width: 699px) 100vw, 56vw",

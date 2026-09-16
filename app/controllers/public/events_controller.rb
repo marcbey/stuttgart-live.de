@@ -478,14 +478,13 @@ module Public
     def design_preview_detail_format_images(event)
       current_image = event.image_for(slot: :detail_hero, breakpoint: :desktop) ||
         event.image_for(slot: :grid_default, breakpoint: :desktop)
-      return [] if current_image.blank?
 
-      [
+      ([ current_image ] + event.slider_images).compact.uniq { |image| [ image.class.name, image.id ] }.map do |image|
         {
-          kind: design_preview_detail_image_bucket(current_image) || :image,
-          image: current_image
+          kind: design_preview_detail_image_bucket(image) || :image,
+          image: image
         }
-      ]
+      end
     end
 
     def design_preview_detail_image_bucket(image)

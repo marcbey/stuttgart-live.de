@@ -49,6 +49,16 @@
           <%= presenter.body %>
         </section>
 
+        <div class="design-news-preview-share">
+          <%= render "public/events/share_event_button",
+                     presenter: presenter,
+                     share_headline: presenter.headline,
+                     share_text: presenter.teaser,
+                     share_label: "#{presenter.headline} teilen",
+                     button_class: "design-detail-preview-action-button",
+                     show_text: true %>
+        </div>
+
         <% if presenter.has_video_block? %>
           <div class="design-news-preview-media">
             <%= render "show_media", presenter: presenter %>

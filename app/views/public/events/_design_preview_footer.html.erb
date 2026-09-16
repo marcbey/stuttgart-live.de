@@ -1,4 +1,5 @@
 <% menu_groups = Array(local_assigns[:menu_groups]) %>
+<% show_consent_settings = !((controller_path == "public/events" && action_name.in?(%w[design_preview design_preview_detail])) || (controller_path == "public/pages" && action_name == "design_preview_service")) %>
 
 <footer class="design-preview-footer">
   <div class="design-preview-footer-brand">
@@ -46,6 +47,14 @@
         <div>
           <% links.each do |label, path| %>
             <%= link_to label, path %>
+            <% if show_consent_settings && group_label == "Rechtliches" && label == "Datenschutz" %>
+              <button type="button"
+                      class="design-preview-footer-privacy-button"
+                      data-action="click->consent#openSettings"
+                      aria-label="Datenschutzeinstellungen öffnen">
+                Datenschutzeinstellungen
+              </button>
+            <% end %>
           <% end %>
         </div>
       </section>
