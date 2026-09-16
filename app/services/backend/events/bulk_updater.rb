@@ -35,7 +35,11 @@ module Backend
       def preload_events(events)
         return events unless events.respond_to?(:with_attached_promotion_banner_image)
 
-        events.with_attached_promotion_banner_image
+        events
+          .with_attached_promotion_banner_image
+          .with_attached_promotion_banner_landscape_image
+          .with_attached_highlight_video_file
+          .with_attached_highlight_landscape_video_file
       end
 
       def apply_action(event)
