@@ -7,10 +7,27 @@
 %>
 
 <section class="design-preview-section design-preview-list-section lane-page-section search-results-section">
-  <div class="design-preview-section-header design-preview-section-header--stacked">
+  <div class="lane-page-topbar">
+    <div class="event-detail-back">
+      <%= link_to events_path, aria: { label: "Zurück" } do %>
+        <span class="event-detail-back-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24">
+            <path d="M19 12H6"></path>
+            <path d="m11 6-6 6 6 6"></path>
+          </svg>
+        </span>
+        <span class="sr-only">Zurück</span>
+      <% end %>
+    </div>
+  </div>
+  <div class="design-preview-section-header design-preview-section-header--stacked lane-header lane-header--search">
+    <span class="slider-window-bar" aria-hidden="true"></span>
     <div>
-      <h2>Suchergebnisse</h2>
-      <p class="design-preview-list-meta"><%= search_meta %></p>
+      <h2 class="lane-header-title">Suchergebnisse</h2>
+      <p class="design-preview-list-meta lane-header-meta"><%= search_meta %></p>
+    </div>
+    <div class="lane-header-nav">
+      <span class="slider-view-toggle" aria-hidden="true"></span>
     </div>
   </div>
   <% if events.any? %>
@@ -19,6 +36,8 @@
                  events: events,
                  browse_state: browse_state,
                  effective_series_ids: effective_series_ids,
+                 dom_id_prefix: "search_card_event",
+                 show_admin_edit: true,
                  strict_proxy: strict_proxy %>
     </div>
   <% else %>

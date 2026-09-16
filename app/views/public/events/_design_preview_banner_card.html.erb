@@ -5,11 +5,12 @@
 <% effective_series_ids = local_assigns[:effective_series_ids] || [] %>
 <% image_class = "design-preview-card-image" %>
 <% hide_slider_text = false %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 
 <% if banner_type == :event %>
   <% event = record %>
   <% show_series_pill = public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-  <% series_count = show_series_pill ? public_event_series_upcoming_count(event) : 0 %>
+  <% series_count = show_series_pill ? public_event_series_upcoming_count(event, series_counts_by_id: series_counts_by_id) : 0 %>
   <% series_count_label = "#{series_count} #{series_count == 1 ? "Event" : "Events"}" %>
   <% primary_offer = event.public_ticket_offer %>
   <% display_price = public_event_ticket_price(event, primary_offer) %>
@@ -21,7 +22,7 @@
   <% image_style = uses_promotion_image ? event_promotion_banner_card_image_style(event) : event_card_image_style(fallback_image) %>
   <% image_class = "design-preview-card-image" %>
   <% href = public_event_detail_path(event, browse_state) %>
-  <% kicker = nil %>
+  <% kicker = event.promotion_banner_kicker_text_value.presence || "Promotion" %>
   <% heading = event.artist_name.presence || event.promotion_banner_title_value.presence || event.title %>
   <% subheading = event.title.to_s.strip.presence %>
   <% image_alt = uses_promotion_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(fallback_image, event) %>
@@ -40,6 +41,7 @@
   <% hide_slider_text = blog_post.promotion_banner_slider_text_hidden? %>
 <% end %>
 <% show_admin_edit = local_assigns.fetch(:show_admin_edit, false) && authenticated? %>
+<% image_priority = local_assigns.fetch(:image_priority, false) %>
 <% admin_edit_path =
   if banner_type == :event
     backend_events_path(status: event.status, event_id: event.id)
@@ -50,18 +52,31 @@
 <% banner_background_color = default_event_background ? "#080909" : record.promotion_banner_background_color_value %>
 <% banner_mobile_surface_color = default_event_background ? "#080909" : banner_background_color %>
 <% show_kicker_only = hide_slider_text && banner_type == :news && kicker.present? %>
-<% banner_card_classes = [ "design-preview-card", "design-preview-card--feature", "design-preview-banner-card", "design-preview-banner-card--text-light", ("design-preview-card--unavailable" if ticket_status_label.present?), ("design-preview-card--sold-out" if ticket_status_label.present?) ].compact.join(" ") %>
+<% banner_tone_class = banner_type == :event ? "promotion-banner-link-light" : "promotion-banner-link-dark" %>
+<% banner_card_classes = [
+  "design-preview-card",
+  "design-preview-card--feature",
+  "design-preview-banner-card",
+  "design-preview-banner-card--text-light",
+  "promotion-banner",
+  (banner_type == :event ? "promotion-banner-event" : "promotion-banner-news"),
+  ("design-preview-card--unavailable" if ticket_status_label.present?),
+  ("design-preview-card--sold-out" if ticket_status_label.present?)
+].compact.join(" ") %>
 <% banner_card_style = "--promotion-banner-background: #{banner_background_color}; --promotion-banner-mobile-surface: #{banner_mobile_surface_color}" %>
 
 <article class="<%= banner_card_classes %>" style="<%= banner_card_style %>">
-  <%= link_to href, class: "design-preview-card-link" do %>
+  <%= link_to href,
+              class: "design-preview-card-link promotion-banner-link #{banner_tone_class}",
+              style: "background: var(--promotion-banner-background)" do %>
     <span class="design-preview-card-media">
       <% if image_source.present? %>
         <%= image_tag image_source,
                       alt: image_alt,
-                      loading: "lazy",
+                      loading: image_priority ? "eager" : "lazy",
+                      fetchpriority: (image_priority ? "high" : nil),
                       decoding: "async",
-                      class: image_class,
+                      class: "#{image_class} promotion-banner-image",
                       style: image_style,
                       width: image_dimensions.fetch(:width),
                       height: image_dimensions.fetch(:height),
@@ -74,21 +89,21 @@
 
     <% if show_kicker_only %>
       <span class="design-preview-card-copy design-preview-card-copy--kicker-only">
-        <span class="design-preview-card-kicker"><%= kicker %></span>
+        <span class="design-preview-card-kicker promotion-banner-kicker"><%= kicker %></span>
       </span>
     <% end %>
 
     <% unless hide_slider_text %>
       <span class="design-preview-card-copy">
-        <% if banner_type != :event && kicker.present? %>
-          <span class="design-preview-card-kicker"><%= kicker %></span>
+        <% if kicker.present? %>
+          <span class="design-preview-card-kicker promotion-banner-kicker"><%= kicker %></span>
         <% end %>
         <strong class="design-preview-card-title"><%= heading %></strong>
         <% if subheading.present? %>
-          <span class="design-preview-card-subtitle"><%= subheading %></span>
+          <span class="design-preview-card-subtitle promotion-banner-event-title"><%= subheading %></span>
         <% end %>
         <% if banner_type == :event %>
-          <span class="design-preview-card-meta design-preview-card-meta--banner">
+          <span class="design-preview-card-meta design-preview-card-meta--banner promotion-banner-kicker-meta">
             <span class="design-preview-card-date-location-row">
               <span class="design-preview-card-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
               <% if event.venue.present? %>
@@ -98,12 +113,15 @@
           </span>
         <% end %>
         <% if banner_type == :event %>
-          <span class="design-preview-card-cta"><%= ticket_status_label.presence || "Tickets sichern" %></span>
+          <span class="design-preview-card-cta promotion-banner-cta"><%= ticket_status_label.presence || event.promotion_banner_cta_text_value.presence || "Zum Event" %></span>
         <% elsif banner_type == :news %>
-          <span class="design-preview-card-cta">Zum Beitrag</span>
+          <span class="design-preview-card-cta promotion-banner-cta">Zum Beitrag</span>
         <% end %>
       </span>
     <% end %>
+  <% end %>
+  <% if banner_type == :event && event.promotion_banner_image_copyright.present? %>
+    <span class="promotion-banner-credit"><%= event.promotion_banner_image_copyright %></span>
   <% end %>
   <% if show_admin_edit && admin_edit_path.present? %>
     <%= link_to "Edit",

@@ -218,7 +218,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     get root_url
 
     assert_response :success
-    assert_includes response.body, "newsletter-signup-field"
+    assert_select ".design-preview-newsletter-form input[type='email']"
     refute_includes response.body, "newsletter-signup-interests"
     refute_includes response.body, "Interessen auswählen"
   end

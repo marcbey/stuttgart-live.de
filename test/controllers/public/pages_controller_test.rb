@@ -151,7 +151,7 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     get static_page_url(page.slug)
 
     assert_response :success
-    assert_select ".info-page-hero-actions .public-edit-link[href='#{edit_backend_page_path(page)}']", text: "Edit"
+    assert_select ".public-backend-shortcut.public-edit-link[href='#{edit_backend_page_path(page)}']", text: "Edit"
   end
 
   test "unknown static page returns not found" do
@@ -165,14 +165,14 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "body[data-controller~='consent']"
-    assert_select ".site-footer-nav a", text: "Datenschutz"
-    assert_select ".site-footer-nav a", text: "Impressum"
-    assert_select ".site-footer-nav a", text: "AGB"
-    assert_select ".site-footer-nav a", text: "Barrierefreiheit"
-    assert_select ".site-footer-nav a", text: "FAQ"
-    assert_select ".site-footer-nav a", text: "Über uns"
-    assert_select ".site-footer-nav a", text: "Kontakt"
-    assert_select "#site-footer > .privacy-settings-button[aria-label='Datenschutzeinstellungen öffnen']", count: 1
+    assert_select ".design-preview-footer-nav a", text: "Datenschutz"
+    assert_select ".design-preview-footer-nav a", text: "Impressum"
+    assert_select ".design-preview-footer-nav a", text: "AGB"
+    assert_select ".design-preview-footer-nav a", text: "Barrierefreiheit"
+    assert_select ".design-preview-footer-nav a", text: "FAQ"
+    assert_select ".design-preview-footer-nav a", text: "Über uns"
+    assert_select ".design-preview-footer-nav a", text: "Kontakt"
+    assert_select ".design-preview-footer-privacy-button[aria-label='Datenschutzeinstellungen öffnen']", count: 1
     assert_includes response.body, "Google Analytics"
     assert_includes response.body, "Meta Pixel"
   end

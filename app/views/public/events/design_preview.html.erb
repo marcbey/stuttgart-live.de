@@ -30,6 +30,9 @@
 <% lane_pool = Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) } %>
 <% highlight_tiles = public_design_highlight_tiles(highlight_events, capacity: 8) %>
 <% today_events = Array(@home_tagestipp_events) %>
+<% if @browse_state.event_date.present? %>
+  <% today_events = today_events.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
+<% end %>
 <% under_30_events = Array(@home_under_30_events) %>
 <% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: highlights) %>
 <% all_events_path = @home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path %>
@@ -40,12 +43,26 @@
 <% genres_active = genre_paths.include?(active_path) %>
 <% promotion_banner_events = promotion_banners.filter_map { |banner| banner.fetch(:record) if banner.fetch(:type) == :event } %>
 <% stuttgart_mix_pool = (lane_pool + highlights + today_events + under_30_events + promotion_banner_events).compact.uniq(&:id) %>
+<% if @browse_state.event_date.present? %>
+  <% stuttgart_mix_pool = stuttgart_mix_pool.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
+<% end %>
 <% stuttgart_mix_events = Array(@design_preview_mix_events).presence || stuttgart_mix_pool %>
 <% stuttgart_mix_events = stuttgart_mix_pool if stuttgart_mix_events.blank? %>
+<% if @browse_state.event_date.present? %>
+  <% stuttgart_mix_events = stuttgart_mix_events.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
+<% end %>
 <% stuttgart_mix_video_event = stuttgart_mix_events.find { |event| event.highlight_landscape_video_file.attached? } %>
 <% design_preview_series_events = (highlight_events + promotion_banner_events + highlight_tiles.map(&:event) + today_events + under_30_events + stuttgart_mix_events).compact.uniq(&:id) %>
 <% design_preview_effective_series_ids = effective_public_event_series_ids(design_preview_series_events) %>
+<% design_preview_series_counts_by_id = @design_preview_series_counts_by_id || {} %>
 <% design_preview_menu_groups = public_design_menu_groups %>
+<% if @priority_promotion_banner.present? %>
+  <% content_for :head do %>
+    <%= render "promotion_banner_preload",
+               banner: @priority_promotion_banner,
+               strict_proxy: strict_proxy %>
+  <% end %>
+<% end %>
 
 <div class="design-preview" data-controller="design-preview-menu design-preview-filterbar" aria-labelledby="design-preview-title">
   <header class="design-preview-topbar">
@@ -266,7 +283,12 @@
   </section>
 
   <% if highlights.any? || promotion_banners.any? %>
-    <section class="design-preview-section design-preview-highlights" aria-labelledby="design-preview-highlights-title">
+    <section class="design-preview-section design-preview-highlights home-featured-section"
+             aria-labelledby="design-preview-highlights-title"
+             data-controller="highlights-slider homepage-lane"
+             data-homepage-lane-lane-value="highlights"
+             <% if @home_featured_next_cursor.present? %>data-homepage-lane-cursor-value="<%= @home_featured_next_cursor %>"<% end %>
+             <% if @home_featured_list_next_cursor.present? %>data-homepage-lane-list-cursor-value="<%= @home_featured_list_next_cursor %>"<% end %>>
       <div class="design-preview-section-header">
         <h2 id="design-preview-highlights-title">Unsere Highlights</h2>
         <%= link_to highlights_lane_path, class: "design-preview-section-link" do %>
@@ -284,7 +306,7 @@
              data-design-preview-feature-slider-interval-value="4200"
              data-design-preview-feature-slider-duration-value="560">
           <div class="design-preview-feature-slider">
-            <div class="design-preview-feature-track" data-design-preview-feature-slider-target="track">
+            <div class="design-preview-feature-track home-featured-track" data-design-preview-feature-slider-target="track" data-homepage-lane-target="track">
               <% if design_preview_video_slide_enabled %>
                 <div class="design-preview-feature-slide" data-design-preview-slide-interval="12000">
                   <article class="design-preview-card design-preview-card--feature design-preview-banner-card design-preview-video-card">
@@ -316,13 +338,15 @@
               <% end %>
 
               <% if feature_promotion_banners.any? %>
-                <% feature_promotion_banners.each do |banner| %>
+                <% feature_promotion_banners.each_with_index do |banner, index| %>
                   <div class="design-preview-feature-slide">
                     <%= render "design_preview_banner_card",
                                banner: banner,
                                browse_state: @browse_state,
                                strict_proxy: strict_proxy,
                                effective_series_ids: design_preview_effective_series_ids,
+                               series_counts_by_id: design_preview_series_counts_by_id,
+                               image_priority: (@priority_promotion_banner.present? ? banner == @priority_promotion_banner : index.zero?),
                                show_admin_edit: true %>
                   </div>
                 <% end %>
@@ -336,6 +360,7 @@
                                variant: "feature",
                                category: "Highlight",
                                effective_series_ids: design_preview_effective_series_ids,
+                               series_counts_by_id: design_preview_series_counts_by_id,
                                show_admin_edit: true %>
                   </div>
                 <% end %>
@@ -385,6 +410,7 @@
                          tile_variant: EventImage::GRID_VARIANT_1X1,
                          card_slot: :grid_default,
                          effective_series_ids: design_preview_effective_series_ids,
+                         series_counts_by_id: design_preview_series_counts_by_id,
                          show_admin_edit: true %>
             <% end %>
           </div>
@@ -402,6 +428,7 @@
                          tile_variant: tile.grid_variant,
                          card_slot: card_slot,
                          effective_series_ids: design_preview_effective_series_ids,
+                         series_counts_by_id: design_preview_series_counts_by_id,
                          show_admin_edit: true %>
             <% end %>
           </div>
@@ -414,6 +441,7 @@
                        variant: "poster",
                        category: "Event",
                        effective_series_ids: design_preview_effective_series_ids,
+                       series_counts_by_id: design_preview_series_counts_by_id,
                        show_admin_edit: true %>
           <% end %>
         <% end %>
@@ -435,8 +463,47 @@
              browse_state: @browse_state,
              strict_proxy: strict_proxy,
              effective_series_ids: design_preview_effective_series_ids,
+             series_counts_by_id: design_preview_series_counts_by_id,
              link_path: (@home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path),
              link_label: "Alles aus Stuttgart" %>
+
+  <% Array(@home_genre_lanes).each do |lane| %>
+    <section class="design-preview-section design-preview-list-section design-preview-lane genre-lane-section"
+             aria-labelledby="design-preview-genre-lane-<%= lane.group.slug %>"
+             data-controller="homepage-lane"
+             data-homepage-lane-lane-value="genre:<%= lane.group.slug %>"
+             data-homepage-lane-url-value="<%= homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>"
+             <% if lane.next_cursor.present? %>data-homepage-lane-cursor-value="<%= lane.next_cursor %>"<% end %>
+             <% if lane.events.blank? %>data-homepage-lane-deferred-value="true"<% end %>>
+      <div class="design-preview-section-header">
+        <% if lane.public_path.present? %>
+          <%= link_to lane.public_path,
+                      class: "design-preview-section-link lane-header-title-link" do %>
+            <h2 id="design-preview-genre-lane-<%= lane.group.slug %>"><%= lane.group.name %></h2>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 12h13"></path>
+              <path d="m13 6 6 6-6 6"></path>
+            </svg>
+          <% end %>
+        <% else %>
+          <h2 id="design-preview-genre-lane-<%= lane.group.slug %>"><%= lane.group.name %></h2>
+        <% end %>
+      </div>
+      <div class="design-preview-card-row" data-homepage-lane-target="track">
+        <% if lane.events.any? %>
+          <%= render "design_preview_event_grid",
+                     events: lane.events,
+                     browse_state: @browse_state,
+                     strict_proxy: strict_proxy,
+                     effective_series_ids: lane.effective_series_ids,
+                     series_counts_by_id: lane.series_counts_by_id,
+                     show_card_kicker: false %>
+        <% else %>
+          <article class="homepage-lane-initial-placeholder" aria-hidden="true"></article>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 
   <% if content_promotion_banners_by_position[1].present? %>
     <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
@@ -596,7 +663,8 @@
                        strict_proxy: strict_proxy,
                        variant: "compact",
                        category: "Festivals & Partys",
-                       effective_series_ids: design_preview_effective_series_ids %>
+                       effective_series_ids: design_preview_effective_series_ids,
+                       series_counts_by_id: design_preview_series_counts_by_id %>
           <% end %>
         </div>
         <button type="button"
@@ -655,7 +723,8 @@
                        browse_state: @browse_state,
                        strict_proxy: strict_proxy,
                        variant: "compact",
-                       effective_series_ids: design_preview_effective_series_ids %>
+                       effective_series_ids: design_preview_effective_series_ids,
+                       series_counts_by_id: design_preview_series_counts_by_id %>
           <% end %>
         </div>
         <button type="button"
@@ -696,6 +765,12 @@
       <%= form.submit "Anmelden" %>
     <% end %>
   </section>
+
+  <div id="saved-events-lane-slot"
+       class="saved-events-lane-slot"
+       data-controller="saved-events-lane"
+       data-saved-events-lane-url-value="<%= saved_lane_events_path %>"
+       hidden></div>
 
   <footer class="design-preview-footer">
     <div class="design-preview-footer-brand">
@@ -756,7 +831,7 @@
         </section>
       <% end %>
     </nav>
-    <section id="design-preview-newsletter" class="design-preview-footer-newsletter" aria-labelledby="design-preview-footer-newsletter-title">
+    <section id="design-preview-newsletter" class="design-preview-footer-newsletter newsletter-signup-section" aria-labelledby="design-preview-footer-newsletter-title">
       <p>Newsletter</p>
       <h2 id="design-preview-footer-newsletter-title">Nichts verpassen.</h2>
       <span>Neue Events direkt per Mail.</span>

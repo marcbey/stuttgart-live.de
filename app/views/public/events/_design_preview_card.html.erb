@@ -12,21 +12,25 @@
 <% card_classes = [ "design-preview-card", "design-preview-card--#{variant}", "design-preview-card--grid-#{tile_variant.tr("x", "-")}" ].join(" ") %>
 <% effective_series_ids = local_assigns[:effective_series_ids] || [] %>
 <% show_series_pill = public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
-<% series_count_label = public_event_series_additional_terms_label(event) %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
+<% series_count_label = public_event_series_additional_terms_label(event, series_counts_by_id: series_counts_by_id) %>
 <% primary_offer = event.public_ticket_offer %>
 <% display_price = public_event_ticket_price(event, primary_offer) %>
 <% show_card_actions = variant != "feature" %>
 <% show_card_kicker = local_assigns.fetch(:show_card_kicker, true) %>
 <% show_body_price = show_card_actions && display_price.present? && !%w[poster format].include?(variant) %>
-<% status_pill_label = local_assigns[:status_label].presence || event.public_ticket_status_label.presence || event.badge_text.presence %>
+<% available_ticket_label = "Tickets" if primary_offer&.ticket_url.present? && !primary_offer.sold_out? %>
+<% status_pill_label = local_assigns[:status_label].presence || event.public_ticket_status_label.presence || event.badge_text.presence || available_ticket_label %>
 <% local_unavailable_status_label = status_pill_label if %w[Ausverkauft Abgelaufen].any? { |label| status_pill_label.to_s.casecmp(label).zero? } %>
 <% ticket_status_label = event.public_ticket_status_label.presence || local_unavailable_status_label %>
 <% unavailable_preview = ticket_status_label.present? || status_pill_label.to_s.casecmp("Ausverkauft").zero? || status_pill_label.to_s.casecmp("Abgelaufen").zero? %>
 <% show_admin_edit = local_assigns.fetch(:show_admin_edit, false) && authenticated? %>
+<% card_dom_id = local_assigns[:dom_id_prefix].present? ? "#{local_assigns[:dom_id_prefix]}_#{event.id}" : nil %>
+<% link_class = [ "design-preview-card-link", local_assigns[:link_class] ].compact.join(" ") %>
 <% card_classes = [ card_classes, ("design-preview-card--has-actions" if show_card_actions), ("design-preview-card--sold-out" if unavailable_preview), ("design-preview-card--unavailable" if ticket_status_label.present?) ].compact.join(" ") %>
 
-<article class="<%= card_classes %>">
-  <%= link_to public_event_detail_path(event, browse_state), class: "design-preview-card-link" do %>
+<article<% if card_dom_id.present? %> id="<%= card_dom_id %>"<% end %> class="<%= card_classes %>">
+  <%= link_to public_event_detail_path(event, browse_state), class: link_class do %>
     <span class="design-preview-card-media">
       <% if image_source.present? %>
         <%= image_tag image_source,
@@ -44,7 +48,7 @@
       <% end %>
     </span>
 
-    <% if status_pill_label.present? && %w[feature poster format].include?(variant) %>
+    <% if status_pill_label.present? %>
       <span class="design-preview-card-status-pill"><%= status_pill_label %></span>
     <% end %>
 
@@ -79,17 +83,20 @@
                    event: event,
                    button_class: "design-preview-card-save" %>
         <% if show_series_pill %>
-          <span class="design-preview-card-series-pill" aria-label="Event-Reihe mit <%= series_count_label %>">
+          <span class="design-preview-card-series-pill event-series-badge" aria-label="Event-Reihe: <%= series_count_label %>">
             <%= series_count_label %>
+            <span class="event-series-badge-tooltip"><%= series_count_label %></span>
           </span>
         <% end %>
       </span>
     </span>
   <% end %>
   <% if show_admin_edit %>
-    <%= link_to "Edit",
-                backend_events_path(status: event.status, event_id: event.id),
-                class: "design-preview-card-admin-link",
-                data: { turbo: false } %>
+    <span class="event-card-admin-controls">
+      <%= link_to "Edit",
+                  backend_events_path(status: event.status, event_id: event.id),
+                  class: "design-preview-card-admin-link event-card-admin-link",
+                  data: { turbo: false } %>
+    </span>
   <% end %>
 </article>

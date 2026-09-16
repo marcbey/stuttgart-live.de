@@ -25,6 +25,7 @@
                  effective_series_ids: page.effective_series_ids,
                  series_counts_by_id: page.series_counts_by_id,
                  strict_proxy: strict_proxy,
+                 show_admin_edit: true,
                  tile_variant: tile_variant,
                  card_slot: card_slot %>
     <% else %>
@@ -35,7 +36,8 @@
                  strict_proxy: strict_proxy,
                  effective_series_ids: page.effective_series_ids,
                  series_counts_by_id: page.series_counts_by_id,
-                 show_series_badge: true %>
+                 show_series_badge: true,
+                 show_admin_edit: true %>
     <% end %>
   <% end %>
 <% end %>

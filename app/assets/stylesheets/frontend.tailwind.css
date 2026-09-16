@@ -20118,6 +20118,14 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   line-height: 1.12;
 }
 
+.design-detail-preview-support {
+  margin: -0.22rem 0 0;
+  color: rgba(8, 9, 9, 0.72);
+  font-size: clamp(0.96rem, 2.5vw, 1.2rem);
+  font-weight: 300;
+  line-height: 1.15;
+}
+
 .design-detail-preview-facts {
   display: grid;
   gap: 0.48rem;
@@ -20255,6 +20263,13 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-sub-tag-divider {
   padding-inline: 0.42rem;
   color: rgba(8, 9, 9, 0.42);
+}
+
+.design-detail-preview-copy-block {
+  display: grid;
+  gap: 0.72rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(8, 9, 9, 0.08);
 }
 
 .design-detail-preview-series {
@@ -21108,6 +21123,12 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   transform: translateY(-1px);
 }
 
+.design-detail-preview-location-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .design-detail-preview-notes {
   background: rgba(255, 255, 255, 0.82);
 }
@@ -21180,6 +21201,45 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   object-fit: contain;
   opacity: 0.62;
   filter: grayscale(1);
+}
+
+.design-detail-preview-notes .event-detail-organizer-presenters {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.65rem;
+}
+
+.design-detail-preview-notes .event-detail-organizer-sidebar-heading {
+  margin: 0;
+  color: rgba(8, 9, 9, 0.56);
+  font-size: 0.72rem;
+  font-weight: 400;
+  line-height: 1.15;
+  text-transform: uppercase;
+}
+
+.design-detail-preview-notes .event-detail-organizer-partner-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.design-detail-preview-notes .event-detail-organizer-partner {
+  display: inline-grid;
+  min-width: 4.6rem;
+  min-height: 2.2rem;
+  place-items: center;
+  padding: 0.35rem 0.48rem;
+  border: 1px solid rgba(8, 9, 9, 0.1);
+  border-radius: 0.4rem;
+  background: rgba(255, 255, 255, 0.66);
+}
+
+.design-detail-preview-notes .event-detail-organizer-partner-image {
+  display: block;
+  max-width: 5.6rem;
+  max-height: 1.8rem;
+  object-fit: contain;
 }
 
 .design-detail-preview-panel.design-detail-preview-media {

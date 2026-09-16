@@ -1,5 +1,5 @@
 <%
-  grid_classes = [ "lane-page-grid", "design-preview-list-card-grid" ]
+  grid_classes = [ "lane-page-grid", "design-preview-list-card-grid", ("featured-event-grid" if lane.key == "highlights") ].compact
   lane_key_class = "lane-page-section--#{lane.key.tr("_", "-")}"
   strict_proxy = local_assigns.fetch(:strict_proxy, false)
   lazy_lane_id = local_assigns[:lazy_lane_id]

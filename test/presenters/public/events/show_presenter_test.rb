@@ -248,7 +248,10 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event, primary_offer: primary_offer)
 
-    assert_not presenter.show_ticket_panel?
+    assert presenter.show_ticket_panel?
+    assert presenter.show_expired_note?
+    assert presenter.show_unavailable_note?
+    assert_not presenter.show_ticket_link?
     assert_nil presenter.ticket_url
     assert_nil presenter.ticket_price_text
   end

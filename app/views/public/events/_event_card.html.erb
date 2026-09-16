@@ -16,6 +16,7 @@
 <% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 <% unavailable_label = event.public_ticket_status_label %>
 <% unavailable = unavailable_label.present? %>
+<% show_admin_edit = authenticated? && (local_assigns.fetch(:show_admin_edit, false) || event.sks_promoter?) %>
 
 <article id="<%= card_dom_id %>" class="event-card event-card-grid-<%= tile_variant.tr("x", "-") %>">
   <div class="event-card-image-wrap">
@@ -68,7 +69,7 @@
       </div>
     <% end %>
 
-    <% if authenticated? && event.sks_promoter? %>
+    <% if show_admin_edit %>
       <div class="event-card-admin-controls">
         <%= link_to "Edit",
                     backend_events_path(status: event.status, event_id: event.id),

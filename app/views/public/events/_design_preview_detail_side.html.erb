@@ -1,6 +1,7 @@
 <% wrapper_class = local_assigns.fetch(:wrapper_class, "design-detail-preview-side") %>
 <% highlight_event = event.respond_to?(:homepage_highlight?) && event.homepage_highlight? %>
 <% vvs_ticket = local_assigns.fetch(:vvs_ticket, false) %>
+<% presenters = Array(local_assigns[:presenters]) %>
 
 <aside class="<%= wrapper_class %>" aria-label="Eventinformationen">
   <% if venue_info.present? || event.venue.present? || event.city.present? %>
@@ -41,22 +42,36 @@
                         class: "design-detail-preview-location-logo" %>
         </div>
       <% end %>
-      <% if venue_info&.map_url.present? %>
-        <%= link_to venue_info.map_url, target: "_blank", rel: "noopener", class: "design-detail-preview-side-link" do %>
-          Route anzeigen
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M7 17 17 7"></path>
-            <path d="M9 7h8v8"></path>
-          </svg>
-        <% end %>
+      <% if venue_info.present? && (venue_info.external_url.present? || venue_info.map_url.present?) %>
+        <div class="design-detail-preview-location-links">
+          <% if venue_info.external_url.present? %>
+            <%= link_to venue_info.external_url, target: "_blank", rel: "noopener", class: "design-detail-preview-side-link" do %>
+              Website
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 17 17 7"></path>
+                <path d="M9 7h8v8"></path>
+              </svg>
+            <% end %>
+          <% end %>
+          <% if venue_info.map_url.present? %>
+            <%= link_to venue_info.map_url, target: "_blank", rel: "noopener", class: "design-detail-preview-side-link" do %>
+              Route anzeigen
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M7 17 17 7"></path>
+                <path d="M9 7h8v8"></path>
+              </svg>
+            <% end %>
+          <% end %>
+        </div>
       <% end %>
     </section>
   <% end %>
 
   <section class="design-detail-preview-panel design-detail-preview-notes">
     <% organizer_logo = event_detail_organizer_logo(event) %>
-    <p class="design-detail-preview-panel-label"><%= highlight_event ? "VERANSTALTERHINWEISE" : "ALLGEMEINE HINWEISE" %></p>
-    <% if highlight_event && organizer_notes.present? %>
+    <% show_organizer_notes = event.respond_to?(:show_public_organizer_notes?) && event.show_public_organizer_notes? && organizer_notes.present? %>
+    <p class="design-detail-preview-panel-label"><%= show_organizer_notes || highlight_event ? "Veranstalterhinweise" : "Allgemeine Hinweise" %></p>
+    <% if show_organizer_notes %>
       <div class="design-detail-preview-flow">
         <%= formatted_organizer_notes_with_link(organizer_notes, event: event, normalize_headings: true) %>
       </div>
@@ -88,11 +103,12 @@
         <p>Mo bis Sa 08 - 20 Uhr<br><strong>+49 761 888499 99</strong></p>
       </div>
     <% end %>
-    <% if highlight_event %>
+    <% if show_organizer_notes || highlight_event %>
       <div class="design-detail-preview-organizer-brand">
         <span>Veranstalter</span>
         <%= image_tag organizer_logo.source, alt: organizer_logo.alt %>
       </div>
+      <%= render "organizer_presenters_strip", presenters: presenters %>
     <% end %>
   </section>
 </aside>

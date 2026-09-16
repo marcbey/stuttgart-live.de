@@ -26,6 +26,7 @@ end %>
 <% description = presenter.primary_description.presence || "Mehr Informationen zu diesem Event folgen in Kürze." %>
 <% description_plain_text = strip_tags(description).squish %>
 <% description_word_count = description_plain_text.split.size %>
+<% visibility_badges = authenticated? ? public_event_visibility_badges(@event) : [] %>
 <% venue_info = presenter.venue_info %>
 <% organizer_notes = @event.public_organizer_notes.to_s.strip.presence %>
 <% related_events = Array(@related_events).first(12) %>
@@ -107,7 +108,7 @@ end %>
                             decoding: "async" %>
               <% image_credit = slide[:credit].presence || hero_credit %>
               <% if image_credit.present? %>
-                <span class="design-detail-preview-image-credit"><%= image_credit %></span>
+                <span class="design-detail-preview-image-credit"><%= image_credit.to_s.match?(/\A©/) ? image_credit : "© #{image_credit}" %></span>
               <% end %>
             </div>
           </div>
@@ -162,6 +163,16 @@ end %>
             </button>
           </div>
         </div>
+        <div class="event-lightbox" hidden>
+          <button type="button"
+                  class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-prev"
+                  data-action="click->lightbox#previous"
+                  aria-label="Vorheriges Bild"></button>
+          <button type="button"
+                  class="highlights-slider-arrow highlights-slider-arrow-overlay highlights-slider-arrow-next"
+                  data-action="click->lightbox#next"
+                  aria-label="Nächstes Bild"></button>
+        </div>
       <% end %>
     </figure>
 
@@ -178,16 +189,40 @@ end %>
           </p>
         <% end %>
         <h1 id="design-detail-preview-title"><%= presenter.display_headline %></h1>
+        <% if visibility_badges.any? %>
+          <div class="event-detail-badges-row design-detail-preview-badges">
+            <% visibility_badges.each do |badge| %>
+              <span class="status-badge <%= badge.fetch(:css_class) %>"><%= badge.fetch(:label) %></span>
+            <% end %>
+          </div>
+        <% end %>
         <% if presenter.title_line.present? %>
           <p class="design-detail-preview-subtitle"><%= presenter.title_line %></p>
         <% end %>
+        <% if presenter.support_text.present? %>
+          <p class="design-detail-preview-support">Support: <%= presenter.support_text %></p>
+        <% end %>
       </div>
-      <% detail_primary_genre_tag = presenter.genre_tag_links.first %>
-      <% if detail_primary_genre_tag.present? %>
+      <% if presenter.genre_tag_links.any? || presenter.sub_genre_tags.any? %>
         <div class="design-detail-preview-tags" aria-label="Genres und Sub-Genres">
-          <%= link_to detail_primary_genre_tag.label,
-                      detail_primary_genre_tag.url,
-                      class: "design-detail-preview-tag" %>
+          <% presenter.genre_tag_links.each do |genre_tag| %>
+            <%= link_to genre_tag.label,
+                        genre_tag.url,
+                        class: "design-detail-preview-tag" %>
+          <% end %>
+          <% if presenter.sub_genre_tags.any? %>
+            <span class="design-detail-preview-sub-tags">
+              <span class="design-detail-preview-sub-tag-arrow" aria-hidden="true">→</span>
+              <span class="design-detail-preview-sub-tag-list">
+                <% presenter.sub_genre_tags.each_with_index do |sub_genre, index| %>
+                  <span class="design-detail-preview-sub-tag"><%= sub_genre %></span>
+                  <% unless index == presenter.sub_genre_tags.size - 1 %>
+                    <span class="design-detail-preview-sub-tag-divider" aria-hidden="true">/</span>
+                  <% end %>
+                <% end %>
+              </span>
+            </span>
+          <% end %>
         </div>
       <% end %>
 
@@ -227,24 +262,14 @@ end %>
                   <%= item.value %>
                 <% end %>
                 <% if item.label == "Beginn" && detail_doors_item&.value.present? %>
-                  <span class="design-detail-preview-fact-inline">Einlass: <%= detail_doors_item.value %></span>
+                  <span class="design-detail-preview-fact-inline">Einlass <%= detail_doors_item.value %></span>
                 <% end %>
               </span>
-              <% if item.label == "Datum" && @event_series_lane.present? %>
-                <div class="design-detail-preview-date-series design-detail-preview-series">
-                  <%= render "event_series_term_links",
-                             event_series_lane: @event_series_lane,
-                             browse_state: @browse_state,
-                             current_event: @event,
-                             show_visible_terms: false,
-                             summary_label: "Weitere Termine" %>
-                </div>
-              <% end %>
             </dd>
           </div>
         <% end %>
-        <% if display_price.present? && presenter.show_ticket_link? %>
-          <div class="design-detail-preview-fact design-detail-preview-fact-preis">
+        <% if display_price.present? %>
+          <div class="design-detail-preview-fact design-detail-preview-fact-preis" aria-label="Preis: <%= display_price %>">
             <dt>Preis</dt>
             <dd>
               <span class="design-detail-preview-fact-icon" aria-hidden="true">
@@ -259,11 +284,14 @@ end %>
         <% end %>
       </dl>
 
-      <div class="design-detail-preview-actions">
+      <div class="design-detail-preview-actions event-detail-cta">
         <% if presenter.show_ticket_link? %>
-          <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "design-detail-preview-action-button design-detail-preview-action-button--primary" %>
+          <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", class: "design-detail-preview-action-button design-detail-preview-action-button--primary event-detail-cta-button" %>
         <% else %>
-          <span class="design-detail-preview-action-button design-detail-preview-action-button--primary design-detail-preview-action-button--status"><%= (@event.public_ticket_status_label.presence || presenter.sold_out_note_text.presence || "Tickets aktuell nicht verfügbar").upcase %></span>
+          <span class="design-detail-preview-action-button design-detail-preview-action-button--primary design-detail-preview-action-button--status event-detail-cta-button"><%= @event.public_ticket_status_label.presence || presenter.sold_out_note_text.presence || "Tickets aktuell nicht verfügbar" %></span>
+          <% if presenter.show_ticket_special_note? %>
+            <span class="design-detail-preview-action-note"><%= presenter.ticket_special_note_text %></span>
+          <% end %>
         <% end %>
         <%= render "public/events/saved_event_button",
                    event: @event,
@@ -273,6 +301,16 @@ end %>
                    button_class: "design-detail-preview-action-button",
                    show_text: true %>
       </div>
+      <% if @event_series_lane.present? %>
+        <div class="design-detail-preview-date-series design-detail-preview-series">
+          <%= render "event_series_term_links",
+                     event_series_lane: @event_series_lane,
+                     browse_state: @browse_state,
+                     current_event: @event,
+                     show_visible_terms: true,
+                     summary_label: "Weitere Termine" %>
+        </div>
+      <% end %>
     </div>
   </section>
 
@@ -348,12 +386,29 @@ end %>
               </svg>
             </label>
           </div>
+          <% if presenter.venue_description.present? %>
+            <section class="design-detail-preview-copy-block design-detail-preview-venue-description">
+              <p class="design-detail-preview-panel-label">Location</p>
+              <div class="design-detail-preview-flow">
+                <%= formatted_event_detail_copy(presenter.venue_description, link_class: "design-detail-preview-inline-link") %>
+              </div>
+            </section>
+          <% end %>
+          <% if @event.editor_notes.present? %>
+            <section class="design-detail-preview-copy-block design-detail-preview-editor-notes">
+              <p class="design-detail-preview-panel-label">Redaktionsnotiz</p>
+              <div class="design-detail-preview-flow">
+                <%= simple_format(@event.editor_notes) %>
+              </div>
+            </section>
+          <% end %>
         </div>
 
         <%= render "design_preview_detail_side",
                    event: @event,
                    venue_info: venue_info,
                    organizer_notes: organizer_notes,
+                   presenters: presenter.presenters,
                    vvs_ticket: presenter.venue_vvs_ticket?,
                    wrapper_class: "design-detail-preview-side design-detail-preview-side--desktop-inline" %>
 
@@ -362,6 +417,8 @@ end %>
                      related_preview_events: related_preview_events,
                      browse_state: @browse_state,
                      strict_proxy: strict_proxy,
+                     current_event: @event,
+                     has_more_related_events: @related_events_has_more,
                      related_effective_series_ids: related_effective_series_ids,
                      wrapper_class: "design-preview-section design-detail-preview-related design-detail-preview-related--mobile-inline",
                      title_id: "design-detail-preview-related-title-mobile" %>
@@ -373,6 +430,7 @@ end %>
                event: @event,
                venue_info: venue_info,
                organizer_notes: organizer_notes,
+               presenters: presenter.presenters,
                vvs_ticket: presenter.venue_vvs_ticket?,
                wrapper_class: "design-detail-preview-side design-detail-preview-side--mobile-regular" %>
 
@@ -381,6 +439,8 @@ end %>
                  related_preview_events: related_preview_events,
                  browse_state: @browse_state,
                  strict_proxy: strict_proxy,
+                 current_event: @event,
+                 has_more_related_events: @related_events_has_more,
                  related_effective_series_ids: related_effective_series_ids,
                  wrapper_class: "design-preview-section design-detail-preview-related design-detail-preview-related--desktop-side",
                  title_id: "design-detail-preview-related-title-desktop" %>

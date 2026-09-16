@@ -14,6 +14,14 @@
 <% page_body_present = @page&.body&.to_plain_text.to_s.strip.present? %>
 <% design_service_preview_mode = action_name == "design_preview_service" %>
 <% design_service_back_path = design_service_preview_mode ? design_preview_path : root_path %>
+<% if @page.present? && authenticated? && current_user.backend_access? %>
+  <% content_for :public_backend_actions do %>
+    <%= link_to "Edit",
+                edit_backend_page_path(@page),
+                class: "button button-secondary button-compact public-edit-link public-backend-shortcut",
+                data: { turbo: false } %>
+  <% end %>
+<% end %>
 <% content_for :page_newsletter do %><% end %>
 <% content_for :page_partner_strip do %><% end %>
 <%= render_public_seo title: "#{page_title}#{' Preview' if design_service_preview_mode} - Stuttgart Live",

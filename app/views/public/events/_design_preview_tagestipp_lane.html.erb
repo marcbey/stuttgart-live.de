@@ -2,6 +2,7 @@
 <% browse_state = local_assigns.fetch(:browse_state) %>
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% effective_series_ids = local_assigns.fetch(:effective_series_ids, []) %>
+<% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
 <% title = local_assigns.fetch(:title, "Heute in Stuttgart") %>
 <% title_id = local_assigns.fetch(:title_id, "design-preview-today-title") %>
 <% link_path = local_assigns[:link_path] %>
@@ -10,7 +11,8 @@
 <% if events.any? %>
   <section class="design-preview-section design-preview-lane design-preview-tagestipp-lane"
            aria-labelledby="<%= title_id %>"
-           data-controller="highlights-slider">
+           data-controller="highlights-slider homepage-lane"
+           data-homepage-lane-lane-value="tagestipp">
     <div class="design-preview-section-header">
       <h2 id="<%= title_id %>"><%= title %></h2>
       <% if link_path.present? %>
@@ -41,7 +43,8 @@
                      strict_proxy: strict_proxy,
                      variant: "compact",
                      category: "Heute",
-                     effective_series_ids: effective_series_ids %>
+                     effective_series_ids: effective_series_ids,
+                     series_counts_by_id: series_counts_by_id %>
         <% end %>
       </div>
       <button type="button"

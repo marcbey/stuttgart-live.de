@@ -65,7 +65,7 @@ module Public
       end
 
       @events = relation.to_a
-      assign_design_chrome(saved_events: @events)
+      assign_design_chrome(saved_events: @events, include_homepage_saved_events: false)
     end
 
     def lane
@@ -231,7 +231,7 @@ module Public
     def build_search_overlay
       Public::Events::Search::OverlayBuilder.build(
         query: @browse_state.query,
-        idle_loader: -> { initial_search_overlay_events },
+        idle_loader: -> { action_name == "search" ? [] : initial_search_overlay_events },
         event_loader: lambda {
           visible_events_relation(
             scope: searchable_index_events_relation,
@@ -347,7 +347,23 @@ module Public
       assign_homepage_promotion_banners
       @design_preview_news_posts = BlogPost.published_live.with_attached_cover_image.limit(6).to_a
       @design_preview_mix_events = design_preview_mix_events
+      @design_preview_series_counts_by_id = Public::Events::SeriesCountsByIdQuery.call(design_preview_series_events)
       @design_preview_search_overlay = build_search_overlay
+    end
+
+    def design_preview_series_events
+      promotion_banner_events = Array(@all_promotion_banners).filter_map do |banner|
+        banner[:record] if banner[:type] == :event
+      end
+
+      (
+        Array(@home_featured_events) +
+        Array(@home_tagestipp_events) +
+        Array(@home_under_30_events) +
+        Array(@design_preview_mix_events) +
+        Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) } +
+        promotion_banner_events
+      ).compact.uniq(&:id)
     end
 
     def assign_design_detail_event(event)
@@ -369,17 +385,19 @@ module Public
       assign_related_events_page(offset: 0)
     end
 
-    def assign_design_chrome(saved_events: [])
+    def assign_design_chrome(saved_events: [], include_homepage_saved_events: true)
       assign_homepage_sections
       @design_preview_search_overlay = build_search_overlay
       @design_chrome_genre_lanes = @home_genre_lanes
-      @design_chrome_saved_events = (
-        Array(saved_events) +
+      homepage_saved_events = if include_homepage_saved_events
         Array(@home_featured_events) +
-        Array(@home_tagestipp_events) +
-        Array(@home_under_30_events) +
-        Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) }
-      ).compact.uniq(&:id)
+          Array(@home_tagestipp_events) +
+          Array(@home_under_30_events) +
+          Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) }
+      else
+        []
+      end
+      @design_chrome_saved_events = (Array(saved_events) + homepage_saved_events).compact.uniq(&:id)
     end
 
     def should_redirect_search_result?(relation)
@@ -417,7 +435,7 @@ module Public
 
     def design_preview_mix_events
       lanes = Public::Events::HomepageGenreLanesBuilder.new(
-        relation: homepage_events_relation,
+        relation: scoped_homepage_all_relation,
         limit: HOME_LANE_LIMIT
       ).call
 
