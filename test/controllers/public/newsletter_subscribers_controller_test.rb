@@ -67,8 +67,10 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     subscriber = NewsletterSubscriber.create!(email: "token@example.com", source: "homepage")
     clear_enqueued_jobs
 
-    assert_enqueued_with(job: Newsletter::SyncSubscriberJob, args: [ subscriber ]) do
-      get newsletter_confirmation_url(subscriber.confirmation_token)
+    with_mailjet_sync_configured do
+      assert_enqueued_with(job: Newsletter::SyncSubscriberJob, args: [ subscriber ]) do
+        get newsletter_confirmation_url(subscriber.confirmation_token)
+      end
     end
 
     assert_response :success
@@ -221,5 +223,16 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     assert_select ".design-preview-newsletter-form input[type='email']"
     refute_includes response.body, "newsletter-signup-interests"
     refute_includes response.body, "Interessen auswählen"
+  end
+
+  private
+
+  def with_mailjet_sync_configured
+    original_method = Newsletter::MailjetSync.method(:configured?)
+
+    Newsletter::MailjetSync.singleton_class.send(:define_method, :configured?) { true }
+    yield
+  ensure
+    Newsletter::MailjetSync.singleton_class.send(:define_method, :configured?, original_method)
   end
 end
