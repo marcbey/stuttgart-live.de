@@ -2932,9 +2932,10 @@ padding-bottom: 0.3rem;
 }
 
 .genre-lane-track {
+  --genre-lane-card-width: clamp(14rem, 18vw, 15.2rem);
 display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(15.2rem, 15.2rem);
+  grid-auto-columns: var(--genre-lane-card-width);
   gap: 1rem;
   overflow-x: auto;
   padding-bottom: 0.35rem;
@@ -2948,6 +2949,8 @@ display: none;
 
 .genre-lane-card {
 position: relative;
+  width: 100%;
+  min-width: 0;
   height: 100%;
   scroll-snap-align: start;
   background: #fff;
@@ -10141,7 +10144,8 @@ display: flex;
   }
 
   .genre-lane-track {
-  grid-auto-columns: minmax(16.6rem, 16.6rem);
+  --genre-lane-card-width: 16.6rem;
+      grid-auto-columns: var(--genre-lane-card-width);
   }
 
   .partner-strip {
@@ -10456,7 +10460,8 @@ display: flex;
   }
 
   .genre-lane-track {
-  grid-auto-columns: calc((100% - 4rem) / 5);
+  --genre-lane-card-width: clamp(14rem, 18vw, 17.6rem);
+      grid-auto-columns: var(--genre-lane-card-width);
   }
 
   .flyer-grid {
@@ -10520,7 +10525,8 @@ display: flex;
   }
 
   .genre-lane-track {
-  grid-auto-columns: calc((100% - 4rem) / 5);
+  --genre-lane-card-width: clamp(14rem, 18vw, 17.6rem);
+      grid-auto-columns: var(--genre-lane-card-width);
   }
 
   .flyer-grid {
