@@ -60,21 +60,11 @@
       </section>
     <% end %>
   </nav>
-  <section id="design-preview-newsletter" class="design-preview-footer-newsletter newsletter-signup-section" aria-labelledby="design-preview-footer-newsletter-title">
-    <p>Newsletter</p>
-    <h2 id="design-preview-footer-newsletter-title">Nichts verpassen.</h2>
-    <span>Neue Events direkt per Mail.</span>
-    <%= form_with model: NewsletterSubscriber.new,
-                  url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath, source: "footer"),
-                  local: true,
-                  class: "design-preview-footer-newsletter-form" do |form| %>
-      <%= form.email_field :email,
-                           placeholder: "E-Mail-Adresse",
-                           autocomplete: "email",
-                           aria: { label: "E-Mail-Adresse für Newsletter" } %>
-      <%= form.submit "Anmelden" %>
-    <% end %>
-  </section>
+  <%= render "public/events/newsletter_signup",
+             subscriber: NewsletterSubscriber.new,
+             section_id: "design-preview-newsletter",
+             title_id: "design-preview-footer-newsletter-title",
+             signup: newsletter_signup_config("events_index", return_to: request.fullpath, source: "footer").merge(frame_id: "events-footer-newsletter-signup") %>
   <div class="design-preview-footer-partners">
     <%= render "public/events/partner_strip" %>
   </div>

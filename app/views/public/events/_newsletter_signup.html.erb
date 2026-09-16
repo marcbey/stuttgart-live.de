@@ -1,15 +1,16 @@
 <% signup = local_assigns[:signup] || newsletter_signup_config("events_index", return_to: request.fullpath) %>
 <% subscriber = local_assigns[:subscriber] || NewsletterSubscriber.new %>
 <% section_id = local_assigns[:section_id] %>
+<% title_id = local_assigns[:title_id] || "newsletter-signup-title" %>
 
-<section class="newsletter-signup-section" <%= %(id="#{section_id}") if section_id.present? %> aria-labelledby="newsletter-signup-title">
+<section class="newsletter-signup-section" <%= %(id="#{section_id}") if section_id.present? %> aria-labelledby="<%= title_id %>">
   <div class="slider-window-bar newsletter-signup-window-bar" aria-hidden="true">
     <span></span><span></span><span></span>
   </div>
   <div class="newsletter-signup-inner">
     <div class="newsletter-signup-copy">
       <div class="newsletter-signup-copy-intro">
-        <h2 id="newsletter-signup-title">Nichts verpassen</h2>
+        <h2 id="<%= title_id %>">Nichts verpassen</h2>
       </div>
 
       <ul class="newsletter-signup-highlights" aria-label="Vorteile des Newsletters">
