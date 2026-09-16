@@ -60,7 +60,7 @@ export default class extends Controller {
     document.body.style.setProperty("--design-preview-logo-header-y", `${(1.1 * (1 - logoProgress)).toFixed(3)}rem`)
     document.body.style.setProperty("--design-preview-logo-header-scale", (1 + 0.28 * (1 - logoProgress)).toFixed(3))
     this.updateCalendarPosition()
-    window.requestAnimationFrame(this.updateHeaderGenres)
+    this.updateHeaderGenres()
   }
 
   updateHeaderGenres() {
@@ -80,7 +80,7 @@ export default class extends Controller {
     const topbar = this.element.querySelector(".design-preview-topbar")
     if (!(topbar instanceof HTMLElement)) return false
 
-    if (window.scrollY > 40) return true
+    if (window.scrollY > 8) return true
 
     if (!this.hasBarTarget || this.barTarget.hidden) return false
 

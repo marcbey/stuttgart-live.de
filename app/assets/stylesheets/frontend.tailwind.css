@@ -13716,7 +13716,7 @@ body.page-public-design-preview main {
   border-bottom: 1px solid transparent;
   background: rgba(255, 255, 255, 0.76);
   backdrop-filter: none;
-  transition: opacity 180ms ease, transform 220ms ease, border-color 180ms ease, background 180ms ease;
+  transition: opacity 140ms ease, transform 160ms ease, border-color 120ms ease, background 120ms ease;
 }
 
 body.is-design-preview-header-scrolled .design-preview-topbar {
@@ -18355,7 +18355,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-0.18rem);
-    transition: opacity 180ms ease, transform 200ms ease;
+    transition: opacity 120ms ease, transform 140ms ease;
   }
 
   body.is-design-preview-header-genres-snapped .design-preview-header-genres {
