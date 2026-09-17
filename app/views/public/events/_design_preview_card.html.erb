@@ -19,8 +19,8 @@
 <% show_card_actions = variant != "feature" %>
 <% show_card_kicker = local_assigns.fetch(:show_card_kicker, true) %>
 <% show_body_price = show_card_actions && display_price.present? && !%w[poster format].include?(variant) %>
-<% available_ticket_label = "Tickets" if primary_offer&.ticket_url.present? && !primary_offer.sold_out? %>
-<% status_pill_label = local_assigns[:status_label].presence || event.public_ticket_status_label.presence || event.badge_text.presence || available_ticket_label %>
+<% status_pill_label = local_assigns[:status_label].presence || event.public_ticket_status_label.presence || event.badge_text.presence %>
+<% status_pill_label = nil if status_pill_label.to_s.casecmp("Tickets").zero? %>
 <% local_unavailable_status_label = status_pill_label if %w[Ausverkauft Abgelaufen].any? { |label| status_pill_label.to_s.casecmp(label).zero? } %>
 <% ticket_status_label = event.public_ticket_status_label.presence || local_unavailable_status_label %>
 <% unavailable_preview = ticket_status_label.present? || status_pill_label.to_s.casecmp("Ausverkauft").zero? || status_pill_label.to_s.casecmp("Abgelaufen").zero? %>
@@ -83,9 +83,8 @@
                    event: event,
                    button_class: "design-preview-card-save" %>
         <% if show_series_pill %>
-          <span class="design-preview-card-series-pill event-series-badge" aria-label="Event-Reihe: <%= series_count_label %>">
+          <span class="design-preview-card-series-pill" aria-label="Event-Reihe: <%= series_count_label %>">
             <%= series_count_label %>
-            <span class="event-series-badge-tooltip"><%= series_count_label %></span>
           </span>
         <% end %>
       </span>

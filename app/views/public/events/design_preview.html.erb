@@ -471,6 +471,7 @@
     <section class="design-preview-section design-preview-list-section design-preview-lane genre-lane-section"
              aria-labelledby="design-preview-genre-lane-<%= lane.group.slug %>"
              data-controller="homepage-lane"
+             data-homepage-lane-card-mode-value="design_cards"
              data-homepage-lane-lane-value="genre:<%= lane.group.slug %>"
              data-homepage-lane-url-value="<%= homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>"
              <% if lane.next_cursor.present? %>data-homepage-lane-cursor-value="<%= lane.next_cursor %>"<% end %>

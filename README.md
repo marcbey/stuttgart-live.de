@@ -356,6 +356,8 @@ Das LLM-Enrichment ermittelt pro Event beide Ebenen in einem Lauf. Dabei muss `g
 
 Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Dort kann zusätzlich eine Genre-Tag-Cloud aktiviert werden, die unter den Genre-Lanes weitere statische Genres mit kommenden öffentlichen Events verlinkt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
 
+Die Genre-Reihen laden weitere Kacheln beim Scrollen nach. Dabei muss das Nachladen denselben Kartentyp wie die erste Reihe verwenden (`design_cards`). Wenn nur die erste Reihe korrekt aussieht und weitere Reihen zusammengedrückt erscheinen, zuerst den Kartenmodus der Nachlade-Anfrage prüfen.
+
 Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.
 
 ### Kennzahlen in "Importer Jobs"

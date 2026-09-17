@@ -2785,7 +2785,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "section.genre-lane-section[data-homepage-lane-lane-value='genre:#{rock_group.slug}']", count: 1
     assert_select "section.genre-lane-section[data-homepage-lane-lane-value='genre:#{rock_group.slug}'][data-homepage-lane-deferred-value]", count: 0
-    assert_select "section.genre-lane-section[data-homepage-lane-lane-value='genre:#{rock_group.slug}'] .event-series-badge", count: 1
+    assert_select "section.genre-lane-section[data-homepage-lane-lane-value='genre:#{rock_group.slug}'] .design-preview-card-series-pill", count: 1
     assert_empty per_series_count_queries(queries)
   end
 
@@ -3215,8 +3215,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the series event to be rendered in Tagestipp"
-    assert_equal "Event-Reihe: Termine", target_card.at_css(".event-series-badge")&.[]("aria-label")
-    assert_equal "Termine", target_card.at_css(".event-series-badge-tooltip")&.text.to_s.strip
+    assert_equal "Event-Reihe: Termine", target_card.at_css(".design-preview-card-series-pill")&.[]("aria-label")
+    assert_equal "Termine", target_card.at_css(".design-preview-card-series-pill")&.text.to_s.strip
   end
 
   test "index can be filtered to SKS events" do
@@ -3756,7 +3756,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "#search_card_event_#{event.id} .event-sold-out-ribbon", count: 0
-    assert_select "#search_card_event_#{event.id} .genre-lane-card-ticket-overlay", count: 1
+    assert_select "#search_card_event_#{event.id} .design-preview-card-status-pill", count: 0
   end
 
   test "search result event cards show an ausverkauft ribbon when manual offer is sold out" do
@@ -6319,6 +6319,23 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".genre-lane-card .saved-event-button[data-controller='saved-event-toggle']", minimum: 1
     assert_includes response.body, @published_event.slug
+  end
+
+  test "homepage genre lanes request and render matching design cards" do
+    create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
+
+    get events_url(filter: "all")
+    assert_response :success
+    assert_select "[data-homepage-lane-lane-value='genre:rock-alternative'][data-homepage-lane-card-mode-value='design_cards']", count: 1
+
+    get homepage_lane_events_url(lane: "genre:rock-alternative", mode: "design_cards", filter: "all")
+    assert_response :success
+    document = Nokogiri::HTML.fragment(response.body)
+    assert document.css("article").any?
+    assert document.css("article").all? { |card| card["class"].split.include?("design-preview-card") }
+    assert_empty document.css(".event-series-badge-tooltip")
+    assert document.css(".design-preview-card-status-pill").none? { |badge| badge.text.strip.casecmp("Tickets").zero? }
   end
 
   private

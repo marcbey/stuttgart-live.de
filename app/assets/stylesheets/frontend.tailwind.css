@@ -13716,7 +13716,7 @@ body.page-public-design-preview main {
   border-bottom: 1px solid transparent;
   background: rgba(255, 255, 255, 0.76);
   backdrop-filter: none;
-  transition: opacity 140ms ease, transform 160ms ease, border-color 120ms ease, background 120ms ease;
+  transition: none;
 }
 
 body.is-design-preview-header-scrolled .design-preview-topbar {
@@ -16453,6 +16453,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   font-size: 0.64rem;
   font-weight: 400;
   line-height: 1;
+  white-space: nowrap;
   text-transform: uppercase;
   pointer-events: auto;
 }
@@ -18321,14 +18322,14 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     justify-content: space-between;
     gap: 1rem;
     min-height: 4.5rem;
-    background: transparent;
+    background: #fff;
     box-shadow: none;
     backdrop-filter: none;
   }
 
   body.is-design-preview-header-scrolled .design-preview-topbar {
     border-bottom-color: rgba(8, 9, 9, 0.08);
-    background: rgba(255, 255, 255, 0.98);
+    background: #fff;
     box-shadow: 0 1rem 2.7rem rgba(8, 9, 9, 0.12);
     backdrop-filter: none;
   }
@@ -18355,7 +18356,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     opacity: 0;
     pointer-events: none;
     transform: translateY(-0.18rem);
-    transition: opacity 120ms ease, transform 140ms ease;
+    transition: none;
   }
 
   body.is-design-preview-header-genres-snapped .design-preview-header-genres {

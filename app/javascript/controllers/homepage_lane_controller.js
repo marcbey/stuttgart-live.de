@@ -6,6 +6,7 @@ export default class extends Controller {
     cursor: String,
     deferred: { type: Boolean, default: false },
     lane: String,
+    cardMode: { type: String, default: "cards" },
     listCursor: String,
     listLimit: { type: Number, default: 12 },
     maxPagesDesktop: { type: Number, default: 3 },
@@ -102,7 +103,7 @@ export default class extends Controller {
     this.abortController = abortController
 
     try {
-      const response = await fetch(this.requestUrl("cards"), {
+      const response = await fetch(this.requestUrl(this.cardModeValue), {
         headers: {
           Accept: "text/html",
           "X-Requested-With": "XMLHttpRequest"
