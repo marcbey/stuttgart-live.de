@@ -361,6 +361,8 @@ Die Genre-Reihen laden weitere Kacheln beim Scrollen nach. Dabei muss das Nachla
 
 Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.
 
+Die Startseiten-Highlights passen ihre Auswahl an die Bildschirmbreite an: Zwischen 768 und 1279 Pixeln stehen vier größere Event-Kacheln neben dem Hauptslider, ab 1280 Pixeln erscheint das vollständige Kachelraster. Die zusätzliche Video-Kachel wird erst ab 1536 Pixeln eingeblendet. Auf dem Handy bleibt die horizontal scrollbar angeordnete Event-Reihe erhalten; alle Highlights sind weiterhin über `Alle anzeigen` erreichbar.
+
 ### Kennzahlen in "Importer Jobs"
 
 Im Backend zeigen die Tabellen `Importer Jobs` und `Importer Job #...` absichtlich verschiedene Ebenen der Import-Pipeline. Die Spalten haben dieselbe Bedeutung wie die Hover-Texte im UI:
