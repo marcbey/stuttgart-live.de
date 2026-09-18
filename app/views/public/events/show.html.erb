@@ -81,7 +81,7 @@
                           data: { turbo: false } %>
             <% end %>
 
-            <% if presenter.venue_description.present? %>
+            <% if @event.show_venue_description? && presenter.venue_description.present? %>
               <div class="event-detail-copy-flow event-detail-venue-description">
                 <%= formatted_venue_description(presenter.venue_description) %>
               </div>

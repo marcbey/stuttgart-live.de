@@ -466,6 +466,7 @@ module Backend
         :promoter_name,
         :organizer_notes,
         :show_organizer_notes,
+        :show_venue_description,
         :badge_text,
         :homepage_url,
         :instagram_url,

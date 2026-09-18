@@ -4951,6 +4951,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "noopener", venue_link["rel"]
   end
 
+  test "show hides venue description when disabled for the event" do
+    @published_event.update!(show_venue_description: false)
+    @published_event.venue_record.update!(description: "Dieser Location-Text soll verborgen bleiben.")
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-preview-venue-description", count: 0
+    assert_not_includes response.body, "Dieser Location-Text soll verborgen bleiben."
+    assert_select ".design-detail-preview-location", minimum: 1
+  end
+
   test "show preserves rich text links from event and venue editors" do
     @published_event.update!(
       event_info: '<div>Mehr beim <a href="https://artist.example">Artist</a>.</div>'

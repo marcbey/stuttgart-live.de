@@ -233,6 +233,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_kicker_text]']", count: 0
     assert_select "form#editor_form_event_#{@event.id} input[type='hidden'][name='event[promotion_banner_cta_text]']", count: 0
     assert_select "input[name='event[support]']", count: 1
+    assert_select "input[name='event[show_venue_description]'][type='checkbox']", count: 1
     assert_select "#event-editor-panel-event input[type='hidden'][name='event[event_info]']", count: 1
     assert_select "#event-editor-panel-event trix-editor.backend-description-editor[input='event_event_info'][data-controller='description-image-upload']", count: 1
     assert_select "#event-editor-panel-event trix-editor.backend-description-editor[data-description-image-upload-direct-upload-url-value='#{rails_direct_uploads_path}']", count: 1
@@ -1055,6 +1056,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
         support: "Special Guest",
         organizer_notes: "Eigene Hinweise\nZweite Zeile",
         show_organizer_notes: "1",
+        show_venue_description: "0",
         homepage_url: "https://example.com",
         instagram_url: "https://instagram.com/example",
         facebook_url: "https://facebook.com/example",
@@ -1072,6 +1074,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Special Guest", @event.support
     assert_equal "Eigene Hinweise\nZweite Zeile", @event.organizer_notes
     assert_predicate @event, :show_organizer_notes?
+    assert_not_predicate @event, :show_venue_description?
     assert_equal "https://example.com", @event.homepage_url
     assert_equal "https://instagram.com/example", @event.instagram_url
     assert_equal "https://facebook.com/example", @event.facebook_url

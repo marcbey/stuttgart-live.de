@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_29_093000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -284,6 +284,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_29_093000) do
     t.datetime "published_at"
     t.bigint "published_by_id"
     t.boolean "show_organizer_notes", default: false, null: false
+    t.boolean "show_venue_description", default: true, null: false
     t.string "slug", null: false
     t.string "source_fingerprint"
     t.jsonb "source_snapshot", default: {}, null: false
