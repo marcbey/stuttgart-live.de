@@ -220,32 +220,25 @@
         <% end %>
 
         <% if public_homepage_chrome && public_events_search_visible %>
-          <% homepage_header_genres = [
-               { label: "POP", slug: "pop-indie-singer-songwriter" },
-               { label: "ROCK", slug: "rock-alternative" },
-               { label: "PUNK & METAL", slug: "metal-punk-hardcore" },
-               { label: "HIP-HOP", slug: "hip-hop-r-n-b" },
-               { label: "ELECTRONIC", slug: "electronic-music-edm" },
-               { label: "JAZZ", slug: "jazz-blues-soul" },
-               { label: "KLASSIK", slug: "klassik-oper" },
-               { label: "THEATER", slug: "musical-theater" }
-             ] %>
-          <div class="app-nav-hotline">
-            <nav class="app-nav-hotline-copy" aria-label="Genre-Navigation">
-              <% homepage_header_genres.each_with_index do |genre, index| %>
-                <%= link_to genre[:label],
-                            genre_lane_path(genre[:slug]),
-                            class: "app-nav-hotline-genre",
-                            data: { genre_index: index + 1 } %>
-              <% end %>
-            </nav>
-            <div class="app-nav-hotline-contact">
-              <%= link_to "Tickets",
-                          tickets_path,
-                          class: app_nav_link_class(active: tickets_nav_active?),
-                          aria: { current: ("page" if tickets_nav_active?) } %>
+          <% homepage_header_genres = public_homepage_header_genres %>
+          <% if homepage_header_genres.any? %>
+            <div class="app-nav-hotline">
+              <nav class="app-nav-hotline-copy" aria-label="Genre-Navigation">
+                <% homepage_header_genres.each_with_index do |genre, index| %>
+                  <%= link_to genre[:label],
+                              genre_lane_path(genre[:slug]),
+                              class: "app-nav-hotline-genre",
+                              data: { genre_index: index + 1 } %>
+                <% end %>
+              </nav>
+              <div class="app-nav-hotline-contact">
+                <%= link_to "Tickets",
+                            tickets_path,
+                            class: app_nav_link_class(active: tickets_nav_active?),
+                            aria: { current: ("page" if tickets_nav_active?) } %>
+              </div>
             </div>
-          </div>
+          <% end %>
         <% end %>
 
         <button type="button"

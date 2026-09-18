@@ -354,7 +354,7 @@ Events haben zwei getrennte Genre-Ebenen:
 
 Das LLM-Enrichment ermittelt pro Event beide Ebenen in einem Lauf. Dabei muss `genres` 1 bis 3 Werte aus der statischen Liste enthalten, während `sub_genres` 1 bis 4 frei abgeleitete fachliche Begriffe enthält. Bei jedem erfolgreichen Enrichment-Lauf werden die bestehenden Genre- und Sub-Genre-Zuordnungen des Events ersetzt.
 
-Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Dort kann zusätzlich eine Genre-Tag-Cloud aktiviert werden, die unter den Genre-Lanes weitere statische Genres mit kommenden öffentlichen Events verlinkt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
+Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Dieselbe Auswahl steuert auch die kompakte Genre-Navigation auf der Startseite; wenn dort keine Genres aktiviert sind, erscheinen auf der Startseite keine Genre-Lanes und keine Genre-Navigation. Dort kann zusätzlich eine Genre-Tag-Cloud aktiviert werden, die unter den Genre-Lanes weitere statische Genres mit kommenden öffentlichen Events verlinkt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
 
 Die Genre-Reihen laden weitere Kacheln beim Scrollen nach. Dabei muss das Nachladen denselben Kartentyp wie die erste Reihe verwenden (`design_cards`). Wenn nur die erste Reihe korrekt aussieht und weitere Reihen zusammengedrückt erscheinen, zuerst den Kartenmodus der Nachlade-Anfrage prüfen.
 

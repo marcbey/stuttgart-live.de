@@ -29,7 +29,7 @@
 <% link_class = [ "design-preview-card-link", local_assigns[:link_class] ].compact.join(" ") %>
 <% card_classes = [ card_classes, ("design-preview-card--has-actions" if show_card_actions), ("design-preview-card--sold-out" if unavailable_preview), ("design-preview-card--unavailable" if ticket_status_label.present?) ].compact.join(" ") %>
 
-<article<% if card_dom_id.present? %> id="<%= card_dom_id %>"<% end %> class="<%= card_classes %>">
+<article<% if card_dom_id.present? %> id="<%= card_dom_id %>"<% end %> class="<%= card_classes %>"<% if local_assigns[:card_style].present? %> style="<%= local_assigns[:card_style] %>"<% end %>>
   <%= link_to public_event_detail_path(event, browse_state), class: link_class do %>
     <span class="design-preview-card-media">
       <% if image_source.present? %>

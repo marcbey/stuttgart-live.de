@@ -3,6 +3,35 @@ require "test_helper"
 class Public::EventsHelperTest < ActionView::TestCase
   include Public::EventsHelper
 
+  test "public_design_highlight_tiles reorders and skips tiles to fill the grid" do
+    variants = [
+      EventImage::GRID_VARIANT_2X1,
+      EventImage::GRID_VARIANT_2X1,
+      EventImage::GRID_VARIANT_2X1,
+      EventImage::GRID_VARIANT_1X2,
+      EventImage::GRID_VARIANT_1X1,
+      EventImage::GRID_VARIANT_1X1
+    ]
+    event_images = Class.new(Array) { def loaded? = true }
+    events = variants.each_with_index.map do |variant, index|
+      image = EventImage.new(purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: variant)
+      Struct.new(:id, :event_images).new(index + 1, event_images.new([ image ]))
+    end
+
+    tiles = public_design_highlight_tiles(events, capacity: 8)
+    occupied_cells = tiles.flat_map do |tile|
+      width, height = public_design_grid_variant_dimensions(tile.grid_variant)
+      height.times.flat_map do |row_offset|
+        width.times.map { |column_offset| [ tile.column + column_offset, tile.row + row_offset ] }
+      end
+    end
+
+    assert_equal 8, tiles.sum { |tile| public_design_grid_variant_slot_count(tile.grid_variant) }
+    assert_includes tiles.map(&:grid_variant), EventImage::GRID_VARIANT_1X2
+    assert_equal 8, occupied_cells.uniq.length
+    assert tiles.all? { |tile| tile.column.between?(1, 4) && tile.row.between?(1, 2) }
+  end
+
   test "public_event_ticket_price returns ab price for ranges" do
     event = events(:published_one)
     offer = event_offers(:published_one_offer)

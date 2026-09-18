@@ -115,15 +115,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-saved-events-link[hidden]", count: 0
     assert_select ".app-nav-saved-events-count", text: "0", count: 2
     assert_select ".app-nav-socials-poster[data-controller='saved-events-nav'] .app-nav-saved-events-link-desktop", count: 1
-    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('pop-indie-singer-songwriter')}']", text: "POP", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('rock-alternative')}']", text: "ROCK", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('metal-punk-hardcore')}']", text: "PUNK & METAL", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('jazz-blues-soul')}']", text: "JAZZ", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('musical-theater')}']", text: "THEATER", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('klassik-oper')}']", text: "KLASSIK", count: 1
-    assert_select ".app-nav-hotline-copy .app-nav-hotline-genre[href='#{genre_lane_path('electronic-music-edm')}']", text: "ELECTRONIC", count: 1
-    assert_select ".app-nav-hotline-contact .app-nav-link", text: "Tickets"
+    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 0
+    assert_select ".design-preview-header-genres-more", count: 0
     assert_select ".partner-strip-image[width][height]", count: 6
     assert_includes response.body, "Published Artist"
     assert_not_includes response.body, "Past Artist"
@@ -255,6 +248,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     rock_lane_index = shell_children.index(rock_section)
     assert pop_section.present?, "expected configured pop lane to be rendered"
     assert rock_section.present?, "expected configured rock lane to be rendered"
+    assert_equal [ "POP", "ROCK" ], document.css(".app-nav-hotline-genre").map { |link| link.text.squish }
+    assert_equal [ genre_lane_path(pop_group.slug), genre_lane_path(rock_group.slug) ],
+                 document.css(".app-nav-hotline-genre").map { |link| link["href"] }
+    assert_select ".design-preview-header-genres-more", count: 1
     assert document.at_css(".genre-lane-section .design-preview-section-header").present?,
            "expected genre section header"
     assert_operator first_genre_index, :>, highlights_index
@@ -297,6 +294,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".genre-lane-section", count: 0
+    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 0
+    assert_select ".design-preview-header-genres-more", count: 0
   end
 
   test "index renders top homepage lanes in the initial payload" do
@@ -1532,6 +1531,29 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner-slider-track .promotion-banner-event .promotion-banner-event-title", text: "Highlight Slider Event"
     assert_select ".promotion-banner-slider-track .promotion-banner-event a[href='#{event_path(event.slug)}']", count: 1
     assert_select "section.public-shell > article.promotion-banner-event a[href='#{event_path(event.slug)}']", count: 0
+  end
+
+  test "homepage excludes expired events from the highlight slider" do
+    expired_event = Event.create!(
+      slug: "homepage-expired-highlight-slider-event",
+      source_fingerprint: "test::homepage::expired-highlight-slider",
+      title: "Expired Highlight Slider Event",
+      artist_name: "Expired Highlight Artist",
+      start_at: 1.day.ago,
+      venue: "Liederhalle",
+      city: "Stuttgart",
+      highlighted: true,
+      promotion_banner: true,
+      status: "published",
+      published_at: 2.days.ago,
+      source_snapshot: {}
+    )
+    create_event_image(event: expired_event, purpose: EventImage::PURPOSE_DETAIL_HERO, grid_variant: EventImage::GRID_VARIANT_1X1)
+
+    get events_url
+
+    assert_response :success
+    assert_select ".design-preview-feature-track a[href='#{event_path(expired_event.slug)}']", count: 0
   end
 
   test "homepage keeps slider-only and lane-positioned promotion banners separate" do
@@ -3367,10 +3389,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-search #public-search-calendar.public-search-calendar-overlay[hidden]", count: 1
     assert_select ".app-nav-search [data-public-search-target='calendarMonthLabel']", count: 1
     assert_select ".app-nav-search [data-public-search-target='calendarGrid']", count: 1
-    header_genres = css_select(".app-nav-hotline-genre").map { |link| link.text.strip }
-    assert_equal "PUNK & METAL", header_genres[2]
-    assert_equal "HIP-HOP", header_genres[3]
-    assert_select ".app-nav-hotline-genre[href='#{genre_lane_path('hip-hop-r-n-b')}']", text: "HIP-HOP", count: 1
+    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 0
 
     assert_select ".public-filter-row", count: 0
     assert_select ".public-view-toggle", count: 0
@@ -3569,7 +3588,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, @published_event.artist_name
     assert_not_includes response.body, "Mehr Events laden"
     assert_select "#events-pagination", count: 0
-    assert_select ".newsletter-signup-section", count: 1
+    assert_select ".design-preview-footer-newsletter", count: 1
   end
 
   test "search renders events within a selected date range" do

@@ -57,22 +57,28 @@ module ApplicationHelper
   end
 
   def public_design_navigation_lanes(genre_lanes, highlight_events:)
-    lanes = Array(genre_lanes).compact
-    return lanes if lanes.any?
+    Array(genre_lanes).compact
+  end
 
-    events = Array(highlight_events).compact
-    return [] if events.empty?
+  def public_homepage_header_genres
+    label_by_slug = {
+      "pop-indie-singer-songwriter" => "POP",
+      "rock-alternative" => "ROCK",
+      "metal-punk-hardcore" => "PUNK & METAL",
+      "hip-hop-r-n-b" => "HIP-HOP",
+      "electronic-music-edm" => "ELECTRONIC",
+      "jazz-blues-soul" => "JAZZ",
+      "klassik-oper" => "KLASSIK",
+      "musical-theater" => "THEATER"
+    }
+    genres_by_slug = Genre.where(slug: AppSetting.homepage_genre_lane_slugs).index_by(&:slug)
 
-    [
-      Public::Events::HomepageGenreLanesBuilder::Lane.new(
-        group: PublicDesignNavigationGroup.new(name: "Unsere Highlights", slug: "highlights"),
-        events: events,
-        effective_series_ids: [],
-        series_counts_by_id: {},
-        public_path: highlights_lane_path,
-        next_cursor: nil
-      )
-    ]
+    AppSetting.homepage_genre_lane_slugs.filter_map do |slug|
+      genre = genres_by_slug[slug]
+      next if genre.blank?
+
+      { label: label_by_slug.fetch(slug, genre.name.upcase), slug: slug }
+    end
   end
 
   PublicDesignNavigationGroup = Data.define(:name, :slug)

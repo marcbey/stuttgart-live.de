@@ -13,7 +13,8 @@ module Public::EventsHelper
 
   EventDetailTextColumns = Data.define(:left, :right)
   EventDetailOrganizerLogo = Data.define(:source, :alt)
-  DesignHighlightTile = Data.define(:event, :grid_variant)
+  DesignHighlightTile = Data.define(:event, :grid_variant, :column, :row, :source_index)
+  DESIGN_HIGHLIGHT_GRID_COLUMNS = 4
   DEFAULT_EVENT_DETAIL_ORGANIZER_LOGO = EventDetailOrganizerLogo.new(
     source: "russ-live-logo.svg",
     alt: "Russ Live"
@@ -173,16 +174,71 @@ module Public::EventsHelper
   end
 
   def public_design_highlight_tiles(events, capacity: 8)
-    remaining_slots = capacity.to_i
+    states = { [ 0, [] ] => [] }
 
-    Array(events).filter_map.with_index do |event, index|
-      grid_variant = effective_public_grid_variant_for(event, index)
-      slot_count = public_design_grid_variant_slot_count(grid_variant)
-      next if slot_count > remaining_slots
+    Array(events).each_with_index do |event, source_index|
+      grid_variant = effective_public_grid_variant_for(event, source_index)
+      width, height = public_design_grid_variant_dimensions(grid_variant)
+      next_states = states.dup
 
-      remaining_slots -= slot_count
-      DesignHighlightTile.new(event:, grid_variant:)
+      states.each do |(mask, _variants), tiles|
+        public_design_highlight_placements(mask, width:, height:, capacity:).each do |placement|
+          tile = DesignHighlightTile.new(
+            event:,
+            grid_variant:,
+            source_index:,
+            column: placement.fetch(:column),
+            row: placement.fetch(:row)
+          )
+          candidate = tiles + [ tile ]
+          candidate_mask = mask | placement.fetch(:mask)
+          candidate_key = [ candidate_mask, candidate.map(&:grid_variant).uniq.sort ]
+          current = next_states[candidate_key]
+          next unless current.nil? || public_design_highlight_tiles_preferred?(candidate, current)
+
+          next_states[candidate_key] = candidate
+        end
+      end
+
+      states = next_states
     end
+
+    states.max_by { |(mask, _variants), tiles| public_design_highlight_pack_score(mask, tiles) }
+      &.last
+      &.sort_by { |tile| [ tile.row, tile.column ] } || []
+  end
+
+  def public_design_grid_variant_dimensions(grid_variant)
+    case grid_variant.to_s
+    when EventImage::GRID_VARIANT_1X2 then [ 1, 2 ]
+    when EventImage::GRID_VARIANT_2X1 then [ 2, 1 ]
+    when EventImage::GRID_VARIANT_2X2 then [ 2, 2 ]
+    else [ 1, 1 ]
+    end
+  end
+
+  def public_design_highlight_placements(mask, width:, height:, capacity:)
+    columns = DESIGN_HIGHLIGHT_GRID_COLUMNS
+    rows = (capacity.to_f / columns).ceil
+
+    rows.times.filter_map do |row|
+      next if row + height > rows
+
+      (0..(columns - width)).filter_map do |column|
+        cells = height.times.flat_map { |row_offset| width.times.map { |column_offset| ((row + row_offset) * columns) + column + column_offset } }
+        next if cells.any? { |cell| cell >= capacity || mask.anybits?(1 << cell) }
+
+        { column: column + 1, row: row + 1, mask: cells.sum { |cell| 1 << cell } }
+      end
+    end.flatten
+  end
+
+  def public_design_highlight_tiles_preferred?(candidate, current)
+    (candidate.map(&:source_index) <=> current.map(&:source_index)) == -1
+  end
+
+  def public_design_highlight_pack_score(mask, tiles)
+    [ mask.digits(2).sum, tiles.map(&:grid_variant).uniq.size, -tiles.sum(&:source_index) ]
   end
 
   def card_slot_for_grid_variant(grid_variant)

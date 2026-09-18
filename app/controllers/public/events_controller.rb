@@ -782,10 +782,12 @@ module Public
 
     def assign_homepage_promotion_banners
       event_banners = Event.promotion_banner_live
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .select(&:promotion_banner_display_image_present?)
         .map { |event| { type: :event, record: event } }
       highlight_slider_event_banners = Event.published_live
         .where(highlighted: true)
+        .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .includes(
           :venue_record,
           promotion_banner_image_attachment: :blob,

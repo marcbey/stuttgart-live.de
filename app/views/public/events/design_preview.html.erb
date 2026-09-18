@@ -99,17 +99,19 @@
                       ("is-active" if active_path == lane.public_path)
                     ] %>
       <% end %>
-      <details class="<%= class_names("design-preview-header-genres-more", "is-active": genres_active) %>">
-        <summary>
-          Alle Genres
-          <span aria-hidden="true"></span>
-        </summary>
-        <div class="design-preview-header-genres-menu">
-          <% genre_lanes.each do |lane| %>
-            <%= link_to lane.group.name, lane.public_path %>
-          <% end %>
-        </div>
-      </details>
+      <% if genre_lanes.any? %>
+        <details class="<%= class_names("design-preview-header-genres-more", "is-active": genres_active) %>">
+          <summary>
+            Alle Genres
+            <span aria-hidden="true"></span>
+          </summary>
+          <div class="design-preview-header-genres-menu">
+            <% genre_lanes.each do |lane| %>
+              <%= link_to lane.group.name, lane.public_path %>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
       <%= link_to "News",
                   news_index_path,
                   class: [
@@ -420,6 +422,7 @@
           <div class="design-preview-format-grid" aria-label="Aktuelle Highlight-Events">
             <% highlight_tiles.each do |tile| %>
               <% card_slot = card_slot_for_grid_variant(tile.grid_variant) %>
+              <% tile_width, tile_height = public_design_grid_variant_dimensions(tile.grid_variant) %>
               <%= render "design_preview_card",
                          event: tile.event,
                          browse_state: @browse_state,
@@ -429,7 +432,8 @@
                          card_slot: card_slot,
                          effective_series_ids: design_preview_effective_series_ids,
                          series_counts_by_id: design_preview_series_counts_by_id,
-                         show_admin_edit: true %>
+                         show_admin_edit: true,
+                         card_style: "grid-column: #{tile.column} / span #{tile_width}; grid-row: #{tile.row} / span #{tile_height}" %>
             <% end %>
           </div>
         <% else %>
@@ -750,95 +754,11 @@
     </section>
   <% end %>
 
-  <section class="design-preview-newsletter design-preview-newsletter--standalone" aria-labelledby="design-preview-newsletter-title">
-    <div>
-      <p>Stuttgart Live direkt ins Postfach.</p>
-      <h2 id="design-preview-newsletter-title">Nichts verpassen. Stuttgart Live im Postfach.</h2>
-    </div>
-    <%= form_with model: NewsletterSubscriber.new,
-                  url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath),
-                  local: true,
-                  class: "design-preview-newsletter-form" do |form| %>
-      <%= form.email_field :email,
-                           placeholder: "E-Mail-Adresse eingeben",
-                           autocomplete: "email",
-                           aria: { label: "E-Mail-Adresse" } %>
-      <%= form.submit "Anmelden" %>
-    <% end %>
-  </section>
-
   <div id="saved-events-lane-slot"
        class="saved-events-lane-slot"
        data-controller="saved-events-lane"
        data-saved-events-lane-url-value="<%= saved_lane_events_path %>"
        hidden></div>
 
-  <footer class="design-preview-footer">
-    <div class="design-preview-footer-brand">
-      <strong>Stuttgart<br>Live</strong>
-      <p>Events in deiner Stadt.</p>
-      <div class="design-preview-footer-socials" aria-label="Soziale Medien">
-        <%= link_to "https://www.instagram.com/stuttgart.live.concert/",
-                    class: "design-preview-footer-social-link",
-                    target: "_blank",
-                    rel: "noopener",
-                    title: "Instagram",
-                    aria: { label: "Instagram" } do %>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <rect x="3.5" y="3.5" width="17" height="17" rx="4.5"></rect>
-            <circle cx="12" cy="12" r="4"></circle>
-            <circle cx="17.4" cy="6.7" r="1.2" class="design-preview-footer-social-fill"></circle>
-          </svg>
-        <% end %>
-        <%= link_to "https://www.tiktok.com/@stuttgart.live.concert",
-                    class: "design-preview-footer-social-link",
-                    target: "_blank",
-                    rel: "noopener",
-                    title: "TikTok",
-                    aria: { label: "TikTok" } do %>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M14.2 4.2c.36 1.82 1.44 3.18 3.26 4.06.63.3 1.3.48 2.04.55v2.56a8.18 8.18 0 0 1-3.01-.67v5.06c0 3.1-2.48 5.53-5.74 5.53-3.05 0-5.56-2.3-5.56-5.27 0-3.1 2.72-5.5 5.91-5.22v2.66a2.67 2.67 0 0 0-3.21 2.56c0 1.47 1.2 2.66 2.72 2.66 1.66 0 2.74-1.26 2.74-3.02V4.2h2.85Z" class="design-preview-footer-social-fill"></path>
-          </svg>
-        <% end %>
-        <%= link_to "https://www.facebook.com/stuttgartlive",
-                    class: "design-preview-footer-social-link",
-                    target: "_blank",
-                    rel: "noopener",
-                    title: "Facebook",
-                    aria: { label: "Facebook" } do %>
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M13.4 20.5v-7h2.3l.35-2.75H13.4V9c0-.8.22-1.35 1.37-1.35h1.46V5.2c-.25-.03-1.1-.1-2.1-.1-2.08 0-3.5 1.27-3.5 3.62v2.03H8.3v2.75h2.37v7h2.73Z" class="design-preview-footer-social-fill"></path>
-          </svg>
-        <% end %>
-      </div>
-    </div>
-    <nav class="design-preview-footer-nav" aria-label="Footer Navigation">
-      <% design_preview_menu_groups.each do |group_label, links| %>
-        <section class="design-preview-footer-nav-group" aria-labelledby="design-preview-footer-<%= group_label.parameterize %>">
-          <h2 id="design-preview-footer-<%= group_label.parameterize %>"><%= group_label %></h2>
-          <div>
-            <% links.each do |label, path| %>
-              <%= link_to label, path %>
-              <% if group_label == "Rechtliches" && label == "Datenschutz" %>
-                <button type="button"
-                        class="design-preview-footer-privacy-button"
-                        data-action="click->consent#openSettings"
-                        aria-label="Datenschutzeinstellungen öffnen">
-                  Datenschutzeinstellungen
-                </button>
-              <% end %>
-            <% end %>
-          </div>
-        </section>
-      <% end %>
-    </nav>
-    <%= render "newsletter_signup",
-               subscriber: NewsletterSubscriber.new,
-               section_id: "design-preview-newsletter",
-               title_id: "design-preview-footer-newsletter-title",
-               signup: newsletter_signup_config("events_index", return_to: request.fullpath, source: "footer").merge(frame_id: "events-footer-newsletter-signup") %>
-    <div class="design-preview-footer-partners">
-      <%= render "partner_strip" %>
-    </div>
-  </footer>
+  <%= render "design_preview_footer", menu_groups: design_preview_menu_groups %>
 </div>

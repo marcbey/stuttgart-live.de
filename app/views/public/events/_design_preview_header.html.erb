@@ -42,17 +42,19 @@
                     ("is-active" if active_path == lane.public_path)
                   ] %>
     <% end %>
-    <details class="<%= class_names("design-preview-header-genres-more", "is-active": genres_active) %>">
-      <summary>
-        Alle Genres
-        <span aria-hidden="true"></span>
-      </summary>
-      <div class="design-preview-header-genres-menu">
-        <% genre_lanes.each do |lane| %>
-          <%= link_to lane.group.name, lane.public_path %>
-        <% end %>
-      </div>
-    </details>
+    <% if genre_lanes.any? %>
+      <details class="<%= class_names("design-preview-header-genres-more", "is-active": genres_active) %>">
+        <summary>
+          Alle Genres
+          <span aria-hidden="true"></span>
+        </summary>
+        <div class="design-preview-header-genres-menu">
+          <% genre_lanes.each do |lane| %>
+            <%= link_to lane.group.name, lane.public_path %>
+          <% end %>
+        </div>
+      </details>
+    <% end %>
     <%= link_to "News",
                 news_index_path,
                 class: [
