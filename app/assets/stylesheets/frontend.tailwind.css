@@ -18924,6 +18924,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 @media (min-width: 96rem) {
   body.page-public-design-preview {
     --preview-shell-edge: max(2.5rem, calc((100vw - 100rem) / 2));
+    --preview-expanded-edge: max(2.5rem, calc((100vw - 140rem) / 2));
   }
 
   .design-preview {
@@ -18936,6 +18937,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     width: min(calc(100vw - 5rem), 140rem);
     max-width: none;
     transform: translateX(-50%);
+  }
+
+  body.page-public-startpage:not(.is-design-preview-header-scrolled) .design-preview-topbar {
+    padding-inline: var(--preview-expanded-edge);
   }
 
   .design-preview-header-genre-link.design-preview-header-genre-link--full {
@@ -19373,7 +19378,12 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
     gap: 0.24rem;
+    bottom: clamp(2.25rem, 8vw, 3rem);
     padding: 1rem var(--preview-shell-edge) 1.5rem;
+  }
+
+  .design-preview-feature-slider .design-preview-card--feature:not(.design-preview-banner-card) .design-preview-card-copy {
+    bottom: clamp(2.25rem, 8vw, 3rem);
   }
 
   body.page-public-startpage .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
@@ -19829,7 +19839,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 @media (min-width: 64rem) {
   .design-preview-highlight-grid--with-video {
-    aspect-ratio: 3.85 / 1;
+    aspect-ratio: 3.55 / 1;
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.78fr) minmax(12.8rem, 0.62fr);
     align-items: stretch;
   }
@@ -21852,7 +21862,7 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
   }
 
   .design-detail-preview-image-track {
-    height: clamp(28.6rem, 72vh, 38.5rem);
+    height: clamp(21rem, 56vh, 26rem);
     aspect-ratio: auto;
     border-radius: 0.62rem;
   }
