@@ -13,6 +13,8 @@ module Newsletter
     def call
       raise MailjetClient::Error, "Final newsletter send is disabled" unless AppConfig.newsletter_final_send_enabled?
 
+      return false unless SyncIssueToMailjet.call(issue, client:)
+
       client.send_campaign(draft_id: issue.mailjet_campaign_draft_id)
       issue.update!(status: "sent", sent_at: Time.current, sent_by: user, mailjet_error_message: nil)
       true

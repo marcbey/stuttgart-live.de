@@ -505,6 +505,28 @@ Die Double-Opt-In-Bestätigungsmails für Newsletter-Anmeldungen werden bei vorh
 Beim SMTP-Versand muss `mailer.from` oder der ENV-Fallback `MAILER_FROM` auf eine Absenderadresse zeigen, die vom konfigurierten SMTP-Konto akzeptiert wird.
 In der lokalen Entwicklungsumgebung werden echte E-Mails verschickt, sobald `SMTP_*` konfiguriert ist. Ohne SMTP-Konfiguration rendert Rails die Mails nur lokal und es kommt keine Nachricht im Postfach an.
 
+### Newsletter-Einwilligungen und Tracking
+
+Die kompakten E-Mail-Felder auf der Website öffnen zunächst die ausführliche Anmeldung. Erst mit der erforderlichen Newsletter-Zustimmung wird eine Bestätigungsmail angefordert. Die separate Tracking-Checkbox ist freiwillig und nicht vorausgewählt. Beide freigegebenen Texte sowie der Kurztext stehen auf der Anmeldeseite; die Bestätigungsmail verwendet den vorgegebenen Betreff und Text.
+
+Anmeldeanfrage, Double-Opt-In-Bestätigung und spätere Tracking-Änderungen werden mit E-Mail-Adresse, Zeitpunkt, Quelle, Textversion und vollständigem Text als `NewsletterConsentEvent` gespeichert. Diese Nachweise werden durch Änderungen nicht überschrieben. Neue Einwilligungen werden erst nach Bestätigung wirksam. Der Bestätigungslink gilt sieben Tage; eine erneute Anmeldung macht ältere Links ungültig. Alte, noch unbestätigte Anmeldungen ohne Einwilligungsnachweis müssen das neue Formular erneut durchlaufen. Bereits bestätigte Kontakte behalten ihren Status, erhalten aber keine nachträgliche Tracking-Einwilligung.
+
+Der Link **Tracking-Einstellungen** im Newsletter führt zu einer eigenen Seite. Nach Anforderung erhält der Kontakt eine ungetrackte E-Mail mit einem zwei Tage gültigen Zugangslink. Änderungen betreffen nur das Tracking, nicht das Abonnement. Die Newsletter-Abmeldung bleibt beim Mailjet-Abmeldelink `[[UNSUB_LINK_DE]]`. Ein Tracking-Widerruf verändert keine Listenzugehörigkeit und kann eine abgemeldete Adresse nicht erneut anmelden. Die Einstellungsseiten verwenden keine Analyse-Skripte und dürfen nicht zwischengespeichert werden.
+
+**Sicherer Zwischenstand für Mailjet:** Die App überträgt die dokumentierte Auswahl getrennt als boolesche Kontakteigenschaften `stuttgartlive_open_tracking_consent` und `stuttgartlive_click_tracking_consent`. Das sind eigene Nachweisfelder, **nicht** Mailjets native Tracking-Schalter. Deshalb deaktiviert die App Öffnungs- und Klicktracking derzeit für **alle** von ihr erzeugten Mails: per Send-API-Optionen bei Bestätigungs-/Einstellungsmails, per SMTP-Headern beim SMTP-Fallback und per Kampagnen-Headern bei Newsletter-Drafts. Auch vor dem finalen Versand wird der Draft erneut synchronisiert. Eine positive Checkbox aktiviert noch keine personenbezogene Messung.
+
+Vor einer späteren Aktivierung muss Marc die native, kontaktbezogene Steuerung im tatsächlichen Mailjet-Konto integrieren und mit dem Datenschutzbeauftragten prüfen. Mailjet dokumentiert getrennte Systempräferenzen für Open/Click; eigene Kontakteigenschaften allein steuern diese nicht. Die öffentlichen Hinweise zu Import/Export (`mjoptinopen`, `mjoptinclick`) sind kein verifizierter API-Schreibvertrag. Es werden deshalb keine unbestätigten API-Felder verwendet. Erst nach einem geprüften Abgleich inklusive Widerrufen, sicheren Vorgaben für Bestandskontakte und einem Test der tatsächlich zugestellten E-Mail darf die pauschale Tracking-Sperre im Code geändert werden.
+
+Vor dem Einsatz bitte im Mailjet-Konto zusätzlich kontrollieren:
+
+- Konto-/API-Key-Tracking für manuell erstellte Kampagnen und Automationen deaktivieren. Die App kann Mails außerhalb ihres eigenen Versandwegs nicht absichern; bestehende, bereits versendete Mails werden nicht verändert.
+- Unbestätigte und aus Ticketkäufen stammende Kontakte nicht in Versandlisten übernehmen. EasyTicket-Käuferdaten werden durch diese Änderung weder importiert noch als Newsletter-Einwilligung behandelt. Eine Bestandskunden-Ausnahme ist kein automatischer Importgrund und muss im Einzelfall rechtlich geprüft werden.
+- Bestandskontakte ohne getrennten Nachweis nicht zum Tracking freigeben. Eine spätere Einwilligungsabfrage nur ungetrackt versenden; diese Änderung löst keine solche Kampagne aus.
+- Absendergesellschaft, Datenschutzerklärung, Abmeldelink, Preference-Link und Warteschlange für Mailjet-Sync prüfen. Der neue Anmeldetext nennt die Südwestdeutsche Konzertdirektion Erwin Russ GmbH; bisherige Newsletter-Absenderangaben müssen dazu passen.
+- Aufbewahrungs- und Löschfristen der Nachweise mit dem Datenschutzbeauftragten festlegen. Ein Löschen eines lokalen Abonnenten entfernt auch dessen lokale Nachweise; eine Mailjet-Abmeldung ist davon unabhängig.
+
+Mailjet-Referenzen: [Kontaktbezogene Einwilligung](https://documentation.mailjet.com/hc/en-us/articles/51109335532571-Email-Tracking-Pixels-and-Consent-CNIL-and-Garante-Guidance), [Tracking-Header](https://dev.mailjet.com/docs/smtp-relay/custom-headers/). Eine Live-Konto-Prüfung oder ein echter E-Mail-Testversand ist damit nicht ersetzt.
+
 ### Credentials bearbeiten
 
 Zum Hinzufügen oder Ändern von Einträgen in `config/credentials.yml.enc` öffnest du die Rails-Credentials mit dem im Projekt verwendeten Ruby über `mise`:

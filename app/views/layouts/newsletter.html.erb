@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <title><%= content_for(:title) || "Newsletter | StuttgartLIVE" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="referrer" content="no-referrer">
+    <meta name="robots" content="noindex,nofollow">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <style><%= local_font_face_stylesheet(frontend: true) %></style>
+    <%= stylesheet_link_tag "shared", "frontend" %>
+  </head>
+  <body class="page-public newsletter-consent-page">
+    <header class="newsletter-consent-header">
+      <%= link_to root_path, aria: { label: "StuttgartLIVE Startseite" } do %>
+        <%= image_tag "stuttgart-live-textlogo.svg", alt: "StuttgartLIVE", width: 180 %>
+      <% end %>
+      <%= link_to "Zur Startseite", root_path %>
+    </header>
+    <main class="newsletter-consent-main">
+      <% flash.each do |type, message| %>
+        <p class="newsletter-consent-feedback" role="<%= type == "alert" ? "alert" : "status" %>"><%= message %></p>
+      <% end %>
+      <%= yield %>
+    </main>
+    <footer class="newsletter-consent-footer">
+      <%= link_to "Datenschutzerklärung", datenschutz_path %>
+      <%= link_to "Impressum", imprint_path %>
+      <%= link_to "Tracking-Einstellungen", newsletter_preferences_path %>
+    </footer>
+  </body>
+</html>

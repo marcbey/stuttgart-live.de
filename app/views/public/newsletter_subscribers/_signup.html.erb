@@ -6,7 +6,8 @@
 <% homepage_error_message = homepage_duplicate_email_error ? "Diese Mailadresse ist schon vorhanden." : email_error_messages.to_sentence %>
 <% form_error_message = homepage_signup ? homepage_error_message : subscriber.errors.full_messages.to_sentence %>
 <% show_error_before_field = !homepage_signup && subscriber.errors.any? %>
-<% show_error_after_field = homepage_signup && has_email_errors %>
+<% show_error_after_field = homepage_signup && subscriber.errors.any? %>
+<% form_error_message = subscriber.errors.full_messages.to_sentence if subscriber.errors[:base].any? %>
 
 <%= turbo_frame_tag signup[:frame_id], class: "newsletter-signup-frame" do %>
   <% if subscribed %>
@@ -92,6 +93,8 @@
       <% unless homepage_signup %>
         <%= form.submit signup[:submit_label], **submit_options %>
       <% end %>
+      <%= render "public/newsletter_subscribers/consents", form:, prefix: signup[:frame_id] %>
+      <p class="newsletter-consent-note"><%= Newsletter::ConsentText::FOOTER %> <%= link_to "Datenschutzerklärung", datenschutz_path, data: { turbo_frame: "_top" } %></p>
     <% end %>
   <% end %>
 <% end %>

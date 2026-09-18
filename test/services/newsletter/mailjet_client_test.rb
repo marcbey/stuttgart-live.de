@@ -263,6 +263,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     assert_equal 4242, captured_attributes.fetch(:id)
     assert_equal "<h1>Hi</h1>", captured_attributes.fetch(:html_part)
     assert_equal "Hi", captured_attributes.fetch(:text_part)
+    assert_equal({ "X-Mailjet-TrackOpen" => "0", "X-Mailjet-TrackClick" => "0" }, captured_attributes.fetch(:headers))
   end
 
   test "sends campaign test to fixed addresses" do
@@ -342,6 +343,29 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     assert_equal "Bitte bestätigen", message.fetch("Subject")
     assert_equal "<p>Hallo</p>", message.fetch("HTMLPart")
     assert_equal "Hallo", message.fetch("TextPart")
+    assert_equal "disabled", message.fetch("TrackOpens")
+    assert_equal "disabled", message.fetch("TrackClicks")
+  end
+
+  test "preference sync updates contact properties without subscribing" do
+    captured = nil
+    original_new = Mailjet::Contactdata.method(:new)
+    original_ensure = @client.method(:ensure_tracking_properties)
+    @client.define_singleton_method(:ensure_tracking_properties) { true }
+    Mailjet::Contactdata.define_singleton_method(:new) do |attributes|
+      captured = attributes
+      Object.new.tap { |record| record.define_singleton_method(:save!) { true } }
+    end
+
+    with_mailjet_create(Mailjet::Contactslist_managecontact, ->(_) { flunk "Must not resubscribe" }) do
+      @client.sync_tracking_preferences(email: "withdrawn@example.com", properties: { "stuttgartlive_open_tracking_consent" => false, "stuttgartlive_click_tracking_consent" => false })
+    end
+    assert_equal "withdrawn@example.com", captured.fetch(:id)
+    assert_equal true, captured.fetch(:persisted)
+    assert_equal [ { "Name" => "stuttgartlive_open_tracking_consent", "Value" => false }, { "Name" => "stuttgartlive_click_tracking_consent", "Value" => false } ], captured.fetch(:data)
+  ensure
+    Mailjet::Contactdata.define_singleton_method(:new, original_new)
+    @client.define_singleton_method(:ensure_tracking_properties, original_ensure)
   end
 
   private

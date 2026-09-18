@@ -13,7 +13,7 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
     assert_equal "mailjet-contact-1", subscriber.external_contact_id
     assert_not_nil subscriber.external_last_synced_at
     assert_nil subscriber.external_error_message
-    assert_equal [ { email: "sync@example.com", properties: {} } ], client.requests
+    assert_equal [ { email: "sync@example.com", properties: subscriber.tracking_mailjet_properties } ], client.requests
   end
 
   test "syncs selected interests as mailjet properties" do
@@ -27,7 +27,7 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
       [
         {
           email: "interests@example.com",
-          properties: { "interest_pop_indie_singer_songwriter" => true }
+          properties: { "interest_pop_indie_singer_songwriter" => true }.merge(subscriber.tracking_mailjet_properties)
         }
       ],
       client.requests
@@ -69,6 +69,8 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
   end
 
   SuccessfulMailjetClient = Struct.new(:configured?, :requests) do
+    def ensure_tracking_properties; end
+
     def initialize
       super(true, [])
     end
@@ -84,6 +86,8 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
   end
 
   FailingMailjetClient = Struct.new(:configured?) do
+    def ensure_tracking_properties; end
+
     def initialize
       super(true)
     end

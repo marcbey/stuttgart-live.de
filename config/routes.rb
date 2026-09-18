@@ -129,7 +129,8 @@ Rails.application.routes.draw do
   get "tagestipp", to: "public/events#lane", defaults: { lane: "tagestipp" }, as: :tagestipp_lane
   get "unter-30", to: "public/events#lane", defaults: { lane: "under_30" }, as: :under_30_lane
   get "russ-live", to: "public/events#lane", defaults: { lane: "russ_live" }, as: :russ_live_lane
-  resources :newsletter_subscribers, only: [ :create ], module: :public
+  resources :newsletter_subscribers, only: [ :new, :create ], module: :public
+  resource :newsletter_preferences, only: [ :show, :create, :update ], module: :public
   get "newsletter/confirm/:token", to: "public/newsletter_confirmations#show", as: :newsletter_confirmation
   get "tickets", to: "public/pages#show", defaults: { slug: "tickets" }, as: :tickets
   get "kontakt", to: "public/pages#show", defaults: { slug: "kontakt" }, as: :contact

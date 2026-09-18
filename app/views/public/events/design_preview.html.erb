@@ -245,8 +245,10 @@
       <%= form_with model: NewsletterSubscriber.new,
                     url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath, source: "menu"),
                     local: true,
+                    data: { turbo: false },
                     id: "design-preview-menu-newsletter-form",
                     class: "design-preview-menu-newsletter-form" do |form| %>
+        <%= hidden_field_tag :signup_step, "details" %>
         <div class="design-preview-menu-newsletter-copy">
           <strong>Newsletter</strong>
           <span>Neue Events direkt per Mail.</span>
@@ -565,8 +567,10 @@
       <%= form_with model: NewsletterSubscriber.new,
                     url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath, source: "news_lane"),
                     local: true,
+                    data: { turbo: false },
                     id: "design-preview-news-lane-newsletter-form",
                     class: "design-preview-news-lane-newsletter" do |form| %>
+        <%= hidden_field_tag :signup_step, "details" %>
         <div class="design-preview-news-lane-newsletter-copy">
           <strong>Alle News direkt ins Postfach.</strong>
           <span>Dein wöchentliches Best-of: die spannendsten Events, exklusive Specials und Highlights aus allen Genres.</span>

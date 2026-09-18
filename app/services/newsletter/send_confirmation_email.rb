@@ -11,14 +11,7 @@ module Newsletter
 
     def call
       mail = NewsletterMailer.confirmation(subscriber)
-      return mail.deliver_now unless client.api_configured?
-
-      client.send_transactional_email(
-        to: subscriber.email,
-        subject: mail.subject,
-        html: mail.html_part.body.decoded,
-        text: mail.text_part.body.decoded
-      )
+      DeliverEmail.call(mail, client:)
     end
 
     private

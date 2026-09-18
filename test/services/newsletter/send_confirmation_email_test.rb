@@ -8,7 +8,7 @@ class Newsletter::SendConfirmationEmailTest < ActiveSupport::TestCase
     Newsletter::SendConfirmationEmail.call(subscriber, client:)
 
     assert_equal "confirm-api@example.com", client.delivery.fetch(:to)
-    assert_equal "Bitte bestätige deine Newsletter-Anmeldung", client.delivery.fetch(:subject)
+    assert_equal "Bitte bestätigen Sie Ihre Anmeldung zum StuttgartLIVE-Newsletter", client.delivery.fetch(:subject)
     assert_includes client.delivery.fetch(:html), "/newsletter/confirm/"
     assert_includes client.delivery.fetch(:text), "/newsletter/confirm/"
   end

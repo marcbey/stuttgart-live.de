@@ -1,11 +1,13 @@
 <div style="font-family: Arial, sans-serif; color: #0a2324; line-height: 1.5;">
   <h1 style="font-family: Arial, sans-serif; text-transform: uppercase; margin: 0 0 16px;">Stuttgart Live Newsletter</h1>
-  <p>Bitte bestätige deine Anmeldung zum Stuttgart Live Newsletter.</p>
+  <p><%= Newsletter::ConsentText::CONFIRMATION_BODY %></p>
   <p>
     <%= link_to "Newsletter-Anmeldung bestätigen",
                 @confirmation_url,
                 style: "display: inline-block; background: #2bd7cf; color: #0a2324; font-weight: bold; text-decoration: none; padding: 12px 18px; border-radius: 999px;" %>
   </p>
   <p>Der Link ist <%= distance_of_time_in_words(0, NewsletterSubscriber::CONFIRMATION_TOKEN_EXPIRY) %> gültig.</p>
-  <p>Falls du dich nicht angemeldet hast, kannst du diese E-Mail ignorieren.</p>
+  <p>Ihre Auswahl zur personenbezogenen Öffnungs- und Klickmessung: <strong><%= @subscriber.requested_tracking_consent? ? "zugestimmt" : "nicht zugestimmt" %></strong>.</p>
+  <p>Die Tracking-Einwilligung ist freiwillig und kann unabhängig vom Newsletter widerrufen werden.</p>
+  <p><%= link_to "Tracking-Einstellungen verwalten", newsletter_preferences_url %> · <%= link_to "Datenschutzerklärung", datenschutz_url %></p>
 </div>

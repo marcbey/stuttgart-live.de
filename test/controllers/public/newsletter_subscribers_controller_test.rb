@@ -13,7 +13,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     assert_enqueued_with(job: Newsletter::SendConfirmationEmailJob) do
       assert_difference("NewsletterSubscriber.count", 1) do
         post newsletter_subscribers_url, params: {
-          newsletter_subscriber: { email: "new@example.com" }
+          newsletter_subscriber: { email: "new@example.com", newsletter_consent: "1" }
         }
       end
     end
@@ -33,6 +33,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
       post newsletter_subscribers_url, params: {
         newsletter_subscriber: {
           email: "interests@example.com",
+          newsletter_consent: "1",
           newsletter_interest_ids: [
             newsletter_interests(:pop).id,
             newsletter_interests(:rock).id
@@ -55,7 +56,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     assert_enqueued_with(job: Newsletter::SendConfirmationEmailJob) do
       assert_no_difference("NewsletterSubscriber.count") do
         post newsletter_subscribers_url, params: {
-          newsletter_subscriber: { email: "pending@example.com" }
+          newsletter_subscriber: { email: "pending@example.com", newsletter_consent: "1" }
         }
       end
     end
@@ -65,6 +66,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
 
   test "confirms newsletter subscriber with valid token" do
     subscriber = NewsletterSubscriber.create!(email: "token@example.com", source: "homepage")
+    assert subscriber.request_signup(newsletter_consent: "1")
     clear_enqueued_jobs
 
     with_mailjet_sync_configured do
@@ -96,6 +98,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
         post newsletter_subscribers_url, params: {
           newsletter_subscriber: {
             email: "new@example.com",
+            newsletter_consent: "1",
             newsletter_interest_ids: [ newsletter_interests(:rock).id ]
           }
         }
@@ -103,15 +106,14 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
     end
 
     assert_equal [ newsletter_interests(:pop) ], existing.reload.newsletter_interests.to_a
-    assert_redirected_to events_url
-    follow_redirect!
+    assert_response :unprocessable_entity
     assert_includes response.body, "Email ist bereits vergeben"
   end
 
   test "legacy creates newsletter subscriber from homepage copy is now confirmation pending" do
     assert_difference("NewsletterSubscriber.count", 1) do
       post newsletter_subscribers_url, params: {
-        newsletter_subscriber: { email: "legacy-new@example.com" }
+        newsletter_subscriber: { email: "legacy-new@example.com", newsletter_consent: "1" }
       }
     end
 
@@ -125,12 +127,11 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
 
     assert_no_difference("NewsletterSubscriber.count") do
       post newsletter_subscribers_url, params: {
-        newsletter_subscriber: { email: "ungültig" }
+        newsletter_subscriber: { email: "ungültig", newsletter_consent: "1" }
       }
     end
 
-    assert_redirected_to events_url
-    follow_redirect!
+    assert_response :unprocessable_entity
     assert_includes response.body, expected_message
   end
 
@@ -141,7 +142,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
              context: "events_index",
              return_to: root_path,
              source: "homepage",
-             newsletter_subscriber: { email: "frame@example.com" }
+             newsletter_subscriber: { email: "frame@example.com", newsletter_consent: "1" }
            },
            headers: { "Turbo-Frame" => "events-newsletter-signup" }
     end
@@ -160,7 +161,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
              context: "news_index",
              return_to: news_index_path,
              source: "news_index",
-             newsletter_subscriber: { email: "news@example.com" }
+             newsletter_subscriber: { email: "news@example.com", newsletter_consent: "1" }
            },
            headers: { "Turbo-Frame" => "news-index-newsletter-signup" }
     end
@@ -179,7 +180,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
              context: "events_index",
              return_to: root_path,
              source: "homepage",
-             newsletter_subscriber: { email: "ungültig" }
+             newsletter_subscriber: { email: "ungültig", newsletter_consent: "1" }
            },
            headers: { "Turbo-Frame" => "events-newsletter-signup" }
     end
@@ -201,7 +202,7 @@ class Public::NewsletterSubscribersControllerTest < ActionDispatch::IntegrationT
              context: "events_index",
              return_to: root_path,
              source: "homepage",
-             newsletter_subscriber: { email: "existing@example.com" }
+             newsletter_subscriber: { email: "existing@example.com", newsletter_consent: "1" }
            },
            headers: { "Turbo-Frame" => "events-newsletter-signup" }
     end

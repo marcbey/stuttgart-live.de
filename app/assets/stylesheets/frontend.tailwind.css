@@ -1,3 +1,143 @@
+.newsletter-consent-page {
+  margin: 0;
+  background: #fff;
+  font-family: "Archivo Narrow", sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.newsletter-consent-header,
+.newsletter-consent-footer {
+  width: min(100% - 2rem, 70rem);
+  margin-inline: auto;
+  padding-block: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.newsletter-consent-header img {
+  width: 11.25rem;
+  height: auto;
+}
+
+.newsletter-consent-main {
+  width: min(100% - 2rem, 44rem);
+  margin: 2rem auto 4rem;
+}
+
+.newsletter-consent-main h1 {
+  font-family: "Oswald", sans-serif;
+  font-size: 2rem;
+  line-height: 1.2;
+  margin-bottom: 1.5rem;
+  overflow-wrap: anywhere;
+}
+
+.newsletter-consent-form,
+.newsletter-consent-email {
+  display: grid;
+  gap: 0.65rem;
+  min-width: 0;
+}
+
+.newsletter-consent-form {
+  gap: 1.5rem;
+}
+
+.newsletter-consent-email input {
+  width: 100%;
+  min-width: 0;
+  min-height: 3rem;
+  padding: 0.65rem;
+  border: 1px solid #718082;
+  border-radius: 4px;
+  background: #fff;
+  font: inherit;
+}
+
+.newsletter-consent-options {
+  display: grid;
+  gap: 1.5rem;
+  grid-column: 1 / -1;
+}
+
+.newsletter-consent-option {
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: start;
+  padding-top: 1rem;
+  border-top: 1px solid #dbe2e1;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.newsletter-consent-option input[type="checkbox"] {
+  appearance: auto;
+  width: 1.25rem;
+  height: 1.25rem;
+  margin-top: 0.25rem;
+  accent-color: #096b65;
+}
+
+.newsletter-consent-option label {
+  display: block;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.newsletter-consent-option p {
+  margin-top: 0.5rem;
+}
+
+.newsletter-consent-optional {
+  display: block;
+  color: #47615c;
+  font-size: 0.875rem;
+  margin-bottom: 0.25rem;
+}
+
+.newsletter-consent-form input[type="submit"] {
+  width: fit-content;
+  max-width: 100%;
+  min-height: 2.75rem;
+  padding: 0.65rem 1.25rem;
+  border: 0;
+  border-radius: 4px;
+  background: #0a2324;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: normal;
+}
+
+.newsletter-consent-page a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.newsletter-consent-page :focus-visible {
+  outline: 3px solid #096b65;
+  outline-offset: 4px;
+}
+
+.newsletter-consent-note {
+  grid-column: 1 / -1;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.newsletter-consent-feedback {
+  padding: 1rem;
+  border-left: 3px solid #096b65;
+  background: #edf7f4;
+  margin-bottom: 1rem;
+}
+
 body.page-public {
 --ink: #0a2324;
   --ink-soft: #0a2324;

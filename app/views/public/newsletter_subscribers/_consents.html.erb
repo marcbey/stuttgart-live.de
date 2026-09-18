@@ -1,0 +1,17 @@
+<div class="newsletter-consent-options">
+  <div class="newsletter-consent-option">
+    <%= form.check_box :newsletter_consent, required: true, id: "#{prefix}-newsletter", aria: { describedby: "#{prefix}-newsletter-details" } %>
+    <div>
+      <%= form.label :newsletter_consent, Newsletter::ConsentText::NEWSLETTER_TITLE, for: "#{prefix}-newsletter" %>
+      <p id="<%= prefix %>-newsletter-details"><%= Newsletter::ConsentText::NEWSLETTER_DETAILS %></p>
+    </div>
+  </div>
+  <div class="newsletter-consent-option">
+    <%= form.check_box :tracking_consent, id: "#{prefix}-tracking", aria: { describedby: "#{prefix}-tracking-details" } %>
+    <div>
+      <span class="newsletter-consent-optional">Freiwillig</span>
+      <%= form.label :tracking_consent, Newsletter::ConsentText::TRACKING_TITLE, for: "#{prefix}-tracking" %>
+      <p id="<%= prefix %>-tracking-details"><%= Newsletter::ConsentText::TRACKING_DETAILS %></p>
+    </div>
+  </div>
+</div>

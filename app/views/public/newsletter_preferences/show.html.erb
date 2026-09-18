@@ -1,0 +1,31 @@
+<% content_for :title, "Newsletter-Tracking | StuttgartLIVE" %>
+<h1>Tracking-Einstellungen</h1>
+<% if @invalid_token %>
+  <p role="alert">Dieser Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen Link an.</p>
+  <%= link_to "Neuen Link anfordern", newsletter_preferences_path %>
+<% elsif @subscriber %>
+  <p><%= @subscriber.email %></p>
+  <%= form_with url: newsletter_preferences_path(token: params[:token]), method: :patch, class: "newsletter-consent-form" do %>
+    <div class="newsletter-consent-option">
+      <%= hidden_field_tag :tracking_consent, "0", id: nil %>
+      <%= check_box_tag :tracking_consent, "1", @subscriber.open_tracking_consent? && @subscriber.click_tracking_consent?, aria: { describedby: "tracking-details" } %>
+      <div>
+        <span class="newsletter-consent-optional">Freiwillig</span>
+        <%= label_tag :tracking_consent, Newsletter::ConsentText::TRACKING_TITLE %>
+        <p id="tracking-details"><%= Newsletter::ConsentText::TRACKING_DETAILS %></p>
+        <%= link_to "Datenschutzerklärung", datenschutz_path %>
+      </div>
+    </div>
+    <%= submit_tag "Einstellung speichern" %>
+    <p>Die Abwahl des Trackings beendet nicht Ihr Newsletter-Abonnement. Zur vollständigen Abmeldung nutzen Sie bitte den Abmeldelink in Ihrer Newsletter-E-Mail.</p>
+  <% end %>
+<% else %>
+  <p>Sie können Ihre Tracking-Einwilligung unabhängig vom Newsletter-Abonnement ändern oder widerrufen.</p>
+  <%= form_with url: newsletter_preferences_path, class: "newsletter-consent-form" do |form| %>
+    <div class="newsletter-consent-email">
+      <%= form.label :email, "E-Mail-Adresse" %>
+      <%= form.email_field :email, required: true, autocomplete: "email" %>
+    </div>
+    <%= form.submit "Link zu meinen Einstellungen anfordern" %>
+  <% end %>
+<% end %>

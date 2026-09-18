@@ -863,6 +863,8 @@ module Newsletter
                         Bitte antworte nicht auf diese E-Mail, da uns deine Anfrage hier nicht erreicht.
                       </p>
                       <p class="newsletter-footer-link-row" style="margin:0 0 12px;font-size:12px;line-height:1.45;">
+                        <a href="#{escape(newsletter_preferences_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Tracking-Einstellungen</a>
+                        <span style="color:#c2c7c7;">&nbsp;&middot;&nbsp;</span>
                         <a href="#{escape(datenschutz_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Datenschutz</a>
                         <span style="color:#c2c7c7;">&nbsp;&middot;&nbsp;</span>
                         <a href="#{escape(imprint_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Impressum</a>
@@ -892,6 +894,7 @@ module Newsletter
 
         Du erhältst diese E-Mail, weil du dich für den Stuttgart Live Newsletter angemeldet hast.
         Newsletter abbestellen: [[UNSUB_LINK_DE]]
+        Tracking-Einstellungen: #{newsletter_preferences_url(**route_url_options)}
         Datenschutz: #{datenschutz_url(**route_url_options)}
         Impressum: #{imprint_url(**route_url_options)}
 

@@ -1,15 +1,23 @@
 module Public
   class NewsletterSubscribersController < ApplicationController
-    allow_unauthenticated_access only: [ :create ]
+    allow_unauthenticated_access only: [ :new, :create ]
+    layout "newsletter", only: :new
+    before_action -> { response.headers["Cache-Control"] = "no-store" }
+    rate_limit to: 10, within: 3.minutes, only: :create,
+               with: -> { redirect_to new_newsletter_subscriber_path, alert: "Bitte versuchen Sie es später erneut." }
+
+    def new
+      @subscriber = NewsletterSubscriber.new
+    end
 
     def create
-      subscriber = existing_or_new_subscriber
+      if params[:signup_step] == "details"
+        @subscriber = NewsletterSubscriber.new(newsletter_subscriber_params)
+        return render :new, layout: "newsletter"
+      end
 
-      if subscriber.persisted? && subscriber.pending_confirmation?
-        subscriber.newsletter_interest_ids = newsletter_subscriber_params[:newsletter_interest_ids]
-        subscriber.send_confirmation_email
-        respond_to_success(subscriber)
-      elsif subscriber.save
+      subscriber = existing_or_new_subscriber
+      if subscriber.request_signup(newsletter_subscriber_params.merge(source: newsletter_signup[:source]))
         respond_to_success(subscriber)
       else
         respond_to_error(subscriber)
@@ -19,7 +27,7 @@ module Public
     private
 
     def newsletter_subscriber_params
-      params.require(:newsletter_subscriber).permit(:email, newsletter_interest_ids: [])
+      params.require(:newsletter_subscriber).permit(:email, :newsletter_consent, :tracking_consent, newsletter_interest_ids: [])
     end
 
     def existing_or_new_subscriber
@@ -58,8 +66,8 @@ module Public
       if newsletter_frame_request?
         render_signup(subscriber:, confirmation_pending: false, status: :unprocessable_entity)
       else
-        redirect_to newsletter_redirect_target,
-                    alert: subscriber.errors.full_messages.to_sentence
+        @subscriber = subscriber
+        render :new, layout: "newsletter", status: :unprocessable_entity
       end
     end
 

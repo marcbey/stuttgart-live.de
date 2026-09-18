@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_18_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_18_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -407,6 +407,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_120000) do
     t.index ["user_id"], name: "index_login_attempts_on_user_id"
   end
 
+  create_table "newsletter_consent_events", force: :cascade do |t|
+    t.string "action", null: false
+    t.boolean "click_tracking_consent", default: false, null: false
+    t.jsonb "consent_text", default: {}, null: false
+    t.string "consent_version", null: false
+    t.string "email", null: false
+    t.bigint "newsletter_subscriber_id", null: false
+    t.datetime "occurred_at", null: false
+    t.boolean "open_tracking_consent", default: false, null: false
+    t.string "source", null: false
+    t.index ["newsletter_subscriber_id"], name: "index_newsletter_consent_events_on_newsletter_subscriber_id"
+  end
+
   create_table "newsletter_interests", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "genre_id", null: false
@@ -486,8 +499,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_120000) do
   end
 
   create_table "newsletter_subscribers", force: :cascade do |t|
+    t.boolean "click_tracking_consent", default: false, null: false
+    t.string "confirmation_nonce"
     t.datetime "confirmation_sent_at"
     t.datetime "confirmed_at"
+    t.string "consent_version"
     t.datetime "created_at", null: false
     t.string "email", null: false
     t.string "external_contact_id"
@@ -495,6 +511,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_120000) do
     t.datetime "external_last_synced_at"
     t.string "external_sync_provider"
     t.string "external_sync_status", default: "pending", null: false
+    t.datetime "newsletter_consent_at"
+    t.boolean "open_tracking_consent", default: false, null: false
+    t.boolean "requested_tracking_consent", default: false, null: false
     t.string "source", default: "homepage", null: false
     t.datetime "updated_at", null: false
     t.index "lower((email)::text)", name: "index_newsletter_subscribers_on_lower_email", unique: true
@@ -686,6 +705,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_120000) do
   add_foreign_key "import_runs", "import_sources"
   add_foreign_key "import_source_configs", "import_sources"
   add_foreign_key "login_attempts", "users"
+  add_foreign_key "newsletter_consent_events", "newsletter_subscribers"
   add_foreign_key "newsletter_interests", "genres"
   add_foreign_key "newsletter_issue_items", "newsletter_issues"
   add_foreign_key "newsletter_issues", "newsletter_interests"

@@ -69,6 +69,24 @@ module Newsletter
       raise Error, error.message
     end
 
+    def ensure_tracking_properties
+      %w[stuttgartlive_open_tracking_consent stuttgartlive_click_tracking_consent].each do |name|
+        ensure_contact_property(name:, data_type: "bool")
+      end
+    end
+
+    def sync_tracking_preferences(email:, properties:)
+      ensure_tracking_properties
+      configure_mailjet
+      contact_data = Mailjet::Contactdata.new(
+        id: email, persisted: true,
+        data: properties.map { |name, value| { "Name" => name, "Value" => value } }
+      )
+      contact_data.save!
+    rescue *MAILJET_ERRORS => error
+      raise Error, error.message
+    end
+
     def create_contact_segment(name:, expression:, description:)
       raise Error, "Mailjet is not configured" unless configured?
 
@@ -107,7 +125,9 @@ module Newsletter
             ],
             "Subject" => subject,
             "TextPart" => text,
-            "HTMLPart" => html
+            "HTMLPart" => html,
+            "TrackOpens" => "disabled",
+            "TrackClicks" => "disabled"
           }
         ]
       )
@@ -133,7 +153,8 @@ module Newsletter
       response = Mailjet::Campaigndraft_detailcontent.create(
         id: draft_id,
         html_part: html,
-        text_part: text
+        text_part: text,
+        headers: { "X-Mailjet-TrackOpen" => "0", "X-Mailjet-TrackClick" => "0" }
       )
       normalize_response(response)
     rescue *MAILJET_ERRORS => error

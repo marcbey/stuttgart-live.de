@@ -67,13 +67,15 @@
     <%= form_with model: NewsletterSubscriber.new,
                   url: newsletter_subscribers_path(context: "events_index", return_to: request.fullpath, source: "footer"),
                   local: true,
+                  data: { turbo: false },
                   class: "design-preview-footer-newsletter-form" do |form| %>
+      <%= hidden_field_tag :signup_step, "details" %>
       <%= form.email_field :email,
                            placeholder: "E-Mail-Adresse",
                            autocomplete: "email",
                            required: true,
                            aria: { label: "E-Mail-Adresse für Newsletter" } %>
-      <%= form.submit "Anmelden" %>
+      <%= form.submit "Weiter" %>
     <% end %>
   </section>
   <div class="design-preview-footer-partners">

@@ -22,10 +22,13 @@ module Newsletter
       return false unless configured?
       return false unless subscriber.confirmed?
 
-      response = client.subscribe(
-        email: subscriber.email,
-        properties: subscriber.interest_mailjet_properties
-      )
+      response = subscriber.with_lock do
+        client.ensure_tracking_properties
+        client.subscribe(
+          email: subscriber.email,
+          properties: subscriber.interest_mailjet_properties.merge(subscriber.tracking_mailjet_properties)
+        )
+      end
 
       subscriber.update!(
         external_sync_status: NewsletterSubscriber::EXTERNAL_SYNC_STATUS_SYNCED,

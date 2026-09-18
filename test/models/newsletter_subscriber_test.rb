@@ -17,10 +17,10 @@ class NewsletterSubscriberTest < ActiveSupport::TestCase
     assert duplicate.errors.added?(:email, :taken, value: "hello@example.com")
   end
 
-  test "enqueues confirmation email after create" do
+  test "enqueues confirmation email after explicit signup" do
     with_mailjet_config do
       assert_enqueued_with(job: Newsletter::SendConfirmationEmailJob) do
-        NewsletterSubscriber.create!(email: "queued@example.com", source: "homepage")
+        signup_subscriber("queued@example.com")
       end
     end
   end
@@ -36,7 +36,7 @@ class NewsletterSubscriberTest < ActiveSupport::TestCase
 
   test "confirm enqueues mailjet sync when mailjet is configured" do
     with_mailjet_config do
-      subscriber = NewsletterSubscriber.create!(email: "confirm@example.com", source: "homepage")
+      subscriber = signup_subscriber("confirm@example.com")
       clear_enqueued_jobs
 
       assert_enqueued_with(job: Newsletter::SyncSubscriberJob, args: [ subscriber ]) do
@@ -50,7 +50,7 @@ class NewsletterSubscriberTest < ActiveSupport::TestCase
   test "does not enqueue mailjet sync without a list id" do
     with_mailjet_config(list_id: nil) do
       assert_no_enqueued_jobs only: Newsletter::SyncSubscriberJob do
-        NewsletterSubscriber.create!(email: "missing-list@example.com", source: "homepage").confirm!
+        signup_subscriber("missing-list@example.com").confirm!
       end
     end
   end
@@ -58,12 +58,50 @@ class NewsletterSubscriberTest < ActiveSupport::TestCase
   test "does not enqueue mailjet sync for placeholder api key" do
     with_mailjet_config(api_key: "todo", secret_key: "secret-key", list_id: "123456") do
       assert_no_enqueued_jobs only: Newsletter::SyncSubscriberJob do
-        NewsletterSubscriber.create!(email: "placeholder@example.com", source: "homepage").confirm!
+        signup_subscriber("placeholder@example.com").confirm!
       end
     end
   end
 
+  test "plain record creation does not authorize sending or tracking" do
+    assert_no_enqueued_jobs do
+      subscriber = NewsletterSubscriber.create!(email: "ticket-buyer@example.com")
+      assert_not subscriber.confirm!
+      assert_not subscriber.open_tracking_consent?
+      assert_empty subscriber.newsletter_consent_events
+    end
+  end
+
+  test "legacy confirmed contacts do not acquire tracking consent" do
+    subscriber = NewsletterSubscriber.create!(email: "legacy@example.com", confirmed_at: Time.current)
+    assert subscriber.confirm!
+    assert_not subscriber.open_tracking_consent?
+    assert_not subscriber.click_tracking_consent?
+    assert_empty subscriber.newsletter_consent_events
+  end
+
+  test "consent evidence cannot be overwritten" do
+    subscriber = signup_subscriber("evidence@example.com")
+    event = subscriber.newsletter_consent_events.first
+    assert_raises ActiveRecord::ReadOnlyRecord do
+      event.update!(open_tracking_consent: true)
+    end
+  end
+
+  test "confirmed subscriber cannot be changed by another signup" do
+    subscriber = signup_subscriber("confirmed@example.com")
+    subscriber.confirm!
+    assert_not subscriber.request_signup(newsletter_consent: "1", tracking_consent: "1")
+    assert_not subscriber.reload.open_tracking_consent?
+  end
+
   private
+
+  def signup_subscriber(email)
+    NewsletterSubscriber.new(email:, source: "homepage").tap do |subscriber|
+      assert subscriber.request_signup(newsletter_consent: "1")
+    end
+  end
 
   def with_mailjet_config(api_key: "public-key", secret_key: "secret-key", list_id: "123456", api_endpoint: nil, &block)
     with_singleton_return_value(AppConfig, :mailjet_api_key, api_key) do
