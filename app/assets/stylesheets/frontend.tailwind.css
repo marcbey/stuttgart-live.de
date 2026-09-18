@@ -15826,6 +15826,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   border-color: #fff;
   background: #fff;
   color: #080909;
+  -webkit-text-fill-color: #080909;
 }
 
 .design-preview-feature-slider .promotion-banner-link-dark .design-preview-card-cta {
