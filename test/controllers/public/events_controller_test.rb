@@ -4838,7 +4838,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "LLM Event- und Artist-Beschreibung"
-    assert_includes response.body, "Venue Modell Beschreibung"
+    assert_not_includes response.body, "Venue Modell Beschreibung"
     assert_includes response.body, "https://venue.example/im-wizemann"
     assert_includes response.body, "Quellenstraße 7, 70376 Stuttgart"
     assert_includes response.body, "https://llm-homepage.example"
@@ -4949,14 +4949,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".design-detail-preview-copy-block", minimum: 1
+    assert_select ".design-detail-preview-description-main", count: 1
     assert_select ".event-detail-copy-grid", count: 0
     assert_includes response.body, "Erster Absatz."
     assert_includes response.body, "Dritter Absatz."
-    assert_includes response.body, "Rockclub in Stuttgart-Wangen."
+    assert_not_includes response.body, "Rockclub in Stuttgart-Wangen."
   end
 
-  test "show renders venue description urls as external links" do
+  test "show omits venue description while keeping the location address and links" do
+    @published_event.update!(show_venue_description: true)
     @published_event.venue_record.update!(
       description: "Infos zur Venue: https://example.com/lka/programm."
     )
@@ -4964,10 +4965,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".design-detail-preview-venue-description a.design-detail-preview-inline-link[href='https://example.com/lka/programm']",
-                  text: "https://example.com/lka/programm",
-                  count: 1
-    venue_link = css_select(".design-detail-preview-venue-description a.design-detail-preview-inline-link").first
+    assert_select ".design-detail-preview-venue-description", count: 0
+    assert_not_includes response.body, "Infos zur Venue:"
+    assert_not_includes response.body, "https://example.com/lka/programm"
+    assert_select ".design-detail-preview-location-address .event-detail-venue-address-line", text: "Heiligenwiesen 6,"
+    assert_select ".design-detail-preview-location-address .event-detail-venue-address-line", text: "70327 Stuttgart"
+    assert_select ".design-detail-preview-location-links a", text: /Route anzeigen/
+    venue_link = css_select(".design-detail-preview-location-links a[href='https://example.com/lka']").first
     assert_equal "_blank", venue_link["target"]
     assert_equal "noopener", venue_link["rel"]
   end
@@ -4984,26 +4988,19 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".design-detail-preview-location", minimum: 1
   end
 
-  test "show preserves rich text links from event and venue editors" do
+  test "show preserves rich text links from the event editor" do
     @published_event.update!(
       event_info: '<div>Mehr beim <a href="https://artist.example">Artist</a>.</div>'
     )
-    @published_event.venue_record.update!(
-      description: '<div>Infos zur <a href="https://example.com/lka">Venue</a>.</div>'
-    )
-
     get event_url(@published_event.slug)
 
     assert_response :success
     assert_select ".design-detail-preview-description a.design-detail-preview-inline-link[href='https://artist.example']",
                   text: "Artist",
                   count: 1
-    assert_select ".design-detail-preview-venue-description a.design-detail-preview-inline-link[href='https://example.com/lka']",
-                  text: "Venue",
-                  count: 1
-    venue_link = css_select(".design-detail-preview-venue-description a.design-detail-preview-inline-link").first
-    assert_equal "_blank", venue_link["target"]
-    assert_equal "noopener", venue_link["rel"]
+    event_link = css_select(".design-detail-preview-description a.design-detail-preview-inline-link").first
+    assert_equal "_blank", event_link["target"]
+    assert_equal "noopener", event_link["rel"]
   end
 
   test "show hides organizer notes unless explicitly enabled" do

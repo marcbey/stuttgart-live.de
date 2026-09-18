@@ -386,14 +386,6 @@ end %>
               </svg>
             </label>
           </div>
-          <% if @event.show_venue_description? && presenter.venue_description.present? %>
-            <section class="design-detail-preview-copy-block design-detail-preview-venue-description">
-              <p class="design-detail-preview-panel-label">Location</p>
-              <div class="design-detail-preview-flow">
-                <%= formatted_event_detail_copy(presenter.venue_description, link_class: "design-detail-preview-inline-link") %>
-              </div>
-            </section>
-          <% end %>
           <% if @event.editor_notes.present? %>
             <section class="design-detail-preview-copy-block design-detail-preview-editor-notes">
               <p class="design-detail-preview-panel-label">Redaktionsnotiz</p>

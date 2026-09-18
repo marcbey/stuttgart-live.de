@@ -319,6 +319,7 @@ Fachlich ist wichtig:
 - Das Enrichment arbeitet auf dem bestehenden Event-Bestand nach dem Merge.
 - `event_description` bündelt die belastbaren Informationen zu Artist, Projekt/Produktion und konkretem Eventformat in einem einzigen zusammenhängenden Beschreibungstext.
 - `EventLlmEnrichment.venue`, `venue_description`, `venue_external_url` und `venue_address` bleiben als Rohdaten erhalten.
+- Auf öffentlichen Event-Detailseiten erscheinen die Location-Adresse, Website und Route im Infobereich. Der beschreibende Location-Text wird dort nicht angezeigt; er bleibt im Backend gespeichert.
 - `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` werden vom LLM nur aus den gelieferten Top-10-Kandidaten des konfigurierten Search-Providers ausgewählt.
 - `venue_external_url` wird direkt vom LLM aus Venue-Name und Event-Kontext ermittelt und anschließend technisch validiert.
 - Die Search Provider `serpapi` und `openwebninja` bleiben austauschbar; beide liefern denselben normalisierten Suchkontext an den Prompt.

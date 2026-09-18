@@ -81,12 +81,6 @@
                           data: { turbo: false } %>
             <% end %>
 
-            <% if @event.show_venue_description? && presenter.venue_description.present? %>
-              <div class="event-detail-copy-flow event-detail-venue-description">
-                <%= formatted_venue_description(presenter.venue_description) %>
-              </div>
-            <% end %>
-
             <div class="event-detail-venue-main">
               <% if (presenter.venue_info.present? && (presenter.venue_info.address.present? || presenter.venue_info.external_url.present? || presenter.venue_info.map_url.present? || presenter.venue_info.logo_source.present?)) || presenter.venue_vvs_ticket? %>
                 <div class="event-detail-venue-meta">
