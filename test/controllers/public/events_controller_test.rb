@@ -1909,9 +1909,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".promotion-banner-news[style*='--promotion-banner-background: #E0F7F2']"
-    assert_select ".design-preview-banner-card--text-dark .promotion-banner-link-dark[style='background: var(--promotion-banner-background)']"
-    assert_select ".promotion-banner-event .promotion-banner-link-light[style='background: var(--promotion-banner-background)']", count: 1
+    document = Nokogiri::HTML.parse(response.body)
+    news_banner = document.at_css("article.promotion-banner-news")
+    event_banner = document.at_css("article.promotion-banner-event")
+
+    assert_includes news_banner["style"], "--promotion-banner-background: #E0F7F2"
+    assert_includes news_banner["class"], "design-preview-banner-card--text-light"
+    assert_includes news_banner.at_css("a")["class"], "promotion-banner-link-light"
+    assert_includes event_banner.at_css("a")["class"], "promotion-banner-link-light"
   end
 
   test "homepage renders custom promotion banner background color from event" do
