@@ -18595,6 +18595,11 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     min-height: 0;
   }
 
+  .design-preview-feature-slider .design-preview-card--feature {
+    max-height: none;
+    margin: 0;
+  }
+
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-link {
     min-height: 0;
   }
@@ -18923,6 +18928,14 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview {
     width: min(100% - 5rem, 100rem);
+  }
+
+  .design-preview-highlights {
+    position: relative;
+    left: 50%;
+    width: min(calc(100vw - 5rem), 140rem);
+    max-width: none;
+    transform: translateX(-50%);
   }
 
   .design-preview-header-genre-link.design-preview-header-genre-link--full {
