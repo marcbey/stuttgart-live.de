@@ -2261,7 +2261,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
-    assert_select ".promotion-banner-event .promotion-banner-kicker", text: "Promotion"
+    assert_select ".design-preview-feature-slider article[class~='promotion-banner-event'] .design-preview-card-kicker", count: 0
     assert_select ".promotion-banner-event .promotion-banner-cta", text: "Zum Event"
     assert_includes response.body, expected_path
     refute_includes response.body, "/rails/active_storage/"

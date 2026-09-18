@@ -22,7 +22,7 @@
   <% image_style = uses_promotion_image ? event_promotion_banner_card_image_style(event) : event_card_image_style(fallback_image) %>
   <% image_class = "design-preview-card-image" %>
   <% href = public_event_detail_path(event, browse_state) %>
-  <% kicker = event.promotion_banner_kicker_text_value.presence || "Promotion" %>
+  <% kicker = nil %>
   <% heading = event.artist_name.presence || event.promotion_banner_title_value.presence || event.title %>
   <% subheading = event.title.to_s.strip.presence %>
   <% image_alt = uses_promotion_image ? "#{event.artist_name} - #{event.title}" : event_image_alt(fallback_image, event) %>
