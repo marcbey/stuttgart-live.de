@@ -18540,16 +18540,22 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   body.page-public-startpage .design-preview-hero {
     align-items: start;
+    grid-template-columns: minmax(20rem, clamp(20rem, 32vw, 28rem)) minmax(0, 1fr);
     min-height: 0;
     padding: 0.45rem 0 1.7rem;
   }
 
   body.page-public-startpage .design-preview-hero-copy {
+    grid-column: 2;
     align-self: start;
+    justify-self: end;
   }
 
   body.page-public-startpage .design-preview-hero-side {
+    grid-column: 1;
+    grid-row: 1;
     align-self: end;
+    justify-self: start;
   }
 
   .design-preview-hero-side {
@@ -19378,12 +19384,12 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
     gap: 0.24rem;
-    bottom: clamp(2.25rem, 8vw, 3rem);
+    bottom: clamp(3.5rem, 11vw, 4.3rem);
     padding: 1rem var(--preview-shell-edge) 1.5rem;
   }
 
   .design-preview-feature-slider .design-preview-card--feature:not(.design-preview-banner-card) .design-preview-card-copy {
-    bottom: clamp(2.25rem, 8vw, 3rem);
+    bottom: clamp(3.5rem, 11vw, 4.3rem);
   }
 
   body.page-public-startpage .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
