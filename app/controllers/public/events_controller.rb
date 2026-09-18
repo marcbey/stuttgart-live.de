@@ -817,7 +817,31 @@ module Public
     def homepage_promotion_slider_banners(banners)
       return banners unless banners.many? && !Rails.env.test?
 
-      banners.rotate(homepage_promotion_banner_rotation_offset(banners.length))
+      mixed_banners = interleaved_homepage_promotion_banners(banners)
+      mixed_banners.rotate(homepage_promotion_banner_rotation_offset(mixed_banners.length))
+    end
+
+    def interleaved_homepage_promotion_banners(banners)
+      event_banners, news_banners = banners.partition { |banner| banner[:type] == :event }
+      return banners if event_banners.empty? || news_banners.empty?
+
+      random = Random.new(Time.zone.today.jd)
+      news_slots = (0..event_banners.length)
+        .to_a
+        .sample([ news_banners.length, event_banners.length + 1 ].min, random: random)
+        .to_set
+      remaining_news = news_banners.dup
+
+      mixed_banners = (0..event_banners.length).each_with_object([]) do |slot, mixed|
+        mixed << remaining_news.shift if news_slots.include?(slot)
+        mixed << event_banners[slot] if event_banners[slot]
+      end
+
+      remaining_news.each do |news_banner|
+        mixed_banners.insert(random.rand(mixed_banners.length + 1), news_banner)
+      end
+
+      mixed_banners
     end
 
     def homepage_promotion_banner_rotation_offset(length)

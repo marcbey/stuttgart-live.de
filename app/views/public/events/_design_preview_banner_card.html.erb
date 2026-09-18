@@ -52,12 +52,13 @@
 <% banner_background_color = default_event_background ? "#080909" : record.promotion_banner_background_color_value %>
 <% banner_mobile_surface_color = default_event_background ? "#080909" : banner_background_color %>
 <% show_kicker_only = hide_slider_text && banner_type == :news && kicker.present? %>
-<% banner_tone_class = banner_type == :event ? "promotion-banner-link-light" : "promotion-banner-link-dark" %>
+<% banner_text_color_scheme = default_event_background ? Event::PROMOTION_BANNER_TEXT_COLOR_LIGHT : record.promotion_banner_text_color_scheme %>
+<% banner_tone_class = "promotion-banner-link-#{banner_text_color_scheme}" %>
 <% banner_card_classes = [
   "design-preview-card",
   "design-preview-card--feature",
   "design-preview-banner-card",
-  "design-preview-banner-card--text-light",
+  "design-preview-banner-card--text-#{banner_text_color_scheme}",
   "promotion-banner",
   (banner_type == :event ? "promotion-banner-event" : "promotion-banner-news"),
   ("design-preview-card--unavailable" if ticket_status_label.present?),

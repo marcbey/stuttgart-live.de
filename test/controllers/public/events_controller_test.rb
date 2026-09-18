@@ -1803,9 +1803,25 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".design-preview-feature-slider .design-preview-banner-card[style*='--promotion-banner-background: #18333A']"
-    assert_select ".design-preview-feature-slider .design-preview-banner-card a[href='#{news_path(blog_post.slug)}'] .design-preview-card-kicker", text: "Lesetipp"
+    assert_select ".design-preview-feature-slider .design-preview-banner-card--text-light a.promotion-banner-link-light[href='#{news_path(blog_post.slug)}'] .design-preview-card-kicker", text: "Lesetipp"
     assert_select ".design-preview-feature-slider .design-preview-banner-card a[href='#{news_path(blog_post.slug)}'] .design-preview-card-title", text: "Promo mit Copy"
     assert_select ".design-preview-feature-slider .design-preview-banner-card a[href='#{news_path(blog_post.slug)}'] .design-preview-card-cta", text: "Zum Beitrag"
+  end
+
+  test "homepage interleaves news promotion banners with event banners" do
+    banners = [
+      { type: :event, record: :event_one },
+      { type: :event, record: :event_two },
+      { type: :event, record: :event_three },
+      { type: :news, record: :news_one },
+      { type: :news, record: :news_two }
+    ]
+
+    mixed_banners = Public::EventsController.new.send(:interleaved_homepage_promotion_banners, banners)
+    mixed_types = mixed_banners.map { |banner| banner[:type] }
+
+    assert_equal banners.to_set, mixed_banners.to_set
+    refute mixed_types.each_cons(2).any? { |left, right| left == :news && right == :news }
   end
 
   test "homepage keeps news kicker visible in highlight slider when news slider text is hidden" do
@@ -1894,8 +1910,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".promotion-banner-news[style*='--promotion-banner-background: #E0F7F2']"
-    assert_select ".promotion-banner-link-dark[style='background: var(--promotion-banner-background)']"
-    assert_select ".promotion-banner-event .promotion-banner-link-dark[style='background: var(--promotion-banner-background)']", count: 1
+    assert_select ".design-preview-banner-card--text-dark .promotion-banner-link-dark[style='background: var(--promotion-banner-background)']"
+    assert_select ".promotion-banner-event .promotion-banner-link-light[style='background: var(--promotion-banner-background)']", count: 1
   end
 
   test "homepage renders custom promotion banner background color from event" do
