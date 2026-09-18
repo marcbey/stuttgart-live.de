@@ -18569,7 +18569,8 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-highlight-grid {
-    height: clamp(25rem, 32vw, 30rem);
+    height: auto;
+    aspect-ratio: 3.05 / 1;
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.95fr);
     align-items: stretch;
     margin-bottom: 3rem;
@@ -18583,6 +18584,18 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-feature-slider {
     height: 100%;
+    min-height: 0;
+  }
+
+  .design-preview-feature-slider .design-preview-feature-track,
+  .design-preview-feature-slider .design-preview-feature-slide,
+  .design-preview-feature-slider .design-preview-card--feature,
+  .design-preview-feature-slider .design-preview-card--feature .design-preview-card-link {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .design-preview-feature-slider .design-preview-banner-card .design-preview-card-link {
     min-height: 0;
   }
 
@@ -18921,7 +18934,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-highlight-grid {
-    height: clamp(30rem, 31vw, 37rem);
+    height: auto;
   }
 }
 
@@ -19069,7 +19082,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-highlight-grid {
-    height: clamp(21.5rem, 37vh, 24.5rem);
+    height: auto;
   }
 
   .design-preview-dots {
@@ -19111,7 +19124,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     position: relative;
     left: 50%;
     width: 100vw;
-    height: clamp(25.5rem, 112vw, 33.5rem);
+    height: clamp(31rem, 135vw, 38rem);
     min-height: 0;
     margin-left: -50vw;
     border-radius: 0;
@@ -19219,7 +19232,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     z-index: 3;
     align-content: end;
     gap: 0.32rem;
-    padding: 1.15rem var(--preview-shell-edge) 1.2rem;
+    padding: 1.15rem var(--preview-shell-edge) 1.5rem;
     background: transparent;
     color: #fff;
     overflow: hidden;
@@ -19347,7 +19360,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
     gap: 0.24rem;
-    padding: 1rem var(--preview-shell-edge) 1.32rem;
+    padding: 1rem var(--preview-shell-edge) 1.5rem;
   }
 
   body.page-public-startpage .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
@@ -19803,6 +19816,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 @media (min-width: 64rem) {
   .design-preview-highlight-grid--with-video {
+    aspect-ratio: 3.85 / 1;
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.78fr) minmax(12.8rem, 0.62fr);
     align-items: stretch;
   }

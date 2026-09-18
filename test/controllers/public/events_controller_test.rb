@@ -115,8 +115,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-saved-events-link[hidden]", count: 0
     assert_select ".app-nav-saved-events-count", text: "0", count: 2
     assert_select ".app-nav-socials-poster[data-controller='saved-events-nav'] .app-nav-saved-events-link-desktop", count: 1
-    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 0
-    assert_select ".design-preview-header-genres-more", count: 0
+    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
+    assert_select ".design-preview-header-genres-more", count: 1
     assert_select ".partner-strip-image[width][height]", count: 6
     assert_includes response.body, "Published Artist"
     assert_not_includes response.body, "Past Artist"
@@ -248,9 +248,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     rock_lane_index = shell_children.index(rock_section)
     assert pop_section.present?, "expected configured pop lane to be rendered"
     assert rock_section.present?, "expected configured rock lane to be rendered"
-    assert_equal [ "POP", "ROCK" ], document.css(".app-nav-hotline-genre").map { |link| link.text.squish }
-    assert_equal [ genre_lane_path(pop_group.slug), genre_lane_path(rock_group.slug) ],
-                 document.css(".app-nav-hotline-genre").map { |link| link["href"] }
+    assert_equal [ "POP", "ROCK", "PUNK & METAL", "HIP-HOP", "ELECTRONIC", "JAZZ", "KLASSIK", "THEATER" ],
+                 document.css(".app-nav-hotline-genre").map { |link| link.text.squish }
     assert_select ".design-preview-header-genres-more", count: 1
     assert document.at_css(".genre-lane-section .design-preview-section-header").present?,
            "expected genre section header"
@@ -294,8 +293,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".genre-lane-section", count: 0
-    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 0
-    assert_select ".design-preview-header-genres-more", count: 0
+    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
+    assert_select ".design-preview-header-genres-more", count: 1
   end
 
   test "index renders top homepage lanes in the initial payload" do
@@ -3389,7 +3388,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".app-nav-search #public-search-calendar.public-search-calendar-overlay[hidden]", count: 1
     assert_select ".app-nav-search [data-public-search-target='calendarMonthLabel']", count: 1
     assert_select ".app-nav-search [data-public-search-target='calendarGrid']", count: 1
-    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 0
+    assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
 
     assert_select ".public-filter-row", count: 0
     assert_select ".public-view-toggle", count: 0

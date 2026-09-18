@@ -33,6 +33,16 @@ module ApplicationHelper
     "TICKET-HOTLINE" => "Ticket-Hotline",
     "TELEFONISCHER TICKETKAUF" => "Telefonischer Ticketkauf"
   }.freeze
+  PUBLIC_HEADER_GENRE_LABELS = {
+    "pop-indie-singer-songwriter" => "POP",
+    "rock-alternative" => "ROCK",
+    "metal-punk-hardcore" => "PUNK & METAL",
+    "hip-hop-r-n-b" => "HIP-HOP",
+    "electronic-music-edm" => "ELECTRONIC",
+    "jazz-blues-soul" => "JAZZ",
+    "klassik-oper" => "KLASSIK",
+    "musical-theater" => "THEATER"
+  }.freeze
 
   def public_design_menu_groups
     [
@@ -56,28 +66,36 @@ module ApplicationHelper
     ]
   end
 
-  def public_design_navigation_lanes(genre_lanes, highlight_events:)
-    Array(genre_lanes).compact
+  def public_design_navigation_lanes(_genre_lanes, highlight_events:)
+    slugs = PUBLIC_HEADER_GENRE_LABELS.keys.first(5)
+    genres_by_slug = Genre.where(slug: slugs).index_by(&:slug)
+    paths_by_slug = Public::Events::LaneDirectory.public_paths_for_genre_slugs(slugs)
+
+    slugs.filter_map do |slug|
+      genre = genres_by_slug[slug]
+      public_path = paths_by_slug[slug]
+      next if genre.blank? || public_path.blank?
+
+      Public::Events::HomepageGenreLanesBuilder::Lane.new(
+        group: genre,
+        events: [],
+        effective_series_ids: [],
+        series_counts_by_id: {},
+        public_path: public_path,
+        next_cursor: nil
+      )
+    end
   end
 
   def public_homepage_header_genres
-    label_by_slug = {
-      "pop-indie-singer-songwriter" => "POP",
-      "rock-alternative" => "ROCK",
-      "metal-punk-hardcore" => "PUNK & METAL",
-      "hip-hop-r-n-b" => "HIP-HOP",
-      "electronic-music-edm" => "ELECTRONIC",
-      "jazz-blues-soul" => "JAZZ",
-      "klassik-oper" => "KLASSIK",
-      "musical-theater" => "THEATER"
-    }
-    genres_by_slug = Genre.where(slug: AppSetting.homepage_genre_lane_slugs).index_by(&:slug)
+    slugs = PUBLIC_HEADER_GENRE_LABELS.keys
+    genres_by_slug = Genre.where(slug: slugs).index_by(&:slug)
 
-    AppSetting.homepage_genre_lane_slugs.filter_map do |slug|
+    slugs.filter_map do |slug|
       genre = genres_by_slug[slug]
       next if genre.blank?
 
-      { label: label_by_slug.fetch(slug, genre.name.upcase), slug: slug }
+      { label: PUBLIC_HEADER_GENRE_LABELS.fetch(slug), slug: slug }
     end
   end
 

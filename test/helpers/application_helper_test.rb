@@ -3,6 +3,20 @@ require "test_helper"
 class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
 
+  test "public design navigation genres do not depend on homepage genre lanes" do
+    lanes = public_design_navigation_lanes([], highlight_events: [])
+
+    assert_equal %w[pop-indie-singer-songwriter rock-alternative metal-punk-hardcore hip-hop-r-n-b electronic-music-edm],
+                 lanes.map { |lane| lane.group.slug }
+    assert_equal "/pop-indie-singer-songwriter", lanes.first.public_path
+  end
+
+  test "public homepage header genres do not depend on homepage genre lanes" do
+    genres = public_homepage_header_genres
+
+    assert_equal %w[POP ROCK PUNK\ &\ METAL HIP-HOP ELECTRONIC JAZZ KLASSIK THEATER], genres.pluck(:label)
+  end
+
   test "public media path falls back to rails storage proxy when media proxy is disabled" do
     blob = create_uploaded_blob(filename: "fallback.png")
 
