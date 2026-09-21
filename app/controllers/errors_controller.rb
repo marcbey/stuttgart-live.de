@@ -1,7 +1,7 @@
 class ErrorsController < ActionController::Base
   include Authentication
 
-  layout "application"
+  layout "public_error"
   allow_unauthenticated_access only: :show
 
   ERROR_COPY = {

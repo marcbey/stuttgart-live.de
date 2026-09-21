@@ -11,46 +11,34 @@
     when 404
       "Prüf die Adresse oder spring direkt zurück zu den aktuellen Events, News oder Kontaktinfos."
     when 422
-      "Kontrollier die Eingaben und versuch die Aktion danach noch einmal."
+      "Öffne das Formular neu und versuch es noch einmal. Falls du Text eingegeben hast, sichere ihn vorher über die Zurück-Funktion deines Browsers."
     else
       "Wenn die Störung bleibt, versuch es in ein paar Minuten noch einmal."
     end
 %>
 
-<section class="info-page-shell app-error-page">
-  <header class="info-page-hero app-error-hero">
-    <p class="news-kicker"><%= @error_copy[:eyebrow] %></p>
-    <h1><%= @error_copy[:title] %></h1>
+<section aria-labelledby="public-error-title">
+  <header class="public-error-hero">
+    <p class="app-error-status">Fehler <%= @status_code %> · <%= @error_copy[:eyebrow] %></p>
+    <h1 id="public-error-title"><%= @error_copy[:title] %></h1>
     <p><%= @error_copy[:message] %></p>
   </header>
 
-  <div class="info-page-content">
-    <div class="info-page-grid">
-      <%= render "public/pages/info_page_card", title: "So geht es weiter", wide: true do %>
-        <div class="app-error-actions">
-          <%= link_to "Zur Startseite", root_path, class: "button" %>
-          <% if request.referer.present? %>
-            <%= link_to "Zurück", request.referer, class: "button button-secondary" %>
-          <% end %>
-        </div>
-        <p><%= recovery_copy %></p>
-      <% end %>
-
-      <%= render "public/pages/info_page_card", title: "Fehlercode" do %>
-        <p class="app-error-status" aria-label="Fehlercode <%= @status_code %>">
-          <strong><%= @status_code %></strong>
-          <span>HTTP</span>
-        </p>
-        <p>Die Anfrage wurde mit dem Status <%= @status_code %> beantwortet.</p>
-      <% end %>
-
-      <%= render "public/pages/info_page_card", title: "Direkt weiter" do %>
-        <div class="info-page-links">
-          <%= link_to "Events", root_path %>
-          <%= link_to "News", news_index_path %>
-          <%= link_to "Kontakt", contact_path %>
-        </div>
+  <div class="public-error-recovery">
+    <p><%= recovery_copy %></p>
+    <div class="public-error-actions">
+      <%= link_to "Zur Startseite", root_path, class: "button" %>
+      <% if (back_url = controller.url_from(request.referer)).present? %>
+        <%= link_to "Zurück", back_url, class: "button button-secondary" %>
       <% end %>
     </div>
+    <nav class="public-error-links" aria-label="Direkt weiter">
+      <% if @status_code == 422 %>
+        <%= link_to "Zur Newsletter-Anmeldung", new_newsletter_subscriber_path %>
+      <% end %>
+      <%= link_to "Events", root_path %>
+      <%= link_to "News", news_index_path %>
+      <%= link_to "Kontakt", contact_path %>
+    </nav>
   </div>
 </section>

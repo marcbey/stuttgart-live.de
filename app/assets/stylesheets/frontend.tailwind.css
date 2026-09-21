@@ -138,6 +138,120 @@
   margin-bottom: 1rem;
 }
 
+.public-error-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  font-family: "Archivo Narrow", sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+.public-error-header,
+.public-error-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.5rem;
+  width: min(100% - 2rem, 80rem);
+  margin-inline: auto;
+  padding-block: 1.25rem;
+}
+
+.public-error-header {
+  justify-content: space-between;
+  border-bottom: 1px solid #dedfdd;
+}
+
+.public-error-header img {
+  display: block;
+  width: 8rem;
+  height: auto;
+}
+
+.public-error-main {
+  width: min(100% - 2rem, 46rem);
+  margin: 3rem auto;
+  flex: 1;
+}
+
+.public-error-hero h1 {
+  margin: 1rem 0;
+  font-family: "Oswald", sans-serif;
+  font-size: 2.5rem;
+  font-weight: 400;
+  line-height: 1.12;
+  letter-spacing: 0;
+  overflow-wrap: anywhere;
+}
+
+.public-error-page .app-error-status {
+  display: block;
+  margin: 0;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+}
+
+.public-error-recovery {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #dedfdd;
+}
+
+.public-error-actions,
+.public-error-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.public-error-page a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+}
+
+.public-error-actions .button {
+  padding: 0.65rem 1.25rem;
+  border-radius: 4px;
+  background: #0a2324;
+  color: #fff;
+  font: inherit;
+  text-transform: none;
+}
+
+.public-error-actions .button-secondary {
+  border: 1px solid #dedfdd;
+  background: #fff;
+  color: #0a2324;
+}
+
+.public-error-page a:not(.button):hover,
+.public-error-page a:not(.button):focus-visible {
+  color: #00c5cc;
+}
+
+.public-error-page a:focus-visible {
+  outline: 2px solid #00c5cc;
+  outline-offset: 4px;
+}
+
+.public-error-footer {
+  border-top: 1px solid #dedfdd;
+}
+
+@media (min-width: 48rem) {
+  .public-error-main {
+    margin-block: 5rem;
+  }
+
+  .public-error-hero h1 {
+    font-size: 3.5rem;
+  }
+}
+
 body.page-public {
 --ink: #0a2324;
   --ink-soft: #0a2324;

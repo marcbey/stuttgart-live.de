@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <title><%= content_for(:title) || "StuttgartLIVE" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="referrer" content="same-origin">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <style data-local-font-faces><%= local_font_face_stylesheet(frontend: true) %></style>
+    <%= stylesheet_link_tag "shared", "frontend" %>
+  </head>
+  <body class="page-public public-error-page">
+    <header class="public-error-header">
+      <%= link_to root_path, aria: { label: "StuttgartLIVE Startseite" } do %>
+        <%= image_tag "stuttgart-live-textlogo.svg", alt: "StuttgartLIVE", width: 180 %>
+      <% end %>
+      <%= link_to "Zur Startseite", root_path %>
+    </header>
+    <main id="main-content" class="public-error-main">
+      <%= yield %>
+    </main>
+    <footer class="public-error-footer">
+      <%= link_to "Kontakt", contact_path %>
+      <%= link_to "Datenschutz", datenschutz_path %>
+      <%= link_to "Impressum", imprint_path %>
+    </footer>
+  </body>
+</html>
