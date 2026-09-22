@@ -4269,6 +4269,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
+    assert_select ".design-detail-preview-back[data-controller='history-back-link'][data-action='click->history-back-link#navigate']", count: 1
+    assert_select ".design-preview-logo[data-turbo-preload='true'][href='#{root_path}']", count: 1
+    assert_select ".design-detail-preview-more-button", count: 0
     assert_select ".design-detail-preview-actions .event-share[data-controller='share-event'][data-share-event-url-value=?]",
                   event_url(@published_event.slug),
                   count: 1
@@ -4379,7 +4382,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     ], related_names.first(3)
   end
 
-  test "show renders first eight related genre lane events with load more button" do
+  test "show renders first eight related genre lane events without load more button" do
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])
 
     related_events = 22.times.map do |index|
@@ -4405,13 +4408,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     document = Nokogiri::HTML.parse(response.body)
     related_names = document.css(".event-detail-related-list .event-listing-link strong").map(&:text)
-    more_link = document.at_css("#event-detail-related-more a")
 
     assert_equal 8, related_names.size
     assert_equal related_events.first(8).map(&:artist_name), related_names
-    assert_equal "Mehr laden", more_link&.text&.strip
-    assert_equal related_event_path(@published_event.slug, offset: 8, format: :turbo_stream), more_link&.[]("href")
-    assert_equal "true", more_link&.[]("data-turbo-stream")
+    assert_nil document.at_css("#event-detail-related-more")
+    assert_nil document.at_css(".event-detail-related-list .design-detail-preview-related-link")
   end
 
   test "related appends the next eight related genre lane events" do
@@ -4529,7 +4530,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     sorted_future_events = future_events.sort_by { |event| [ event.start_at, event.id ] }
-    assert_select ".event-detail-header-panel > .event-detail-series-terms", count: 1
+    assert_select ".design-detail-preview-fact-datum .design-detail-preview-date-series > .event-detail-series-terms", count: 1
     assert_select ".event-detail-series-terms-button", count: 0
     series_section = css_select(".event-detail-series-terms").first
     assert_not_nil series_section
@@ -4563,11 +4564,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     cta_index = response.body.index("event-detail-cta")
     series_index = response.body.index("Weitere Termine")
     genre_index = response.body.index("Das könnte dir auch gefallen")
-    assert_operator cta_index, :<, series_index
-    assert_operator series_index, :<, genre_index
+    assert_operator series_index, :<, cta_index
+    assert_operator cta_index, :<, genre_index
   end
 
-  test "show keeps short upcoming event series terms as plain buttons" do
+  test "show renders short upcoming event series terms in the date pill" do
     series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
     @published_event.update!(event_series: series, event_series_assignment: "manual")
 
@@ -4593,9 +4594,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     series_section = css_select(".event-detail-series-terms").first
     assert_not_nil series_section
-    assert_equal 0, series_section.css(".event-detail-series-more").size
-    assert_equal 2, series_section.css(".event-detail-series-term-list--compact .event-detail-series-term-link").size
-    assert_equal future_events.map { |event| event_path(event.slug) }, series_section.css(".event-detail-series-term-link").map { |link| link["href"] }
+    assert_equal 1, series_section.css(".event-detail-series-more").size
+    assert_equal 0, series_section.css(".event-detail-series-term-link").size
+    assert_equal "Weitere Termine", series_section.at_css(".event-detail-series-more-summary span")&.text&.strip
+    assert_equal future_events.size.to_s, series_section.at_css(".event-detail-series-more-count")&.text&.strip
   end
 
   test "show does not render the event series lane when only one public event is visible" do

@@ -13788,6 +13788,47 @@ body.page-public-design-preview main {
   margin-bottom: 0.75rem;
 }
 
+.design-preview-list-page .lane-page-pagination {
+  max-width: none;
+  margin-top: 2rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.design-preview-list-page .lane-page-pagination .pagination-link {
+  display: inline-flex;
+  min-height: 2.8rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--preview-ink);
+  border-radius: 999px;
+  padding: 0.72rem 1.5rem;
+  background: var(--preview-ink);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  transition: background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+.design-preview-list-page .lane-page-pagination .pagination-link:hover,
+.design-preview-list-page .lane-page-pagination .pagination-link:focus-visible {
+  border-color: var(--preview-turquoise);
+  background: var(--preview-turquoise);
+  outline: none;
+  transform: translateY(-1px);
+}
+
+.design-preview-list-page .lane-page-pagination .pagination-link:focus-visible {
+  box-shadow: 0 0 0 3px rgba(0, 197, 204, 0.2);
+}
+
+.design-preview-list-page .lane-page-pagination .pagination-copy:empty {
+  display: none;
+}
+
 .design-preview-section-header--stacked {
   align-items: end;
 }

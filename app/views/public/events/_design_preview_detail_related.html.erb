@@ -1,7 +1,6 @@
 <% wrapper_class = local_assigns.fetch(:wrapper_class, "design-preview-section design-detail-preview-related") %>
 <% title_id = local_assigns.fetch(:title_id, "design-detail-preview-related-title") %>
 <% title = local_assigns.fetch(:title, "Das könnte dir auch gefallen") %>
-<% current_event = local_assigns[:current_event] %>
 <% has_more_related_events = local_assigns.fetch(:has_more_related_events, false) %>
 <% legacy_related_class = wrapper_class.include?("design-detail-preview-related--desktop-side") ? "event-detail-related-list" : nil %>
 
@@ -21,14 +20,7 @@
                  effective_series_ids: related_effective_series_ids %>
     <% end %>
   </div>
-  <% if has_more_related_events && current_event.present? && legacy_related_class.present? %>
-    <div id="event-detail-related-more">
-      <%= link_to "Mehr laden",
-                  related_event_path(current_event.slug, offset: related_preview_events.size, format: :turbo_stream),
-                  class: "design-preview-section-link design-detail-preview-related-link",
-                  data: { turbo_stream: true } %>
-    </div>
-  <% else %>
+  <% unless has_more_related_events && legacy_related_class.present? %>
     <%= link_to events_path, class: "design-preview-section-link design-detail-preview-related-link" do %>
       Alle anzeigen
       <svg viewBox="0 0 24 24" aria-hidden="true">

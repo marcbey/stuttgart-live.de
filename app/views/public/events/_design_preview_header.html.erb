@@ -9,7 +9,10 @@
 <% genres_active = genre_paths.include?(active_path) %>
 
 <header class="design-preview-topbar">
-  <%= link_to root_path, class: "design-preview-logo", aria: { label: "Stuttgart Live Startseite" } do %>
+  <%= link_to root_path,
+              class: "design-preview-logo",
+              aria: { label: "Stuttgart Live Startseite" },
+              data: { turbo_preload: true } do %>
     <span>Stuttgart</span>
     <span>Live</span>
   <% end %>

@@ -72,7 +72,9 @@ end %>
              strict_proxy: strict_proxy %>
 
   <article class="design-detail-preview" aria-labelledby="design-detail-preview-title">
-    <%= link_to design_detail_back_path, class: "design-detail-preview-back" do %>
+    <%= link_to design_detail_back_path,
+                class: "design-detail-preview-back",
+                data: { controller: "history-back-link", action: "click->history-back-link#navigate" } do %>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M19 12H6"></path>
         <path d="m11 6-6 6 6 6"></path>
@@ -265,6 +267,16 @@ end %>
                   <span class="design-detail-preview-fact-inline">Einlass <%= detail_doors_item.value %></span>
                 <% end %>
               </span>
+              <% if item.label == "Datum" && @event_series_lane.present? %>
+                <div class="design-detail-preview-date-series design-detail-preview-series">
+                  <%= render "event_series_term_links",
+                             event_series_lane: @event_series_lane,
+                             browse_state: @browse_state,
+                             current_event: @event,
+                             show_visible_terms: false,
+                             summary_label: "Weitere Termine" %>
+                </div>
+              <% end %>
             </dd>
           </div>
         <% end %>
@@ -301,16 +313,6 @@ end %>
                    button_class: "design-detail-preview-action-button",
                    show_text: true %>
       </div>
-      <% if @event_series_lane.present? %>
-        <div class="design-detail-preview-date-series design-detail-preview-series">
-          <%= render "event_series_term_links",
-                     event_series_lane: @event_series_lane,
-                     browse_state: @browse_state,
-                     current_event: @event,
-                     show_visible_terms: true,
-                     summary_label: "Weitere Termine" %>
-        </div>
-      <% end %>
     </div>
   </section>
 
@@ -362,29 +364,12 @@ end %>
               </div>
             </div>
           <% end %>
-          <div class="design-detail-preview-description-toggle"
-               data-controller="design-preview-description-toggle">
-            <input type="checkbox"
-                   id="design-detail-preview-description-toggle"
-                   class="design-detail-preview-description-checkbox"
-                   data-design-preview-description-toggle-target="checkbox"
-                   aria-label="Beschreibung vollständig anzeigen">
-            <div class="design-detail-preview-description-body"
-                 data-design-preview-description-toggle-target="body">
+          <div class="design-detail-preview-description-toggle">
+            <div class="design-detail-preview-description-body">
               <div class="design-detail-preview-flow<%= " design-detail-preview-flow--long" if description_word_count > 110 %>">
                 <%= formatted_event_detail_copy(description, link_class: "design-detail-preview-inline-link") %>
               </div>
             </div>
-            <label for="design-detail-preview-description-toggle"
-                   class="design-detail-preview-more-button"
-                   data-design-preview-description-toggle-target="button"
-                   hidden>
-              <span class="design-detail-preview-more-open">Mehr anzeigen</span>
-              <span class="design-detail-preview-more-close">Weniger anzeigen</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M6 9l6 6 6-6"></path>
-              </svg>
-            </label>
           </div>
           <% if @event.editor_notes.present? %>
             <section class="design-detail-preview-copy-block design-detail-preview-editor-notes">
@@ -409,7 +394,6 @@ end %>
                      related_preview_events: related_preview_events,
                      browse_state: @browse_state,
                      strict_proxy: strict_proxy,
-                     current_event: @event,
                      has_more_related_events: @related_events_has_more,
                      related_effective_series_ids: related_effective_series_ids,
                      wrapper_class: "design-preview-section design-detail-preview-related design-detail-preview-related--mobile-inline",
@@ -431,7 +415,6 @@ end %>
                  related_preview_events: related_preview_events,
                  browse_state: @browse_state,
                  strict_proxy: strict_proxy,
-                 current_event: @event,
                  has_more_related_events: @related_events_has_more,
                  related_effective_series_ids: related_effective_series_ids,
                  wrapper_class: "design-preview-section design-detail-preview-related design-detail-preview-related--desktop-side",
