@@ -4271,7 +4271,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".design-detail-preview-back[data-controller='history-back-link'][data-action='click->history-back-link#navigate']", count: 1
     assert_select ".design-preview-logo[data-turbo-preload='true'][href='#{root_path}']", count: 1
-    assert_select ".design-detail-preview-more-button", count: 0
+    assert_select ".design-detail-preview-description-toggle[data-controller='design-preview-description-toggle']", count: 1
+    assert_select ".design-detail-preview-more-button[data-design-preview-description-toggle-target='button'][aria-controls='design-detail-preview-description-body']", count: 1
     assert_select ".design-detail-preview-actions .event-share[data-controller='share-event'][data-share-event-url-value=?]",
                   event_url(@published_event.slug),
                   count: 1

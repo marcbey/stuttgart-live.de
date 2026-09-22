@@ -16134,12 +16134,9 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   order: 0;
 }
 
-.design-preview-feature-slider .promotion-banner-link-light .design-preview-card-copy {
-  color: #fff;
-}
-
+.design-preview-feature-slider .promotion-banner-link-light .design-preview-card-copy,
 .design-preview-feature-slider .promotion-banner-link-dark .design-preview-card-copy {
-  color: #080909;
+  color: #fff;
 }
 
 .design-preview-feature-slider .promotion-banner-link-light .design-preview-card-kicker,
@@ -16147,17 +16144,12 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   color: inherit;
 }
 
-.design-preview-feature-slider .promotion-banner-link-light .design-preview-card-cta {
+.design-preview-feature-slider .promotion-banner-link-light .design-preview-card-cta,
+.design-preview-feature-slider .promotion-banner-link-dark .design-preview-card-cta {
   border-color: #fff;
   background: #fff;
   color: #080909;
   -webkit-text-fill-color: #080909;
-}
-
-.design-preview-feature-slider .promotion-banner-link-dark .design-preview-card-cta {
-  border-color: #080909;
-  background: #080909;
-  color: #fff;
 }
 
 .design-preview-feature-slider .design-preview-card-meta {
@@ -19652,18 +19644,6 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     color: #080909;
   }
 
-  .design-preview-feature-slider .design-preview-banner-card .promotion-banner-link-dark .design-preview-card-copy,
-  .design-preview-feature-slider .design-preview-banner-card .promotion-banner-link-dark .design-preview-card-kicker,
-  .design-preview-feature-slider .design-preview-banner-card .promotion-banner-link-dark .design-preview-card-title {
-    color: #080909;
-  }
-
-  .design-preview-feature-slider .design-preview-banner-card .promotion-banner-link-dark .design-preview-card-cta {
-    border-color: #080909;
-    background: #080909;
-    color: #fff;
-  }
-
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-link:hover .design-preview-card-cta,
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-link:focus-visible .design-preview-card-cta {
     border-color: var(--preview-turquoise);
@@ -22728,7 +22708,7 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
   }
 
   .design-detail-preview-description-body {
-    max-height: 46.5rem;
+    max-height: var(--description-collapsed-height, 46.5rem);
   }
 
   .design-detail-preview-panel {

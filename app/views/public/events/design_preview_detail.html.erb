@@ -364,12 +364,33 @@ end %>
               </div>
             </div>
           <% end %>
-          <div class="design-detail-preview-description-toggle">
-            <div class="design-detail-preview-description-body">
+          <div class="design-detail-preview-description-toggle"
+               data-controller="design-preview-description-toggle">
+            <input type="checkbox"
+                   id="design-detail-preview-description-toggle"
+                   class="design-detail-preview-description-checkbox"
+                   data-design-preview-description-toggle-target="checkbox"
+                   data-action="change->design-preview-description-toggle#toggle"
+                   aria-label="Beschreibung vollständig anzeigen">
+            <div id="design-detail-preview-description-body"
+                 class="design-detail-preview-description-body"
+                 data-design-preview-description-toggle-target="body">
               <div class="design-detail-preview-flow<%= " design-detail-preview-flow--long" if description_word_count > 110 %>">
                 <%= formatted_event_detail_copy(description, link_class: "design-detail-preview-inline-link") %>
               </div>
             </div>
+            <label for="design-detail-preview-description-toggle"
+                   class="design-detail-preview-more-button"
+                   data-design-preview-description-toggle-target="button"
+                   aria-controls="design-detail-preview-description-body"
+                   aria-expanded="false"
+                   hidden>
+              <span class="design-detail-preview-more-open">Mehr anzeigen</span>
+              <span class="design-detail-preview-more-close">Weniger anzeigen</span>
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"></path>
+              </svg>
+            </label>
           </div>
           <% if @event.editor_notes.present? %>
             <section class="design-detail-preview-copy-block design-detail-preview-editor-notes">
