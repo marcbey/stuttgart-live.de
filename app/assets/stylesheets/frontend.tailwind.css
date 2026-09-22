@@ -13613,14 +13613,14 @@ body.page-public-startpage .design-preview-highlights .homepage-highlight-video-
   }
 }
 
-@media (min-width: 80rem) {
-  body.page-public-startpage .design-preview {
-    width: calc(100% - 2.5rem);
-    max-width: none;
+@media (min-width: 80rem) and (max-width: 95.999rem) {
+  body.page-public.page-public-design-preview {
+    --preview-shell-edge: 4rem;
   }
 
-  body.page-public-startpage .design-preview-topbar {
-    padding-right: 1.25rem;
+  body.page-public-design-preview .design-preview {
+    width: calc(100% - 8rem);
+    max-width: none;
   }
 }
 
