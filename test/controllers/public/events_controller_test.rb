@@ -4290,6 +4290,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       start_at: 8.days.from_now.change(hour: 18, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
+      badge_text: "Ausverkauft",
       status: "published",
       published_at: 1.day.ago,
       source_snapshot: {}
@@ -4362,7 +4363,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-related-list .event-listing-link strong", text: unpublished_event.artist_name, count: 0
     assert_select ".event-detail-related-list .event-listing-link strong", text: past_event.artist_name, count: 0
 
-    related_names = Nokogiri::HTML.parse(response.body).css(".event-detail-related-list .event-listing-link strong").map(&:text)
+    document = Nokogiri::HTML.parse(response.body)
+    regular_card = document.css(".event-detail-related-list .design-preview-card").find do |card|
+      card.at_css(".design-preview-card-title")&.text&.strip == regular_event.artist_name
+    end
+    related_names = document.css(".event-detail-related-list .event-listing-link strong").map(&:text)
+
+    assert_nil regular_card&.at_css(".design-preview-card-status-pill")
+    assert_equal "Ausverkauft", regular_card&.at_css(".design-preview-card-price--status")&.text&.strip
 
     assert_equal [
       sks_event.artist_name,

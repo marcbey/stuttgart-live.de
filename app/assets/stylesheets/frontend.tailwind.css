@@ -13597,6 +13597,33 @@ width: calc(100% - var(--homepage-header-padding-inline, 0.8rem) - var(--homepag
   padding-inline: 0;
 }
 
+body.page-public-startpage .design-preview-highlights .design-preview-card-subtitle,
+body.page-public-startpage .design-preview-highlights .homepage-highlight-video-subtitle {
+  margin-top: 0.3rem;
+}
+
+@media (min-width: 68.75rem) {
+  body.page-public-startpage .design-preview-highlights .design-preview-card-title,
+  body.page-public-startpage .design-preview-highlights .homepage-highlight-video-title {
+    font-size: 1.75rem;
+  }
+
+  body.page-public-startpage .design-preview-highlights .design-preview-card--feature .design-preview-card-title {
+    font-size: 2.85rem;
+  }
+}
+
+@media (min-width: 80rem) {
+  body.page-public-startpage .design-preview {
+    width: calc(100% - 2.5rem);
+    max-width: none;
+  }
+
+  body.page-public-startpage .design-preview-topbar {
+    padding-right: 1.25rem;
+  }
+}
+
 body.page-public-design-preview {
   --preview-ink: #080909;
   --preview-muted: #6c706f;
@@ -22240,7 +22267,7 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
   .design-detail-preview-image-title-overlay {
     position: absolute;
     right: 0.72rem;
-    bottom: 4.35rem;
+    bottom: 1.25rem;
     left: 0.72rem;
     z-index: 3;
     display: grid;
@@ -22775,6 +22802,10 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
   font-weight: 400;
   line-height: 1;
   text-align: right;
+}
+
+.design-detail-preview-related .design-preview-card-price--status {
+  text-transform: uppercase;
 }
 
 .design-preview-highlights :where(.design-preview-card--poster, .design-preview-card--format) .design-preview-card-price--body {

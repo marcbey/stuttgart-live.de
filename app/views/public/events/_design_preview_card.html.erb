@@ -21,6 +21,8 @@
 <% show_body_price = show_card_actions && display_price.present? && !%w[poster format].include?(variant) %>
 <% status_pill_label = local_assigns[:status_label].presence || event.public_ticket_status_label.presence || event.badge_text.presence %>
 <% status_pill_label = nil if status_pill_label.to_s.casecmp("Tickets").zero? %>
+<% status_in_price_position = local_assigns.fetch(:status_in_price_position, false) %>
+<% body_status_label = status_pill_label if status_in_price_position && %w[Abgesagt Ausverkauft Abgelaufen].any? { |label| status_pill_label.to_s.casecmp(label).zero? } %>
 <% local_unavailable_status_label = status_pill_label if %w[Ausverkauft Abgelaufen].any? { |label| status_pill_label.to_s.casecmp(label).zero? } %>
 <% ticket_status_label = event.public_ticket_status_label.presence || local_unavailable_status_label %>
 <% unavailable_preview = ticket_status_label.present? || status_pill_label.to_s.casecmp("Ausverkauft").zero? || status_pill_label.to_s.casecmp("Abgelaufen").zero? %>
@@ -48,7 +50,7 @@
       <% end %>
     </span>
 
-    <% if status_pill_label.present? %>
+    <% if status_pill_label.present? && body_status_label.blank? %>
       <span class="design-preview-card-status-pill"><%= status_pill_label %></span>
     <% end %>
 
@@ -68,7 +70,9 @@
           <% end %>
         </span>
       </span>
-      <% if show_body_price %>
+      <% if body_status_label.present? %>
+        <span class="design-preview-card-price design-preview-card-price--body design-preview-card-price--status"><%= body_status_label %></span>
+      <% elsif show_body_price %>
         <span class="design-preview-card-price design-preview-card-price--body"><%= display_price %></span>
       <% end %>
       <% if variant == "feature" %>
