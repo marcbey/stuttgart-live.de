@@ -88,24 +88,12 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes package_json, "--chunk-names=[name]-[hash].digested"
   end
 
-  test "promotion banner images use responsive card crop style in design preview feature slider" do
-    event = Event.new(
-      promotion_banner_image_focus_x: 18,
-      promotion_banner_image_focus_y: 72,
-      promotion_banner_image_zoom: 145
-    )
-
-    style = event_promotion_banner_card_image_style(event)
+  test "promotion banner images use the editor crop ratio in design preview feature slider" do
     partial = Rails.root.join("app/views/public/events/_design_preview_banner_card.html.erb").read
 
-    assert_includes style, "object-position: 18.0% 72.0%"
-    assert_includes style, "transform: scale(1.45)"
-    assert_includes style, "transform-origin: 18.0% 72.0%"
-    refute_includes style, "position: absolute"
-    refute_includes style, "left:"
-    refute_includes style, "width:"
-    assert_includes partial, "event_promotion_banner_card_image_style(event)"
+    assert_includes partial, "event_promotion_banner_image_style(event, frame_ratio: 1.0 / 1.16)"
     assert_includes partial, "blog_post_image_style(blog_post, :promotion_banner_image)"
+    refute_includes partial, "event_promotion_banner_card_image_style(event)"
     refute_includes partial, "event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0)"
   end
 

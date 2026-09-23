@@ -2353,8 +2353,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "720", promotion_banner_image["height"]
     assert_includes promotion_banner_image["srcset"], "768w"
     assert_includes promotion_banner_image["srcset"], "1280w"
-    assert_includes promotion_banner_image["style"], "object-position: 18.0% 72.0%"
-    assert_includes promotion_banner_image["style"], "transform: scale(1.45)"
+    assert_includes promotion_banner_image["style"], "position: absolute"
+    assert_includes promotion_banner_image["style"], "width: 299.022%"
+    assert_includes promotion_banner_image["style"], "height: 145.0%"
   end
 
   test "homepage falls back to rails storage media urls when media proxy is unavailable" do

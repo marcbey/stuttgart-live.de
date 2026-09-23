@@ -16139,6 +16139,11 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   color: #fff;
 }
 
+.design-preview-feature-slider .promotion-banner-link-light .design-preview-card-subtitle,
+.design-preview-feature-slider .promotion-banner-link-dark .design-preview-card-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .design-preview-feature-slider .promotion-banner-link-light .design-preview-card-kicker,
 .design-preview-feature-slider .promotion-banner-link-dark .design-preview-card-kicker {
   color: inherit;
@@ -19564,25 +19569,20 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     position: absolute;
     inset: auto 0 0;
     z-index: 2;
-    height: 58%;
+    height: 66%;
     pointer-events: none;
     background: linear-gradient(
       to bottom,
       transparent 0%,
-      color-mix(in srgb, var(--promotion-banner-mobile-surface, var(--promotion-banner-background, #080909)) 18%, transparent) 36%,
-      color-mix(in srgb, var(--promotion-banner-mobile-surface, var(--promotion-banner-background, #080909)) 52%, rgba(8, 9, 9, 0.2)) 72%,
-      color-mix(in srgb, var(--promotion-banner-mobile-surface, var(--promotion-banner-background, #080909)) 72%, rgba(8, 9, 9, 0.62)) 100%
+      rgba(0, 0, 0, 0.12) 34%,
+      rgba(0, 0, 0, 0.58) 72%,
+      rgba(0, 0, 0, 0.9) 100%
     );
   }
 
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-image {
-    position: static;
-    width: 100%;
-    height: 100%;
     min-width: 0;
     min-height: 0;
-    object-fit: cover;
-    transform: none;
   }
 
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-image--contain {
@@ -19651,24 +19651,27 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     color: #fff;
   }
 
-  .design-preview-content-promotions .promotion-banner-link {
+  :is(body.page-public-events-index, body.page-public-design-preview) .design-preview-content-promotions .promotion-banner-link {
     grid-template-columns: minmax(0, 1fr);
     min-height: 0;
   }
 
-  .design-preview-content-promotions .promotion-banner-visual {
+  :is(body.page-public-events-index, body.page-public-design-preview) .design-preview-content-promotions .promotion-banner-visual {
     min-height: 0;
-  }
-
-  .design-preview-content-promotions .promotion-banner-media {
-    position: relative;
-    inset: auto;
-    height: auto;
     aspect-ratio: 16 / 9;
   }
 
-  .design-preview-content-promotions .promotion-banner-media::after,
-  .design-preview-content-promotions .promotion-banner-layout-reversed .promotion-banner-media::after {
+  :is(body.page-public-events-index, body.page-public-design-preview) .design-preview-content-promotions .promotion-banner-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    aspect-ratio: auto;
+  }
+
+  :is(body.page-public-events-index, body.page-public-design-preview) .design-preview-content-promotions .promotion-banner-media::after,
+  :is(body.page-public-events-index, body.page-public-design-preview) .design-preview-content-promotions .promotion-banner-layout-reversed .promotion-banner-media::after {
     inset: auto 0 0;
     width: 100%;
     height: calc(34% + 2px);
@@ -19724,7 +19727,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
     gap: 0.24rem;
-    bottom: clamp(3.5rem, 11vw, 4.3rem);
+    bottom: clamp(7.5rem, 20vw, 8.5rem);
     padding: 1rem var(--preview-shell-edge) 1.5rem;
   }
 

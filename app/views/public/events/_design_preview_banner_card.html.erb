@@ -19,7 +19,7 @@
   <% uses_promotion_image = event.promotion_banner_image.attached? %>
   <% image_source = uses_promotion_image ? optimized_event_promotion_banner_image_source(event, strict_proxy: strict_proxy, size: :banner_desktop) : event_image_source(fallback_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
   <% image_srcset = uses_promotion_image ? optimized_event_promotion_banner_image_srcset(event, strict_proxy: strict_proxy) : event_image_srcset(fallback_image, variant_sizes: %i[banner_mobile banner_desktop], strict_proxy: strict_proxy) %>
-  <% image_style = uses_promotion_image ? event_promotion_banner_card_image_style(event) : event_card_image_style(fallback_image) %>
+  <% image_style = uses_promotion_image ? event_promotion_banner_image_style(event, frame_ratio: 1.0 / 1.16) : event_card_image_style(fallback_image) %>
   <% image_class = "design-preview-card-image" %>
   <% href = public_event_detail_path(event, browse_state) %>
   <% kicker = nil %>
