@@ -1,0 +1,8 @@
+<% events.each do |event| %>
+  <li data-design-preview-saved-dropdown-target="item" data-slug="<%= event.slug %>">
+    <%= render "design_preview_saved_event",
+               event: event,
+               browse_state: browse_state,
+               strict_proxy: homepage_media_strict_proxy? %>
+  </li>
+<% end %>

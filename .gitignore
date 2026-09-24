@@ -78,6 +78,9 @@ skills-lock.json
 !.agents/skills/**
 test/locust/__pycache__/*
 .playwright-mcp/**
+/.playwright-cli/
+/output/playwright/
+/test-results/
 openwebninja-*.png
 TODO.md
 

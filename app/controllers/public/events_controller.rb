@@ -1,10 +1,11 @@
 module Public
   class EventsController < ApplicationController
-    allow_unauthenticated_access only: [ :index, :design_preview, :design_preview_detail, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
+    allow_unauthenticated_access only: [ :index, :design_preview, :design_preview_detail, :lane, :homepage_lane, :homepage_section, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
     PER_PAGE = 12
     HOME_LANE_LIMIT = Public::Events::HomepageLanePager::DEFAULT_PER_PAGE
+    HOME_DESIGN_LANE_LIMIT = 7
     HOME_LANE_LIST_LIMIT = 12
     HOME_HIGHLIGHTS_LANE_LIMIT = HOME_LANE_LIMIT + 4
     HOME_UNDER_30_PRICE_LIMIT = 30
@@ -20,7 +21,7 @@ module Public
     GERMAN_MONTH_NAMES = %w[Januar Februar März April Mai Juni Juli August September Oktober November Dezember].freeze
     HomepageLaneShell = Data.define(:events, :effective_series_ids, :series_counts_by_id, :next_cursor)
 
-    before_action :set_browse_state, only: [ :index, :design_preview, :design_preview_detail, :lane, :homepage_lane, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
+    before_action :set_browse_state, only: [ :index, :design_preview, :design_preview_detail, :lane, :homepage_lane, :homepage_section, :saved, :saved_lane, :search, :show, :related, :search_overlay, :termine ]
     around_action :append_index_profile_headers, only: :index
 
     def index
@@ -94,6 +95,17 @@ module Public
       head :bad_request
     end
 
+    def homepage_section
+      case params[:section]
+      when "stuttgart_mix"
+        render_design_homepage_mix_section
+      when "under_30"
+        render_design_homepage_under_30_section
+      else
+        head :not_found
+      end
+    end
+
     def saved
       assign_design_chrome
     end
@@ -111,11 +123,9 @@ module Public
         return
       end
 
-      render partial: "public/events/saved_events_lane",
-             locals: {
-               browse_state: @browse_state,
-               events: @saved_lane_events
-             }
+      partial = params[:mode] == "dropdown" ? "public/events/design_preview_saved_items" : "public/events/saved_events_lane"
+      render partial: partial,
+             locals: { browse_state: @browse_state, events: @saved_lane_events }
     end
 
     def show
@@ -305,7 +315,7 @@ module Public
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
 
-    def assign_homepage_sections
+    def assign_homepage_sections(defer_lower_lanes: false)
       @home_featured_lane = Public::Events::LaneDirectory.highlights
       @home_all_stuttgart_lane = Public::Events::LaneDirectory.all_stuttgart
       @home_tagestipp_lane = Public::Events::LaneDirectory.tagestipp
@@ -321,20 +331,22 @@ module Public
       @home_featured_next_cursor = home_featured_page.next_cursor
       @home_featured_list_next_cursor = home_featured_list_page.next_cursor
 
-      @home_genre_lanes = homepage_genre_lane_sections
+      initial_lane_limit = defer_lower_lanes ? HOME_DESIGN_LANE_LIMIT : HOME_LANE_LIMIT
+      @home_genre_lanes = homepage_genre_lane_sections(initial_limit: initial_lane_limit)
       @home_genre_tag_cloud_genres = []
       @home_highlight_events = empty_lane.events
       @home_highlight_effective_series_ids = empty_lane.effective_series_ids
       @home_highlight_series_counts_by_id = empty_lane.series_counts_by_id
       @home_highlight_next_cursor = empty_lane.next_cursor
       @home_tagestipp_available = tagestipp_available?
-      home_tagestipp_page = @home_tagestipp_available ? homepage_lane_page_or_empty("tagestipp", per_page: HOME_LANE_LIMIT) : empty_lane
+      tagestipp_limit = defer_lower_lanes ? HOME_DESIGN_LANE_LIMIT : HOME_LANE_LIMIT
+      home_tagestipp_page = @home_tagestipp_available ? homepage_lane_page_or_empty("tagestipp", per_page: tagestipp_limit) : empty_lane
       @home_tagestipp_events = home_tagestipp_page.events
       @home_tagestipp_effective_series_ids = home_tagestipp_page.effective_series_ids
       @home_tagestipp_series_counts_by_id = home_tagestipp_page.series_counts_by_id
       @home_tagestipp_next_cursor = home_tagestipp_page.next_cursor
       @home_under_30_available = under_30_available?
-      home_under_30_page = @home_under_30_available ? homepage_lane_page_or_empty("under_30", per_page: HOME_LANE_LIMIT) : empty_lane
+      home_under_30_page = @home_under_30_available && !defer_lower_lanes ? homepage_lane_page_or_empty("under_30", per_page: HOME_LANE_LIMIT) : empty_lane
       @home_under_30_events = home_under_30_page.events
       @home_under_30_effective_series_ids = home_under_30_page.effective_series_ids
       @home_under_30_series_counts_by_id = home_under_30_page.series_counts_by_id
@@ -343,12 +355,35 @@ module Public
     end
 
     def assign_design_homepage
-      assign_homepage_sections
+      assign_homepage_sections(defer_lower_lanes: true)
       assign_homepage_promotion_banners
       @design_preview_news_posts = BlogPost.published_live.with_attached_cover_image.limit(6).to_a
-      @design_preview_mix_events = design_preview_mix_events
+      @design_preview_mix_available = @home_genre_lanes.any?
       @design_preview_series_counts_by_id = Public::Events::SeriesCountsByIdQuery.call(design_preview_series_events)
       @design_preview_search_overlay = build_search_overlay
+    end
+
+    def render_design_homepage_mix_section
+      events = design_preview_mix_events.first(HOME_DESIGN_LANE_LIMIT)
+      render partial: "public/events/design_preview_mix_lane",
+             locals: design_homepage_deferred_section_locals(events:)
+    end
+
+    def render_design_homepage_under_30_section
+      page = homepage_lane_page_or_empty("under_30", per_page: HOME_DESIGN_LANE_LIMIT)
+      render partial: "public/events/design_preview_under_30_lane",
+             locals: design_homepage_deferred_section_locals(events: page.events, next_cursor: page.next_cursor)
+    end
+
+    def design_homepage_deferred_section_locals(events:, next_cursor: nil)
+      {
+        events: events,
+        next_cursor: next_cursor,
+        browse_state: @browse_state,
+        strict_proxy: helpers.homepage_media_strict_proxy?,
+        effective_series_ids: Public::Events::EffectiveSeriesIdsQuery.call(events),
+        series_counts_by_id: Public::Events::SeriesCountsByIdQuery.call(events)
+      }
     end
 
     def design_preview_series_events
@@ -359,8 +394,6 @@ module Public
       (
         Array(@home_featured_events) +
         Array(@home_tagestipp_events) +
-        Array(@home_under_30_events) +
-        Array(@design_preview_mix_events) +
         Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) } +
         promotion_banner_events
       ).compact.uniq(&:id)
@@ -528,7 +561,7 @@ module Public
       list_events_relation
     end
 
-    def homepage_genre_lane_sections
+    def homepage_genre_lane_sections(initial_limit: HOME_LANE_LIMIT)
       slugs = AppSetting.normalize_slug_list(AppSetting.homepage_genre_lane_slugs)
       return [] if slugs.empty?
 
@@ -541,7 +574,7 @@ module Public
         next if group.blank?
         next unless homepage_genre_lane_available?(group)
 
-        lane_page = initial_lane_rendered ? empty_homepage_lane_shell : homepage_lane_page_or_empty("genre:#{group.slug}", per_page: HOME_LANE_LIMIT)
+        lane_page = initial_lane_rendered ? empty_homepage_lane_shell : homepage_lane_page_or_empty("genre:#{group.slug}", per_page: initial_limit)
         initial_lane_rendered ||= lane_page.events.present?
 
         Public::Events::HomepageGenreLanesBuilder::Lane.new(
@@ -622,10 +655,7 @@ module Public
       when "highlights"
         homepage_highlights_relation_and_context(cursor_payload:)
       when "all_stuttgart"
-        [
-          scoped_homepage_all_relation.reorder(:start_at, :id),
-          homepage_lane_context(lane: "all_stuttgart")
-        ]
+        [ all_stuttgart_month_relation, all_stuttgart_lane_context ]
       when "tagestipp"
         [
           tagestipp_relation,
@@ -763,6 +793,7 @@ module Public
     def normalized_homepage_lane_render_mode(mode)
       return "rows" if mode.to_s == "rows"
       return "design_cards" if mode.to_s == "design_cards"
+      return "all_stuttgart_rows" if mode.to_s == "all_stuttgart_rows"
 
       "cards"
     end
@@ -1027,9 +1058,22 @@ module Public
         @lane_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.to_a)
       when "all_stuttgart"
         relation = all_stuttgart_month_relation
-        @lane_series_counts_by_id = public_series_counts_for_relation(relation)
-        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
-        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
+        lane_page = Public::Events::HomepageLanePager.new(
+          relation: relation,
+          context: all_stuttgart_lane_context,
+          per_page: LANE_PAGE_LIMIT
+        ).call
+        @lane_series_counts_by_id = lane_page.series_counts_by_id
+        @lane_effective_series_ids = lane_page.effective_series_ids
+        @lane_events = lane_page.events
+        @lane_next_cursor = lane_page.next_cursor
+        @lane_lazy_id = "all_stuttgart" if @lane_next_cursor.present?
+        @lane_lazy_url = helpers.homepage_lane_events_path(
+          event_month: @lane_selected_month&.strftime("%Y-%m"),
+          event_genre: @all_stuttgart_selected_genre&.slug,
+          event_location: @all_stuttgart_selected_location,
+          filter: @browse_state.filter
+        ) if @lane_lazy_id.present?
       when "tagestipp"
         relation = tagestipp_relation
         @lane_series_counts_by_id = public_series_counts_for_relation(relation)
@@ -1117,6 +1161,15 @@ module Public
       genre_ids = relation.except(:order).joins(:genres).distinct.pluck("genres.id")
 
       Genre.where(id: genre_ids).order(:name).to_a
+    end
+
+    def all_stuttgart_lane_context
+      homepage_lane_context(
+        lane: "all_stuttgart",
+        event_month: @lane_selected_month&.strftime("%Y-%m"),
+        event_genre: @all_stuttgart_selected_genre&.slug,
+        event_location: @all_stuttgart_selected_location
+      )
     end
 
     def all_stuttgart_locations_for(relation)

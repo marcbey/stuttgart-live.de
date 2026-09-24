@@ -59,7 +59,11 @@
                  locations: @all_stuttgart_locations,
                  selected_genre: @all_stuttgart_selected_genre,
                  selected_location: @all_stuttgart_selected_location,
-                 selected_month: @lane_selected_month %>
+                 selected_month: @lane_selected_month,
+                 lazy_lane_id: @lane_lazy_id,
+                 lazy_url: @lane_lazy_url,
+                 lazy_next_cursor: @lane_next_cursor,
+                 lazy_per_page: Public::EventsController::LANE_PAGE_LIMIT %>
     <% else %>
       <%= render "lane_page_section",
                  lane: @lane,

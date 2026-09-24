@@ -5,6 +5,10 @@
   selected_genre = local_assigns[:selected_genre]
   selected_location = local_assigns[:selected_location].to_s.presence
   selected_month = local_assigns[:selected_month]
+  lazy_lane_id = local_assigns[:lazy_lane_id]
+  lazy_url = local_assigns[:lazy_url]
+  lazy_next_cursor = local_assigns[:lazy_next_cursor]
+  lazy_per_page = local_assigns.fetch(:lazy_per_page, Public::EventsController::LANE_PAGE_LIMIT)
   selected_month_param = selected_month&.strftime("%Y-%m")
   genre_label = selected_genre&.name.presence || "Genre"
   location_label = selected_location.presence || "Location"
@@ -17,7 +21,15 @@
   base_location_params = base_filter_params.except(:event_location)
 %>
 
-<section class="design-preview-section all-stuttgart-event-section">
+<section class="design-preview-section all-stuttgart-event-section"
+         <% if lazy_lane_id.present? %>data-controller="lane-page"<% end %>
+         <% if lazy_lane_id.present? %>
+         data-lane-page-url-value="<%= lazy_url %>"
+         data-lane-page-lane-value="<%= lazy_lane_id %>"
+         data-lane-page-cursor-value="<%= lazy_next_cursor %>"
+         data-lane-page-per-page-value="<%= lazy_per_page %>"
+         data-lane-page-card-mode-value="all_stuttgart_rows"
+         <% end %>>
   <div class="design-preview-section-header all-stuttgart-event-header">
     <h2><%= display_title %></h2>
     <% if genres.any? || locations.any? %>
@@ -89,51 +101,21 @@
         <span role="columnheader">Aktion</span>
       </div>
 
-      <% events.each do |event| %>
-        <% event_url = public_event_detail_path(event, browse_state) %>
-        <% primary_offer = event.public_ticket_offer %>
-        <% display_price = public_event_ticket_price(event, primary_offer) %>
-        <% unavailable_label = event.public_ticket_status_label %>
-        <% ticket_url = primary_offer&.resolved_ticket_url if unavailable_label.blank? && !event.public_expired? %>
-        <% primary_genre = event.primary_genre %>
-
-        <article class="all-stuttgart-event-row" role="row">
-          <time class="all-stuttgart-event-day" datetime="<%= event.start_at.to_date.iso8601 %>" role="cell">
-            <strong><%= event.start_at.day.to_s.rjust(2, "0") %></strong>
-          </time>
-
-          <div class="all-stuttgart-event-title" role="cell">
-            <%= link_to event.artist_name, event_url %>
-            <% if event.title.present? %>
-              <span class="all-stuttgart-event-title-tour"><%= event.title %></span>
-            <% end %>
-          </div>
-
-          <div class="all-stuttgart-event-location" role="cell">
-            <%= event.venue.presence || event.city.presence || "Stuttgart" %>
-          </div>
-
-          <div class="all-stuttgart-event-price" role="cell">
-            <%= unavailable_label.presence || display_price.presence || "Preis folgt" %>
-          </div>
-
-          <div class="all-stuttgart-event-genre" role="cell">
-            <% if primary_genre.present? %>
-              <%= link_to primary_genre.name,
-                          genre_lane_path(primary_genre.slug),
-                          class: "all-stuttgart-event-genre-pill" %>
-            <% end %>
-          </div>
-
-          <div class="all-stuttgart-event-actions" role="cell">
-            <%= link_to "Mehr Infos", event_url, class: "all-stuttgart-event-button all-stuttgart-event-button--secondary" %>
-            <% if ticket_url.present? %>
-              <%= link_to "Tickets", ticket_url, target: "_blank", rel: "noopener", class: "all-stuttgart-event-button all-stuttgart-event-button--primary" %>
-            <% end %>
-          </div>
-        </article>
-      <% end %>
+      <div class="all-stuttgart-event-rows" data-lane-page-target="grid">
+        <%= render "all_stuttgart_event_rows", events: events, browse_state: browse_state %>
+      </div>
     </div>
+    <% if lazy_lane_id.present? %>
+      <div class="pagination-sentinel lane-page-pagination" data-lane-page-target="pagination">
+        <button type="button"
+                class="button button-secondary button-compact pagination-link"
+                data-action="click->lane-page#load"
+                data-lane-page-target="button">
+          Mehr Events laden
+        </button>
+        <p class="pagination-copy" data-lane-page-target="status" aria-live="polite"></p>
+      </div>
+    <% end %>
   <% else %>
     <div class="search-results-empty">
       <h2>

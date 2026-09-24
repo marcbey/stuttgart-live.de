@@ -1,0 +1,51 @@
+<% events = Array(local_assigns[:events]) %>
+<% if events.any? %>
+  <section class="design-preview-section design-preview-lane"
+           aria-labelledby="design-preview-under-30-title"
+           data-controller="highlights-slider homepage-lane"
+           data-homepage-lane-lane-value="under_30"
+           data-homepage-lane-card-mode-value="design_cards"
+           data-homepage-lane-per-page-value="<%= Public::EventsController::HOME_DESIGN_LANE_LIMIT %>"
+           <% if next_cursor.present? %>data-homepage-lane-cursor-value="<%= next_cursor %>"<% end %>
+           data-homepage-lane-url-value="<%= homepage_lane_events_path(event_date: browse_state.event_date_param, filter: browse_state.filter) %>">
+    <div class="design-preview-section-header">
+      <h2 id="design-preview-under-30-title">
+        <span class="design-preview-heading-desktop">Unter 30€ - Kleine Preise, große Abende</span>
+        <span class="design-preview-heading-mobile">Unter 30€</span>
+      </h2>
+      <%= link_to under_30_lane_path, class: "design-preview-section-link" do %>
+        Alle anzeigen
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13"></path><path d="m13 8 4 4-4 4"></path></svg>
+      <% end %>
+    </div>
+    <div class="design-preview-lane-viewport">
+      <button type="button"
+              class="design-preview-lane-arrow design-preview-lane-arrow--prev"
+              aria-label="Unter 30€ zurück"
+              data-highlights-slider-target="previousButton"
+              data-action="highlights-slider#previous">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6"></path></svg>
+      </button>
+      <div class="design-preview-card-row"
+           data-highlights-slider-target="track"
+           data-homepage-lane-target="track">
+        <% events.each do |event| %>
+          <%= render "design_preview_card",
+                     event: event,
+                     browse_state: browse_state,
+                     strict_proxy: strict_proxy,
+                     variant: "compact",
+                     effective_series_ids: effective_series_ids,
+                     series_counts_by_id: series_counts_by_id %>
+        <% end %>
+      </div>
+      <button type="button"
+              class="design-preview-lane-arrow design-preview-lane-arrow--next"
+              aria-label="Unter 30€ weiter"
+              data-highlights-slider-target="nextButton"
+              data-action="click->highlights-slider#next">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+      </button>
+    </div>
+  </section>
+<% end %>

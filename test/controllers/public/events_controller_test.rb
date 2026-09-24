@@ -726,6 +726,51 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".all-stuttgart-location-menu a", text: other_event.venue
   end
 
+  test "all stuttgart lane loads monthly events in pages" do
+    event_month = 5.years.from_now.beginning_of_month
+    events = 25.times.map do |index|
+      Event.create!(
+        slug: "all-stuttgart-paged-#{index}",
+        source_fingerprint: "test::public::all-stuttgart::paged::#{index}",
+        title: "Paged Stuttgart Event #{index}",
+        artist_name: "Paged Stuttgart Artist #{index}",
+        start_at: event_month.change(day: index + 1, hour: 20, min: 0, sec: 0),
+        venue: "Paging Hall",
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        primary_source: "reservix",
+        source_snapshot: {}
+      ).tap do |event|
+        build_homepage_genre_enrichment(event: event, genres: [ "Rock" ])
+      end
+    end
+
+    get all_stuttgart_lane_url(event_month: event_month.strftime("%Y-%m"))
+
+    assert_response :success
+    assert_select ".all-stuttgart-event-row", count: Public::EventsController::LANE_PAGE_LIMIT
+    assert_select ".all-stuttgart-event-section[data-controller~='lane-page']", count: 1
+    assert_select "[data-lane-page-card-mode-value='all_stuttgart_rows']", count: 1
+    assert_includes response.body, events.first.artist_name
+    assert_not_includes response.body, events.last.artist_name
+
+    document = Nokogiri::HTML5(response.body)
+    cursor = document.at_css(".all-stuttgart-event-section")["data-lane-page-cursor-value"]
+    get homepage_lane_events_url(
+      lane: "all_stuttgart",
+      mode: "all_stuttgart_rows",
+      per_page: Public::EventsController::LANE_PAGE_LIMIT,
+      cursor: cursor,
+      event_month: event_month.strftime("%Y-%m")
+    )
+
+    assert_response :success
+    assert_select ".all-stuttgart-event-row", count: 5
+    assert_includes response.body, events.last.artist_name
+    assert_not_includes response.body, events.first.artist_name
+  end
+
   test "under 30 lane renders only affordable events with active tickets" do
     earlier_under_30_event = Event.create!(
       slug: "lane-page-earlier-under-30",
@@ -2568,6 +2613,42 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       published_at: 1.day.ago,
       source_snapshot: {}
     )
+    tomorrow_evening_event = Event.create!(
+      slug: "tagestipp-tomorrow-evening",
+      source_fingerprint: "test::homepage::tagestipp::tomorrow-evening",
+      title: "Tagestipp Tomorrow Evening",
+      artist_name: "Tomorrow Evening Artist",
+      start_at: (FIXTURE_NOW + 1.day).change(hour: 20, min: 0, sec: 0),
+      venue: "Club Zentral",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    day_after_event = Event.create!(
+      slug: "tagestipp-day-after",
+      source_fingerprint: "test::homepage::tagestipp::day-after",
+      title: "Tagestipp Day After",
+      artist_name: "Day After Artist",
+      start_at: (FIXTURE_NOW + 2.days).change(hour: 19, min: 0, sec: 0),
+      venue: "Wagenhallen",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+    day_after_evening_event = Event.create!(
+      slug: "tagestipp-day-after-evening",
+      source_fingerprint: "test::homepage::tagestipp::day-after-evening",
+      title: "Tagestipp Day After Evening",
+      artist_name: "Day After Evening Artist",
+      start_at: (FIXTURE_NOW + 2.days).change(hour: 21, min: 0, sec: 0),
+      venue: "Kulturquartier",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
     much_later_event = Event.create!(
       slug: "tagestipp-much-later",
       source_fingerprint: "test::homepage::tagestipp::much-later",
@@ -2605,8 +2686,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       earlier_today_event.artist_name,
       later_today_event.artist_name,
       tomorrow_event.artist_name,
+      tomorrow_evening_event.artist_name,
+      day_after_event.artist_name,
+      day_after_evening_event.artist_name,
       much_later_event.artist_name
-    ], names.first(4)
+    ], names.first(Public::EventsController::HOME_DESIGN_LANE_LIMIT)
 
     get homepage_lane_events_url(lane: "tagestipp")
 
@@ -2617,8 +2701,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       earlier_today_event.artist_name,
       later_today_event.artist_name,
       tomorrow_event.artist_name,
+      tomorrow_evening_event.artist_name,
+      day_after_event.artist_name,
+      day_after_evening_event.artist_name,
       much_later_event.artist_name
-    ], names.first(4)
+    ], names.first(7)
   end
 
   test "index shows all visible events in the all events slider" do
@@ -2781,7 +2868,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_nil rock_section["data-homepage-lane-deferred-value"]
-    assert_equal (0..9).map { |index| "Homepage Lane Endpoint Metal Artist #{index}" }, card_title_texts(rock_section)
+    assert_equal (0...Public::EventsController::HOME_DESIGN_LANE_LIMIT).map { |index| "Homepage Lane Endpoint Metal Artist #{index}" }, card_title_texts(rock_section)
 
     get homepage_lane_events_url(lane: "genre:#{metal_group.slug}", mode: "cards")
 
@@ -3177,8 +3264,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert tagestipp_section.present?, "expected Tagestipp section to be rendered"
     names = tagestipp_section.css(".design-preview-card-title").map { |title| title.text.squish }
 
-    assert_equal 10, names.size
-    assert_equal (0..9).to_a.reverse.map { |index| "Tagestipp Filler Artist #{index}" }, names
+    assert_equal Public::EventsController::HOME_DESIGN_LANE_LIMIT, names.size
+    assert_equal (3..9).to_a.reverse.map { |index| "Tagestipp Filler Artist #{index}" }, names
     assert_not_includes names, today_event.artist_name
     assert_not_includes names, late_today_event.artist_name
     assert_not_includes names, reservix_today_event.artist_name

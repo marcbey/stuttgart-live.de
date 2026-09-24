@@ -78,7 +78,8 @@
     </div>
     <div class="design-preview-saved-dropdown"
          data-controller="design-preview-saved-dropdown"
-         data-design-preview-saved-dropdown-share-url-value="<%= saved_events_url %>">
+         data-design-preview-saved-dropdown-share-url-value="<%= saved_events_url %>"
+         data-design-preview-saved-dropdown-url-value="<%= saved_lane_events_path %>">
       <button type="button"
               class="design-preview-saved-link"
               aria-label="Gemerkte Events anzeigen"
@@ -106,16 +107,9 @@
           </strong>
           <%= link_to "Alle ansehen", saved_events_path %>
         </div>
-        <ul class="public-search-overlay-list design-preview-saved-list" role="list">
-          <% saved_events.each do |event| %>
-            <li data-design-preview-saved-dropdown-target="item" data-slug="<%= event.slug %>" hidden>
-              <%= render "public/events/design_preview_saved_event",
-                         event: event,
-                         browse_state: browse_state,
-                         strict_proxy: strict_proxy %>
-            </li>
-          <% end %>
-        </ul>
+        <ul class="public-search-overlay-list design-preview-saved-list"
+            role="list"
+            data-design-preview-saved-dropdown-target="list"></ul>
         <div class="public-search-overlay-empty design-preview-saved-empty"
              data-design-preview-saved-dropdown-target="empty">
           <h2>Noch nichts gemerkt</h2>

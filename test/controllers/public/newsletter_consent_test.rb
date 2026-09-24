@@ -22,6 +22,11 @@ class Public::NewsletterConsentTest < ActionDispatch::IntegrationTest
     end
 
     assert_response :success
+    assert_select "a.newsletter-consent-brand[aria-label='Stuttgart Live Startseite']" do
+      assert_select ".newsletter-consent-brand-city", text: "STUTTGART"
+      assert_select ".newsletter-consent-brand-live", text: "LIVE"
+      assert_select "img", count: 0
+    end
     assert_select "input[type=email][value='details@example.com']"
     assert_select "input[type=checkbox][name='newsletter_subscriber[newsletter_consent]'][required]"
     assert_select "input[type=checkbox][name='newsletter_subscriber[tracking_consent]']:not([required]):not([checked])"

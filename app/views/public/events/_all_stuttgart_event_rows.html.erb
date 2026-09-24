@@ -1,0 +1,44 @@
+<% events.each do |event| %>
+  <% event_url = public_event_detail_path(event, browse_state) %>
+  <% primary_offer = event.public_ticket_offer %>
+  <% display_price = public_event_ticket_price(event, primary_offer) %>
+  <% unavailable_label = event.public_ticket_status_label %>
+  <% ticket_url = primary_offer&.resolved_ticket_url if unavailable_label.blank? && !event.public_expired? %>
+  <% primary_genre = event.primary_genre %>
+
+  <article class="all-stuttgart-event-row" role="row">
+    <time class="all-stuttgart-event-day" datetime="<%= event.start_at.to_date.iso8601 %>" role="cell">
+      <strong><%= event.start_at.day.to_s.rjust(2, "0") %></strong>
+    </time>
+
+    <div class="all-stuttgart-event-title" role="cell">
+      <%= link_to event.artist_name, event_url %>
+      <% if event.title.present? %>
+        <span class="all-stuttgart-event-title-tour"><%= event.title %></span>
+      <% end %>
+    </div>
+
+    <div class="all-stuttgart-event-location" role="cell">
+      <%= event.venue.presence || event.city.presence || "Stuttgart" %>
+    </div>
+
+    <div class="all-stuttgart-event-price" role="cell">
+      <%= unavailable_label.presence || display_price.presence || "Preis folgt" %>
+    </div>
+
+    <div class="all-stuttgart-event-genre" role="cell">
+      <% if primary_genre.present? %>
+        <%= link_to primary_genre.name,
+                    genre_lane_path(primary_genre.slug),
+                    class: "all-stuttgart-event-genre-pill" %>
+      <% end %>
+    </div>
+
+    <div class="all-stuttgart-event-actions" role="cell">
+      <%= link_to "Mehr Infos", event_url, class: "all-stuttgart-event-button all-stuttgart-event-button--secondary" %>
+      <% if ticket_url.present? %>
+        <%= link_to "Tickets", ticket_url, target: "_blank", rel: "noopener", class: "all-stuttgart-event-button all-stuttgart-event-button--primary" %>
+      <% end %>
+    </div>
+  </article>
+<% end %>

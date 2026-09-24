@@ -5,13 +5,14 @@ const OVERLAY_OPENED_EVENT = "design-preview:overlay-opened"
 const OVERLAY_SOURCE = "saved"
 
 export default class extends Controller {
-  static targets = [ "button", "panel", "item", "empty", "footer", "label", "shareStatus" ]
+  static targets = [ "button", "panel", "list", "item", "empty", "footer", "label", "shareStatus" ]
   static values = {
-    shareUrl: String
+    shareUrl: String,
+    url: String
   }
 
   connect() {
-    this.handleSavedEventsChanged = this.render.bind(this)
+    this.handleSavedEventsChanged = this.handleSavedEventsChanged.bind(this)
     this.handleStorage = this.handleStorage.bind(this)
     this.handlePointerDown = this.handlePointerDown.bind(this)
     this.handleKeydown = this.handleKeydown.bind(this)
@@ -31,6 +32,7 @@ export default class extends Controller {
     window.removeEventListener(OVERLAY_OPENED_EVENT, this.handleOverlayOpened)
     document.removeEventListener("pointerdown", this.handlePointerDown)
     document.removeEventListener("keydown", this.handleKeydown)
+    this.itemsAbortController?.abort()
     clearTimeout(this.shareStatusTimeout)
   }
 
@@ -44,12 +46,13 @@ export default class extends Controller {
     }
   }
 
-  open() {
+  async open() {
     this.announceOpen()
-    this.render()
     this.panelTarget.hidden = false
     this.buttonTarget.setAttribute("aria-expanded", "true")
     this.element.classList.add("is-open")
+    await this.loadItems()
+    this.render()
   }
 
   close() {
@@ -61,13 +64,16 @@ export default class extends Controller {
   render() {
     const slugs = savedEventSlugs()
     const savedSlugs = new Set(slugs)
-    let visibleCount = 0
+    const currentKey = slugs.join("\n")
+    let visibleCount = this.loadedKey === currentKey ? 0 : slugs.length
 
-    this.itemTargets.forEach((item) => {
-      const visible = savedSlugs.has(item.dataset.slug)
-      item.hidden = !visible
-      if (visible) visibleCount += 1
-    })
+    if (this.loadedKey === currentKey) {
+      this.itemTargets.forEach((item) => {
+        const visible = savedSlugs.has(item.dataset.slug)
+        item.hidden = !visible
+        if (visible) visibleCount += 1
+      })
+    }
 
     this.element.classList.toggle("has-saved-events", visibleCount > 0)
     this.buttonTarget.setAttribute(
@@ -85,6 +91,45 @@ export default class extends Controller {
 
     if (this.hasFooterTarget) {
       this.footerTarget.hidden = visibleCount === 0
+    }
+  }
+
+  async loadItems() {
+    const slugs = savedEventSlugs()
+    const currentKey = slugs.join("\n")
+    if (this.loadedKey === currentKey || !this.hasListTarget) return
+
+    if (slugs.length === 0 || !this.hasUrlValue) {
+      this.listTarget.innerHTML = ""
+      this.loadedKey = currentKey
+      return
+    }
+
+    const url = new URL(this.urlValue, window.location.origin)
+    url.searchParams.set("mode", "dropdown")
+    slugs.forEach((slug) => url.searchParams.append("slugs[]", slug))
+
+    this.itemsAbortController?.abort()
+    const abortController = new AbortController()
+    this.itemsAbortController = abortController
+
+    try {
+      const response = await fetch(url, {
+        headers: { Accept: "text/html", "X-Requested-With": "XMLHttpRequest" },
+        credentials: "same-origin",
+        signal: abortController.signal
+      })
+      if (!response.ok) return
+
+      const html = await response.text()
+      if (savedEventSlugs().join("\n") !== currentKey) return
+
+      this.listTarget.innerHTML = html
+      this.loadedKey = currentKey
+    } catch (error) {
+      if (error.name !== "AbortError") console.error(error)
+    } finally {
+      if (this.itemsAbortController === abortController) this.itemsAbortController = null
     }
   }
 
@@ -149,6 +194,12 @@ export default class extends Controller {
 
   handleStorage(event) {
     if (event.key && event.key !== STORAGE_KEY) return
+
+    this.handleSavedEventsChanged()
+  }
+
+  async handleSavedEventsChanged() {
+    if (!this.panelTarget.hidden) await this.loadItems()
 
     this.render()
   }

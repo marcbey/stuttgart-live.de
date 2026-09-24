@@ -3,6 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = ["button", "grid", "list", "pagination", "status"]
   static values = {
+    cardMode: { type: String, default: "design_cards" },
     cursor: String,
     lane: String,
     listCursor: String,
@@ -14,6 +15,12 @@ export default class extends Controller {
     this.loading = false
     if (!this.hasListCursorValue && this.hasCursorValue) this.listCursorValue = this.cursorValue
     this.updateAvailability()
+    this.installPaginationObserver()
+  }
+
+  disconnect() {
+    this.paginationObserver?.disconnect()
+    this.abortController?.abort()
   }
 
   async load(event) {
@@ -23,32 +30,36 @@ export default class extends Controller {
     this.loading = true
     this.setPending(true)
     this.updateStatus("Weitere Events werden geladen ...")
+    const abortController = new AbortController()
+    this.abortController = abortController
 
     try {
-      const cardPage = await this.fetchPage("design_cards", this.cursorValue)
-      const rowPage = this.hasListTarget ? await this.fetchPage("rows", this.listCursorValue) : { html: "", nextCursor: "" }
+      const cardPage = await this.fetchPage(this.cardModeValue, this.cursorValue, abortController.signal)
+      const rowPage = this.hasListTarget ? await this.fetchPage("rows", this.listCursorValue, abortController.signal) : { html: "", nextCursor: "" }
 
       this.appendHtml(this.gridTarget, cardPage.html)
       if (this.hasListTarget) this.appendHtml(this.listTarget, rowPage.html)
       this.cursorValue = cardPage.nextCursor
       this.listCursorValue = rowPage.nextCursor
       this.updateStatus(cardPage.html.trim().length > 0 ? "Weitere Events wurden geladen." : "")
-    } catch (_error) {
-      this.updateStatus("Weitere Events konnten nicht geladen werden.")
+    } catch (error) {
+      if (error.name !== "AbortError") this.updateStatus("Weitere Events konnten nicht geladen werden.")
     } finally {
+      if (this.abortController === abortController) this.abortController = null
       this.loading = false
       this.setPending(false)
       this.updateAvailability()
     }
   }
 
-  async fetchPage(mode, cursor) {
+  async fetchPage(mode, cursor, signal) {
     const response = await fetch(this.requestUrl(mode, cursor), {
       headers: {
         Accept: "text/html",
         "X-Requested-With": "XMLHttpRequest"
       },
-      credentials: "same-origin"
+      credentials: "same-origin",
+      signal
     })
 
     if (!response.ok) throw new Error(`Lane page request failed (${response.status})`)
@@ -80,6 +91,16 @@ export default class extends Controller {
     if (!this.hasPaginationTarget) return
 
     this.paginationTarget.hidden = !this.canLoad
+    if (!this.canLoad) this.paginationObserver?.disconnect()
+  }
+
+  installPaginationObserver() {
+    if (!this.hasPaginationTarget || !("IntersectionObserver" in window)) return
+
+    this.paginationObserver = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) this.load()
+    }, { rootMargin: "900px 0px" })
+    this.paginationObserver.observe(this.paginationTarget)
   }
 
   setPending(pending) {

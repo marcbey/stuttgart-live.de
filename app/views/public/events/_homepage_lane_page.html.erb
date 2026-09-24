@@ -1,4 +1,8 @@
-<% if mode == "rows" %>
+<% if mode == "all_stuttgart_rows" %>
+  <%= render "all_stuttgart_event_rows",
+             events: page.events,
+             browse_state: browse_state %>
+<% elsif mode == "rows" %>
   <%= render "event_rows",
              events: page.events,
              browse_state: browse_state,

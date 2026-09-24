@@ -1,0 +1,76 @@
+<% events = Array(local_assigns[:events]) %>
+<% if events.any? %>
+  <% video_event = events.find { |event| event.highlight_landscape_video_file.attached? } %>
+  <section class="design-preview-section design-preview-lane design-preview-section--summer-party"
+           aria-labelledby="design-preview-summer-party-title"
+           data-controller="highlights-slider">
+    <div class="design-preview-section-header">
+      <h2 id="design-preview-summer-party-title">Stuttgart im Mix</h2>
+    </div>
+    <div class="design-preview-lane-viewport">
+      <button type="button"
+              class="design-preview-lane-arrow design-preview-lane-arrow--prev"
+              aria-label="Stuttgart im Mix zurück"
+              data-highlights-slider-target="previousButton"
+              data-action="highlights-slider#previous">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6"></path></svg>
+      </button>
+      <div class="design-preview-card-row" data-highlights-slider-target="track">
+        <article class="design-preview-card design-preview-card--compact design-preview-card--lane-video"
+                 data-controller="video-sound">
+          <% video_source = video_event&.highlight_landscape_video_file&.attached? ? public_media_path(video_event.highlight_landscape_video_file) : asset_path("design_preview/david-garrett-highlight.mp4") %>
+          <% video_poster = video_event.present? ? event_image_source(video_event.event_image, strict_proxy: strict_proxy, size: :banner_mobile) : asset_path("design_preview/david-garrett-highlight-poster.jpg") %>
+          <% video_href = public_event_detail_path(video_event, browse_state) if video_event.present? %>
+          <% video_content = capture do %>
+            <span class="design-preview-card-media" aria-hidden="true">
+              <%= video_tag video_source,
+                            poster: video_poster,
+                            autoplay: true,
+                            muted: true,
+                            loop: true,
+                            playsinline: true,
+                            preload: "metadata",
+                            class: "design-preview-card-video",
+                            data: { video_sound_target: "video" } %>
+            </span>
+          <% end %>
+          <% if video_href.present? %>
+            <%= link_to video_href,
+                        class: "design-preview-card-link",
+                        aria: { label: "#{video_event.artist_name} ansehen" } do %>
+              <%= video_content %>
+            <% end %>
+          <% else %>
+            <div class="design-preview-card-link"><%= video_content %></div>
+          <% end %>
+          <button type="button"
+                  class="homepage-highlight-video-sound-toggle"
+                  data-video-sound-target="button"
+                  data-action="click->video-sound#toggle"
+                  aria-label="Ton einschalten"
+                  aria-pressed="false">
+            <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path><path d="m16.2 9.2 4.1 4.1m0-4.1-4.1 4.1"></path></svg>
+            <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path><path d="M16 8.4c1 .9 1.6 2.2 1.6 3.6S17 14.7 16 15.6"></path></svg>
+          </button>
+        </article>
+        <% events.each do |event| %>
+          <%= render "design_preview_card",
+                     event: event,
+                     browse_state: browse_state,
+                     strict_proxy: strict_proxy,
+                     variant: "compact",
+                     category: "Festivals & Partys",
+                     effective_series_ids: effective_series_ids,
+                     series_counts_by_id: series_counts_by_id %>
+        <% end %>
+      </div>
+      <button type="button"
+              class="design-preview-lane-arrow design-preview-lane-arrow--next"
+              aria-label="Stuttgart im Mix weiter"
+              data-highlights-slider-target="nextButton"
+              data-action="highlights-slider#next">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+      </button>
+    </div>
+  </section>
+<% end %>

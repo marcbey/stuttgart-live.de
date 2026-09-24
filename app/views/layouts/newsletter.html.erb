@@ -13,8 +13,9 @@
   </head>
   <body class="page-public newsletter-consent-page">
     <header class="newsletter-consent-header">
-      <%= link_to root_path, aria: { label: "StuttgartLIVE Startseite" } do %>
-        <%= image_tag "stuttgart-live-textlogo.svg", alt: "StuttgartLIVE", width: 180 %>
+      <%= link_to root_path, class: "newsletter-consent-brand", aria: { label: "Stuttgart Live Startseite" } do %>
+        <span class="newsletter-consent-brand-city">STUTTGART</span>
+        <span class="newsletter-consent-brand-live">LIVE</span>
       <% end %>
       <%= link_to "Zur Startseite", root_path %>
     </header>

@@ -112,6 +112,7 @@ Rails.application.routes.draw do
 
   resources :events, only: [ :index, :show ], module: :public, param: :slug do
     get :homepage_lane, on: :collection
+    get :homepage_section, on: :collection
     get :saved_lane, on: :collection
     get :search_overlay, on: :collection
     get :related, on: :member

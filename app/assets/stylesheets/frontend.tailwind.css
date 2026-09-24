@@ -18,9 +18,23 @@
   gap: 1rem;
 }
 
-.newsletter-consent-header img {
-  width: 11.25rem;
-  height: auto;
+.newsletter-consent-brand {
+  display: inline-grid;
+  gap: 0;
+  color: #0a2324;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: 2.15rem;
+  line-height: 0.82;
+  letter-spacing: 0;
+  text-decoration: none !important;
+}
+
+.newsletter-consent-brand-city {
+  font-weight: 500;
+}
+
+.newsletter-consent-brand-live {
+  font-weight: 300;
 }
 
 .newsletter-consent-main {
@@ -13637,6 +13651,8 @@ body.page-public-design-preview {
   --preview-filter-height: 2.75rem;
   --preview-topbar-height: 4.05rem;
   --preview-shell-edge: max(0.75rem, calc((100vw - 80rem) / 2));
+  --preview-content-max-width: 100rem;
+  --preview-highlight-max-width: 132rem;
   --preview-header-search-width: min(26rem, calc(100vw - (2 * var(--preview-shell-edge))));
   background: #fbfaf7;
 }
@@ -15639,11 +15655,15 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 }
 
 .design-preview-feature-slider {
+  --design-preview-feature-radius: 0.75rem;
   position: relative;
+  isolation: isolate;
   min-width: 0;
   min-height: 21rem;
   overflow: hidden;
-  border-radius: 0.5rem;
+  border-radius: var(--design-preview-feature-radius);
+  background: #080909;
+  clip-path: inset(0 round var(--design-preview-feature-radius));
 }
 
 .design-preview-feature-nav {
@@ -15718,13 +15738,29 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 
 .design-preview-feature-slide {
   flex: 0 0 100%;
+  width: 100%;
   min-width: 100%;
+  overflow: hidden;
+  border-radius: var(--design-preview-feature-radius);
+  background: #080909;
+  transform: translateZ(0);
 }
 
 .design-preview-feature-slide,
 .design-preview-feature-slide .design-preview-card,
 .design-preview-feature-slide .design-preview-card-link {
   height: 100%;
+}
+
+.design-preview-feature-slider .design-preview-feature-slide .design-preview-card,
+.design-preview-feature-slider .design-preview-feature-slide .design-preview-card-link,
+.design-preview-feature-slider .design-preview-feature-slide .design-preview-card-media,
+.design-preview-feature-slider .design-preview-feature-slide .design-preview-card-image {
+  border-radius: var(--design-preview-feature-radius);
+}
+
+.design-preview-feature-slider .design-preview-feature-slide .design-preview-card-link {
+  border: 0;
 }
 
 .design-preview-feature-slider .design-preview-card--feature .design-preview-card-media {
@@ -17791,6 +17827,25 @@ body.page-public-design-preview .design-preview-header-toolbar .design-preview-s
   display: none;
 }
 
+.all-stuttgart-event-rows {
+  display: contents;
+}
+
+.design-preview-deferred-section {
+  min-height: 18rem;
+}
+
+.design-preview-deferred-section.is-loaded {
+  min-height: 0;
+}
+
+.design-preview-deferred-placeholder {
+  width: 100%;
+  min-height: 18rem;
+  border-radius: 0.5rem;
+  background: rgba(8, 9, 9, 0.04);
+}
+
 .all-stuttgart-event-row {
   display: grid;
   grid-template-columns: 3.2rem minmax(0, 1fr) max-content;
@@ -19282,14 +19337,14 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview {
-    width: min(100% - 5rem, 100rem);
+    width: min(100% - 5rem, var(--preview-content-max-width));
   }
 
   body.page-public-startpage .design-preview-hero,
   .design-preview-highlights {
     position: relative;
     left: 50%;
-    width: min(calc(100vw - 5rem), 140rem);
+    width: min(calc(100vw - 5rem), var(--preview-highlight-max-width));
     max-width: none;
     transform: translateX(-50%);
   }
@@ -19490,6 +19545,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-feature-slider {
+    --design-preview-feature-radius: 0;
     position: relative;
     left: 50%;
     width: 100vw;
@@ -19497,6 +19553,8 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     min-height: 0;
     margin-left: -50vw;
     border-radius: 0;
+    background: transparent;
+    clip-path: inset(0);
   }
 
   .design-preview-feature-slider .design-preview-feature-slide,

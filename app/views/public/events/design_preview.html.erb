@@ -27,13 +27,11 @@
 <% homepage_highlight_video_event = highlight_events.find { |event| event.highlight_video_file.attached? } %>
 <% design_preview_video_slide_enabled = false %>
 <% feature_slide_count = (feature_promotion_banners.presence&.size || [ highlights.size, 6 ].min) + (design_preview_video_slide_enabled ? 1 : 0) %>
-<% lane_pool = Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) } %>
 <% highlight_tiles = public_design_highlight_tiles(highlight_events, capacity: 8) %>
 <% today_events = Array(@home_tagestipp_events) %>
 <% if @browse_state.event_date.present? %>
   <% today_events = today_events.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
 <% end %>
-<% under_30_events = Array(@home_under_30_events) %>
 <% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: highlights) %>
 <% all_events_path = @home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path %>
 <% genre_paths = genre_lanes.map(&:public_path) %>
@@ -42,17 +40,7 @@
 <% news_active = active_path == news_index_path || active_path.start_with?("#{news_index_path}/") %>
 <% genres_active = genre_paths.include?(active_path) %>
 <% promotion_banner_events = promotion_banners.filter_map { |banner| banner.fetch(:record) if banner.fetch(:type) == :event } %>
-<% stuttgart_mix_pool = (lane_pool + highlights + today_events + under_30_events + promotion_banner_events).compact.uniq(&:id) %>
-<% if @browse_state.event_date.present? %>
-  <% stuttgart_mix_pool = stuttgart_mix_pool.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
-<% end %>
-<% stuttgart_mix_events = Array(@design_preview_mix_events).presence || stuttgart_mix_pool %>
-<% stuttgart_mix_events = stuttgart_mix_pool if stuttgart_mix_events.blank? %>
-<% if @browse_state.event_date.present? %>
-  <% stuttgart_mix_events = stuttgart_mix_events.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
-<% end %>
-<% stuttgart_mix_video_event = stuttgart_mix_events.find { |event| event.highlight_landscape_video_file.attached? } %>
-<% design_preview_series_events = (highlight_events + promotion_banner_events + highlight_tiles.map(&:event) + today_events + under_30_events + stuttgart_mix_events).compact.uniq(&:id) %>
+<% design_preview_series_events = (highlight_events + promotion_banner_events + highlight_tiles.map(&:event) + today_events).compact.uniq(&:id) %>
 <% design_preview_effective_series_ids = effective_public_event_series_ids(design_preview_series_events) %>
 <% design_preview_series_counts_by_id = @design_preview_series_counts_by_id || {} %>
 <% design_preview_menu_groups = public_design_menu_groups %>
@@ -132,7 +120,8 @@
       </div>
       <div class="design-preview-saved-dropdown"
            data-controller="design-preview-saved-dropdown"
-           data-design-preview-saved-dropdown-share-url-value="<%= saved_events_url %>">
+           data-design-preview-saved-dropdown-share-url-value="<%= saved_events_url %>"
+           data-design-preview-saved-dropdown-url-value="<%= saved_lane_events_path %>">
         <button type="button"
                 class="design-preview-saved-link"
                 aria-label="Gemerkte Events anzeigen"
@@ -160,16 +149,9 @@
             </strong>
             <%= link_to "Alle ansehen", saved_events_path %>
           </div>
-          <ul class="public-search-overlay-list design-preview-saved-list" role="list">
-            <% design_preview_series_events.each do |event| %>
-              <li data-design-preview-saved-dropdown-target="item" data-slug="<%= event.slug %>" hidden>
-                <%= render "design_preview_saved_event",
-                           event: event,
-                           browse_state: @browse_state,
-                           strict_proxy: strict_proxy %>
-              </li>
-            <% end %>
-          </ul>
+          <ul class="public-search-overlay-list design-preview-saved-list"
+              role="list"
+              data-design-preview-saved-dropdown-target="list"></ul>
           <div class="public-search-overlay-empty design-preview-saved-empty"
                data-design-preview-saved-dropdown-target="empty">
             <h2>Noch nichts gemerkt</h2>
@@ -466,10 +448,12 @@
 
   <%= render "design_preview_tagestipp_lane",
              events: today_events,
+             next_cursor: @home_tagestipp_next_cursor,
              browse_state: @browse_state,
              strict_proxy: strict_proxy,
              effective_series_ids: design_preview_effective_series_ids,
              series_counts_by_id: design_preview_series_counts_by_id,
+             lazy_url: homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter),
              link_path: (@home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path),
              link_label: "Alles aus Stuttgart" %>
 
@@ -478,6 +462,7 @@
              aria-labelledby="design-preview-genre-lane-<%= lane.group.slug %>"
              data-controller="homepage-lane"
              data-homepage-lane-card-mode-value="design_cards"
+             data-homepage-lane-per-page-value="<%= Public::EventsController::HOME_DESIGN_LANE_LIMIT %>"
              data-homepage-lane-lane-value="genre:<%= lane.group.slug %>"
              data-homepage-lane-url-value="<%= homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>"
              <% if lane.next_cursor.present? %>data-homepage-lane-cursor-value="<%= lane.next_cursor %>"<% end %>
@@ -601,92 +586,14 @@
     </section>
   <% end %>
 
-  <% if stuttgart_mix_events.any? %>
-    <section class="design-preview-section design-preview-lane design-preview-section--summer-party"
-             aria-labelledby="design-preview-summer-party-title"
-             data-controller="highlights-slider">
-      <div class="design-preview-section-header">
-        <h2 id="design-preview-summer-party-title">Stuttgart im Mix</h2>
+  <% if @design_preview_mix_available %>
+    <div class="design-preview-deferred-section"
+         data-controller="deferred-section"
+         data-deferred-section-url-value="<%= homepage_section_events_path(section: "stuttgart_mix", event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>">
+      <div class="design-preview-deferred-section-content" data-deferred-section-target="content">
+        <div class="design-preview-deferred-placeholder" aria-hidden="true"></div>
       </div>
-      <div class="design-preview-lane-viewport">
-        <button type="button"
-                class="design-preview-lane-arrow design-preview-lane-arrow--prev"
-                aria-label="Stuttgart im Mix zurück"
-                data-highlights-slider-target="previousButton"
-                data-action="highlights-slider#previous">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M15 6 9 12l6 6"></path>
-          </svg>
-        </button>
-        <div class="design-preview-card-row" data-highlights-slider-target="track">
-          <article class="design-preview-card design-preview-card--compact design-preview-card--lane-video"
-                   data-controller="video-sound">
-            <% lane_video_source = stuttgart_mix_video_event&.highlight_landscape_video_file&.attached? ? public_media_path(stuttgart_mix_video_event.highlight_landscape_video_file) : asset_path("design_preview/david-garrett-highlight.mp4") %>
-            <% lane_video_poster = stuttgart_mix_video_event.present? ? event_image_source(stuttgart_mix_video_event.event_image, strict_proxy: strict_proxy, size: :banner_mobile) : asset_path("design_preview/david-garrett-highlight-poster.jpg") %>
-            <% lane_video_href = stuttgart_mix_video_event.present? ? public_event_detail_path(stuttgart_mix_video_event, @browse_state) : nil %>
-            <% lane_video_content = capture do %>
-              <span class="design-preview-card-media" aria-hidden="true">
-                <%= video_tag lane_video_source,
-                              poster: lane_video_poster,
-                              autoplay: true,
-                              muted: true,
-                              loop: true,
-                              playsinline: true,
-                              preload: "metadata",
-                              class: "design-preview-card-video",
-                              data: { video_sound_target: "video" } %>
-              </span>
-            <% end %>
-            <% if lane_video_href.present? %>
-              <%= link_to lane_video_href,
-                          class: "design-preview-card-link",
-                          aria: { label: "#{stuttgart_mix_video_event.artist_name} ansehen" } do %>
-                <%= lane_video_content %>
-              <% end %>
-            <% else %>
-              <div class="design-preview-card-link">
-                <%= lane_video_content %>
-              </div>
-            <% end %>
-            <button type="button"
-                    class="homepage-highlight-video-sound-toggle"
-                    data-video-sound-target="button"
-                    data-action="click->video-sound#toggle"
-                    aria-label="Ton einschalten"
-                    aria-pressed="false">
-              <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-muted" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path>
-                <path d="m16.2 9.2 4.1 4.1m0-4.1-4.1 4.1"></path>
-              </svg>
-              <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-on" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                <path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path>
-                <path d="M16 8.4c1 .9 1.6 2.2 1.6 3.6S17 14.7 16 15.6"></path>
-                <path d="M18.4 6.2A7.7 7.7 0 0 1 21 12a7.7 7.7 0 0 1-2.6 5.8"></path>
-              </svg>
-            </button>
-          </article>
-          <% stuttgart_mix_events.each do |event| %>
-            <%= render "design_preview_card",
-                       event: event,
-                       browse_state: @browse_state,
-                       strict_proxy: strict_proxy,
-                       variant: "compact",
-                       category: "Festivals & Partys",
-                       effective_series_ids: design_preview_effective_series_ids,
-                       series_counts_by_id: design_preview_series_counts_by_id %>
-          <% end %>
-        </div>
-        <button type="button"
-                class="design-preview-lane-arrow design-preview-lane-arrow--next"
-                aria-label="Stuttgart im Mix weiter"
-                data-highlights-slider-target="nextButton"
-                data-action="highlights-slider#next">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m9 6 6 6-6 6"></path>
-          </svg>
-        </button>
-      </div>
-    </section>
+    </div>
   <% end %>
 
   <% if content_promotion_banners_by_position[3].present? %>
@@ -698,55 +605,14 @@
     </section>
   <% end %>
 
-  <% if under_30_events.any? %>
-    <section class="design-preview-section design-preview-lane"
-             aria-labelledby="design-preview-under-30-title"
-             data-controller="highlights-slider">
-      <div class="design-preview-section-header">
-        <h2 id="design-preview-under-30-title">
-          <span class="design-preview-heading-desktop">Unter 30€ - Kleine Preise, große Abende</span>
-          <span class="design-preview-heading-mobile">Unter 30€</span>
-        </h2>
-        <%= link_to (@home_under_30_lane&.public_path || under_30_lane_path), class: "design-preview-section-link" do %>
-          Alle anzeigen
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12h13"></path>
-            <path d="m13 6 6 6-6 6"></path>
-          </svg>
-        <% end %>
+  <% if @home_under_30_available %>
+    <div class="design-preview-deferred-section"
+         data-controller="deferred-section"
+         data-deferred-section-url-value="<%= homepage_section_events_path(section: "under_30", event_date: @browse_state.event_date_param, filter: @browse_state.filter) %>">
+      <div class="design-preview-deferred-section-content" data-deferred-section-target="content">
+        <div class="design-preview-deferred-placeholder" aria-hidden="true"></div>
       </div>
-      <div class="design-preview-lane-viewport">
-        <button type="button"
-                class="design-preview-lane-arrow design-preview-lane-arrow--prev"
-                aria-label="Unter 30€ zurück"
-                data-highlights-slider-target="previousButton"
-                data-action="highlights-slider#previous">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M15 6 9 12l6 6"></path>
-          </svg>
-        </button>
-        <div class="design-preview-card-row" data-highlights-slider-target="track">
-          <% under_30_events.each do |event| %>
-            <%= render "design_preview_card",
-                       event: event,
-                       browse_state: @browse_state,
-                       strict_proxy: strict_proxy,
-                       variant: "compact",
-                       effective_series_ids: design_preview_effective_series_ids,
-                       series_counts_by_id: design_preview_series_counts_by_id %>
-          <% end %>
-        </div>
-        <button type="button"
-                class="design-preview-lane-arrow design-preview-lane-arrow--next"
-                aria-label="Unter 30€ weiter"
-                data-highlights-slider-target="nextButton"
-                data-action="highlights-slider#next">
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="m9 6 6 6-6 6"></path>
-          </svg>
-        </button>
-      </div>
-    </section>
+    </div>
   <% end %>
 
   <% if content_promotion_banners_by_position[4].present? %>
