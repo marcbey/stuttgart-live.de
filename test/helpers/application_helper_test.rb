@@ -70,6 +70,13 @@ class ApplicationHelperTest < ActionView::TestCase
     assert base_public_search_icon_rules.any? { |rule| rule.include?("height: 2.5rem;") }
   end
 
+  test "wide homepage highlights stay inside the main desktop content width" do
+    stylesheet = Rails.root.join("app/assets/stylesheets/frontend.tailwind.css").read
+
+    assert_includes stylesheet, "width: min(calc(100vw - 5rem), var(--preview-content-max-width));"
+    refute_includes stylesheet, "width: min(calc(100vw - 5rem), var(--preview-highlight-max-width));"
+  end
+
   test "public search controller keeps aria expanded off the native search input" do
     controller = Rails.root.join("app/javascript/controllers/public_search_controller.js").read
 

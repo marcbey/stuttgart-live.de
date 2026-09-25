@@ -19350,7 +19350,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   .design-preview-highlights {
     position: relative;
     left: 50%;
-    width: min(calc(100vw - 5rem), var(--preview-highlight-max-width));
+    width: min(calc(100vw - 5rem), var(--preview-content-max-width));
     max-width: none;
     transform: translateX(-50%);
   }
