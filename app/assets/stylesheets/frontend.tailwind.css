@@ -21123,6 +21123,11 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   content: "Merken";
 }
 
+.design-detail-preview-action-button.saved-event-button {
+  height: 2.75rem;
+  min-height: 2.75rem;
+}
+
 .design-detail-preview-action-button.saved-event-button.is-saved::after {
   content: "Gemerkt";
 }

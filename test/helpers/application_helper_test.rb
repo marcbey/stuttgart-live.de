@@ -77,6 +77,14 @@ class ApplicationHelperTest < ActionView::TestCase
     refute_includes stylesheet, "width: min(calc(100vw - 5rem), var(--preview-highlight-max-width));"
   end
 
+  test "event detail save action matches the neighboring action button height" do
+    stylesheet = Rails.root.join("app/assets/stylesheets/frontend.tailwind.css").read
+    saved_action_rules = stylesheet[/\.design-detail-preview-action-button\.saved-event-button\s*\{([^}]*)\}/m, 1]
+
+    assert_includes saved_action_rules, "height: 2.75rem;"
+    assert_includes saved_action_rules, "min-height: 2.75rem;"
+  end
+
   test "public search controller keeps aria expanded off the native search input" do
     controller = Rails.root.join("app/javascript/controllers/public_search_controller.js").read
 
