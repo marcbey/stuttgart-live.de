@@ -1,11 +1,21 @@
-<%= render "genre_lane_section",
-           title: "Deine Events",
-           title_url: saved_events_path,
-           events: events,
-           effective_series_ids: effective_public_event_series_ids(events),
-           browse_state: browse_state,
-           header_variant: :genre,
-           header_class: "lane-header--saved-events",
-           hover_lift_cards: true,
-           tone_class: "genre-lane-section--tone-4",
-           list_aria_label: "Listenansicht für Deine Events" %>
+<% effective_series_ids = effective_public_event_series_ids(events) %>
+
+<section class="design-preview-section design-preview-list-section design-preview-lane genre-lane-section genre-lane-section--saved-events">
+  <div class="design-preview-section-header lane-header--saved-events">
+    <%= link_to saved_events_path, class: "design-preview-section-link lane-header-title-link" do %>
+      <h2>Deine Events</h2>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M5 12h13"></path>
+        <path d="m13 6 6 6-6 6"></path>
+      </svg>
+    <% end %>
+  </div>
+
+  <div class="design-preview-card-row">
+    <%= render "design_preview_event_grid",
+               events: events,
+               browse_state: browse_state,
+               effective_series_ids: effective_series_ids,
+               show_card_kicker: false %>
+  </div>
+</section>

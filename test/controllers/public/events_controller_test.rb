@@ -6399,11 +6399,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
                   count: 1
 
     document = Nokogiri::HTML.fragment(response.body)
-    rendered_names = document.css(".genre-lane-card-name").map(&:text)
+    rendered_names = document.css(".design-preview-card-title").map(&:text)
 
     assert_equal [ earlier_event.artist_name, later_event.artist_name ], rendered_names
     assert_not_includes rendered_names, unpublished_event.artist_name
     assert_not_includes rendered_names, past_event.artist_name
+    assert_empty document.css(".event-sold-out-ribbon")
+    assert_empty document.css(".genre-lane-card-ticket-overlay")
+    assert_equal rendered_names.size, document.css(".saved-event-button.design-preview-card-save").size
   end
 
   test "saved lane renders more than the homepage genre lane default limit" do
@@ -6420,7 +6423,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
 
     document = Nokogiri::HTML.fragment(response.body)
-    rendered_names = document.css(".genre-lane-card-name").map(&:text)
+    rendered_names = document.css(".design-preview-card-title").map(&:text)
 
     assert_equal saved_events.map(&:artist_name), rendered_names
   end
