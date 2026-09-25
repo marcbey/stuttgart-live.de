@@ -80,9 +80,15 @@ class ApplicationHelperTest < ActionView::TestCase
   test "event detail save action matches the neighboring action button height" do
     stylesheet = Rails.root.join("app/assets/stylesheets/frontend.tailwind.css").read
     saved_action_rules = stylesheet[/\.design-detail-preview-action-button\.saved-event-button\s*\{([^}]*)\}/m, 1]
+    action_button_rules = stylesheet[/\.design-detail-preview-action-button\s*\{([^}]*)\}/m, 1]
+    action_row_rules = stylesheet[/\.design-detail-preview-actions\s*\{([^}]*)\}/m, 1]
+    share_wrapper_rules = stylesheet[/\.design-detail-preview-actions > \.event-share\s*\{([^}]*)\}/m, 1]
 
     assert_includes saved_action_rules, "height: 2.75rem;"
     assert_includes saved_action_rules, "min-height: 2.75rem;"
+    assert_includes action_button_rules, "margin-top: 0;"
+    assert_includes action_row_rules, "align-items: start;"
+    assert_includes share_wrapper_rules, "height: 2.75rem;"
   end
 
   test "public search controller keeps aria expanded off the native search input" do
