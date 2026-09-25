@@ -59,30 +59,7 @@
     <% end %>
     <% javascript_asset = controller_path.start_with?("backend/") ? "backend" : "public" %>
     <% if compiled_asset_exists?("#{javascript_asset}.js") %>
-      <% if javascript_asset == "public" && controller_path == "public/events" && action_name == "index" %>
-        <script>
-          window.addEventListener("load", function() {
-            window.setTimeout(function() {
-              var loadPublicJavascript = function() {
-                var script = document.createElement("script")
-                script.src = "<%= asset_path("#{javascript_asset}.js") %>"
-                script.type = "module"
-                script.dataset.turboTrack = "reload"
-                script.fetchPriority = "low"
-                document.head.appendChild(script)
-              }
-              if ("requestIdleCallback" in window) {
-                window.requestIdleCallback(loadPublicJavascript, { timeout: 1200 })
-              } else {
-                window.setTimeout(loadPublicJavascript, 1)
-              }
-            }, 800)
-          }, { once: true })
-        </script>
-      <% end %>
-      <% unless javascript_asset == "public" && controller_path == "public/events" && action_name == "index" %>
-        <%= javascript_include_tag javascript_asset, "data-turbo-track": "reload", type: "module" %>
-      <% end %>
+      <%= javascript_include_tag javascript_asset, "data-turbo-track": "reload", type: "module" %>
     <% end %>
     <% if defined?(::Sentry) && ::Sentry.respond_to?(:get_trace_propagation_meta) %>
       <%= ::Sentry.get_trace_propagation_meta.to_s.html_safe %>

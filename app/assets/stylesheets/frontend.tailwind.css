@@ -19584,8 +19584,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-feature-slider .design-preview-feature-track {
+    position: relative;
+    top: -1.25rem;
     width: 100%;
-    height: 100%;
+    height: calc(100% + 1.25rem);
     min-height: 0;
   }
 
@@ -19643,8 +19645,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     min-height: 0;
   }
 
-  .design-preview-feature-slider .design-preview-banner-card .design-preview-card-image--contain {
-    object-fit: contain;
+  .design-preview-feature-slider .design-preview-banner-card .design-preview-card-image {
+    height: 100%;
+    margin-top: 0;
+    object-fit: cover;
   }
 
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy,
@@ -19696,7 +19700,13 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-feature-slider .design-preview-banner-card .design-preview-card-cta {
-    margin-top: 0.5rem;
+    position: relative;
+    top: -1.25rem;
+    width: fit-content;
+    min-width: min(13.5rem, calc(100vw - 2.5rem));
+    justify-self: start;
+    margin-top: 1.75rem;
+    margin-bottom: 1.25rem;
     border-color: #fff;
     background: #fff;
     color: #080909;
@@ -19779,22 +19789,24 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-feature-slider .design-preview-card-copy {
+    bottom: 1.25rem;
     gap: 0.35rem;
     padding: 1rem;
   }
 
-  .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
+  .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy,
+  .design-preview-feature-slider .design-preview-banner-card.design-preview-card--has-actions .design-preview-card-copy {
     gap: 0.24rem;
-    bottom: clamp(7.5rem, 20vw, 8.5rem);
-    padding: 1rem var(--preview-shell-edge) 1.5rem;
+    inset: auto 0 0;
+    padding: 1rem 1.25rem 0;
   }
 
   .design-preview-feature-slider .design-preview-card--feature:not(.design-preview-banner-card) .design-preview-card-copy {
-    bottom: clamp(3.5rem, 11vw, 4.3rem);
+    bottom: 1.25rem;
   }
 
   body.page-public-startpage .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
-    padding-left: calc(var(--preview-shell-edge) + var(--preview-startpage-mobile-align-nudge));
+    padding-left: 1.25rem;
   }
 
   .design-preview-feature-slider .design-preview-card-title {
@@ -22407,7 +22419,7 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
     max-width: 12.6ch;
     color: #fff;
     font-size: clamp(2rem, 10.9vw, 2.95rem);
-    font-weight: 700;
+    font-weight: 400;
     line-height: 1.06;
     text-transform: uppercase;
   }

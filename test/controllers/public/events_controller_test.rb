@@ -88,12 +88,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".design-preview-footer-privacy-button[data-action='click->consent#openSettings'][aria-label='Datenschutzeinstellungen öffnen']", count: 1
     assert_not_includes response.body, "fonts.googleapis.com"
     assert_not_includes response.body, "fonts.gstatic.com"
-    assert_select "script[type='module'][src*='/assets/public']", count: 0
+    assert_select "script[type='module'][src*='/assets/public']", count: 1
     assert_select "script[type='module'][src*='/assets/backend']", count: 0
     assert_select "script[type='module'][src*='/assets/application']", count: 0
-    assert_includes response.body, "loadPublicJavascript"
     assert_includes response.body, ActionController::Base.helpers.asset_path("public.js")
-    assert_includes response.body, "requestIdleCallback"
+    assert_not_includes response.body, "requestIdleCallback"
     assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='oswald-700']", count: 1
     assert_select "link[rel='preload'][as='font'][href*='oswald-300']", count: 1
