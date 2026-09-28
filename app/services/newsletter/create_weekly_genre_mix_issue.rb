@@ -39,7 +39,11 @@ module Newsletter
     attr_reader :user, :today, :items_per_genre, :selected_event_ids, :selected_series_keys
 
     def draft_title
-      "Wochenmix Test KW #{today.cweek}/#{today.cwyear} #{Time.current.strftime('%d.%m.%Y %H:%M')}"
+      "#{genre_mix_name} KW #{today.cweek}/#{today.cwyear} #{Time.current.strftime('%d.%m.%Y %H:%M')}"
+    end
+
+    def genre_mix_name
+      items_per_genre == 3 ? "Genre small" : "Genre large"
     end
 
     def default_intro

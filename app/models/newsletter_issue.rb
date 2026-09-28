@@ -1,6 +1,6 @@
 class NewsletterIssue < ApplicationRecord
   STATUSES = %w[draft synced tested sending sent failed].freeze
-  LAYOUT_VARIANTS = %w[standard genre_weekly_mix].freeze
+  LAYOUT_VARIANTS = %w[standard genre_weekly_mix mixed_weekly_mix].freeze
 
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :sent_by, class_name: "User", optional: true
@@ -36,6 +36,10 @@ class NewsletterIssue < ApplicationRecord
     layout_variant == "genre_weekly_mix"
   end
 
+  def mixed_weekly_mix?
+    layout_variant == "mixed_weekly_mix"
+  end
+
   def team_tip?
     team_tip_name.present? && team_tip_text.present?
   end
@@ -50,6 +54,12 @@ class NewsletterIssue < ApplicationRecord
 
   def display_jump_menu_title
     jump_menu_title.presence || "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
+  end
+
+  def backend_list_title
+    return title unless genre_weekly_mix? || mixed_weekly_mix?
+
+    [ weekly_mix_variant_name, title[/KW .+\z/] ].compact.join(" ")
   end
 
   def grouped_items_for_backend
@@ -110,6 +120,14 @@ class NewsletterIssue < ApplicationRecord
     return "item-#{item.id}" unless item.item.is_a?(Event)
 
     item.item.event_series_id.presence || "event-#{item.item.id}"
+  end
+
+  def weekly_mix_variant_name
+    return "Wochenmix" if mixed_weekly_mix?
+    return "Genre large" if title.start_with?("Genre large")
+    return "Genre small" if title.start_with?("Genre small")
+
+    grouped_items_for_backend.any? { |group| group.fetch(:items).size > 3 } ? "Genre large" : "Genre small"
   end
 
   def mark_mailjet_synced!(draft_id:)

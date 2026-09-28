@@ -1,6 +1,7 @@
 module Backend
   class NewsletterIssuesController < BaseController
     AVAILABLE_EVENTS_LIMIT = 100
+    WEEKLY_GENRE_MIX_ITEM_OPTIONS = [ 3, 6 ].freeze
 
     before_action :set_issue, only: %i[
       show edit update destroy sync_mailjet send_test send_test_list send_now sort_by_date populate_from_interest
@@ -31,7 +32,14 @@ module Backend
     end
 
     def create_weekly_genre_mix
-      issue = Newsletter::CreateWeeklyGenreMixIssue.call(user: current_user)
+      issue = if params[:variant] == "mixed"
+        Newsletter::CreateMixedWeeklyMixIssue.call(user: current_user)
+      else
+        Newsletter::CreateWeeklyGenreMixIssue.call(
+          user: current_user,
+          items_per_genre: weekly_genre_mix_items_per_genre
+        )
+      end
 
       redirect_to backend_newsletter_path(issue),
                   notice: "Wochenmix-Draft wurde mit #{issue.newsletter_issue_items.count} Events erstellt."
@@ -132,6 +140,13 @@ module Backend
       return if selected_id.blank?
 
       @issues.find { |issue| issue.id == selected_id.to_i }
+    end
+
+    def weekly_genre_mix_items_per_genre
+      value = params[:items_per_genre].to_i
+      return value if WEEKLY_GENRE_MIX_ITEM_OPTIONS.include?(value)
+
+      Newsletter::CreateWeeklyGenreMixIssue::ITEMS_PER_GENRE
     end
 
     def issue_params

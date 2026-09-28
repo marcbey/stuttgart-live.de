@@ -12,6 +12,37 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_url
   end
 
+  test "index shows the three weekly mix variants without issue counter" do
+    sign_in_as(@editor)
+    create_issue
+
+    get backend_newsletters_url
+
+    assert_response :success
+    assert_not_includes response.body, "status-chip status-chip-active"
+    assert_includes response.body, ">Wochenmix</span>"
+    assert_includes response.body, "(10 Events im Mix)"
+    assert_includes response.body, ">Genre small</span>"
+    assert_includes response.body, "(3 Events pro Genre)"
+    assert_includes response.body, ">Genre large</span>"
+    assert_includes response.body, "(6 Events pro Genre)"
+    assert_includes response.body, "newsletter-issue-list-delete"
+    assert_includes response.body, 'data-turbo-method="delete"'
+    assert_operator response.body.index(">Wochenmix</span>"), :<, response.body.index(">Genre small</span>")
+    assert_operator response.body.index(">Genre small</span>"), :<, response.body.index(">Genre large</span>")
+  end
+
+  test "editor can delete newsletter issue from the list" do
+    sign_in_as(@editor)
+    issue = create_issue
+
+    assert_difference("NewsletterIssue.count", -1) do
+      delete backend_newsletter_url(issue)
+    end
+
+    assert_redirected_to backend_newsletters_url
+  end
+
   test "editor can create newsletter issue" do
     sign_in_as(@editor)
 
@@ -215,6 +246,62 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     assert_predicate issue, :genre_weekly_mix?
     assert_equal @editor, issue.created_by
     assert_equal event.id, issue.newsletter_issue_items.first.item_id
+  end
+
+  test "editor can create compact weekly genre mix draft" do
+    sign_in_as(@editor)
+
+    4.times do |index|
+      event = Event.create!(
+        slug: "compact-weekly-mix-#{index}",
+        source_fingerprint: "test::compact-weekly-mix-#{index}",
+        title: "Compact Wochenmix #{index}",
+        artist_name: "Compact Artist #{index}",
+        normalized_artist_name: "compact-artist-#{index}",
+        start_at: (index + 1).days.from_now,
+        venue_record: venues(:lka_longhorn),
+        city: "Stuttgart",
+        event_info: "Infos",
+        status: "published",
+        published_at: 1.day.ago,
+        published_by: @editor,
+        completeness_score: 100,
+        completeness_flags: [],
+        primary_source: "test",
+        auto_published: false
+      )
+      event.genres << genres(:rock)
+    end
+
+    assert_difference("NewsletterIssue.count", 1) do
+      post create_weekly_genre_mix_backend_newsletters_url, params: { items_per_genre: 3 }
+    end
+
+    issue = NewsletterIssue.order(:created_at).last
+    rock_items = issue.newsletter_issue_items.select do |item|
+      item.item.genres.include?(genres(:rock))
+    end
+
+    assert_redirected_to backend_newsletter_url(issue)
+    assert_equal 3, rock_items.size
+  end
+
+  test "editor can create mixed weekly mix draft" do
+    sign_in_as(@editor)
+    event = events(:published_one)
+    event.genres << genres(:pop)
+    event.update!(start_at: 1.week.from_now, highlighted: true)
+
+    assert_difference("NewsletterIssue.count", 1) do
+      post create_weekly_genre_mix_backend_newsletters_url, params: { variant: "mixed" }
+    end
+
+    issue = NewsletterIssue.order(:created_at).last
+
+    assert_redirected_to backend_newsletter_url(issue)
+    assert_predicate issue, :mixed_weekly_mix?
+    assert_equal @editor, issue.created_by
+    assert_operator issue.newsletter_issue_items.size, :<=, 10
   end
 
   test "sync mailjet reports success" do

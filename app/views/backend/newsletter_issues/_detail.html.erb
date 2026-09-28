@@ -8,6 +8,8 @@
       <% end %>
       <% if issue.genre_weekly_mix? %>
         <p class="backend-muted">Layout: Wochenmix nach Header-Genres mit Sprungmenü</p>
+      <% elsif issue.mixed_weekly_mix? %>
+        <p class="backend-muted">Layout: Wochenmix mit 10 gemischten Events</p>
       <% end %>
     </div>
   </div>

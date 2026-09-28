@@ -22,6 +22,7 @@ class Newsletter::CreateWeeklyGenreMixIssueTest < ActiveSupport::TestCase
     issue = Newsletter::CreateWeeklyGenreMixIssue.call(user: users(:one), today: Time.zone.today)
 
     assert_predicate issue, :genre_weekly_mix?
+    assert issue.title.start_with?("Genre large KW ")
     assert_equal users(:one), issue.created_by
     assert_equal "Dein Stuttgart Live Wochenmix", issue.subject
     assert_equal "Für was interessierst du dich? Spring hinein ins Vergnügen :-)", issue.jump_menu_title
@@ -55,6 +56,24 @@ class Newsletter::CreateWeeklyGenreMixIssueTest < ActiveSupport::TestCase
     rock_items = issue.newsletter_issue_items.select { |item| item.item.genres.include?(genres(:rock)) }
 
     assert_equal 6, rock_items.size
+  end
+
+  test "supports limiting generated draft to three events per genre" do
+    4.times do |index|
+      create_published_event(
+        slug: "newsletter-jazz-#{index}",
+        title: "Jazz #{index}",
+        artist_name: "Jazz Artist #{index}",
+        start_at: (index + 1).days.from_now,
+        genre: genres(:jazz)
+      )
+    end
+
+    issue = Newsletter::CreateWeeklyGenreMixIssue.call(user: users(:one), today: Time.zone.today, items_per_genre: 3)
+    jazz_items = issue.newsletter_issue_items.select { |item| item.item.genres.include?(genres(:jazz)) }
+
+    assert_equal 3, jazz_items.size
+    assert issue.title.start_with?("Genre small KW ")
   end
 
   test "deduplicates event series to the next upcoming date" do

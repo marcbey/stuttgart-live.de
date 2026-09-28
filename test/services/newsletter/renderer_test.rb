@@ -159,8 +159,32 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
 
     rendered = Newsletter::Renderer.call(issue)
 
+    assert_includes rendered.html, "newsletter/logo-sl"
     assert_includes rendered.html, "DEIN WOCHENMIX"
     assert_includes rendered.html, "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
+  end
+
+  test "renders mixed weekly mix with one heading and genre labels" do
+    event = create_published_event(
+      slug: "newsletter-mixed-pop",
+      title: "Mixed Pop",
+      artist_name: "Mixed Pop Artist",
+      start_at: 1.week.from_now,
+      genre: genres(:pop)
+    )
+    issue = NewsletterIssue.create!(
+      title: "Wochenmix gemischt",
+      subject: "Dein Stuttgart Live Wochenmix",
+      layout_variant: "mixed_weekly_mix",
+      created_by: users(:one)
+    )
+    issue.newsletter_issue_items.create!(item: event, position: 1, section_key: genres(:pop).slug)
+
+    rendered = Newsletter::Renderer.call(issue)
+
+    assert_includes rendered.html, "DEIN WOCHENMIX"
+    assert_includes rendered.html, "Pop ·"
+    assert_not_includes rendered.html, '<nav class="newsletter-genre-jump-nav"'
   end
 
   test "uses configured newsletter public url for media" do

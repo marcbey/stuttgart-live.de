@@ -303,7 +303,7 @@ module Newsletter
     end
 
     def opening_html
-      return weekly_mix_header_html if issue.genre_weekly_mix?
+      return weekly_mix_header_html if issue.genre_weekly_mix? || issue.mixed_weekly_mix?
 
       <<~HTML
         <div style="padding:24px 24px 0;">
@@ -458,11 +458,22 @@ module Newsletter
 
     def items_html
       return genre_weekly_mix_items_html if issue.genre_weekly_mix?
+      return mixed_weekly_mix_items_html if issue.mixed_weekly_mix?
 
       [
         team_tip_html,
         issue.newsletter_issue_items.map { |item| item_html(item) }.join("\n")
       ].join("\n")
+    end
+
+    def mixed_weekly_mix_items_html
+      <<~HTML
+        #{team_tip_html}
+        <section style="padding-top:18px;">
+          <h2 style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">DEIN WOCHENMIX</h2>
+          #{issue.newsletter_issue_items.map { |item| item_html(item) }.join("\n")}
+        </section>
+      HTML
     end
 
     def genre_weekly_mix_items_html
@@ -926,7 +937,10 @@ module Newsletter
     end
 
     def item_label(item)
-      item.item.is_a?(Event) ? event_label(item.item) : "News"
+      return "News" unless item.item.is_a?(Event)
+      return event_label(item.item) unless issue.mixed_weekly_mix?
+
+      [ header_group_for(item)&.label, event_label(item.item) ].compact_blank.join(" · ")
     end
 
     def genre_weekly_mix_news_items
