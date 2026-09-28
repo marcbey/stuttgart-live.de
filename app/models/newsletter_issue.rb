@@ -5,6 +5,7 @@ class NewsletterIssue < ApplicationRecord
   belongs_to :created_by, class_name: "User", optional: true
   belongs_to :sent_by, class_name: "User", optional: true
   belongs_to :newsletter_interest, optional: true
+  belongs_to :team_tip_event, class_name: "Event", optional: true
   has_many :newsletter_issue_items, -> { order(:position, :id) }, dependent: :destroy, inverse_of: :newsletter_issue
   has_many :events, through: :newsletter_issue_items, source: :item, source_type: "Event"
   has_many :blog_posts, through: :newsletter_issue_items, source: :item, source_type: "BlogPost"

@@ -160,6 +160,7 @@ module Backend
         :team_tip_role,
         :team_tip_image_url,
         :team_tip_text,
+        :team_tip_event_id,
         newsletter_issue_items_attributes: [
           :id,
           :position,

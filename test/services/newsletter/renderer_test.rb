@@ -172,6 +172,14 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
       start_at: 1.week.from_now,
       genre: genres(:pop)
     )
+    event.import_event_images.create!(
+      source: "easyticket",
+      image_type: "image_url",
+      image_url: "https://img.example.test/newsletter-mixed-pop-1200x800.jpg",
+      role: "cover",
+      aspect_hint: "landscape",
+      position: 0
+    )
     issue = NewsletterIssue.create!(
       title: "Wochenmix gemischt",
       subject: "Dein Stuttgart Live Wochenmix",
@@ -183,7 +191,18 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     rendered = Newsletter::Renderer.call(issue)
 
     assert_includes rendered.html, "DEIN WOCHENMIX"
-    assert_includes rendered.html, "Pop ·"
+    assert_includes rendered.html, "newsletter-item-genre"
+    assert_includes rendered.html, "background:#d9f5f2"
+    assert_match(/newsletter-item-genre[^>]*>Pop<\/span>\s*<span class="newsletter-item-date"/, rendered.html)
+    assert_not_includes rendered.html, "Pop ·"
+    assert_equal 1, rendered.html.scan('class="newsletter-mobile-item-row"').length
+    assert_includes rendered.html, 'class="newsletter-item-desktop-row newsletter-mixed-item-desktop-row"'
+    assert_includes rendered.html, ".newsletter-mixed-item-desktop-row"
+    assert_includes rendered.html, "display: none !important"
+    assert_includes rendered.html, "newsletter-mobile-image"
+    assert_includes rendered.html, "newsletter-mobile-title"
+    assert_match(/class="newsletter-item-image"[^>]+border-radius:8px/, rendered.html)
+    assert_match(/class="newsletter-mobile-image"[^>]+border-radius:8px/, rendered.html)
     assert_not_includes rendered.html, '<nav class="newsletter-genre-jump-nav"'
   end
 
@@ -216,6 +235,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
       team_tip_name: "Sarah",
       team_tip_role: "Marketing",
       team_tip_text: "Sarah empfiehlt diese Woche besondere Konzertabende.",
+      team_tip_event: event,
       created_by: users(:one)
     )
     issue.newsletter_issue_items.create!(item: event, position: 1, section_key: genres(:pop).slug)
@@ -229,10 +249,16 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_not_includes rendered.html, "Sarahs heißer Tipp"
     assert_not_includes rendered.html, ">Wochentipp</p>"
     assert_includes rendered.html, "newsletter/team/sarah"
+    assert_includes rendered.html, 'class="newsletter-team-tip-mobile-avatar-wrap" style="padding-bottom:12px;text-align:left;"'
     assert_includes rendered.html, "border-radius:14px"
+    assert_includes rendered.html, "background:#f0faf9"
     assert_includes rendered.html, "&#8220;"
     assert_not_includes rendered.html, "&#8221;"
     assert_includes rendered.html, "Sarah empfiehlt diese Woche"
+    assert_includes rendered.html, ">Zum Event</a>"
+    assert_includes rendered.html, "border:1px solid #111;color:#102223"
+    assert_includes rendered.html, "/events/#{event.slug}"
+    assert_includes rendered.text, "Zum Event: https://example.com/events/#{event.slug}"
   end
 
   test "renders weekly mix news after team tip and before genre sections" do

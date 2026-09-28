@@ -58,6 +58,16 @@
         <span>Tipp-Text</span>
         <%= form.text_area :team_tip_text, class: "form-input", rows: 5, placeholder: "Ca. 5 Zeilen Wochentipp" %>
       </label>
+      <label class="form-field form-field-full">
+        <span>Verlinktes Event</span>
+        <%= form.select :team_tip_event_id,
+                        options_for_select(
+                          available_events.map { |event| [ newsletter_event_option_label(event), event.id ] },
+                          issue.team_tip_event_id
+                        ),
+                        { include_blank: "Kein Event verlinken" },
+                        class: "form-input" %>
+      </label>
     </div>
   </section>
 

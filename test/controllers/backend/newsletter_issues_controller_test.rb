@@ -54,7 +54,8 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
           jump_menu_title: "Wähle dein Genre",
           intro: "Hallo Stuttgart",
           team_tip_profile_key: "sarah-sandner",
-          team_tip_text: "Sarah empfiehlt diese Woche kleine Shows."
+          team_tip_text: "Sarah empfiehlt diese Woche kleine Shows.",
+          team_tip_event_id: events(:published_one).id
         }
       }
     end
@@ -65,6 +66,27 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Wähle dein Genre", issue.jump_menu_title
     assert_equal "Sarah", issue.team_tip_name
     assert_includes issue.team_tip_text, "Sarah empfiehlt"
+    assert_equal events(:published_one), issue.team_tip_event
+  end
+
+  test "editor can select a linked event for the personal tip" do
+    sign_in_as(@editor)
+    issue = create_issue
+    event = events(:published_one)
+
+    patch backend_newsletter_url(issue), params: {
+      newsletter_issue: {
+        title: issue.title,
+        subject: issue.subject,
+        team_tip_name: "Sarah",
+        team_tip_text: "Mein Tipp für diese Woche.",
+        team_tip_event_id: event.id
+      }
+    }
+
+    assert_redirected_to backend_newsletter_url(issue)
+    assert_equal event, issue.reload.team_tip_event
+    assert_empty issue.newsletter_issue_items
   end
 
   test "editor can add event and see preview" do

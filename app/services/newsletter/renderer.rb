@@ -79,7 +79,8 @@ module Newsletter
                 .newsletter-item-spacer,
                 .newsletter-item-content,
                 .newsletter-card-column,
-                .newsletter-card-row {
+                .newsletter-card-row,
+                .newsletter-item-no-image-desktop {
                   display: none !important;
                 }
 
@@ -205,6 +206,7 @@ module Newsletter
 
                 .newsletter-team-tip-mobile-avatar-wrap {
                   padding-bottom: 12px !important;
+                  text-align: left !important;
                 }
 
                 .newsletter-jump-title {
@@ -269,6 +271,10 @@ module Newsletter
                   max-width: 100% !important;
                   height: auto !important;
                 }
+
+                .newsletter-mixed-item-desktop-row {
+                  display: none !important;
+                }
               }
             </style>
           </head>
@@ -298,7 +304,7 @@ module Newsletter
     end
 
     def render_text
-      parts = [ "STUTTGART LIVE", issue.subject, issue.intro.to_s.strip.presence, text_items, footer_text ]
+      parts = [ "STUTTGART LIVE", issue.subject, issue.intro.to_s.strip.presence, team_tip_text, text_items, footer_text ]
       parts.compact.join("\n\n")
     end
 
@@ -426,7 +432,7 @@ module Newsletter
       return "" unless issue.team_tip?
 
       <<~HTML
-        <aside style="margin:12px 0 24px;padding:18px;border:1px solid #d4d7d4;border-radius:14px;background:#fbfbfa;">
+        <aside style="margin:12px 0 24px;padding:18px;border:1px solid #d4d7d4;border-radius:14px;background:#f0faf9;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
             <tr class="newsletter-team-tip-desktop-row">
               <td width="70" valign="top" style="width:70px;vertical-align:top;">
@@ -440,8 +446,8 @@ module Newsletter
           </tr>
             <!--[if !mso]><!-->
               <tr class="newsletter-team-tip-mobile-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
-                <td colspan="3" align="center" style="padding:0;">
-                  <div class="newsletter-team-tip-mobile-avatar-wrap" style="padding-bottom:12px;">
+                <td colspan="3" align="left" style="padding:0;text-align:left;">
+                  <div class="newsletter-team-tip-mobile-avatar-wrap" style="padding-bottom:12px;text-align:left;">
                     #{team_tip_avatar_html}
                   </div>
                   <div class="newsletter-team-tip-mobile-content" style="text-align:left;">
@@ -663,7 +669,7 @@ module Newsletter
 
     def genre_item_mobile_content_html(item)
       <<~HTML
-        <p class="newsletter-mobile-label" style="margin:0 0 4px;font-size:11px;line-height:1.25;color:#667071;">#{escape(item_label(item))}</p>
+        <p class="newsletter-mobile-label" style="margin:0 0 4px;font-size:11px;line-height:1.25;color:#667071;">#{item_label_html(item)}</p>
         <h3 class="newsletter-mobile-title" style="margin:0 0 5px;font-size:16px;line-height:1.18;font-weight:600;">#{escape(item.display_headline)}</h3>
         <p class="newsletter-mobile-teaser" style="margin:0;font-size:13px;line-height:1.3;color:#263334;">#{escape(item.display_teaser)}</p>
         <div class="newsletter-mobile-button-wrap" style="padding-top:8px;">
@@ -712,7 +718,7 @@ module Newsletter
       <<~HTML
         <article style="padding:12px 0;">
           <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
-            <tr>
+            <tr class="newsletter-item-desktop-row#{" newsletter-mixed-item-desktop-row" if issue.mixed_weekly_mix?}">
               <td class="newsletter-item-media" width="#{IMAGE_WIDTH}" valign="top" style="width:#{IMAGE_WIDTH}px;vertical-align:top;">
                 #{image_html(item, image_url)}
               </td>
@@ -721,25 +727,53 @@ module Newsletter
                 #{item_content_html(item)}
               </td>
             </tr>
+            #{genre_item_mobile_row_html(item) if issue.mixed_weekly_mix?}
           </table>
         </article>
       HTML
     end
 
     def item_html_without_image(item)
+      desktop_class = issue.mixed_weekly_mix? ? "newsletter-item-no-image-desktop" : "newsletter-item-no-image"
+
       <<~HTML
         <article style="padding:12px 0;">
-          #{item_content_html(item)}
+          <div class="#{desktop_class}">
+            #{item_content_html(item)}
+          </div>
+          #{mixed_weekly_mix_mobile_item_table_html(item)}
         </article>
+      HTML
+    end
+
+    def mixed_weekly_mix_mobile_item_table_html(item)
+      return "" unless issue.mixed_weekly_mix?
+
+      <<~HTML
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
+          #{genre_item_mobile_row_html(item)}
+        </table>
       HTML
     end
 
     def item_content_html(item)
       <<~HTML
-        <p style="margin:0 0 5px;font-size:11px;letter-spacing:.06em;color:#667071;">#{escape(item_label(item))}</p>
+        <p style="margin:0 0 7px;font-size:11px;color:#667071;">#{item_label_html(item)}</p>
         <h3 style="margin:0 0 6px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(item.display_headline)}</h3>
         <p style="margin:0 0 10px;font-size:14px;line-height:1.4;color:#263334;">#{escape(item.display_teaser)}</p>
         <a class="newsletter-event-button" href="#{escape(item_url(item))}" style="display:inline-block;border:1px solid #111;color:#102223;font-size:12px;font-weight:bold;text-decoration:none;border-radius:999px;padding:8px 12px;">#{escape(item.display_cta_label)}</a>
+      HTML
+    end
+
+    def item_label_html(item)
+      return escape(item_label(item)) unless issue.mixed_weekly_mix? && item.item.is_a?(Event)
+
+      genre_label = header_group_for(item)&.label
+      return escape(event_label(item.item)) if genre_label.blank?
+
+      <<~HTML.squish
+        <span class="newsletter-item-genre" style="display:inline-block;margin:0 7px 3px 0;padding:3px 7px;border-radius:999px;background:#d9f5f2;color:#245956;font-size:10px;font-weight:bold;line-height:1.2;">#{escape(genre_label)}</span>
+        <span class="newsletter-item-date" style="display:inline-block;line-height:1.3;">#{escape(event_label(item.item))}</span>
       HTML
     end
 
@@ -751,9 +785,11 @@ module Newsletter
     end
 
     def image_html(item, url)
+      border_radius = issue.mixed_weekly_mix? ? "border-radius:8px;" : ""
+
       <<~HTML
         <a href="#{escape(item_url(item))}" style="display:block;text-decoration:none;">
-          <img class="newsletter-item-image" src="#{escape(url)}" width="#{IMAGE_WIDTH}" alt="#{escape(item.display_headline)}" style="display:block;width:#{IMAGE_WIDTH}px;max-width:#{IMAGE_WIDTH}px;height:auto;border:0;">
+          <img class="newsletter-item-image" src="#{escape(url)}" width="#{IMAGE_WIDTH}" alt="#{escape(item.display_headline)}" style="display:block;width:#{IMAGE_WIDTH}px;max-width:#{IMAGE_WIDTH}px;height:auto;border:0;#{border_radius}">
         </a>
       HTML
     end
@@ -780,10 +816,27 @@ module Newsletter
             <td width="26" valign="top" style="width:26px;vertical-align:top;color:#111;font-size:44px;line-height:36px;font-family:Georgia,serif;">&#8220;</td>
             <td valign="top" style="vertical-align:top;">
               <p class="newsletter-team-tip-text" style="margin:0;font-size:14px;line-height:1.42;color:#263334;">#{escape(issue.team_tip_text)}</p>
+              #{team_tip_event_button_html}
             </td>
           </tr>
         </table>
       HTML
+    end
+
+    def team_tip_event_button_html
+      return "" if issue.team_tip_event.blank?
+
+      <<~HTML
+        <a class="newsletter-event-button" href="#{escape(event_url(issue.team_tip_event.slug, **route_url_options))}" style="display:inline-block;margin-top:12px;border:1px solid #111;color:#102223;font-size:12px;font-weight:bold;text-decoration:none;border-radius:999px;padding:8px 12px;">Zum Event</a>
+      HTML
+    end
+
+    def team_tip_text
+      return unless issue.team_tip?
+
+      parts = [ "#{issue.team_tip_name}s Wochentipp", issue.team_tip_text ]
+      parts << "Zum Event: #{event_url(issue.team_tip_event.slug, **route_url_options)}" if issue.team_tip_event.present?
+      parts.join("\n")
     end
 
     def team_tip_image_url

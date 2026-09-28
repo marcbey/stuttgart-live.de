@@ -70,7 +70,7 @@
     <div class="flash flash-alert"><%= issue.mailjet_error_message %></div>
   <% end %>
 
-  <%= render "form", issue: issue %>
+  <%= render "form", issue: issue, available_events: available_events %>
 
   <section class="editor-form-section newsletter-editor-section newsletter-add-content-section">
     <% newsletter_genre_options = Newsletter::HeaderGenreGroups.all.map { |group| [ group.label, group.slug ] } %>

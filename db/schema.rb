@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_18_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_28_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -472,6 +472,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_150000) do
     t.bigint "sent_by_id"
     t.string "status", default: "draft", null: false
     t.string "subject", null: false
+    t.bigint "team_tip_event_id"
     t.string "team_tip_image_url"
     t.string "team_tip_name"
     t.string "team_tip_profile_key"
@@ -486,6 +487,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_150000) do
     t.index ["newsletter_interest_id"], name: "index_newsletter_issues_on_newsletter_interest_id"
     t.index ["sent_by_id"], name: "index_newsletter_issues_on_sent_by_id"
     t.index ["status"], name: "index_newsletter_issues_on_status"
+    t.index ["team_tip_event_id"], name: "index_newsletter_issues_on_team_tip_event_id"
   end
 
   create_table "newsletter_subscriber_interests", force: :cascade do |t|
@@ -708,6 +710,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_18_150000) do
   add_foreign_key "newsletter_consent_events", "newsletter_subscribers"
   add_foreign_key "newsletter_interests", "genres"
   add_foreign_key "newsletter_issue_items", "newsletter_issues"
+  add_foreign_key "newsletter_issues", "events", column: "team_tip_event_id", on_delete: :nullify
   add_foreign_key "newsletter_issues", "newsletter_interests"
   add_foreign_key "newsletter_issues", "users", column: "created_by_id"
   add_foreign_key "newsletter_issues", "users", column: "sent_by_id"
