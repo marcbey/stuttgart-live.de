@@ -51,7 +51,7 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
       "The Astonishingly Long Artist Name That Absolutely Must Not Overflow The Card Layout Or Continue Into Yet Another Needlessly Long Clause",
       font_name: Meta::SocialCardRenderer::ARTIST_FONT_NAME,
       font_size: variant.artist_font_size,
-      max_width: renderer.send(:text_width_for, variant),
+      max_width: 500,
       max_lines: variant.artist_max_lines,
       uppercase: true
     )

@@ -8,6 +8,7 @@ module Meta
     TextLayer = Data.define(:image, :x, :y)
     ARTIST_FONT_NAME = "Oswald".freeze
     BODY_FONT_NAME = "Archivo Narrow".freeze
+    BADGE_FONT_NAME = "Archivo Narrow Bold".freeze
     Variant = Data.define(
       :key,
       :width,
@@ -27,9 +28,9 @@ module Meta
         key: :instagram,
         width: 1080,
         height: 1350,
-        content_left: 118,
-        content_right: 120,
-        bottom_padding: 100,
+        content_left: 58,
+        content_right: 58,
+        bottom_padding: 58,
         artist_font_size: 126,
         artist_line_height: 0.86,
         artist_max_lines: 4,
@@ -62,7 +63,7 @@ module Meta
     BADGE_TOP = 34
     BADGE_HEIGHT = 64
     BADGE_MIN_WIDTH = 180
-    BADGE_MAX_WIDTH = 320
+    BADGE_MAX_WIDTH = 380
     BADGE_HORIZONTAL_PADDING = 64
     BADGE_FONT_SIZE = 36
     INSTAGRAM_EXPORT_FORMAT = ".jpg[Q=90,strip,optimize_coding,interlace]".freeze
@@ -209,7 +210,7 @@ module Meta
 
     def corner_badge_text_layers(variant:, badge_text:, badge_width:)
       heart = rendered_text(HEART_GLYPH, font_family: HEART_FONT_NAME, font_size: HEART_FONT_SIZE, color: BRAND_COLOR)
-      badge = rendered_text(badge_text, font_family: ARTIST_FONT_NAME, font_size: BADGE_FONT_SIZE, color: [ 255, 255, 255 ])
+      badge = rendered_text(badge_text, font_family: BADGE_FONT_NAME, font_size: BADGE_FONT_SIZE, color: [ 255, 255, 255 ])
       badge_left = variant.width - BADGE_RIGHT - badge_width
 
       [
@@ -275,11 +276,11 @@ module Meta
 
     def fitted_badge_text(text)
       normalized = normalized_text(text, uppercase: true).presence || "NEW"
-      fit_text(normalized, font_name: ARTIST_FONT_NAME, font_size: BADGE_FONT_SIZE, max_width: BADGE_MAX_WIDTH - BADGE_HORIZONTAL_PADDING)
+      fit_text(normalized, font_name: BADGE_FONT_NAME, font_size: BADGE_FONT_SIZE, max_width: BADGE_MAX_WIDTH - BADGE_HORIZONTAL_PADDING)
     end
 
     def badge_width_for(text)
-      measured_width = measure_text(text, font_name: ARTIST_FONT_NAME, font_size: BADGE_FONT_SIZE)
+      measured_width = measure_text(text, font_name: BADGE_FONT_NAME, font_size: BADGE_FONT_SIZE)
       [ [ measured_width + BADGE_HORIZONTAL_PADDING, BADGE_MIN_WIDTH ].max, BADGE_MAX_WIDTH ].min
     end
 

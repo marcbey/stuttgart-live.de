@@ -75,6 +75,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       caption: "Old Instagram Caption",
       target_url: "https://example.com/events/#{@event.slug}",
       image_url: "https://example.com/old-instagram.jpg",
+      payload_snapshot: { "card_text" => { "badge_text" => "ABGESAGT" } },
       published_at: Time.current,
       published_by: @user,
       remote_post_id: "instagram-post-1"
@@ -97,6 +98,8 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       instagram_post.reload
       assert_equal "instagram", instagram_post.platform
       assert_equal "draft", instagram_post.status
+      assert_equal "ABGESAGT", instagram_post.payload_snapshot.dig("card_text", "badge_text")
+      assert_equal "ABGESAGT", instagram_post.payload_snapshot.dig("rendered_variants", "instagram", "badge_text")
       assert_nil instagram_post.remote_post_id
 
       facebook_post.reload
