@@ -31,7 +31,7 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
     assert_equal "ABGESAGT", rendered_cards[:instagram].badge_text
 
     image = Vips::Image.new_from_buffer(rendered_cards[:instagram].binary, "")
-    white_heart_circle = image.getpoint(78, 40).first(3).sum
+    white_heart_circle = image.getpoint(88, 40).first(3).sum
     turquoise_badge = image.getpoint(900, 40).first(3)
 
     assert_operator white_heart_circle, :>, 650

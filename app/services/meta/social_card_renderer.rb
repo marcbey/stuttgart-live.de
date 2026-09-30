@@ -28,7 +28,7 @@ module Meta
         key: :instagram,
         width: 1080,
         height: 1350,
-        content_left: 58,
+        content_left: 68,
         content_right: 58,
         bottom_padding: 58,
         artist_font_size: 126,
@@ -57,7 +57,7 @@ module Meta
     HEART_GLYPH = "♥".freeze
     HEART_FONT_NAME = "DejaVu Sans".freeze
     HEART_FONT_SIZE = 52
-    HEART_CIRCLE_CENTER = [ 78, 78 ].freeze
+    HEART_CIRCLE_CENTER = [ 88, 78 ].freeze
     HEART_CIRCLE_RADIUS = 42
     BADGE_RIGHT = 46
     BADGE_TOP = 34
