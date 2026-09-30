@@ -61,11 +61,11 @@ module Meta
     HEART_CIRCLE_RADIUS = 42
     BADGE_RIGHT = 46
     BADGE_TOP = 34
-    BADGE_HEIGHT = 64
-    BADGE_MIN_WIDTH = 180
-    BADGE_MAX_WIDTH = 380
-    BADGE_HORIZONTAL_PADDING = 64
-    BADGE_FONT_SIZE = 36
+    BADGE_HEIGHT = 96
+    BADGE_MIN_WIDTH = 270
+    BADGE_MAX_WIDTH = 570
+    BADGE_HORIZONTAL_PADDING = 96
+    BADGE_FONT_SIZE = 54
     INSTAGRAM_EXPORT_FORMAT = ".jpg[Q=90,strip,optimize_coding,interlace]".freeze
 
     def initialize(remote_image_fetcher: nil)
