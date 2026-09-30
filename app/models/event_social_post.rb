@@ -17,7 +17,7 @@ class EventSocialPost < ApplicationRecord
   validates :caption, presence: true
 
   before_validation :normalize_attributes
-  attr_writer :card_artist_name, :card_meta_line
+  attr_writer :card_artist_name, :card_meta_line, :card_badge_text
 
   scope :ordered, -> { order(:platform, :id) }
 
@@ -61,10 +61,17 @@ class EventSocialPost < ApplicationRecord
       default_card_meta_line
   end
 
+  def card_badge_text
+    @card_badge_text.presence ||
+      payload_snapshot.dig("card_text", "badge_text").to_s.strip.presence ||
+      "NEW"
+  end
+
   def card_payload
     {
       artist_name: card_artist_name,
-      meta_line: card_meta_line
+      meta_line: card_meta_line,
+      badge_text: card_badge_text
     }
   end
 
@@ -230,7 +237,8 @@ class EventSocialPost < ApplicationRecord
     self.payload_snapshot = {} unless payload_snapshot.is_a?(Hash)
     payload_snapshot["card_text"] = {
       "artist_name" => card_artist_name.to_s.strip,
-      "meta_line" => card_meta_line.to_s.strip
+      "meta_line" => card_meta_line.to_s.strip,
+      "badge_text" => card_badge_text.to_s.strip.upcase
     }
   end
 

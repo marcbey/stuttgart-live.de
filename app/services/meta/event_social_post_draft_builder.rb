@@ -5,9 +5,10 @@ module Meta
 
     attr_reader :event, :platform
 
-    def initialize(event:, platform:)
+    def initialize(event:, platform:, card_badge_text: nil)
       @event = event
       @platform = platform.to_s
+      @card_badge_text = card_badge_text.to_s.strip.presence || "NEW"
     end
 
     def build
@@ -59,7 +60,8 @@ module Meta
     def card_payload
       {
         artist_name: event.artist_name.to_s.strip,
-        meta_line: default_card_meta_line
+        meta_line: default_card_meta_line,
+        badge_text: @card_badge_text
       }
     end
 

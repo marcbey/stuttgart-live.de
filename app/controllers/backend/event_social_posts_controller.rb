@@ -4,7 +4,7 @@ module Backend
     before_action :set_event_social_post, only: [ :update, :publish, :regenerate ]
 
     def create
-      social_post = draft_sync.call(event: @event, platform: platform_param)
+      social_post = draft_sync.call(event: @event, platform: platform_param, card_badge_text: params[:card_badge_text])
       redirect_to redirect_path, notice: "Social-Draft wurde erzeugt."
     rescue ActiveRecord::RecordInvalid => error
       redirect_to redirect_path, alert: error.record.errors.full_messages.to_sentence
@@ -42,9 +42,11 @@ module Backend
 
       previous_card_artist_name = @event_social_post.card_artist_name
       previous_card_meta_line = @event_social_post.card_meta_line
+      previous_card_badge_text = @event_social_post.card_badge_text
       @event_social_post.assign_attributes(event_social_post_params)
       card_text_changed = previous_card_artist_name != @event_social_post.card_artist_name ||
-        previous_card_meta_line != @event_social_post.card_meta_line
+        previous_card_meta_line != @event_social_post.card_meta_line ||
+        previous_card_badge_text != @event_social_post.card_badge_text
       @event_social_post.reset_workflow_to_draft! if (@event_social_post.will_save_change_to_caption? || card_text_changed) && !@event_social_post.draft?
       @event_social_post.save!
       draft_sync.refresh_rendered_assets!(@event_social_post) if card_text_changed
@@ -100,7 +102,7 @@ module Backend
     end
 
     def event_social_post_params
-      params.require(:event_social_post).permit(:caption, :card_artist_name, :card_meta_line)
+      params.require(:event_social_post).permit(:caption, :card_artist_name, :card_meta_line, :card_badge_text)
     end
 
     def platform_param

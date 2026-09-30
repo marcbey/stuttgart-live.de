@@ -1638,6 +1638,18 @@ display: grid;
   gap: 0.35rem;
 }
 
+.social-post-create-form {
+display: grid;
+  grid-template-columns: minmax(8rem, 12rem) auto;
+  gap: 0.6rem;
+  align-items: end;
+}
+
+.social-post-create-status-field {
+display: grid;
+  gap: 0.35rem;
+}
+
 .social-post-meta-list {
 display: grid;
   gap: 0.5rem;

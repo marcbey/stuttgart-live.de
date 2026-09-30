@@ -17,7 +17,8 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
       background_source:,
       card_payload: {
         artist_name: "Mike Oldfield's Tubular Bells",
-        meta_line: "09.09.2026 · Liederhalle Hegelsaal"
+        meta_line: "09.09.2026 · Liederhalle Hegelsaal",
+        badge_text: "Abgesagt"
       },
       slug: "tubular-bells"
     )
@@ -27,6 +28,14 @@ class Meta::SocialCardRendererTest < ActiveSupport::TestCase
     assert_equal [ 1080, 1350 ], image_dimensions(rendered_cards[:instagram].binary)
     assert_no_match(/[·•]/, rendered_cards[:instagram].meta_line)
     assert_match(/\A09\.09\.2026 /, rendered_cards[:instagram].meta_line)
+    assert_equal "ABGESAGT", rendered_cards[:instagram].badge_text
+
+    image = Vips::Image.new_from_buffer(rendered_cards[:instagram].binary, "")
+    white_heart_circle = image.getpoint(78, 40).first(3).sum
+    turquoise_badge = image.getpoint(900, 40).first(3)
+
+    assert_operator white_heart_circle, :>, 650
+    assert_operator turquoise_badge[1], :>, turquoise_badge[0] + 80
   end
 
   test "truncates long artist and venue text with ellipsis" do

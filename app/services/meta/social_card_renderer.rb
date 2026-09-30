@@ -4,7 +4,7 @@ require "net/http"
 
 module Meta
   class SocialCardRenderer
-    RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :meta_line)
+    RenderedCard = Data.define(:binary, :content_type, :filename, :width, :height, :artist_lines, :meta_line, :badge_text)
     TextLayer = Data.define(:image, :x, :y)
     ARTIST_FONT_NAME = "Oswald".freeze
     BODY_FONT_NAME = "Archivo Narrow".freeze
@@ -12,7 +12,6 @@ module Meta
       :key,
       :width,
       :height,
-      :frame_inset,
       :content_left,
       :content_right,
       :bottom_padding,
@@ -28,7 +27,6 @@ module Meta
         key: :instagram,
         width: 1080,
         height: 1350,
-        frame_inset: 58,
         content_left: 118,
         content_right: 120,
         bottom_padding: 100,
@@ -53,6 +51,20 @@ module Meta
     ].freeze
     DEFAULT_ZOOM = 100.0
     BACKGROUND_DIMMER_ALPHA = 0.08
+    BADGE_RENDER_SCALE = 4
+    BRAND_COLOR = [ 0, 197, 204 ].freeze
+    HEART_GLYPH = "♥".freeze
+    HEART_FONT_NAME = "DejaVu Sans".freeze
+    HEART_FONT_SIZE = 52
+    HEART_CIRCLE_CENTER = [ 78, 78 ].freeze
+    HEART_CIRCLE_RADIUS = 42
+    BADGE_RIGHT = 46
+    BADGE_TOP = 34
+    BADGE_HEIGHT = 64
+    BADGE_MIN_WIDTH = 180
+    BADGE_MAX_WIDTH = 320
+    BADGE_HORIZONTAL_PADDING = 64
+    BADGE_FONT_SIZE = 36
     INSTAGRAM_EXPORT_FORMAT = ".jpg[Q=90,strip,optimize_coding,interlace]".freeze
 
     def initialize(remote_image_fetcher: nil)
@@ -89,8 +101,9 @@ module Meta
         uppercase: true
       )
       meta_line = fitted_meta_line_text(card_payload.fetch(:meta_line), variant:)
+      badge_text = fitted_badge_text(card_payload.fetch(:badge_text, "NEW"))
 
-      card = background.composite2(overlay_image(variant:), :over)
+      card = background.composite2(overlay_image(variant:, badge_text:), :over)
       card = composite_text_layers(
         card,
         text_layers_for(
@@ -107,7 +120,8 @@ module Meta
         width: variant.width,
         height: variant.height,
         artist_lines:,
-        meta_line:
+        meta_line:,
+        badge_text:
       )
     end
 
@@ -155,21 +169,118 @@ module Meta
       raise Error, "Social-Post-Bild konnte nicht gerendert werden: #{error.message}"
     end
 
-    def overlay_image(variant:)
+    def overlay_image(variant:, badge_text:)
       shade = vertical_shade_overlay(variant)
-      frame = Vips::Image
-        .black(variant.width, variant.height, bands: 4)
-        .copy(interpretation: :srgb)
-        .draw_rect(
-          [ 255, 255, 255, (255 * 0.98).round ],
-          variant.frame_inset,
-          variant.frame_inset,
-          variant.width - (variant.frame_inset * 2),
-          variant.height - (variant.frame_inset * 2),
-          fill: false
-        )
+      badge_width = badge_width_for(badge_text)
+      graphics = corner_badge_graphics(variant:, badge_width:)
+      overlay = shade.composite2(graphics, :over)
 
-      shade.composite2(frame, :over)
+      composite_text_layers(overlay, corner_badge_text_layers(variant:, badge_text:, badge_width:))
+    end
+
+    def corner_badge_graphics(variant:, badge_width:)
+      circle_alpha = circle_mask(
+        canvas_width: variant.width,
+        canvas_height: variant.height,
+        center_x: HEART_CIRCLE_CENTER.first,
+        center_y: HEART_CIRCLE_CENTER.last,
+        radius: HEART_CIRCLE_RADIUS
+      )
+      circle = circle_alpha
+        .new_from_image([ 255, 255, 255 ])
+        .bandjoin(circle_alpha)
+        .copy(interpretation: :srgb)
+      badge_alpha = rounded_rectangle_mask(
+        canvas_width: variant.width,
+        canvas_height: variant.height,
+        x: variant.width - BADGE_RIGHT - badge_width,
+        y: BADGE_TOP,
+        rectangle_width: badge_width,
+        rectangle_height: BADGE_HEIGHT,
+        radius: BADGE_HEIGHT / 2
+      )
+      badge = badge_alpha
+        .new_from_image(BRAND_COLOR)
+        .bandjoin(badge_alpha)
+        .copy(interpretation: :srgb)
+
+      circle.composite2(badge, :over)
+    end
+
+    def corner_badge_text_layers(variant:, badge_text:, badge_width:)
+      heart = rendered_text(HEART_GLYPH, font_family: HEART_FONT_NAME, font_size: HEART_FONT_SIZE, color: BRAND_COLOR)
+      badge = rendered_text(badge_text, font_family: ARTIST_FONT_NAME, font_size: BADGE_FONT_SIZE, color: [ 255, 255, 255 ])
+      badge_left = variant.width - BADGE_RIGHT - badge_width
+
+      [
+        TextLayer.new(
+          image: heart,
+          x: HEART_CIRCLE_CENTER.first - (heart.width / 2),
+          y: HEART_CIRCLE_CENTER.last - (heart.height / 2)
+        ),
+        TextLayer.new(
+          image: badge,
+          x: badge_left + ((badge_width - badge.width) / 2),
+          y: BADGE_TOP + ((BADGE_HEIGHT - badge.height) / 2)
+        )
+      ]
+    end
+
+    def circle_mask(canvas_width:, canvas_height:, center_x:, center_y:, radius:)
+      scale = BADGE_RENDER_SCALE
+      mask = Vips::Image.black(canvas_width * scale, canvas_height * scale)
+      mask = mask.draw_circle(255, center_x * scale, center_y * scale, radius * scale, fill: true)
+
+      mask.resize(1.0 / scale, kernel: :lanczos3)
+    end
+
+    def rounded_rectangle_mask(canvas_width:, canvas_height:, x:, y:, rectangle_width:, rectangle_height:, radius:)
+      scale = BADGE_RENDER_SCALE
+      width = canvas_width * scale
+      height = canvas_height * scale
+      scaled_x = x * scale
+      scaled_y = y * scale
+      scaled_radius = radius * scale
+      scaled_rectangle_width = rectangle_width * scale
+      scaled_rectangle_height = rectangle_height * scale
+      right = scaled_x + scaled_rectangle_width - scaled_radius - 1
+      bottom = scaled_y + scaled_rectangle_height - scaled_radius - 1
+      mask = Vips::Image.black(width, height)
+      mask = mask.draw_rect(
+        255,
+        scaled_x + scaled_radius,
+        scaled_y,
+        scaled_rectangle_width - (2 * scaled_radius),
+        scaled_rectangle_height,
+        fill: true
+      )
+      mask = mask.draw_rect(
+        255,
+        scaled_x,
+        scaled_y + scaled_radius,
+        scaled_rectangle_width,
+        scaled_rectangle_height - (2 * scaled_radius),
+        fill: true
+      )
+
+      [ [ scaled_x + scaled_radius, scaled_y + scaled_radius ],
+        [ right, scaled_y + scaled_radius ],
+        [ scaled_x + scaled_radius, bottom ],
+        [ right, bottom ] ].each do |center_x, center_y|
+        mask = mask.draw_circle(255, center_x, center_y, scaled_radius, fill: true)
+      end
+
+      mask.resize(1.0 / scale, kernel: :lanczos3)
+    end
+
+    def fitted_badge_text(text)
+      normalized = normalized_text(text, uppercase: true).presence || "NEW"
+      fit_text(normalized, font_name: ARTIST_FONT_NAME, font_size: BADGE_FONT_SIZE, max_width: BADGE_MAX_WIDTH - BADGE_HORIZONTAL_PADDING)
+    end
+
+    def badge_width_for(text)
+      measured_width = measure_text(text, font_name: ARTIST_FONT_NAME, font_size: BADGE_FONT_SIZE)
+      [ [ measured_width + BADGE_HORIZONTAL_PADDING, BADGE_MIN_WIDTH ].max, BADGE_MAX_WIDTH ].min
     end
 
     def vertical_shade_overlay(variant)
@@ -331,16 +442,19 @@ module Meta
     end
 
     def text_layer(text:, x:, y:, font_family:, font_size:, color:, opacity:)
-      rendered_text = Vips::Image.text(
+      TextLayer.new(image: rendered_text(text, font_family:, font_size:, color:, opacity:), x:, y:)
+    end
+
+    def rendered_text(text, font_family:, font_size:, color:, opacity: 1.0)
+      text_image = Vips::Image.text(
         CGI.escapeHTML(text.to_s),
         font: "#{font_family} #{font_size}",
         rgba: true
       )
-      alpha = rendered_text.extract_band(3).linear(opacity, 0)
-      rgb = rendered_text.new_from_image(color)
-      rgba = rgb.bandjoin(alpha).copy(interpretation: :srgb)
+      alpha = text_image.extract_band(3).linear(opacity, 0)
+      rgb = text_image.new_from_image(color)
 
-      TextLayer.new(image: rgba, x:, y:)
+      rgb.bandjoin(alpha).copy(interpretation: :srgb)
     end
 
     def line_step(font_size, line_height)

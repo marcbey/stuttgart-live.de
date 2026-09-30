@@ -23,7 +23,8 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
     with_stubbed_meta_access_status do
       assert_difference -> { @event.event_social_posts.count }, 1 do
         post backend_event_event_social_posts_url(@event), params: {
-          inbox_status: "published"
+          inbox_status: "published",
+          card_badge_text: "Abgesagt"
         }
       end
 
@@ -31,6 +32,7 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       assert_redirected_to backend_events_url(status: "published", event_id: @event.id, editor_tab: "social")
       assert_equal "instagram", social_post.platform
       assert_equal "draft", social_post.status
+      assert_equal "ABGESAGT", social_post.payload_snapshot.dig("card_text", "badge_text")
     end
   end
 
@@ -150,7 +152,8 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
         event_social_post: {
           caption: social_post.caption,
           card_artist_name: "Custom Artist",
-          card_meta_line: "11.11.2026 · Custom Venue"
+          card_meta_line: "11.11.2026 · Custom Venue",
+          card_badge_text: "Ausverkauft"
         }
       }
 
@@ -158,7 +161,9 @@ class Backend::EventSocialPostsControllerTest < ActionDispatch::IntegrationTest
       social_post.reload
       assert_equal "Custom Artist", social_post.payload_snapshot.dig("card_text", "artist_name")
       assert_equal "11.11.2026 · Custom Venue", social_post.payload_snapshot.dig("card_text", "meta_line")
+      assert_equal "AUSVERKAUFT", social_post.payload_snapshot.dig("card_text", "badge_text")
       assert_equal "11.11.2026 CUSTOM VENUE", social_post.payload_snapshot.dig("rendered_variants", "instagram", "meta_line")
+      assert_equal "AUSVERKAUFT", social_post.payload_snapshot.dig("rendered_variants", "instagram", "badge_text")
     end
   end
 

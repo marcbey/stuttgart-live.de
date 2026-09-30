@@ -14,6 +14,7 @@ class Meta::EventSocialPostDraftBuilderTest < ActiveSupport::TestCase
     assert_equal "facebook", draft.attributes[:payload_snapshot]["platform"]
     assert_equal "Published Artist", draft.attributes[:payload_snapshot].dig("card_text", "artist_name")
     assert_equal "01.06.2026 · LKA Longhorn", draft.attributes[:payload_snapshot].dig("card_text", "meta_line")
+    assert_equal "NEW", draft.attributes[:payload_snapshot].dig("card_text", "badge_text")
     assert_equal :remote_url, draft.background_source.source_type
     assert_equal "https://example.com/published.jpg", draft.background_source.remote_url
     assert_equal "import_image", draft.attributes[:payload_snapshot]["background_source"]

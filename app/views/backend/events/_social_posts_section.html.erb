@@ -37,12 +37,21 @@
             </div>
           <% elsif social_post.blank? %>
             <div class="backend-section-header-actions">
-              <%= button_to "Draft erzeugen",
-                            backend_event_event_social_posts_path(event),
+              <%= form_with url: backend_event_event_social_posts_path(event),
                             method: :post,
-                            params: { inbox_status: inbox_status, platform: "instagram" },
-                            form: { data: { turbo_frame: "_top" } },
-                            class: "button button-save-primary button-compact" %>
+                            class: "social-post-create-form",
+                            data: { turbo_frame: "_top" } do |form| %>
+                <%= hidden_field_tag :inbox_status, inbox_status if inbox_status.present? %>
+                <%= hidden_field_tag :platform, "instagram" %>
+                <div class="social-post-create-status-field">
+                  <%= form.label :card_badge_text, "Status im Bild", class: "form-label" %>
+                  <%= form.text_field :card_badge_text,
+                                      value: "NEW",
+                                      maxlength: 20,
+                                      class: "form-input" %>
+                </div>
+                <%= form.button "Draft erzeugen", type: :submit, class: "button button-save-primary button-compact" %>
+              <% end %>
             </div>
           <% end %>
         </div>
@@ -92,6 +101,15 @@
                             class: "social-post-caption-form",
                             data: { turbo_frame: "_top" } do |form| %>
                 <%= hidden_field_tag :inbox_status, inbox_status if inbox_status.present? %>
+
+                <div class="social-post-form-field">
+                  <%= form.label :card_badge_text, "Status im Bild", class: "form-label" %>
+                  <%= form.text_field :card_badge_text,
+                                      maxlength: 20,
+                                      placeholder: "NEW",
+                                      class: "form-input",
+                                      disabled: !editable %>
+                </div>
 
                 <div class="social-post-form-field">
                   <%= form.label :card_artist_name, "Bildtext Artist", class: "form-label" %>
@@ -180,12 +198,21 @@
             </div>
           <% elsif facebook_post.blank? %>
             <div class="backend-section-header-actions">
-              <%= button_to "Draft erzeugen",
-                            backend_event_event_social_posts_path(event),
+              <%= form_with url: backend_event_event_social_posts_path(event),
                             method: :post,
-                            params: { inbox_status: inbox_status, platform: "facebook" },
-                            form: { data: { turbo_frame: "_top" } },
-                            class: "button button-save-primary button-compact" %>
+                            class: "social-post-create-form",
+                            data: { turbo_frame: "_top" } do |form| %>
+                <%= hidden_field_tag :inbox_status, inbox_status if inbox_status.present? %>
+                <%= hidden_field_tag :platform, "facebook" %>
+                <div class="social-post-create-status-field">
+                  <%= form.label :card_badge_text, "Status im Bild", class: "form-label" %>
+                  <%= form.text_field :card_badge_text,
+                                      value: "NEW",
+                                      maxlength: 20,
+                                      class: "form-input" %>
+                </div>
+                <%= form.button "Draft erzeugen", type: :submit, class: "button button-save-primary button-compact" %>
+              <% end %>
             </div>
           <% end %>
         </div>
@@ -240,6 +267,15 @@
                             class: "social-post-caption-form",
                             data: { turbo_frame: "_top" } do |form| %>
                 <%= hidden_field_tag :inbox_status, inbox_status if inbox_status.present? %>
+
+                <div class="social-post-form-field">
+                  <%= form.label :card_badge_text, "Status im Bild", class: "form-label" %>
+                  <%= form.text_field :card_badge_text,
+                                      maxlength: 20,
+                                      placeholder: "NEW",
+                                      class: "form-input",
+                                      disabled: !facebook_editable %>
+                </div>
 
                 <div class="social-post-form-field">
                   <%= form.label :card_artist_name, "Bildtext Artist", class: "form-label" %>

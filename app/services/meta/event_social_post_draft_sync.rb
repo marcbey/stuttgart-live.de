@@ -12,10 +12,10 @@ module Meta
       @connection_resolver = connection_resolver
     end
 
-    def call(event:, platform:)
+    def call(event:, platform:, card_badge_text: nil)
       normalized_platform = normalize_platform(platform)
       social_post = event.event_social_posts.find_or_initialize_by(platform: normalized_platform)
-      draft = builder_class.new(event:, platform: normalized_platform).build
+      draft = builder_class.new(event:, platform: normalized_platform, card_badge_text:).build
       social_post.assign_draft_attributes!(draft.attributes)
       social_post.save!
       sync_rendered_assets!(social_post, draft:)
@@ -118,7 +118,8 @@ module Meta
           "width" => rendered_card.width,
           "height" => rendered_card.height,
           "artist_lines" => rendered_card.artist_lines,
-          "meta_line" => rendered_card.meta_line
+          "meta_line" => rendered_card.meta_line,
+          "badge_text" => rendered_card.badge_text
         }
       end
     end
