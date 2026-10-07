@@ -7,29 +7,12 @@
 %>
 
 <section class="design-preview-section design-preview-list-section lane-page-section search-results-section">
-  <div class="lane-page-topbar">
-    <div class="event-detail-back">
-      <%= link_to events_path, aria: { label: "Zurück" } do %>
-        <span class="event-detail-back-icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24">
-            <path d="M19 12H6"></path>
-            <path d="m11 6-6 6 6 6"></path>
-          </svg>
-        </span>
-        <span class="sr-only">Zurück</span>
-      <% end %>
-    </div>
-  </div>
-  <div class="design-preview-section-header design-preview-section-header--stacked lane-header lane-header--search">
-    <span class="slider-window-bar" aria-hidden="true"></span>
+  <header class="search-results-header">
     <div>
-      <h2 class="lane-header-title">Suchergebnisse</h2>
+      <h1 class="search-results-title">Suchergebnisse</h1>
       <p class="design-preview-list-meta lane-header-meta"><%= search_meta %></p>
     </div>
-    <div class="lane-header-nav">
-      <span class="slider-view-toggle" aria-hidden="true"></span>
-    </div>
-  </div>
+  </header>
   <% if events.any? %>
     <div class="lane-page-grid design-preview-list-card-grid" id="event-grid">
       <%= render "design_preview_event_grid",

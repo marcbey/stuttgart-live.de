@@ -30,11 +30,14 @@
 %>
 
 <section class="design-preview-filterbar design-preview-filterbar--lane-page design-preview-filterbar--months"
+         data-controller="all-stuttgart-filters"
          aria-label="Alles aus Stuttgart filtern">
   <div class="design-preview-mobile-filter-group">
     <span class="design-preview-filter-label" aria-hidden="true">Filter</span>
 
-    <details class="design-preview-month-dropdown design-preview-month-dropdown--mobile">
+    <details class="design-preview-month-dropdown design-preview-month-dropdown--mobile"
+             data-all-stuttgart-filters-target="dropdown"
+             data-action="toggle->all-stuttgart-filters#sync">
       <summary class="design-preview-filter-pill design-preview-filter-month">
         Monat
         <span aria-hidden="true"></span>
@@ -53,7 +56,9 @@
       </div>
     </details>
 
-    <details class="all-stuttgart-filter-dropdown all-stuttgart-genre-dropdown design-preview-mobile-filter-field">
+    <details class="all-stuttgart-filter-dropdown all-stuttgart-genre-dropdown design-preview-mobile-filter-field"
+             data-all-stuttgart-filters-target="dropdown"
+             data-action="toggle->all-stuttgart-filters#sync">
       <summary class="design-preview-filter-pill all-stuttgart-filter-summary">
         <span>Genre</span>
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -75,7 +80,9 @@
       </div>
     </details>
 
-    <details class="all-stuttgart-filter-dropdown all-stuttgart-location-dropdown design-preview-mobile-filter-field">
+    <details class="all-stuttgart-filter-dropdown all-stuttgart-location-dropdown design-preview-mobile-filter-field"
+             data-all-stuttgart-filters-target="dropdown"
+             data-action="toggle->all-stuttgart-filters#sync">
       <summary class="design-preview-filter-pill all-stuttgart-filter-summary">
         <span>Location</span>
         <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -101,7 +108,7 @@
             class="design-preview-filter-pill design-preview-filter-calendar"
             aria-label="Datum wählen"
             data-design-preview-filterbar-target="dateButton"
-            data-action="design-preview-filterbar#openDate">
+            data-action="all-stuttgart-filters#closeAll design-preview-filterbar#openDate">
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M8 2v4"></path>
         <path d="M16 2v4"></path>

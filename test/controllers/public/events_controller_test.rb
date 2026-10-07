@@ -680,7 +680,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".all-stuttgart-event-list article.all-stuttgart-event-row", minimum: 1
     assert_select ".all-stuttgart-event-list .all-stuttgart-event-title a", text: reservix_event.artist_name
     assert_select ".design-preview-month-dropdown--calendar", count: 0
-    assert_select "button.design-preview-filter-calendar[data-action='design-preview-filterbar#openDate'][data-design-preview-filterbar-target='dateButton'][aria-label='Datum wählen']", count: 1
+    assert_select "button.design-preview-filter-calendar[data-design-preview-filterbar-target='dateButton'][aria-label='Datum wählen'][data-action*='all-stuttgart-filters#closeAll'][data-action*='design-preview-filterbar#openDate']", count: 1
 
     get "/tagestipp"
 
@@ -3716,18 +3716,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "section.lane-page-section.search-results-section", count: 1
-    assert_select ".lane-page-topbar .event-detail-back a[aria-label=?]", "Zurück" do
-      assert_select ".event-detail-back-icon svg", count: 1
-      assert_select ".sr-only", text: "Zurück"
-    end
-    assert_select ".lane-header.lane-header--search", count: 1
-    assert_select ".lane-header.lane-header--search .slider-window-bar", count: 1
-    assert_select ".lane-header.lane-header--search .lane-header-title", text: "Suchergebnisse"
-    assert_select ".lane-header.lane-header--search .lane-header-meta", text: /Search Cluster/
-    assert_select ".lane-header.lane-header--search .lane-header-meta", text: /2 Ergebnisse/
+    assert_select ".search-results-section .event-detail-back", count: 0
+    assert_select ".search-results-header", count: 1
+    assert_select ".search-results-title", text: "Suchergebnisse"
+    assert_select ".search-results-header .lane-header-meta", text: /Search Cluster/
+    assert_select ".search-results-header .lane-header-meta", text: /2 Ergebnisse/
     assert_select "meta[name='robots'][content='noindex, follow']", count: 1
     assert_select "link[rel='canonical'][href=?]", search_url
-    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 1
+    assert_select ".lane-page-section .lane-header-nav .slider-view-toggle", count: 0
     assert_select "#event-grid article.genre-lane-card", count: 2
     assert_select "#event-grid article.event-listing-card", count: 0
     assert_includes response.body, first_event.title
@@ -3820,8 +3816,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get search_url(q: "Absolut Unfindbarer Suchbegriff")
 
     assert_response :success
-    assert_select ".lane-header.lane-header--search .lane-header-meta", text: /Absolut Unfindbarer Suchbegriff/
-    assert_select ".lane-header.lane-header--search .lane-header-meta", text: /0 Ergebnisse/
+    assert_select ".search-results-header .lane-header-meta", text: /Absolut Unfindbarer Suchbegriff/
+    assert_select ".search-results-header .lane-header-meta", text: /0 Ergebnisse/
     assert_includes response.body, "Sorry, nix gefunden"
     assert_includes response.body, "Zu „Absolut Unfindbarer Suchbegriff“ haben wir aktuell keine Events gefunden."
   end

@@ -43,7 +43,7 @@
   end
 %>
 
-<section class="design-preview-section all-stuttgart-event-section"
+<section class="design-preview-section all-stuttgart-event-section <%= "is-filtered" if active_filter_chips.any? %>"
          <% if lazy_lane_id.present? %>data-controller="lane-page"<% end %>
          <% if lazy_lane_id.present? %>
          data-lane-page-url-value="<%= lazy_url %>"

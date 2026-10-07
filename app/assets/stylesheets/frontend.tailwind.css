@@ -13806,6 +13806,25 @@ body.page-public-design-preview main {
   margin-top: clamp(1.1rem, 2.4vw, 2rem);
 }
 
+.search-results-section {
+  margin-top: clamp(0.35rem, 1.2vw, 0.9rem);
+}
+
+.search-results-header {
+  margin-bottom: clamp(1rem, 2vw, 1.45rem);
+}
+
+.search-results-title {
+  margin: 0;
+  color: var(--preview-ink);
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: clamp(2.05rem, 6.4vw, 3.35rem);
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
 .design-preview-list-section .design-preview-section-header {
   margin-bottom: 0.75rem;
 }
@@ -17710,11 +17729,6 @@ body.page-public-design-preview .design-preview-header-toolbar .design-preview-s
   left: 0;
 }
 
-.design-preview-mobile-filter-group .all-stuttgart-location-dropdown .all-stuttgart-filter-menu {
-  right: 0;
-  left: auto;
-}
-
 .design-preview-filterbar--months .design-preview-filter-calendar {
   width: var(--preview-filter-height);
   justify-self: end;
@@ -17836,7 +17850,7 @@ body.page-public-design-preview .design-preview-header-toolbar .design-preview-s
 }
 
 .all-stuttgart-filter-dropdown {
-  position: static;
+  position: relative;
 }
 
 .all-stuttgart-filter-summary {
@@ -17997,6 +18011,12 @@ body.page-public-design-preview .design-preview-header-toolbar .design-preview-s
   line-height: 1.1;
 }
 
+.all-stuttgart-event-section.is-filtered .all-stuttgart-event-day strong {
+  font-size: 1rem;
+  font-weight: 300;
+  line-height: 1.1;
+}
+
 .all-stuttgart-event-title a {
   color: var(--preview-ink);
   font-size: 1.28rem;
@@ -18144,6 +18164,11 @@ body.page-public-design-preview .design-preview-header-toolbar .design-preview-s
     border-color: transparent;
     background: transparent;
     box-shadow: none;
+  }
+
+  .design-preview-mobile-filter-group .all-stuttgart-location-dropdown .all-stuttgart-filter-menu {
+    right: 0;
+    left: auto;
   }
 
   .all-stuttgart-active-filters {
