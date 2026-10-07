@@ -4,4 +4,12 @@ require "bundler/setup"
 
 ARGV.unshift("--ensure-latest")
 
-load Gem.bin_path("brakeman", "brakeman")
+begin
+  load Gem.bin_path("brakeman", "brakeman")
+rescue NoMethodError => e
+  raise unless e.message.include?("undefined method 'date'")
+
+  warn "Brakeman latest-version check failed; running security scan without that check."
+  ARGV.delete("--ensure-latest")
+  load Gem.bin_path("brakeman", "brakeman")
+end

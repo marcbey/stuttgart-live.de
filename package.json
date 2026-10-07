@@ -19,6 +19,7 @@
     "trix": "^2.1.18"
   },
   "resolutions": {
-    "picomatch": "^4.0.4"
+    "picomatch": "^4.0.4",
+    "source-map-js": "^1.2.2"
   }
 }
