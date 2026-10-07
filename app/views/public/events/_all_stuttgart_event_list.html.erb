@@ -5,20 +5,42 @@
   selected_genre = local_assigns[:selected_genre]
   selected_location = local_assigns[:selected_location].to_s.presence
   selected_month = local_assigns[:selected_month]
+  selected_date = local_assigns[:selected_date]
   lazy_lane_id = local_assigns[:lazy_lane_id]
   lazy_url = local_assigns[:lazy_url]
   lazy_next_cursor = local_assigns[:lazy_next_cursor]
   lazy_per_page = local_assigns.fetch(:lazy_per_page, Public::EventsController::LANE_PAGE_LIMIT)
   selected_month_param = selected_month&.strftime("%Y-%m")
+  show_time_column = selected_date.present?
   genre_label = selected_genre&.name.presence || "Genre"
   location_label = selected_location.presence || "Location"
   base_filter_params = {
     event_month: selected_month_param,
+    event_date: selected_date&.iso8601,
     event_genre: selected_genre&.slug,
     event_location: selected_location
   }.compact
   base_genre_params = base_filter_params.except(:event_genre)
   base_location_params = base_filter_params.except(:event_location)
+  active_filter_chips = []
+  if selected_date.present?
+    active_filter_chips << {
+      label: display_title,
+      path: all_stuttgart_lane_path(base_filter_params.except(:event_date))
+    }
+  end
+  if selected_genre.present?
+    active_filter_chips << {
+      label: selected_genre.name,
+      path: all_stuttgart_lane_path(base_genre_params)
+    }
+  end
+  if selected_location.present?
+    active_filter_chips << {
+      label: selected_location,
+      path: all_stuttgart_lane_path(base_location_params)
+    }
+  end
 %>
 
 <section class="design-preview-section all-stuttgart-event-section"
@@ -30,6 +52,19 @@
          data-lane-page-per-page-value="<%= lazy_per_page %>"
          data-lane-page-card-mode-value="all_stuttgart_rows"
          <% end %>>
+  <% if active_filter_chips.any? %>
+    <div class="all-stuttgart-active-filters" aria-label="Aktive Filter">
+      <% active_filter_chips.each do |chip| %>
+        <%= link_to chip[:path],
+                    class: "all-stuttgart-active-filter-chip",
+                    aria: { label: "Filter #{chip[:label]} entfernen" } do %>
+          <span><%= chip[:label] %></span>
+          <span class="all-stuttgart-active-filter-remove" aria-hidden="true">x</span>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
   <div class="design-preview-section-header all-stuttgart-event-header">
     <h2><%= display_title %></h2>
     <% if genres.any? || locations.any? %>
@@ -93,7 +128,7 @@
   <% if events.any? %>
     <div class="all-stuttgart-event-list" role="table" aria-label="<%= display_title %>">
       <div class="all-stuttgart-event-list-head" role="row">
-        <span role="columnheader">Tag</span>
+        <span role="columnheader"><%= show_time_column ? "Uhrzeit" : "Tag" %></span>
         <span role="columnheader">Titel</span>
         <span role="columnheader">Location</span>
         <span role="columnheader">Preis</span>
@@ -102,7 +137,10 @@
       </div>
 
       <div class="all-stuttgart-event-rows" data-lane-page-target="grid">
-        <%= render "all_stuttgart_event_rows", events: events, browse_state: browse_state %>
+        <%= render "all_stuttgart_event_rows",
+                   events: events,
+                   browse_state: browse_state,
+                   show_time_column: show_time_column %>
       </div>
     </div>
     <% if lazy_lane_id.present? %>

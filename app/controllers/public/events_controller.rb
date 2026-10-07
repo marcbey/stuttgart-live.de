@@ -1070,6 +1070,7 @@ module Public
         @lane_lazy_id = "all_stuttgart" if @lane_next_cursor.present?
         @lane_lazy_url = helpers.homepage_lane_events_path(
           event_month: @lane_selected_month&.strftime("%Y-%m"),
+          event_date: @browse_state.event_date_param,
           event_genre: @all_stuttgart_selected_genre&.slug,
           event_location: @all_stuttgart_selected_location,
           filter: @browse_state.filter
@@ -1131,9 +1132,11 @@ module Public
     def all_stuttgart_month_relation
       relation = all_stuttgart_relation
       @lane_months = all_stuttgart_months_for(relation)
-      @lane_month_labels_by_value = all_stuttgart_month_labels_by_value(@lane_months)
       @lane_selected_month = selected_all_stuttgart_month(@lane_months)
-      @lane_title = all_stuttgart_month_title(@lane_selected_month)
+      @lane_months |= [ @lane_selected_month ] if @lane_selected_month.present?
+      @lane_month_labels_by_value = all_stuttgart_month_labels_by_value(@lane_months)
+      @all_stuttgart_selected_date = selected_all_stuttgart_date
+      @lane_title = all_stuttgart_period_title(@lane_selected_month, @all_stuttgart_selected_date)
 
       month_relation = if @lane_selected_month.blank?
         relation
@@ -1143,14 +1146,20 @@ module Public
         )
       end
 
+      period_relation = if @all_stuttgart_selected_date.blank?
+        month_relation
+      else
+        month_relation.where(start_at: @all_stuttgart_selected_date.beginning_of_day..@all_stuttgart_selected_date.end_of_day)
+      end
+
       @all_stuttgart_selected_genre = selected_all_stuttgart_genre
-      @all_stuttgart_genres = all_stuttgart_genres_for(month_relation)
+      @all_stuttgart_genres = all_stuttgart_genres_for(period_relation)
       @all_stuttgart_genres |= [ @all_stuttgart_selected_genre ] if @all_stuttgart_selected_genre.present?
-      @all_stuttgart_selected_location = selected_all_stuttgart_location(month_relation)
-      @all_stuttgart_locations = all_stuttgart_locations_for(month_relation)
+      @all_stuttgart_selected_location = selected_all_stuttgart_location(period_relation)
+      @all_stuttgart_locations = all_stuttgart_locations_for(period_relation)
       @all_stuttgart_locations |= [ @all_stuttgart_selected_location ] if @all_stuttgart_selected_location.present?
 
-      filtered_relation = month_relation
+      filtered_relation = period_relation
       filtered_relation = filtered_relation.joins(:genres).where(genres: { id: @all_stuttgart_selected_genre.id }).distinct if @all_stuttgart_selected_genre.present?
       filtered_relation = filtered_relation.left_outer_joins(:venue_record).where(venues: { name: @all_stuttgart_selected_location }) if @all_stuttgart_selected_location.present?
 
@@ -1167,6 +1176,7 @@ module Public
       homepage_lane_context(
         lane: "all_stuttgart",
         event_month: @lane_selected_month&.strftime("%Y-%m"),
+        event_date: @browse_state.event_date_param,
         event_genre: @all_stuttgart_selected_genre&.slug,
         event_location: @all_stuttgart_selected_location
       )
@@ -1205,6 +1215,9 @@ module Public
     end
 
     def selected_all_stuttgart_month(months)
+      selected_date_month = @browse_state.event_date&.beginning_of_month
+      return selected_date_month if selected_date_month.present?
+
       requested_month = parsed_all_stuttgart_month(params[:event_month])
       return requested_month if requested_month.present?
 
@@ -1225,7 +1238,12 @@ module Public
       nil
     end
 
-    def all_stuttgart_month_title(month)
+    def selected_all_stuttgart_date
+      @browse_state.event_date
+    end
+
+    def all_stuttgart_period_title(month, date = nil)
+      return all_stuttgart_date_label(date) if date.present?
       return Public::Events::LaneDirectory.all_stuttgart.title if month.blank?
 
       "#{all_stuttgart_month_label(month)} #{month.year}"
@@ -1237,6 +1255,10 @@ module Public
 
     def all_stuttgart_month_label(month)
       GERMAN_MONTH_NAMES.fetch(month.month - 1)
+    end
+
+    def all_stuttgart_date_label(date)
+      "#{date.day}. #{all_stuttgart_month_label(date)} #{date.year}"
     end
 
     def apply_status!(event, status)

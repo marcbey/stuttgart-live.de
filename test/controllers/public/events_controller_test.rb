@@ -676,8 +676,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".all-stuttgart-event-list", count: 1
     assert_select ".all-stuttgart-event-header h2", minimum: 1
+    assert_select ".all-stuttgart-event-list-head span", text: "Tag", count: 1
     assert_select ".all-stuttgart-event-list article.all-stuttgart-event-row", minimum: 1
     assert_select ".all-stuttgart-event-list .all-stuttgart-event-title a", text: reservix_event.artist_name
+    assert_select ".design-preview-month-dropdown--calendar", count: 0
+    assert_select "button.design-preview-filter-calendar[data-action='design-preview-filterbar#openDate'][data-design-preview-filterbar-target='dateButton'][aria-label='Datum wählen']", count: 1
 
     get "/tagestipp"
 
@@ -723,6 +726,48 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".all-stuttgart-location-summary span", text: matching_event.venue
     assert_select ".all-stuttgart-location-menu a", text: "Alle Locations"
     assert_select ".all-stuttgart-location-menu a", text: other_event.venue
+  end
+
+  test "all stuttgart lane filters monthly events by selected date" do
+    event_date = Time.zone.today.next_month.change(day: 12)
+    matching_start_at = Time.zone.local(event_date.year, event_date.month, event_date.day, 20, 0, 0)
+    other_start_at = Time.zone.local(event_date.year, event_date.month, event_date.day + 1, 20, 0, 0)
+    matching_event = Event.create!(
+      slug: "all-stuttgart-date-match",
+      source_fingerprint: "test::public::all-stuttgart::date-match",
+      title: "Date Match Tour",
+      artist_name: "Date Match Artist",
+      start_at: matching_start_at,
+      venue: "Porsche-Arena",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+    other_event = Event.create!(
+      slug: "all-stuttgart-date-other",
+      source_fingerprint: "test::public::all-stuttgart::date-other",
+      title: "Date Other Tour",
+      artist_name: "Date Other Artist",
+      start_at: other_start_at,
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      primary_source: "reservix",
+      source_snapshot: {}
+    )
+
+    get all_stuttgart_lane_url(event_month: event_date.strftime("%Y-%m"), event_date: event_date.iso8601)
+
+    assert_response :success
+    assert_select ".all-stuttgart-event-title a", text: matching_event.artist_name
+    assert_select ".all-stuttgart-event-title a", text: other_event.artist_name, count: 0
+    month_label = Public::EventsController::GERMAN_MONTH_NAMES.fetch(event_date.month - 1)
+    assert_select ".all-stuttgart-event-header h2", text: "#{event_date.day}. #{month_label} #{event_date.year}"
+    assert_select ".all-stuttgart-event-list-head span", text: "Uhrzeit", count: 1
+    assert_select ".all-stuttgart-event-day strong", text: "20:00", count: 1
   end
 
   test "all stuttgart lane loads monthly events in pages" do

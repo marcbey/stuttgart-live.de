@@ -1,3 +1,4 @@
+<% show_time_column = local_assigns.fetch(:show_time_column, false) %>
 <% events.each do |event| %>
   <% event_url = public_event_detail_path(event, browse_state) %>
   <% primary_offer = event.public_ticket_offer %>
@@ -7,8 +8,8 @@
   <% primary_genre = event.primary_genre %>
 
   <article class="all-stuttgart-event-row" role="row">
-    <time class="all-stuttgart-event-day" datetime="<%= event.start_at.to_date.iso8601 %>" role="cell">
-      <strong><%= event.start_at.day.to_s.rjust(2, "0") %></strong>
+    <time class="all-stuttgart-event-day <%= "all-stuttgart-event-day--time" if show_time_column %>" datetime="<%= show_time_column ? event.start_at.iso8601 : event.start_at.to_date.iso8601 %>" role="cell">
+      <strong><%= show_time_column ? event.start_at.strftime("%H:%M") : event.start_at.day.to_s.rjust(2, "0") %></strong>
     </time>
 
     <div class="all-stuttgart-event-title" role="cell">
