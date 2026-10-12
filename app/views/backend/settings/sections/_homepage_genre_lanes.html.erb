@@ -5,6 +5,7 @@
     <div class="settings-group-header-main">
       <h2>Homepage Genre-Lanes</h2>
       <p>Wählt aus der statischen Genre-Liste, welche Genres als zusätzliche Slider-Lanes auf der Startseite erscheinen.</p>
+      <p>„Stuttgart im Mix“ wird unabhängig von dieser Auswahl automatisch aus allen Genres mit kommenden öffentlichen Events zusammengestellt.</p>
     </div>
   </div>
   <div class="settings-group-body">
@@ -21,7 +22,7 @@
                           id: "app_setting_homepage_genre_tag_cloud_enabled" %>
         <span>Aktiviert</span>
       </label>
-      <p class="form-hint">Wenn aktiviert, erscheinen unter den Genre-Lanes die übrigen statischen Genres mit kommenden öffentlichen Events als Tag-Cloud.</p>
+      <p class="form-hint">Wenn aktiviert, erscheinen zwischen „Stuttgart im Mix“ und „Unter 30 €“ die übrigen statischen Genres mit kommenden öffentlichen Events als Tag-Cloud.</p>
 
       <% if @homepage_genre_lane_reference_genres.any? %>
         <div class="settings-reference-list">

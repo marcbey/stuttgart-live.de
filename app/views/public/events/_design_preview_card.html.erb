@@ -51,12 +51,12 @@
     </span>
 
     <% if status_pill_label.present? && body_status_label.blank? %>
-      <span class="design-preview-card-status-pill"><%= status_pill_label %></span>
+      <span class="design-preview-card-status-pill<%= " design-preview-card-status-pill--alert" if %w[Abgesagt Ausverkauft].any? { |label| status_pill_label.to_s.casecmp(label).zero? } %>"><%= status_pill_label %></span>
     <% end %>
 
     <span class="design-preview-card-copy">
       <% if show_card_kicker %>
-        <span class="design-preview-card-kicker"><%= category %></span>
+        <span class="design-preview-card-kicker design-preview-card-genre"><%= category %></span>
       <% end %>
       <strong class="design-preview-card-title"><%= event.artist_name %></strong>
       <% if event.title.present? %>

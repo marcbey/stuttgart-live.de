@@ -439,8 +439,8 @@
                    browse_state: @browse_state,
                    strict_proxy: strict_proxy,
                    setting: AppSetting.homepage_highlight_video_record,
-                   fallback_video: asset_path("design_preview/walk-off-the-earth-portrait.mp4"),
-                   fallback_poster: asset_path("design_preview/walk-off-the-earth-portrait-poster.jpg") %>
+                   fallback_video: asset_path("design_preview/lea-portrait.mp4"),
+                   fallback_poster: asset_path("design_preview/lea-portrait-poster.jpg") %>
       </div>
 
     </section>
@@ -604,6 +604,8 @@
                  strict_proxy: strict_proxy %>
     </section>
   <% end %>
+
+  <%= render "homepage_genre_tag_cloud", tags: @home_genre_tag_cloud_genres %>
 
   <% if @home_under_30_available %>
     <div class="design-preview-deferred-section"

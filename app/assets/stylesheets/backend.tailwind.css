@@ -2171,6 +2171,59 @@ outline: 3px solid #b8b8b8;
   outline-offset: 2px;
 }
 
+.backend-shell input[type="file"]:not(.event-image-inline-file-input):not(.settings-highlight-video-file-input) {
+min-height: 3rem;
+  padding: 0.32rem;
+  color: #645d52;
+  cursor: pointer;
+}
+
+.backend-shell input[type="file"]:not(.event-image-inline-file-input):not(.settings-highlight-video-file-input)::file-selector-button {
+min-height: 2.35rem;
+  margin-right: 0.7rem;
+  border: 1px solid #666;
+  border-radius: 5px;
+  background: #666;
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.backend-shell input[type="file"]:not(.event-image-inline-file-input):not(.settings-highlight-video-file-input)::-webkit-file-upload-button {
+min-height: 2.35rem;
+  margin-right: 0.7rem;
+  border: 1px solid #666;
+  border-radius: 5px;
+  background: #666;
+  color: #fff;
+  padding: 0.5rem 0.9rem;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: 0.95rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.backend-shell input[type="file"]:not(.event-image-inline-file-input):not(.settings-highlight-video-file-input):hover::file-selector-button,
+.backend-shell input[type="file"]:not(.event-image-inline-file-input):not(.settings-highlight-video-file-input):focus-visible::file-selector-button {
+border-color: #050505;
+  background: #050505;
+}
+
+.backend-shell input[type="file"]:not(.event-image-inline-file-input):not(.settings-highlight-video-file-input):hover::-webkit-file-upload-button,
+.backend-shell input[type="file"]:not(.event-image-inline-file-input):not(.settings-highlight-video-file-input):focus-visible::-webkit-file-upload-button {
+border-color: #050505;
+  background: #050505;
+}
+
 trix-editor.blog-rich-text {
 width: 100%;
   min-height: 24rem;

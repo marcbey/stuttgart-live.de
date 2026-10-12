@@ -570,6 +570,12 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 - `homepage_genre_tag_cloud_enabled` für die optionale Tag-Cloud mit übrigen Homepage-Genres
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen und prägnanten Titelvarianten im Merge-Import bei gleicher oder sehr naher Startzeit
 
+„Stuttgart im Mix“ erscheint automatisch, sobald kommende öffentliche Events mit Genre-Zuordnung verfügbar sind. Die Lane mischt Events aus allen Genres; dafür muss unter **Einstellungen → Homepage Genre-Lanes** kein Genre ausgewählt werden. Die dortige Auswahl steuert nur die zusätzlichen einzelnen Genre-Lanes. Die aktivierte Genre-Tag-Cloud zeigt zwischen „Stuttgart im Mix“ und „Unter 30 €“ die übrigen Genres mit kommenden öffentlichen Events und funktioniert auch ohne ausgewählte Genre-Lanes.
+
+Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo eines dort angezeigten Events, ansonsten den lokalen Mamma-Mia-Clip (20 Sekunden). Das Video startet stumm; über den Lautsprecher-Schalter lässt sich der Ton ein- und wieder ausschalten.
+
+Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Auch dieses Video startet stumm mit zuschaltbarem Ton; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
+
 ### Meta-Setup für Social-Publishing
 
 Damit Social-Posts aus dem Backend zuverlässig auf Instagram und Facebook funktionieren, muss das externe Meta-Setup zur hinterlegten App und den Ziel-Accounts passen:

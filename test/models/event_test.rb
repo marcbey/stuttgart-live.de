@@ -391,7 +391,7 @@ class EventTest < ActiveSupport::TestCase
       source_fingerprint: "test::event::public-ticket-offer-blocks-manual",
       artist_name: "Public Artist",
       title: "Public Tour",
-      start_at: Time.zone.local(2026, 10, 11, 20, 0, 0),
+      start_at: 7.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
       status: "published",

@@ -18,8 +18,8 @@
       <div class="design-preview-card-row" data-highlights-slider-target="track">
         <article class="design-preview-card design-preview-card--compact design-preview-card--lane-video"
                  data-controller="video-sound">
-          <% video_source = video_event&.highlight_landscape_video_file&.attached? ? public_media_path(video_event.highlight_landscape_video_file) : asset_path("design_preview/david-garrett-highlight.mp4") %>
-          <% video_poster = video_event.present? ? event_image_source(video_event.event_image, strict_proxy: strict_proxy, size: :banner_mobile) : asset_path("design_preview/david-garrett-highlight-poster.jpg") %>
+          <% video_source = video_event&.highlight_landscape_video_file&.attached? ? public_media_path(video_event.highlight_landscape_video_file) : asset_path("design_preview/mamma-mia-highlight.mp4") %>
+          <% video_poster = video_event.present? ? event_image_source(video_event.event_image, strict_proxy: strict_proxy, size: :banner_mobile) : asset_path("design_preview/mamma-mia-highlight-poster.jpg") %>
           <% video_href = public_event_detail_path(video_event, browse_state) if video_event.present? %>
           <% video_content = capture do %>
             <span class="design-preview-card-media" aria-hidden="true">

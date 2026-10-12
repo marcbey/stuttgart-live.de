@@ -4658,6 +4658,8 @@ display: grid;
 .homepage-genre-tag-cloud-tags {
 display: flex;
   flex-wrap: wrap;
+  justify-content: center;
+  text-align: center;
   gap: 0.38rem 0.62rem;
   align-items: baseline;
 }
@@ -4665,9 +4667,12 @@ display: flex;
 .homepage-genre-tag-cloud-tag {
 display: inline-flex;
   align-items: center;
+  padding: 0.18rem 0.3rem;
+  border-radius: 0.3rem;
+  transition: background-color 160ms ease;
   color: var(--homepage-genre-tag-color, #07595f);
   font-family: "Oswald", "Arial Narrow", sans-serif;
-  font-size: 1.65rem;
+  font-size: 1.4rem;
   font-weight: 400;
   line-height: 0.94;
   letter-spacing: 0.04em;
@@ -4716,9 +4721,8 @@ content: "";
 
 .homepage-genre-tag-cloud-tag:hover,
 .homepage-genre-tag-cloud-tag:focus-visible {
-  text-decoration: underline;
-  text-decoration-thickness: 0.08em;
-  text-underline-offset: 0.12em;
+  text-decoration: none;
+  background-color: rgba(255, 255, 255, 0.5);
 }
 
 @media (min-width: 768px) {
@@ -4727,7 +4731,7 @@ content: "";
   }
 
   .homepage-genre-tag-cloud-tag {
-  font-size: 2.15rem;
+  font-size: 1.8rem;
   }
 }
 
@@ -13908,11 +13912,11 @@ body.page-public-design-preview main {
   padding: 0.52rem 0 0.35rem;
 }
 
-.design-preview-list-card-grid .design-preview-card-actions {
-  top: 0.52rem;
-  right: 0.52rem;
+.design-preview-list-card-grid .design-preview-card .design-preview-card-actions {
+  top: 0.65rem;
+  right: 0.65rem;
   bottom: auto;
-  left: 0.52rem;
+  left: 0.65rem;
   align-items: flex-start;
   justify-content: space-between;
 }
@@ -15624,7 +15628,8 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 .homepage-highlight-video-admin-link {
   position: absolute;
   top: 0.55rem;
-  left: 0.55rem;
+  right: 0.55rem;
+  left: auto;
   z-index: 4;
   min-height: 1.2rem;
   padding: 0.12rem 0.42rem 0.15rem;
@@ -15637,7 +15642,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 .homepage-highlight-video-sound-toggle {
   position: absolute;
   top: 0.58rem;
-  right: 0.58rem;
+  left: 0.58rem;
   z-index: 5;
   display: inline-grid;
   width: 2rem;
@@ -15645,8 +15650,8 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.68);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.86);
-  color: #080909;
+  background: #fff;
+  color: #000;
   box-shadow: 0 0.35rem 0.9rem rgba(8, 9, 9, 0.18);
   cursor: pointer;
   backdrop-filter: blur(12px);
@@ -15659,16 +15664,16 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 
 .homepage-highlight-video-sound-toggle:hover,
 .homepage-highlight-video-sound-toggle:focus-visible {
-  border-color: rgba(8, 9, 9, 0.18);
-  background: rgba(255, 255, 255, 0.96);
+  border-color: #fff;
+  background: #f2f2f2;
   box-shadow: 0 0.45rem 1rem rgba(8, 9, 9, 0.2);
   transform: translateY(-1px);
 }
 
 .homepage-highlight-video-sound-icon {
   display: block;
-  width: 1rem;
-  height: 1rem;
+  width: 1.25rem;
+  height: 1.25rem;
   fill: none;
   stroke: currentColor;
   stroke-width: 1.8;
@@ -16039,8 +16044,22 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   backdrop-filter: blur(12px);
 }
 
-.design-preview-card--sold-out .design-preview-card-status-pill {
-  background: rgba(8, 9, 9, 0.22);
+.design-preview-card-status-pill--alert {
+  background: #c62828;
+  color: #fff;
+}
+
+.design-preview-card:has(.design-preview-card-status-pill) .design-preview-card-series-pill {
+  margin-top: 1.75rem;
+}
+
+.design-preview-card > .event-card-admin-controls {
+  top: 0.65rem;
+  right: 2.55rem;
+}
+
+.design-preview-card > .event-card-admin-controls .design-preview-card-admin-link {
+  position: static;
 }
 
 .design-preview-card-admin-link {
@@ -16113,6 +16132,17 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   white-space: nowrap;
   font-weight: 300;
   text-transform: none;
+}
+
+.design-preview-card-copy .design-preview-card-kicker.design-preview-card-genre {
+  justify-self: start;
+  max-width: 100%;
+  padding: 0.16rem 0.5rem 0.2rem;
+  margin-bottom: 0.16rem;
+  border: 1px solid rgba(0, 197, 204, 0.2);
+  border-radius: 999px;
+  background: rgba(228, 250, 250, 0.96);
+  color: #0a2324;
 }
 
 .design-preview-card-meta,
@@ -21660,8 +21690,27 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   text-wrap: pretty;
 }
 
-.design-detail-preview-flow :where(p, ul, ol, h3) {
+.design-detail-preview-flow :where(p, ul, ol, h2, h3, h4) {
   margin: 0;
+}
+
+.design-detail-preview-flow :where(h2, h3, h4) {
+  color: var(--preview-ink);
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-weight: 400;
+  line-height: 1;
+}
+
+.design-detail-preview-flow h2 {
+  font-size: clamp(1.8rem, 2.9vw, 2.3rem);
+}
+
+.design-detail-preview-flow h3 {
+  font-size: clamp(1.45rem, 2.25vw, 1.78rem);
+}
+
+.design-detail-preview-flow h4 {
+  font-size: clamp(1.15rem, 1.65vw, 1.35rem);
 }
 
 .design-detail-preview-flow p {

@@ -476,11 +476,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     tag_cloud_index = shell_children.index { |node| node["class"].to_s.include?("homepage-genre-tag-cloud") }
     saved_lane_slot_index = shell_children.index { |node| node["id"] == "saved-events-lane-slot" }
 
-    assert_nil tag_cloud_index
+    assert tag_cloud_index.present?, "expected enabled genre tag cloud"
+    assert_operator tag_cloud_index, :>, rock_lane_index
     assert rock_lane_index.present?, "expected configured rock lane to be rendered"
     assert_operator saved_lane_slot_index, :>, rock_lane_index
-    assert_select ".homepage-genre-tag-cloud", count: 0
-    assert_select ".homepage-genre-tag-cloud-tag[href='/#{pop_group.slug}']", count: 0
+    assert_select ".homepage-genre-tag-cloud", count: 1
+    assert_select ".homepage-genre-tag-cloud-tag[href='/#{pop_group.slug}']", count: 1
     assert_select ".homepage-genre-tag-cloud-tag[href='/#{rock_group.slug}']", count: 0
     assert_select ".homepage-genre-tag-cloud-tag[href='/metal-punk-hardcore']", count: 0
   end
@@ -508,8 +509,50 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".genre-lane-section", count: 0
-    assert_select ".homepage-genre-tag-cloud", count: 0
-    assert_select ".homepage-genre-tag-cloud-tag[href='/pop-indie-singer-songwriter']", count: 0
+    assert_select ".homepage-genre-tag-cloud", count: 1
+    assert_select ".homepage-genre-tag-cloud-tag[href='/pop-indie-singer-songwriter']", count: 1
+  end
+
+  test "stuttgart mix renders without configured genre lanes" do
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Pop" ])
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select "[data-deferred-section-url-value*='section=stuttgart_mix']", count: 1
+
+    get homepage_section_events_url(section: "stuttgart_mix", filter: "all")
+
+    assert_response :success
+    assert_select "h2", text: "Stuttgart im Mix"
+    assert_select ".design-preview-card--lane-video video[src*='mamma-mia-highlight'][autoplay]", count: 1
+    assert_select ".design-preview-card--lane-video video[muted]", count: 1
+    assert_select ".design-preview-card--lane-video button[aria-label='Ton einschalten']", count: 1
+    assert_select ".design-preview-card-title", text: @published_event.artist_name
+  end
+
+  test "stuttgart mix includes genres outside configured homepage lanes" do
+    create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Pop" ])
+
+    get homepage_section_events_url(section: "stuttgart_mix", filter: "all")
+
+    assert_response :success
+    assert_select ".design-preview-card-title", text: @published_event.artist_name
+  end
+
+  test "stuttgart mix stays hidden without upcoming public genre events" do
+    Event.published_live.update_all(status: "needs_review")
+
+    get events_url(filter: "all")
+
+    assert_response :success
+    assert_select "[data-deferred-section-url-value*='section=stuttgart_mix']", count: 0
+
+    get homepage_section_events_url(section: "stuttgart_mix", filter: "all")
+
+    assert_response :success
+    assert_select ".design-preview-section--summer-party", count: 0
   end
 
   test "homepage lane header titles link to their landing pages when available" do
@@ -2099,6 +2142,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       published_at: 1.day.ago,
       source_snapshot: {}
     )
+    get events_url
+
+    assert_response :success
+    assert_select ".homepage-highlight-video[src*='lea-portrait'][muted][autoplay]", count: 1
+    assert_select ".homepage-highlight-video[poster*='lea-portrait-poster']", count: 1
+    assert_select ".homepage-highlight-video-card button[aria-label='Ton einschalten']", count: 1
+
     event.highlight_video_file.attach(
       io: StringIO.new("fake video content"),
       filename: "highlight-video.mp4",

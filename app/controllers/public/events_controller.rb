@@ -358,7 +358,8 @@ module Public
       assign_homepage_sections(defer_lower_lanes: true)
       assign_homepage_promotion_banners
       @design_preview_news_posts = BlogPost.published_live.with_attached_cover_image.limit(6).to_a
-      @design_preview_mix_available = @home_genre_lanes.any?
+      @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
+      @design_preview_mix_available = lean_homepage_all_relation.joins(:genres).exists?
       @design_preview_series_counts_by_id = Public::Events::SeriesCountsByIdQuery.call(design_preview_series_events)
       @design_preview_search_overlay = build_search_overlay
     end
@@ -469,6 +470,7 @@ module Public
     def design_preview_mix_events
       lanes = Public::Events::HomepageGenreLanesBuilder.new(
         relation: scoped_homepage_all_relation,
+        slugs: Genre.pluck(:slug),
         limit: HOME_LANE_LIMIT
       ).call
 
@@ -589,7 +591,7 @@ module Public
     end
 
     def homepage_genre_tag_cloud_genres
-      Public::Events::HomepageGenreTagCloudBuilder.new(relation: homepage_events_relation).call
+      Public::Events::HomepageGenreTagCloudBuilder.new(relation: lean_homepage_events_relation).call
     end
 
     def empty_homepage_lane_shell
