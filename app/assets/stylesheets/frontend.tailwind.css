@@ -8105,6 +8105,19 @@ border-top: 1px solid #e3ded3;
   padding-top: 0.4rem;
 }
 
+.event-series-calendar-time-hint {
+  width: fit-content;
+  margin: 0 auto 0.55rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: #e4fafa;
+  color: #0a2324;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.3;
+  text-align: center;
+}
+
 .event-series-calendar-time-panel {
 display: flex;
   gap: 0.42rem;
@@ -16136,6 +16149,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 
 .design-preview-card-copy .design-preview-card-kicker.design-preview-card-genre {
   justify-self: start;
+  width: fit-content;
   max-width: 100%;
   padding: 0.16rem 0.5rem 0.2rem;
   margin-bottom: 0.16rem;
@@ -21091,6 +21105,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   display: inline-flex;
   min-height: 1.75rem;
   align-items: center;
+  transform: translateY(-2px);
   color: var(--preview-saved);
   font-size: 0.9rem;
   line-height: 1;
@@ -21692,6 +21707,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-detail-preview-flow :where(p, ul, ol, h2, h3, h4) {
   margin: 0;
+}
+
+.design-detail-preview-flow .attachment--preview .attachment__caption {
+  display: none;
 }
 
 .design-detail-preview-flow :where(h2, h3, h4) {

@@ -44,7 +44,9 @@
             <span class="event-detail-series-more-count"><%= summary_count %></span>
             <span class="event-detail-series-more-arrow" aria-hidden="true"></span>
           </summary>
-          <div class="event-series-calendar" data-controller="event-series-calendar">
+          <div class="event-series-calendar"
+               data-controller="event-series-calendar"
+               data-action="click@window->event-series-calendar#closeOutside">
             <div class="event-series-calendar-months" role="tablist" aria-label="Terminmonate">
               <% calendar_months.each do |month_date, month_events| %>
                 <% month_key = month_date.strftime("%Y-%m") %>
@@ -104,6 +106,10 @@
                 </div>
 
                 <div class="event-series-calendar-times">
+                  <p class="event-series-calendar-time-hint"
+                     data-event-series-calendar-target="timeHint"
+                     role="status"
+                     hidden></p>
                   <% month_events_by_day.sort_by { |date, _day_events| date }.each do |date, day_events| %>
                     <% day_key = date.iso8601 %>
                     <div class="event-series-calendar-time-panel"

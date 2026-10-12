@@ -576,6 +576,8 @@ Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo 
 
 Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Auch dieses Video startet stumm mit zuschaltbarem Ton; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
 
+Im Kalender „Weitere Termine“ öffnet ein Klick auf einen Tag mit genau einem Termin direkt dessen Eventseite. Ab zwei Terminen wird die Uhrzeit darunter gewählt und ein Hinweis eingeblendet. Ein Klick außerhalb schließt den Kalender.
+
 ### Meta-Setup für Social-Publishing
 
 Damit Social-Posts aus dem Backend zuverlässig auf Instagram und Facebook funktionieren, muss das externe Meta-Setup zur hinterlegten App und den Ziel-Accounts passen:

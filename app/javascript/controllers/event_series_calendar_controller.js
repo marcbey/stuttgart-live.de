@@ -1,7 +1,14 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "monthButton", "monthPanel", "dayButton", "dayPanel" ]
+  static targets = [ "monthButton", "monthPanel", "dayButton", "dayPanel", "timeHint" ]
+
+  closeOutside(event) {
+    const disclosure = this.element.closest("details")
+    if (!disclosure?.open || disclosure.contains(event.target)) return
+
+    disclosure.open = false
+  }
 
   selectMonth(event) {
     event.preventDefault()
@@ -13,7 +20,8 @@ export default class extends Controller {
   selectDay(event) {
     event.preventDefault()
 
-    this.showDay(event.params.dayKey)
+    const times = this.showDay(event.params.dayKey)
+    if (times.length === 1) times[0].click()
   }
 
   showMonth(monthKey) {
@@ -29,6 +37,14 @@ export default class extends Controller {
   }
 
   showDay(dayKey) {
+    const selectedPanel = this.dayPanelTargets.find((panel) => panel.dataset.dayKey === dayKey)
+    const times = selectedPanel?.querySelectorAll(".event-series-calendar-time") || []
+
+    this.timeHintTargets.forEach((hint) => {
+      hint.hidden = times.length < 2
+      hint.textContent = times.length >= 2 ? "Uhrzeit wählen" : ""
+    })
+
     this.dayButtonTargets.forEach((button) => {
       const active = button.dataset.eventSeriesCalendarDayKeyParam === dayKey
       button.classList.toggle("is-active", active)
@@ -38,5 +54,7 @@ export default class extends Controller {
     this.dayPanelTargets.forEach((panel) => {
       panel.hidden = panel.dataset.dayKey !== dayKey
     })
+
+    return times
   }
 }
