@@ -510,7 +510,7 @@ class EventTest < ActiveSupport::TestCase
       source_fingerprint: "test::event::public-canceled-leading-offer",
       artist_name: "Canceled Artist",
       title: "Canceled Tour",
-      start_at: Time.zone.local(2026, 10, 15, 20, 0, 0),
+      start_at: 2.days.from_now.change(hour: 20, min: 0, sec: 0),
       venue: "Im Wizemann",
       city: "Stuttgart",
       status: "published",
