@@ -1,0 +1,13 @@
+# Redirect-Service für Stuttgart Live
+
+Die neue App bearbeitet Anfragen zuerst regulär. Ausschließlich tatsächliche öffentliche GET-/HEAD-404 werden vor Auslieferung lokal aufgelöst. Erfolgreiche Antworten, insbesondere die Startseite mit WordPress-Kurzlink-Parametern, haben Vorrang. Dauerhafte 301-Ziele müssen äquivalent, öffentlich und direkt erreichbar sein.
+
+Der Altbestand wird vor dem Domainwechsel aus Sitemaps, HTML und verknüpften Dateien inventarisiert. Die Datenbank speichert Quelldaten, Zielreferenz, Herkunft, Ergebnis, Treffergrund und Score. Import ist wiederholbar und fortsetzbar. Vorhandene Blog-Quell-URLs werden übernommen. Dateien benötigen belegte Herkunft oder identischen Inhalt.
+
+Manuelle Entscheidungen und Sperren sind verbindlich. Automatische Auflösung verwendet zuerst Provider-/Quell-IDs und fachliche Exaktvergleiche, danach PostgreSQL-Trigrammähnlichkeit ab 0,90 mit 0,10 Abstand zum zweitbesten fachlich anderen Ziel. Events müssen Termin und Ort treffen. Ersatzweise ist dieselbe Produktion/Reihe über eine bestehende Event-Detailseite mit Terminliste zulässig; Künstlergleichheit allein reicht nicht. News/Seiten benötigen zusätzlich übereinstimmenden Inhalt und dürfen keine widersprüchlichen Themen, Ausgaben oder Jahresangaben enthalten.
+
+Requests verwenden nur lokale Daten. Negative Ergebnisse gelten 15 Minuten und werden bei Inhaltsänderungen invalidiert; technische Fehler sind keine Fehltreffer. Ziele werden bei Wiederverwendung auf Öffentlichkeit geprüft. HTTP-Redirects erhalten fünf Minuten Cachezeit. Keine Schleifen, Ketten oder pauschalen Startseiten-/Suchweiterleitungen. Sitemap und Canonicals bleiben auf aktuellen Inhalts-URLs.
+
+Unter /backend/redirects entsteht eine Admin-Verwaltung exakt nach dem bestehenden Bereich Seiten: Backend-Layout, obere Aktionsleiste, Liste und Filter links, Turbo-Editor rechts, vorhandene editor-inbox-Steuerung, Formulare, Badges, Feedback und responsive Regeln. Filter, Seitennummer und Auswahl bleiben beim Bearbeiten erhalten. Anlegen, Ändern, Deaktivieren, Prüfen und Zielvorschau werden unterstützt. Ausschließlich bestehende Backend-Assets und lokale Fonts verwenden.
+
+Abnahme: relevante Integrations-, Matching-, Import-, Datei-, Cache-, Berechtigungs- und Parallelitätstests; Browservergleich mit Seiten, auch schmal und mit langen URLs; lokaler Prüfbericht und Benchmark. Resolver-Ziele p95 <20 ms gespeichert und <100 ms erstmalig sind unter produktionsnaher Last nachzuprüfen. README, Migrationen, RuboCop und mise exec -- bin/ci gehören zur Umsetzung. DNS/TLS und fehlende Inhalte gehören nicht zum Redirect-Dienst.

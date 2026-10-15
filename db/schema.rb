@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_28_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_152000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -96,6 +96,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_160000) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.jsonb "youtube_video_urls", default: [], null: false
+    t.index "lower((title)::text) gin_trgm_ops", name: "index_blog_posts_on_legacy_title_trgm", using: :gin
     t.index ["author_id"], name: "index_blog_posts_on_author_id"
     t.index ["promotion_banner", "promotion_banner_lane_position", "published_at", "id"], name: "index_blog_posts_on_promotion_banner_lane_position", where: "promotion_banner"
     t.index ["published_by_id"], name: "index_blog_posts_on_published_by_id"
@@ -296,6 +297,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_160000) do
     t.datetime "updated_at", null: false
     t.bigint "venue_id", null: false
     t.string "youtube_url"
+    t.index "lower((artist_name)::text) gin_trgm_ops", name: "index_events_on_legacy_artist_name_trgm", using: :gin
     t.index ["event_series_assignment"], name: "index_events_on_event_series_assignment"
     t.index ["event_series_id"], name: "index_events_on_event_series_id"
     t.index ["promoter_id", "start_at", "id"], name: "index_events_on_published_promoter_id_start_at_and_id", where: "((status)::text = 'published'::text)"
@@ -306,6 +308,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_160000) do
     t.index ["published_by_id"], name: "index_events_on_published_by_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true
     t.index ["source_fingerprint"], name: "index_events_on_source_fingerprint", unique: true, where: "(source_fingerprint IS NOT NULL)"
+    t.index ["source_snapshot"], name: "index_events_on_legacy_source_snapshot", using: :gin
     t.index ["start_at", "id"], name: "index_events_on_published_highlighted_start_at_and_id", where: "(((status)::text = 'published'::text) AND (highlighted = true))"
     t.index ["start_at", "id"], name: "index_events_on_published_reservix_start_at_and_id", where: "(((status)::text = 'published'::text) AND ((primary_source)::text = 'reservix'::text))"
     t.index ["start_at", "normalized_artist_name"], name: "index_events_on_start_at_and_normalized_artist_name"
@@ -391,6 +394,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_160000) do
     t.string "source_type", null: false
     t.datetime "updated_at", null: false
     t.index ["source_type"], name: "index_import_sources_on_source_type", unique: true
+  end
+
+  create_table "legacy_redirects", force: :cascade do |t|
+    t.datetime "checked_at"
+    t.datetime "created_at", null: false
+    t.string "match_reason"
+    t.string "origin", default: "automatic", null: false
+    t.string "resolution_version"
+    t.datetime "retry_at"
+    t.decimal "score"
+    t.string "source_kind", default: "page", null: false
+    t.jsonb "source_metadata", default: {}, null: false
+    t.string "source_path", null: false
+    t.string "status", default: "unresolved", null: false
+    t.bigint "target_id"
+    t.string "target_path"
+    t.string "target_type"
+    t.datetime "updated_at", null: false
+    t.index ["source_path"], name: "index_legacy_redirects_on_source_path", unique: true
+    t.index ["status", "origin"], name: "index_legacy_redirects_on_status_and_origin"
+    t.index ["target_type", "target_id"], name: "index_legacy_redirects_on_target"
   end
 
   create_table "login_attempts", force: :cascade do |t|
@@ -641,6 +665,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_28_160000) do
     t.string "system_key"
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.index "lower((title)::text) gin_trgm_ops", name: "index_static_pages_on_legacy_title_trgm", using: :gin
     t.index ["slug"], name: "index_static_pages_on_slug", unique: true
     t.index ["system_key"], name: "index_static_pages_on_system_key", unique: true
   end

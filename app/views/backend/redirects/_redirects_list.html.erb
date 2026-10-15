@@ -1,0 +1,40 @@
+<div id="redirects_list">
+  <p class="event-list-count"><strong><%= total_count %></strong> gefilterte Weiterleitungen</p>
+  <% if redirects.any? %>
+    <ul class="event-list" role="list">
+      <% redirects.each do |rule| %>
+        <li class="event-list-item redirect-list-item <%= 'event-list-item-active' if selected_redirect&.id == rule.id %>">
+          <%= link_to edit_backend_redirect_path(rule, list_context),
+                      data: { turbo_frame: "redirect_editor", action: "click->editor-inbox#itemLinkClicked",
+                              editor_inbox_item_id: rule.id,
+                              editor_inbox_selection_url: backend_redirects_path(list_context.merge(redirect_id: rule.id)) },
+                      class: "event-link redirect-link" do %>
+            <div class="event-list-main">
+              <strong class="redirect-url"><%= rule.source_path %></strong>
+              <span class="redirect-url">→ <%= rule.destination.presence || "Kein Ziel" %></span>
+              <% if rule.source_metadata["title"].present? %><small><%= rule.source_metadata["title"] %></small><% end %>
+            </div>
+            <span class="event-list-badges">
+              <span class="status-badge"><%= { "unresolved" => "Ungeklärt", "redirect" => "Weiterleitung", "disabled" => "Deaktiviert" }.fetch(rule.status) %></span>
+              <span class="status-badge"><%= rule.manual? ? "Manuell" : "Automatisch" %></span>
+            </span>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <div class="empty-state">Keine Weiterleitungen zur aktuellen Filterung.</div>
+  <% end %>
+  <% if total_pages > 1 || page_number > 1 %>
+    <nav class="backend-topbar-actions" aria-label="Weiterleitungen blättern">
+      <% selection = selected_redirect&.persisted? ? { redirect_id: selected_redirect.id } : {} %>
+      <% if page_number > 1 %>
+        <%= link_to "Zurück", backend_redirects_path(list_context.merge(selection).merge(page: page_number - 1)), class: "button button-secondary button-compact", data: { turbo_frame: "_top" } %>
+      <% end %>
+      <span>Seite <%= page_number %> von <%= total_pages %></span>
+      <% if page_number < total_pages %>
+        <%= link_to "Weiter", backend_redirects_path(list_context.merge(selection).merge(page: page_number + 1)), class: "button button-secondary button-compact", data: { turbo_frame: "_top" } %>
+      <% end %>
+    </nav>
+  <% end %>
+</div>

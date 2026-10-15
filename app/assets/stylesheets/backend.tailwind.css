@@ -4579,3 +4579,27 @@ padding: 0.2rem 0.7rem 0.75rem;
     white-space: normal;
   }
 }
+
+.redirect-list-item {
+grid-template-columns: minmax(0, 1fr);
+}
+
+.redirect-link,
+.redirect-list-item .event-list-main {
+min-width: 0;
+}
+
+.redirect-url {
+overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+pre.redirect-url {
+white-space: pre-wrap;
+}
+
+@media (min-width: 700px) {
+  .redirect-filter-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

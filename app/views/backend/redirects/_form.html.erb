@@ -1,0 +1,79 @@
+<div class="editor-panel backend-panel" id="redirect_editor_panel" data-selected-item-id="<%= rule.id if rule.persisted? %>">
+  <template class="editor-actions-template">
+    <%= render "editor_actions", rule: rule, list_context: list_context %>
+  </template>
+  <% if rule.errors.any? %>
+    <div class="flash flash-alert">
+      <strong>Bitte Eingaben prüfen.</strong>
+      <ul><% rule.errors.full_messages.each do |message| %><li><%= message %></li><% end %></ul>
+    </div>
+  <% end %>
+
+  <%= form_with model: rule, url: (rule.persisted? ? backend_redirect_path(rule) : backend_redirects_path), id: dom_id(rule, :editor_form), class: "editor-form" do |form| %>
+    <% list_context.except(:page).each do |key, value| %><%= hidden_field_tag key, value %><% end %>
+    <%= hidden_field_tag :page, page_number %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header">
+        <h3>Weiterleitung</h3>
+        <p>Regeln greifen erst nach einem tatsächlichen 404. Bestehende öffentliche Seiten haben Vorrang.</p>
+      </div>
+      <div class="backend-section-body">
+        <div class="editor-grid">
+          <div class="editor-grid-span-full">
+            <%= form.label :source_path, "Quelladresse", class: "form-label" %>
+            <%= form.text_field :source_path, class: "form-input", required: true, placeholder: "/alter-pfad" %>
+          </div>
+          <div>
+            <%= form.label :source_kind, "Inhaltstyp", class: "form-label" %>
+            <%= form.select :source_kind, [["Event", "event"], ["News", "news"], ["Seite", "page"], ["Genre", "genre"], ["Datei", "file"]], {}, class: "form-input" %>
+          </div>
+          <div>
+            <%= form.label :status, "Entscheidung", class: "form-label" %>
+            <%= form.select :status, [["Automatisch ermitteln", "unresolved"], ["Manuell weiterleiten", "redirect"], ["Deaktiviert", "disabled"]], {}, class: "form-input" %>
+          </div>
+          <div class="editor-grid-span-full">
+            <%= form.label :destination, "Zieladresse", class: "form-label" %>
+            <%= form.text_field :destination, value: (rule.destination_input.nil? ? rule.destination : rule.destination_input), class: "form-input", placeholder: "/events/aktuelles-event" %>
+            <p class="form-hint">Nur direkte öffentliche Ziele dieser App sind zulässig. „Automatisch ermitteln“ verwirft die bisherige Entscheidung und aktiviert die automatische Zuordnung erneut.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
+  <% if rule.persisted? %>
+    <section class="backend-section backend-section-compact">
+      <div class="backend-section-header"><h3>Prüfung und Quelldaten</h3></div>
+      <div class="backend-section-body">
+        <dl>
+          <dt>Herkunft</dt><dd><%= rule.manual? ? "Manuell" : "Automatisch" %></dd>
+          <% reason_labels = {
+            "manual_decision" => "Manuelle Entscheidung",
+            "provider_id" => "Übereinstimmende Provider-ID",
+            "event_identity" => "Übereinstimmende Veranstaltung mit Termin und Ort",
+            "event_series" => "Übereinstimmende Veranstaltungsreihe",
+            "blog_source_url" => "Übernommene News-Quelladresse",
+            "equivalent_route" => "Gleichwertige öffentliche Adresse",
+            "file_checksum" => "Identischer Dateiinhalt",
+            "content_similarity" => "Übereinstimmender Inhalt",
+            "genre_slug" => "Übereinstimmendes Genre"
+          } %>
+          <dt>Treffergrund</dt><dd><%= reason_labels[rule.match_reason] || (rule.match_reason.present? ? "Automatische Zuordnung" : "Noch kein Treffer") %></dd>
+          <dt>Score</dt><dd><%= rule.score.present? ? number_with_precision(rule.score, precision: 3) : "–" %></dd>
+          <dt>Zuletzt geprüft</dt><dd><%= rule.checked_at ? l(rule.checked_at, format: "%d.%m.%Y %H:%M") : "Noch nicht geprüft" %></dd>
+          <% { "title" => "Titel", "artist_name" => "Künstler", "production" => "Produktion", "date" => "Termin", "start_at" => "Beginn", "dates" => "Termine", "venue" => "Veranstaltungsort", "provider_id" => "Provider-ID", "provider_ids" => "Provider-Referenzen", "published_at" => "Veröffentlicht", "source_url" => "Alte Adresse", "crawled_at" => "Importiert", "crawl_error" => "Importfehler" }.each do |key, label| %>
+            <% value = rule.source_metadata[key] %>
+            <% next if value.blank? %>
+            <dt><%= label %></dt><dd class="redirect-url"><%= value.is_a?(Hash) || value.is_a?(Array) ? JSON.pretty_generate(value) : value %></dd>
+          <% end %>
+        </dl>
+        <% if rule.source_metadata.present? %>
+          <details>
+            <summary>Vollständige Importdaten</summary>
+            <pre class="redirect-url"><%= JSON.pretty_generate(rule.source_metadata) %></pre>
+          </details>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+</div>

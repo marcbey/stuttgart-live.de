@@ -1,0 +1,51 @@
+<% content_for :title, "Weiterleitungen" %>
+
+<section class="backend-shell backend-inbox-shell"
+         data-controller="editor-inbox"
+         data-action="turbo:frame-load@document->editor-inbox#syncActiveFromEditor turbo:submit-end@document->editor-inbox#syncActiveAfterSubmit"
+         data-editor-inbox-frame-id-value="redirect_editor"
+         data-editor-inbox-item-selector-value=".redirect-list-item"
+         data-editor-inbox-link-selector-value=".redirect-link">
+  <header class="backend-topbar backend-topbar-sticky backend-inbox-topbar">
+    <div class="backend-topbar-title">
+      <h1>Weiterleitungen</h1>
+    </div>
+    <%= render "topbar_controls", rule: @selected_redirect, list_context: @list_context %>
+  </header>
+
+  <div class="backend-split backend-inbox-split">
+    <aside class="backend-list-column">
+      <%= form_with url: backend_redirects_path, method: :get, id: "redirect_filters", class: "filter-form", data: { turbo_frame: "_top" } do |form| %>
+        <div class="filter-grid redirect-filter-grid">
+          <div class="filter-search-field filter-search-field-full">
+            <%= form.label :query, "Suche", class: "form-label" %>
+            <div class="filter-date-wrap">
+              <%= form.text_field :query, value: @query_filter, placeholder: "Quelladresse, Zieladresse oder Titel",
+                                  class: "form-input filter-input-with-clear",
+                                  oninput: "this.nextElementSibling.classList.toggle('filter-date-clear-visible', this.value.length > 0)" %>
+              <%= button_tag "×", type: "button",
+                             class: "filter-date-clear filter-input-clear #{'filter-date-clear-visible' if @query_filter.present?}",
+                             aria: { label: "Suche löschen" },
+                             onclick: "this.previousElementSibling.value=''; this.classList.remove('filter-date-clear-visible'); this.form.requestSubmit();" %>
+            </div>
+          </div>
+          <div>
+            <%= form.label :status, "Status", class: "form-label" %>
+            <%= form.select :status, options_for_select([["Alle Status", ""], ["Ungeklärt", "unresolved"], ["Weiterleitung", "redirect"], ["Deaktiviert", "disabled"]], @status_filter), {}, class: "form-input", onchange: "this.form.requestSubmit()" %>
+          </div>
+          <div>
+            <%= form.label :origin, "Herkunft", class: "form-label" %>
+            <%= form.select :origin, options_for_select([["Alle Herkünfte", ""], ["Automatisch", "automatic"], ["Manuell", "manual"]], @origin_filter), {}, class: "form-input", onchange: "this.form.requestSubmit()" %>
+          </div>
+        </div>
+      <% end %>
+      <%= render "redirects_list", redirects: @redirects, selected_redirect: @selected_redirect,
+                 total_count: @total_count, total_pages: @total_pages,
+                 list_context: @list_context, page_number: @page_number %>
+    </aside>
+
+    <section class="backend-editor-column backend-inbox-editor-column">
+      <%= render "editor_frame", rule: @selected_redirect, list_context: @list_context, page_number: @page_number %>
+    </section>
+  </div>
+</section>

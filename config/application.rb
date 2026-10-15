@@ -1,5 +1,6 @@
 require_relative "boot"
 require_relative "../app/lib/production_server_config"
+require_relative "../lib/legacy_redirects/middleware"
 
 require "rails/all"
 
@@ -25,6 +26,7 @@ module StuttgartLiveDe
     config.time_zone = "Europe/Berlin"
     config.i18n.default_locale = :de
     config.exceptions_app = routes
+    config.middleware.insert_before ActionDispatch::ShowExceptions, LegacyRedirects::Middleware
     config.active_storage.variant_processor =
       begin
         require "vips"

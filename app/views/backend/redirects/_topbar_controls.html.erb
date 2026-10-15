@@ -1,0 +1,12 @@
+<div id="redirect_topbar_controls" class="backend-topbar-controls backend-inbox-topbar-controls">
+  <div class="backend-inbox-control-rail">
+    <%= render "topbar_editor_actions", rule: rule, list_context: list_context %>
+    <% unless rule.present? && !rule.persisted? %>
+      <div class="backend-topbar-actions" data-editor-inbox-target="newAction">
+        <%= link_to "New", new_backend_redirect_path(list_context),
+                    data: { turbo_frame: "redirect_editor" },
+                    class: "button button-secondary button-compact" %>
+      </div>
+    <% end %>
+  </div>
+</div>

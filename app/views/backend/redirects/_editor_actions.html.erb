@@ -1,0 +1,12 @@
+<div class="backend-topbar-actions">
+  <button type="submit" form="<%= dom_id(rule, :editor_form) %>" class="button button-save-primary button-compact">Save</button>
+  <% unless rule.persisted? %>
+    <%= link_to "Cancel", backend_redirects_path(list_context), class: "button button-secondary button-compact", data: { turbo_frame: "_top" } %>
+  <% end %>
+  <% if rule.persisted? %>
+    <% if rule.destination.present? %>
+      <%= link_to "Open", rule.destination, class: "button button-secondary button-compact", target: "_blank", rel: "noopener" %>
+    <% end %>
+    <%= button_to "Prüfen", recheck_backend_redirect_path(rule, list_context), class: "button button-secondary button-compact", form: { data: { turbo_frame: "redirect_editor" } } %>
+  <% end %>
+</div>

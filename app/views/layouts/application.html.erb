@@ -130,6 +130,7 @@
           <%= link_to "Locations", backend_venues_path, class: app_nav_link_class(active: venue_nav_active?), aria: { current: ("page" if venue_nav_active?) } %>
         <% end %>
         <% if current_user.admin? %>
+          <%= link_to "Weiterleitungen", backend_redirects_path, class: app_nav_link_class(active: controller_path == "backend/redirects"), aria: { current: ("page" if controller_path == "backend/redirects") } %>
           <%= link_to "Einstellungen", edit_backend_settings_path, class: app_nav_link_class(active: settings_nav_active?), aria: { current: ("page" if settings_nav_active?) } %>
           <%= link_to "Queue", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?), aria: { current: ("page" if importer_nav_active?) } %>
           <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users"), aria: { current: ("page" if controller_path == "backend/users") } %>

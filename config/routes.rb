@@ -60,6 +60,9 @@ Rails.application.routes.draw do
       resources :items, controller: "newsletter_issue_items", only: [ :create, :destroy ]
     end
     resources :pages, except: [ :show ]
+    resources :redirects, only: [ :index, :new, :create, :edit, :update ] do
+      post :recheck, on: :member
+    end
     resources :presenters, except: [ :show ] do
       get :bulk_new, on: :collection
       post :bulk_create, on: :collection
@@ -138,7 +141,7 @@ Rails.application.routes.draw do
   get "faq", to: "public/pages#show", defaults: { slug: "faq" }, as: :faq
   get "ueber-uns", to: "public/pages#show", defaults: { slug: "ueber-uns" }, as: :about
   get "impressum", to: "public/pages#show", defaults: { slug: "impressum" }, as: :imprint
-  get "blog/:slug", to: "public/legacy_blog_redirects#show", as: :legacy_blog_redirect
+  get "blog/:slug", to: "errors#show", defaults: { code: 404 }, as: :legacy_blog_redirect
   resources :news, only: [ :index, :show ], module: :public, param: :slug
   get "datenschutz", to: "public/pages#show", defaults: { slug: "datenschutz" }, as: :datenschutz
   get "agb", to: "public/pages#show", defaults: { slug: "agb" }, as: :agb

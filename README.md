@@ -1065,3 +1065,30 @@ Wenn du tiefer einsteigen willst, sind diese Dateien meist die besten Startpunkt
 - `config/ci.rb` für den CI-Ablauf
 - `config/deploy.hetzner.yml` für das Produktions-Deployment
 - `HETZNER.md`, `INFRA.md` und `infra/ansible/README.md` für Infrastrukturdetails
+
+## Alte URLs für den Domainwechsel vorbereiten
+
+Der Redirect-Dienst bearbeitet ausschließlich öffentliche GET-/HEAD-Anfragen, die die App regulär mit 404 beantwortet. Vorhandene Seiten haben Vorrang. Insbesondere wird ein WordPress-Kurzlink wie `/?p=429061` auf einer erfolgreichen Startseitenantwort nicht umgeleitet. Die Auflösung erfolgt vollständig lokal; fehlende Artikel, Veranstaltungen oder Dateien werden dabei nicht importiert.
+
+Die Inventarisierung muss stattfinden, solange `stuttgart-live.de` noch den alten öffentlichen WordPress-Bestand ausliefert. Nach dem Domainwechsel würde derselbe Aufruf bereits die neue App erreichen. `SOURCE_URL` akzeptiert ausschließlich die alten Hosts `stuttgart-live.de` und `www.stuttgart-live.de`, keine beliebigen Ersatzhosts.
+
+```bash
+# Kleiner erster Lauf: maximal 20 Inhalts-/Dateiabrufe, keine unbegrenzte Vollinventur
+MAX_PAGES=20 mise exec -- bin/rails legacy_redirects:inventory
+# Fortsetzen: bereits erfolgreich erfasste Quellen und deren Links werden wiederverwendet
+MAX_PAGES=10000 mise exec -- bin/rails legacy_redirects:inventory
+# Bereits erfasste Seiten bewusst erneut abrufen
+REFRESH=1 MAX_PAGES=10000 mise exec -- bin/rails legacy_redirects:inventory
+# Vorhandene Blog-Quell-URLs übernehmen und bekannte Quellen lokal auflösen
+mise exec -- bin/rails legacy_redirects:prepare
+mise exec -- bin/rails legacy_redirects:report
+SAMPLES=100 mise exec -- bin/rails legacy_redirects:benchmark
+```
+
+Der Import startet beim Sitemap-Index, berücksichtigt `robots.txt` und folgt öffentlichen internen Inhaltslinks und Bild-/PDF-Verweisen. Er arbeitet nacheinander mit höchstens zwei Abrufen pro Sekunde, kurzen Zeitlimits, höchstens zwei Wiederholungen und fünf Weiterleitungen. HTML ist auf 2 MB, Dateien auf 25 MB begrenzt. Pro Lauf werden höchstens 1.000 Sitemaps und 100.000 verschiedene Quellen entdeckt; `MAX_PAGES` begrenzt zusätzlich die Inhalts-/Dateiabrufe (Standard 10.000). Ein unterbrochener Lauf lässt sich mit demselben Befehl fortsetzen. HTTP-Fehler bleiben sichtbar und werden beim nächsten Lauf erneut versucht. Technische Sitemap- oder Robots-Fehler brechen den Lauf ab, damit ein unvollständiger Bestand nicht als erfolgreich erscheint.
+
+Nach der Vorbereitung lassen sich unter **Backend → Weiterleitungen** (`/backend/redirects`, nur für Admins) Zuordnungen prüfen, manuell ändern oder deaktivieren. Manuelle Entscheidungen bleiben auch beim erneuten Import erhalten. Unklare Treffer, alte Ortsseiten ohne Gegenstück und fehlende Inhalte bleiben ungelöst und liefern weiterhin 404. Veranstaltungen benötigen belastbare Termin-/Ortsdaten; ein gleicher Künstler allein genügt nicht. Dateien erhalten nur bei belegter Zuordnung oder identischer Prüfsumme ein vorhandenes öffentliches Ziel.
+
+`tmp/legacy_redirects/report.json` und `report.csv` unterscheiden gültige Redirects, bereits aktuelle öffentliche Pfade, ungelöste Quellen, Sperren und Abruffehler. Die Prüfung der Ziele erfolgt anhand der lokalen Veröffentlichungsregeln; `current_public_200` ist eine lokale Bewertung, kein durchgeführter HTTP-Aufruf. Eine tatsächliche HTTP-Abnahme erfolgt separat, beispielsweise mit `curl -I https://stuttgart-live.de/ALTE-URL` nach der Umschaltung beziehungsweise gegen die passend konfigurierte Vorschau. Der Import ändert weder DNS noch TLS.
+
+Der Benchmark schreibt `tmp/legacy_redirects/benchmark.json`. Er misst den lokalen Resolver getrennt mit vorbereitetem Zustand und mit zurückgesetzten automatischen Zuordnungen innerhalb zurückgerollter Datenbanktransaktionen. Manuelle Regeln bleiben auch bei kalten Stichproben unmittelbar verbindlich. Netzwerk und die reguläre 404-Verarbeitung der App sind ausgeschlossen. Die Ergebnisse belegen keine Produktionslatenz: Die Ziele p95 unter 20 ms für gespeicherte und unter 100 ms für erstmalige Auflösung müssen unter produktionsnaher Last gesondert geprüft werden.
