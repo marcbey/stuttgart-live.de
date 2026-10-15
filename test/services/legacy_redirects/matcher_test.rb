@@ -19,6 +19,53 @@ class LegacyRedirects::MatcherTest < ActiveSupport::TestCase
     assert_nil LegacyRedirects::Matcher.call(rule)
   end
 
+  test "combined legacy heading matches separate artist and production with date and venue evidence" do
+    heading = "#{@event.artist_name} – #{@event.title}"
+    rule = event_rule(artist_name: heading, title: heading, date: "2027-11-10", venue: @event.venue,
+      start_at: @event.start_at.iso8601, time_known: true)
+    result = LegacyRedirects::Matcher.call(rule)
+    assert_equal @event, result&.target
+    assert_equal "event_identity", result&.reason
+
+    rule.source_metadata["start_at"] = (@event.start_at + 1.hour).iso8601
+    assert_nil LegacyRedirects::Matcher.call(rule)
+    rule.source_metadata["start_at"] = @event.start_at.iso8601
+    rule.source_metadata["venue"] = "Ein anderer Veranstaltungsort"
+    assert_nil LegacyRedirects::Matcher.call(rule)
+  end
+
+  test "combined headings do not erase conflicting numbered productions" do
+    [ [ "Ausgabe 12", "Ausgabe 13" ], [ "Ausgabe XII", "Ausgabe XIII" ], [ "Tour 2026", "Tour 2027" ] ].each do |old_label, current_label|
+      @event.update!(title: "Wandern total #{current_label}")
+      heading = "#{@event.artist_name} – Wandern total #{old_label}"
+      rule = event_rule(artist_name: heading, title: heading, date: "2027-11-10", venue: @event.venue)
+      assert_nil LegacyRedirects::Matcher.call(rule), "Conflicting #{old_label} and #{current_label} must not redirect"
+    end
+  end
+
+  test "combined heading does not bypass ambiguity or explicit production evidence" do
+    heading = "#{@event.artist_name} – #{@event.title}"
+    rule = event_rule(artist_name: heading, title: heading, date: "2027-11-10", venue: @event.venue)
+    second = @event.dup
+    second.assign_attributes(slug: "combined-second-performance", source_fingerprint: "combined-second-performance")
+    second.save!
+    assert_nil LegacyRedirects::Matcher.call(rule)
+    second.destroy!
+    rule.source_metadata["production"] = "Ein anderes Programm"
+    assert_nil LegacyRedirects::Matcher.call(rule)
+  end
+
+  test "combined heading cannot substitute for production evidence in a series" do
+    series = EventSeries.create!(origin: "manual", name: "Wandern total")
+    @event.update!(event_series: series)
+    second = @event.dup
+    second.assign_attributes(slug: "combined-next-date", source_fingerprint: "combined-next-date", start_at: @event.start_at + 1.day)
+    second.save!
+    heading = "#{@event.artist_name} – #{@event.title}"
+    rule = event_rule(artist_name: heading, title: heading, date: "2027-11-09", venue: @event.venue)
+    assert_nil LegacyRedirects::Matcher.call(rule)
+  end
+
   test "artist name alone never substitutes for another production" do
     rule = event_rule(artist_name: @event.artist_name, production: "Neue Abenteuer", date: "2027-11-10", venue: @event.venue)
     assert_nil LegacyRedirects::Matcher.call(rule)

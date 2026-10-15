@@ -95,10 +95,22 @@ module LegacyRedirects
       return unless Text.compatible_editions?(title, event.title)
 
       values = []
-      values << Text.similarity(artist, event.artist_name) if artist
+      values << artist_similarity(artist, event, production: title) if artist
       values << Text.similarity(title, event.title) if title
       score = values.min
       Matcher::Match.new(event, nil, reason, score)
+    end
+
+    def artist_similarity(artist, event, production:)
+      score = Text.similarity(artist, event.artist_name)
+      return score if production || metadata["title"].blank? || event.title.blank?
+      return score unless Text.normalize(metadata["title"]) == Text.normalize(artist)
+
+      headline = [ event.artist_name, event.title ].join(" ")
+      return score unless Text.compatible_years?(artist, headline) &&
+        Text.compatible_numbers?(artist, headline) && Text.compatible_editions?(artist, headline)
+
+      [ score, Text.similarity(artist, headline) ].max
     end
 
     def production
