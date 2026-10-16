@@ -661,6 +661,8 @@ Der Issue-Workflow für `codex-fix` lädt GitHub-hosted Screenshots aus dem Issu
 Das Skript `script/github_set_production_secrets` setzt dafür sowohl die benötigten Production-Environment-Secrets als auch das Repository-Secret `OPENAI_API_KEY` aus der lokalen `.env`.
 
 Webprozess und Job-Verarbeitung laufen in Production getrennt. Kamal startet eine `web`-Rolle für den öffentlichen Traffic und zusätzlich eine `job`-Rolle mit `bin/jobs`, damit Queue-Arbeit nicht mehr im selben Puma-Prozess um dieselben Threads konkurriert.
+
+Öffentliche Event-Karten laden gespeicherte Bildvarianten einschließlich ihrer Dateien gesammelt vor. Auch Genre-Vorschläge und die Terminanzahl für Serien-Badges werden gesammelt ermittelt. Event-Listen sowie Event- und News-Detailseiten vermeiden dadurch zusätzliche Datenbankabfragen pro Karte; Karten ohne sichtbares Serien-Badge benötigen keine Termin-Zählung.
 Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=2` und `RAILS_MAX_THREADS=3` gesetzt. Die Datenbank-Pools werden zusätzlich explizit über `DB_POOL` und `QUEUE_DB_POOL` festgelegt.
 Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt pfadsignierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Die URL bleibt für dieselbe gespeicherte Datei oder Variante dauerhaft stabil, damit Browser-Caches zwischen frischen HTML-Renders greifen. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
 

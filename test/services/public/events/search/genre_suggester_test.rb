@@ -64,6 +64,21 @@ class Public::Events::Search::GenreSuggesterTest < ActiveSupport::TestCase
     assert_empty suggestions
   end
 
+  test "batches route checks for default and matching suggestions" do
+    [ "", "s" ].each do |query|
+      queries = []
+      callback = lambda do |event|
+        queries << event.payload[:sql].to_s unless event.payload[:cached] || event.payload[:name] == "SCHEMA"
+      end
+      suggestions = nil
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { suggestions = suggest(query) }
+
+      assert_operator suggestions.size, :>=, 3
+      assert_empty queries.grep(/"genres"\."slug" =|"static_pages"\."slug" =/)
+      assert_operator queries.grep(/SELECT.*FROM "(?:genres|static_pages)"/m).size, :<=, 3
+    end
+  end
+
   private
 
   def suggest(query)

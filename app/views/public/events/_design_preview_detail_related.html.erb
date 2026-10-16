@@ -17,7 +17,8 @@
                  variant: "compact",
                  link_class: "event-listing-link",
                  status_in_price_position: true,
-                 effective_series_ids: related_effective_series_ids %>
+                 effective_series_ids: related_effective_series_ids,
+                 series_counts_by_id: local_assigns[:series_counts_by_id] %>
     <% end %>
   </div>
   <% unless has_more_related_events && legacy_related_class.present? %>

@@ -28,7 +28,7 @@ module Public
         def call
           return default_suggestions if normalized_query.blank?
 
-          Genre.all.filter_map do |genre|
+          genres.filter_map do |genre|
             rank = match_rank(genre)
             next if rank.blank?
 
@@ -47,7 +47,7 @@ module Public
         attr_reader :query, :limit
 
         def default_suggestions
-          genres_by_name = Genre.where(name: DEFAULT_GENRE_NAMES).index_by(&:name)
+          genres_by_name = genres.index_by(&:name)
 
           DEFAULT_GENRE_NAMES.filter_map do |name|
             genre = genres_by_name[name]
@@ -58,10 +58,18 @@ module Public
         end
 
         def suggestion_for(genre)
-          path = Public::Events::LaneDirectory.public_path_for_genre_slug(genre.slug)
+          path = public_paths_by_slug[genre.slug]
           return if path.blank?
 
           Suggestion.new(name: genre.name, slug: genre.slug, path:)
+        end
+
+        def public_paths_by_slug
+          @public_paths_by_slug ||= Public::Events::LaneDirectory.public_paths_for_genre_slugs(genres.map(&:slug))
+        end
+
+        def genres
+          @genres ||= Genre.all.to_a
         end
 
         def normalized_query

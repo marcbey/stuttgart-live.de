@@ -13,7 +13,7 @@
 <% effective_series_ids = local_assigns[:effective_series_ids] || [] %>
 <% show_series_pill = public_event_series_effective?(event, effective_series_ids: effective_series_ids) %>
 <% series_counts_by_id = local_assigns[:series_counts_by_id] || {} %>
-<% series_count_label = public_event_series_additional_terms_label(event, series_counts_by_id: series_counts_by_id) %>
+<% series_count_label = public_event_series_additional_terms_label(event, series_counts_by_id: series_counts_by_id) if show_series_pill && variant != "feature" %>
 <% primary_offer = event.public_ticket_offer %>
 <% display_price = public_event_ticket_price(event, primary_offer) %>
 <% show_card_actions = variant != "feature" %>

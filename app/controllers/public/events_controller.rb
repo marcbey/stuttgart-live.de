@@ -827,7 +827,7 @@ module Public
           promotion_banner_landscape_image_attachment: :blob,
           highlight_video_file_attachment: :blob,
           highlight_landscape_video_file_attachment: :blob,
-          event_images: [ file_attachment: :blob ]
+          event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]
         )
         .select(&:promotion_banner_display_image_present?)
         .map { |event| { type: :event, record: event } }
@@ -995,7 +995,7 @@ module Public
         :import_event_images,
         highlight_video_file_attachment: :blob,
         highlight_landscape_video_file_attachment: :blob,
-        event_images: [ file_attachment: :blob ],
+        event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ],
         venue_record: [ logo_attachment: :blob ],
         event_presenters: { presenter: [ logo_attachment: :blob ] }
       )
@@ -1008,7 +1008,7 @@ module Public
         :import_event_images,
         highlight_video_file_attachment: :blob,
         highlight_landscape_video_file_attachment: :blob,
-        event_images: [ file_attachment: :blob ]
+        event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]
       )
     end
 

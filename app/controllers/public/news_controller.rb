@@ -45,6 +45,8 @@ module Public
         assign_news_preview_sidebar_events
         @news_preview_effective_series_ids =
           Public::Events::EffectiveSeriesIdsQuery.call(@news_preview_sidebar_events)
+        @news_preview_series_counts_by_id =
+          Public::Events::SeriesCountsByIdQuery.call(@news_preview_sidebar_events)
       end
 
       def build_search_overlay
@@ -152,7 +154,7 @@ module Public
           :venue_record,
           :event_offers,
           :import_event_images,
-          event_images: [ file_attachment: :blob ]
+          event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]
         )
           .published_live
           .where("start_at >= ?", Time.zone.today.beginning_of_day)
