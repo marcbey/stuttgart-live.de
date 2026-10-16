@@ -59,13 +59,19 @@ module Public
       end
 
       relation = search_results_relation
-      if should_redirect_search_result?(relation)
+      @search_result_count = relation.except(:includes, :order).count
+      if should_redirect_search_result?(@search_result_count)
         event = relation.limit(1).first
         redirect_to event_path(event.slug, **@browse_state.route_params)
         return
       end
 
-      @events = relation.to_a
+      page = homepage_lane_page("search", per_page: LANE_PAGE_LIMIT)
+      @events = page.events
+      @search_effective_series_ids = page.effective_series_ids
+      @search_series_counts_by_id = page.series_counts_by_id
+      @search_next_cursor = page.next_cursor
+      @search_lazy_url = helpers.homepage_lane_events_path(**@browse_state.route_params, filter: @browse_state.filter)
       assign_design_chrome(saved_events: @events, include_homepage_saved_events: false)
     end
 
@@ -434,11 +440,11 @@ module Public
       @design_chrome_saved_events = (Array(saved_events) + homepage_saved_events).compact.uniq(&:id)
     end
 
-    def should_redirect_search_result?(relation)
+    def should_redirect_search_result?(result_count)
       return false unless @browse_state.search_query_present?
       return false unless @browse_state.page == 1
 
-      relation.limit(2).count == 1
+      result_count == 1
     end
 
     def search_results_relation
@@ -642,7 +648,9 @@ module Public
         relation: lane_relation,
         context: context,
         cursor: cursor,
-        per_page: normalized_homepage_lane_per_page(per_page)
+        per_page: normalized_homepage_lane_per_page(per_page),
+        deduplicate_series: identifier != "search",
+        prioritize_search: identifier == "search"
       ).call
     end
 
@@ -668,6 +676,12 @@ module Public
           under_30_relation,
           homepage_lane_context(lane: "under_30")
         ]
+      when "russ_live", "sks_promoters"
+        [ sks_promoter_events_relation, homepage_lane_context(lane: lane_key) ]
+      when "search"
+        return unless @browse_state.search_query_present?
+
+        [ search_results_relation, homepage_lane_context(lane: "search", q: @browse_state.query) ]
       when "genre"
         group = Genre.find_by(slug: lane_slug)
         return if group.blank?
@@ -747,7 +761,7 @@ module Public
       published_visible_events_relation(
         scope: lean_homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_ALL,
-        event_date: nil,
+        event_date: Time.zone.today,
         query: nil
       ).reorder(:start_at, :id)
     end
@@ -1016,7 +1030,7 @@ module Public
       published_visible_events_relation(
         scope: homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_ALL,
-        event_date: nil,
+        event_date: Time.zone.today,
         query: nil
       ).reorder(:start_at, :id)
     end
@@ -1024,40 +1038,7 @@ module Public
     def assign_lane_page(lane)
       case lane.key
       when "highlights"
-        if explicit_sks_filter?
-          relation = published_visible_events_relation(
-            scope: homepage_events_relation.merge(Event.sks_promoters),
-            filter: Public::Events::BrowseState::FILTER_ALL,
-            event_date: @browse_state.event_date,
-            query: nil
-          ).reorder(:start_at, :id)
-          @lane_series_counts_by_id = public_series_counts_for_relation(relation)
-          @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
-          @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
-          return
-        end
-
-        scoped_highlights = published_visible_events_relation(
-          scope: homepage_events_relation,
-          filter: Public::Events::BrowseState::FILTER_SKS,
-          event_date: @browse_state.event_date,
-          query: nil
-        ).reorder(:start_at, :id)
-        @lane_series_counts_by_id = public_series_counts_for_relation(scoped_highlights)
-        @lane_effective_series_ids = effective_public_series_ids_for_relation(scoped_highlights)
-        @lane_events = Public::Events::SeriesRepresentativeSelector.call(scoped_highlights.to_a)
-
-        return unless @lane_events.empty?
-
-        fallback_relation = published_visible_events_relation(
-          scope: homepage_events_relation,
-          filter: Public::Events::BrowseState::FILTER_ALL,
-          event_date: @browse_state.event_date,
-          query: nil
-        ).reorder(:start_at, :id)
-        @lane_series_counts_by_id = public_series_counts_for_relation(fallback_relation)
-        @lane_effective_series_ids = effective_public_series_ids_for_relation(fallback_relation)
-        @lane_events = Public::Events::SeriesRepresentativeSelector.call(fallback_relation.to_a)
+        assign_cursor_lane_page(explicit_sks_filter? ? "sks_promoters" : "highlights")
       when "all_stuttgart"
         relation = all_stuttgart_month_relation
         lane_page = Public::Events::HomepageLanePager.new(
@@ -1077,26 +1058,8 @@ module Public
           event_location: @all_stuttgart_selected_location,
           filter: @browse_state.filter
         ) if @lane_lazy_id.present?
-      when "tagestipp"
-        relation = tagestipp_relation
-        @lane_series_counts_by_id = public_series_counts_for_relation(relation)
-        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
-        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
-      when "under_30"
-        relation = under_30_relation
-        @lane_series_counts_by_id = public_series_counts_for_relation(relation)
-        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
-        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
-      when "russ_live"
-        relation = published_visible_events_relation(
-          scope: homepage_events_relation.merge(Event.sks_promoters),
-          filter: Public::Events::BrowseState::FILTER_ALL,
-          event_date: @browse_state.event_date,
-          query: nil
-        ).reorder(:start_at, :id)
-        @lane_series_counts_by_id = public_series_counts_for_relation(relation)
-        @lane_effective_series_ids = effective_public_series_ids_for_relation(relation)
-        @lane_events = Public::Events::SeriesRepresentativeSelector.call(relation.to_a)
+      when "tagestipp", "under_30", "russ_live"
+        assign_cursor_lane_page(lane.key)
       when "genre"
         lane_page = homepage_lane_page("genre:#{lane.group.slug}", per_page: LANE_PAGE_LIMIT)
         raise ActiveRecord::RecordNotFound if lane_page.blank?
@@ -1114,6 +1077,30 @@ module Public
       else
         raise ActiveRecord::RecordNotFound
       end
+    end
+
+    def assign_cursor_lane_page(identifier)
+      page = homepage_lane_page(identifier, per_page: LANE_PAGE_LIMIT)
+      @lane_events = page.events
+      @lane_effective_series_ids = page.effective_series_ids
+      @lane_series_counts_by_id = page.series_counts_by_id
+      @lane_next_cursor = page.next_cursor
+      return if @lane_next_cursor.blank?
+
+      @lane_lazy_id = identifier
+      @lane_lazy_url = helpers.homepage_lane_events_path(
+        event_date: @browse_state.event_date_param,
+        filter: @browse_state.filter
+      )
+    end
+
+    def sks_promoter_events_relation
+      published_visible_events_relation(
+        scope: homepage_events_relation.merge(Event.sks_promoters),
+        filter: Public::Events::BrowseState::FILTER_ALL,
+        event_date: @browse_state.event_date,
+        query: nil
+      ).reorder(:start_at, :id)
     end
 
     def resolved_lane
@@ -1272,14 +1259,6 @@ module Public
       event.save!
       after_values = event.attributes.slice("status", "published_at", "published_by_id", "auto_published")
       before_values != after_values
-    end
-
-    def effective_public_series_ids_for_relation(relation)
-      Public::Events::EffectiveSeriesIdsQuery.call(relation)
-    end
-
-    def public_series_counts_for_relation(relation)
-      Public::Events::SeriesCountsByIdQuery.call(relation)
     end
 
     def explicit_sks_filter?

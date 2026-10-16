@@ -24,8 +24,10 @@ module Public
         Rails.application.message_verifier(CURSOR_SALT)
       end
 
-      def initialize(relation:, context:, cursor: nil, per_page: DEFAULT_PER_PAGE)
-        @relation = relation
+      def initialize(relation:, context:, cursor: nil, per_page: DEFAULT_PER_PAGE, deduplicate_series: true, prioritize_search: false)
+        @prioritize_search = prioritize_search
+        @relation = prioritize_search ? relation.select(Event.arel_table[Arel.star], search_priority_expression.as("lane_page_priority")) : relation
+        @deduplicate_series = deduplicate_series
         @context = normalized_context(context)
         @per_page = normalized_per_page(per_page)
         @cursor_payload = self.class.decode_cursor(cursor)
@@ -48,7 +50,7 @@ module Public
 
       private
 
-      attr_reader :context, :cursor_payload, :per_page, :relation
+      attr_reader :context, :cursor_payload, :per_page, :relation, :deduplicate_series, :prioritize_search
 
       def paged_events
         selected_events = []
@@ -63,10 +65,10 @@ module Public
           batch.each do |event|
             last_scanned_event = event
             series_id = event.event_series_id
-            next if series_id.present? && seen_series.include?(series_id.to_i)
+            next if deduplicate_series && series_id.present? && seen_series.include?(series_id.to_i)
 
             selected_events << event
-            seen_series << series_id.to_i if series_id.present?
+            seen_series << series_id.to_i if deduplicate_series && series_id.present?
             break if selected_events.size >= per_page
           end
 
@@ -96,6 +98,7 @@ module Public
         {
           "last_start_at" => event.start_at.iso8601(6),
           "last_id" => event.id,
+          "last_priority" => (event[:lane_page_priority] if prioritize_search),
           "seen_series_ids" => seen_series_ids.to_a,
           "position" => position + selected_count
         }
@@ -111,18 +114,26 @@ module Public
       def relation_after(event)
         return relation.none if event.blank?
 
-        relation_after_position(event.start_at, event.id)
+        relation_after_position(event.start_at, event.id, priority: event[:lane_page_priority])
       end
 
       def relation_after_state(state, scope: relation)
         start_at = Time.zone.parse(state.fetch("last_start_at"))
         id = state.fetch("last_id")
 
-        relation_after_position(start_at, id, scope:)
+        relation_after_position(start_at, id, priority: state["last_priority"], scope:)
       end
 
-      def relation_after_position(start_at, id, scope: relation)
-        scope.where("events.start_at > :start_at OR (events.start_at = :start_at AND events.id > :id)", start_at:, id:)
+      def relation_after_position(start_at, id, priority: nil, scope: relation)
+        events = Event.arel_table
+        chronological_condition = events[:start_at].gt(start_at).or(events[:start_at].eq(start_at).and(events[:id].gt(id)))
+        return scope.where(chronological_condition) unless prioritize_search
+
+        scope.where(search_priority_expression.gt(priority).or(search_priority_expression.eq(priority).and(chronological_condition)))
+      end
+
+      def search_priority_expression
+        @search_priority_expression ||= Arel.sql(Event.search_priority_order_sql)
       end
 
       def cursor_state

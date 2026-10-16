@@ -1,13 +1,44 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = [ "track" ]
+  static targets = [ "track", "toggleButton", "toggleLabel" ]
   static values = {
     interval: { type: Number, default: 4200 },
     duration: { type: Number, default: 520 }
   }
 
   connect() {
+    this.userPaused = this.userPaused || false
+    this.hovered = false
+    this.focused = false
+    this.reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
+    this.handleMotionChange = () => {
+      this.stop()
+      if (this.reduceMotionQuery.matches) {
+        this.disableTransition()
+        this.moveToIndex(this.index)
+      }
+      this.updateToggleButton()
+      this.start()
+    }
+    this.handleMouseEnter = () => {
+      this.hovered = true
+      this.stop()
+    }
+    this.handleMouseLeave = () => {
+      this.hovered = false
+      this.start()
+    }
+    this.handleFocusIn = () => {
+      this.focused = true
+      this.stop()
+    }
+    this.handleFocusOut = () => {
+      window.requestAnimationFrame(() => {
+        this.focused = this.element.contains(document.activeElement)
+        this.start()
+      })
+    }
     this.index = 0
     this.dragStartX = null
     this.dragStartY = null
@@ -32,38 +63,69 @@ export default class extends Controller {
     this.trackTarget.addEventListener("pointerup", this.handlePointerUp)
     this.trackTarget.addEventListener("pointercancel", this.handlePointerUp)
     this.trackTarget.addEventListener("click", this.handleClick, true)
-    this.element.addEventListener("mouseenter", this.stop)
-    this.element.addEventListener("mouseleave", this.start)
-    this.element.addEventListener("focusin", this.stop)
-    this.element.addEventListener("focusout", this.start)
-    if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) this.start()
+    this.element.addEventListener("mouseenter", this.handleMouseEnter)
+    this.element.addEventListener("mouseleave", this.handleMouseLeave)
+    this.element.addEventListener("focusin", this.handleFocusIn)
+    this.element.addEventListener("focusout", this.handleFocusOut)
+    this.reduceMotionQuery.addEventListener("change", this.handleMotionChange)
+    this.updateToggleButton()
+    this.start()
   }
 
   disconnect() {
     this.stop()
-    this.trackTarget?.removeEventListener("transitionend", this.handleTransitionEnd)
-    this.trackTarget?.removeEventListener("pointerdown", this.handlePointerDown)
-    this.trackTarget?.removeEventListener("pointermove", this.handlePointerMove)
-    this.trackTarget?.removeEventListener("pointerup", this.handlePointerUp)
-    this.trackTarget?.removeEventListener("pointercancel", this.handlePointerUp)
-    this.trackTarget?.removeEventListener("click", this.handleClick, true)
-    this.element.removeEventListener("mouseenter", this.stop)
-    this.element.removeEventListener("mouseleave", this.start)
-    this.element.removeEventListener("focusin", this.stop)
-    this.element.removeEventListener("focusout", this.start)
+    if (!this.hasTrackTarget) return
+
+    this.trackTarget.removeEventListener("transitionend", this.handleTransitionEnd)
+    this.trackTarget.removeEventListener("pointerdown", this.handlePointerDown)
+    this.trackTarget.removeEventListener("pointermove", this.handlePointerMove)
+    this.trackTarget.removeEventListener("pointerup", this.handlePointerUp)
+    this.trackTarget.removeEventListener("pointercancel", this.handlePointerUp)
+    this.trackTarget.removeEventListener("click", this.handleClick, true)
+    this.element.removeEventListener("mouseenter", this.handleMouseEnter)
+    this.element.removeEventListener("mouseleave", this.handleMouseLeave)
+    this.element.removeEventListener("focusin", this.handleFocusIn)
+    this.element.removeEventListener("focusout", this.handleFocusOut)
+    this.reduceMotionQuery?.removeEventListener("change", this.handleMotionChange)
     this.loopClone?.remove()
   }
 
   get slides() {
+    if (!this.hasTrackTarget) return []
+
     return Array.from(this.trackTarget.children).filter((slide) => (
       slide instanceof HTMLElement && slide.dataset.designPreviewClone !== "true"
     ))
   }
 
   start() {
+    if (!this.hasTrackTarget || this.slides.length <= 1) return
+    if (this.userPaused || this.reduceMotionQuery.matches || this.hovered || this.focused || this.dragStartX !== null) return
     if (this.timer) return
 
     this.timer = window.setTimeout(this.advance, this.currentInterval)
+  }
+
+  toggleAutoplay(event) {
+    event.preventDefault()
+    if (this.reduceMotionQuery.matches) return
+
+    this.userPaused = !this.userPaused
+    this.stop()
+    this.updateToggleButton()
+    this.start()
+  }
+
+  updateToggleButton() {
+    if (!this.hasToggleButtonTarget) return
+
+    const paused = this.userPaused || this.reduceMotionQuery.matches
+    const label = paused ? "Animation starten" : "Animation pausieren"
+    this.toggleButtonTarget.classList.toggle("is-paused", paused)
+    this.toggleButtonTarget.setAttribute("aria-label", label)
+    this.toggleButtonTarget.setAttribute("aria-pressed", paused.toString())
+    this.toggleButtonTarget.disabled = this.reduceMotionQuery.matches
+    if (this.hasToggleLabelTarget) this.toggleLabelTarget.textContent = label
   }
 
   stop() {
@@ -94,9 +156,11 @@ export default class extends Controller {
 
     if (this.index <= 0) {
       this.index = this.slides.length
-      this.disableTransition()
-      this.moveToIndex(this.index)
-      this.trackTarget.offsetHeight
+      if (!this.reduceMotionQuery.matches) {
+        this.disableTransition()
+        this.moveToIndex(this.index)
+        this.trackTarget.offsetHeight
+      }
     }
 
     this.index -= 1
@@ -138,9 +202,9 @@ export default class extends Controller {
     if (this.dragStartX === null) return
 
     const threshold = Math.min(72, this.trackTarget.clientWidth * 0.16)
-    const shouldChangeSlide = this.isHorizontalDrag && Math.abs(this.dragDeltaX) >= threshold
+    const shouldChangeSlide = event.type !== "pointercancel" && this.isHorizontalDrag && Math.abs(this.dragDeltaX) >= threshold
 
-    this.trackTarget.releasePointerCapture?.(event.pointerId)
+    if (this.trackTarget.hasPointerCapture?.(event.pointerId)) this.trackTarget.releasePointerCapture(event.pointerId)
     this.suppressClick = this.isHorizontalDrag
     window.setTimeout(() => { this.suppressClick = false }, 400)
     this.dragStartX = null
@@ -191,6 +255,10 @@ export default class extends Controller {
   }
 
   moveToIndex(index) {
+    if (this.reduceMotionQuery.matches && index >= this.slides.length) {
+      this.index = 0
+      index = 0
+    }
     this.trackTarget.style.transform = `translate3d(${-100 * index}%, 0, 0)`
   }
 
@@ -205,6 +273,11 @@ export default class extends Controller {
   }
 
   enableTransition() {
+    if (this.reduceMotionQuery.matches) {
+      this.disableTransition()
+      return
+    }
+
     this.trackTarget.style.transition = `transform ${this.durationValue}ms cubic-bezier(0.76, 0, 0.24, 1)`
   }
 

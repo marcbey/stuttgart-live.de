@@ -39,7 +39,7 @@
              saved_events: design_preview_shell_saved_events,
              strict_proxy: strict_proxy %>
 
-  <main class="design-service-preview">
+  <div class="design-service-preview">
     <%= link_to design_service_back_path, class: "design-detail-preview-back design-service-preview-back" do %>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M19 12H6"></path>
@@ -69,7 +69,7 @@
           <% end %>
 
           <% if page_body_present %>
-            <%= @page.body %>
+            <%= public_page_body(@page) %>
           <% else %>
             <h2>Events in deiner Stadt</h2>
             <p>Stuttgart Live ist die Plattform für Veranstaltungen in Stuttgart und der Region. Hier findest du Konzerte, Festivals, Musicals, Comedy, Kultur und besondere Abende, die man nicht verpassen möchte.</p>
@@ -92,7 +92,7 @@
                    title: "Unsere Highlights" %>
       <% end %>
     </section>
-  </main>
+  </div>
 
   <%= render "public/events/design_preview_footer", menu_groups: design_preview_menu_groups %>
 </div>

@@ -18,6 +18,8 @@
              strict_proxy: strict_proxy,
              effective_series_ids: page.effective_series_ids,
              series_counts_by_id: page.series_counts_by_id,
+             dom_id_prefix: ("search_card_event" if lane_key == "search"),
+             show_admin_edit: %w[search highlights sks_promoters russ_live].include?(lane_key),
              show_card_kicker: lane_key != "genre" %>
 <% else %>
   <% page.events.each_with_index do |event, index| %>

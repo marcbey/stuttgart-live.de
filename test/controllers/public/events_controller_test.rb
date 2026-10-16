@@ -4,10 +4,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
   FIXTURE_NOW = Time.zone.local(2026, 4, 15, 12, 0, 0)
   DESIGN_SELECTOR_ALIASES = {
     ".lane-header.lane-header--highlights" => ".design-preview-highlights",
-    ".lane-header.lane-header--highlights .lane-header-title" => ".design-preview-highlights .design-preview-section-header h2, .design-preview-list-section .design-preview-section-header h2",
+    ".lane-header.lane-header--highlights .lane-header-title" => ".design-preview-highlights .design-preview-section-header h2, .design-preview-list-section .design-preview-section-header h1",
     ".lane-header.lane-header--search .lane-header-meta" => ".search-results-section .design-preview-section-header",
-    ".lane-header.lane-header--genre .lane-header-title" => ".design-preview-list-section .design-preview-section-header h2",
-    ".lane-header--genre .lane-header-title" => ".design-preview-list-section .design-preview-section-header h2",
+    ".lane-header.lane-header--genre .lane-header-title" => ".design-preview-list-section .design-preview-section-header h1",
+    ".lane-header--genre .lane-header-title" => ".design-preview-list-section .design-preview-section-header h1, .design-preview-list-section .design-preview-section-header h2",
     ".lane-header--highlights .lane-header-title-link[href='/highlights']" => ".design-preview-highlights .design-preview-section-link[href='/highlights']",
     ".home-featured-track" => ".design-preview-feature-track, .design-preview-mobile-highlight-row",
     ".home-featured-section .highlights-slider-viewport" => ".design-preview-feature-slider",
@@ -525,7 +525,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h2", text: "Stuttgart im Mix"
-    assert_select ".design-preview-card--lane-video video[src*='mamma-mia-highlight'][autoplay]", count: 1
+    assert_select ".design-preview-card--lane-video video[src*='mamma-mia-highlight']:not([autoplay])", count: 1
     assert_select ".design-preview-card--lane-video video[muted]", count: 1
     assert_select ".design-preview-card--lane-video button[aria-label='Ton einschalten']", count: 1
     assert_select ".design-preview-card-title", text: @published_event.artist_name
@@ -661,7 +661,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".lane-header--genre .lane-header-title-link[href='/rock-alternative']", count: 0
   end
 
-  test "fixed lane pages render their full matching event list" do
+  test "fixed lane pages render small matching event lists" do
     highlight_event = Event.create!(
       slug: "lane-page-highlight",
       source_fingerprint: "test::public::lane-page::highlight",
@@ -718,9 +718,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".all-stuttgart-event-list", count: 1
-    assert_select ".all-stuttgart-event-header h2", minimum: 1
+    assert_select ".all-stuttgart-event-header h1", minimum: 1
     assert_select ".all-stuttgart-event-list-head span", text: "Tag", count: 1
-    assert_select ".all-stuttgart-event-list article.all-stuttgart-event-row", minimum: 1
+    assert_select ".all-stuttgart-event-list .all-stuttgart-event-row[role='row']", minimum: 1
     assert_select ".all-stuttgart-event-list .all-stuttgart-event-title a", text: reservix_event.artist_name
     assert_select ".design-preview-month-dropdown--calendar", count: 0
     assert_select "button.design-preview-filter-calendar[data-design-preview-filterbar-target='dateButton'][aria-label='Datum wählen'][data-action*='all-stuttgart-filters#closeAll'][data-action*='design-preview-filterbar#openDate']", count: 1
@@ -728,7 +728,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get "/tagestipp"
 
     assert_response :success
-    assert_select ".lane-page-section--tagestipp .design-preview-section-header h2", text: "Heute in Stuttgart"
+    assert_select ".lane-page-section--tagestipp .design-preview-section-header h1", text: "Heute in Stuttgart"
     assert_select "#lane-event-grid .design-preview-card-title", text: today_event.artist_name
   end
 
@@ -808,7 +808,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".all-stuttgart-event-title a", text: matching_event.artist_name
     assert_select ".all-stuttgart-event-title a", text: other_event.artist_name, count: 0
     month_label = Public::EventsController::GERMAN_MONTH_NAMES.fetch(event_date.month - 1)
-    assert_select ".all-stuttgart-event-header h2", text: "#{event_date.day}. #{month_label} #{event_date.year}"
+    assert_select ".all-stuttgart-event-header h1", text: "#{event_date.day}. #{month_label} #{event_date.year}"
     assert_select ".all-stuttgart-event-list-head span", text: "Uhrzeit", count: 1
     assert_select ".all-stuttgart-event-day strong", text: "20:00", count: 1
   end
@@ -2145,7 +2145,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".homepage-highlight-video[src*='lea-portrait'][muted][autoplay]", count: 1
+    assert_select ".homepage-highlight-video[src*='lea-portrait'][muted]:not([autoplay])", count: 1
     assert_select ".homepage-highlight-video[poster*='lea-portrait-poster']", count: 1
     assert_select ".homepage-highlight-video-card button[aria-label='Ton einschalten']", count: 1
 
@@ -2682,7 +2682,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
   end
 
-  test "tagestipp lane continues chronologically after today" do
+  test "tagestipp lane stays on today in chronological order" do
     later_today_event = Event.create!(
       slug: "tagestipp-later-today",
       source_fingerprint: "test::homepage::tagestipp::later-today",
@@ -2778,12 +2778,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal [
       earlier_today_event.artist_name,
-      later_today_event.artist_name,
-      tomorrow_event.artist_name,
-      tomorrow_evening_event.artist_name,
-      day_after_event.artist_name,
-      day_after_evening_event.artist_name,
-      much_later_event.artist_name
+      later_today_event.artist_name
     ], names.first(Public::EventsController::HOME_DESIGN_LANE_LIMIT)
 
     get homepage_lane_events_url(lane: "tagestipp")
@@ -2793,13 +2788,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_equal [
       earlier_today_event.artist_name,
-      later_today_event.artist_name,
-      tomorrow_event.artist_name,
-      tomorrow_evening_event.artist_name,
-      day_after_event.artist_name,
-      day_after_evening_event.artist_name,
-      much_later_event.artist_name
-    ], names.first(7)
+      later_today_event.artist_name
+    ], names
+    [ tomorrow_event, tomorrow_evening_event, day_after_event, day_after_evening_event, much_later_event ].each do |event|
+      assert_not_includes names, event.artist_name
+    end
   end
 
   test "index shows all visible events in the all events slider" do
@@ -3387,7 +3380,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, sks_today_event.artist_name
     assert_includes response.body, late_today_event.artist_name
     assert_includes response.body, reservix_today_event.artist_name
-    assert_includes response.body, tomorrow_event.artist_name
+    assert_not_includes response.body, tomorrow_event.artist_name
   end
 
   test "tagestipp shows event series badge when the series is globally visible via a past event" do
@@ -3439,7 +3432,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the series event to be rendered in Tagestipp"
-    assert_equal "Event-Reihe: Termine", target_card.at_css(".design-preview-card-series-pill")&.[]("aria-label")
+    assert_equal "Event-Reihe: Termine", target_card.at_css(".design-preview-card-series-pill")&.[]("title")
     assert_equal "Termine", target_card.at_css(".design-preview-card-series-pill")&.text.to_s.strip
   end
 

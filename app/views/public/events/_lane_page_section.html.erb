@@ -19,15 +19,15 @@
          <% end %>>
   <div class="design-preview-section-header">
     <% if lane.key == "russ_live" %>
-      <h2 class="lane-page-russ-live-logo-title">
+      <h1 class="lane-page-russ-live-logo-title">
         <%= image_tag "russ-live-logo.svg",
                       alt: display_title,
                       class: "lane-page-russ-live-logo",
                       width: 786,
                       height: 174 %>
-      </h2>
+      </h1>
     <% else %>
-      <h2><%= display_title %></h2>
+      <h1><%= display_title %></h1>
     <% end %>
   </div>
   <% if events.any? %>
@@ -58,7 +58,7 @@
   <% else %>
     <div class="search-results-empty">
       <h2>Aktuell nichts in dieser Lane</h2>
-      <p>Für „<%= lane.title %>“ haben wir aktuell keine zukünftigen Events.</p>
+      <p><%= lane.key == "tagestipp" ? "Für heute haben wir aktuell keine Events gefunden." : "Für „#{lane.title}“ haben wir aktuell keine zukünftigen Events." %></p>
     </div>
   <% end %>
 </section>

@@ -18,7 +18,7 @@
              saved_events: design_chrome_saved_events,
              strict_proxy: strict_proxy %>
 
-  <main class="design-preview-list-page">
+  <div class="design-preview-list-page">
     <%= link_to public_events_index_path(@browse_state),
                 class: "design-detail-preview-back",
                 aria: { label: "Zurück" },
@@ -29,6 +29,8 @@
       </svg>
       Zurück
     <% end %>
+
+    <h1 class="search-results-title saved-events-page-title">Deine Events</h1>
 
     <section class="saved-events-page-section"
              data-controller="saved-events-lane"
@@ -45,7 +47,7 @@
         </div>
       </noscript>
     </section>
-  </main>
+  </div>
 
   <%= render "design_preview_footer", menu_groups: public_design_menu_groups %>
 </div>

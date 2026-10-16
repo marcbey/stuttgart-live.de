@@ -175,7 +175,7 @@ export default class extends Controller {
   }
 
   handleDocumentKeydown(event) {
-    if (event.defaultPrevented) {
+    if (event.defaultPrevented || !this.inputTarget.getClientRects().length || window.getComputedStyle(this.inputTarget).visibility === "hidden") {
       return
     }
 
