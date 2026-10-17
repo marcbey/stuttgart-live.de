@@ -46,6 +46,7 @@
       <% else %>
         <h2>Keine Venue gefunden</h2>
         <p>Für „<%= overlay.query %>“ wurden aktuell keine passenden Venues gefunden.</p>
+        <%= render "public/events/search_recovery" %>
       <% end %>
     </div>
   <% end %>
@@ -98,6 +99,7 @@
     <div class="public-search-overlay-empty">
       <h2>Sorry, nix gefunden</h2>
       <p>Zu „<%= overlay.query %>“ haben wir aktuell keine Events gefunden.</p>
+      <%= render "public/events/search_recovery" %>
     </div>
   <% end %>
 <% else %>

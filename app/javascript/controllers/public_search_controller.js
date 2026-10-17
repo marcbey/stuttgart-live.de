@@ -174,8 +174,20 @@ export default class extends Controller {
     this.close()
   }
 
+  focusFromRecovery(event) {
+    if (!event.target.closest("[data-public-search-focus]") || !this.inputVisible) return
+
+    this.inputTarget.focus()
+    this.inputTarget.select()
+    this.open()
+  }
+
+  get inputVisible() {
+    return this.inputTarget.getClientRects().length > 0 && window.getComputedStyle(this.inputTarget).visibility !== "hidden"
+  }
+
   handleDocumentKeydown(event) {
-    if (event.defaultPrevented || !this.inputTarget.getClientRects().length || window.getComputedStyle(this.inputTarget).visibility === "hidden") {
+    if (event.defaultPrevented || !this.inputVisible) {
       return
     }
 

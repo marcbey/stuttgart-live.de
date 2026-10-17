@@ -24,6 +24,8 @@
     <% if event.title.present? %>
       <span class="public-search-result-title"><%= event.title %></span>
     <% end %>
+
+    <%= render "public/events/event_preview_metadata", event: event %>
   </span>
 
   <span class="public-search-result-arrow" aria-hidden="true">→</span>
