@@ -31,6 +31,16 @@ class StagingInventoryTest < ActiveSupport::TestCase
     end
   end
 
+  test "staging provisioner runs apply without optional flags on the system Bash" do
+    with_provisioner do |root, env, vars, log|
+      output, status = Open3.capture2e(env, "/bin/bash", root.join("script/ansible_app_host_staging").to_s, "--vars-file", vars.to_s)
+      assert status.success?, output
+      arguments = File.readlines(log, chomp: true)
+      assert_includes arguments, "@#{vars}"
+      refute_includes arguments, "--check"
+    end
+  end
+
   private
 
   def with_provisioner
