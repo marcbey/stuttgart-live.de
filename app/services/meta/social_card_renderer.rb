@@ -508,6 +508,7 @@ module Meta
     end
 
     def fetch_remote_image(url, limit: 3)
+      ExternalActionPolicy.require_allowed!(action: :external_import)
       raise Error, "Ungültige Bild-URL für Social Card." if limit <= 0
 
       uri = URI.parse(url)

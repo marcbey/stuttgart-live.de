@@ -1,6 +1,8 @@
 module Newsletter
   class DeliverEmail
     def self.call(mail, client: MailjetClient.new)
+      return mail.deliver_now if Rails.configuration.x.deployment_environment == "staging"
+
       return mail.deliver_now unless client.api_configured?
 
       client.send_transactional_email(

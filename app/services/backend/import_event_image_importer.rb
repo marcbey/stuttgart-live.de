@@ -42,6 +42,7 @@ module Backend
     private
 
     def download_file(url)
+      ExternalActionPolicy.require_allowed!(action: :external_import)
       uri = URI.parse(url)
       response = Net::HTTP.get_response(uri)
       raise "Bild konnte nicht geladen werden (HTTP #{response.code})" unless response.is_a?(Net::HTTPSuccess)

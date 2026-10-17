@@ -85,6 +85,12 @@ Rails.application.configure do
     }.compact
   end
 
+  if config.x.deployment_environment == "staging"
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = DeploymentEnvironment.staging_smtp_settings
+    config.action_mailer.raise_delivery_errors = true
+  end
+
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
   config.i18n.fallbacks = true

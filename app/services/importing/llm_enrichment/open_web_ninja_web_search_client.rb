@@ -20,6 +20,7 @@ module Importing
       end
 
       def search(query:, num: 10, location: "Germany", hl: "de", gl: "de", **)
+        ExternalActionPolicy.require_allowed!(action: :paid_ai)
         raise ConfigurationError, "OPENWEBNINJA_API_KEY fehlt." if api_key.blank?
         raise Error, "Suchanfrage darf nicht leer sein." if query.to_s.strip.blank?
 

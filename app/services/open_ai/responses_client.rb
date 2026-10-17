@@ -24,6 +24,7 @@ module OpenAi
     end
 
     def create!(input:, text_format:)
+      ExternalActionPolicy.require_allowed!(action: :paid_ai)
       raise Error, "openai.api_key ist nicht in den Rails Credentials gesetzt." if resolved_api_key.blank?
       raise Error, "llm_enrichment_model ist nicht gesetzt." if model.blank?
 
@@ -32,6 +33,8 @@ module OpenAi
         text_format: text_format,
         include_temperature: temperature.present?
       )
+    rescue ExternalActionPolicy::Disabled => error
+      raise Error, error.message
     end
 
     private

@@ -226,6 +226,8 @@ module ApplicationHelper
   end
 
   def google_analytics_allowed_host?
+    return false if %w[staging build].include?(Rails.configuration.x.deployment_environment)
+
     GOOGLE_ANALYTICS_ALLOWED_HOSTS.include?(request.host)
   end
 

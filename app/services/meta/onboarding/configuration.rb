@@ -12,9 +12,12 @@ module Meta
       end
 
       def ensure_configured!
+        ExternalActionPolicy.require_allowed!(action: :meta)
         raise Error, "meta.app_id ist nicht konfiguriert." if app_id.blank?
         raise Error, "meta.app_secret ist nicht konfiguriert." if app_secret.blank?
         raise Error, "active_record_encryption ist nicht vollständig konfiguriert." unless active_record_encryption_configured?
+      rescue ExternalActionPolicy::Disabled => error
+        raise Error, error.message
       end
 
       private

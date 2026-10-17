@@ -48,7 +48,6 @@ env:
     SENTRY_ENVIRONMENT: staging
     SENTRY_RELEASE: <%= ENV.fetch("SENTRY_RELEASE") { `git rev-parse HEAD`.strip } %>
     STAGING_NOINDEX: "true"
-    SOLID_QUEUE_SKIP_RECURRING: "true"
 <% DeploymentEnvironment.staging_profile(project: "stuttgart_live_de").each do |key, value| %>
     <%= key %>: <%= value.inspect %>
 <% end %>
@@ -58,3 +57,18 @@ ssh:
   user: deploy
   keys:
     - <%= ENV.fetch("KAMAL_SSH_KEY_PATH", File.expand_path("~/.ssh/stgt-live-hetzner-github")) %>
+
+# Shared test mail capture. SMTP is not published on the host.
+accessories:
+  mailpit:
+    service: stuttgart_live_de-staging-mailpit
+    image: axllent/mailpit:v1.31.5@sha256:94f6b70c1436defae6799d9ac7ff0eeff9540465b842026d5cdb018f1c0234ea
+    host: <%= HetznerDeployConfig.web_host(destination: "staging") %>
+    port: "127.0.0.1:8025:8025"
+    options:
+      memory: 128m
+      cpus: "0.1"
+    env:
+      clear:
+        MP_MAX_MESSAGES: "1000"
+        MP_DISABLE_VERSION_CHECK: "true"
