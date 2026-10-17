@@ -3,7 +3,7 @@
   "checkpoint_id": "686f9b321184",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 11,
+  "checkpoints_count": 12,
   "files_touched": [
     ".impeccable/config.json",
     "README.md"
@@ -26,13 +26,19 @@
       "transcript": "/68/6f9b321184/2/full.jsonl",
       "content_hash": "/68/6f9b321184/2/content_hash.txt",
       "prompt": "/68/6f9b321184/2/prompt.txt"
+    },
+    {
+      "metadata": "/68/6f9b321184/3/metadata.json",
+      "transcript": "/68/6f9b321184/3/full.jsonl",
+      "content_hash": "/68/6f9b321184/3/content_hash.txt",
+      "prompt": "/68/6f9b321184/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 2540110,
+    "input_tokens": 2546668,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 128222976,
-    "output_tokens": 556380,
-    "api_call_count": 769
+    "cache_read_tokens": 128537344,
+    "output_tokens": 557040,
+    "api_call_count": 771
   }
 }
