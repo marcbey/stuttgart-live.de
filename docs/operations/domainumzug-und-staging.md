@@ -201,6 +201,14 @@ Absenderverifizierung, Newsletter-Drafts, alte Bestätigungs-/Abmeldelinks,
 Meta-Callbacks und weitere Domainbindungen vorab prüfen. Falls zusätzliche
 Mail-DNS nötig wäre, Mailteil klären; keine SPF-/DKIM-Ergänzung vornehmen.
 
+Für den Umzug am 17. Oktober 2026 bleibt die vorhandene Meta-Konfiguration
+zunächst erhalten. Ihr fester OAuth-Rückruf zeigt noch auf die bisherige
+schopp3r-Adresse. Neue Meta-Verknüpfungen dürfen nach Nutzerentscheidung warten;
+dafür müssen später die erlaubte Rückrufadresse in Meta Developers und die
+App-Konfiguration gemeinsam auf die neue Domain umgestellt und geprüft werden.
+Vorhandene Veröffentlichungen werden durch diesen Umzugsschritt nicht neu
+konfiguriert; eine erfolgreiche neue OAuth-Verknüpfung wird nicht behauptet.
+
 Unmittelbar vor dem vereinbarten Fenster: frische DNS-Sicherung, geprüfte
 Image-Digests, beide Versionsnachweise, Rückfallwerte und Verantwortliche
 protokollieren. Alle bestehenden Mail-DNS-Einträge einschließlich Autodiscover,
