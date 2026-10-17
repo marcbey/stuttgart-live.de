@@ -1259,6 +1259,10 @@ Laufprotokolle verschwinden; öffentliche LLM-Ergebnisse verweisen anschließend
 einen leeren synthetischen Importlauf. Private Redaktionsnotizen, externe
 Newsletter-IDs und freie Crawl-Metadaten werden entfernt. Bestehende Legacy-Ziel-
 Zuordnungen, Veröffentlichungsfreigaben, Event-IDs und Medienzuordnungen bleiben.
+Das gilt auch für importierte öffentliche Bildverweise, die direkt einem bestehenden
+Event zugeordnet sind: Ohne sie bleiben Karten ohne redaktionelles Bild leer. Nur
+Bildverweise auf Rohimporte oder fehlende Events werden gelöscht; Cache-Fehler und
+Cache-Zeitstempel der erhaltenen Bildverweise werden bereinigt.
 Kontakt- und Teamangaben in Russ werden synthetisch. Die Staging-Kopie ist für
 Layout- und Funktionstests gedacht und keine Inhaltsfreigabe echter Kontaktdaten.
 Die Medienprüfung kontrolliert Dateien, Größe und Prüfsummen für alle durch

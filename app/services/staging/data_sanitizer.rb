@@ -8,7 +8,7 @@ module Staging
     Error = Class.new(StandardError)
     DATABASE = "stuttgart_live_de_staging".freeze
     EMPTY_TABLES = %w[publish_attempts event_social_posts social_connection_targets social_connections sessions login_attempts
-      newsletter_consent_events newsletter_subscriber_interests newsletter_subscribers event_change_logs import_run_errors raw_event_imports import_event_images].freeze
+      newsletter_consent_events newsletter_subscriber_interests newsletter_subscribers event_change_logs import_run_errors raw_event_imports].freeze
     PUBLIC_SETTINGS = %w[sks_promoter_ids sks_organizer_notes merge_artist_similarity_matching_enabled venue_duplicate_mappings
       homepage_genre_lane_slugs homepage_genre_tag_cloud_enabled homepage_highlight_video llm_enrichment_model
       llm_enrichment_temperature llm_enrichment_web_search_provider].freeze
@@ -27,6 +27,7 @@ module Staging
       validate_target!
       @connection.transaction do
         remove_private_records
+        sanitize_import_images
         sanitize_users
         update("blog_posts", "author_name = 'Redaktion Staging'")
         update("events", "editor_notes = NULL, source_snapshot = '{}'::jsonb")
@@ -56,6 +57,13 @@ module Staging
     def verify!(admin_id: nil)
       validate_target!
       EMPTY_TABLES.each { |table| assert_zero("SELECT COUNT(*) FROM #{table}") }
+      assert_zero(<<~SQL)
+        SELECT COUNT(*) FROM import_event_images images
+        WHERE images.import_class <> 'Event'
+          OR NOT EXISTS (SELECT 1 FROM events WHERE events.id = images.import_event_id)
+          OR to_jsonb(images)->>'cache_error' IS NOT NULL OR to_jsonb(images)->>'cache_attempted_at' IS NOT NULL
+          OR to_jsonb(images)->>'cached_at' IS NOT NULL OR COALESCE(to_jsonb(images)->>'cache_status', 'pending') <> 'pending'
+      SQL
       admin_clause = admin_id ? " AND id <> #{Integer(admin_id)}" : ""
       assert_zero("SELECT COUNT(*) FROM users WHERE (email_address <> 'user-' || id || '@example.invalid' OR name IS DISTINCT FROM 'Benutzer ' || id OR role <> 'editor' OR failed_login_attempts <> 0 OR locked_until IS NOT NULL)#{admin_clause}")
       assert_zero("SELECT COUNT(*) FROM users WHERE role = 'admin'#{admin_clause}")
@@ -104,6 +112,19 @@ module Staging
         SQL
       end
       @counts["users"] = ids.size
+    end
+
+    def sanitize_import_images
+      @counts["removed_import_event_images"] = @connection.delete(<<~SQL)
+        DELETE FROM import_event_images images
+        WHERE images.import_class <> 'Event'
+          OR NOT EXISTS (SELECT 1 FROM events WHERE events.id = images.import_event_id)
+      SQL
+      columns = @connection.columns("import_event_images").map(&:name)
+      assignments = { "cache_status" => "'pending'", "cache_error" => "NULL", "cache_attempted_at" => "NULL", "cached_at" => "NULL" }.filter_map do |column, value|
+        "#{column} = #{value}" if columns.include?(column)
+      end
+      update("import_event_images", assignments.join(", ")) if assignments.any?
     end
 
     def replace_import_history
