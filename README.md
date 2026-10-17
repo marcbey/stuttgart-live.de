@@ -1261,7 +1261,7 @@ separat beim Livegang. Ab `prepared` sind die schopp3r-Adressen nicht mehr Teil
 des Proxy-Ziels. Staging behält unabhängig davon sein festes, geschütztes Profil.
 
 Der gemeinsame [Betriebsablauf für Domainwechsel, DNS-Abgleich und Staging](docs/operations/domainumzug-und-staging.md)
-beschreibt die Bereitstellung, Microsoft-365-Abnahme und den gezielten Rückweg.
+beschreibt die Bereitstellung, den technischen Microsoft-365-DNS-Abgleich und den gezielten Rückweg.
 
 
 Freigabemanifeste verwenden Schema-Version 2: `paired_app` und

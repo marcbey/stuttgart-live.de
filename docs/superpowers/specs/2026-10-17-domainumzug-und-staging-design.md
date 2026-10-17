@@ -180,7 +180,7 @@ Der detaillierte Umsetzungsplan muss folgende Nachweise vorsehen:
 - Passwortschutz und Suchmaschinen-Ausschluss für Staging sowie korrekte Indexierungseinstellungen für Produktion.
 - Gültiges HTTPS für alle Zielhosts, sichere kanonische Weiterleitungen ohne Schleifen, richtige App-Zuordnung und keine Vermischung beider Projekte.
 - Vorher-/Nachher-Abgleich aller bestehenden Nicht-Web-DNS-Einträge bei Host Europe und STRATO einschließlich Werten, Prioritäten und individuell konfigurierten TTLs; keinerlei Änderungen an diesen Einträgen.
-- Nachweis der weiterhin funktionierenden Microsoft-365-Dienste vor und nach der jeweiligen Umschaltung: Mail-DNS einschließlich Autodiscover prüfen und Senden/Empfangen über ein vom Nutzer bereitgestelltes Testpostfach durch den Nutzer beziehungsweise einen dazu ausdrücklich beauftragten Verantwortlichen testen lassen. Zusätzlich benötigte externe Links/Callbacks prüfen.
+- Nach Nutzerentscheidung erfolgt die Microsoft-365-Prüfung technisch über den vollständigen Vorher-/Nachher-Abgleich aller bestehenden Mail-DNS-Einträge einschließlich Autodiscover, Werten, Prioritäten und TTLs. Eine manuelle Postfachprobe ist keine Voraussetzung; der Nutzer kann sie nicht durchführen. Senden und Empfangen werden damit nicht Ende zu Ende geprüft oder als nachgewiesen bezeichnet. Zusätzlich benötigte externe Links/Callbacks prüfen.
 - Ressourcenprüfung unter repräsentativer Nutzung und während Deployments sowie dokumentierte aktuelle Backups und der überprüfte WordPress-Rückweg.
 - Nachvollziehbare Freigabe und Veröffentlichung desselben geprüften Images; keine Veröffentlichung fehlgeschlagener oder ungeprüfter Versionen.
 

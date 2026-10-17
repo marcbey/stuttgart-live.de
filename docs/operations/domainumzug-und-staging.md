@@ -8,7 +8,7 @@ Pfad und Querystring zum Apex weiter. Die getrennten Testumgebungen liegen unter
 
 Host Europe verwaltet Stuttgart, STRATO Russ. Codex bedient dafür die vom Nutzer
 bereits angemeldeten Browsersitzungen. **Für den öffentlichen Wechsel fehlen
-noch das vereinbarte Zeitfenster und die Person für die Microsoft-365-Abnahme.**
+noch das vereinbarte Zeitfenster.**
 Vorbereitung und Staging können vorher erfolgen. Russ wird zuerst umgestellt;
 Stuttgart folgt erst nach vollständiger Russ-Abnahme.
 
@@ -18,7 +18,10 @@ MX, SPF, DKIM, DMARC, Autodiscover, SRV, unbekannte Einträge, VPN, Nameserver,
 DNSSEC und bestehende CAA-Regeln bleiben einschließlich Prioritäten und TTLs
 erhalten. Keine Zone zurücksetzen, keine globalen TTLs absenken und keine
 Mail-/Domain-Assistenten verwenden. Insbesondere die Microsoft-365-Konfiguration
-und die vorhandenen Mailjet-Verifizierungen werden nicht verändert.
+und die vorhandenen Mailjet-Verifizierungen werden nicht verändert. Die technische
+Abnahme vergleicht sämtliche bestehenden Einträge vor und nach jedem Eingriff.
+Der Nutzer kann keine Postfachprobe durchführen; diese ist daher keine Voraussetzung.
+Senden und Empfangen werden nicht Ende zu Ende geprüft oder als nachgewiesen bezeichnet.
 
 Es gibt keine `old.*`-Subdomains. Das bisherige WordPress-Hosting bleibt mindestens
 72 Stunden nach erfolgreicher Stuttgart-Abnahme unverändert. Für internes
@@ -97,7 +100,7 @@ Für **einen** bevorstehenden Eingriff eine private Erlaubnisdatei erstellen:
 ```json
 {
   "zone": "stuttgart-live.de",
-  "operator": "Codex in angemeldeter Providersitzung; Nutzer verantwortet Abnahme",
+  "operator": "Codex in angemeldeter Providersitzung; technische Web-/DNS-Abnahme",
   "changes": [
     {"action": "add", "record": {"name": "staging.stuttgart-live.de", "type": "A", "value": "46.225.224.194", "priority": null, "ttl": 600}}
   ],
@@ -200,8 +203,9 @@ Mail-DNS nötig wäre, Mailteil klären; keine SPF-/DKIM-Ergänzung vornehmen.
 
 Unmittelbar vor dem vereinbarten Fenster: frische DNS-Sicherung, geprüfte
 Image-Digests, beide Versionsnachweise, Rückfallwerte und Verantwortliche
-protokollieren. Der beauftragte Mensch sendet und empfängt je eine M365-Testmail
-und prüft Autodiscover. Konkurrierende Deployments und Kampagnen aussetzen.
+protokollieren. Alle bestehenden Mail-DNS-Einträge einschließlich Autodiscover,
+Werten, Prioritäten und TTLs vollständig technisch vergleichen. Nach Nutzerentscheidung
+ist keine manuelle Postfachprobe erforderlich. Konkurrierende Deployments und Kampagnen aussetzen.
 
 | Eintrag | Stuttgart | Russ |
 | --- | --- | --- |
@@ -223,7 +227,8 @@ DNS-Abgleich, beide Autoritäten und unabhängige Resolver prüfen. Frischer
 HTTP-Client und Browserkontext vermeiden alte 301-Caches. Startseite,
 `/unternehmen`, `/referenzen`, `/jobs`, Event, Login und Medien abnehmen.
 `www` muss mit 308 und erhaltenem Pfad/Query zum Apex führen; keine Schleifen.
-M365-Senden/-Empfangen und Autodiscover erneut durch den Menschen bestätigen.
+Sämtliche bestehenden Mail-DNS-Einträge einschließlich Autodiscover, Werten,
+Prioritäten und TTLs erneut vollständig vergleichen.
 
 Erst nach Russ-Abnahme denselben Ablauf für Stuttgart durchführen. Vorher den
 WordPress-Rückweg erneut prüfen. Stuttgart-Startseite, Events, Login, Medien,

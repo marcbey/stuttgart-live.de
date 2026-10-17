@@ -67,7 +67,7 @@ Keine neue Bibliothek für gemeinsame Projektlogik einführen. Die wenigen gleic
 - [ ] Bei beiden Providern die tatsächlich autoritative Zone und vollständige Export-/Ansichtsmöglichkeit prüfen. Alle Nicht-Web-Einträge einschließlich DKIM-Selektoren, SRV und TTLs erfassen; unbekannte Einträge bleiben unverändert. Mail-Abhängigkeiten von Apex/`www` prüfen, etwa SPF-Mechanismen oder CNAME-Ziele.
 - [ ] Nach Nutzerkorrektur sind die bisherigen `schopp3r.de`-Hosts während der Vorbereitung optional. Keine DNS-Rechte oder SANs für diese Hosts voraussetzen; Übergangs-HTTPS umfasst Hauptdomain und `www`.
 - [ ] WordPress-Rückweg mit `curl --resolve stuttgart-live.de:443:83.169.28.13 -I https://stuttgart-live.de/` und auch `www` prüfen; Zertifikatsablauf muss den Umschalttermin plus mindestens 72 Stunden abdecken. Betreiberkontakt parallel suchen; aktuellen Rückweg und spätere Abschaltung getrennt behandeln.
-- [ ] Mit dem Nutzer Umschaltfenster und Verantwortliche für DNS, Abnahme und Microsoft-365-Testpostfach festhalten. Ermittlung dieser Betriebsparameter ist Voraussetzung für Tasks 11–13.
+- [ ] Mit dem Nutzer das Umschaltfenster festhalten. Codex bedient die angemeldeten DNS-Portale und führt die technische Web-/DNS-Abnahme aus. Der vollständige unveränderte Mail-DNS-Bestand einschließlich Autodiscover ist vor und nach jedem Eingriff nachzuweisen; nach Nutzerentscheidung wird keine manuelle Postfachprobe verlangt. Das Zeitfenster ist Voraussetzung für Tasks 11–13.
 
 **Ergebnis:** Aktuelle Basis und ausführbare Voraussetzungen sind belegt. Hier werden weder Domains umgeschaltet noch Produktionsprozesse angehalten.
 
@@ -205,7 +205,7 @@ end
 - [ ] Einen fallbezogenen Änderungsnachweis anlegen: ursprüngliche Werte und TTLs, erlaubte Sollwerte, DNS-Operator, Zeitpunkt, zugehörige Zertifikats-/App-Version und gezielter Rückweg. Der Bericht enthält keine Logins oder privaten Schlüssel.
 - [ ] Erlaubte Web-Änderungen im Runbook festlegen: Apex A → `46.225.224.194`; `www` CNAME → jeweiliger Apex, soweit keine dokumentierte Web-Sonderkonfiguration entgegensteht; `staging` A → `46.225.224.194`; alte Web-AAAA ohne positiven IPv6-Nachweis entfernen. Keine `old.*`-Einträge. Für Russ zusätzlich den bisherigen Weiterleitungsschalter dokumentieren.
 - [ ] Nur betroffene Web-TTLs auf 300–600 Sekunden absenken. Kann der Provider dies nur global, nichts absenken und die vorhandene maximale Web-TTL abwarten. SOA-/Mail-TTLs nicht ändern. Vor dem Cutover sowohl autoritative Antworten als auch Provideransicht prüfen.
-- [ ] Den unten stehenden Rückfallablauf, HTTPS-Vorabtests, Microsoft-365-Abnahme und das Entfernen lokaler hosts-Einträge in das Runbook übernehmen. Beide READMEs knapp auf den neuen Alltag und das gemeinsame Runbook ausrichten, ohne bestehende fremde README-Änderungen zu überschreiben.
+- [ ] Den unten stehenden Rückfallablauf, HTTPS-Vorabtests, den technischen Microsoft-365-DNS-Abgleich und das Entfernen lokaler hosts-Einträge in das Runbook übernehmen. Beide READMEs knapp auf den neuen Alltag und das gemeinsame Runbook ausrichten, ohne bestehende fremde README-Änderungen zu überschreiben.
 - [ ] Tests mit `mise exec -- bin/rails test test/lib/dns_change_policy_test.rb` grün ausführen und Ruby-Dateien linten. Commits: `feat(ops): audit scoped DNS changes` und je Repository `docs(ops): document staging promotion and domain cutover`.
 
 ## Task 9: Vorbereitung prüfen und Staging erstmals bereitstellen
@@ -235,7 +235,7 @@ end
 - [ ] Zertifikate/Schlüssel außerhalb von Git über Kamal-Secrets bereitstellen. Proxy im Modus `prepared` mit Hauptdomain und `www` und benutzerdefiniertem Zertifikat vorbereiten; kanonische Weiterleitung bleibt aus und Indexierungsschutz bleibt bis zum jeweiligen Wechsel erhalten. Die bisherigen schopp3r-Hosts dürfen dabei entfallen. Das vorbereitete Image ist dasselbe geprüfte Image, nur das dokumentierte Laufzeitprofil wird erweitert.
 - [ ] Für alle vorbereiteten Hosts `curl --resolve <host>:443:46.225.224.194 -I https://<host>/` ausführen, dazu repräsentative Events und Medien. Richtige App, Zertifikat, neue Hostrouten und Healthchecks prüfen. Canonical-/`www`-Umschaltverhalten ist bereits mit dem echten nginx aus Task 4 getestet.
 - [ ] Vorhandenen verifizierten Mailabsender feststellen; benötigte Domainbindungen/Callbacks aktualisieren, ohne Mail-DNS zu verändern. Reicht die bestehende Absenderverifizierung nicht, den Mailteil als Konflikt klären statt zusätzliche SPF/DKIM-Einträge einzurichten. Bereits versandte Links und vorbereitete Newsletter-Drafts gesondert prüfen.
-- [ ] Vollständigen DNS-Abgleich nach Zertifikatsvorbereitung bestehen lassen. Microsoft-365-Testpostfach durch den Nutzer/ausdrücklich beauftragten Verantwortlichen auf Senden, Empfangen und Autodiscover testen lassen; Ergebnis vor dem Cutover protokollieren.
+- [ ] Vollständigen DNS-Abgleich nach Zertifikatsvorbereitung bestehen lassen. Alle bestehenden Microsoft-365-/Mail-DNS-Einträge einschließlich Autodiscover, Werten, Prioritäten und TTLs technisch vergleichen und das Ergebnis vor dem Cutover protokollieren. Keine manuelle Postfachprobe voraussetzen oder ungeprüftes Senden/Empfangen als nachgewiesen bezeichnen.
 
 ## Task 11: Russ Live bei STRATO umschalten
 
@@ -247,7 +247,7 @@ end
 - [ ] Autoritative Nameserver sowie unabhängige Resolver abfragen. Mit frischem Browserprofil und HTTP-Client testen: richtige Startseite, `/unternehmen`, `/referenzen`, `/jobs`, Event-/Medienzugriff und Anmeldung. Alte Browser-301-Caches nicht als Zustand des neuen Servers interpretieren.
 - [ ] `https://www.russ-live.de/unternehmen?probe=1` muss nach `https://russ-live.de/unternehmen?probe=1` weiterleiten; Hauptdomain darf keine Schleife erzeugen. Assets/Medien und falsche Hosts ebenfalls prüfen. Globale öffentliche Indexierbarkeit kontrollieren.
 - [ ] Nach propagiertem Web-DNS von Custom-TLS auf Kamal-Automatik umstellen und gültige Zertifikate aller bedienten Hosts bestätigen. Erst nach erfolgreicher Ausgabe/Erneuerungszuständigkeit das Übergangsmaterial entfernen.
-- [ ] Microsoft-365-DNS erneut vergleichen und den vereinbarten Postfach-Test wiederholen lassen. Erst nach dokumentiert erfolgreicher Russ-Abnahme Task 12 beginnen. `www.michaelrussgmbh.de` bleibt unverändert.
+- [ ] Microsoft-365-/Mail-DNS einschließlich Autodiscover, Werten, Prioritäten und TTLs erneut vollständig vergleichen. Erst nach dokumentiert erfolgreicher Russ-Abnahme Task 12 beginnen. `www.michaelrussgmbh.de` bleibt unverändert.
 
 ## Task 12: Stuttgart Live bei Host Europe umschalten
 
@@ -258,7 +258,7 @@ end
 - [ ] In der tatsächlich aktiven Host-Europe-Zone ausschließlich Apex A auf `46.225.224.194`, alten Web-AAAA und die `www`-Webzuordnung anpassen. Vollständigen Nicht-Web-DNS-Abgleich bestehen lassen. Domain-/Mail-Assistenten und globale Zonenoptionen nicht verwenden.
 - [ ] DNS autoritativ und über unabhängige Resolver prüfen. Für die Abnahme lokale hosts-Overrides entfernen. Startseite, Eventdetail, Suche/Filter, Blog/Altpfade, Medien, Backend, Newsletter-Bestätigung/Abmeldung sowie Meta-/OAuth-Callbacks prüfen. Reale Integrationsaktionen nur an ausdrücklich vereinbarte Testziele.
 - [ ] Hauptdomain und `www` mit Pfad/Query, Assets und Medien auf korrektes HTTPS/Redirect-Verhalten prüfen; Canonical, Open Graph, strukturierte Daten und Sitemap müssen die endgültige Domain verwenden. Staging bleibt separat passwortgeschützt und nicht indexierbar.
-- [ ] Nach propagiertem DNS automatische Kamal-Zertifikate übernehmen und prüfen. Unverändertes Microsoft-365-DNS und den wiederholten vereinbarten Postfach-Test nachweisen. Zeitpunkt der erfolgreichen Stuttgart-Abnahme als Beginn des mindestens 72-stündigen Rückfallfensters dokumentieren.
+- [ ] Nach propagiertem DNS automatische Kamal-Zertifikate übernehmen und prüfen. Unverändertes Microsoft-365-/Mail-DNS einschließlich Autodiscover, Werten, Prioritäten und TTLs nachweisen. Zeitpunkt der erfolgreichen Stuttgart-Abnahme als Beginn des mindestens 72-stündigen Rückfallfensters dokumentieren.
 
 ## Task 13: Beobachtungsfenster abschließen und WordPress-Abschaltung veranlassen
 
@@ -279,7 +279,7 @@ end
 2. Zuerst die betroffene App mit dem zuvor protokollierten Release zurückrollen: `mise exec -- bin/kamal rollback <vorherige-version> -d hetzner`. Zusätzlich das gesicherte Laufzeitprofil einschließlich Hostlisten, Redirects, Indexierung und TLS wiederherstellen und den Digest prüfen; ein Container-Rollback allein reicht nicht.
 3. Falls öffentlicher Rückfall nötig ist, nur die selbst geänderten Web-Einträge auf die unmittelbar vorher gesicherten Werte zurückstellen. Bei Stuttgart führt das zurück zum bestehenden WordPress-Hosting. Bei Russ die alte Weiterleitung nur wiederherstellen, wenn dadurch keine Nicht-Web-Einträge verändert werden. Keinen vollständigen Zonenimport ausführen.
 4. Hetzner während auslaufender DNS-Caches weiter bedienen; DNS-Rückänderung und vorhandene 301-Caches wirken zeitversetzt. WordPress enthält keine seitdem neu in Rails bearbeiteten Inhalte.
-5. Rails-Datenbanken und Medien nicht zurücksetzen oder nach WordPress übertragen. Vorher-/Nachher-DNS-Abgleich und Microsoft-365-Test erneut durchführen. Neue Umschaltung erst nach geklärter Ursache und erneuten erfolgreichen Prüfungen.
+5. Rails-Datenbanken und Medien nicht zurücksetzen oder nach WordPress übertragen. Vollständigen Vorher-/Nachher-DNS-Abgleich einschließlich Microsoft-365-/Mail-DNS erneut durchführen. Neue Umschaltung erst nach geklärter Ursache und erneuten erfolgreichen Prüfungen.
 
 ## Abdeckung und Planprüfung
 
