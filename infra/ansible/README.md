@@ -69,3 +69,38 @@ Der produktive Media-Proxy läuft bewusst nicht als zusätzlicher Host-Webserver
 Für Backups bleibt deshalb derselbe Storage-Pfad relevant:
 
 - `/var/lib/docker/volumes/stuttgart_live_de_storage/_data`
+
+## Staging getrennt einrichten
+
+Das eigenständige Playbook `playbooks/staging.yml` legt ausschließlich acht
+Staging-Datenbanken, drei eingeschränkte Rollen, das Staging-Medienvolume und
+die gemeinsame Deploy-Sperre an. Es installiert keine Pakete, ändert keine
+Produktionsrollen/-datenbanken und startet PostgreSQL oder den Proxy nicht neu.
+Neue HBA-Regeln betreffen ausschließlich die drei Staging-Rollen; ein Reload
+aktiviert sie nach erfolgreicher Syntaxprüfung.
+
+Lege eine lokale, nicht versionierte YAML-Datei mit Dateirechten `0600` an.
+Sie enthält ausschließlich drei unterschiedliche, mindestens 32 Zeichen lange
+Staging-Passwörter: `staging_stuttgart_db_password`, `staging_russ_reader_password`
+und `staging_russ_operational_password`. Produktionspasswörter und `.env` werden
+für diesen Aufruf nicht übernommen. Die Werte stehen nicht in Prozessargumenten.
+
+```bash
+ANSIBLE_CONFIG=infra/ansible/ansible.cfg ansible-playbook \
+  -i infra/ansible/inventories/production/hosts.yml \
+  infra/ansible/playbooks/staging.yml --syntax-check
+script/ansible_app_host_staging --vars-file /geschuetzter/pfad/staging.yml --check
+script/ansible_app_host_staging --vars-file /geschuetzter/pfad/staging.yml
+```
+
+Check-Modus zeigt Ressourcen und HBA-Änderungen. Grants werden erst beim echten
+Lauf nach Anlage der Datenbanken ausgeführt; ihre tatsächliche Wirkung muss nach
+der bereinigten Datenübernahme im jeweiligen Staging-Container mit
+`bin/rails runner script/ops/check_staging_acl.rb` bestätigt werden. Erst danach
+dürfen Web-/Jobprozesse starten. Auch ein späteres Restore muss die Reader-Grants
+wiederherstellen und diese Prüfung wiederholen.
+
+Die Sperre liegt unter `/var/lock/live-deploy/global.lock`, ist für beide Projekte
+und Umgebungen gemeinsam und wird durch eine offene SSH-/flock-Sitzung gehalten.
+Ein tmpfiles-Eintrag stellt das Verzeichnis nach Neustarts wieder her. Automatische
+Deployments dürfen den gemeinsamen Kamal-Proxy nicht eigenmächtig neu starten.

@@ -1,0 +1,7 @@
+---
+- name: Ausschließlich isolierte Staging-Ressourcen einrichten
+  hosts: production
+  become: true
+  roles:
+    - staging_postgres
+    - staging_support
