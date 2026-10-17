@@ -86,7 +86,9 @@ class StagingDataSanitizerTest < ActiveSupport::TestCase
     assert_not BCrypt::Password.new(stage_row("users", user)["password_digest"]) == "old password"
     assert sanitizer.verify!(admin_id:)
     assert_raises(Staging::DataSanitizer::Error) { sanitizer.create_admin!(password:) }
-    insert_stage("active_storage_blobs", key: "abcdefghijklmnopqrstuvwx", filename: "image", service_name: "local", byte_size: 4)
+    blob = insert_stage("active_storage_blobs", key: "abcdefghijklmnopqrstuvwx", filename: "image", service_name: "local", byte_size: 4)
+    venue = insert_stage("venues", name: "Media venue")
+    insert_stage("active_storage_attachments", record_type: "Venue", record_id: venue, name: "logo", blob_id: blob)
     Dir.mktmpdir do |root|
       assert_raises(Staging::MediaVerifier::Error) { Staging::MediaVerifier.call(connection: @stage, root:) }
       FileUtils.mkdir_p(File.join(root, "ab", "cd"))
@@ -96,6 +98,18 @@ class StagingDataSanitizerTest < ActiveSupport::TestCase
       File.unlink(path)
       File.symlink("/etc/hosts", path)
       assert_raises(Staging::MediaVerifier::Error) { Staging::MediaVerifier.call(connection: @stage, root:) }
+    end
+  end
+
+  test "incomplete unattached uploads are ignored while variant references require the original file" do
+    blob = insert_stage("active_storage_blobs", key: "abcdefghijklmnopqrstuvwx", filename: "incomplete", service_name: "local", byte_size: 4)
+    Dir.mktmpdir do |root|
+      assert Staging::MediaVerifier.call(connection: @stage, root:)
+      insert_stage("active_storage_variant_records", blob_id: blob, variation_digest: "variant")
+      assert_raises(Staging::MediaVerifier::Error) { Staging::MediaVerifier.call(connection: @stage, root:) }
+      FileUtils.mkdir_p(File.join(root, "ab", "cd"))
+      File.write(File.join(root, "ab", "cd", "abcdefghijklmnopqrstuvwx"), "test")
+      assert Staging::MediaVerifier.call(connection: @stage, root:)
     end
   end
 

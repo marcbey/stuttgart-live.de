@@ -9,7 +9,12 @@ module Staging
     def self.call(connection:, root: "/rails/storage")
       raise Error, "Medienprüfung benötigt Staging" unless connection.select_value("SELECT current_database()") == DataSanitizer::DATABASE
       base = Pathname.new(root).realpath
-      connection.select_all("SELECT key, byte_size, checksum FROM active_storage_blobs").each do |blob|
+      blobs = connection.select_all(<<~SQL)
+        SELECT blobs.key, blobs.byte_size, blobs.checksum FROM active_storage_blobs blobs
+        WHERE EXISTS (SELECT 1 FROM active_storage_attachments attachments WHERE attachments.blob_id = blobs.id)
+          OR EXISTS (SELECT 1 FROM active_storage_variant_records variants WHERE variants.blob_id = blobs.id)
+      SQL
+      blobs.each do |blob|
         key = blob.fetch("key")
         raise Error, "Ungültiger Medienschlüssel" unless key.match?(/\A[a-zA-Z0-9_-]{4,255}\z/)
         file = base.join(key[0, 2], key[2, 2], key).realpath

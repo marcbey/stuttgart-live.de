@@ -1225,6 +1225,10 @@ Newsletter-IDs und freie Crawl-Metadaten werden entfernt. Bestehende Legacy-Ziel
 Zuordnungen, Veröffentlichungsfreigaben, Event-IDs und Medienzuordnungen bleiben.
 Kontakt- und Teamangaben in Russ werden synthetisch. Die Staging-Kopie ist für
 Layout- und Funktionstests gedacht und keine Inhaltsfreigabe echter Kontaktdaten.
+Die Medienprüfung kontrolliert Dateien, Größe und Prüfsummen für alle durch
+Attachments oder Varianten referenzierten Active-Storage-Blobs sowie die eigenen
+Medienpfade von Russ. Unverknüpfte, unvollständige Upload-Einträge können bereits
+in Produktion ohne Datei existieren und blockieren diese Prüfung nicht.
 
 Erst nach allen Prüfungen wird die Readiness atomisch veröffentlicht. Rohdumps
 liegen bis dahin unter `/var/lib/live-staging-refresh/<snapshot_id>/` mit privaten
