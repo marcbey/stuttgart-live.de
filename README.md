@@ -1167,13 +1167,25 @@ KI-Aufrufe werden an den echten Client-Grenzen blockiert, auch bei versehentlich
 vorhandenen API-Zugangsdaten. Öffentliche Tracking-Pixel bleiben in Staging aus.
 
 Das Staging-Ziel benötigt zusätzlich `STAGING_BASIC_AUTH_HTPASSWD` als vollständige
-htpasswd-Zeile (`Benutzer:Hash`), beispielsweise mit einem Bcrypt-Hash. Der Hash
-wird als Secret behandelt; das Startskript schreibt ihn mit Dateirechten `0600`.
+htpasswd-Zeile (`Benutzer:Hash`). Für das kryptografisch zufällige Staging-Passwort
+(mindestens 32 Zeichen) SHA-512-crypt verwenden. Den Hash auf dem Linux-Host mit
+`openssl passwd -6 -stdin` erzeugen; das System-OpenSSL von macOS unterstützt
+diese Option nicht.
+Den Benutzernamen vor den erzeugten Hash setzen. nginx prüft diesen Hash bei jedem
+Bild, Skript und Stylesheet erneut; ein teurer Bcrypt-Hash bremst deshalb die gesamte
+Seite. `STAGING_HTTP_AUTH` muss weiterhin denselben Benutzer und dasselbe Passwort
+enthalten. Der Hash wird als Secret behandelt; das Startskript schreibt ihn mit
+Dateirechten `0600`.
 Fehlt er, startet nginx nicht. In Staging gelten Basic Auth und `noindex, nofollow`
 auch für Assets, Medien und Fehlerantworten. Antworten werden dort nicht öffentlich
 zwischengespeichert. Ausschließlich der exakte Healthcheck `/up` bleibt öffentlich
 und enthält keine Anwendungsdaten. nginx prüft dabei den Rails-Healthcheck von
 Puma, damit ein noch nicht gestarteter oder defekter App-Prozess nicht als bereit gilt.
+
+Das Staging-Deployment aktiviert `MEDIA_PROXY_ENABLED=true`, damit öffentliche
+Bilder wie in Produktion über signierte `/media/`-Pfade direkt von nginx kommen.
+Ohne diese Einstellung bleiben Bildbereiche mit erzwungener Medienauslieferung
+leer; die übrigen Bilder belasten Rails mit einzelnen Proxy-Aufrufen.
 
 `APP_ALLOWED_HOSTS` enthält die erlaubten Hostnamen als kommagetrennte Liste.
 `CANONICAL_REDIRECT_ENABLED=false` hält die Weiterleitung bis zum Umschaltfenster
