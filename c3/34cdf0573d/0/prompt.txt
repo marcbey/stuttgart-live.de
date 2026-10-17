@@ -1,1 +1,0 @@
-Für Skills mit Subagents solltest du Multi-Agent-Support für codex aktivieren
