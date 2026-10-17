@@ -1265,3 +1265,7 @@ Nach einem Deploy-/Refresh-Abbruch bleibt die Operationsmarkierung
 `/var/lock/live-deploy/active-operation` bestehen und sperrt weitere Eingriffe.
 Erst nach bestätigtem Ende aller bisherigen Host-Mutationen administrativ gemäß
 gemeinsamem Runbook freigeben; es gibt keine automatische Ablaufzeit.
+
+`mise install` stellt neben Ruby und Python auch das gepinnte Bun für den
+JavaScript-Sicherheitsaudit in `bin/ci` bereit. Dadurch führt GitHub dieselben
+vollständigen Prüfungen wie die lokale Umgebung aus.
