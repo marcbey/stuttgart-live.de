@@ -21446,9 +21446,15 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   margin-top: 0.75rem;
 }
 
+.design-detail-preview-ticket-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
 .design-detail-preview-ticket-handoff {
-  grid-column: 1 / -1;
-  order: 1;
   margin: 0;
   color: var(--preview-muted);
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
@@ -21460,10 +21466,13 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   position: static;
   z-index: auto;
   display: inline-flex;
-  width: auto;
+  width: 100%;
+  min-width: 0;
+  max-inline-size: 100%;
   height: auto;
   min-height: 2.75rem;
-  margin-top: 0;
+  margin: 0;
+  justify-self: stretch;
   align-items: center;
   justify-content: center;
   gap: 0.34rem;
@@ -21581,6 +21590,8 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   box-shadow: none;
   cursor: default;
   pointer-events: none;
+  white-space: normal;
+  line-height: 1.2;
   transform: none;
 }
 

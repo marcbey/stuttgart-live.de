@@ -298,17 +298,19 @@ end %>
       </dl>
 
       <div class="design-detail-preview-actions event-detail-cta">
-        <% if presenter.show_ticket_link? %>
-          <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", aria: { describedby: "ticket-handoff-note" }, class: "design-detail-preview-action-button design-detail-preview-action-button--primary event-detail-cta-button" %>
-          <p id="ticket-handoff-note" class="design-detail-preview-ticket-handoff">
-            <%= presenter.ticket_provider_label.present? ? "Bei #{presenter.ticket_provider_label}" : "Beim Ticketanbieter" %> · öffnet neuen Tab
-          </p>
-        <% else %>
-          <span class="design-detail-preview-action-button design-detail-preview-action-button--primary design-detail-preview-action-button--status event-detail-cta-button"><%= @event.public_ticket_status_label.presence || presenter.sold_out_note_text.presence || "Tickets aktuell nicht verfügbar" %></span>
-          <% if presenter.show_ticket_special_note? %>
-            <span class="design-detail-preview-action-note"><%= presenter.ticket_special_note_text %></span>
+        <div class="design-detail-preview-ticket-action">
+          <% if presenter.show_ticket_link? %>
+            <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", aria: { describedby: "ticket-handoff-note" }, class: "design-detail-preview-action-button design-detail-preview-action-button--primary event-detail-cta-button" %>
+            <p id="ticket-handoff-note" class="design-detail-preview-ticket-handoff">
+              <%= presenter.ticket_provider_label.present? ? "Bei #{presenter.ticket_provider_label}" : "Beim Ticketanbieter" %> · öffnet neuen Tab
+            </p>
+          <% else %>
+            <span class="design-detail-preview-action-button design-detail-preview-action-button--primary design-detail-preview-action-button--status event-detail-cta-button"><%= @event.public_ticket_status_label.presence || presenter.sold_out_note_text.presence || "Tickets aktuell nicht verfügbar" %></span>
+            <% if presenter.show_ticket_special_note? %>
+              <span class="design-detail-preview-action-note"><%= presenter.ticket_special_note_text %></span>
+            <% end %>
           <% end %>
-        <% end %>
+        </div>
         <%= render "public/events/saved_event_button",
                    event: @event,
                    button_class: "design-detail-preview-action-button" %>
