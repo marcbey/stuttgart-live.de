@@ -74,6 +74,7 @@ RUN rm -rf node_modules
 
 # Final stage for app image
 FROM base
+LABEL service="stuttgart_live_de"
 
 COPY vendor/fonts/runtime /usr/local/share/fonts/stuttgart-live
 RUN fc-cache -f && \

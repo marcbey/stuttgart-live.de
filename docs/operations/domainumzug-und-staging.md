@@ -123,6 +123,14 @@ mise exec -- bin/dns-audit --before /privat/before.json --after /privat/after.js
 
 Nur Exit 0 gilt als Erfolg. Der Bericht bindet alle drei Eingaben per SHA256.
 SOA-Seriennummern dürfen wechseln; andere SOA-Werte und TTLs bleiben geschützt.
+STRATO kann für unkonfigurierte Namen MX-Antworten aus einem Wildcard-Eintrag
+ableiten. Eine neue Subdomain verändert, wo diese Synthese greift
+([RFC 4592, Abschnitt 3.3.1](https://www.rfc-editor.org/rfc/rfc4592.html#section-3.3.1)).
+Solche Antworten nur dann auf den echten Wildcard-Datensatz zurückführen, wenn
+vollständige Provideransichten und beide Nameserver die unveränderte Quelle und
+das Fehlen separat konfigurierter Einträge belegen. Rohaufnahmen, ihre Hashes und
+die einzelnen abgeleiteten Antworten im normalisierten Inventar festhalten.
+Keine MX-Ausnahme in die Änderungsliste aufnehmen; bei unklarer Herkunft anhalten.
 Bei unerlaubten Nebenwirkungen anhalten und ausschließlich die selbst verursachte
 Änderung gezielt rückgängig machen. Kein vollständiger Zonenimport als Rückfall.
 
