@@ -45,6 +45,8 @@ env:
     - DB_PASSWORD
     - MEDIA_PROXY_SECRET
   clear:
+    APP_ENVIRONMENT: production
+    STORAGE_VOLUME: stuttgart_live_de_storage
     APP_HOST: <%= HetznerDeployConfig.app_host %>
     SENTRY_ENVIRONMENT: production
     SENTRY_RELEASE: <%= ENV.fetch("SENTRY_RELEASE") { `git rev-parse HEAD`.strip } %>
@@ -60,3 +62,6 @@ ssh:
   user: deploy
   keys:
     - <%= ENV.fetch("KAMAL_SSH_KEY_PATH", File.expand_path("~/.ssh/stgt-live-hetzner-github")) %>
+
+volumes:
+  - "stuttgart_live_de_storage:/rails/storage"

@@ -1,4 +1,5 @@
 require_relative "boot"
+require_relative "../app/lib/deployment_environment"
 require_relative "../app/lib/production_server_config"
 require_relative "../lib/legacy_redirects/middleware"
 
@@ -12,6 +13,18 @@ module StuttgartLiveDe
   class Application < Rails::Application
     # Initialize configuration defaults for originally generated Rails version.
     config.load_defaults 8.1
+
+    config.x.deployment_environment = DeploymentEnvironment.name(rails_env: Rails.env)
+    if Rails.env.production?
+      asset_build = DeploymentEnvironment.asset_build?
+      DeploymentEnvironment.validate_runtime!(project: "stuttgart_live_de") unless asset_build
+      if config.x.deployment_environment == "staging"
+        paths = DeploymentEnvironment.credentials_paths(root: config.root, environment: "staging")
+        config.credentials.content_path = paths.fetch(:content_path)
+        config.credentials.key_path = paths.fetch(:key_path)
+        DeploymentEnvironment.validate_credentials!(root: config.root, environment: "staging") unless asset_build
+      end
+    end
 
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.

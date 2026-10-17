@@ -12,9 +12,6 @@ aliases:
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
 
-volumes:
-  - "stuttgart_live_de_storage:/rails/storage"
-
 asset_path: /rails/public/assets
 
 builder:

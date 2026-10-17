@@ -1107,3 +1107,24 @@ Nach der Vorbereitung lassen sich unter **Backend → Weiterleitungen** (`/backe
 `tmp/legacy_redirects/report.json` und `report.csv` unterscheiden gültige Redirects, bereits aktuelle öffentliche Pfade, ungelöste Quellen, Sperren und Abruffehler. Die Prüfung der Ziele erfolgt anhand der lokalen Veröffentlichungsregeln; `current_public_200` ist eine lokale Bewertung, kein durchgeführter HTTP-Aufruf. Eine tatsächliche HTTP-Abnahme erfolgt separat, beispielsweise mit `curl -I https://stuttgart-live.de/ALTE-URL` nach der Umschaltung beziehungsweise gegen die passend konfigurierte Vorschau. Der Import ändert weder DNS noch TLS.
 
 Der Benchmark schreibt `tmp/legacy_redirects/benchmark.json`. Er misst den lokalen Resolver getrennt mit vorbereitetem Zustand und mit zurückgesetzten automatischen Zuordnungen innerhalb zurückgerollter Datenbanktransaktionen. Manuelle Regeln bleiben auch bei kalten Stichproben unmittelbar verbindlich. Netzwerk und die reguläre 404-Verarbeitung der App sind ausgeschlossen. Die Ergebnisse belegen keine Produktionslatenz: Die Ziele p95 unter 20 ms für gespeicherte und unter 100 ms für erstmalige Auflösung müssen unter produktionsnaher Last gesondert geprüft werden.
+
+## Getrennte Umgebungen vorbereiten
+
+Das neue Kamal-Ziel `staging` verwendet weiterhin `RAILS_ENV=production`, aber
+`APP_ENVIRONMENT=staging`. Datenbanken, PostgreSQL-Rollen, Credentials und das
+Medienvolume sind von Produktion getrennt. Beide Staging-Apps teilen sich nur
+`stuttgart_live_de_staging_storage`; Russ liest ausschließlich die
+Stuttgart-Staging-Datenbank. Produktionswerte in geerbten Datenbank-URLs werden
+beim Start abgelehnt.
+
+Produktion bleibt zunächst unter der bisherigen `schopp3r.de`-Adresse und dem
+Kamal-Ziel `hetzner`. Diese Konfiguration allein schaltet keine Domain um.
+Für Staging müssen eigene `config/credentials/staging.yml.enc` sowie ein eigener
+Schlüssel bereitgestellt werden; der Produktionsschlüssel ist kein Ersatz.
+Das Beispiel `.kamal/secrets.staging.example` liest ausschließlich ausdrücklich
+bereitgestellte Staging-Werte. `bin/hetzner-check --destination staging` lädt
+keine Produktions-`.env` und lehnt `.kamal/secrets-common` für Staging ab. Der bisherige Check verwendet `--destination hetzner`.
+
+Die Staging-Profile sind erst nach Einrichtung der Datenbanken, bereinigten Daten,
+Zugriffsschutz und Deployment-Prüfungen betriebsbereit. Der vollständige Ablauf
+steht im freigegebenen Umzugsplan; vor Abschluss dieser Vorbereitung nicht deployen.
