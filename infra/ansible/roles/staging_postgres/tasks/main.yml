@@ -75,7 +75,7 @@
     groups: "{{ item.parent_role }}"
     target_roles: "{{ item.child_role }}"
     state: absent
-  loop: "{{ staging_existing_memberships.query_result }}"
+  loop: "{{ staging_existing_memberships.query_result | list }}"
 
 - name: Nur die acht Staging-Datenbanken anlegen
   become_user: postgres
