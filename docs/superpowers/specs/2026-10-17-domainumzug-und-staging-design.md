@@ -96,7 +96,7 @@ Für beide Repositories gilt künftig:
 4. Nach der inhaltlichen Prüfung wird genau diese erfolgreich auf Staging bereitgestellte Version manuell für Produktion freigegeben.
 5. Produktion verwendet dasselbe Image ohne Neubau. Ein beweglicher Tag wie `latest` ist keine ausreichende Versionsangabe.
 
-Die Freigabe bezieht sich auf eine konkrete Version, auch wenn inzwischen weitere Änderungen auf Staging angekommen sind. Die Zuordnung von Commit, Image und erfolgreichem Staging-Deployment muss nachvollziehbar bleiben. Produktions- und Staging-Secrets sind getrennten Deployment-Zielen zugeordnet. Ein Push auf `main` darf Produktion nicht mehr unmittelbar verändern.
+Die Freigabe bezieht sich auf eine konkrete Version, auch wenn inzwischen weitere Änderungen auf Staging angekommen sind. Auch die geprüften Peer-Images werden mit Image-Name, Commit und Digest gebunden. Ein anderer Digest bei gleichem Commit erfordert einen neuen Kompatibilitätsnachweis. Die Zuordnung von Commit, Image und erfolgreichem Staging-Deployment muss nachvollziehbar bleiben. Produktions- und Staging-Secrets sind getrennten Deployment-Zielen zugeordnet. Ein Push auf `main` darf Produktion nicht mehr unmittelbar verändern.
 
 Da Russ Live die Stuttgart-Datenbank liest, wird bei Datenmodelländerungen die Kombination beider App-Versionen geprüft. Stuttgart-Migrationen müssen zur noch laufenden Russ-Version kompatibel sein. Ein App-Rollback setzt ein kompatibles Datenbankschema voraus; für den reinen Domainwechsel werden keine destruktiven Datenmigrationen eingeführt.
 

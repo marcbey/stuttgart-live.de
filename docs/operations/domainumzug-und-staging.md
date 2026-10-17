@@ -227,6 +227,34 @@ freigegebenen Digest erneut deployen. Automatisches TLS einschließlich
 Zertifikatskette und Erneuerung prüfen; die Übergangszertifikate anschließend
 aus den Production-Secrets entfernen. Kein dauerhaft manueller Zertifikatsbetrieb.
 
+## Unterbrochene Host-Operation klären
+
+Die gemeinsame Sperre verwendet zusätzlich das persistente Verzeichnis
+`/var/lock/live-deploy/active-operation`. Nur ein sauber abgeschlossener Vorgang
+entfernt es per bestätigtem Handshake. Bei SSH-Verlust, fehlgeschlagenem Befehl
+oder Refresh-Fehler bleibt es stehen und blockiert jeden neuen Deploy/Refresh,
+auch wenn der Betriebssystem-Lock bereits frei ist. Es gibt keine automatische
+Freigabe nach Zeitablauf.
+
+Vor Wiederholung beide GitHub-Läufe, verbleibende SSH-/Kamal-/Refresh-Prozesse,
+Docker-Ereignisse und Containerzustände prüfen. Sicherstellen, dass die vorherige
+Host-Mutation beendet oder gezielt gestoppt ist; laufende Web-/Jobdienste werden
+dafür nicht pauschal angehalten. Erst dann die Kennung als Administrator lesen
+und ausschließlich die bekannte eigene Operationsmarkierung unter `flock`
+entfernen. Im administrativen SSH-Terminal:
+
+```bash
+sudo cat /var/lock/live-deploy/active-operation/owner
+# OWNER durch die gerade geprüfte Kennung ersetzen, nachdem der alte Vorgang beendet ist:
+sudo flock -n /var/lock/live-deploy/global.lock sh -ec \
+  'test "$(cat "$1/owner")" = "$2"; rm "$1/owner"; rmdir "$1"' \
+  sh /var/lock/live-deploy/active-operation OWNER
+```
+
+Ein belegter `flock`, eine andere Kennung oder unerwartete Dateien verhindern
+die Freigabe. Keine pauschale Löschung und keine Freigabe nur aufgrund eines
+fehlgeschlagenen GitHub-Jobs: ein unabhängiger Remote-Befehl kann noch laufen.
+
 ## Rückfall, Abschluss und späterer Alltag
 
 Bei Problemen mit Domainrouting/HTTPS ausschließlich die gespeicherten eigenen
@@ -245,8 +273,9 @@ Nachweis und verbleibende externe Abhängigkeiten privat dokumentieren.
 
 Im Alltag: grünes `main` → automatisches Staging → inhaltliche Abnahme →
 `gh workflow run deploy-production.yml -f staging_run_id=RUN_ID` im jeweiligen
-Repository. Produktion erhält exakt das auf Staging geprüfte Image. Ein anderer
-produktiver Peer-Commit braucht einen neuen Kompatibilitätsnachweis. Destruktive
+Repository. Produktion erhält exakt das auf Staging geprüfte Image. Ein anderes
+produktives Peer-Image braucht einen neuen Kompatibilitätsnachweis. Dabei zählen
+Image-Name, Commit und Digest gemeinsam, auch bei gleichem Commit. Destruktive
 Schemaänderungen separat planen; die eigene Migration muss zur noch laufenden
 App passen. Staging-Daten werden nur über einen ausdrücklich gestarteten,
 bereinigten Refresh erneuert und niemals automatisch überschrieben.

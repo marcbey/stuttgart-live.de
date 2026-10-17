@@ -111,6 +111,7 @@ class StagingRefreshTest < ActiveSupport::TestCase
         assert 'admin@test.invalid' in sys.argv
         args = shlex.split(sys.argv[-1])
         index = args.index('/var/lock/live-deploy/global.lock')
+        args[-1] = args[-1].replace('/var/lock/live-deploy/active-operation', #{"#{lock}.fence".inspect})
         with open(#{lock.inspect}, 'w') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
             sys.exit(subprocess.call(args[index + 1:]))
@@ -128,7 +129,12 @@ class StagingRefreshTest < ActiveSupport::TestCase
       end
       assert_equal "verified", File.read(output)
       assert_not_includes err, "private-token"
+      assert File.directory?("#{lock}.fence")
+      assert_raises(Ops::StagingRefresh::Error) { remote.with_lock { flunk "Failed refresh fence ignored" } }
+      File.unlink("#{lock}.fence/owner")
+      Dir.rmdir("#{lock}.fence")
       capture_io { remote.with_lock { remote.run(:released, "true") } }
+      refute File.exist?("#{lock}.fence")
     ensure
       ENV["PATH"] = previous
     end

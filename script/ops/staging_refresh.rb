@@ -3,6 +3,8 @@ require "shellwords"
 require "open3"
 require "base64"
 require "timeout"
+require "securerandom"
+require_relative "host_operation_fence"
 
 module Ops
   class StagingRefresh
@@ -208,13 +210,17 @@ module Ops
       BASH
     end
 
-    # One server-side flock owns all RPC phases. If SSH disappears during a phase,
-    # the lock stays held until that child exits; no other deploy can overlap it.
+    # The persistent fence also blocks deployments if SSH/flock dies before a child.
     class Remote
       PROGRAM = <<~'BASH'.freeze
         set -uo pipefail
         printf '__REFRESH_LOCKED\n'
         while IFS= read -r payload; do
+          if [ "$payload" = "RELEASE OPERATION_OWNER" ]; then
+            OPERATION_RELEASE
+            printf '__REFRESH_RELEASED\n'
+            exit 0
+          fi
           if printf '%s' "$payload" | base64 --decode | bash -euo pipefail >/dev/null 2>&1; then
             printf '__REFRESH_STATUS_0\n'
           else
@@ -222,6 +228,7 @@ module Ops
             exit 1
           fi
         done
+        exit 75
       BASH
 
       def initialize(host:, key_path: File.expand_path("~/.ssh/stgt-live-hetzner-admin"))
@@ -230,18 +237,24 @@ module Ops
 
       def with_lock
         raise Error, "SSH-Key fehlt" unless File.file?(@key_path)
-        remote = "sudo -n flock -w 900 -E 75 /var/lock/live-deploy/global.lock bash -c #{Shellwords.escape(PROGRAM)}"
+        operation = SecureRandom.hex(16)
+        program = "set -e\n#{HostOperationFence.acquire_script(owner: operation)}\n" +
+          PROGRAM.sub("OPERATION_OWNER", operation).sub("OPERATION_RELEASE", HostOperationFence.release_script(owner: operation))
+        remote = "sudo -n flock -w 900 -E 75 /var/lock/live-deploy/global.lock bash -c #{Shellwords.escape(program)}"
         args = [ "ssh", "-T", "-o", "BatchMode=yes", "-o", "StrictHostKeyChecking=yes", "-o", "ConnectTimeout=10",
           "-o", "ServerAliveInterval=10", "-o", "ServerAliveCountMax=2", "-i", @key_path, "admin@#{@host}", remote ]
         Open3.popen3(*args) do |input, output, error, waiter|
           @input, @output = input, output
           drain = Thread.new { error.each_line { |_line| } }
           begin
-            raise Error, "Refresh-Sperre konnte nicht angefordert werden" unless Timeout.timeout(915) { output.gets } == "__REFRESH_LOCKED\n"
+            raise Error, "Refresh-Sperre nicht verfügbar; unabgeschlossene Host-Operation administrativ prüfen" unless Timeout.timeout(915) { output.gets } == "__REFRESH_LOCKED\n"
             yield
+            input.puts("RELEASE #{operation}")
+            input.flush
+            raise Error, "Refresh-Sperre nicht sauber freigegeben" unless Timeout.timeout(5) { output.gets } == "__REFRESH_RELEASED\n" && waiter.value.success?
           ensure
             input.close unless input.closed?
-            # The remote lock remains owned while an in-flight command finishes.
+            # The persistent fence survives transport or supervisor loss.
             unless waiter.join(5)
               Process.kill("TERM", waiter.pid) rescue nil
               waiter.join
