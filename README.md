@@ -681,14 +681,14 @@ Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=
 
 Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bleibt der Eigentümer der fachlichen Produktionsdatenbank und des Docker-Volumes `stuttgart_live_de_storage`. Weitere Apps wie `russ-live.de` dürfen diese Primärdatenbank nur mit einem separaten read-only PostgreSQL-Benutzer lesen und dasselbe Storage-Volume mounten. Queue, Cache und Cable bleiben je App getrennt, damit Worker und Laufzeitdaten nicht zwischen Projekten kollidieren.
 
-Die produktive öffentliche Domain, die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
-Die Datei bleibt bewusst außerhalb des Docker-Build-Kontexts; Kamal setzt `APP_HOST` daraus zur Laufzeit in den Produktions-Container.
+Die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
+Das öffentliche Hostprofil wird über `PRODUCTION_DOMAIN_MODE` im GitHub-Environment `production` gewählt; die endgültige Zieladresse ist `https://stuttgart-live.de`. Kamal setzt `APP_HOST` zur Laufzeit in den Produktions-Container.
 
 ### Staging und Suchindex
 
 Das bisherige Hetzner-Produktionsziel `https://stuttgart-live.schopp3r.de/` behält bis zur Domainumschaltung `STAGING_NOINDEX=true`. Das getrennte Staging liegt unter `https://staging.stuttgart-live.de/` und erzwingt zusätzlich Basic Auth. `nginx` setzt dadurch global den Header `X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien und den Healthcheck `/up`. `robots.txt` wird dafür bewusst nicht gesperrt, damit Google das `noindex` crawlen kann.
 
-Die Search-Console-Verifizierung läuft über die HTML-Datei [public/google8f1bf564d79d9e2c.html](/Users/marc/Projects/stuttgart-live.de/public/google8f1bf564d79d9e2c.html). Nach einem Deploy muss sie unter `https://stuttgart-live.schopp3r.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Erst danach die URL-Präfix-Property `https://stuttgart-live.schopp3r.de/` in der Search Console bestätigen, die temporäre Entfernung beantragen und anschließend Basic Auth aktivieren.
+Die Search-Console-Verifizierungsdatei [public/google8f1bf564d79d9e2c.html](/Users/marc/Projects/stuttgart-live.de/public/google8f1bf564d79d9e2c.html) muss nach dem Domainwechsel unter `https://stuttgart-live.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Den Status der bestehenden Domain- oder URL-Präfix-Property separat im zuständigen Google-Konto prüfen. Die öffentliche Produktion bleibt indexierbar; Staging behält Basic Auth und `noindex`.
 
 ### Was lokal wichtig ist
 
@@ -783,6 +783,11 @@ unbekannte Zusatzfelder und Dateischichten führen weiterhin zum Abbruch. Der La
 die jeweilige Prüfphase, ohne Daten oder Schlüssel auszugeben. Schemamigrationen müssen
 weiterhin auf die Verträglichkeit mit laufenden Web-/Job-Prozessen geprüft werden;
 eine Code-Rückkehr setzt keine Datenbank zurück.
+
+Die HTTPS-Prüfung erlaubt Staging pro Leseversuch bis zu 60 Sekunden, damit auch
+eine kalte Seite auf den bewusst kleinen Ressourcen fertig rendern kann.
+Produktion behält 15 Sekunden. Ein hängender Staging-Aufruf führt weiterhin zum
+Abbruch; der Prüfclient protokolliert die Phase und die Fehlerklasse ohne Nutzdaten.
 
 ### Die wichtigsten Kommandos
 
@@ -1137,8 +1142,9 @@ Medienvolume sind von Produktion getrennt. Beide Staging-Apps teilen sich nur
 Stuttgart-Staging-Datenbank. Produktionswerte in geerbten Datenbank-URLs werden
 beim Start abgelehnt.
 
-Produktion bleibt zunächst unter der bisherigen `schopp3r.de`-Adresse und dem
-Kamal-Ziel `hetzner`. Diese Konfiguration allein schaltet keine Domain um.
+Das Produktionsziel bleibt `hetzner`; sein Hostprofil wird über
+`PRODUCTION_DOMAIN_MODE` gewählt. Das Staging-Ziel schaltet selbst keine
+Produktionsdomain um.
 Für Staging müssen eigene `config/credentials/staging.yml.enc` sowie ein eigener
 Schlüssel bereitgestellt werden; der Produktionsschlüssel ist kein Ersatz.
 Das Beispiel `.kamal/secrets.staging.example` liest ausschließlich ausdrücklich
