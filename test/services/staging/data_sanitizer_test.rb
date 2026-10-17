@@ -11,6 +11,48 @@ class StagingDataSanitizerTest < ActiveSupport::TestCase
 
   teardown { close_staging_fixture }
 
+  test "public event image references survive while raw import images and cache diagnostics are removed" do
+    venue = insert_stage("venues", name: "Public venue")
+    event = insert_stage("events", title: "Public event", artist_name: "Artist", normalized_artist_name: "artist", slug: "public-event", venue_id: venue, start_at: Time.current, status: "published")
+    image_attributes = { source: "easyticket", image_type: "large", role: "cover", aspect_hint: "landscape", position: 0,
+      image_url: "https://images.example.test/public-event.jpg" }
+    image = insert_stage("import_event_images", **image_attributes, import_class: "Event", import_event_id: event,
+      cache_status: "failed", cache_error: "private upstream diagnostic", cache_attempted_at: Time.current, cached_at: Time.current)
+    insert_stage("import_event_images", **image_attributes, import_class: "RawEventImport", import_event_id: event)
+    insert_stage("import_event_images", **image_attributes, import_class: "Event", import_event_id: event + 1)
+
+    2.times do
+      Staging::DataSanitizer.call(connection: @stage)
+
+      assert_equal 1, stage_count("import_event_images")
+      clean = stage_row("import_event_images", image)
+      assert_equal event, clean["import_event_id"]
+      assert_equal "Event", clean["import_class"]
+      assert_equal "https://images.example.test/public-event.jpg", clean["image_url"]
+      assert_equal "cover", clean["role"]
+      assert_equal "pending", clean["cache_status"]
+      assert_nil clean["cache_error"]
+      assert_nil clean["cache_attempted_at"]
+      assert_nil clean["cached_at"]
+    end
+  end
+
+  test "public event images survive snapshots without optional cache columns" do
+    %w[cache_status cache_error cache_attempted_at cached_at].each do |column|
+      @stage.remove_column(:import_event_images, column)
+    end
+    venue = insert_stage("venues", name: "Public venue")
+    event = insert_stage("events", title: "Public event", artist_name: "Artist", normalized_artist_name: "artist", slug: "public-event", venue_id: venue, start_at: Time.current, status: "published")
+    image = insert_stage("import_event_images", source: "easyticket", image_type: "large", image_url: "https://images.example.test/public-event.jpg", import_class: "Event", import_event_id: event)
+
+    2.times do
+      Staging::DataSanitizer.call(connection: @stage)
+
+      assert_equal 1, stage_count("import_event_images")
+      assert_equal "https://images.example.test/public-event.jpg", stage_row("import_event_images", image)["image_url"]
+    end
+  end
+
   test "real foreign keys and public identities survive while private data disappears twice" do
     user = insert_stage("users", email_address: "real@customer.de", name: "Real Name", role: "admin", password_digest: "old-secret-digest")
     venue = insert_stage("venues", name: "Public Venue")
