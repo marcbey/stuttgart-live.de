@@ -1,73 +1,63 @@
 name: Main Checks
-
 on:
+  pull_request:
   push:
-    branches:
-      - main
-
+    branches: [main]
+permissions:
+  contents: read
 jobs:
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 30
-
     services:
       postgres:
-        image: postgres:16
+        image: postgres:16.15
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
+        ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U postgres"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+          --health-interval 10s --health-timeout 5s --health-retries 5
     env:
       RAILS_ENV: test
       PGHOST: localhost
       PGUSER: postgres
       PGPASSWORD: postgres
-
+      DB_HOST: localhost
+      DB_PORT: '5432'
+      DB_USER: postgres
+      DB_PASSWORD: postgres
     steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Set up Ruby
-        uses: ruby/setup-ruby@v1
+      - uses: actions/checkout@v7
         with:
-          ruby-version: .ruby-version
-          bundler-cache: true
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: yarn
-
-      - name: Install libvips
+          persist-credentials: false
+      - name: Install native dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install --no-install-recommends -y libvips
-
-      - name: Enable Corepack
-        run: corepack enable
-
-      - name: Install JavaScript dependencies
-        run: yarn install --frozen-lockfile
-
-      - name: Prepare test database
-        run: bin/rails db:prepare
-
-      - name: Lint (RuboCop)
-        run: bin/rubocop
-
-      - name: Security scan (Brakeman)
-        run: bin/brakeman --no-pager
-
-      - name: Dependency audit (Bundler Audit)
-        run: bin/bundler-audit check --update
-
-      - name: Run test suite
-        run: bin/rails test
+          sudo apt-get install --no-install-recommends -y libpq-dev libvips node-gyp
+      - uses: jdx/mise-action@v5
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: yarn
+      - name: Prepare dependencies
+        run: |
+          corepack enable
+          mise exec -- bundle install
+          yarn install --frozen-lockfile
+      - name: Complete lint security tests and seeds
+        run: mise exec -- bin/ci
+      - name: Existing system tests when present
+        run: |
+          if rg --files test/system 2>/dev/null | rg -q '_test\.rb$'; then
+            mise exec -- bin/rails test:system
+          else
+            echo 'Keine Systemtests vorhanden.'
+          fi
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: screenshots
+          path: tmp/screenshots
+          if-no-files-found: ignore

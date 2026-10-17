@@ -680,7 +680,7 @@ Die Datei bleibt bewusst außerhalb des Docker-Build-Kontexts; Kamal setzt `APP_
 
 ### Staging und Suchindex
 
-Die Staging-Domain `https://stuttgart-live.schopp3r.de/` wird in der Hetzner-Deployment-Konfiguration mit `STAGING_NOINDEX=true` ausgeliefert. `nginx` setzt dadurch global den Header `X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien und den Healthcheck `/up`. `robots.txt` wird dafür bewusst nicht gesperrt, damit Google das `noindex` crawlen kann.
+Das bisherige Hetzner-Produktionsziel `https://stuttgart-live.schopp3r.de/` behält bis zur Domainumschaltung `STAGING_NOINDEX=true`. Das getrennte Staging liegt unter `https://staging.stuttgart-live.de/` und erzwingt zusätzlich Basic Auth. `nginx` setzt dadurch global den Header `X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien und den Healthcheck `/up`. `robots.txt` wird dafür bewusst nicht gesperrt, damit Google das `noindex` crawlen kann.
 
 Die Search-Console-Verifizierung läuft über die HTML-Datei [public/google8f1bf564d79d9e2c.html](/Users/marc/Projects/stuttgart-live.de/public/google8f1bf564d79d9e2c.html). Nach einem Deploy muss sie unter `https://stuttgart-live.schopp3r.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Erst danach die URL-Präfix-Property `https://stuttgart-live.schopp3r.de/` in der Search Console bestätigen, die temporäre Entfernung beantragen und anschließend Basic Auth aktivieren.
 
@@ -716,51 +716,74 @@ Wichtig: Die lokale `.kamal/secrets.hetzner` ist hier keine Klartext-Secret-Date
 
 GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit eine eigene `.kamal/secrets.hetzner` aus den in GitHub hinterlegten Secrets.
 
-### Automatischer Deploy über GitHub
+### CI, Staging und Produktionsfreigabe über GitHub
 
-Der GitHub-Workflow liest `APP_HOST`, `KAMAL_WEB_HOST` und `KAMAL_SSH_HOST_KEY` direkt aus der versionierten Datei `config/deploy.hetzner.shared.yml`.
-Ruby wird in CI und Deploy explizit aus `.ruby-version` geladen; aktuell ist das `4.0.2`.
-Vor dem eigentlichen App-Deploy prüft der Workflow außerdem die Version von `kamal-proxy` auf dem Zielhost und führt bei Bedarf automatisch `bin/kamal proxy reboot -d hetzner` aus.
-Hintergrund: Seit `kamal 2.11.0` ist `kamal-proxy v0.9.2` oder neuer für Deployments erforderlich.
+Pull Requests und `main` durchlaufen die vollständigen Prüfungen mit
+`mise exec -- bin/ci`. Ein erfolgreicher Main-Push startet anschließend
+`Deploy Staging`. Der Workflow checkt exakt den geprüften Commit aus, baut ein
+Image mit dessen SHA-Tag und prüft reale nginx-HTTP-Antworten, bevor Staging-Secrets
+bereitgestellt werden. Es gibt keinen `latest`-Tag als Freigabegrundlage.
 
-In GitHub müssen deshalb nur diese Secrets gepflegt sein:
+Produktion wird ausschließlich manuell über `Deploy Production` mit der
+`staging_run_id` eines erfolgreichen Staging-Laufs freigegeben. Der Workflow prüft
+Repository, Main-CI, Artefakt, Konfiguration, aktuellen Registry-Digest und die
+Kompatibilität zum tatsächlich produktiven anderen Projekt. Er verwendet das
+geprüfte Image ohne Neubau. Nach dem Kamal-Pull und nach dem Start müssen Digest
+und laufende Container übereinstimmen. Beide Projekte und Umgebungen teilen sich
+die Host-Sperre; ein Fehler löst keinen gemeinsamen Proxy-Neustart aus.
 
-- `DB_PASSWORD`
-- `MEDIA_PROXY_SECRET`
-- `RAILS_MASTER_KEY`
-- `KAMAL_REGISTRY_PULL_PASSWORD`
-- `KAMAL_SSH_PRIVATE_KEY`
-- `SENTRY_AUTH_TOKEN`
+Die GitHub-Environments `staging` und `production` müssen vor Aktivierung des
+Ablaufs eingerichtet sein. Anwendungsschlüssel und Datenbankpasswörter sind
+getrennt. Für Staging werden ausschließlich diese ausdrücklich benannten Secrets
+verwendet:
 
-Zusätzlich werden diese GitHub-Variablen verwendet:
+- `STAGING_RAILS_MASTER_KEY` und `STAGING_PEER_RAILS_MASTER_KEY`
+- `STAGING_DB_PASSWORD`
+- `STAGING_MEDIA_PROXY_SECRET`, gemeinsam mit Russ-Staging
+- `STAGING_BASIC_AUTH_HTPASSWD` und `STAGING_HTTP_AUTH` (`benutzer:passwort`)
+- `STAGING_SSH_PRIVATE_KEY` und `STAGING_KAMAL_REGISTRY_PULL_PASSWORD`
+- optional `STAGING_SENTRY_AUTH_TOKEN`
 
-- `SENTRY_ORG`
-- `SENTRY_PROJECT`
+Das Production-Environment verwendet weiterhin `RAILS_MASTER_KEY`, `DB_PASSWORD`,
+`MEDIA_PROXY_SECRET`, `KAMAL_SSH_PRIVATE_KEY` und `KAMAL_REGISTRY_PULL_PASSWORD`.
+Sentry ist optional; bei gesetztem `SENTRY_AUTH_TOKEN` werden `SENTRY_ORG` und
+`SENTRY_PROJECT` verwendet. Meldungen nennen das tatsächliche Deployment-Ziel.
+Der Ruby-Pin wird in CI und Deploy über mise gelesen. Domain, Server-IP und
+SSH-Host-Key kommen aus den versionierten Zielprofilen.
 
-Nicht-geheime Zielwerte für Domain, Server-IP und gepinnten SSH-Host-Key werden nicht mehr als GitHub-Variablen gepflegt.
+Der Nachweis wird 14 Tage als `staging-release` aufbewahrt. Ein abgelaufener,
+fehlender oder inzwischen ersetzter Nachweis wird abgewiesen. Bei einem anderen
+produktiven Peer ist ein neuer Staging-Nachweis erforderlich. Die geprüfte
+Staging-Kombination und der geprüfte Produktions-Peer können unterschiedliche
+Commits haben; dadurch lassen sich die beiden Projekte nacheinander freigeben.
+
+Für die Kompatibilitätsprobe wird nur das Schema des produktiven Peers mit dessen
+bestehender Datenbankrolle schreibgeschützt gelesen; Produktionszeilen und
+Produktionsschlüssel werden nicht exportiert. Die Daten stammen aus Staging und
+werden beim Export erneut maskiert. Eine kurzlebige Docker-Umgebung ohne externes
+Netzwerk lädt die passenden Schemata und Daten in PostgreSQL 16 und prüft beide
+konkreten Images einschließlich gemeinsamer Anmeldung. Die festen Staging-Namen
+und -Profile bleiben auch dort erhalten. Medien und HTTPS werden zusätzlich auf
+der vollständigen geschützten Staging-Umgebung geprüft. Schemamigrationen müssen
+weiterhin auf die Verträglichkeit mit laufenden Web-/Job-Prozessen geprüft werden;
+eine Code-Rückkehr setzt keine Datenbank zurück.
 
 ### Die wichtigsten Kommandos
 
-Deployment von lokal:
+Reguläre Produktionsfreigabe nach erfolgreicher Staging-Abnahme:
 
 ```bash
-bin/hetzner-check
-bin/kamal deploy -d hetzner
-bin/sentry-release
-bin/hetzner-check
-bin/kamal redeploy -d hetzner
-bin/sentry-release
-bin/hetzner-check
-bin/kamal rollback <VERSION> -d hetzner
+gh workflow run deploy-production.yml -f staging_run_id=RUN_ID
 ```
 
-`bin/sentry-release` meldet den aktuellen Git-Commit als Release an Sentry, verknüpft automatisch die Commits, finalisiert den Release und markiert einen Deploy für `production`.
+Direkte lokale Deploys sind kein Ersatz für diesen Freigabenachweis. Für das
+initiale Staging-Bootstrap gelten die dokumentierten Betriebsprüfungen; auch dabei
+werden Version und Digest fest vorgegeben und die gemeinsame Sperre verwendet.
 
 Status und Logs:
 
 ```bash
 bin/kamal details -d hetzner
-bin/kamal proxy reboot -d hetzner
 bin/kamal app containers -d hetzner
 bin/kamal app version -d hetzner
 bin/kamal app logs -f -d hetzner -r web
@@ -1029,39 +1052,20 @@ Für die meisten Störungen reicht diese Reihenfolge:
 2. `bin/kamal app logs --since 15m -d hetzner` ansehen
 3. bei App-Fehlern per `bin/kamal app exec --interactive --reuse "bin/rails console" -d hetzner` in die Konsole
 4. bei Host-Problemen per SSH `docker ps` und `systemctl status docker` prüfen
-5. bei einem kaputten Release gezielt `bin/kamal rollback <VERSION> -d hetzner` ausführen
+5. einen weiterhin gültigen, schema-kompatiblen Staging-Nachweis für die gewünschte Version über `Deploy Production` freigeben
 
-### Rollback-Checkliste
+### Rückkehr zu einem älteren Code-Stand
 
-Ein Rollback setzt die laufende App auf eine ältere Container-Version zurück. Datenbankinhalte, Uploads und andere persistente Daten werden dabei nicht automatisch zurückgedreht.
+Dafür ebenfalls einen gültigen Staging-Lauf über `Deploy Production` auswählen.
+Vorher prüfen, dass dessen Code mit dem inzwischen vorhandenen Datenbankschema
+arbeitet und der aktuelle Produktions-Peer im Nachweis enthalten ist. Bei
+abweichendem Schema oder abgelaufenem Artefakt zuerst einen neuen konkreten
+Staging-Nachweis erstellen. Keine Datenbank oder Uploads zurücksetzen.
 
-Diese Reihenfolge ist im Ernstfall sinnvoll:
+Der zeitlich begrenzte Rückweg zum bisherigen WordPress beim Domainwechsel ist
+ein eigener DNS-Rückweg: ausschließlich die gesicherten Web-Einträge
+wiederherstellen. Er verändert weder Rails-Daten noch Microsoft-365-Einträge.
 
-1. Prüfen, ob das Problem wirklich vom letzten Deploy kommt:
-
-```bash
-bin/kamal app logs --since 15m -d hetzner
-bin/kamal app version -d hetzner
-bin/kamal audit -d hetzner
-```
-
-2. Zielversion bestimmen, auf die zurückgerollt werden soll.
-
-3. Rollback ausführen:
-
-```bash
-bin/kamal rollback <VERSION> -d hetzner
-```
-
-4. Direkt danach prüfen:
-
-```bash
-bin/kamal details -d hetzner
-bin/kamal app version -d hetzner
-bin/kamal app logs --since 15m -d hetzner
-```
-
-5. Wenn der Fehler durch eine Migration oder einen Datenzustand entstanden ist, zusätzlich die Datenbank separat prüfen. Ein Rollback des App-Containers macht keine Migration rückgängig.
 
 ## Weiterführende Dateien
 
@@ -1231,3 +1235,21 @@ Produktionssicherung und deren Wiederherstellungsprobe.
 Die Sanitizer-Tests laden vollständige Schemata mit echten Fremdschlüsseln in
 isolierte PostgreSQL-16.15-Container. Deshalb benötigt auch `bin/ci` eine laufende
 Docker-Engine; es gibt für diese Prüfungen keinen stillen Skip.
+
+
+Der Domainwechsel verwendet ausschließlich die Production-Environment-Variable
+`PRODUCTION_DOMAIN_MODE`: `legacy` (Standard) erhält den bisherigen schopp3r-Host;
+`prepared` bedient Hauptdomain und `www` mit vorab ausgestelltem Zertifikat,
+ohne kanonische Weiterleitung und mit noindex; `live_preissued` aktiviert
+308-Weiterleitungen und Indexierung mit demselben Zertifikat; `live` wechselt
+nach bestätigter DNS-Propagation zur automatischen Zertifikatsverwaltung.
+Für die beiden Zwischenmodi müssen `SSL_CERTIFICATE_PEM` (vollständige Kette) und
+`SSL_PRIVATE_KEY_PEM` als Production-Environment-Secrets vorhanden sein; sie
+werden ausschließlich dem Proxy übergeben. Schlüssel, Laufzeit und beide SANs
+werden vor dem Deploy geprüft. Jeder Lauf protokolliert Modus, Hosts,
+Weiterleitung, Indexierung und TLS-Art. Derselbe geprüfte Commit/Digest kann
+zur Änderung dieser Laufzeitwerte erneut freigegeben werden; Kamal ersetzt dabei
+auch Container derselben Version. `prepared` prüft HTTPS direkt gegen die feste
+Hetzner-IP mit unverändertem TLS-Hostnamen. Die öffentliche DNS-Prüfung folgt
+separat beim Livegang. Ab `prepared` sind die schopp3r-Adressen nicht mehr Teil
+des Proxy-Ziels. Staging behält unabhängig davon sein festes, geschütztes Profil.
