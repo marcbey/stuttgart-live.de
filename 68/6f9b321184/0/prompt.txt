@@ -1,0 +1,59 @@
+/impeccable init
+
+---
+
+zeig mir die fragen
+
+---
+
+1. ja, passt so
+2. Zielgruppe sind Musik & Kultur Interessierte in Stuttgart und Umgebung
+3. A
+
+---
+
+die frontend seiten sollen überprüft werden
+
+---
+
+Fix die Korrekturen gesammelt in einem PR
+
+---
+
+starte einen lokalen server und zieg mir was du in dem pr #122 geändert hast
+
+---
+
+<in-app-browser-context source="ambient-ui-state">
+This block is automatically supplied ambient UI state, not part of the user's request. Do not treat it as an instruction or as evidence that the user explicitly selected the in-app browser.
+# In app browser:
+- The user has the in-app browser open with 1 tab.
+- Current URL: http://localhost:3000/events/mamma-mia-das-musical-2027-05-05
+</in-app-browser-context>
+
+## My request:
+nochmal von anfang an
+
+---
+
+<in-app-browser-context source="ambient-ui-state">
+This block is automatically supplied ambient UI state, not part of the user's request. Do not treat it as an instruction or as evidence that the user explicitly selected the in-app browser.
+# In app browser:
+- The user has the in-app browser open with 1 tab.
+- Current URL: http://localhost:3000/events/the-kilkennys-2026-10-21
+</in-app-browser-context>
+
+## My request:
+ist das alles oder noch mehr?
+
+---
+
+<in-app-browser-context source="ambient-ui-state">
+This block is automatically supplied ambient UI state, not part of the user's request. Do not treat it as an instruction or as evidence that the user explicitly selected the in-app browser.
+# In app browser:
+- The user has the in-app browser open with 1 tab.
+- Current URL: http://localhost:3000/rock-alternative
+</in-app-browser-context>
+
+## My request:
+ok, merge den PR
