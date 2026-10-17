@@ -553,6 +553,12 @@ openai:
   api_key: sk-...
 ```
 
+Beim Domainwechsel am 17. Oktober 2026 dürfen neue Meta-Verknüpfungen
+vorübergehend warten. Der vorhandene feste OAuth-Rückruf zeigt weiterhin auf
+`stuttgart-live.schopp3r.de`; die Umstellung in Meta Developers und den
+App-Credentials folgt gesondert. Einzelheiten stehen im
+[Umzugsrunbook](docs/operations/domainumzug-und-staging.md).
+
 Für das Social-Publishing liegen nur die App-Zugangsdaten in den Rails-Credentials und nicht in `app_settings`. Facebook nutzt die Meta-App. Instagram kann eine eigene Instagram-Platform-App-ID benötigen; wenn keine eigenen Instagram-Werte gesetzt sind, fällt die App auf `meta.app_id` und `meta.app_secret` zurück:
 
 ```yml
@@ -764,7 +770,9 @@ werden beim Export erneut maskiert. Eine kurzlebige Docker-Umgebung ohne externe
 Netzwerk lädt die passenden Schemata und Daten in PostgreSQL 16 und prüft beide
 konkreten Images einschließlich gemeinsamer Anmeldung. Die festen Staging-Namen
 und -Profile bleiben auch dort erhalten. Medien und HTTPS werden zusätzlich auf
-der vollständigen geschützten Staging-Umgebung geprüft. Schemamigrationen müssen
+der vollständigen geschützten Staging-Umgebung geprüft. Der Image-Vergleich berücksichtigt die leeren
+Standardfelder, die ältere Docker-Versionen ergänzen; geänderte Laufzeitwerte,
+unbekannte Zusatzfelder und Dateischichten führen weiterhin zum Abbruch. Schemamigrationen müssen
 weiterhin auf die Verträglichkeit mit laufenden Web-/Job-Prozessen geprüft werden;
 eine Code-Rückkehr setzt keine Datenbank zurück.
 
