@@ -3,8 +3,10 @@
   "checkpoint_id": "f2e8075ea0d3",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 9,
-  "files_touched": null,
+  "checkpoints_count": 10,
+  "files_touched": [
+    "docs/superpowers/specs/2026-10-17-domainumzug-und-staging-design.md"
+  ],
   "sessions": [
     {
       "metadata": "/f2/e8075ea0d3/0/metadata.json",
@@ -17,13 +19,19 @@
       "transcript": "/f2/e8075ea0d3/1/full.jsonl",
       "content_hash": "/f2/e8075ea0d3/1/content_hash.txt",
       "prompt": "/f2/e8075ea0d3/1/prompt.txt"
+    },
+    {
+      "metadata": "/f2/e8075ea0d3/2/metadata.json",
+      "transcript": "/f2/e8075ea0d3/2/full.jsonl",
+      "content_hash": "/f2/e8075ea0d3/2/content_hash.txt",
+      "prompt": "/f2/e8075ea0d3/2/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 28722,
+    "input_tokens": 45712,
     "cache_creation_tokens": 0,
-    "cache_read_tokens": 1459712,
-    "output_tokens": 5371,
-    "api_call_count": 7
+    "cache_read_tokens": 3494144,
+    "output_tokens": 12940,
+    "api_call_count": 21
   }
 }
