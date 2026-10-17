@@ -46,3 +46,7 @@ Ja, Zielbild passt
 ---
 
 Ja, passt
+
+---
+
+die bestehenden DNS Einträge auf Host Europe & Strato die nicht web betreffen (zB MX) dürfen nicht verändert werden (Microsoft 365 muss weiterhin funktionen)
