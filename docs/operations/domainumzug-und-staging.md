@@ -7,10 +7,10 @@ Pfad und Querystring zum Apex weiter. Die getrennten Testumgebungen liegen unter
 `staging.stuttgart-live.de` und `staging.russ-live.de`.
 
 Host Europe verwaltet Stuttgart, STRATO Russ. Codex bedient dafür die vom Nutzer
-bereits angemeldeten Browsersitzungen. **Für den öffentlichen Wechsel fehlen
-noch das vereinbarte Zeitfenster.**
-Vorbereitung und Staging können vorher erfolgen. Russ wird zuerst umgestellt;
-Stuttgart folgt erst nach vollständiger Russ-Abnahme.
+bereits angemeldeten Browsersitzungen. Der Nutzer hat den öffentlichen Wechsel
+für den 17. Oktober 2026 freigegeben. Russ wird zuerst umgestellt;
+Stuttgart folgt erst nach vollständiger Russ-Abnahme. Der genaue Abnahmezeitpunkt
+und die freigegebenen Release-IDs stehen im privaten Betriebsprotokoll.
 
 ## Unveränderliche Daten und Rückweg
 
@@ -239,9 +239,28 @@ Sämtliche bestehenden Mail-DNS-Einträge einschließlich Autodiscover, Werten,
 Prioritäten und TTLs erneut vollständig vergleichen.
 
 Erst nach Russ-Abnahme denselben Ablauf für Stuttgart durchführen. Vorher den
-WordPress-Rückweg erneut prüfen. Stuttgart-Startseite, Events, Login, Medien,
+Stuttgart-Nachweis durch einen regulären Main-CI-/Staging-Lauf gegen die endgültige
+Russ-Produktionsversion erneuern. Ein Nachweis gegen den vorherigen produktiven
+Peer reicht für die nächste Freigabe nicht aus. Bei der Profilfolge
+`prepared` → `live_preissued` → `live` bleiben Image und Peer dann unverändert.
+Kein Image während der Produktionsfreigabe neu bauen und keinen identischen
+Commit erneut unter einem bereits bewiesenen SHA-Tag veröffentlichen.
+
+Den WordPress-Rückweg erneut prüfen. Stuttgart-Startseite, Events, Login, Medien,
 Legacy-Weiterleitungen, Indexierung und Mailfunktionen abnehmen. Erfolgszeitpunkt
 für das mindestens 72-stündige WordPress-Rückfallfenster festhalten.
+
+Bei STRATO deaktiviert ein eigener A-Record die bisherige externe Weiterleitung.
+Im tatsächlichen Kunden-Login danach kontrollieren, dass der Menüpunkt inaktiv
+ist. Zusätzlich beide Autoritäten auf den neuen A-Record, den entfallenen alten
+Web-AAAA und den unveränderten `www`-CNAME prüfen; die Anzeige allein ersetzt
+keinen vollständigen DNS-Abgleich. Mail, Autodiscover und VPN bleiben unverändert.
+
+Der bisherige Stuttgart-Apex-AAAA hat eine TTL von 24 Stunden. Der Nutzer
+akzeptiert deshalb vorübergehend noch die WordPress-Ansicht aus DNS-Caches.
+Das gültige Übergangszertifikat auf Hetzner bleibt aktiv, bis auch der alte
+AAAA nicht mehr aufgelöst wird. Eine vorzeitige automatische TLS-Übernahme kann
+die ACME-Prüfung noch zum alten IPv6-Webserver schicken.
 
 Nach bestätigter DNS-Propagation `PRODUCTION_DOMAIN_MODE=live` setzen und denselben
 freigegebenen Digest erneut deployen. Automatisches TLS einschließlich
