@@ -183,7 +183,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     assert_equal "© Live auf der Bühne", presenter.hero_gallery_slides.second.credit
   end
 
-  test "uses known ticket source for provider label" do
+  test "uses the actual ticket host instead of the import source for provider label" do
     event = build_event(
       artist_name: "Band",
       title: "Live",
@@ -191,13 +191,66 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
     )
     primary_offer = OpenStruct.new(
       source: "eventim",
-      resolved_ticket_url: "https://tickets.example/band",
+      resolved_ticket_url: "https://www.reservix.de/band",
       ticket_price_text: nil
     )
 
     presenter = build_presenter(event, primary_offer: primary_offer)
 
-    assert_equal "Eventim", presenter.ticket_provider_label
+    assert_equal "Reservix", presenter.ticket_provider_label
+  end
+
+  test "recognizes ticket provider domains and their subdomains" do
+    event = build_event(start_at: Time.zone.local(2026, 6, 17, 20, 0))
+
+    {
+      "https://easyticket.de/band" => "Easy Ticket",
+      "https://partnershop.easyticket.de/band" => "Easy Ticket",
+      "https://eventim.de/band" => "Eventim",
+      "https://WWW.EVENTIM.DE/band" => "Eventim",
+      "https://reservix.de/band" => "Reservix",
+      "https://stuttgart.reservix.de/band" => "Reservix"
+    }.each do |url, expected_provider|
+      presenter = build_presenter(event, primary_offer: OpenStruct.new(source: "manual", resolved_ticket_url: url))
+
+      assert_equal expected_provider, presenter.ticket_provider_label, url
+      assert_equal url, presenter.ticket_url
+    end
+  end
+
+  test "does not name a provider for unknown malformed or lookalike ticket targets" do
+    event = build_event(start_at: Time.zone.local(2026, 6, 17, 20, 0))
+
+    [
+      "https://tickets.example/band",
+      "https://easyticket.de.evil.test/band",
+      "https://not-eventim.de/band",
+      "https://reservix.de@tickets.example/band",
+      "https://tickets.example/eventim.de",
+      "not a valid easyticket.de URL",
+      "/eventim.de/band",
+      "https://",
+      "mailto:info@eventim.de",
+      "ftp://eventim.de/band"
+    ].each do |url|
+      presenter = build_presenter(event, primary_offer: OpenStruct.new(source: "eventim", resolved_ticket_url: url))
+
+      assert_nil presenter.ticket_provider_label, url
+      assert_equal url, presenter.ticket_url
+    end
+  end
+
+  test "does not expose provider context without an available ticket link" do
+    [ :past?, :public_canceled?, :public_sold_out? ].each do |unavailable_status|
+      event = build_event(start_at: Time.zone.local(2026, 6, 17, 20, 0))
+      event.define_singleton_method(unavailable_status) { true }
+      presenter = build_presenter(event, primary_offer: OpenStruct.new(resolved_ticket_url: "https://eventim.de/band"))
+
+      assert_nil presenter.ticket_provider_label, unavailable_status.to_s
+      assert_nil presenter.ticket_url
+    end
+
+    assert_nil build_presenter(build_event).ticket_provider_label
   end
 
   test "detects provider label from manual ticket url" do

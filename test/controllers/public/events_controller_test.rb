@@ -4047,7 +4047,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     event.event_offers.create!(
       source: "easyticket",
       source_event_id: "easy-show-123",
-      ticket_url: "https://easyticket.example/show-tickets",
+      ticket_url: "https://partnershop.easyticket.de/show-tickets",
       sold_out: false,
       priority_rank: 50,
       metadata: {}
@@ -4056,9 +4056,27 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_includes response.body, "https://easyticket.example/show-tickets"
+    assert_includes response.body, "https://partnershop.easyticket.de/show-tickets"
     assert_not_includes response.body, "https://eventim.example/show-tickets"
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
+    assert_select "a.event-detail-cta-button[target='_blank'][rel~='noopener'][aria-describedby='ticket-handoff-note']", count: 1
+    assert_select ".design-detail-preview-actions #ticket-handoff-note", text: "Bei Easy Ticket · öffnet neuen Tab", count: 1
+  end
+
+  test "show explains neutral ticket handoff when a manual override has an unknown host" do
+    @published_event.event_offers.create!(
+      source: "manual",
+      source_event_id: @published_event.id.to_s,
+      ticket_url: "https://eventim.de.other.example/override",
+      sold_out: false,
+      priority_rank: 0
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select "a.event-detail-cta-button[href='https://eventim.de.other.example/override'][target='_blank'][aria-describedby='ticket-handoff-note']", text: "Tickets sichern"
+    assert_select ".design-detail-preview-actions #ticket-handoff-note", text: "Beim Ticketanbieter · öffnet neuen Tab", count: 1
   end
 
   test "show renders manual ticket link when imported primary offer is sold out" do
@@ -4099,6 +4117,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta", count: 1
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
     assert_includes response.body, "https://partnershop.easyticket.de/still-open"
+    assert_select ".design-detail-preview-actions #ticket-handoff-note", text: "Bei Easy Ticket · öffnet neuen Tab", count: 1
     assert_not_includes response.body, "Ausverkauft"
     assert_not_includes response.body, "https://easyticket.example/sold-out"
   end
@@ -4136,6 +4155,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Bitte bei Tickets nachfragen"
     assert_not_includes response.body, "Tickets sichern"
     assert_not_includes response.body, "https://easyticket.example/sold-out-message"
+    assert_select "#ticket-handoff-note", count: 0
   end
 
   test "show renders generic sold out note without ticket special note when missing" do
