@@ -15,6 +15,16 @@
     group: root
     mode: "0644"
 
+- name: Gemeinsame Sperrdatei auch für den privilegierten Refresh vorbereiten
+  ansible.builtin.file:
+    path: /var/lock/live-deploy/global.lock
+    state: touch
+    owner: deploy
+    group: deploy
+    mode: "0660"
+    access_time: preserve
+    modification_time: preserve
+
 - name: Staging-Medienvolume lesend prüfen
   ansible.builtin.command:
     argv: [docker, volume, inspect, stuttgart_live_de_staging_storage]

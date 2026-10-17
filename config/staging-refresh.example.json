@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "snapshot_id": "20261017-example01",
+  "host": "46.225.224.194",
+  "source_volume": "stuttgart_live_de_storage",
+  "target_volume": "stuttgart_live_de_staging_storage",
+  "apps": {
+    "stuttgart_live_de": {
+      "source_database": "stuttgart_live_de_production",
+      "target_database": "stuttgart_live_de_staging",
+      "image": "ghcr.io/marcbey/stuttgart-live-de@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "schema_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "schema_version": "20261015152000"
+    },
+    "russ_live_de": {
+      "source_database": "russ_live_de_production",
+      "target_database": "russ_live_de_staging",
+      "image": "ghcr.io/marcbey/russ-live-de@sha256:0000000000000000000000000000000000000000000000000000000000000000",
+      "schema_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+      "schema_version": "20260929103000"
+    }
+  }
+}

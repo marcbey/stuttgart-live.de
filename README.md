@@ -1172,3 +1172,62 @@ Die tatsächlichen Staging-Rechte werden nach Einrichtung und Datenübernahme mi
 `bin/rails runner script/ops/check_staging_acl.rb` im jeweiligen Staging-Container
 geprüft. Schreibprüfungen verwenden ausschließlich `WHERE FALSE` und Rollback;
 Produktionsdatenbanken werden nur auf die erwartete Verbindungsverweigerung geprüft.
+
+### Bereinigte Staging-Daten manuell erneuern
+
+Ein Refresh ersetzt ausschließlich die acht Staging-Datenbanken und das gemeinsame
+Staging-Medienvolume. Produktionsdatenbanken und Produktionsmedien bleiben die
+Lesequellen. Die Staging-Apps bleiben währenddessen aus; sie starten ohne eine gültige
+`/rails/storage/.staging-ready.json` weder Web noch Worker. Offline-Runner und
+Migrationen sind weiterhin möglich. Ein fehlgeschlagener Refresh startet keine alten
+Container neu. Nach Erfolg startet der reguläre Deployment-Ablauf die Apps.
+
+1. Aus `config/staging-refresh.example.json` ein eigenes Manifest erstellen. Eine neue
+   `snapshot_id` vergeben, beide Registry-Images mit vollständigem SHA256-Digest und
+   den SHA256 der jeweiligen Schema-Datei eintragen. Die Schema-Versionen müssen zur
+   laufenden Produktion und zu diesen Images passen. Bei abweichenden Schemata erst
+   die Kompatibilität klären; das Tool bricht vor der Datenübernahme ab.
+2. Auf dem Server unter `/etc/live-staging/` eigene `stuttgart_live_de.env` und
+   `russ_live_de.env` sowie `staging-admin-password` vorbereiten: Eigentümer `root`,
+   Modus `0600`, keine Symlinks. Die Env-Dateien enthalten ausschließlich vollständige
+   Staging-Profile und deren separate Secrets. Das Admin-Passwort hat 32–72 Zeichen
+   und wird über STDIN an den Offline-Runner übergeben. Produktions-Secrets dürfen
+   in diesen Dateien nicht vorkommen. Der Admin meldet sich anschließend in beiden
+   Apps als `staging-admin@example.invalid` an.
+3. Lokal zunächst `mise exec -- bin/staging-refresh --snapshot /pfad/manifest.json`
+   ausführen und den Plan prüfen. Erst mit zusätzlichem `--execute` werden Änderungen
+   vorgenommen. Der SSH-Admin-Key muss vorhanden sein; die Host-Identität wird strikt
+   gegen `known_hosts` geprüft. Das Tool protokolliert Phasennamen, keine Datensätze
+   oder Secret-Werte.
+
+Der Refresh hält dieselbe serverseitige Dateisperre wie beide Deployments. Die
+privilegierte Verbindung hält sie über alle Phasen; bei einem Verbindungsabbruch
+bleibt eine noch laufende Phase weiterhin unter dieser Sperre. Zuerst werden die
+Staging-Dienste gestoppt und ihre Readiness entfernt. Zwei Medienkopien umrahmen
+konsistente `pg_dump`-Snapshots je fachlicher Datenbank. Dumps werden ohne fremde
+Owner und ACLs wiederhergestellt. Cache, Queue und Cable entstehen leer. Das Tool
+bereinigt zuerst Stuttgart, stellt Russ' Leserechte wieder her, bereinigt Russ,
+migriert mit den angegebenen Images und prüft abschließend Rollen, Daten und alle
+referenzierten Medien. Fehlende Medien erfordern einen neuen vollständigen Refresh.
+
+Kopierte Nutzer behalten ihre IDs für Fremdschlüssel, erhalten synthetische Angaben,
+unbekannte neue Passwörter und verlieren Adminrechte. Nur ein neu angelegter
+Staging-Admin erhält ein bekanntes eigenes Passwort. Sessions, Login-Versuche,
+Newsletter-Empfänger/Einwilligungen und Social-Verbindungen samt verschlüsselten
+Tokens werden ohne Entschlüsselung entfernt. Import-Rohdaten, Fehler und
+Laufprotokolle verschwinden; öffentliche LLM-Ergebnisse verweisen anschließend auf
+einen leeren synthetischen Importlauf. Private Redaktionsnotizen, externe
+Newsletter-IDs und freie Crawl-Metadaten werden entfernt. Bestehende Legacy-Ziel-
+Zuordnungen, Veröffentlichungsfreigaben, Event-IDs und Medienzuordnungen bleiben.
+Kontakt- und Teamangaben in Russ werden synthetisch. Die Staging-Kopie ist für
+Layout- und Funktionstests gedacht und keine Inhaltsfreigabe echter Kontaktdaten.
+
+Erst nach allen Prüfungen wird die Readiness atomisch veröffentlicht. Rohdumps
+liegen bis dahin unter `/var/lib/live-staging-refresh/<snapshot_id>/` mit privaten
+Rechten und werden vor der Freigabe gelöscht. Bei einem Fehler bleiben sie dort
+für die geschützte Diagnose; anschließend manuell entfernen. Das ersetzt keine
+Produktionssicherung und deren Wiederherstellungsprobe.
+
+Die Sanitizer-Tests laden vollständige Schemata mit echten Fremdschlüsseln in
+isolierte PostgreSQL-16.15-Container. Deshalb benötigt auch `bin/ci` eine laufende
+Docker-Engine; es gibt für diese Prüfungen keinen stillen Skip.
