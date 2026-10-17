@@ -660,10 +660,11 @@ BULLET=1 bin/rails test
 
 ## Deployment und Betrieb
 
-Produktion läuft auf Hetzner und wird mit Kamal ausgerollt. Im Alltag gibt es zwei Wege:
-
-- automatische Deployments über GitHub Actions nach Pushes auf `main`
-- manuelle Eingriffe von lokal per `bin/kamal ... -d hetzner`
+Produktion läuft auf Hetzner; GitHub Actions steuert die Auslieferung mit Kamal.
+App-Versionen durchlaufen Main-CI, Staging und anschließend die manuelle
+Produktionsfreigabe. Auch Rollbacks verwenden den GitHub-Freigabeablauf. Lokale
+Kamal-Kommandos dienen der Betriebsdiagnose, etwa dem Lesen von Status und Logs.
+Der vollständige Ablauf steht unter „CI, Staging und Produktionsfreigabe über GitHub“.
 
 Zusätzlich gibt es einen GitHub-Actions-Workflow für kleine automatisierte Bugfixes aus Issues: Wenn ein GitHub-Issue das Label `codex-fix` erhält, rendert der Workflow aus Titel und Beschreibung einen Codex-Prompt, lässt Codex den kleinstmöglichen Fix im Repository umsetzen, führt danach `bin/ci` aus und eröffnet nur bei erfolgreicher Verifikation automatisch einen Pull Request gegen den Default-Branch. Die PR-Beschreibung verlinkt das auslösende Issue und übernimmt Codex' abschließende Erklärung zu Problem und Lösung. Dafür müssen im Repository das Secret `OPENAI_API_KEY` sowie die GitHub-Einstellung zum Erstellen von Pull Requests durch Actions aktiviert sein.
 
@@ -730,18 +731,42 @@ Pull Requests und `main` durchlaufen die vollständigen Prüfungen mit
 Image mit dessen SHA-Tag und prüft reale nginx-HTTP-Antworten, bevor Staging-Secrets
 bereitgestellt werden. Es gibt keinen `latest`-Tag als Freigabegrundlage.
 
-Produktion wird ausschließlich manuell über `Deploy Production` mit der
-`staging_run_id` eines erfolgreichen Staging-Laufs freigegeben. Der Workflow prüft
-Repository, Main-CI, Artefakt, Konfiguration, aktuellen Registry-Digest und die
-Kompatibilität zum tatsächlich produktiven anderen Projekt. Er verwendet das
-geprüfte Image ohne Neubau. Nach dem Kamal-Pull und nach dem Start müssen Digest
-und laufende Container übereinstimmen. Beide Projekte und Umgebungen teilen sich
-die Host-Sperre; ein Fehler löst keinen gemeinsamen Proxy-Neustart aus.
+Ein erfolgreicher `Deploy Staging` auf `main` startet automatisch
+[`Deploy Production`](https://github.com/marcbey/stuttgart-live.de/actions/workflows/deploy-production.yml).
+Die Vorbereitung prüft den Staging-Nachweis und zeigt in der Laufzusammenfassung
+die aktuelle Produktionsversion, den Kandidaten, den Versionsvergleich und die
+zugehörigen Pull Requests. Danach wartet der Produktionsjob auf **Review
+deployments** für das Environment `production`. Marc (`marcbey`) oder Katharina
+(`kasch0`) kann die Freigabe erteilen; eine der beiden Freigaben reicht aus.
+Beide dürfen auch einen selbst gestarteten Rollback freigeben. Für diesen Ablauf
+brauchen sie Repository-Schreibzugriff und müssen als erforderliche Reviewer im
+Environment eingetragen sein. Administratoren dürfen den Schutz nicht umgehen.
+
+Ändert sich während der Wartezeit der Produktionsstand, muss die Freigabe mit
+aktuellem Versionsvergleich neu vorbereitet werden.
+
+Neuere erfolgreiche Staging-Versionen ersetzen ältere noch wartende automatische
+Produktionsfreigaben. Laufende Deployments werden dabei nicht abgebrochen.
+Wartende Freigaben blockieren weder Staging noch das andere Projekt. Vor dem
+eigentlichen Deploy prüft der Ablauf erneut, ob der freigegebene Stand weiterhin
+aktuell ist; ein inzwischen überholter normaler Freigabelauf wird abgewiesen.
+
+Vorbereitung und Deployment prüfen Repository, Main-CI, Artefakt, Konfiguration,
+aktuellen Registry-Digest und die Kompatibilität zum tatsächlich produktiven
+anderen Projekt. Der Deploy verwendet das geprüfte Image ohne Neubau und den
+bei der Vorbereitung festgelegten Kontrollcode. Nach dem Kamal-Pull und nach dem
+Start müssen Digest und laufende Container übereinstimmen. Beide Projekte und
+Umgebungen teilen sich die Host-Sperre; ein Fehler löst keinen gemeinsamen
+Proxy-Neustart aus.
 
 Die GitHub-Environments `staging` und `production` müssen vor Aktivierung des
-Ablaufs eingerichtet sein. Anwendungsschlüssel und Datenbankpasswörter sind
-getrennt. Für Staging werden ausschließlich diese ausdrücklich benannten Secrets
-verwendet:
+Ablaufs eingerichtet sein. `production` verlangt die oben genannte Freigabe,
+erlaubt Selbstfreigaben und beschränkt Deployments auf `main`. Die Vorbereitung
+nutzt aus `staging` nur den SSH-Key zum Lesen der laufenden Versionen und zum
+geordneten Ersetzen wartender Freigaben; sie erzeugt kein Staging-Deployment und
+erhält keine Produktions-Secrets. Anwendungsschlüssel und Datenbankpasswörter
+sind getrennt. Für Staging-Deployments werden ausschließlich diese ausdrücklich
+benannten Secrets verwendet:
 
 - `STAGING_RAILS_MASTER_KEY` und `STAGING_PEER_RAILS_MASTER_KEY`
 - `STAGING_DB_PASSWORD`
@@ -757,11 +782,19 @@ Sentry ist optional; bei gesetztem `SENTRY_AUTH_TOKEN` werden `SENTRY_ORG` und
 Der Ruby-Pin wird in CI und Deploy über mise gelesen. Domain, Server-IP und
 SSH-Host-Key kommen aus den versionierten Zielprofilen.
 
-Der Nachweis wird 14 Tage als `staging-release` aufbewahrt. Ein abgelaufener,
-fehlender oder inzwischen ersetzter Nachweis wird abgewiesen. Bei einem anderen
-produktiven Peer ist ein neuer Staging-Nachweis erforderlich. Die geprüfte
-Staging-Kombination und der geprüfte Produktions-Peer können unterschiedliche
-Commits haben; dadurch lassen sich die beiden Projekte nacheinander freigeben.
+Der Nachweis wird 14 Tage als `staging-release` aufbewahrt. Fehlende, abgelaufene
+oder nachträglich ersetzte Artefakte werden abgewiesen. Eine reguläre
+Freigabe (`promote`) verlangt zusätzlich den neuesten erfolgreichen Staging-Lauf
+und dessen weiterhin laufendes Staging-Image. Ein ausdrücklich gewählter
+`rollback` darf einen älteren gültigen Nachweis verwenden und überspringt nur
+diese beiden Aktualitätsprüfungen. Image-Digest, Konfiguration und der aktuelle
+Produktions-Peer bleiben auch beim Rollback geprüft. Der gewählte Code muss mit
+dem aktuellen Datenbankschema kompatibel sein; Migrationen werden nicht
+rückgängig gemacht. Bei einem anderen produktiven Peer ist ein neuer
+Staging-Nachweis erforderlich. Die geprüfte Staging-Kombination und der geprüfte
+Produktions-Peer können
+unterschiedliche Commits haben; dadurch lassen sich die beiden Projekte
+nacheinander freigeben.
 
 Beim Domainwechsel wird Russ zuerst vollständig öffentlich abgenommen. Danach
 braucht Stuttgart einen frischen regulären Main-CI-/Staging-Nachweis gegen diese
@@ -791,11 +824,20 @@ Abbruch; der Prüfclient protokolliert die Phase und die Fehlerklasse ohne Nutzd
 
 ### Die wichtigsten Kommandos
 
-Reguläre Produktionsfreigabe nach erfolgreicher Staging-Abnahme:
+Für die reguläre Freigabe den automatisch gestarteten `Deploy Production`-Lauf
+öffnen, die Versionszusammenfassung prüfen und `production` freigeben. Ein
+manueller Rollback wird auf `main` mit der Run-ID des gewünschten erfolgreichen
+[`Deploy Staging`](https://github.com/marcbey/stuttgart-live.de/actions/workflows/deploy-staging.yml)-Laufs gestartet:
 
 ```bash
-gh workflow run deploy-production.yml -f staging_run_id=RUN_ID
+gh workflow run deploy-production.yml --ref main -f staging_run_id=RUN_ID -f mode=rollback
 ```
+
+Alternativ in GitHub Actions **Run workflow** öffnen, Branch `main`,
+`staging_run_id` und Modus `rollback` wählen. Auch dieser Lauf zeigt zuerst die
+Versionen und wartet danach auf dieselbe Produktionsfreigabe. Für eine bewusst
+manuell gestartete reguläre Freigabe `mode=promote` verwenden; dafür gelten die
+Aktualitätsprüfungen des automatischen Ablaufs.
 
 Direkte lokale Deploys sind kein Ersatz für diesen Freigabenachweis. Für das
 initiale Staging-Bootstrap gelten die dokumentierten Betriebsprüfungen; auch dabei
@@ -1077,11 +1119,14 @@ Für die meisten Störungen reicht diese Reihenfolge:
 
 ### Rückkehr zu einem älteren Code-Stand
 
-Dafür ebenfalls einen gültigen Staging-Lauf über `Deploy Production` auswählen.
-Vorher prüfen, dass dessen Code mit dem inzwischen vorhandenen Datenbankschema
-arbeitet und der aktuelle Produktions-Peer im Nachweis enthalten ist. Bei
-abweichendem Schema oder abgelaufenem Artefakt zuerst einen neuen konkreten
-Staging-Nachweis erstellen. Keine Datenbank oder Uploads zurücksetzen.
+Dafür in `Deploy Production` auf `main` den Modus `rollback` und einen weiterhin
+gültigen Staging-Lauf für die gewünschte Version auswählen; das Kommando steht
+oben unter „Die wichtigsten Kommandos“. Vorher prüfen, dass dessen Code mit dem
+inzwischen vorhandenen Datenbankschema arbeitet und der aktuelle Produktions-Peer
+im Nachweis enthalten ist. Die Freigabe durch Marc oder Katharina bleibt
+erforderlich. Bei abweichendem Schema, geändertem Produktions-Peer oder
+abgelaufenem Artefakt zuerst einen neuen konkreten Staging-Nachweis erstellen.
+Ein Code-Rollback setzt weder Datenbank noch Uploads zurück.
 
 Der zeitlich begrenzte Rückweg zum bisherigen WordPress beim Domainwechsel ist
 ein eigener DNS-Rückweg: ausschließlich die gesicherten Web-Einträge
