@@ -14,6 +14,11 @@ module Public
         "eventim" => "Eventim",
         "reservix" => "Reservix"
       }.freeze
+      TICKET_PROVIDER_DOMAINS = {
+        "easyticket.de" => "Easy Ticket",
+        "eventim.de" => "Eventim",
+        "reservix.de" => "Reservix"
+      }.freeze
       WEEKDAY_LABELS = [ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag" ].freeze
 
       attr_reader :event
@@ -250,7 +255,13 @@ module Public
       def ticket_provider_label
         return unless show_ticket_link?
 
-        ticket_provider_label_from_source || ticket_provider_label_from_url
+        uri = URI.parse(raw_ticket_url)
+        return unless uri.is_a?(URI::HTTP)
+
+        host = uri.host.to_s.downcase
+        TICKET_PROVIDER_DOMAINS.find { |domain, _label| host == domain || host.end_with?(".#{domain}") }&.last
+      rescue URI::InvalidURIError
+        nil
       end
 
       def ticket_price_text
@@ -456,33 +467,6 @@ module Public
         return unless primary_offer.present?
 
         primary_offer.resolved_ticket_url.to_s.presence
-      end
-
-      def ticket_provider_label_from_source
-        provider_label(primary_offer&.source)
-      end
-
-      def ticket_provider_label_from_url
-        url = raw_ticket_url.to_s
-        host = URI.parse(url).host.to_s.downcase
-        provider_label(host.presence || url)
-      rescue URI::InvalidURIError
-        provider_label(url)
-      end
-
-      def provider_label(value)
-        normalized = value.to_s.strip.downcase
-
-        case normalized
-        when "easyticket" then "Easy Ticket"
-        when "eventim" then "Eventim"
-        when "reservix" then "Reservix"
-        else
-          return "Easy Ticket" if normalized.include?("easyticket")
-          return "Eventim" if normalized.include?("eventim")
-
-          "Reservix" if normalized.include?("reservix")
-        end
       end
 
       def schema_event_status

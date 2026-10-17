@@ -21439,21 +21439,42 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-detail-preview-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: 0.42rem;
   max-width: 34rem;
   margin-top: 0.75rem;
 }
 
+.design-detail-preview-ticket-action {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0.35rem;
+  min-width: 0;
+}
+
+.design-detail-preview-ticket-handoff {
+  margin: 0;
+  color: var(--preview-muted);
+  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
+  font-size: 0.82rem;
+  line-height: 1.3;
+  text-align: center;
+}
+
 .design-detail-preview-action-button {
   position: static;
   z-index: auto;
   display: inline-flex;
-  width: auto;
+  width: 100%;
+  min-width: 0;
+  max-inline-size: 100%;
   height: auto;
   min-height: 2.75rem;
   margin-top: 0;
+  margin-right: 0;
+  justify-self: stretch;
   align-items: center;
   justify-content: center;
   gap: 0.34rem;
@@ -21466,6 +21487,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   font-size: 0.72rem;
   font-weight: 400;
   line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
   opacity: 1;
   text-transform: uppercase;
@@ -21571,6 +21593,8 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   box-shadow: none;
   cursor: default;
   pointer-events: none;
+  white-space: normal;
+  line-height: 1.2;
   transform: none;
 }
 
@@ -22880,6 +22904,18 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
     height: 5.4rem;
     background: linear-gradient(180deg, rgba(251, 250, 247, 0), rgba(251, 250, 247, 0.98) 48%, #fbfaf7 100%);
     pointer-events: none;
+  }
+
+  .design-detail-preview-actions:has(.design-detail-preview-ticket-handoff) {
+    border-radius: 1.5rem;
+  }
+
+  .design-detail-preview-ticket-handoff {
+    padding: 0 0.35rem 0.12rem;
+  }
+
+  .design-detail-preview-shell:has(.design-detail-preview-ticket-handoff) .design-preview-footer {
+    padding-bottom: 7.5rem;
   }
 
   .design-detail-preview-tags {
