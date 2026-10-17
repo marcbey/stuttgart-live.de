@@ -21439,7 +21439,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-detail-preview-actions {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
   align-items: start;
   gap: 0.42rem;
   max-width: 34rem;
@@ -21471,7 +21471,8 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   max-inline-size: 100%;
   height: auto;
   min-height: 2.75rem;
-  margin: 0;
+  margin-top: 0;
+  margin-right: 0;
   justify-self: stretch;
   align-items: center;
   justify-content: center;
@@ -21485,6 +21486,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   font-size: 0.72rem;
   font-weight: 400;
   line-height: 1;
+  white-space: nowrap;
   cursor: pointer;
   opacity: 1;
   text-transform: uppercase;
