@@ -1,0 +1,7 @@
+---
+- name: Staging PostgreSQL-Konfiguration neu laden
+  become_user: postgres
+  community.postgresql.postgresql_query:
+    login_db: postgres
+    query: SELECT pg_reload_conf()
+  when: not ansible_check_mode

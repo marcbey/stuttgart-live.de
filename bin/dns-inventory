@@ -1,0 +1,21 @@
+#!/usr/bin/env ruby
+require "bundler/setup"
+require "optparse"
+require_relative "../script/ops/dns_inventory"
+
+options = {}
+parser = OptionParser.new do |cli|
+  cli.banner = "mise exec -- bin/dns-inventory --zone DOMAIN --provider hosteurope|strato --provider-file FILE --server NS --output FILE"
+  %w[zone provider provider-file server output].each { |key| cli.on("--#{key} VALUE") { |value| options[key] = value } }
+end
+begin
+  parser.parse!
+  raise ArgumentError, parser.to_s unless ARGV.empty? && %w[zone provider provider-file server output].all? { |key| options.key?(key) }
+  inventory = Ops::DnsInventory.new(zone: options.fetch("zone"), provider: options.fetch("provider"), source: File.binread(options.fetch("provider-file")))
+  snapshot = inventory.snapshot(server: options.fetch("server"))
+  File.open(options.fetch("output"), File::WRONLY | File::CREAT | File::EXCL, 0o600) { |file| file.puts JSON.pretty_generate(snapshot) }
+  puts "Vollständiger Provider-/DNS-Abgleich gesichert: #{snapshot.fetch('zone')} (#{snapshot.fetch('records').size} Datensätze)"
+rescue JSON::ParserError, CSV::MalformedCSVError, ArgumentError, KeyError, SystemCallError => error
+  warn "DNS-Inventar abgebrochen: #{error.message}"
+  exit 2
+end

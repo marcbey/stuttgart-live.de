@@ -222,6 +222,7 @@ module Importing
       end
 
       def perform_get(uri)
+        ExternalActionPolicy.require_allowed!(action: :external_import)
         request = Net::HTTP::Get.new(uri)
         request["User-Agent"] = USER_AGENT
         request["Accept-Language"] = ACCEPT_LANGUAGE

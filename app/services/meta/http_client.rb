@@ -24,6 +24,7 @@ module Meta
     private
 
     def perform!(uri, request)
+      ExternalActionPolicy.require_allowed!(action: :meta)
       response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https") do |http|
         http.request(request)
       end
@@ -32,6 +33,8 @@ module Meta
       return payload if response.is_a?(Net::HTTPSuccess)
 
       raise Error, error_message_for(payload, response)
+    rescue ExternalActionPolicy::Disabled => error
+      raise Error, error.message
     end
 
     def stringify_values(params)

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ANSIBLE_DIR="$ROOT_DIR/infra/ansible"
+SSH_KEY="${SSH_KEY:-$HOME/.ssh/stgt-live-hetzner-admin}"
+SSH_USER="${SSH_USER:-admin}"
+vars_file=''
+arguments=(ansible-playbook)
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --vars-file) [[ $# -ge 2 ]] || exit 1; vars_file="$2"; shift 2 ;;
+    --check|--diff|--syntax-check|--list-tasks|--list-hosts) arguments+=("$1"); shift ;;
+    *) printf 'Unbekannte Option für Staging-Einrichtung\n' >&2; exit 1 ;;
+  esac
+done
+[[ -n "$vars_file" ]] || { printf 'Geschützte --vars-file PATH fehlt\n' >&2; exit 1; }
+vars_file="$(mise exec -- ruby - "$vars_file" <<'RUBY'
+require "yaml"
+path = File.expand_path(ARGV.fetch(0))
+abort "Variablendatei fehlt" unless File.file?(path) && !File.symlink?(path)
+stat = File.stat(path)
+abort "Dateirechte müssen ausschließlich dem Eigentümer Zugriff erlauben" unless stat.uid == Process.uid && (stat.mode & 0o077).zero?
+values = YAML.safe_load_file(path) || {}
+names = %w[staging_stuttgart_db_password staging_russ_reader_password staging_russ_operational_password]
+abort "Variablendatei darf ausschließlich drei eigene Staging-Passwörter enthalten" unless values.is_a?(Hash) && values.keys.sort == names.sort
+abort "Staging-Passwörter fehlen oder sind zu kurz" unless values.values.all? { |value| value.is_a?(String) && value.length >= 32 }
+abort "Staging-Passwörter müssen unterschiedlich sein" unless values.values.uniq.length == 3
+puts path
+RUBY
+)"
+[[ -f "$SSH_KEY" ]] || { printf 'SSH-Schlüssel fehlt\n' >&2; exit 1; }
+cd "$ANSIBLE_DIR"
+exec "${arguments[@]}" -i "$ANSIBLE_DIR/inventories/production/hosts.yml" \
+  -u "$SSH_USER" --private-key "$SSH_KEY" "$ANSIBLE_DIR/playbooks/staging.yml" \
+  -e "@$vars_file"

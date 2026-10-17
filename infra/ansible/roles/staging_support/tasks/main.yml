@@ -1,0 +1,68 @@
+---
+- name: Gemeinsames Sperrverzeichnis für beide Projekte anlegen
+  ansible.builtin.file:
+    path: /var/lock/live-deploy
+    state: directory
+    owner: deploy
+    group: deploy
+    mode: "0770"
+
+- name: Sperrverzeichnis nach einem Neustart wiederherstellen
+  ansible.builtin.copy:
+    dest: /etc/tmpfiles.d/live-deploy.conf
+    content: "d /var/lock/live-deploy 0770 deploy deploy -\n"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Gemeinsame Sperrdatei auch für den privilegierten Refresh vorbereiten
+  ansible.builtin.file:
+    path: /var/lock/live-deploy/global.lock
+    state: touch
+    owner: deploy
+    group: deploy
+    mode: "0660"
+    access_time: preserve
+    modification_time: preserve
+
+- name: Staging-Medienvolume lesend prüfen
+  ansible.builtin.command:
+    argv: [docker, volume, inspect, stuttgart_live_de_staging_storage]
+  check_mode: false
+  register: staging_volume_before
+  changed_when: false
+  failed_when: staging_volume_before.rc not in [0, 1]
+  no_log: true
+
+- name: Ausschließlich das neue Staging-Medienvolume anlegen
+  ansible.builtin.command:
+    argv: [docker, volume, create, --label, live.environment=staging, stuttgart_live_de_staging_storage]
+  when: staging_volume_before.rc == 1
+  changed_when: true
+
+- name: Staging-Medienvolume nach Anlage prüfen
+  ansible.builtin.command:
+    argv: [docker, volume, inspect, stuttgart_live_de_staging_storage]
+  register: staging_volume_after
+  changed_when: false
+  no_log: true
+  when: not ansible_check_mode
+
+- name: Unerwartete Volume-Treiber und fremde Mounts ablehnen
+  ansible.builtin.assert:
+    that:
+      - (staging_volume_after.stdout | from_json)[0].Driver == 'local'
+      - (staging_volume_after.stdout | from_json)[0].Mountpoint == '/var/lib/docker/volumes/stuttgart_live_de_staging_storage/_data'
+      - not (staging_volume_after.stdout | from_json)[0].Options
+    fail_msg: Staging-Volume hat unerwartete Optionen; keine Rechteänderung.
+  when: not ansible_check_mode
+  no_log: true
+
+- name: Nur das Staging-Medienvolume für den Rails-Container freigeben
+  ansible.builtin.file:
+    path: /var/lib/docker/volumes/stuttgart_live_de_staging_storage/_data
+    owner: "1000"
+    group: "1000"
+    mode: "0750"
+    state: directory
+  when: not ansible_check_mode or staging_volume_before.rc == 0

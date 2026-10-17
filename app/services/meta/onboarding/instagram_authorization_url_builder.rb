@@ -15,6 +15,7 @@ module Meta
       end
 
       def call(session:, redirect_uri:)
+        ExternalActionPolicy.require_allowed!(action: :meta)
         raise Error, "meta.instagram_app_id oder meta.app_id ist nicht konfiguriert." if app_id.blank?
 
         state = SecureRandom.hex(24)
@@ -31,6 +32,8 @@ module Meta
         }
 
         "#{AUTH_BASE_URL}?#{URI.encode_www_form(query)}"
+      rescue ExternalActionPolicy::Disabled => error
+        raise Error, error.message
       end
 
       private

@@ -17,6 +17,7 @@ module LegacyRedirects
     end
 
     def call(url, max_bytes: HTML_LIMIT, allowed: nil)
+      ExternalActionPolicy.require_allowed!(action: :external_import)
       uri = validated_uri(url)
       (@max_redirects + 1).times do
         raise Error, "URL blocked by robots" if allowed && !allowed.call(uri.to_s)

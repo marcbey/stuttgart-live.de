@@ -10,6 +10,7 @@ module Importing
       REQUEST_TIMEOUT_SECONDS = 90
 
       def get(url, accept: nil)
+        ExternalActionPolicy.require_allowed!(action: :external_import)
         uri = URI.parse(url)
         request = Net::HTTP::Get.new(uri)
         request["Accept"] = accept if accept.present?

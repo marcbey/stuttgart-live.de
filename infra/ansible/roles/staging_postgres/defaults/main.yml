@@ -1,0 +1,21 @@
+---
+staging_postgres_docker_subnet: 172.18.0.0/16
+staging_postgres_roles:
+  - name: stuttgart_live_de_staging
+    password_var: staging_stuttgart_db_password
+    connection_limit: 20
+  - name: russ_live_de_staging_reader
+    password_var: staging_russ_reader_password
+    connection_limit: 10
+  - name: russ_live_de_staging
+    password_var: staging_russ_operational_password
+    connection_limit: 20
+staging_postgres_databases:
+  - { name: stuttgart_live_de_staging, owner: stuttgart_live_de_staging }
+  - { name: stuttgart_live_de_staging_cache, owner: stuttgart_live_de_staging }
+  - { name: stuttgart_live_de_staging_queue, owner: stuttgart_live_de_staging }
+  - { name: stuttgart_live_de_staging_cable, owner: stuttgart_live_de_staging }
+  - { name: russ_live_de_staging, owner: russ_live_de_staging }
+  - { name: russ_live_de_staging_cache, owner: russ_live_de_staging }
+  - { name: russ_live_de_staging_queue, owner: russ_live_de_staging }
+  - { name: russ_live_de_staging_cable, owner: russ_live_de_staging }

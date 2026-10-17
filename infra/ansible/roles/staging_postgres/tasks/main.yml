@@ -1,0 +1,216 @@
+---
+- name: Ausschließlich die festgelegten Staging-Ziele zulassen
+  ansible.builtin.assert:
+    that:
+      - staging_postgres_docker_subnet == '172.18.0.0/16'
+      - staging_postgres_roles | map(attribute='name') | list == ['stuttgart_live_de_staging', 'russ_live_de_staging_reader', 'russ_live_de_staging']
+      - staging_postgres_roles | map(attribute='password_var') | list == ['staging_stuttgart_db_password', 'staging_russ_reader_password', 'staging_russ_operational_password']
+      - staging_postgres_databases | map(attribute='name') | list | sort == ['stuttgart_live_de_staging', 'stuttgart_live_de_staging_cache', 'stuttgart_live_de_staging_queue', 'stuttgart_live_de_staging_cable', 'russ_live_de_staging', 'russ_live_de_staging_cache', 'russ_live_de_staging_queue', 'russ_live_de_staging_cable'] | sort
+    fail_msg: Staging-Ziele weichen von der festen Freigabeliste ab.
+
+- name: Eigentümer der Staging-Datenbanken prüfen
+  ansible.builtin.assert:
+    that:
+      - (item.name.startswith('stuttgart_live_de_staging') and item.owner == 'stuttgart_live_de_staging') or (item.name.startswith('russ_live_de_staging') and item.owner == 'russ_live_de_staging')
+  loop: "{{ staging_postgres_databases }}"
+
+- name: Bestehenden Produktionsbesitz durch Staging-Rollen ausschließen
+  become_user: postgres
+  community.postgresql.postgresql_query:
+    login_db: postgres
+    query: >-
+      SELECT datname FROM pg_database
+      WHERE datdba IN (SELECT oid FROM pg_roles WHERE rolname = ANY(%s))
+      AND datname <> ALL(%s)
+    positional_args:
+      - "{{ staging_postgres_roles | map(attribute='name') | list }}"
+      - "{{ staging_postgres_databases | map(attribute='name') | list }}"
+  check_mode: false
+  register: staging_existing_ownership
+  changed_when: false
+
+- name: Fremden Datenbankbesitz vor Rollenänderungen ablehnen
+  ansible.builtin.assert:
+    that: staging_existing_ownership.query_result | length == 0
+    fail_msg: Eine Staging-Rolle besitzt fremde Datenbanken; Einrichtung abgebrochen.
+
+- name: Eigene Staging-Passwörter verlangen
+  ansible.builtin.assert:
+    that:
+      - lookup('vars', item.password_var, default='') | length >= 32
+    fail_msg: Die geschützte Variablendatei benötigt drei eigene Staging-Passwörter.
+  loop: "{{ staging_postgres_roles }}"
+  no_log: true
+
+- name: Eingeschränkte Staging-Rollen anlegen
+  become_user: postgres
+  community.postgresql.postgresql_user:
+    name: "{{ item.name }}"
+    password: "{{ lookup('vars', item.password_var) }}"
+    role_attr_flags: LOGIN,NOSUPERUSER,NOCREATEDB,NOCREATEROLE,NOINHERIT,NOREPLICATION,NOBYPASSRLS
+    conn_limit: "{{ item.connection_limit }}"
+    state: present
+  loop: "{{ staging_postgres_roles }}"
+  no_log: true
+
+- name: Vorhandene Rollenmitgliedschaften der Staging-Rollen lesen
+  become_user: postgres
+  community.postgresql.postgresql_query:
+    login_db: postgres
+    query: >-
+      SELECT parent.rolname AS parent_role, child.rolname AS child_role
+      FROM pg_auth_members membership
+      JOIN pg_roles parent ON parent.oid = membership.roleid
+      JOIN pg_roles child ON child.oid = membership.member
+      WHERE child.rolname = ANY(%s)
+    positional_args:
+      - "{{ staging_postgres_roles | map(attribute='name') | list }}"
+  check_mode: false
+  register: staging_existing_memberships
+  changed_when: false
+
+- name: Fremde Rollenmitgliedschaften ausschließlich für Staging entfernen
+  become_user: postgres
+  community.postgresql.postgresql_membership:
+    groups: "{{ item.parent_role }}"
+    target_roles: "{{ item.child_role }}"
+    state: absent
+  loop: "{{ staging_existing_memberships.query_result | list }}"
+
+- name: Nur die acht Staging-Datenbanken anlegen
+  become_user: postgres
+  community.postgresql.postgresql_db:
+    name: "{{ item.name }}"
+    owner: "{{ item.owner }}"
+    state: present
+  loop: "{{ staging_postgres_databases }}"
+
+- name: Öffentliche Verbindungs- und Temp-Rechte auf Staging entfernen
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    login_db: postgres
+    type: database
+    objs: "{{ item.name }}"
+    roles: PUBLIC
+    privs: ALL
+    state: absent
+  loop: "{{ staging_postgres_databases }}"
+  when: not ansible_check_mode
+
+- name: Öffentliche Schema-Rechte auf Staging entfernen
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    login_db: "{{ item.name }}"
+    type: schema
+    objs: public
+    roles: PUBLIC
+    privs: ALL
+    state: absent
+  loop: "{{ staging_postgres_databases }}"
+  when: not ansible_check_mode
+
+- name: Schema-Rechte ausschließlich an den jeweiligen Staging-Eigentümer geben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    login_db: "{{ item.name }}"
+    type: schema
+    objs: public
+    roles: "{{ item.owner }}"
+    privs: ALL
+  loop: "{{ staging_postgres_databases }}"
+  when: not ansible_check_mode
+
+- name: Reader-Verbindung zur Stuttgart-Staging-Datenbank erlauben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    login_db: postgres
+    type: database
+    objs: stuttgart_live_de_staging
+    roles: russ_live_de_staging_reader
+    privs: CONNECT
+  when: not ansible_check_mode
+
+- name: Reader-Schema-Zugriff erlauben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    login_db: stuttgart_live_de_staging
+    type: schema
+    objs: public
+    roles: russ_live_de_staging_reader
+    privs: USAGE
+  when: not ansible_check_mode
+
+- name: Vorhandene Tabellen nur zum Lesen freigeben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    login_db: stuttgart_live_de_staging
+    type: table
+    schema: public
+    objs: ALL_IN_SCHEMA
+    roles: russ_live_de_staging_reader
+    privs: SELECT
+  when: not ansible_check_mode
+
+- name: Zukünftige Tabellen nur zum Lesen freigeben
+  become_user: postgres
+  community.postgresql.postgresql_privs:
+    login_db: stuttgart_live_de_staging
+    type: default_privs
+    schema: public
+    objs: TABLES
+    target_roles: stuttgart_live_de_staging
+    roles: russ_live_de_staging_reader
+    privs: SELECT
+  when: not ansible_check_mode
+
+- name: HBA-Datei lesend bestimmen
+  become_user: postgres
+  community.postgresql.postgresql_query:
+    login_db: postgres
+    query: SHOW hba_file
+  check_mode: false
+  register: staging_hba_location
+  changed_when: false
+
+- name: Abgegrenzte Staging-HBA-Regeln sicher ergänzen
+  block:
+    - name: Staging-HBA vor breiten Host-Regeln einfügen
+      become_user: postgres
+      ansible.builtin.blockinfile:
+        path: "{{ staging_hba_location.query_result[0].hba_file }}"
+        marker: "# {mark} LIVE STAGING ONLY"
+        insertbefore: BOF
+        backup: true
+        block: |
+          host stuttgart_live_de_staging,stuttgart_live_de_staging_cache,stuttgart_live_de_staging_queue,stuttgart_live_de_staging_cable stuttgart_live_de_staging 172.18.0.0/16 scram-sha-256
+          host stuttgart_live_de_staging russ_live_de_staging_reader 172.18.0.0/16 scram-sha-256
+          host russ_live_de_staging,russ_live_de_staging_cache,russ_live_de_staging_queue,russ_live_de_staging_cable russ_live_de_staging 172.18.0.0/16 scram-sha-256
+          host all stuttgart_live_de_staging,russ_live_de_staging_reader,russ_live_de_staging 0.0.0.0/0 reject
+          host all stuttgart_live_de_staging,russ_live_de_staging_reader,russ_live_de_staging ::/0 reject
+      register: staging_hba_change
+      notify: Staging PostgreSQL-Konfiguration neu laden
+
+    - name: HBA-Syntax vor dem Reload prüfen
+      become_user: postgres
+      community.postgresql.postgresql_query:
+        login_db: postgres
+        query: SELECT error FROM pg_hba_file_rules WHERE error IS NOT NULL
+      check_mode: false
+      register: staging_hba_errors
+      changed_when: false
+
+    - name: Fehlerhafte HBA-Datei ablehnen
+      ansible.builtin.assert:
+        that: staging_hba_errors.query_result | length == 0
+        fail_msg: HBA-Syntax ist fehlerhaft; keine Aktivierung.
+  rescue:
+    - name: Bisherige HBA-Datei bei Fehler erhalten
+      ansible.builtin.copy:
+        src: "{{ staging_hba_change.backup_file }}"
+        dest: "{{ staging_hba_location.query_result[0].hba_file }}"
+        remote_src: true
+        mode: preserve
+      when: staging_hba_change.backup_file is defined
+    - name: Einrichtung ohne PostgreSQL-Neustart abbrechen
+      ansible.builtin.fail:
+        msg: Staging-HBA konnte nicht sicher eingerichtet werden; bisherige Datei wiederhergestellt.

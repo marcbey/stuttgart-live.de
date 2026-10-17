@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+require "optparse"
+require_relative "../script/ops/staging_refresh"
+
+options = { execute: false }
+parser = OptionParser.new do |cli|
+  cli.banner = "mise exec -- bin/staging-refresh --snapshot MANIFEST [--execute]"
+  cli.on("--snapshot PATH") { |path| options[:snapshot] = path }
+  cli.on("--execute") { options[:execute] = true }
+end
+begin
+  parser.parse!
+  raise Ops::StagingRefresh::Error, parser.to_s unless ARGV.empty? && options[:snapshot]
+  manifest = JSON.parse(File.read(options.fetch(:snapshot)))
+  puts Ops::StagingRefresh.new(manifest:).call(execute: options.fetch(:execute))
+rescue Ops::StagingRefresh::Error, OptionParser::ParseError, JSON::ParserError, Errno::ENOENT => error
+  warn error.message
+  exit 1
+end

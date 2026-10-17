@@ -5,7 +5,7 @@ require Rails.root.join("app/lib/hetzner_deploy_config").to_s
 Rails.application.configure do
   # The Docker image build excludes deploy config files. Kamal still injects
   # APP_HOST at runtime from the shared Hetzner deploy config.
-  app_host = ENV["APP_HOST"].presence || HetznerDeployConfig.app_host_if_present
+  app_host = ENV["APP_HOST"].presence || HetznerDeployConfig.app_host_if_present(destination: (config.x.deployment_environment == "staging" ? "staging" : "hetzner"))
   smtp_address = AppConfig.smtp_address
   smtp_port = AppConfig.smtp_port
   smtp_user_name = AppConfig.smtp_user_name
@@ -14,6 +14,9 @@ Rails.application.configure do
   smtp_authentication = AppConfig.smtp_authentication
   smtp_enable_starttls_auto = AppConfig.smtp_enable_starttls_auto
   mailer_from = AppConfig.mailer_from
+
+  config.hosts = ENV.fetch("APP_ALLOWED_HOSTS", app_host.to_s).split(",").map(&:strip).reject(&:empty?)
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
 
   # Settings specified here will take precedence over those in config/application.rb.
 
@@ -83,6 +86,12 @@ Rails.application.configure do
       authentication: smtp_authentication&.to_sym,
       enable_starttls_auto: ActiveModel::Type::Boolean.new.cast(smtp_enable_starttls_auto)
     }.compact
+  end
+
+  if config.x.deployment_environment == "staging"
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.smtp_settings = DeploymentEnvironment.staging_smtp_settings
+    config.action_mailer.raise_delivery_errors = true
   end
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to

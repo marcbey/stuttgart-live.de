@@ -78,12 +78,16 @@ module AppConfig
     end
 
     def newsletter_final_send_enabled?
+      return false if Rails.configuration.x.deployment_environment == "staging"
+
       ActiveModel::Type::Boolean.new.cast(
         fetch(:newsletter, :final_send_enabled, env: "NEWSLETTER_FINAL_SEND_ENABLED")
       )
     end
 
     def newsletter_test_list_send_enabled?
+      return false if Rails.configuration.x.deployment_environment == "staging"
+
       value = fetch(:newsletter, :test_list_send_enabled, env: "NEWSLETTER_TEST_LIST_SEND_ENABLED")
       return Rails.env.development? || Rails.env.test? || mailjet_list_id.present? if value.nil?
 

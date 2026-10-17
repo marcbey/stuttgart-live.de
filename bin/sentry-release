@@ -3,7 +3,10 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DOTENV_FILE="$ROOT_DIR/.env"
-DEFAULT_ENVIRONMENT="production"
+DEFAULT_ENVIRONMENT="${APP_ENVIRONMENT:-production}"
+if [[ "$DEFAULT_ENVIRONMENT" == staging && -z "${SENTRY_ENVIRONMENT:-}" ]]; then
+  export SENTRY_ENVIRONMENT=staging
+fi
 DEFAULT_ORG="self-employed-gi"
 DEFAULT_PROJECT="stuttgart-live"
 
@@ -63,11 +66,16 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
+if [[ "${APP_ENVIRONMENT:-}" == staging && "$SENTRY_ENVIRONMENT_VALUE" != staging ]]; then
+  printf 'Staging-Releases müssen das Sentry-Environment staging verwenden.\n' >&2
+  exit 1
+fi
+
 read_dotenv_value() {
   local key="$1"
   local dotenv_file="$2"
 
-  ruby - "$dotenv_file" "$key" <<'RUBY'
+  mise exec -- ruby - "$dotenv_file" "$key" <<'RUBY'
 dotenv_file, key = ARGV
 exit 0 unless File.exist?(dotenv_file)
 

@@ -208,12 +208,15 @@ module Newsletter
     end
 
     def configure_mailjet(api_version: "v3")
+      ExternalActionPolicy.require_allowed!(action: :mailjet)
       Mailjet.configure do |config|
         config.api_key = api_key
         config.secret_key = secret_key
         config.api_version = api_version
         config.end_point = api_endpoint if api_endpoint.present?
       end
+    rescue ExternalActionPolicy::Disabled => error
+      raise Error, error.message
     end
 
     def test_recipients

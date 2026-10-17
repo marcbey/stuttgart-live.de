@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+require "bundler/setup"
+require "json"
+require "optparse"
+require "digest"
+require "time"
+require_relative "../script/ops/dns_audit"
+
+options = {}
+parser = OptionParser.new do |cli|
+  cli.banner = "mise exec -- bin/dns-audit --before FILE --after FILE --allow FILE [--report FILE]"
+  %w[before after allow report].each { |key| cli.on("--#{key} FILE") { |value| options[key] = value } }
+end
+begin
+  parser.parse!
+  raise ArgumentError, parser.to_s unless ARGV.empty? && %w[before after allow].all? { |key| options.key?(key) }
+  inputs = %w[before after allow].to_h { |key| [ key, File.binread(options.fetch(key)) ] }
+  before, after, allowance = %w[before after allow].map { |key| JSON.parse(inputs.fetch(key)) }
+  errors = Ops::DnsAudit.violations(before:, after:, allowance:)
+  if options["report"]
+    report = { "checked_at" => Time.now.utc.iso8601, "zone" => before.fetch("zone"), "passed" => errors.empty?, "violations" => errors,
+      "input_sha256" => inputs.transform_values { |value| Digest::SHA256.hexdigest(value) } }
+    File.open(options.fetch("report"), File::WRONLY | File::CREAT | File::EXCL, 0o600) { |file| file.puts JSON.pretty_generate(report) }
+  end
+  errors.each { |error| warn error }
+  puts "DNS-Abgleich bestanden: #{before.fetch('zone')}" if errors.empty?
+  exit(errors.empty? ? 0 : 1)
+rescue JSON::ParserError, ArgumentError, KeyError, SystemCallError => error
+  warn "DNS-Abgleich abgebrochen: #{error.message}"
+  exit 2
+end
