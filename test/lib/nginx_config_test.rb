@@ -14,7 +14,7 @@ class NginxConfigTest < ActiveSupport::TestCase
     assert_operator legacy_index, :<, stable_index
     assert_includes config[legacy_index...stable_index], "secure_link $media_signature,$media_expires;"
     assert_includes config[legacy_index...stable_index], 'secure_link_md5 "$secure_link_expires/${media_path}${MEDIA_PROXY_SECRET}";'
-    assert_includes config[legacy_index...stable_index], "try_files /$media_path =404;"
+    assert_includes config[legacy_index...stable_index], "try_files /$media_path @media_unavailable;"
   end
 
   test "serves proxied svg media with an image content type before generic media" do

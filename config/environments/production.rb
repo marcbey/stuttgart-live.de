@@ -15,6 +15,9 @@ Rails.application.configure do
   smtp_enable_starttls_auto = AppConfig.smtp_enable_starttls_auto
   mailer_from = AppConfig.mailer_from
 
+  config.hosts = ENV.fetch("APP_ALLOWED_HOSTS", app_host.to_s).split(",").map(&:strip).reject(&:empty?)
+  config.host_authorization = { exclude: ->(request) { request.path == "/up" } }
+
   # Settings specified here will take precedence over those in config/application.rb.
 
   # Code is not reloaded between requests.
