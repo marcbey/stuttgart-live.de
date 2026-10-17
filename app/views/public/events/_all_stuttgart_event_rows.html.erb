@@ -7,7 +7,7 @@
   <% ticket_url = primary_offer&.resolved_ticket_url if unavailable_label.blank? && !event.public_expired? %>
   <% primary_genre = event.primary_genre %>
 
-  <article class="all-stuttgart-event-row" role="row">
+  <div class="all-stuttgart-event-row" role="row">
     <time class="all-stuttgart-event-day <%= "all-stuttgart-event-day--time" if show_time_column %>" datetime="<%= show_time_column ? event.start_at.iso8601 : event.start_at.to_date.iso8601 %>" role="cell">
       <strong><%= show_time_column ? event.start_at.strftime("%H:%M") : event.start_at.day.to_s.rjust(2, "0") %></strong>
     </time>
@@ -41,5 +41,5 @@
         <%= link_to "Tickets", ticket_url, target: "_blank", rel: "noopener", class: "all-stuttgart-event-button all-stuttgart-event-button--primary" %>
       <% end %>
     </div>
-  </article>
+  </div>
 <% end %>

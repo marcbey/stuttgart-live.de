@@ -14,11 +14,11 @@
   <% end %>
 
   <% if @page.card_layout? %>
-    <%= @page.body %>
+    <%= public_page_body(@page) %>
   <% else %>
     <article class="static-page-article">
       <div class="static-page-rich-copy">
-        <%= @page.body %>
+        <%= public_page_body(@page) %>
       </div>
     </article>
   <% end %>

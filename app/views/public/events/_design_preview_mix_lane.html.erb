@@ -25,7 +25,6 @@
             <span class="design-preview-card-media" aria-hidden="true">
               <%= video_tag video_source,
                             poster: video_poster,
-                            autoplay: true,
                             muted: true,
                             loop: true,
                             playsinline: true,
@@ -43,6 +42,8 @@
           <% else %>
             <div class="design-preview-card-link"><%= video_content %></div>
           <% end %>
+          <%= render "public/events/video_playback_button" %>
+
           <button type="button"
                   class="homepage-highlight-video-sound-toggle"
                   data-video-sound-target="button"

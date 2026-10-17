@@ -62,7 +62,7 @@
           <span class="event-listing-status-pill"><%= unavailable_label %></span>
         <% end %>
         <% if show_series_pill %>
-          <span class="event-listing-series-pill" aria-label="Event-Reihe">
+          <span class="event-listing-series-pill"><span class="sr-only">Event-Reihe: </span>
             <%= image_tag "event-series-icon.svg", class: "event-listing-series-pill-icon", alt: "" %>
           </span>
         <% end %>

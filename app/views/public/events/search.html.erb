@@ -18,7 +18,7 @@
              saved_events: design_chrome_saved_events,
              strict_proxy: strict_proxy %>
 
-  <main class="design-preview-list-page">
+  <div class="design-preview-list-page">
     <%= link_to events_path(event_date: @browse_state.event_date_param),
                 class: "design-detail-preview-back",
                 aria: { label: "Zurück" },
@@ -30,8 +30,16 @@
       Zurück
     <% end %>
 
-    <%= render "search_results_section", events: @events, browse_state: @browse_state, strict_proxy: strict_proxy %>
-  </main>
+    <%= render "search_results_section",
+               events: @events,
+               result_count: @search_result_count,
+               effective_series_ids: @search_effective_series_ids,
+               series_counts_by_id: @search_series_counts_by_id,
+               lazy_next_cursor: @search_next_cursor,
+               lazy_url: @search_lazy_url,
+               browse_state: @browse_state,
+               strict_proxy: strict_proxy %>
+  </div>
 
   <%= render "design_preview_footer", menu_groups: public_design_menu_groups %>
 </div>

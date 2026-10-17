@@ -271,7 +271,7 @@
   <% if highlights.any? || promotion_banners.any? %>
     <section class="design-preview-section design-preview-highlights home-featured-section"
              aria-labelledby="design-preview-highlights-title"
-             data-controller="highlights-slider homepage-lane"
+             data-controller="homepage-lane"
              data-homepage-lane-lane-value="highlights"
              <% if @home_featured_next_cursor.present? %>data-homepage-lane-cursor-value="<%= @home_featured_next_cursor %>"<% end %>
              <% if @home_featured_list_next_cursor.present? %>data-homepage-lane-list-cursor-value="<%= @home_featured_list_next_cursor %>"<% end %>>
@@ -295,17 +295,17 @@
             <div class="design-preview-feature-track" data-design-preview-feature-slider-target="track" data-homepage-lane-target="track">
               <% if design_preview_video_slide_enabled %>
                 <div class="design-preview-feature-slide" data-design-preview-slide-interval="12000">
-                  <article class="design-preview-card design-preview-card--feature design-preview-banner-card design-preview-video-card">
+                  <article class="design-preview-card design-preview-card--feature design-preview-banner-card design-preview-video-card" data-controller="video-sound">
                     <%= link_to events_path(q: "Taylor Swift Tribute"), class: "design-preview-card-link", aria: { label: "Taylor Swift Tribute Events ansehen" } do %>
                       <span class="design-preview-card-media" aria-hidden="true">
                         <%= video_tag asset_path("design_preview/lover-highlight.mp4"),
                                       poster: asset_path("design_preview/lover-highlight-poster.jpg"),
-                                      autoplay: true,
                                       muted: true,
                                       loop: true,
                                       playsinline: true,
                                       preload: "metadata",
-                                      class: "design-preview-card-video" %>
+                                      class: "design-preview-card-video",
+                                      data: { video_sound_target: "video" } %>
                       </span>
 
                       <span class="design-preview-card-copy">
@@ -319,6 +319,7 @@
                         <span class="design-preview-card-subtitle">Lover Trailer</span>
                       </span>
                     <% end %>
+                    <%= render "public/events/video_playback_button" %>
                   </article>
                 </div>
               <% end %>
@@ -372,6 +373,16 @@
                   <svg viewBox="0 0 24 24" aria-hidden="true">
                     <path d="m9 6 6 6-6 6"></path>
                   </svg>
+                </button>
+                <button type="button"
+                        class="design-preview-feature-arrow design-preview-feature-toggle"
+                        aria-label="Animation pausieren"
+                        aria-pressed="false"
+                        data-design-preview-feature-slider-target="toggleButton"
+                        data-action="design-preview-feature-slider#toggleAutoplay">
+                  <svg class="motion-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg>
+                  <svg class="motion-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"></path></svg>
+                  <span class="sr-only" data-design-preview-feature-slider-target="toggleLabel">Animation pausieren</span>
                 </button>
               </div>
             <% end %>
@@ -498,7 +509,7 @@
   <% end %>
 
   <% if content_promotion_banners_by_position[1].present? %>
-    <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
+    <section class="design-preview-section design-preview-content-promotions">
       <%= render "promotion_banners",
                  banners: content_promotion_banners_by_position[1],
                  browse_state: @browse_state,
@@ -578,7 +589,7 @@
   <% end %>
 
   <% if content_promotion_banners_by_position[2].present? %>
-    <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
+    <section class="design-preview-section design-preview-content-promotions">
       <%= render "promotion_banners",
                  banners: content_promotion_banners_by_position[2],
                  browse_state: @browse_state,
@@ -597,7 +608,7 @@
   <% end %>
 
   <% if content_promotion_banners_by_position[3].present? %>
-    <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
+    <section class="design-preview-section design-preview-content-promotions">
       <%= render "promotion_banners",
                  banners: content_promotion_banners_by_position[3],
                  browse_state: @browse_state,
@@ -618,7 +629,7 @@
   <% end %>
 
   <% if content_promotion_banners_by_position[4].present? %>
-    <section class="design-preview-section design-preview-content-promotions" aria-label="Promotion">
+    <section class="design-preview-section design-preview-content-promotions">
       <%= render "promotion_banners",
                  banners: content_promotion_banners_by_position[4],
                  browse_state: @browse_state,

@@ -23,7 +23,6 @@
     <% video_content = capture do %>
       <%= video_tag video_source,
                     poster: poster_source,
-                    autoplay: true,
                     muted: true,
                     loop: true,
                     playsinline: true,
@@ -65,6 +64,8 @@
         <%= video_content %>
       </div>
     <% end %>
+
+    <%= render "public/events/video_playback_button" %>
 
     <button type="button"
             class="homepage-highlight-video-sound-toggle"

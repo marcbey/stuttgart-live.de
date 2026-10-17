@@ -3,7 +3,7 @@
 <% vvs_ticket = local_assigns.fetch(:vvs_ticket, false) %>
 <% presenters = Array(local_assigns[:presenters]) %>
 
-<aside class="<%= wrapper_class %>" aria-label="Eventinformationen">
+<section class="<%= wrapper_class %>" aria-label="Eventinformationen">
   <% if venue_info.present? || event.venue.present? || event.city.present? %>
     <section class="design-detail-preview-panel design-detail-preview-location">
       <p class="design-detail-preview-panel-label">LOCATION</p>
@@ -70,7 +70,7 @@
   <section class="design-detail-preview-panel design-detail-preview-notes">
     <% organizer_logo = event_detail_organizer_logo(event) %>
     <% show_organizer_notes = event.respond_to?(:show_public_organizer_notes?) && event.show_public_organizer_notes? && organizer_notes.present? %>
-    <p class="design-detail-preview-panel-label"><%= show_organizer_notes || highlight_event ? "Veranstalterhinweise" : "Allgemeine Hinweise" %></p>
+    <h2 class="design-detail-preview-panel-label"><%= show_organizer_notes || highlight_event ? "Veranstalterhinweise" : "Allgemeine Hinweise" %></h2>
     <% if show_organizer_notes %>
       <div class="design-detail-preview-flow">
         <%= formatted_organizer_notes_with_link(organizer_notes, event: event, normalize_headings: true) %>
@@ -111,4 +111,4 @@
       <%= render "organizer_presenters_strip", presenters: presenters %>
     <% end %>
   </section>
-</aside>
+</section>

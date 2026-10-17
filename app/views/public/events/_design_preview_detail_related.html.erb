@@ -4,7 +4,7 @@
 <% has_more_related_events = local_assigns.fetch(:has_more_related_events, false) %>
 <% legacy_related_class = wrapper_class.include?("design-detail-preview-related--desktop-side") ? "event-detail-related-list" : nil %>
 
-<aside class="<%= [ wrapper_class, legacy_related_class ].compact.join(" ") %>" aria-labelledby="<%= title_id %>">
+<section class="<%= [ wrapper_class, legacy_related_class ].compact.join(" ") %>" aria-labelledby="<%= title_id %>">
   <div class="design-preview-section-header">
     <h2 id="<%= title_id %>"><%= title %></h2>
   </div>
@@ -30,4 +30,4 @@
       </svg>
     <% end %>
   <% end %>
-</aside>
+</section>

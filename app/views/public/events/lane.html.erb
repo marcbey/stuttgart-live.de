@@ -23,7 +23,7 @@
              saved_events: design_chrome_saved_events,
              strict_proxy: strict_proxy %>
 
-  <main class="design-preview-list-page">
+  <div class="design-preview-list-page">
     <%= link_to public_events_index_path(@browse_state),
                 class: "design-detail-preview-back",
                 aria: { label: "Zurück" },
@@ -84,7 +84,7 @@
                  lazy_list_next_cursor: @lane_list_next_cursor,
                  lazy_per_page: Public::EventsController::LANE_PAGE_LIMIT %>
     <% end %>
-  </main>
+  </div>
 
   <%= render "design_preview_footer", menu_groups: public_design_menu_groups %>
 </div>

@@ -357,7 +357,9 @@ Das LLM-Enrichment ermittelt pro Event beide Ebenen in einem Lauf. Dabei muss `g
 
 Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Dieselbe Auswahl steuert auch die kompakte Genre-Navigation auf der Startseite; wenn dort keine Genres aktiviert sind, erscheinen auf der Startseite keine Genre-Lanes und keine Genre-Navigation. Dort kann zusätzlich eine Genre-Tag-Cloud aktiviert werden, die unter den Genre-Lanes weitere statische Genres mit kommenden öffentlichen Events verlinkt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
 
-Die Genre-Reihen laden weitere Kacheln beim Scrollen nach. Dabei muss das Nachladen denselben Kartentyp wie die erste Reihe verwenden (`design_cards`). Wenn nur die erste Reihe korrekt aussieht und weitere Reihen zusammengedrückt erscheinen, zuerst den Kartenmodus der Nachlade-Anfrage prüfen.
+Öffentliche Eventlisten und Suchergebnisse starten mit höchstens 20 Kacheln und laden weitere beim Scrollen oder über „Mehr Events laden“ nach. Die Suche zeigt weiterhin die Gesamtzahl der Treffer und behält einzelne Termine einer Event-Reihe sowie ihre Trefferreihenfolge bei. „Heute in Stuttgart“ enthält ausschließlich Veranstaltungen des aktuellen Tages in der Zeitzone der Anwendung.
+
+Beim Nachladen muss derselbe Kartentyp wie in der ersten Reihe verwendet werden (`design_cards`). Wenn nur die erste Reihe korrekt aussieht und weitere Reihen zusammengedrückt erscheinen, zuerst den Kartenmodus der Nachlade-Anfrage prüfen.
 
 Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.
 
@@ -572,9 +574,11 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 
 „Stuttgart im Mix“ erscheint automatisch, sobald kommende öffentliche Events mit Genre-Zuordnung verfügbar sind. Die Lane mischt Events aus allen Genres; dafür muss unter **Einstellungen → Homepage Genre-Lanes** kein Genre ausgewählt werden. Die dortige Auswahl steuert nur die zusätzlichen einzelnen Genre-Lanes. Die aktivierte Genre-Tag-Cloud zeigt zwischen „Stuttgart im Mix“ und „Unter 30 €“ die übrigen Genres mit kommenden öffentlichen Events und funktioniert auch ohne ausgewählte Genre-Lanes.
 
-Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo eines dort angezeigten Events, ansonsten den lokalen Mamma-Mia-Clip (20 Sekunden). Das Video startet stumm; über den Lautsprecher-Schalter lässt sich der Ton ein- und wieder ausschalten.
+Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo eines dort angezeigten Events, ansonsten den lokalen Mamma-Mia-Clip (20 Sekunden). Das Video startet stumm; über die Schalter lassen sich Wiedergabe und Ton getrennt steuern.
 
-Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Auch dieses Video startet stumm mit zuschaltbarem Ton; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
+Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
+
+Bei aktivierter Systemeinstellung „Bewegung reduzieren“ starten diese Videos und der Highlight-Slider ohne automatische Bewegung. Eine ausdrücklich gewählte Pause bleibt auch nach weiterer Bedienung erhalten. Der Slider hat eine eigene Pause-Taste; mit der Taste `S` lässt sich das sichtbare Suchfeld fokussieren.
 
 Im Kalender „Weitere Termine“ öffnet ein Klick auf einen Tag mit genau einem Termin direkt dessen Eventseite. Ab zwei Terminen wird die Uhrzeit darunter gewählt und ein Hinweis eingeblendet. Ein Klick außerhalb schließt den Kalender.
 

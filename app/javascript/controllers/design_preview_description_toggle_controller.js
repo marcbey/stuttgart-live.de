@@ -1,9 +1,10 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["body", "button", "checkbox"]
+  static targets = ["body", "button"]
 
   connect() {
+    this.expanded = this.buttonTarget.getAttribute("aria-expanded") === "true"
     this.update = this.update.bind(this)
     this.sidebar = this.element
       .closest(".design-detail-preview-content")
@@ -25,18 +26,23 @@ export default class extends Controller {
     this.resizeObserver?.disconnect()
   }
 
-  toggle() {
-    this.buttonTarget.setAttribute("aria-expanded", this.checkboxTarget.checked.toString())
+  toggle(event) {
+    event?.preventDefault()
+    this.expanded = !this.expanded
+    this.syncExpandedState()
+  }
+
+  syncExpandedState() {
+    this.element.classList.toggle("is-expanded", this.expanded)
+    this.buttonTarget.setAttribute("aria-expanded", this.expanded.toString())
   }
 
   update() {
     if (!this.hasBodyTarget || !this.hasButtonTarget) return
 
-    const wasChecked = this.hasCheckboxTarget ? this.checkboxTarget.checked : false
-
     this.element.classList.add("design-detail-preview-description-toggle--needs-more")
     this.buttonTarget.hidden = false
-    if (this.hasCheckboxTarget) this.checkboxTarget.checked = false
+    this.element.classList.remove("is-expanded")
     this.applySidebarHeightLimit()
 
     const needsToggle = this.bodyTarget.scrollHeight > this.bodyTarget.clientHeight + 2
@@ -44,10 +50,7 @@ export default class extends Controller {
     this.element.classList.toggle("design-detail-preview-description-toggle--needs-more", needsToggle)
     this.buttonTarget.hidden = !needsToggle
 
-    if (this.hasCheckboxTarget) {
-      this.checkboxTarget.checked = needsToggle && wasChecked
-      this.toggle()
-    }
+    this.syncExpandedState()
   }
 
   applySidebarHeightLimit() {

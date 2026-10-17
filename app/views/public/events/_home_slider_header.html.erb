@@ -2,6 +2,7 @@
   variant = local_assigns.fetch(:variant).to_s
   show_window_bar = local_assigns.fetch(:show_window_bar, true)
   header_classes = [ "lane-header", "lane-header--#{variant}", local_assigns[:header_class] ].compact
+  heading_tag = local_assigns.fetch(:heading_tag, :h2)
   heading_classes = [ "lane-header-heading", local_assigns[:heading_class] ].compact
 %>
 
@@ -16,7 +17,7 @@
     <% if local_assigns[:kicker].present? %>
       <p class="lane-header-kicker"><%= kicker %></p>
     <% end %>
-    <h2 class="lane-header-title">
+    <%= content_tag heading_tag, class: "lane-header-title" do %>
       <% if local_assigns[:title_url].present? %>
         <%= link_to title_url, class: "lane-header-title-link" do %>
           <span class="lane-header-title-text"><%= title %></span>
@@ -24,7 +25,7 @@
       <% else %>
         <span class="lane-header-title-text"><%= title %></span>
       <% end %>
-    </h2>
+    <% end %>
     <% if local_assigns[:meta].present? %>
       <p class="lane-header-meta"><%= meta %></p>
     <% end %>

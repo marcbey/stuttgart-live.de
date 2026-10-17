@@ -10,6 +10,8 @@ export default class extends Controller {
   }
 
   connect() {
+    if (!this.hasTrackTarget) return
+
     this.updateButtons = this.updateButtons.bind(this)
     this.handleTrackScroll = this.handleTrackScroll.bind(this)
     this.handleFocusIn = this.handleFocusIn.bind(this)
@@ -39,6 +41,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    if (!this.hasTrackTarget) return
+
     this.trackTarget?.removeEventListener("scroll", this.handleTrackScroll)
     this.element.removeEventListener("mouseenter", this.handleMouseEnter)
     this.element.removeEventListener("mouseleave", this.handleMouseLeave)
