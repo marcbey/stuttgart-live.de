@@ -763,6 +763,13 @@ produktiven Peer ist ein neuer Staging-Nachweis erforderlich. Die geprüfte
 Staging-Kombination und der geprüfte Produktions-Peer können unterschiedliche
 Commits haben; dadurch lassen sich die beiden Projekte nacheinander freigeben.
 
+Beim Domainwechsel wird Russ zuerst vollständig öffentlich abgenommen. Danach
+braucht Stuttgart einen frischen regulären Main-CI-/Staging-Nachweis gegen diese
+Russ-Produktionsversion. Die anschließenden Domain-/TLS-Profile verwenden dasselbe
+geprüfte Image. Das [Umzugsrunbook](docs/operations/domainumzug-und-staging.md)
+beschreibt die STRATO-Weiterleitung und die akzeptierte Übergangszeit durch den
+bisherigen Stuttgart-IPv6-Eintrag mit 24 Stunden TTL.
+
 Für die Kompatibilitätsprobe wird nur das Schema des produktiven Peers mit dessen
 bestehender Datenbankrolle schreibgeschützt gelesen; Produktionszeilen und
 Produktionsschlüssel werden nicht exportiert. Die Daten stammen aus Staging und
