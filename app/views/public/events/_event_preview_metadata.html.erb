@@ -1,0 +1,6 @@
+<span class="public-search-result-meta">
+  <% if event.start_at.present? %>
+    <time datetime="<%= event.start_at.iso8601 %>"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %> · <%= l(event.start_at, format: "%H:%M") %> Uhr</time>
+  <% end %>
+  <span class="public-search-result-venue"><%= event.venue.presence || event.city.presence || "Ort wird noch bekannt gegeben" %></span>
+</span>

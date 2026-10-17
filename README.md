@@ -110,6 +110,8 @@ Im Backend gibt es für Venues einen eigenen Verwaltungsbereich unter `/backend/
 
 Auch die öffentliche Event-Suche versteht strukturierte Zeitphrasen wie `heute`, `morgen`, `diese Woche`, `dieses Wochenende` oder `am Wochenende`, kombiniert mit einer Venue wie `am Wochenende im Goldmark´s Stuttgart`. Wichtig dabei: Das Wochenende ist in dieser Suche bewusst als Freitag bis Sonntag definiert.
 
+Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Location, damit du verschiedene Termine desselben Acts unterscheiden kannst. Ohne Treffer kannst du die Suche direkt ändern oder alle Events öffnen. Deine Merkliste wird in diesem Browser gespeichert; über die Teilenfunktion kannst du sie weitergeben.
+
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen und prägnante Titelvarianten bei gleicher oder sehr naher Startzeit. Damit kann der Merge-Import Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten`, `Gregory Porter & Orchestra` und `Gregory Porter` oder einen kurzen Veranstaltungstitel innerhalb eines längeren Provider-Titels als denselben Termin erkennen. Titel-Varianten werden dabei nur bei passender Venue zusammengeführt. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Event-Dubletten` ein- oder ausschalten.
 
 Wichtig für das Verhalten im Backend:
