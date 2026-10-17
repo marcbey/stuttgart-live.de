@@ -1,2 +1,6 @@
 update die skills die im projekt liegen;
 Sind die skills im repo ?
+
+---
+
+commite die aktualisierten skills
