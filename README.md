@@ -772,7 +772,8 @@ konkreten Images einschließlich gemeinsamer Anmeldung. Die festen Staging-Namen
 und -Profile bleiben auch dort erhalten. Medien und HTTPS werden zusätzlich auf
 der vollständigen geschützten Staging-Umgebung geprüft. Der Image-Vergleich berücksichtigt die leeren
 Standardfelder, die ältere Docker-Versionen ergänzen; geänderte Laufzeitwerte,
-unbekannte Zusatzfelder und Dateischichten führen weiterhin zum Abbruch. Schemamigrationen müssen
+unbekannte Zusatzfelder und Dateischichten führen weiterhin zum Abbruch. Der Lauf nennt
+die jeweilige Prüfphase, ohne Daten oder Schlüssel auszugeben. Schemamigrationen müssen
 weiterhin auf die Verträglichkeit mit laufenden Web-/Job-Prozessen geprüft werden;
 eine Code-Rückkehr setzt keine Datenbank zurück.
 
