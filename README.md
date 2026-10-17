@@ -144,6 +144,7 @@ Wichtig für Updates bestehender Events:
 - Im Event-Editor kann die sichtbare Ticket-URL zusätzlich als manueller Override gespeichert werden. Dieser Override wird als eigenes `event_offer` mit `source = manual` angelegt oder aktualisiert und überschreibt keine importierten Offers direkt.
 - Ein bloßes erneutes Speichern einer unveränderten importierten Ticket-URL erzeugt dabei bewusst kein zusätzliches manuelles Offer.
 - Im Backend zeigt der Editor bei vorhandenem manuellem Override künftig diesen Wert an. Für die öffentliche Ticketlogik bleiben importierte Offers und deren Priorisierung weiterhin maßgeblich.
+- Direkt am Ticketlink der öffentlichen Detailseite steht, bei welchem Anbieter sich ein neuer Tab öffnet. Der Anbietername richtet sich nach der tatsächlich verlinkten Domain; unbekannte Ziele heißen neutral „Ticketanbieter“.
 - Die öffentliche Ticketverfügbarkeit wird dabei nicht nur über `sold_out` abgeleitet, sondern zusätzlich über provider-spezifische Verfügbarkeits-Signale im Offer-Metadatum `availability_status`.
 - Für `Eventim` gilt aktuell:
   - `eventStatus = 1` wird als `canceled` interpretiert und im Frontend als `Abgesagt` angezeigt.
