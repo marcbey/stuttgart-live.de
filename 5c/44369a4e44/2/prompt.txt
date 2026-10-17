@@ -1,0 +1,48 @@
+[$superpowers:brainstorming](/Users/marc/.codex/plugins/cache/openai-curated-remote/superpowers/6.4.2/skills/brainstorming/SKILL.md)&#x20;
+Die zusammenhängenden Projekte stuttgart-live & russ-live sollen beide auf ihre Ziel Domains umziehen:
+[https://stuttgart-live.schopp3r.de/](https://stuttgart-live.schopp3r.de/) => [https://stuttgart-live.de](https://stuttgart-live.de)
+[https://russ-live.schopp3r.de/](https://russ-live.schopp3r.de/) => [https://russ-live.de](https://russ-live.de)
+Die heutige WordPress Seite auf [https://stuttgart-live.de](https://stuttgart-live.de) soll unter [https://old.stuttgart-live.de](https://old.stuttgart-live.de) vorübergehend erreichbar bleiben.
+Auch die heutige Seite unter [https://russ-live.de](https://russ-live.de) soll unter [https://old.russ-live.de](https://old.russ-live.de) vorübergehend erreichbar bleiben.
+
+Beide Projekte bleiben auf dem Hetzner Server liegen, nur die Domains ziehen um.
+Die Domain stuttgart-live.de wird bei Host Europe verwaltet.
+Die Domain russ-live.de wird bei Strato verwaltet. russ-live.de soll keine Weiterleitung mehr zu www\.michaelrussgmbh.de sein.
+Ich habe die Zugänge zu den Domain Verwaltungen von Host Europe & Strato vorliegen.
+
+Zusätzlich sollen für beide Projekte eine staging Umgebung entstehen, die auch auf dem Hetzner Server neben der produktions Umgebung liegt. production & statging sollen eine möglichst ähnliche Umgebung sein um Code & Design Änderungen vorab auf staing testen zu können. staging muss nicht auf Last & parallele Zugriffe optimiert sein.
+Beide Projekte haben also prod & staging und sind dann so über https erreichbar:
+[https://stuttgart-live.de](https://stuttgart-live.de) & [https://staging.stuttgart-live.de](https://staging.stuttgart-live.de)
+[https://russ-live.de](https://russ-live.de) & [https://staging.russ-live.de](https://staging.russ-live.de)
+Erstelle einen Ablauf Plan für den Umzug und die erstellung der staging Umgebung beide Projekte.
+Stelle Fragen wenn etwas unklar ist oder du Probleme siehst.
+
+---
+
+old.russ-live.de kann entfallen, da ja `www.michaelrussgmbh.de` weiterhin erreichbar ist.&#x20;
+Zu einen späteren Zeitpunkt wird `www.michaelrussgmbh.de` eine Umleitung zu [https://russ-live.de](https://russ-live.de) bekommen
+
+---
+
+Nein, ich habe keinen Zugriff auf das bisherige WordPress-Hosting. Wozu benötige ich das?
+
+---
+
+Bisher habe ich keinen Kontakt zum Betreiber der Wordpress Seite.
+Wie wäre es wenn die alte WordPress Seite nur über die IP Adresse erreichbar bleibt?
+
+---
+
+Ja, der interne Zugriff zum Nachschlagen über die hosts Datei reicht; die WordPress Seite soll auch möglichst band nach dem Live Gang von der neuen Rails stuttgart-live abgeschaltet werden. Ich möchte mir beim Livegang nur einen Rückweg offen lassen falls etwas schief geht.
+
+---
+
+Ja, der Ablauf passt so.
+
+---
+
+Ja, Zielbild passt
+
+---
+
+Ja, passt
