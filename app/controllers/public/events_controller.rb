@@ -959,6 +959,7 @@ module Public
 
     def show_related_genre_lane_events_relation
       list_events_relation
+        .except(:preload)
         .published_live
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
