@@ -75,12 +75,15 @@ module Public
       end
 
       def routeable_genres
-        Genre
+        genres = Genre
           .joins(:events)
           .merge(future_live_events.reorder(nil))
           .distinct
           .order(:slug)
-          .select { |genre| Public::Events::LaneDirectory.routeable_genre_slug?(genre.slug) }
+          .to_a
+        paths_by_slug = Public::Events::LaneDirectory.public_paths_for_genre_slugs(genres.map(&:slug))
+
+        genres.select { |genre| paths_by_slug.key?(genre.slug) }
       end
 
       def future_live_events
