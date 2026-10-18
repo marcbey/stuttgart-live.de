@@ -408,7 +408,6 @@ module Public
 
     def assign_design_detail_event(event)
       assign_homepage_sections
-      @design_preview_search_overlay = build_search_overlay
       @event = event
       @design_preview_detail_format_images = design_preview_detail_format_images(@event)
       @primary_offer = @event.public_ticket_offer

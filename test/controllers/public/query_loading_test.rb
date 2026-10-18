@@ -37,6 +37,26 @@ class Public::QueryLoadingTest < ActionDispatch::IntegrationTest
     assert_batched_render event_path(@events.first.slug)
   end
 
+  test "event detail defers inherited header search until the overlay is requested" do
+    queries = []
+    callback = lambda do |event|
+      queries << event.payload[:sql].to_s unless event.payload[:cached]
+    end
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      get event_path(@events.first.slug, q: "Query Loading Artist")
+    end
+
+    assert_response :success
+    assert_select 'input[name="q"][value="Query Loading Artist"]', minimum: 1
+    assert_select 'form[action="/search"][method="get"]', minimum: 1
+    assert_empty queries.grep(/FROM "events".*ILIKE/m)
+
+    get search_overlay_events_path(q: "Query Loading Artist")
+
+    assert_response :success
+    assert_select ".public-search-result-artist", text: @events.first.artist_name
+  end
+
   test "event lane batches image variants and series counts" do
     assert_batched_render highlights_lane_path
   end

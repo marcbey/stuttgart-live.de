@@ -112,6 +112,8 @@ Auch die öffentliche Event-Suche versteht strukturierte Zeitphrasen wie `heute`
 
 Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Location, damit du verschiedene Termine desselben Acts unterscheiden kannst. Ohne Treffer kannst du die Suche direkt ändern oder alle Events öffnen. Deine Merkliste wird in diesem Browser gespeichert; über die Teilenfunktion kannst du sie weitergeben.
 
+Auf Event-Detailseiten lädt die Kopfzeilensuche Vorschläge erst beim Öffnen des Suchfelds nach. Ein übernommener Suchbegriff bleibt im Formular erhalten; das Laden der Detailseite wiederholt die Suche nicht.
+
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen und prägnante Titelvarianten bei gleicher oder sehr naher Startzeit. Damit kann der Merge-Import Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten`, `Gregory Porter & Orchestra` und `Gregory Porter` oder einen kurzen Veranstaltungstitel innerhalb eines längeren Provider-Titels als denselben Termin erkennen. Titel-Varianten werden dabei nur bei passender Venue zusammengeführt. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Event-Dubletten` ein- oder ausschalten.
 
 Wichtig für das Verhalten im Backend:
