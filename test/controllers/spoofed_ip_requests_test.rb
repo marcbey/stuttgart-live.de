@@ -21,6 +21,16 @@ class SpoofedIpRequestsTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "conflicting client IP headers preserve an empty HEAD response" do
+    head "/errors/404", headers: {
+      "HTTP_CLIENT_IP" => "198.51.100.10",
+      "HTTP_X_FORWARDED_FOR" => "203.0.113.20"
+    }
+
+    assert_response :bad_request
+    assert_empty response.body
+  end
+
   test "forwarded IP without a client IP keeps normal routing" do
     get "/errors/404", headers: { "HTTP_X_FORWARDED_FOR" => "198.51.100.10, 172.18.0.2" }
 
