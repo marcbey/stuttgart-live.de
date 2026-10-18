@@ -85,6 +85,7 @@ openwebninja-*.png
 TODO.md
 
 # Codex / agent local runtime data
+/.entire/
 /.codex/cache/
 /.codex/logs/
 /.codex/plugins/
