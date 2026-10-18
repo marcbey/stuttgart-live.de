@@ -1,4 +1,5 @@
 require "test_helper"
+require "faraday/adapter/test"
 
 class Newsletter::MailjetClientTest < ActiveSupport::TestCase
   setup do
@@ -110,9 +111,49 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
 
     assert_equal "interest_pop", metadata_attributes.fetch(:name)
     assert_equal "bool", metadata_attributes.fetch(:datatype)
-    assert_equal "static", metadata_attributes.fetch(:namespace)
+    assert_equal "static", metadata_attributes.fetch(:name_space)
     assert_equal "stuttgart_live_newsletter_pop", segment_attributes.fetch(:name)
     assert_equal "(interest_pop=true)", segment_attributes.fetch(:expression)
+  end
+
+  test "creates requested metadata when Mailjet ignores the name filter" do
+    metadata = [ { "ID" => 101, "Name" => "unrelated", "Datatype" => "str", "NameSpace" => "static" } ]
+    stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+      stub.get("/v3/REST/contactmetadata") { [ 200, {}, { "Data" => metadata }.to_json ] }
+      stub.post("/v3/REST/contactmetadata") do |request|
+        attributes = JSON.parse(request.body)
+        assert_equal "stuttgartlive_open_tracking_consent", attributes.fetch("Name")
+        assert_equal "bool", attributes.fetch("Datatype")
+        assert_equal "static", attributes.fetch("NameSpace")
+        property = attributes.merge("ID" => 202)
+        metadata << property
+        [ 201, {}, { "Data" => [ property ] }.to_json ]
+      end
+    end
+
+    with_mailjet_http(stubs) do
+      response = @client.ensure_contact_property(name: "stuttgartlive_open_tracking_consent", data_type: "bool")
+
+      assert_equal 202, response.fetch("ID")
+    end
+  end
+
+  test "finds existing metadata after the first page without creating a duplicate" do
+    first_page = 1_000.times.map { |index| { "ID" => index + 1, "Name" => "unrelated_#{index}", "Datatype" => "str", "NameSpace" => "static" } }
+    property = { "ID" => 2001, "Name" => "interest_pop", "Datatype" => "bool", "NameSpace" => "static" }
+    stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+      stub.get("/v3/REST/contactmetadata") do |request|
+        page = request.params["Offset"].to_i.zero? ? first_page : [ property ]
+        [ 200, {}, { "Data" => page }.to_json ]
+      end
+      stub.post("/v3/REST/contactmetadata") { flunk "Existing properties must not be recreated" }
+    end
+
+    with_mailjet_http(stubs) do
+      response = @client.ensure_contact_property(name: "interest_pop", data_type: "bool")
+
+      assert_equal 2001, response.fetch("ID")
+    end
   end
 
   test "extracts sender email and name from formatted mailer from value" do
@@ -369,6 +410,21 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
   end
 
   private
+
+  def with_mailjet_http(stubs)
+    constructor = Mailjet::Connection.method(:new)
+    Mailjet::Connection.define_singleton_method(:new) do |*arguments|
+      connection = constructor.call(*arguments)
+      connection.adapter = Faraday.new(connection.uri) do |http|
+        http.response :raise_error
+        http.adapter :test, stubs
+      end
+      connection
+    end
+    yield
+  ensure
+    Mailjet::Connection.define_singleton_method(:new, constructor)
+  end
 
   def with_mailjet_create(resource, handler)
     original_method = resource.method(:create)

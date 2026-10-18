@@ -56,13 +56,13 @@ module Newsletter
       raise Error, "Mailjet is not configured" unless configured?
 
       configure_mailjet
-      existing = Mailjet::Contactmetadata.all(name: name).first
+      existing = find_contact_property(name)
       return normalize_response(existing) if existing.present?
 
       response = Mailjet::Contactmetadata.create(
         name: name,
         datatype: data_type,
-        namespace: "static"
+        name_space: "static"
       )
       normalize_response(response)
     rescue *MAILJET_ERRORS => error
@@ -196,6 +196,18 @@ module Newsletter
     end
 
     private
+
+    def find_contact_property(name)
+      offset = 0
+
+      loop do
+        properties = Mailjet::Contactmetadata.all(limit: 1_000, offset: offset)
+        property = properties.find { |metadata| metadata.name == name }
+        return property if property.present? || properties.size < 1_000
+
+        offset += 1_000
+      end
+    end
 
     def perform_campaign_send(draft_id:)
       raise Error, "Mailjet is not configured" unless configured?

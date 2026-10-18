@@ -24,6 +24,9 @@ module Newsletter
 
       response = subscriber.with_lock do
         client.ensure_tracking_properties
+        subscriber.interest_mailjet_properties.each_key do |name|
+          client.ensure_contact_property(name: name, data_type: "bool")
+        end
         client.subscribe(
           email: subscriber.email,
           properties: subscriber.interest_mailjet_properties.merge(subscriber.tracking_mailjet_properties)
