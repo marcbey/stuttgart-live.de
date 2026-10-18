@@ -758,6 +758,13 @@ Ein daraus gestarteter Staging-Deploy bricht ab; ein neuer Push auf `main` muss
 zuerst einen erfolgreichen Lauf mit Image-Artefakt erzeugen. Es gibt keinen
 automatischen Neubau als Ersatz für einen fehlenden Build-Nachweis.
 
+Jeder neue Web- und Job-Container hält den geprüften Digest im Label
+`live.release_digest` fest. So bleiben wiederholte Deployments desselben Commits
+eindeutig, auch wenn Docker mehrere Build-Nachweise für identische Image-Bytes
+kennt. Das Label muss weiterhin zu den lokalen Image-Digests und zur laufenden
+Image-ID passen. Ältere Container ohne Label werden nur bei genau einem Digest
+akzeptiert; mehrdeutige Altcontainer benötigen einen frischen regulären Deploy.
+
 Ein erfolgreicher `Deploy Staging` auf `main` startet automatisch
 [`Deploy Production`](https://github.com/marcbey/stuttgart-live.de/actions/workflows/deploy-production.yml).
 Die Vorbereitung prüft den Staging-Nachweis und zeigt in der Laufzusammenfassung
