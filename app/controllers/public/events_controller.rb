@@ -837,8 +837,8 @@ module Public
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .includes(
           :venue_record,
-          promotion_banner_image_attachment: :blob,
-          promotion_banner_landscape_image_attachment: :blob,
+          promotion_banner_image_attachment: { blob: { variant_records: { image_attachment: :blob } } },
+          promotion_banner_landscape_image_attachment: { blob: { variant_records: { image_attachment: :blob } } },
           highlight_video_file_attachment: :blob,
           highlight_landscape_video_file_attachment: :blob,
           event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]
