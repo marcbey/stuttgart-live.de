@@ -22,7 +22,7 @@
 - Produktions-Zielname `hetzner` bleibt bestehen; neues Kamal-Ziel `staging`. Bestehende Produktionsdatenbanken und `stuttgart_live_de_storage` werden beim Umzug nicht ersetzt.
 - Alle Ruby-/Bundler-Aufrufe auf Entwicklungs- und CI-Rechnern erfolgen über `mise exec -- ...`. Container verwenden das unveränderte, auf Ruby 4.0.2 basierende Image; ihre Verwaltung erfolgt von außen über `mise exec -- bin/kamal ...`.
 - Vor jedem Push Remote-Stand holen, Branch per Fast-forward/Rebase aktualisieren, gegebenenfalls neue Migrationen anwenden und anschließend `mise exec -- bin/ci` erfolgreich ausführen. Geänderte Ruby-Dateien zusätzlich gezielt mit `mise exec -- bundle exec rubocop ...` prüfen.
-- Vorhandene fremde Änderungen erhalten, nur eigene Dateien/Hunks committen. Entire-Laufzeitdaten, `.env`, Schlüssel, Klartext-Credentials, Dumps und DNS-Exporte bleiben außerhalb von Commits. Deutsche Texte verwenden echte Umlaute und `ß`.
+- Vorhandene fremde Änderungen erhalten, nur eigene Dateien/Hunks committen. Agent-Laufzeitdaten, `.env`, Schlüssel, Klartext-Credentials, Dumps und DNS-Exporte bleiben außerhalb von Commits. Deutsche Texte verwenden echte Umlaute und `ß`.
 - Beide READMEs werden im selben Implementierungsworkflow aktualisiert. Keine Änderungen an öffentlichen/backend Assets oder Fonts für dieses Betriebsvorhaben.
 - Russ wird vor Stuttgart umgeschaltet. WordPress bleibt mindestens 72 Stunden nach erfolgreicher Stuttgart-Abnahme als Rückfallmöglichkeit auf dem bisherigen Hosting. Ohne Betreiberkontakt können weder ein vollständiges WordPress-Backup noch die Abschaltung zugesagt werden.
 
