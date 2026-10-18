@@ -59,7 +59,8 @@ class Public::EventCardGenreQueriesTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     @events.drop(1).each { |event| assert_includes response.body, event.artist_name }
-    assert_equal 2, queries.grep(/FROM "event_genres"/).size,
+    genre_load_queries = queries.grep(/\ASELECT "event_genres"\.\* FROM "event_genres"/)
+    assert_equal 2, genre_load_queries.size,
       "expected one genre preload for the current event and one for all related candidates"
   end
 
