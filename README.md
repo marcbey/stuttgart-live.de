@@ -364,6 +364,8 @@ Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus d
 
 Öffentliche Eventlisten und Suchergebnisse starten mit höchstens 20 Kacheln und laden weitere beim Scrollen oder über „Mehr Events laden“ nach. Die Suche zeigt weiterhin die Gesamtzahl der Treffer und behält einzelne Termine einer Event-Reihe sowie ihre Trefferreihenfolge bei. „Heute in Stuttgart“ enthält ausschließlich Veranstaltungen des aktuellen Tages in der Zeitzone der Anwendung.
 
+Detail- und Listenseiten laden für die gemeinsame Navigation keine zusätzlichen Startseiten-Lanes. Nur „alles aus stuttgart“ lädt zusätzlich die dort sichtbaren Tagestipps. Monats-, Genre- und Location-Filter lesen ihre Auswahlwerte ohne Bild- und Angebotsdaten; Bilder werden erst für die tatsächlich ausgegebenen Karten vorgeladen. Das gilt auch für die Empfehlungen auf Eventdetails. Angebotsverknüpfungen, die etwa für die Auswahl verfügbarer Unter-30-Euro-Tickets benötigt werden, bleiben erhalten.
+
 Beim Nachladen muss derselbe Kartentyp wie in der ersten Reihe verwendet werden (`design_cards`). Wenn nur die erste Reihe korrekt aussieht und weitere Reihen zusammengedrückt erscheinen, zuerst den Kartenmodus der Nachlade-Anfrage prüfen.
 
 Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.

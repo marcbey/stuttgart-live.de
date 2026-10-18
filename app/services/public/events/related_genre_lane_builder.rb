@@ -9,7 +9,9 @@ module Public
 
       def initialize(event:, relation:, limit: DEFAULT_LIMIT)
         @event = event
-        @relation = relation
+        eager_load = relation.eager_loading?
+        @preload_associations = relation.preload_values + (eager_load ? [] : relation.includes_values)
+        @relation = eager_load ? relation.except(:preload) : relation.except(:includes, :preload)
         @limit = limit
       end
 
@@ -24,7 +26,7 @@ module Public
 
       private
 
-      attr_reader :event, :limit, :relation
+      attr_reader :event, :limit, :relation, :preload_associations
 
       def group
         @group ||= event.primary_genre
@@ -33,6 +35,7 @@ module Public
       def chronological_group_events
         selected_events = ranked_events
         events = series_representatives(selected_events).first(limit)
+        preload_selected_associations(events)
         series_counts_by_id = series_counts_by_id_for(events)
         effective_series_ids = effective_series_ids_for(events)
 
@@ -179,6 +182,12 @@ module Public
           associations: [ :genres, :sub_genres ]
         ).call
         events
+      end
+
+      def preload_selected_associations(events)
+        return if events.empty? || preload_associations.empty?
+
+        ActiveRecord::Associations::Preloader.new(records: events, associations: preload_associations).call
       end
 
       def genre_ids

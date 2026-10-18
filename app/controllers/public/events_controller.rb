@@ -72,7 +72,7 @@ module Public
       @search_series_counts_by_id = page.series_counts_by_id
       @search_next_cursor = page.next_cursor
       @search_lazy_url = helpers.homepage_lane_events_path(**@browse_state.route_params, filter: @browse_state.filter)
-      assign_design_chrome(saved_events: @events, include_homepage_saved_events: false)
+      assign_design_chrome(saved_events: @events)
     end
 
     def lane
@@ -344,13 +344,8 @@ module Public
       @home_highlight_effective_series_ids = empty_lane.effective_series_ids
       @home_highlight_series_counts_by_id = empty_lane.series_counts_by_id
       @home_highlight_next_cursor = empty_lane.next_cursor
-      @home_tagestipp_available = tagestipp_available?
       tagestipp_limit = defer_lower_lanes ? HOME_DESIGN_LANE_LIMIT : HOME_LANE_LIMIT
-      home_tagestipp_page = @home_tagestipp_available ? homepage_lane_page_or_empty("tagestipp", per_page: tagestipp_limit) : empty_lane
-      @home_tagestipp_events = home_tagestipp_page.events
-      @home_tagestipp_effective_series_ids = home_tagestipp_page.effective_series_ids
-      @home_tagestipp_series_counts_by_id = home_tagestipp_page.series_counts_by_id
-      @home_tagestipp_next_cursor = home_tagestipp_page.next_cursor
+      assign_tagestipp_section(per_page: tagestipp_limit)
       @home_under_30_available = under_30_available?
       home_under_30_page = @home_under_30_available && !defer_lower_lanes ? homepage_lane_page_or_empty("under_30", per_page: HOME_LANE_LIMIT) : empty_lane
       @home_under_30_events = home_under_30_page.events
@@ -407,7 +402,6 @@ module Public
     end
 
     def assign_design_detail_event(event)
-      assign_homepage_sections
       @event = event
       @design_preview_detail_format_images = design_preview_detail_format_images(@event)
       @primary_offer = @event.public_ticket_offer
@@ -424,19 +418,19 @@ module Public
       assign_related_events_page(offset: 0)
     end
 
-    def assign_design_chrome(saved_events: [], include_homepage_saved_events: true)
-      assign_homepage_sections
+    def assign_design_chrome(saved_events: [])
+      assign_tagestipp_section if @lane&.key == "all_stuttgart"
       @design_preview_search_overlay = build_search_overlay
-      @design_chrome_genre_lanes = @home_genre_lanes
-      homepage_saved_events = if include_homepage_saved_events
-        Array(@home_featured_events) +
-          Array(@home_tagestipp_events) +
-          Array(@home_under_30_events) +
-          Array(@home_genre_lanes).flat_map { |lane| Array(lane.events) }
-      else
-        []
-      end
-      @design_chrome_saved_events = (Array(saved_events) + homepage_saved_events).compact.uniq(&:id)
+      @design_chrome_saved_events = Array(saved_events)
+    end
+
+    def assign_tagestipp_section(per_page: HOME_LANE_LIMIT)
+      @home_tagestipp_available = tagestipp_available?
+      page = @home_tagestipp_available ? homepage_lane_page_or_empty("tagestipp", per_page:) : empty_homepage_lane_shell
+      @home_tagestipp_events = page.events
+      @home_tagestipp_effective_series_ids = page.effective_series_ids
+      @home_tagestipp_series_counts_by_id = page.series_counts_by_id
+      @home_tagestipp_next_cursor = page.next_cursor
     end
 
     def should_redirect_search_result?(result_count)
@@ -725,6 +719,7 @@ module Public
     def under_30_relation
       scoped_homepage_all_relation
         .joins(:event_offers)
+        .includes(:event_offers)
         .merge(EventOffer.active_ticket)
         .where.not(min_price: nil)
         .where("events.min_price > 0")
@@ -959,7 +954,6 @@ module Public
 
     def show_related_genre_lane_events_relation
       list_events_relation
-        .except(:preload)
         .published_live
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
     end
@@ -1017,7 +1011,8 @@ module Public
     end
 
     def list_events_relation
-      Event.preload(:genres).includes(
+      Event.preload(
+        :genres,
         :venue_record,
         :event_offers,
         :import_event_images,
@@ -1112,7 +1107,7 @@ module Public
 
     def all_stuttgart_relation
       published_visible_events_relation(
-        scope: homepage_events_relation,
+        scope: lean_homepage_events_relation,
         filter: Public::Events::BrowseState::FILTER_ALL,
         event_date: nil,
         query: nil
@@ -1145,15 +1140,15 @@ module Public
       @all_stuttgart_selected_genre = selected_all_stuttgart_genre
       @all_stuttgart_genres = all_stuttgart_genres_for(period_relation)
       @all_stuttgart_genres |= [ @all_stuttgart_selected_genre ] if @all_stuttgart_selected_genre.present?
-      @all_stuttgart_selected_location = selected_all_stuttgart_location(period_relation)
       @all_stuttgart_locations = all_stuttgart_locations_for(period_relation)
+      @all_stuttgart_selected_location = selected_all_stuttgart_location(@all_stuttgart_locations)
       @all_stuttgart_locations |= [ @all_stuttgart_selected_location ] if @all_stuttgart_selected_location.present?
 
       filtered_relation = period_relation
       filtered_relation = filtered_relation.joins(:genres).where(genres: { id: @all_stuttgart_selected_genre.id }).distinct if @all_stuttgart_selected_genre.present?
       filtered_relation = filtered_relation.left_outer_joins(:venue_record).where(venues: { name: @all_stuttgart_selected_location }) if @all_stuttgart_selected_location.present?
 
-      filtered_relation
+      list_events_relation.merge(filtered_relation)
     end
 
     def all_stuttgart_genres_for(relation)
@@ -1177,6 +1172,7 @@ module Public
         .except(:order)
         .left_outer_joins(:venue_record)
         .where.not(venues: { name: [ nil, "" ] })
+        .distinct
         .pluck("venues.name")
         .map { |venue| venue.to_s.strip }
         .reject(&:blank?)
@@ -1191,11 +1187,11 @@ module Public
       Genre.find_by(slug: requested_genre)
     end
 
-    def selected_all_stuttgart_location(relation)
+    def selected_all_stuttgart_location(locations)
       requested_location = params[:event_location].to_s.strip
       return if requested_location.blank?
 
-      all_stuttgart_locations_for(relation).find { |location| location == requested_location }
+      locations.find { |location| location == requested_location }
     end
 
     def all_stuttgart_months_for(relation)

@@ -26,7 +26,10 @@ module Public
 
       def initialize(relation:, context:, cursor: nil, per_page: DEFAULT_PER_PAGE, deduplicate_series: true, prioritize_search: false)
         @prioritize_search = prioritize_search
-        @relation = prioritize_search ? relation.select(Event.arel_table[Arel.star], search_priority_expression.as("lane_page_priority")) : relation
+        eager_load = relation.eager_loading?
+        @preload_associations = relation.preload_values + (eager_load ? [] : relation.includes_values)
+        scope = eager_load ? relation.except(:preload) : relation.except(:includes, :preload)
+        @relation = prioritize_search ? scope.select(Event.arel_table[Arel.star], search_priority_expression.as("lane_page_priority")) : scope
         @deduplicate_series = deduplicate_series
         @context = normalized_context(context)
         @per_page = normalized_per_page(per_page)
@@ -37,6 +40,7 @@ module Public
 
       def call
         events, next_state = paged_events
+        preload_event_associations(events)
         series_counts_by_id = SeriesCountsByIdQuery.call(events)
 
         Result.new(
@@ -50,7 +54,13 @@ module Public
 
       private
 
-      attr_reader :context, :cursor_payload, :per_page, :relation, :deduplicate_series, :prioritize_search
+      attr_reader :context, :cursor_payload, :per_page, :relation, :deduplicate_series, :prioritize_search, :preload_associations
+
+      def preload_event_associations(events)
+        return if events.empty? || preload_associations.empty?
+
+        ActiveRecord::Associations::Preloader.new(records: events, associations: preload_associations).call
+      end
 
       def paged_events
         selected_events = []

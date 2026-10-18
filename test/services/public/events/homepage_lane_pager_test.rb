@@ -44,6 +44,41 @@ class Public::Events::HomepageLanePagerTest < ActiveSupport::TestCase
     end
   end
 
+  test "loads image associations only for returned cards rather than the entire candidate batch" do
+    events = 25.times.map do |index|
+      build_event(index: index).tap do |event|
+        event.import_event_images.create!(
+          source: "easyticket",
+          image_type: "large",
+          role: "cover",
+          aspect_hint: "landscape",
+          position: 0,
+          image_url: "https://example.invalid/pager-#{index}.jpg"
+        )
+      end
+    end
+    image_count = 0
+    subscriber = lambda do |notification|
+      payload = notification.payload
+      image_count += payload.fetch(:record_count) if payload[:class_name] == "ImportEventImage"
+    end
+
+    page = ActiveSupport::Notifications.subscribed(subscriber, "instantiation.active_record") do
+      Public::Events::HomepageLanePager.new(
+        relation: Event.where(id: events.map(&:id)).includes(:import_event_images).order(:start_at, :id),
+        context: @context,
+        per_page: 10
+      ).call
+    end
+
+    assert_equal events.first(10).map(&:id), page.events.map(&:id)
+    assert_equal 10, image_count
+    assert page.events.all? { |event| event.association(:import_event_images).loaded? }
+    assert_equal (0...10).map { |index| "https://example.invalid/pager-#{index}.jpg" },
+                 page.events.map { |event| event.import_event_images.first.image_url }
+    assert_predicate page.next_cursor, :present?
+  end
+
   private
 
   def pager(context: @context, cursor: nil)
