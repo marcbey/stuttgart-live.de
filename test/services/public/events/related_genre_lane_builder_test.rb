@@ -145,7 +145,7 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     assert_not_includes lane.events.map(&:id), current_event.id
   end
 
-  test "uses staged candidate queries instead of one broad outer join" do
+  test "filters candidate ids without sorting distinct event rows across genre joins" do
     current_event = build_lane_event(slug: "related-staged-current", artist_name: "Current Event", start_at: 2.days.from_now.change(hour: 20))
     sub_genre_match = build_lane_event(slug: "related-staged-sub-genre", artist_name: "Sub Genre Match", start_at: 3.days.from_now.change(hour: 20))
     genre_match = build_lane_event(slug: "related-staged-genre", artist_name: "Genre Match", start_at: 4.days.from_now.change(hour: 20))
@@ -160,11 +160,12 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
       assert_equal [ sub_genre_match.id, genre_match.id ], lane.events.map(&:id)
     end
 
-    event_load_queries = queries.select { |query| query.include?('SELECT DISTINCT "events".*') }
+    event_load_queries = queries.select { |query| query.include?('SELECT "events".*') }
 
-    assert event_load_queries.any? { |query| query.include?('INNER JOIN "event_sub_genres"') }
-    assert event_load_queries.any? { |query| query.include?('INNER JOIN "event_genres"') }
-    assert_empty event_load_queries.grep(/LEFT OUTER JOIN "event_genres".*LEFT OUTER JOIN "event_sub_genres"/m)
+    assert_empty queries.grep(/SELECT DISTINCT "events"\.\*/)
+    assert_empty event_load_queries.grep(/JOIN "(?:event_genres|event_sub_genres|genres|sub_genres)"/)
+    assert event_load_queries.any? { |query| query.include?('FROM "event_sub_genres"') }
+    assert event_load_queries.any? { |query| query.include?('FROM "event_genres"') }
   end
 
   test "returns nil when no related event matches sub genres or genres" do
