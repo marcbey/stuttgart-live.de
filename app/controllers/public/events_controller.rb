@@ -1016,7 +1016,7 @@ module Public
     end
 
     def list_events_relation
-      Event.includes(
+      Event.preload(:genres).includes(
         :venue_record,
         :event_offers,
         :import_event_images,
