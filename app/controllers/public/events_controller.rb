@@ -828,7 +828,7 @@ module Public
     end
 
     def assign_homepage_promotion_banners
-      event_banners = Event.promotion_banner_live
+      event_banners = Event.promotion_banner_live.includes(:event_offers)
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .select(&:promotion_banner_display_image_present?)
         .map { |event| { type: :event, record: event } }
@@ -837,6 +837,7 @@ module Public
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .includes(
           :venue_record,
+          :event_offers,
           promotion_banner_image_attachment: :blob,
           promotion_banner_landscape_image_attachment: :blob,
           highlight_video_file_attachment: :blob,
