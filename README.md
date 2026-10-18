@@ -871,6 +871,8 @@ Der Produktions-Logpfad für App und Jobs ist bewusst zentral über Docker/Kamal
 
 Es gibt in Produktion absichtlich keinen separaten persistenten App-Dateilog unter `log/production.log` oder `log/importers.log`. Sentry ergänzt bei konfigurierten Zugangsdaten Fehlererfassung und Alerting; die zentralen Laufzeit-Logs bleiben für die Diagnose erforderlich.
 
+Anfragen mit widersprüchlichen Client-IP-Headern werden mit der öffentlichen Fehlerseite und HTTP 400 abgewiesen. Die Rails-Prüfung auf IP-Spoofing bleibt dabei aktiv; ungültige Header erreichen weder Anmeldung noch reguläre Seitenverarbeitung.
+
 Rails-Konsole, Shell und Tasks im laufenden Container:
 
 ```bash
