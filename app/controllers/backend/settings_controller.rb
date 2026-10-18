@@ -260,6 +260,7 @@ module Backend
 
     def homepage_genre_lane_reference_genres(selected_slugs = [])
       upcoming_relation = Event.published_live.where("start_at >= ?", Time.zone.today.beginning_of_day)
+      upcoming_counts = upcoming_relation.reorder(nil).joins(:event_genres).group("event_genres.genre_id").distinct.count(:id)
       selected_positions = Array(selected_slugs).each_with_index.to_h
 
       Genre.all.to_a.sort_by { |genre| Genre::STATIC_NAMES.index(genre.name) || Genre::STATIC_NAMES.size }.map do |genre|
@@ -267,7 +268,7 @@ module Backend
           position: Genre::STATIC_NAMES.index(genre.name) || Genre::STATIC_NAMES.size,
           name: genre.name,
           slug: genre.slug,
-          upcoming_events_count: upcoming_relation.joins(:genres).where(genres: { id: genre.id }).distinct.count
+          upcoming_events_count: upcoming_counts.fetch(genre.id, 0)
         }
       end.sort_by do |genre|
         selection_index = selected_positions[genre[:slug]]
