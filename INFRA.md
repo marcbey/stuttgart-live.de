@@ -90,9 +90,11 @@ PR → vollständige Main-CI → Deploy Staging → Versionszusammenfassung
 
 1. Änderungen durchlaufen PR-Prüfungen und nach dem Merge erneut die vollständige
    Main-CI. Ein erfolgreicher Main-Lauf startet `Deploy Staging` automatisch.
-2. Staging baut den geprüften Commit einmal und veröffentlicht ihn in GHCR.
-   Echte nginx-HTTP-Tests laufen vor Bereitstellung der Staging-Secrets. Nach dem
-   Deploy werden laufende Web-/Job-Versionen, HTTPS, Login und Medien geprüft.
+2. Die Main-CI baut den Commit parallel zu den vollständigen Prüfungen einmal
+   und veröffentlicht ihn in GHCR. Staging übernimmt dessen Digest aus dem
+   erfolgreichen CI-Lauf. Echte nginx-HTTP-Tests laufen vor Bereitstellung der
+   Staging-Secrets. Nach dem Deploy werden laufende Web-/Job-Versionen, HTTPS,
+   Login und Medien geprüft.
 3. Die Kompatibilitätsprobe testet die konkrete Kombination mit dem anderen
    Staging-Projekt und mit dessen tatsächlich produktiver Version. Dafür werden
    nur das Schema des produktiven Peers und erneut maskierte Staging-Daten in

@@ -738,10 +738,25 @@ Die gemeinsame Architektur und die verbleibenden Betriebsnachweise stehen in
 [Betriebsrunbook](docs/operations/domainumzug-und-staging.md).
 
 Pull Requests und `main` durchlaufen die vollständigen Prüfungen mit
-`mise exec -- bin/ci`. Ein erfolgreicher Main-Push startet anschließend
-`Deploy Staging`. Der Workflow checkt exakt den geprüften Commit aus, baut ein
-Image mit dessen SHA-Tag und prüft reale nginx-HTTP-Antworten, bevor Staging-Secrets
-bereitgestellt werden. Es gibt keinen `latest`-Tag als Freigabegrundlage.
+`mise exec -- bin/ci`. Bei einem Push auf `main` baut ein zweiter Job parallel
+das Image mit dem SHA-Tag dieses Commits und hält dessen Digest im Artefakt
+`main-image` fest. Erst wenn Prüfungen und Build erfolgreich sind, startet
+`Deploy Staging`. Der Workflow checkt exakt den geprüften Commit aus, übernimmt
+das Image aus demselben CI-Lauf und prüft reale nginx-HTTP-Antworten, bevor
+Staging-Secrets bereitgestellt werden. Pull Requests veröffentlichen kein Image;
+es gibt keinen `latest`-Tag als Freigabegrundlage.
+
+Installierte Gems werden in CI und Staging anhand von Betriebssystem,
+Architektur, Ruby-Version und `Gemfile.lock` wiederverwendet. Docker speichert
+zusätzlich die Build-Layer einschließlich der Zwischenstufen im GitHub-Actions-Cache.
+Ein fehlender Cache führt zu einer regulären Neuinstallation beziehungsweise einem
+vollständigen Build. Der erste Lauf füllt die Caches; Laufzeitvergleiche sind erst
+bei Folgeläufen mit unveränderten Abhängigkeiten aussagekräftig.
+
+CI-Läufe aus der Zeit vor dieser Umstellung enthalten noch kein `main-image`.
+Ein daraus gestarteter Staging-Deploy bricht ab; ein neuer Push auf `main` muss
+zuerst einen erfolgreichen Lauf mit Image-Artefakt erzeugen. Es gibt keinen
+automatischen Neubau als Ersatz für einen fehlenden Build-Nachweis.
 
 Ein erfolgreicher `Deploy Staging` auf `main` startet automatisch
 [`Deploy Production`](https://github.com/marcbey/stuttgart-live.de/actions/workflows/deploy-production.yml).
@@ -820,9 +835,12 @@ bestehender Datenbankrolle schreibgeschützt gelesen; Produktionszeilen und
 Produktionsschlüssel werden nicht exportiert. Die Daten stammen aus Staging und
 werden beim Export erneut maskiert. Eine kurzlebige Docker-Umgebung ohne externes
 Netzwerk lädt die passenden Schemata und Daten in PostgreSQL 16 und prüft beide
-konkreten Images einschließlich gemeinsamer Anmeldung. Die festen Staging-Namen
-und -Profile bleiben auch dort erhalten. Medien und HTTPS werden zusätzlich auf
-der vollständigen geschützten Staging-Umgebung geprüft. Der Image-Vergleich berücksichtigt die leeren
+konkreten Images einschließlich gemeinsamer Anmeldung. Alle drei Images werden
+in einem gemeinsamen Archiv übertragen, sodass gemeinsame Dateischichten nur
+einmal übertragen werden. Jede Image-Identität wird anschließend einzeln geprüft.
+Die festen Staging-Namen und -Profile bleiben auch dort erhalten. Medien und
+HTTPS werden zusätzlich auf der vollständigen geschützten Staging-Umgebung
+geprüft. Der Image-Vergleich berücksichtigt die leeren
 Standardfelder, die ältere Docker-Versionen ergänzen; geänderte Laufzeitwerte,
 unbekannte Zusatzfelder und Dateischichten führen weiterhin zum Abbruch. Der Lauf nennt
 die jeweilige Prüfphase, ohne Daten oder Schlüssel auszugeben. Schemamigrationen müssen
