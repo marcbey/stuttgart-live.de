@@ -110,6 +110,60 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_predicate lanes.first.next_cursor, :present?
   end
 
+  test "preserves filters that reference included associations" do
+    rock_event = build_lane_event(slug: "lane-filtered-rock", artist_name: "Filtered Rock", start_at: 2.days.from_now)
+    pop_event = build_lane_event(slug: "lane-filtered-pop", artist_name: "Filtered Pop", start_at: 2.days.from_now)
+    rock_event.genres = [ @rock_group ]
+    pop_event.genres = [ @pop_group ]
+    pop_event.update!(venue: venues(:lka_longhorn).name)
+    assert_not_equal rock_event.venue_id, pop_event.venue_id
+
+    lanes = Public::Events::HomepageGenreLanesBuilder.new(
+      relation: Event.published_live.includes(:venue_record).where(venues: { id: rock_event.venue_id }),
+      slugs: [ @rock_group.slug, @pop_group.slug ]
+    ).call
+
+    assert_equal [ @rock_group.slug ], lanes.map { |lane| lane.group.slug }
+    assert_equal [ rock_event.id ], lanes.first.events.map(&:id)
+  end
+
+  test "batches image attachments across lanes and only loads selected events" do
+    [ @rock_group, @pop_group ].each_with_index do |genre, group_index|
+      2.times do |index|
+        event = build_lane_event(
+          slug: "lane-images-#{group_index}-#{index}",
+          artist_name: "Lane Images #{group_index} #{index}",
+          start_at: (index + 1).days.from_now.change(hour: 20)
+        )
+        event.genres = [ genre ]
+        image = event.event_images.build(purpose: EventImage::PURPOSE_DETAIL_HERO)
+        image.file.attach(create_uploaded_blob(filename: "lane-image-#{group_index}-#{index}.png"))
+        image.save!
+      end
+    end
+
+    instantiated_images = 0
+    callback = lambda do |event|
+      instantiated_images += event.payload[:record_count] if event.payload[:class_name] == "EventImage"
+    end
+    lanes = nil
+    queries = capture_sql_queries do
+      ActiveSupport::Notifications.subscribed(callback, "instantiation.active_record") do
+        lanes = Public::Events::HomepageGenreLanesBuilder.new(
+          relation: Event.published_live.includes(event_images: { file_attachment: :blob }),
+          slugs: [ @rock_group.slug, @pop_group.slug ],
+          limit: 1
+        ).call
+        lanes.each { |lane| assert_predicate lane.events.first.event_images.first.file, :attached? }
+      end
+    end
+
+    assert_equal [ @rock_group.slug, @pop_group.slug ], lanes.map { |lane| lane.group.slug }
+    assert_equal 2, instantiated_images
+    assert_equal 1, queries.grep(/FROM "active_storage_attachments"/).size
+    assert lanes.all? { |lane| lane.next_cursor.present? }
+  end
+
   test "returns all lane events when limit is nil" do
     18.times do |index|
       event = build_lane_event(

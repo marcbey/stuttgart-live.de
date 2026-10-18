@@ -17,7 +17,7 @@ module Public
 
         groups_by_slug = Genre.all.index_by(&:slug)
 
-        normalized_slugs.filter_map do |slug|
+        lanes = normalized_slugs.filter_map do |slug|
           group = groups_by_slug[slug]
           next if group.blank?
 
@@ -33,11 +33,21 @@ module Public
             next_cursor: next_cursor
           )
         end
+
+        preload_lane_associations(lanes)
+        lanes
       end
 
       private
 
       attr_reader :limit, :relation, :slugs
+
+      def preload_lane_associations(lanes)
+        ActiveRecord::Associations::Preloader.new(
+          records: lanes.flat_map(&:events),
+          associations: relation.includes_values + relation.preload_values
+        ).call
+      end
 
       def normalized_slugs
         @normalized_slugs ||= AppSetting.normalize_slug_list(
@@ -79,7 +89,9 @@ module Public
       end
 
       def group_events(group)
-        relation
+        candidate_relation = relation.eager_loading? ? relation : relation.except(:includes, :preload)
+
+        candidate_relation
           .joins(:genres)
           .where(genres: { id: group.id })
           .distinct
