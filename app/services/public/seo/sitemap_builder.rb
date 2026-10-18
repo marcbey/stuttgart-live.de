@@ -88,7 +88,9 @@ module Public
       end
 
       def latest_public_update
-        [
+        return @latest_public_update if defined?(@latest_public_update)
+
+        @latest_public_update = [
           future_live_events.maximum(:updated_at),
           BlogPost.published_live.maximum(:updated_at),
           StaticPage.maximum(:updated_at)

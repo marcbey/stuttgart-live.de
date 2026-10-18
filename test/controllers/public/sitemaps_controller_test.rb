@@ -60,7 +60,46 @@ class Public::SitemapsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes locs, news_url(scheduled_post.slug)
   end
 
+  test "show calculates public update timestamps once for all fixed entries" do
+    queries = capture_maximum_queries { get sitemap_url(format: :xml) }
+
+    assert_response :success
+    %w[events blog_posts static_pages].each do |table|
+      assert_equal 1, queries.grep(/FROM "#{table}"/).size, "expected one maximum query for #{table}"
+    end
+
+    document = Nokogiri::XML(response.body)
+    document.remove_namespaces!
+    fixed_locs = [ root_url, highlights_lane_url, all_stuttgart_lane_url, tagestipp_lane_url ]
+    timestamps = document.css("url").filter_map do |entry|
+      entry.at_css("lastmod")&.text if fixed_locs.include?(entry.at_css("loc").text)
+    end
+    assert_equal 4, timestamps.size
+    assert_equal 1, timestamps.uniq.size
+  end
+
+  test "show calculates empty public update timestamps only once" do
+    Event.update_all(status: "needs_review")
+    BlogPost.update_all(status: "draft")
+    StaticPage.delete_all
+
+    queries = capture_maximum_queries { get sitemap_url(format: :xml) }
+
+    assert_response :success
+    %w[events blog_posts static_pages].each do |table|
+      assert_equal 1, queries.grep(/FROM "#{table}"/).size, "expected one maximum query for #{table}"
+    end
+    assert_not_includes response.body, "<lastmod>"
+  end
+
   private
+    def capture_maximum_queries
+      queries = []
+      callback = ->(event) { queries << event.payload[:sql] if event.payload[:sql].match?(/SELECT MAX\(/) }
+      ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { yield }
+      queries
+    end
+
     def create_event(slug:, title:, artist_name:, start_at:, status: "published", published_at: 1.day.ago)
       Event.create!(
         slug: slug,
