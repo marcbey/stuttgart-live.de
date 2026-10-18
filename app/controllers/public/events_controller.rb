@@ -837,13 +837,13 @@ module Public
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .includes(
           :venue_record,
-          :event_offers,
           promotion_banner_image_attachment: :blob,
           promotion_banner_landscape_image_attachment: :blob,
           highlight_video_file_attachment: :blob,
           highlight_landscape_video_file_attachment: :blob,
           event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]
         )
+        .includes(:event_offers)
         .select(&:promotion_banner_display_image_present?)
         .map { |event| { type: :event, record: event } }
       news_banners = BlogPost.promotion_banner_live
