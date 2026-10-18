@@ -20,6 +20,7 @@
              series_counts_by_id: page.series_counts_by_id,
              dom_id_prefix: ("search_card_event" if lane_key == "search"),
              show_admin_edit: %w[search highlights sks_promoters russ_live].include?(lane_key),
+             show_expired_status: local_assigns.fetch(:show_expired_status, true),
              show_card_kicker: lane_key != "genre" %>
 <% else %>
   <% page.events.each_with_index do |event, index| %>

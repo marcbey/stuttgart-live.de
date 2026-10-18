@@ -459,12 +459,13 @@
 
   <%= render "design_preview_tagestipp_lane",
              events: today_events,
+             show_expired_status: false,
              next_cursor: @home_tagestipp_next_cursor,
              browse_state: @browse_state,
              strict_proxy: strict_proxy,
              effective_series_ids: design_preview_effective_series_ids,
              series_counts_by_id: design_preview_series_counts_by_id,
-             lazy_url: homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter),
+             lazy_url: homepage_lane_events_path(event_date: @browse_state.event_date_param, filter: @browse_state.filter, show_expired_status: false),
              link_path: (@home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path),
              link_label: "Alles aus Stuttgart" %>
 

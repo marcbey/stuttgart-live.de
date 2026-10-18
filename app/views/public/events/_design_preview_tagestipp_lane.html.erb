@@ -51,6 +51,7 @@
                      strict_proxy: strict_proxy,
                      variant: "compact",
                      category: "Heute",
+                     show_expired_status: local_assigns.fetch(:show_expired_status, true),
                      effective_series_ids: effective_series_ids,
                      series_counts_by_id: series_counts_by_id %>
         <% end %>
