@@ -1,11 +1,14 @@
 # Ansible für Hetzner App-Host
 
-Dieses Verzeichnis konfiguriert einen frisch provisionierten Hetzner-Server für den Betrieb von `stuttgart-live.de`.
+Dieses Verzeichnis konfiguriert den gemeinsamen Hetzner-Host für Stuttgart Live
+und Russ Live. Die aktuelle Architektur und die Freigaberegeln für Produktion und
+Staging stehen in [INFRA.md](../../INFRA.md). Host-Eingriffe sind von den
+App-Deployments über GitHub getrennt.
 
 ## Voraussetzungen
 
 - Ansible `>= 2.16`
-- Collections aus [requirements.yml](/Users/marc/Projects/stuttgart-live.de/infra/ansible/requirements.yml)
+- Collections aus [requirements.yml](requirements.yml)
 
 Installation der Collections:
 
@@ -24,7 +27,7 @@ script/render_hetzner_inventory.sh
 
 Oder manuell gepflegt werden unter:
 
-- [hosts.yml](/Users/marc/Projects/stuttgart-live.de/infra/ansible/inventories/production/hosts.yml)
+- [hosts.yml](inventories/production/hosts.yml)
 
 ## Reihenfolge
 
@@ -35,7 +38,7 @@ cd infra/ansible
 ansible-playbook -i inventories/production/hosts.yml -u root playbooks/bootstrap.yml
 ```
 
-Dann Docker, PostgreSQL und Backups einrichten:
+Danach aus der Repository-Wurzel Docker, PostgreSQL und Backups einrichten:
 
 ```bash
 script/ansible_app_host_production
@@ -49,7 +52,7 @@ mit dem gehärteten `admin`-Benutzer und dem Standard-Schlüssel
 
 Nicht-sensitive Defaults liegen in:
 
-- [all.yml](/Users/marc/Projects/stuttgart-live.de/infra/ansible/inventories/production/group_vars/all.yml)
+- [all.yml](inventories/production/group_vars/all.yml)
 
 Diese Werte solltest du vor dem ersten Lauf prüfen:
 
@@ -104,3 +107,8 @@ Die Sperre liegt unter `/var/lock/live-deploy/global.lock`, ist für beide Proje
 und Umgebungen gemeinsam und wird durch eine offene SSH-/flock-Sitzung gehalten.
 Ein tmpfiles-Eintrag stellt das Verzeichnis nach Neustarts wieder her. Automatische
 Deployments dürfen den gemeinsamen Kamal-Proxy nicht eigenmächtig neu starten.
+
+Bei unterbrochenen oder fehlgeschlagenen Host-Mutationen bleibt zusätzlich
+`/var/lock/live-deploy/active-operation` bestehen. Diese Markierung niemals
+pauschal löschen. Diagnose und gezielte Wiederaufnahme stehen im
+[Betriebsrunbook](../../docs/operations/domainumzug-und-staging.md#unterbrochene-host-operation-klären).

@@ -1,6 +1,9 @@
 # Hetzner Infra mit Terraform
 
-Dieses Verzeichnis enthält den neuen Hetzner-Stack für `stuttgart-live.de`.
+Dieses Verzeichnis provisioniert den gemeinsamen Hetzner-Host für Stuttgart Live
+und Russ Live einschließlich Produktion und Staging. Staging erhält keinen
+eigenen Server. Der aktuelle Betrieb und die Trennung der Ressourcen stehen in
+[INFRA.md](../../../INFRA.md); diese Anleitung betrifft Infrastrukturänderungen.
 
 ## Voraussetzungen
 
@@ -15,20 +18,21 @@ Dieses Verzeichnis enthält den neuen Hetzner-Stack für `stuttgart-live.de`.
 - `modules/firewall/`: Firewall-Regeln
 - `modules/app_server/`: Server, Primary IPs und optionales Volume
 
-## Schnellstart
+## Nutzung aus der Repository-Wurzel
 
 ```bash
-cd infra/terraform/hetzner/environments/prod
-cp terraform.tfvars.example terraform.tfvars
+cp infra/terraform/hetzner/environments/prod/terraform.tfvars.example \
+  infra/terraform/hetzner/environments/prod/terraform.tfvars
 ```
 
 Danach `terraform.tfvars` anpassen und das Token setzen:
 
 ```bash
 export HCLOUD_TOKEN="..."
-terraform init
-terraform plan
-terraform apply
+terraform -chdir=infra/terraform/hetzner/environments/prod init
+terraform -chdir=infra/terraform/hetzner/environments/prod plan
+# Erst nach Abgleich mit dem bestehenden Host und Prüfung des Plans:
+terraform -chdir=infra/terraform/hetzner/environments/prod apply
 ```
 
 ## Wichtige Outputs
@@ -40,7 +44,14 @@ Nach dem Apply stehen unter anderem diese Werte bereit:
 - `server_ipv6`
 - `app_domain`
 
-Für Ansible kann daraus ein Inventory erzeugt werden:
+`app_domain` ist ein historischer Terraform-Ausgabewert und steuert weder DNS
+noch das aktuelle Kamal-Ziel. Maßgeblich sind die versionierten
+[Produktions-](../../../config/deploy.hetzner.shared.yml) und
+[Staging-Profile](../../../config/deploy.staging.shared.yml) sowie
+`PRODUCTION_DOMAIN_MODE` im GitHub-Environment.
+
+Für Ansible kann daraus aus der Repository-Wurzel ein Inventory erzeugt werden.
+Das überschreibt das bestehende Inventory; den Diff vor einem Ansible-Lauf prüfen:
 
 ```bash
 script/render_hetzner_inventory.sh
@@ -48,7 +59,7 @@ script/render_hetzner_inventory.sh
 
 Das schreibt standardmäßig nach:
 
-- [hosts.yml](/Users/marc/Projects/stuttgart-live.de/infra/ansible/inventories/production/hosts.yml)
+- [hosts.yml](../../ansible/inventories/production/hosts.yml)
 
 ## Hinweise
 

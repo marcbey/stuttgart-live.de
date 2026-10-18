@@ -682,14 +682,20 @@ Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=
 
 Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bleibt der Eigentümer der fachlichen Produktionsdatenbank und des Docker-Volumes `stuttgart_live_de_storage`. Weitere Apps wie `russ-live.de` dürfen diese Primärdatenbank nur mit einem separaten read-only PostgreSQL-Benutzer lesen und dasselbe Storage-Volume mounten. Queue, Cache und Cable bleiben je App getrennt, damit Worker und Laufzeitdaten nicht zwischen Projekten kollidieren.
 
-Die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
+Die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](config/deploy.hetzner.shared.yml).
 Das öffentliche Hostprofil wird über `PRODUCTION_DOMAIN_MODE` im GitHub-Environment `production` gewählt; die endgültige Zieladresse ist `https://stuttgart-live.de`. Kamal setzt `APP_HOST` zur Laufzeit in den Produktions-Container.
 
 ### Staging und Suchindex
 
-Das bisherige Hetzner-Produktionsziel `https://stuttgart-live.schopp3r.de/` behält bis zur Domainumschaltung `STAGING_NOINDEX=true`. Das getrennte Staging liegt unter `https://staging.stuttgart-live.de/` und erzwingt zusätzlich Basic Auth. `nginx` setzt dadurch global den Header `X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien und den Healthcheck `/up`. `robots.txt` wird dafür bewusst nicht gesperrt, damit Google das `noindex` crawlen kann.
+Die getrennte Staging-Umgebung `https://staging.stuttgart-live.de/` erzwingt
+Basic Auth und `STAGING_NOINDEX=true`. nginx setzt dort global den Header
+`X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien
+und den Healthcheck `/up`. Produktion unter der neuen Hauptdomain wird indexiert.
+Stuttgart verwendet während des IPv6-DNS-Übergangs noch `live_preissued`;
+[INFRA.md](INFRA.md#backups-domainwechsel-und-verbleibende-nacharbeiten) beschreibt
+den anschließenden Wechsel auf automatische Zertifikate.
 
-Die Search-Console-Verifizierungsdatei [public/google8f1bf564d79d9e2c.html](/Users/marc/Projects/stuttgart-live.de/public/google8f1bf564d79d9e2c.html) muss nach dem Domainwechsel unter `https://stuttgart-live.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Den Status der bestehenden Domain- oder URL-Präfix-Property separat im zuständigen Google-Konto prüfen. Die öffentliche Produktion bleibt indexierbar; Staging behält Basic Auth und `noindex`.
+Die Search-Console-Verifizierungsdatei [public/google8f1bf564d79d9e2c.html](public/google8f1bf564d79d9e2c.html) muss nach dem Domainwechsel unter `https://stuttgart-live.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Den Status der bestehenden Domain- oder URL-Präfix-Property separat im zuständigen Google-Konto prüfen. Die öffentliche Produktion bleibt indexierbar; Staging behält Basic Auth und `noindex`.
 
 ### Was lokal wichtig ist
 
@@ -724,6 +730,10 @@ Wichtig: Die lokale `.kamal/secrets.hetzner` ist hier keine Klartext-Secret-Date
 GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit eine eigene `.kamal/secrets.hetzner` aus den in GitHub hinterlegten Secrets.
 
 ### CI, Staging und Produktionsfreigabe über GitHub
+
+Die gemeinsame Architektur und die verbleibenden Betriebsnachweise stehen in
+[INFRA.md](INFRA.md); Host-Eingriffe und Domainwechsel im
+[Betriebsrunbook](docs/operations/domainumzug-und-staging.md).
 
 Pull Requests und `main` durchlaufen die vollständigen Prüfungen mit
 `mise exec -- bin/ci`. Ein erfolgreicher Main-Push startet anschließend
@@ -857,7 +867,7 @@ bin/kamal app logs --since 30m --grep ERROR -d hetzner -r job
 
 Der Produktions-Logpfad für App und Jobs ist bewusst zentral über Docker/Kamal organisiert. Rails schreibt in Production nach `STDOUT`, daher sind `bin/kamal app logs ...` und auf dem Host `docker logs ...` die primären Werkzeuge auch für Import- und LLM-Läufe.
 
-Es gibt in Produktion absichtlich keinen separaten persistenten App-Dateilog unter `log/production.log` oder `log/importers.log`. Wenn später Sentry dazukommt, ergänzt es Fehlererfassung und Alerting, ersetzt aber nicht diese zentralen Laufzeit-Logs.
+Es gibt in Produktion absichtlich keinen separaten persistenten App-Dateilog unter `log/production.log` oder `log/importers.log`. Sentry ergänzt bei konfigurierten Zugangsdaten Fehlererfassung und Alerting; die zentralen Laufzeit-Logs bleiben für die Diagnose erforderlich.
 
 Rails-Konsole, Shell und Tasks im laufenden Container:
 
@@ -986,6 +996,12 @@ Der Task nutzt dieselbe Eventim-Konsolidierung wie der Merge. Im Dry-Run meldet 
 
 ### Produktionsdatenbank aus lokalem Dump wiederherstellen
 
+Dieser Eingriff betrifft auch Russ, das die Stuttgart-Datenbank mitliest.
+Beide Produktions-Apps und alle Deployments für das Wartungsfenster koordinieren;
+Datenbankmutationen unter der gemeinsamen Host-Sperre ausführen. Vor dem
+Wiederanlauf die Russ-Reader-Grants wiederherstellen und beide Apps prüfen.
+Die folgenden Stuttgart-Kommandos allein ersetzen diese Koordination nicht.
+
 Die lokalen Dumps unter `/var/backups/stuttgart-live` werden im PostgreSQL-Custom-Format erstellt. Sie müssen deshalb mit `pg_restore` zurückgespielt werden, nicht mit `psql < dump.sql`. Ein Restore überschreibt produktive Daten und gehört in ein bewusstes Wartungsfenster.
 
 Zuerst auf dem Host prüfen, welche Dumps vorhanden sind. Für einen vollständigen Stand sollten die vier Datenbanken mit demselben Zeitstempel verwendet werden:
@@ -1056,14 +1072,21 @@ Danach die App wieder starten und prüfen:
 bin/hetzner-check
 bin/kamal app start -d hetzner --version <VERSION>
 bin/kamal app logs --since 5m -d hetzner
-curl -I https://stuttgart-live.schopp3r.de
+curl -I https://stuttgart-live.de
 ```
 
 ### Produktionsdatenbank neu aufsetzen
 
+Auch hier gelten die Voraussetzungen des Restore-Abschnitts: Beide
+Produktions-Apps einschließlich Russ koordinieren, konkurrierende Deployments
+für das Wartungsfenster aussetzen und Datenbankmutationen unter der gemeinsamen
+Host-Sperre ausführen. Anschließend Russ-Reader-Grants wiederherstellen und beide
+Apps prüfen. Die folgende Befehlsfolge ist ausschließlich der Stuttgart-Baustein;
+sie ist allein keine vollständige Wiederherstellungsanleitung für den gemeinsamen Host.
+
 Ein vollständiges Neuaufsetzen der Produktionsdatenbanken ist ein Host-Eingriff und darf nicht nur als App-User per `db:setup` erfolgen. Der Datenbankbenutzer der Anwendung hat bewusst kein `CREATEDB`.
 
-Sichere Reihenfolge:
+Stuttgart-Baustein nach Erfüllung dieser Voraussetzungen:
 
 1. App kontrolliert stoppen:
 
@@ -1102,7 +1125,7 @@ bin/kamal app exec -d hetzner -- bin/rails db:schema:load db:seed
 bin/hetzner-check
 bin/kamal app start -d hetzner --version <VERSION>
 bin/kamal app logs --since 5m -d hetzner
-curl -I https://stuttgart-live.schopp3r.de
+curl -I https://stuttgart-live.de
 ```
 
 `bin/rails db:setup` ist für dieses Produktions-Setup nicht der richtige Weg, weil das Kommando Datenbanken anlegen will.
@@ -1178,9 +1201,9 @@ Nach der Vorbereitung lassen sich unter **Backend → Weiterleitungen** (`/backe
 
 Der Benchmark schreibt `tmp/legacy_redirects/benchmark.json`. Er misst den lokalen Resolver getrennt mit vorbereitetem Zustand und mit zurückgesetzten automatischen Zuordnungen innerhalb zurückgerollter Datenbanktransaktionen. Manuelle Regeln bleiben auch bei kalten Stichproben unmittelbar verbindlich. Netzwerk und die reguläre 404-Verarbeitung der App sind ausgeschlossen. Die Ergebnisse belegen keine Produktionslatenz: Die Ziele p95 unter 20 ms für gespeicherte und unter 100 ms für erstmalige Auflösung müssen unter produktionsnaher Last gesondert geprüft werden.
 
-## Getrennte Umgebungen vorbereiten
+## Getrennte Umgebungen betreiben
 
-Das neue Kamal-Ziel `staging` verwendet weiterhin `RAILS_ENV=production`, aber
+Das Kamal-Ziel `staging` verwendet weiterhin `RAILS_ENV=production`, aber
 `APP_ENVIRONMENT=staging`. Datenbanken, PostgreSQL-Rollen, Credentials und das
 Medienvolume sind von Produktion getrennt. Beide Staging-Apps teilen sich nur
 `stuttgart_live_de_staging_storage`; Russ liest ausschließlich die
@@ -1196,9 +1219,9 @@ Das Beispiel `.kamal/secrets.staging.example` liest ausschließlich ausdrücklic
 bereitgestellte Staging-Werte. `bin/hetzner-check --destination staging` lädt
 keine Produktions-`.env` und lehnt `.kamal/secrets-common` für Staging ab. Der bisherige Check verwendet `--destination hetzner`.
 
-Die Staging-Profile sind erst nach Einrichtung der Datenbanken, bereinigten Daten,
-Zugriffsschutz und Deployment-Prüfungen betriebsbereit. Der vollständige Ablauf
-steht im freigegebenen Umzugsplan; vor Abschluss dieser Vorbereitung nicht deployen.
+Die Staging-Umgebungen sind eingerichtet. Bei einem Neuaufbau müssen zuerst
+Datenbanken, bereinigte Daten, Zugriffsschutz und Deployment-Prüfungen vollständig
+vorliegen; der Bereitstellungsablauf steht im gemeinsamen Betriebsrunbook.
 
 Staging versendet E-Mails ausschließlich an das gemeinsame interne Mailpit-Postfach.
 Die Oberfläche ist auf Hetzner nur über `127.0.0.1:8025` erreichbar. Für den lokalen

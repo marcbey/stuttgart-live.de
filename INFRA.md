@@ -1,596 +1,239 @@
-# Infra Plan: Hetzner + Terraform + Ansible + GitHub Deploy
+# Infrastruktur und Veröffentlichungen
 
-Stand: 10. März 2026
+Stand: 18. Oktober 2026
 
-## Ziel
+Diese Übersicht beschreibt den gemeinsamen Betrieb von Stuttgart Live und Russ
+Live. Die [README](README.md#ci-staging-und-produktionsfreigabe-über-github)
+erklärt die täglichen Handgriffe; das
+[Betriebsrunbook](docs/operations/domainumzug-und-staging.md) behandelt
+Domainwechsel, DNS-Nachweise und die Wiederaufnahme unterbrochener Host-Eingriffe.
+Die Infrastruktur wird zentral aus diesem Repository verwaltet. Russ dokumentiert
+seine app-spezifischen Secrets und Datenbankverbindungen in seiner
+[README](https://github.com/marcbey/russ-live.de#deployment-und-betrieb).
 
-Die Infrastruktur für `stuttgart-live.de` soll auf Hetzner reproduzierbar aufgebaut werden, damit sie später auch in einem anderen Hetzner-Konto mit möglichst wenig manueller Arbeit neu erstellt werden kann.
+## Gemeinsamer Host, getrennte Umgebungen
 
-Die Betriebsverantwortung wird klar getrennt:
+Beide Anwendungen laufen auf dem Hetzner-Host `46.225.224.194`.
+Produktions- und Staging-Container teilen sich die VM, Docker, PostgreSQL und
+`kamal-proxy`. Staging ist daher keine vom Produktionshost unabhängige
+Ausfallumgebung. Seine Container haben eigene CPU-/RAM-Limits; bei Engpässen
+hat Produktion Vorrang.
 
-- `Terraform` provisioniert Hetzner-Ressourcen
-- `Ansible` konfiguriert den Server
-- `Kamal` deployt die Rails-App
-- `GitHub Actions` fuehrt nur CI und App-Deploy aus
+| Umgebung | Stuttgart Live | Russ Live | Kamal-Ziel |
+| --- | --- | --- | --- |
+| Produktion | `https://stuttgart-live.de` | `https://russ-live.de` | `hetzner` |
+| Staging | `https://staging.stuttgart-live.de` | `https://staging.russ-live.de` | `staging` |
 
-Nicht Teil von GitHub Actions:
+`www` leitet in Produktion mit HTTP 308 und erhaltenem Pfad sowie Querystring
+auf die jeweilige Hauptdomain weiter. Staging verlangt Basic Auth und setzt
+`noindex, nofollow` sowie `no-store`, auch für Assets und Medien. Nur der exakte
+Healthcheck `/up` bleibt ohne Anmeldung erreichbar und prüft die Rails-Readiness.
 
-- `terraform apply`
-- `ansible-playbook`
-- Host-Administration
-- manuelle Recovery-Schritte
+Jede Anwendung hat je Umgebung einen eigenen Web- und einen eigenen Job-Container.
+Im Web-Container liefert nginx Assets und signierte `/media/...`-Dateien direkt
+aus; Puma verarbeitet Rails-Anfragen. Solid Queue läuft separat über `bin/jobs`.
+PostgreSQL läuft auf dem Host und ist nicht öffentlich freigegeben. Die
+Container verbinden sich über das Docker-Gateway `172.18.0.1`.
 
-## Ausgangslage im Repo
+Die verbindlichen Zielprofile stehen in
+[config/deploy.hetzner.yml](config/deploy.hetzner.yml),
+[config/deploy.staging.yml](config/deploy.staging.yml) und den jeweiligen
+`deploy.*.shared.yml`-Dateien beider Repositories. SSH-Host-Keys sind dort gepinnt;
+Passwörter und private Schlüssel gehören nicht in diese Dateien.
 
-Der produktive Infrastrukturpfad liegt jetzt vollständig auf Hetzner:
+## Datenbanken, Medien und externe Dienste
 
-- Hetzner-Terraform unter [infra/terraform/hetzner](/Users/marc/Projects/stuttgart-live.de/infra/terraform/hetzner)
-- GitHub-Environment-Verwaltung unter [infra/terraform/github](/Users/marc/Projects/stuttgart-live.de/infra/terraform/github)
-- Hetzner-Deploy-Datei unter [config/deploy.hetzner.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.yml)
-- vorhandene CI in [ci.yml](/Users/marc/Projects/stuttgart-live.de/.github/workflows/ci.yml)
+| Ressource | Produktion | Staging |
+| --- | --- | --- |
+| Stuttgart-Fachdatenbank | `stuttgart_live_de_production` | `stuttgart_live_de_staging` |
+| Russ-Fachdatenbank | `russ_live_de_production` | `russ_live_de_staging` |
+| Cache, Queue, Cable | je App eigene DBs mit Suffix `_cache`, `_queue`, `_cable` | ebenfalls je App getrennt |
+| Gemeinsames Medienvolume | `stuttgart_live_de_storage` | `stuttgart_live_de_staging_storage` |
+| Russ-Lesebenutzer für Stuttgart | `russ_live_de_reader` | `russ_live_de_staging_reader` |
 
-## Zielarchitektur
+Russ liest Events und die gemeinsame Nutzerquelle ausschließlich über seinen
+Reader in der Stuttgart-Datenbank derselben Umgebung. Eigene Russ-Daten,
+Sessions und Betriebsdaten liegen in den Russ-Datenbanken. Stuttgart migriert
+seine Datenbanken; Russ migriert seine eigenen. Ein Restore muss die zusätzlichen
+Reader-Grants wiederherstellen.
 
-Die Zielarchitektur für V1 ist bewusst einfach:
+Staging hat acht eigene Datenbanken und drei eingeschränkte PostgreSQL-Rollen.
+Diese dürfen keine Produktionsdatenbank öffnen. Eigene Rails-Credentials,
+Session-Schlüssel und DB-Passwörter trennen die Umgebungen. Der Medien-Signierschlüssel
+ist innerhalb eines Umgebungspaars gleich und zwischen Produktion und Staging
+verschieden. Beide Staging-Apps verwenden weiterhin `RAILS_ENV=production`;
+`APP_ENVIRONMENT=staging` aktiviert die Schutzregeln.
 
-- 1x Hetzner Cloud Server `CX33`
-- `Ubuntu 24.04`
-- `Primary IPv4` aktiviert
-- `IPv6` optional zusätzlich aktiviert
-- `Docker` auf dem Host
-- `PostgreSQL` lokal auf dem Host
-- `Kamal` für App-Deploys
-- `kamal-proxy` fuer TLS und Routing
-- `nginx` im App-Container für öffentliche `/media/...`-Requests
-- lokale Uploads über persistentes Volume für `/rails/storage`
-- Hetzner Server Backups aktiviert
+Staging versendet ausschließlich an Mailpit. Dessen Oberfläche ist nur auf dem
+Host unter `127.0.0.1:8025` gebunden; lokal ist sie per SSH-Tunnel erreichbar.
+Wiederkehrende Jobs, echte Newsletter, Meta-Veröffentlichungen, externe Imports,
+kostenpflichtige KI-Aufrufe und Tracking-Pixel sind dort gesperrt.
 
-Diese Architektur passt zum aktuellen Rails-Setup:
+Ein Deploy aktualisiert Code und führt die vorgesehenen Migrationen aus. Er
+kopiert keine Produktionsdaten. Die gesonderte, manuell gestartete
+[bereinigte Datenübernahme](README.md#bereinigte-staging-daten-manuell-erneuern)
+stoppt beide Staging-Apps, ersetzt deren Daten und Medien, entfernt sensible
+Inhalte und prüft Medien sowie DB-Rechte. Nur nach vollständiger Prüfung wird
+`/rails/storage/.staging-ready.json` freigegeben. Bei Fehlern bleibt Staging aus.
+Produktionsdaten und Produktionsmedien werden dabei ausschließlich gelesen.
 
-- Production-Datenbanken liegen bereits auf `127.0.0.1` als Default: [config/database.yml](/Users/marc/Projects/stuttgart-live.de/config/database.yml)
-- Solid Queue kann im Puma-Prozess laufen: [config/puma.rb](/Users/marc/Projects/stuttgart-live.de/config/puma.rb)
-
-## Architekturprinzipien
-
-- Ein einziger Produktionsserver ist für V1 akzeptabel.
-- Wiederholbarkeit ist wichtiger als maximale Plattform-Komplexität.
-- Infrastruktur-Code darf keine App-Secrets im State speichern.
-- Host-Konfiguration gehört in Ansible, nicht in fragile Einmal-Skripte.
-- GitHub deployt nur die Anwendung auf einen bereits vorbereiteten Host.
-
-## Verantwortlichkeiten
-
-### Terraform
-
-Terraform verwaltet ausschließlich Hetzner-Ressourcen:
-
-- Projekt-/Namenskonventionen
-- SSH-Key-Registrierung bei Hetzner
-- Server `CX33`
-- Primary IPv4
-- optionale IPv6-Aktivierung
-- Hetzner Backups
-- Firewall
-- optional Volume
-- optionale Reverse-DNS-Einträge
-
-Terraform verwaltet nicht:
-
-- Docker-Installation
-- PostgreSQL-Setup
-- UFW/Fail2ban-Konfiguration auf dem Host
-- App-Secrets
-
-### Ansible
-
-Ansible konfiguriert den laufenden Server:
-
-- Benutzer und SSH-Hardening
-- Zeitzone und Basis-Pakete
-- Docker Engine
-- PostgreSQL
-- Datenbank-User und Datenbanken
-- UFW und Fail2ban
-- Backup-Skripte und Cronjobs
-- optionale Monitoring-Agenten
-
-### Kamal
-
-Kamal übernimmt nur den App-Lifecycle:
-
-- Container deployen
-- neue Versionen aktivieren
-- `kamal-proxy`
-- den App-Container mit `nginx` vor Puma
-- Rollbacks
-- Volumes für `/rails/storage`
-
-### GitHub Actions
-
-GitHub Actions übernimmt:
-
-- Tests
-- Build des App-Images
-- Push in die Registry
-- `kamal deploy` auf Hetzner
-- optional verwaltet Terraform das GitHub-Environment `production`
-
-GitHub Actions übernimmt nicht:
-
-- Infrastruktur-Provisionierung
-- Server-Hardening
-- Datenbank-Administration auf Host-Ebene
-
-## Zielstruktur im Repo
-
-Die Repo-Struktur für den aktuellen Produktionspfad sieht so aus:
+## Von einer Änderung bis zur Produktion
 
 ```text
-infra/
-  terraform/
-    github/
-      environments/
-        production/
-    hetzner/
-      environments/
-        prod/
-      modules/
-        app_server/
-        firewall/
-        ssh_key/
-  ansible/
-    inventories/
-      production/
-        hosts.yml
-        group_vars/
-    playbooks/
-      bootstrap.yml
-      app_host.yml
-    roles/
-      base/
-      docker/
-      postgres/
-      firewall/
-      backups/
-.github/
-  workflows/
-    ci.yml
-    deploy-production.yml
-config/
-  deploy.hetzner.yml
-.kamal/
-  secrets.hetzner.example
+PR → vollständige Main-CI → Deploy Staging → Versionszusammenfassung
+                                             ↓
+                                   Produktionsfreigabe
+                                   durch Marc oder Katharina
+                                             ↓
+                                   geprüftes Image auf Prod
 ```
 
-Hinweis:
-
-- GitHub-Environment-Secrets und Variables können zusätzlich unter [infra/terraform/github](/Users/marc/Projects/stuttgart-live.de/infra/terraform/github) verwaltet werden.
-- Der Hetzner-Stack lebt in einem eigenen Pfad, damit Provisionierung und Host-Konfiguration klar getrennt bleiben.
-
-## Terraform-Plan für Hetzner
-
-### Ziel
-
-Terraform soll einen neuen Host in einem beliebigen Hetzner-Konto mit denselben Parametern reproduzierbar anlegen können.
-
-### Ressourcen fuer V1
-
-- `hcloud_ssh_key`
-- `hcloud_server`
-- `hcloud_firewall`
-- Firewall-Attachments
-- optional `hcloud_volume`
-- optional `hcloud_rdns`
-
-### Minimale Variablen
-
-- `hcloud_token`
-- `project`
-- `environment`
-- `server_name`
-- `server_type` mit Default `cx33`
-- `location` oder `datacenter`
-- `image` mit Default `ubuntu-24.04`
-- `enable_ipv4` mit Default `true`
-- `enable_ipv6` mit Default `true`
-- `enable_backups` mit Default `true`
-- `ssh_key_name`
-- `ssh_public_key`
-- `allowed_ssh_cidrs`
-- `app_domain`
-
-### Terraform-Outputs
-
-Diese Outputs müssen für Ansible und Kamal leicht nutzbar sein:
-
-- `server_name`
-- `server_ipv4`
-- `server_ipv6`
-- `ssh_user`
-- `app_domain`
-
-### Remote State
-
-Da die Infrastruktur später in einem anderen Hetzner-Konto neu aufgebaut werden können soll, sollte der Terraform-State nicht auf dem Zielserver liegen.
-
-Empfehlung:
-
-- Terraform Cloud als einfachste Lösung
-- alternativ ein S3-kompatibles Backend außerhalb des Zielkontos
-
-Nicht empfohlen:
-
-- lokaler State auf Entwicklerrechnern als dauerhaftes Betriebsmodell
-- State-Ablage auf dem zu provisionierenden Produktionsserver
-
-## Ansible-Plan
-
-### Ziel
-
-Ansible soll aus einem frisch provisionierten Ubuntu-Host einen Kamal-fähigen Produktionsserver machen.
-
-### Reihenfolge der Playbooks
-
-1. `bootstrap.yml`
-2. `app_host.yml`
-
-### Inhalt von `bootstrap.yml`
-
-- Zeitzone auf `Europe/Berlin`
-- Paketquellen aktualisieren
-- Basis-Pakete installieren
-- Deploy-User anlegen
-- SSH-Hardening
-- optional Root-Login deaktivieren
-- UFW aktivieren
-- Fail2ban aktivieren
-
-### Inhalt von `app_host.yml`
-
-- Docker installieren und starten
-- Docker-Gruppe und Benutzerrechte setzen
-- PostgreSQL installieren
-- DB-Rolle `stuttgart_live_de` anlegen
-- Datenbanken anlegen:
-  - `stuttgart_live_de_production`
-  - `stuttgart_live_de_production_cache`
-  - `stuttgart_live_de_production_queue`
-  - `stuttgart_live_de_production_cable`
-- Backup-Skripte für `pg_dump` installieren
-- Cronjob für tägliche Dumps einrichten
-- optional Sicherung von `/rails/storage`
-
-### Ansible-Inventar
-
-Das Inventar für Production sollte nicht auf Handarbeit beruhen.
-
-Empfehlung:
-
-- Terraform-Outputs in ein statisches Inventory rendern
-- oder ein kleines Skript, das aus Terraform-Outputs ein Ansible-Inventar erzeugt
-
-Ziel:
-
-- kein manuelles Eintragen der Server-IP vor jedem Lauf
-
-## App- und Kamal-Anpassungen
-
-Damit die App zur Hetzner-Architektur passt, sind folgende Anpassungen einzuplanen:
-
-### Neue Deploy-Datei
-
-Neue Datei:
-
-- [config/deploy.hetzner.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.yml)
-
-Inhaltlich:
-
-- `servers.web` mit Hetzner-Host
-- `servers.job` mit demselben Hetzner-Host und eigenem `bin/jobs`-Command
-- `proxy.ssl: true`
-- `proxy.host` mit Produktionsdomain
-- Registry auf `ghcr.io`
-- getrennte Env-Werte für `WEB_CONCURRENCY`, `RAILS_MAX_THREADS`, `DB_POOL`, `QUEUE_DB_POOL`, `JOB_THREADS` und `JOB_CONCURRENCY`
-- `DB_HOST=172.18.0.1`
-- `DB_PORT=5432`
-- `DB_NAME=stuttgart_live_de_production`
-- `DB_USER=stuttgart_live_de`
-- Volume für `/rails/storage`
-- SSH-User passend zu Ansible-Setup
-
-### Neue Secret-Beispieldatei
-
-Neue Datei:
-
-- `.kamal/secrets.hetzner.example`
-
-Enthält mindestens:
-
-- `RAILS_MASTER_KEY`
-- `DB_PASSWORD`
-- Drittanbieter-API-Secrets
-- optional Registry-Token, falls nötig
-
-### Rails-Produktionskonfiguration
-
-Die Hetzner-Zielarchitektur verwendet lokale Uploads statt S3. Deshalb muss die Production-Konfiguration angepasst werden.
-
-Bereits umgesetzt:
-
-- Active Storage ist in Production env-gesteuert
-- Default für Hetzner ist `:local`
-
-Für `kamal-proxy` zusätzlich aktivieren:
-
-- `config.assume_ssl = true`
-- `config.force_ssl = true`
-
-## GitHub Actions für Deploys
-
-### Ziel
-
-GitHub soll nur die Anwendung deployen, nicht die Infrastruktur provisionieren.
-
-### Workflow `deploy-production.yml`
-
-Trigger:
-
-- Push auf `main`
-- optional `workflow_dispatch`
-
-Schritte:
-
-1. Checkout
-2. Ruby und Docker Buildx einrichten
-3. optional Tests oder Abhängigkeit auf erfolgreiche CI
-4. Docker-Login bei `ghcr.io`
-5. SSH-Key aus GitHub Secret schreiben
-6. bekannte Hosts vorbereiten
-7. `kamal-proxy` auf dem Zielhost auf eine mit der Kamal-Version kompatible Version prüfen und bei Bedarf per `bin/kamal proxy reboot -d hetzner` aktualisieren
-8. Kamal-Umgebungsvariablen setzen
-9. `bin/kamal deploy -d hetzner --skip_push`
-
-### GitHub Secrets / Environment Secrets
-
-Im GitHub-Environment `production`:
-
-- `KAMAL_SSH_PRIVATE_KEY`
-- `KAMAL_REGISTRY_PULL_PASSWORD`
-- `RAILS_MASTER_KEY`
-- `DB_PASSWORD`
-- API-Secrets für Drittanbieter
-
-Nicht-geheime Hetzner-Zieldaten wie Domain, Server-IP und gepinnter SSH-Host-Key
-liegen versioniert in `config/deploy.hetzner.shared.yml`.
-
-## Lokale Deploys und Admin-Kommandos
-
-### Ziel
-
-Von einem lokalen Admin-Rechner aus sollen Host-Konfiguration, Diagnose und
-gezielte Redeploys möglich sein, ohne den GitHub-Workflow zu ersetzen.
-
-### Voraussetzungen lokal
-
-- `.env` mit allen App-Secrets
-- `config/master.key`
-- `~/.ssh/stgt-live-hetzner-admin` für Ansible und Admin-Zugriff
-- `~/.ssh/stgt-live-hetzner-github` für Kamal-Deploys
-- `KAMAL_REGISTRY_PULL_PASSWORD` in `.env`
-
-### Host lokal konfigurieren
-
-Für Docker, PostgreSQL, Firewall und Backups:
+1. Änderungen durchlaufen PR-Prüfungen und nach dem Merge erneut die vollständige
+   Main-CI. Ein erfolgreicher Main-Lauf startet `Deploy Staging` automatisch.
+2. Staging baut den geprüften Commit einmal und veröffentlicht ihn in GHCR.
+   Echte nginx-HTTP-Tests laufen vor Bereitstellung der Staging-Secrets. Nach dem
+   Deploy werden laufende Web-/Job-Versionen, HTTPS, Login und Medien geprüft.
+3. Die Kompatibilitätsprobe testet die konkrete Kombination mit dem anderen
+   Staging-Projekt und mit dessen tatsächlich produktiver Version. Dafür werden
+   nur das Schema des produktiven Peers und erneut maskierte Staging-Daten in
+   einer kurzlebigen isolierten Docker-Umgebung verwendet.
+4. Erst nach Erfolg entsteht das Artefakt `staging-release`. Es bindet unter
+   anderem Commit, Image-Digest, CI-Lauf, Konfiguration und geprüfte Peer-Versionen.
+   Die Aufbewahrung beträgt derzeit **14 Tage**.
+5. Erfolgreiches Staging startet `Deploy Production` automatisch. Die Vorbereitung
+   zeigt die aktuelle Produktion, den Kandidaten, den Versionsvergleich und die
+   zugehörigen PRs. Anschließend wartet der Job auf **Review deployments** für
+   `production`. Im Normalfall muss niemand eine Run-ID kopieren.
+6. Marc (`marcbey`) oder Katharina Schopper (`kasch0`) prüft die Änderungen und
+   Staging und gibt den Job frei. Eine Freigabe reicht. Beide haben Schreibzugriff,
+   sind erforderliche Environment-Reviewer und dürfen auch eigene Läufe freigeben.
+   Administratoren dürfen den Schutz nicht umgehen; das Ziel ist auf `main` beschränkt.
+7. Produktion übernimmt exakt das geprüfte Image ohne Neubau. Vor der Mutation
+   werden Nachweis, Konfiguration, Digest und der aktuelle Produktions-Peer erneut
+   geprüft. Der eigene Produktionsstand muss noch der zuvor gezeigten Basis
+   entsprechen; sonst ist eine neue Vorbereitung nötig.
+
+Neuere erfolgreiche Staging-Läufe ersetzen ältere noch wartende automatische
+Produktionsfreigaben. Es wird keine Warteschlange aller ausgelassenen Releases
+auf Produktion nachgeholt: Die neue Version enthält die Änderungen seit dem
+bisherigen Produktionsstand. Laufende Deployments und manuelle Rollback-Anfragen
+werden dabei nicht automatisch abgebrochen. Wartende Freigaben halten keine
+Host-Sperre und blockieren Staging oder das andere Repository nicht.
+
+Eine reguläre Freigabe verlangt den neuesten erfolgreichen Staging-Nachweis und
+dessen weiterhin laufendes Staging-Image. Hat sich der produktive Peer geändert,
+muss ein frischer Kompatibilitätsnachweis erstellt werden. Fehlende, abgelaufene
+oder veränderte Nachweise führen zum Abbruch.
+
+## Manueller Rollback
+
+Im jeweiligen Repository unter **Actions → Deploy Production → Run workflow**
+Branch `main`, Modus `rollback` und die `staging_run_id` der gewünschten früheren
+Version wählen. Die ID steht in der URL ihres erfolgreichen **Deploy Staging**-Laufs
+(`actions/runs/…`), nicht im PR oder in der Commit-SHA. Dasselbe per CLI:
 
 ```bash
-script/ansible_app_host_production
+gh workflow run deploy-production.yml --ref main -f mode=rollback -f staging_run_id=RUN_ID
 ```
 
-Das Skript liest `DB_PASSWORD` direkt aus `.env` und ruft `app_host.yml`
-mit dem gehärteten `admin`-Benutzer auf.
-
-### Kamal lokal verwenden
-
-Für Diagnose und Admin-Zugriff:
-
-```bash
-bin/kamal logs -d hetzner
-bin/kamal console -d hetzner
-bin/kamal shell -d hetzner
-bin/kamal app exec -d hetzner "bin/rails db:prepare"
-```
-
-### Lokaler Redeploy eines vorhandenen Images
-
-Wenn das Ziel-Image bereits in `ghcr.io` existiert, kann es lokal erneut
-ausgerollt werden:
-
-```bash
-bin/kamal deploy -d hetzner --skip_push
-```
-
-Wichtig:
-
-- Das funktioniert nur für Images, die bereits in `ghcr.io` vorhanden sind.
-- Bei uncommitteten lokalen Änderungen erwartet Kamal einen lokalen
-  `_uncommitted_...`-Tag, der in der Registry normalerweise nicht existiert.
-
-### Was lokal bewusst nicht der Standardpfad ist
-
-Ein vollständiger lokaler `build + push + deploy` ist im aktuellen Setup nicht
-der Standard, weil:
-
-- GitHub den Build-Push mit `github.token` übernimmt
-- der lokale Registry-Token bewusst nur Pull-Rechte hat
-
-Für den normalen Produktionspfad ist deshalb vorgesehen:
-
-- Push auf `main`
-- GitHub baut das Image
-- GitHub pusht nach `ghcr.io`
-- GitHub deployt per Kamal auf Hetzner
-
-### Registry-Strategie
-
-Empfehlung:
-
-- `ghcr.io`
-
-Gründe:
-
-- passt natürlich zu GitHub Actions
-- keine zusätzliche Registry-Infrastruktur im Projekt
-- einfacher Build-und-Push-Ablauf
-
-### GitHub-Schutzmechanismen
-
-Empfohlen für das Environment `production`:
-
-- Required reviewers
-- geschützte Branches
-- Deploy nur von `main`
-- klare Trennung von `CI` und `Deploy`
-
-## Migrationsplan in Phasen
-
-### Phase 1: Architektur festziehen
-
-Ergebnis:
-
-- Zielarchitektur beschlossen
-- Hetzner als einziger Produktionspfad
-- klare Trennung zwischen Infra und App-Deploy
-
-Arbeitspakete:
-
-- Hetzner-Ressourcenliste finalisieren
-- Registry-Entscheidung auf `ghcr.io`
-- Namensschema für Server, Firewall und Volumes festlegen
-
-### Phase 2: Terraform für Hetzner aufsetzen
-
-Ergebnis:
-
-- neuer Hetzner-Terraform-Stack vorhanden
-
-Arbeitspakete:
-
-- `infra/terraform/hetzner` anlegen
-- Provider und Module aufsetzen
-- Variablen und Outputs definieren
-- State-Backend festlegen
-- `terraform.tfvars.example` schreiben
-
-Abnahmekriterium:
-
-- neuer Server kann in leerem Hetzner-Konto per `terraform apply` erstellt werden
-
-### Phase 3: Ansible für Host-Konfiguration aufsetzen
-
-Ergebnis:
-
-- frisch provisionierter Host wird deterministisch konfiguriert
-
-Arbeitspakete:
-
-- Inventarstruktur anlegen
-- Rollen für `base`, `docker`, `postgres`, `firewall`, `backups` erstellen
-- DB-Rollen und Datenbanken automatisieren
-- Cronjobs fuer Backups anlegen
-
-Abnahmekriterium:
-
-- ein nackter Ubuntu-Host ist nach `ansible-playbook` deploybereit
-
-### Phase 4: Kamal auf Hetzner umstellen
-
-Ergebnis:
-
-- separater Hetzner-Deploypfad vorhanden
-
-Arbeitspakete:
-
-- `config/deploy.hetzner.yml` anlegen
-- `.kamal/secrets.hetzner.example` anlegen
-- Production-Konfiguration für lokalen Storage vorbereiten
-- SSL-Settings aktivieren
-
-Abnahmekriterium:
-
-- `bin/kamal setup -c config/deploy.hetzner.yml` funktioniert gegen den neuen Host
-
-### Phase 5: GitHub Deploy-Workflow aufsetzen
-
-Ergebnis:
-
-- App-Deploy läuft automatisiert über GitHub
-
-Arbeitspakete:
-
-- `deploy-production.yml` anlegen
-- GitHub Environment `production` konfigurieren
-- GHCR-Login und SSH-Key-Handling einbauen
-- Kamal-Deploy aus GitHub testen
-
-Abnahmekriterium:
-
-- Merge nach `main` kann erfolgreich auf Hetzner deployen
-
-### Phase 6: Produktivschaltung
-
-Ergebnis:
-
-- Hetzner wird produktiver Deploy-Zielpfad
-
-Arbeitspakete:
-
-- DNS auf Hetzner-IP zeigen lassen
-- HTTPS testen
-- `/up` Healthcheck testen
-- Uploads testen
-- Job-Ausführung über Solid Queue testen
-- Restore-Test für DB-Backup durchführen
-
-Abnahmekriterium:
-
-- App ist über Produktionsdomain erreichbar und Wiederherstellung wurde getestet
-
-## Betriebs- und Recovery-Plan
-
-### Regelmäßige Betriebsaufgaben
-
-- Hetzner-Backups überwachen
-- tägliche `pg_dump`-Backups prüfen
-- freien Plattenplatz prüfen
-- Docker-Image- und Container-Cleanup
-- regelmäßige Paket-Updates über Ansible
-
-### Recovery-Ziele
-
-Im Desasterfall muss Folgendes reproduzierbar möglich sein:
-
-1. neuen Server per Terraform erzeugen
-2. Server per Ansible konfigurieren
-3. Datenbank aus Backup wiederherstellen
-4. `/rails/storage` aus Sicherung zurückspielen
-5. App per GitHub/Kamal erneut deployen
-6. DNS auf neue IP umstellen, falls nötig
-
-## Offene Entscheidungen
-
-Diese Punkte müssen vor der Umsetzung final festgelegt werden:
-
-- Terraform-State in Terraform Cloud oder S3-kompatiblem Backend
-- exakter SSH-Betriebsnutzer für Kamal
-- ob zusaetzlich ein Hetzner Volume fuer App-Daten verwendet wird
-- wohin `pg_dump`-Backups repliziert werden
-- ob Uploads in V1 sicher lokal bleiben oder früher auf Object Storage wechseln
-
-## Konkrete nächste Schritte
-
-1. Hetzner-Layout unter `infra/terraform/hetzner` anlegen.
-2. Ansible-Grundstruktur unter `infra/ansible` anlegen.
-3. `config/deploy.hetzner.yml` und `.kamal/secrets.hetzner.example` erstellen.
-4. Production für lokalen Storage und SSL vorbereiten.
-5. `deploy-production.yml` für GitHub Actions implementieren.
-6. ersten End-to-End-Test gegen einen frischen Hetzner-Server fahren.
+Der Rollback zeigt ebenfalls den Vergleich zur aktuellen Produktion und wartet
+auf dieselbe Freigabe durch Marc oder Katharina. Er darf einen älteren Nachweis
+verwenden; nur die Prüfungen auf neuesten Lauf und aktuell laufendes Staging-Image
+entfallen. Digest, Konfiguration und aktueller Produktions-Peer bleiben gebunden.
+Bei abgelaufenem Artefakt oder geändertem Peer zuerst einen neuen Nachweis erstellen.
+
+**Ein Code-Rollback setzt weder Datenbankmigrationen noch Inhalte oder Uploads
+zurück.** Der ältere Code muss mit dem heutigen Schema funktionieren. Ein
+Datenbank-Restore ist ein eigener koordinierter Wartungseingriff. Auch der
+DNS-Rückweg beim Domainumzug ist vom App-Rollback getrennt.
+
+## Gemeinsame Sperre und Fehlerbehandlung
+
+Die regulären Deployments beider Anwendungen und Umgebungen sowie der
+Staging-Refresh verwenden `/var/lock/live-deploy/global.lock`. Die Produktionsvorbereitung hält
+sie kurz beim Lesen der Versionen und Ersetzen alter Freigaben; die eigentliche
+Wartezeit auf den Reviewer findet außerhalb der Sperre statt.
+
+Bei abgebrochenen oder fehlgeschlagenen Mutationen bleibt zusätzlich die
+Operationsmarkierung `/var/lock/live-deploy/active-operation` stehen. Sie sperrt
+weitere Vorgänge, bis ein Administrator den tatsächlichen Prozess- und
+Containerzustand geprüft hat. Es gibt keine automatische Freigabe nach Zeitablauf.
+Die [gezielte Wiederaufnahme](docs/operations/domainumzug-und-staging.md#unterbrochene-host-operation-klären)
+beschreibt die Prüfung und Entfernung ausschließlich der bekannten Markierung.
+
+Manuelle Host-/DB-Eingriffe, Ansible und Terraform werden durch diese
+Deploy-Sperre nicht automatisch serialisiert. Sie brauchen ein abgestimmtes
+Wartungsfenster, ausgesetzte konkurrierende Deployments und eine passend gehaltene
+Sperre für betroffene Host-Mutationen. Die Wrapper allein stellen das nicht sicher.
+
+Der gemeinsame Proxy wird bei Deploy-Fehlern nicht automatisch neu gestartet.
+Ein Proxy-Upgrade oder Host-Neustart betrifft alle vier App-Ziele und braucht
+einen separat koordinierten Eingriff. Direkte lokale Kamal-Deploys ersetzen weder
+Sperre noch Produktionsfreigabe oder Kompatibilitätsnachweis.
+
+## Infrastruktur ändern und neu aufbauen
+
+| Werkzeug | Verantwortung | Anleitung |
+| --- | --- | --- |
+| Terraform / Hetzner | VM, IPs, Firewall, SSH-Key-Registrierung, optionale Volumes und Server-Backups | [Hetzner-Stack](infra/terraform/hetzner/README.md) |
+| Ansible | Host-Härtung, Docker, PostgreSQL, Rollen, Backup-Jobs und Staging-Ressourcen | [Host-Konfiguration](infra/ansible/README.md) |
+| Kamal über GitHub Actions | geprüfte App-Images, Container, Routing und Release-Prüfungen | [Deployment](README.md#ci-staging-und-produktionsfreigabe-über-github) |
+| GitHub-Environments | getrennte Secrets und Produktionsfreigaben | [GitHub-Stack und Grenzen](infra/terraform/github/README.md) |
+
+Host-Administration verwendet den Benutzer `admin`, App-Deployments `deploy`.
+Terraform und Ansible laufen nicht als Teil eines App-Deployments. Die Reihenfolge
+für einen neuen Host ist Terraform, Ansible-Bootstrap, Produktionskonfiguration,
+separates Staging-Playbook, eigene Secrets und geprüfte Datenübernahme. Danach
+DB-Rechte und Readiness nachweisen und beide Deploy-Pipelines abnehmen.
+
+Die Terraform-Defaults `cx33`, `ubuntu-24.04` und optionales Zusatzvolume
+beschreiben die Provisionierung, keinen aktuellen Kapazitäts- oder
+Wiederherstellungsnachweis. Das versionierte Inventory ist die Verbindung zum
+bestehenden Host; vor Änderungen immer tatsächlichen Bestand und Terraform-Plan
+vergleichen. Secrets, State-Dateien und private Betriebsnachweise nicht committen.
+
+## Backups, Domainwechsel und verbleibende Nacharbeiten
+
+Ansible konfiguriert tägliche PostgreSQL-Custom-Dumps um 03:15 Uhr unter
+`/var/backups/stuttgart-live` mit sieben Tagen Aufbewahrung, einschließlich der
+Russ-Datenbanken bei aktivierter Russ-Konfiguration. Die zusätzliche
+Dateisicherung ist im versionierten Default mit `backup_storage_enabled: false`
+ausgeschaltet. Ein persistentes Docker-Volume ersetzt kein unabhängiges Backup.
+Server-Backups, aktuelle Dumps, externe Replikation und ein gemeinsamer Restore
+von Datenbanken, Rollen und Medien müssen betrieblich nachgewiesen werden.
+Eine erfolgreiche Wiederherstellungsprobe oder Offsite-Sicherung wird durch die
+Deploy-Pipeline nicht belegt. Auch die Ablage und Sicherung des verwendeten
+Terraform-States muss für den Betrieb separat festgehalten werden.
+
+Beim Domainwechsel bleiben Mail-DNS, Microsoft 365, Mailjet-Verifizierungen,
+VPN und unbekannte Einträge unverändert. Vollständige Vorher-/Nachher-Nachweise,
+gezielte erlaubte Web-DNS-Änderungen und der zeitlich begrenzte WordPress-Rückweg
+stehen im [Runbook](docs/operations/domainumzug-und-staging.md). Domain-/TLS-Modus
+ist eine Production-Environment-Variable und wird nicht durch Staging geändert.
+
+Am 18. Oktober steht Russ auf `PRODUCTION_DOMAIN_MODE=live`; Stuttgart verwendet
+noch `live_preissued`. Dort erst nach bestätigtem Ende der alten IPv6-DNS-Caches
+auf `live` und automatische Zertifikate wechseln. Der Zeitpunkt des mindestens
+72-stündigen WordPress-Rückfallfensters gehört ins private Abnahmeprotokoll.
+Neue Meta-OAuth-Verknüpfungen benötigen später die Umstellung der bisherigen
+Rückrufadresse. WordPress-Abschaltung und die spätere Weiterleitung von
+`www.michaelrussgmbh.de` sind eigene, nicht durch einen App-Deploy erledigte Schritte.
+
+## Erkenntnisse aus den Staging-Korrekturen vom 17./18. Oktober
+
+- **Langsame Seiten:** nginx prüft Basic Auth für jedes Bild und Asset. Für das
+  lange zufällige Staging-Passwort wird SHA-512-crypt verwendet; der zuvor teure
+  Bcrypt-Hash bremste jeden Request. Passwort und Hash müssen weiterhin zusammenpassen.
+- **Leere Bildbereiche:** `MEDIA_PROXY_ENABLED=true` muss auch in Staging gesetzt
+  sein. nginx liefert signierte Medien aus dem getrennten Staging-Volume.
+- **Fehlende Eventbilder nach Datenübernahme:** Die Bereinigung behält öffentliche
+  `import_event_images`, die bestehenden Events gehören; Rohimport-Verweise und
+  verwaiste Zeilen werden entfernt. Medienprüfung und ein Blick auf echte
+  Eventkarten ergänzen den reinen Startseiten-Healthcheck.
+- **Kalte Staging-Seiten:** HTTP-Leseprüfungen erlauben dort bis zu 60 Sekunden;
+  Produktion behält 15 Sekunden. Das ersetzt keine Prüfung der wahrgenommenen
+  Ladezeit und der geladenen Bilder im Browser.
+
+Die ursprünglichen Pläne unter `docs/superpowers/` sind Entscheidungs- und
+Implementierungshistorie. Für heutige Betriebsanweisungen gelten diese Übersicht,
+die READMEs und das Betriebsrunbook.
