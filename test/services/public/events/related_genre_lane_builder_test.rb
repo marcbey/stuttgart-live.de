@@ -178,6 +178,36 @@ class Public::Events::RelatedGenreLaneBuilderTest < ActiveSupport::TestCase
     assert_nil build_builder(event: current_event).call
   end
 
+  test "loads card images only after ranking and limiting related candidates" do
+    current_event = build_lane_event(slug: "related-images-current", artist_name: "Current Event", start_at: 1.day.from_now)
+    current_event.genres = [ @rock_group ]
+    candidates = 12.times.map do |index|
+      build_lane_event(slug: "related-images-#{index}", artist_name: "Related Images #{index}", start_at: (index + 2).days.from_now).tap do |event|
+        event.genres = [ @rock_group ]
+        event.import_event_images.create!(source: "easyticket", image_type: "large", role: "cover", aspect_hint: "landscape", position: 0, image_url: "https://example.invalid/related-#{index}.jpg")
+      end
+    end
+    image_count = 0
+    subscriber = lambda do |notification|
+      payload = notification.payload
+      image_count += payload.fetch(:record_count) if payload[:class_name] == "ImportEventImage"
+    end
+
+    lane = ActiveSupport::Notifications.subscribed(subscriber, "instantiation.active_record") do
+      Public::Events::RelatedGenreLaneBuilder.new(
+        event: current_event,
+        relation: Event.published_live.preload(:import_event_images),
+        limit: 3
+      ).call
+    end
+
+    assert_equal candidates.first(3).map(&:id), lane.events.map(&:id)
+    assert_equal 3, image_count
+    assert lane.events.all? { |event| event.association(:import_event_images).loaded? }
+    assert_equal (0...3).map { |index| "https://example.invalid/related-#{index}.jpg" },
+                 lane.events.map { |event| event.import_event_images.first.image_url }
+  end
+
   private
 
   def build_builder(event:)
