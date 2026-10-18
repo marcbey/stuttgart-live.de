@@ -56,9 +56,7 @@ module Public
         return [] if sub_genre_ids.empty?
 
         base_candidate_relation
-          .joins(:sub_genres)
-          .where(sub_genres: { id: sub_genre_ids })
-          .distinct
+          .where(id: EventSubGenre.where(sub_genre_id: sub_genre_ids).select(:event_id))
           .limit(candidate_limit)
           .to_a
       end
@@ -67,9 +65,7 @@ module Public
         return [] if genre_ids.empty?
 
         base_candidate_relation
-          .joins(:genres)
-          .where(genres: { id: genre_ids })
-          .distinct
+          .where(id: EventGenre.where(genre_id: genre_ids).select(:event_id))
           .limit(candidate_limit)
           .to_a
       end
