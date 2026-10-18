@@ -660,10 +660,11 @@ BULLET=1 bin/rails test
 
 ## Deployment und Betrieb
 
-Produktion läuft auf Hetzner und wird mit Kamal ausgerollt. Im Alltag gibt es zwei Wege:
-
-- automatische Deployments über GitHub Actions nach Pushes auf `main`
-- manuelle Eingriffe von lokal per `bin/kamal ... -d hetzner`
+Produktion läuft auf Hetzner; GitHub Actions steuert die Auslieferung mit Kamal.
+App-Versionen durchlaufen Main-CI, Staging und anschließend die manuelle
+Produktionsfreigabe. Auch Rollbacks verwenden den GitHub-Freigabeablauf. Lokale
+Kamal-Kommandos dienen der Betriebsdiagnose, etwa dem Lesen von Status und Logs.
+Der vollständige Ablauf steht unter „CI, Staging und Produktionsfreigabe über GitHub“.
 
 Zusätzlich gibt es einen GitHub-Actions-Workflow für kleine automatisierte Bugfixes aus Issues: Wenn ein GitHub-Issue das Label `codex-fix` erhält, rendert der Workflow aus Titel und Beschreibung einen Codex-Prompt, lässt Codex den kleinstmöglichen Fix im Repository umsetzen, führt danach `bin/ci` aus und eröffnet nur bei erfolgreicher Verifikation automatisch einen Pull Request gegen den Default-Branch. Die PR-Beschreibung verlinkt das auslösende Issue und übernimmt Codex' abschließende Erklärung zu Problem und Lösung. Dafür müssen im Repository das Secret `OPENAI_API_KEY` sowie die GitHub-Einstellung zum Erstellen von Pull Requests durch Actions aktiviert sein.
 
@@ -681,14 +682,20 @@ Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=
 
 Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bleibt der Eigentümer der fachlichen Produktionsdatenbank und des Docker-Volumes `stuttgart_live_de_storage`. Weitere Apps wie `russ-live.de` dürfen diese Primärdatenbank nur mit einem separaten read-only PostgreSQL-Benutzer lesen und dasselbe Storage-Volume mounten. Queue, Cache und Cable bleiben je App getrennt, damit Worker und Laufzeitdaten nicht zwischen Projekten kollidieren.
 
-Die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml).
+Die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](config/deploy.hetzner.shared.yml).
 Das öffentliche Hostprofil wird über `PRODUCTION_DOMAIN_MODE` im GitHub-Environment `production` gewählt; die endgültige Zieladresse ist `https://stuttgart-live.de`. Kamal setzt `APP_HOST` zur Laufzeit in den Produktions-Container.
 
 ### Staging und Suchindex
 
-Das bisherige Hetzner-Produktionsziel `https://stuttgart-live.schopp3r.de/` behält bis zur Domainumschaltung `STAGING_NOINDEX=true`. Das getrennte Staging liegt unter `https://staging.stuttgart-live.de/` und erzwingt zusätzlich Basic Auth. `nginx` setzt dadurch global den Header `X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien und den Healthcheck `/up`. `robots.txt` wird dafür bewusst nicht gesperrt, damit Google das `noindex` crawlen kann.
+Die getrennte Staging-Umgebung `https://staging.stuttgart-live.de/` erzwingt
+Basic Auth und `STAGING_NOINDEX=true`. nginx setzt dort global den Header
+`X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien
+und den Healthcheck `/up`. Produktion unter der neuen Hauptdomain wird indexiert.
+Stuttgart verwendet während des IPv6-DNS-Übergangs noch `live_preissued`;
+[INFRA.md](INFRA.md#backups-domainwechsel-und-verbleibende-nacharbeiten) beschreibt
+den anschließenden Wechsel auf automatische Zertifikate.
 
-Die Search-Console-Verifizierungsdatei [public/google8f1bf564d79d9e2c.html](/Users/marc/Projects/stuttgart-live.de/public/google8f1bf564d79d9e2c.html) muss nach dem Domainwechsel unter `https://stuttgart-live.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Den Status der bestehenden Domain- oder URL-Präfix-Property separat im zuständigen Google-Konto prüfen. Die öffentliche Produktion bleibt indexierbar; Staging behält Basic Auth und `noindex`.
+Die Search-Console-Verifizierungsdatei [public/google8f1bf564d79d9e2c.html](public/google8f1bf564d79d9e2c.html) muss nach dem Domainwechsel unter `https://stuttgart-live.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Den Status der bestehenden Domain- oder URL-Präfix-Property separat im zuständigen Google-Konto prüfen. Die öffentliche Produktion bleibt indexierbar; Staging behält Basic Auth und `noindex`.
 
 ### Was lokal wichtig ist
 
@@ -724,24 +731,52 @@ GitHub Actions nutzt diese lokale Datei nicht. Der Workflow erzeugt zur Laufzeit
 
 ### CI, Staging und Produktionsfreigabe über GitHub
 
+Die gemeinsame Architektur und die verbleibenden Betriebsnachweise stehen in
+[INFRA.md](INFRA.md); Host-Eingriffe und Domainwechsel im
+[Betriebsrunbook](docs/operations/domainumzug-und-staging.md).
+
 Pull Requests und `main` durchlaufen die vollständigen Prüfungen mit
 `mise exec -- bin/ci`. Ein erfolgreicher Main-Push startet anschließend
 `Deploy Staging`. Der Workflow checkt exakt den geprüften Commit aus, baut ein
 Image mit dessen SHA-Tag und prüft reale nginx-HTTP-Antworten, bevor Staging-Secrets
 bereitgestellt werden. Es gibt keinen `latest`-Tag als Freigabegrundlage.
 
-Produktion wird ausschließlich manuell über `Deploy Production` mit der
-`staging_run_id` eines erfolgreichen Staging-Laufs freigegeben. Der Workflow prüft
-Repository, Main-CI, Artefakt, Konfiguration, aktuellen Registry-Digest und die
-Kompatibilität zum tatsächlich produktiven anderen Projekt. Er verwendet das
-geprüfte Image ohne Neubau. Nach dem Kamal-Pull und nach dem Start müssen Digest
-und laufende Container übereinstimmen. Beide Projekte und Umgebungen teilen sich
-die Host-Sperre; ein Fehler löst keinen gemeinsamen Proxy-Neustart aus.
+Ein erfolgreicher `Deploy Staging` auf `main` startet automatisch
+[`Deploy Production`](https://github.com/marcbey/stuttgart-live.de/actions/workflows/deploy-production.yml).
+Die Vorbereitung prüft den Staging-Nachweis und zeigt in der Laufzusammenfassung
+die aktuelle Produktionsversion, den Kandidaten, den Versionsvergleich und die
+zugehörigen Pull Requests. Danach wartet der Produktionsjob auf **Review
+deployments** für das Environment `production`. Marc (`marcbey`) oder Katharina
+(`kasch0`) kann die Freigabe erteilen; eine der beiden Freigaben reicht aus.
+Beide dürfen auch einen selbst gestarteten Rollback freigeben. Für diesen Ablauf
+brauchen sie Repository-Schreibzugriff und müssen als erforderliche Reviewer im
+Environment eingetragen sein. Administratoren dürfen den Schutz nicht umgehen.
+
+Ändert sich während der Wartezeit der Produktionsstand, muss die Freigabe mit
+aktuellem Versionsvergleich neu vorbereitet werden.
+
+Neuere erfolgreiche Staging-Versionen ersetzen ältere noch wartende automatische
+Produktionsfreigaben. Laufende Deployments werden dabei nicht abgebrochen.
+Wartende Freigaben blockieren weder Staging noch das andere Projekt. Vor dem
+eigentlichen Deploy prüft der Ablauf erneut, ob der freigegebene Stand weiterhin
+aktuell ist; ein inzwischen überholter normaler Freigabelauf wird abgewiesen.
+
+Vorbereitung und Deployment prüfen Repository, Main-CI, Artefakt, Konfiguration,
+aktuellen Registry-Digest und die Kompatibilität zum tatsächlich produktiven
+anderen Projekt. Der Deploy verwendet das geprüfte Image ohne Neubau und den
+bei der Vorbereitung festgelegten Kontrollcode. Nach dem Kamal-Pull und nach dem
+Start müssen Digest und laufende Container übereinstimmen. Beide Projekte und
+Umgebungen teilen sich die Host-Sperre; ein Fehler löst keinen gemeinsamen
+Proxy-Neustart aus.
 
 Die GitHub-Environments `staging` und `production` müssen vor Aktivierung des
-Ablaufs eingerichtet sein. Anwendungsschlüssel und Datenbankpasswörter sind
-getrennt. Für Staging werden ausschließlich diese ausdrücklich benannten Secrets
-verwendet:
+Ablaufs eingerichtet sein. `production` verlangt die oben genannte Freigabe,
+erlaubt Selbstfreigaben und beschränkt Deployments auf `main`. Die Vorbereitung
+nutzt aus `staging` nur den SSH-Key zum Lesen der laufenden Versionen und zum
+geordneten Ersetzen wartender Freigaben; sie erzeugt kein Staging-Deployment und
+erhält keine Produktions-Secrets. Anwendungsschlüssel und Datenbankpasswörter
+sind getrennt. Für Staging-Deployments werden ausschließlich diese ausdrücklich
+benannten Secrets verwendet:
 
 - `STAGING_RAILS_MASTER_KEY` und `STAGING_PEER_RAILS_MASTER_KEY`
 - `STAGING_DB_PASSWORD`
@@ -757,11 +792,19 @@ Sentry ist optional; bei gesetztem `SENTRY_AUTH_TOKEN` werden `SENTRY_ORG` und
 Der Ruby-Pin wird in CI und Deploy über mise gelesen. Domain, Server-IP und
 SSH-Host-Key kommen aus den versionierten Zielprofilen.
 
-Der Nachweis wird 14 Tage als `staging-release` aufbewahrt. Ein abgelaufener,
-fehlender oder inzwischen ersetzter Nachweis wird abgewiesen. Bei einem anderen
-produktiven Peer ist ein neuer Staging-Nachweis erforderlich. Die geprüfte
-Staging-Kombination und der geprüfte Produktions-Peer können unterschiedliche
-Commits haben; dadurch lassen sich die beiden Projekte nacheinander freigeben.
+Der Nachweis wird 14 Tage als `staging-release` aufbewahrt. Fehlende, abgelaufene
+oder nachträglich ersetzte Artefakte werden abgewiesen. Eine reguläre
+Freigabe (`promote`) verlangt zusätzlich den neuesten erfolgreichen Staging-Lauf
+und dessen weiterhin laufendes Staging-Image. Ein ausdrücklich gewählter
+`rollback` darf einen älteren gültigen Nachweis verwenden und überspringt nur
+diese beiden Aktualitätsprüfungen. Image-Digest, Konfiguration und der aktuelle
+Produktions-Peer bleiben auch beim Rollback geprüft. Der gewählte Code muss mit
+dem aktuellen Datenbankschema kompatibel sein; Migrationen werden nicht
+rückgängig gemacht. Bei einem anderen produktiven Peer ist ein neuer
+Staging-Nachweis erforderlich. Die geprüfte Staging-Kombination und der geprüfte
+Produktions-Peer können
+unterschiedliche Commits haben; dadurch lassen sich die beiden Projekte
+nacheinander freigeben.
 
 Beim Domainwechsel wird Russ zuerst vollständig öffentlich abgenommen. Danach
 braucht Stuttgart einen frischen regulären Main-CI-/Staging-Nachweis gegen diese
@@ -791,11 +834,20 @@ Abbruch; der Prüfclient protokolliert die Phase und die Fehlerklasse ohne Nutzd
 
 ### Die wichtigsten Kommandos
 
-Reguläre Produktionsfreigabe nach erfolgreicher Staging-Abnahme:
+Für die reguläre Freigabe den automatisch gestarteten `Deploy Production`-Lauf
+öffnen, die Versionszusammenfassung prüfen und `production` freigeben. Ein
+manueller Rollback wird auf `main` mit der Run-ID des gewünschten erfolgreichen
+[`Deploy Staging`](https://github.com/marcbey/stuttgart-live.de/actions/workflows/deploy-staging.yml)-Laufs gestartet:
 
 ```bash
-gh workflow run deploy-production.yml -f staging_run_id=RUN_ID
+gh workflow run deploy-production.yml --ref main -f staging_run_id=RUN_ID -f mode=rollback
 ```
+
+Alternativ in GitHub Actions **Run workflow** öffnen, Branch `main`,
+`staging_run_id` und Modus `rollback` wählen. Auch dieser Lauf zeigt zuerst die
+Versionen und wartet danach auf dieselbe Produktionsfreigabe. Für eine bewusst
+manuell gestartete reguläre Freigabe `mode=promote` verwenden; dafür gelten die
+Aktualitätsprüfungen des automatischen Ablaufs.
 
 Direkte lokale Deploys sind kein Ersatz für diesen Freigabenachweis. Für das
 initiale Staging-Bootstrap gelten die dokumentierten Betriebsprüfungen; auch dabei
@@ -815,7 +867,7 @@ bin/kamal app logs --since 30m --grep ERROR -d hetzner -r job
 
 Der Produktions-Logpfad für App und Jobs ist bewusst zentral über Docker/Kamal organisiert. Rails schreibt in Production nach `STDOUT`, daher sind `bin/kamal app logs ...` und auf dem Host `docker logs ...` die primären Werkzeuge auch für Import- und LLM-Läufe.
 
-Es gibt in Produktion absichtlich keinen separaten persistenten App-Dateilog unter `log/production.log` oder `log/importers.log`. Wenn später Sentry dazukommt, ergänzt es Fehlererfassung und Alerting, ersetzt aber nicht diese zentralen Laufzeit-Logs.
+Es gibt in Produktion absichtlich keinen separaten persistenten App-Dateilog unter `log/production.log` oder `log/importers.log`. Sentry ergänzt bei konfigurierten Zugangsdaten Fehlererfassung und Alerting; die zentralen Laufzeit-Logs bleiben für die Diagnose erforderlich.
 
 Rails-Konsole, Shell und Tasks im laufenden Container:
 
@@ -944,6 +996,12 @@ Der Task nutzt dieselbe Eventim-Konsolidierung wie der Merge. Im Dry-Run meldet 
 
 ### Produktionsdatenbank aus lokalem Dump wiederherstellen
 
+Dieser Eingriff betrifft auch Russ, das die Stuttgart-Datenbank mitliest.
+Beide Produktions-Apps und alle Deployments für das Wartungsfenster koordinieren;
+Datenbankmutationen unter der gemeinsamen Host-Sperre ausführen. Vor dem
+Wiederanlauf die Russ-Reader-Grants wiederherstellen und beide Apps prüfen.
+Die folgenden Stuttgart-Kommandos allein ersetzen diese Koordination nicht.
+
 Die lokalen Dumps unter `/var/backups/stuttgart-live` werden im PostgreSQL-Custom-Format erstellt. Sie müssen deshalb mit `pg_restore` zurückgespielt werden, nicht mit `psql < dump.sql`. Ein Restore überschreibt produktive Daten und gehört in ein bewusstes Wartungsfenster.
 
 Zuerst auf dem Host prüfen, welche Dumps vorhanden sind. Für einen vollständigen Stand sollten die vier Datenbanken mit demselben Zeitstempel verwendet werden:
@@ -1014,14 +1072,21 @@ Danach die App wieder starten und prüfen:
 bin/hetzner-check
 bin/kamal app start -d hetzner --version <VERSION>
 bin/kamal app logs --since 5m -d hetzner
-curl -I https://stuttgart-live.schopp3r.de
+curl -I https://stuttgart-live.de
 ```
 
 ### Produktionsdatenbank neu aufsetzen
 
+Auch hier gelten die Voraussetzungen des Restore-Abschnitts: Beide
+Produktions-Apps einschließlich Russ koordinieren, konkurrierende Deployments
+für das Wartungsfenster aussetzen und Datenbankmutationen unter der gemeinsamen
+Host-Sperre ausführen. Anschließend Russ-Reader-Grants wiederherstellen und beide
+Apps prüfen. Die folgende Befehlsfolge ist ausschließlich der Stuttgart-Baustein;
+sie ist allein keine vollständige Wiederherstellungsanleitung für den gemeinsamen Host.
+
 Ein vollständiges Neuaufsetzen der Produktionsdatenbanken ist ein Host-Eingriff und darf nicht nur als App-User per `db:setup` erfolgen. Der Datenbankbenutzer der Anwendung hat bewusst kein `CREATEDB`.
 
-Sichere Reihenfolge:
+Stuttgart-Baustein nach Erfüllung dieser Voraussetzungen:
 
 1. App kontrolliert stoppen:
 
@@ -1060,7 +1125,7 @@ bin/kamal app exec -d hetzner -- bin/rails db:schema:load db:seed
 bin/hetzner-check
 bin/kamal app start -d hetzner --version <VERSION>
 bin/kamal app logs --since 5m -d hetzner
-curl -I https://stuttgart-live.schopp3r.de
+curl -I https://stuttgart-live.de
 ```
 
 `bin/rails db:setup` ist für dieses Produktions-Setup nicht der richtige Weg, weil das Kommando Datenbanken anlegen will.
@@ -1077,11 +1142,14 @@ Für die meisten Störungen reicht diese Reihenfolge:
 
 ### Rückkehr zu einem älteren Code-Stand
 
-Dafür ebenfalls einen gültigen Staging-Lauf über `Deploy Production` auswählen.
-Vorher prüfen, dass dessen Code mit dem inzwischen vorhandenen Datenbankschema
-arbeitet und der aktuelle Produktions-Peer im Nachweis enthalten ist. Bei
-abweichendem Schema oder abgelaufenem Artefakt zuerst einen neuen konkreten
-Staging-Nachweis erstellen. Keine Datenbank oder Uploads zurücksetzen.
+Dafür in `Deploy Production` auf `main` den Modus `rollback` und einen weiterhin
+gültigen Staging-Lauf für die gewünschte Version auswählen; das Kommando steht
+oben unter „Die wichtigsten Kommandos“. Vorher prüfen, dass dessen Code mit dem
+inzwischen vorhandenen Datenbankschema arbeitet und der aktuelle Produktions-Peer
+im Nachweis enthalten ist. Die Freigabe durch Marc oder Katharina bleibt
+erforderlich. Bei abweichendem Schema, geändertem Produktions-Peer oder
+abgelaufenem Artefakt zuerst einen neuen konkreten Staging-Nachweis erstellen.
+Ein Code-Rollback setzt weder Datenbank noch Uploads zurück.
 
 Der zeitlich begrenzte Rückweg zum bisherigen WordPress beim Domainwechsel ist
 ein eigener DNS-Rückweg: ausschließlich die gesicherten Web-Einträge
@@ -1133,9 +1201,9 @@ Nach der Vorbereitung lassen sich unter **Backend → Weiterleitungen** (`/backe
 
 Der Benchmark schreibt `tmp/legacy_redirects/benchmark.json`. Er misst den lokalen Resolver getrennt mit vorbereitetem Zustand und mit zurückgesetzten automatischen Zuordnungen innerhalb zurückgerollter Datenbanktransaktionen. Manuelle Regeln bleiben auch bei kalten Stichproben unmittelbar verbindlich. Netzwerk und die reguläre 404-Verarbeitung der App sind ausgeschlossen. Die Ergebnisse belegen keine Produktionslatenz: Die Ziele p95 unter 20 ms für gespeicherte und unter 100 ms für erstmalige Auflösung müssen unter produktionsnaher Last gesondert geprüft werden.
 
-## Getrennte Umgebungen vorbereiten
+## Getrennte Umgebungen betreiben
 
-Das neue Kamal-Ziel `staging` verwendet weiterhin `RAILS_ENV=production`, aber
+Das Kamal-Ziel `staging` verwendet weiterhin `RAILS_ENV=production`, aber
 `APP_ENVIRONMENT=staging`. Datenbanken, PostgreSQL-Rollen, Credentials und das
 Medienvolume sind von Produktion getrennt. Beide Staging-Apps teilen sich nur
 `stuttgart_live_de_staging_storage`; Russ liest ausschließlich die
@@ -1151,9 +1219,9 @@ Das Beispiel `.kamal/secrets.staging.example` liest ausschließlich ausdrücklic
 bereitgestellte Staging-Werte. `bin/hetzner-check --destination staging` lädt
 keine Produktions-`.env` und lehnt `.kamal/secrets-common` für Staging ab. Der bisherige Check verwendet `--destination hetzner`.
 
-Die Staging-Profile sind erst nach Einrichtung der Datenbanken, bereinigten Daten,
-Zugriffsschutz und Deployment-Prüfungen betriebsbereit. Der vollständige Ablauf
-steht im freigegebenen Umzugsplan; vor Abschluss dieser Vorbereitung nicht deployen.
+Die Staging-Umgebungen sind eingerichtet. Bei einem Neuaufbau müssen zuerst
+Datenbanken, bereinigte Daten, Zugriffsschutz und Deployment-Prüfungen vollständig
+vorliegen; der Bereitstellungsablauf steht im gemeinsamen Betriebsrunbook.
 
 Staging versendet E-Mails ausschließlich an das gemeinsame interne Mailpit-Postfach.
 Die Oberfläche ist auf Hetzner nur über `127.0.0.1:8025` erreichbar. Für den lokalen

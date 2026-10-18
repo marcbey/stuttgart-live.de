@@ -1,45 +1,73 @@
-# GitHub Actions Environment mit Terraform
+# GitHub-Environments und Terraform
 
-Dieser Stack verwaltet das GitHub-Environment `production` für `marcbey/stuttgart-live.de`.
+Der Stack verwaltet das Environment `production` und ausgewählte nicht-geheime
+Variablen für `marcbey/stuttgart-live.de`. Staging und das Russ-Repository werden
+durch diesen Stack nicht vollständig eingerichtet. Die gemeinsame Architektur
+steht in [INFRA.md](../../../INFRA.md), die aktuellen Secret-Namen und Handgriffe
+in der [README](../../../README.md#ci-staging-und-produktionsfreigabe-über-github).
 
-Verwaltet wird:
+## Verbindliche Produktionsfreigaben
 
-- GitHub Environment
-- nicht-geheime GitHub-Environment-Variablen
+In **beiden** Repositories gelten für `production`:
 
-## Voraussetzungen
+- erforderliche Reviewer: Marc (`marcbey`) und Katharina Schopper (`kasch0`);
+  eine Freigabe reicht, beide haben Repository-Schreibzugriff;
+- Selbstfreigaben sind erlaubt, Administrator-Bypass ist ausgeschaltet;
+- Deployment-Branch-Policy: ausschließlich Branch `main`.
 
-- `GITHUB_TOKEN` mit ausreichenden Rechten auf das Repository
+Diese Schutzregeln sind derzeit über GitHub gesetzt und werden vom
+Produktionsworkflow geprüft. **Die Terraform-Ressource bildet sie noch nicht ab.**
+Ein `apply` auf das bestehende Environment darf sie nicht entfernen oder ändern.
+Vor jeder Anwendung den Plan einschließlich Environment-Regeln prüfen; bei
+abweichenden Schutzregeln zuerst die Terraform-Konfiguration vervollständigen.
+Nach einer Änderung Reviewer, Selbstfreigabe, Admin-Bypass und Branch-Policy
+explizit in GitHub prüfen. Ein neu angelegtes Environment ist ohne diese Regeln
+nicht produktionsbereit.
 
-## Nutzung
+## Nutzung aus der Repository-Wurzel
 
-```bash
-cd infra/terraform/github/environments/production
-cp terraform.tfvars.example terraform.tfvars
-terraform init
-terraform plan
-terraform apply
-```
-
-Die sensiblen GitHub-Environment-Secrets werden bewusst nicht per Terraform verwaltet.
-Sie werden separat mit `gh secret set` gesetzt, damit sie nicht im Terraform-State landen.
-
-Nicht-geheime Werte wie `SENTRY_ORG` und `SENTRY_PROJECT` werden dagegen bewusst per Terraform verwaltet.
-
-Nicht-geheime Hetzner-Zielwerte wie `APP_HOST`, `KAMAL_WEB_HOST` und `KAMAL_SSH_HOST_KEY`
-kommen aus der versionierten Datei [config/deploy.hetzner.shared.yml](/Users/marc/Projects/stuttgart-live.de/config/deploy.hetzner.shared.yml)
-und werden nicht als GitHub-Environment-Variablen dupliziert.
-
-Dafür gibt es das Skript:
+Voraussetzungen: Terraform `>= 1.8.0` und `GITHUB_TOKEN` mit ausreichenden
+Repository-/Environment-Rechten. State und lokale Variablendateien nicht committen.
 
 ```bash
-script/github_set_production_secrets
+cp infra/terraform/github/environments/production/terraform.tfvars.example \
+  infra/terraform/github/environments/production/terraform.tfvars
+terraform -chdir=infra/terraform/github/environments/production init
+terraform -chdir=infra/terraform/github/environments/production plan
 ```
 
-`.env` muss `DB_PASSWORD` und `KAMAL_REGISTRY_PULL_PASSWORD` enthalten.
-Dieser Token sollte nur `read:packages` für den Host-Pull auf `ghcr.io` haben.
+Erst nach Prüfung der oben genannten Schutzregeln anwenden:
 
-## Wichtige Hinweise
+```bash
+terraform -chdir=infra/terraform/github/environments/production apply
+```
 
-- Terraform verwaltet hier das GitHub-Environment und ausgewählte nicht-geheime Environment-Variablen.
-- GitHub Actions liest die Hetzner-Zieldaten direkt aus der versionierten Repo-Konfiguration.
+Nicht-geheime Werte wie `SENTRY_ORG` und `SENTRY_PROJECT` können hier verwaltet
+werden. Domain, Host-IP und gepinnter SSH-Host-Key kommen aus den versionierten
+[Produktions-](../../../config/deploy.hetzner.shared.yml) und
+[Staging-Profilen](../../../config/deploy.staging.shared.yml). Sie werden nicht
+als zusätzliche Zielkonfiguration in Environment-Variablen gepflegt.
+
+## Secrets getrennt pflegen
+
+Secrets werden separat über GitHub gesetzt, damit sie nicht im Terraform-State
+landen. Das vorhandene Skript ist ein **Bootstrap für Stuttgart-Produktion**,
+kein vollständiges Setup für Russ, Staging oder die temporären TLS-Secrets.
+Es setzt unpräfixierte Produktionsnamen; nicht für Staging verwenden.
+
+Aus der Repository-Wurzel zuerst prüfen:
+
+```bash
+mise exec -- script/github_set_production_secrets --dry-run
+```
+
+Die lokale `.env` benötigt `OPENAI_API_KEY`, `DB_PASSWORD`,
+`KAMAL_REGISTRY_PULL_PASSWORD` und `MEDIA_PROXY_SECRET`; außerdem werden
+`config/master.key` und der private Deploy-SSH-Key gelesen. `OPENAI_API_KEY` wird
+als Repository-Secret gesetzt, die übrigen Deploy-Werte als Environment-Secrets.
+Der Registry-Pull-Token soll nur `read:packages` haben. `SENTRY_AUTH_TOKEN` ist
+optional. Das Skript protokolliert Secret-Namen, keine Werte.
+
+Erst nach Prüfung von Repository und Ziel-Environment ohne `--dry-run` starten.
+Die vollständigen aktuellen Secret-Listen, einschließlich der ausschließlich
+mit `STAGING_` präfixierten Werte, stehen in den READMEs der beiden Anwendungen.

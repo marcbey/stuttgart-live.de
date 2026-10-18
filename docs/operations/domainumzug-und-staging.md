@@ -1,5 +1,11 @@
 # Domainumzug und Staging betreiben
 
+Die aktuelle Architektur steht in [INFRA.md](../../INFRA.md), der tägliche
+Freigabe- und Rollback-Ablauf in der
+[README](../../README.md#ci-staging-und-produktionsfreigabe-über-github).
+Die folgenden Bereitstellungs- und Umzugsschritte sind bei einem Neuaufbau oder
+Domainwechsel relevant; für einen normalen App-Deploy werden sie nicht wiederholt.
+
 Beide Rails-Apps bleiben auf Hetzner `46.225.224.194`. Stuttgart wird unter
 `https://stuttgart-live.de`, Russ unter `https://russ-live.de` veröffentlicht.
 Die jeweilige `www`-Adresse erhält HTTPS und leitet mit Status 308, erhaltenem
@@ -311,11 +317,38 @@ Rückfallfenster und Freigabe durch den Nutzer über den bisherigen Betreiber
 abschalten lassen. Lokale hosts-Zuordnungen und eigene ACME-Reste entfernen,
 Nachweis und verbleibende externe Abhängigkeiten privat dokumentieren.
 
-Im Alltag: grünes `main` → automatisches Staging → inhaltliche Abnahme →
-`gh workflow run deploy-production.yml -f staging_run_id=RUN_ID` im jeweiligen
-Repository. Produktion erhält exakt das auf Staging geprüfte Image. Ein anderes
-produktives Peer-Image braucht einen neuen Kompatibilitätsnachweis. Dabei zählen
-Image-Name, Commit und Digest gemeinsam, auch bei gleichem Commit. Destruktive
+## Veröffentlichungen im Alltag und Code-Rollback
+
+Grünes `main` → automatisches `Deploy Staging` → automatisch vorbereiteter
+`Deploy Production`-Lauf → inhaltliche Abnahme und **Review deployments** durch
+Marc (`marcbey`) oder Katharina Schopper (`kasch0`). Die Zusammenfassung zeigt
+die aktuelle Produktion, den Kandidaten und alle Änderungen dazwischen. Eine
+Run-ID muss für diesen Normalfall nicht mehr kopiert werden.
+
+Ein neuerer erfolgreicher Staging-Lauf ersetzt ältere noch wartende automatische
+Freigaben. Laufende Deployments und manuelle Rollbacks werden nicht automatisch
+abgebrochen; wartende Freigaben blockieren Staging nicht. Der freigegebene
+Produktionsstand muss noch der in der Zusammenfassung gezeigten Basis entsprechen.
+Andernfalls eine neue Vorbereitung und Freigabe durchführen.
+
+Für einen Code-Rollback im jeweiligen Repository **Actions → Deploy Production →
+Run workflow** öffnen, Branch `main`, Modus `rollback` und die Run-ID des
+gewünschten erfolgreichen `Deploy Staging`-Laufs aus dessen URL angeben. Per CLI:
+
+```bash
+gh workflow run deploy-production.yml --ref main -f mode=rollback -f staging_run_id=RUN_ID
+```
+
+Auch der Rollback braucht die Produktionsfreigabe durch Marc oder Katharina.
+Er verwendet das alte geprüfte Image ohne Neubau. Nur die Forderung nach dem
+neuesten Staging-Lauf und dessen aktuell laufendem Staging-Image entfällt;
+Artefakt, Digest, Konfiguration und aktueller Produktions-Peer bleiben geprüft.
+Die Nachweise werden 14 Tage aufbewahrt. Bei abgelaufenem Nachweis oder anderem
+produktivem Peer zuerst einen frischen Nachweis erstellen. Image-Name, Commit
+und Digest zählen gemeinsam, auch bei gleichem Commit.
+
+Ein Code-Rollback setzt keine Datenbankmigrationen, Inhalte oder Medien zurück.
+Der ältere Code muss mit dem aktuellen Schema arbeiten. Destruktive
 Schemaänderungen separat planen; die eigene Migration muss zur noch laufenden
 App passen. Staging-Daten werden nur über einen ausdrücklich gestarteten,
 bereinigten Refresh erneuert und niemals automatisch überschrieben.
