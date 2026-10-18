@@ -794,6 +794,7 @@ module Public
         lane_key: lane_key,
         lane_slug: lane_slug,
         mode: normalized_homepage_lane_render_mode(mode),
+        show_expired_status: params[:show_expired_status] != "false",
         page: lane_page,
         browse_state: @browse_state,
         strict_proxy: helpers.homepage_media_strict_proxy?

@@ -2682,6 +2682,40 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal [ earlier_event.artist_name, middle_event.artist_name, highlighted_event.artist_name ], names.first(3)
   end
 
+  test "homepage hides expired badges without changing tagestipp page pagination" do
+    event = Event.create!(
+      slug: "homepage-expired-today-badge",
+      source_fingerprint: "test::homepage::expired-today-badge",
+      artist_name: "Earlier Today Artist",
+      title: "Earlier Today Tour",
+      start_at: FIXTURE_NOW - 1.hour,
+      venue: "Im Wizemann",
+      city: "Stuttgart",
+      status: "published",
+      published_at: 1.day.ago,
+      source_snapshot: {}
+    )
+
+    get homepage_lane_events_url(lane: "tagestipp", mode: "design_cards")
+
+    assert_response :success
+    assert_select ".design-preview-card-title", text: event.artist_name
+    assert_select ".design-preview-card-status-pill", text: "Abgelaufen", minimum: 1
+
+    get root_url
+
+    assert_response :success
+    assert_select ".design-preview-tagestipp-lane .design-preview-card-title", text: event.artist_name
+    assert_select ".design-preview-tagestipp-lane .design-preview-card-status-pill", text: "Abgelaufen", count: 0
+    lazy_url = Nokogiri::HTML.parse(response.body).at_css(".design-preview-tagestipp-lane")["data-homepage-lane-url-value"]
+
+    get lazy_url, params: { lane: "tagestipp", mode: "design_cards" }
+
+    assert_response :success
+    assert_select ".design-preview-card-title", text: event.artist_name
+    assert_select ".design-preview-card-status-pill", text: "Abgelaufen", count: 0
+  end
+
   test "tagestipp lane stays on today in chronological order" do
     later_today_event = Event.create!(
       slug: "tagestipp-later-today",
