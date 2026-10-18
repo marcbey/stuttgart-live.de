@@ -34,6 +34,30 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
     )
   end
 
+  test "registers selected interest properties before subscribing a confirmed contact" do
+    subscriber = NewsletterSubscriber.create!(email: "new-interest@example.com", source: "homepage", confirmed_at: Time.current)
+    subscriber.newsletter_interests << newsletter_interests(:pop)
+    client = SuccessfulMailjetClient.new
+    registered_properties = %w[stuttgartlive_open_tracking_consent stuttgartlive_click_tracking_consent]
+    client.define_singleton_method(:ensure_contact_property) do |name:, data_type:|
+      raise ArgumentError, "Interests must be boolean properties" unless data_type == "bool"
+
+      registered_properties << name
+    end
+    client.define_singleton_method(:subscribe) do |email:, properties:|
+      raise Newsletter::MailjetClient::Error, "Object properties invalid" unless (properties.keys - registered_properties).empty?
+
+      { "ContactID" => "mailjet-contact-2", "Email" => email }
+    end
+
+    assert_nothing_raised do
+      assert Newsletter::MailjetSync.call(subscriber, client: client)
+    end
+
+    assert_equal NewsletterSubscriber::EXTERNAL_SYNC_STATUS_SYNCED, subscriber.reload.external_sync_status
+    assert_equal "mailjet-contact-2", subscriber.external_contact_id
+  end
+
   test "marks subscriber as failed when mailjet sync raises" do
     subscriber = NewsletterSubscriber.create!(email: "failed@example.com", source: "homepage", confirmed_at: Time.current)
     client = FailingMailjetClient.new
@@ -70,6 +94,7 @@ class Newsletter::MailjetSyncTest < ActiveSupport::TestCase
 
   SuccessfulMailjetClient = Struct.new(:configured?, :requests) do
     def ensure_tracking_properties; end
+    def ensure_contact_property(**); end
 
     def initialize
       super(true, [])
