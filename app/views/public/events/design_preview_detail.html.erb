@@ -301,7 +301,7 @@ end %>
         <div class="design-detail-preview-ticket-action">
           <% if presenter.show_ticket_link? %>
             <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", aria: { describedby: "ticket-handoff-note" }, class: "design-detail-preview-action-button design-detail-preview-action-button--primary event-detail-cta-button" %>
-            <p id="ticket-handoff-note" class="design-detail-preview-ticket-handoff">
+            <p id="ticket-handoff-note" class="sr-only">
               <%= presenter.ticket_provider_label.present? ? "Bei #{presenter.ticket_provider_label}" : "Beim Ticketanbieter" %> · öffnet neuen Tab
             </p>
           <% else %>

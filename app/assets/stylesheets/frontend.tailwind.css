@@ -20181,8 +20181,12 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   :is(body.page-public-events-index, body.page-public-design-preview) .design-preview-content-promotions .promotion-banner-visual {
+    /* Reserve the image height independently of grid aspect-ratio sizing. */
+    width: 100%;
+    height: 0;
     min-height: 0;
-    aspect-ratio: 16 / 9;
+    padding-top: 56.25%;
+    aspect-ratio: auto;
   }
 
   :is(body.page-public-events-index, body.page-public-design-preview) .design-preview-content-promotions .promotion-banner-media {
@@ -21554,15 +21558,6 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   align-content: start;
   gap: 0.35rem;
   min-width: 0;
-}
-
-.design-detail-preview-ticket-handoff {
-  margin: 0;
-  color: var(--preview-muted);
-  font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
-  font-size: 0.82rem;
-  line-height: 1.3;
-  text-align: center;
 }
 
 .design-detail-preview-action-button {
@@ -23006,18 +23001,6 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
     height: 5.4rem;
     background: linear-gradient(180deg, rgba(251, 250, 247, 0), rgba(251, 250, 247, 0.98) 48%, #fbfaf7 100%);
     pointer-events: none;
-  }
-
-  .design-detail-preview-actions:has(.design-detail-preview-ticket-handoff) {
-    border-radius: 1.5rem;
-  }
-
-  .design-detail-preview-ticket-handoff {
-    padding: 0 0.35rem 0.12rem;
-  }
-
-  .design-detail-preview-shell:has(.design-detail-preview-ticket-handoff) .design-preview-footer {
-    padding-bottom: 7.5rem;
   }
 
   .design-detail-preview-tags {
