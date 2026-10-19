@@ -746,8 +746,10 @@ das Image aus demselben CI-Lauf und prüft reale nginx-HTTP-Antworten, bevor
 Staging-Secrets bereitgestellt werden. Pull Requests veröffentlichen kein Image;
 es gibt keinen `latest`-Tag als Freigabegrundlage.
 
-Installierte Gems werden in CI und Staging anhand von Betriebssystem,
-Architektur, Ruby-Version und `Gemfile.lock` wiederverwendet. Docker speichert
+Installierte Gems werden in CI, Staging und beim Produktionsdeploy anhand von
+Betriebssystem, Architektur, Ruby-Version und `Gemfile.lock` wiederverwendet.
+Produktion liest den Cache passend zum festgelegten Kontrollcode und führt
+weiterhin `bundle install` aus. Docker speichert
 zusätzlich die Build-Layer einschließlich der Zwischenstufen im GitHub-Actions-Cache.
 Ein fehlender Cache führt zu einer regulären Neuinstallation beziehungsweise einem
 vollständigen Build. Der erste Lauf füllt die Caches; Laufzeitvergleiche sind erst
@@ -792,6 +794,13 @@ bei der Vorbereitung festgelegten Kontrollcode. Nach dem Kamal-Pull und nach dem
 Start müssen Digest und laufende Container übereinstimmen. Beide Projekte und
 Umgebungen teilen sich die Host-Sperre; ein Fehler löst keinen gemeinsamen
 Proxy-Neustart aus.
+
+Die Produktionsjobs verwenden die vorhandene Buildx-CLI nur zum Prüfen der
+Registry-Manifeste und starten dafür keinen zusätzlichen BuildKit-Container.
+Die abschließende Prüfung aller laufenden App-Rollen bündelt die Docker-Abfragen
+in einer SSH-Verbindung; Image-ID, Digest-Label sowie fehlende oder doppelte
+Rollen werden weiterhin geprüft. Die erforderlichen Prüfungen nach der Freigabe
+bleiben erhalten, damit zwischenzeitliche Änderungen erkannt werden.
 
 Die GitHub-Environments `staging` und `production` müssen vor Aktivierung des
 Ablaufs eingerichtet sein. `production` verlangt die oben genannte Freigabe,
