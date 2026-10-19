@@ -92,7 +92,7 @@ class Public::QueryLoadingTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "img.design-preview-card-image", minimum: 2
-    assert_select ".design-preview-card-series-pill", text: "1 Termin", minimum: 2
+    assert_select ".design-preview-card-series-pill", text: "+ 1 Termin", minimum: 2
     assert_empty queries.grep(/FROM "active_storage_variant_records".*"variation_digest" =/m)
     assert_empty queries.grep(/FROM "active_storage_attachments".*"record_id" =.*LIMIT/m)
     assert_empty queries.grep(/COUNT\(DISTINCT "events"\."id"\).*"event_series_id" =/m)

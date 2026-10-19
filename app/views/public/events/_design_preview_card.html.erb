@@ -88,7 +88,7 @@
                    button_class: "design-preview-card-save" %>
         <% if show_series_pill %>
           <span class="design-preview-card-series-pill" title="Event-Reihe: <%= series_count_label %>">
-            + <%= series_count_label %>
+            <%= "+ " if series_count_label.to_s.match?(/\A\d/) %><%= series_count_label %>
           </span>
         <% end %>
       </span>
