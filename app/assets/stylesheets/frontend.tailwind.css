@@ -1086,6 +1086,13 @@ margin: 2.35rem 0 0.8rem;
   text-wrap: balance;
 }
 
+.trix-content h2,
+.news-detail-copy .trix-content h2,
+.static-page-rich-copy .trix-content h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
 .static-page-rich-copy .trix-content h1:first-child,
 .static-page-rich-copy .trix-content h2:first-child,
 .static-page-rich-copy .trix-content h3:first-child,
@@ -17039,7 +17046,9 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 }
 
 .saved-event-button.design-preview-card-save {
-  position: static;
+  --preview-card-control-size: 1.75rem;
+  position: relative;
+  inset: auto;
   flex: 0 0 auto;
   width: var(--preview-card-control-size);
   height: var(--preview-card-control-size);
@@ -17053,6 +17062,13 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   transform: none;
   backdrop-filter: none;
   pointer-events: auto;
+}
+
+.saved-event-button.design-preview-card-save::after {
+  content: "";
+  position: absolute;
+  inset: calc((100% - 2.75rem) / 2);
+  border-radius: inherit;
 }
 
 .saved-event-button.design-preview-card-save:hover,
@@ -19890,9 +19906,24 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     --preview-startpage-mobile-align-nudge: 0.42rem;
   }
 
+  .homepage-genre-tag-cloud {
+    display: none;
+  }
+
+  .design-preview-card-status-pill {
+    top: auto;
+    bottom: 0.5rem;
+    left: 0.5rem;
+    max-width: calc(100% - 1rem);
+  }
+
+  .design-preview-card:has(.design-preview-card-status-pill) .design-preview-card-series-pill {
+    margin-top: 0;
+  }
+
   body.page-public-design-preview .scroll-top-button {
     right: 1rem;
-    bottom: calc(env(safe-area-inset-bottom) + 5.35rem);
+    bottom: 15px;
   }
 
   .design-preview-hero {
@@ -19905,6 +19936,13 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   body.page-public-startpage .design-preview-highlights .design-preview-section-header {
     padding-left: var(--preview-startpage-mobile-align-nudge);
+    min-height: 2.75rem;
+    margin-bottom: 0.75rem;
+  }
+
+  body.page-public-startpage .design-preview-feature-slider {
+    /* Keep the full banner above expanded mobile browser controls. */
+    height: max(18rem, calc(100svh - var(--feature-page-top, 17rem) - 0.75rem));
   }
 
   .design-preview-saved-dropdown.is-open .design-preview-saved-link svg {
@@ -20178,6 +20216,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   body.page-public-startpage .design-preview-feature-slider .design-preview-banner-card .design-preview-card-copy {
     padding-left: 1.25rem;
+    padding-bottom: 1rem;
   }
 
   .design-preview-feature-slider .design-preview-card-title {
@@ -20523,7 +20562,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-feature-arrows {
     position: absolute;
-    top: -2.55rem;
+    bottom: calc(100% + 0.75rem);
     right: 0;
     z-index: 4;
   }
