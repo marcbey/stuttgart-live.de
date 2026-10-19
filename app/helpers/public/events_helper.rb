@@ -173,7 +173,7 @@ module Public::EventsHelper
     editorial_image&.grid_variant.presence || EventImage::GRID_VARIANT_1X1
   end
 
-  def public_design_highlight_tiles(events, capacity: 8)
+  def public_design_highlight_tiles(events, capacity: 8, columns: DESIGN_HIGHLIGHT_GRID_COLUMNS)
     states = { [ 0, [] ] => [] }
 
     Array(events).each_with_index do |event, source_index|
@@ -182,7 +182,7 @@ module Public::EventsHelper
       next_states = states.dup
 
       states.each do |(mask, _variants), tiles|
-        public_design_highlight_placements(mask, width:, height:, capacity:).each do |placement|
+        public_design_highlight_placements(mask, width:, height:, capacity:, columns:).each do |placement|
           tile = DesignHighlightTile.new(
             event:,
             grid_variant:,
@@ -217,8 +217,7 @@ module Public::EventsHelper
     end
   end
 
-  def public_design_highlight_placements(mask, width:, height:, capacity:)
-    columns = DESIGN_HIGHLIGHT_GRID_COLUMNS
+  def public_design_highlight_placements(mask, width:, height:, capacity:, columns: DESIGN_HIGHLIGHT_GRID_COLUMNS)
     rows = (capacity.to_f / columns).ceil
 
     rows.times.filter_map do |row|

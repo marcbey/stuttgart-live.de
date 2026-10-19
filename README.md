@@ -370,7 +370,9 @@ Beim Nachladen muss derselbe Kartentyp wie in der ersten Reihe verwendet werden 
 
 Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.
 
-Die Startseiten-Highlights passen ihre Auswahl an die Bildschirmbreite an: Zwischen 768 und 1279 Pixeln stehen vier größere Event-Kacheln neben dem Hauptslider, ab 1280 Pixeln erscheint das vollständige Kachelraster. Die zusätzliche Video-Kachel wird erst ab 1536 Pixeln eingeblendet. Auf dem Handy bleibt die horizontal scrollbar angeordnete Event-Reihe erhalten; alle Highlights sind weiterhin über `Alle anzeigen` erreichbar.
+Die Startseiten-Highlights passen ihre Auswahl an die Bildschirmbreite an: Zwischen 768 und 1279 Pixeln stehen vier größere Event-Kacheln neben dem Hauptslider. Auf Laptopbreiten von 1280 bis 1535 Pixeln hat das Kachelraster drei Spalten und rechts daneben die hochkantige Video-Kachel. Dafür werden weniger Events gezeigt; breite und hohe Bildformate bleiben erhalten. Slider, Kacheln und Video wachsen dort gemeinsam bis knapp an den unteren Rand des anfangs sichtbaren Browserfensters. Ab 1536 Pixeln erscheint das vollständige Raster mit vier Spalten und Video. Auf dem Handy bleibt die horizontal scrollbar angeordnete Event-Reihe erhalten. Zur vollständigen Übersicht führen die Überschrift `Unsere Highlights` und der Link `Alle Highlights anzeigen`, der mobil unter den Highlight-Kacheln steht.
+
+Mobil bleibt die Seite im Hintergrund stehen, solange Menü, Suche oder Merkliste geöffnet sind. Längere Inhalte lassen sich innerhalb des geöffneten Bereichs scrollen. Nach dem Schließen bleibt die vorherige Seitenposition erhalten.
 
 ### Kennzahlen in "Importer Jobs"
 

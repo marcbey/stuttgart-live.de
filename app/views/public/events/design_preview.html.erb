@@ -28,6 +28,8 @@
 <% design_preview_video_slide_enabled = false %>
 <% feature_slide_count = (feature_promotion_banners.presence&.size || [ highlights.size, 6 ].min) + (design_preview_video_slide_enabled ? 1 : 0) %>
 <% highlight_tiles = public_design_highlight_tiles(highlight_events, capacity: 8) %>
+<% laptop_highlight_events = highlight_tiles.reject { |tile| tile.column > 3 }.map(&:event) %>
+<% laptop_highlight_tiles_by_event_id = public_design_highlight_tiles(laptop_highlight_events, capacity: 6, columns: 3).index_by { |tile| tile.event.id } %>
 <% today_events = Array(@home_tagestipp_events) %>
 <% if @browse_state.event_date.present? %>
   <% today_events = today_events.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
@@ -276,9 +278,9 @@
              <% if @home_featured_next_cursor.present? %>data-homepage-lane-cursor-value="<%= @home_featured_next_cursor %>"<% end %>
              <% if @home_featured_list_next_cursor.present? %>data-homepage-lane-list-cursor-value="<%= @home_featured_list_next_cursor %>"<% end %>>
       <div class="design-preview-section-header">
-        <h2 id="design-preview-highlights-title">Unsere Highlights</h2>
+        <h2 id="design-preview-highlights-title"><%= link_to "Unsere Highlights", highlights_lane_path %></h2>
         <%= link_to highlights_lane_path, class: "design-preview-section-link" do %>
-          Alle anzeigen
+          Alle Highlights anzeigen
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M5 12h13"></path>
             <path d="m13 6 6 6-6 6"></path>
@@ -386,13 +388,6 @@
                 </button>
               </div>
             <% end %>
-            <%= link_to highlights_lane_path, class: "design-preview-section-link design-preview-feature-all-link" do %>
-              Alle anzeigen
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M5 12h13"></path>
-                <path d="m13 6 6 6-6 6"></path>
-              </svg>
-            <% end %>
           </div>
         </div>
 
@@ -418,6 +413,14 @@
             <% highlight_tiles.each do |tile| %>
               <% card_slot = card_slot_for_grid_variant(tile.grid_variant) %>
               <% tile_width, tile_height = public_design_grid_variant_dimensions(tile.grid_variant) %>
+              <% laptop_tile = laptop_highlight_tiles_by_event_id[tile.event.id] %>
+              <% card_style = [
+                "--highlight-column: #{tile.column} / span #{tile_width}",
+                "--highlight-row: #{tile.row} / span #{tile_height}",
+                "--highlight-laptop-display: #{laptop_tile ? 'block' : 'none'}",
+                ("--highlight-laptop-column: #{laptop_tile.column} / span #{tile_width}" if laptop_tile),
+                ("--highlight-laptop-row: #{laptop_tile.row} / span #{tile_height}" if laptop_tile)
+              ].compact.join("; ") %>
               <%= render "design_preview_card",
                          event: tile.event,
                          browse_state: @browse_state,
@@ -428,7 +431,7 @@
                          effective_series_ids: design_preview_effective_series_ids,
                          series_counts_by_id: design_preview_series_counts_by_id,
                          show_admin_edit: true,
-                         card_style: "grid-column: #{tile.column} / span #{tile_width}; grid-row: #{tile.row} / span #{tile_height}" %>
+                         card_style: card_style %>
             <% end %>
           </div>
         <% else %>
@@ -454,6 +457,13 @@
                    fallback_poster: asset_path("design_preview/lea-portrait-poster.jpg") %>
       </div>
 
+      <%= link_to highlights_lane_path, class: "design-preview-section-link design-preview-highlights-all-link" do %>
+        Alle Highlights anzeigen
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M5 12h13"></path>
+          <path d="m13 6 6 6-6 6"></path>
+        </svg>
+      <% end %>
     </section>
   <% end %>
 

@@ -106,7 +106,9 @@ export default class extends Controller {
 
     this.updateViewportOffset = () => {
       const top = this.element.getBoundingClientRect().top + window.scrollY
-      this.element.style.setProperty("--feature-page-top", `${Math.ceil(top)}px`)
+      const offset = `${Math.ceil(top)}px`
+      this.element.style.setProperty("--feature-page-top", offset)
+      this.element.closest(".design-preview-highlight-grid")?.style.setProperty("--feature-page-top", offset)
     }
     this.layoutObserver = new ResizeObserver(this.updateViewportOffset)
     document.querySelectorAll(".design-preview-hero, .design-preview-topbar, .design-preview-highlights .design-preview-section-header").forEach((element) => {
