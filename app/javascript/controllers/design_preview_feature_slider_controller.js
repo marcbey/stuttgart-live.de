@@ -8,6 +8,7 @@ export default class extends Controller {
   }
 
   connect() {
+    this.observeViewportOffset()
     this.userPaused = this.userPaused || false
     this.hovered = false
     this.focused = false
@@ -73,6 +74,8 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.layoutObserver?.disconnect()
+    window.removeEventListener("resize", this.updateViewportOffset)
     this.stop()
     if (!this.hasTrackTarget) return
 
@@ -96,6 +99,21 @@ export default class extends Controller {
     return Array.from(this.trackTarget.children).filter((slide) => (
       slide instanceof HTMLElement && slide.dataset.designPreviewClone !== "true"
     ))
+  }
+
+  observeViewportOffset() {
+    if (!document.body.classList.contains("page-public-startpage")) return
+
+    this.updateViewportOffset = () => {
+      const top = this.element.getBoundingClientRect().top + window.scrollY
+      this.element.style.setProperty("--feature-page-top", `${Math.ceil(top)}px`)
+    }
+    this.layoutObserver = new ResizeObserver(this.updateViewportOffset)
+    document.querySelectorAll(".design-preview-hero, .design-preview-topbar, .design-preview-highlights .design-preview-section-header").forEach((element) => {
+      this.layoutObserver.observe(element)
+    })
+    window.addEventListener("resize", this.updateViewportOffset)
+    this.updateViewportOffset()
   }
 
   start() {

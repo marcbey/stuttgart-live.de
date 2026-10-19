@@ -49,11 +49,10 @@
       <% else %>
         <span class="design-preview-card-image design-preview-card-image--placeholder"></span>
       <% end %>
+      <% if status_pill_label.present? && body_status_label.blank? %>
+        <span class="design-preview-card-status-pill<%= " design-preview-card-status-pill--alert" if %w[Abgesagt Ausverkauft].any? { |label| status_pill_label.to_s.casecmp(label).zero? } %>"><%= status_pill_label %></span>
+      <% end %>
     </span>
-
-    <% if status_pill_label.present? && body_status_label.blank? %>
-      <span class="design-preview-card-status-pill<%= " design-preview-card-status-pill--alert" if %w[Abgesagt Ausverkauft].any? { |label| status_pill_label.to_s.casecmp(label).zero? } %>"><%= status_pill_label %></span>
-    <% end %>
 
     <span class="design-preview-card-copy">
       <% if show_card_kicker %>
@@ -89,7 +88,7 @@
                    button_class: "design-preview-card-save" %>
         <% if show_series_pill %>
           <span class="design-preview-card-series-pill" title="Event-Reihe: <%= series_count_label %>">
-            <%= series_count_label %>
+            + <%= series_count_label %>
           </span>
         <% end %>
       </span>
