@@ -654,6 +654,16 @@ bin/ci
 
 `bin/ci` bündelt Setup, Linting, Security-Checks und Tests. Die Rails-Tests laufen dort mit aktiviertem Bullet, damit N+1-Queries den Lauf fehlschlagen lassen. Vor einem Push sollte dieser Lauf grün sein.
 
+Für reine Designänderungen auf Kathis lokalem Rechner ohne Docker gibt es einen ausdrücklich gewählten Prüfmodus:
+
+```bash
+LOCAL_DESIGN_CHECKS=1 mise exec -- bundle exec bin/ci
+```
+
+Dieser Modus lässt nur die drei Infrastruktur-Testdateien `test/lib/hetzner_check_test.rb`, `test/lib/compatibility_copy_test.rb` und `test/services/staging/data_sanitizer_test.rb` aus. Alle übrigen Rails-Tests mit Bullet, Setup, Linting, Sicherheitsprüfungen und Seed-Prüfung bleiben aktiv. Die ausgelassenen Dateien werden im Protokoll genannt. Für Änderungen an Infrastruktur oder Datenübernahme ist weiterhin der vollständige Prüflauf nötig.
+
+Ohne diese Variable bleibt `bin/ci` vollständig. In GitHub Actions beziehungsweise bei gesetztem `CI` wird der lokale Modus abgewiesen; dort bleiben auch die Infrastrukturtests verpflichtend.
+
 Wenn du Bullet lokal gezielt im Testlauf aktivieren willst:
 
 ```bash
