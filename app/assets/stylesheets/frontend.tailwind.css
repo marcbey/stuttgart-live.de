@@ -15814,7 +15814,10 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   gap: 0.45rem;
 }
 
-.design-preview-feature-all-link {
+.design-preview-highlights-all-link {
+  display: flex;
+  width: fit-content;
+  min-height: 2.75rem;
   margin-left: auto;
 }
 
@@ -15913,6 +15916,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 .design-preview-card-link {
   position: relative;
   display: grid;
+  align-content: start;
   min-height: 100%;
   overflow: hidden;
   border: 0;
@@ -15926,6 +15930,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 .design-preview-card--poster .design-preview-card-link,
 .design-preview-card--format .design-preview-card-link,
 .design-preview-banner-card .design-preview-card-link {
+  align-content: stretch;
   overflow: hidden;
   border: 1px solid rgba(8, 9, 9, 0.11);
   border-radius: 0.5rem;
@@ -16195,6 +16200,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 
 .design-preview-card-copy {
   display: grid;
+  align-content: start;
   gap: 0.25rem;
   padding: 0.85rem;
 }
@@ -16985,7 +16991,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
     display: inline-flex;
   }
 
-  .design-preview-feature-all-link {
+  .design-preview-highlights-all-link {
     display: none;
   }
 }
@@ -19383,6 +19389,11 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     grid-auto-rows: minmax(0, 1fr);
   }
 
+  .design-preview-format-grid > .design-preview-card {
+    grid-column: var(--highlight-column, auto);
+    grid-row: var(--highlight-row, auto);
+  }
+
   .design-preview-card--format .design-preview-card-media {
     aspect-ratio: auto;
   }
@@ -19906,6 +19917,28 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     --preview-startpage-mobile-align-nudge: 0.42rem;
   }
 
+  html:has(body.page-public-design-preview :is(.design-preview-menu-panel, .design-preview-saved-panel, .public-search-overlay, .public-search-calendar-overlay):not([hidden])),
+  body.page-public-design-preview:has(:is(.design-preview-menu-panel, .design-preview-saved-panel, .public-search-overlay, .public-search-calendar-overlay):not([hidden])) {
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body.page-public-design-preview :is(.design-preview-menu-panel, .design-preview-saved-panel, .public-search-overlay) {
+    max-height: calc(100dvh - 5.3rem);
+    overscroll-behavior: contain;
+  }
+
+  body.page-public-design-preview .design-preview-mobile-toolbar .public-search-overlay-list {
+    max-height: 100%;
+    overscroll-behavior: contain;
+  }
+
+  body.page-public-design-preview .design-preview-mobile-toolbar .public-search-calendar-overlay {
+    max-height: calc(100dvh - 10.1rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
   .homepage-genre-tag-cloud {
     display: none;
   }
@@ -19913,8 +19946,14 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   .design-preview-card-status-pill {
     top: auto;
     bottom: 0.5rem;
-    left: 0.5rem;
+    left: 50%;
     max-width: calc(100% - 1rem);
+    padding: 0.16rem 0.42rem;
+    border-width: 0.5px;
+    border-color: rgba(255, 255, 255, 0.45);
+    font-size: 0.75rem;
+    box-shadow: 0 0.15rem 0.4rem rgba(8, 9, 9, 0.12);
+    transform: translateX(-50%);
   }
 
   .design-preview-card:has(.design-preview-card-status-pill) .design-preview-card-series-pill {
@@ -19930,6 +19969,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     padding-bottom: 1.15rem;
   }
 
+  body.page-public-startpage .design-preview-start-logo-title {
+    translate: 0 calc(0.5rem * (1 - var(--design-preview-logo-progress, 0)));
+  }
+
   .design-preview-highlights {
     padding-top: 0.95rem;
   }
@@ -19938,6 +19981,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     padding-left: var(--preview-startpage-mobile-align-nudge);
     min-height: 2.75rem;
     margin-bottom: 0.75rem;
+  }
+
+  body.page-public-startpage #design-preview-highlights-title {
+    transform: translateY(0.275rem);
   }
 
   body.page-public-startpage .design-preview-feature-slider {
@@ -20434,7 +20481,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-section:not(.design-preview-highlights) .design-preview-card-row .design-preview-card-media,
   .design-preview-section--genre-lane .design-preview-wide-grid .design-preview-card-media {
-    aspect-ratio: 1 / 0.9;
+    aspect-ratio: 1 / 1.15;
     border-radius: 0.5rem;
   }
 
@@ -20568,9 +20615,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-feature-nav {
-    min-height: 2.2rem;
-    margin-top: 0.55rem;
-    justify-content: flex-end;
+    display: contents;
   }
 
   .design-preview-list-page > .design-preview-tagestipp-lane {
@@ -20711,7 +20756,25 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 }
 
-@media (min-width: 96rem) {
+@media (min-width: 80rem) and (max-width: 95.999rem) {
+  body.page-public-startpage .design-preview-highlight-grid--with-video {
+    width: 100%;
+    min-width: 0;
+    min-height: calc(100svh - var(--feature-page-top, 26rem) - 0.75rem);
+  }
+
+  .design-preview-highlight-grid--with-video .design-preview-format-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .design-preview-highlight-grid--with-video .design-preview-format-grid > .design-preview-card {
+    display: var(--highlight-laptop-display, block);
+    grid-column: var(--highlight-laptop-column, auto);
+    grid-row: var(--highlight-laptop-row, auto);
+  }
+}
+
+@media (min-width: 80rem) {
   .design-preview-highlight-grid--with-video {
     aspect-ratio: 3.42 / 1;
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.78fr) minmax(12.8rem, 0.62fr);
@@ -23388,7 +23451,7 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
   font-size: 0.875rem;
   font-weight: 400;
   line-height: 1.2;
-  text-align: right;
+  text-align: left;
 }
 
 .design-detail-preview-related .design-preview-card-price--status {
@@ -23406,13 +23469,13 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
 
 .design-preview-list-card-grid .design-preview-card-price--body {
   margin-top: 0.5rem;
-  text-align: right;
+  text-align: left;
 }
 
 .design-preview .design-preview-lane :where(.design-preview-card--compact, .design-preview-card--wide) .design-preview-card-price--body {
   display: block;
   margin-top: 0.55rem;
-  text-align: right;
+  text-align: left;
 }
 
 .design-preview .design-preview-lane :where(.design-preview-card--compact, .design-preview-card--wide).design-preview-card--has-actions .design-preview-card-copy {
@@ -23421,9 +23484,28 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
   padding-left: 0.35rem;
 }
 
+.design-detail-preview-related .design-preview-card-copy .design-preview-card-kicker,
+.design-detail-preview-related .design-preview-card-title,
+.design-detail-preview-related .design-preview-card-subtitle,
+.design-detail-preview-related .design-preview-card-meta {
+  max-width: calc(100% - var(--preview-card-control-size) - 1rem);
+}
+
+.design-detail-preview-related .design-preview-card-copy .design-preview-card-price--body {
+  margin-top: 0.15rem;
+  margin-bottom: 0.35rem;
+}
+
 @media (min-width: 48rem) {
   .page-public-design-preview .design-detail-preview-related .design-preview-card-row {
     grid-auto-rows: minmax(6.75rem, auto);
+  }
+
+  .design-detail-preview-related .design-preview-card-actions {
+    top: 0.52rem;
+    right: 0.52rem;
+    bottom: auto;
+    left: auto;
   }
 
   .design-preview :where(.design-preview-card--compact, .design-preview-card--wide) .design-preview-card-date-location-row,
