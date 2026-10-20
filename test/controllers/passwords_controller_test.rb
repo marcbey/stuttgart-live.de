@@ -15,6 +15,11 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   test "new" do
     get new_password_path
     assert_response :success
+    assert_select "script[src*='/backend'][type='module']", count: 1
+    assert_select "script[src*='/public'][type='module']", count: 0
+    assert_select "link[rel='stylesheet'][href*='/backend']", count: 1
+    assert_select "body[data-controller~='consent']", count: 0
+    assert_select ".consent-banner, .consent-dialog-backdrop", count: 0
     assert_select "body.page-auth-backoffice"
     assert_select ".app-nav-inner.app-nav-inner-backend.app-nav-inner-auth-backoffice", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Login"
@@ -55,6 +60,11 @@ class PasswordsControllerTest < ActionDispatch::IntegrationTest
   test "edit" do
     get edit_password_path(@user.password_reset_token)
     assert_response :success
+    assert_select "script[src*='/backend'][type='module']", count: 1
+    assert_select "script[src*='/public'][type='module']", count: 0
+    assert_select "link[rel='stylesheet'][href*='/backend']", count: 1
+    assert_select "body.page-auth-backoffice", count: 1
+    assert_select "meta[name='web-vitals-route'], .consent-banner, .consent-dialog-backdrop", count: 0
   end
 
   test "edit with invalid password reset token" do

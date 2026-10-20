@@ -21,5 +21,8 @@
   "resolutions": {
     "picomatch": "^4.0.4",
     "source-map-js": "^1.2.2"
+  },
+  "dependencies": {
+    "web-vitals": "6.2.3"
   }
 }

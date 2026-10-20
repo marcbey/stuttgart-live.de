@@ -5,6 +5,27 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     StaticPageDefaults.ensure!
   end
 
+  test "public metrics metadata exposes a route template and only a release hash" do
+    original_release = ENV["SENTRY_RELEASE"]
+    ENV["SENTRY_RELEASE"] = "a" * 40
+    get search_path, params: { q: "private-search" }
+    assert_select "meta[name='web-vitals-route'][content='/search']", count: 1
+    assert_select "meta[name='web-vitals-release'][content=?]", "a" * 40, count: 1
+
+    ENV["SENTRY_RELEASE"] = "branch/private-release"
+    get contact_path
+    assert_select "meta[name='web-vitals-route'][content='/kontakt']", count: 1
+    assert_select "meta[name='web-vitals-release']", count: 0
+  ensure
+    ENV["SENTRY_RELEASE"] = original_release
+  end
+
+  test "static page metrics use the route pattern instead of a resolved slug" do
+    page = StaticPage.create!(title: "Private Slug", slug: "private-slug", body: "<p>Content</p>")
+    get static_page_path(page.slug)
+    assert_select "meta[name='web-vitals-route'][content='/:slug']", count: 1
+  end
+
   test "contact page is publicly accessible" do
     get contact_url
 

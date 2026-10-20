@@ -9,6 +9,11 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   test "new" do
     get new_session_path
     assert_response :success
+    assert_select "script[src*='/backend'][type='module']", count: 1
+    assert_select "script[src*='/public'][type='module']", count: 0
+    assert_select "link[rel='stylesheet'][href*='/backend']", count: 1
+    assert_select "body[data-controller~='consent']", count: 0
+    assert_select ".consent-banner, .consent-dialog-backdrop", count: 0
     assert_not_includes response.body, "fonts.googleapis.com"
     assert_not_includes response.body, "fonts.gstatic.com"
     assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
@@ -23,6 +28,8 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
     assert_not_includes response.body, 'data-consent-meta-pixel-id-value="841645720192467"'
+    assert_select "meta[name='web-vitals-route']", count: 0
+    assert_select "meta[name='web-vitals-release']", count: 0
     assert_select "body.page-auth-backoffice"
     assert_select ".app-nav-inner.app-nav-inner-backend.app-nav-inner-auth-backoffice", count: 1
     assert_select ".app-nav-links .app-nav-link-active", text: "Login"
