@@ -37,6 +37,36 @@ class Public::QueryLoadingTest < ActionDispatch::IntegrationTest
     assert_batched_render event_path(@events.first.slug)
   end
 
+  test "detail batches ready venue and presenter logo outputs as presenters increase" do
+    event = @events.first
+    event.update!(organizer_notes: "Hinweise", show_organizer_notes: true)
+    venue = event.venue_record
+    venue.logo.attach(create_uploaded_blob(filename: "venue-logo.png", width: 640, height: 640))
+    expected_outputs = [ venue.detail_logo_variant.image.blob ]
+    batch_counts = [ 2, 4 ].map do |count|
+      ((count - 2)...count).each do |index|
+        presenter = Presenter.new(name: "Batched Presenter #{index}")
+        presenter.logo.attach(create_uploaded_blob(filename: "presenter-#{index}.png", width: 640, height: 640))
+        presenter.save!
+        event.event_presenters.create!(presenter:, position: index + 1)
+        expected_outputs << presenter.detail_logo_variant.image.blob
+      end
+      queries = []
+      callback = lambda do |notification|
+        sql = notification.payload[:sql]
+        queries << sql if sql.match?(/FROM "active_storage_(?:attachments|blobs|variant_records)"/)
+      end
+      assert_no_difference "ActiveStorage::VariantRecord.count" do
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { get event_path(event.slug) }
+      end
+      assert_response :success
+      expected_outputs.each { |blob| assert_select "img[src=?]", rails_storage_proxy_path(blob, only_path: true), minimum: 1 }
+      assert_empty queries.grep(/FROM "active_storage_variant_records".*"variation_digest" =/m)
+      queries.group_by { |sql| sql[/FROM "(active_storage_\w+)"/, 1] }.transform_values(&:length)
+    end
+    assert_equal batch_counts.first, batch_counts.last, "Logo query batches must stay fixed for two versus four presenters"
+  end
+
   test "event detail defers inherited header search until the overlay is requested" do
     queries = []
     callback = lambda do |event|

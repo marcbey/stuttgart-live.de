@@ -1009,8 +1009,8 @@ module Public
         highlight_video_file_attachment: :blob,
         highlight_landscape_video_file_attachment: :blob,
         event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ],
-        venue_record: [ logo_attachment: :blob ],
-        event_presenters: { presenter: [ logo_attachment: :blob ] }
+        venue_record: [ logo_attachment: { blob: { variant_records: { image_attachment: :blob } } } ],
+        event_presenters: { presenter: [ logo_attachment: { blob: { variant_records: { image_attachment: :blob } } } ] }
       )
     end
 
