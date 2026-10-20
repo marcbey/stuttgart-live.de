@@ -109,6 +109,15 @@ class Public::EventFragmentsHelperTest < ActionView::TestCase
     Rails.configuration.x.media_proxy = original_config if original_config
   end
 
+  test "manual offers omit irrelevant priority changes even with imported alternatives" do
+    @event.event_offers.create!(source: "manual", source_event_id: "manual-fragment", priority_rank: 0)
+    key = fragment_key(loaded_event)
+    provider_priorities(:easyticket).update!(priority_rank: 30)
+    Current.provider_priority_map = nil
+
+    assert_equal key, fragment_key(loaded_event)
+  end
+
   private
 
   def loaded_event

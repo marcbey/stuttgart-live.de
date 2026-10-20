@@ -55,6 +55,11 @@ module Public::EventsHelper
     media = events.flat_map(&:event_images).map { |image| public_event_image_cache_components(image) }
     return if media.any?(&:nil?)
 
+    uses_provider_priorities = events.any? do |event|
+      offers = event.event_offers
+      offers.any? && offers.none? { |offer| offer.source == "manual" }
+    end
+
     [
       "public-events-fragment-v1", section,
       cache_fingerprint([
@@ -62,7 +67,7 @@ module Public::EventsHelper
         media_url_options.to_json, PublicMediaUrl.enabled?, homepage_media_strict_proxy?,
         browse_state.page, browse_state.filter, browse_state.event_date_param, browse_state.query,
         context.to_json, mappings.to_json, records_cache_components(canonical_venues),
-        Merging::ProviderPriorityMap.call.to_json,
+        (Merging::ProviderPriorityMap.call.to_json if uses_provider_priorities),
         events.map do |event|
           [ event.cache_key_with_version, event.past?, cache_key_with_version_for(event.venue_record),
             records_cache_components(event.genres), records_cache_components(event.event_offers),

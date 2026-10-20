@@ -140,7 +140,45 @@ class PublicEventFragmentsTest < ActionDispatch::IntegrationTest
     assert_select "#lane-event-grid .design-preview-card-status-pill", text: "Ausverkauft"
   end
 
+  %w[manual-only offerless manual-over-imported].each do |offer_mode|
+    test "saved groups with #{offer_mode} offers do not gain SQL from caching" do
+      if offer_mode == "offerless"
+        @event.event_offers.destroy_all
+      else
+        @event.event_offers.first.update!(source: "manual")
+        @event.event_offers.create!(source: "eventim", source_event_id: "hidden-imported-offer", priority_rank: 10) if offer_mode == "manual-over-imported"
+      end
+
+      Public::EventsController.perform_caching = false
+      get saved_lane_events_url, params: { slugs: [ @event.slug ] }
+      baseline_queries = saved_lane_queries
+      assert_empty baseline_queries.grep(/FROM "provider_priorities"/)
+
+      Public::EventsController.perform_caching = true
+      2.times do
+        queries = saved_lane_queries
+        assert_empty queries.grep(/FROM "provider_priorities"/), "#{offer_mode} group unnecessarily loaded provider priorities"
+        assert_operator queries.size, :<=, baseline_queries.size, "Caching added SQL for #{offer_mode} group"
+      end
+    end
+  end
+
   private
+
+  def saved_lane_queries
+    queries = []
+    Current.provider_priority_map = nil
+    callback = lambda do |notification|
+      payload = notification.payload
+      queries << payload[:sql] unless payload[:name] == "SCHEMA" || payload[:cached]
+    end
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") do
+      get saved_lane_events_url, params: { slugs: [ @event.slug ] }
+    end
+    assert_response :success
+    assert_select ".design-preview-card-title", text: @event.artist_name
+    queries
+  end
 
   def rendered_cards
     count = 0
