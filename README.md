@@ -423,6 +423,7 @@ Wichtig für die Interpretation:
 - PostgreSQL
 - Node.js und npm
 - ein lokales Bildverarbeitungs-Backend für Active Storage, bevorzugt `libvips`, alternativ ImageMagick
+- Poppler mit `pdftoppm` für die PDF-Vorschauen in den Integrationstests (`brew install poppler` unter macOS, `sudo apt-get install poppler-utils` unter Ubuntu)
 - FFmpeg für die serverseitige Komprimierung redaktionell hochgeladener Highlight-Videos
 
 Für die lokale Entwicklung und für den Produktionscontainer gilt dieselbe Ruby-Version. Kamal rollt die App als Docker-Image aus; der Produktionshost selbst braucht deshalb kein separates systemweites Ruby 4.
