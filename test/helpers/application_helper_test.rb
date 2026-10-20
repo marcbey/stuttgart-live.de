@@ -118,6 +118,24 @@ class ApplicationHelperTest < ActionView::TestCase
     refute_includes partial, "event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0)"
   end
 
+  { "public" => true, "backend" => false }.each do |surface, frontend|
+    test "#{surface} font faces use local WOFF2 for Oswald light and regular" do
+      stylesheet = local_font_face_stylesheet(frontend: frontend)
+
+      [ 300, 400 ].each do |weight|
+        rule = stylesheet.scan(/@font-face\s*\{[^}]+\}/).find do |font_face|
+          font_face.include?('font-family: "Oswald";') && font_face.include?("font-weight: #{weight};")
+        end
+
+        assert rule, "expected an Oswald #{weight} font face for #{surface}"
+        assert_includes rule, %(src: url("#{asset_path("oswald-#{weight}.woff2")}") format("woff2");)
+        assert_includes rule, "font-display: swap;"
+      end
+
+      refute_match(/\.ttf|fonts\.googleapis\.com|fonts\.gstatic\.com/, stylesheet)
+    end
+  end
+
   test "local font face stylesheet skips unavailable fonts" do
     original_method = method(:asset_available?)
 

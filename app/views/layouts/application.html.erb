@@ -42,8 +42,8 @@
     <% if asset_available?("oswald-700.woff2") %>
       <link rel="preload" href="<%= asset_path("oswald-700.woff2") %>" as="font" type="font/woff2" crossorigin>
     <% end %>
-    <% if asset_available?("oswald-300.ttf") %>
-      <link rel="preload" href="<%= asset_path("oswald-300.ttf") %>" as="font" type="font/ttf" crossorigin>
+    <% if asset_available?("oswald-300.woff2") %>
+      <link rel="preload" href="<%= asset_path("oswald-300.woff2") %>" as="font" type="font/woff2" crossorigin>
     <% end %>
     <% if frontend_context || backend_context || auth_chrome %>
       <style data-local-font-faces>

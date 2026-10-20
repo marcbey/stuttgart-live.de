@@ -46,9 +46,12 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       assert_select "link[rel='preload'][as='font'][href*='archivo-narrow-400']", count: 1
       assert_select "link[rel='preload'][as='font'][href*='oswald-700']", count: 1
       assert_select "link[rel='preload'][as='font'][href*='oswald-300']", count: 1
+      assert_select "link[rel='preload'][as='font'][type='font/woff2']", count: 3
+      assert_select "link[rel='preload'][as='font'][href*='.ttf']", count: 0
       assert_select "style[data-local-font-faces]", count: 1
       assert_includes response.body, ActionController::Base.helpers.asset_path("archivo-narrow-700.woff2")
-      assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-300.ttf")
+      assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-300.woff2")
+      assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-400.woff2")
       assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-500.woff2")
       assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
       assert_select ".app-nav-links-group-separated .app-nav-link", text: "Events"

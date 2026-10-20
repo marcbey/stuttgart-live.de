@@ -200,7 +200,7 @@ Wichtig für die Generierung:
 - Als Bildquelle gilt zuerst das redaktionelle Eventbild, danach ein Promotion-Banner und danach ein Import-/Fallback-Bild.
 - Der serverseitig gerenderte Bildtext folgt typografisch der `Unsere Highlights`-Kachel: `Oswald` für den Artist und `Archivo Narrow` für Datum und Venue; der Event-Titel wird im Bild nicht separat gerendert.
 - Die Caption enthält Artist oder Titel, Datum, Venue, einen kurzen Call-to-Action und die Event-URL.
-- Damit das auf Production stabil funktioniert, werden die Runtime-Fonts zusätzlich im Docker-Image für Fontconfig/Pango installiert; die Browser-Webfonts bleiben davon unberührt.
+- Browser laden Oswald und Archivo Narrow lokal über die Asset-Pipeline als komprimierte WOFF2-Webfonts. Die vollständige Zeichenabdeckung und Schriftmetriken bleiben dabei erhalten. Serverseitige Renderjobs verwenden weiterhin TTF-Dateien; diese Runtime-Fonts werden für Fontconfig/Pango zusätzlich im Docker-Image installiert.
 
 Wichtig für die Veröffentlichung:
 

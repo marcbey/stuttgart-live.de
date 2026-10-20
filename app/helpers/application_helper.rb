@@ -8,8 +8,8 @@ module ApplicationHelper
     shared: [
       { family: "Archivo Narrow", weight: 400, logical_path: "archivo-narrow-400.woff2" },
       { family: "Archivo Narrow", weight: 700, logical_path: "archivo-narrow-700.woff2" },
-      { family: "Oswald", weight: 300, logical_path: "oswald-300.ttf", format: "truetype" },
-      { family: "Oswald", weight: 400, logical_path: "oswald-400.ttf", format: "truetype" },
+      { family: "Oswald", weight: 300, logical_path: "oswald-300.woff2" },
+      { family: "Oswald", weight: 400, logical_path: "oswald-400.woff2" },
       { family: "Oswald", weight: 500, logical_path: "oswald-500.woff2" },
       { family: "Oswald", weight: 700, logical_path: "oswald-700.woff2" }
     ],
