@@ -103,7 +103,7 @@ test("CLI infrastructure failure writes redacted artifacts and exits 1", async (
 test("worker returns selected metrics when Chrome cleanup returns void", async () => {
   const { runNavigation } = await import("../../script/performance/worker.mjs");
   const row = await runNavigation({ url: "https://example.invalid", profile: "mobile", userDataDir: "/unused" }, {
-    launchBrowser: async () => ({ pid: 123, kill() {} }),
+    createBrowser: () => ({ pid: 123, async launch() {}, kill() {} }),
     audit: async () => ({ lhr: fixture() })
   });
   assert.equal(row.metrics.lcp, 2500);
@@ -114,7 +114,7 @@ test("desktop navigation resolves to desktop UA with direct unthrottled settings
   const { initializeConfig } = await import("lighthouse/core/config/config.js");
   let settings;
   await runNavigation({ url: "https://example.invalid", profile: "desktop", userDataDir: "/unused" }, {
-    launchBrowser: async () => ({ pid: 123, kill() {} }),
+    createBrowser: () => ({ pid: 123, async launch() {}, kill() {} }),
     audit: async (_url, _flags, config) => {
       const resolved = await initializeConfig("navigation", config);
       settings = resolved.resolvedConfig.settings;
@@ -132,4 +132,58 @@ test("a bounded navigation deadline is infrastructure timeout, not a metric fail
   const { measureOne } = await import("../../script/performance/measure.mjs");
   const row = await measureOne({ url: "https://example.invalid/private?token=SECRET", profile: "mobile" }, 1);
   assert.deepEqual(row, { failure: "timeout" });
+});
+
+async function browserWithoutDebugger() {
+  const fs = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = await fs.mkdtemp(join(tmpdir(), "performance-startup-"));
+  const executable = join(dir, "browser-fixture");
+  const pidFile = join(dir, "pids.json");
+  await fs.writeFile(executable, `#!${process.execPath}\nconst fs = require("node:fs");
+const { spawn } = require("node:child_process");
+const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
+fs.writeFileSync(${JSON.stringify(pidFile)}, JSON.stringify([process.pid, child.pid]));
+setInterval(() => {}, 1000);\n`, { mode: 0o700 });
+  const readPids = async () => JSON.parse(await fs.readFile(pidFile, "utf8"));
+  return { dir, executable, readPids, async cleanup() {
+    for (const pid of await readPids().catch(() => [])) {
+      try { process.kill(-pid, "SIGKILL"); } catch { /* Already stopped. */ }
+      try { process.kill(pid, "SIGKILL"); } catch { /* Already stopped. */ }
+    }
+    await fs.rm(dir, { recursive: true, force: true });
+  } };
+}
+
+async function assertProcessesStopped(pids) {
+  const { setTimeout } = await import("node:timers/promises");
+  const alive = pid => { try { process.kill(pid, 0); return true; } catch { return false; } };
+  for (let attempt = 0; attempt < 40 && pids.some(alive); attempt++) await setTimeout(25);
+  assert.deepEqual(pids.filter(alive), [], "browser process and same-group descendant must both stop");
+}
+
+test("readiness rejection stops an actually spawned browser process group", async () => {
+  const browser = await browserWithoutDebugger();
+  const worker = await import("../../script/performance/worker.mjs");
+  try {
+    const fastFailure = { connectionPollInterval: 50, maxConnectionRetries: 20 };
+    const result = await worker.runNavigation({ chromePath: browser.executable, userDataDir: browser.dir,
+      url: "https://example.invalid", profile: "mobile" }, {
+      createBrowser: (options, onSpawn) => worker.createOwnedBrowser({ ...options, ...fastFailure }, onSpawn)
+    });
+    assert.deepEqual(result, { failure: "browser-or-transport" });
+    await assertProcessesStopped(await browser.readPids());
+  } finally { await browser.cleanup(); }
+});
+
+test("allowed 10-second deadline stops a browser group while debugger startup is pending", async () => {
+  const browser = await browserWithoutDebugger();
+  const { measureOne } = await import("../../script/performance/measure.mjs");
+  try {
+    const result = await measureOne({ chromePath: browser.executable,
+      url: "https://example.invalid", profile: "mobile" }, 10000);
+    assert.deepEqual(result, { failure: "timeout" });
+    await assertProcessesStopped(await browser.readPids());
+  } finally { await browser.cleanup(); }
 });

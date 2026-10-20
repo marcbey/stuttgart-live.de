@@ -11,7 +11,7 @@ export async function measureOne(input, timeoutMs) {
   const child = fork(new URL("./worker.mjs", import.meta.url), [], { silent: true });
   // Drain/discard all dependency output: it can contain visited URLs or network errors.
   child.stdout.resume(); child.stderr.resume();
-  let chromePid, result, timedOut = false;
+  let chromePid, result, forceTimer, timedOut = false;
   const killChrome = () => {
     if (!chromePid) return;
     try {
@@ -21,14 +21,22 @@ export async function measureOne(input, timeoutMs) {
   };
   try {
     return await new Promise(resolve => {
-      const timer = setTimeout(() => { timedOut = true; killChrome(); child.kill("SIGKILL"); }, timeoutMs);
+      const timer = setTimeout(() => {
+        timedOut = true;
+        // Let the worker clean its owned launcher, including a pending debugger wait.
+        child.kill("SIGTERM");
+        forceTimer = setTimeout(() => { killChrome(); child.kill("SIGKILL"); }, 2000);
+      }, timeoutMs);
       child.on("message", message => {
-        if (Number.isInteger(message.chromePid)) chromePid = message.chromePid;
+        if (Number.isInteger(message.chromePid) && message.chromePid > 1) {
+          chromePid = message.chromePid;
+          if (timedOut) killChrome();
+        }
         if (message.result) result = message.result;
       });
-      child.once("error", () => { clearTimeout(timer); resolve({ failure: "worker" }); });
+      child.once("error", () => { clearTimeout(timer); clearTimeout(forceTimer); resolve({ failure: "worker" }); });
       child.once("exit", code => {
-        clearTimeout(timer); killChrome();
+        clearTimeout(timer); clearTimeout(forceTimer); killChrome();
         resolve(timedOut ? { failure: "timeout" } : code === 0 && result ? result : { failure: "worker" });
       });
       child.send({ ...input, userDataDir });
