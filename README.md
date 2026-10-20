@@ -172,9 +172,13 @@ Das Backend unterstützt getrennte Drafts für Instagram und Facebook. Die Redak
 
 Die Meta-Verbindungen werden dabei nicht über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über persistierte Onboarding- und Lifecycle-Flows im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Instagram und Facebook unabhängig voneinander. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
 
+Die [Einrichtungsanleitung für Marc und Chantal](docs/SOCIAL_MEDIA_EINRICHTUNG.md) führt mit klaren Zuständigkeiten vom Testbetrieb zu den echten Konten. Marc übernimmt Konfiguration und Deployment unserer Anwendung; Chantal verwaltet die technische Meta-App und verbindet anschließend die Facebook-Seite [Stuttgart Live](https://www.facebook.com/Stuttgart.LIVE/) und das Instagram-Konto [@stuttgart.live.concert](https://www.instagram.com/stuttgart.live.concert/).
+
 Für den OAuth-Callback kann optional eine feste Redirect-URL über `meta.instagram_redirect_uri` bzw. `META_INSTAGRAM_REDIRECT_URI` gesetzt werden. Der Name ist historisch Instagram-spezifisch, die URL gilt aber für Instagram- und Facebook-Onboarding.
 
 Sobald eine feste Redirect-URL gesetzt ist, muss der jeweilige Connect-Flow auch auf genau diesem Host gestartet werden. Der serverseitige OAuth-`state` hängt an der Session des Start-Hosts; ein lokal gestarteter Flow kann deshalb nicht sauber auf einer anderen Callback-Domain beendet werden.
+
+In Produktion lautet die Callback-URL `https://stuttgart-live.de/backend/meta_connection/callback`. Bei einem Domainwechsel müssen die Rails-Credentials und die erlaubten Redirect-URLs für Facebook und Instagram im Meta-App-Dashboard gemeinsam angepasst werden. Ein gesetzter Credentials-Wert hat Vorrang vor `META_INSTAGRAM_REDIRECT_URI`. Die korrigierten Credentials durchlaufen den regulären Ablauf über PR, Main-CI, Staging und Produktionsfreigabe. Bestehende Testverbindungen bleiben dabei gespeichert und werden erst durch den anschließenden Kontowechsel ersetzt.
 
 Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
@@ -571,7 +575,7 @@ meta:
   app_secret: "..."
   instagram_app_id: "..."
   instagram_app_secret: "..."
-  instagram_redirect_uri: "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback"
+  instagram_redirect_uri: "https://stuttgart-live.de/backend/meta_connection/callback"
 ```
 
 Nach dem Speichern und Schließen des Editors schreibt Rails die verschlüsselte Datei automatisch zurück. Voraussetzung ist eine vorhandene lokale `config/master.key`.
@@ -601,7 +605,7 @@ Damit Social-Posts aus dem Backend zuverlässig auf Instagram und Facebook funkt
 
 - ein Instagram-Professional-Konto, also `Business` oder `Creator`
 - eine konfigurierte Meta-App mit Instagram API with Instagram Login und Facebook Pages-Zugriff
-- App-Domain `stuttgart-live.schopp3r.de`, Website-URL `https://stuttgart-live.schopp3r.de/` und erlaubte OAuth-Redirect-URL `https://stuttgart-live.schopp3r.de/backend/meta_connection/callback`
+- App-Domain `stuttgart-live.de`, Website-URL `https://stuttgart-live.de/` und erlaubte OAuth-Redirect-URL `https://stuttgart-live.de/backend/meta_connection/callback` für Facebook und Instagram
 - Instagram-Scopes `instagram_business_basic` und `instagram_business_content_publish`
 - Facebook-Scopes `pages_show_list`, `pages_read_engagement` und `pages_manage_posts`
 - gültige App-Konfiguration für den serverseitigen OAuth- und Token-Refresh-Flow
