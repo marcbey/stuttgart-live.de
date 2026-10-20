@@ -1,3 +1,4 @@
+<% image_priority = local_assigns.fetch(:image_priority, false) %>
 <% hide_media = local_assigns.fetch(:hide_media, false) %>
 <% has_cover_image = blog_post.cover_image.attached? && !hide_media %>
 <% strict_proxy = local_assigns.key?(:strict_proxy) ? local_assigns[:strict_proxy] : homepage_media_strict_proxy? %>
@@ -18,7 +19,10 @@
       <span class="news-card-media news-index-card-media">
         <%= image_tag optimized_blog_post_image_source(blog_post, :cover_image, strict_proxy:, size: :banner_mobile),
                       alt: blog_post.title,
-                      loading: "lazy",
+                      loading: local_assigns.fetch(:image_loading, image_priority ? "eager" : "lazy"),
+                      fetchpriority: (image_priority ? "high" : nil),
+                      width: blog_post.cover_image.blob.metadata["width"] || 768,
+                      height: blog_post.cover_image.blob.metadata["height"] || 576,
                       srcset: optimized_blog_post_image_srcset(blog_post, :cover_image, strict_proxy:),
                       sizes: "(max-width: 767px) calc(100vw - 2rem), 18rem",
                       style: blog_post_image_style(blog_post, :cover_image) %>

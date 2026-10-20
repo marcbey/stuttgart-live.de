@@ -1,5 +1,6 @@
 <% browse_state = local_assigns.fetch(:browse_state) %>
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
+<% image_priority = local_assigns.fetch(:image_priority, false) %>
 <% variant = local_assigns.fetch(:variant, "standard") %>
 <% category = event.primary_genre&.name.presence || event.badge_text.presence || "Event" %>
 <% tile_variant = local_assigns[:tile_variant].presence || (variant == "wide" ? EventImage::GRID_VARIANT_2X1 : EventImage::GRID_VARIANT_1X1) %>
@@ -38,7 +39,8 @@
       <% if image_source.present? %>
         <%= image_tag image_source,
                       alt: event_image_alt(event_image, event),
-                      loading: "lazy",
+                      loading: local_assigns.fetch(:image_loading, image_priority ? "eager" : "lazy"),
+                      fetchpriority: (image_priority ? "high" : nil),
                       decoding: "async",
                       class: "design-preview-card-image",
                       style: image_style,

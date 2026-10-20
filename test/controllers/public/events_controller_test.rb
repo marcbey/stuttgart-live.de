@@ -2148,7 +2148,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".homepage-highlight-video[src*='lea-portrait'][muted]:not([autoplay])", count: 1
+    assert_select ".homepage-highlight-video[data-video-sound-src-value*='lea-portrait'][muted]:not([autoplay])", count: 1
     assert_select ".homepage-highlight-video[poster*='lea-portrait-poster']", count: 1
     assert_select ".homepage-highlight-video-card button[aria-label='Ton einschalten']", count: 1
 
@@ -2161,7 +2161,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".homepage-highlight-video[src=?]", rails_storage_proxy_path(event.highlight_video_file, only_path: true)
+    assert_select ".homepage-highlight-video[data-video-sound-src-value=?]", rails_storage_proxy_path(event.highlight_video_file, only_path: true)
     refute_includes response.body, "/rails/active_storage/disk/"
   end
 
@@ -4594,7 +4594,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".design-detail-preview-back[data-controller='history-back-link'][data-action='click->history-back-link#navigate']", count: 1
-    assert_select ".design-preview-logo[data-turbo-preload='true'][href='#{root_path}']", count: 1
+    assert_select ".design-preview-logo:not([data-turbo-preload])[href='#{root_path}']", count: 1
     assert_select ".design-detail-preview-description-toggle[data-controller='design-preview-description-toggle']", count: 1
     assert_select ".design-detail-preview-more-button[data-design-preview-description-toggle-target='button'][aria-controls='design-detail-preview-description-body']", count: 1
     assert_select ".design-detail-preview-actions .event-share[data-controller='share-event'][data-share-event-url-value=?]",

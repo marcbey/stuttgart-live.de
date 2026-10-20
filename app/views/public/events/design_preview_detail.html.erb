@@ -112,6 +112,7 @@ end %>
               <%= image_tag slide.fetch(:source),
                             alt: index.zero? ? slide.fetch(:alt) : "",
                             loading: index.zero? ? "eager" : "lazy",
+                            fetchpriority: (index.zero? ? "high" : nil),
                             decoding: "async" %>
               <% image_credit = slide[:credit].presence || hero_credit %>
               <% if image_credit.present? %>

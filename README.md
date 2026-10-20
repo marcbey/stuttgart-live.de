@@ -603,6 +603,10 @@ Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo 
 
 Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
 
+Der Highlight-Slider startet ohne automatische Wechsel; Pfeile und Wischen bleiben direkt bedienbar. Erst „Animation starten“ aktiviert automatische Wechsel. Die erste sichtbare Bildkarte auf Lane-, Such- und Newsseiten sowie das erste Detailbild werden bevorzugt geladen; weitere Karten bleiben verzögert. Das Logo auf Unterseiten lädt die Startseite nicht vorsorglich.
+
+Das Hochformatvideo lädt seine MP4-Quelle erst ab 1536 Pixeln und nur im sichtbaren Bereich. Zwischen 1280 und 1535 Pixeln bleibt das Poster mit deaktivierten Videotasten stehen. Beim Verkleinern oder Verlassen des sichtbaren Bereichs wird die Quelle entfernt. „Daten sparen“ und die Systemeinstellung „Bewegung reduzieren“ verhindern automatisches Laden und Abspielen; ab 1536 Pixeln lässt sich die Wiedergabe ausdrücklich starten.
+
 Bei aktivierter Systemeinstellung „Bewegung reduzieren“ starten diese Videos und der Highlight-Slider ohne automatische Bewegung. Eine ausdrücklich gewählte Pause bleibt auch nach weiterer Bedienung erhalten. Der Slider hat eine eigene Pause-Taste; mit der Taste `S` lässt sich das sichtbare Suchfeld fokussieren.
 
 Im Kalender „Weitere Termine“ öffnet ein Klick auf einen Tag mit genau einem Termin direkt dessen Eventseite. Ab zwei Terminen wird die Uhrzeit darunter gewählt und ein Hinweis eingeblendet. Ein Klick außerhalb schließt den Kalender.

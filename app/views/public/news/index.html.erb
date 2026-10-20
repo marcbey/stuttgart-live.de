@@ -29,7 +29,7 @@
         <section class="news-shell news-index-shell design-news-preview-content">
           <% if @blog_posts.any? %>
             <div class="news-grid news-index-grid" id="news-index-grid">
-              <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false, strict_proxy: strict_proxy %>
+              <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false, strict_proxy: strict_proxy, prioritize_first_image: true %>
             </div>
             <%= render "public/news/more", has_more: @has_more_blog_posts, next_offset: @next_offset %>
           <% else %>

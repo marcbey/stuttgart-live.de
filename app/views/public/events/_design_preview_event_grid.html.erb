@@ -6,12 +6,13 @@
 <% show_admin_edit = local_assigns.fetch(:show_admin_edit, false) %>
 <% dom_id_prefix = local_assigns[:dom_id_prefix] %>
 
-<% events.each do |event| %>
+<% events.each_with_index do |event, index| %>
   <%= render "design_preview_card",
              event: event,
              browse_state: browse_state,
              strict_proxy: strict_proxy,
              variant: variant,
+             image_priority: local_assigns.fetch(:prioritize_first_image, false) && index.zero?,
              effective_series_ids: effective_series_ids,
              series_counts_by_id: series_counts_by_id,
              show_card_kicker: show_card_kicker,

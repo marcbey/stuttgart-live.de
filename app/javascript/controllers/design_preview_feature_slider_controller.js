@@ -9,7 +9,7 @@ export default class extends Controller {
 
   connect() {
     this.observeViewportOffset()
-    this.userPaused = this.userPaused || false
+    this.userPaused = this.userPaused ?? true
     this.hovered = false
     this.focused = false
     this.reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
@@ -268,6 +268,10 @@ export default class extends Controller {
     this.loopClone = firstSlide.cloneNode(true)
     this.loopClone.dataset.designPreviewClone = "true"
     this.loopClone.setAttribute("aria-hidden", "true")
+    this.loopClone.querySelectorAll("img").forEach((image) => {
+      image.loading = "lazy"
+      image.removeAttribute("fetchpriority")
+    })
     this.loopClone.querySelectorAll("a, button, input, select, textarea, [tabindex]").forEach((element) => {
       element.setAttribute("tabindex", "-1")
     })
