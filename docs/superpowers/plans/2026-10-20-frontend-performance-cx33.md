@@ -93,13 +93,13 @@
 
 ### Task 5: Responsive Bilder und asynchrone Varianten
 
-**Files:** `app/helpers/application_helper.rb`, `app/models/event_image.rb`, `import_event_image.rb`; vorhandene Importdownload-/Bildservices und `app/jobs/event_images/`; passende Modell-/Service-/Integrationtests, Backfill-Raketask; Karten-`sizes` nach Task 2; README.
+**Files:** `app/helpers/application_helper.rb`, `app/helpers/public/events_helper.rb`, `app/models/event_image.rb`, `import_event_image.rb`; bei den gemeinsamen öffentlichen Bildpfaden auch `event.rb` und `blog_post.rb`; vorhandene Importdownload-/Bildservices und `app/jobs/event_images/`; passende Modell-/Service-/Integrationtests, Backfill-Raketask; Karten-`sizes` nach Task 2; Docker-/Deploy-Konfiguration ausschließlich für den gemeinsamen Arbeitslock; README.
 
-**Interfaces:** Bestehende Quellen/Crops/Rechteinformationen erhalten. Lokale optimierte Repräsentationen sind nach erfolgreicher Verarbeitung bevorzugt; solange sie fehlen, bleibt eine funktionsfähige vorhandene Quelle verfügbar. Kein synchroner neuer Providerdownload im HTML-Pfad.
+**Interfaces:** Bestehende Quellen/Crops/Rechteinformationen erhalten. Lokale optimierte Repräsentationen sind nach erfolgreicher Verarbeitung bevorzugt; solange sie fehlen, bleibt eine funktionsfähige vorhandene Quelle verfügbar. Kein synchroner neuer Providerdownload im HTML-Pfad. Die öffentlichen Banner-/News-Pfade verwenden denselben Srcset-Helfer und müssen ebenfalls ohne neue Transformation beim HTML-Rendern auskommen; bestehende synchrone Backend-/Press-/Renderer-Schnittstellen bleiben verfügbar.
 
 - [ ] RED: `sizes` entsprechen realem Slot, Srcset-Deskriptoren tatsächlicher intrinsischer Breite auch bei Hochformaten. Unterschiedliche kleine Related-/Listen-/Hero-Slots dürfen nicht alle dieselbe große Quelle wählen.
-- [ ] RED: neue/ersetzte lokale Eventbilder erzeugen öffentliche Varianten im Hintergrund; HTML-Anfragen benötigen keine neue synchrone Transformation. Fehlende/beschädigte Bilder funktionieren mit bestehendem Fallback.
-- [ ] Bestehende sichere Downloadlogik für Importbilder wiederverwenden; asynchron lokal optimieren, Quelleänderung invalidiert alten Output. Tests für private/ungültige URL, Größen-/Zeitlimits, Fehler/Retry und unveränderte Quelle. Keine neue offene Proxyroute.
+- [ ] RED: neue/ersetzte lokale Event-, Banner- und Newsbilder erzeugen öffentliche Varianten im Hintergrund; HTML-Anfragen benötigen keine neue synchrone Transformation. Fehlende/beschädigte Bilder funktionieren mit bestehendem Fallback. Task-4-Fragmentkeys erfassen neue und ersetzte fertige Ausgaben weiterhin.
+- [ ] Vorhandenen abgesicherten Transport aus `LegacyRedirects::HttpFetcher` gezielt wiederverwenden/auskoppeln, ohne dessen Legacy-Hostvertrag zu erweitern. Der bisherige Backend-Bildimporter mit unbeschränktem `Net::HTTP.get_response` ist dafür ungeeignet. Importbilder asynchron lokal optimieren; Quelleänderung invalidiert alten Output. Tests für private/ungültige URL, Größen-/Zeitlimits, Fehler/Retry und unveränderte Quelle. Keine neue offene Proxyroute.
 - [ ] Begrenzte Jobparallelität (höchstens ein aktiver öffentlicher Bildbackfill/-transformationsjob je Host) und expliziter Dry-run-/Limit-Backfill für veröffentlichte künftige Events. Keine ungeprüfte Massendownloadaktion auf Produktion.
 - [ ] GREEN: Transformation-/Import-/Fallbacktests, tatsächliche Pixel-/Byteprüfung, Fullsuite/RuboCop; README mit schrittweisem Backfill und Lastkontrolle, Commit.
 
