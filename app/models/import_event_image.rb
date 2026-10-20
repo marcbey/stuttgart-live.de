@@ -29,7 +29,29 @@ class ImportEventImage < ApplicationRecord
 
   scope :ordered, -> { order(:position, :id) }
 
+  has_one_attached :prepared_file
+
   before_validation :normalize_fields
+  after_commit :enqueue_public_preparation, on: %i[create update], if: :saved_change_to_image_url?
+
+  def public_source_fingerprint
+    Digest::SHA256.hexdigest(image_url)
+  end
+
+  def public_file
+    return unless prepared_file.attached?
+    return unless prepared_file.blob.metadata["public_source_fingerprint"] == public_source_fingerprint
+
+    prepared_file
+  end
+
+  def public_preparation_relevant?
+    import_class == "Event" && import_event.live? && import_event.start_at.present? && import_event.start_at >= Time.current.beginning_of_day
+  end
+
+  def enqueue_public_preparation
+    EventImages::PreparePublicImagesJob.perform_later(self) if public_preparation_relevant?
+  end
 
   def self.normalize_image_url(raw_value)
     value = raw_value.to_s.strip

@@ -53,6 +53,7 @@ module Public::EventsHelper
     canonical_venues = canonical_keys.map { |key| Venue.venue_match_key_index[key] }
 
     media = events.flat_map(&:event_images).map { |image| public_event_image_cache_components(image) }
+    media += events.flat_map(&:import_event_images).map { |image| public_event_image_cache_components(image, attachment_name: :prepared_file_attachment) }
     return if media.any?(&:nil?)
 
     uses_provider_priorities = events.any? do |event|
@@ -61,7 +62,7 @@ module Public::EventsHelper
     end
 
     [
-      "public-events-fragment-v1", section,
+      "public-events-fragment-v2", section,
       cache_fingerprint([
         I18n.locale, Time.zone.name, Date.current.iso8601,
         media_url_options.to_json, PublicMediaUrl.enabled?, homepage_media_strict_proxy?,
@@ -292,9 +293,7 @@ module Public::EventsHelper
 
   def event_image_source(image, strict_proxy: false, size: nil)
     return nil if image.blank?
-    return optimized_event_image_source(image, strict_proxy:, size:) if image.is_a?(EventImage)
-
-    image.image_url
+    optimized_event_image_source(image, strict_proxy:, size:)
   end
 
   def event_image_srcset(image, variant_sizes:, strict_proxy: false)
@@ -370,10 +369,10 @@ module Public::EventsHelper
     logo_source if asset_available?(logo_source)
   end
 
-  def public_event_image_cache_components(image)
-    return unless image.association(:file_attachment).loaded?
+  def public_event_image_cache_components(image, attachment_name: :file_attachment)
+    return unless image.association(attachment_name).loaded?
 
-    attachment = image.file_attachment
+    attachment = image.public_send(attachment_name)
     return [ image.cache_key_with_version ] unless attachment
     return unless attachment.association(:blob).loaded?
 

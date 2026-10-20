@@ -1005,7 +1005,7 @@ module Public
         :genres,
         :sub_genres,
         :event_offers,
-        :import_event_images,
+        { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
         highlight_video_file_attachment: :blob,
         highlight_landscape_video_file_attachment: :blob,
         event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ],
@@ -1019,7 +1019,7 @@ module Public
         :genres,
         :venue_record,
         :event_offers,
-        :import_event_images,
+        { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
         highlight_video_file_attachment: :blob,
         highlight_landscape_video_file_attachment: :blob,
         event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]

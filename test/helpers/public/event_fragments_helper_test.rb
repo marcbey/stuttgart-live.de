@@ -118,10 +118,27 @@ class Public::EventFragmentsHelperTest < ActionView::TestCase
     assert_equal key, fragment_key(loaded_event)
   end
 
+
+  test "prepared import output and later derivative attachment invalidate without card queries" do
+    image = @event.import_event_images.create!(source: "easyticket", image_type: "image_url", image_url: "https://images.example/a", role: "cover", aspect_hint: "portrait", position: 0)
+    key = fragment_key(loaded_event)
+    image.prepared_file.attach(create_uploaded_blob)
+    assert_not_equal key, fragment_key(loaded_event)
+    variant = image.prepared_file.blob.variant_records.create!(variation_digest: "pending-import-variant")
+    key = fragment_key(loaded_event)
+    variant.image.attach(create_uploaded_blob(filename: "import-ready.png"))
+    event = loaded_event
+    queries = []
+    callback = ->(notification) { queries << notification.payload[:sql] unless notification.payload[:name] == "SCHEMA" }
+    ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { assert_not_equal key, fragment_key(event) }
+    assert_empty queries
+  end
+
   private
 
   def loaded_event
-    Event.preload(:genres, :venue_record, :event_offers, :import_event_images,
+    Event.preload(:genres, :venue_record, :event_offers,
+      { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
       event_images: { file_attachment: { blob: { variant_records: { image_attachment: :blob } } } }).find(@event.id)
   end
 

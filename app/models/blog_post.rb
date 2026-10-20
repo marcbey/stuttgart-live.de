@@ -67,6 +67,9 @@ class BlogPost < ApplicationRecord
   validate :promotion_banner_landscape_image_must_be_image
   validate :promotion_banner_requires_image
 
+  include PreparesPublicImages
+  self.public_image_slots = %i[cover_image promotion_banner_image promotion_banner_landscape_image]
+
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
 

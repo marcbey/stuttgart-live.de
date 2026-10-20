@@ -15,13 +15,6 @@ module ApplicationHelper
     ],
     frontend: []
   }.freeze
-  PUBLIC_IMAGE_SRCSET_WIDTHS = {
-    card_mobile: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:card_mobile),
-    card_desktop: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:card_desktop),
-    banner_mobile: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:banner_mobile),
-    banner_desktop: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:banner_desktop),
-    thumbnail: EventImage::PUBLIC_VARIANT_MAX_DIMENSIONS.fetch(:thumbnail)
-  }.freeze
   ORGANIZER_NOTES_PREVIEW_HEADING_LABELS = {
     "ERHÖHTE SICHERHEITSMASSNAHMEN" => "Erhöhte Sicherheitsmaßnahmen",
     "DAS DÜRFT IHR MITBRINGEN" => "Das dürft ihr mitbringen",
@@ -262,40 +255,56 @@ module ApplicationHelper
     )
   end
 
+  def backend_image_request?
+    respond_to?(:controller_path) && controller_path.start_with?("backend/")
+  end
+
+  def public_event_image_attachment(image)
+    case image
+    when EventImage then image.file
+    when ImportEventImage then image.public_file
+    end
+  end
+
   def optimized_event_image_representation(image, size: nil)
     return if image.blank?
-    return image unless image.is_a?(EventImage)
+    if backend_image_request? && image.is_a?(EventImage)
+      return size.present? ? image.processed_optimized_public_variant(size) : image.processed_optimized_variant
+    end
+    attachment = public_event_image_attachment(image)
+    return unless attachment
 
-    size.present? ? image.processed_optimized_public_variant(size) : image.processed_optimized_variant
+    PublicImages::Representation.ready(attachment, size:)
   rescue EventImage::ProcessingError, LoadError
     image.file
   end
 
   def optimized_event_image_source(image, strict_proxy: false, size: nil)
     return if image.blank?
-    return image.image_url unless image.is_a?(EventImage)
-
     representation = optimized_event_image_representation(image, size:)
+    return image.image_url if representation.blank? && image.is_a?(ImportEventImage)
     return if representation.blank?
 
-    return strict_public_media_path(representation, image.file) if strict_proxy
+    return strict_public_media_path(representation, public_event_image_attachment(image)) if strict_proxy
 
     public_media_path(representation)
   end
 
   def optimized_event_image_srcset(image, variant_sizes:, strict_proxy: false)
-    return unless image.is_a?(EventImage)
+    attachment = public_event_image_attachment(image)
+    return unless attachment
 
-    public_image_srcset(variant_sizes, strict_proxy:, fallback_record: image.file) do |size|
+    public_image_srcset(variant_sizes, strict_proxy:, fallback_record: attachment) do |size|
       optimized_event_image_representation(image, size:)
     end
   end
 
   def optimized_event_image_url(image)
     return if image.blank?
-    return image.image_url unless image.is_a?(EventImage)
+    representation = optimized_event_image_representation(image)
+    return image.image_url if representation.blank? && image.is_a?(ImportEventImage)
 
-    public_media_url(optimized_event_image_representation(image))
+    public_media_url(representation)
   end
 
   def event_cropped_image_style(image, frame_ratio:)
@@ -318,11 +327,11 @@ module ApplicationHelper
   def optimized_event_promotion_banner_image_representation(event, size: nil)
     return unless event.promotion_banner_image.attached?
 
-    if size.present?
-      event.processed_optimized_public_promotion_banner_image_variant(size)
-    else
-      event.processed_optimized_promotion_banner_image_variant
+    if backend_image_request?
+      return size.present? ? event.processed_optimized_public_promotion_banner_image_variant(size) : event.processed_optimized_promotion_banner_image_variant
     end
+
+    PublicImages::Representation.ready(event.promotion_banner_image, size:)
   rescue Event::ProcessingError, LoadError
     event.promotion_banner_image
   end
@@ -347,11 +356,11 @@ module ApplicationHelper
   def optimized_event_promotion_banner_landscape_image_representation(event, size: nil)
     return unless event.promotion_banner_landscape_image.attached?
 
-    if size.present?
-      event.processed_optimized_public_promotion_banner_landscape_image_variant(size)
-    else
-      event.processed_optimized_promotion_banner_landscape_image_variant
+    if backend_image_request?
+      return size.present? ? event.processed_optimized_public_promotion_banner_landscape_image_variant(size) : event.processed_optimized_promotion_banner_landscape_image_variant
     end
+
+    PublicImages::Representation.ready(event.promotion_banner_landscape_image, size:)
   rescue Event::ProcessingError, LoadError
     event.promotion_banner_landscape_image
   end
@@ -406,12 +415,10 @@ module ApplicationHelper
   def presenter_logo_representation(presenter, size: :detail)
     return if presenter.blank? || !presenter.logo.attached?
 
-    case size.to_sym
-    when :thumbnail
-      presenter.thumbnail_logo_variant
-    else
-      presenter.detail_logo_variant
-    end
+    return size.to_sym == :thumbnail ? presenter.thumbnail_logo_variant : presenter.detail_logo_variant if backend_image_request?
+
+    dimension = size.to_sym == :thumbnail ? 160 : 320
+    PublicImages::Representation.ready_blob(presenter.logo.blob, transformations: { resize_to_limit: [ dimension, dimension ] })
   end
 
   def presenter_logo_source(presenter, size: :detail)
@@ -424,12 +431,10 @@ module ApplicationHelper
   def venue_logo_representation(venue, size: :detail)
     return if venue.blank? || !venue.logo.attached?
 
-    case size.to_sym
-    when :thumbnail
-      venue.thumbnail_logo_variant
-    else
-      venue.detail_logo_variant
-    end
+    return size.to_sym == :thumbnail ? venue.thumbnail_logo_variant : venue.detail_logo_variant if backend_image_request?
+
+    dimension = size.to_sym == :thumbnail ? 160 : 320
+    PublicImages::Representation.ready_blob(venue.logo.blob, transformations: { resize_to_limit: [ dimension, dimension ] })
   end
 
   def venue_logo_source(venue, size: :detail)
@@ -453,7 +458,11 @@ module ApplicationHelper
     attachment = blog_post.public_send(slot)
     return attachment unless attachment.attached?
 
-    size.present? ? blog_post.processed_optimized_public_image_variant(slot, size) : blog_post.processed_optimized_image_variant(slot)
+    if backend_image_request?
+      return size.present? ? blog_post.processed_optimized_public_image_variant(slot, size) : blog_post.processed_optimized_image_variant(slot)
+    end
+
+    PublicImages::Representation.ready(attachment, size:)
   rescue BlogPost::ProcessingError, LoadError
     attachment
   end
@@ -541,24 +550,30 @@ module ApplicationHelper
   def public_image_srcset(variant_sizes, strict_proxy:, fallback_record:)
     entries = Array(variant_sizes).filter_map do |size|
       representation = yield(size)
-      path = if strict_proxy
-        strict_public_media_path(representation, fallback_record)
-      else
-        public_media_path(representation)
+      path = public_media_path(representation, strict_proxy:)
+      if path.blank? && strict_proxy
+        representation = fallback_record
+        path = public_media_path(representation, strict_proxy: true)
       end
       next if path.blank?
 
-      "#{path} #{PUBLIC_IMAGE_SRCSET_WIDTHS.fetch(size.to_sym)}w"
+      width = PublicImages::Representation.width(representation)
+      next unless width.positive?
+
+      [ path, width ]
     end
 
-    entries.uniq.join(", ").presence
+    entries.uniq(&:last).sort_by(&:last).map { |path, width| "#{path} #{width}w" }.join(", ").presence
   end
 
   def public_rich_text_representation_source(blob, in_gallery: false)
-    representation = blob.representation(resize_to_limit: in_gallery ? [ 800, 600 ] : [ 1024, 768 ]).processed
+    blob = blob.attachable if blob.is_a?(ActionText::Attachment)
+    if backend_image_request?
+      return public_media_path(blob.representation(resize_to_limit: in_gallery ? [ 800, 600 ] : [ 1024, 768 ]).processed)
+    end
+
+    representation = PublicImages::Representation.ready_blob(blob, transformations: { resize_to_limit: in_gallery ? [ 800, 600 ] : [ 1024, 768 ] })
     public_media_path(representation)
-  rescue LoadError, MiniMagick::Error, ActiveStorage::InvariableError, ImageProcessing::Error
-    public_media_path(blob)
   end
 
   def blog_post_cropped_image_style(blog_post, slot, frame_ratio:, lock_top: false, edge_lock_margin: nil)

@@ -382,6 +382,21 @@ Anonyme moderne Kartengruppen der Startseite, Eventlisten und Suche nutzen in Pr
 
 Für eine lokale Cache-Diagnose mit `mise exec -- bin/rails dev:cache` das Entwicklungscaching einschalten und den Server neu starten; nach dem Vergleich mit demselben Befehl wieder ausschalten und neu starten. Zwei identische anonyme Anfragen vergleichen und dabei Fragmenttreffer sowie Renderdauer beobachten. Zusätzliche Fragmentlogs lassen sich lokal über `config.action_controller.enable_fragment_cache_logging = true` aktivieren. Die stabilen Medienlinks laufen nicht zeitlich ab; nach einer Rotation des Signaturschlüssels müssen vorhandene Fragmente mit `Rails.cache.clear` in der betroffenen Umgebung geleert werden, damit sie sofort neue Links ausgeben.
 
+Öffentliche Bilder verwenden ausschließlich bereits fertige lokale Varianten. Neue oder ersetzte Event-, Banner- und Newsbilder werden über die Queue `public_images` vorbereitet; bis dahin bleibt die vorhandene Originalquelle sichtbar. Importbilder behalten ihre Anbieter-URL als Fallback. Automatisch werden nur Bilder bereits veröffentlichter Events ab heute heruntergeladen, auch beim Veröffentlichen eines Events; Rohimporte lösen keine Bilddownloads aus. Bei einer geänderten Quelle werden alte lokale Ausgaben sofort ignoriert. Rechteangaben, Fokus und Zoom bleiben erhalten. Logos und Bilder im Fließtext verwenden vorhandene Varianten oder ihr Original; für sie gibt es keinen neuen automatischen Backfill.
+
+Ein Bildjob verarbeitet höchstens vier Größen, begrenzt Eingaben auf 12 MiB und 24 Millionen Pixel und akzeptiert JPEG, PNG, WebP und GIF. Downloads haben insgesamt höchstens 25 Sekunden einschließlich DNS, Weiterleitungen und eines Wiederholungsversuchs; private Netzadressen und unsichere URLs werden abgewiesen. Netzwerkfehler werden im Hintergrund höchstens dreimal versucht. Nicht unterstützte oder beschädigte Bilder bleiben bei ihrer vorhandenen Quelle. Die HTML-Anfrage lädt keine neue Datei vom Anbieter und erzeugt keine Bildvariante.
+
+Produktion und Staging erhalten dasselbe Volume `stuttgart_live_de_public_image_lock` unter `/rails/public-image-lock`. Es enthält ausschließlich den Arbeitslock, keine Bilder oder Geschäftsdaten. Ein nicht blockierender Dateilock begrenzt öffentliche Bildarbeit auf einen aktiven Job pro Host, zusätzlich zur Queue-Begrenzung. Das Image legt den Ordner für Benutzer 1000 an. Der Lockpfad muss bei allen beteiligten Workern auf dasselbe Volume zeigen; ein fehlender oder nicht beschreibbarer Mount darf nicht durch einen privaten Lockpfad ersetzt werden. Datenbanken und Medienvolumes bleiben getrennt. Die Staging-Sperre für externe Importe gilt weiterhin.
+
+Bestehende Eventbilder werden nur ausdrücklich und in kleinen Schritten nachgezogen. Zuerst die Auswahl prüfen, beispielsweise lokal:
+
+```sh
+LIMIT=5 EVENT_SLUGS=mein-event mise exec -- bin/rails public_images:backfill
+```
+
+Der Standard ist ein Dry-run ohne Downloads oder Jobs. `LIMIT` muss zwischen 1 und 100 liegen und begrenzt die Anzahl eingereihter Datensätze; optional schränken kommagetrennte `EVENT_SLUGS` oder `EVENT_IDS` die Auswahl ein. Nur veröffentlichte Events ab heute sind zugelassen. Für eine freigegebene Auswahl denselben Aufruf ausdrücklich um `DRY_RUN=false` ergänzen; die Arbeit läuft anschließend asynchron über den Worker. Zunächst wenige repräsentative Events vorbereiten, Queue, CPU, RAM, Antwortzeiten und Bilddateigrößen prüfen und erst danach den nächsten kleinen Lauf einreihen. Mehrere Backfill-Aufrufe umgehen den gemeinsamen Arbeitslock nicht. Presseexport und Backend-Renderer behalten ihre bestehenden synchronen Schnittstellen.
+
+
 Beim Nachladen muss derselbe Kartentyp wie in der ersten Reihe verwendet werden (`design_cards`). Wenn nur die erste Reihe korrekt aussieht und weitere Reihen zusammengedrückt erscheinen, zuerst den Kartenmodus der Nachlade-Anfrage prüfen.
 
 Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.

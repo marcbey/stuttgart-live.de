@@ -90,8 +90,8 @@ class DeploymentEnvironmentTest < ActiveSupport::TestCase
     assert_equal true, ActiveModel::Type::Boolean.new.cast(stage.dig("env", "clear", "MEDIA_PROXY_ENABLED")), "Staging must serve public images through nginx"
     assert_equal "production", production.dig("env", "clear", "APP_ENVIRONMENT")
     assert_equal "stuttgart_live_de_staging", stage.dig("env", "clear", "DB_NAME")
-    assert_equal [ "stuttgart_live_de_staging_storage:/rails/storage" ], stage.fetch("volumes")
-    assert_equal [ "stuttgart_live_de_storage:/rails/storage" ], production.fetch("volumes")
+    assert_equal [ "stuttgart_live_de_public_image_lock:/rails/public-image-lock", "stuttgart_live_de_staging_storage:/rails/storage" ], stage.fetch("volumes").sort
+    assert_equal [ "stuttgart_live_de_public_image_lock:/rails/public-image-lock", "stuttgart_live_de_storage:/rails/storage" ], production.fetch("volumes").sort
     assert_equal "staging.stuttgart-live.de", stage.dig("proxy", "host")
     assert_equal "stuttgart-live.schopp3r.de", production.dig("proxy", "host")
     assert_equal stage, render_deploy_config(destination: "staging")

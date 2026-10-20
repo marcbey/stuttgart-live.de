@@ -124,6 +124,20 @@ class Event < ApplicationRecord
   validate :highlight_video_file_must_be_video
   validate :highlight_landscape_video_file_must_be_video
 
+  include PreparesPublicImages
+  self.public_image_slots = %i[promotion_banner_image promotion_banner_landscape_image]
+
+  after_commit :enqueue_published_import_images, on: %i[create update]
+
+  def enqueue_published_import_images
+    return unless (previous_changes.keys & %w[status published_at start_at]).any?
+    return unless live? && start_at.present? && start_at >= Time.current.beginning_of_day
+
+    import_event_images.with_attached_prepared_file.find_each do |image|
+      image.enqueue_public_preparation unless image.public_file
+    end
+  end
+
   before_validation :normalize_attributes
   before_validation :assign_slug, if: :slug_needed?
   before_validation :apply_publication_schedule_rules
@@ -147,6 +161,7 @@ class Event < ApplicationRecord
       .reorder(:promotion_banner_lane_position, :start_at, :id)
       .includes(
         :venue_record,
+        { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
         promotion_banner_image_attachment: { blob: { variant_records: { image_attachment: :blob } } },
         promotion_banner_landscape_image_attachment: { blob: { variant_records: { image_attachment: :blob } } },
         highlight_video_file_attachment: :blob,

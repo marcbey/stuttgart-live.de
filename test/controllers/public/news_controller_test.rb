@@ -246,10 +246,12 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
       content_type: "image/png"
     )
 
+    EventImages::PreparePublicImagesJob.perform_now(@live_post)
+
     get news_index_url
 
     assert_response :success
-    assert_includes response.body, rails_storage_proxy_path(@live_post.processed_optimized_image_variant(:cover_image), only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(PublicImages::Representation.ready(@live_post.cover_image), only_path: true)
     assert_select ".news-index-card--with-image .news-index-card-media img", count: 1
   end
 
@@ -260,10 +262,12 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
       content_type: "image/png"
     )
 
+    EventImages::PreparePublicImagesJob.perform_now(@live_post)
+
     get news_url(@live_post.slug)
 
     assert_response :success
-    assert_includes response.body, rails_storage_proxy_path(@live_post.processed_optimized_image_variant(:cover_image), only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(PublicImages::Representation.ready(@live_post.cover_image), only_path: true)
   end
 
   test "show renders media proxy urls for public cover images when enabled" do
@@ -272,6 +276,8 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
       filename: "news-cover.png",
       content_type: "image/png"
     )
+
+    EventImages::PreparePublicImagesJob.perform_now(@live_post)
 
     with_media_proxy do
       get news_url(@live_post.slug)
@@ -368,7 +374,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     travel_to Time.zone.local(2026, 4, 9, 10, 0, 0) do
       with_media_proxy do
         get news_url(@live_post.slug)
-        expected_path = PublicMediaUrl.path_for(blob.representation(resize_to_limit: [ 1024, 768 ]).processed)
+        expected_path = PublicMediaUrl.path_for(blob)
       end
     end
 

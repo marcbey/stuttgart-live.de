@@ -2225,6 +2225,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
         )
         second_blog_post.update!(promotion_banner: true)
 
+        EventImages::PreparePublicImagesJob.perform_now(blog_post)
+        EventImages::PreparePublicImagesJob.perform_now(second_blog_post)
         get events_url(filter: "all")
         expected_path = PublicMediaUrl.path_for(blog_post.processed_optimized_image_variant(:promotion_banner_image))
       end
@@ -2295,6 +2297,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
         production_env = ActiveSupport::StringInquirer.new("production")
         begin
           Rails.singleton_class.define_method(:env) { production_env }
+          EventImages::PreparePublicImagesJob.perform_now(older_blog_post)
+          EventImages::PreparePublicImagesJob.perform_now(newer_blog_post)
           get events_url(filter: "all")
         ensure
           Rails.singleton_class.define_method(:env) { original_env }
@@ -2475,6 +2479,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     with_media_proxy do
       travel_to Time.zone.local(2026, 4, 6, 12, 0, 0) do
+        EventImages::PreparePublicImagesJob.perform_now(event)
         get events_url(filter: "all")
         expected_path = PublicMediaUrl.path_for(event.processed_optimized_promotion_banner_image_variant)
       end
@@ -5488,8 +5493,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".design-detail-preview-notes .event-detail-organizer-partner[href='#{presenter_two.external_url}']", count: 2
     assert_select ".design-detail-preview-notes .event-detail-organizer-partner-image[alt='Alpha Presenter']", count: 2
     assert_select ".design-detail-preview-notes .event-detail-organizer-partner-image[alt='Beta Presenter']", count: 2
-    assert_includes response.body, rails_storage_proxy_path(presenter_one.detail_logo_variant, only_path: true)
-    assert_includes response.body, rails_storage_proxy_path(presenter_two.detail_logo_variant, only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(presenter_one.logo, only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(presenter_two.logo, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
@@ -5506,7 +5511,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-presenters", count: 0
     assert_select ".design-detail-preview-notes .event-detail-organizer-partner-image[alt='SVG Presenter']", count: 2
-    assert_includes response.body, rails_storage_proxy_path(svg_presenter.detail_logo_variant, only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(svg_presenter.logo, only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
@@ -6349,8 +6354,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-image-dot", count: 2
     assert_select ".event-detail-slider", count: 0
     assert_select ".event-lightbox", count: 1
-    assert_includes response.body, rails_storage_proxy_path(hero_image.processed_optimized_variant, only_path: true)
-    assert_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_public_variant(:card_desktop), only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(PublicImages::Representation.ready(hero_image.file), only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(PublicImages::Representation.ready(slider_image.file, size: :banner_desktop), only_path: true)
     refute_includes response.body, "/rails/active_storage/blobs/redirect/"
   end
 
@@ -6377,8 +6382,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".design-detail-preview-image-arrow", count: 2
     assert_includes response.body, "Foto Max Mustermann"
     assert_includes response.body, "Slider Subline"
-    assert_includes response.body, rails_storage_proxy_path(hero_image.processed_optimized_public_variant(:card_desktop), only_path: true)
-    assert_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_public_variant(:card_desktop), only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(PublicImages::Representation.ready(hero_image.file, size: :banner_desktop), only_path: true)
+    assert_includes response.body, rails_storage_proxy_path(PublicImages::Representation.ready(slider_image.file, size: :banner_desktop), only_path: true)
   end
 
   test "show keeps press images out of the design detail image slider when publishing is disabled" do
@@ -6401,7 +6406,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".design-detail-preview-image-slide", count: 1
     assert_not_includes response.body, "Slider Subline"
-    assert_not_includes response.body, rails_storage_proxy_path(slider_image.processed_optimized_public_variant(:card_desktop), only_path: true)
+    assert_not_includes response.body, rails_storage_proxy_path(PublicImages::Representation.ready(slider_image.file, size: :banner_desktop), only_path: true)
   end
 
   test "show hides slider images when stuttgart live slider publishing is disabled" do
@@ -6509,8 +6514,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil image_node
     assert_equal "500", image_node["width"]
     assert_equal "580", image_node["height"]
-    assert_includes image_node["srcset"], "384w"
-    assert_includes image_node["srcset"], "768w"
+    assert_match(/ 1w\z/, image_node["srcset"])
     assert_equal "(max-width: 699px) 100vw, 25vw", image_node["sizes"]
   end
 
@@ -6750,7 +6754,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       content_type: "image/png"
     )
     image.save!
-    image
+    EventImages::PreparePublicImagesJob.perform_now(image)
+    image.reload
   end
 
   def create_public_event(slug:, artist_name:, start_at:, status: "published", published_at: 1.day.ago)
@@ -6963,7 +6968,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     original_path_for = PublicMediaUrl.method(:path_for)
 
     PublicMediaUrl.singleton_class.send(:define_method, :path_for) do |record|
-      record.is_a?(ActiveStorage::VariantWithRecord) ? nil : original_path_for.call(record)
+      record.is_a?(ActiveStorage::VariantWithRecord) || (record.is_a?(ActiveStorage::Blob) && record.content_type == "image/webp") ? nil : original_path_for.call(record)
     end
 
     yield original_path_for

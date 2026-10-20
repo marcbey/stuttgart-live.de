@@ -67,6 +67,7 @@ env:
     DB_NAME: <%= ENV.fetch("DB_NAME", "stuttgart_live_de_production") %>
     DB_USER: <%= ENV.fetch("DB_USER", "stuttgart_live_de") %>
     ACTIVE_STORAGE_SERVICE: <%= ENV.fetch("ACTIVE_STORAGE_SERVICE", "local") %>
+    PUBLIC_IMAGE_LOCK_PATH: /rails/public-image-lock/work.lock
     MEDIA_PROXY_ENABLED: <%= ENV.fetch("MEDIA_PROXY_ENABLED", "true") %>
     STAGING_NOINDEX: "<%= !HetznerDeployConfig.production_redirect? %>"
 
@@ -76,4 +77,5 @@ ssh:
     - <%= ENV.fetch("KAMAL_SSH_KEY_PATH", File.expand_path("~/.ssh/stgt-live-hetzner-github")) %>
 
 volumes:
+  - "stuttgart_live_de_public_image_lock:/rails/public-image-lock"
   - "stuttgart_live_de_storage:/rails/storage"

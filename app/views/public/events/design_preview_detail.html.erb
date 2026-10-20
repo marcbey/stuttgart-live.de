@@ -2,25 +2,26 @@
 <% strict_proxy = homepage_media_strict_proxy? %>
 <% hero_slide = presenter.hero_gallery_slides.first %>
 <% fallback_image = @event.image_for(slot: :grid_default, breakpoint: :desktop) %>
-<% fallback_source = event_image_source(fallback_image, strict_proxy: strict_proxy, size: :card_desktop) %>
+<% fallback_source = event_image_source(fallback_image, strict_proxy: strict_proxy, size: :banner_desktop) %>
 <% hero_source = hero_slide&.desktop_source.presence || fallback_source %>
 <% hero_alt = hero_slide&.alt_text.presence || event_image_alt(fallback_image, @event) %>
 <% hero_credit = hero_slide&.credit.presence || presenter.hero_image_credit %>
 <% hero_preview_slides = Array(@design_preview_detail_format_images).filter_map do |item|
   image = item[:image]
-  source = event_image_source(image, strict_proxy: strict_proxy, size: :card_desktop)
+  source = event_image_source(image, strict_proxy: strict_proxy, size: :banner_desktop)
   next if source.blank?
 
   {
     label: item[:label],
     kind: item[:kind],
     source: source,
+    srcset: event_image_srcset(image, variant_sizes: %i[card_mobile banner_mobile banner_desktop], strict_proxy: strict_proxy),
     alt: event_image_alt(image, (image.event if image.respond_to?(:event)) || @event),
     credit: (image.sub_text.to_s.strip.presence if image.respond_to?(:sub_text))
   }
 end %>
 <% if hero_preview_slides.blank? && hero_source.present? %>
-  <% hero_preview_slides = [ { label: "Bild", source: hero_source, alt: hero_alt, credit: hero_credit } ] %>
+  <% hero_preview_slides = [ { label: "Bild", srcset: event_image_srcset(@event.image_for(slot: :detail_hero, breakpoint: :desktop) || fallback_image, variant_sizes: %i[card_mobile banner_mobile banner_desktop], strict_proxy: strict_proxy), source: hero_source, alt: hero_alt, credit: hero_credit } ] %>
 <% end %>
 <% display_price = public_event_ticket_price(@event, @primary_offer, format: :detail) %>
 <% ticket_status_text = (@event.public_ticket_status_label.presence || "Tickets aktuell nicht verfügbar") unless presenter.show_ticket_link? %>
@@ -110,6 +111,8 @@ end %>
                <%= "hidden" if index.positive? %>>
             <div class="design-detail-preview-image-frame">
               <%= image_tag slide.fetch(:source),
+                            srcset: slide[:srcset],
+                            sizes: "(max-width: 767px) calc(100vw - 2rem), (max-width: 1099px) 50vw, 46rem",
                             alt: index.zero? ? slide.fetch(:alt) : "",
                             loading: index.zero? ? "eager" : "lazy",
                             fetchpriority: (index.zero? ? "high" : nil),
