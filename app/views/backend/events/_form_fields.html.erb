@@ -65,6 +65,15 @@
       <p class="sr-only" role="status" aria-live="polite" data-venue-autocomplete-target="status"></p>
     </div>
   </div>
+  <div>
+    <%= form.label :price_override, "Preis (optional)", class: "form-label" %>
+    <%= form.text_field :price_override,
+                        class: "form-input",
+                        maxlength: 100,
+                        placeholder: "z. B. ab 49,00 €",
+                        aria: { describedby: dom_id(event, :price_override_hint) } %>
+    <p id="<%= dom_id(event, :price_override_hint) %>" class="form-hint">Ersetzt den importierten Preis. Leer lassen, um den Importpreis zu verwenden.</p>
+  </div>
   <% if show_promoter_id %>
     <div class="editor-grid editor-grid-span-full event-promoter-fields">
       <div>

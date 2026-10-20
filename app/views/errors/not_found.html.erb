@@ -1,0 +1,31 @@
+<% strict_proxy = homepage_media_strict_proxy? %>
+<% genre_lanes = public_design_navigation_lanes([], highlight_events: @not_found_events) %>
+<% menu_groups = public_design_menu_groups %>
+
+<div class="design-preview design-error-preview"
+     data-controller="design-preview-menu design-preview-filterbar">
+  <%= render "public/events/design_preview_header",
+             browse_state: @browse_state,
+             genre_lanes: genre_lanes,
+             search_overlay: @search_overlay,
+             menu_groups: menu_groups,
+             saved_events: @not_found_events,
+             strict_proxy: strict_proxy %>
+
+  <div class="design-error-preview-message">
+    <%= render "errors/message" %>
+  </div>
+
+  <%= render "public/events/design_preview_tagestipp_lane",
+             events: @not_found_events,
+             browse_state: @browse_state,
+             strict_proxy: strict_proxy,
+             effective_series_ids: @effective_series_ids,
+             series_counts_by_id: @series_counts_by_id,
+             title: "Unsere Highlights",
+             title_id: "not-found-highlights-title",
+             link_path: highlights_lane_path,
+             link_label: "Alle Highlights anzeigen" %>
+
+  <%= render "public/events/design_preview_footer", menu_groups: menu_groups %>
+</div>

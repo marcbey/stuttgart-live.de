@@ -45,7 +45,7 @@ class Public::LegacyRedirectsTest < ActionDispatch::IntegrationTest
   test "missing paths retain the existing error response" do
     get "/definitely-still-missing"
     assert_response :not_found
-    assert_select "h1", "Diese Seite gibt es nicht."
+    assert_select "h1", "Ups! Diese Seite gibt es leider nicht."
   end
 
   test "inventoried WordPress event resolves automatically through its ticket provider" do

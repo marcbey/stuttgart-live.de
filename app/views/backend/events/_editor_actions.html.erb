@@ -1,8 +1,4 @@
 <div class="editor-actions-row">
-  <label class="check-inline">
-    <%= check_box_tag "next_event_toggle", "1", next_event_enabled, data: { next_event_target: "toggle", action: "change->next-event#toggleChanged" } %>
-    <span>auto-next</span>
-  </label>
   <% if event.persisted? %>
     <button type="submit" form="<%= dom_id(event, :editor_form) %>" class="button button-save-primary button-compact">Save</button>
     <% unless event.published? %>
@@ -12,7 +8,7 @@
       <%= button_to "Unpublish",
                     unpublish_backend_event_path(event),
                     method: :patch,
-                    params: (filter_status.present? ? { inbox_status: filter_status } : {}),
+                    params: { inbox_status: filter_status.presence, return_to: editor_return_path },
                     class: "button button-secondary button-compact",
                     form: { data: { turbo_stream: true } } %>
     <% end %>

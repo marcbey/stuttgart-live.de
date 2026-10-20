@@ -112,6 +112,8 @@ Auch die öffentliche Event-Suche versteht strukturierte Zeitphrasen wie `heute`
 
 Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Location, damit du verschiedene Termine desselben Acts unterscheiden kannst. Ohne Treffer kannst du die Suche direkt ändern oder alle Events öffnen. Deine Merkliste wird in diesem Browser gespeichert; über die Teilenfunktion kannst du sie weitergeben.
 
+Bei der Eingabe von `Russ Live` erscheint ein direkter Link zur Russ-Live-Übersicht. Beim Absenden dieser Suche öffnet sich die Übersicht direkt. Groß- und Kleinschreibung sowie zusätzliche Leerzeichen spielen dabei keine Rolle; längere Suchanfragen bleiben normale Event-Suchen.
+
 Auf Event-Detailseiten lädt die Kopfzeilensuche Vorschläge erst beim Öffnen des Suchfelds nach. Ein übernommener Suchbegriff bleibt im Formular erhalten; das Laden der Detailseite wiederholt die Suche nicht.
 
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen und prägnante Titelvarianten bei gleicher oder sehr naher Startzeit. Damit kann der Merge-Import Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten`, `Gregory Porter & Orchestra` und `Gregory Porter` oder einen kurzen Veranstaltungstitel innerhalb eines längeren Provider-Titels als denselben Termin erkennen. Titel-Varianten werden dabei nur bei passender Venue zusammengeführt. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Event-Dubletten` ein- oder ausschalten.
@@ -143,10 +145,14 @@ Wichtig für Updates bestehender Events:
 - `source_snapshot` wird quellenübergreifend zusammengeführt, statt bei späteren Merges nur noch den zuletzt verarbeiteten Provider zu enthalten.
 - `event_offers` werden quellenweise auf den aktuellen Importstand synchronisiert: bestehende passende Offers werden aktualisiert, neue angelegt und nur Offers derselben gerade verarbeiteten Quelle entfernt, wenn sie dort nicht mehr vorkommen.
 - Eventim-Offers werden innerhalb desselben Merges zusätzlich konsolidiert: Mehrere Hauptangebote derselben Eventim-Vorstellung werden auf den neuesten Rohimport reduziert; erkannte Zusatzprodukte wie VIP- oder Package-Angebote ersetzen dieses Hauptangebot nicht.
+- Das optionale Feld „Preis“ im Event-Editor ersetzt den Importpreis auf Karten, Listen und der Detailseite, zum Beispiel mit `ab 49,00 €`. Ein leerer Eintrag stellt die automatische Preisanzeige wieder her. Der manuelle Preis bleibt bei späteren Importen erhalten und ändert die Ticketverfügbarkeit nicht.
+- Der Editor bleibt nach Save, Publish und Unpublish beim bearbeiteten Event, auch wenn es anschließend nicht mehr zum Filter der Seitenleiste passt. „Auto next“ wurde entfernt. „Zurück“ führt zur Seite, von der der Editor geöffnet wurde; ohne bekannte Herkunft zur Startseite.
 - Im Event-Editor kann die sichtbare Ticket-URL zusätzlich als manueller Override gespeichert werden. Dieser Override wird als eigenes `event_offer` mit `source = manual` angelegt oder aktualisiert und überschreibt keine importierten Offers direkt.
 - Ein bloßes erneutes Speichern einer unveränderten importierten Ticket-URL erzeugt dabei bewusst kein zusätzliches manuelles Offer.
 - Im Backend zeigt der Editor bei vorhandenem manuellem Override künftig diesen Wert an. Für die öffentliche Ticketlogik bleiben importierte Offers und deren Priorisierung weiterhin maßgeblich.
 - Der Ticketlink der öffentlichen Detailseite enthält für Screenreader einen Hinweis auf den Anbieter und den neuen Tab. Dieser Hinweis ist visuell ausgeblendet. Der Anbietername richtet sich nach der tatsächlich verlinkten Domain; unbekannte Ziele heißen neutral „Ticketanbieter“.
+- Hinweise aus dem Feld `Banderole`, etwa „Tickets an der Abendkasse“, erscheinen auf der Event-Detailseite unter dem Preis. Fehlt ein Preis, steht der Hinweis am Ende der Veranstaltungsdaten. Der allgemeine Platzhalter „Tickets“ wird ausgeblendet.
+- Ist kein Ticketkauf möglich, steht der Grund dort als rote Wolke, etwa „Ausverkauft“, „Abgesagt“, „Abgelaufen“ oder „Tickets aktuell nicht verfügbar“. Der Button behält die Beschriftung „Tickets sichern“, ist grau und deaktiviert.
 - Die öffentliche Ticketverfügbarkeit wird dabei nicht nur über `sold_out` abgeleitet, sondern zusätzlich über provider-spezifische Verfügbarkeits-Signale im Offer-Metadatum `availability_status`.
 - Für `Eventim` gilt aktuell:
   - `eventStatus = 1` wird als `canceled` interpretiert und im Frontend als `Abgesagt` angezeigt.
@@ -361,6 +367,8 @@ Events haben zwei getrennte Genre-Ebenen:
 Das LLM-Enrichment ermittelt pro Event beide Ebenen in einem Lauf. Dabei muss `genres` 1 bis 3 Werte aus der statischen Liste enthalten, während `sub_genres` 1 bis 4 frei abgeleitete fachliche Begriffe enthält. Bei jedem erfolgreichen Enrichment-Lauf werden die bestehenden Genre- und Sub-Genre-Zuordnungen des Events ersetzt.
 
 Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus der statischen Genre-Liste gepflegt. Dieselbe Auswahl steuert auch die kompakte Genre-Navigation auf der Startseite; wenn dort keine Genres aktiviert sind, erscheinen auf der Startseite keine Genre-Lanes und keine Genre-Navigation. Dort kann zusätzlich eine Genre-Tag-Cloud aktiviert werden, die unter den Genre-Lanes weitere statische Genres mit kommenden öffentlichen Events verlinkt. Es gibt keinen separaten Genre-Gruppierungsjob und keine Snapshot-Auswahl mehr.
+
+Die aufklappbare Genre-Liste in der Suche zeigt auf Desktop und Mobil alle öffentlichen Genres in der festgelegten Reihenfolge, unabhängig von der Auswahl der Homepage-Lanes.
 
 Öffentliche Eventlisten und Suchergebnisse starten mit höchstens 20 Kacheln und laden weitere beim Scrollen oder über „Mehr Events laden“ nach. Die Suche zeigt weiterhin die Gesamtzahl der Treffer und behält einzelne Termine einer Event-Reihe sowie ihre Trefferreihenfolge bei. „Heute in Stuttgart“ enthält ausschließlich Veranstaltungen des aktuellen Tages in der Zeitzone der Anwendung.
 
@@ -645,6 +653,12 @@ HCLOUD_TOKEN=...
 KAMAL_REGISTRY_PUSH_TOKEN=...
 KAMAL_REGISTRY_PULL_PASSWORD=...
 ```
+
+### Öffentliche Fehlerseiten
+
+Bei einer unbekannten Seitenadresse zeigt die 404-Seite den gewohnten Header mit Suche, Merkliste und Menü sowie bis zu sechs kommende, veröffentlichte Highlights. Der Startseiten-Button lädt die Startseite vollständig neu, damit der Rückweg auch aus einer fehlgeschlagenen Teilnavigation funktioniert.
+
+Sind die dafür benötigten Daten oder Ansichten nicht verfügbar, wird automatisch die einfache Fehlerseite ohne JavaScript und Datenbankinhalte angezeigt. Auch die Fehlerseiten für 400, 422 und 500 bleiben unabhängig davon nutzbar. Die dynamische 404-Ansicht lässt sich lokal unter `/errors/404` prüfen; `public/404.html` bleibt die statische Notfallseite.
 
 ## Qualitätssicherung
 

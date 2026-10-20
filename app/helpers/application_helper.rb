@@ -99,6 +99,19 @@ module ApplicationHelper
     end
   end
 
+  def public_search_genre_links
+    @public_search_genre_links ||= begin
+      genres_by_name = Genre.all.index_by(&:name)
+      paths_by_slug = Public::Events::LaneDirectory.public_paths_for_genre_slugs(genres_by_name.values.map(&:slug))
+
+      Genre.static_names.filter_map do |name|
+        genre = genres_by_name[name]
+        path = paths_by_slug[genre&.slug]
+        [ name, path ] if path.present?
+      end
+    end
+  end
+
   PublicDesignNavigationGroup = Data.define(:name, :slug)
 
   def app_nav_link_class(active: false, accent: false)

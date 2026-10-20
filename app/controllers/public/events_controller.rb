@@ -58,6 +58,11 @@ module Public
         return
       end
 
+      if (navigation_target = Public::Events::Search::NavigationTarget.call(@browse_state.query))
+        redirect_to navigation_target.public_path, allow_other_host: false
+        return
+      end
+
       relation = search_results_relation
       @search_result_count = relation.except(:includes, :order).count
       if should_redirect_search_result?(@search_result_count)

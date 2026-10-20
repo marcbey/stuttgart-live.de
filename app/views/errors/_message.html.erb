@@ -1,0 +1,46 @@
+<% content_for :title, "#{@status_code} | Stuttgart Live" %>
+<% content_for :head do %>
+  <meta name="robots" content="noindex, nofollow">
+<% end %>
+
+<%
+  recovery_copy =
+    case @status_code
+    when 400
+      "Prüf die Angaben noch einmal und öffne die gewünschte Seite danach neu."
+    when 404
+      "Prüf die Adresse oder spring direkt zurück zur Startseite."
+    when 422
+      "Öffne das Formular neu und versuch es noch einmal. Falls du Text eingegeben hast, sichere ihn vorher über die Zurück-Funktion deines Browsers."
+    else
+      "Wenn die Störung bleibt, versuch es in ein paar Minuten noch einmal."
+    end
+%>
+
+<section aria-labelledby="public-error-title">
+  <header class="public-error-hero">
+    <p class="app-error-status">Fehler <%= @status_code %> · <%= @error_copy[:eyebrow] %></p>
+    <h1 id="public-error-title"><%= @error_copy[:title] %></h1>
+    <p><%= @error_copy[:message] %></p>
+  </header>
+
+  <div class="public-error-recovery">
+    <p><%= recovery_copy %></p>
+    <div class="public-error-actions">
+      <%= link_to "Zur Startseite", root_path, class: "button", data: { turbo: false }, target: "_top" %>
+      <% if (back_url = controller.url_from(request.referer)).present? %>
+        <%= link_to "Zurück", back_url, class: "button button-secondary" %>
+      <% end %>
+    </div>
+    <% unless @status_code == 404 %>
+      <nav class="public-error-links" aria-label="Direkt weiter">
+        <% if @status_code == 422 %>
+          <%= link_to "Zur Newsletter-Anmeldung", new_newsletter_subscriber_path %>
+        <% end %>
+        <%= link_to "Events", root_path %>
+        <%= link_to "News", news_index_path %>
+        <%= link_to "Kontakt", contact_path %>
+      </nav>
+    <% end %>
+  </div>
+</section>

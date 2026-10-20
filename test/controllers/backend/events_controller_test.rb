@@ -56,7 +56,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       assert_select ".app-nav-links .app-nav-link-active", text: "Events"
       assert_match(/Events.*News.*Präsentatoren.*Locations.*Queue.*Passwort.*Logout/m, response.body)
       assert_includes response.body, "Event-Inbox"
-      assert_includes response.body, "auto-next"
+      assert_not_includes response.body, "auto-next"
       assert_includes response.body, "name=\"status\""
       assert_includes response.body, "value=\"published\""
       assert_includes response.body, "Promoter-ID"
@@ -66,7 +66,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       assert_includes response.body, "Bilder aus Import"
       assert_not_includes response.body, "Ticket-Angebote"
       assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"
-      assert_includes response.body, "data-next-event-enabled-value=\"false\""
+      assert_select "input[name=next_event_enabled]", count: 0
       assert_select "input[name='starts_after'][value='#{Date.current.iso8601}']"
       assert_select "#event_topbar_editor_actions a.button", text: "Open"
     end
@@ -267,8 +267,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-slider-images[hidden]", count: 1
     assert_select "#event-editor-panel-presenters[hidden]", count: 1
     assert_select "#event-editor-panel-settings[hidden]", count: 1
-    assert_select "#event-editor-tab-slider-images[data-event-editor-tabs-url-param='#{backend_event_path(@event, status: "needs_review", editor_tab: "slider_images")}']", count: 1
-    assert_select "#event-editor-tab-presenters[data-event-editor-tabs-url-param='#{backend_event_path(@event, status: "needs_review", editor_tab: "presenters")}']", count: 1
+    assert_select "#event-editor-tab-slider-images[data-event-editor-tabs-url-param='#{backend_event_path(@event, status: "needs_review", editor_tab: "slider_images", return_to: root_path)}']", count: 1
+    assert_select "#event-editor-tab-presenters[data-event-editor-tabs-url-param='#{backend_event_path(@event, status: "needs_review", editor_tab: "presenters", return_to: root_path)}']", count: 1
     assert_select "#event-editor-panel-slider-images .slider-image-editor-card", count: 0
     assert_select "#event-editor-panel-slider-images h4", text: "Presse-Bilder hochladen", count: 0
     assert_select "#event-editor-panel-presenters input[name='event[presenter_ids][]']", count: 0
@@ -949,16 +949,48 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "select[name='merge_change_type'] option[selected][value='all']"
   end
 
-  test "next event preference endpoint stores value in session" do
+  test "editor links back to the referring page and keeps that destination after saving" do
+    sign_in_as(@user)
+    origin = "/events?genre=rock"
+
+    get backend_events_url(event_id: @event.id), headers: { "HTTP_REFERER" => "#{root_url.chomp('/')}#{origin}" }
+
+    assert_response :success
+    assert_select "a.event-editor-back-link[href=?]", origin, text: "Zurück"
+    assert_select "input[name=return_to][value=?]", origin
+    assert_select "input[name='event[price_override]']"
+
+    patch backend_event_url(@event), params: { event: { title: @event.title }, return_to: origin }
+
+    assert_redirected_to backend_events_url(status: @event.status, event_id: @event.id, return_to: origin)
+    follow_redirect!
+    assert_select "a.event-editor-back-link[href=?]", origin
+  end
+
+  test "editor ignores external and malformed return destinations" do
     sign_in_as(@user)
 
-    post next_event_preference_backend_events_url, params: { enabled: "0" }
+    [ "https://example.org/", "//example.org/", "/\\example.org/", "/%2fexample.org/" ].each do |destination|
+      get backend_events_url(event_id: @event.id, return_to: destination)
+      assert_response :success
+      assert_select "a.event-editor-back-link[href='/']", text: "Zurück"
+    end
+  end
 
-    assert_response :success
+  test "update saves and clears an optional editorial price without changing imported offers" do
+    sign_in_as(@user)
+    offer = event_offers(:published_one_offer)
+    original_price = offer.ticket_price_text
 
-    get backend_events_url
-    assert_response :success
-    assert_includes response.body, "data-next-event-enabled-value=\"false\""
+    patch backend_event_url(@published_event), params: { event: { price_override: "  ab 49,00 €  " } }
+    assert_response :redirect
+    assert_equal "ab 49,00 €", @published_event.reload.price_override
+    assert_equal original_price, offer.reload.ticket_price_text
+
+    patch backend_event_url(@published_event), params: { event: { price_override: "  " } }
+    assert_response :redirect
+    assert_nil @published_event.reload.price_override
+    assert_equal original_price, offer.reload.ticket_price_text
   end
 
   test "status filter is persisted in session" do
@@ -1734,7 +1766,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "published", @event.reload.status
   end
 
-  test "update stores next event preference from editor form param" do
+  test "update ignores a legacy auto next form param" do
     sign_in_as(@user)
 
     patch backend_event_url(@event), params: {
@@ -1753,7 +1785,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     get backend_events_url
     assert_response :success
-    assert_includes response.body, "data-next-event-enabled-value=\"false\""
+    assert_select "input[name=next_event_enabled]", count: 0
   end
 
   test "top save persists event image crop settings" do
@@ -1811,7 +1843,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to backend_events_url(status: "published", event_id: @published_event.id)
   end
 
-  test "turbo update renders next filtered event when next event preference is enabled" do
+  test "turbo update stays on the edited event despite a legacy auto next param" do
     sign_in_as(@user)
 
     post apply_filters_backend_events_url, params: {
@@ -1834,10 +1866,10 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, "target=\"events_list\""
-    assert_includes response.body, "editor_form_event_#{@next_event.id}"
+    assert_includes response.body, "editor_form_event_#{@event.id}"
   end
 
-  test "turbo update wraps to first filtered event when current event is last" do
+  test "turbo update stays on the last event" do
     sign_in_as(@user)
 
     post apply_filters_backend_events_url, params: {
@@ -1859,7 +1891,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     }, as: :turbo_stream
 
     assert_response :success
-    assert_includes response.body, "editor_form_event_#{@event.id}"
+    assert_includes response.body, "editor_form_event_#{@next_event.id}"
   end
 
   test "update does not clear existing genres when genre_ids are absent" do
@@ -2699,8 +2731,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       assert_includes response.body, 'target="events_list"'
       assert_includes response.body, @next_event.artist_name
       assert_includes response.body, 'target="event_editor"'
-      assert_includes response.body, "editor_form_event_#{@next_event.id}"
-      assert_includes response.body, "Publish"
+      assert_includes response.body, "editor_form_event_#{@event.id}"
+      assert_includes response.body, "Unpublish"
     end
   end
 
@@ -2727,8 +2759,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
       assert_includes response.body, 'target="events_list"'
       assert_includes response.body, other_published_event.artist_name
       assert_includes response.body, 'target="event_editor"'
-      assert_includes response.body, "editor_form_event_#{other_published_event.id}"
-      assert_includes response.body, "/backend/events/#{other_published_event.id}/unpublish"
+      assert_includes response.body, "editor_form_event_#{@published_event.id}"
+      assert_select "button", text: "Publish"
     end
   end
 

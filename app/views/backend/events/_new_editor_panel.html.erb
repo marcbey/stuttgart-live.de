@@ -29,7 +29,7 @@
      data-controller="event-image-preupload"
      data-event-image-preupload-direct-upload-url-value="<%= rails_direct_uploads_path %>">
   <template class="editor-actions-template">
-    <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled, filter_status: nil %>
+    <%= render "backend/events/editor_actions", event: event, filter_status: nil %>
   </template>
 
   <header class="editor-header">
@@ -49,6 +49,7 @@
                 class: "editor-form",
                 html: { multipart: true, id: editor_form_id },
                 data: { action: "submit->event-image-preupload#beforeSubmit" } do |form| %>
+    <%= hidden_field_tag :return_to, editor_return_path %>
     <% if form_errors.any? %>
       <div class="flash flash-alert">
         <strong>Bitte Eingaben prüfen.</strong>

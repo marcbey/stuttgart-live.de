@@ -6,9 +6,9 @@
 <% search_help_id = "public-search-help#{dom_id_suffix}" %>
 <% search_overlay_id = "public-search-overlay#{dom_id_suffix}" %>
 <% search_calendar_id = "public-search-calendar#{dom_id_suffix}" %>
-<% preview_genre_lanes = Array(local_assigns[:preview_genre_lanes]) %>
+<% preview_genres = local_assigns.key?(:preview_genre_lanes) ? public_search_genre_links : [] %>
 <% preview_overlay = local_assigns[:preview_overlay] %>
-<% search_overlay_path = preview_genre_lanes.any? ? search_overlay_events_path(preview_results_only: true) : search_overlay_events_path %>
+<% search_overlay_path = preview_genres.any? ? search_overlay_events_path(preview_results_only: true) : search_overlay_events_path %>
 
 <%= form_with url: search_path,
               method: :get,
@@ -98,32 +98,8 @@
          class="public-search-overlay"
          data-public-search-target="panel"
          hidden>
-      <% if preview_genre_lanes.any? %>
+      <% if preview_genres.any? %>
         <div class="design-preview-search-controls">
-          <div class="design-preview-search-today-row">
-            <%= link_to tagestipp_lane_path,
-                        class: "public-search-result public-search-result-compact design-preview-search-today-link",
-                        data: {
-                          public_search_result: true,
-                          action: "keydown->public-search#handleResultKeydown"
-                        } do %>
-              <span class="public-search-result-copy">
-                <strong class="public-search-result-artist">HEUTE</strong>
-              </span>
-            <% end %>
-            <button type="button"
-                    class="design-preview-search-today-calendar"
-                    aria-label="Datum wählen"
-                    data-public-search-keep-panel-param="true"
-                    data-action="public-search#toggleCalendar">
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 3.5v3"></path>
-                <path d="M17 3.5v3"></path>
-                <rect x="4" y="5.5" width="16" height="15" rx="2.25"></rect>
-                <path d="M4 10h16"></path>
-              </svg>
-            </button>
-          </div>
           <details class="design-preview-search-genres-dropdown">
             <summary class="public-search-result public-search-result-compact">
               <span class="public-search-result-copy">
@@ -132,9 +108,9 @@
               <span class="design-preview-search-genres-arrow" aria-hidden="true"></span>
             </summary>
             <div class="design-preview-search-genres-menu">
-              <% preview_genre_lanes.each do |lane| %>
-                <%= link_to lane.group.name,
-                            lane.public_path,
+              <% preview_genres.each do |name, path| %>
+                <%= link_to name,
+                            path,
                             data: {
                               public_search_result: true,
                               action: "keydown->public-search#handleResultKeydown"
@@ -148,6 +124,7 @@
                           } %>
             </div>
           </details>
+          <div class="public-search-overlay-separator" role="presentation"></div>
         </div>
       <% end %>
       <div class="public-search-overlay-results"
@@ -157,7 +134,7 @@
         <%= render "public/events/search_overlay",
                    browse_state: browse_state,
                    overlay: preview_overlay,
-                   preview_results_only: preview_genre_lanes.any? %>
+                   preview_results_only: preview_genres.any? %>
       </div>
     </div>
 
@@ -207,7 +184,7 @@
       <%= render "public/events/search_overlay",
                  browse_state: browse_state,
                  overlay: preview_overlay,
-                 preview_results_only: preview_genre_lanes.any? %>
+                 preview_results_only: preview_genres.any? %>
     </template>
   </div>
 <% end %>

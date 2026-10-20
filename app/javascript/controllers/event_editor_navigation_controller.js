@@ -1,62 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["toggle", "preference", "headerActions", "newAction"]
-  static values = { enabled: { type: Boolean, default: true }, preferenceUrl: String }
+  static targets = ["headerActions", "newAction"]
+  static values = { returnPath: String }
 
   connect() {
-    this.applyToggleState()
     this.syncActiveFromEditor()
   }
 
-  toggleChanged() {
-    if (!this.hasToggleTarget) return
-
-    this.enabledValue = this.toggleTarget.checked
-    this.syncPreferenceField()
-    this.persistPreference()
-  }
-
-  applyToggleState() {
-    if (this.hasToggleTarget) {
-      this.toggleTarget.checked = this.enabledValue
-    }
-
-    this.syncPreferenceField()
-  }
-
-  nextEventEnabled() {
-    if (this.hasToggleTarget) return this.toggleTarget.checked
-
-    return this.enabledValue
-  }
-
-  syncPreferenceField() {
-    if (!this.hasPreferenceTarget) return
-
-    this.preferenceTarget.value = this.nextEventEnabled() ? "1" : "0"
-  }
-
-  persistPreference() {
-    if (!this.hasPreferenceUrlValue) return
-
-    const token = document.querySelector("meta[name='csrf-token']")?.content
-    if (!token) return
-
-    const body = new URLSearchParams({ enabled: this.nextEventEnabled() ? "1" : "0" })
-    fetch(this.preferenceUrlValue, {
-      method: "POST",
-      headers: {
-        "X-CSRF-Token": token,
-        "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
-      },
-      credentials: "same-origin",
-      body
-    })
-  }
-
   eventLinkClicked(event) {
-    const eventId = Number.parseInt(event.currentTarget?.dataset?.nextEventEventId, 10)
+    const eventId = Number.parseInt(event.currentTarget?.dataset?.eventEditorNavigationEventId, 10)
     if (Number.isNaN(eventId)) return
 
     const editorTab = this.currentEditorTab()
@@ -140,7 +93,7 @@ export default class extends Controller {
 
     if (eventId === null || eventId === undefined) return
 
-    const activeLink = document.querySelector(`.event-link[data-next-event-event-id='${eventId}']`)
+    const activeLink = document.querySelector(`.event-link[data-event-editor-navigation-event-id='${eventId}']`)
     const activeItem = activeLink?.closest(".event-list-item")
     if (activeItem) activeItem.classList.add("event-list-item-active")
   }
@@ -187,6 +140,7 @@ export default class extends Controller {
 
   replaceUrl({ eventId = null, status = null, editorTab = null, newRecord = false } = {}) {
     const url = new URL(window.location.href)
+    if (this.hasReturnPathValue) url.searchParams.set("return_to", this.returnPathValue)
 
     if (status) {
       url.searchParams.set("status", status)

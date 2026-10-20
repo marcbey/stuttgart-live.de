@@ -1,10 +1,9 @@
 <div id="event_topbar_editor_actions"
      class="backend-topbar-editor-actions"
-     data-next-event-target="headerActions">
+     data-event-editor-navigation-target="headerActions">
   <% if event.present? %>
     <%= render "backend/events/editor_actions",
                event: event,
-               next_event_enabled: next_event_enabled,
                filter_status: filter_status %>
   <% end %>
 </div>

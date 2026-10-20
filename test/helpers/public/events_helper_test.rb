@@ -61,6 +61,30 @@ class Public::EventsHelperTest < ActionView::TestCase
     assert_equal [ 2, 2 ], [ tiles.last.column, tiles.last.row ]
   end
 
+  test "editorial price takes priority on cards and details and clearing it restores the import" do
+    event = events(:published_one)
+    offer = event_offers(:published_one_offer)
+    event.start_at = 2.days.from_now
+    event.price_override = "ab 49,00 €"
+    event.min_price = 20
+    event.max_price = 80
+
+    assert_equal "ab 49,00 €", public_event_ticket_price(event, offer)
+    assert_equal "ab 49,00 €", public_event_ticket_price(event, offer, format: :detail)
+    event.price_override = nil
+    assert_equal "ab 20,00€", public_event_ticket_price(event, offer)
+  end
+
+  test "editorial price can fill a missing offer without making tickets available" do
+    event = events(:published_one)
+    event.start_at = 2.days.from_now
+    event.event_offers.destroy_all
+    event.price_override = "35,00 €"
+
+    assert_equal "35,00 €", public_event_ticket_price(event)
+    assert_nil event.public_ticket_offer
+  end
+
   test "public_event_ticket_price returns ab price for ranges" do
     event = events(:published_one)
     offer = event_offers(:published_one_offer)
