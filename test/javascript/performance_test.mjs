@@ -136,6 +136,7 @@ test("a bounded navigation deadline is infrastructure timeout, not a metric fail
 
 async function browserWithoutDebugger() {
   const fs = await import("node:fs/promises");
+  const { watch } = await import("node:fs");
   const { tmpdir } = await import("node:os");
   const { join } = await import("node:path");
   const dir = await fs.mkdtemp(join(tmpdir(), "performance-startup-"));
@@ -144,10 +145,35 @@ async function browserWithoutDebugger() {
   await fs.writeFile(executable, `#!${process.execPath}\nconst fs = require("node:fs");
 const { spawn } = require("node:child_process");
 const child = spawn(process.execPath, ["-e", "setInterval(() => {}, 1000)"], { stdio: "ignore" });
-fs.writeFileSync(${JSON.stringify(pidFile)}, JSON.stringify([process.pid, child.pid]));
+child.once("spawn", () => {
+  fs.writeFileSync(${JSON.stringify(pidFile + ".tmp")}, JSON.stringify([process.pid, child.pid]));
+  fs.renameSync(${JSON.stringify(pidFile + ".tmp")}, ${JSON.stringify(pidFile)});
+});
 setInterval(() => {}, 1000);\n`, { mode: 0o700 });
   const readPids = async () => JSON.parse(await fs.readFile(pidFile, "utf8"));
-  return { dir, executable, readPids, async cleanup() {
+  // This is a bound on a missing fixture signal, not an allowance for Node startup speed.
+  const waitForStart = () => new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (error, pids) => {
+      if (settled) return;
+      settled = true; clearTimeout(deadline); watcher.close();
+      if (error) reject(error); else resolve(pids);
+    };
+    const check = async () => {
+      try {
+        const pids = await readPids();
+        if (pids.length !== 2 || !pids.every(pid => Number.isInteger(pid) && pid > 1)) throw new Error();
+        finish(null, pids);
+      } catch (error) {
+        if (error.code !== "ENOENT") finish(new Error("Invalid browser fixture start signal"));
+      }
+    };
+    const watcher = watch(dir, () => { void check(); });
+    watcher.once("error", () => finish(new Error("Browser fixture signal watcher failed")));
+    const deadline = setTimeout(() => finish(new Error("Browser fixture did not signal actual parent/child startup")), 10000);
+    void check(); // Also catch a signal atomically published before the watcher was installed.
+  });
+  return { dir, executable, readPids, waitForStart, async cleanup() {
     for (const pid of await readPids().catch(() => [])) {
       try { process.kill(-pid, "SIGKILL"); } catch { /* Already stopped. */ }
       try { process.kill(pid, "SIGKILL"); } catch { /* Already stopped. */ }
@@ -167,12 +193,25 @@ test("readiness rejection stops an actually spawned browser process group", asyn
   const browser = await browserWithoutDebugger();
   const worker = await import("../../script/performance/worker.mjs");
   try {
-    const fastFailure = { connectionPollInterval: 50, maxConnectionRetries: 20 };
+    const fastFailure = { connectionPollInterval: 10, maxConnectionRetries: 1 };
+    let debuggerRejection;
     const result = await worker.runNavigation({ chromePath: browser.executable, userDataDir: browser.dir,
       url: "https://example.invalid", profile: "mobile" }, {
-      createBrowser: (options, onSpawn) => worker.createOwnedBrowser({ ...options, ...fastFailure }, onSpawn)
+      createBrowser: (options, onSpawn) => {
+        const launcher = worker.createOwnedBrowser({ ...options, ...fastFailure }, onSpawn);
+        const waitUntilReady = launcher.waitUntilReady.bind(launcher);
+        // Start the real debugger probes only after both real fixture processes exist.
+        launcher.waitUntilReady = async () => {
+          const pids = await browser.waitForStart();
+          for (const pid of pids) process.kill(pid, 0);
+          try { return await waitUntilReady(); }
+          catch (error) { debuggerRejection = error.code; throw error; }
+        };
+        return launcher;
+      }
     });
     assert.deepEqual(result, { failure: "browser-or-transport" });
+    assert.equal(debuggerRejection, "ECONNREFUSED", "the real debugger probe must reject, not the fixture guard");
     await assertProcessesStopped(await browser.readPids());
   } finally { await browser.cleanup(); }
 });
