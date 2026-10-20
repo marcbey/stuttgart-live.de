@@ -6,17 +6,69 @@ Freigabe- und Rollback-Ablauf in der
 Die folgenden Bereitstellungs- und Umzugsschritte sind bei einem Neuaufbau oder
 Domainwechsel relevant; für einen normalen App-Deploy werden sie nicht wiederholt.
 
-Beide Rails-Apps bleiben auf Hetzner `46.225.224.194`. Stuttgart wird unter
-`https://stuttgart-live.de`, Russ unter `https://russ-live.de` veröffentlicht.
+Beide Rails-Apps laufen auf Hetzner `46.225.224.194`: Stuttgart unter
+`https://stuttgart-live.de`, Russ unter `https://russ-live.de`.
 Die jeweilige `www`-Adresse erhält HTTPS und leitet mit Status 308, erhaltenem
 Pfad und Querystring zum Apex weiter. Die getrennten Testumgebungen liegen unter
 `staging.stuttgart-live.de` und `staging.russ-live.de`.
 
-Host Europe verwaltet Stuttgart, STRATO Russ. Codex bedient dafür die vom Nutzer
-bereits angemeldeten Browsersitzungen. Der Nutzer hat den öffentlichen Wechsel
-für den 17. Oktober 2026 freigegeben. Russ wird zuerst umgestellt;
-Stuttgart folgt erst nach vollständiger Russ-Abnahme. Der genaue Abnahmezeitpunkt
-und die freigegebenen Release-IDs stehen im privaten Betriebsprotokoll.
+Host Europe verwaltet Stuttgart und `michaelrussgmbh.de`, STRATO verwaltet Russ.
+Provider-Eingriffe erfolgen ausschließlich in den vom Nutzer autorisierten,
+angemeldeten Sitzungen. Russ und danach Stuttgart wurden am 17. Oktober 2026
+öffentlich umgestellt. Abnahmezeitpunkte, Release-IDs und unveränderliche
+Vorher-/Nachher-Nachweise stehen im privaten Betriebsprotokoll.
+
+## Betriebsstand nach dem Domainumzug
+
+Stand: 20. Oktober 2026. Beide GitHub-Production-Environments verwenden
+`PRODUCTION_DOMAIN_MODE=live`. Automatisches HTTPS ist übernommen; die tatsächlich
+ausgelieferten Zertifikate aller sechs Produktionshosts stimmen mit dem
+persistenten Cache im Docker-Volume `kamal-proxy-config` überein. Die
+Stuttgart-Übergangs-Secrets wurden nach dem Nachweis entfernt. Zertifikatserneuerung
+gehört zum laufenden Proxy-Betrieb; temporäre DNS-01-Tokens werden dafür nicht
+benötigt.
+
+| Zone / Provider | Apex A / TTL | `www` / TTL | `staging` A / TTL |
+| --- | --- | --- | --- |
+| `stuttgart-live.de` / Host Europe | `46.225.224.194` / 600 s | CNAME `stuttgart-live.de` / 600 s | `46.225.224.194` / 86400 s |
+| `russ-live.de` / STRATO | `46.225.224.194` / 150 s | CNAME `russ-live.de` / 150 s | `46.225.224.194` / 150 s |
+| `michaelrussgmbh.de` / Host Europe | `46.225.224.194` / 600 s | A `46.225.224.194` / 600 s | keine Staging-Zuordnung |
+
+Für diese Apex-/`www`-Webhosts bestehen keine AAAA-Einträge. Die früheren
+Web-AAAA wurden gezielt entfernt; Mail- und FTP-Hostadressen blieben erhalten.
+Die ursprünglichen Web-TTLs wurden beibehalten, deshalb ist keine TTL-Rückstellung
+erforderlich. Globale TTLs und sämtliche Nicht-Web-Einträge bleiben unverändert.
+
+`michaelrussgmbh.de` und `www.michaelrussgmbh.de` führen seit dem 19. Oktober mit
+HTTP und HTTPS auf genau `https://russ-live.de/`. Die abschließende Weiterleitung
+ist HTTP 301; alle alten Pfade und Querystrings entfallen. Das ist die getrennt
+genehmigte Ausnahme zur pfaderhaltenden `www`-Weiterleitung der beiden Hauptseiten.
+
+Die Stuttgart-Abnahme vom 17. Oktober um 19:13 Uhr MESZ startete das mindestens
+72-stündige Rückfallfenster; die Mindestfrist endete am 20. Oktober um 19:13 Uhr
+MESZ. Die funktionale Nutzerabnahme liegt vor. Ausführungsunterbrechungen und
+begrenzte Log-Aufbewahrung sind im privaten Protokoll dokumentiert; daraus folgt
+kein lückenloser stündlicher Messnachweis. Separat gemeldete Anwendungsfehler
+bleiben dort offen. Die Mail-Abnahme belegt ausschließlich unveränderte
+DNS-Werte, Prioritäten und TTLs; es wurde keine Postfachprobe durchgeführt.
+
+Noch offen ist die Entfernung von genau sechs eigenen DNS-01-TXT-Werten: je
+einer unter `_acme-challenge` für Apex und `www` der drei Zonen. Die aktiven
+Provider-Sitzungen fehlen derzeit. Vor und nach **jeder** einzelnen Entfernung
+vollständige frische Provider- und DNS-Inventare beider Autoritäten sichern und
+streng auditieren. Fremde TXT-Werte bleiben erhalten. Bei STRATO die unten
+beschriebene Wildcard-Synthese ausschließlich anhand frischer kanonischer
+Nachweise bewerten; MX-Änderungen sind niemals zulässig. Erst nach diesen
+Nachweisen die Bereinigung und die automatische Nachkontrolle abschließen.
+
+Marc (`marcbey`) oder Katharina Schopper (`kasch0`) gibt Produktionsversionen
+über GitHub frei. Host-Administration nutzt `admin`, App-Deployments `deploy`;
+die gemeinsame Infrastruktur wird aus diesem Repository verwaltet. Ein
+bereinigter Staging-Refresh wird weiterhin bewusst manuell aus Stuttgart
+gestartet: [Ablauf und Manifest](../../README.md#bereinigte-staging-daten-manuell-erneuern).
+Der bisherige WordPress-Betreiber und sein Hostingzugang sind unbekannt; die
+Abschaltung bleibt eine externe Abhängigkeit. Hosting- und Mailverträge werden
+durch diese Nachkontrolle nicht gekündigt.
 
 ## Unveränderliche Daten und Rückweg
 
@@ -30,25 +82,26 @@ Der Nutzer kann keine Postfachprobe durchführen; diese ist daher keine Vorausse
 Senden und Empfangen werden nicht Ende zu Ende geprüft oder als nachgewiesen bezeichnet.
 
 Es gibt keine `old.*`-Subdomains. Das bisherige WordPress-Hosting bleibt mindestens
-72 Stunden nach erfolgreicher Stuttgart-Abnahme unverändert. Für internes
-Nachschlagen genügt vorübergehend diese lokale hosts-Zeile:
+72 Stunden nach erfolgreicher Stuttgart-Abnahme unverändert. Der Rückweg wurde
+mit echtem Hostnamen und gültiger HTTPS-Prüfung gezielt geprüft:
 
-```text
-83.169.28.13 stuttgart-live.de www.stuttgart-live.de
+```bash
+curl --resolve stuttgart-live.de:443:83.169.28.13 -I https://stuttgart-live.de/
+curl --resolve www.stuttgart-live.de:443:83.169.28.13 -I https://www.stuttgart-live.de/
 ```
 
-Dabei weiterhin `https://stuttgart-live.de` öffnen; eine reine IP-Adresse ersetzt
-Hostname und TLS-Zertifikat nicht. Vor dem Livegang Erreichbarkeit und
-Zertifikatslaufzeit mit `curl --resolve` erneut prüfen. Hosts-Zuordnung nach dem
-Nachschlagen entfernen, damit öffentliche Abnahme und Alltag das echte DNS nutzen.
+Eine reine IP-Adresse ersetzt Hostname und TLS-Zertifikat nicht. Es wurde kein
+dauerhafter lokaler hosts-Override eingerichtet; öffentliche Abnahme und Alltag
+verwenden das echte DNS. Die beiden `--resolve`-Optionen gelten nur für den
+jeweiligen einzelnen Abruf.
 Die Abschaltung von WordPress braucht den bisherigen Betreiber; dessen Kontakt
 und Hostingzugang liegen nicht vor. Eine vollständige WordPress-Sicherung ist
 daher nicht zugesagt.
 
 Die alten schopp3r-Adressen müssen nach Nutzerentscheidung nicht erreichbar
 bleiben. Ihre Zone und SANs sind für diesen Ablauf nicht erforderlich.
-`www.michaelrussgmbh.de` bleibt zunächst unverändert; dessen spätere Weiterleitung
-auf Russ ist ein eigener Schritt.
+Die spätere Web-Weiterleitung beider Michael-Russ-Hosts wurde getrennt genehmigt
+und umgesetzt; der aktuelle Stand steht oben.
 
 ## Vollständiger DNS-Nachweis vor jedem Eingriff
 
@@ -207,13 +260,12 @@ Absenderverifizierung, Newsletter-Drafts, alte Bestätigungs-/Abmeldelinks,
 Meta-Callbacks und weitere Domainbindungen vorab prüfen. Falls zusätzliche
 Mail-DNS nötig wäre, Mailteil klären; keine SPF-/DKIM-Ergänzung vornehmen.
 
-Für den Umzug am 17. Oktober 2026 bleibt die vorhandene Meta-Konfiguration
-zunächst erhalten. Ihr fester OAuth-Rückruf zeigt noch auf die bisherige
-schopp3r-Adresse. Neue Meta-Verknüpfungen dürfen nach Nutzerentscheidung warten;
-dafür müssen später die erlaubte Rückrufadresse in Meta Developers und die
-App-Konfiguration gemeinsam auf die neue Domain umgestellt und geprüft werden.
-Vorhandene Veröffentlichungen werden durch diesen Umzugsschritt nicht neu
-konfiguriert; eine erfolgreiche neue OAuth-Verknüpfung wird nicht behauptet.
+Beim Umzug blieben neue Meta-Verknüpfungen zunächst zurückgestellt. Die
+App-Anpassung an `https://stuttgart-live.de/backend/meta_connection/callback`
+wurde inzwischen über den regulären Produktionsweg veröffentlicht. Die erlaubten
+Rückrufadressen in Meta Developers müssen dazu passen. Die Nachkontrolle hat
+keine neue OAuth-Verbindung und keine externe Veröffentlichung ausgeführt;
+deren Erfolg ist gesondert zu prüfen.
 
 Unmittelbar vor dem vereinbarten Fenster: frische DNS-Sicherung, geprüfte
 Image-Digests, beide Versionsnachweise, Rückfallwerte und Verantwortliche
@@ -311,11 +363,13 @@ nicht vollständig importieren. Rails-Datenbanken und Medien bleiben erhalten;
 zwischenzeitlich entstandene Daten werden nicht durch alte Sicherungen ersetzt.
 Ein App-Rollback erfordert zusätzlich eine kompatible aktuelle Datenbank.
 
-Nach dem Livegang HTTP/TLS, Fehler, Jobs, Mail und Kapazität beobachten.
-Produktionsfehler zuerst mit Sentry untersuchen. WordPress erst nach erfolgreichem
-Rückfallfenster und Freigabe durch den Nutzer über den bisherigen Betreiber
-abschalten lassen. Lokale hosts-Zuordnungen und eigene ACME-Reste entfernen,
-Nachweis und verbleibende externe Abhängigkeiten privat dokumentieren.
+Nach dem Livegang HTTP/TLS, Fehler, Jobs, DNS und Kapazität beobachten;
+Mailproben brauchen ein ausdrücklich vereinbartes Testziel. Produktionsfehler
+zuerst mit Sentry untersuchen und jeden Hinweis gegen den Code prüfen. WordPress
+erst nach erfolgreichem Rückfallfenster und Freigabe durch den Nutzer über den
+bisherigen Betreiber abschalten lassen. Eigene ACME-Reste nach dem vollständigen
+DNS-Nachweis entfernen und verbleibende externe Abhängigkeiten dokumentieren.
+Die Nachkontrolle endet erst mit dem tatsächlichen Abschluss der offenen Schritte.
 
 ## Veröffentlichungen im Alltag und Code-Rollback
 
