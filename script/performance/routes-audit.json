@@ -1,0 +1,34 @@
+[
+  {
+    "id": "home",
+    "path": "/"
+  },
+  {
+    "id": "highlights",
+    "path": "/highlights"
+  },
+  {
+    "id": "genre",
+    "path": "/rock-alternative"
+  },
+  {
+    "id": "event",
+    "path": "/events/asaf-avidan-2026-11-02"
+  },
+  {
+    "id": "news",
+    "path": "/news"
+  },
+  {
+    "id": "article",
+    "path": "/news/supporter-innen-soli-tickets"
+  },
+  {
+    "id": "search",
+    "path": "/search?q=Rock"
+  },
+  {
+    "id": "faq",
+    "path": "/faq"
+  }
+]

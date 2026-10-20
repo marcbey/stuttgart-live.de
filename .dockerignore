@@ -71,3 +71,6 @@
 /public/mamma-mia/Vorlagen
 /public/mamma-mia/gallery
 /public/mamma-mia/kasch0
+
+# Local measurements and diagnostics are never runtime inputs.
+/output/
