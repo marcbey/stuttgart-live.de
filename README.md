@@ -1440,7 +1440,9 @@ Nur benötigte Webdateien gehören in diese Ordner; Entwürfe und Originalmateri
 werden nicht veröffentlicht. Änderungen durchlaufen denselben PR-, CI- und
 Staging-Ablauf wie die übrige Website.
 
-Beide Landingpages nutzen die volle Browserbreite. Der Zurück-Link liegt in
+Die Landingpages öffnen als eigenständige Seiten. Das OVO-Plakat bleibt
+zentriert und maximal 1.000 Pixel breit, mit schwarzem Hintergrund daneben.
+Der Zurück-Link liegt über die gesamte Browserbreite in
 einem etwa 50 Pixel hohen, fest überlagerten schwarzen Streifen mit weißer
 Schrift und führt zur übermittelten Herkunftsseite.
 Fehlt diese Information (etwa beim direkten Öffnen), führt er zur Startseite.
