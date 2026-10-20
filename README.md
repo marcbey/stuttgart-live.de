@@ -1440,7 +1440,9 @@ Nur benötigte Webdateien gehören in diese Ordner; Entwürfe und Originalmateri
 werden nicht veröffentlicht. Änderungen durchlaufen denselben PR-, CI- und
 Staging-Ablauf wie die übrige Website.
 
-Der Zurück-Link oberhalb beider Seiten führt zur übermittelten Herkunftsseite.
+Beide Landingpages nutzen die volle Browserbreite. Der Zurück-Link liegt in
+einem etwa 50 Pixel hohen, fest überlagerten schwarzen Streifen mit weißer
+Schrift und führt zur übermittelten Herkunftsseite.
 Fehlt diese Information (etwa beim direkten Öffnen), führt er zur Startseite.
 Sprunglinks innerhalb der Landingpage verändern dieses Ziel nicht.
 Die gemeinsame Navigation liegt in `public/landingpages`.
