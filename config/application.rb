@@ -3,6 +3,7 @@ require_relative "../app/lib/deployment_environment"
 require_relative "../app/lib/production_server_config"
 require_relative "../lib/legacy_redirects/middleware"
 require_relative "../lib/request_security/ip_spoofing_middleware"
+require_relative "../lib/request_telemetry"
 
 require "rails/all"
 
@@ -40,6 +41,7 @@ module StuttgartLiveDe
     config.time_zone = "Europe/Berlin"
     config.i18n.default_locale = :de
     config.exceptions_app = routes
+    config.middleware.insert_before Rails::Rack::Logger, RequestTelemetry if Rails.env.production?
     config.middleware.insert_after ActionDispatch::RemoteIp, RequestSecurity::IpSpoofingMiddleware
     config.middleware.insert_before ActionDispatch::ShowExceptions, LegacyRedirects::Middleware
     config.active_storage.variant_processor =

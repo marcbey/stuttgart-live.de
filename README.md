@@ -735,6 +735,127 @@ Webprozess und Job-Verarbeitung laufen in Production getrennt. Kamal startet ein
 Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=2` und `RAILS_MAX_THREADS=3` gesetzt. Die Datenbank-Pools werden zusätzlich explizit über `DB_POOL` und `QUEUE_DB_POOL` festgelegt.
 Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt pfadsignierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Die URL bleibt für dieselbe gespeicherte Datei oder Variante dauerhaft stabil, damit Browser-Caches zwischen frischen HTML-Renders greifen. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
 
+#### Queue-, Proxy- und Kapazitätsdiagnose auf dem CX33
+
+nginx schreibt `proxy_timing` als JSON mit eigener Request-ID, Release, Status,
+festen Routenkategorien sowie Gesamt-, Upstream-, Verbindungs- und Headerzeit in
+Sekunden. Rails ergänzt `request_timing`: `queue_ms` misst die Zeit vom
+nginx-Eingang bis zur Middleware, `app_ms` bis zur Rückgabe der Rack-Antwort.
+Die Auslieferung eines Streaming-Bodys ist nur in der nginx-Gesamtzeit enthalten.
+Diese Queuezeit umfasst auch Proxy- und vorgelagerte Middlewarearbeit; sie ist
+kein isolierter Puma-Backlogwert. nginx überschreibt eingehende Startzeit und
+Request-ID. Fehlende, ungültige, zukünftige oder über fünf Minuten alte Startwerte
+liefern `queue_ms: null`; sie dürfen nicht als null Millisekunden aggregiert werden.
+`at` ist die Unixzeit. Die Releasekennung akzeptiert ausschließlich einen Git-SHA.
+
+Die neuen Metriklogs enthalten keine rohen Pfade, Querystrings, IP-Adressen,
+Useragents, Cookies oder Tokens. Pfade wie Passwort-Reset und signierte Medien
+werden ausschließlich als feste Kategorien geschrieben. Bestehende Rails-Logs
+und nginx-Fehlerdiagnosen sind davon unabhängig und dürfen nicht ungeprüft als
+Performanceartefakte exportiert werden. nginx behält seine Fehlerdiagnose bei;
+Crawlerablehnungen erzeugen keine zusätzlichen rohen Requestzeilen im Fehlerlog.
+Docker begrenzt die kombinierten Rails-/nginx-Logs jedes produktiven App-Containers
+auf drei Dateien à 10 MB. Das ist eine Größenbegrenzung, keine garantierte Anzahl
+Tage; vor einem Vergleich rechtzeitig ausschließlich die beiden JSON-Ereignisse
+sichern und sensible bestehende Logzeilen verwerfen.
+
+Der Produktions-Webcontainer bietet Puma-Statistiken nur unter
+`/rails/tmp/puma-control/stats.sock`. Verzeichnis und Socket sind ausschließlich
+für den Containerbenutzer zugänglich (0700). Es gibt keinen öffentlichen
+Steuerport; selbst am Socket sind Steueraktionen gesperrt. Im ausgewählten
+Webcontainer genügt für eine lesende Diagnose:
+
+```bash
+docker exec WEB_CONTAINER curl --silent --fail \
+  --unix-socket /rails/tmp/puma-control/stats.sock http://localhost/stats
+```
+
+`backlog`, `running`, `pool_capacity` und die Workerstatistiken mit
+`queue_ms`/`app_ms` vergleichen. Die `pools` jeder Rails-Timingzeile enthalten nur
+lokale Zähler (`size`, `busy`, `idle`, `dead`, `waiting`) bereits registrierter
+Active-Record-Pools; die Messung öffnet keine DB-Verbindung und fragt keine Daten
+ab. Die Arrayeinträge sind keine Datenbanknamen und keine hostweiten Werte.
+Die theoretischen Limits und aktuelle PostgreSQL-Verbindungen müssen separat
+über den freigegebenen lesenden Diagnoseweg geprüft werden.
+
+Für nicht notwendige Trainings-/SEO-Crawler (`GPTBot`, `ClaudeBot`, `Bytespider`,
+`CCBot`, `AhrefsBot`, `SemrushBot`, `MJ12bot`, `DotBot`) gilt pro nginx-Container
+zusammen ein dynamisches Budget von einer Anfrage pro Sekunde mit drei zusätzlichen
+Burstplätzen. Darüber antwortet nginx sofort mit 429 und `Retry-After: 2`; bei
+nachlassender Last wird das Budget wieder frei. Die Useragent-Angabe ist eine
+unverifizierte Klassifizierung und kann umgangen werden. Google, Bing,
+`Claude-SearchBot`, `OAI-SearchBot`, `ChatGPT-User`, Social-Vorschauen und normale
+Browser werden von dieser Regel nicht begrenzt. Assets, Medien und der exakte
+Healthcheck `/up` bleiben ausgenommen. Staging erhält kein Crawlerlimit, damit
+Basic Auth weiterhin vor jeder Inhalts-/Fehlerantwort greift. `robots.txt` bittet
+kooperative Crawler zusätzlich, `/search` und `/events/search_overlay` auszulassen.
+
+Am 20. Oktober 2026 (08:49 UTC) zeigte die lesende Hostaufnahme bei 7.751 MiB RAM
+und vier vCPU 2.321 MiB `MemAvailable`. Die vier Stacks belegten zusammen rund
+4.404 MiB cgroup-Speicher: Stuttgart Produktion 1.940, Stuttgart Staging 718,
+Russ Produktion 1.143 und Russ Staging 602 MiB. Stuttgart-Web lag bei rund
+1.150 MiB PSS, seine zwei Worker bei 496/516 MiB; Web-cgroup-Peak 1.520 MiB.
+Der Stuttgart-Jobpeak von 1.801 MiB lag rund 1.082 MiB über der Momentaufnahme;
+Russ-Web hatte einen historischen Peak von 2.451 MiB. Diese Peaks sind nicht als
+gleichzeitig gemessen zu verstehen. Im übergeordneten cgroup-Zähler waren drei
+OOM-Kills ohne zeitliche Zuordnung vorhanden; die aktuellen Container hatten keine.
+
+Ein dritter Worker mit vorsichtig angesetzten 650 MiB ließe aktuell 1.671 MiB,
+beim historischen Reserveminimum aber nur 627 MiB übrig. Ein warmer Web-Rollout
+mit drei Workern hätte vor Jobspitzen nur etwa 151–450 MiB Reserve; überlappender
+neuer Web- und Jobprozess könnte sie überschreiten. Kamal startet neue Rollen vor
+dem Stoppen ihrer Vorgänger; Web-Drain und Jobstart können sich überlappen.
+Deshalb bleiben **zwei Worker mit drei Threads und unveränderten DB-Pools** aktiv.
+Die entfallenen öffentlichen Bildtransformationen sind erst nach neuen Kalt-/
+Warmmessungen als geringerer Speicherbedarf anrechenbar.
+
+Vor einer späteren Kapazitätsänderung beide Anwendungen in Produktion und Staging,
+Puma-Master, Worker, Solid-Queue-Supervisor, Dispatcher und Jobworker sowie
+PostgreSQL berücksichtigen. Ein Stuttgart-Produktions-Webworker kann theoretisch
+vier Pools à drei Verbindungen konfigurieren (12), zwei Worker also 24; die Pools
+werden bedarfsgesteuert verbunden. Ein Jobprozess hat für Primary/Cache/Cable je
+drei und Queue fünf Plätze (14), wobei Supervisor und Dispatcher eigene Prozesse
+mit ihren tatsächlich verwendeten Pools sind. Staging-Web hat pro Prozess vier
+Pools à zwei (8), Staging-Job je einen für Primary/Cache/Cable und drei für Queue
+(6). Master und Rollout-Duplikate kommen je nach geöffneten Pools hinzu. Diese
+Obergrenzen sind keine gemessene Nutzung; vier Apps dürfen nicht auf die Formel
+„Puma-Worker × Threads“ reduziert werden.
+
+| Stack (beobachteter Release) | Webprozesse inkl. Master | Poolplätze je Webprozess | Queueprozesse¹ | Poolplätze je Queueprozess |
+| --- | ---: | ---: | ---: | ---: |
+| Stuttgart Produktion | 3 | 12 | 3 | 14 |
+| Stuttgart Staging | 2 | 8 | 3 | 6 |
+| Russ Produktion (`9230820`) | 3 | 15 | 3 | 17 |
+| Russ Staging (`9488992`) | 2 | 10 | 3 | 7 |
+
+¹ Ein Supervisor, ein Dispatcher und ein Jobworker. Auch `WEB_CONCURRENCY=1`
+aktiviert in Puma einen Worker plus Master; es bedeutet hier keinen einzelnen
+Prozess. Russ konfiguriert fünf Pools
+(einschließlich seiner eigenen operativen Datenbank). Seine beiden beobachteten
+Queuekonfigurationen haben fest drei Jobthreads; die Staging-Variable
+`JOB_THREADS=1` reduziert diese im genannten Russ-Release nicht. Russ wird durch
+diese Änderung nicht angepasst. Addiert man vorsichtshalber jeden konfigurierten
+Pool in jedem dieser Prozesse, erhält man 249 Plätze, mit vollständiger
+Stuttgart-Produktions-Rolloutüberlappung weitere 78. Tatsächlich werden viele
+Pools in Master, Supervisor oder Dispatcher gar nicht verbunden. Das ist daher
+eine sehr lockere theoretische Obergrenze, kein Bedarf und keine Livebelegung;
+sie zeigt, weshalb das 100-Verbindungen-Limit nicht ohne gemessene Nutzung und
+Reserve als ausreichend erklärt werden kann. Die ältere Beobachtung von 32/100
+PostgreSQL-Verbindungen ersetzt keinen aktuellen Nachweis.
+
+Für Vorher/Nachher gleiche Zeitfenster, Release, Routenkategorien und Anfrageraten
+verwenden; p50/p95/p99 der gültigen Queue-/Appzeiten, Fehlerquote, 429-Anteil,
+Puma-Backlog, Poolwartezeiten, CPU-/Memory-Pressure und minimale RAM-Reserve
+vergleichen. Als erste Untersuchungsschwellen gelten dauerhaft über 100 ms
+Queue-p95, wartende Poolkunden, steigende 5xx oder weniger als 1 GiB Reserve.
+Das sind Startwerte für eine kontrollierte Messung, kein Kapazitätsversprechen.
+Ein Drei-Worker-Versuch braucht ausreichend Reserve auch während Rollout und
+Rollback, frische DB-/PSS-Werte und den regulären Freigabeweg. Diese Änderung
+beinhaltet keinen solchen Liveversuch. Rückfall erfolgt auf die vorherige
+geprüfte Konfiguration bzw. das vorherige Image über den dokumentierten
+GitHub-Rollback. `PRODUCTION_DOMAIN_MODE` bleibt dabei unverändert; insbesondere
+wird weder ein Legacy-Modus noch Staging-`noindex` für Produktion erzwungen.
+
 Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bleibt der Eigentümer der fachlichen Produktionsdatenbank und des Docker-Volumes `stuttgart_live_de_storage`. Weitere Apps wie `russ-live.de` dürfen diese Primärdatenbank nur mit einem separaten read-only PostgreSQL-Benutzer lesen und dasselbe Storage-Volume mounten. Queue, Cache und Cable bleiben je App getrennt, damit Worker und Laufzeitdaten nicht zwischen Projekten kollidieren.
 
 Die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](config/deploy.hetzner.shared.yml).
