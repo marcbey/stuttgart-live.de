@@ -114,7 +114,7 @@ Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Loca
 
 Bei der Eingabe von `Russ Live` erscheint ein direkter Link zur Russ-Live-Übersicht. Beim Absenden dieser Suche öffnet sich die Übersicht direkt. Groß- und Kleinschreibung sowie zusätzliche Leerzeichen spielen dabei keine Rolle; längere Suchanfragen bleiben normale Event-Suchen.
 
-Auf Event-Detailseiten lädt die Kopfzeilensuche Vorschläge erst beim Öffnen des Suchfelds nach. Ein übernommener Suchbegriff bleibt im Formular erhalten; das Laden der Detailseite wiederholt die Suche nicht.
+Die öffentliche Suche lädt Vorschläge erst beim Öffnen des Suchfelds nach. Mehrere Suchfelder derselben Seite teilen sich die Empfehlungen für denselben Datumsfilter; nach einem Ladefehler lässt sich das Öffnen erneut versuchen. Ein übernommener Suchbegriff bleibt im Formular erhalten. Navigation und Seitenaufruf lösen keine unsichtbare Suche aus.
 
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen und prägnante Titelvarianten bei gleicher oder sehr naher Startzeit. Damit kann der Merge-Import Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten`, `Gregory Porter & Orchestra` und `Gregory Porter` oder einen kurzen Veranstaltungstitel innerhalb eines längeren Provider-Titels als denselben Termin erkennen. Titel-Varianten werden dabei nur bei passender Venue zusammengeführt. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Event-Dubletten` ein- oder ausschalten.
 

@@ -34,7 +34,7 @@
 <% if @browse_state.event_date.present? %>
   <% today_events = today_events.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
 <% end %>
-<% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: highlights) %>
+<% genre_lanes = public_design_navigation_lanes %>
 <% all_events_path = @home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path %>
 <% genre_links = public_search_genre_links %>
 <% genre_paths = genre_links.map(&:last) %>

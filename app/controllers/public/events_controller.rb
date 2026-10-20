@@ -367,7 +367,6 @@ module Public
       @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
       @design_preview_mix_available = lean_homepage_all_relation.joins(:genres).exists?
       @design_preview_series_counts_by_id = Public::Events::SeriesCountsByIdQuery.call(design_preview_series_events)
-      @design_preview_search_overlay = build_search_overlay
     end
 
     def render_design_homepage_mix_section
@@ -425,7 +424,6 @@ module Public
 
     def assign_design_chrome(saved_events: [])
       assign_tagestipp_section if @lane&.key == "all_stuttgart"
-      @design_preview_search_overlay = build_search_overlay
       @design_chrome_saved_events = Array(saved_events)
     end
 

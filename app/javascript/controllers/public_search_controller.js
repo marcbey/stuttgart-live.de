@@ -7,6 +7,7 @@ const PLACEHOLDER_SEQUENCE_START_DELAY = 2000
 const PLACEHOLDER_TYPING_CADENCE = [-18, 14, -6, 20, -12, 10, 4, -4]
 const OVERLAY_OPENED_EVENT = "design-preview:overlay-opened"
 const OVERLAY_SOURCE = "search"
+const idleRequestsByBody = new WeakMap()
 const CALENDAR_WEEKDAYS = ["Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag", "Sonntag"]
 const CALENDAR_MONTH_FORMATTER = new Intl.DateTimeFormat("de-DE", { month: "long", year: "numeric" })
 
@@ -424,25 +425,23 @@ export default class extends Controller {
     const requestUrl = this.buildRequestUrl()
     const requestKey = this.buildRequestKey()
 
-    if (requestKey === this.lastRequestKey) {
+    if (requestKey === this.lastRequestKey || requestKey === this.pendingRequestKey) {
       return
     }
 
     this.abortPendingRequest()
     this.abortController = new AbortController()
     const currentAbortController = this.abortController
+    this.pendingRequestKey = requestKey
 
     try {
-      const response = await fetch(requestUrl, {
-        headers: { Accept: "text/html" },
-        signal: this.abortController.signal
-      })
+      const html = this.query.present
+        ? await this.requestResults(requestUrl, currentAbortController.signal)
+        : await this.sharedIdleResults(requestKey, requestUrl)
 
-      if (!response.ok) {
-        throw new Error(`Search request failed with status ${response.status}`)
-      }
+      if (currentAbortController.signal.aborted || !this.element?.isConnected) return
 
-      this.resultsTarget.innerHTML = await response.text()
+      this.resultsTarget.innerHTML = html
       this.lastRequestKey = requestKey
     } catch (error) {
       if (error.name === "AbortError") {
@@ -451,8 +450,32 @@ export default class extends Controller {
     } finally {
       if (this.abortController === currentAbortController) {
         this.abortController = null
+        this.pendingRequestKey = null
       }
     }
+  }
+
+  async requestResults(url, signal) {
+    const response = await fetch(url, { headers: { Accept: "text/html" }, signal })
+    if (!response.ok) throw new Error(`Search request failed with status ${response.status}`)
+
+    return response.text()
+  }
+
+  sharedIdleResults(key, url) {
+    const body = document.body
+    if (!idleRequestsByBody.has(body)) idleRequestsByBody.set(body, new Map())
+    const requests = idleRequestsByBody.get(body)
+
+    if (!requests.has(key)) {
+      const request = this.requestResults(url).catch((error) => {
+        requests.delete(key)
+        throw error
+      })
+      requests.set(key, request)
+    }
+
+    return requests.get(key)
   }
 
   scheduleSearch() {
@@ -466,6 +489,9 @@ export default class extends Controller {
   }
 
   loadIdleResults() {
+    const requestKey = this.buildRequestKey()
+    if (requestKey === this.lastRequestKey || requestKey === this.pendingRequestKey) return
+
     this.renderIdleState()
     this.fetchResults()
   }
@@ -550,6 +576,7 @@ export default class extends Controller {
   abortPendingRequest() {
     this.abortController?.abort()
     this.abortController = null
+    this.pendingRequestKey = null
   }
 
   clearScheduledSearch() {

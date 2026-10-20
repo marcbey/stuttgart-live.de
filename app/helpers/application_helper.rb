@@ -66,7 +66,7 @@ module ApplicationHelper
     ]
   end
 
-  def public_design_navigation_lanes(_genre_lanes, highlight_events:)
+  def public_design_navigation_lanes
     slugs = PUBLIC_HEADER_GENRE_LABELS.keys.first(5)
     genres_by_slug = Genre.where(slug: slugs).index_by(&:slug)
     paths_by_slug = Public::Events::LaneDirectory.public_paths_for_genre_slugs(slugs)

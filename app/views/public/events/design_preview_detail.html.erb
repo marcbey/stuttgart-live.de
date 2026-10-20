@@ -37,7 +37,7 @@ end %>
 <% related_preview_events = related_events.first(8) %>
 <% related_effective_series_ids = @related_genre_lane&.effective_series_ids || effective_public_event_series_ids(related_events) %>
 <% related_series_counts_by_id = @related_genre_lane&.series_counts_by_id || {} %>
-<% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: @home_featured_events) %>
+<% genre_lanes = public_design_navigation_lanes %>
 <% design_preview_menu_groups = public_design_menu_groups %>
 <% design_preview_shell_saved_events = (
   [ @event ] +

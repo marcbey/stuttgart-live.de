@@ -10,7 +10,7 @@
 <% content_for :page_newsletter do %><% end %>
 <% content_for :page_partner_strip do %><% end %>
 <% strict_proxy = homepage_media_strict_proxy? %>
-<% genre_lanes = public_design_navigation_lanes(Array(@design_chrome_genre_lanes).first(5), highlight_events: @home_featured_events) %>
+<% genre_lanes = public_design_navigation_lanes %>
 <% design_chrome_saved_events = (Array(@design_chrome_saved_events) + Array(@lane_events)).compact.uniq(&:id) %>
 
 <div class="design-preview design-preview-list-shell"

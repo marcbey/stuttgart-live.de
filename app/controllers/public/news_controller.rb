@@ -1,8 +1,5 @@
 module Public
   class NewsController < ApplicationController
-    SEARCH_OVERLAY_LIMIT = 6
-    SEARCH_OVERLAY_IDLE_LIMIT = 10
-
     allow_unauthenticated_access only: %i[index show]
     rescue_from ActiveRecord::RecordNotFound, with: :render_not_found
 
@@ -11,10 +8,9 @@ module Public
 
     def index
       assign_blog_posts_page
-      assign_design_news_chrome
 
       respond_to do |format|
-        format.html
+        format.html { assign_design_news_chrome }
         format.turbo_stream
       end
     end
@@ -39,50 +35,11 @@ module Public
       end
 
       def assign_design_news_chrome
-        @design_preview_search_overlay = build_search_overlay
-        @news_preview_genre_lanes = news_preview_genre_lanes
-        @news_preview_highlight_events = news_preview_highlight_events
         assign_news_preview_sidebar_events
         @news_preview_effective_series_ids =
           Public::Events::EffectiveSeriesIdsQuery.call(@news_preview_sidebar_events)
         @news_preview_series_counts_by_id =
           Public::Events::SeriesCountsByIdQuery.call(@news_preview_sidebar_events)
-      end
-
-      def build_search_overlay
-        Public::Events::Search::OverlayBuilder.build(
-          query: @browse_state.query,
-          idle_loader: -> { initial_search_overlay_events },
-          event_loader: -> { search_overlay_events(structured: true) },
-          standard_event_loader: -> { search_overlay_events(structured: false) },
-          genre_loader: -> { Public::Events::Search::GenreSuggester.call(@browse_state.query) }
-        )
-      end
-
-      def search_overlay_events(structured:)
-        visible_events_relation(
-          scope: news_preview_search_relation,
-          event_date: @browse_state.event_date,
-          query: @browse_state.query,
-          structured: structured
-        ).limit(SEARCH_OVERLAY_LIMIT).to_a
-      end
-
-      def initial_search_overlay_events
-        promotion_events = initial_search_overlay_events_for(news_preview_events_relation.where(promotion_banner: true))
-        highlighted_events = initial_search_overlay_events_for(news_preview_events_relation.where(highlighted: true))
-        sks_events = initial_search_overlay_events_for(news_preview_events_relation.merge(Event.sks_promoters))
-
-        (promotion_events + highlighted_events + sks_events).uniq(&:id).first(SEARCH_OVERLAY_IDLE_LIMIT)
-      end
-
-      def initial_search_overlay_events_for(scope)
-        visible_events_relation(
-          scope: scope,
-          event_date: @browse_state.event_date,
-          query: nil,
-          structured: true
-        ).limit(SEARCH_OVERLAY_IDLE_LIMIT).to_a
       end
 
       def news_preview_highlight_events
@@ -112,7 +69,7 @@ module Public
       end
 
       def news_preview_sidebar_events
-        return @news_preview_highlight_events if @news_preview_sidebar_genre.blank?
+        return news_preview_highlight_events if @news_preview_sidebar_genre.blank?
 
         selected_events = visible_events_relation(
           scope: news_preview_events_relation.joins(:genres).where(genres: { id: @news_preview_sidebar_genre.id }).distinct,
@@ -125,14 +82,7 @@ module Public
         return events if events.any?
 
         @news_preview_sidebar_genre = nil
-        @news_preview_highlight_events
-      end
-
-      def news_preview_genre_lanes
-        Public::Events::HomepageGenreLanesBuilder.new(
-          relation: news_preview_events_relation,
-          limit: Public::Events::HomepageGenreLanesBuilder::DEFAULT_LIMIT
-        ).call.first(5)
+        news_preview_highlight_events
       end
 
       def visible_events_relation(scope:, event_date:, query:, structured:)
@@ -145,12 +95,9 @@ module Public
         ).call
       end
 
-      def news_preview_search_relation
-        news_preview_events_relation.search_priority_first
-      end
-
       def news_preview_events_relation
-        Event.includes(
+        Event.preload(
+          :genres,
           :venue_record,
           :event_offers,
           :import_event_images,

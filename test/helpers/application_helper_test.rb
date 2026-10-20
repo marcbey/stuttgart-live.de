@@ -4,7 +4,7 @@ class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
 
   test "public design navigation genres do not depend on homepage genre lanes" do
-    lanes = public_design_navigation_lanes([], highlight_events: [])
+    lanes = public_design_navigation_lanes
 
     assert_equal %w[pop-indie-singer-songwriter rock-alternative metal-punk-hardcore hip-hop-r-n-b electronic-music-edm],
                  lanes.map { |lane| lane.group.slug }
