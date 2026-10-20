@@ -1,5 +1,7 @@
 # Meta-Onboarding und Token-Lifecycle
 
+Die [Einrichtungsanleitung für Marc und Chantal](SOCIAL_MEDIA_EINRICHTUNG.md) erklärt das Zusammenspiel der Systeme und führt mit klaren Zuständigkeiten vom Testbetrieb zu den echten Facebook- und Instagram-Konten. Dieses Dokument beschreibt die technische Umsetzung und den Token-Lifecycle.
+
 ## Zielbild
 
 `stuttgart-live` verwendet eine technische Meta-App, aber zwei getrennte persistierte Verbindungen:
@@ -103,17 +105,53 @@ Nicht in Credentials gehören:
 
 Wenn `meta.instagram_redirect_uri` gesetzt ist, verwendet die App diese Callback-URL explizit statt die URL aus dem aktuellen Request zu bauen. Der Name ist historisch Instagram-spezifisch, die URL gilt aber für beide Meta-Flows, also Instagram und Facebook. Der OAuth-Start und der Callback müssen dabei auf demselben Host laufen, weil der `state` serverseitig an die Session gebunden ist.
 
+Für Produktion ist `https://stuttgart-live.de/backend/meta_connection/callback` hinterlegt. Credentials haben Vorrang vor ENV: Solange der Credentials-Schlüssel gesetzt ist, ändert `META_INSTAGRAM_REDIRECT_URI` die wirksame URL nicht. Nach einer Änderung der verschlüsselten Credentials ist ein erneutes Deployment erforderlich.
+
 ## Meta-App-Konfiguration
 
 Die technische Meta-App muss zu `stuttgart-live` passen:
 
-- App-Domain `stuttgart-live.schopp3r.de`
-- Website-URL `https://stuttgart-live.schopp3r.de/`
-- erlaubte OAuth-Redirect-URL `https://stuttgart-live.schopp3r.de/backend/meta_connection/callback`
+- App-Domain `stuttgart-live.de`
+- Website-URL `https://stuttgart-live.de/`
+- erlaubte OAuth-Redirect-URL `https://stuttgart-live.de/backend/meta_connection/callback` im Facebook- und im Instagram-Login-Setup
 - Instagram API with Instagram Login mit `instagram_business_basic` und `instagram_business_content_publish`
 - Facebook Login/Login for Business mit `pages_show_list`, `pages_read_engagement` und `pages_manage_posts`
 
-Für Produktion braucht die App Advanced Access/App Review für die Publishing-Scopes. Im Testbetrieb müssen die verwendeten Accounts als Admin, Developer oder Tester der Meta-App berechtigt sein.
+Welche App Review, Advanced-Access-Freigaben oder App-Rollen erforderlich sind, hängt vom vorgesehenen Nutzerkreis und dem Freigabestatus der Meta-App ab. Der Livebetrieb unserer Website schaltet diese Rechte nicht automatisch frei. Im eingeschränkten App-Betrieb müssen die verwendeten Personen und Konten die von Meta verlangten Rollen beziehungsweise Tester-Einladungen besitzen und angenommen haben. Eine solche Rolle ist von der Auswahl einer Testseite oder eines echten Veröffentlichungskontos unabhängig. Die Prüfung und Zuständigkeiten stehen in der [Einrichtungsanleitung](SOCIAL_MEDIA_EINRICHTUNG.md#schritt-5-chantal-prüft-die-app-berechtigungen-und-nimmt-nötige-einladungen-an).
+
+## Fehlerbehebung
+
+### Onboarding verweist nach einem Domainwechsel auf den alten Host
+
+Die Meldung „Onboarding muss auf … gestartet werden“ entsteht in der Anwendung vor der Weiterleitung zu Meta. Sie bedeutet, dass die fest konfigurierte Callback-URL nicht zum aktuellen Aufruf passt.
+
+1. Im Meta-App-Dashboard App-Domain und Website-URL auf die Produktionsdomain anpassen. Die vollständige Callback-URL `https://stuttgart-live.de/backend/meta_connection/callback` sowohl für Facebook Login als auch für Instagram Login freigeben. Falls Instagram eine eigene App-ID verwendet, deren Konfiguration ebenfalls prüfen.
+2. In den Rails-Credentials `meta.instagram_redirect_uri` auf diese URL setzen und die Anwendung neu deployen. Eine ENV-Änderung allein überschreibt einen vorhandenen Credentials-Wert nicht.
+3. Das Backend über `https://stuttgart-live.de` öffnen und den Verbindungsaufbau dort neu starten. Ein bereits begonnener OAuth-Flow muss neu gestartet werden, damit Session und Callback zusammenpassen.
+
+Die Hostprüfung muss bestehen bleiben: Eine Weiterleitung des Callbacks auf die alte Domain würde die Bindung an die Session des Start-Hosts verletzen.
+
+### Facebook zeigt nur die Testseite oder die gewünschte Seite fehlt
+
+Die Seitenauswahl wird aus den von Meta über `me/accounts` gelieferten und gespeicherten Zielen aufgebaut. Ein vorhandener Scope wie `pages_show_list` bedeutet nicht automatisch, dass jede verwaltete Seite freigegeben ist; die Berechtigung kann auf einzelne Seiten beschränkt sein.
+
+1. Mit dem Facebook-Login anmelden, der die gewünschte echte Seite verwalten und dort Inhalte veröffentlichen darf. Den Seitenzugriff beziehungsweise die Zuweisung im Business Portfolio prüfen.
+2. In den Einstellungen der bestehenden Meta-Business-Integration prüfen, welche Seiten für die App freigegeben sind, und die echte Seite hinzufügen. App-Rollen und den Freigabestatus der benötigten Berechtigungen im Meta-App-Dashboard ebenfalls prüfen, wenn der echte Account im Meta-Dialog fehlt.
+3. Im Backend `Facebook verbinden` erneut durchlaufen, damit der Callback den Seitenkatalog mit der neuen Freigabe lädt. Das Speichern der bestehenden Seitenauswahl erteilt keine zusätzlichen Rechte bei Meta.
+4. Die echte Seite im Backend auswählen und speichern. Mit einem abgelaufenen oder ungültigen Instagram-Token muss zusätzlich `Instagram verbinden` mit dem gewünschten Professional-Konto erneut durchlaufen werden.
+
+Für eine technische Diagnose lassen sich `me/accounts` und `debug_token` mit dem gespeicherten Token ausschließlich lesend prüfen. Dabei auf weitere Ergebnisseiten und auf `granular_scopes.target_ids` achten. Liefert Meta nur die Testseite und beschränkt die Seiten-Scopes auf deren ID, liegt die fehlende Freigabe vor der Seitenauswahl unserer App. Tokens und App-Secrets dürfen dabei weder protokolliert noch in Screenshots oder Support-Nachrichten übernommen werden.
+
+### Von Testkonten auf die echten Social-Media-Konten wechseln
+
+Die verbundenen Facebook-Seiten und Instagram-Konten sind zusammen mit den beim Login erteilten Tokens in der Datenbank gespeichert. Eine Änderung der Callback-URL oder der App-Zugangsdaten ersetzt diese Verbindungen nicht. Auch das manuelle Ändern einer Account-ID erteilt dem vorhandenen Token keine Rechte für ein anderes Konto.
+
+1. Zuerst die Produktionsdomain und Callback-URL abgleichen: Marc übernimmt unsere Anwendung, Chantal das Meta-App-Dashboard. Chantal prüft außerdem, ob die benötigten Berechtigungen und App-Rollen die Verbindung der echten Konten erlauben.
+2. Anschließend führt die Person mit Zugriff auf die echten Social-Media-Konten den Wechsel unter `Einstellungen -> Meta Publishing` aus. Für Facebook die bisherige Testverbindung über `Verbindung trennen` entfernen, `Facebook verbinden` starten und mit dem Login anmelden, der die echte Seite verwalten darf. Die echte Seite bei Meta freigeben und anschließend im Backend auswählen und speichern.
+3. Für Instagram ebenfalls die Testverbindung trennen und `Instagram verbinden` mit dem echten Professional-Konto durchlaufen. Instagram verwendet einen eigenen Login; die Auswahl der Facebook-Seite stellt diese Verbindung nicht automatisch um.
+4. Vor der ersten Veröffentlichung prüfen, dass im Backend der Name der echten Facebook-Seite und der richtige Instagram-Benutzername angezeigt werden und beide Verbindungen verwendbar sind.
+
+Fehlt die echte Seite bereits im Meta-Freigabedialog, müssen Seitenzugriff, Business-Portfolio-Zuweisung und die Meta-App-Berechtigungen geklärt werden. Das Entfernen der Testverbindung allein macht eine bisher nicht freigegebene Seite nicht verfügbar.
 
 ## Verwendete Scopes
 
