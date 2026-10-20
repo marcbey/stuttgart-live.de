@@ -21,6 +21,7 @@
 - TDD für relevante Verhaltensänderungen; HTML-/Browser-/SQL-Verträge prüfen, keine Tests bloßer Quelltextzeilen. Vollsuite einmal je abschließender Änderungseinheit, gezielte Tests während Iteration; zentrale CI am Ende.
 - Jeder Task enthält gezielte README-Ergänzungen zum veränderten Verhalten; finale Betriebsanleitung wird in Task 8 zusammengeführt.
 - Code und Konfiguration werden vor Produktionsänderungen vollständig prüfbar gemacht. Runtimeanpassungen nur mit gemessenen Ressourcen, Rückfallmöglichkeit und dokumentiertem Rollout.
+- Aktuelles AGENTS.md/INFRA.md ist für Veröffentlichung verbindlich: PR → Main-CI → Deploy Staging → gültiger Nachweis → menschliche GitHub-Environment-Freigabe durch marcbey oder kasch0. Keine direkten Kamal-Deploys oder Image-Neubauten als Ersatz; aktuelle Betriebsanleitung vor Host-Eingriffen lesen.
 
 ## Review Focus
 
@@ -36,7 +37,7 @@
 
 **Files:** `test/models/event_test.rb`; keine Produktionsdatei.
 
-**Interfaces:** Bestehende fachliche Tests und ihre Assertions bleiben erhalten. Abgelaufene feste Eventtermine in genau den drei fehlgeschlagenen Verfügbarkeitstests durch relativ zur Testzeit zukünftige Termine ersetzen.
+**Interfaces:** Bestehende fachliche Tests und ihre Assertions bleiben erhalten. Die drei abgelaufenen Termine waren nur im alten lokalen main vorhanden; aktuelles origin/main enthält bereits korrekte relative Zukunftstermine und erfüllt diesen Task. Keine zusätzliche Änderung darüberlegen.
 
 - [ ] RED bereits belegt: `output/performance/baseline-ci.log` enthält Fehler in `public_ticket_offer falls back to manual when no imported offer exists`, `public_sold_out? follows the manual ticket status offer` und `manual ticket offer overrides canceled imported offer`; erwartetes manuelles Angebot, tatsächlich nil wegen vergangenem Eventdatum.
 - [ ] Ausschließlich die drei betreffenden `start_at`-Werte auf eine Woche nach aktueller Testzeit, lokale Uhrzeit20:00, ändern. Keine Ticketlogik oder Assertions abschwächen; bestehende explizite Tests für vergangene Events erhalten.
@@ -63,7 +64,7 @@
 - [ ] RED: repräsentative Lane/Suche/News rendern erstes sichtbares Bild eager/high und spätere Karten lazy. Direkte Unterseiten enthalten keinen unbedingten Logo-Turbo-Preload. Detailbild bleibt eager, mit passender Priorität.
 - [ ] Browser-RED: Feature-Slider wechselt vor bewusster Interaktion nicht automatisch; Pfeile/Swipe funktionieren. Erster Slide darf bereits richtig priorisiert sein und nicht durch einen späteren lazy Slide als LCP verdrängt werden.
 - [ ] Browser-RED: bei 412/1350 px wird keine MP4-Quelle angefordert; sichtbare Kachel ab 1536 px kann laden/abspielen. Kein `src`/`source[src]` vor passenden Media-/Sichtbarkeitsbedingungen, `preload=none` allein genügt nicht. Data-Saver/Reduced-Motion beachten; Tonbutton und Resize funktionieren.
-- [ ] Browser-RED zusätzlich: moderne Homepage hängt derzeit `highlights-slider` ohne erforderlichen `track`-Target an und wirft beim Verbinden eine Ausnahme. Fehlanschluss entfernen oder gezielt korrigieren, ohne ältere funktionierende Sliderpfade zu beschädigen; Browser soll ohne diese Controllerexception laden.
+- [ ] Bereits produktiv korrigierte Sliderinitialisierung erhalten: moderner Highlightbereich nutzt nur `homepage-lane`, ältere Slider besitzen ihren eigenen `track`-Target. Keine alte Controllerexception beim Optimieren wieder einführen.
 - [ ] Genau diese bestehenden Verhaltenspfade korrigieren; keine pauschale eager-Priorität aller Karten und kein visueller Umbau. Breiten/Höhen für Newsbild ergänzen, ohne bestehendes Seitenverhältnis/Crop zu ändern.
 - [ ] GREEN: gezielte Rails-/Browsertests einschließlich erster Interaktion, Resize und Turbo-Navigation; Fullsuite/RuboCop; README-Verhalten dokumentieren und committen.
 
@@ -111,7 +112,7 @@
 - [ ] RED: Queuezeitberechnung toleriert fehlende, kaputte, zukünftige und überlange Headers; eingehende Spoofwerte werden am Proxy ersetzt. Pool-/Pumaeinblicke lösen selbst keine Datenbankabfrage aus und erzeugen keine Secrets in Logs.
 - [ ] Auf echtem nginx kontrolliert Requests testen: bekannte nicht notwendige Crawlerklassen erhalten begrenztes dynamisches Budget und sauberes 429/Retry-Verhalten; Assets/Medien/Healthchecks und normale Nutzer bleiben verfügbar. Useragent ist Klassifizierung, keine verifizierte Identität. Keine IP-basierte Regel auf ungeprüftem X-Forwarded-For oder pauschaler Sperre wichtiger Suchmaschinen.
 - [ ] Logs mit Request-ID, nginx-/Upstreamzeiten und sanitisiertem Pfad ergänzen; Logretention begrenzen und für Vorher/Nachher nutzbar halten. Kooperative Robotsregeln für nicht indexierbare Such-/Overlaypfade prüfen.
-- [ ] Vor jedem Rollout Host-/Indexierungsdrift korrigieren: öffentlich ist `stuttgart-live.de` ohne noindex produktiv, die versionierte Konfiguration zeigt noch den nicht erfolgreich per TLS erreichbaren Schopp3r-Host und STAGING_NOINDEX=true. Versionskonfiguration muss den verifizierten aktuellen Produktionszustand erhalten; keine Domain-/SEO-Rücksetzung durch den Performancedeploy. Eigene Stagings/Russ nicht auf andere Hosts umstellen.
+- [ ] Aktuellen Domain-/Indexierungsmodus beim Rollout erhalten: `HetznerDeployConfig` und GitHub-Variable `PRODUCTION_DOMAIN_MODE` steuern Legacy/Kanonisch/Redirect/TLS. Produktiv ist `stuttgart-live.de` ohne noindex; keinen Legacy-Default oder Stagingparameter beim Performancedeploy erzwingen. Vorhandene getrennte Stagingkonfiguration und Russ unverändert halten.
 - [ ] Vor Workeränderung reale PSS/RSS-/Poolbudgets aller vier Stacks inklusive Rolloutüberlappung berechnen. Zwei→drei Worker ausschließlich im kontrollierten Vergleich; bei zu wenig Reserve bei zwei bleiben und Entscheidung messen. Threads nicht pauschal erhöhen.
 - [ ] GREEN: Middleware-/Configverhalten und nginx-Syntaxtest/Integration, volle CI/RuboCop. README beschreibt interne Diagnose, Änderungen, Schwellenvorschläge, Poolbudget und Rückfall auf vorherige Konfiguration; Commit.
 
@@ -149,3 +150,16 @@
 - [ ] Vor Remoteänderung Zielbranch aktuell holen/aktualisieren; anschließend erneut CI. Konkreten geprüften Stand bereitstellen; erforderliche Veröffentlichung-/Produktionsfreigaben erst am fertigen Ergebnis klären, nicht während Umsetzung erneut um generelle Erlaubnis bitten.
 - [ ] Vor tatsächlichem Rollout Backupstatus, Rollout-RAMreserve und Rückfallrelease prüfen. Keine Secrets ausgeben. Kein gleichzeitiger Schreibbetrieb auf neuen Hosts; kein anderer Host vorgesehen. Bildbackfill begrenzt und separat messbar.
 - [ ] Nach Rollout dieselbe Produktionsmatrix und Interaktionen wiederholen, Queue-/CPU-/RAM-/Pool-/Fehlerwerte vergleichen. Bei Regression Rückfall statt ungeprüfter Folgetweaks. Ergebnisse und verbleibende Beobachtungszeit transparent berichten; erst dann Zielabschluss prüfen.
+
+### Task 10: Isolierte CI-Datenbank vom Staging-Unterprozesstest trennen
+
+Dieser kleine Setupfix wird nach dem Rebase und vor Task2 ausgeführt; er ist keine Wiederholung von Task0, dessen Datumskorrekturen bereits upstream vorhanden sind.
+
+**Files:** ausschließlich `test/lib/staging_readiness_test.rb`.
+
+**Interfaces:** `DeploymentEnvironment.validate_runtime!` muss geerbte Datenbank-URLs in Staging weiterhin ablehnen. Der gezielte Readiness-Test soll einen gültigen Staging-Prozess ohne Readiness-Marker starten; dafür dürfen seine isolierten lokalen Test-DSNs nicht in den Kindprozess gelangen.
+
+- [ ] RED liegt in `output/performance/rebased-ci.log`: bei `DATABASE_URL=postgresql:///stuttgart_live_de_performance_test` scheitert der Unterprozess bereits an `DATABASE_URL is forbidden in staging`, bevor die zu prüfende fehlende Readiness-Datei erreicht wird. Eine Failure in1725Tests, alle übrigen CI-Stufen grün.
+- [ ] Im Test `direct web and worker commands refuse unready stage before credentials or database boot` die an `Open3.capture3` übergebene Umgebung um `nil`-Einträge für geerbte `DATABASE_URL` und alle `*_DATABASE_URL` ergänzen; alle anderen Umgebungs-/Fehlerassertions unverändert. Keine Produktionsdatei verändern und keine Staging-Prüfung abschwächen.
+- [ ] GREEN: `mise exec -- env DATABASE_URL=postgresql:///stuttgart_live_de_performance_test QUEUE_DATABASE_URL=postgresql:///stuttgart_live_de_performance_queue CABLE_DATABASE_URL=postgresql:///stuttgart_live_de_performance_cable bin/rails test test/lib/staging_readiness_test.rb test/lib/deployment_environment_test.rb`. Bestehende Ablehnungstests für explizite Datenbank-URLs müssen weiter bestehen.
+- [ ] RuboCop nur auf geänderte Testdatei und vollständiges `bin/ci` mit denselben drei isolierten DSNs, ohne `LOCAL_DESIGN_CHECKS=1`. Alle Tests einschließen. Nur Testdatei committen; Bericht mit RED/GREEN/CI und echtem SHA.
