@@ -46,7 +46,7 @@
 
 **Files:** Modify `app/helpers/application_helper.rb`, `app/views/layouts/application.html.erb`, `test/helpers/application_helper_test.rb`, `test/helpers/local_font_stylesheet_test.rb`; create `app/assets/fonts/oswald-300.woff2`, `app/assets/fonts/oswald-400.woff2`; README.
 
-**Interfaces:** `LOCAL_FONT_FACES` und `local_font_faces_stylesheet(surface:)` behalten ihre bestehende Schnittstelle. Serverseitige TTF-Dateien für Pango/Fontconfig bleiben verfügbar.
+**Interfaces:** `LOCAL_FONT_FACES` und `local_font_face_stylesheet(frontend:)` behalten ihre bestehende Schnittstelle. Serverseitige TTF-Dateien für Pango/Fontconfig bleiben verfügbar.
 
 - [ ] RED: Integrations-/Helpertest zeigt, dass öffentliche und Backend-Font-Faces für Gewicht 300/400 lokale WOFF2 statt TTF referenzieren. Assertions auf gerendertes CSS und gültige Assets; bestehende lokale Preloads dürfen keinen TTF-Request auslösen.
 - [ ] Vorhandene TTFs mit vorhandenen Fonttools verlustfrei in WOFF2 konvertieren; Zeichenabdeckung und Metriken erhalten. Kein externes Font-CDN und keine neue Fontfamilie. Nicht auf ASCII beschränken.
@@ -56,13 +56,14 @@
 
 ### Task 2: LCP-Bilder, Slider und verstecktes Video
 
-**Files:** `app/views/public/events/_design_preview_card.html.erb`, `_design_preview_banner_card.html.erb`, `_design_preview_header.html.erb`, `_homepage_highlight_video.html.erb`, `design_preview.html.erb`, `lane.html.erb`, `search.html.erb`, `design_preview_detail.html.erb`; `app/views/public/news/_card.html.erb`, `index.html.erb`; passende aufrufende Partials; `app/javascript/controllers/design_preview_feature_slider_controller.js`, `video_sound_controller.js` oder eigener kleiner Controller; `public_index.js` nur bei Registrierung; gezielte Integration-/Browsertests; README.
+**Files:** `app/views/public/events/_design_preview_card.html.erb`, `_design_preview_banner_card.html.erb`, `_design_preview_header.html.erb`, `_homepage_highlight_video.html.erb`, `design_preview.html.erb`, `lane.html.erb`, `search.html.erb`, `design_preview_detail.html.erb`; `app/views/public/news/_card.html.erb`, `index.html.erb`; passende aufrufende Partials; `app/javascript/controllers/design_preview_feature_slider_controller.js`, `video_sound_controller.js` oder eigener kleiner Controller; `highlights_slider_controller.js` nur falls ein nachgewiesener moderner Fehlanschluss das erfordert; `public_index.js` nur bei Registrierung; gezielte Integration-/Browsertests; README.
 
 **Interfaces:** Karten erhalten optional `image_priority: false` und gegebenenfalls `image_loading:`. Höchstens der sichtbare wahrscheinliche LCP-Kandidat erhält `fetchpriority=high`; tiefe Karten bleiben lazy. Vorhandene Kartenaufrufe behalten ihre Standardsemantik.
 
 - [ ] RED: repräsentative Lane/Suche/News rendern erstes sichtbares Bild eager/high und spätere Karten lazy. Direkte Unterseiten enthalten keinen unbedingten Logo-Turbo-Preload. Detailbild bleibt eager, mit passender Priorität.
 - [ ] Browser-RED: Feature-Slider wechselt vor bewusster Interaktion nicht automatisch; Pfeile/Swipe funktionieren. Erster Slide darf bereits richtig priorisiert sein und nicht durch einen späteren lazy Slide als LCP verdrängt werden.
 - [ ] Browser-RED: bei 412/1350 px wird keine MP4-Quelle angefordert; sichtbare Kachel ab 1536 px kann laden/abspielen. Kein `src`/`source[src]` vor passenden Media-/Sichtbarkeitsbedingungen, `preload=none` allein genügt nicht. Data-Saver/Reduced-Motion beachten; Tonbutton und Resize funktionieren.
+- [ ] Browser-RED zusätzlich: moderne Homepage hängt derzeit `highlights-slider` ohne erforderlichen `track`-Target an und wirft beim Verbinden eine Ausnahme. Fehlanschluss entfernen oder gezielt korrigieren, ohne ältere funktionierende Sliderpfade zu beschädigen; Browser soll ohne diese Controllerexception laden.
 - [ ] Genau diese bestehenden Verhaltenspfade korrigieren; keine pauschale eager-Priorität aller Karten und kein visueller Umbau. Breiten/Höhen für Newsbild ergänzen, ohne bestehendes Seitenverhältnis/Crop zu ändern.
 - [ ] GREEN: gezielte Rails-/Browsertests einschließlich erster Interaktion, Resize und Turbo-Navigation; Fullsuite/RuboCop; README-Verhalten dokumentieren und committen.
 
@@ -103,13 +104,14 @@
 
 ### Task 6: CX33-Queue, Proxy und Worker messbar entlasten
 
-**Files:** `config/nginx.conf.template`, `config/puma.rb`, `config/deploy.hetzner.yml`, `config/database.yml` nur bei begründetem Poolbedarf; kleine Rack-/Telemetryklasse und deren Konfiguration; `test/lib/nginx_config_test.rb`, `hetzner_deploy_config_test.rb`, neue Runtime-/Middlewaretests; `public/robots.txt` beziehungsweise bestehende Robotsquelle; README.
+**Files:** `config/nginx.conf.template`, `config/puma.rb`, `config/deploy.hetzner.yml`, `config/deploy.hetzner.shared.yml`, `config/database.yml` nur bei begründetem Poolbedarf; kleine Rack-/Telemetryklasse und deren Konfiguration; `test/lib/nginx_config_test.rb`, `hetzner_deploy_config_test.rb`, neue Runtime-/Middlewaretests; `public/robots.txt` beziehungsweise bestehende Robotsquelle; README.
 
 **Interfaces:** Proxy nginx→Puma erhält einen vom Proxy überschriebenen Requeststart-Zeitstempel. Metriken: Queuezeit, Appzeit, Status/Route/Release; keine vertraulichen Querystrings. Pumastats über internen Unixsocket, kein öffentlicher Steuerport.
 
 - [ ] RED: Queuezeitberechnung toleriert fehlende, kaputte, zukünftige und überlange Headers; eingehende Spoofwerte werden am Proxy ersetzt. Pool-/Pumaeinblicke lösen selbst keine Datenbankabfrage aus und erzeugen keine Secrets in Logs.
 - [ ] Auf echtem nginx kontrolliert Requests testen: bekannte nicht notwendige Crawlerklassen erhalten begrenztes dynamisches Budget und sauberes 429/Retry-Verhalten; Assets/Medien/Healthchecks und normale Nutzer bleiben verfügbar. Useragent ist Klassifizierung, keine verifizierte Identität. Keine IP-basierte Regel auf ungeprüftem X-Forwarded-For oder pauschaler Sperre wichtiger Suchmaschinen.
 - [ ] Logs mit Request-ID, nginx-/Upstreamzeiten und sanitisiertem Pfad ergänzen; Logretention begrenzen und für Vorher/Nachher nutzbar halten. Kooperative Robotsregeln für nicht indexierbare Such-/Overlaypfade prüfen.
+- [ ] Vor jedem Rollout Host-/Indexierungsdrift korrigieren: öffentlich ist `stuttgart-live.de` ohne noindex produktiv, die versionierte Konfiguration zeigt noch den nicht erfolgreich per TLS erreichbaren Schopp3r-Host und STAGING_NOINDEX=true. Versionskonfiguration muss den verifizierten aktuellen Produktionszustand erhalten; keine Domain-/SEO-Rücksetzung durch den Performancedeploy. Eigene Stagings/Russ nicht auf andere Hosts umstellen.
 - [ ] Vor Workeränderung reale PSS/RSS-/Poolbudgets aller vier Stacks inklusive Rolloutüberlappung berechnen. Zwei→drei Worker ausschließlich im kontrollierten Vergleich; bei zu wenig Reserve bei zwei bleiben und Entscheidung messen. Threads nicht pauschal erhöhen.
 - [ ] GREEN: Middleware-/Configverhalten und nginx-Syntaxtest/Integration, volle CI/RuboCop. README beschreibt interne Diagnose, Änderungen, Schwellenvorschläge, Poolbudget und Rückfall auf vorherige Konfiguration; Commit.
 
