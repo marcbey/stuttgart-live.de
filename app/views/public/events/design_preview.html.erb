@@ -393,6 +393,9 @@
           </div>
         </div>
 
+        <% highlight_cards_context = [ strict_proxy, design_preview_effective_series_ids, design_preview_series_counts_by_id, highlight_tiles.map { |tile| [ tile.event.id, tile.grid_variant, tile.column, tile.row ] }, laptop_highlight_tiles_by_event_id.values.map { |tile| [ tile.event.id, tile.grid_variant, tile.column, tile.row ] } ] %>
+        <% highlight_cards_cache_key = public_events_fragment_cache_key(section: "modern-highlight-cards", events: highlight_events, browse_state: @browse_state, context: highlight_cards_context) if controller.perform_caching && !authenticated? %>
+        <% cache_if highlight_cards_cache_key.present?, highlight_cards_cache_key, expires_in: 15.minutes do %>
         <% if highlight_events.any? %>
           <div class="design-preview-mobile-highlight-row" aria-label="Weitere Highlights">
             <% highlight_events.each do |event| %>
@@ -448,6 +451,8 @@
                        series_counts_by_id: design_preview_series_counts_by_id,
                        show_admin_edit: true %>
           <% end %>
+        <% end %>
+
         <% end %>
 
         <%= render "homepage_highlight_video",
