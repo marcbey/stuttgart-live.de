@@ -1,0 +1,35 @@
+.landing-navigation {
+  padding: 0.5rem max(1rem, env(safe-area-inset-left));
+  background: #000;
+  color: #fff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.landing-navigation--mamma-mia {
+  background: #091a68;
+}
+
+.landing-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid currentColor;
+  border-radius: 0.35rem;
+  color: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+  text-decoration: none;
+}
+
+.landing-back-link:hover {
+  background: #fff;
+  color: #091a68;
+}
+
+.landing-back-link:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 3px;
+}

@@ -1431,3 +1431,22 @@ gemeinsamem Runbook freigeben; es gibt keine automatische Ablaufzeit.
 `mise install` stellt neben Ruby und Python auch das gepinnte Bun für den
 JavaScript-Sicherheitsaudit in `bin/ci` bereit. Dadurch führt GitHub dieselben
 vollständigen Prüfungen wie die lokale Umgebung aus.
+
+### Statische Landingpages
+
+Die eigenständigen Angebotsseiten liegen unter `public/ovo` und
+`public/mamma-mia` und sind unter `/ovo/` beziehungsweise `/mamma-mia/` erreichbar.
+Nur benötigte Webdateien gehören in diese Ordner; Entwürfe und Originalmaterial
+werden nicht veröffentlicht. Änderungen durchlaufen denselben PR-, CI- und
+Staging-Ablauf wie die übrige Website.
+
+Der Zurück-Link oberhalb beider Seiten führt zur übermittelten Herkunftsseite.
+Fehlt diese Information (etwa beim direkten Öffnen), führt er zur Startseite.
+Sprunglinks innerhalb der Landingpage verändern dieses Ziel nicht.
+Die gemeinsame Navigation liegt in `public/landingpages`.
+
+Mamma Mia lädt ihre Schriftdateien lokal aus der Asset-Pipeline. Die Dateinamen
+enthalten einen Inhalts-Hash und `.digested`, damit Propshaft die in der
+statischen `fonts.css` verwendeten URLs beim Build beibehält. Beim Austausch
+einer Schrift müssen Hash und CSS-Verweis zusammen aktualisiert werden; die
+Schriftlizenzen liegen neben den Dateien in `app/assets/fonts`.

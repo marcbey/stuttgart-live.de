@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Cirque du Soleil OVO - Business Tickets</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: #000;
+        color: #fff;
+        font-family: Arial, Helvetica, sans-serif;
+      }
+
+      main {
+        width: min(100%, 1000px);
+        margin: 0 auto;
+      }
+
+      .poster {
+        position: relative;
+      }
+
+      img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .ticket-hotspot {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        display: grid;
+        place-items: center;
+        border: 1px solid #d9121b;
+        background: #fff;
+        color: #d9121b;
+        text-align: center;
+        text-decoration: none;
+        font-size: clamp(0.45rem, 1.55vw, 0.74rem);
+        font-weight: 800;
+        line-height: 1.04;
+        z-index: 1;
+        transition: background 140ms ease, border-color 140ms ease, color 140ms ease;
+      }
+
+      .ticket-hotspot span {
+        display: block;
+      }
+
+      .ticket-hotspot:hover,
+      .ticket-hotspot:focus-visible {
+        border-color: #d9121b;
+        background: #d9121b;
+        color: #fff;
+      }
+
+      .ticket-hotspot:focus-visible {
+        outline: 2px solid #fff;
+        outline-offset: 2px;
+      }
+
+      .hint {
+        position: fixed;
+        left: 50%;
+        bottom: 1rem;
+        z-index: 2;
+        width: min(calc(100% - 2rem), 26rem);
+        padding: 0.8rem 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.22);
+        border-radius: 0.35rem;
+        background: rgba(9, 0, 24, 0.94);
+        color: #fff;
+        text-align: center;
+        font-size: 0.95rem;
+        box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        transform: translate(-50%, 150%);
+        transition: opacity 160ms ease, transform 160ms ease;
+      }
+
+      .hint.is-visible {
+        opacity: 1;
+        transform: translate(-50%, 0);
+      }
+    </style>
+    <link rel="stylesheet" href="../landingpages/navigation.css">
+    <script src="../landingpages/navigation.js" defer></script>
+  </head>
+  <body>
+    <nav class="landing-navigation landing-navigation--ovo" aria-label="Zurücknavigation">
+      <a class="landing-back-link" data-landing-back href="/">
+        <span aria-hidden="true">←</span> Zurück
+      </a>
+    </nav>
+    <main>
+      <div class="poster">
+        <img
+          src="ovo-business.jpg"
+          width="794"
+          height="1209"
+          alt="Cirque du Soleil OVO Business Packages"
+        >
+
+        <a class="ticket-hotspot" data-ticket="flying-friday" href="#" style="--x: 5.38%; --y: 70.78%; --w: 8.74%; --h: 2.98%;" aria-label="Flying High Upgrade, Freitag 12.02.27"><span>Fr<br>12.02.27</span></a>
+        <a class="ticket-hotspot" data-ticket="flying-saturday" href="#" style="--x: 15.29%; --y: 70.78%; --w: 8.07%; --h: 2.98%;" aria-label="Flying High Upgrade, Samstag 13.02.27"><span>Sa<br>13.02.27</span></a>
+        <a class="ticket-hotspot" data-ticket="premium-friday" href="#" style="--x: 29.41%; --y: 70.89%; --w: 8.74%; --h: 2.98%;" aria-label="Cirque Premium Package, Freitag 12.02.27"><span>Fr<br>12.02.27</span></a>
+        <a class="ticket-hotspot" data-ticket="premium-saturday" href="#" style="--x: 39.33%; --y: 70.89%; --w: 8.57%; --h: 2.98%;" aria-label="Cirque Premium Package, Samstag 13.02.27"><span>Sa<br>13.02.27</span></a>
+        <a class="ticket-hotspot" data-ticket="loge-friday" href="#" style="--x: 53.28%; --y: 79.71%; --w: 8.40%; --h: 2.98%;" aria-label="Cirque Loge, Freitag 12.02.27"><span>Fr<br>12.02.27</span></a>
+        <a class="ticket-hotspot" data-ticket="loge-saturday" href="#" style="--x: 62.86%; --y: 79.71%; --w: 8.40%; --h: 2.98%;" aria-label="Cirque Loge, Samstag 13.02.27"><span>Sa<br>13.02.27</span></a>
+        <a class="ticket-hotspot" data-ticket="premium-loge-friday" href="#" style="--x: 76.97%; --y: 79.71%; --w: 8.40%; --h: 2.98%;" aria-label="Cirque Premium Loge, Freitag 12.02.27"><span>Fr<br>12.02.27</span></a>
+        <a class="ticket-hotspot" data-ticket="premium-loge-saturday" href="#" style="--x: 86.72%; --y: 79.71%; --w: 8.40%; --h: 2.98%;" aria-label="Cirque Premium Loge, Samstag 13.02.27"><span>Sa<br>13.02.27</span></a>
+      </div>
+    </main>
+
+    <div class="hint" role="status" aria-live="polite"></div>
+
+    <script>
+      const ticketLinks = {
+        "flying-friday": "https://www.eventim.de/event/cirque-du-soleil-ovo-cirque-du-soleil-ovo-porsche-arena-21774912/?affiliate=EYA#tab=extras-21915807",
+        "flying-saturday": "https://www.eventim.de/event/cirque-du-soleil-ovo-cirque-du-soleil-ovo-porsche-arena-21814501/?affiliate=EYA#tab=extras-21913791",
+        "premium-friday": "https://www.eventim.de/event/cirque-du-soleil-ovo-cirque-du-soleil-ovo-porsche-arena-21774912/?affiliate=EYA#tab=vip_packages-21915734",
+        "premium-saturday": "https://www.eventim.de/event/cirque-du-soleil-ovo-cirque-du-soleil-ovo-porsche-arena-21814501/?affiliate=EYA#tab=vip_packages-21915738",
+        "loge-friday": "https://www.eventim.de/event/cirque-du-soleil-ovo-cirque-du-soleil-ovo-porsche-arena-21774912/?affiliate=EYA#tab=vip_packages-21915734",
+        "loge-saturday": "https://www.eventim.de/event/cirque-du-soleil-ovo-cirque-du-soleil-ovo-porsche-arena-21814501/?affiliate=EYA#tab=vip_packages-21915738",
+        "premium-loge-friday": "https://www.eventim.de/event/cirque-du-soleil-ovo-cirque-du-soleil-ovo-porsche-arena-21774912/?affiliate=EYA#tab=vip_packages-21915734",
+        "premium-loge-saturday": "https://www.eventim.de/event/cirque-du-soleil-ovo-cirque-du-soleil-ovo-porsche-arena-21814501/?affiliate=EYA#tab=vip_packages-21915738"
+      };
+
+      const ticketButtons = [...document.querySelectorAll("[data-ticket]")];
+      const hint = document.querySelector(".hint");
+      let hintTimer;
+
+      function showMissingLinkHint() {
+        clearTimeout(hintTimer);
+        hint.textContent = "Der Ticket-Link ist noch nicht hinterlegt.";
+        hint.classList.add("is-visible");
+        hintTimer = setTimeout(() => {
+          hint.classList.remove("is-visible");
+        }, 2400);
+      }
+
+      ticketButtons.forEach((button) => {
+        const target = ticketLinks[button.dataset.ticket];
+
+        if (target) {
+          button.href = target;
+          button.target = "_blank";
+          button.rel = "noopener";
+          return;
+        }
+
+        button.addEventListener("click", (event) => {
+          event.preventDefault();
+          showMissingLinkHint();
+        });
+      });
+    </script>
+  </body>
+</html>
