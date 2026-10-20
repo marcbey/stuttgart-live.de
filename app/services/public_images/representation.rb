@@ -17,7 +17,14 @@ module PublicImages
     end
 
     def ready_blob(blob, transformations:)
-      return available?(blob) ? blob : nil unless blob.variable?
+      unless blob.variable?
+        if blob.previewable?
+          return ready_blob(blob.preview_image.blob, transformations:) if blob.preview_image.attached?
+
+          return nil
+        end
+        return available?(blob) ? blob : nil
+      end
 
       digest = blob.variant(transformations).variation.digest
       record = blob.variant_records.find { |variant| variant.variation_digest == digest }

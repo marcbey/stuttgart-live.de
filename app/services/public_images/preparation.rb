@@ -16,6 +16,8 @@ module PublicImages
         record.public_image_slots.each do |slot|
           attachment = record.public_send(slot)
           prepare_blob(attachment.blob) if attachment.attached?
+        rescue InvalidImage
+          next # Keep the original fallback for this slot and prepare the others.
         end
       end
     end

@@ -138,6 +138,44 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, expected_path
   end
 
+  test "rich text PDF uses a file link while its preview is pending and a ready image afterward" do
+    blob = ActiveStorage::Blob.create_and_upload!(io: File.open(file_fixture("public_preview.pdf")), filename: "public-preview.pdf", content_type: "application/pdf")
+    page = StaticPage.create!(slug: "pdf-preview", title: "PDF", body: %(<action-text-attachment sgid="#{blob.attachable_sgid}"></action-text-attachment>))
+    assert blob.previewable?
+    assert_not blob.variable?
+
+    assert_no_difference [ "ActiveStorage::Attachment.count", "ActiveStorage::VariantRecord.count" ] do
+      get static_page_url(page.slug)
+      assert_response :success
+      assert_select "figure.attachment img", count: 0
+      assert_select "figure.attachment a[href=?]", rails_storage_proxy_path(blob, only_path: true), text: "public-preview.pdf"
+      get rails_storage_proxy_path(blob, only_path: true)
+      assert_response :success
+      assert_equal "application/pdf", response.media_type
+    end
+    assert_not blob.reload.preview_image.attached?
+
+    preview = blob.preview(resize_to_limit: [ 1024, 768 ]).processed
+    output = preview.image.variant(resize_to_limit: [ 1024, 768 ]).processed.image.blob
+    assert_no_difference [ "ActiveStorage::Attachment.count", "ActiveStorage::VariantRecord.count" ] do
+      get static_page_url(page.slug)
+      assert_response :success
+      assert_select "figure.attachment img[src=?]", rails_storage_proxy_path(output, only_path: true)
+    end
+
+    output.service.delete(output.key)
+    assert_no_difference "ActiveStorage::VariantRecord.count" do
+      get static_page_url(page.slug)
+      assert_select "figure.attachment img[src=?]", rails_storage_proxy_path(preview.image.blob, only_path: true)
+    end
+    preview.image.blob.service.delete(preview.image.blob.key)
+    assert_no_difference "ActiveStorage::Attachment.count" do
+      get static_page_url(page.slug)
+      assert_select "figure.attachment img", count: 0
+      assert_select "figure.attachment a[href=?]", rails_storage_proxy_path(blob, only_path: true)
+    end
+  end
+
   test "static pages show an edit link for authenticated backend users" do
     sign_in_as(users(:one))
     page = StaticPage.create!(

@@ -45,6 +45,26 @@ class PublicImagesPreparationTest < ActiveSupport::TestCase
     end
   end
 
+  test "an invalid first slot does not prevent preparing a later valid banner" do
+    post = BlogPost.create!(title: "Invalid cover", teaser: "News", body: "Text", author: users(:one), status: "draft")
+    [ [ post, :cover_image, :promotion_banner_image ], [ @event, :promotion_banner_image, :promotion_banner_landscape_image ] ].each do |record, invalid_slot, valid_slot|
+      record.public_send(invalid_slot).attach(io: StringIO.new('<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20"/>'), filename: "unsupported.svg", content_type: "image/svg+xml")
+      record.public_send(valid_slot).attach(io: StringIO.new(@binary), filename: "banner.png", content_type: "image/png")
+      EventImages::PreparePublicImagesJob.perform_now(record)
+      output = PublicImages::Representation.ready(record.public_send(valid_slot), size: :card_mobile)
+      assert_equal "image/webp", output.content_type
+      assert_equal 384, output.metadata["width"]
+      assert_empty record.public_send(invalid_slot).blob.variant_records
+    end
+  end
+
+  test "missing source files still propagate for job retry" do
+    @event.promotion_banner_image.attach(io: StringIO.new(@binary), filename: "missing.png", content_type: "image/png")
+    blob = @event.promotion_banner_image.blob
+    blob.service.delete(blob.key)
+    assert_raises(ActiveStorage::FileNotFoundError) { PublicImages::Preparation.new.call(@event) }
+  end
+
   test "imports retain remote fallback until ready and do not redownload unchanged source" do
     image = imported_image
     assert_nil image.public_file
