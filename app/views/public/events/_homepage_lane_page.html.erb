@@ -13,6 +13,7 @@
              wrap: false %>
 <% elsif mode == "design_cards" %>
   <%= render "design_preview_event_grid",
+             image_sizes: public_event_list_image_sizes,
              events: page.events,
              browse_state: browse_state,
              strict_proxy: strict_proxy,

@@ -71,6 +71,20 @@ class PublicImagesRepresentationTest < ActionView::TestCase
     end
   end
 
+  [ LoadError, MiniMagick::Error, ActiveStorage::InvariableError, ImageProcessing::Error ].each do |error_class|
+    test "backend rich text renders original image after #{error_class} processing failure" do
+      blob = portrait_image.file.blob
+      representation = blob.representation(resize_to_limit: [ 1024, 768 ])
+      representation.define_singleton_method(:processed) { raise error_class, "processing unavailable" }
+      blob.define_singleton_method(:representation) { |**_options| representation }
+      view.define_singleton_method(:backend_image_request?) { true }
+
+      render partial: "active_storage/blobs/blob", locals: { blob: blob }
+
+      assert_select "figure.attachment--preview img[src=?]", public_media_path(blob), count: 1
+    end
+  end
+
   test "banner and news public paths do not process new variants" do
     event = events(:needs_review_one)
     event.promotion_banner_image.attach(portrait_image.file.blob)

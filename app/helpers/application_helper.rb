@@ -569,7 +569,11 @@ module ApplicationHelper
   def public_rich_text_representation_source(blob, in_gallery: false)
     blob = blob.attachable if blob.is_a?(ActionText::Attachment)
     if backend_image_request?
-      return public_media_path(blob.representation(resize_to_limit: in_gallery ? [ 800, 600 ] : [ 1024, 768 ]).processed)
+      begin
+        return public_media_path(blob.representation(resize_to_limit: in_gallery ? [ 800, 600 ] : [ 1024, 768 ]).processed)
+      rescue LoadError, MiniMagick::Error, ActiveStorage::InvariableError, ImageProcessing::Error
+        return public_media_path(blob)
+      end
     end
 
     representation = PublicImages::Representation.ready_blob(blob, transformations: { resize_to_limit: in_gallery ? [ 800, 600 ] : [ 1024, 768 ] })

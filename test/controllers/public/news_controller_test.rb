@@ -21,6 +21,41 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, @scheduled_post.title
   end
 
+  %w[index show].each do |page|
+    test "#{page} renders without images when cover storage files are missing" do
+      @live_post.cover_image.attach(
+        io: StringIO.new(solid_png_binary(width: 800, height: 600)),
+        filename: "missing-cover.png", content_type: "image/png"
+      )
+      blob = @live_post.cover_image.blob
+      %i[banner_mobile banner_desktop].each do |size|
+        output = blob.variant(PublicImages::Representation.transformations(size)).processed.image.blob
+        output.service.delete(output.key)
+      end
+      blob.service.delete(blob.key)
+      assert @live_post.cover_image.attached?
+      assert_not blob.service.exist?(blob.key)
+
+      transformations = []
+      track_transform = ->(notification) { transformations << notification.name }
+      assert_no_difference "ActiveStorage::VariantRecord.count" do
+        ActiveSupport::Notifications.subscribed(track_transform, /(?:transform|preview)\.active_storage/) do
+          get(page == "index" ? news_index_url : news_url(@live_post.slug))
+        end
+      end
+      assert_empty transformations
+      assert_response :success
+      if page == "index"
+        assert_select ".news-index-card-no-image h2", text: @live_post.title
+        assert_select ".news-index-card-media", count: 0
+      else
+        assert_select ".news-detail-header-panel h1", text: @live_post.title
+        assert_select ".design-news-preview-media--image", count: 0
+        assert_select ".news-detail-image-wrap", count: 0
+      end
+    end
+  end
+
   test "index does not render an inline newsletter signup slot" do
     8.times do |index|
       create_blog_post(

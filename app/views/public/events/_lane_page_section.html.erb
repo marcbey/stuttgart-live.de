@@ -35,6 +35,7 @@
          id="lane-event-grid"
          <% if lazy_lane_id.present? %>data-lane-page-target="grid"<% end %>>
       <%= render "design_preview_event_grid",
+                 image_sizes: public_event_list_image_sizes,
                  events: events,
                  prioritize_first_image: true,
                  browse_state: browse_state,

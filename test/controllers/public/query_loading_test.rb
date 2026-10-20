@@ -33,6 +33,19 @@ class Public::QueryLoadingTest < ActionDispatch::IntegrationTest
 
   teardown { travel_back }
 
+  test "list grids carry their responsive image slots through initial and lazy rendering" do
+    expected_sizes = "(min-width: 96rem) calc((min(100vw - 5rem, 100rem) - 5.25rem) / 6), " \
+      "(min-width: 80rem) calc((100vw - 12rem) / 5), " \
+      "(min-width: 64rem) calc((100vw - 7rem) / 4), " \
+      "(min-width: 48rem) calc((100vw - 5.8rem) / 3), calc((100vw - 2.22rem) / 2)"
+    [ highlights_lane_path, search_path(q: "Query Loading"),
+      homepage_lane_events_path(lane: "highlights", mode: "design_cards") ].each do |path|
+      get path
+      assert_response :success
+      assert_select ".design-preview-card-image[sizes=?]", expected_sizes, minimum: 1
+    end
+  end
+
   test "event detail batches image variants and related series counts" do
     assert_batched_render event_path(@events.first.slug)
   end

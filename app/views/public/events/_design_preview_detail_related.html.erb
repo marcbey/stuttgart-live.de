@@ -15,7 +15,7 @@
                  browse_state: browse_state,
                  strict_proxy: strict_proxy,
                  variant: "compact",
-                 image_sizes: "(max-width: 767px) 5.35rem, 5.25rem",
+                 image_sizes: local_assigns.fetch(:image_sizes, "(max-width: 767px) 5.35rem, 5.25rem"),
                  image_variant_sizes: %i[thumbnail card_mobile],
                  link_class: "event-listing-link",
                  status_in_price_position: true,

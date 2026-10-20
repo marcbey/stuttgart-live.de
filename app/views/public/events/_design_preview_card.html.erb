@@ -47,7 +47,7 @@
                       width: image_dimensions.fetch(:width),
                       height: image_dimensions.fetch(:height),
                       srcset: image_srcset,
-                      sizes: local_assigns.fetch(:image_sizes, variant == "feature" ? "(max-width: 767px) 92vw, 42vw" : "(max-width: 767px) 46vw, 18vw") %>
+                      sizes: local_assigns[:image_sizes].presence || (variant == "feature" ? "(max-width: 767px) 92vw, 42vw" : "(max-width: 767px) 46vw, 18vw") %>
       <% else %>
         <span class="design-preview-card-image design-preview-card-image--placeholder"></span>
       <% end %>

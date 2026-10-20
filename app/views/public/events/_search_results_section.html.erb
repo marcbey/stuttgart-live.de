@@ -25,6 +25,7 @@
   <% if events.any? %>
     <div class="lane-page-grid design-preview-list-card-grid" id="event-grid" data-lane-page-target="grid">
       <%= render "design_preview_event_grid",
+                 image_sizes: public_event_list_image_sizes,
                  events: events,
                  prioritize_first_image: true,
                  browse_state: browse_state,

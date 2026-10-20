@@ -32,7 +32,7 @@ class Public::EventFragmentsHelperTest < ActionView::TestCase
   test "render context and browse parameters cannot share fragments" do
     event = loaded_event
     key = fragment_key(event)
-    [ { variant: "feature" }, { prioritize_first_image: true }, { image_loading: "eager" },
+    [ { variant: "feature" }, { image_sizes: "6.2rem" }, { prioritize_first_image: true }, { image_loading: "eager" },
       { strict_proxy: true }, { effective_series_ids: [ 9 ], series_counts_by_id: { 9 => 3 } },
       { dom_id_prefix: "saved" }, { next_cursor: "cursor-two" }, { show_expired_status: false } ].each do |context|
       assert_not_equal key, fragment_key(event, context: context)
