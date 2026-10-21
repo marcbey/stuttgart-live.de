@@ -1489,6 +1489,9 @@ vollständigen Prüfungen wie die lokale Umgebung aus.
 
 Die eigenständigen Angebotsseiten liegen unter `public/ovo` und
 `public/mamma-mia` und sind unter `/ovo/` beziehungsweise `/mamma-mia/` erreichbar.
+Auch Aufrufe ohne abschließenden Schrägstrich funktionieren. Bilder, Stylesheets
+und Skripte im HTML verwenden deshalb Pfade ab der Website-Wurzel (etwa
+`/ovo/ovo-business.jpg`), damit der Browser sie bei beiden URL-Varianten findet.
 Nur benötigte Webdateien werden veröffentlicht. Die mit versionierten
 Mamma-Mia-Ordner `Vorlagen` und `gallery` sowie lokale Zugangsdaten-Notizen
 sind über `.dockerignore` vom App-Image ausgeschlossen. Änderungen durchlaufen denselben PR-, CI- und
