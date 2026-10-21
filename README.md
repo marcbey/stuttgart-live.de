@@ -483,7 +483,7 @@ Konservativer headless Smoke-Test gegen Production:
 
 ```bash
 locust -f test/locust/locustfile.py \
-  --host https://stuttgart-live.schopp3r.de \
+  --host https://stuttgart-live.de \
   --headless \
   --users 3 \
   --spawn-rate 1 \
@@ -569,11 +569,13 @@ openai:
   api_key: sk-...
 ```
 
-Beim Domainwechsel am 17. Oktober 2026 dürfen neue Meta-Verknüpfungen
-vorübergehend warten. Der vorhandene feste OAuth-Rückruf zeigt weiterhin auf
-`stuttgart-live.schopp3r.de`; die Umstellung in Meta Developers und den
-App-Credentials folgt gesondert. Einzelheiten stehen im
-[Umzugsrunbook](docs/operations/domainumzug-und-staging.md).
+Für neue Meta-Verknüpfungen müssen die App-Credentials und die erlaubten
+Redirect-URLs in Meta Developers gemeinsam
+`https://stuttgart-live.de/backend/meta_connection/callback` verwenden.
+Die beim Umzug zunächst zurückgestellte App-Anpassung ist inzwischen über den
+regulären Freigabeweg veröffentlicht. Die Domain-Nachkontrolle hat keine neue
+OAuth-Verknüpfung oder Veröffentlichung bei Meta ausgeführt. Einzelheiten stehen
+im [Umzugsrunbook](docs/operations/domainumzug-und-staging.md).
 
 Für das Social-Publishing liegen nur die App-Zugangsdaten in den Rails-Credentials und nicht in `app_settings`. Facebook nutzt die Meta-App. Instagram kann eine eigene Instagram-Platform-App-ID benötigen; wenn keine eigenen Instagram-Werte gesetzt sind, fällt die App auf `meta.app_id` und `meta.app_secret` zurück:
 
@@ -715,7 +717,13 @@ Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=
 Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bleibt der Eigentümer der fachlichen Produktionsdatenbank und des Docker-Volumes `stuttgart_live_de_storage`. Weitere Apps wie `russ-live.de` dürfen diese Primärdatenbank nur mit einem separaten read-only PostgreSQL-Benutzer lesen und dasselbe Storage-Volume mounten. Queue, Cache und Cable bleiben je App getrennt, damit Worker und Laufzeitdaten nicht zwischen Projekten kollidieren.
 
 Die Ziel-IP und der gepinnte SSH-Host-Key stehen versioniert in [config/deploy.hetzner.shared.yml](config/deploy.hetzner.shared.yml).
-Das öffentliche Hostprofil wird über `PRODUCTION_DOMAIN_MODE` im GitHub-Environment `production` gewählt; die endgültige Zieladresse ist `https://stuttgart-live.de`. Kamal setzt `APP_HOST` zur Laufzeit in den Produktions-Container.
+Produktion ist unter `https://stuttgart-live.de/` erreichbar. Das GitHub-Environment
+`production` verwendet `PRODUCTION_DOMAIN_MODE=live`; `www.stuttgart-live.de`
+leitet mit HTTP 308 und erhaltenem Pfad sowie Querystring zur Hauptdomain weiter.
+Kamal verwaltet HTTPS automatisch und speichert die Zertifikate im persistenten
+Volume `kamal-proxy-config`. Kamal setzt `APP_HOST` zur Laufzeit im Container.
+Die aktuellen DNS-Werte, der bisherige WordPress-Rückweg und der Stand der
+Abschlussbereinigung stehen im [Betriebsrunbook](docs/operations/domainumzug-und-staging.md#betriebsstand-nach-dem-domainumzug).
 
 ### Staging und Suchindex
 
@@ -723,9 +731,8 @@ Die getrennte Staging-Umgebung `https://staging.stuttgart-live.de/` erzwingt
 Basic Auth und `STAGING_NOINDEX=true`. nginx setzt dort global den Header
 `X-Robots-Tag: noindex, nofollow`, auch für `sitemap.xml`, Assets, Media-Dateien
 und den Healthcheck `/up`. Produktion unter der neuen Hauptdomain wird indexiert.
-Stuttgart verwendet während des IPv6-DNS-Übergangs noch `live_preissued`;
-[INFRA.md](INFRA.md#backups-domainwechsel-und-verbleibende-nacharbeiten) beschreibt
-den anschließenden Wechsel auf automatische Zertifikate.
+Die automatische TLS-Verwaltung ist übernommen; das Übergangsprofil
+`live_preissued` wird im laufenden Betrieb nicht mehr verwendet.
 
 Die Search-Console-Verifizierungsdatei [public/google8f1bf564d79d9e2c.html](public/google8f1bf564d79d9e2c.html) muss nach dem Domainwechsel unter `https://stuttgart-live.de/google8f1bf564d79d9e2c.html` mit `200 OK` erreichbar sein. Den Status der bestehenden Domain- oder URL-Präfix-Property separat im zuständigen Google-Konto prüfen. Die öffentliche Produktion bleibt indexierbar; Staging behält Basic Auth und `noindex`.
 

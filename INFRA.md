@@ -220,13 +220,19 @@ gezielte erlaubte Web-DNS-Änderungen und der zeitlich begrenzte WordPress-Rück
 stehen im [Runbook](docs/operations/domainumzug-und-staging.md). Domain-/TLS-Modus
 ist eine Production-Environment-Variable und wird nicht durch Staging geändert.
 
-Am 18. Oktober steht Russ auf `PRODUCTION_DOMAIN_MODE=live`; Stuttgart verwendet
-noch `live_preissued`. Dort erst nach bestätigtem Ende der alten IPv6-DNS-Caches
-auf `live` und automatische Zertifikate wechseln. Der Zeitpunkt des mindestens
-72-stündigen WordPress-Rückfallfensters gehört ins private Abnahmeprotokoll.
-Neue Meta-OAuth-Verknüpfungen benötigen später die Umstellung der bisherigen
-Rückrufadresse. WordPress-Abschaltung und die spätere Weiterleitung von
-`www.michaelrussgmbh.de` sind eigene, nicht durch einen App-Deploy erledigte Schritte.
+Beide Produktionen verwenden `PRODUCTION_DOMAIN_MODE=live` und automatisch
+verwaltete HTTPS-Zertifikate im persistenten Volume `kamal-proxy-config`.
+Auch `michaelrussgmbh.de` und `www.michaelrussgmbh.de` leiten seit dem 19. Oktober
+mit gültigem HTTPS auf genau `https://russ-live.de/` weiter; alte Pfade und
+Querystrings entfallen. Die eigene ACME-DNS-Bereinigung benötigt noch frische
+Provider-Anmeldungen und vollständige Vorher-/Nachher-Nachweise.
+
+Das mindestens 72-stündige WordPress-Rückfallfenster endete am 20. Oktober um
+19:13 Uhr MESZ. Die funktionale Nutzerabnahme und die dokumentierten Messlücken
+stehen im privaten Protokoll. Der bisherige WordPress-Betreiber und sein
+Hostingzugang sind weiterhin unbekannt; die Abschaltung bleibt eine externe
+Abhängigkeit. Der [aktuelle Betriebsstand](docs/operations/domainumzug-und-staging.md#betriebsstand-nach-dem-domainumzug)
+nennt DNS-Werte, Zuständigkeiten und die noch offene Abschlussbereinigung.
 
 ## Erkenntnisse aus den Staging-Korrekturen vom 17./18. Oktober
 
