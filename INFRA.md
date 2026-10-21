@@ -1,6 +1,6 @@
 # Infrastruktur und Veröffentlichungen
 
-Stand: 18. Oktober 2026
+Stand: 20. Oktober 2026
 
 Diese Übersicht beschreibt den gemeinsamen Betrieb von Stuttgart Live und Russ
 Live. Die [README](README.md#ci-staging-und-produktionsfreigabe-über-github)
@@ -80,13 +80,20 @@ Produktionsdaten und Produktionsmedien werden dabei ausschließlich gelesen.
 ## Von einer Änderung bis zur Produktion
 
 ```text
-PR → vollständige Main-CI → Deploy Staging → Versionszusammenfassung
+PR → PR-CI → optional manuell „Deploy PR Staging“ (gemeinsames Staging)
+ ↓ Merge
+main → vollständige Main-CI → Deploy Staging → Versionszusammenfassung
                                              ↓
                                    Produktionsfreigabe
                                    durch Marc oder Katharina
                                              ↓
                                    geprüftes Image auf Prod
 ```
+
+Die PR-Vorschau verwendet die Deploy-Steuerung von `main` und erzeugt keine
+Produktionsfreigabe. Der automatische Main-Deploy ersetzt sie nach dem Merge.
+Die täglichen Schritte stehen in der
+[README](README.md#ci-staging-und-produktionsfreigabe-über-github).
 
 1. Änderungen durchlaufen PR-Prüfungen und nach dem Merge erneut die vollständige
    Main-CI. Ein erfolgreicher Main-Lauf startet `Deploy Staging` automatisch.

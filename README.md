@@ -178,9 +178,13 @@ Das Backend unterstützt getrennte Drafts für Instagram und Facebook. Die Redak
 
 Die Meta-Verbindungen werden dabei nicht über statische Einmal-Tokens in Credentials oder ENV gefahren, sondern über persistierte Onboarding- und Lifecycle-Flows im Backend-Tab `Einstellungen -> Meta Publishing`. Dort verbindet ein Admin Instagram und Facebook unabhängig voneinander. Details dazu stehen in [docs/META_ONBOARDING.md](docs/META_ONBOARDING.md).
 
+Die [Einrichtungsanleitung für Marc und Chantal](docs/SOCIAL_MEDIA_EINRICHTUNG.md) führt mit klaren Zuständigkeiten vom Testbetrieb zu den echten Konten. Marc übernimmt Konfiguration und Deployment unserer Anwendung; Chantal verwaltet die technische Meta-App und verbindet anschließend die Facebook-Seite [Stuttgart Live](https://www.facebook.com/Stuttgart.LIVE/) und das Instagram-Konto [@stuttgart.live.concert](https://www.instagram.com/stuttgart.live.concert/).
+
 Für den OAuth-Callback kann optional eine feste Redirect-URL über `meta.instagram_redirect_uri` bzw. `META_INSTAGRAM_REDIRECT_URI` gesetzt werden. Der Name ist historisch Instagram-spezifisch, die URL gilt aber für Instagram- und Facebook-Onboarding.
 
 Sobald eine feste Redirect-URL gesetzt ist, muss der jeweilige Connect-Flow auch auf genau diesem Host gestartet werden. Der serverseitige OAuth-`state` hängt an der Session des Start-Hosts; ein lokal gestarteter Flow kann deshalb nicht sauber auf einer anderen Callback-Domain beendet werden.
+
+In Produktion lautet die Callback-URL `https://stuttgart-live.de/backend/meta_connection/callback`. Bei einem Domainwechsel müssen die Rails-Credentials und die erlaubten Redirect-URLs für Facebook und Instagram im Meta-App-Dashboard gemeinsam angepasst werden. Ein gesetzter Credentials-Wert hat Vorrang vor `META_INSTAGRAM_REDIRECT_URI`. Die korrigierten Credentials durchlaufen den regulären Ablauf über PR, Main-CI, Staging und Produktionsfreigabe. Bestehende Testverbindungen bleiben dabei gespeichert und werden erst durch den anschließenden Kontowechsel ersetzt.
 
 Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
@@ -579,7 +583,7 @@ meta:
   app_secret: "..."
   instagram_app_id: "..."
   instagram_app_secret: "..."
-  instagram_redirect_uri: "https://stuttgart-live.schopp3r.de/backend/meta_connection/callback"
+  instagram_redirect_uri: "https://stuttgart-live.de/backend/meta_connection/callback"
 ```
 
 Nach dem Speichern und Schließen des Editors schreibt Rails die verschlüsselte Datei automatisch zurück. Voraussetzung ist eine vorhandene lokale `config/master.key`.
@@ -609,7 +613,7 @@ Damit Social-Posts aus dem Backend zuverlässig auf Instagram und Facebook funkt
 
 - ein Instagram-Professional-Konto, also `Business` oder `Creator`
 - eine konfigurierte Meta-App mit Instagram API with Instagram Login und Facebook Pages-Zugriff
-- App-Domain `stuttgart-live.schopp3r.de`, Website-URL `https://stuttgart-live.schopp3r.de/` und erlaubte OAuth-Redirect-URL `https://stuttgart-live.schopp3r.de/backend/meta_connection/callback`
+- App-Domain `stuttgart-live.de`, Website-URL `https://stuttgart-live.de/` und erlaubte OAuth-Redirect-URL `https://stuttgart-live.de/backend/meta_connection/callback` für Facebook und Instagram
 - Instagram-Scopes `instagram_business_basic` und `instagram_business_content_publish`
 - Facebook-Scopes `pages_show_list`, `pages_read_engagement` und `pages_manage_posts`
 - gültige App-Konfiguration für den serverseitigen OAuth- und Token-Refresh-Flow
@@ -769,8 +773,43 @@ das Image mit dem SHA-Tag dieses Commits und hält dessen Digest im Artefakt
 `main-image` fest. Erst wenn Prüfungen und Build erfolgreich sind, startet
 `Deploy Staging`. Der Workflow checkt exakt den geprüften Commit aus, übernimmt
 das Image aus demselben CI-Lauf und prüft reale nginx-HTTP-Antworten, bevor
-Staging-Secrets bereitgestellt werden. Pull Requests veröffentlichen kein Image;
-es gibt keinen `latest`-Tag als Freigabegrundlage.
+Staging-Secrets bereitgestellt werden. Die reguläre PR-CI veröffentlicht kein
+Image; es gibt keinen `latest`-Tag als Freigabegrundlage.
+
+Für eine Vorschau vor dem Merge öffnest du **Actions → Deploy PR Staging → Run
+workflow**, lässt den Branch auf **main** und gibst die PR-Nummer ohne `#` ein.
+Der PR muss offen sein, aus diesem Repository stammen und nach `main` zeigen.
+Der neueste `Main Checks`-Lauf für seinen aktuellen Commit muss erfolgreich sein;
+Fork-PRs sind für diesen manuellen Ablauf nicht zugelassen.
+
+Ein Branch braucht dafür zunächst einen offenen Pull Request nach `main`. Der
+PR bestimmt den zu deployenden Branch; die Branch-Auswahl des Workflows bleibt
+auf `main`. Der Workflow muss zuvor selbst nach `main` übernommen worden sein.
+Nach weiteren Pushes in den PR-Branch wartest du erneut auf die grüne CI und
+startest den Workflow für dieselbe PR-Nummer noch einmal.
+
+Alternativ startest du den Deploy mit der GitHub CLI, hier für den Beispiel-PR
+`123`:
+
+```bash
+gh workflow run deploy-pr-staging.yml \
+  --repo marcbey/stuttgart-live.de --ref main -f pr_number=123
+```
+
+Der Workflow baut das App-Image des gewählten PR-Commits und prüft vor dem Deploy
+erneut PR, CI und Image-Digest. Ein inzwischen geänderter oder geschlossener PR
+benötigt einen neuen Lauf. Deploy-Steuerung, Kamal-Konfiguration und HTTP-Prüfungen
+kommen aus dem beim Workflow-Start festgelegten Main-Commit. Änderungen an diesen
+Steuerdateien werden daher erst nach ihrem Merge wirksam. Die Zusammenfassung
+des erfolgreichen Laufs verlinkt PR, CI und
+[Staging](https://staging.stuttgart-live.de/) und nennt Commit sowie Digest.
+
+PR-Vorschauen verwenden dieselbe Staging-Umgebung und dieselben Deploy-Sperren wie
+Main-Deployments. Sie ersetzen den dort laufenden Stand. Nach dem Merge wird der
+neue Main-Stand weiterhin automatisch auf Staging deployt. Ein PR-Deploy erzeugt
+keinen Produktionsnachweis und startet keine Produktionsfreigabe; dafür bleibt
+der vollständige Main-CI-/Staging-Ablauf erforderlich. Daten und bereits
+ausgeführte Migrationen werden beim Wechsel des Images nicht zurückgesetzt.
 
 Installierte Gems werden in CI, Staging und beim Produktionsdeploy anhand von
 Betriebssystem, Architektur, Ruby-Version und `Gemfile.lock` wiederverwendet.

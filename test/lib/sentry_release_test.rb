@@ -14,6 +14,12 @@ class SentryReleaseTest < ActiveSupport::TestCase
       output, status = Open3.capture2e(env, *command)
       assert status.success?, output
       assert_includes File.read(log), "releases deploys test-release new -e staging"
+      assert_includes File.read(log), "releases set-commits --auto test-release"
+      FileUtils.rm_f(log)
+      output, status = Open3.capture2e(env.merge("SENTRY_COMMIT_REFERENCE" => "marcbey/stuttgart-live.de@#{'a' * 40}"), *command)
+      assert status.success?, output
+      assert_includes File.read(log), "releases set-commits --commit marcbey/stuttgart-live.de@#{'a' * 40} test-release"
+      refute_includes File.read(log), "--auto"
       FileUtils.rm_f(log)
       output, status = Open3.capture2e(env, *command, "--environment", "production")
       refute status.success?
