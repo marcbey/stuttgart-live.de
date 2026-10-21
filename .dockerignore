@@ -66,3 +66,8 @@
 /.entire
 /.codex
 /.agents
+
+# Landingpage design sources and local account notes are not public assets.
+/public/mamma-mia/Vorlagen
+/public/mamma-mia/gallery
+/public/mamma-mia/kasch0
