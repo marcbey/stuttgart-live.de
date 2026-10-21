@@ -94,3 +94,6 @@ TODO.md
 
 # Local account note; never publish.
 /public/mamma-mia/kasch0
+
+# Generated performance summaries and local diagnostics
+/output/performance/

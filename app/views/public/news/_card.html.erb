@@ -1,6 +1,8 @@
+<% image_priority = local_assigns.fetch(:image_priority, false) %>
 <% hide_media = local_assigns.fetch(:hide_media, false) %>
-<% has_cover_image = blog_post.cover_image.attached? && !hide_media %>
 <% strict_proxy = local_assigns.key?(:strict_proxy) ? local_assigns[:strict_proxy] : homepage_media_strict_proxy? %>
+<% cover_image_source = optimized_blog_post_image_source(blog_post, :cover_image, strict_proxy:, size: :banner_mobile) if !hide_media && blog_post.cover_image.attached? %>
+<% has_cover_image = cover_image_source.present? %>
 <% show_admin_edit = local_assigns.fetch(:show_admin_edit, false) && authenticated? %>
 
 <article class="<%= class_names("news-card news-index-card", "news-index-card--with-image": has_cover_image, "news-index-card-no-image": !has_cover_image) %>">
@@ -16,9 +18,12 @@
 
     <% if has_cover_image %>
       <span class="news-card-media news-index-card-media">
-        <%= image_tag optimized_blog_post_image_source(blog_post, :cover_image, strict_proxy:, size: :banner_mobile),
+        <%= image_tag cover_image_source,
                       alt: blog_post.title,
-                      loading: "lazy",
+                      loading: local_assigns.fetch(:image_loading, image_priority ? "eager" : "lazy"),
+                      fetchpriority: (image_priority ? "high" : nil),
+                      width: blog_post.cover_image.blob.metadata["width"] || 768,
+                      height: blog_post.cover_image.blob.metadata["height"] || 576,
                       srcset: optimized_blog_post_image_srcset(blog_post, :cover_image, strict_proxy:),
                       sizes: "(max-width: 767px) calc(100vw - 2rem), 18rem",
                       style: blog_post_image_style(blog_post, :cover_image) %>

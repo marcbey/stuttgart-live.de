@@ -1,5 +1,5 @@
 <% strict_proxy = homepage_media_strict_proxy? %>
-<% genre_lanes = public_design_navigation_lanes(Array(@service_preview_genre_lanes).first(5), highlight_events: @service_preview_highlight_events) %>
+<% genre_lanes = public_design_navigation_lanes %>
 <% related_events = Array(@service_preview_highlight_events).first(7) %>
 <% design_preview_menu_groups = public_design_menu_groups %>
 <% design_preview_shell_saved_events = (
@@ -89,6 +89,7 @@
                    related_effective_series_ids: @service_preview_effective_series_ids,
                    wrapper_class: "design-preview-section design-detail-preview-related design-service-preview-highlights",
                    title_id: "design-service-preview-highlights-title",
+                   image_sizes: "(max-width: 767px) 5.35rem, 6.2rem",
                    title: "Unsere Highlights" %>
       <% end %>
     </section>

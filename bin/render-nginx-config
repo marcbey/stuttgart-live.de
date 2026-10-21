@@ -20,6 +20,10 @@ esac
 valid_host "${APP_HOST:-}" || fail APP_HOST
 [[ "${MEDIA_PROXY_SECRET:-}" =~ ^[A-Za-z0-9_+/=-]+$ ]] || fail MEDIA_PROXY_SECRET
 export CANONICAL_HOST="$APP_HOST"
+export TELEMETRY_RELEASE=unknown
+if [[ "${SENTRY_RELEASE:-}" =~ ^[0-9a-f]{6,64}$ ]]; then
+  export TELEMETRY_RELEASE="$SENTRY_RELEASE"
+fi
 
 hosts_value="${APP_ALLOWED_HOSTS:-$APP_HOST}"
 [[ "$hosts_value" =~ ^[a-z0-9.,\ -]+$ ]] || fail APP_ALLOWED_HOSTS
@@ -65,6 +69,6 @@ fi
 
 mkdir -p /tmp/nginx/{client_body,proxy,fastcgi,uwsgi,scgi,denied-media}
 app_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-envsubst '${MEDIA_PROXY_SECRET} ${STAGING_NOINDEX_HEADER} ${STAGING_AUTH_CONFIG} ${STAGING_PRIVATE_CACHE_HEADER} ${STATIC_EXPIRES} ${STATIC_CACHE_CONTROL_HEADER} ${CANONICAL_HOST} ${APP_ALLOWED_HOST_MAP} ${CANONICAL_REDIRECT_MAP}' \
+envsubst '${TELEMETRY_RELEASE} ${APP_ENVIRONMENT} ${MEDIA_PROXY_SECRET} ${STAGING_NOINDEX_HEADER} ${STAGING_AUTH_CONFIG} ${STAGING_PRIVATE_CACHE_HEADER} ${STATIC_EXPIRES} ${STATIC_CACHE_CONTROL_HEADER} ${CANONICAL_HOST} ${APP_ALLOWED_HOST_MAP} ${CANONICAL_REDIRECT_MAP}' \
   < "$app_root/config/nginx.conf.template" > /tmp/nginx.conf
 chmod 600 /tmp/nginx.conf

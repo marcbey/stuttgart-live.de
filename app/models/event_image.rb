@@ -54,6 +54,9 @@ class EventImage < ApplicationRecord
   validate :file_attached
   validate :file_is_image
 
+  include PreparesPublicImages
+  self.public_image_slots = %i[file]
+
   before_validation :normalize_text_fields
 
   def slider?

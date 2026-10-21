@@ -6,16 +6,21 @@
 <% show_admin_edit = local_assigns.fetch(:show_admin_edit, false) %>
 <% dom_id_prefix = local_assigns[:dom_id_prefix] %>
 
-<% events.each do |event| %>
+<% fragment_cache_key = public_events_fragment_cache_key(section: "modern-grid", events: events, browse_state: browse_state, context: local_assigns.except(:events, :browse_state).merge(effective_series_ids: effective_series_ids, series_counts_by_id: series_counts_by_id)) if controller.perform_caching && !authenticated? %>
+<% cache_if fragment_cache_key.present?, fragment_cache_key, expires_in: 15.minutes do %>
+<% events.each_with_index do |event, index| %>
   <%= render "design_preview_card",
              event: event,
              browse_state: browse_state,
              strict_proxy: strict_proxy,
              variant: variant,
+             image_sizes: local_assigns[:image_sizes],
+             image_priority: local_assigns.fetch(:prioritize_visible_images, false) && index < 4,
              effective_series_ids: effective_series_ids,
              series_counts_by_id: series_counts_by_id,
              show_card_kicker: show_card_kicker,
              show_expired_status: local_assigns.fetch(:show_expired_status, true),
              dom_id_prefix: dom_id_prefix,
              show_admin_edit: show_admin_edit %>
+<% end %>
 <% end %>

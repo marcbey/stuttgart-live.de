@@ -17,9 +17,7 @@ class Public::PromotionBannerVariantQueriesTest < ActionDispatch::IntegrationTes
         highlighted: index.positive?
       )
       event.promotion_banner_image.attach(create_uploaded_blob(filename: "banner-variants-#{index}.png"))
-      Event::PUBLIC_PROMOTION_BANNER_VARIANT_MAX_DIMENSIONS.each_key do |size|
-        event.processed_optimized_public_promotion_banner_image_variant(size)
-      end
+      EventImages::PreparePublicImagesJob.perform_now(event)
     end
   end
 

@@ -66,9 +66,10 @@ module Public
         def event_candidates
           @event_candidates ||=
             relation
-              .joins(:genres)
-              .includes(:genres)
-              .distinct
+              .except(:includes, :preload, :eager_load)
+              .select(:id, :artist_name, :title)
+              .where(id: EventGenre.select(:event_id))
+              .preload(:genres)
               .limit(EVENT_MATCH_CANDIDATE_LIMIT)
               .to_a
         end

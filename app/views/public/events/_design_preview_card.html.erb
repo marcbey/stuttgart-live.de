@@ -1,12 +1,13 @@
 <% browse_state = local_assigns.fetch(:browse_state) %>
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
+<% image_priority = local_assigns.fetch(:image_priority, false) %>
 <% variant = local_assigns.fetch(:variant, "standard") %>
 <% category = event.primary_genre&.name.presence || event.badge_text.presence || "Event" %>
 <% tile_variant = local_assigns[:tile_variant].presence || (variant == "wide" ? EventImage::GRID_VARIANT_2X1 : EventImage::GRID_VARIANT_1X1) %>
 <% image_slot = (local_assigns[:card_slot].presence || card_slot_for_grid_variant(tile_variant)).to_sym %>
 <% event_image = event.image_for(slot: image_slot, breakpoint: :desktop) || event.image_for(slot: :grid_default, breakpoint: :desktop) %>
 <% image_source = event_image_source(event_image, strict_proxy: strict_proxy, size: (variant == "feature" ? :card_desktop : :card_mobile)) %>
-<% image_srcset = event_image_srcset(event_image, variant_sizes: %i[card_mobile card_desktop], strict_proxy: strict_proxy) %>
+<% image_srcset = event_image_srcset(event_image, variant_sizes: local_assigns.fetch(:image_variant_sizes, %i[thumbnail card_mobile card_desktop]), strict_proxy: strict_proxy) %>
 <% image_style = event_card_image_style(event_image) %>
 <% image_dimensions = public_event_card_image_dimensions(tile_variant) %>
 <% card_classes = [ "design-preview-card", "design-preview-card--#{variant}", "design-preview-card--grid-#{tile_variant.tr("x", "-")}" ].join(" ") %>
@@ -38,14 +39,15 @@
       <% if image_source.present? %>
         <%= image_tag image_source,
                       alt: event_image_alt(event_image, event),
-                      loading: "lazy",
+                      loading: local_assigns.fetch(:image_loading, image_priority ? "eager" : "lazy"),
+                      fetchpriority: (image_priority ? "high" : nil),
                       decoding: "async",
                       class: "design-preview-card-image",
                       style: image_style,
                       width: image_dimensions.fetch(:width),
                       height: image_dimensions.fetch(:height),
                       srcset: image_srcset,
-                      sizes: variant == "feature" ? "(max-width: 767px) 92vw, 42vw" : "(max-width: 767px) 46vw, 18vw" %>
+                      sizes: local_assigns[:image_sizes].presence || (variant == "feature" ? "(max-width: 767px) 92vw, 42vw" : "(max-width: 767px) 46vw, 18vw") %>
       <% else %>
         <span class="design-preview-card-image design-preview-card-image--placeholder"></span>
       <% end %>

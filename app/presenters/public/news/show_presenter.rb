@@ -25,9 +25,7 @@ module Public
       end
 
       def og_image_url
-        return unless hero_image?
-
-        view_context.optimized_blog_post_image_url(blog_post, :cover_image)
+        hero_image_source
       end
 
       def back_path
@@ -84,13 +82,13 @@ module Public
       end
 
       def hero_image?
-        blog_post.cover_image.attached?
+        hero_image_source.present?
       end
 
       def hero_image_source
-        return unless hero_image?
+        return @hero_image_source if defined?(@hero_image_source)
 
-        view_context.optimized_blog_post_image_url(blog_post, :cover_image)
+        @hero_image_source = view_context.optimized_blog_post_image_url(blog_post, :cover_image) if blog_post.cover_image.attached?
       end
 
       def hero_image_style

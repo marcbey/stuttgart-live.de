@@ -33,8 +33,68 @@ class Public::QueryLoadingTest < ActionDispatch::IntegrationTest
 
   teardown { travel_back }
 
+  test "list grids carry their responsive image slots through initial and lazy rendering" do
+    expected_sizes = "(min-width: 96rem) calc((min(100vw - 5rem, 100rem) - 5.25rem) / 6), " \
+      "(min-width: 80rem) calc((100vw - 12rem) / 5), " \
+      "(min-width: 64rem) calc((100vw - 7rem) / 4), " \
+      "(min-width: 48rem) calc((100vw - 5.8rem) / 3), calc((100vw - 2.22rem) / 2)"
+    [ highlights_lane_path, search_path(q: "Query Loading"),
+      homepage_lane_events_path(lane: "highlights", mode: "design_cards") ].each do |path|
+      get path
+      assert_response :success
+      assert_select ".design-preview-card-image[sizes=?]", expected_sizes, minimum: 1
+    end
+  end
+
   test "event detail batches image variants and related series counts" do
     assert_batched_render event_path(@events.first.slug)
+  end
+
+  test "search computes text matches once for counts cards and pagination" do
+    queries = []
+    subscriber = lambda do |notification|
+      payload = notification.payload
+      queries << payload[:sql] unless payload[:cached] || payload[:name] == "SCHEMA"
+    end
+
+    ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+      get search_path(q: "Query Loading")
+    end
+
+    assert_response :success
+    assert_select ".search-results-header", text: /6 Ergebnisse/
+    assert_select "#event-grid .design-preview-card-title", count: 6
+    assert_equal 1, queries.count { |sql| sql.include?("REGEXP_REPLACE") }, "Count, cards and cursor must reuse the same matching IDs"
+  end
+
+  test "detail batches ready venue and presenter logo outputs as presenters increase" do
+    event = @events.first
+    event.update!(organizer_notes: "Hinweise", show_organizer_notes: true)
+    venue = event.venue_record
+    venue.logo.attach(create_uploaded_blob(filename: "venue-logo.png", width: 640, height: 640))
+    expected_outputs = [ venue.detail_logo_variant.image.blob ]
+    batch_counts = [ 2, 4 ].map do |count|
+      ((count - 2)...count).each do |index|
+        presenter = Presenter.new(name: "Batched Presenter #{index}")
+        presenter.logo.attach(create_uploaded_blob(filename: "presenter-#{index}.png", width: 640, height: 640))
+        presenter.save!
+        event.event_presenters.create!(presenter:, position: index + 1)
+        expected_outputs << presenter.detail_logo_variant.image.blob
+      end
+      queries = []
+      callback = lambda do |notification|
+        sql = notification.payload[:sql]
+        queries << sql if sql.match?(/FROM "active_storage_(?:attachments|blobs|variant_records)"/)
+      end
+      assert_no_difference "ActiveStorage::VariantRecord.count" do
+        ActiveSupport::Notifications.subscribed(callback, "sql.active_record") { get event_path(event.slug) }
+      end
+      assert_response :success
+      expected_outputs.each { |blob| assert_select "img[src=?]", rails_storage_proxy_path(blob, only_path: true), minimum: 1 }
+      assert_empty queries.grep(/FROM "active_storage_variant_records".*"variation_digest" =/m)
+      queries.group_by { |sql| sql[/FROM "(active_storage_\w+)"/, 1] }.transform_values(&:length)
+    end
+    assert_equal batch_counts.first, batch_counts.last, "Logo query batches must stay fixed for two versus four presenters"
   end
 
   test "event detail defers inherited header search until the overlay is requested" do

@@ -1,0 +1,45 @@
+name: Public Performance Check
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 5 * * 1'
+permissions:
+  contents: read
+concurrency:
+  group: public-performance
+  cancel-in-progress: false
+jobs:
+  measure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          cache: yarn
+      - name: Install pinned tools without downloading a browser
+        run: |
+          corepack enable
+          yarn install --frozen-lockfile --ignore-scripts
+      - name: Serial anonymous navigation measurements
+        env:
+          CHROME_PATH: /usr/bin/google-chrome
+        run: >-
+          node script/performance/measure.mjs
+          --base-url https://stuttgart-live.de --profile mobile --repeats 3
+          --connection github-runner --server-cache unknown
+          --output output/performance/public
+      - name: Safe aggregate reports (also for metric or transport failures)
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: public-performance
+          path: |
+            output/performance/public/summary.json
+            output/performance/public/summary.html
+            output/performance/public/runs.csv
+          if-no-files-found: warn
+          retention-days: 7

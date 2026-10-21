@@ -46,6 +46,7 @@ env:
     - DB_PASSWORD
   clear:
     APP_ENVIRONMENT: staging
+    PUBLIC_IMAGE_LOCK_PATH: /rails/public-image-lock/work.lock
     MEDIA_PROXY_ENABLED: true
     SENTRY_ENVIRONMENT: staging
     SENTRY_RELEASE: <%= ENV.fetch("SENTRY_RELEASE") { `git rev-parse HEAD`.strip } %>
@@ -53,6 +54,7 @@ env:
     <%= key %>: <%= value.inspect %>
 <% end %>
 volumes:
+  - "stuttgart_live_de_public_image_lock:/rails/public-image-lock"
   - "stuttgart_live_de_staging_storage:/rails/storage"
 ssh:
   user: deploy

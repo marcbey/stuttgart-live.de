@@ -1,6 +1,9 @@
-<figure class="attachment attachment--<%= blob.representable? ? "preview" : "file" %> attachment--<%= blob.filename.extension %>">
-  <% if blob.representable? %>
-    <%= image_tag public_rich_text_representation_source(blob, in_gallery: local_assigns[:in_gallery]) %>
+<% representation_source = public_rich_text_representation_source(blob, in_gallery: local_assigns[:in_gallery]) if blob.representable? %>
+<figure class="attachment attachment--<%= representation_source.present? ? "preview" : "file" %> attachment--<%= blob.filename.extension %>">
+  <% if representation_source.present? %>
+    <%= image_tag representation_source %>
+  <% else %>
+    <%= link_to blob.filename, public_media_path(blob.is_a?(ActionText::Attachment) ? blob.attachable : blob) %>
   <% end %>
 
   <figcaption class="attachment__caption">

@@ -19,16 +19,16 @@
 
 <% if enabled && video_source.present? %>
   <article class="homepage-highlight-video-card design-preview-highlight-video-card"
-           data-controller="video-sound">
+           data-controller="video-sound"
+           data-video-sound-media-value="(min-width: 96rem)">
     <% video_content = capture do %>
-      <%= video_tag video_source,
-                    poster: poster_source,
+      <%= tag.video poster: poster_source,
                     muted: true,
                     loop: true,
                     playsinline: true,
-                    preload: "metadata",
+                    preload: "none",
                     class: "homepage-highlight-video design-preview-highlight-video",
-                    data: { video_sound_target: "video" } %>
+                    data: { video_sound_target: "video", video_sound_src_value: video_source } %>
 
       <% if show_overlay %>
         <span class="homepage-highlight-video-copy">

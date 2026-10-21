@@ -114,7 +114,7 @@ Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Loca
 
 Bei der Eingabe von `Russ Live` erscheint ein direkter Link zur Russ-Live-Übersicht. Beim Absenden dieser Suche öffnet sich die Übersicht direkt. Groß- und Kleinschreibung sowie zusätzliche Leerzeichen spielen dabei keine Rolle; längere Suchanfragen bleiben normale Event-Suchen.
 
-Auf Event-Detailseiten lädt die Kopfzeilensuche Vorschläge erst beim Öffnen des Suchfelds nach. Ein übernommener Suchbegriff bleibt im Formular erhalten; das Laden der Detailseite wiederholt die Suche nicht.
+Die öffentliche Suche lädt Vorschläge erst beim Öffnen des Suchfelds nach. Mehrere Suchfelder derselben Seite teilen sich die Empfehlungen für denselben Datumsfilter; nach einem Ladefehler lässt sich das Öffnen erneut versuchen. Ein übernommener Suchbegriff bleibt im Formular erhalten. Navigation und Seitenaufruf lösen keine unsichtbare Suche aus.
 
 Zusätzlich zum exakten Dublettenschlüssel gibt es ein optionales Ähnlichkeits-Matching für Artist-Namen und prägnante Titelvarianten bei gleicher oder sehr naher Startzeit. Damit kann der Merge-Import Fälle wie `Vier Pianisten - Ein Konzert` und `Vier Pianisten`, `Gregory Porter & Orchestra` und `Gregory Porter` oder einen kurzen Veranstaltungstitel innerhalb eines längeren Provider-Titels als denselben Termin erkennen. Titel-Varianten werden dabei nur bei passender Venue zusammengeführt. Dieses Verhalten lässt sich im Backend unter `Einstellungen` über das Setting `Ähnlichkeits-Matching für Event-Dubletten` ein- oder ausschalten.
 
@@ -200,7 +200,7 @@ Wichtig für die Generierung:
 - Als Bildquelle gilt zuerst das redaktionelle Eventbild, danach ein Promotion-Banner und danach ein Import-/Fallback-Bild.
 - Der serverseitig gerenderte Bildtext folgt typografisch der `Unsere Highlights`-Kachel: `Oswald` für den Artist und `Archivo Narrow` für Datum und Venue; der Event-Titel wird im Bild nicht separat gerendert.
 - Die Caption enthält Artist oder Titel, Datum, Venue, einen kurzen Call-to-Action und die Event-URL.
-- Damit das auf Production stabil funktioniert, werden die Runtime-Fonts zusätzlich im Docker-Image für Fontconfig/Pango installiert; die Browser-Webfonts bleiben davon unberührt.
+- Browser laden Oswald und Archivo Narrow lokal über die Asset-Pipeline als komprimierte WOFF2-Webfonts. Die vollständige Zeichenabdeckung und Schriftmetriken bleiben dabei erhalten. Serverseitige Renderjobs verwenden weiterhin TTF-Dateien; diese Runtime-Fonts werden für Fontconfig/Pango zusätzlich im Docker-Image installiert.
 
 Wichtig für die Veröffentlichung:
 
@@ -374,9 +374,7 @@ Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus d
 
 Die aufklappbare Genre-Liste in der Suche zeigt auf Desktop und Mobil alle öffentlichen Genres in der festgelegten Reihenfolge, unabhängig von der Auswahl der Homepage-Lanes.
 
-Öffentliche Eventlisten und Suchergebnisse starten mit höchstens 20 Kacheln und laden weitere beim Scrollen oder über „Mehr Events laden“ nach. Die Suche zeigt weiterhin die Gesamtzahl der Treffer und behält einzelne Termine einer Event-Reihe sowie ihre Trefferreihenfolge bei. „Heute in Stuttgart“ enthält ausschließlich Veranstaltungen des aktuellen Tages in der Zeitzone der Anwendung.
-
-Detail- und Listenseiten laden für die gemeinsame Navigation keine zusätzlichen Startseiten-Lanes. Nur „alles aus stuttgart“ lädt zusätzlich die dort sichtbaren Tagestipps. Monats-, Genre- und Location-Filter lesen ihre Auswahlwerte ohne Bild- und Angebotsdaten; Bilder werden erst für die tatsächlich ausgegebenen Karten vorgeladen. Das gilt auch für die Empfehlungen auf Eventdetails. Angebotsverknüpfungen, die etwa für die Auswahl verfügbarer Unter-30-Euro-Tickets benötigt werden, bleiben erhalten.
+Öffentliche Eventlisten und Suchergebnisse starten mit höchstens 20 Kacheln und laden weitere beim Scrollen oder über „Mehr Events laden“ nach. Die Suche zeigt weiterhin die Gesamtzahl der Treffer und behält einzelne Termine einer Event-Reihe sowie ihre Trefferreihenfolge bei. Für eine Suchanfrage wird der aufwendige Textabgleich einmal ausgeführt; Trefferzahl, Kacheln und Seitennavigation verwenden dessen Event-IDs innerhalb derselben Anfrage wieder. „Heute in Stuttgart“ enthält ausschließlich Veranstaltungen des aktuellen Tages in der Zeitzone der Anwendung.
 
 Beim Nachladen muss derselbe Kartentyp wie in der ersten Reihe verwendet werden (`design_cards`). Wenn nur die erste Reihe korrekt aussieht und weitere Reihen zusammengedrückt erscheinen, zuerst den Kartenmodus der Nachlade-Anfrage prüfen.
 
@@ -425,6 +423,7 @@ Wichtig für die Interpretation:
 - PostgreSQL
 - Node.js und npm
 - ein lokales Bildverarbeitungs-Backend für Active Storage, bevorzugt `libvips`, alternativ ImageMagick
+- Poppler mit `pdftoppm` für die PDF-Vorschauen in den Integrationstests (`brew install poppler` unter macOS, `sudo apt-get install poppler-utils` unter Ubuntu)
 - FFmpeg für die serverseitige Komprimierung redaktionell hochgeladener Highlight-Videos
 
 Für die lokale Entwicklung und für den Produktionscontainer gilt dieselbe Ruby-Version. Kamal rollt die App als Docker-Image aus; der Produktionshost selbst braucht deshalb kein separates systemweites Ruby 4.
@@ -436,8 +435,8 @@ Highlight-Videos werden beim Speichern mit FFmpeg als weboptimiertes MP4 neu ges
 ### Schnellstart
 
 ```bash
-bin/setup
-bin/dev
+mise exec -- bin/setup
+mise exec -- bin/dev
 ```
 
 `bin/dev` startet die lokale Entwicklungsumgebung mit Rails, Job-Verarbeitung sowie JavaScript- und CSS-Watchern.
@@ -445,10 +444,10 @@ bin/dev
 ### Wichtige Kommandos
 
 ```bash
-bin/rails test
-bin/rails console
-bin/rake -T
-bin/ci
+mise exec -- bin/rails test
+mise exec -- bin/rails console
+mise exec -- bin/rake -T
+mise exec -- bin/ci
 ```
 
 ### KI-gestützte Entwicklung
@@ -506,6 +505,51 @@ curl -sD - -o /dev/null \
 ```
 
 Die Antwort enthält dann `X-Stuttgart-Live-Profile` und `Server-Timing` mit Wall-Time, View-Zeit und SQL-Zeit. Das ist nur für gezielte Analyse gedacht und bewusst nicht standardmäßig aktiv.
+
+### Reproduzierbare Performancechecks
+
+`script/performance/measure.mjs` misst anonyme vollständige Navigationen seriell mit Lighthouse 13.5.0 und einem installierten Chrome. Voraussetzungen sind Node 24 und die mit `yarn install --frozen-lockfile` installierten Dev-Abhängigkeiten. Es wird kein Browser heruntergeladen. Chrome wird automatisch gefunden; alternativ `CHROME_PATH` setzen oder `--chrome-path /pfad/zu/chrome` übergeben. Jeder Aufruf verwendet einen neuen Browser mit frischem Profil und Storage-Reset; Einwilligung, Scrollen und Interaktionen gehören nicht zu diesem Test.
+
+Der kleine öffentliche Check umfasst Startseite, News und FAQ:
+
+```sh
+node script/performance/measure.mjs --base-url https://stuttgart-live.de \
+  --profile mobile --repeats 3 --connection fixed --server-cache unknown \
+  --output output/performance/public
+```
+
+Für den vollständigen Vergleich enthält `script/performance/routes-audit.json` die acht öffentlichen Audit-Routen. Veraltete Inhalte vor einem neuen Vergleich durch repräsentative öffentliche Seiten ersetzen und für Vorher/Nachher dieselbe Auswahl verwenden. Eigene JSON-Listen haben die Form `[{"id":"event","path":"/events/beispiel"}]`; die ID ist eine generische Kategorie ohne private Angaben. Routen bleiben auf derselben Basisdomain, URL-Zugangsdaten sind nicht erlaubt.
+
+```sh
+node script/performance/measure.mjs --base-url https://stuttgart-live.de \
+  --urls script/performance/routes-audit.json --profile mobile,desktop --repeats 3 \
+  --connection mobile-5g --server-cache unknown \
+  --output output/performance/before-5g
+```
+
+Für einen lokalen Vergleich dieselben Optionen mit `--base-url http://localhost:3000 --connection loopback` verwenden. Den Entwicklungsserver mit `mise exec -- bin/dev` auf Port 3000 starten. Entwicklungsmodus und Servercaches unterscheiden sich von Produktion; daraus folgt kein Produktionsvergleich. Optional dokumentiert `--release <Git-SHA>` den tatsächlich gemessenen Serverrelease, andernfalls steht dort `unknown`.
+
+Mobile nutzt direktes DevTools-Throttling: 412 × 823, DPR 1.75, Latenz 562.5 ms, Download 1474.5600000000002 Kbit/s, Upload 675 Kbit/s und CPU-Faktor 4. Desktop nutzt 1350 × 940, DPR 1, keine künstliche Netzwerkdrosselung und CPU-Faktor 1. Die gespeicherten Simulationswerte für RTT/Throughput steuern diese Messung nicht. Ausgewertet werden beobachtete Tracewerte, kein simulierter LCP-Ersatz. Die tatsächliche Browser-UA und die emulierte UA stehen je Lauf im JSON; Chrome-Updates können Vergleiche beeinflussen.
+
+`--connection` muss `mobile-5g`, `fixed`, `github-runner`, `loopback` oder `unknown` sein. Der Servercache wird nur deklariert, niemals durch die CLI geleert: `--server-cache cold|warm|mixed|unknown` angeben. Kalte und warme Serverzustände separat und kontrolliert prüfen. Die historische Messung vom 20. Oktober über die gestörte DSL-Verbindung ist keine gepaarte Vorhermessung für spätere 5G-Läufe. Vor einer Auslieferung eine frische Baseline auf dem unveränderten Produktionsrelease erfassen; nachher Verbindung, Browser, Profil und Servercachezustand gleich halten und deklarieren. Während einer Messung keine CI, Bildbuilds oder schweren lokalen Jobs ausführen. Für laufende Trends denselben Runner verwenden; Netzwerkidentität und Bandbreite werden nicht ermittelt.
+
+Unter dem ignorierten, vom Docker-Build ausgeschlossenen `output/performance/` entstehen `summary.json`, `runs.csv` und `summary.html`. Sie enthalten ausgewählte Zahlen, generische Routen-IDs, Werkzeug-/Profilmetadaten sowie Fehlerkategorien; keine Roh-LHR, Traces, Seitentitel, vollständigen URLs, Queries, Header, Cookies oder Netzwerkfehlertexte. Eingabelisten mit privaten Pfaden separat behandeln und niemals als Artefakte hochladen. JSON/CSV enthalten je Lauf auch Transferbytes und Requestzahl, soweit Lighthouse sie liefert. Mediane und gültige Samples/Versuche je Route und Profil bleiben sichtbar; Fehler werden nicht als schnelle Nullwerte gewertet. Drei Läufe sind ein Diagnosesignal, kein „Good“-Nachweis.
+
+Exitcode **0** bedeutet Labormedian LCP ≤ 2500 ms und CLS ≤ 0,1; **2** bedeutet eine Überschreitung dieser Budgets. FCP ≤ 1800 ms und TTFB ≈ 800 ms sind ausgewiesene Diagnoseziele, TBT wird separat ohne erfundenes Budget berichtet. **1** bedeutet Infrastruktur-, Transport-, Browser-, Timeout- oder Messdatenfehler und hat Vorrang vor Code 2; gleichzeitig erkannte Budgetüberschreitungen bleiben im Bericht. Standardtimeout ist 120 Sekunden je Navigation (`--timeout-ms` 10000–300000); `--repeats` erlaubt 1–10. Bei Ablauf beendet der Worker auch einen noch startenden Chrome; spätestens nach zwei zusätzlichen Sekunden erzwingt der Elternprozess das Ende der eigenen erfassten Prozessgruppe und des Workers. Es gibt keine automatischen Wiederholungen fehlgeschlagener Abrufe. Fehlende Feld-INP-Werte werden niemals aus TBT oder synthetischen Interaktionen ersetzt: Feldziel bleibt INP ≤ 200 ms und wird ausschließlich mit den nachfolgend beschriebenen echten Nutzerwerten bewertet.
+
+Der Workflow **Public Performance Check** läuft montags und manuell auf GitHub mit neun seriellen mobilen Navigationen für Startseite/News/FAQ und sieben Tagen Artefaktaufbewahrung. Er benötigt keine neuen Secrets und nimmt keine produktiven Schreibaktionen vor. Er ist ein Diagnoseworkflow; die bestehenden Main-Checks, Staging-Nachweise und menschlichen Produktionsfreigaben bleiben der Auslieferungsweg. Navigationstests ersetzen weder Feldbeobachtung noch Server-/Queue- und Kapazitätsdiagnose auf dem CX33.
+
+### Reale Web Vitals mit Analytics-Einwilligung
+
+Auf öffentlichen Seiten lädt die App die fest versionierte Standardbibliothek `web-vitals` 6.2.3 erst nach Analytics-Einwilligung und nur mit einem auf dem aktuellen Host freigegebenen, bereits konfigurierten GA4-Ziel. Gespeicherte Zustimmung funktioniert ebenso wie eine spätere Auswahl im Datenschutzdialog. Ohne Zustimmung, ohne Ziel oder nach Widerruf werden keine Metrikereignisse gesendet; ein Widerruf während des Ladens verhindert auch die Registrierung. Backend, Login und Passwortseiten verwenden Backend-Assets und nehmen an dieser Messung nicht teil. Es gibt keinen neuen Collector oder zusätzlichen Trackingdienst.
+
+Das GA4-Ereignis `web_vital` enthält `metric_name` (LCP, INP, CLS, FCP, TTFB), `metric_value` (aktueller Gesamtwert), `value` (numerisches Delta seit dem vorherigen Report), `metric_unit` (`ms`, bei CLS `score`), `metric_id` (zufällige ID der einzelnen Messung), `device_segment` (mobile bis 767 px, tablet bis 1023 px, sonst desktop), `route_pattern`, `release` und `navigation_type`. `release` ist ausschließlich eine validierte Git-SHA aus `SENTRY_RELEASE`, sonst `unknown`. Die Route ist eine Rails-Routenvorlage wie `/events/:slug`, niemals ein aufgelöster Eventname. Diese Ereignisse überschreiben außerdem den geerbten GA-Seitenkontext mit der Routenvorlage und leerem Titel/Referrer. Suchbegriffe, URL-Parameter, vollständige URLs, DOM-Inhalte und Nutzer-/Sitzungskennungen werden vom Adapter nicht übertragen. Das verändert die bestehenden Analytics-Seitenaufrufe nicht.
+
+Die Population sind vollständige Dokumentaufrufe und echte BFCache-Wiederherstellungen. Die Beobachter werden pro Dokument einmal registriert, ohne zusätzliche Turbo- oder Soft-Navigation-Messpopulation. Bei später Zustimmung können gepufferte Browserwerte zum ursprünglichen Dokument gehören; dessen Routenvorlage bleibt auch nach Turbo-Wechseln erhalten. BFCache erhält neue Metrik-IDs und die Route zum Zeitpunkt der Wiederherstellung. Wird die Bibliothek erstmals nach einer bereits abgeschlossenen BFCache-Wiederherstellung durch Zustimmung geladen, kann sie diese vergangene Persisted-Pageshow-Population nicht rückwirkend rekonstruieren. Vor Metrik-Callbacks wird die gespeicherte Einwilligung erneut angewendet, damit auch ein Widerruf in einem anderen Dokument gilt. Spätere Turbo-Wechsel ändern diese Zuordnung nicht. Messungen können mehrere Reports mit derselben ID liefern; nicht unterstützte Browser-APIs, Hintergrundaufrufe ohne Paint und Besuche ohne Interaktion liefern gegebenenfalls nicht alle Werte. INP benötigt echte Interaktionen. Diese Werte messen keine asynchrone Suchantwortlatenz; dafür bleiben gezielte Anfrage-/Servermessungen erforderlich.
+
+Für die Auswertung in GA4 ereignisbezogene benutzerdefinierte Dimensionen für `metric_name`, `metric_unit`, `device_segment`, `route_pattern`, `release` und `navigation_type` sowie eine benutzerdefinierte Messgröße für `metric_value` anlegen. Die hochkardinale `metric_id` für die Gruppierung im Export behalten, statt sie als gewöhnliche Berichtsdimension zu registrieren. Für Verteilungen im BigQuery-Export oder einer geeigneten API-Auswertung je Metrik-ID die Deltas summieren; alternativ pro ID den letzten Gesamtwert verwenden. Erst diese einzelnen Messungen nach Metrik, Gerät und Routenvorlage gruppieren und das 75. Perzentil bestimmen. Ein Mittelwert über Ereigniszeilen oder deren p75 würde wiederholte Reports übergewichten. Beim Delta-Ansatz können Widerruf, geschlossene Tabs und verlorene Reports unvollständige Reihen ergeben.
+
+Immer Anzahl der Messungen, Zeitraum und Geräte-/Routenverteilung mit ausweisen: Nur zustimmende Besuche auf freigegebenen Hosts werden erfasst, also keine vollständige oder unverzerrte Nutzerpopulation. Nach einem Release sind 24 Stunden und sieben Tage erste Signale; für eine belastbare Einordnung zusätzlich das vollständige rollierende 28-Tage-Fenster betrachten. Lokale Browser- oder Labortests belegen die Integration, keinen repräsentativen Feld-INP und keine garantierte Einstufung als „Good“. Die Dimensionen und Exporte werden im Analytics-Konto eingerichtet; die App legt sie nicht automatisch an.
 
 ## Wichtige Konfiguration
 
@@ -605,6 +649,10 @@ Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo 
 
 Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
 
+Der Highlight-Slider startet ohne automatische Wechsel; Pfeile und Wischen bleiben direkt bedienbar. Erst „Animation starten“ aktiviert automatische Wechsel. Lane- und Suchseiten laden die ersten vier Kartenbilder bevorzugt, damit beide zunächst sichtbaren mobilen Reihen früh verfügbar sind. Weitere Karten und nachgeladene Ergebnisse bleiben verzögert. Auf Newsseiten und Eventdetails wird weiterhin jeweils das erste Bild bevorzugt geladen. Das Logo auf Unterseiten lädt die Startseite nicht vorsorglich.
+
+Das Hochformatvideo lädt seine MP4-Quelle erst ab 1536 Pixeln und nur im sichtbaren Bereich. Zwischen 1280 und 1535 Pixeln bleibt das Poster mit deaktivierten Videotasten stehen. Beim Verkleinern oder Verlassen des sichtbaren Bereichs wird die Quelle entfernt. „Daten sparen“ und die Systemeinstellung „Bewegung reduzieren“ verhindern automatisches Laden und Abspielen; ab 1536 Pixeln lässt sich die Wiedergabe ausdrücklich starten.
+
 Bei aktivierter Systemeinstellung „Bewegung reduzieren“ starten diese Videos und der Highlight-Slider ohne automatische Bewegung. Eine ausdrücklich gewählte Pause bleibt auch nach weiterer Bedienung erhalten. Der Slider hat eine eigene Pause-Taste; mit der Taste `S` lässt sich das sichtbare Suchfeld fokussieren.
 
 Im Kalender „Weitere Termine“ öffnet ein Klick auf einen Tag mit genau einem Termin direkt dessen Eventseite. Ab zwei Terminen wird die Uhrzeit darunter gewählt und ein Hinweis eingeblendet. Ein Klick außerhalb schließt den Kalender.
@@ -671,10 +719,10 @@ Sind die dafür benötigten Daten oder Ansichten nicht verfügbar, wird automati
 Der Standardweg für Prüfungen ist:
 
 ```bash
-bin/ci
+mise exec -- bin/ci
 ```
 
-`bin/ci` bündelt Setup, Linting, Security-Checks und Tests. Die Rails-Tests laufen dort mit aktiviertem Bullet, damit N+1-Queries den Lauf fehlschlagen lassen. Vor einem Push sollte dieser Lauf grün sein.
+`bin/ci` bündelt Setup, Linting, Security-Checks, die Node-Regressionstests unter `test/javascript/` einschließlich Messparser sowie Rails- und Seed-Tests. Browserharnesses unter `test/browser/` werden gezielt separat ausgeführt, da sie einen vorbereiteten lokalen App-Datenbestand benötigen. Die Rails-Tests laufen dort mit aktiviertem Bullet, damit N+1-Queries den Lauf fehlschlagen lassen. Vor einem Push sollte dieser Lauf grün sein.
 
 Für reine Designänderungen auf Kathis lokalem Rechner ohne Docker gibt es einen ausdrücklich gewählten Prüfmodus:
 
@@ -689,7 +737,7 @@ Ohne diese Variable bleibt `bin/ci` vollständig. In GitHub Actions beziehungswe
 Wenn du Bullet lokal gezielt im Testlauf aktivieren willst:
 
 ```bash
-BULLET=1 bin/rails test
+BULLET=1 mise exec -- bin/rails test
 ```
 
 ## Deployment und Betrieb
@@ -713,6 +761,151 @@ Webprozess und Job-Verarbeitung laufen in Production getrennt. Kamal startet ein
 Öffentliche Event-Karten laden gespeicherte Bildvarianten einschließlich ihrer Dateien gesammelt vor. Auch Genre-Vorschläge und die Terminanzahl für Serien-Badges werden gesammelt ermittelt. Event-Listen sowie Event- und News-Detailseiten vermeiden dadurch zusätzliche Datenbankabfragen pro Karte; Karten ohne sichtbares Serien-Badge benötigen keine Termin-Zählung.
 Für den Einzelhost ist der Webprozess bewusst konservativ auf `WEB_CONCURRENCY=2` und `RAILS_MAX_THREADS=3` gesetzt. Die Datenbank-Pools werden zusätzlich explizit über `DB_POOL` und `QUEUE_DB_POOL` festgelegt.
 Öffentliche Active-Storage-Bilder laufen in Production nicht mehr über Rails-Streaming: Rails erzeugt pfadsignierte `/media/...`-URLs, `nginx` im App-Container validiert diese URLs und liefert die Dateien direkt aus `/rails/storage` aus. Die URL bleibt für dieselbe gespeicherte Datei oder Variante dauerhaft stabil, damit Browser-Caches zwischen frischen HTML-Renders greifen. Lokale Entwicklung und Tests bleiben beim Rails-Proxy für Active Storage.
+
+### Öffentliche Seiten: Caches, Bilder und Schriften
+
+Detail- und Listenseiten laden für die gemeinsame Navigation keine zusätzlichen Startseiten-Lanes. Nur „alles aus stuttgart“ lädt zusätzlich die dort sichtbaren Tagestipps. Monats-, Genre- und Location-Filter lesen ihre Auswahlwerte ohne Bild- und Angebotsdaten; Bilder werden erst für die tatsächlich ausgegebenen Karten vorgeladen. Das gilt auch für die Empfehlungen auf Eventdetails. Angebotsverknüpfungen, die etwa für die Auswahl verfügbarer Unter-30-Euro-Tickets benötigt werden, bleiben erhalten.
+
+Anonyme moderne Kartengruppen der Startseite, Eventlisten und Suche nutzen in Produktion Solid Cache für höchstens 15 Minuten. Die Eventauswahl wird trotzdem bei jeder Anfrage neu geprüft. Änderungen an Events, Angeboten, Genres, Bildern und fertiggestellten Bildvarianten sowie Anbieterprioritäten und Venue-Zuordnungen erzeugen neue Fragmentkeys; Filter, Linkparameter, Serienanzahlen, Bildpriorität, Host und Medienmodus werden getrennt gehalten. Angemeldete Redakteure rendern diese Gruppen ohne gemeinsamen Cache. Der kanonische Venue-Index bleibt bei Alias-Zuordnungen auch bei einem Treffer nötig und wird einmal je Anfrage geladen.
+
+Für eine lokale Cache-Diagnose mit `mise exec -- bin/rails dev:cache` das Entwicklungscaching einschalten und den Server neu starten; nach dem Vergleich mit demselben Befehl wieder ausschalten und neu starten. Zwei identische anonyme Anfragen vergleichen und dabei Fragmenttreffer sowie Renderdauer beobachten. Zusätzliche Fragmentlogs lassen sich lokal über `config.action_controller.enable_fragment_cache_logging = true` aktivieren. Die stabilen Medienlinks laufen nicht zeitlich ab; nach einer Rotation des Signaturschlüssels müssen vorhandene Fragmente mit `Rails.cache.clear` in der betroffenen Umgebung geleert werden, damit sie sofort neue Links ausgeben.
+
+Öffentliche Bilder verwenden ausschließlich bereits fertige lokale Varianten. Neue oder ersetzte Event-, Banner- und Newsbilder werden über die Queue `public_images` vorbereitet; bis dahin bleibt die vorhandene Originalquelle sichtbar. Fehlen bei einem Newsbild sowohl Original als auch fertige Varianten im Storage, bleiben Liste und Artikel ohne Bild aufrufbar. Importbilder behalten ihre Anbieter-URL als Fallback. Automatisch werden nur Bilder bereits veröffentlichter Events ab heute heruntergeladen, auch beim Veröffentlichen eines Events; Rohimporte lösen keine Bilddownloads aus. Bei einer geänderten Quelle werden alte lokale Ausgaben sofort ignoriert. Rechteangaben, Fokus und Zoom bleiben erhalten. Logos und Bilder im Fließtext verwenden vorhandene Varianten oder ihr Original; für sie gibt es keinen neuen automatischen Backfill. PDFs und Videos im Fließtext zeigen eine vorhandene Bildvorschau; fehlt diese, erscheint ein Dateilink.
+
+Ein Bildjob verarbeitet höchstens vier Größen, begrenzt Eingaben auf 12 MiB und 24 Millionen Pixel und akzeptiert JPEG, PNG, WebP und GIF. Downloads haben insgesamt höchstens 25 Sekunden einschließlich DNS, Weiterleitungen und eines Wiederholungsversuchs; private Netzadressen und unsichere URLs werden abgewiesen. Netzwerkfehler werden im Hintergrund höchstens dreimal versucht. Nicht unterstützte oder beschädigte Bilder bleiben bei ihrer vorhandenen Quelle; weitere gültige Bildslots desselben Events oder Beitrags werden trotzdem vorbereitet. Die HTML-Anfrage lädt keine neue Datei vom Anbieter und erzeugt keine Bildvariante.
+
+Produktion und Staging erhalten dasselbe Volume `stuttgart_live_de_public_image_lock` unter `/rails/public-image-lock`. Es enthält ausschließlich den Arbeitslock, keine Bilder oder Geschäftsdaten. Ein nicht blockierender Dateilock begrenzt öffentliche Bildarbeit auf einen aktiven Job pro Host, zusätzlich zur Queue-Begrenzung. Das Image legt den Ordner für Benutzer 1000 an. Der Lockpfad muss bei allen beteiligten Workern auf dasselbe Volume zeigen; ein fehlender oder nicht beschreibbarer Mount darf nicht durch einen privaten Lockpfad ersetzt werden. Datenbanken und Medienvolumes bleiben getrennt. Die Staging-Sperre für externe Importe gilt weiterhin.
+
+Bestehende Eventbilder werden nur ausdrücklich und in kleinen Schritten nachgezogen. Zuerst die Auswahl prüfen, beispielsweise lokal:
+
+```sh
+LIMIT=5 EVENT_SLUGS=mein-event mise exec -- bin/rails public_images:backfill
+```
+
+Der Standard ist ein Dry-run ohne Downloads oder Jobs. `LIMIT` muss zwischen 1 und 100 liegen und begrenzt die Anzahl eingereihter Datensätze; optional schränken kommagetrennte `EVENT_SLUGS` oder `EVENT_IDS` die Auswahl ein. Nur veröffentlichte Events ab heute sind zugelassen. Für eine freigegebene Auswahl denselben Aufruf ausdrücklich um `DRY_RUN=false` ergänzen; die Arbeit läuft anschließend asynchron über den Worker. Zunächst wenige repräsentative Events vorbereiten, Queue, CPU, RAM, Antwortzeiten und Bilddateigrößen prüfen und erst danach den nächsten kleinen Lauf einreihen. Mehrere Backfill-Aufrufe umgehen den gemeinsamen Arbeitslock nicht. Es gibt keinen Fortschrittscursor für aufeinanderfolgende Aufrufe: Ohne gezielt wechselnde `EVENT_IDS` oder `EVENT_SLUGS` kann derselbe Anfang der Auswahl erneut eingereiht werden. Die nächste kleine Auswahl deshalb ausdrücklich angeben und erledigte Events selbst nachhalten. Presseexport und Backend-Renderer behalten ihre bestehenden synchronen Schnittstellen.
+
+Öffentliche Seiten und Backend/Auth behalten getrennte CSS- und JavaScript-Einstiege. `frontend.css` enthält die gemeinsamen Basisstile und die öffentlichen Seitenstile, sodass öffentliche Seiten nur eine blockierende CSS-Datei anfordern. Backend und Login verwenden weiterhin `shared.css` und `backend.css`. Oswald und Archivo Narrow kommen als lokale WOFF2-Dateien aus der Asset-Pipeline; es werden keine externen Schrift-CDNs geladen. Die TTF-Dateien bleiben für serverseitige Renderjobs im Image.
+
+#### Queue-, Proxy- und Kapazitätsdiagnose auf dem CX33
+
+nginx schreibt `proxy_timing` als JSON mit eigener Request-ID, Release, Status,
+festen Routenkategorien sowie Gesamt-, Upstream-, Verbindungs- und Headerzeit in
+Sekunden. Rails ergänzt `request_timing`: `queue_ms` misst die Zeit vom
+nginx-Eingang bis zur Middleware, `app_ms` bis zur Rückgabe der Rack-Antwort.
+Die Auslieferung eines Streaming-Bodys ist nur in der nginx-Gesamtzeit enthalten.
+Diese Queuezeit umfasst auch Proxy- und vorgelagerte Middlewarearbeit; sie ist
+kein isolierter Puma-Backlogwert. nginx überschreibt eingehende Startzeit und
+Request-ID. Fehlende, ungültige, zukünftige oder über fünf Minuten alte Startwerte
+liefern `queue_ms: null`; sie dürfen nicht als null Millisekunden aggregiert werden.
+`at` ist die Unixzeit. Die Releasekennung akzeptiert ausschließlich einen Git-SHA.
+
+Die neuen Metriklogs enthalten keine rohen Pfade, Querystrings, IP-Adressen,
+Useragents, Cookies oder Tokens. Pfade wie Passwort-Reset und signierte Medien
+werden ausschließlich als feste Kategorien geschrieben. Bestehende Rails-Logs
+und nginx-Fehlerdiagnosen sind davon unabhängig und dürfen nicht ungeprüft als
+Performanceartefakte exportiert werden. nginx behält seine Fehlerdiagnose bei;
+Crawlerablehnungen erzeugen keine zusätzlichen rohen Requestzeilen im Fehlerlog.
+Docker begrenzt die kombinierten Rails-/nginx-Logs jedes produktiven App-Containers
+auf drei Dateien à 10 MB. Das ist eine Größenbegrenzung, keine garantierte Anzahl
+Tage; vor einem Vergleich rechtzeitig ausschließlich die beiden JSON-Ereignisse
+sichern und sensible bestehende Logzeilen verwerfen.
+
+Der Produktions-Webcontainer bietet Puma-Statistiken nur unter
+`/rails/tmp/puma-control/stats.sock`. Verzeichnis und Socket sind ausschließlich
+für den Containerbenutzer zugänglich (0700). Es gibt keinen öffentlichen
+Steuerport; selbst am Socket sind Steueraktionen gesperrt. Im ausgewählten
+Webcontainer genügt für eine lesende Diagnose:
+
+```bash
+docker exec WEB_CONTAINER curl --silent --fail \
+  --unix-socket /rails/tmp/puma-control/stats.sock http://localhost/stats
+```
+
+`backlog`, `running`, `pool_capacity` und die Workerstatistiken mit
+`queue_ms`/`app_ms` vergleichen. Die `pools` jeder Rails-Timingzeile enthalten nur
+lokale Zähler (`size`, `busy`, `idle`, `dead`, `waiting`) bereits registrierter
+Active-Record-Pools; die Messung öffnet keine DB-Verbindung und fragt keine Daten
+ab. Die Arrayeinträge sind keine Datenbanknamen und keine hostweiten Werte.
+Die theoretischen Limits und aktuelle PostgreSQL-Verbindungen müssen separat
+über den freigegebenen lesenden Diagnoseweg geprüft werden.
+
+Für nicht notwendige Trainings-/SEO-Crawler (`GPTBot`, `ClaudeBot`, `Bytespider`,
+`CCBot`, `AhrefsBot`, `SemrushBot`, `MJ12bot`, `DotBot`) gilt pro nginx-Container
+zusammen ein dynamisches Budget von einer Anfrage pro Sekunde mit drei zusätzlichen
+Burstplätzen. Darüber antwortet nginx sofort mit 429 und `Retry-After: 2`; bei
+nachlassender Last wird das Budget wieder frei. Die Useragent-Angabe ist eine
+unverifizierte Klassifizierung und kann umgangen werden. Google, Bing,
+`Claude-SearchBot`, `OAI-SearchBot`, `ChatGPT-User`, Social-Vorschauen und normale
+Browser werden von dieser Regel nicht begrenzt. Assets, Medien und der exakte
+Healthcheck `/up` bleiben ausgenommen. Staging erhält kein Crawlerlimit, damit
+Basic Auth weiterhin vor jeder Inhalts-/Fehlerantwort greift. `robots.txt` bittet
+kooperative Crawler zusätzlich, `/search` und `/events/search_overlay` auszulassen.
+
+Am 20. Oktober 2026 (08:49 UTC) zeigte die lesende Hostaufnahme bei 7.751 MiB RAM
+und vier vCPU 2.321 MiB `MemAvailable`. Die vier Stacks belegten zusammen rund
+4.404 MiB cgroup-Speicher: Stuttgart Produktion 1.940, Stuttgart Staging 718,
+Russ Produktion 1.143 und Russ Staging 602 MiB. Stuttgart-Web lag bei rund
+1.150 MiB PSS, seine zwei Worker bei 496/516 MiB; Web-cgroup-Peak 1.520 MiB.
+Der Stuttgart-Jobpeak von 1.801 MiB lag rund 1.082 MiB über der Momentaufnahme;
+Russ-Web hatte einen historischen Peak von 2.451 MiB. Diese Peaks sind nicht als
+gleichzeitig gemessen zu verstehen. Im übergeordneten cgroup-Zähler waren drei
+OOM-Kills ohne zeitliche Zuordnung vorhanden; die aktuellen Container hatten keine.
+
+Ein dritter Worker mit vorsichtig angesetzten 650 MiB ließe aktuell 1.671 MiB,
+beim historischen Reserveminimum aber nur 627 MiB übrig. Ein warmer Web-Rollout
+mit drei Workern hätte vor Jobspitzen nur etwa 151–450 MiB Reserve; überlappender
+neuer Web- und Jobprozess könnte sie überschreiten. Kamal startet neue Rollen vor
+dem Stoppen ihrer Vorgänger; Web-Drain und Jobstart können sich überlappen.
+Deshalb bleiben **zwei Worker mit drei Threads und unveränderten DB-Pools** aktiv.
+Die entfallenen öffentlichen Bildtransformationen sind erst nach neuen Kalt-/
+Warmmessungen als geringerer Speicherbedarf anrechenbar.
+
+Vor einer späteren Kapazitätsänderung beide Anwendungen in Produktion und Staging,
+Puma-Master, Worker, Solid-Queue-Supervisor, Dispatcher und Jobworker sowie
+PostgreSQL berücksichtigen. Ein Stuttgart-Produktions-Webworker kann theoretisch
+vier Pools à drei Verbindungen konfigurieren (12), zwei Worker also 24; die Pools
+werden bedarfsgesteuert verbunden. Ein Jobprozess hat für Primary/Cache/Cable je
+drei und Queue fünf Plätze (14), wobei Supervisor und Dispatcher eigene Prozesse
+mit ihren tatsächlich verwendeten Pools sind. Staging-Web hat pro Prozess vier
+Pools à zwei (8), Staging-Job je einen für Primary/Cache/Cable und drei für Queue
+(6). Master und Rollout-Duplikate kommen je nach geöffneten Pools hinzu. Diese
+Obergrenzen sind keine gemessene Nutzung; vier Apps dürfen nicht auf die Formel
+„Puma-Worker × Threads“ reduziert werden.
+
+| Stack (beobachteter Release) | Webprozesse inkl. Master | Poolplätze je Webprozess | Queueprozesse¹ | Poolplätze je Queueprozess |
+| --- | ---: | ---: | ---: | ---: |
+| Stuttgart Produktion | 3 | 12 | 3 | 14 |
+| Stuttgart Staging | 2 | 8 | 3 | 6 |
+| Russ Produktion (`9230820`) | 3 | 15 | 3 | 17 |
+| Russ Staging (`9488992`) | 2 | 10 | 3 | 7 |
+
+¹ Ein Supervisor, ein Dispatcher und ein Jobworker. Auch `WEB_CONCURRENCY=1`
+aktiviert in Puma einen Worker plus Master; es bedeutet hier keinen einzelnen
+Prozess. Russ konfiguriert fünf Pools
+(einschließlich seiner eigenen operativen Datenbank). Seine beiden beobachteten
+Queuekonfigurationen haben fest drei Jobthreads; die Staging-Variable
+`JOB_THREADS=1` reduziert diese im genannten Russ-Release nicht. Russ wird durch
+diese Änderung nicht angepasst. Addiert man vorsichtshalber jeden konfigurierten
+Pool in jedem dieser Prozesse, erhält man 249 Plätze, mit vollständiger
+Stuttgart-Produktions-Rolloutüberlappung weitere 78. Tatsächlich werden viele
+Pools in Master, Supervisor oder Dispatcher gar nicht verbunden. Das ist daher
+eine sehr lockere theoretische Obergrenze, kein Bedarf und keine Livebelegung;
+sie zeigt, weshalb das 100-Verbindungen-Limit nicht ohne gemessene Nutzung und
+Reserve als ausreichend erklärt werden kann. Die ältere Beobachtung von 32/100
+PostgreSQL-Verbindungen ersetzt keinen aktuellen Nachweis.
+
+Für Vorher/Nachher gleiche Zeitfenster, Release, Routenkategorien und Anfrageraten
+verwenden; p50/p95/p99 der gültigen Queue-/Appzeiten, Fehlerquote, 429-Anteil,
+Puma-Backlog, Poolwartezeiten, CPU-/Memory-Pressure und minimale RAM-Reserve
+vergleichen. Als erste Untersuchungsschwellen gelten dauerhaft über 100 ms
+Queue-p95, wartende Poolkunden, steigende 5xx oder weniger als 1 GiB Reserve.
+Das sind Startwerte für eine kontrollierte Messung, kein Kapazitätsversprechen.
+Ein Drei-Worker-Versuch braucht ausreichend Reserve auch während Rollout und
+Rollback, frische DB-/PSS-Werte und den regulären Freigabeweg. Diese Änderung
+beinhaltet keinen solchen Liveversuch. Rückfall erfolgt auf die vorherige
+geprüfte Konfiguration bzw. das vorherige Image über den dokumentierten
+GitHub-Rollback. `PRODUCTION_DOMAIN_MODE` bleibt dabei unverändert; insbesondere
+wird weder ein Legacy-Modus noch Staging-`noindex` für Produktion erzwungen.
 
 Der Hetzner-Host ist für mehrere Kamal-Apps vorbereitet. `stuttgart-live.de` bleibt der Eigentümer der fachlichen Produktionsdatenbank und des Docker-Volumes `stuttgart_live_de_storage`. Weitere Apps wie `russ-live.de` dürfen diese Primärdatenbank nur mit einem separaten read-only PostgreSQL-Benutzer lesen und dasselbe Storage-Volume mounten. Queue, Cache und Cable bleiben je App getrennt, damit Worker und Laufzeitdaten nicht zwischen Projekten kollidieren.
 

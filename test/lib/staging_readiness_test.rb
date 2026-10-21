@@ -27,6 +27,7 @@ class StagingReadinessTest < ActiveSupport::TestCase
 
   test "direct web and worker commands refuse unready stage before credentials or database boot" do
     env = DeploymentEnvironment.staging_profile(project: "stuttgart_live_de").merge("APP_ENVIRONMENT" => "staging", "RAILS_ENV" => "production", "RAILS_MASTER_KEY" => nil, "SECRET_KEY_BASE_DUMMY" => nil)
+    env.merge!(ENV.keys.grep(/\A(?:DATABASE_URL|.+_DATABASE_URL)\z/).to_h { |key| [ key, nil ] })
     [ [ "bin/jobs" ], [ "bin/rails", "server" ], [ "bin/production-server" ], [ "bin/docker-entrypoint", "./bin/production-server" ] ].each do |command|
       _out, err, status = Open3.capture3(env, "mise", "exec", "--", *command)
       assert_not status.success?, command.inspect

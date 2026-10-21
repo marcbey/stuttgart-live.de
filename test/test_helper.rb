@@ -1,6 +1,15 @@
 ENV["RAILS_ENV"] ||= "test"
 require "json"
 require "fileutils"
+require "tmpdir"
+
+# Test runs and parallel workers prepare unrelated fixtures independently.
+TEST_PUBLIC_IMAGE_LOCK_DIRECTORY = Dir.mktmpdir("stuttgart-live-public-images-")
+ENV["PUBLIC_IMAGE_LOCK_PATH"] = File.join(TEST_PUBLIC_IMAGE_LOCK_DIRECTORY, "main.lock")
+public_image_lock_owner_pid = Process.pid
+at_exit do
+  FileUtils.remove_entry(TEST_PUBLIC_IMAGE_LOCK_DIRECTORY) if Process.pid == public_image_lock_owner_pid
+end
 
 TEST_WARNING_FILTER_MASTER_PID = Process.pid
 TEST_WARNING_FILTER_COUNTS_DIR = File.expand_path("../tmp/test_warning_filter_counts", __dir__)
@@ -104,6 +113,10 @@ module ActiveSupport
   class TestCase
     # libvips text rendering can crash on macOS after fork due CoreText initialization.
     parallelize(workers: RUBY_PLATFORM.include?("darwin") ? 1 : :number_of_processors)
+
+    parallelize_setup do |worker|
+      ENV["PUBLIC_IMAGE_LOCK_PATH"] = File.join(TEST_PUBLIC_IMAGE_LOCK_DIRECTORY, "worker-#{worker}.lock")
+    end
 
     # Setup all fixtures in test/fixtures/*.yml for all tests in alphabetical order.
     fixtures :all

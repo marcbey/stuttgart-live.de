@@ -14,12 +14,17 @@
     "@hotwired/turbo-rails": "^8.0.23",
     "@rails/actiontext": "^8.1.200",
     "@tailwindcss/cli": "^4.2.1",
+    "chrome-launcher": "1.2.1",
     "esbuild": "^0.27.3",
+    "lighthouse": "13.5.0",
     "tailwindcss": "^4.2.1",
     "trix": "^2.1.18"
   },
   "resolutions": {
     "picomatch": "^4.0.4",
     "source-map-js": "^1.2.2"
+  },
+  "dependencies": {
+    "web-vitals": "6.2.3"
   }
 }

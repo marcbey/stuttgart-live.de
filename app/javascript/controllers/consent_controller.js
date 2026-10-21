@@ -14,6 +14,8 @@ export default class extends Controller {
   connect() {
     this.trackPageView = this.trackPageView.bind(this)
     this.handleKeydown = this.handleKeydown.bind(this)
+    this.refreshConsent = this.refreshConsent.bind(this)
+    this.ensureConsentRestore()
 
     this.ensureGoogleTag()
 
@@ -28,6 +30,21 @@ export default class extends Controller {
     document.removeEventListener("keydown", this.handleKeydown)
     this.toggleBackgroundInert(false)
     document.body.classList.remove("consent-dialog-open")
+  }
+
+  ensureConsentRestore() {
+    if (window.StuttgartLiveConsentRestoreInitialized) return
+
+    // Keep this document-lifetime capture listener ahead of metric listeners,
+    // even when Turbo replaces the body and its consent controller.
+    window.addEventListener("pageshow", (event) => {
+      if (event.persisted) window.StuttgartLiveConsent?.refresh?.()
+    }, { capture: true })
+    window.StuttgartLiveConsentRestoreInitialized = true
+  }
+
+  refreshConsent() {
+    this.applyConsent(this.loadPreferences(this.preferences), { persist: false, announce: true })
   }
 
   openSettings(event) {
@@ -115,7 +132,7 @@ export default class extends Controller {
     this.syncInputs()
     this.updateConsentMode()
     this.updateAnalytics()
-    window.StuttgartLiveConsent = { preferences: this.preferences }
+    window.StuttgartLiveConsent = { preferences: this.preferences, refresh: this.refreshConsent }
 
     if (announce) {
       window.dispatchEvent(new CustomEvent(CONSENT_EVENT, { detail: { preferences: this.preferences } }))
@@ -129,9 +146,15 @@ export default class extends Controller {
     }
   }
 
-  loadPreferences() {
+  loadPreferences(fallback = DEFAULT_PREFERENCES) {
+    let raw
     try {
-      const raw = window.localStorage.getItem(STORAGE_KEY)
+      raw = window.localStorage.getItem(STORAGE_KEY)
+    } catch (_error) {
+      return fallback
+    }
+
+    try {
       return raw ? this.normalizePreferences(JSON.parse(raw)) : DEFAULT_PREFERENCES
     } catch (_error) {
       return DEFAULT_PREFERENCES

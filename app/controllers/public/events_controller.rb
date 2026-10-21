@@ -367,7 +367,6 @@ module Public
       @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
       @design_preview_mix_available = lean_homepage_all_relation.joins(:genres).exists?
       @design_preview_series_counts_by_id = Public::Events::SeriesCountsByIdQuery.call(design_preview_series_events)
-      @design_preview_search_overlay = build_search_overlay
     end
 
     def render_design_homepage_mix_section
@@ -425,7 +424,6 @@ module Public
 
     def assign_design_chrome(saved_events: [])
       assign_tagestipp_section if @lane&.key == "all_stuttgart"
-      @design_preview_search_overlay = build_search_overlay
       @design_chrome_saved_events = Array(saved_events)
     end
 
@@ -446,12 +444,13 @@ module Public
     end
 
     def search_results_relation
-      visible_events_relation(
+      @search_results_relation ||= Public::VisibleEventsQuery.new(
         scope: searchable_index_events_relation,
         filter: search_filter,
         event_date: @browse_state.event_date,
-        query: @browse_state.query
-      )
+        query: @browse_state.query,
+        materialize_matches: true
+      ).call
     end
 
     def search_redirect_path
@@ -1007,12 +1006,12 @@ module Public
         :genres,
         :sub_genres,
         :event_offers,
-        :import_event_images,
+        { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
         highlight_video_file_attachment: :blob,
         highlight_landscape_video_file_attachment: :blob,
         event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ],
-        venue_record: [ logo_attachment: :blob ],
-        event_presenters: { presenter: [ logo_attachment: :blob ] }
+        venue_record: [ logo_attachment: { blob: { variant_records: { image_attachment: :blob } } } ],
+        event_presenters: { presenter: [ logo_attachment: { blob: { variant_records: { image_attachment: :blob } } } ] }
       )
     end
 
@@ -1021,7 +1020,7 @@ module Public
         :genres,
         :venue_record,
         :event_offers,
-        :import_event_images,
+        { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
         highlight_video_file_attachment: :blob,
         highlight_landscape_video_file_attachment: :blob,
         event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]

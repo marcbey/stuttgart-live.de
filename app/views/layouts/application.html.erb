@@ -7,15 +7,20 @@
     <meta name="application-name" content="Stuttgart Live">
     <meta name="mobile-web-app-capable" content="yes">
     <% backend_context = controller_path.start_with?("backend/") %>
-    <% auth_chrome = controller_path == "sessions" ||
-                     (controller_path == "passwords" && action_name == "new") %>
+    <% auth_chrome = controller_path.in?(%w[sessions passwords]) %>
     <% frontend_context = controller_path.start_with?("public/") || controller_path == "errors" %>
+    <% if frontend_context %>
+      <meta name="web-vitals-route" content="<%= request.route_uri_pattern.to_s.delete_suffix("(.:format)") %>">
+      <% if ENV["SENTRY_RELEASE"].to_s.match?(/\A(?:[a-f0-9]{40}|[a-f0-9]{64})\z/i) %>
+        <meta name="web-vitals-release" content="<%= ENV["SENTRY_RELEASE"] %>">
+      <% end %>
+    <% end %>
     <% if controller_path.start_with?("backend/") %>
       <meta name="turbo-cache-control" content="no-cache">
     <% end %>
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
-    <% unless controller_path.start_with?("backend/") %>
+    <% if frontend_context %>
       <script>
         try {
           if (window.localStorage && window.localStorage.getItem("stuttgart-live-consent-v1")) {
@@ -42,22 +47,22 @@
     <% if asset_available?("oswald-700.woff2") %>
       <link rel="preload" href="<%= asset_path("oswald-700.woff2") %>" as="font" type="font/woff2" crossorigin>
     <% end %>
-    <% if asset_available?("oswald-300.ttf") %>
-      <link rel="preload" href="<%= asset_path("oswald-300.ttf") %>" as="font" type="font/ttf" crossorigin>
+    <% if asset_available?("oswald-300.woff2") %>
+      <link rel="preload" href="<%= asset_path("oswald-300.woff2") %>" as="font" type="font/woff2" crossorigin>
     <% end %>
     <% if frontend_context || backend_context || auth_chrome %>
       <style data-local-font-faces>
         <%= local_font_face_stylesheet(frontend: frontend_context) %>
       </style>
     <% end %>
-    <% if compiled_asset_exists?("shared.css") %>
+    <% if !frontend_context && compiled_asset_exists?("shared.css") %>
       <%= stylesheet_link_tag "shared", "data-turbo-track": "reload" %>
     <% end %>
     <% css_asset = backend_context || auth_chrome ? "backend" : (frontend_context ? "frontend" : nil) %>
     <% if css_asset.present? && compiled_asset_exists?("#{css_asset}.css") %>
       <%= stylesheet_link_tag css_asset, "data-turbo-track": "reload" %>
     <% end %>
-    <% javascript_asset = controller_path.start_with?("backend/") ? "backend" : "public" %>
+    <% javascript_asset = backend_context || auth_chrome ? "backend" : "public" %>
     <% if compiled_asset_exists?("#{javascript_asset}.js") %>
       <%= javascript_include_tag javascript_asset, "data-turbo-track": "reload", type: "module" %>
     <% end %>
@@ -97,12 +102,12 @@
   <body
     class="<%= body_classes.join(" ") %>"
     <% body_controllers = [] %>
-    <% unless controller_path.start_with?("backend/") || public_design_preview %>
+    <% if frontend_context && !public_design_preview %>
       <% body_controllers << "consent" %>
     <% end %>
     <% body_controllers << "scroll-top" %>
     data-controller="<%= body_controllers.join(" ") %>"
-    <% if !controller_path.start_with?("backend/") && google_analytics_enabled? %>
+    <% if frontend_context && google_analytics_enabled? %>
       data-consent-measurement-id-value="<%= google_analytics_measurement_id %>"
     <% end %>
     <% if frontend_context && meta_pixel_enabled? %>
@@ -401,7 +406,7 @@
       ↑
     </button>
 
-    <% if !controller_path.start_with?("backend/") && !public_design_preview %>
+    <% if frontend_context && !public_design_preview %>
       <%= render "layouts/consent_banner" %>
       <%= render "layouts/consent_dialog" %>
     <% end %>

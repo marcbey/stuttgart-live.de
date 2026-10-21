@@ -20,6 +20,14 @@ module Public::EventsHelper
     alt: "Russ Live"
   ).freeze
 
+  # Mirrors .design-preview container widths and .design-preview-list-card-grid gaps/columns.
+  def public_event_list_image_sizes
+    "(min-width: 96rem) calc((min(100vw - 5rem, 100rem) - 5.25rem) / 6), " \
+      "(min-width: 80rem) calc((100vw - 12rem) / 5), " \
+      "(min-width: 64rem) calc((100vw - 7rem) / 4), " \
+      "(min-width: 48rem) calc((100vw - 5.8rem) / 3), calc((100vw - 2.22rem) / 2)"
+  end
+
   def effective_public_event_series_ids(events)
     Public::Events::EffectiveSeriesIdsQuery.call(events)
   end
@@ -36,6 +44,47 @@ module Public::EventsHelper
       ("context-#{cache_fingerprint(context)}" if context.present?),
       "events-#{public_events_render_fingerprint(events)}"
     ].compact
+  end
+
+  # Card associations must already be loaded. Alias venues reuse the same
+  # once-per-request canonical index that rendering their names requires.
+  def public_events_fragment_cache_key(section:, events:, browse_state:, context: {})
+    events = Array(events)
+    associations = %i[genres venue_record event_offers event_images import_event_images]
+    return if events.empty? || events.any? { |event| associations.any? { |name| !event.association(name).loaded? } }
+
+    mappings = AppSetting.venue_duplicate_mappings
+    mappings_by_alias = mappings.index_by { |mapping| mapping.fetch("alias_key") }
+    canonical_keys = events.filter_map do |event|
+      mappings_by_alias[Venue.match_key(event.venue_record&.name)]&.fetch("canonical_key")
+    end.uniq
+    canonical_venues = canonical_keys.map { |key| Venue.venue_match_key_index[key] }
+
+    media = events.flat_map(&:event_images).map { |image| public_event_image_cache_components(image) }
+    media += events.flat_map(&:import_event_images).map { |image| public_event_image_cache_components(image, attachment_name: :prepared_file_attachment) }
+    return if media.any?(&:nil?)
+
+    uses_provider_priorities = events.any? do |event|
+      offers = event.event_offers
+      offers.any? && offers.none? { |offer| offer.source == "manual" }
+    end
+
+    [
+      "public-events-fragment-v2", section,
+      cache_fingerprint([
+        I18n.locale, Time.zone.name, Date.current.iso8601,
+        media_url_options.to_json, PublicMediaUrl.enabled?, homepage_media_strict_proxy?,
+        browse_state.page, browse_state.filter, browse_state.event_date_param, browse_state.query,
+        context.to_json, mappings.to_json, records_cache_components(canonical_venues),
+        (Merging::ProviderPriorityMap.call.to_json if uses_provider_priorities),
+        events.map do |event|
+          [ event.cache_key_with_version, event.past?, cache_key_with_version_for(event.venue_record),
+            records_cache_components(event.genres), records_cache_components(event.event_offers),
+            records_cache_components(event.import_event_images) ]
+        end,
+        media
+      ])
+    ]
   end
 
   def public_event_series_effective?(event, effective_series_ids: nil)
@@ -252,9 +301,7 @@ module Public::EventsHelper
 
   def event_image_source(image, strict_proxy: false, size: nil)
     return nil if image.blank?
-    return optimized_event_image_source(image, strict_proxy:, size:) if image.is_a?(EventImage)
-
-    image.image_url
+    optimized_event_image_source(image, strict_proxy:, size:)
   end
 
   def event_image_srcset(image, variant_sizes:, strict_proxy: false)
@@ -328,6 +375,33 @@ module Public::EventsHelper
 
     logo_source = "#{promoter_slug}-logo.svg"
     logo_source if asset_available?(logo_source)
+  end
+
+  def public_event_image_cache_components(image, attachment_name: :file_attachment)
+    return unless image.association(attachment_name).loaded?
+
+    attachment = image.public_send(attachment_name)
+    return [ image.cache_key_with_version ] unless attachment
+    return unless attachment.association(:blob).loaded?
+
+    blob = attachment.blob
+    return unless blob.association(:variant_records).loaded?
+
+    variants = blob.variant_records.map { |variant| public_event_variant_cache_components(variant) }
+    return if variants.any?(&:nil?)
+
+    [ image.cache_key_with_version, attachment.cache_key_with_version,
+      blob.cache_key_with_version, variants ]
+  end
+
+  def public_event_variant_cache_components(variant)
+    return unless variant.association(:image_attachment).loaded?
+
+    attachment = variant.image_attachment
+    return [ variant.cache_key ] unless attachment
+    return unless attachment.association(:blob).loaded?
+
+    [ variant.cache_key, attachment.cache_key_with_version, attachment.blob.cache_key_with_version ]
   end
 
   def public_events_render_fingerprint(events)

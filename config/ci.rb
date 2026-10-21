@@ -27,6 +27,7 @@ CI.run do
   step "Security: Gem audit", "bin/bundler-audit"
   step "Security: JavaScript vulnerability audit", "bun audit --audit-level=high"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
+  step "Tests: JavaScript and performance parsers", "node --test test/javascript/*_test.mjs"
   step "Tests: Rails (Bullet)", rails_test_command
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
 

@@ -44,3 +44,13 @@ plugin :solid_queue if ENV["SOLID_QUEUE_IN_PUMA"]
 # Specify the PID file. Defaults to tmp/pids/server.pid in development.
 # In other environments, only set the PID file if requested.
 pidfile ENV["PIDFILE"] if ENV["PIDFILE"]
+
+# Only this container's user can inspect stats. No TCP port or control actions.
+if ENV["PUMA_CONTROL_ENABLED"] == "true"
+  require "fileutils"
+  control_directory = File.expand_path("../tmp/puma-control", __dir__)
+  FileUtils.mkdir_p(control_directory, mode: 0o700)
+  File.chmod(0o700, control_directory)
+  # Puma 8 binds the control URL directly; the DSL umask option is not forwarded.
+  activate_control_app "unix://#{control_directory}/stats.sock?umask=0077", no_token: true, data_only: true
+end

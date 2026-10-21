@@ -4,8 +4,8 @@
 <% content_for :page_newsletter do %><% end %>
 <% content_for :page_partner_strip do %><% end %>
 <% strict_proxy = homepage_media_strict_proxy? %>
-<% genre_lanes = public_design_navigation_lanes(Array(@news_preview_genre_lanes).first(5), highlight_events: @news_preview_highlight_events) %>
-<% design_chrome_saved_events = (Array(@news_preview_highlight_events) + genre_lanes.flat_map { |lane| Array(lane.events) }).compact.uniq(&:id) %>
+<% genre_lanes = public_design_navigation_lanes %>
+<% design_chrome_saved_events = Array(@news_preview_sidebar_events) %>
 
 <div class="design-preview design-news-preview-shell"
      data-controller="design-preview-menu design-preview-filterbar">
@@ -29,7 +29,7 @@
         <section class="news-shell news-index-shell design-news-preview-content">
           <% if @blog_posts.any? %>
             <div class="news-grid news-index-grid" id="news-index-grid">
-              <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false, strict_proxy: strict_proxy %>
+              <%= render "public/news/cards", blog_posts: @blog_posts, include_newsletter: false, strict_proxy: strict_proxy, prioritize_first_image: true %>
             </div>
             <%= render "public/news/more", has_more: @has_more_blog_posts, next_offset: @next_offset %>
           <% else %>

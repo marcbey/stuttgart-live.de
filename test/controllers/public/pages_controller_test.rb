@@ -5,6 +5,27 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     StaticPageDefaults.ensure!
   end
 
+  test "public metrics metadata exposes a route template and only a release hash" do
+    original_release = ENV["SENTRY_RELEASE"]
+    ENV["SENTRY_RELEASE"] = "a" * 40
+    get search_path, params: { q: "private-search" }
+    assert_select "meta[name='web-vitals-route'][content='/search']", count: 1
+    assert_select "meta[name='web-vitals-release'][content=?]", "a" * 40, count: 1
+
+    ENV["SENTRY_RELEASE"] = "branch/private-release"
+    get contact_path
+    assert_select "meta[name='web-vitals-route'][content='/kontakt']", count: 1
+    assert_select "meta[name='web-vitals-release']", count: 0
+  ensure
+    ENV["SENTRY_RELEASE"] = original_release
+  end
+
+  test "static page metrics use the route pattern instead of a resolved slug" do
+    page = StaticPage.create!(title: "Private Slug", slug: "private-slug", body: "<p>Content</p>")
+    get static_page_path(page.slug)
+    assert_select "meta[name='web-vitals-route'][content='/:slug']", count: 1
+  end
+
   test "contact page is publicly accessible" do
     get contact_url
 
@@ -130,12 +151,50 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     travel_to Time.zone.local(2026, 4, 9, 10, 0, 0) do
       with_media_proxy do
         get static_page_url(page.slug)
-        expected_path = PublicMediaUrl.path_for(blob.representation(resize_to_limit: [ 1024, 768 ]).processed)
+        expected_path = PublicMediaUrl.path_for(blob)
       end
     end
 
     assert_response :success
     assert_includes response.body, expected_path
+  end
+
+  test "rich text PDF uses a file link while its preview is pending and a ready image afterward" do
+    blob = ActiveStorage::Blob.create_and_upload!(io: File.open(file_fixture("public_preview.pdf")), filename: "public-preview.pdf", content_type: "application/pdf")
+    page = StaticPage.create!(slug: "pdf-preview", title: "PDF", body: %(<action-text-attachment sgid="#{blob.attachable_sgid}"></action-text-attachment>))
+    assert blob.previewable?
+    assert_not blob.variable?
+
+    assert_no_difference [ "ActiveStorage::Attachment.count", "ActiveStorage::VariantRecord.count" ] do
+      get static_page_url(page.slug)
+      assert_response :success
+      assert_select "figure.attachment img", count: 0
+      assert_select "figure.attachment a[href=?]", rails_storage_proxy_path(blob, only_path: true), text: "public-preview.pdf"
+      get rails_storage_proxy_path(blob, only_path: true)
+      assert_response :success
+      assert_equal "application/pdf", response.media_type
+    end
+    assert_not blob.reload.preview_image.attached?
+
+    preview = blob.preview(resize_to_limit: [ 1024, 768 ]).processed
+    output = preview.image.variant(resize_to_limit: [ 1024, 768 ]).processed.image.blob
+    assert_no_difference [ "ActiveStorage::Attachment.count", "ActiveStorage::VariantRecord.count" ] do
+      get static_page_url(page.slug)
+      assert_response :success
+      assert_select "figure.attachment img[src=?]", rails_storage_proxy_path(output, only_path: true)
+    end
+
+    output.service.delete(output.key)
+    assert_no_difference "ActiveStorage::VariantRecord.count" do
+      get static_page_url(page.slug)
+      assert_select "figure.attachment img[src=?]", rails_storage_proxy_path(preview.image.blob, only_path: true)
+    end
+    preview.image.blob.service.delete(preview.image.blob.key)
+    assert_no_difference "ActiveStorage::Attachment.count" do
+      get static_page_url(page.slug)
+      assert_select "figure.attachment img", count: 0
+      assert_select "figure.attachment a[href=?]", rails_storage_proxy_path(blob, only_path: true)
+    end
   end
 
   test "static pages show an edit link for authenticated backend users" do

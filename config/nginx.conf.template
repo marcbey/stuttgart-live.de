@@ -9,7 +9,44 @@ http {
   include /etc/nginx/mime.types;
   default_type application/octet-stream;
 
-  access_log /dev/stdout;
+  # Fixed route categories deliberately omit path parameters, queries and headers.
+  map $uri $telemetry_route {
+    default other;
+    / /;
+    /up /up;
+    /search /search;
+    /events/search_overlay /events/search_overlay;
+    ~^/events/ /events/:id;
+    ~^/passwords(?:/|$) /passwords/*;
+    ~^/backend(?:/|$) /backend/*;
+    ~^/media/ /media/*;
+    ~^/assets/ /assets/*;
+  }
+  log_format performance escape=json
+    '{"event":"proxy_timing","at":$msec,"request_id":"$request_id","release":"${TELEMETRY_RELEASE}",'
+    '"route":"$request_route","status":$status,"request_s":$request_time,'
+    '"upstream_s":"$upstream_response_time","upstream_connect_s":"$upstream_connect_time",'
+    '"upstream_header_s":"$upstream_header_time","crawler_budget":"$limit_req_status"}';
+  access_log /dev/stdout performance;
+
+  # UA is an untrusted classification, never an identity or an IP limit.
+  map $http_user_agent $nonessential_crawler {
+    default "";
+    ~*(^|[^a-z0-9_-])(GPTBot|ClaudeBot|Bytespider|CCBot|AhrefsBot|SemrushBot|MJ12bot|DotBot)([^a-z0-9_-]|$) nonessential;
+  }
+  map $uri $crawler_exempt {
+    default 0;
+    /up 1;
+    ~^/(assets|media)/ 1;
+  }
+  map "$nonessential_crawler:$crawler_exempt:${APP_ENVIRONMENT}" $crawler_budget_key {
+    default "";
+    "nonessential:0:production" nonessential;
+  }
+  limit_req_zone $crawler_budget_key zone=crawler_budget:1m rate=1r/s;
+  limit_req_status 429;
+  # Keep request-bearing rejection diagnostics below the existing warn threshold.
+  limit_req_log_level notice;
   error_log /dev/stderr warn;
 
   sendfile on;
@@ -83,6 +120,8 @@ ${CANONICAL_REDIRECT_MAP}
     listen 80;
     server_name _;
 
+    set $proxy_request_start $msec;
+    set $request_route $telemetry_route;
     root /rails/public;
     ${STAGING_NOINDEX_HEADER}
     ${STAGING_PRIVATE_CACHE_HEADER}
@@ -94,6 +133,8 @@ ${CANONICAL_REDIRECT_MAP}
     location = /up {
       proxy_pass http://127.0.0.1:3000/up;
       proxy_set_header Host ${CANONICAL_HOST};
+      proxy_set_header X-Request-Start $proxy_request_start;
+      proxy_set_header X-Request-Id $request_id;
       proxy_set_header Content-Length "";
       proxy_pass_request_body off;
       proxy_method GET;
@@ -244,7 +285,18 @@ ${CANONICAL_REDIRECT_MAP}
       return 404;
     }
 
+    location @crawler_limited {
+      add_header Retry-After "2" always;
+      ${STAGING_NOINDEX_HEADER}
+      ${STAGING_PRIVATE_CACHE_HEADER}
+      return 429;
+    }
+
     location @puma {
+      limit_req zone=crawler_budget burst=3 nodelay;
+      error_page 429 = @crawler_limited;
+      proxy_set_header X-Request-Start $proxy_request_start;
+      proxy_set_header X-Request-Id $request_id;
       proxy_http_version 1.1;
       proxy_set_header Host $http_host;
       proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;

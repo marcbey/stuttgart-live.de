@@ -4,7 +4,7 @@ class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
 
   test "public design navigation genres do not depend on homepage genre lanes" do
-    lanes = public_design_navigation_lanes([], highlight_events: [])
+    lanes = public_design_navigation_lanes
 
     assert_equal %w[pop-indie-singer-songwriter rock-alternative metal-punk-hardcore hip-hop-r-n-b electronic-music-edm],
                  lanes.map { |lane| lane.group.slug }
@@ -116,6 +116,24 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes partial, "blog_post_image_style(blog_post, :promotion_banner_image)"
     refute_includes partial, "event_promotion_banner_card_image_style(event)"
     refute_includes partial, "event_promotion_banner_image_style(event, frame_ratio: 16.0 / 9.0)"
+  end
+
+  { "public" => true, "backend" => false }.each do |surface, frontend|
+    test "#{surface} font faces use local WOFF2 for Oswald light and regular" do
+      stylesheet = local_font_face_stylesheet(frontend: frontend)
+
+      [ 300, 400 ].each do |weight|
+        rule = stylesheet.scan(/@font-face\s*\{[^}]+\}/).find do |font_face|
+          font_face.include?('font-family: "Oswald";') && font_face.include?("font-weight: #{weight};")
+        end
+
+        assert rule, "expected an Oswald #{weight} font face for #{surface}"
+        assert_includes rule, %(src: url("#{asset_path("oswald-#{weight}.woff2")}") format("woff2");)
+        assert_includes rule, "font-display: swap;"
+      end
+
+      refute_match(/\.ttf|fonts\.googleapis\.com|fonts\.gstatic\.com/, stylesheet)
+    end
   end
 
   test "local font face stylesheet skips unavailable fonts" do

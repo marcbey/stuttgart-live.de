@@ -34,7 +34,7 @@
 <% if @browse_state.event_date.present? %>
   <% today_events = today_events.select { |event| event.start_at&.to_date == @browse_state.event_date.to_date } %>
 <% end %>
-<% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: highlights) %>
+<% genre_lanes = public_design_navigation_lanes %>
 <% all_events_path = @home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path %>
 <% genre_links = public_search_genre_links %>
 <% genre_paths = genre_links.map(&:last) %>
@@ -341,13 +341,14 @@
                   </div>
                 <% end %>
               <% else %>
-                <% highlights.each do |event| %>
+                <% highlights.each_with_index do |event, index| %>
                   <div class="design-preview-feature-slide">
                     <%= render "design_preview_card",
                                event: event,
                                browse_state: @browse_state,
                                strict_proxy: strict_proxy,
                                variant: "feature",
+                               image_priority: index.zero? && !design_preview_video_slide_enabled,
                                category: "Highlight",
                                effective_series_ids: design_preview_effective_series_ids,
                                series_counts_by_id: design_preview_series_counts_by_id,
@@ -378,20 +379,23 @@
                   </svg>
                 </button>
                 <button type="button"
-                        class="design-preview-feature-arrow design-preview-feature-toggle"
-                        aria-label="Animation pausieren"
-                        aria-pressed="false"
+                        class="design-preview-feature-arrow design-preview-feature-toggle is-paused"
+                        aria-label="Animation starten"
+                        aria-pressed="true"
                         data-design-preview-feature-slider-target="toggleButton"
                         data-action="design-preview-feature-slider#toggleAutoplay">
                   <svg class="motion-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg>
                   <svg class="motion-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"></path></svg>
-                  <span class="sr-only" data-design-preview-feature-slider-target="toggleLabel">Animation pausieren</span>
+                  <span class="sr-only" data-design-preview-feature-slider-target="toggleLabel">Animation starten</span>
                 </button>
               </div>
             <% end %>
           </div>
         </div>
 
+        <% highlight_cards_context = [ strict_proxy, design_preview_effective_series_ids, design_preview_series_counts_by_id, highlight_tiles.map { |tile| [ tile.event.id, tile.grid_variant, tile.column, tile.row ] }, laptop_highlight_tiles_by_event_id.values.map { |tile| [ tile.event.id, tile.grid_variant, tile.column, tile.row ] } ] %>
+        <% highlight_cards_cache_key = public_events_fragment_cache_key(section: "modern-highlight-cards", events: highlight_events, browse_state: @browse_state, context: highlight_cards_context) if controller.perform_caching && !authenticated? %>
+        <% cache_if highlight_cards_cache_key.present?, highlight_cards_cache_key, expires_in: 15.minutes do %>
         <% if highlight_events.any? %>
           <div class="design-preview-mobile-highlight-row" aria-label="Weitere Highlights">
             <% highlight_events.each do |event| %>
@@ -447,6 +451,8 @@
                        series_counts_by_id: design_preview_series_counts_by_id,
                        show_admin_edit: true %>
           <% end %>
+        <% end %>
+
         <% end %>
 
         <%= render "homepage_highlight_video",
