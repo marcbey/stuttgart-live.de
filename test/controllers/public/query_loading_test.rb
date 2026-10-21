@@ -50,6 +50,23 @@ class Public::QueryLoadingTest < ActionDispatch::IntegrationTest
     assert_batched_render event_path(@events.first.slug)
   end
 
+  test "search computes text matches once for counts cards and pagination" do
+    queries = []
+    subscriber = lambda do |notification|
+      payload = notification.payload
+      queries << payload[:sql] unless payload[:cached] || payload[:name] == "SCHEMA"
+    end
+
+    ActiveSupport::Notifications.subscribed(subscriber, "sql.active_record") do
+      get search_path(q: "Query Loading")
+    end
+
+    assert_response :success
+    assert_select ".search-results-header", text: /6 Ergebnisse/
+    assert_select "#event-grid .design-preview-card-title", count: 6
+    assert_equal 1, queries.count { |sql| sql.include?("REGEXP_REPLACE") }, "Count, cards and cursor must reuse the same matching IDs"
+  end
+
   test "detail batches ready venue and presenter logo outputs as presenters increase" do
     event = @events.first
     event.update!(organizer_notes: "Hinweise", show_organizer_notes: true)

@@ -3,7 +3,7 @@ module Public
     FILTER_ALL = "all".freeze
     FILTER_SKS = "sks".freeze
 
-    def initialize(scope: Event.published_live, filter: FILTER_ALL, event_date: nil, query: nil, structured: true)
+    def initialize(scope: Event.published_live, filter: FILTER_ALL, event_date: nil, query: nil, structured: true, materialize_matches: false)
       @scope = scope
       @filter = filter
       @event_date = event_date
@@ -12,6 +12,7 @@ module Public
       @compact_query = Public::Events::SearchQueryNormalizer.compact_normalize(query).presence
       @analysis = Public::Events::Search::Analyzer.call(query)
       @structured = structured
+      @materialize_matches = materialize_matches
     end
 
     def call
@@ -29,7 +30,7 @@ module Public
 
     private
 
-    attr_reader :scope, :filter, :event_date, :raw_query, :normalized_query, :compact_query, :analysis, :structured
+    attr_reader :scope, :filter, :event_date, :raw_query, :normalized_query, :compact_query, :analysis, :structured, :materialize_matches
 
     def structured?
       structured
@@ -60,7 +61,13 @@ module Public
       compact_matches = compact_query.present? ? [ compact_searchable_text.matches("%#{compact_query}%") ] : []
       predicate = (wildcard_matches + raw_matches + compact_matches).reduce { |combined, condition| combined.or(condition) }
 
-      matching_ids = relation.left_outer_joins(:genres, :sub_genres).where(predicate).select(:id)
+      matches = relation.left_outer_joins(:genres, :sub_genres).where(predicate)
+      matching_ids = if materialize_matches
+        # Count, cards and pagination share these IDs within one request.
+        matches.except(:includes, :preload, :order).distinct.pluck(:id)
+      else
+        matches.select(:id)
+      end
       relation.where(id: matching_ids)
     end
 

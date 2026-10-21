@@ -464,6 +464,32 @@ class Public::VisibleEventsQueryTest < ActiveSupport::TestCase
     assert_equal [ highlighted_event, regular_event ], result.to_a
   end
 
+  test "materialized matches preserve scope date highlights and distinct genre matches" do
+    selected_date = 14.days.from_now.to_date
+    matching_event = create_visible_event(
+      title: "Die Ärzte Rock Night", artist_name: "Die Ärzte", highlighted: true,
+      start_at: selected_date.in_time_zone.change(hour: 20)
+    )
+    matching_event.genres << genres(:rock)
+    matching_event.sub_genres << SubGenre.create!(name: "Followup Rock", slug: "followup-rock")
+    matching_event.sub_genres << SubGenre.create!(name: "Followup Rock Live", slug: "followup-rock-live")
+    create_visible_event(title: matching_event.title, artist_name: matching_event.artist_name, highlighted: false, start_at: matching_event.start_at)
+    create_visible_event(title: matching_event.title, artist_name: matching_event.artist_name, highlighted: true, start_at: matching_event.start_at + 1.day)
+    create_visible_event(title: matching_event.title, artist_name: matching_event.artist_name, highlighted: true, start_at: matching_event.start_at)
+      .update!(status: "needs_review")
+
+    [ "Die Aerzte", "Rock", "Followup Rock", "does not match" ].each do |query|
+      options = {
+        scope: Event.published_live.preload(:genres).chronological,
+        filter: Public::VisibleEventsQuery::FILTER_SKS, event_date: selected_date, query: query
+      }
+      expected_ids = query == "does not match" ? [] : [ matching_event.id ]
+
+      assert_equal expected_ids, Public::VisibleEventsQuery.new(**options).call.pluck(:id), query
+      assert_equal expected_ids, Public::VisibleEventsQuery.new(**options, materialize_matches: true).call.pluck(:id), query
+    end
+  end
+
   private
 
   def create_visible_event(title:, artist_name:, promoter_id: nil, promoter_name: nil, highlighted: false, start_at: 10.days.from_now.change(hour: 20, min: 0, sec: 0), venue_name: "Im Wizemann")

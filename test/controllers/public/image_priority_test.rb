@@ -4,9 +4,11 @@ class Public::ImagePriorityTest < ActionDispatch::IntegrationTest
   setup do
     travel_to Time.zone.local(2026, 4, 15, 12)
     @events = [ events(:published_one) ]
-    @events << @events.first.dup.tap do |event|
-      event.assign_attributes(slug: "second-priority-event", source_fingerprint: "test::second-priority", artist_name: "Published Artist Two")
-      event.save!
+    4.times do |index|
+      @events << @events.first.dup.tap do |event|
+        event.assign_attributes(slug: "priority-event-#{index}", source_fingerprint: "test::priority::#{index}", artist_name: "Published Artist #{index}")
+        event.save!
+      end
     end
     @events.each do |event|
       image = event.event_images.build(purpose: EventImage::PURPOSE_SLIDER)
@@ -18,17 +20,27 @@ class Public::ImagePriorityTest < ActionDispatch::IntegrationTest
 
   teardown { travel_back }
 
-  test "lane and search prioritize only the first card" do
+  test "initial list pages prioritize both visible mobile rows and keep later cards lazy" do
     [ highlights_lane_path, search_path(q: "Published Artist") ].each do |path|
       get path
       assert_response :success
       images = css_select(".design-preview-list-card-grid .design-preview-card-image[src]")
-      assert_equal 2, images.size
-      assert_equal "eager", images.first["loading"], path
-      assert_equal "high", images.first["fetchpriority"], path
+      assert_equal 5, images.size
+      images.first(4).each do |image|
+        assert_equal "eager", image["loading"], path
+        assert_equal "high", image["fetchpriority"], path
+      end
       assert_equal "lazy", images.last["loading"], path
       assert_nil images.last["fetchpriority"], path
     end
+  end
+
+  test "subsequent list pages do not prioritize images below the initial viewport" do
+    get homepage_lane_events_path(lane: "highlights", mode: "design_cards")
+
+    assert_response :success
+    assert_select ".design-preview-card-image[loading='lazy']", count: 5
+    assert_select ".design-preview-card-image[fetchpriority='high']", count: 0
   end
 
   test "direct subpages do not preload the homepage through the logo" do

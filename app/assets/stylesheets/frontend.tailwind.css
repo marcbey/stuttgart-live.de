@@ -1,3 +1,5 @@
+@import "./shared.tailwind.css";
+
 .newsletter-consent-page {
   margin: 0;
   background: #fff;

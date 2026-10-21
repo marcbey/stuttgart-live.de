@@ -55,7 +55,7 @@
         <%= local_font_face_stylesheet(frontend: frontend_context) %>
       </style>
     <% end %>
-    <% if compiled_asset_exists?("shared.css") %>
+    <% if !frontend_context && compiled_asset_exists?("shared.css") %>
       <%= stylesheet_link_tag "shared", "data-turbo-track": "reload" %>
     <% end %>
     <% css_asset = backend_context || auth_chrome ? "backend" : (frontend_context ? "frontend" : nil) %>

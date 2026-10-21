@@ -374,7 +374,7 @@ Die Auswahl der Homepage-Genre-Lanes wird im Backend unter `Einstellungen` aus d
 
 Die aufklappbare Genre-Liste in der Suche zeigt auf Desktop und Mobil alle öffentlichen Genres in der festgelegten Reihenfolge, unabhängig von der Auswahl der Homepage-Lanes.
 
-Öffentliche Eventlisten und Suchergebnisse starten mit höchstens 20 Kacheln und laden weitere beim Scrollen oder über „Mehr Events laden“ nach. Die Suche zeigt weiterhin die Gesamtzahl der Treffer und behält einzelne Termine einer Event-Reihe sowie ihre Trefferreihenfolge bei. „Heute in Stuttgart“ enthält ausschließlich Veranstaltungen des aktuellen Tages in der Zeitzone der Anwendung.
+Öffentliche Eventlisten und Suchergebnisse starten mit höchstens 20 Kacheln und laden weitere beim Scrollen oder über „Mehr Events laden“ nach. Die Suche zeigt weiterhin die Gesamtzahl der Treffer und behält einzelne Termine einer Event-Reihe sowie ihre Trefferreihenfolge bei. Für eine Suchanfrage wird der aufwendige Textabgleich einmal ausgeführt; Trefferzahl, Kacheln und Seitennavigation verwenden dessen Event-IDs innerhalb derselben Anfrage wieder. „Heute in Stuttgart“ enthält ausschließlich Veranstaltungen des aktuellen Tages in der Zeitzone der Anwendung.
 
 Beim Nachladen muss derselbe Kartentyp wie in der ersten Reihe verwendet werden (`design_cards`). Wenn nur die erste Reihe korrekt aussieht und weitere Reihen zusammengedrückt erscheinen, zuerst den Kartenmodus der Nachlade-Anfrage prüfen.
 
@@ -647,7 +647,7 @@ Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo 
 
 Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
 
-Der Highlight-Slider startet ohne automatische Wechsel; Pfeile und Wischen bleiben direkt bedienbar. Erst „Animation starten“ aktiviert automatische Wechsel. Die erste sichtbare Bildkarte auf Lane-, Such- und Newsseiten sowie das erste Detailbild werden bevorzugt geladen; weitere Karten bleiben verzögert. Das Logo auf Unterseiten lädt die Startseite nicht vorsorglich.
+Der Highlight-Slider startet ohne automatische Wechsel; Pfeile und Wischen bleiben direkt bedienbar. Erst „Animation starten“ aktiviert automatische Wechsel. Lane- und Suchseiten laden die ersten vier Kartenbilder bevorzugt, damit beide zunächst sichtbaren mobilen Reihen früh verfügbar sind. Weitere Karten und nachgeladene Ergebnisse bleiben verzögert. Auf Newsseiten und Eventdetails wird weiterhin jeweils das erste Bild bevorzugt geladen. Das Logo auf Unterseiten lädt die Startseite nicht vorsorglich.
 
 Das Hochformatvideo lädt seine MP4-Quelle erst ab 1536 Pixeln und nur im sichtbaren Bereich. Zwischen 1280 und 1535 Pixeln bleibt das Poster mit deaktivierten Videotasten stehen. Beim Verkleinern oder Verlassen des sichtbaren Bereichs wird die Quelle entfernt. „Daten sparen“ und die Systemeinstellung „Bewegung reduzieren“ verhindern automatisches Laden und Abspielen; ab 1536 Pixeln lässt sich die Wiedergabe ausdrücklich starten.
 
@@ -782,7 +782,7 @@ LIMIT=5 EVENT_SLUGS=mein-event mise exec -- bin/rails public_images:backfill
 
 Der Standard ist ein Dry-run ohne Downloads oder Jobs. `LIMIT` muss zwischen 1 und 100 liegen und begrenzt die Anzahl eingereihter Datensätze; optional schränken kommagetrennte `EVENT_SLUGS` oder `EVENT_IDS` die Auswahl ein. Nur veröffentlichte Events ab heute sind zugelassen. Für eine freigegebene Auswahl denselben Aufruf ausdrücklich um `DRY_RUN=false` ergänzen; die Arbeit läuft anschließend asynchron über den Worker. Zunächst wenige repräsentative Events vorbereiten, Queue, CPU, RAM, Antwortzeiten und Bilddateigrößen prüfen und erst danach den nächsten kleinen Lauf einreihen. Mehrere Backfill-Aufrufe umgehen den gemeinsamen Arbeitslock nicht. Es gibt keinen Fortschrittscursor für aufeinanderfolgende Aufrufe: Ohne gezielt wechselnde `EVENT_IDS` oder `EVENT_SLUGS` kann derselbe Anfang der Auswahl erneut eingereiht werden. Die nächste kleine Auswahl deshalb ausdrücklich angeben und erledigte Events selbst nachhalten. Presseexport und Backend-Renderer behalten ihre bestehenden synchronen Schnittstellen.
 
-Öffentliche Seiten und Backend/Auth behalten getrennte CSS- und JavaScript-Einstiege. Oswald und Archivo Narrow kommen als lokale WOFF2-Dateien aus der Asset-Pipeline; es werden keine externen Schrift-CDNs geladen. Die TTF-Dateien bleiben für serverseitige Renderjobs im Image.
+Öffentliche Seiten und Backend/Auth behalten getrennte CSS- und JavaScript-Einstiege. `frontend.css` enthält die gemeinsamen Basisstile und die öffentlichen Seitenstile, sodass öffentliche Seiten nur eine blockierende CSS-Datei anfordern. Backend und Login verwenden weiterhin `shared.css` und `backend.css`. Oswald und Archivo Narrow kommen als lokale WOFF2-Dateien aus der Asset-Pipeline; es werden keine externen Schrift-CDNs geladen. Die TTF-Dateien bleiben für serverseitige Renderjobs im Image.
 
 #### Queue-, Proxy- und Kapazitätsdiagnose auf dem CX33
 

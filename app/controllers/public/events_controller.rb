@@ -444,12 +444,13 @@ module Public
     end
 
     def search_results_relation
-      visible_events_relation(
+      @search_results_relation ||= Public::VisibleEventsQuery.new(
         scope: searchable_index_events_relation,
         filter: search_filter,
         event_date: @browse_state.event_date,
-        query: @browse_state.query
-      )
+        query: @browse_state.query,
+        materialize_matches: true
+      ).call
     end
 
     def search_redirect_path
