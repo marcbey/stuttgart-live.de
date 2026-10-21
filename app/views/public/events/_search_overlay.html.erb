@@ -1,7 +1,25 @@
 <% overlay ||= Public::Events::Search::OverlayBuilder::Result.new(mode: :idle, query: nil, events: [], suggestions: [], venues: [], genres: []) %>
 <% preview_results_only = local_assigns[:preview_results_only] == true %>
+<% navigation_target = overlay.navigation_target %>
 
-<% if overlay.parser_suggestions? %>
+<% if navigation_target.present? %>
+  <ul class="public-search-overlay-list" role="list">
+    <li>
+      <%= link_to navigation_target.public_path,
+                  class: "public-search-result public-search-result-compact",
+                  data: {
+                    public_search_result: true,
+                    action: "keydown->public-search#handleResultKeydown"
+                  } do %>
+        <span class="public-search-result-copy">
+          <strong class="public-search-result-artist"><%= navigation_target.title %></strong>
+          <span class="public-search-result-title">Alle Veranstaltungen anzeigen</span>
+        </span>
+        <span class="public-search-result-arrow" aria-hidden="true">→</span>
+      <% end %>
+    </li>
+  </ul>
+<% elsif overlay.parser_suggestions? %>
   <% if overlay.suggestions? && overlay.suggestions.any? %>
     <ul class="public-search-overlay-list" role="list">
       <% overlay.suggestions.each do |suggestion| %>
@@ -103,26 +121,8 @@
     </div>
   <% end %>
 <% else %>
-  <% show_today_link = overlay.idle? %>
-
-  <% if (show_today_link || overlay.genre_suggestions?) && !preview_results_only %>
+  <% if overlay.genre_suggestions? && !preview_results_only %>
     <ul class="public-search-overlay-list" role="list">
-      <% if show_today_link %>
-        <li>
-          <%= link_to tagestipp_lane_path,
-                      class: "public-search-result public-search-result-compact",
-                      data: {
-                        public_search_result: true,
-                        action: "keydown->public-search#handleResultKeydown"
-                      } do %>
-            <span class="public-search-result-copy">
-              <strong class="public-search-result-artist">HEUTE</strong>
-            </span>
-            <span class="public-search-result-arrow" aria-hidden="true">→</span>
-          <% end %>
-        </li>
-      <% end %>
-
       <% overlay.genres.each do |genre| %>
         <li>
           <%= link_to genre.path,
@@ -146,6 +146,7 @@
   <% end %>
 
   <% if overlay.events.any? %>
+    <h2 class="public-search-overlay-heading">UNSERE HIGHLIGHTS</h2>
     <ul class="public-search-overlay-list" role="list">
       <% overlay.events.each do |event| %>
         <li>
@@ -153,7 +154,7 @@
         </li>
       <% end %>
     </ul>
-  <% elsif !overlay.genre_suggestions? && !show_today_link %>
+  <% elsif !overlay.genre_suggestions? %>
     <div class="public-search-overlay-empty">
       <h2>Empfohlen für dich</h2>
       <p>Aktuell sind keine empfohlenen Events verfügbar.</p>

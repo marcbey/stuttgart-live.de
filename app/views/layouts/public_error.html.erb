@@ -4,13 +4,14 @@
     <title><%= content_for(:title) || "StuttgartLIVE" %></title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <meta name="referrer" content="same-origin">
+    <meta name="turbo-visit-control" content="reload">
     <link rel="icon" href="/icon.svg" type="image/svg+xml">
     <%= csp_meta_tag %>
     <%= yield :head %>
     <style data-local-font-faces><%= local_font_face_stylesheet(frontend: true) %></style>
     <%= stylesheet_link_tag "shared", "frontend" %>
   </head>
-  <body class="page-public public-error-page">
+  <body class="page-public public-error-page" data-turbo="false">
     <header class="public-error-header">
       <%= link_to root_path, aria: { label: "StuttgartLIVE Startseite" } do %>
         <%= image_tag "stuttgart-live-textlogo.svg", alt: "StuttgartLIVE", width: 180 %>

@@ -4,11 +4,11 @@ module Backend
     MANUAL_EVENT_PROMOTER_NAME = "RUSS Live".freeze
     PROMOTER_NAME_AUTOCOMPLETE_DEFAULT_LIMIT = 8
     PROMOTER_NAME_AUTOCOMPLETE_MAX_LIMIT = 20
+    helper_method :editor_return_path
 
     before_action :set_event, only: [ :show, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :set_available_merge_runs, except: :promoter_name_autocomplete
     before_action :set_inbox_state, except: :promoter_name_autocomplete
-    before_action :set_next_event_enabled, only: [ :index, :show, :new, :create, :update, :publish, :unpublish, :run_llm_enrichment ]
     before_action :load_all_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
     before_action :load_all_sub_genres, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ]
     before_action :load_all_presenters, only: [ :index, :show, :new, :create, :update, :unpublish, :run_llm_enrichment ], if: :presenter_options_required?
@@ -32,11 +32,6 @@ module Backend
       redirect_to backend_events_path(status: @inbox_state.current_status)
     end
 
-    def next_event_preference
-      @next_event_enabled = @inbox_state.persist_next_event_preference!(params[:enabled])
-      head :ok
-    end
-
     def promoter_name_autocomplete
       render json: promoter_name_autocomplete_suggestions(params[:q]).map { |name| { name: name } }
     end
@@ -56,7 +51,8 @@ module Backend
       redirect_to backend_events_path(
         status: @inbox_state.current_status,
         new: "1",
-        editor_tab: new_editor_tab_param
+        editor_tab: new_editor_tab_param,
+        return_to: params[:return_to].present? ? editor_return_path : nil
       )
     end
 
@@ -133,12 +129,11 @@ module Backend
         @selected_event = @event
         render :index, status: :unprocessable_entity
       else
-        redirect_to backend_events_path(status: @event.status, event_id: @event.id), notice: "Event wurde erstellt."
+        redirect_to backend_events_path(status: @event.status, event_id: @event.id, return_to: params[:return_to].present? ? editor_return_path : nil), notice: "Event wurde erstellt."
       end
     end
 
     def update
-      @next_event_enabled = @inbox_state.persist_next_event_preference!(params[:next_event_enabled]) if params.key?(:next_event_enabled)
       navigation_status = @inbox_state.navigation_status
       @manual_ticket_url = manual_ticket_url
       @manual_ticket_sold_out = manual_ticket_sold_out
@@ -271,6 +266,22 @@ module Backend
 
     private
 
+    def editor_return_path
+      return @editor_return_path if defined?(@editor_return_path)
+
+      candidate = params[:return_to]
+      if candidate.blank? && request.referer.present?
+        referrer = Backend::Events::ReturnPath.resolve(request.referer, base_url: request.base_url)
+        if referrer.present?
+          uri = URI.parse(referrer)
+          candidate = Rack::Utils.parse_query(uri.query)["return_to"]
+          candidate ||= referrer unless uri.path.match?(%r{\A/backend/events(?:/|\z)})
+        end
+      end
+
+      @editor_return_path = Backend::Events::ReturnPath.resolve(candidate, base_url: request.base_url) || root_path
+    end
+
     def set_inbox_state
       @inbox_state = Backend::Events::InboxState.new(
         params: params,
@@ -311,10 +322,6 @@ module Backend
       )
     end
 
-    def set_next_event_enabled
-      @next_event_enabled = @inbox_state.next_event_enabled
-    end
-
     def load_all_genres
       @all_genres = Genre.order(:name)
     end
@@ -336,7 +343,6 @@ module Backend
     def build_editor_state_builder
       Backend::Events::EditorStateBuilder.new(
         inbox_state: @inbox_state,
-        next_event_enabled: @next_event_enabled,
         event_loader: ->(event) { event_editor_relation.find_by(id: event.id) || event }
       )
     end
@@ -347,7 +353,6 @@ module Backend
         all_genres: @all_genres,
         all_sub_genres: @all_sub_genres,
         all_presenters: @all_presenters,
-        next_event_enabled: @next_event_enabled
       )
     end
 
@@ -467,6 +472,7 @@ module Backend
         :organizer_notes,
         :show_organizer_notes,
         :badge_text,
+        :price_override,
         :homepage_url,
         :instagram_url,
         :facebook_url,
@@ -611,7 +617,6 @@ module Backend
                all_genres: @all_genres,
                all_sub_genres: @all_sub_genres,
                all_presenters: @all_presenters,
-               next_event_enabled: @next_event_enabled,
                filter_status: @inbox_state.current_status,
                active_editor_tab: @active_editor_tab,
                selected_genre_ids: @selected_genre_ids,
@@ -697,7 +702,6 @@ module Backend
                 all_genres: @all_genres,
                 all_sub_genres: @all_sub_genres,
                 all_presenters: @all_presenters,
-                next_event_enabled: @next_event_enabled,
                 filter_status: event_editor_filter_status,
                 active_editor_tab: "llm_enrichment"
               }

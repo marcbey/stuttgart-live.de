@@ -8,7 +8,7 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
     @next_event = events(:needs_review_two)
   end
 
-  test "build selects next filtered event when auto-next is enabled" do
+  test "build keeps the edited event" do
     inbox_state = Backend::Events::InboxState.new(
       params: { "query" => "Review Event", "status" => "needs_review" },
       session: @session,
@@ -19,14 +19,13 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
     inbox_state.persist_filters!
 
     builder = Backend::Events::EditorStateBuilder.new(
-      inbox_state: inbox_state,
-      next_event_enabled: true
+      inbox_state: inbox_state
     )
 
     result = builder.build(preferred_event: @event, navigation_status: "needs_review")
 
     assert_equal "needs_review", result.target_status
-    assert_equal @next_event.id, result.target_event.id
+    assert_equal @event.id, result.target_event.id
   end
 
   test "selected merge run id is returned for explicit merge run filter" do
@@ -51,8 +50,7 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
     inbox_state.persist_filters!
 
     builder = Backend::Events::EditorStateBuilder.new(
-      inbox_state: inbox_state,
-      next_event_enabled: false
+      inbox_state: inbox_state
     )
 
     assert_equal merge_run.id, builder.selected_merge_run_id_for_status("needs_review")
@@ -70,8 +68,7 @@ class Backend::Events::EditorStateBuilderTest < ActiveSupport::TestCase
     inbox_state.persist_filters!
 
     builder = Backend::Events::EditorStateBuilder.new(
-      inbox_state: inbox_state,
-      next_event_enabled: false
+      inbox_state: inbox_state
     )
 
     result = builder.build(preferred_event: published_event, navigation_status: "published")

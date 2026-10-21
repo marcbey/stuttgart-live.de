@@ -1009,6 +1009,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
 
     event = Event.find_by!(artist_name: "Band Update")
     event_id = event.id
+    event.update!(price_override: "ab 49,00 €")
 
     second_raw = RawEventImport.create!(
       import_source: source,
@@ -1045,6 +1046,7 @@ class Merging::SyncFromImportsTest < ActiveSupport::TestCase
     assert_equal "Original Title", updated_event.title
     assert_equal "Porsche Arena", updated_event.venue
     assert_equal "Ausverkauft fast", updated_event.badge_text
+    assert_equal "ab 49,00 €", updated_event.price_override
     assert_equal BigDecimal("45"), updated_event.min_price
     assert_equal BigDecimal("55"), updated_event.max_price
     assert_equal [ "merged_update" ], EventChangeLog.where(

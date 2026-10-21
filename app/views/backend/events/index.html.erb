@@ -1,24 +1,23 @@
 <% content_for :title, "Redaktion" %>
 
 <section class="backend-shell backend-inbox-shell"
-         data-controller="keyboard-shortcuts next-event"
-         data-action="turbo:load@document->next-event#syncActiveFromEditor turbo:frame-load@document->next-event#syncActiveFromEditor turbo:submit-end@document->next-event#syncActiveAfterSubmit"
-         data-next-event-enabled-value="<%= @next_event_enabled %>"
-         data-next-event-preference-url-value="<%= next_event_preference_backend_events_path %>">
+         data-controller="keyboard-shortcuts event-editor-navigation"
+         data-action="turbo:load@document->event-editor-navigation#syncActiveFromEditor turbo:frame-load@document->event-editor-navigation#syncActiveFromEditor turbo:submit-end@document->event-editor-navigation#syncActiveAfterSubmit"
+         data-event-editor-navigation-return-path-value="<%= editor_return_path %>">
   <header class="backend-topbar backend-topbar-sticky backend-inbox-topbar">
     <div class="backend-topbar-title">
-      <h1>Event-Inbox</h1>
+      <%= link_to "Zurück", editor_return_path, class: "button button-secondary button-compact event-editor-back-link", data: { turbo: false } %>
+      <h1 class="sr-only">Event-Inbox</h1>
     </div>
     <div class="backend-topbar-controls backend-inbox-topbar-controls">
       <div class="backend-inbox-control-rail">
         <%= render "backend/events/topbar_editor_actions",
                    event: @selected_event,
-                   next_event_enabled: @next_event_enabled,
                    filter_status: @filters[:status] %>
         <% unless @selected_event.present? && !@selected_event.persisted? %>
-          <div class="backend-topbar-actions" data-next-event-target="newAction">
+          <div class="backend-topbar-actions" data-event-editor-navigation-target="newAction">
             <%= link_to "New",
-                        new_backend_event_path(status: @filters[:status], editor_tab: (@active_editor_tab unless @active_editor_tab == "event")),
+                        new_backend_event_path(status: @filters[:status], editor_tab: (@active_editor_tab unless @active_editor_tab == "event"), return_to: editor_return_path),
                         data: { turbo_frame: "event_editor" },
                         class: "button button-secondary button-compact" %>
           </div>
@@ -155,7 +154,6 @@
                  all_genres: @all_genres,
                  all_sub_genres: @all_sub_genres,
                  all_presenters: @all_presenters,
-                 next_event_enabled: @next_event_enabled,
                  filter_status: @filters[:status],
                  active_editor_tab: @active_editor_tab,
                  lazy_inactive_tabs: true,

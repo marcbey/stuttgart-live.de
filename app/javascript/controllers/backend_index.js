@@ -54,8 +54,8 @@ application.register("mobile-nav", MobileNavController)
 import NavOffsetController from "./nav_offset_controller"
 application.register("nav-offset", NavOffsetController)
 
-import NextEventController from "./next_event_controller"
-application.register("next-event", NextEventController)
+import EventEditorNavigationController from "./event_editor_navigation_controller"
+application.register("event-editor-navigation", EventEditorNavigationController)
 
 import PromotionBannerColorController from "./promotion_banner_color_controller"
 application.register("promotion-banner-color", PromotionBannerColorController)

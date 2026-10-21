@@ -738,6 +738,25 @@ color: #0a2324;
   }
 }
 
+@media (max-width: 47.999rem) {
+  .news-index-grid .news-index-card .news-index-card-link {
+    background: rgba(255, 255, 255, 0.72);
+    box-shadow: 0 0.35rem 0.9rem rgba(8, 9, 9, 0.055);
+    transform: none;
+  }
+
+  .news-index-grid .news-index-card--with-image .news-index-card-body {
+    position: relative;
+    padding-top: 1rem;
+  }
+
+  .news-index-grid .news-index-card .news-index-accent {
+    position: static;
+    width: 2.4rem;
+    margin-bottom: 1rem;
+  }
+}
+
 .news-index-card-newsletter .news-index-accent {
 background: linear-gradient(90deg, var(--public-accent-strong), var(--public-accent-soft));
 }
@@ -1740,15 +1759,6 @@ margin-top: 1.5rem;
 }
 
 .news-detail-author-name {
-  overflow: hidden;
-  color: var(--preview-ink, #0a2324);
-  font-size: 0.86rem;
-  font-weight: 400;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.news-detail-author-role {
   overflow: hidden;
   color: rgba(8, 9, 9, 0.58);
   font-size: 0.74rem;
@@ -2892,6 +2902,13 @@ list-style: none;
   margin: 0.65rem 1rem;
   padding: 0;
   border-top: 1px solid rgba(17, 17, 17, 0.08);
+}
+
+.public-search-overlay .public-search-overlay-heading {
+  margin: 0.65rem 1.07rem 0.2rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.2;
 }
 
 .public-search-overlay-empty {
@@ -17527,46 +17544,8 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   line-height: 1;
 }
 
-.design-preview-search-today-row {
-  position: relative;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  align-items: stretch;
-}
-
-body.page-public-design-preview .design-preview-mobile-toolbar .design-preview-search-today-link,
-body.page-public-design-preview .design-preview-header-toolbar .design-preview-search-today-link {
-  min-width: 0;
-  border-radius: 0.78rem;
-  padding-right: 0.75rem;
-}
-
-.design-preview-search-today-calendar {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  width: 2.55rem;
-  min-height: 2.9rem;
-  border: 0;
-  border-radius: 0.78rem;
-  background: transparent;
-  color: var(--preview-ink);
-  cursor: pointer;
-}
-
-.design-preview-search-today-calendar:hover,
-.design-preview-search-today-calendar:focus-visible {
-  background: rgba(8, 9, 9, 0.045);
-}
-
-.design-preview-search-today-calendar svg {
-  width: 1.15rem;
-  height: 1.15rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.design-preview-search-controls .public-search-overlay-separator {
+  margin: 0.35rem 0.72rem 0;
 }
 
 .design-preview-search-genres-dropdown {
@@ -19250,6 +19229,9 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     z-index: 72;
     display: grid;
     width: min(17rem, calc(100vw - 2rem));
+    max-height: min(28rem, calc(100dvh - 7rem));
+    overflow-y: auto;
+    overscroll-behavior: contain;
     padding: 0.45rem;
     border: 1px solid rgba(8, 9, 9, 0.12);
     border-radius: 0.72rem;
@@ -19958,6 +19940,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-card:has(.design-preview-card-status-pill) .design-preview-card-series-pill {
     margin-top: 0;
+  }
+
+  .design-preview-highlights .design-preview-card:is(.design-preview-card--poster, .design-preview-card--format, .design-preview-card--feature):has(.design-preview-card-status-pill) .design-preview-card-copy {
+    padding-bottom: 2.5rem;
   }
 
   body.page-public-design-preview .scroll-top-button {
@@ -21243,6 +21229,33 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   font-weight: 300;
 }
 
+.design-detail-preview-fact-hinweis dd {
+  flex-wrap: wrap;
+  padding-left: 1.82rem;
+}
+
+.design-detail-preview-ticket-note {
+  flex-basis: 100%;
+}
+
+.design-detail-preview-ticket-badge {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.25rem 0.65rem;
+  border-radius: 1rem;
+  background: var(--preview-ink);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  text-transform: uppercase;
+}
+
+.design-detail-preview-ticket-badge--alert {
+  background: #c62828;
+}
+
 .design-detail-preview-tags {
   display: flex;
   flex-wrap: wrap;
@@ -21607,6 +21620,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   justify-content: flex-start;
 }
 
+.design-news-preview-share .event-share-button {
+  padding-inline: 1.25rem;
+}
+
 .design-detail-preview-action-button.saved-event-button::after {
   content: "Merken";
 }
@@ -21687,6 +21704,8 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   border-color: rgba(8, 9, 9, 0.12);
   background: rgba(236, 236, 232, 0.96);
   color: rgba(8, 9, 9, 0.58);
+  -webkit-text-fill-color: rgba(8, 9, 9, 0.58);
+  opacity: 1;
   box-shadow: none;
   cursor: default;
   pointer-events: none;
@@ -22487,9 +22506,11 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-detail-preview-related .design-preview-card-copy,
 .design-detail-preview-related .design-preview-card--has-actions .design-preview-card-copy {
+  display: grid;
   gap: 0.13rem;
   min-height: 4.7rem;
   padding: 0.1rem 0.08rem 1.55rem;
+  -webkit-line-clamp: unset;
 }
 
 .design-detail-preview-related .design-preview-card-kicker,
@@ -22558,6 +22579,29 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-service-preview {
   padding-top: clamp(1.4rem, 3vw, 2.6rem);
+}
+
+.design-error-preview-message {
+  max-width: 46rem;
+  padding-block: clamp(1.5rem, 4vw, 3rem) 1.5rem;
+}
+
+.design-error-preview .public-error-hero h1 {
+  margin-block: 0.75rem;
+}
+
+.design-error-preview .public-error-recovery {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+}
+
+.design-error-preview .public-error-actions .button {
+  border-radius: 999px;
+  padding-inline: 1.5rem;
+}
+
+.design-error-preview .app-error-status {
+  color: rgba(8, 9, 9, 0.58);
 }
 
 .design-service-preview-back {
@@ -23185,6 +23229,10 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
     padding-left: var(--preview-shell-edge);
   }
 
+  body.page-public-design-preview .design-news-preview-layout--index .news-index-shell {
+    width: 100%;
+  }
+
   .design-news-preview-shell .design-news-preview-layout,
   .design-news-preview-shell .design-news-preview-article,
   .design-news-preview-shell .design-news-preview-media {
@@ -23480,6 +23528,23 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
 }
 
 @media (min-width: 48rem) {
+  .design-preview :is(.design-preview-card--standard, .design-preview-card--compact, .design-preview-card--wide):not(.design-detail-preview-related .design-preview-card) .design-preview-card-copy:has(> .design-preview-card-genre) > :not(.design-preview-card-genre) {
+    margin-left: calc(0.5rem + 1px);
+  }
+
+  .design-news-preview-highlights .design-preview-card--has-actions .design-preview-card-copy,
+  .design-detail-preview-related .design-preview-card-copy,
+  .design-detail-preview-related .design-preview-card--has-actions .design-preview-card-copy {
+    /* Leave room for the pill border while keeping the text aligned. */
+    margin-left: calc(-0.5rem - 1px);
+    padding-left: calc(0.58rem + 1px);
+  }
+
+  .design-news-preview-highlights .design-preview-card-copy .design-preview-card-genre,
+  .design-detail-preview-related .design-preview-card-copy .design-preview-card-genre {
+    margin-left: calc(-0.5rem - 1px);
+  }
+
   .page-public-design-preview .design-detail-preview-related .design-preview-card-row {
     grid-auto-rows: minmax(6.75rem, auto);
   }

@@ -1,19 +1,18 @@
 module Backend
   module Events
     class EditorResponse
-      def initialize(controller:, all_genres:, all_sub_genres:, all_presenters:, next_event_enabled:)
+      def initialize(controller:, all_genres:, all_sub_genres:, all_presenters:)
         @controller = controller
         @all_genres = all_genres
         @all_sub_genres = all_sub_genres
         @all_presenters = all_presenters
-        @next_event_enabled = next_event_enabled
       end
 
       def success(editor_state:, notice:, active_editor_tab: "event")
         controller.respond_to do |format|
           format.html do
             controller.redirect_to(
-              controller.backend_events_path(status: editor_state.target_status, event_id: editor_state.target_event&.id),
+              controller.backend_events_path(status: editor_state.target_status, event_id: editor_state.target_event&.id, return_to: controller.params[:return_to].present? ? controller.send(:editor_return_path) : nil),
               notice: notice
             )
           end
@@ -47,7 +46,7 @@ module Backend
 
       private
 
-      attr_reader :all_genres, :all_sub_genres, :all_presenters, :controller, :next_event_enabled
+      attr_reader :all_genres, :all_sub_genres, :all_presenters, :controller
 
       def success_streams(editor_state:, active_editor_tab:)
         [
@@ -62,7 +61,6 @@ module Backend
             partial: "backend/events/topbar_editor_actions",
             locals: {
               event: editor_state.target_event,
-              next_event_enabled: next_event_enabled,
               filter_status: editor_state.target_status
             }
           ),
@@ -99,7 +97,6 @@ module Backend
           all_genres: all_genres,
           all_sub_genres: all_sub_genres,
           all_presenters: all_presenters,
-          next_event_enabled: next_event_enabled,
           filter_status: filter_status,
           active_editor_tab: active_editor_tab,
           manual_ticket_url: controller.instance_variable_get(:@manual_ticket_url),

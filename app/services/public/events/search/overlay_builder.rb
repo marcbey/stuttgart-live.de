@@ -8,6 +8,10 @@ module Public
             mode == :idle
           end
 
+          def navigation_target
+            NavigationTarget.call(query) if mode == :navigation
+          end
+
           def suggestions?
             mode == :suggestions
           end
@@ -46,6 +50,10 @@ module Public
         end
 
         def call
+          if NavigationTarget.call(query)
+            return Result.new(mode: :navigation, query:, events: [], suggestions: [], venues: [], genres: [])
+          end
+
           analysis = Analyzer.call(query)
           return Result.new(mode: :idle, query: nil, events: idle_loader.call, suggestions: [], venues: [], genres: genre_loader.call) if analysis.blank?
           return Result.new(mode: :suggestions, query:, events: standard_event_loader.call, suggestions: analysis.suggestions, venues: [], genres: []) if analysis.time_incomplete?

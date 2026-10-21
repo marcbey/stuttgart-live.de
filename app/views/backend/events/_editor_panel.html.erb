@@ -1,4 +1,3 @@
-<% next_event_enabled = local_assigns.fetch(:next_event_enabled, true) %>
 <% filter_status = local_assigns[:filter_status] %>
 <% editor_status = filter_status.presence || event.status %>
 <% active_editor_tab = local_assigns[:active_editor_tab].presence || "event" %>
@@ -18,7 +17,7 @@
 <% editor_form_id = dom_id(event, :editor_form) %>
 <% editor_tab_url_attribute = lambda do |tab_key, active|
      if lazy_inactive_tabs && !active
-       url = backend_event_path(event, status: filter_status.presence, editor_tab: (tab_key == "event" ? nil : tab_key))
+       url = backend_event_path(event, status: filter_status.presence, editor_tab: (tab_key == "event" ? nil : tab_key), return_to: editor_return_path)
        %(data-event-editor-tabs-url-param="#{ERB::Util.html_escape(url)}").html_safe
      end
    end %>
@@ -26,7 +25,7 @@
 <div class="editor-panel backend-panel"
      id="event_editor_panel">
   <template class="editor-actions-template">
-    <%= render "backend/events/editor_actions", event: event, next_event_enabled: next_event_enabled, filter_status: filter_status %>
+    <%= render "backend/events/editor_actions", event: event, filter_status: filter_status %>
   </template>
 
   <header class="editor-header">
@@ -171,7 +170,6 @@
                    event: event,
                    all_genres: all_genres,
                    all_sub_genres: all_sub_genres,
-                   next_event_enabled: next_event_enabled,
                    filter_status: filter_status,
                    active_editor_tab: active_editor_tab,
                    manual_ticket_url: local_assigns[:manual_ticket_url],

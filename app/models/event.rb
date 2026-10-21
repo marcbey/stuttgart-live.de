@@ -101,6 +101,7 @@ class Event < ApplicationRecord
   validates :source_fingerprint, uniqueness: true, allow_nil: true
   validates :completeness_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100, only_integer: true }
   validates :min_price, :max_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
+  validates :price_override, length: { maximum: 100 }
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_title, length: { maximum: 120 }, allow_blank: true
   validates :promotion_banner_text, length: { maximum: 320 }, allow_blank: true
@@ -786,6 +787,7 @@ class Event < ApplicationRecord
     normalized_city = city.to_s.strip
     self.city = normalized_city.casecmp("Unbekannt").zero? ? nil : normalized_city.presence
     self.badge_text = badge_text.to_s.strip.presence
+    self.price_override = price_override.to_s.strip.presence
     self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
     self.promotion_banner_title = promotion_banner_title.to_s.strip.presence
     self.promotion_banner_text = promotion_banner_text.to_s.strip.presence

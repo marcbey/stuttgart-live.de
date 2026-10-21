@@ -297,6 +297,9 @@ module Public::EventsHelper
   end
 
   def public_event_ticket_price(event, offer = event.public_ticket_offer, format: :card)
+    if event.price_override.present? && event.public_ticket_status_label.blank?
+      return event.price_override
+    end
     return unless offer.present?
 
     if event.min_price.present? && event.max_price.present? && event.min_price < event.max_price

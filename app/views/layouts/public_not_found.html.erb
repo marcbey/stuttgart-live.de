@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="de">
+  <head>
+    <title><%= content_for(:title) || "404 | Stuttgart Live" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="referrer" content="same-origin">
+    <meta name="turbo-visit-control" content="reload">
+    <link rel="icon" href="/icon.svg" type="image/svg+xml">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <style data-local-font-faces><%= local_font_face_stylesheet(frontend: true) %></style>
+    <%= stylesheet_link_tag "shared", "frontend", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "public", "data-turbo-track": "reload", type: "module" %>
+  </head>
+  <body class="page-public page-public-newsletter-poster page-public-events-index page-public-design-preview header-color-black"
+        data-controller="consent" data-turbo="false">
+    <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
+    <main id="main-content">
+      <%= yield %>
+    </main>
+    <%= render "layouts/consent_dialog" %>
+  </body>
+</html>

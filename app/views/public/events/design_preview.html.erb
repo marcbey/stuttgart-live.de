@@ -36,7 +36,8 @@
 <% end %>
 <% genre_lanes = public_design_navigation_lanes(Array(@home_genre_lanes).first(5), highlight_events: highlights) %>
 <% all_events_path = @home_all_stuttgart_lane&.public_path || all_stuttgart_lane_path %>
-<% genre_paths = genre_lanes.map(&:public_path) %>
+<% genre_links = public_search_genre_links %>
+<% genre_paths = genre_links.map(&:last) %>
 <% active_path = request.path %>
 <% all_events_active = active_path == all_events_path %>
 <% news_active = active_path == news_index_path || active_path.start_with?("#{news_index_path}/") %>
@@ -89,15 +90,15 @@
                       ("is-active" if active_path == lane.public_path)
                     ] %>
       <% end %>
-      <% if genre_lanes.any? %>
+      <% if genre_links.any? %>
         <details class="<%= class_names("design-preview-header-genres-more", "is-active": genres_active) %>">
           <summary>
             Alle Genres
             <span aria-hidden="true"></span>
           </summary>
           <div class="design-preview-header-genres-menu">
-            <% genre_lanes.each do |lane| %>
-              <%= link_to lane.group.name, lane.public_path %>
+            <% genre_links.each do |name, path| %>
+              <%= link_to name, path %>
             <% end %>
           </div>
         </details>

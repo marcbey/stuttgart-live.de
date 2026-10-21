@@ -23,6 +23,10 @@ end %>
   <% hero_preview_slides = [ { label: "Bild", source: hero_source, alt: hero_alt, credit: hero_credit } ] %>
 <% end %>
 <% display_price = public_event_ticket_price(@event, @primary_offer, format: :detail) %>
+<% ticket_status_text = (@event.public_ticket_status_label.presence || "Tickets aktuell nicht verfügbar") unless presenter.show_ticket_link? %>
+<% ticket_badge_text = presenter.ticket_badge_text %>
+<% ticket_badge_text = nil if ticket_badge_text.to_s.casecmp("Tickets").zero? %>
+<% ticket_badge_text = nil if ticket_status_text.present? && ticket_badge_text.to_s.casecmp(ticket_status_text).zero? %>
 <% description = presenter.primary_description.presence || "Mehr Informationen zu diesem Event folgen in Kürze." %>
 <% description_plain_text = strip_tags(description).squish %>
 <% description_word_count = description_plain_text.split.size %>
@@ -295,6 +299,22 @@ end %>
             </dd>
           </div>
         <% end %>
+        <% if ticket_status_text.present? || ticket_badge_text.present? %>
+          <div class="design-detail-preview-fact design-detail-preview-fact-hinweis">
+            <dt>Tickethinweis</dt>
+            <dd>
+              <% if ticket_status_text.present? %>
+                <span id="ticket-status-note" class="design-detail-preview-ticket-badge design-detail-preview-ticket-badge--alert"><%= ticket_status_text %></span>
+              <% end %>
+              <% if ticket_badge_text.present? %>
+                <span class="design-detail-preview-ticket-badge<%= " design-detail-preview-ticket-badge--alert" if %w[Abgesagt Ausverkauft Abgelaufen].any? { |label| ticket_badge_text.casecmp(label).zero? } %>"><%= ticket_badge_text %></span>
+              <% end %>
+              <% if ticket_status_text.present? && presenter.show_ticket_special_note? %>
+                <span class="design-detail-preview-ticket-note"><%= presenter.ticket_special_note_text %></span>
+              <% end %>
+            </dd>
+          </div>
+        <% end %>
       </dl>
 
       <div class="design-detail-preview-actions event-detail-cta">
@@ -305,10 +325,7 @@ end %>
               <%= presenter.ticket_provider_label.present? ? "Bei #{presenter.ticket_provider_label}" : "Beim Ticketanbieter" %> · öffnet neuen Tab
             </p>
           <% else %>
-            <span class="design-detail-preview-action-button design-detail-preview-action-button--primary design-detail-preview-action-button--status event-detail-cta-button"><%= @event.public_ticket_status_label.presence || presenter.sold_out_note_text.presence || "Tickets aktuell nicht verfügbar" %></span>
-            <% if presenter.show_ticket_special_note? %>
-              <span class="design-detail-preview-action-note"><%= presenter.ticket_special_note_text %></span>
-            <% end %>
+            <button type="button" disabled aria-describedby="ticket-status-note" class="design-detail-preview-action-button design-detail-preview-action-button--primary design-detail-preview-action-button--status event-detail-cta-button">Tickets sichern</button>
           <% end %>
         </div>
         <%= render "public/events/saved_event_button",

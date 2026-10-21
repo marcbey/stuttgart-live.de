@@ -3694,6 +3694,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to event_url(@published_event.slug, q: @published_event.artist_name)
   end
 
+  test "search opens russ live overview regardless of capitalization and spacing" do
+    [ "Russ Live", "russ live", "RUSS LIVE", "rUsS LiVe", "  Russ   Live  " ].each do |query|
+      get search_url(q: query)
+
+      assert_redirected_to russ_live_lane_url
+    end
+  end
+
+  test "search keeps longer russ live queries as event searches" do
+    @published_event.update!(artist_name: "Russ Live in Stuttgart")
+
+    get search_url(q: "Russ Live in Stuttgart")
+
+    assert_redirected_to event_url(@published_event.slug, q: "Russ Live in Stuttgart")
+  end
+
   test "search redirects to detail page for normalized umlaut queries" do
     event = Event.create!(
       slug: "search-normalized-umlaut",
@@ -4097,6 +4113,82 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".design-detail-preview-actions #ticket-handoff-note.sr-only", text: "Bei Easy Ticket · öffnet neuen Tab", count: 1
   end
 
+  test "show displays the event banderole directly below the ticket price" do
+    @published_event.update!(badge_text: "Tickets an der Abendkasse")
+    @published_event.event_offers.create!(
+      source: "manual",
+      source_event_id: @published_event.id.to_s,
+      ticket_url: "https://tickets.example/abendkasse",
+      ticket_price_text: "25,00 EUR",
+      sold_out: false,
+      priority_rank: 1,
+      metadata: {}
+    )
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-preview-fact-preis + .design-detail-preview-fact-hinweis .design-detail-preview-ticket-badge",
+                  text: "Tickets an der Abendkasse"
+  end
+
+  test "show keeps a banderole visible without a ticket offer" do
+    @published_event.event_offers.destroy_all
+    @published_event.update!(badge_text: "Tickets an der Abendkasse")
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-preview-fact-preis", count: 0
+    assert_select ".design-detail-preview-facts .design-detail-preview-ticket-badge", text: "Tickets an der Abendkasse"
+  end
+
+  test "show omits empty and generic ticket banderoles" do
+    [ nil, "Tickets", "tickets" ].each do |label|
+      @published_event.update!(badge_text: label)
+
+      get event_url(@published_event.slug)
+
+      assert_response :success
+      assert_select ".design-detail-preview-ticket-badge:not(#ticket-status-note)", count: 0
+    end
+  end
+
+  test "show displays an unavailable notice after the location and a disabled ticket button without an offer" do
+    @published_event.event_offers.destroy_all
+    @published_event.update!(badge_text: nil)
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-preview-fact-ort + .design-detail-preview-fact-hinweis #ticket-status-note.design-detail-preview-ticket-badge--alert",
+                  text: "Tickets aktuell nicht verfügbar"
+    assert_select "button.event-detail-cta-button[disabled][aria-describedby='ticket-status-note']", text: "Tickets sichern"
+    assert_select "a.event-detail-cta-button", count: 0
+  end
+
+  test "show displays an expired notice below the location and disables the ticket button" do
+    @past_published_event.update!(badge_text: "Abgelaufen")
+    @past_published_event.event_offers.create!(
+      source: "manual",
+      source_event_id: @past_published_event.id.to_s,
+      ticket_url: "https://tickets.example/past",
+      ticket_price_text: "25,00 EUR",
+      sold_out: false,
+      priority_rank: 1,
+      metadata: {}
+    )
+
+    get event_url(@past_published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-preview-fact-ort + .design-detail-preview-fact-hinweis #ticket-status-note.design-detail-preview-ticket-badge--alert",
+                  text: "Abgelaufen"
+    assert_select ".design-detail-preview-fact-hinweis .design-detail-preview-ticket-badge", count: 1
+    assert_select "button.event-detail-cta-button[disabled]", text: "Tickets sichern"
+    assert_select "a.event-detail-cta-button", count: 0
+  end
+
   test "show explains neutral ticket handoff when a manual override has an unknown host" do
     @published_event.event_offers.create!(
       source: "manual",
@@ -4187,7 +4279,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta", count: 1
     assert_includes response.body, "Ausverkauft"
     assert_includes response.body, "Bitte bei Tickets nachfragen"
-    assert_not_includes response.body, "Tickets sichern"
+    assert_select "#ticket-status-note.design-detail-preview-ticket-badge--alert", text: "Ausverkauft"
+    assert_select "button.event-detail-cta-button[disabled]", text: "Tickets sichern"
     assert_not_includes response.body, "https://easyticket.example/sold-out-message"
     assert_select "#ticket-handoff-note", count: 0
   end
@@ -4222,7 +4315,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta", count: 1
     assert_includes response.body, "Ausverkauft"
     assert_not_includes response.body, "Bitte bei Tickets nachfragen"
-    assert_not_includes response.body, "Tickets sichern"
+    assert_select "#ticket-status-note.design-detail-preview-ticket-badge--alert", text: "Ausverkauft"
+    assert_select "button.event-detail-cta-button[disabled]", text: "Tickets sichern"
   end
 
   test "show renders generic sold out note for sold out sks events without message" do
@@ -4254,7 +4348,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-cta", count: 1
     assert_includes response.body, "Ausverkauft"
-    assert_not_includes response.body, "Tickets sichern"
+    assert_select "#ticket-status-note.design-detail-preview-ticket-badge--alert", text: "Ausverkauft"
+    assert_select "button.event-detail-cta-button[disabled]", text: "Tickets sichern"
     assert_not_includes response.body, "https://easyticket.example/sks-sold-out-without-message"
   end
 
@@ -4292,7 +4387,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta", count: 1
     assert_includes response.body, "Abgesagt"
     assert_includes response.body, "Bitte bei Tickets nachfragen"
-    assert_not_includes response.body, "Tickets sichern"
+    assert_select "#ticket-status-note.design-detail-preview-ticket-badge--alert", text: "Abgesagt"
+    assert_select "button.event-detail-cta-button[disabled]", text: "Tickets sichern"
     assert_not_includes response.body, "https://eventim.example/sks-canceled-sold-out-message"
   end
 
@@ -5660,6 +5756,18 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "Search Overlay Artist Draft"
   end
 
+  test "search overlay links to russ live overview regardless of capitalization and spacing" do
+    [ "Russ Live", "russ live", "RUSS LIVE", "rUsS LiVe", "  Russ   Live  " ].each do |query|
+      get search_overlay_events_url(q: query, preview_results_only: true)
+
+      assert_response :success
+      assert_select "a.public-search-result[href=?][data-public-search-result='true']", russ_live_lane_path do
+        assert_select ".public-search-result-artist", text: "Russ Live"
+      end
+      assert_select ".public-search-overlay-empty", count: 0
+    end
+  end
+
   test "search overlay renders genre suggestions before event matches" do
     matching_event = Event.create!(
       slug: "search-overlay-genre-match",
@@ -5691,17 +5799,15 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     genre_links = css_select("a.public-search-result.public-search-result-compact")
     assert_equal [
-      "HEUTE",
       "Pop, Indie & Singer-Songwriter",
       "Rock & Alternative",
       "Metal, Punk & Hardcore"
-    ], genre_links.first(4).map { |link| link.at_css(".public-search-result-artist").text }
+    ], genre_links.first(3).map { |link| link.at_css(".public-search-result-artist").text }
     assert_equal [
-      "/tagestipp",
       "/pop-indie-singer-songwriter",
       "/rock-alternative",
       "/metal-punk-hardcore"
-    ], genre_links.first(4).map { |link| link["href"] }
+    ], genre_links.first(3).map { |link| link["href"] }
   end
 
   test "search overlay renders phrase suggestions for incomplete structured queries" do

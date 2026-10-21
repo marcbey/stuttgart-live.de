@@ -91,3 +91,6 @@ TODO.md
 /.codex/plugins/
 /.codex/sessions/
 /.codex/tmp/
+
+# Local account note; never publish.
+/public/mamma-mia/kasch0

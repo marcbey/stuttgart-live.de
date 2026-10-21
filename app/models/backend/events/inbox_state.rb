@@ -3,7 +3,6 @@ module Backend
     class InboxState
       SESSION_FILTERS_KEY = "backend_events_inbox_filters".freeze
       SESSION_STATUS_KEY = "backend_events_inbox_status".freeze
-      SESSION_NEXT_EVENT_KEY = "backend_events_next_event_enabled".freeze
       MERGE_CHANGE_TYPES = %w[all created updated].freeze
       DEFAULT_STATUS = "published".freeze
 
@@ -59,24 +58,6 @@ module Backend
         end
 
         reset_memoized_state!
-      end
-
-      def next_event_enabled
-        return @next_event_enabled if defined?(@next_event_enabled)
-
-        value = session[SESSION_NEXT_EVENT_KEY]
-        @next_event_enabled =
-          if value.nil?
-            false
-          else
-            boolean(value)
-          end
-      end
-
-      def persist_next_event_preference!(value)
-        normalized = boolean(value)
-        session[SESSION_NEXT_EVENT_KEY] = normalized
-        @next_event_enabled = normalized
       end
 
       private

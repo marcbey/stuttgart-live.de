@@ -137,7 +137,7 @@ class Public::NewsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-back a[href='#{news_index_path}'][aria-label='Zurück']"
     assert_select "h2", text: "Artikel", count: 0
     assert_select ".event-detail-meta-line", text: /\d{2}\.\d{2}\.\d{4}/
-    assert_select ".news-detail-author-name", text: @live_post.display_author_name
+    assert_select ".news-detail-author-name", text: "von #{@live_post.display_author_name.split.first}"
     assert_select ".design-news-preview-share .event-share[data-controller='share-event'][data-share-event-url-value=?]",
                   news_url(@live_post.slug),
                   count: 1

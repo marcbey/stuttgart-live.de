@@ -130,19 +130,4 @@ class Backend::Events::InboxStateTest < ActiveSupport::TestCase
 
     assert_nil session["backend_events_inbox_filters"]
   end
-
-  test "next event preference defaults to false and persists boolean values" do
-    session = {}
-    state = Backend::Events::InboxState.new(
-      params: {},
-      session: session,
-      status_filters: @status_filters,
-      available_merge_run_ids: @available_merge_run_ids,
-      latest_successful_merge_run_id: 19
-    )
-
-    assert_equal false, state.next_event_enabled
-    assert_equal true, state.persist_next_event_preference!("1")
-    assert_equal true, session["backend_events_next_event_enabled"]
-  end
 end
