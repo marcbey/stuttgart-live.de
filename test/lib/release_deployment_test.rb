@@ -54,6 +54,31 @@ class ReleaseDeploymentTest < ActiveSupport::TestCase
     end
   end
 
+  test "PR release notification binds Sentry to the image commit instead of the controls checkout" do
+    Dir.mktmpdir do |root|
+      FileUtils.mkdir_p(File.join(root, "config"))
+      FileUtils.mkdir_p(File.join(root, "bin"))
+      File.write(File.join(root, "config/deploy.yml"), "service: stuttgart_live_de\n")
+      FileUtils.cp(Rails.root.join("bin/sentry-release"), File.join(root, "bin/sentry-release"))
+      executable = File.join(root, "bin/sentry-cli")
+      File.write(executable, "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$SENTRY_TEST_LOG\"\n")
+      FileUtils.chmod(0o700, executable)
+      log = File.join(root, "calls.log")
+      env = { "GITHUB_REPOSITORY" => "marcbey/stuttgart-live.de", "APP_ENVIRONMENT" => "staging", "SENTRY_ENVIRONMENT" => "staging",
+        "SENTRY_RELEASE" => "a" * 40, "SENTRY_AUTH_TOKEN" => "test-token", "SENTRY_TEST_LOG" => log,
+        "PATH" => "#{File.join(root, 'bin')}:#{ENV.fetch('PATH')}" }
+      code = <<~'RUBY'
+        require ARGV.shift
+        Dir.chdir(ARGV.shift)
+        Ops::ReleaseDeployment.new(destination: 'staging').notify_sentry!(commit: 'a' * 40)
+      RUBY
+      out, err, status = Open3.capture3(env, "mise", "exec", "--", "bundle", "exec", "ruby", "-e", code, Rails.root.join("script/ops/deploy_release.rb").to_s, root)
+      assert status.success?, out + err
+      assert_includes File.read(log), "releases set-commits --commit marcbey/stuttgart-live.de@#{'a' * 40} #{'a' * 40}"
+      refute_includes File.read(log), "--auto"
+    end
+  end
+
   test "post-deploy verification loads actual destination roles through Kamal" do
     Dir.mktmpdir do |root|
       FileUtils.mkdir_p(File.join(root, "config"))
@@ -77,7 +102,8 @@ class ReleaseDeploymentTest < ActiveSupport::TestCase
       code = <<~'RUBY'
         require ARGV.shift
         Dir.chdir(ARGV.shift)
-        Ops::ReleaseSupport.define_singleton_method(:capture) { |*args, **| args.first == 'git' ? 'a' * 40 : '' }
+        checkout_commit = 'a' * 40
+        Ops::ReleaseSupport.define_singleton_method(:capture) { |*args, **| args.first == 'git' ? checkout_commit : '' }
         Ops::ManagedCommand.define_singleton_method(:run) { |*| Struct.new(:success?).new(true) }
         Ops::DeploymentSmoke.define_singleton_method(:call) { |**| true }
         remote = Object.new
@@ -88,6 +114,19 @@ class ReleaseDeploymentTest < ActiveSupport::TestCase
         deployment = Ops::ReleaseDeployment.new(destination: 'staging')
         deployment.instance_variable_set(:@remote, remote)
         deployment.deploy!(commit: 'a' * 40, digest: 'sha256:' + 'b' * 64)
+        checkout_commit = 'c' * 40
+        deployment.deploy!(commit: 'a' * 40, digest: 'sha256:' + 'b' * 64, checkout_commit: checkout_commit)
+        begin
+          deployment.deploy!(commit: 'a' * 40, digest: 'sha256:' + 'b' * 64)
+          abort 'Mismatched default checkout accepted'
+        rescue Ops::ReleaseSupport::Error
+        end
+        production = Ops::ReleaseDeployment.new(destination: 'hetzner')
+        begin
+          production.deploy!(commit: 'a' * 40, digest: 'sha256:' + 'b' * 64, checkout_commit: checkout_commit)
+          abort 'Production accepted another checkout'
+        rescue Ops::ReleaseSupport::Error
+        end
       RUBY
       env = { "GITHUB_REPOSITORY" => "marcbey/stuttgart-live.de", "KAMAL_REGISTRY_PULL_PASSWORD" => "synthetic", "STAGING_HTTP_AUTH" => "stage:synthetic" }
       out, err, status = Open3.capture3(env, "mise", "exec", "--", "bundle", "exec", "ruby", "-e", code, Rails.root.join("script/ops/deploy_release.rb").to_s, root)

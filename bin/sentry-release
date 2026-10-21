@@ -130,7 +130,11 @@ if ! sentry-cli releases info "$SENTRY_RELEASE" >/dev/null 2>&1; then
   sentry-cli releases new "$SENTRY_RELEASE"
 fi
 
-sentry-cli releases set-commits --auto "$SENTRY_RELEASE"
+if [[ -n "${SENTRY_COMMIT_REFERENCE:-}" ]]; then
+  sentry-cli releases set-commits --commit "$SENTRY_COMMIT_REFERENCE" "$SENTRY_RELEASE"
+else
+  sentry-cli releases set-commits --auto "$SENTRY_RELEASE"
+fi
 sentry-cli releases finalize "$SENTRY_RELEASE"
 sentry-cli releases deploys "$SENTRY_RELEASE" new -e "$SENTRY_ENVIRONMENT"
 

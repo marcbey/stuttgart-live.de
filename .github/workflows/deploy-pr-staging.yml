@@ -1,0 +1,141 @@
+name: Deploy PR Staging
+run-name: 'PR #${{ inputs.pr_number }} auf Staging'
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Offener PR aus diesem Repository nach main mit erfolgreicher CI'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+  pull-requests: read
+  packages: read
+concurrency:
+  group: live-staging-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      packages: write
+    defaults:
+      run:
+        working-directory: release-control
+    env:
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      commit: ${{ steps.source.outputs.commit }}
+      ci_run_id: ${{ steps.source.outputs.ci_run_id }}
+      digest: ${{ steps.image.outputs.digest }}
+    steps:
+      - name: Checkout pinned main workflow helpers
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: release-control
+          persist-credentials: false
+      - uses: jdx/mise-action@v5
+        with:
+          working_directory: release-control
+      - name: Validate current PR and its latest CI through GitHub API
+        id: source
+        run: mise exec -- ruby script/ops/pr_source.rb
+      - name: Checkout only the validated PR commit for the image build
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.source.outputs.commit }}
+          path: pr-candidate
+          persist-credentials: false
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Build the PR image without deployment credentials
+        id: image
+        uses: docker/build-push-action@v7
+        with:
+          context: ./pr-candidate
+          file: ./pr-candidate/Dockerfile
+          github-token: ''
+          push: true
+          platforms: linux/amd64
+          tags: ghcr.io/marcbey/stuttgart-live-de:${{ steps.source.outputs.commit }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ steps.source.outputs.commit }}
+          cache-from: type=gha,scope=stuttgart-live-pr-amd64
+          cache-to: type=gha,scope=stuttgart-live-pr-amd64,mode=max
+  deploy:
+    name: 'PR #${{ inputs.pr_number }}: ${{ needs.build.outputs.commit }}'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+      url: https://staging.stuttgart-live.de
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read
+      packages: read
+    defaults:
+      run:
+        working-directory: release-control
+    env:
+      BUNDLE_PATH: ${{ github.workspace }}/vendor/bundle
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_IMAGE: ghcr.io/marcbey/stuttgart-live-de
+      RELEASE_DIGEST: ${{ needs.build.outputs.digest }}
+    steps:
+      - name: Checkout the same pinned main deployment controls
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          path: release-control
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: jdx/mise-action@v5
+        with:
+          working_directory: release-control
+      - name: Restore trusted deployment gems
+        uses: actions/cache@v5
+        with:
+          path: vendor/bundle
+          key: gems-v1-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('release-control/.ruby-version', 'release-control/Gemfile.lock') }}
+      - name: Install dependencies from main
+        run: mise exec -- bundle install
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4.5.2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
+      - name: Mandatory HTTP runtime checks before staging secrets
+        run: |
+          docker pull "${RELEASE_IMAGE}@${RELEASE_DIGEST}"
+          APP_IMAGE="${RELEASE_IMAGE}@${RELEASE_DIGEST}" mise exec -- ruby test/ops/nginx_runtime_check.rb
+      - name: Revalidate the PR and deploy only to staging under the shared host lock
+        env:
+          RELEASE_COMMIT: ${{ needs.build.outputs.commit }}
+          RELEASE_CI_RUN_ID: ${{ needs.build.outputs.ci_run_id }}
+          STAGING_RAILS_MASTER_KEY: ${{ secrets.STAGING_RAILS_MASTER_KEY }}
+          STAGING_PEER_RAILS_MASTER_KEY: ${{ secrets.STAGING_PEER_RAILS_MASTER_KEY }}
+          STAGING_MEDIA_PROXY_SECRET: ${{ secrets.STAGING_MEDIA_PROXY_SECRET }}
+          STAGING_BASIC_AUTH_HTPASSWD: ${{ secrets.STAGING_BASIC_AUTH_HTPASSWD }}
+          STAGING_HTTP_AUTH: ${{ secrets.STAGING_HTTP_AUTH }}
+          STAGING_SSH_PRIVATE_KEY: ${{ secrets.STAGING_SSH_PRIVATE_KEY }}
+          STAGING_KAMAL_REGISTRY_PULL_PASSWORD: ${{ secrets.STAGING_KAMAL_REGISTRY_PULL_PASSWORD }}
+          STAGING_DB_PASSWORD: ${{ secrets.STAGING_DB_PASSWORD }}
+          STAGING_SENTRY_AUTH_TOKEN: ${{ secrets.STAGING_SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        run: mise exec -- ruby script/ops/deploy_pr_staging.rb
