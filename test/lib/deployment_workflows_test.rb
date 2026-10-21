@@ -157,6 +157,56 @@ class DeploymentWorkflowsTest < ActiveSupport::TestCase
     assert_equal "main-image", upload.dig("with", "name")
   end
 
+  test "PR staging is an explicit main-only workflow and builds only the validated commit without staging secrets" do
+    assert_path_exists Rails.root.join(".github/workflows/deploy-pr-staging.yml")
+    preview = workflow("deploy-pr-staging")
+    trigger = preview["on"] || preview[true]
+    assert_equal [ "workflow_dispatch" ], trigger.keys
+    assert trigger.dig("workflow_dispatch", "inputs", "pr_number", "required")
+    assert_equal workflow("deploy-staging")["concurrency"], preview["concurrency"]
+    build = preview.fetch("jobs").fetch("build")
+    assert_equal "github.ref == 'refs/heads/main'", build["if"]
+    assert_not build.key?("environment")
+    assert_not_includes build.to_json, "secrets."
+    steps = build.fetch("steps")
+    source = steps.index { |step| step["run"].to_s.include?("pr_source.rb") }
+    candidate = steps.index { |step| step.dig("with", "path") == "pr-candidate" }
+    image = steps.index { |step| step["uses"].to_s.start_with?("docker/build-push-action@") }
+    assert source && candidate && image && source < candidate && candidate < image
+    assert_equal "${{ steps.source.outputs.commit }}", steps[candidate].dig("with", "ref")
+    assert_equal false, steps[candidate].dig("with", "persist-credentials")
+    assert_equal "./pr-candidate", steps[image].dig("with", "context")
+    assert_equal "ghcr.io/marcbey/stuttgart-live-de:${{ steps.source.outputs.commit }}", steps[image].dig("with", "tags")
+  end
+
+  test "PR deployment uses pinned main controls and staging credentials without publishing production evidence" do
+    assert_path_exists Rails.root.join(".github/workflows/deploy-pr-staging.yml")
+    preview = workflow("deploy-pr-staging")
+    deploy = preview.fetch("jobs").fetch("deploy")
+    assert_equal "build", deploy["needs"]
+    assert_equal "staging", deploy.dig("environment", "name")
+    assert_equal "read", deploy.dig("permissions", "packages")
+    steps = deploy.fetch("steps")
+    checkout = steps.find { |step| step["uses"].to_s.start_with?("actions/checkout@") }
+    assert_equal "${{ github.sha }}", checkout.dig("with", "ref")
+    assert_equal "release-control", checkout.dig("with", "path")
+    assert_equal 1, steps.count { |step| step["uses"].to_s.start_with?("actions/checkout@") }
+    assert_equal "release-control", deploy.dig("defaults", "run", "working-directory")
+    runtime = steps.index { |step| step["run"].to_s.include?("nginx_runtime_check.rb") }
+    rollout = steps.index { |step| step["run"].to_s.include?("deploy_pr_staging.rb") }
+    assert runtime && rollout && runtime < rollout
+    assert_equal "${{ needs.build.outputs.commit }}", steps[rollout].dig("env", "RELEASE_COMMIT")
+    assert_equal "${{ needs.build.outputs.ci_run_id }}", steps[rollout].dig("env", "RELEASE_CI_RUN_ID")
+    assert_equal "${{ needs.build.outputs.digest }}", deploy.dig("env", "RELEASE_DIGEST")
+    secret_names = steps.to_json.scan(/secrets\.([A-Z_]+)/).flatten
+    assert secret_names.any?
+    assert secret_names.all? { |name| name.start_with?("STAGING_") }, secret_names.inspect
+    assert_not steps.any? { |step| step["uses"].to_s.start_with?("actions/upload-artifact@") }
+    prod = workflow("deploy-production")
+    prod_trigger = prod["on"] || prod[true]
+    assert_not_includes prod_trigger.dig("workflow_run", "workflows"), preview["name"]
+  end
+
   private
 
   def script_step(job, script)

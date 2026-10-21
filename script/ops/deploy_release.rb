@@ -67,11 +67,14 @@ module Ops
       DeployLock.with_lock(host: "46.225.224.194", key_path: @key_path, &block)
     end
 
-    def deploy!(commit:, digest:)
+    def deploy!(commit:, digest:, checkout_commit: commit)
       raise ReleaseSupport::Error, "Ungültige Release-Version" unless ReleaseManifest.sha?(commit) && digest.match?(/\Asha256:[a-f0-9]{64}\z/)
+      unless ReleaseManifest.sha?(checkout_commit) && (destination == "staging" || checkout_commit == commit)
+        raise ReleaseSupport::Error, "Nur Staging darf ein PR-Image mit separaten Main-Deploy-Steuerdateien ausrollen"
+      end
       ENV["RELEASE_DIGEST"] = digest
       ENV["SENTRY_RELEASE"] = commit
-      raise ReleaseSupport::Error, "Checkout passt nicht zur Freigabe" unless ReleaseSupport.capture("git", "rev-parse", "HEAD").strip == commit
+      raise ReleaseSupport::Error, "Checkout passt nicht zur Freigabe" unless ReleaseSupport.capture("git", "rev-parse", "HEAD").strip == checkout_commit
       # The read credential can pull both private packages for the paired probe.
       ReleaseSupport.capture("docker", "login", "ghcr.io", "-u", "marcbey", "--password-stdin", input: ENV.fetch("KAMAL_REGISTRY_PULL_PASSWORD"))
       @remote.capture("docker login ghcr.io -u marcbey --password-stdin", input: ENV.fetch("KAMAL_REGISTRY_PULL_PASSWORD"))
@@ -91,21 +94,26 @@ module Ops
       DeploymentSmoke.call(host:, staging: true, auth: required("STAGING_HTTP_AUTH"))
     end
 
-    def notify_sentry!
+    def notify_sentry!(commit: nil)
       return if ENV["SENTRY_AUTH_TOKEN"].to_s.empty?
+      if commit && (!ReleaseManifest.sha?(commit) || commit != required("SENTRY_RELEASE"))
+        raise ReleaseSupport::Error, "Sentry-Commit passt nicht zum deployten Release"
+      end
+      reference = commit && "#{repository}@#{commit}"
       unless system("sh", "-c", "command -v sentry-cli >/dev/null 2>&1")
         ReleaseSupport.capture("bash", "-o", "pipefail", "-c", "curl -fsSL https://sentry.io/get-cli/ | bash")
         ENV["PATH"] = "#{File.join(Dir.home, '.local/bin')}:#{ENV.fetch('PATH')}"
       end
       if File.executable?("bin/sentry-release")
-        ReleaseSupport.capture("mise", "exec", "--", "bin/sentry-release")
+        ReleaseSupport.capture("mise", "exec", "--", "bin/sentry-release", env: { "SENTRY_COMMIT_REFERENCE" => reference })
       else
         required("SENTRY_ORG")
         required("SENTRY_PROJECT")
         release = required("SENTRY_RELEASE")
         _, _, status = Open3.capture3("sentry-cli", "releases", "info", release)
         ReleaseSupport.capture("sentry-cli", "releases", "new", release) unless status.success?
-        ReleaseSupport.capture("sentry-cli", "releases", "set-commits", "--auto", release)
+        selection = reference ? [ "--commit", reference ] : [ "--auto" ]
+        ReleaseSupport.capture("sentry-cli", "releases", "set-commits", *selection, release)
         ReleaseSupport.capture("sentry-cli", "releases", "finalize", release)
         ReleaseSupport.capture("sentry-cli", "releases", "deploys", release, "new", "-e", ENV.fetch("SENTRY_ENVIRONMENT"))
       end

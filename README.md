@@ -759,8 +759,43 @@ das Image mit dem SHA-Tag dieses Commits und hält dessen Digest im Artefakt
 `main-image` fest. Erst wenn Prüfungen und Build erfolgreich sind, startet
 `Deploy Staging`. Der Workflow checkt exakt den geprüften Commit aus, übernimmt
 das Image aus demselben CI-Lauf und prüft reale nginx-HTTP-Antworten, bevor
-Staging-Secrets bereitgestellt werden. Pull Requests veröffentlichen kein Image;
-es gibt keinen `latest`-Tag als Freigabegrundlage.
+Staging-Secrets bereitgestellt werden. Die reguläre PR-CI veröffentlicht kein
+Image; es gibt keinen `latest`-Tag als Freigabegrundlage.
+
+Für eine Vorschau vor dem Merge öffnest du **Actions → Deploy PR Staging → Run
+workflow**, lässt den Branch auf **main** und gibst die PR-Nummer ohne `#` ein.
+Der PR muss offen sein, aus diesem Repository stammen und nach `main` zeigen.
+Der neueste `Main Checks`-Lauf für seinen aktuellen Commit muss erfolgreich sein;
+Fork-PRs sind für diesen manuellen Ablauf nicht zugelassen.
+
+Ein Branch braucht dafür zunächst einen offenen Pull Request nach `main`. Der
+PR bestimmt den zu deployenden Branch; die Branch-Auswahl des Workflows bleibt
+auf `main`. Der Workflow muss zuvor selbst nach `main` übernommen worden sein.
+Nach weiteren Pushes in den PR-Branch wartest du erneut auf die grüne CI und
+startest den Workflow für dieselbe PR-Nummer noch einmal.
+
+Alternativ startest du den Deploy mit der GitHub CLI, hier für den Beispiel-PR
+`123`:
+
+```bash
+gh workflow run deploy-pr-staging.yml \
+  --repo marcbey/stuttgart-live.de --ref main -f pr_number=123
+```
+
+Der Workflow baut das App-Image des gewählten PR-Commits und prüft vor dem Deploy
+erneut PR, CI und Image-Digest. Ein inzwischen geänderter oder geschlossener PR
+benötigt einen neuen Lauf. Deploy-Steuerung, Kamal-Konfiguration und HTTP-Prüfungen
+kommen aus dem beim Workflow-Start festgelegten Main-Commit. Änderungen an diesen
+Steuerdateien werden daher erst nach ihrem Merge wirksam. Die Zusammenfassung
+des erfolgreichen Laufs verlinkt PR, CI und
+[Staging](https://staging.stuttgart-live.de/) und nennt Commit sowie Digest.
+
+PR-Vorschauen verwenden dieselbe Staging-Umgebung und dieselben Deploy-Sperren wie
+Main-Deployments. Sie ersetzen den dort laufenden Stand. Nach dem Merge wird der
+neue Main-Stand weiterhin automatisch auf Staging deployt. Ein PR-Deploy erzeugt
+keinen Produktionsnachweis und startet keine Produktionsfreigabe; dafür bleibt
+der vollständige Main-CI-/Staging-Ablauf erforderlich. Daten und bereits
+ausgeführte Migrationen werden beim Wechsel des Images nicht zurückgesetzt.
 
 Installierte Gems werden in CI, Staging und beim Produktionsdeploy anhand von
 Betriebssystem, Architektur, Ruby-Version und `Gemfile.lock` wiederverwendet.
