@@ -1,11 +1,15 @@
 require "test_helper"
 
 class Public::AssetLoadingTest < ActionDispatch::IntegrationTest
+  setup do
+    StaticPageDefaults.ensure!
+  end
+
   test "public pages load their base and surface styles through one stylesheet" do
     [ root_path, highlights_lane_path, search_path(q: "Rock"), faq_path, news_index_path, "/errors/404", "/errors/500" ].each do |path|
       get path
 
-      assert_response(path.start_with?("/errors/") ? path.delete_prefix("/errors/").to_i : :success)
+      assert_response(path.start_with?("/errors/") ? path.delete_prefix("/errors/").to_i : :success, path)
       assert_select "link[rel='stylesheet']", count: 1
       assert_select "link[rel='stylesheet'][href*='/frontend']", count: 1
     end
