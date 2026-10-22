@@ -15,11 +15,13 @@
       <% end %>
       <% if vvs_ticket %>
         <div class="design-detail-preview-vvs">
-          <button type="button"
-                  class="design-detail-preview-vvs-button"
-                  aria-label="VVS Kombiticket Informationen anzeigen">
+          <a href="https://www.vvs.de/tickets-und-abos/kombiticket"
+             target="_blank"
+             rel="noopener"
+             class="design-detail-preview-vvs-button"
+             aria-label="VVS Kombiticket – Informationen öffnen (neuer Tab)">
             <%= image_tag "vvs.png", alt: "VVS", class: "design-detail-preview-vvs-logo" %>
-          </button>
+          </a>
           <div class="design-detail-preview-vvs-popover" role="tooltip">
             <h3>VVS Kombiticket</h3>
             <p>Gilt für die An- und Abreise zur Veranstaltung im gesamten VVS-Gebiet.</p>

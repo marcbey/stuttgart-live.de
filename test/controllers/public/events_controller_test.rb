@@ -100,7 +100,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='preload'][as='font'][href*='.ttf']", count: 0
     assert_select "style[data-local-font-faces]", count: 1
     assert_select "meta[name='description'][content=?]",
-                  "Konzerte, Shows und Events in Stuttgart und Region entdecken: aktuelle Termine, Highlights, Tickets und News bei Stuttgart Live."
+                  "Konzerte, Shows und Events in Stuttgart und Region entdecken: aktuelle Termine, Highlights, Tickets und News bei STUTTGART LIVE."
     assert_select "link[rel='canonical'][href=?]", root_url
     assert_match(/"@type":"WebSite"/, response.body)
     assert_match(/"@type":"ItemList"/, response.body)
@@ -3425,7 +3425,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, tomorrow_event.artist_name
   end
 
-  test "tagestipp shows event series badge when the series is globally visible via a past event" do
+  test "tagestipp hides event series badge when only today remains" do
     today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
     series = EventSeries.create!(origin: "manual", name: "Marvel Reihe")
     today_event = Event.create!(
@@ -3474,8 +3474,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the series event to be rendered in Tagestipp"
-    assert_equal "Event-Reihe: Termine", target_card.at_css(".design-preview-card-series-pill")&.[]("title")
-    assert_equal "Termine", target_card.at_css(".design-preview-card-series-pill")&.text.to_s.strip
+    assert_nil target_card.at_css(".design-preview-card-series-pill")
   end
 
   test "index can be filtered to SKS events" do
@@ -4606,7 +4605,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
                   event_url(@published_event.slug),
                   count: 1
     assert_select ".event-share[data-share-event-title-value=?]",
-                  "Published Artist | Stuttgart Live",
+                  "Published Artist | STUTTGART LIVE",
                   count: 1
     assert_select "button.event-share-button.design-detail-preview-action-button[aria-label='Published Artist teilen'][data-action='click->share-event#share']", count: 1
     assert_select ".event-share-status[role='status'][aria-live='polite'][data-share-event-target='status']", count: 1
@@ -6604,7 +6603,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get saved_events_url
 
     assert_response :success
-    assert_select "title", text: "Stuttgart Live - Deine Events"
+    assert_select "title", text: "STUTTGART LIVE - Deine Events"
     assert_select "meta[name='robots'][content='noindex, follow']", count: 1
     assert_select "link[rel='canonical'][href=?]", saved_events_url
     assert_select ".app-nav-saved-events-link[href='#{saved_events_path}']", count: 2

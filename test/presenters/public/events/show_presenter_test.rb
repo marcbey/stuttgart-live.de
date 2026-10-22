@@ -103,7 +103,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event)
 
-    assert_equal "Band – Live | 17.06.2026 | Im Wizemann, Stuttgart | Stuttgart Live", presenter.page_title
+    assert_equal "Band – Live | 17.06.2026 | Im Wizemann, Stuttgart | STUTTGART LIVE", presenter.page_title
     assert_equal "Band – Live | 17.06.2026 | Im Wizemann, Stuttgart", presenter.meta_title
     assert_equal event.event_info.truncate(160), presenter.meta_description
     assert_equal "https://cdn.example.test/social.jpg", presenter.og_image_url

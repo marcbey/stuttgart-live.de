@@ -1,7 +1,7 @@
 <% design_preview_mode = action_name == "design_preview" %>
 <% design_homepage_canonical_url = design_preview_mode ? design_preview_url : root_url %>
-<%= render_public_seo title: (design_preview_mode ? "Stuttgart Live - Design Preview" : "Stuttgart Live - Konzerte"),
-                      description: (design_preview_mode ? "Interne Layoutvorschau für die Stuttgart Live Startseite." : Public::SeoHelper::HOMEPAGE_SEO_DESCRIPTION),
+<%= render_public_seo title: (design_preview_mode ? "STUTTGART LIVE - Design Preview" : "STUTTGART LIVE - Konzerte"),
+                      description: (design_preview_mode ? "Interne Layoutvorschau für die STUTTGART LIVE Startseite." : Public::SeoHelper::HOMEPAGE_SEO_DESCRIPTION),
                       canonical_url: design_homepage_canonical_url,
                       json_ld: (unless design_preview_mode
                         [
@@ -263,7 +263,7 @@
       </h1>
     </div>
     <div class="design-preview-hero-side">
-      <p>Stuttgart Live bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region.</p>
+      <p><%= stuttgart_live_brand_text %> bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region.</p>
       <%= link_to "#design-preview-news", class: "design-preview-text-link" do %>
         Nichts verpassen mit unserem Newsletter
         <span aria-hidden="true">↓</span>
@@ -379,14 +379,14 @@
                   </svg>
                 </button>
                 <button type="button"
-                        class="design-preview-feature-arrow design-preview-feature-toggle is-paused"
-                        aria-label="Animation starten"
-                        aria-pressed="true"
+                        class="design-preview-feature-arrow design-preview-feature-toggle"
+                        aria-label="Animation pausieren"
+                        aria-pressed="false"
                         data-design-preview-feature-slider-target="toggleButton"
                         data-action="design-preview-feature-slider#toggleAutoplay">
                   <svg class="motion-pause-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5v14M16 5v14"></path></svg>
                   <svg class="motion-play-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 10 7-10 7Z"></path></svg>
-                  <span class="sr-only" data-design-preview-feature-slider-target="toggleLabel">Animation starten</span>
+                  <span class="sr-only" data-design-preview-feature-slider-target="toggleLabel">Animation pausieren</span>
                 </button>
               </div>
             <% end %>
