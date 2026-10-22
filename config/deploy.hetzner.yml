@@ -7,6 +7,10 @@ require File.expand_path("app/lib/hetzner_deploy_config.rb", Dir.pwd)
 
 deploy_timeout: 90
 
+# Keep web and job replacement sequential to bound rollout memory overlap.
+boot:
+  parallel_roles: false
+
 # Bound combined nginx/Rails stdout per application container.
 logging:
   driver: json-file
@@ -21,8 +25,8 @@ servers:
     env:
       clear:
         PUMA_CONTROL_ENABLED: "true"
-        WEB_CONCURRENCY: 2
-        RAILS_MAX_THREADS: 3
+        WEB_CONCURRENCY: 3
+        RAILS_MAX_THREADS: 2
         DB_POOL: 3
         QUEUE_DB_POOL: 3
   job:

@@ -5,14 +5,15 @@ require "support/deploy_config_helper"
 class HetznerDeployConfigTest < ActiveSupport::TestCase
   include DeployConfigHelper
 
-  test "production log retention applies to both roles without changing canonical routing or capacity" do
+  test "production log retention applies to both roles with canonical routing and the selected web profile" do
     raw = render_deploy_config(destination: "hetzner", env: { "PRODUCTION_DOMAIN_MODE" => "live" })
     config = Kamal::Configuration.new(raw.symbolize_keys, destination: "hetzner")
     config.roles.each do |role|
       assert_includes role.logging_args, 'max-size="10m"'
       assert_includes role.logging_args, 'max-file="3"'
     end
-    assert_equal 2, raw.dig("servers", "web", "env", "clear", "WEB_CONCURRENCY")
+    assert_equal 3, raw.dig("servers", "web", "env", "clear", "WEB_CONCURRENCY")
+    assert_equal 2, raw.dig("servers", "web", "env", "clear", "RAILS_MAX_THREADS")
     assert_equal 3, raw.dig("servers", "web", "env", "clear", "DB_POOL")
     assert_equal "false", raw.dig("env", "clear", "STAGING_NOINDEX")
     assert_includes raw.dig("proxy", "hosts"), "stuttgart-live.de"
