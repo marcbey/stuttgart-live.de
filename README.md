@@ -698,6 +698,7 @@ Für Sentry gilt zusätzlich:
 - der Produktions-Container bekommt `SENTRY_ENVIRONMENT=production`
 - der Produktions-Deploy setzt `SENTRY_RELEASE` automatisch auf die deployte Git-SHA
 - nach erfolgreichem GitHub-Deploy meldet der Workflow denselben Release per `sentry-cli` an Sentry und verknüpft automatisch die Commits
+- der aktive Uptime-Monitor prüft jede Minute `https://stuttgart-live.de/up` in der Umgebung `production`; abgeschaltete Testdomains gehören nicht in diese Verfügbarkeitsprüfung
 
 Wenn du lokal sowohl entwickelst als auch Hetzner-Infrastruktur steuerst und manuell nach Produktion deployen willst, reicht aktuell in `.env` in der Regel:
 
@@ -770,7 +771,7 @@ Anonyme moderne Kartengruppen der Startseite, Eventlisten und Suche nutzen in Pr
 
 Für eine lokale Cache-Diagnose mit `mise exec -- bin/rails dev:cache` das Entwicklungscaching einschalten und den Server neu starten; nach dem Vergleich mit demselben Befehl wieder ausschalten und neu starten. Zwei identische anonyme Anfragen vergleichen und dabei Fragmenttreffer sowie Renderdauer beobachten. Zusätzliche Fragmentlogs lassen sich lokal über `config.action_controller.enable_fragment_cache_logging = true` aktivieren. Die stabilen Medienlinks laufen nicht zeitlich ab; nach einer Rotation des Signaturschlüssels müssen vorhandene Fragmente mit `Rails.cache.clear` in der betroffenen Umgebung geleert werden, damit sie sofort neue Links ausgeben.
 
-Öffentliche Bilder verwenden ausschließlich bereits fertige lokale Varianten. Neue oder ersetzte Event-, Banner- und Newsbilder werden über die Queue `public_images` vorbereitet; bis dahin bleibt die vorhandene Originalquelle sichtbar. Fehlen bei einem Newsbild sowohl Original als auch fertige Varianten im Storage, bleiben Liste und Artikel ohne Bild aufrufbar. Importbilder behalten ihre Anbieter-URL als Fallback. Automatisch werden nur Bilder bereits veröffentlichter Events ab heute heruntergeladen, auch beim Veröffentlichen eines Events; Rohimporte lösen keine Bilddownloads aus. Bei einer geänderten Quelle werden alte lokale Ausgaben sofort ignoriert. Rechteangaben, Fokus und Zoom bleiben erhalten. Logos und Bilder im Fließtext verwenden vorhandene Varianten oder ihr Original; für sie gibt es keinen neuen automatischen Backfill. PDFs und Videos im Fließtext zeigen eine vorhandene Bildvorschau; fehlt diese, erscheint ein Dateilink.
+Öffentliche Bilder verwenden ausschließlich bereits fertige lokale Varianten. Neue oder ersetzte Event-, Banner- und Newsbilder werden über die Queue `public_images` vorbereitet; bis dahin bleibt die vorhandene Originalquelle sichtbar. Fehlen bei einem Newsbild sowohl Original als auch fertige Varianten im Storage, bleiben Liste und Artikel ohne Bild aufrufbar. Importbilder behalten ihre Anbieter-URL als Fallback. Meldet ein Anbieter HTTP 404 oder 410, wird der Vorbereitungsjob ohne erneuten Versuch verworfen; vorübergehende Netzwerk- und Serverfehler werden weiterhin wiederholt. Automatisch werden nur Bilder bereits veröffentlichter Events ab heute heruntergeladen, auch beim Veröffentlichen eines Events; Rohimporte lösen keine Bilddownloads aus. Bei einer geänderten Quelle werden alte lokale Ausgaben sofort ignoriert. Rechteangaben, Fokus und Zoom bleiben erhalten. Logos und Bilder im Fließtext verwenden vorhandene Varianten oder ihr Original; für sie gibt es keinen neuen automatischen Backfill. PDFs und Videos im Fließtext zeigen eine vorhandene Bildvorschau; fehlt diese, erscheint ein Dateilink.
 
 Ein Bildjob verarbeitet höchstens vier Größen, begrenzt Eingaben auf 12 MiB und 24 Millionen Pixel und akzeptiert JPEG, PNG, WebP und GIF. Downloads haben insgesamt höchstens 25 Sekunden einschließlich DNS, Weiterleitungen und eines Wiederholungsversuchs; private Netzadressen und unsichere URLs werden abgewiesen. Netzwerkfehler werden im Hintergrund höchstens dreimal versucht. Nicht unterstützte oder beschädigte Bilder bleiben bei ihrer vorhandenen Quelle; weitere gültige Bildslots desselben Events oder Beitrags werden trotzdem vorbereitet. Die HTML-Anfrage lädt keine neue Datei vom Anbieter und erzeugt keine Bildvariante.
 
@@ -1231,6 +1232,13 @@ PostgreSQL läuft direkt auf dem Host, nicht in einem separaten Container. Die A
 - `stuttgart_live_de_production_cache`
 - `stuttgart_live_de_production_queue`
 - `stuttgart_live_de_production_cable`
+
+Automatische Bibliotheksupdates dürfen PostgreSQL nicht ungeplant neu starten:
+Die Ansible-Base-Rolle stellt deshalb den Neustart von `postgresql@16-main.service`
+durch `needrestart` gezielt zurück. Updates werden weiterhin installiert; ein
+ausstehender PostgreSQL-Neustart muss anschließend in einem abgestimmten
+Wartungsfenster für alle Apps auf dem Host nachgeholt werden. Anwendung und
+Prüfschritte sind im [Ansible-Betriebsablauf](infra/ansible/README.md) beschrieben.
 
 Für `russ-live.de` legt das Host-Setup zusätzlich getrennte Operational-Datenbanken an:
 
