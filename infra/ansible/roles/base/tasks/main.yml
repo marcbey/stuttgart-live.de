@@ -15,6 +15,26 @@
   community.general.timezone:
     name: "{{ timezone }}"
 
+- name: Verzeichnis für needrestart-Konfiguration sicherstellen
+  ansible.builtin.file:
+    path: /etc/needrestart/conf.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  tags: needrestart
+
+- name: PostgreSQL-Neustarts durch needrestart gezielt zurückstellen
+  ansible.builtin.copy:
+    dest: /etc/needrestart/conf.d/90-live-postgresql.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      $nrconf{override_rc}->{qr(^postgresql\@16-main\.service$)} = 0;
+    validate: /usr/bin/perl -c %s
+  tags: needrestart
+
 - name: Basis-Pakete installieren
   ansible.builtin.apt:
     name: "{{ base_packages }}"
