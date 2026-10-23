@@ -27,6 +27,8 @@ Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität n
 - Manuelles Social-Publishing für Event-Posts auf Facebook und Instagram
 - Newsletter-Anmeldung mit Double-Opt-In, optionalem Mailjet-Sync und redaktionellen Newsletter-Drafts
 
+Unter `/backend/users` können Admins Benutzer anlegen, bearbeiten und nach Bestätigung löschen. Der letzte Admin bleibt immer erhalten; auch seine Admin-Rolle kann nicht entfernt werden. Beim Löschen eines Benutzers werden seine Sitzungen beendet. Wer das eigene Konto löscht, wird abgemeldet; dafür muss ein weiterer Admin vorhanden sein. Benutzer mit eigenen Blogbeiträgen können nicht gelöscht werden, solange ihnen diese Beiträge zugeordnet sind. Newsletter und Social-Publishing-Verläufe bleiben erhalten. Noch wartende Social-Veröffentlichungen dieses Benutzers werden mit einem verständlichen Fehler beendet und können anschließend von einem anderen Benutzer erneut gestartet werden.
+
 ## Wie das System grob funktioniert
 
 Ein typischer Ablauf für Events sieht so aus:
