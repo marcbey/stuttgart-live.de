@@ -59,7 +59,7 @@ end %>
 <% end %>
 <% content_for :page_newsletter do %><% end %>
 <% content_for :page_partner_strip do %><% end %>
-<%= render_public_seo title: (design_detail_preview_mode ? "Detailseite Preview - Stuttgart Live" : presenter.page_title),
+<%= render_public_seo title: (design_detail_preview_mode ? "Detailseite Preview - STUTTGART LIVE" : presenter.page_title),
                       meta_title: (presenter.meta_title unless design_detail_preview_mode),
                       description: (design_detail_preview_mode ? "Interne Layoutvorschau für eine Event-Detailseite." : presenter.meta_description),
                       canonical_url: (design_detail_preview_mode ? design_preview_detail_url : presenter.canonical_url),

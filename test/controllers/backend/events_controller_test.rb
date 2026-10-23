@@ -623,8 +623,8 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#event-editor-panel-slider-images .press-checkbox-block input[name='event[publish_slider_images_on_stuttgart_live]'][type='checkbox'][checked]", count: 0
     assert_select "#event-editor-panel-slider-images trix-editor.blog-rich-text.static-page-rich-text", count: 1
     assert_select "#event-editor-panel-slider-images .form-hint", text: "Wenn kein Presse Text angegeben, wird die Event Beschreibung verwendet.", count: 1
-    assert_operator response.body.index("Presse-Bilder hochladen"), :<, response.body.index("Bilder als Slider auf Stuttgart Live veröffentlichen")
-    assert_operator response.body.index("Bilder als Slider auf Stuttgart Live veröffentlichen"), :<, response.body.index("Auf Russ Live veröffentlichen")
+    assert_operator Nokogiri::HTML.fragment(response.body).text.index("Presse-Bilder hochladen"), :<, Nokogiri::HTML.fragment(response.body).text.index("Bilder als Slider auf STUTTGARTLIVE veröffentlichen")
+    assert_operator Nokogiri::HTML.fragment(response.body).text.index("Bilder als Slider auf STUTTGARTLIVE veröffentlichen"), :<, Nokogiri::HTML.fragment(response.body).text.index("Auf Russ Live veröffentlichen")
     assert_select "[data-controller='event-image-preupload']"
     assert_select "[data-event-image-crop-preview-target='previewBox']", count: 3
     assert_includes response.body, "startDate.setHours(startDate.getHours()-1)"

@@ -9102,7 +9102,7 @@ display: block;
   border: 0;
   background: transparent;
   box-shadow: none;
-  cursor: help;
+  cursor: pointer;
   transition: transform 160ms ease;
 }
 
@@ -22158,7 +22158,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   border: 0;
   background: transparent;
   box-shadow: none;
-  cursor: help;
+  cursor: pointer;
   list-style: none;
   transition: transform 160ms ease;
 }

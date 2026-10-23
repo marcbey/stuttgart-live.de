@@ -27,6 +27,10 @@ Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität n
 - Manuelles Social-Publishing für Event-Posts auf Facebook und Instagram
 - Newsletter-Anmeldung mit Double-Opt-In, optionalem Mailjet-Sync und redaktionellen Newsletter-Drafts
 
+Der große Highlight-Slider auf der Startseite wechselt automatisch weiter, auch wenn der Mauszeiger darüber steht oder die Pfeile angeklickt wurden. Über die Pause-/Play-Taste lässt sich der automatische Wechsel steuern. Tastaturfokus pausiert den Slider; die Systemeinstellung „Bewegung reduzieren“ verhindert den automatischen Start.
+
+Fest eingebaute Markennennungen im Fließtext erscheinen als **STUTTGART**LIVE, ohne Leerzeichen und nur mit fettem „STUTTGART“. In reinen Textfeldern wie Seitentiteln, Metadaten, E-Mail-Betreff und Teilen-Texten lautet der Name „STUTTGART LIVE“. Die Header- und Footer-Logos sowie redaktionell gepflegte Seiteninhalte bleiben davon unabhängig. Das Footer-Logo steht weiterhin zweizeilig.
+
 Unter `/backend/users` können Admins Benutzer anlegen, bearbeiten und nach Bestätigung löschen. Der letzte Admin bleibt immer erhalten; auch seine Admin-Rolle kann nicht entfernt werden. Beim Löschen eines Benutzers werden seine Sitzungen beendet. Wer das eigene Konto löscht, wird abgemeldet; dafür muss ein weiterer Admin vorhanden sein. Benutzer mit eigenen Blogbeiträgen können nicht gelöscht werden, solange ihnen diese Beiträge zugeordnet sind. Newsletter und Social-Publishing-Verläufe bleiben erhalten. Noch wartende Social-Veröffentlichungen dieses Benutzers werden mit einem verständlichen Fehler beendet und können anschließend von einem anderen Benutzer erneut gestartet werden.
 
 ## Wie das System grob funktioniert
@@ -110,6 +114,8 @@ Der Ablauf ist:
 
 Im Backend gibt es für Venues einen eigenen Verwaltungsbereich unter `/backend/venues`. Die Liste startet dort bewusst leer und zeigt erst nach einer Suche Treffer an. Die Suche läuft bereits während des Tippens und aktualisiert die Trefferliste per Turbo, ohne dass die komplette Seite neu geladen werden muss. Gesucht wird nach Venue-Name, Adresse, Beschreibung und externer URL.
 
+Die Option „VVS-Ticket“ an einer Venue blendet auf den zugehörigen Event-Detailseiten das VVS-Logo mit einem erklärenden Hinweis ein. Das Logo öffnet die [VVS-Kombiticket-Seite](https://www.vvs.de/tickets-und-abos/kombiticket) in einem neuen Tab; ein eigener Link pro Venue muss nicht gepflegt werden.
+
 Auch die öffentliche Event-Suche versteht strukturierte Zeitphrasen wie `heute`, `morgen`, `diese Woche`, `dieses Wochenende` oder `am Wochenende`, kombiniert mit einer Venue wie `am Wochenende im Goldmark´s Stuttgart`. Wichtig dabei: Das Wochenende ist in dieser Suche bewusst als Freitag bis Sonntag definiert.
 
 Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Location, damit du verschiedene Termine desselben Acts unterscheiden kannst. Ohne Treffer kannst du die Suche direkt ändern oder alle Events öffnen. Deine Merkliste wird in diesem Browser gespeichert; über die Teilenfunktion kannst du sie weitergeben.
@@ -192,7 +198,7 @@ Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
 1. Beim Öffnen des Tabs existieren Instagram- und Facebook-Draft normalerweise bereits automatisch.
 2. Ein Draft baut serverseitig eine Caption aus Eventdaten und wählt ein öffentlich erreichbares Bild.
-3. Caption sowie die beiden Bildtext-Zeilen für Artist und Meta-Zeile können danach manuell angepasst werden.
+3. Caption sowie die beiden Bildtext-Zeilen für Artist und Meta-Zeile können danach manuell angepasst werden. „Status im Bild“ ist anfangs mit „NEW“ vorbelegt. Wird das Feld geleert und gespeichert, entfällt die farbige Statuswolke im Vorschaubild und im veröffentlichten Bild; das Herz bleibt sichtbar.
 4. Drafts können bei Bedarf manuell neu erzeugt werden; beim Hinzufügen oder Ändern des Eventbilds werden nicht veröffentlichte Drafts automatisch neu gebaut.
 5. Die Veröffentlichung läuft direkt aus dem jeweiligen Plattform-Draft. Status, Fehler und externe IDs werden getrennt pro Plattform am jeweiligen `EventSocialPost` gespeichert.
 
@@ -293,14 +299,14 @@ Für die Badge-Logik im Backend gilt bewusst eine redaktionelle Regel:
 
 ### Wie Event-Reihen im Frontend wirken
 
-Im öffentlichen Frontend gilt eine strengere, sichtbarkeitsbezogene Regel als im Backend. Eine Event-Reihe ist dort nur wirksam, wenn sie in der gesamten öffentlich sichtbaren Event-Menge tatsächlich mindestens zwei Events hat.
+Im öffentlichen Frontend gilt eine strengere, sichtbarkeitsbezogene Regel als im Backend. Für die Termin-Wolke auf Karten und in Listen muss eine Event-Reihe mindestens zwei öffentlich sichtbare Termine ab heute haben. Ist nur noch ein Termin übrig, entfällt die Wolke.
 
 Öffentlich sichtbar bedeutet:
 
 - `status = published`
 - `published_at <= jetzt`
 
-Dabei zählen ausdrücklich auch vergangene veröffentlichte Events mit. Die Frontend-Regel ist also global über den öffentlichen Bestand und nicht mehr auf die lokale Quellmenge einer einzelnen Lane beschränkt.
+Für die Termin-Wolke zählen alle veröffentlichten Termine ab Beginn des heutigen Tages in der Zeitzone der Anwendung, auch außerhalb der gerade angezeigten Lane. Vergangene Termine zählen dafür nicht mit; ihre Zuordnung zur Reihe und die Terminübersicht bleiben erhalten.
 
 Die konkreten Auswirkungen sind:
 
@@ -313,7 +319,7 @@ Wichtig ist der Unterschied zwischen gespeicherter Zuordnung und öffentlicher W
 
 - Eine importierte oder manuell angelegte Event-Reihe kann im Datenmodell existieren, obwohl öffentlich aktuell nur ein einziges sichtbares Event dazugehört.
 - In diesem Fall bleibt die Zuordnung im Backend sichtbar, im Frontend erscheint aber keine `Event-Reihe`-Banderole.
-- Sobald ein zweites veröffentlichtes sichtbares Event derselben Reihe vorhanden ist, wird die Reihe ohne weitere Redaktion automatisch auch öffentlich wirksam.
+- Sobald ein zweiter veröffentlichter Termin ab heute vorhanden ist, erscheint die Termin-Wolke automatisch wieder.
 
 ### Wie das LLM-Enrichment funktioniert
 
