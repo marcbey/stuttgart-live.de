@@ -22,6 +22,39 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
     assert_equal "succeeded", social_post.publish_attempts.last.status
   end
 
+  test "publishes without an audit user when the initiating account was deleted" do
+    social_post = create_approved_social_post(platform: "instagram")
+    user = users(:one)
+    user.destroy!
+
+    Meta::EventSocialPostPublisher.new(
+      platform_publishers: { "instagram" => SuccessfulPlatformPublisher.new("media-1", nil) },
+      access_status: SuccessfulAccessStatus.new
+    ).call(event_social_post: social_post, user:)
+
+    assert_equal "published", social_post.reload.status
+    assert_nil social_post.published_by_id
+    assert_nil social_post.publish_attempts.last.initiated_by_id
+    assert_equal "succeeded", social_post.publish_attempts.last.status
+  end
+
+  test "preserves a publication when its user is deleted during the platform request" do
+    social_post = create_approved_social_post(platform: "instagram")
+    user = users(:one)
+    publisher = SuccessfulPlatformPublisher.new("media-1", nil) { user.destroy! }
+
+    Meta::EventSocialPostPublisher.new(
+      platform_publishers: { "instagram" => publisher },
+      access_status: SuccessfulAccessStatus.new
+    ).call(event_social_post: social_post, user:)
+
+    assert_equal "published", social_post.reload.status
+    assert_equal "media-1", social_post.remote_media_id
+    assert_nil social_post.published_by_id
+    assert_nil social_post.publish_attempts.last.initiated_by_id
+    assert_equal "succeeded", social_post.publish_attempts.last.status
+  end
+
   test "marks the social post as failed when publishing raises" do
     social_post = create_approved_social_post(platform: "instagram")
     platform_publishers = {
@@ -152,12 +185,14 @@ class Meta::EventSocialPostPublisherTest < ActiveSupport::TestCase
   end
 
   class SuccessfulPlatformPublisher
-    def initialize(remote_media_id, remote_post_id)
+    def initialize(remote_media_id, remote_post_id, &before_response)
       @remote_media_id = remote_media_id
       @remote_post_id = remote_post_id
+      @before_response = before_response
     end
 
     def publish!(event_social_post:)
+      @before_response&.call
       Meta::InstagramPublisher::Result.new(
         remote_media_id: @remote_media_id,
         remote_post_id: @remote_post_id,
