@@ -18723,7 +18723,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   gap: 0.75rem;
 }
 
-.design-preview-footer-name {
+.design-preview-footer strong {
   display: block;
   color: var(--preview-ink);
   font-size: 1.1rem;
