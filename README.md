@@ -987,7 +987,11 @@ Die gemeinsame Architektur und die verbleibenden Betriebsnachweise stehen in
 [Betriebsrunbook](docs/operations/domainumzug-und-staging.md).
 
 Pull Requests und `main` durchlaufen die vollständigen Prüfungen mit
-`mise exec -- bin/ci`. Bei einem Push auf `main` baut ein zweiter Job parallel
+`mise exec -- bin/ci`. Meldet ein Abhängigkeitsaudit eine verwundbare Bibliothek,
+aktualisiere sie gezielt, übernimm das zugehörige Lockfile und führe die vollständige
+CI erneut aus.
+
+Bei einem Push auf `main` baut ein zweiter Job parallel
 das Image mit dem SHA-Tag dieses Commits und hält dessen Digest im Artefakt
 `main-image` fest. Erst wenn Prüfungen und Build erfolgreich sind, startet
 `Deploy Staging`. Der Workflow checkt exakt den geprüften Commit aus, übernimmt
