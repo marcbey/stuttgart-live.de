@@ -18,6 +18,8 @@ Das Repository enthält die komplette Anwendung: öffentliche Website, redaktion
 
 Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität niedrig und sorgt dafür, dass redaktionelle Abläufe, Importe und öffentliche Ausgabe auf demselben Domänenmodell arbeiten.
 
+Die öffentliche Website sperrt ältere Browser nicht anhand ihrer Versionsnummer. So können auch Geräte wie das iPhone 8 mit Safari unter iOS 16 die Inhalte aufrufen. Für Backoffice und Anmeldung gilt weiterhin die Rails-Anforderung an moderne Browser. Bei Änderungen am Frontend müssen die öffentlichen Kernfunktionen deshalb auch mit einem älteren mobilen Browserprofil geprüft werden.
+
 ## Was die Anwendung abdeckt
 
 - Öffentliche Website mit Event-Listen, Event-Detailseiten, News und statischen Inhaltsseiten
