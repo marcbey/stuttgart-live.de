@@ -4583,7 +4583,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-time-line", text: /Beginn:\s*\d{2}:\d{2}\s*Uhr/
     assert_select ".event-detail-meta-line", text: /LKA Longhorn/
     assert_select ".event-detail-time-line", text: /Einlass/, count: 0
-    assert_includes response.body, "Preis: 45 EUR"
+    assert_includes response.body, "Preis: 45 €"
     assert_select ".event-detail-tag", text: "Jazz, Blues & Soul"
     assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
     assert_select ".event-detail-tag", text: "Rock & Alternative"

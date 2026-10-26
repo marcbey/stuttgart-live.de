@@ -2990,7 +2990,7 @@ display: block;
   display: grid;
   gap: 0.1rem;
   color: rgba(8, 9, 9, 0.76);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 400;
   line-height: 1.3;
 }
@@ -3784,14 +3784,14 @@ position: static;
 .genre-lane-card-date {
 margin: 0;
   color: var(--ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
 }
 
 .genre-lane-card-date--editorial {
-font-size: 0.9rem;
+font-size: 1rem;
   color: var(--ink);
 }
 
@@ -3827,7 +3827,7 @@ display: flex;
   min-width: 0;
   overflow: hidden;
   color: var(--ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.18;
   white-space: nowrap;
 }
@@ -3872,7 +3872,7 @@ display: -webkit-box;
   overflow: hidden;
   margin: 0;
   color: var(--ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.18;
 }
 
@@ -3897,7 +3897,7 @@ min-width: 0;
 }
 
 .genre-lane-card-title--editorial {
-font-size: 0.9rem;
+font-size: 1rem;
   color: var(--ink);
 }
 
@@ -6535,7 +6535,7 @@ display: flex;
   gap: 0.45rem;
   margin: 0;
   min-width: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.15;
 }
 
@@ -6550,7 +6550,7 @@ display: grid;
 .event-listing-price {
 margin: 0;
   margin-right: 0.5rem;
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.2;
   flex: 0 0 auto;
   font-weight: 700;
@@ -6650,7 +6650,7 @@ font-size: 1.05rem;
 
 .event-listing-link span {
 color: var(--ink-soft);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1.18;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -8222,7 +8222,7 @@ display: inline-flex;
   color: #0a2324;
   flex: 0 0 auto;
   font-family: "Archivo Narrow", "Arial Narrow", sans-serif;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1;
   text-decoration: none;
@@ -9248,7 +9248,7 @@ display: flex;
   min-width: 0;
   overflow: hidden;
   gap: 0.2rem 0.45rem;
-  font-size: 0.8rem;
+  font-size: 1rem;
   white-space: nowrap;
 }
 
@@ -9286,7 +9286,7 @@ font-size: 1rem;
 }
 
 .event-detail-related-list .event-listing-link span {
-font-size: 0.82rem;
+font-size: 1rem;
   line-height: 1.14;
   display: block;
   overflow: hidden;
@@ -15028,7 +15028,7 @@ body.page-public-design-preview .design-preview-header-toolbar .public-search-ov
 
 .design-preview-menu-nav {
   display: grid;
-  gap: 0.75rem;
+  gap: 1.25rem;
   padding: 0.8rem 0.8rem 0.65rem;
 }
 
@@ -15038,9 +15038,10 @@ body.page-public-design-preview .design-preview-header-toolbar .public-search-ov
 }
 
 .design-preview-menu-group h2 {
-  padding: 0 0.3rem;
+  padding: 0 0.3rem 0.4rem;
+  border-bottom: 1px solid rgba(8, 9, 9, 0.18);
   color: rgba(8, 9, 9, 0.48);
-  font-size: 0.68rem;
+  font-size: 0.98rem;
   font-weight: 400;
   line-height: 1;
   text-transform: uppercase;
@@ -16780,7 +16781,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 .design-preview-news-lane-newsletter-copy span {
   max-width: 35rem;
   color: rgba(8, 35, 36, 0.72);
-  font-size: clamp(0.78rem, 0.82vw, 0.9rem);
+  font-size: clamp(0.78rem, 0.82vw, 1rem);
   font-weight: 300;
   line-height: 1.25;
 }
@@ -17550,7 +17551,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 }
 
 .design-preview-search-controls .public-search-result-artist {
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1;
 }
@@ -17600,7 +17601,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   min-height: 2.25rem;
   border-radius: 0.5rem;
   color: var(--preview-ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 400;
   text-decoration: none;
 }
@@ -17614,7 +17615,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   display: none;
   gap: 0;
   color: var(--preview-ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 0.9;
   text-decoration: none;
@@ -17755,7 +17756,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   padding: 0.65rem 0.75rem;
   border-radius: 0.35rem;
   color: var(--preview-ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1.1;
   text-decoration: none;
@@ -18475,9 +18476,15 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   }
 }
 
-.stuttgart-event-day strong,
-.all-stuttgart-event-day strong {
+.stuttgart-event-day strong {
   font-size: 2rem;
+}
+
+.all-stuttgart-event-day:not(.all-stuttgart-event-day--time) strong {
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.16;
+  white-space: nowrap;
 }
 
 .all-stuttgart-event-day--time strong {
@@ -18505,7 +18512,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   padding: 0.65rem 0.75rem;
   border-radius: 0.35rem;
   color: var(--preview-ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1.1;
   text-decoration: none;
@@ -18927,7 +18934,7 @@ body.page-public-newsletter-poster .design-preview-footer > .newsletter-signup-s
 .design-preview-footer a {
   min-height: 1.55rem;
   color: var(--preview-muted);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 400;
   text-decoration: none;
   transition: color 160ms ease, transform 160ms ease;
@@ -18943,7 +18950,7 @@ body.page-public-newsletter-poster .design-preview-footer > .newsletter-signup-s
   background: transparent;
   color: var(--preview-muted);
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 400;
   text-align: left;
   cursor: pointer;
@@ -19596,7 +19603,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     display: inline-flex;
     align-items: center;
     color: rgba(8, 9, 9, 0.58);
-    font-size: 0.9rem;
+    font-size: 1rem;
     font-weight: 700;
     line-height: 1;
     text-transform: uppercase;
@@ -21201,7 +21208,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   gap: 0.62rem;
   margin: 0;
   color: var(--preview-ink);
-  font-size: 0.96rem;
+  font-size: 1.04rem;
   font-weight: 300;
   line-height: 1.18;
 }
@@ -21278,14 +21285,14 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-detail-preview-tag {
   display: inline-flex;
-  min-height: 1.75rem;
+  min-height: 2rem;
   align-items: center;
-  padding: 0 0.64rem;
-  border: 1px solid rgba(8, 9, 9, 0.18);
+  padding: 0.25rem 0.64rem;
+  border: 1px solid rgba(0, 197, 204, 0.24);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.42);
+  background: var(--preview-turquoise-soft);
   color: rgba(8, 9, 9, 0.74);
-  font-size: 0.72rem;
+  font-size: 0.86rem;
   font-weight: 400;
   line-height: 1;
   text-decoration: none;
@@ -21315,7 +21322,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   align-items: center;
   transform: translateY(-2px);
   color: var(--preview-saved);
-  font-size: 0.9rem;
+  font-size: 1rem;
   line-height: 1;
 }
 
@@ -21332,7 +21339,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   min-height: 1.75rem;
   align-items: center;
   color: inherit;
-  font-size: 0.72rem;
+  font-size: 0.86rem;
   font-weight: 300;
   line-height: 1;
 }
@@ -21541,7 +21548,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   border-radius: 999px;
   background: var(--preview-ink);
   color: #fff;
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 400;
   line-height: 1;
   text-align: center;
@@ -21920,7 +21927,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   display: grid;
   gap: 0.85rem;
   color: var(--preview-ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 300;
   line-height: 1.5rem;
   text-wrap: pretty;
@@ -21967,7 +21974,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   max-width: 70ch;
   padding-left: 0.95rem;
   font-size: 1rem;
-  font-weight: 400;
+  font-weight: 300;
   line-height: 1.6;
 }
 
@@ -22019,7 +22026,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-series .event-detail-series-terms h2,
 .design-detail-preview-related .design-preview-section-header h2 {
   color: var(--preview-ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 400;
   line-height: 1;
   text-transform: uppercase;
@@ -22051,7 +22058,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.72);
   color: var(--preview-ink);
-  font-size: 0.78rem;
+  font-size: 0.89rem;
   font-weight: 400;
   line-height: 1;
   text-decoration: none;
@@ -22113,7 +22120,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-location p {
   margin: 0;
   color: var(--preview-ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 300;
   line-height: 1.34;
 }
@@ -22126,7 +22133,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-location .design-detail-preview-location-name {
   margin: 0;
   color: var(--preview-ink);
-  font-size: 0.9rem;
+  font-size: 1rem;
   font-weight: 700;
   line-height: 1.24;
 }
@@ -22260,7 +22267,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-detail-preview-notes .design-detail-preview-flow {
   gap: 0.4rem;
-  font-size: 0.88rem;
+  font-size: 1rem;
   line-height: 1.34;
 }
 
@@ -22269,7 +22276,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   margin: 0.32rem 0 -0.22rem;
   color: var(--preview-ink);
   font-family: "Oswald", "Arial Narrow", sans-serif;
-  font-size: 0.84rem;
+  font-size: 1rem;
   font-weight: 700;
   letter-spacing: 0;
   line-height: 1.12;
@@ -22297,7 +22304,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-detail-preview-notes li {
   color: var(--preview-ink);
-  font-size: 0.84rem;
+  font-size: 1rem;
   font-weight: 300;
   line-height: 1.24;
 }
@@ -22321,8 +22328,8 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-organizer-brand img {
   display: block;
   width: auto;
-  max-width: min(11rem, 72%);
-  max-height: 2.4rem;
+  max-width: min(14rem, 100%);
+  max-height: 3rem;
   object-fit: contain;
   opacity: 0.62;
   filter: grayscale(1);
@@ -22346,15 +22353,18 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-notes .event-detail-organizer-partner-grid {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
   gap: 0.5rem;
 }
 
 .design-detail-preview-notes .event-detail-organizer-partner {
   display: inline-grid;
-  min-width: 4.6rem;
-  min-height: 2.2rem;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
   place-items: center;
-  padding: 0.35rem 0.48rem;
+  padding: 10px;
   border: 1px solid rgba(8, 9, 9, 0.1);
   border-radius: 0.4rem;
   background: rgba(255, 255, 255, 0.66);
@@ -22362,8 +22372,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
 .design-detail-preview-notes .event-detail-organizer-partner-image {
   display: block;
-  max-width: 5.6rem;
-  max-height: 1.8rem;
+  width: auto;
+  height: auto;
+  max-width: min(8rem, 100%);
+  max-height: 3rem;
   object-fit: contain;
 }
 
@@ -22534,7 +22546,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-related .design-preview-card-title {
   display: -webkit-box;
   overflow: hidden;
-  font-size: clamp(0.78rem, 2.6vw, 0.95rem);
+  font-size: 1rem;
   line-height: 1.08;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -22542,13 +22554,26 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 }
 
 .design-detail-preview-related .design-preview-card-meta {
-  font-size: 0.62rem;
+  font-size: 1rem;
   line-height: 1.12;
 }
 
-.design-detail-preview-related .design-preview-card-date-location-row {
-  display: grid;
-  gap: 0.06rem;
+.design-detail-preview-related .design-preview-card-copy .design-preview-card-date-location-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.08rem 0.35rem;
+}
+
+.design-detail-preview-related .design-preview-card-copy .design-preview-card-date-location-row .design-preview-card-date {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+.design-detail-preview-related .design-preview-card-copy .design-preview-card-date-location-row .design-preview-card-location {
+  flex: 0 1 auto;
+  width: auto;
+  max-width: 100%;
 }
 
 .design-detail-preview-related .design-preview-card-location {
@@ -23025,7 +23050,7 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
   .design-detail-preview-image-subtitle {
     max-width: 20rem;
     color: rgba(255, 255, 255, 0.94);
-    font-size: clamp(0.9rem, 5.1vw, 1.16rem);
+    font-size: clamp(1rem, 5.1vw, 1.16rem);
     font-weight: 300;
     line-height: 1.02;
   }
@@ -23528,12 +23553,18 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
 
 .design-detail-preview-related .design-preview-card-copy .design-preview-card-kicker,
 .design-detail-preview-related .design-preview-card-title,
-.design-detail-preview-related .design-preview-card-subtitle,
-.design-detail-preview-related .design-preview-card-meta {
+.design-detail-preview-related .design-preview-card-subtitle {
+  font-size: 1rem;
   max-width: calc(100% - var(--preview-card-control-size) - 1rem);
 }
 
+.design-detail-preview-related .design-preview-card-meta {
+  font-size: 1rem;
+  max-width: 100%;
+}
+
 .design-detail-preview-related .design-preview-card-copy .design-preview-card-price--body {
+  font-size: 1rem;
   margin-top: 0.15rem;
   margin-bottom: 0.35rem;
 }
@@ -23599,7 +23630,7 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
   .design-detail-preview-related .design-preview-card-meta,
   .design-detail-preview-related .design-preview-card-date,
   .design-detail-preview-related .design-preview-card-location {
-    font-size: 0.84rem;
+    font-size: 1rem;
     line-height: 1.18;
   }
 }
@@ -23661,5 +23692,23 @@ body.page-public .design-preview .public-search-clear {
   .design-preview-lane-arrow {
     min-width: 2.75rem;
     min-height: 2.75rem;
+  }
+}
+
+/* Genre labels add information only when a collection contains different genres. */
+[data-genres-mixed="false"] [data-genre-labels-target~="label"],
+[data-genres-mixed="false"] [data-genre-labels-target~="heading"] {
+  display: none !important;
+}
+
+@media (min-width: 68.75rem) {
+  .all-stuttgart-event-list[data-genres-mixed="false"] .all-stuttgart-event-list-head,
+  .all-stuttgart-event-list[data-genres-mixed="false"] .all-stuttgart-event-row {
+    grid-template-columns:
+      minmax(3.5rem, 0.34fr)
+      minmax(12rem, 1.55fr)
+      minmax(10rem, 1.1fr)
+      minmax(6rem, 0.62fr)
+      minmax(12rem, max-content);
   }
 }

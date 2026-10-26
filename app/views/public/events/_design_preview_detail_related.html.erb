@@ -8,7 +8,7 @@
   <div class="design-preview-section-header">
     <h2 id="<%= title_id %>"><%= title %></h2>
   </div>
-  <div class="design-preview-card-row">
+  <div data-controller="genre-labels" class="design-preview-card-row">
     <% related_preview_events.each do |event| %>
       <%= render "public/events/design_preview_card",
                  event: event,
