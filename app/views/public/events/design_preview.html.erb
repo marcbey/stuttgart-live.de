@@ -295,7 +295,7 @@
              data-design-preview-feature-slider-interval-value="4200"
              data-design-preview-feature-slider-duration-value="560">
           <div class="design-preview-feature-slider">
-            <div class="design-preview-feature-track" data-design-preview-feature-slider-target="track" data-homepage-lane-target="track">
+            <div data-controller="genre-labels" class="design-preview-feature-track" data-design-preview-feature-slider-target="track" data-homepage-lane-target="track">
               <% if design_preview_video_slide_enabled %>
                 <div class="design-preview-feature-slide" data-design-preview-slide-interval="12000">
                   <article class="design-preview-card design-preview-card--feature design-preview-banner-card design-preview-video-card" data-controller="video-sound">
@@ -397,7 +397,7 @@
         <% highlight_cards_cache_key = public_events_fragment_cache_key(section: "modern-highlight-cards", events: highlight_events, browse_state: @browse_state, context: highlight_cards_context) if controller.perform_caching && !authenticated? %>
         <% cache_if highlight_cards_cache_key.present?, highlight_cards_cache_key, expires_in: 15.minutes do %>
         <% if highlight_events.any? %>
-          <div class="design-preview-mobile-highlight-row" aria-label="Weitere Highlights">
+          <div data-controller="genre-labels" class="design-preview-mobile-highlight-row" aria-label="Weitere Highlights">
             <% highlight_events.each do |event| %>
               <%= render "design_preview_card",
                          event: event,
@@ -414,7 +414,7 @@
         <% end %>
 
         <% if highlight_tiles.any? %>
-          <div class="design-preview-format-grid" aria-label="Aktuelle Highlight-Events">
+          <div data-controller="genre-labels" class="design-preview-format-grid" aria-label="Aktuelle Highlight-Events">
             <% highlight_tiles.each do |tile| %>
               <% card_slot = card_slot_for_grid_variant(tile.grid_variant) %>
               <% tile_width, tile_height = public_design_grid_variant_dimensions(tile.grid_variant) %>
@@ -460,6 +460,7 @@
                    browse_state: @browse_state,
                    strict_proxy: strict_proxy,
                    setting: AppSetting.homepage_highlight_video_record,
+                   fallback_href: event_path("lea-2027-04-25", **@browse_state.route_params),
                    fallback_video: asset_path("design_preview/lea-portrait.mp4"),
                    fallback_poster: asset_path("design_preview/lea-portrait-poster.jpg") %>
       </div>
@@ -510,7 +511,7 @@
           <h2 id="design-preview-genre-lane-<%= lane.group.slug %>"><%= lane.group.name %></h2>
         <% end %>
       </div>
-      <div class="design-preview-card-row" data-homepage-lane-target="track">
+      <div data-controller="genre-labels" class="design-preview-card-row" data-homepage-lane-target="track">
         <% if lane.events.any? %>
           <%= render "design_preview_event_grid",
                      events: lane.events,

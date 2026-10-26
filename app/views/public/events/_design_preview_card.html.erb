@@ -2,7 +2,7 @@
 <% strict_proxy = local_assigns.fetch(:strict_proxy, false) %>
 <% image_priority = local_assigns.fetch(:image_priority, false) %>
 <% variant = local_assigns.fetch(:variant, "standard") %>
-<% category = event.primary_genre&.name.presence || event.badge_text.presence || "Event" %>
+<% category = event.primary_genre&.name.presence %>
 <% tile_variant = local_assigns[:tile_variant].presence || (variant == "wide" ? EventImage::GRID_VARIANT_2X1 : EventImage::GRID_VARIANT_1X1) %>
 <% image_slot = (local_assigns[:card_slot].presence || card_slot_for_grid_variant(tile_variant)).to_sym %>
 <% event_image = event.image_for(slot: image_slot, breakpoint: :desktop) || event.image_for(slot: :grid_default, breakpoint: :desktop) %>
@@ -57,8 +57,8 @@
     </span>
 
     <span class="design-preview-card-copy">
-      <% if show_card_kicker %>
-        <span class="design-preview-card-kicker design-preview-card-genre"><%= category %></span>
+      <% if show_card_kicker && category.present? %>
+        <span class="design-preview-card-kicker design-preview-card-genre" data-genre-labels-target="label" data-genre-name="<%= category %>"><%= category %></span>
       <% end %>
       <strong class="design-preview-card-title"><%= event.artist_name %></strong>
       <% if event.title.present? %>
