@@ -4795,6 +4795,46 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-related-list", count: 0
   end
 
+  test "highlight series exposes every upcoming term and keeps ordinary series compact" do
+    series = EventSeries.create!(origin: "manual", name: "Highlight Termine")
+    @published_event.update!(event_series: series, event_series_assignment: "manual", highlighted: true)
+    terms = 7.times.map do |index|
+      Event.create!(
+        slug: "highlight-term-#{index}",
+        source_fingerprint: "test::highlight-term::#{index}",
+        title: "Highlight Vorstellung", artist_name: "Highlight Artist",
+        start_at: (index + 2).days.from_now.change(hour: 15, min: 30),
+        venue: "Porsche-Arena", city: "Stuttgart", status: "published",
+        published_at: 1.day.ago, event_series: series,
+        event_series_assignment: "manual", source_snapshot: {}
+      )
+    end
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-highlight-term", count: 8
+    assert_select ".design-detail-highlight-term-select option", count: 8
+    assert_select ".design-detail-highlight-term-select option[selected][value=?]", event_path(@published_event.slug), count: 1
+    assert_select ".design-detail-highlight-term[aria-current='page']", count: 1
+    assert_select ".design-detail-preview-date-series", count: 1
+    terms.each do |term|
+      assert_select ".design-detail-highlight-term[href=?]", event_path(term.slug)
+    end
+    assert_select ".design-detail-highlight-term-time", text: "15:30 Uhr", count: 7
+
+    @published_event.update!(highlighted: false)
+    get event_url(@published_event.slug)
+    assert_response :success
+    assert_select ".design-detail-highlight-terms", count: 0
+    assert_select ".design-detail-preview-date-series", count: 1
+
+    @published_event.update!(highlighted: true, event_series: nil, event_series_assignment: "manual_none")
+    get event_url(@published_event.slug)
+    assert_response :success
+    assert_select ".design-detail-highlight-terms", count: 0
+  end
+
   test "show renders compact upcoming event series terms below the ticket cta" do
     create_homepage_genre_snapshot
     build_homepage_genre_enrichment(event: @published_event, genres: [ "Rock" ])

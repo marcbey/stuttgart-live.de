@@ -1,0 +1,27 @@
+<% terms = (event_series_lane.events + [event]).uniq(&:id).sort_by { |term| [term.start_at, term.id] } %>
+<nav class="design-detail-highlight-terms" aria-label="Alle Termine dieser Veranstaltung">
+  <h2>Alle Termine</h2>
+  <select class="design-detail-highlight-term-select"
+          aria-label="Vorstellung auswählen"
+          data-controller="event-term-select"
+          data-action="change->event-term-select#navigate">
+    <% terms.each do |term| %>
+      <% time_format = term.start_at.min.zero? ? "%d.%m.%Y · %H Uhr" : "%d.%m.%Y · %H:%M Uhr" %>
+      <option value="<%= public_event_detail_path(term, browse_state) %>" <%= "selected" if term.id == event.id %>><%= l(term.start_at, format: time_format) %></option>
+    <% end %>
+  </select>
+  <ul class="design-detail-highlight-term-list">
+    <% terms.each do |term| %>
+      <li>
+        <%= link_to public_event_detail_path(term, browse_state),
+                    class: "design-detail-highlight-term",
+                    aria: { current: ("page" if term.id == event.id) } do %>
+          <time datetime="<%= term.start_at.iso8601 %>">
+            <span><%= l(term.start_at, format: "%d.%m.%Y") %></span>
+            <span class="design-detail-highlight-term-time"><%= l(term.start_at, format: term.start_at.min.zero? ? "%H Uhr" : "%H:%M Uhr") %></span>
+          </time>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+</nav>
