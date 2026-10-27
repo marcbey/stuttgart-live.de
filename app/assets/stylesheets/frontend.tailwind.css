@@ -21443,12 +21443,16 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-date-series .event-detail-series-more-summary {
   min-height: 1.34rem;
   gap: 0.3rem;
-  padding: 0 0.46rem 0 0.22rem;
+  padding: 0 0.7rem 0 0.46rem;
   border-color: rgba(0, 197, 204, 0.2);
   background: rgba(0, 197, 204, 0.12);
   color: var(--preview-ink);
   font-size: 0.78rem;
   line-height: 1;
+}
+
+.design-detail-preview-date-series .event-detail-series-more-summary > span:first-child {
+  transform: translateY(1px);
 }
 
 .design-detail-preview-date-series .event-detail-series-more-summary:hover,
@@ -21670,10 +21674,11 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-preview .design-detail-highlight-term[aria-current="page"] {
   background: #d5d8d8;
   border-color: #b8bcbc;
-  color: #0b2526 !important;
+  color: #626868 !important;
+  cursor: default;
 }
 
-.design-preview .design-detail-highlight-term:hover {
+.design-preview a.design-detail-highlight-term:hover {
   background: #c6caca;
   color: #0b2526 !important;
 }

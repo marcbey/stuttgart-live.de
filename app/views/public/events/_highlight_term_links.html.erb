@@ -12,10 +12,12 @@
   </select>
   <ul class="design-detail-highlight-term-list">
     <% terms.each do |term| %>
+      <% current_term = term.id == event.id %>
       <li>
-        <%= link_to public_event_detail_path(term, browse_state),
-                    class: "design-detail-highlight-term",
-                    aria: { current: ("page" if term.id == event.id) } do %>
+        <%= content_tag(current_term ? :span : :a,
+                        class: "design-detail-highlight-term",
+                        href: (public_event_detail_path(term, browse_state) unless current_term),
+                        aria: { current: ("page" if current_term) }) do %>
           <time datetime="<%= term.start_at.iso8601 %>">
             <span><%= l(term.start_at, format: "%d.%m.%Y") %></span>
             <span class="design-detail-highlight-term-time"><%= l(term.start_at, format: term.start_at.min.zero? ? "%H Uhr" : "%H:%M Uhr") %></span>

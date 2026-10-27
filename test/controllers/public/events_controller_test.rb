@@ -4816,7 +4816,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".design-detail-highlight-term", count: 8
     assert_select ".design-detail-highlight-term-select option", count: 8
     assert_select ".design-detail-highlight-term-select option[selected][value=?]", event_path(@published_event.slug), count: 1
-    assert_select ".design-detail-highlight-term[aria-current='page']", count: 1
+    assert_select "span.design-detail-highlight-term[aria-current='page']", count: 1
+    assert_select "a.design-detail-highlight-term[aria-current='page']", count: 0
+    assert_select ".design-detail-highlight-term[aria-current='page'][href]", count: 0
     assert_select ".design-detail-preview-date-series", count: 1
     terms.each do |term|
       assert_select ".design-detail-highlight-term[href=?]", event_path(term.slug)
