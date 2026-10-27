@@ -38,6 +38,7 @@ end %>
 <% related_preview_events = related_events.first(8) %>
 <% related_effective_series_ids = @related_genre_lane&.effective_series_ids || effective_public_event_series_ids(related_events) %>
 <% related_series_counts_by_id = @related_genre_lane&.series_counts_by_id || {} %>
+<% show_highlight_terms = @event.homepage_highlight? && @event_series_lane.present? %>
 <% genre_lanes = public_design_navigation_lanes %>
 <% design_preview_menu_groups = public_design_menu_groups %>
 <% design_preview_shell_saved_events = (
@@ -340,6 +341,9 @@ end %>
                    button_class: "design-detail-preview-action-button",
                    show_text: true %>
       </div>
+      <% if show_highlight_terms %>
+        <%= render "highlight_term_links", event: @event, event_series_lane: @event_series_lane, browse_state: @browse_state %>
+      <% end %>
     </div>
   </section>
 

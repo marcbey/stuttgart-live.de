@@ -5,6 +5,7 @@ import ConsentMediaController from "./consent_media_controller"
 import GenreLabelsController from "./genre_labels_controller"
 import FlashController from "./flash_controller"
 import HistoryBackLinkController from "./history_back_link_controller"
+import EventTermSelectController from "./event_term_select_controller"
 import MobileNavController from "./mobile_nav_controller"
 import NavOffsetController from "./nav_offset_controller"
 import NewsletterInterestsController from "./newsletter_interests_controller"
@@ -30,6 +31,7 @@ registerController("consent-media", ConsentMediaController)
 registerController("flash", FlashController)
 registerController("genre-labels", GenreLabelsController)
 registerController("history-back-link", HistoryBackLinkController)
+registerController("event-term-select", EventTermSelectController)
 registerController("mobile-nav", MobileNavController)
 registerController("nav-offset", NavOffsetController)
 registerController("newsletter-interests", NewsletterInterestsController)
