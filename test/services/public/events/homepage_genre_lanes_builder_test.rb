@@ -229,7 +229,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     assert_equal [ series.id ], lanes.first.effective_series_ids
   end
 
-  test "marks a lane event as event series when another published event exists only in the past" do
+  test "does not mark a lane event as a series when the other event is past" do
     series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
     future_event = build_lane_event(
       slug: "lane-series-future-only-visible",
@@ -254,7 +254,7 @@ class Public::Events::HomepageGenreLanesBuilderTest < ActiveSupport::TestCase
     ).call
 
     assert_equal [ future_event.id ], lanes.first.events.map(&:id)
-    assert_equal [ series.id ], lanes.first.effective_series_ids
+    assert_empty lanes.first.effective_series_ids
   end
 
   private

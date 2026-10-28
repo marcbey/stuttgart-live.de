@@ -14,7 +14,7 @@ module Newsletter
     def call
       issue = NewsletterIssue.create!(
         title: draft_title,
-        subject: "Dein Stuttgart Live Wochenmix",
+        subject: "Dein STUTTGART LIVE Wochenmix",
         preheader: "Zehn ausgewählte Events aus unserem Wochenmix.",
         intro: default_intro,
         layout_variant: "mixed_weekly_mix",

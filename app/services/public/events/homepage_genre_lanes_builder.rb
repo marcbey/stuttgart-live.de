@@ -6,10 +6,11 @@ module Public
       DEFAULT_LIMIT = 10
       DEFAULT_GROUP_EVENTS_LIMIT = 100
 
-      def initialize(relation:, slugs: nil, limit: DEFAULT_LIMIT)
+      def initialize(relation:, slugs: nil, limit: DEFAULT_LIMIT, include_series_metadata: true)
         @relation = relation
         @slugs = slugs
         @limit = limit
+        @include_series_metadata = include_series_metadata
       end
 
       def call
@@ -40,7 +41,7 @@ module Public
 
       private
 
-      attr_reader :limit, :relation, :slugs
+      attr_reader :limit, :relation, :slugs, :include_series_metadata
 
       def preload_lane_associations(lanes)
         ActiveRecord::Associations::Preloader.new(
@@ -62,7 +63,7 @@ module Public
           relation: group_events(group),
           context: lane_context(group),
           per_page: limit
-        ).call
+        ).call(include_series_metadata:)
 
         [ page.events, page.effective_series_ids, page.series_counts_by_id, page.next_cursor ]
       end
@@ -72,8 +73,8 @@ module Public
 
         events = SeriesRepresentativeSelector.call(selected_events)
         events = events.first(limit) if limit.present?
-        series_counts_by_id = SeriesCountsByIdQuery.call(events)
-        effective_series_ids = effective_series_ids_for(events)
+        series_counts_by_id = include_series_metadata ? SeriesCountsByIdQuery.call(events) : {}
+        effective_series_ids = include_series_metadata ? effective_series_ids_for(events) : []
 
         [ events, effective_series_ids, series_counts_by_id, nil ]
       end

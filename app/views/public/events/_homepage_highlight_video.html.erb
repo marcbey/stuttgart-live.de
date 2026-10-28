@@ -15,12 +15,13 @@
 <% date = event_video_attached ? l(event.start_at.to_date, format: "%d.%m.%Y") : config.fetch("date").presence %>
 <% location = event_video_attached ? event.venue.to_s.strip.presence : config.fetch("location").presence %>
 <% href = event_video_attached ? public_event_detail_path(event, local_assigns.fetch(:browse_state)) : nil %>
+<% href ||= local_assigns[:fallback_href] unless event_video_attached || setting_video_attached %>
 <% show_overlay = overlay_enabled && [title, subtitle, date, location].any?(&:present?) %>
 
 <% if enabled && video_source.present? %>
   <article class="homepage-highlight-video-card design-preview-highlight-video-card"
            data-controller="video-sound"
-           data-video-sound-media-value="(min-width: 96rem)">
+           data-video-sound-media-value="(min-width: 80rem)">
     <% video_content = capture do %>
       <%= tag.video poster: poster_source,
                     muted: true,

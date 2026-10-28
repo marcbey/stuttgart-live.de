@@ -94,7 +94,7 @@
         <%= form.submit signup[:submit_label], **submit_options %>
       <% end %>
       <%= render "public/newsletter_subscribers/consents", form:, prefix: signup[:frame_id] %>
-      <p class="newsletter-consent-note"><%= Newsletter::ConsentText::FOOTER %> <%= link_to "Datenschutzerklärung", datenschutz_path, data: { turbo_frame: "_top" } %></p>
+      <p class="newsletter-consent-note"><%= stuttgart_live_brand_text(Newsletter::ConsentText::FOOTER) %> <%= link_to "Datenschutzerklärung", datenschutz_path, data: { turbo_frame: "_top" } %></p>
     <% end %>
   <% end %>
 <% end %>

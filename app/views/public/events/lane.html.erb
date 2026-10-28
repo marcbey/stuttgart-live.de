@@ -1,5 +1,5 @@
 <% lane_display_title = @lane_title.presence || @lane.title %>
-<%= render_public_seo title: "Stuttgart Live - #{lane_display_title}",
+<%= render_public_seo title: "STUTTGART LIVE - #{lane_display_title}",
                       description: public_lane_seo_description(@lane),
                       canonical_url: public_lane_canonical_url(@lane),
                       json_ld: public_event_item_list_json_ld(

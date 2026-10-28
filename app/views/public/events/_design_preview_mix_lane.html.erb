@@ -15,12 +15,12 @@
               data-action="highlights-slider#previous">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6"></path></svg>
       </button>
-      <div class="design-preview-card-row" data-highlights-slider-target="track">
+      <div data-controller="genre-labels" class="design-preview-card-row" data-highlights-slider-target="track">
         <article class="design-preview-card design-preview-card--compact design-preview-card--lane-video"
                  data-controller="video-sound">
           <% video_source = video_event&.highlight_landscape_video_file&.attached? ? public_media_path(video_event.highlight_landscape_video_file) : asset_path("design_preview/mamma-mia-highlight.mp4") %>
           <% video_poster = video_event.present? ? event_image_source(video_event.event_image, strict_proxy: strict_proxy, size: :banner_mobile) : asset_path("design_preview/mamma-mia-highlight-poster.jpg") %>
-          <% video_href = public_event_detail_path(video_event, browse_state) if video_event.present? %>
+          <% video_href = video_event.present? ? public_event_detail_path(video_event, browse_state) : event_path("mamma-mia-das-musical-2027-05-05", **browse_state.route_params) %>
           <% video_content = capture do %>
             <span class="design-preview-card-media" aria-hidden="true">
               <%= video_tag video_source,
@@ -33,14 +33,10 @@
                             data: { video_sound_target: "video" } %>
             </span>
           <% end %>
-          <% if video_href.present? %>
-            <%= link_to video_href,
-                        class: "design-preview-card-link",
-                        aria: { label: "#{video_event.artist_name} ansehen" } do %>
-              <%= video_content %>
-            <% end %>
-          <% else %>
-            <div class="design-preview-card-link"><%= video_content %></div>
+          <%= link_to video_href,
+                      class: "design-preview-card-link",
+                      aria: { label: "#{video_event&.artist_name || 'MAMMA MIA! – Das Musical'} ansehen" } do %>
+            <%= video_content %>
           <% end %>
           <%= render "public/events/video_playback_button" %>
 
