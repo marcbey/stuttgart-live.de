@@ -116,6 +116,48 @@ module Importing
         )
       end
 
+      test "preserves repeated and encoded query parameters while replacing the page" do
+        client = FakeHttpClient.new(
+          "https://dump.example/events?filter=Rock+%26+Pop&filter=Jazz&page=1&pageSize=2" => {
+            "data" => { "event_dates" => [ { "event_id" => "42" } ] },
+            "last_page" => 2
+          }.to_json,
+          "https://dump.example/events?filter=Rock+%26+Pop&filter=Jazz&page=2&pageSize=2" => {
+            "data" => { "event_dates" => [ { "event_id" => "99" } ] },
+            "last_page" => 2
+          }.to_json
+        )
+
+        events = DumpFetcher.new(
+          http_client: client,
+          events_api_url: "https://dump.example/events?filter=Rock%20%26%20Pop&filter=Jazz&page=7&pageSize=2"
+        ).fetch_events
+
+        assert_equal [ "42", "99" ], events.map { |event| event["event_id"] }
+        assert_equal [
+          "https://dump.example/events?filter=Rock+%26+Pop&filter=Jazz&page=1&pageSize=2",
+          "https://dump.example/events?filter=Rock+%26+Pop&filter=Jazz&page=2&pageSize=2"
+        ], client.requested_urls
+      end
+
+      test "preserves legacy semicolon separators and encoded semicolons in values" do
+        expected_url = "https://dump.example/events?filter=Rock%3BJazz&page=1&pageSize=2"
+        client = FakeHttpClient.new(
+          expected_url => {
+            "data" => { "event_dates" => [ { "event_id" => "42" } ] },
+            "last_page" => 1
+          }.to_json
+        )
+
+        events = DumpFetcher.new(
+          http_client: client,
+          events_api_url: "https://dump.example/events?filter=Rock%3BJazz;pageSize=2"
+        ).fetch_events
+
+        assert_equal [ "42" ], events.map { |event| event["event_id"] }
+        assert_equal [ expected_url ], client.requested_urls
+      end
+
       test "stops before fetching when stop was requested" do
         client = FakeHttpClient.new({})
 

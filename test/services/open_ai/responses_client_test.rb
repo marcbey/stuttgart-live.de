@@ -148,9 +148,9 @@ module OpenAi
           status: 429,
           headers: {},
           body: {
-            "message" => "You exceeded your current quota.",
-            "type" => "insufficient_quota",
-            "code" => "insufficient_quota"
+            message: "You exceeded your current quota.",
+            type: "insufficient_quota",
+            code: "insufficient_quota"
           },
           request: nil,
           response: nil
@@ -180,6 +180,62 @@ module OpenAi
           },
           error.details_payload
         )
+      end
+    end
+
+    test "recognizes quota metadata in string keyed error bodies" do
+      bodies = [
+        { "message" => "No credits remain.", "code" => "insufficient_quota" },
+        { "message" => "No credits remain.", "type" => "insufficient_quota" },
+        { "message" => "You exceeded your current quota." }
+      ]
+
+      bodies.each do |body|
+        fake_sdk_client = build_fake_sdk_client do |_request|
+          raise OpenAI::Errors::RateLimitError.new(
+            url: URI("https://api.openai.com/v1/responses"),
+            status: 429,
+            headers: {},
+            body: body,
+            request: nil,
+            response: nil
+          )
+        end
+
+        with_stubbed_credentials(fake_credentials_with_api_key) do
+          error = assert_raises(ResponsesClient::Error) do
+            ResponsesClient.new(model: "gpt-5-mini", sdk_client: fake_sdk_client)
+              .create!(input: "Prompt", text_format: structured_text_format)
+          end
+
+          assert_equal "OpenAI-Kontingent überschritten (HTTP 429): #{body.fetch('message')}", error.message
+          assert_equal body, error.details_payload.fetch("body")
+        end
+      end
+    end
+
+    test "keeps ordinary rate limits distinct when quota metadata is absent" do
+      [ { "message" => "Too many requests.", "code" => "rate_limit_exceeded" }, nil, "Temporary rate limit" ].each do |body|
+        fake_sdk_client = build_fake_sdk_client do |_request|
+          raise OpenAI::Errors::RateLimitError.new(
+            url: URI("https://api.openai.com/v1/responses"),
+            status: 429,
+            headers: {},
+            body: body,
+            request: nil,
+            response: nil
+          )
+        end
+
+        with_stubbed_credentials(fake_credentials_with_api_key) do
+          error = assert_raises(ResponsesClient::Error) do
+            ResponsesClient.new(model: "gpt-5-mini", sdk_client: fake_sdk_client)
+              .create!(input: "Prompt", text_format: structured_text_format)
+          end
+
+          assert_match(/\AOpenAI-Rate-Limit erreicht \(HTTP 429\): /, error.message)
+          assert_equal 429, error.details_payload.fetch("status")
+        end
       end
     end
 

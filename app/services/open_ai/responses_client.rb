@@ -122,10 +122,13 @@ module OpenAi
     end
 
     def insufficient_quota_error?(error)
+      body = normalized_error_body(error.body)
+      body_metadata = body.is_a?(Hash) ? body.values_at("code", "type", "message") : []
       candidates = [
         error.try(:code),
         error.try(:type),
-        error.message
+        error.message,
+        *body_metadata
       ].compact.map(&:to_s)
 
       candidates.any? { |value| value.downcase.include?("quota") || value.downcase.include?("insufficient_quota") }
