@@ -388,6 +388,39 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     assert_equal "disabled", message.fetch("TrackClicks")
   end
 
+  test "interleaved transactional sends keep sender lookups on the v3 API" do
+    interleaved = false
+    recipients = []
+    other_client = Newsletter::MailjetClient.new(api_key: "api-key", secret_key: "secret-key")
+    stubs = Faraday::Adapter::Test::Stubs.new do |stub|
+      stub.get("/v3/REST/sender") do |request|
+        if !interleaved
+          interleaved = true
+          other_client.send_transactional_email(to: "second@example.com", subject: "Bestätigung", html: "<p>Hallo</p>", text: "Hallo")
+          [ 200, {}, { "Data" => [] }.to_json ]
+        else
+          assert_equal "Active", request.params.fetch("Status")
+          [ 200, {}, { "Data" => [ { "ID" => 123, "Email" => "sender@example.com", "Status" => "Active" } ] }.to_json ]
+        end
+      end
+      stub.post("/v3.1/send") do |request|
+        message = JSON.parse(request.body).fetch("Messages").first
+        assert_equal "sender@example.com", message.fetch("From").fetch("Email")
+        recipients << message.fetch("To").first.fetch("Email")
+        [ 200, {}, { "Messages" => [ { "Status" => "success" } ] }.to_json ]
+      end
+    end
+
+    with_app_config(:mailer_from, "sender@example.com") do
+      with_mailjet_http(stubs) do
+        @client.send_transactional_email(to: "first@example.com", subject: "Bestätigung", html: "<p>Hallo</p>", text: "Hallo")
+      end
+    end
+
+    assert_equal [ "second@example.com", "first@example.com" ], recipients
+    stubs.verify_stubbed_calls
+  end
+
   test "preference sync updates contact properties without subscribing" do
     captured = nil
     original_new = Mailjet::Contactdata.method(:new)
@@ -428,7 +461,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
 
   def with_mailjet_create(resource, handler)
     original_method = resource.method(:create)
-    resource.singleton_class.send(:define_method, :create) { |attributes| handler.call(attributes) }
+    resource.singleton_class.send(:define_method, :create) { |attributes, _options = {}| handler.call(attributes) }
     yield
   ensure
     resource.singleton_class.send(:define_method, :create, original_method)

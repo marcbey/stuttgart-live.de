@@ -20,7 +20,7 @@ gem "stimulus-rails"
 gem "cssbundling-rails"
 # Build JSON APIs with ease [https://github.com/rails/jbuilder]
 gem "jbuilder"
-gem "json", ">= 2.21.2", "< 3.0"
+gem "json", ">= 2.21.2", "< 4.0"
 gem "mailjet", "~> 1.8"
 gem "openai", "~> 0.106"
 
