@@ -71,9 +71,29 @@ class ExternalActionPolicyTest < ActiveSupport::TestCase
       end
       assert_equal "staging", config.environment
       assert_includes config.enabled_environments, "staging"
+      assert config.rails.structured_logging.enabled
     ensure
       previous.nil? ? ENV.delete("SENTRY_ENVIRONMENT") : ENV["SENTRY_ENVIRONMENT"] = previous
     end
+  end
+
+  test "Sentry initializes production with structured Rails logs enabled" do
+    original = Rails.configuration.x.deployment_environment
+    previous = ENV["SENTRY_ENVIRONMENT"]
+    Rails.configuration.x.deployment_environment = "production"
+    ENV.delete("SENTRY_ENVIRONMENT")
+    config = Sentry::Configuration.new
+
+    with_test_method(Sentry, :init, ->(&block) { block.call(config) }) do
+      load Rails.root.join("config/initializers/sentry.rb")
+    end
+
+    assert_equal "production", config.environment
+    assert_includes config.enabled_environments, "production"
+    assert config.rails.structured_logging.enabled
+  ensure
+    Rails.configuration.x.deployment_environment = original
+    previous.nil? ? ENV.delete("SENTRY_ENVIRONMENT") : ENV["SENTRY_ENVIRONMENT"] = previous
   end
 
   test "recurring scheduler is absent while local workers remain configured" do
