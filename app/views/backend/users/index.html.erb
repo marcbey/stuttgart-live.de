@@ -4,7 +4,7 @@
   <header class="backend-topbar">
     <div>
       <h1>Benutzerverwaltung</h1>
-      <p>Nur Admins können Benutzer anlegen sowie Rollen und Passwörter ändern.</p>
+      <p>Nur Admins können Benutzer anlegen, löschen sowie Rollen und Passwörter ändern.</p>
     </div>
     <div class="backend-topbar-actions">
       <%= link_to "Eigenes Passwort", edit_backend_account_password_path, class: "button button-secondary button-compact" %>
@@ -34,6 +34,15 @@
               <td><%= user.role %></td>
               <td class="action-cell">
                 <%= link_to "Edit", edit_backend_user_path(user), class: "button button-ghost button-compact" %>
+                <% if user.admin? && @admin_count == 1 %>
+                  <span>Der letzte Admin kann nicht gelöscht werden.</span>
+                <% else %>
+                  <%= button_to "Löschen", backend_user_path(user),
+                                method: :delete,
+                                class: "button button-danger-subtle button-compact",
+                                aria: { label: "Benutzer #{user.email_address} löschen" },
+                                form: { class: "inline-block", data: { turbo_confirm: "Benutzer #{user.email_address} wirklich löschen?" } } %>
+                <% end %>
               </td>
             </tr>
           <% end %>

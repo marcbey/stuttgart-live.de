@@ -62,9 +62,9 @@ class EventSocialPost < ApplicationRecord
   end
 
   def card_badge_text
-    @card_badge_text.presence ||
-      payload_snapshot.dig("card_text", "badge_text").to_s.strip.presence ||
-      "NEW"
+    return @card_badge_text.to_s.strip if instance_variable_defined?(:@card_badge_text)
+
+    payload_snapshot.fetch("card_text", {}).fetch("badge_text", "NEW").to_s.strip
   end
 
   def card_payload

@@ -11,11 +11,10 @@
     <% end %>
   </div>
 
-  <div class="design-preview-card-row">
+  <div data-controller="genre-labels" class="design-preview-card-row">
     <%= render "design_preview_event_grid",
                events: events,
                browse_state: browse_state,
-               effective_series_ids: effective_series_ids,
-               show_card_kicker: false %>
+               effective_series_ids: effective_series_ids %>
   </div>
 </section>

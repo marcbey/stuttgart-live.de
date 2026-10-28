@@ -81,6 +81,6 @@ class Public::ImagePriorityTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".homepage-highlight-video[data-video-sound-src-value][preload='none']:not([src])", count: 1
     assert_select ".homepage-highlight-video source[src]", count: 0
-    assert_select ".homepage-highlight-video-card[data-video-sound-media-value='(min-width: 96rem)']", count: 1
+    assert_select ".homepage-highlight-video-card[data-video-sound-media-value='(min-width: 80rem)']", count: 1
   end
 end

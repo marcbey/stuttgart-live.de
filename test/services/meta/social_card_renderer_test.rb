@@ -1,6 +1,23 @@
 require "test_helper"
 
 class Meta::SocialCardRendererTest < ActiveSupport::TestCase
+  test "empty badge omits the colored cloud but keeps the heart" do
+    background_blob = create_uploaded_blob(filename: "blank-badge.png", width: 1600, height: 1200, rgb: [ 18, 45, 51 ])
+    source = Meta::EventSocialPostDraftBuilder::BackgroundSource.new(
+      source_type: :attachment, attachment: background_blob, remote_url: nil,
+      focus_x: 50, focus_y: 50, zoom: 100, source_label: "test"
+    )
+    card = Meta::SocialCardRenderer.new.render_set(
+      background_source: source,
+      card_payload: { artist_name: "Artist", meta_line: "Venue", badge_text: "   " },
+      slug: "blank-badge"
+    ).fetch(:instagram)
+    assert_equal "", card.badge_text
+    image = Vips::Image.new_from_buffer(card.binary, "")
+    assert_operator image.getpoint(88, 40).first(3).sum, :>, 650
+    assert_operator image.getpoint(900, 40).first(3).max, :<, 80
+  end
+
   test "renders the instagram card variant in the expected dimensions" do
     background_blob = create_uploaded_blob(filename: "social-card-background.png", width: 1600, height: 1200, rgb: [ 18, 45, 51 ])
     background_source = Meta::EventSocialPostDraftBuilder::BackgroundSource.new(

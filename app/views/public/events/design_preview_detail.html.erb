@@ -38,6 +38,7 @@ end %>
 <% related_preview_events = related_events.first(8) %>
 <% related_effective_series_ids = @related_genre_lane&.effective_series_ids || effective_public_event_series_ids(related_events) %>
 <% related_series_counts_by_id = @related_genre_lane&.series_counts_by_id || {} %>
+<% show_highlight_terms = @event.homepage_highlight? && @event_series_lane.present? %>
 <% genre_lanes = public_design_navigation_lanes %>
 <% design_preview_menu_groups = public_design_menu_groups %>
 <% design_preview_shell_saved_events = (
@@ -59,7 +60,7 @@ end %>
 <% end %>
 <% content_for :page_newsletter do %><% end %>
 <% content_for :page_partner_strip do %><% end %>
-<%= render_public_seo title: (design_detail_preview_mode ? "Detailseite Preview - Stuttgart Live" : presenter.page_title),
+<%= render_public_seo title: (design_detail_preview_mode ? "Detailseite Preview - STUTTGART LIVE" : presenter.page_title),
                       meta_title: (presenter.meta_title unless design_detail_preview_mode),
                       description: (design_detail_preview_mode ? "Interne Layoutvorschau für eine Event-Detailseite." : presenter.meta_description),
                       canonical_url: (design_detail_preview_mode ? design_preview_detail_url : presenter.canonical_url),
@@ -340,6 +341,9 @@ end %>
                    button_class: "design-detail-preview-action-button",
                    show_text: true %>
       </div>
+      <% if show_highlight_terms %>
+        <%= render "highlight_term_links", event: @event, event_series_lane: @event_series_lane, browse_state: @browse_state %>
+      <% end %>
     </div>
   </section>
 
