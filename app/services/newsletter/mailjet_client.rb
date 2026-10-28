@@ -110,8 +110,7 @@ module Newsletter
       configure_mailjet
       from_email = transactional_sender_email
 
-      configure_mailjet(api_version: "v3.1")
-      response = Mailjet::Send.create(
+      response = Mailjet::Send.create({
         messages: [
           {
             "From" => {
@@ -130,7 +129,7 @@ module Newsletter
             "TrackClicks" => "disabled"
           }
         ]
-      )
+      }, version: "v3.1")
       normalize_response(response)
     rescue *MAILJET_ERRORS => error
       raise Error, error.message
@@ -219,12 +218,12 @@ module Newsletter
       raise Error, error.message
     end
 
-    def configure_mailjet(api_version: "v3")
+    def configure_mailjet
       ExternalActionPolicy.require_allowed!(action: :mailjet)
       Mailjet.configure do |config|
         config.api_key = api_key
         config.secret_key = secret_key
-        config.api_version = api_version
+        config.api_version = "v3"
         config.end_point = api_endpoint if api_endpoint.present?
       end
     rescue ExternalActionPolicy::Disabled => error
