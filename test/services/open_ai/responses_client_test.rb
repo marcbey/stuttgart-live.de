@@ -148,9 +148,9 @@ module OpenAi
           status: 429,
           headers: {},
           body: {
-            "message" => "You exceeded your current quota.",
-            "type" => "insufficient_quota",
-            "code" => "insufficient_quota"
+            message: "You exceeded your current quota.",
+            type: "insufficient_quota",
+            code: "insufficient_quota"
           },
           request: nil,
           response: nil

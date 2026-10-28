@@ -1,6 +1,6 @@
 require "json"
 require "uri"
-require "cgi"
+require "rack/utils"
 
 module Importing
   module Easyticket
@@ -255,9 +255,9 @@ module Importing
 
       def url_for_page(url, page)
         uri = URI.parse(url)
-        params = CGI.parse(uri.query.to_s)
-        params["page"] = [ page.to_s ]
-        params["pageSize"] = [ DEFAULT_PAGE_SIZE.to_s ] if params["pageSize"].blank?
+        params = Rack::Utils.parse_query(uri.query.to_s)
+        params["page"] = page.to_s
+        params["pageSize"] = DEFAULT_PAGE_SIZE.to_s if params["pageSize"].blank?
         uri.query = URI.encode_www_form(params.sort_by { |key, _| key })
         uri.to_s
       end
