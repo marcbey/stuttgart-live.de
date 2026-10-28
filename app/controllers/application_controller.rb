@@ -1,7 +1,7 @@
 class ApplicationController < ActionController::Base
   include Authentication
-  # Only allow modern browsers supporting webp images, web push, badges, import maps, CSS nesting, and CSS :has.
-  allow_browser versions: :modern
+  # Public content must remain accessible on older devices, including iPhone 8.
+  allow_browser versions: :modern, unless: -> { controller_path.start_with?("public/") }
 
   before_action :set_header_browse_state
 

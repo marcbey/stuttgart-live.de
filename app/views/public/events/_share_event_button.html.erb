@@ -1,5 +1,5 @@
 <% share_headline = local_assigns[:share_headline].presence || presenter.display_headline %>
-<% share_title = local_assigns[:share_title].presence || "#{share_headline} | Stuttgart Live" %>
+<% share_title = local_assigns[:share_title].presence || "#{share_headline} | STUTTGART LIVE" %>
 <% share_text = local_assigns.key?(:share_text) ? local_assigns[:share_text].to_s.strip.presence : presenter.hero_meta_line.to_s.strip.presence %>
 <% share_url = local_assigns[:share_url].presence || presenter.canonical_url %>
 <% share_label = local_assigns[:share_label].presence || "#{share_headline} teilen" %>

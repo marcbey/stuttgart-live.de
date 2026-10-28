@@ -647,7 +647,7 @@ module Newsletter
         <!--[if !mso]><!-->
           <tr class="newsletter-mobile-more-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
             <td colspan="#{GENRE_CARD_COLUMNS}" style="padding:14px 0 22px;">
-              <a href="#{escape(genre_lane_url(group.slug, **route_url_options))}" target="_blank" rel="noopener" style="display:inline-block;color:#102223;text-decoration:underline;font-size:14px;line-height:1.3;font-weight:bold;">Mehr #{escape(group.label)} auf Stuttgart Live</a>
+              <a href="#{escape(genre_lane_url(group.slug, **route_url_options))}" target="_blank" rel="noopener" style="display:inline-block;color:#102223;text-decoration:underline;font-size:14px;line-height:1.3;font-weight:bold;">Mehr #{escape(group.label)} auf #{ApplicationController.helpers.stuttgart_live_brand_text}</a>
             </td>
           </tr>
         <!--<![endif]-->
@@ -918,7 +918,7 @@ module Newsletter
                   <tr>
                     <td align="center" style="padding:0;color:#a5adad;">
                       <p class="newsletter-footer-copy" style="margin:0 0 12px;font-size:12px;line-height:1.6;">
-                        Du erhältst diese E-Mail, weil du dich für den Stuttgart Live Newsletter angemeldet hast.
+                        Du erhältst diese E-Mail, weil du dich für den #{ApplicationController.helpers.stuttgart_live_brand_text} Newsletter angemeldet hast.
                         Wenn du unseren Event-Newsletter nicht mehr erhalten möchtest, kannst du dich
                         <a href="[[UNSUB_LINK_DE]]" style="color:#596364;text-decoration:underline;">hier abmelden</a>.
                       </p>
@@ -934,7 +934,7 @@ module Newsletter
                         <a href="#{escape(imprint_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Impressum</a>
                       </p>
                       <p class="newsletter-footer-address" style="margin:0;font-size:12px;line-height:1.5;">
-                        Stuttgart Live ist eine Marke der SKS Michael Russ GmbH<br>
+                        #{ApplicationController.helpers.stuttgart_live_brand_text} ist eine Marke der SKS Michael Russ GmbH<br>
                         Charlottenplatz 17, 70173 Stuttgart, Deutschland<br>
                         Telefon: <a href="tel:+497111635327" style="color:#596364;text-decoration:underline;">0711 - 16353-27</a>
                         &nbsp;&middot;&nbsp;
@@ -956,7 +956,7 @@ module Newsletter
         Auf unserer Website warten noch jede Menge Highlights auf dich.
         Mehr Events entdecken: #{website_url}
 
-        Du erhältst diese E-Mail, weil du dich für den Stuttgart Live Newsletter angemeldet hast.
+        Du erhältst diese E-Mail, weil du dich für den STUTTGART LIVE Newsletter angemeldet hast.
         Newsletter abbestellen: [[UNSUB_LINK_DE]]
         Tracking-Einstellungen: #{newsletter_preferences_url(**route_url_options)}
         Datenschutz: #{datenschutz_url(**route_url_options)}
@@ -965,7 +965,7 @@ module Newsletter
         Dies ist eine automatisch generierte E-Mail.
         Bitte antworte nicht auf diese E-Mail, da uns deine Anfrage hier nicht erreicht.
 
-        Stuttgart Live ist eine Marke der SKS Michael Russ GmbH
+        STUTTGART LIVE ist eine Marke der SKS Michael Russ GmbH
         Charlottenplatz 17, 70173 Stuttgart, Deutschland
         Telefon: 0711 - 16353-27
         E-Mail: info@stuttgart-live.de

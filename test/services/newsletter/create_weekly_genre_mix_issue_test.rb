@@ -24,7 +24,7 @@ class Newsletter::CreateWeeklyGenreMixIssueTest < ActiveSupport::TestCase
     assert_predicate issue, :genre_weekly_mix?
     assert issue.title.start_with?("Genre large KW ")
     assert_equal users(:one), issue.created_by
-    assert_equal "Dein Stuttgart Live Wochenmix", issue.subject
+    assert_equal "Dein STUTTGART LIVE Wochenmix", issue.subject
     assert_equal "Für was interessierst du dich? Spring hinein ins Vergnügen :-)", issue.jump_menu_title
     assert_equal "Sarah", issue.team_tip_name
     assert_equal "unsere Event-Highlights der Woche, passend zu deinen Interessen und handverlesen statt wahllos zusammengestellt.\nRegelmäßig frisch. Persönlich für dich ♥",

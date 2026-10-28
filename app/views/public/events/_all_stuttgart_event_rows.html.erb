@@ -9,7 +9,7 @@
 
   <div class="all-stuttgart-event-row" role="row">
     <time class="all-stuttgart-event-day <%= "all-stuttgart-event-day--time" if show_time_column %>" datetime="<%= show_time_column ? event.start_at.iso8601 : event.start_at.to_date.iso8601 %>" role="cell">
-      <strong><%= show_time_column ? event.start_at.strftime("%H:%M") : event.start_at.day.to_s.rjust(2, "0") %></strong>
+      <strong><%= show_time_column ? event.start_at.strftime("%H:%M") : event.start_at.strftime("%d.%m.") %></strong>
     </time>
 
     <div class="all-stuttgart-event-title" role="cell">
@@ -27,7 +27,7 @@
       <%= unavailable_label.presence || display_price.presence || "Preis folgt" %>
     </div>
 
-    <div class="all-stuttgart-event-genre" role="cell">
+    <div class="all-stuttgart-event-genre" role="cell" data-genre-labels-target="label" data-genre-name="<%= primary_genre&.name %>">
       <% if primary_genre.present? %>
         <%= link_to primary_genre.name,
                     genre_lane_path(primary_genre.slug),

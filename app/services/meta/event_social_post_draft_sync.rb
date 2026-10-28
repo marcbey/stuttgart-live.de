@@ -15,7 +15,7 @@ module Meta
     def call(event:, platform:, card_badge_text: nil)
       normalized_platform = normalize_platform(platform)
       social_post = event.event_social_posts.find_or_initialize_by(platform: normalized_platform)
-      resolved_badge_text = card_badge_text.to_s.strip.presence || social_post.card_badge_text
+      resolved_badge_text = card_badge_text.nil? ? social_post.card_badge_text : card_badge_text.to_s.strip
       draft = builder_class.new(event:, platform: normalized_platform, card_badge_text: resolved_badge_text).build
       social_post.assign_draft_attributes!(draft.attributes)
       social_post.save!

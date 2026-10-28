@@ -18,6 +18,8 @@ Das Repository enthält die komplette Anwendung: öffentliche Website, redaktion
 
 Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität niedrig und sorgt dafür, dass redaktionelle Abläufe, Importe und öffentliche Ausgabe auf demselben Domänenmodell arbeiten.
 
+Die öffentliche Website sperrt ältere Browser nicht anhand ihrer Versionsnummer. So können auch Geräte wie das iPhone 8 mit Safari unter iOS 16 die Inhalte aufrufen. Für Backoffice und Anmeldung gilt weiterhin die Rails-Anforderung an moderne Browser. Bei Änderungen am Frontend müssen die öffentlichen Kernfunktionen deshalb auch mit einem älteren mobilen Browserprofil geprüft werden.
+
 ## Was die Anwendung abdeckt
 
 - Öffentliche Website mit Event-Listen, Event-Detailseiten, News und statischen Inhaltsseiten
@@ -26,6 +28,12 @@ Die App ist bewusst ein klassischer Rails-Monolith. Das hält die Komplexität n
 - Redaktionelle Qualitätssicherung mit Inbox, Änderungsprotokollen und Vollständigkeitsprüfungen
 - Manuelles Social-Publishing für Event-Posts auf Facebook und Instagram
 - Newsletter-Anmeldung mit Double-Opt-In, optionalem Mailjet-Sync und redaktionellen Newsletter-Drafts
+
+Der große Highlight-Slider auf der Startseite wechselt automatisch weiter, auch wenn der Mauszeiger darüber steht oder die Pfeile angeklickt wurden. Über die Pause-/Play-Taste lässt sich der automatische Wechsel steuern. Tastaturfokus pausiert den Slider; die Systemeinstellung „Bewegung reduzieren“ verhindert den automatischen Start.
+
+Fest eingebaute Markennennungen im Fließtext erscheinen als **STUTTGART**LIVE, ohne Leerzeichen und nur mit fettem „STUTTGART“. In reinen Textfeldern wie Seitentiteln, Metadaten, E-Mail-Betreff und Teilen-Texten lautet der Name „STUTTGART LIVE“. Die Header- und Footer-Logos sowie redaktionell gepflegte Seiteninhalte bleiben davon unabhängig. Das Footer-Logo steht weiterhin zweizeilig.
+
+Unter `/backend/users` können Admins Benutzer anlegen, bearbeiten und nach Bestätigung löschen. Der letzte Admin bleibt immer erhalten; auch seine Admin-Rolle kann nicht entfernt werden. Beim Löschen eines Benutzers werden seine Sitzungen beendet. Wer das eigene Konto löscht, wird abgemeldet; dafür muss ein weiterer Admin vorhanden sein. Benutzer mit eigenen Blogbeiträgen können nicht gelöscht werden, solange ihnen diese Beiträge zugeordnet sind. Newsletter und Social-Publishing-Verläufe bleiben erhalten. Noch wartende Social-Veröffentlichungen dieses Benutzers werden mit einem verständlichen Fehler beendet und können anschließend von einem anderen Benutzer erneut gestartet werden.
 
 ## Wie das System grob funktioniert
 
@@ -108,6 +116,8 @@ Der Ablauf ist:
 
 Im Backend gibt es für Venues einen eigenen Verwaltungsbereich unter `/backend/venues`. Die Liste startet dort bewusst leer und zeigt erst nach einer Suche Treffer an. Die Suche läuft bereits während des Tippens und aktualisiert die Trefferliste per Turbo, ohne dass die komplette Seite neu geladen werden muss. Gesucht wird nach Venue-Name, Adresse, Beschreibung und externer URL.
 
+Die Option „VVS-Ticket“ an einer Venue blendet auf den zugehörigen Event-Detailseiten das VVS-Logo mit einem erklärenden Hinweis ein. Das Logo öffnet die [VVS-Kombiticket-Seite](https://www.vvs.de/tickets-und-abos/kombiticket) in einem neuen Tab; ein eigener Link pro Venue muss nicht gepflegt werden.
+
 Auch die öffentliche Event-Suche versteht strukturierte Zeitphrasen wie `heute`, `morgen`, `diese Woche`, `dieses Wochenende` oder `am Wochenende`, kombiniert mit einer Venue wie `am Wochenende im Goldmark´s Stuttgart`. Wichtig dabei: Das Wochenende ist in dieser Suche bewusst als Freitag bis Sonntag definiert.
 
 Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Location, damit du verschiedene Termine desselben Acts unterscheiden kannst. Ohne Treffer kannst du die Suche direkt ändern oder alle Events öffnen. Deine Merkliste wird in diesem Browser gespeichert; über die Teilenfunktion kannst du sie weitergeben.
@@ -152,6 +162,7 @@ Wichtig für Updates bestehender Events:
 - Im Backend zeigt der Editor bei vorhandenem manuellem Override künftig diesen Wert an. Für die öffentliche Ticketlogik bleiben importierte Offers und deren Priorisierung weiterhin maßgeblich.
 - Der Ticketlink der öffentlichen Detailseite enthält für Screenreader einen Hinweis auf den Anbieter und den neuen Tab. Dieser Hinweis ist visuell ausgeblendet. Der Anbietername richtet sich nach der tatsächlich verlinkten Domain; unbekannte Ziele heißen neutral „Ticketanbieter“.
 - Hinweise aus dem Feld `Banderole`, etwa „Tickets an der Abendkasse“, erscheinen auf der Event-Detailseite unter dem Preis. Fehlt ein Preis, steht der Hinweis am Ende der Veranstaltungsdaten. Der allgemeine Platzhalter „Tickets“ wird ausgeblendet.
+- Bei Highlights mit mehreren Terminen einer Event-Reihe erscheinen alle kommenden Termine als anklickbare Termin-Wolken mit Datum und Uhrzeit, volle Stunden beispielsweise als „20 Uhr“. Der geöffnete Termin ist in einem dunkleren Grau mit ausgegrauter Schrift markiert und auf dem Desktop nicht verlinkt. Auf dem Desktop stehen vier Wolken pro Zeile unter den Ticket-Aktionen, mobil steht stattdessen ein Termin-Dropdown unter Preis und Banderole. Die Auswahl öffnet die gewählte Vorstellung. Jeder Link öffnet die Detailseite des jeweiligen Termins. Die Kalenderauswahl neben dem Datum bleibt zusätzlich erhalten; andere Events behalten die kompakte Terminauswahl.
 - Ist kein Ticketkauf möglich, steht der Grund dort als rote Wolke, etwa „Ausverkauft“, „Abgesagt“, „Abgelaufen“ oder „Tickets aktuell nicht verfügbar“. Der Button behält die Beschriftung „Tickets sichern“, ist grau und deaktiviert.
 - Die öffentliche Ticketverfügbarkeit wird dabei nicht nur über `sold_out` abgeleitet, sondern zusätzlich über provider-spezifische Verfügbarkeits-Signale im Offer-Metadatum `availability_status`.
 - Für `Eventim` gilt aktuell:
@@ -190,7 +201,7 @@ Die Redaktion arbeitet dabei direkt im Event-Editor im Tab `Social`:
 
 1. Beim Öffnen des Tabs existieren Instagram- und Facebook-Draft normalerweise bereits automatisch.
 2. Ein Draft baut serverseitig eine Caption aus Eventdaten und wählt ein öffentlich erreichbares Bild.
-3. Caption sowie die beiden Bildtext-Zeilen für Artist und Meta-Zeile können danach manuell angepasst werden.
+3. Caption sowie die beiden Bildtext-Zeilen für Artist und Meta-Zeile können danach manuell angepasst werden. „Status im Bild“ ist anfangs mit „NEW“ vorbelegt. Wird das Feld geleert und gespeichert, entfällt die farbige Statuswolke im Vorschaubild und im veröffentlichten Bild; das Herz bleibt sichtbar.
 4. Drafts können bei Bedarf manuell neu erzeugt werden; beim Hinzufügen oder Ändern des Eventbilds werden nicht veröffentlichte Drafts automatisch neu gebaut.
 5. Die Veröffentlichung läuft direkt aus dem jeweiligen Plattform-Draft. Status, Fehler und externe IDs werden getrennt pro Plattform am jeweiligen `EventSocialPost` gespeichert.
 
@@ -291,14 +302,14 @@ Für die Badge-Logik im Backend gilt bewusst eine redaktionelle Regel:
 
 ### Wie Event-Reihen im Frontend wirken
 
-Im öffentlichen Frontend gilt eine strengere, sichtbarkeitsbezogene Regel als im Backend. Eine Event-Reihe ist dort nur wirksam, wenn sie in der gesamten öffentlich sichtbaren Event-Menge tatsächlich mindestens zwei Events hat.
+Im öffentlichen Frontend gilt eine strengere, sichtbarkeitsbezogene Regel als im Backend. Für die Termin-Wolke auf Karten und in Listen muss eine Event-Reihe mindestens zwei öffentlich sichtbare Termine ab heute haben. Ist nur noch ein Termin übrig, entfällt die Wolke.
 
 Öffentlich sichtbar bedeutet:
 
 - `status = published`
 - `published_at <= jetzt`
 
-Dabei zählen ausdrücklich auch vergangene veröffentlichte Events mit. Die Frontend-Regel ist also global über den öffentlichen Bestand und nicht mehr auf die lokale Quellmenge einer einzelnen Lane beschränkt.
+Für die Termin-Wolke zählen alle veröffentlichten Termine ab Beginn des heutigen Tages in der Zeitzone der Anwendung, auch außerhalb der gerade angezeigten Lane. Vergangene Termine zählen dafür nicht mit; ihre Zuordnung zur Reihe und die Terminübersicht bleiben erhalten.
 
 Die konkreten Auswirkungen sind:
 
@@ -311,7 +322,7 @@ Wichtig ist der Unterschied zwischen gespeicherter Zuordnung und öffentlicher W
 
 - Eine importierte oder manuell angelegte Event-Reihe kann im Datenmodell existieren, obwohl öffentlich aktuell nur ein einziges sichtbares Event dazugehört.
 - In diesem Fall bleibt die Zuordnung im Backend sichtbar, im Frontend erscheint aber keine `Event-Reihe`-Banderole.
-- Sobald ein zweites veröffentlichtes sichtbares Event derselben Reihe vorhanden ist, wird die Reihe ohne weitere Redaktion automatisch auch öffentlich wirksam.
+- Sobald ein zweiter veröffentlichter Termin ab heute vorhanden ist, erscheint die Termin-Wolke automatisch wieder.
 
 ### Wie das LLM-Enrichment funktioniert
 
@@ -643,15 +654,17 @@ Zusätzlich gibt es Laufzeitkonfiguration in der Datenbank über `app_settings`.
 - `homepage_genre_tag_cloud_enabled` für die optionale Tag-Cloud mit übrigen Homepage-Genres
 - `merge_artist_similarity_matching_enabled` für das quellenübergreifende Ähnlichkeits-Matching von Artist-Namen und prägnanten Titelvarianten im Merge-Import bei gleicher oder sehr naher Startzeit
 
+Genre-Labels auf Eventkarten und in der Veranstaltungstabelle werden nur bei gemischten Hauptgenres innerhalb derselben Liste angezeigt. Bei einem einzigen Hauptgenre entfallen die wiederholten Labels; nachgeladene Events werden automatisch mitberücksichtigt. Ticketstatus wie „Ausverkauft“ bleiben sichtbar.
+
 „Stuttgart im Mix“ erscheint automatisch, sobald kommende öffentliche Events mit Genre-Zuordnung verfügbar sind. Die Lane mischt Events aus allen Genres; dafür muss unter **Einstellungen → Homepage Genre-Lanes** kein Genre ausgewählt werden. Die dortige Auswahl steuert nur die zusätzlichen einzelnen Genre-Lanes. Die aktivierte Genre-Tag-Cloud zeigt zwischen „Stuttgart im Mix“ und „Unter 30 €“ die übrigen Genres mit kommenden öffentlichen Events und funktioniert auch ohne ausgewählte Genre-Lanes.
 
-Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo eines dort angezeigten Events, ansonsten den lokalen Mamma-Mia-Clip (20 Sekunden). Das Video startet stumm; über die Schalter lassen sich Wiedergabe und Ton getrennt steuern.
+Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo eines dort angezeigten Events, ansonsten den lokalen Mamma-Mia-Clip (20 Sekunden). Der Standardclip verlinkt auf „MAMMA MIA! – Das Musical“ am 5. Mai 2027. Das Video startet stumm; über die Schalter lassen sich Wiedergabe und Ton getrennt steuern.
 
-Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
+Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Der Standardtrailer verlinkt auf LEA am 25. April 2027. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
 
 Der Highlight-Slider startet ohne automatische Wechsel; Pfeile und Wischen bleiben direkt bedienbar. Erst „Animation starten“ aktiviert automatische Wechsel. Lane- und Suchseiten laden die ersten vier Kartenbilder bevorzugt, damit beide zunächst sichtbaren mobilen Reihen früh verfügbar sind. Weitere Karten und nachgeladene Ergebnisse bleiben verzögert. Auf Newsseiten und Eventdetails wird weiterhin jeweils das erste Bild bevorzugt geladen. Das Logo auf Unterseiten lädt die Startseite nicht vorsorglich.
 
-Das Hochformatvideo lädt seine MP4-Quelle erst ab 1536 Pixeln und nur im sichtbaren Bereich. Zwischen 1280 und 1535 Pixeln bleibt das Poster mit deaktivierten Videotasten stehen. Beim Verkleinern oder Verlassen des sichtbaren Bereichs wird die Quelle entfernt. „Daten sparen“ und die Systemeinstellung „Bewegung reduzieren“ verhindern automatisches Laden und Abspielen; ab 1536 Pixeln lässt sich die Wiedergabe ausdrücklich starten.
+Das Hochformatvideo lädt seine MP4-Quelle ab 1280 Pixeln und nur im sichtbaren Bereich, passend zur sichtbaren Video-Kachel. Auch zwischen 1280 und 1535 Pixeln spielt es ab und die Videotasten sind bedienbar. Beim Verkleinern unter 1280 Pixel oder Verlassen des sichtbaren Bereichs wird die Quelle entfernt. „Daten sparen“ und die Systemeinstellung „Bewegung reduzieren“ verhindern automatisches Laden und Abspielen; ab 1280 Pixeln lässt sich die Wiedergabe ausdrücklich starten.
 
 Bei aktivierter Systemeinstellung „Bewegung reduzieren“ starten diese Videos und der Highlight-Slider ohne automatische Bewegung. Eine ausdrücklich gewählte Pause bleibt auch nach weiterer Bedienung erhalten. Der Slider hat eine eigene Pause-Taste; mit der Taste `S` lässt sich das sichtbare Suchfeld fokussieren.
 
@@ -698,6 +711,7 @@ Für Sentry gilt zusätzlich:
 - der Produktions-Container bekommt `SENTRY_ENVIRONMENT=production`
 - der Produktions-Deploy setzt `SENTRY_RELEASE` automatisch auf die deployte Git-SHA
 - nach erfolgreichem GitHub-Deploy meldet der Workflow denselben Release per `sentry-cli` an Sentry und verknüpft automatisch die Commits
+- der aktive Uptime-Monitor prüft jede Minute `https://stuttgart-live.de/up` in der Umgebung `production`; abgeschaltete Testdomains gehören nicht in diese Verfügbarkeitsprüfung
 
 Wenn du lokal sowohl entwickelst als auch Hetzner-Infrastruktur steuerst und manuell nach Produktion deployen willst, reicht aktuell in `.env` in der Regel:
 
@@ -770,7 +784,7 @@ Anonyme moderne Kartengruppen der Startseite, Eventlisten und Suche nutzen in Pr
 
 Für eine lokale Cache-Diagnose mit `mise exec -- bin/rails dev:cache` das Entwicklungscaching einschalten und den Server neu starten; nach dem Vergleich mit demselben Befehl wieder ausschalten und neu starten. Zwei identische anonyme Anfragen vergleichen und dabei Fragmenttreffer sowie Renderdauer beobachten. Zusätzliche Fragmentlogs lassen sich lokal über `config.action_controller.enable_fragment_cache_logging = true` aktivieren. Die stabilen Medienlinks laufen nicht zeitlich ab; nach einer Rotation des Signaturschlüssels müssen vorhandene Fragmente mit `Rails.cache.clear` in der betroffenen Umgebung geleert werden, damit sie sofort neue Links ausgeben.
 
-Öffentliche Bilder verwenden ausschließlich bereits fertige lokale Varianten. Neue oder ersetzte Event-, Banner- und Newsbilder werden über die Queue `public_images` vorbereitet; bis dahin bleibt die vorhandene Originalquelle sichtbar. Fehlen bei einem Newsbild sowohl Original als auch fertige Varianten im Storage, bleiben Liste und Artikel ohne Bild aufrufbar. Importbilder behalten ihre Anbieter-URL als Fallback. Automatisch werden nur Bilder bereits veröffentlichter Events ab heute heruntergeladen, auch beim Veröffentlichen eines Events; Rohimporte lösen keine Bilddownloads aus. Bei einer geänderten Quelle werden alte lokale Ausgaben sofort ignoriert. Rechteangaben, Fokus und Zoom bleiben erhalten. Logos und Bilder im Fließtext verwenden vorhandene Varianten oder ihr Original; für sie gibt es keinen neuen automatischen Backfill. PDFs und Videos im Fließtext zeigen eine vorhandene Bildvorschau; fehlt diese, erscheint ein Dateilink.
+Öffentliche Bilder verwenden ausschließlich bereits fertige lokale Varianten. Neue oder ersetzte Event-, Banner- und Newsbilder werden über die Queue `public_images` vorbereitet; bis dahin bleibt die vorhandene Originalquelle sichtbar. Fehlen bei einem Newsbild sowohl Original als auch fertige Varianten im Storage, bleiben Liste und Artikel ohne Bild aufrufbar. Importbilder behalten ihre Anbieter-URL als Fallback. Meldet ein Anbieter HTTP 404 oder 410, wird der Vorbereitungsjob ohne erneuten Versuch verworfen; vorübergehende Netzwerk- und Serverfehler werden weiterhin wiederholt. Automatisch werden nur Bilder bereits veröffentlichter Events ab heute heruntergeladen, auch beim Veröffentlichen eines Events; Rohimporte lösen keine Bilddownloads aus. Bei einer geänderten Quelle werden alte lokale Ausgaben sofort ignoriert. Rechteangaben, Fokus und Zoom bleiben erhalten. Logos und Bilder im Fließtext verwenden vorhandene Varianten oder ihr Original; für sie gibt es keinen neuen automatischen Backfill. PDFs und Videos im Fließtext zeigen eine vorhandene Bildvorschau; fehlt diese, erscheint ein Dateilink.
 
 Ein Bildjob verarbeitet höchstens vier Größen, begrenzt Eingaben auf 12 MiB und 24 Millionen Pixel und akzeptiert JPEG, PNG, WebP und GIF. Downloads haben insgesamt höchstens 25 Sekunden einschließlich DNS, Weiterleitungen und eines Wiederholungsversuchs; private Netzadressen und unsichere URLs werden abgewiesen. Netzwerkfehler werden im Hintergrund höchstens dreimal versucht. Nicht unterstützte oder beschädigte Bilder bleiben bei ihrer vorhandenen Quelle; weitere gültige Bildslots desselben Events oder Beitrags werden trotzdem vorbereitet. Die HTML-Anfrage lädt keine neue Datei vom Anbieter und erzeugt keine Bildvariante.
 
@@ -978,7 +992,11 @@ Die gemeinsame Architektur und die verbleibenden Betriebsnachweise stehen in
 [Betriebsrunbook](docs/operations/domainumzug-und-staging.md).
 
 Pull Requests und `main` durchlaufen die vollständigen Prüfungen mit
-`mise exec -- bin/ci`. Bei einem Push auf `main` baut ein zweiter Job parallel
+`mise exec -- bin/ci`. Meldet ein Abhängigkeitsaudit eine verwundbare Bibliothek,
+aktualisiere sie gezielt, übernimm das zugehörige Lockfile und führe die vollständige
+CI erneut aus.
+
+Bei einem Push auf `main` baut ein zweiter Job parallel
 das Image mit dem SHA-Tag dieses Commits und hält dessen Digest im Artefakt
 `main-image` fest. Erst wenn Prüfungen und Build erfolgreich sind, startet
 `Deploy Staging`. Der Workflow checkt exakt den geprüften Commit aus, übernimmt
@@ -1231,6 +1249,13 @@ PostgreSQL läuft direkt auf dem Host, nicht in einem separaten Container. Die A
 - `stuttgart_live_de_production_cache`
 - `stuttgart_live_de_production_queue`
 - `stuttgart_live_de_production_cable`
+
+Automatische Bibliotheksupdates dürfen PostgreSQL nicht ungeplant neu starten:
+Die Ansible-Base-Rolle stellt deshalb den Neustart von `postgresql@16-main.service`
+durch `needrestart` gezielt zurück. Updates werden weiterhin installiert; ein
+ausstehender PostgreSQL-Neustart muss anschließend in einem abgestimmten
+Wartungsfenster für alle Apps auf dem Host nachgeholt werden. Anwendung und
+Prüfschritte sind im [Ansible-Betriebsablauf](infra/ansible/README.md) beschrieben.
 
 Für `russ-live.de` legt das Host-Setup zusätzlich getrennte Operational-Datenbanken an:
 
