@@ -3,6 +3,17 @@ require "test_helper"
 class ApplicationHelperTest < ActionView::TestCase
   include ApplicationHelper
 
+  test "brand text formats only the name and escapes surrounding text" do
+    html = stuttgart_live_brand_text('Bei STUTTGART LIVE <script>alert("test")</script>')
+    fragment = Nokogiri::HTML.fragment(html)
+
+    assert_equal 'Bei STUTTGARTLIVE <script>alert("test")</script>', fragment.text
+    assert_equal "STUTTGART", fragment.at_css("strong").text
+    assert_includes fragment.at_css("strong")["style"], "700"
+    assert_includes fragment.at_css("span")["style"], "400"
+    assert_empty fragment.css("script")
+  end
+
   test "public design navigation genres do not depend on homepage genre lanes" do
     lanes = public_design_navigation_lanes
 

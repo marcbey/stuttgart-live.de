@@ -137,7 +137,7 @@ export default class extends Controller {
     event.preventDefault()
 
     const url = this.shareUrl()
-    const title = "Meine Merkliste bei Stuttgart Live"
+    const title = "Meine Merkliste bei STUTTGART LIVE"
 
     try {
       if (navigator.share) {
