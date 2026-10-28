@@ -41,6 +41,13 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".info-page-card", count: 5
   end
 
+  test "static pages remain accessible with a structured page parameter" do
+    get datenschutz_url, params: { page: { number: "2" } }
+
+    assert_response :success
+    assert_includes response.body, "Datenschutz"
+  end
+
   test "contact page renders form when stored content has no form" do
     StaticPage.find_by!(slug: "kontakt").update!(
       body: "<h2>Bestell-Hotline</h2><p>Telefon: 0711 – 550 660 77</p>"

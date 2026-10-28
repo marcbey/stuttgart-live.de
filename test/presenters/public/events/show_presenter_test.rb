@@ -21,6 +21,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
   class ViewContextStub
     include ActionView::Helpers::NumberHelper
+    include Public::EventsHelper
 
     def event_image_source(image)
       image&.image_url || image&.source
@@ -48,10 +49,6 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     def event_source_label(source)
       source.to_s
-    end
-
-    def public_event_ticket_price(event, offer, format: :card)
-      Public::EventsHelper.instance_method(:public_event_ticket_price).bind_call(self, event, offer, format:)
     end
 
     def l(value, format:)
@@ -103,7 +100,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event)
 
-    assert_equal "Band – Live | 17.06.2026 | Im Wizemann, Stuttgart | Stuttgart Live", presenter.page_title
+    assert_equal "Band – Live | 17.06.2026 | Im Wizemann, Stuttgart | STUTTGART LIVE", presenter.page_title
     assert_equal "Band – Live | 17.06.2026 | Im Wizemann, Stuttgart", presenter.meta_title
     assert_equal event.event_info.truncate(160), presenter.meta_description
     assert_equal "https://cdn.example.test/social.jpg", presenter.og_image_url
@@ -285,7 +282,7 @@ class Public::Events::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(event, primary_offer: primary_offer)
 
-    assert_equal "35,96€ bis 59,90€", presenter.ticket_price_text
+    assert_equal "35,96 € bis 59,90 €", presenter.ticket_price_text
   end
 
   test "hides ticket cta for past events" do

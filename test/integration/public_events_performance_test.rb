@@ -53,6 +53,40 @@ class PublicEventsPerformanceTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "mix calculates series badges only for the rendered cards as genres increase" do
+    EventGenre.delete_all
+    groups = [ genres(:rock), genres(:pop), genres(:metal), genres(:jazz) ]
+
+    [ 2, 4 ].each do |group_count|
+      ((group_count - 2)...group_count).each do |index|
+        series = EventSeries.create!(origin: "manual", name: "Mix Series #{index}")
+        2.times do |term|
+          event = @event.dup
+          event.assign_attributes(
+            slug: "mix-series-#{index}-#{term}",
+            source_fingerprint: "test::mix-series::#{index}::#{term}",
+            artist_name: "Mix Artist #{index}",
+            start_at: (term + 1).days.from_now.change(hour: 20),
+            event_series: series,
+            event_series_assignment: "manual"
+          )
+          event.save!
+          event.genres = [ groups.fetch(index) ]
+        end
+      end
+
+      queries = capture_queries { get homepage_section_events_url(section: "stuttgart_mix") }
+
+      assert_response :success
+      group_count.times do |index|
+        assert_select ".design-preview-card-title", text: "Mix Artist #{index}", count: 1
+      end
+      assert_select ".design-preview-card-series-pill", text: "+ 1 Termin", count: group_count
+      assert_equal 2, queries.grep(/GROUP BY "events"\."event_series_id"/).size,
+        "Series badge queries must stay fixed as candidate genre lanes increase"
+    end
+  end
+
   test "under 30 cards retain the active offer status when another offer is sold out" do
     @event.event_offers.create!(source: "manual", source_event_id: "performance-sold-out", sold_out: true, priority_rank: 0)
 

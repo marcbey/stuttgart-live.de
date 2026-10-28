@@ -48,6 +48,32 @@ Das Wrapper-Skript liest `DB_PASSWORD` direkt aus `.env` und ruft `app_host.yml`
 mit dem gehärteten `admin`-Benutzer und dem Standard-Schlüssel
 `~/.ssh/stgt-live-hetzner-admin` auf.
 
+## PostgreSQL-Neustarts nach Paketupdates
+
+Ubuntu führt nach automatischen Bibliotheksupdates über `needrestart` auch
+Dienstneustarts aus. Die Base-Rolle stellt deshalb ausschließlich den Neustart
+von `postgresql@16-main.service` zurück. Sicherheitsupdates und die übrigen
+Neustartregeln bleiben aktiv; ausstehende PostgreSQL-Neustarts werden weiterhin
+gemeldet. Die gezielte Konfiguration lässt sich aus der Repository-Wurzel prüfen:
+
+```bash
+ANSIBLE_CONFIG=infra/ansible/ansible.cfg ansible-playbook \
+  -i infra/ansible/inventories/production/hosts.yml \
+  -u admin --private-key ~/.ssh/stgt-live-hetzner-admin \
+  infra/ansible/playbooks/bootstrap.yml --tags needrestart --check --diff
+```
+
+Zum Anwenden nach der Prüfung `--check --diff` weglassen. Diese beiden Aufgaben
+starten keinen Dienst neu. Nach Bibliotheksupdates den ausstehenden DB-Neustart
+zeitnah in einem abgestimmten Wartungsfenster nachholen, damit auch der laufende
+Prozess die aktualisierten Bibliotheken verwendet. Alle Produktions- und
+Staging-Apps teilen diese PostgreSQL-Instanz: konkurrierende Deployments und
+Refreshs aussetzen, die gemeinsame Deploy-Sperre halten und anschließend die
+Readiness beider Produktionen sowie laufende Jobprozesse prüfen. Ablauf und
+Sperren stehen im [Betriebsrunbook](../../docs/operations/domainumzug-und-staging.md).
+Die Ausnahme betrifft `needrestart`; PostgreSQL-Paketupdates oder manuelle
+Neustarts können den Dienst weiterhin unterbrechen.
+
 ## Wichtige Variablen
 
 Nicht-sensitive Defaults liegen in:
