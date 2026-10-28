@@ -8,13 +8,14 @@
   <div class="design-preview-section-header">
     <h2 id="<%= title_id %>"><%= title %></h2>
   </div>
-  <div class="design-preview-card-row">
+  <div data-controller="genre-labels" class="design-preview-card-row">
     <% related_preview_events.each do |event| %>
       <%= render "public/events/design_preview_card",
                  event: event,
                  browse_state: browse_state,
                  strict_proxy: strict_proxy,
                  variant: "compact",
+                 show_card_kicker: false,
                  image_sizes: local_assigns.fetch(:image_sizes, "(max-width: 767px) 5.35rem, 5.25rem"),
                  image_variant_sizes: %i[thumbnail card_mobile],
                  link_class: "event-listing-link",

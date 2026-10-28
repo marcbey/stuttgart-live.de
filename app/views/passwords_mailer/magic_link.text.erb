@@ -1,4 +1,4 @@
-Mit diesem Magic-Link meldest du dich direkt bei Stuttgart Live an:
+Mit diesem Magic-Link meldest du dich direkt bei STUTTGART LIVE an:
 <%= password_url(@user.password_reset_token) %>
 
 Der Link ist <%= distance_of_time_in_words(0, @user.password_reset_token_expires_in) %> gültig.

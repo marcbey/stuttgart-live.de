@@ -7,10 +7,10 @@
   genre_lanes.flat_map { |lane| Array(lane.events) }
 ).compact.uniq(&:id) %>
 <% fallback_title = "Datenschutz" %>
-<% fallback_intro = "Stuttgart Live bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region." %>
+<% fallback_intro = "STUTTGART LIVE bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region." %>
 <% page_title = @page&.title.presence || fallback_title %>
 <% page_intro = @page&.intro.to_s.presence || fallback_intro %>
-<% hero_intro = "Stuttgart Live bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region." %>
+<% hero_intro = "STUTTGART LIVE bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region." %>
 <% page_body_present = @page&.body&.to_plain_text.to_s.strip.present? %>
 <% design_service_preview_mode = action_name == "design_preview_service" %>
 <% design_service_back_path = design_service_preview_mode ? design_preview_path : root_path %>
@@ -24,7 +24,7 @@
 <% end %>
 <% content_for :page_newsletter do %><% end %>
 <% content_for :page_partner_strip do %><% end %>
-<%= render_public_seo title: "#{page_title}#{' Preview' if design_service_preview_mode} - Stuttgart Live",
+<%= render_public_seo title: "#{page_title}#{' Preview' if design_service_preview_mode} - STUTTGART LIVE",
                       description: @page.present? ? public_static_page_description(@page) : page_intro,
                       canonical_url: (design_service_preview_mode || @page.blank? ? design_preview_service_url : static_page_url(@page.slug)) %>
 
@@ -53,7 +53,7 @@
         <h1 id="design-service-preview-title"><%= page_title %></h1>
       </div>
       <div class="design-preview-hero-side design-service-preview-hero-side">
-        <p><%= hero_intro %></p>
+        <p><%= stuttgart_live_brand_text(hero_intro) %></p>
         <%= link_to events_path(anchor: "design-preview-news"), class: "design-preview-text-link" do %>
           Nichts verpassen mit unserem Newsletter
           <span aria-hidden="true">↓</span>
@@ -72,7 +72,7 @@
             <%= public_page_body(@page) %>
           <% else %>
             <h2>Events in deiner Stadt</h2>
-            <p>Stuttgart Live ist die Plattform für Veranstaltungen in Stuttgart und der Region. Hier findest du Konzerte, Festivals, Musicals, Comedy, Kultur und besondere Abende, die man nicht verpassen möchte.</p>
+            <p><%= stuttgart_live_brand_text %> ist die Plattform für Veranstaltungen in Stuttgart und der Region. Hier findest du Konzerte, Festivals, Musicals, Comedy, Kultur und besondere Abende, die man nicht verpassen möchte.</p>
             <p>Unser Ziel ist eine Seite, die schnell Orientierung gibt und trotzdem Lust macht, weiterzustöbern. Deshalb stehen die Events im Mittelpunkt: klare Informationen, starke Bilder und kurze Wege zu Tickets, Terminen und wichtigen Hinweisen.</p>
             <h2>Was uns wichtig ist</h2>
             <p>Wir kuratieren Veranstaltungen so, dass du nicht lange suchen musst. Aktuelle Highlights, kommende Termine und passende Empfehlungen helfen dabei, neue Lieblingsabende zu entdecken.</p>

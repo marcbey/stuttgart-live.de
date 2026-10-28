@@ -1,6 +1,14 @@
 require "test_helper"
 
 class EventSocialPostTest < ActiveSupport::TestCase
+  test "cleared badge stays empty after saving" do
+    post = events(:published_one).event_social_posts.build(platform: "instagram", caption: "Caption")
+    assert_equal "NEW", post.card_badge_text
+    post.card_badge_text = "   "
+    post.save!
+    assert_equal "", EventSocialPost.find(post.id).card_badge_text
+  end
+
   test "validates unique platform per event" do
     events(:published_one).event_social_posts.create!(
       platform: "facebook",

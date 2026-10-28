@@ -56,7 +56,7 @@ class Public::NewsletterConsentTest < ActionDispatch::IntegrationTest
     evidence = subscriber.newsletter_consent_events.order(:id).last
     assert_equal "signup_confirmed", evidence.action
     assert_equal subscriber.email, evidence.email
-    assert_equal "2026-09-23", evidence.consent_version
+    assert_equal "2026-10-22", evidence.consent_version
     assert_includes evidence.consent_text.fetch("newsletter"), "Südwestdeutschen Konzertdirektion Erwin Russ GmbH"
     assert_includes evidence.consent_text.fetch("tracking"), "mithilfe des Newsletter-Dienstes Mailjet"
     assert_includes evidence.consent_text.fetch("tracking"), "ohne den Newsletter abbestellen zu müssen"

@@ -4,6 +4,7 @@ require "ipaddr"
 
 class GuardedHttpFetcher
   class Error < StandardError; end
+  class NotFound < Error; end
   class DeadlineExceeded < StandardError; end
   Response = Data.define(:url, :status, :content_type, :body)
   HTML_LIMIT = 2.megabytes
@@ -40,6 +41,7 @@ class GuardedHttpFetcher
         uri = validated_uri(URI.join(uri.to_s, headers.fetch("location")).to_s)
         next
       end
+      raise NotFound, "HTTP #{status}" if [ 404, 410 ].include?(status)
       raise Error, "HTTP #{status}" unless status == 200
 
       return Response.new(url: uri.to_s, status: status, content_type: headers["content-type"].to_s.split(";").first, body: body)

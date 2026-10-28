@@ -191,6 +191,8 @@ module Meta
         .new_from_image([ 255, 255, 255 ])
         .bandjoin(circle_alpha)
         .copy(interpretation: :srgb)
+      return circle if badge_width.zero?
+
       badge_alpha = rounded_rectangle_mask(
         canvas_width: variant.width,
         canvas_height: variant.height,
@@ -210,21 +212,22 @@ module Meta
 
     def corner_badge_text_layers(variant:, badge_text:, badge_width:)
       heart = rendered_text(HEART_GLYPH, font_family: HEART_FONT_NAME, font_size: HEART_FONT_SIZE, color: BRAND_COLOR)
-      badge = rendered_text(badge_text, font_family: BADGE_FONT_NAME, font_size: BADGE_FONT_SIZE, color: [ 255, 255, 255 ])
-      badge_left = variant.width - BADGE_RIGHT - badge_width
-
-      [
+      layers = [
         TextLayer.new(
           image: heart,
           x: HEART_CIRCLE_CENTER.first - (heart.width / 2),
           y: HEART_CIRCLE_CENTER.last - (heart.height / 2)
-        ),
-        TextLayer.new(
-          image: badge,
-          x: badge_left + ((badge_width - badge.width) / 2),
-          y: BADGE_TOP + ((BADGE_HEIGHT - badge.height) / 2)
         )
       ]
+      return layers if badge_text.blank?
+
+      badge = rendered_text(badge_text, font_family: BADGE_FONT_NAME, font_size: BADGE_FONT_SIZE, color: [ 255, 255, 255 ])
+      badge_left = variant.width - BADGE_RIGHT - badge_width
+      layers << TextLayer.new(
+        image: badge,
+        x: badge_left + ((badge_width - badge.width) / 2),
+        y: BADGE_TOP + ((BADGE_HEIGHT - badge.height) / 2)
+      )
     end
 
     def circle_mask(canvas_width:, canvas_height:, center_x:, center_y:, radius:)
@@ -275,11 +278,14 @@ module Meta
     end
 
     def fitted_badge_text(text)
-      normalized = normalized_text(text, uppercase: true).presence || "NEW"
+      normalized = normalized_text(text, uppercase: true)
+      return "" if normalized.blank?
       fit_text(normalized, font_name: BADGE_FONT_NAME, font_size: BADGE_FONT_SIZE, max_width: BADGE_MAX_WIDTH - BADGE_HORIZONTAL_PADDING)
     end
 
     def badge_width_for(text)
+      return 0 if text.blank?
+
       measured_width = measure_text(text, font_name: BADGE_FONT_NAME, font_size: BADGE_FONT_SIZE)
       [ [ measured_width + BADGE_HORIZONTAL_PADDING, BADGE_MIN_WIDTH ].max, BADGE_MAX_WIDTH ].min
     end

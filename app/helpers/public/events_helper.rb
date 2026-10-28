@@ -345,17 +345,17 @@ module Public::EventsHelper
 
   def public_event_ticket_price(event, offer = event.public_ticket_offer, format: :card)
     if event.price_override.present? && event.public_ticket_status_label.blank?
-      return event.price_override
+      return public_event_price_text(event.price_override)
     end
     return unless offer.present?
 
     if event.min_price.present? && event.max_price.present? && event.min_price < event.max_price
-      min_price = number_to_currency(event.min_price, unit: "€", separator: ",", delimiter: ".", format: "%n%u")
-      return "#{min_price} bis #{number_to_currency(event.max_price, unit: "€", separator: ",", delimiter: ".", format: "%n%u")}" if format == :detail
+      min_price = number_to_currency(event.min_price, unit: "€", separator: ",", delimiter: ".", format: "%n %u")
+      return "#{min_price} bis #{number_to_currency(event.max_price, unit: "€", separator: ",", delimiter: ".", format: "%n %u")}" if format == :detail
 
       "ab #{min_price}"
     else
-      offer.ticket_price_text.to_s.presence
+      public_event_price_text(offer.ticket_price_text)
     end
   end
 
@@ -368,6 +368,10 @@ module Public::EventsHelper
   end
 
   private
+
+  def public_event_price_text(text)
+    text.to_s.gsub(/(?<=\d)[[:space:]]*(?:EUR\b|€)/i, " €").presence
+  end
 
   def event_detail_promoter_logo_source(promoter_name)
     promoter_slug = promoter_name.parameterize
