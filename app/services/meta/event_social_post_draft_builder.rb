@@ -8,7 +8,7 @@ module Meta
     def initialize(event:, platform:, card_badge_text: nil)
       @event = event
       @platform = platform.to_s
-      @card_badge_text = card_badge_text.to_s.strip.presence || "NEW"
+      @card_badge_text = card_badge_text.nil? ? "NEW" : card_badge_text.to_s.strip
     end
 
     def build

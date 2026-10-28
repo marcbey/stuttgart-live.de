@@ -70,7 +70,7 @@ Rails.application.routes.draw do
     resources :venues, except: [ :show ] do
       get :autocomplete, on: :collection
     end
-    resources :users, only: [ :index, :new, :create, :edit, :update ]
+    resources :users, only: [ :index, :new, :create, :edit, :update, :destroy ]
 
     resources :import_sources, only: [ :index, :edit, :update ] do
       post :sync_imported_events, on: :collection

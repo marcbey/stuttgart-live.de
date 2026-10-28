@@ -47,7 +47,7 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
 
     presenter = build_presenter(blog_post)
 
-    assert_equal "Neue Headline | 17.03.2026 | News | Stuttgart Live", presenter.page_title
+    assert_equal "Neue Headline | 17.03.2026 | News | STUTTGART LIVE", presenter.page_title
     assert_equal "Neue Headline | 17.03.2026 | News", presenter.meta_title
     assert_equal "Kurzbeschreibung", presenter.meta_description
     assert_equal "https://stuttgart-live.de/news/neue-headline", presenter.canonical_url

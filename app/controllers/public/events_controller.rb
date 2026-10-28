@@ -474,7 +474,8 @@ module Public
       lanes = Public::Events::HomepageGenreLanesBuilder.new(
         relation: scoped_homepage_all_relation,
         slugs: Genre.pluck(:slug),
-        limit: HOME_LANE_LIMIT
+        limit: HOME_LANE_LIMIT,
+        include_series_metadata: false
       ).call
 
       interleave_design_preview_mix_lanes(lanes)

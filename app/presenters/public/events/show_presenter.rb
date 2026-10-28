@@ -31,7 +31,7 @@ module Public
       end
 
       def page_title
-        "#{meta_title} | Stuttgart Live"
+        "#{meta_title} | STUTTGART LIVE"
       end
 
       def meta_title

@@ -16,7 +16,7 @@ module Newsletter
       response = client.create_contact_segment(
         name: segment_name,
         expression: "(#{interest.mailjet_property_name}=true)",
-        description: "Stuttgart Live Newsletter Interesse: #{interest.name}"
+        description: "STUTTGART LIVE Newsletter Interesse: #{interest.name}"
       )
       interest.update!(mailjet_segment_id: response.fetch("ID"))
       interest.mailjet_segment_id

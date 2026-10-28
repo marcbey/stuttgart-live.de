@@ -31,7 +31,7 @@
     <% end %>
   </div>
   <% if events.any? %>
-    <div class="<%= grid_classes.join(" ") %>"
+    <div data-controller="genre-labels" class="<%= grid_classes.join(" ") %>"
          id="lane-event-grid"
          <% if lazy_lane_id.present? %>data-lane-page-target="grid"<% end %>>
       <%= render "design_preview_event_grid",

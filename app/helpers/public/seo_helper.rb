@@ -1,5 +1,5 @@
 module Public::SeoHelper
-  HOMEPAGE_SEO_DESCRIPTION = "Konzerte, Shows und Events in Stuttgart und Region entdecken: aktuelle Termine, Highlights, Tickets und News bei Stuttgart Live.".freeze
+  HOMEPAGE_SEO_DESCRIPTION = "Konzerte, Shows und Events in Stuttgart und Region entdecken: aktuelle Termine, Highlights, Tickets und News bei STUTTGART LIVE.".freeze
 
   def render_public_seo(title:, description:, canonical_url:, meta_title: nil, og_image_url: nil, og_type: "website", robots: nil, json_ld: nil)
     render "public/seo/head",
@@ -30,7 +30,7 @@ module Public::SeoHelper
       "@context" => "https://schema.org",
       "@type" => "WebSite",
       "@id" => "#{root_url}#website",
-      name: "Stuttgart Live",
+      name: "STUTTGART LIVE",
       url: root_url,
       description: HOMEPAGE_SEO_DESCRIPTION,
       potentialAction: {
@@ -97,7 +97,7 @@ module Public::SeoHelper
   def public_static_page_description(page)
     page.intro.to_s.squish.presence ||
       page.body.to_plain_text.squish.presence&.truncate(160) ||
-      "#{page.title} bei Stuttgart Live."
+      "#{page.title} bei STUTTGART LIVE."
   end
 
   def public_event_item_name(event)

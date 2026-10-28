@@ -1,6 +1,6 @@
 <div style="font-family: Arial, sans-serif; color: #0a2324; line-height: 1.5;">
-  <h1 style="font-family: Arial, sans-serif; text-transform: uppercase; margin: 0 0 16px;">Stuttgart Live Newsletter</h1>
-  <p><%= Newsletter::ConsentText::CONFIRMATION_BODY %></p>
+  <h1 style="font-family: Arial, sans-serif; text-transform: uppercase; margin: 0 0 16px;"><%= stuttgart_live_brand_text %> Newsletter</h1>
+  <p><%= stuttgart_live_brand_text(Newsletter::ConsentText::CONFIRMATION_BODY) %></p>
   <p>
     <%= link_to "Newsletter-Anmeldung bestätigen",
                 @confirmation_url,

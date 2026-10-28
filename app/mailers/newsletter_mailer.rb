@@ -10,7 +10,7 @@ class NewsletterMailer < ApplicationMailer
 
   def preferences(subscriber)
     @preferences_url = newsletter_preferences_url(token: subscriber.preferences_token)
-    mail subject: "Ihre Tracking-Einstellungen für den StuttgartLIVE-Newsletter", to: subscriber.email
+    mail subject: "Ihre Tracking-Einstellungen für den STUTTGART LIVE-Newsletter", to: subscriber.email
   end
 
   private
