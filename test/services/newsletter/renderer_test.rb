@@ -367,7 +367,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, 'href="#newsletter-genres" target="_self"'
     assert_includes rendered.html, "Zur Genre-Auswahl ↑"
     assert_includes rendered.html, ">Pop</h2>"
-    assert_includes rendered.html, "Mehr Pop auf Stuttgart Live"
+    assert_includes Nokogiri::HTML.fragment(rendered.html).text, "Mehr Pop auf STUTTGARTLIVE"
     assert_includes rendered.html, 'href="https://example.com/pop-indie-singer-songwriter"'
     assert_includes rendered.html, "newsletter-card-column"
     assert_includes rendered.html, "newsletter-card-row"
@@ -426,7 +426,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "Mobile Pop Artist 0"
     assert_includes rendered.html, "Mobile Pop Artist 1"
     assert_not_includes rendered.html, "newsletter-mobile-title\" style=\"margin:0 0 5px;font-size:16px;line-height:1.18;font-weight:600;\">Mobile Pop Artist 2"
-    assert_includes rendered.html, "Mehr Pop auf Stuttgart Live"
+    assert_includes Nokogiri::HTML.fragment(rendered.html).text, "Mehr Pop auf STUTTGARTLIVE"
     assert_includes rendered.html, 'href="https://example.com/pop-indie-singer-songwriter"'
   end
 

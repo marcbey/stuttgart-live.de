@@ -1,10 +1,11 @@
 module Backend
   class UsersController < BaseController
     before_action :require_admin!
-    before_action :set_user, only: %i[edit update]
+    before_action :set_user, only: %i[edit update destroy]
 
     def index
       @users = User.order(:role, :name, :email_address)
+      @admin_count = @users.count(&:admin?)
     end
 
     def new
@@ -40,6 +41,25 @@ module Backend
         flash.now[:alert] = "Benutzer konnte nicht aktualisiert werden."
         render :edit, status: :unprocessable_entity
       end
+    end
+
+    def destroy
+      deleting_self = @user == current_user
+
+      if @user.destroy
+        if deleting_self
+          cookies.delete(:session_id)
+          Current.session = nil
+        end
+
+        redirect_to deleting_self ? new_session_path : backend_users_path,
+                    notice: "Benutzer wurde gelöscht.", status: :see_other
+      else
+        redirect_to backend_users_path, alert: @user.errors.full_messages.to_sentence, status: :see_other
+      end
+    rescue ActiveRecord::DeleteRestrictionError
+      redirect_to backend_users_path,
+                  alert: "Benutzer mit eigenen Blogbeiträgen können nicht gelöscht werden.", status: :see_other
     end
 
     private

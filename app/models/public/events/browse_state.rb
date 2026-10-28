@@ -13,7 +13,7 @@ module Public
         @event_date = normalized_event_date
         @query = @params["q"].to_s.strip.presence
         @normalized_query = Public::Events::SearchQueryNormalizer.normalize(@query).presence
-        @page = [ @params["page"].to_i, 1 ].max
+        @page = [ @params["page"].to_s.to_i, 1 ].max
       end
 
       def filter

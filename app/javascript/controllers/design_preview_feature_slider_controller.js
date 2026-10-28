@@ -9,8 +9,7 @@ export default class extends Controller {
 
   connect() {
     this.observeViewportOffset()
-    this.userPaused = this.userPaused ?? true
-    this.hovered = false
+    this.userPaused = this.userPaused ?? false
     this.focused = false
     this.reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
     this.handleMotionChange = () => {
@@ -22,21 +21,13 @@ export default class extends Controller {
       this.updateToggleButton()
       this.start()
     }
-    this.handleMouseEnter = () => {
-      this.hovered = true
-      this.stop()
-    }
-    this.handleMouseLeave = () => {
-      this.hovered = false
-      this.start()
-    }
-    this.handleFocusIn = () => {
-      this.focused = true
-      this.stop()
+    this.handleFocusIn = (event) => {
+      this.focused = event.target.matches(":focus-visible")
+      if (this.focused) this.stop()
     }
     this.handleFocusOut = () => {
       window.requestAnimationFrame(() => {
-        this.focused = this.element.contains(document.activeElement)
+        this.focused = this.element.contains(document.activeElement) && document.activeElement.matches(":focus-visible")
         this.start()
       })
     }
@@ -64,8 +55,6 @@ export default class extends Controller {
     this.trackTarget.addEventListener("pointerup", this.handlePointerUp)
     this.trackTarget.addEventListener("pointercancel", this.handlePointerUp)
     this.trackTarget.addEventListener("click", this.handleClick, true)
-    this.element.addEventListener("mouseenter", this.handleMouseEnter)
-    this.element.addEventListener("mouseleave", this.handleMouseLeave)
     this.element.addEventListener("focusin", this.handleFocusIn)
     this.element.addEventListener("focusout", this.handleFocusOut)
     this.reduceMotionQuery.addEventListener("change", this.handleMotionChange)
@@ -85,8 +74,6 @@ export default class extends Controller {
     this.trackTarget.removeEventListener("pointerup", this.handlePointerUp)
     this.trackTarget.removeEventListener("pointercancel", this.handlePointerUp)
     this.trackTarget.removeEventListener("click", this.handleClick, true)
-    this.element.removeEventListener("mouseenter", this.handleMouseEnter)
-    this.element.removeEventListener("mouseleave", this.handleMouseLeave)
     this.element.removeEventListener("focusin", this.handleFocusIn)
     this.element.removeEventListener("focusout", this.handleFocusOut)
     this.reduceMotionQuery?.removeEventListener("change", this.handleMotionChange)
@@ -120,7 +107,7 @@ export default class extends Controller {
 
   start() {
     if (!this.hasTrackTarget || this.slides.length <= 1) return
-    if (this.userPaused || this.reduceMotionQuery.matches || this.hovered || this.focused || this.dragStartX !== null) return
+    if (this.userPaused || this.reduceMotionQuery.matches || this.focused || this.dragStartX !== null) return
     if (this.timer) return
 
     this.timer = window.setTimeout(this.advance, this.currentInterval)
@@ -131,6 +118,7 @@ export default class extends Controller {
     if (this.reduceMotionQuery.matches) return
 
     this.userPaused = !this.userPaused
+    if (!this.userPaused) this.focused = false
     this.stop()
     this.updateToggleButton()
     this.start()

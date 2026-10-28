@@ -72,7 +72,7 @@ class Public::EventsHelperTest < ActionView::TestCase
     assert_equal "ab 49,00 €", public_event_ticket_price(event, offer)
     assert_equal "ab 49,00 €", public_event_ticket_price(event, offer, format: :detail)
     event.price_override = nil
-    assert_equal "ab 20,00€", public_event_ticket_price(event, offer)
+    assert_equal "ab 20,00 €", public_event_ticket_price(event, offer)
   end
 
   test "editorial price can fill a missing offer without making tickets available" do
@@ -92,7 +92,7 @@ class Public::EventsHelperTest < ActionView::TestCase
     event.min_price = BigDecimal("35.96")
     event.max_price = BigDecimal("59.90")
 
-    assert_equal "ab 35,96€", public_event_ticket_price(event, offer)
+    assert_equal "ab 35,96 €", public_event_ticket_price(event, offer)
   end
 
   test "public_event_ticket_price writes out ranges for detail format" do
@@ -102,7 +102,7 @@ class Public::EventsHelperTest < ActionView::TestCase
     event.min_price = BigDecimal("35.96")
     event.max_price = BigDecimal("59.90")
 
-    assert_equal "35,96€ bis 59,90€", public_event_ticket_price(event, offer, format: :detail)
+    assert_equal "35,96 € bis 59,90 €", public_event_ticket_price(event, offer, format: :detail)
   end
 
   test "public_event_ticket_price falls back to offer text for single prices" do
@@ -112,7 +112,7 @@ class Public::EventsHelperTest < ActionView::TestCase
     event.min_price = BigDecimal("45")
     event.max_price = BigDecimal("45")
 
-    assert_equal "45 EUR", public_event_ticket_price(event, offer)
+    assert_equal "45 €", public_event_ticket_price(event, offer)
   end
 
   test "public_event_ticket_price uses manual offer when imported primary offer is sold out" do
@@ -146,7 +146,7 @@ class Public::EventsHelperTest < ActionView::TestCase
       priority_rank: 0
     )
 
-    assert_equal "39 EUR", public_event_ticket_price(event)
+    assert_equal "39 €", public_event_ticket_price(event)
   end
 
   test "event_detail_organizer_logo uses matching promoter logo asset" do

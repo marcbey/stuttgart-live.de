@@ -1,10 +1,10 @@
-<% content_for :title, @confirmed ? "Newsletter bestätigt | Stuttgart Live" : "Bestätigungslink ungültig | Stuttgart Live" %>
+<% content_for :title, @confirmed ? "Newsletter bestätigt | STUTTGART LIVE" : "Bestätigungslink ungültig | STUTTGART LIVE" %>
 <% content_for :page_newsletter, tag.span("", hidden: true) %>
 
 <div class="newsletter-confirmation-page">
   <section class="newsletter-confirmation-shell" aria-labelledby="newsletter-confirmation-title">
     <div class="<%= class_names("newsletter-confirmation-panel", "newsletter-confirmation-panel-error": !@confirmed) %>">
-      <p class="newsletter-confirmation-eyebrow">Stuttgart Live Newsletter</p>
+      <p class="newsletter-confirmation-eyebrow"><%= stuttgart_live_brand_text %> Newsletter</p>
 
       <% if @confirmed %>
         <h1 id="newsletter-confirmation-title" class="newsletter-confirmation-title">Du bist jetzt eingetragen</h1>
