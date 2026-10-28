@@ -126,13 +126,13 @@
   </div>
 
   <% if events.any? %>
-    <div class="all-stuttgart-event-list" role="table" aria-label="<%= display_title %>">
+    <div class="all-stuttgart-event-list" data-controller="genre-labels" role="table" aria-label="<%= display_title %>">
       <div class="all-stuttgart-event-list-head" role="row">
         <span role="columnheader"><%= show_time_column ? "Uhrzeit" : "Tag" %></span>
         <span role="columnheader">Titel</span>
         <span role="columnheader">Location</span>
         <span role="columnheader">Preis</span>
-        <span role="columnheader">Genre</span>
+        <span role="columnheader" data-genre-labels-target="heading">Genre</span>
         <span role="columnheader">Aktion</span>
       </div>
 

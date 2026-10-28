@@ -38,7 +38,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     assert_equal 123456, captured_attributes.fetch("ContactsListID")
     assert_equal 9876, captured_attributes.fetch("Sender")
     assert_equal "redaktion@stuttgart-live.de", captured_attributes.fetch(:sender_email)
-    assert_equal "Stuttgart Live", captured_attributes.fetch(:sender_name)
+    assert_equal "STUTTGART LIVE", captured_attributes.fetch(:sender_name)
   end
 
   test "creates segmented campaign draft when issue has synced interest" do

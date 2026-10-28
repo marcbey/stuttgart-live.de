@@ -15,6 +15,7 @@ module Public
         Event.published_live
           .except(:order)
           .where(event_series_id: series_ids)
+          .where("start_at >= ?", Time.zone.today.beginning_of_day)
           .group(:event_series_id)
           .having("COUNT(DISTINCT events.id) >= 2")
           .pluck(:event_series_id)
