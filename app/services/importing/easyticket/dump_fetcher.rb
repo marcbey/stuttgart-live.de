@@ -255,7 +255,7 @@ module Importing
 
       def url_for_page(url, page)
         uri = URI.parse(url)
-        params = Rack::Utils.parse_query(uri.query.to_s)
+        params = Rack::Utils.parse_query(uri.query.to_s, "&;")
         params["page"] = page.to_s
         params["pageSize"] = DEFAULT_PAGE_SIZE.to_s if params["pageSize"].blank?
         uri.query = URI.encode_www_form(params.sort_by { |key, _| key })

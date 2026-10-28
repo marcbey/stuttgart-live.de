@@ -94,7 +94,7 @@ class BlogPost < ApplicationRecord
       if uri.path.include?("/embed/")
         video_id = uri.path.split("/embed/").last.to_s.split("/").first
       else
-        video_id = URI.decode_www_form(uri.query.to_s).find { |key, _| key == "v" }&.last
+        video_id = URI.decode_www_form(uri.query.to_s.tr(";", "&")).find { |key, _| key == "v" }&.last
       end
     end
 

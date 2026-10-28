@@ -143,6 +143,11 @@ class BlogPostTest < ActiveSupport::TestCase
     assert_nil BlogPost.normalized_youtube_embed_url("https://www.youtube.com/watch?v=&v=ignored")
   end
 
+  test "youtube video url accepts legacy semicolon query separators" do
+    assert_equal "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+      BlogPost.normalized_youtube_embed_url("https://www.youtube.com/watch?feature=share;v=dQw4w9WgXcQ")
+  end
+
   test "blank youtube video url clears stored videos" do
     blog_post = BlogPost.new(
       title: "Video News",
