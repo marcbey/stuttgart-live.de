@@ -19,7 +19,7 @@ unless disabled_sentry_environments.include?(sentry_environment)
 
     # Am Anfang lieber konservativ
     config.send_default_pii = false
-    config.enable_logs = true
+    config.rails.structured_logging.enabled = true
     config.traces_sample_rate = 0.1
     config.profiles_sample_rate = 0.0
 
