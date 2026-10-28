@@ -30,6 +30,17 @@ class Meta::PublishEventSocialPostJobTest < ActiveJob::TestCase
     Meta.const_set(:EventSocialPostPublisher, original_publisher)
   end
 
+  test "marks a queued post as failed when the initiating user was deleted" do
+    social_post = @event.event_social_posts.create!(platform: "instagram", status: "publishing", caption: "Caption")
+    user_id = @user.id
+    @user.destroy!
+
+    Meta::PublishEventSocialPostJob.perform_now(social_post.id, user_id)
+
+    assert_equal "failed", social_post.reload.status
+    assert_equal "Veröffentlichung abgebrochen: Der auslösende Benutzer wurde gelöscht.", social_post.error_message
+  end
+
   private
 
   class StubPublisher

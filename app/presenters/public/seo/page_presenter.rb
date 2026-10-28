@@ -1,7 +1,7 @@
 module Public
   module Seo
     class PagePresenter
-      DEFAULT_SITE_NAME = "Stuttgart Live"
+      DEFAULT_SITE_NAME = "STUTTGART LIVE"
 
       attr_reader :description, :canonical_url, :meta_title, :og_image_url, :og_type, :page_title, :robots
 

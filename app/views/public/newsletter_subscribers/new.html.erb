@@ -1,5 +1,5 @@
-<% content_for :title, "Newsletter-Anmeldung | StuttgartLIVE" %>
-<h1>StuttgartLIVE-Newsletter</h1>
+<% content_for :title, "Newsletter-Anmeldung | STUTTGART LIVE" %>
+<h1><%= stuttgart_live_brand_text %>-Newsletter</h1>
 <%= form_with model: @subscriber, url: newsletter_subscribers_path, method: :post, class: "newsletter-consent-form", data: { turbo: false } do |form| %>
   <%= hidden_field_tag :source, params[:source].presence || "newsletter" %>
   <%= hidden_field_tag :return_to, new_newsletter_subscriber_path %>
@@ -12,6 +12,6 @@
   </div>
   <%= render "public/newsletter_subscribers/consents", form:, prefix: "newsletter-signup" %>
   <%= form.submit "Newsletter abonnieren" %>
-  <p class="newsletter-consent-note"><%= Newsletter::ConsentText::FOOTER %></p>
+  <p class="newsletter-consent-note"><%= stuttgart_live_brand_text(Newsletter::ConsentText::FOOTER) %></p>
   <%= link_to "Datenschutzerklärung", datenschutz_path %>
 <% end %>

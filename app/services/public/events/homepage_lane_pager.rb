@@ -38,14 +38,14 @@ module Public
         raise InvalidCursor if @cursor_payload.present? && @cursor_payload.fetch("context", {}) != @context
       end
 
-      def call
+      def call(include_series_metadata: true)
         events, next_state = paged_events
         preload_event_associations(events)
-        series_counts_by_id = SeriesCountsByIdQuery.call(events)
+        series_counts_by_id = include_series_metadata ? SeriesCountsByIdQuery.call(events) : {}
 
         Result.new(
           events: events,
-          effective_series_ids: EffectiveSeriesIdsQuery.call(events),
+          effective_series_ids: include_series_metadata ? EffectiveSeriesIdsQuery.call(events) : [],
           series_counts_by_id: series_counts_by_id,
           next_cursor: next_cursor_for(next_state),
           card_offset: position

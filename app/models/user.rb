@@ -14,6 +14,9 @@ class User < ApplicationRecord
   has_many :published_event_social_posts, class_name: "EventSocialPost", foreign_key: :published_by_id, dependent: :nullify
   has_many :authored_blog_posts, class_name: "BlogPost", foreign_key: :author_id, dependent: :restrict_with_exception
   has_many :published_blog_posts, class_name: "BlogPost", foreign_key: :published_by_id, dependent: :nullify
+  has_many :created_newsletter_issues, class_name: "NewsletterIssue", foreign_key: :created_by_id, dependent: :nullify
+  has_many :sent_newsletter_issues, class_name: "NewsletterIssue", foreign_key: :sent_by_id, dependent: :nullify
+  has_many :initiated_publish_attempts, class_name: "PublishAttempt", foreign_key: :initiated_by_id, dependent: :nullify
 
   normalizes :email_address, with: ->(e) { e.strip.downcase }
 
@@ -22,6 +25,7 @@ class User < ApplicationRecord
   validates :name, length: { maximum: 120 }, allow_blank: true
   validate :must_keep_an_admin_account, if: :admin_role_removed?
   validate :password_must_be_strong, if: :password_present?
+  before_destroy :protect_account_on_destroy, prepend: true
 
   def admin?
     role == "admin"
@@ -82,9 +86,24 @@ class User < ApplicationRecord
     end
 
     def must_keep_an_admin_account
-      return if self.class.where(role: "admin").where.not(id: id).exists?
+      return unless last_admin_account?
 
       errors.add(:role, "muss mindestens einen Admin behalten")
+    end
+
+    def protect_account_on_destroy
+      if last_admin_account?
+        errors.add(:base, "Der letzte Admin kann nicht gelöscht werden.")
+        throw :abort
+      end
+
+      # Lock before dependent cleanup so concurrent publishing cannot add stale user references.
+      self.class.where(id: id).lock.load
+    end
+
+    def last_admin_account?
+      admins = self.class.where(role: "admin").order(:id).lock.to_a
+      admins.one? && admins.first.id == id
     end
 
     def password_must_be_strong

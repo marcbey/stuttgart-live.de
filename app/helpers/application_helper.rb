@@ -1,4 +1,6 @@
 module ApplicationHelper
+  include BrandHelper
+
   GOOGLE_ANALYTICS_ALLOWED_HOSTS = %w[
     stuttgart-live.de
     stuttgart-live.schopp3r.de

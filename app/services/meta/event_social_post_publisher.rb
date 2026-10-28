@@ -43,19 +43,21 @@ module Meta
     end
 
     def create_publish_attempt(event_social_post:, publish_context:, user:)
-      event_social_post.publish_attempts.create!(
-        social_connection: publish_context.fetch(:connection),
-        social_connection_target: publish_context.fetch(:target),
-        initiated_by: user,
-        platform: event_social_post.platform,
-        status: "started",
-        started_at: Time.current,
-        request_snapshot: {
-          "connection_status" => publish_context.fetch(:connection)&.connection_status,
-          "target_id" => publish_context.fetch(:target)&.id,
-          "target_external_id" => publish_context.fetch(:target)&.external_id
-        }.compact
-      )
+      with_publishing_user(user) do |publishing_user|
+        event_social_post.publish_attempts.create!(
+          social_connection: publish_context.fetch(:connection),
+          social_connection_target: publish_context.fetch(:target),
+          initiated_by: publishing_user,
+          platform: event_social_post.platform,
+          status: "started",
+          started_at: Time.current,
+          request_snapshot: {
+            "connection_status" => publish_context.fetch(:connection)&.connection_status,
+            "target_id" => publish_context.fetch(:target)&.id,
+            "target_external_id" => publish_context.fetch(:target)&.external_id
+          }.compact
+        )
+      end
     end
 
     def publish_single!(event_social_post:, user:)
@@ -67,12 +69,14 @@ module Meta
         raise Error, "Unbekannte Plattform: #{event_social_post.platform}"
       end.publish!(event_social_post:)
 
-      event_social_post.mark_published!(
-        user:,
-        remote_media_id: result.remote_media_id,
-        remote_post_id: result.remote_post_id,
-        payload: { "publish_response" => result.payload }
-      )
+      with_publishing_user(user) do |publishing_user|
+        event_social_post.mark_published!(
+          user: publishing_user,
+          remote_media_id: result.remote_media_id,
+          remote_post_id: result.remote_post_id,
+          payload: { "publish_response" => result.payload }
+        )
+      end
       publish_attempt&.succeed!(response_snapshot: { "publish_response" => result.payload })
 
       result
@@ -80,6 +84,12 @@ module Meta
       event_social_post.mark_failed!(error.message) if event_social_post.persisted?
       publish_attempt&.fail!(message: error.message)
       raise
+    end
+
+    def with_publishing_user(user)
+      User.transaction do
+        yield User.lock.find_by(id: user&.id)
+      end
     end
 
     def ensure_access_status!(event_social_post, user:)

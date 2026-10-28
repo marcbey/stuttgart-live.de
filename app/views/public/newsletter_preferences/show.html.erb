@@ -1,4 +1,4 @@
-<% content_for :title, "Newsletter-Tracking | StuttgartLIVE" %>
+<% content_for :title, "Newsletter-Tracking | STUTTGART LIVE" %>
 <h1>Tracking-Einstellungen</h1>
 <% if @invalid_token %>
   <p role="alert">Dieser Link ist ungültig oder abgelaufen. Bitte fordern Sie einen neuen Link an.</p>
@@ -11,8 +11,8 @@
       <%= check_box_tag :tracking_consent, "1", @subscriber.open_tracking_consent? && @subscriber.click_tracking_consent?, aria: { describedby: "tracking-details" } %>
       <div>
         <span class="newsletter-consent-optional">Freiwillig</span>
-        <%= label_tag :tracking_consent, Newsletter::ConsentText::TRACKING_TITLE %>
-        <p id="tracking-details"><%= Newsletter::ConsentText::TRACKING_DETAILS %></p>
+        <%= label_tag :tracking_consent, stuttgart_live_brand_text(Newsletter::ConsentText::TRACKING_TITLE) %>
+        <p id="tracking-details"><%= stuttgart_live_brand_text(Newsletter::ConsentText::TRACKING_DETAILS) %></p>
         <%= link_to "Datenschutzerklärung", datenschutz_path %>
       </div>
     </div>

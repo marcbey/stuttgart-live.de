@@ -10,7 +10,7 @@ module Newsletter
     ].freeze
     TEST_EMAILS = TEST_RECIPIENTS.map { |recipient| recipient.fetch("Email") }.freeze
     TEST_EMAIL = TEST_EMAILS.first
-    DEFAULT_SENDER_NAME = "Stuttgart Live"
+    DEFAULT_SENDER_NAME = "STUTTGART LIVE"
     PLACEHOLDER_VALUES = %w[todo tbd changeme change-me replace-me dummy].freeze
     MAILJET_ERRORS = [ Mailjet::ApiError, Mailjet::Error ].freeze
 

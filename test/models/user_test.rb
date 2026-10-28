@@ -83,4 +83,80 @@ class UserTest < ActiveSupport::TestCase
     assert_not admin.update(role: "editor")
     assert_includes admin.errors[:role], "muss mindestens einen Admin behalten"
   end
+
+  test "does not allow destroying the last admin or their sessions" do
+    admin = users(:two)
+    session = admin.sessions.create!
+
+    assert_no_difference [ -> { User.count }, -> { Session.count } ] do
+      assert_not admin.destroy
+    end
+
+    assert_includes admin.errors[:base], "Der letzte Admin kann nicht gelöscht werden."
+    assert User.exists?(admin.id)
+    assert Session.exists?(session.id)
+  end
+
+  test "protects the last admin even with an unsaved role change" do
+    admin = users(:two)
+    admin.role = "editor"
+
+    assert_no_difference -> { User.count } do
+      assert_not admin.destroy
+    end
+  end
+
+  test "can destroy an admin when another admin remains" do
+    users(:one).update!(role: "admin")
+
+    assert_difference -> { User.count }, -1 do
+      assert users(:two).destroy
+    end
+
+    assert_equal 1, User.where(role: "admin").count
+  end
+
+  test "can destroy a non admin and their sessions" do
+    editor = users(:one)
+    session = editor.sessions.create!
+
+    assert_difference -> { User.count }, -1 do
+      assert editor.destroy
+    end
+
+    assert_not Session.exists?(session.id)
+    assert User.exists?(users(:two).id)
+  end
+
+  test "deleting a user preserves newsletters they created" do
+    issue = NewsletterIssue.create!(title: "Kulturwoche", subject: "Deine Events", created_by: users(:one))
+
+    assert_difference -> { User.count }, -1 do
+      assert users(:one).destroy
+    end
+
+    assert_nil issue.reload.created_by_id
+  end
+
+  test "deleting a user preserves newsletters they sent" do
+    issue = NewsletterIssue.create!(title: "Kulturwoche", subject: "Deine Events", sent_by: users(:one))
+
+    assert_difference -> { User.count }, -1 do
+      assert users(:one).destroy
+    end
+
+    assert_nil issue.reload.sent_by_id
+  end
+
+  test "deleting a user preserves their social publishing history" do
+    post = EventSocialPost.create!(event: events(:published_one), platform: "instagram", caption: "Unser Tipp")
+    attempt = post.publish_attempts.create!(platform: "instagram", initiated_by: users(:one))
+
+    assert_difference -> { User.count }, -1 do
+      assert users(:one).destroy
+    end
+
+    assert_nil attempt.reload.initiated_by_id
+    assert EventSocialPost.exists?(post.id)
+  end
 end
