@@ -100,7 +100,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "link[rel='preload'][as='font'][href*='.ttf']", count: 0
     assert_select "style[data-local-font-faces]", count: 1
     assert_select "meta[name='description'][content=?]",
-                  "Konzerte, Shows und Events in Stuttgart und Region entdecken: aktuelle Termine, Highlights, Tickets und News bei Stuttgart Live."
+                  "Konzerte, Shows und Events in Stuttgart und Region entdecken: aktuelle Termine, Highlights, Tickets und News bei STUTTGART LIVE."
     assert_select "link[rel='canonical'][href=?]", root_url
     assert_match(/"@type":"WebSite"/, response.body)
     assert_match(/"@type":"ItemList"/, response.body)
@@ -3425,7 +3425,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, tomorrow_event.artist_name
   end
 
-  test "tagestipp shows event series badge when the series is globally visible via a past event" do
+  test "tagestipp hides event series badge when only today remains" do
     today_start = Time.zone.now.change(hour: 20, min: 0, sec: 0)
     series = EventSeries.create!(origin: "manual", name: "Marvel Reihe")
     today_event = Event.create!(
@@ -3474,8 +3474,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert target_card.present?, "expected the series event to be rendered in Tagestipp"
-    assert_equal "Event-Reihe: Termine", target_card.at_css(".design-preview-card-series-pill")&.[]("title")
-    assert_equal "Termine", target_card.at_css(".design-preview-card-series-pill")&.text.to_s.strip
+    assert_nil target_card.at_css(".design-preview-card-series-pill")
   end
 
   test "index can be filtered to SKS events" do
@@ -4584,7 +4583,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-time-line", text: /Beginn:\s*\d{2}:\d{2}\s*Uhr/
     assert_select ".event-detail-meta-line", text: /LKA Longhorn/
     assert_select ".event-detail-time-line", text: /Einlass/, count: 0
-    assert_includes response.body, "Preis: 45 EUR"
+    assert_includes response.body, "Preis: 45 €"
     assert_select ".event-detail-tag", text: "Jazz, Blues & Soul"
     assert_select ".event-detail-tag", text: "Pop, Indie & Singer-Songwriter"
     assert_select ".event-detail-tag", text: "Rock & Alternative"
@@ -4606,7 +4605,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
                   event_url(@published_event.slug),
                   count: 1
     assert_select ".event-share[data-share-event-title-value=?]",
-                  "Published Artist | Stuttgart Live",
+                  "Published Artist | STUTTGART LIVE",
                   count: 1
     assert_select "button.event-share-button.design-detail-preview-action-button[aria-label='Published Artist teilen'][data-action='click->share-event#share']", count: 1
     assert_select ".event-share-status[role='status'][aria-live='polite'][data-share-event-target='status']", count: 1
@@ -4794,6 +4793,48 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-detail-related-list", count: 0
+  end
+
+  test "highlight series exposes every upcoming term and keeps ordinary series compact" do
+    series = EventSeries.create!(origin: "manual", name: "Highlight Termine")
+    @published_event.update!(event_series: series, event_series_assignment: "manual", highlighted: true)
+    terms = 7.times.map do |index|
+      Event.create!(
+        slug: "highlight-term-#{index}",
+        source_fingerprint: "test::highlight-term::#{index}",
+        title: "Highlight Vorstellung", artist_name: "Highlight Artist",
+        start_at: (index + 2).days.from_now.change(hour: 15, min: 30),
+        venue: "Porsche-Arena", city: "Stuttgart", status: "published",
+        published_at: 1.day.ago, event_series: series,
+        event_series_assignment: "manual", source_snapshot: {}
+      )
+    end
+
+    get event_url(@published_event.slug)
+
+    assert_response :success
+    assert_select ".design-detail-highlight-term", count: 8
+    assert_select ".design-detail-highlight-term-select option", count: 8
+    assert_select ".design-detail-highlight-term-select option[selected][value=?]", event_path(@published_event.slug), count: 1
+    assert_select "span.design-detail-highlight-term[aria-current='page']", count: 1
+    assert_select "a.design-detail-highlight-term[aria-current='page']", count: 0
+    assert_select ".design-detail-highlight-term[aria-current='page'][href]", count: 0
+    assert_select ".design-detail-preview-date-series", count: 1
+    terms.each do |term|
+      assert_select ".design-detail-highlight-term[href=?]", event_path(term.slug)
+    end
+    assert_select ".design-detail-highlight-term-time", text: "15:30 Uhr", count: 7
+
+    @published_event.update!(highlighted: false)
+    get event_url(@published_event.slug)
+    assert_response :success
+    assert_select ".design-detail-highlight-terms", count: 0
+    assert_select ".design-detail-preview-date-series", count: 1
+
+    @published_event.update!(highlighted: true, event_series: nil, event_series_assignment: "manual_none")
+    get event_url(@published_event.slug)
+    assert_response :success
+    assert_select ".design-detail-highlight-terms", count: 0
   end
 
   test "show renders compact upcoming event series terms below the ticket cta" do
@@ -6604,7 +6645,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get saved_events_url
 
     assert_response :success
-    assert_select "title", text: "Stuttgart Live - Deine Events"
+    assert_select "title", text: "STUTTGART LIVE - Deine Events"
     assert_select "meta[name='robots'][content='noindex, follow']", count: 1
     assert_select "link[rel='canonical'][href=?]", saved_events_url
     assert_select ".app-nav-saved-events-link[href='#{saved_events_path}']", count: 2

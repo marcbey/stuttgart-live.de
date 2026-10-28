@@ -24,6 +24,22 @@ class Public::Events::BrowseStateTest < ActiveSupport::TestCase
     assert_nil state.event_date_param
   end
 
+  test "structured page parameters fall back to the first page" do
+    [ { number: "3" }, [ "3" ] ].each do |page|
+      state = Public::Events::BrowseState.new(ActionController::Parameters.new(page: page))
+
+      assert_equal 1, state.page
+    end
+  end
+
+  test "invalid and nonpositive page parameters fall back to the first page" do
+    [ nil, "", "invalid", "0", "-2" ].each do |page|
+      state = Public::Events::BrowseState.new({ "page" => page })
+
+      assert_equal 1, state.page
+    end
+  end
+
   test "route params preserve pagination and format" do
     state = Public::Events::BrowseState.new({
       "filter" => "sks",
