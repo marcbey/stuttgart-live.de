@@ -15,7 +15,8 @@ class EventOffer < ApplicationRecord
   scope :active_ticket, -> { where(sold_out: false).where.not(ticket_url: [ nil, "" ]) }
 
   def resolved_ticket_url
-    self.class.resolve_ticket_url(ticket_url, source_event_id)
+    url = self.class.resolve_ticket_url(ticket_url, source_event_id)
+    Events::EasyticketShopUrl.new(url: url, event: event).call
   end
 
   def self.resolve_ticket_url(url, source_event_id)
