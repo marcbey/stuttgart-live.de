@@ -82,3 +82,5 @@ group :test do
 end
 
 gem "csv", "~> 3.3"
+
+gem "prawn", "~> 2.5"

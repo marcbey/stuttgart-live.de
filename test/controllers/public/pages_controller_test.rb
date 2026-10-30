@@ -269,15 +269,23 @@ class Public::PagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
-  test "guardian form page is publicly accessible" do
+  test "guardian form is publicly accessible as an inline PDF without the website layout" do
     get begleitformular_url(event: "Test Event", venue: "Im Wizemann", date: "2026-03-10")
 
     assert_response :success
-    assert_includes response.body, "Begleitformular"
-    assert_select "meta[name='description'][content*='Begleitformular']", count: 1
-    assert_select "link[rel='canonical'][href=?]", begleitformular_url
-    assert_includes response.body, "Drucken"
-    assert_includes response.body, "Test Event"
+    assert_equal "application/pdf", response.media_type
+    assert_match(/\Ainline;/, response.headers["Content-Disposition"])
+    assert_includes response.headers["Content-Disposition"], "begleitformular.pdf"
+    assert response.body.start_with?("%PDF-")
+    assert_not_includes response.body, "<html"
+  end
+
+  test "guardian form PDF link works without event parameters" do
+    get begleitformular_url(format: :pdf)
+
+    assert_response :success
+    assert_equal "application/pdf", response.media_type
+    assert response.body.start_with?("%PDF-")
   end
 
   private

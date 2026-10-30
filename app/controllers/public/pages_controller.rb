@@ -10,7 +10,11 @@ module Public
       render :design_preview_service
     end
 
-    def guardian_form; end
+    def guardian_form
+      send_data Public::GuardianFormPdf.new(
+        event: params[:event], venue: params[:venue], date: params[:date]
+      ).render, filename: "begleitformular.pdf", type: "application/pdf", disposition: "inline"
+    end
 
     def design_preview_service
       @page = StaticPage.with_page_content.find_by(system_key: "privacy") ||
