@@ -4078,6 +4078,22 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#search_card_event_#{event.id} .genre-lane-card-ticket-overlay", count: 0
   end
 
+  test "show routes Easy Ticket buttons to the organizer partner shop" do
+    own_shop = "https://partnershop.easyticket.de/3b38659fef6bcc38e100c728435ba8e9"
+    general_shop = "https://partnershop.easyticket.de/c2b3ee865fb7464a68403f97966923d8"
+    offer = event_offers(:published_one_offer)
+    offer.update!(source: "manual", ticket_url: "#{own_shop}/event/105758")
+
+    { "382" => own_shop, "141" => own_shop, "7008" => general_shop }.each do |promoter_id, shop|
+      @published_event.update!(promoter_id: promoter_id)
+
+      get event_url(@published_event.slug)
+
+      assert_response :success
+      assert_select "a.event-detail-cta-button[href='#{shop}/event/105758']", count: 1
+    end
+  end
+
   test "show prefers easyticket offer for primary ticket cta" do
     event = Event.create!(
       slug: "show-ticket-priority",
@@ -4104,7 +4120,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     event.event_offers.create!(
       source: "easyticket",
       source_event_id: "easy-show-123",
-      ticket_url: "https://partnershop.easyticket.de/show-tickets",
+      ticket_url: "https://partnershop.easyticket.de/3b38659fef6bcc38e100c728435ba8e9/event/105758",
       sold_out: false,
       priority_rank: 50,
       metadata: {}
@@ -4113,7 +4129,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(event.slug)
 
     assert_response :success
-    assert_includes response.body, "https://partnershop.easyticket.de/show-tickets"
+    assert_includes response.body, "https://partnershop.easyticket.de/c2b3ee865fb7464a68403f97966923d8/event/105758"
     assert_not_includes response.body, "https://eventim.example/show-tickets"
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
     assert_select "a.event-detail-cta-button[target='_blank'][rel~='noopener'][aria-describedby='ticket-handoff-note']", count: 1
@@ -4238,7 +4254,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     event.event_offers.create!(
       source: "manual",
       source_event_id: event.id.to_s,
-      ticket_url: "https://partnershop.easyticket.de/still-open",
+      ticket_url: "https://partnershop.easyticket.de/3b38659fef6bcc38e100c728435ba8e9/event/105759",
       sold_out: false,
       priority_rank: 0,
       metadata: {}
@@ -4249,7 +4265,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".event-detail-cta", count: 1
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
-    assert_includes response.body, "https://partnershop.easyticket.de/still-open"
+    assert_includes response.body, "https://partnershop.easyticket.de/c2b3ee865fb7464a68403f97966923d8/event/105759"
     assert_select ".design-detail-preview-actions #ticket-handoff-note.sr-only", text: "Bei Easy Ticket · öffnet neuen Tab", count: 1
     assert_not_includes response.body, "Ausverkauft"
     assert_not_includes response.body, "https://easyticket.example/sold-out"
@@ -4428,7 +4444,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     event.event_offers.create!(
       source: "manual",
       source_event_id: event.id.to_s,
-      ticket_url: "https://partnershop.easyticket.de/still-open",
+      ticket_url: "https://partnershop.easyticket.de/3b38659fef6bcc38e100c728435ba8e9/event/105759",
       sold_out: false,
       priority_rank: 0,
       metadata: {}
@@ -4441,7 +4457,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-detail-cta .event-detail-cta-button", text: "Tickets sichern"
     assert_not_includes response.body, "Abgesagt"
     assert_not_includes response.body, "Ausverkauft"
-    assert_includes response.body, "https://partnershop.easyticket.de/still-open"
+    assert_includes response.body, "https://partnershop.easyticket.de/c2b3ee865fb7464a68403f97966923d8/event/105759"
     assert_not_includes response.body, "https://eventim.example/canceled"
     assert_includes response.body, "\"eventStatus\":\"https://schema.org/EventScheduled\""
   end
