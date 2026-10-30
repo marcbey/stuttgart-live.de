@@ -340,6 +340,8 @@ class ApplicationHelperTest < ActionView::TestCase
     assert_includes fragment.text, "nur in Begleitung: bis 14 Jahren"
     assert fragment.at_css("p br + a"), "expected the guardian form link to start on a new line"
     assert_equal "→ Begleitformular PDF", fragment.at_css("a")&.text&.squish
+    assert_match %r{\A/begleitformular\.pdf}, fragment.at_css("a")["href"]
+    assert_equal "false", fragment.at_css("a")["data-turbo"]
   end
 
   test "formatted organizer notes replaces du addressed begleiformular shortcut with link" do

@@ -968,10 +968,12 @@ module ApplicationHelper
         link_to(
           "<span class=\"inline-arrow\">→</span> Begleitformular <span class=\"inline-file-badge\">PDF</span>".html_safe,
           begleitformular_path(
+            format: :pdf,
             event: [ event&.artist_name, event&.title ].compact.join(" - ").presence,
             venue: event&.venue,
             date: event&.start_at&.to_date&.iso8601
-          )
+          ),
+          data: { turbo: false }
         )
       ]
     )

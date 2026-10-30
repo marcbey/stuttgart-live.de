@@ -728,6 +728,12 @@ Bei einer unbekannten Seitenadresse zeigt die 404-Seite den gewohnten Header mit
 
 Sind die dafür benötigten Daten oder Ansichten nicht verfügbar, wird automatisch die einfache Fehlerseite ohne JavaScript und Datenbankinhalte angezeigt. Auch die Fehlerseiten für 400, 422 und 500 bleiben unabhängig davon nutzbar. Die dynamische 404-Ansicht lässt sich lokal unter `/errors/404` prüfen; `public/404.html` bleibt die statische Notfallseite.
 
+### Begleitformular als PDF
+
+Der Link „Begleitformular PDF“ öffnet direkt ein zweiseitiges A4-Dokument, ohne Header, Navigation oder Backend-Schaltflächen. Auch bestehende Links auf `/begleitformular` liefern das PDF. Veranstaltung, Datum und Spielstätte werden aus dem Veranstaltungslink übernommen; ohne diese Angaben bleiben die entsprechenden Felder ausfüllbar. Persönliche Angaben werden im PDF-Programm eingetragen und dort gespeichert oder gedruckt, nicht an die Website übertragen. Die beiden Unterschriftslinien sind für handschriftliche Unterschriften vorgesehen.
+
+Das Dokument wird mit Prawn in Rails erzeugt. Layout und Hinweistexte stehen in `app/services/public/guardian_form_pdf.rb`; Schriften und Logo werden lokal eingebunden. Die Felder sind hellgrau und zusätzlich umrandet, damit die Zuordnung auch auf Schwarzweiß-Ausdrucken erkennbar bleibt. PDF-Programme können interaktive Felder am Bildschirm zusätzlich mit ihrer eigenen Hervorhebungsfarbe markieren. Für die Textprüfung in den Tests wird neben `pdftoppm` auch `pdftotext` aus dem bereits benötigten Poppler-Paket verwendet.
+
 ## Qualitätssicherung
 
 Der Standardweg für Prüfungen ist:
