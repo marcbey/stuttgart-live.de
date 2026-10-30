@@ -143,7 +143,7 @@ GEM
       activesupport (>= 6.1)
     i18n (1.15.2)
       concurrent-ruby (~> 1.0)
-    image_processing (2.0.3)
+    image_processing (2.2.0)
     io-console (0.9.4)
     irb (1.18.0)
       pp (>= 0.6.0)
@@ -437,7 +437,7 @@ DEPENDENCIES
   csv (~> 3.3)
   debug
   dotenv-rails
-  image_processing (~> 2.0)
+  image_processing (~> 2.2)
   jbuilder
   jsbundling-rails
   json (>= 2.21.2, < 4.0)
