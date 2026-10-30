@@ -123,11 +123,11 @@ GEM
     erubi (1.13.1)
     et-orbi (1.4.2)
       tzinfo
-    faraday (2.14.3)
-      faraday-net_http (>= 2.0, < 3.5)
+    faraday (2.15.1)
+      faraday-net_http (>= 2.0, < 3.6)
       json
       logger
-    faraday-net_http (3.4.4)
+    faraday-net_http (3.5.0)
       net-http (~> 0.5)
     ffi (1.17.4-aarch64-linux-gnu)
     ffi (1.17.4-aarch64-linux-musl)
@@ -179,7 +179,7 @@ GEM
       net-imap
       net-pop
       net-smtp
-    mailjet (1.8.3)
+    mailjet (1.9.0)
       activesupport (>= 5.0.0)
       faraday (~> 2.1)
       rack (>= 1.4.0)
@@ -193,7 +193,8 @@ GEM
       drb (~> 2.0)
       prism (~> 1.5)
     msgpack (1.8.6)
-    net-http (0.9.1)
+    net-http (0.10.0)
+      net-protocol (>= 0.3.0)
       uri (>= 0.11.1)
     net-imap (0.6.8)
       date
@@ -257,7 +258,7 @@ GEM
       nio4r (~> 2.0)
     raabro (1.5.0)
     racc (1.8.1)
-    rack (3.2.7)
+    rack (3.2.8)
     rack-session (2.1.2)
       base64 (>= 0.1.0)
       rack (>= 3.0.0)
@@ -442,7 +443,7 @@ DEPENDENCIES
   jsbundling-rails
   json (>= 2.21.2, < 4.0)
   kamal
-  mailjet (~> 1.8)
+  mailjet (~> 1.9)
   mini_magick (~> 5.4)
   openai (~> 0.106)
   pg (~> 1.7)
