@@ -280,6 +280,17 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert document.at_css('td[style*="padding:28px 0 0;border-top:1px solid #cfd3d1"]')
   end
 
+  test "standard layout does not add another gap above the team tip" do
+    issue = NewsletterIssue.new(
+      title: "Newsletter", subject: "Highlights", layout_variant: "standard",
+      intro: "Unsere Highlights", team_tip_name: "Sarah", team_tip_text: "Unser Tipp."
+    )
+    document = Nokogiri::HTML(Newsletter::Renderer.call(issue).html)
+    tip = document.at_css('td[bgcolor="#f0faf9"]')
+
+    assert_includes tip.ancestors("td").first["style"], "padding:0 0 24px"
+  end
+
   test "weekly layouts keep tip background and section spacing on email safe table cells" do
     %w[mixed_weekly_mix genre_weekly_mix].each do |layout|
       issue = NewsletterIssue.new(
@@ -294,7 +305,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
       assert_includes tip.text, "Sarahs Wochentipp"
       assert_includes tip["style"], "padding:18px"
       assert_equal "td", document.at_css(".newsletter-weekly-header").name
-      assert_includes tip.ancestors("td").first["style"], "padding:0px 0 24px"
+      assert_includes tip.ancestors("td").first["style"], "padding:0 0 24px"
       assert document.at_css('td[height="20"]'), "The gap below the header must not depend on margins"
       assert document.at_css('td[style="padding-top:18px;"]') if layout == "mixed_weekly_mix"
     end

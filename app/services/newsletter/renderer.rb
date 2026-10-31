@@ -439,12 +439,10 @@ module Newsletter
     def team_tip_html
       return "" unless issue.team_tip?
 
-      top_spacing = issue.genre_weekly_mix? || issue.mixed_weekly_mix? ? 0 : 12
-
       <<~HTML
         <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
           <tr>
-            <td style="padding:#{top_spacing}px 0 24px;">
+            <td style="padding:0 0 24px;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;border-spacing:0;">
                 <tr>
                   <td bgcolor="#f0faf9" style="padding:18px;border:1px solid #d4d7d4;border-radius:14px;background:#f0faf9;">
