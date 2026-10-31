@@ -87,6 +87,7 @@
       <span class="design-preview-card-actions-left">
         <%= render "public/events/saved_event_button",
                    event: event,
+                   remove_from_saved: local_assigns.fetch(:remove_from_saved, false),
                    button_class: "design-preview-card-save" %>
         <% if show_series_pill %>
           <span class="design-preview-card-series-pill" title="Event-Reihe: <%= series_count_label %>">

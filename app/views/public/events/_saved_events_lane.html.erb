@@ -3,7 +3,12 @@
 <section class="design-preview-section design-preview-list-section design-preview-lane genre-lane-section genre-lane-section--saved-events">
   <div class="design-preview-section-header lane-header--saved-events">
     <%= link_to saved_events_path, class: "design-preview-section-link lane-header-title-link" do %>
-      <h2>Deine Events</h2>
+      <h2>
+        <svg viewBox="0 0 24 24" class="saved-events-heading-icon" aria-hidden="true">
+          <path d="M12 21.35 10.55 20.03C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35Z" />
+        </svg>
+        Deine Events
+      </h2>
       <svg viewBox="0 0 24 24" aria-hidden="true">
         <path d="M5 12h13"></path>
         <path d="m13 6 6 6-6 6"></path>
@@ -15,6 +20,7 @@
     <%= render "design_preview_event_grid",
                events: events,
                browse_state: browse_state,
+               remove_from_saved: true,
                effective_series_ids: effective_series_ids %>
   </div>
 </section>
