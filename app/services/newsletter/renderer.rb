@@ -98,11 +98,10 @@ module Newsletter
                 .newsletter-weekly-header {
                   padding-top: 18px !important;
                   padding-bottom: 20px !important;
-                  margin-bottom: 20px !important;
                 }
 
-                .newsletter-logo-table {
-                  margin-bottom: 22px !important;
+                .newsletter-weekly-logo-cell {
+                  padding-bottom: 22px !important;
                 }
 
                 .newsletter-header-title {
@@ -288,10 +287,14 @@ module Newsletter
                       <td style="padding:0;">
                         #{browser_view_link_html}
                         #{opening_html}
-                        <div style="padding:0 24px 24px;">
-                          #{items_html}
-                          #{footer_html}
-                        </div>
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+                          <tr>
+                            <td style="padding:0 24px 24px;">
+                              #{items_html}
+                              #{footer_html}
+                            </td>
+                          </tr>
+                        </table>
                       </td>
                     </tr>
                   </table>
@@ -321,13 +324,18 @@ module Newsletter
 
     def weekly_mix_header_html
       <<~HTML
-        <section class="newsletter-weekly-header" style="margin:0 0 20px;padding:24px 24px 22px;background:#fff;color:#102223;border-bottom:1px solid #dfe6e4;">
-          <header style="margin:0;padding:0;">
-            #{weekly_brand_logo_html}
-            <h1 class="newsletter-header-title" style="margin:0 0 10px;font-size:20px;line-height:1.08;font-weight:800;letter-spacing:.01em;text-transform:uppercase;color:#102223;">#{escape(issue.display_header_title.to_s.upcase)}</h1>
-            #{weekly_intro_html}
-          </header>
-        </section>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td class="newsletter-weekly-header" bgcolor="#ffffff" style="padding:24px 24px 22px;background:#fff;color:#102223;border-bottom:1px solid #dfe6e4;">
+              #{weekly_brand_logo_html}
+              <h1 class="newsletter-header-title" style="margin:0 0 10px;font-size:20px;line-height:1.08;font-weight:800;letter-spacing:.01em;text-transform:uppercase;color:#102223;">#{escape(issue.display_header_title.to_s.upcase)}</h1>
+              #{weekly_intro_html}
+            </td>
+          </tr>
+          <tr>
+            <td height="20" style="height:20px;font-size:0;line-height:0;mso-line-height-rule:exactly;">&nbsp;</td>
+          </tr>
+        </table>
       HTML
     end
 
@@ -376,12 +384,12 @@ module Newsletter
       return text_logo_html("#102223") if logo_url.blank?
 
       <<~HTML
-        <table class="newsletter-logo-table" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin:0 0 28px;border-collapse:collapse;">
+        <table class="newsletter-logo-table" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
           <tr>
-            <td align="left" valign="middle" style="padding:0;">
+            <td class="newsletter-weekly-logo-cell" align="left" valign="middle" style="padding:0 0 28px;">
               <img src="#{logo_url}" width="116" alt="Stuttgart Live" style="display:block;width:116px;max-width:116px;height:auto;border:0;outline:none;text-decoration:none;background:transparent;">
             </td>
-            <td class="newsletter-header-social-icons" align="right" valign="middle" style="padding:0;">
+            <td class="newsletter-header-social-icons newsletter-weekly-logo-cell" align="right" valign="middle" style="padding:0 0 28px;">
               #{social_icons_html}
             </td>
           </tr>
@@ -431,34 +439,46 @@ module Newsletter
     def team_tip_html
       return "" unless issue.team_tip?
 
+      top_spacing = issue.genre_weekly_mix? || issue.mixed_weekly_mix? ? 0 : 12
+
       <<~HTML
-        <aside style="margin:12px 0 24px;padding:18px;border:1px solid #d4d7d4;border-radius:14px;background:#f0faf9;">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
-            <tr class="newsletter-team-tip-desktop-row">
-              <td width="70" valign="top" style="width:70px;vertical-align:top;">
-                #{team_tip_avatar_html}
-              </td>
-              <td width="16" style="width:16px;font-size:1px;line-height:1px;">&nbsp;</td>
-              <td valign="top" style="vertical-align:top;">
-                <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
-                #{team_tip_quote_html}
-              </td>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding:#{top_spacing}px 0 24px;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:separate;border-spacing:0;">
+                <tr>
+                  <td bgcolor="#f0faf9" style="padding:18px;border:1px solid #d4d7d4;border-radius:14px;background:#f0faf9;">
+                    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                      <tr class="newsletter-team-tip-desktop-row">
+                        <td width="70" valign="top" style="width:70px;vertical-align:top;">
+                          #{team_tip_avatar_html}
+                        </td>
+                        <td width="16" style="width:16px;font-size:1px;line-height:1px;">&nbsp;</td>
+                        <td valign="top" style="vertical-align:top;">
+                          <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
+                          #{team_tip_quote_html}
+                        </td>
+                      </tr>
+                      <!--[if !mso]><!-->
+                        <tr class="newsletter-team-tip-mobile-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
+                          <td colspan="3" align="left" style="padding:0;text-align:left;">
+                            <div class="newsletter-team-tip-mobile-avatar-wrap" style="padding-bottom:12px;text-align:left;">
+                              #{team_tip_avatar_html}
+                            </div>
+                            <div class="newsletter-team-tip-mobile-content" style="text-align:left;">
+                              <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
+                              #{team_tip_quote_html}
+                            </div>
+                          </td>
+                        </tr>
+                      <!--<![endif]-->
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
           </tr>
-            <!--[if !mso]><!-->
-              <tr class="newsletter-team-tip-mobile-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
-                <td colspan="3" align="left" style="padding:0;text-align:left;">
-                  <div class="newsletter-team-tip-mobile-avatar-wrap" style="padding-bottom:12px;text-align:left;">
-                    #{team_tip_avatar_html}
-                  </div>
-                  <div class="newsletter-team-tip-mobile-content" style="text-align:left;">
-                    <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
-                    #{team_tip_quote_html}
-                  </div>
-                </td>
-              </tr>
-            <!--<![endif]-->
         </table>
-        </aside>
       HTML
     end
 
@@ -475,10 +495,14 @@ module Newsletter
     def mixed_weekly_mix_items_html
       <<~HTML
         #{team_tip_html}
-        <section style="padding-top:18px;">
-          <h2 style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">DEIN WOCHENMIX</h2>
-          #{issue.newsletter_issue_items.map { |item| item_html(item) }.join("\n")}
-        </section>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding-top:18px;">
+              <h2 style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">DEIN WOCHENMIX</h2>
+              #{issue.newsletter_issue_items.map { |item| item_html(item) }.join("\n")}
+            </td>
+          </tr>
+        </table>
       HTML
     end
 
@@ -498,10 +522,14 @@ module Newsletter
       return "" if items.blank?
 
       <<~HTML
-        <section style="padding-top:18px;">
-          <h2 style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">News</h2>
-          #{items.map { |item| item_html(item) }.join("\n")}
-        </section>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding-top:18px;">
+              <h2 style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">News</h2>
+              #{items.map { |item| item_html(item) }.join("\n")}
+            </td>
+          </tr>
+        </table>
       HTML
     end
 
@@ -534,12 +562,16 @@ module Newsletter
       anchor = genre_anchor(section[:group])
 
       <<~HTML
-        <section style="padding-top:18px;">
-          #{email_anchor_html(anchor)}
-          <h2 class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">#{escape(section[:group].label)}</h2>
-          #{genre_item_cards_html(section)}
-          #{genre_back_to_nav_html}
-        </section>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding-top:18px;">
+              #{email_anchor_html(anchor)}
+              <h2 class="newsletter-section-heading-title" style="margin:0 0 8px;font-size:20px;line-height:1.1;font-weight:700;border-bottom:1px solid #111;padding-bottom:7px;">#{escape(section[:group].label)}</h2>
+              #{genre_item_cards_html(section)}
+              #{genre_back_to_nav_html}
+            </td>
+          </tr>
+        </table>
       HTML
     end
 
@@ -716,20 +748,24 @@ module Newsletter
       return item_html_without_image(item) if image_url.blank?
 
       <<~HTML
-        <article style="padding:12px 0;">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
-            <tr class="newsletter-item-desktop-row#{" newsletter-mixed-item-desktop-row" if issue.mixed_weekly_mix?}">
-              <td class="newsletter-item-media" width="#{IMAGE_WIDTH}" valign="top" style="width:#{IMAGE_WIDTH}px;vertical-align:top;">
-                #{image_html(item, image_url)}
-              </td>
-              <td class="newsletter-item-spacer" width="14" style="width:14px;font-size:1px;line-height:1px;">&nbsp;</td>
-              <td class="newsletter-item-content" valign="top" style="vertical-align:top;">
-                #{item_content_html(item)}
-              </td>
-            </tr>
-            #{genre_item_mobile_row_html(item) if issue.mixed_weekly_mix?}
-          </table>
-        </article>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding:12px 0;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">
+                <tr class="newsletter-item-desktop-row#{" newsletter-mixed-item-desktop-row" if issue.mixed_weekly_mix?}">
+                  <td class="newsletter-item-media" width="#{IMAGE_WIDTH}" valign="top" style="width:#{IMAGE_WIDTH}px;vertical-align:top;">
+                    #{image_html(item, image_url)}
+                  </td>
+                  <td class="newsletter-item-spacer" width="14" style="width:14px;font-size:1px;line-height:1px;">&nbsp;</td>
+                  <td class="newsletter-item-content" valign="top" style="vertical-align:top;">
+                    #{item_content_html(item)}
+                  </td>
+                </tr>
+                #{genre_item_mobile_row_html(item) if issue.mixed_weekly_mix?}
+              </table>
+            </td>
+          </tr>
+        </table>
       HTML
     end
 
@@ -737,12 +773,16 @@ module Newsletter
       desktop_class = issue.mixed_weekly_mix? ? "newsletter-item-no-image-desktop" : "newsletter-item-no-image"
 
       <<~HTML
-        <article style="padding:12px 0;">
-          <div class="#{desktop_class}">
-            #{item_content_html(item)}
-          </div>
-          #{mixed_weekly_mix_mobile_item_table_html(item)}
-        </article>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td style="padding:12px 0;">
+              <div class="#{desktop_class}">
+                #{item_content_html(item)}
+              </div>
+              #{mixed_weekly_mix_mobile_item_table_html(item)}
+            </td>
+          </tr>
+        </table>
       HTML
     end
 
@@ -881,72 +921,79 @@ module Newsletter
 
     def footer_html
       <<~HTML
-        <footer style="margin:32px 0 0;padding:28px 0 0;border-top:1px solid #cfd3d1;color:#596364;text-align:center;">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;">
-            <tr>
-              <td align="center" style="padding:0 22px 20px;">
-                <p class="newsletter-footer-headline" style="margin:0 0 8px;font-size:25px;line-height:1.2;font-weight:700;color:#263334;">Noch nicht genug?</p>
-                <p class="newsletter-footer-teaser" style="margin:0;font-size:18px;line-height:1.35;color:#263334;">
-                  Auf unserer <strong style="font-weight:700;">Website</strong> warten noch jede Menge Highlights auf dich.
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:0 0 24px;">
-                <table class="newsletter-footer-cta-table" role="presentation" width="430" cellspacing="0" cellpadding="0" border="0" style="width:430px;max-width:100%;border-collapse:collapse;">
-                  <tr>
-                    <td align="center" bgcolor="#000000" style="border-radius:999px;background:#000000;">
-                      <a class="newsletter-footer-cta" href="#{escape(website_url)}" target="_blank" rel="noopener" style="display:block;background:#000000;color:#ffffff;text-decoration:none;font-size:18px;line-height:1.2;font-weight:700;border-radius:999px;padding:15px 22px;">Mehr Events entdecken</a>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:0 0 26px;">
-                <a href="#{escape(website_url)}" target="_blank" rel="noopener" style="color:#102223;text-decoration:underline;font-size:15px;line-height:1.4;">www.stuttgart-live.de</a>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:20px 0;border-top:1px solid #cfd3d1;border-bottom:1px solid #cfd3d1;">
-                #{footer_social_icons_html}
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:22px 0 0;color:#a5adad;">
-                <table class="newsletter-footer-legal-table" role="presentation" width="540" cellspacing="0" cellpadding="0" border="0" style="width:540px;max-width:100%;border-collapse:collapse;">
-                  <tr>
-                    <td align="center" style="padding:0;color:#a5adad;">
-                      <p class="newsletter-footer-copy" style="margin:0 0 12px;font-size:12px;line-height:1.6;">
-                        Du erhältst diese E-Mail, weil du dich für den #{ApplicationController.helpers.stuttgart_live_brand_text} Newsletter angemeldet hast.
-                        Wenn du unseren Event-Newsletter nicht mehr erhalten möchtest, kannst du dich
-                        <a href="[[UNSUB_LINK_DE]]" style="color:#596364;text-decoration:underline;">hier abmelden</a>.
-                      </p>
-                      <p class="newsletter-footer-auto-note" style="margin:0 0 12px;font-size:12px;line-height:1.6;">
-                        Dies ist eine automatisch generierte E-Mail.<br>
-                        Bitte antworte nicht auf diese E-Mail, da uns deine Anfrage hier nicht erreicht.
-                      </p>
-                      <p class="newsletter-footer-link-row" style="margin:0 0 12px;font-size:12px;line-height:1.45;">
-                        <a href="#{escape(newsletter_preferences_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Tracking-Einstellungen</a>
-                        <span style="color:#c2c7c7;">&nbsp;&middot;&nbsp;</span>
-                        <a href="#{escape(datenschutz_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Datenschutz</a>
-                        <span style="color:#c2c7c7;">&nbsp;&middot;&nbsp;</span>
-                        <a href="#{escape(imprint_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Impressum</a>
-                      </p>
-                      <p class="newsletter-footer-address" style="margin:0;font-size:12px;line-height:1.5;">
-                        #{ApplicationController.helpers.stuttgart_live_brand_text} ist eine Marke der SKS Michael Russ GmbH<br>
-                        Charlottenplatz 17, 70173 Stuttgart, Deutschland<br>
-                        Telefon: <a href="tel:+497111635327" style="color:#596364;text-decoration:underline;">0711 - 16353-27</a>
-                        &nbsp;&middot;&nbsp;
-                        E-Mail: <a href="mailto:info@stuttgart-live.de" style="color:#596364;text-decoration:underline;">info@stuttgart-live.de</a>
-                      </p>
-                    </td>
-                  </tr>
-                </table>
-              </td>
-            </tr>
-          </table>
-        </footer>
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td height="32" style="height:32px;font-size:0;line-height:0;mso-line-height-rule:exactly;">&nbsp;</td>
+          </tr>
+          <tr>
+            <td style="padding:28px 0 0;border-top:1px solid #cfd3d1;color:#596364;text-align:center;">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="width:100%;border-collapse:collapse;">
+                <tr>
+                  <td align="center" style="padding:0 22px 20px;">
+                    <p class="newsletter-footer-headline" style="margin:0 0 8px;font-size:25px;line-height:1.2;font-weight:700;color:#263334;">Noch nicht genug?</p>
+                    <p class="newsletter-footer-teaser" style="margin:0;font-size:18px;line-height:1.35;color:#263334;">
+                      Auf unserer <strong style="font-weight:700;">Website</strong> warten noch jede Menge Highlights auf dich.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:0 0 24px;">
+                    <table class="newsletter-footer-cta-table" role="presentation" width="430" cellspacing="0" cellpadding="0" border="0" style="width:430px;max-width:100%;border-collapse:collapse;">
+                      <tr>
+                        <td align="center" bgcolor="#000000" style="border-radius:999px;background:#000000;">
+                          <a class="newsletter-footer-cta" href="#{escape(website_url)}" target="_blank" rel="noopener" style="display:block;background:#000000;color:#ffffff;text-decoration:none;font-size:18px;line-height:1.2;font-weight:700;border-radius:999px;padding:15px 22px;">Mehr Events entdecken</a>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:0 0 26px;">
+                    <a href="#{escape(website_url)}" target="_blank" rel="noopener" style="color:#102223;text-decoration:underline;font-size:15px;line-height:1.4;">www.stuttgart-live.de</a>
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:20px 0;border-top:1px solid #cfd3d1;border-bottom:1px solid #cfd3d1;">
+                    #{footer_social_icons_html}
+                  </td>
+                </tr>
+                <tr>
+                  <td align="center" style="padding:22px 0 0;color:#a5adad;">
+                    <table class="newsletter-footer-legal-table" role="presentation" width="540" cellspacing="0" cellpadding="0" border="0" style="width:540px;max-width:100%;border-collapse:collapse;">
+                      <tr>
+                        <td align="center" style="padding:0;color:#a5adad;">
+                          <p class="newsletter-footer-copy" style="margin:0 0 12px;font-size:12px;line-height:1.6;">
+                            Du erhältst diese E-Mail, weil du dich für den #{ApplicationController.helpers.stuttgart_live_brand_text} Newsletter angemeldet hast.
+                            Wenn du unseren Event-Newsletter nicht mehr erhalten möchtest, kannst du dich
+                            <a href="[[UNSUB_LINK_DE]]" style="color:#596364;text-decoration:underline;">hier abmelden</a>.
+                          </p>
+                          <p class="newsletter-footer-auto-note" style="margin:0 0 12px;font-size:12px;line-height:1.6;">
+                            Dies ist eine automatisch generierte E-Mail.<br>
+                            Bitte antworte nicht auf diese E-Mail, da uns deine Anfrage hier nicht erreicht.
+                          </p>
+                          <p class="newsletter-footer-link-row" style="margin:0 0 12px;font-size:12px;line-height:1.45;">
+                            <a href="#{escape(newsletter_preferences_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Tracking-Einstellungen</a>
+                            <span style="color:#c2c7c7;">&nbsp;&middot;&nbsp;</span>
+                            <a href="#{escape(datenschutz_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Datenschutz</a>
+                            <span style="color:#c2c7c7;">&nbsp;&middot;&nbsp;</span>
+                            <a href="#{escape(imprint_url(**route_url_options))}" style="color:#596364;text-decoration:underline;">Impressum</a>
+                          </p>
+                          <p class="newsletter-footer-address" style="margin:0;font-size:12px;line-height:1.5;">
+                            #{ApplicationController.helpers.stuttgart_live_brand_text} ist eine Marke der SKS Michael Russ GmbH<br>
+                            Charlottenplatz 17, 70173 Stuttgart, Deutschland<br>
+                            Telefon: <a href="tel:+497111635327" style="color:#596364;text-decoration:underline;">0711 - 16353-27</a>
+                            &nbsp;&middot;&nbsp;
+                            E-Mail: <a href="mailto:info@stuttgart-live.de" style="color:#596364;text-decoration:underline;">info@stuttgart-live.de</a>
+                          </p>
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       HTML
     end
 
