@@ -10,7 +10,6 @@
 <% fallback_intro = "STUTTGART LIVE bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region." %>
 <% page_title = @page&.title.presence || fallback_title %>
 <% page_intro = @page&.intro.to_s.presence || fallback_intro %>
-<% hero_intro = "STUTTGART LIVE bündelt Veranstaltungshighlights, Konzerte und Kulturtermine für Stuttgart und die Region." %>
 <% page_body_present = @page&.body&.to_plain_text.to_s.strip.present? %>
 <% design_service_preview_mode = action_name == "design_preview_service" %>
 <% design_service_back_path = design_service_preview_mode ? design_preview_path : root_path %>
@@ -51,13 +50,6 @@
     <header class="design-service-preview-hero">
       <div>
         <h1 id="design-service-preview-title"><%= page_title %></h1>
-      </div>
-      <div class="design-preview-hero-side design-service-preview-hero-side">
-        <p><%= stuttgart_live_brand_text(hero_intro) %></p>
-        <%= link_to events_path(anchor: "design-preview-news"), class: "design-preview-text-link" do %>
-          Nichts verpassen mit unserem Newsletter
-          <span aria-hidden="true">↓</span>
-        <% end %>
       </div>
     </header>
 

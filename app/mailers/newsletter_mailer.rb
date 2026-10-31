@@ -1,4 +1,6 @@
 class NewsletterMailer < ApplicationMailer
+  default from: -> { AppConfig.newsletter_from }
+
   before_action :disable_tracking
 
   def confirmation(subscriber)
