@@ -123,6 +123,10 @@ module AppConfig
       fetch(:smtp, :enable_starttls_auto, env: "SMTP_ENABLE_STARTTLS_AUTO")
     end
 
+    def newsletter_from
+      fetch(:newsletter, :from, env: "NEWSLETTER_FROM") || "STUTTGART LIVE <newsletter@stuttgart-live.de>"
+    end
+
     def mailer_from
       fetch(:mailer, :from, env: "MAILER_FROM")
     end

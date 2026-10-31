@@ -14,7 +14,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     issue = NewsletterIssue.create!(title: "KW 33", subject: "Deine Woche")
     captured_attributes = nil
 
-    with_app_config(:mailer_from, "redaktion@stuttgart-live.de") do
+    with_app_config(:newsletter_from, "redaktion@stuttgart-live.de") do
       with_mailjet_senders([
         mailjet_response("id" => 9876, "email" => "redaktion@stuttgart-live.de", "status" => "Active")
       ]) do
@@ -160,7 +160,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     issue = NewsletterIssue.create!(title: "KW 33", subject: "Deine Woche")
     captured_attributes = nil
 
-    with_app_config(:mailer_from, "Stuttgart Live <newsletter@russ-live.de>") do
+    with_app_config(:newsletter_from, "Stuttgart Live <newsletter@russ-live.de>") do
       with_mailjet_senders([
         mailjet_response("id" => 9876, "email" => "newsletter@russ-live.de", "status" => "Active")
       ]) do
@@ -184,7 +184,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     issue = NewsletterIssue.create!(title: "KW 33", subject: "Deine Woche")
     captured_attributes = nil
 
-    with_app_config(:mailer_from, "Stuttgart Live <newsletter@russ-live.de>") do
+    with_app_config(:newsletter_from, "Stuttgart Live <newsletter@russ-live.de>") do
       with_app_config(:mailjet_sender, "1234567") do
         with_mailjet_senders([
           mailjet_response("id" => 1234567, "email" => "newsletter@russ-live.de", "status" => "Active")
@@ -209,7 +209,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     issue = NewsletterIssue.create!(title: "KW 33", subject: "Deine Woche")
     captured_attributes = nil
 
-    with_app_config(:mailer_from, "Stuttgart Live <newsletter@russ-live.de>") do
+    with_app_config(:newsletter_from, "Stuttgart Live <newsletter@russ-live.de>") do
       with_app_config(:mailjet_sender, "Stuttgart Live") do
         with_mailjet_senders([
           mailjet_response("id" => 9876, "email" => "newsletter@russ-live.de", "status" => "Active")
@@ -229,39 +229,23 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
     assert_equal 9876, captured_attributes.fetch("Sender")
   end
 
-  test "falls back to any active mailjet sender when configured sender address is not active" do
+  test "does not use another active sender when newsletter sender is not verified" do
     issue = NewsletterIssue.create!(title: "KW 33", subject: "Deine Woche")
-    captured_attributes = nil
-
-    with_app_config(:mailer_from, "Stuttgart Live <schopp3r@mailbox.org>") do
-      with_mailjet_senders(lambda { |filters|
-        if filters[:email].present?
-          []
-        else
-          [ mailjet_response("id" => 6484988928, "email" => "stuttgart.live.concert@gmail.com", "status" => "Active") ]
-        end
-      }) do
-        handler = proc do |attributes|
-          captured_attributes = attributes
-          mailjet_response("ID" => 4242)
-        end
-
-        with_mailjet_create(Mailjet::Campaigndraft, handler) do
+    with_app_config(:newsletter_from, "STUTTGART LIVE <newsletter@stuttgart-live.de>") do
+      with_mailjet_senders([
+        mailjet_response("id" => 42, "email" => "other@example.com", "status" => "Active")
+      ]) do
+        assert_raises Newsletter::MailjetClient::Error do
           @client.create_campaign_draft(issue:)
         end
       end
     end
-
-    assert_equal 6484988928, captured_attributes.fetch("Sender")
-    assert_equal "stuttgart.live.concert@gmail.com", captured_attributes.fetch(:sender_email)
-    assert_equal "stuttgart.live.concert@gmail.com", captured_attributes.fetch(:reply_email)
-    assert_equal "Stuttgart Live", captured_attributes.fetch(:sender_name)
   end
 
   test "raises helpful error when no active sender exists in mailjet" do
     issue = NewsletterIssue.create!(title: "KW 33", subject: "Deine Woche")
 
-    with_app_config(:mailer_from, "Stuttgart Live <newsletter@russ-live.de>") do
+    with_app_config(:newsletter_from, "Stuttgart Live <newsletter@russ-live.de>") do
       with_mailjet_senders([]) do
         error = assert_raises Newsletter::MailjetClient::Error do
           @client.create_campaign_draft(issue:)
@@ -353,13 +337,9 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
   test "sends transactional email through mailjet send api" do
     captured_attributes = nil
 
-    with_app_config(:mailer_from, "Stuttgart Live <schopp3r@mailbox.org>") do
+    with_app_config(:newsletter_from, "Stuttgart Live <newsletter@stuttgart-live.de>") do
       with_mailjet_senders(lambda { |filters|
-        if filters[:email].present?
-          []
-        else
-          [ mailjet_response("id" => 6484988928, "email" => "stuttgart.live.concert@gmail.com", "status" => "Active") ]
-        end
+        [ mailjet_response("id" => 6484988928, "email" => "newsletter@stuttgart-live.de", "status" => "Active") ]
       }) do
         with_mailjet_create(Mailjet::Send, proc { |attributes|
           captured_attributes = attributes
@@ -377,7 +357,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
 
     message = captured_attributes.fetch(:messages).first
     assert_equal(
-      { "Email" => "stuttgart.live.concert@gmail.com", "Name" => "Stuttgart Live" },
+      { "Email" => "newsletter@stuttgart-live.de", "Name" => "Stuttgart Live" },
       message.fetch("From")
     )
     assert_equal [ { "Email" => "confirm@example.com" } ], message.fetch("To")
@@ -411,7 +391,7 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
       end
     end
 
-    with_app_config(:mailer_from, "sender@example.com") do
+    with_app_config(:newsletter_from, "sender@example.com") do
       with_mailjet_http(stubs) do
         @client.send_transactional_email(to: "first@example.com", subject: "Bestätigung", html: "<p>Hallo</p>", text: "Hallo")
       end

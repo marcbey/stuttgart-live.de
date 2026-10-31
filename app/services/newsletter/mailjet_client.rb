@@ -307,15 +307,14 @@ module Newsletter
     def active_sender
       @active_sender ||= begin
         senders = active_mailjet_senders
-        senders.find { |sender| sender_attribute(sender, :email).to_s.casecmp?(configured_sender_email) } || senders.first
+        senders.find { |sender| sender_attribute(sender, :email).to_s.casecmp?(configured_sender_email) }
       end
     rescue *MAILJET_ERRORS => error
       raise Error, error.message
     end
 
     def active_mailjet_senders
-      Mailjet::Sender.all(email: configured_sender_email, status: "Active").presence ||
-        Mailjet::Sender.all(status: "Active")
+      Mailjet::Sender.all(email: configured_sender_email, status: "Active")
     end
 
     def sender_attribute(sender, key)
@@ -336,7 +335,7 @@ module Newsletter
     end
 
     def sender_from_value
-      AppConfig.mailer_from.to_s.strip.presence || "newsletter@stuttgart-live.de"
+      AppConfig.newsletter_from.to_s.strip.presence || "newsletter@stuttgart-live.de"
     end
 
     def configured_value?(value)

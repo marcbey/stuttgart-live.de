@@ -16,6 +16,7 @@ class NewsletterMailerTest < ActionMailer::TestCase
     mail = NewsletterMailer.confirmation(subscriber)
 
     assert_equal [ "confirm-mail@example.com" ], mail.to
+    assert_equal [ "newsletter@stuttgart-live.de" ], mail.from
     assert_equal "Bitte bestätigen Sie Ihre Anmeldung zum STUTTGART LIVE-Newsletter", mail.subject
     assert_equal "0", mail["X-Mailjet-TrackOpen"].value
     assert_equal "0", mail["X-Mailjet-TrackClick"].value
