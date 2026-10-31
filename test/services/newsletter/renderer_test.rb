@@ -261,6 +261,56 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.text, "Zum Event: https://example.com/events/#{event.slug}"
   end
 
+  test "event and footer spacing survives clients that discard HTML5 containers" do
+    issue = newsletter_issue_with_items
+    issue.update!(layout_variant: "mixed_weekly_mix")
+    events(:published_one).import_event_images.create!(
+      source: "easyticket", image_type: "image_url",
+      image_url: "https://img.example.test/newsletter-event.jpg", role: "cover", position: 0
+    )
+
+    document = Nokogiri::HTML(Newsletter::Renderer.call(issue).html)
+
+    assert_empty document.css("article, footer")
+    item_cells = document.css('td[style="padding:12px 0;"]')
+    assert_equal 2, item_cells.size
+    assert_includes item_cells.first.text, "Published Artist"
+    assert_includes item_cells.last.text, "Newsletter News"
+    assert document.at_css('td[height="32"]'), "The footer gap must not depend on margins"
+    assert document.at_css('td[style*="padding:28px 0 0;border-top:1px solid #cfd3d1"]')
+  end
+
+  test "standard layout does not add another gap above the team tip" do
+    issue = NewsletterIssue.new(
+      title: "Newsletter", subject: "Highlights", layout_variant: "standard",
+      intro: "Unsere Highlights", team_tip_name: "Sarah", team_tip_text: "Unser Tipp."
+    )
+    document = Nokogiri::HTML(Newsletter::Renderer.call(issue).html)
+    tip = document.at_css('td[bgcolor="#f0faf9"]')
+
+    assert_includes tip.ancestors("td").first["style"], "padding:0 0 24px"
+  end
+
+  test "weekly layouts keep tip background and section spacing on email safe table cells" do
+    %w[mixed_weekly_mix genre_weekly_mix].each do |layout|
+      issue = NewsletterIssue.new(
+        title: "Wochenmix", subject: "Dein Wochenmix", layout_variant: layout,
+        intro: "Unsere Highlights", team_tip_name: "Sarah", team_tip_text: "Unser Tipp für diese Woche."
+      )
+      document = Nokogiri::HTML(Newsletter::Renderer.call(issue).html)
+
+      assert_empty document.css("aside, section, header"), "Layout must survive email clients that discard HTML5 containers"
+      tip = document.at_css('td[bgcolor="#f0faf9"]')
+      assert tip, "The tip needs a table-cell background in clients without CSS background support"
+      assert_includes tip.text, "Sarahs Wochentipp"
+      assert_includes tip["style"], "padding:18px"
+      assert_equal "td", document.at_css(".newsletter-weekly-header").name
+      assert_includes tip.ancestors("td").first["style"], "padding:0 0 24px"
+      assert document.at_css('td[height="20"]'), "The gap below the header must not depend on margins"
+      assert document.at_css('td[style="padding-top:18px;"]') if layout == "mixed_weekly_mix"
+    end
+  end
+
   test "renders weekly mix news after team tip and before genre sections" do
     event = events(:published_one)
     event.genres << genres(:pop)
@@ -281,6 +331,13 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_operator rendered.html.index("Sarahs Wochentipp"), :<, rendered.html.index("Für was interessierst du dich? Spring hinein ins Vergnügen :-)")
     assert_operator rendered.html.index("Für was interessierst du dich? Spring hinein ins Vergnügen :-)"), :<, rendered.html.index(">News</h2>")
     assert_operator rendered.html.index(">News</h2>"), :<, rendered.html.index('id="genre-pop-indie-singer-songwriter"')
+    document = Nokogiri::HTML(rendered.html)
+    headings = document.css("h2").select { |heading| heading.text == "News" || heading["class"] == "newsletter-section-heading-title" }
+    assert_equal 2, headings.size
+    headings.each do |heading|
+      assert_equal "td", heading.parent.name
+      assert_includes heading.parent["style"], "padding-top:18px"
+    end
     assert_includes rendered.text, "NEWS"
     assert_operator rendered.text.index("NEWS"), :<, rendered.text.index("POP")
   end
@@ -314,13 +371,13 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "width: 100% !important"
     assert_includes rendered.html, "max-width: 100% !important"
     assert_includes rendered.html, "newsletter-weekly-header"
-    assert_includes rendered.html, "margin:0 0 20px;padding:24px 24px 22px;background:#fff;color:#102223;border-bottom:1px solid #dfe6e4"
+    assert_includes rendered.html, "padding:24px 24px 22px;background:#fff;color:#102223;border-bottom:1px solid #dfe6e4"
     assert_includes rendered.html, "margin:0;padding:0"
     assert_includes rendered.html, "@media only screen and (max-width: 680px)"
     assert_includes rendered.html, ".newsletter-weekly-header"
     assert_includes rendered.html, "padding-top: 18px !important"
     assert_includes rendered.html, "padding-bottom: 20px !important"
-    assert_includes rendered.html, ".newsletter-logo-table"
+    assert_includes rendered.html, ".newsletter-weekly-logo-cell"
     assert_includes rendered.html, ".newsletter-weekly-copy"
     assert_includes rendered.html, ".newsletter-genre-link:hover"
     assert_includes rendered.html, ".newsletter-event-button:hover"
