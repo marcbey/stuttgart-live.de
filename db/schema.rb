@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_27_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -298,6 +298,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_120000) do
     t.datetime "updated_at", null: false
     t.bigint "venue_id", null: false
     t.string "youtube_url"
+    t.boolean "venue_manually_assigned", default: false, null: false
     t.index "lower((artist_name)::text) gin_trgm_ops", name: "index_events_on_legacy_artist_name_trgm", using: :gin
     t.index ["event_series_assignment"], name: "index_events_on_event_series_assignment"
     t.index ["event_series_id"], name: "index_events_on_event_series_id"
