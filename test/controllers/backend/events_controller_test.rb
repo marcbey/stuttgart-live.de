@@ -1232,6 +1232,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
 
     created = Event.order(:id).last
     assert_redirected_to backend_events_url(status: "ready_for_publish", event_id: created.id)
+    assert_predicate created, :venue_manually_assigned?
     assert_equal doors_at.to_i, created.doors_at.to_i
     assert_equal "Local Opener", created.support
     assert_equal "Bitte früh erscheinen", created.organizer_notes

@@ -58,6 +58,7 @@ module Backend
 
     def create
       @event = Event.new(manual_event_promoter_attributes.merge(event_attribute_params))
+      @event.venue_manually_assigned = true
       prepare_promotion_banner_image(@event)
       prepare_promotion_banner_landscape_image(@event)
       prepare_highlight_video(@event)
@@ -140,6 +141,7 @@ module Backend
       previous_venue_id = @event.venue_id
 
       @event.assign_attributes(event_attribute_params)
+      @event.venue_manually_assigned = true if @event.will_save_change_to_venue_id?
       prepare_promotion_banner_image(@event)
       prepare_promotion_banner_landscape_image(@event)
       prepare_highlight_video(@event)
