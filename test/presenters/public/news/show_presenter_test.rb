@@ -123,7 +123,7 @@ class Public::News::ShowPresenterTest < ActiveSupport::TestCase
 
     assert_equal "Katharina Schopper", presenter.author_label
     assert_equal "Grafik/Layout", presenter.author_role
-    assert_equal "/assets/newsletter/team/kathi.jpg", presenter.author_image_source
+    assert_equal "/assets/newsletter/team/kathi.png", presenter.author_image_source
   end
 
   test "normalizes stored youtube embed urls for display" do

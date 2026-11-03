@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_27_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_03_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -507,6 +507,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_27_160000) do
     t.datetime "test_sent_at"
     t.string "title", null: false
     t.datetime "updated_at", null: false
+    t.string "team_tip_title"
     t.index ["created_by_id"], name: "index_newsletter_issues_on_created_by_id"
     t.index ["layout_variant"], name: "index_newsletter_issues_on_layout_variant"
     t.index ["mailjet_campaign_draft_id"], name: "index_newsletter_issues_on_mailjet_campaign_draft_id"

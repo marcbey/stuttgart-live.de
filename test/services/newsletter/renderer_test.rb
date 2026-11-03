@@ -164,6 +164,42 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
   end
 
+  test "mobile event cards put the headline above image and details and omit the tour" do
+    event = create_published_event(slug: "compact-mobile", title: "The Tour 2026", artist_name: "Not Scientists",
+      start_at: Time.zone.local(2026, 11, 20, 20), genre: genres(:rock))
+    event.import_event_images.create!(source: "easyticket", image_type: "image_url",
+      image_url: "https://img.example.test/compact-mobile.jpg", role: "cover", position: 0)
+
+    %w[mixed_weekly_mix genre_weekly_mix].each do |variant|
+      issue = NewsletterIssue.create!(title: "Mobile", subject: "Mobile", layout_variant: variant, created_by: users(:one))
+      issue.newsletter_issue_items.create!(item: event, position: 1, section_key: genres(:rock).slug)
+      document = Nokogiri::HTML(Newsletter::Renderer.call(issue).html)
+      mobile = document.at_css(".newsletter-mobile-item-row")
+      rows = mobile.at_css("table").xpath("./tr | ./tbody/tr")
+
+      assert_equal "Not Scientists", rows.first.at_css("td[colspan='2'] .newsletter-mobile-title")&.text
+      assert rows.last.at_css(".newsletter-mobile-image")
+      assert_equal "20.11.26, 20 Uhr", mobile.at_css(".newsletter-mobile-date")&.text
+      assert_equal event.venue, mobile.at_css(".newsletter-mobile-venue")&.text
+      assert_not_includes mobile.text, "The Tour 2026"
+      assert_includes document.text, "The Tour 2026", "Desktop must keep the tour subtitle"
+    end
+  end
+
+  test "compact mobile dates retain minutes and cards work without an image" do
+    event = create_published_event(slug: "compact-mobile-minutes", title: "Tour", artist_name: "Artist",
+      start_at: Time.zone.local(2026, 11, 20, 20, 30), genre: genres(:rock))
+    issue = NewsletterIssue.create!(title: "Mobile", subject: "Mobile", layout_variant: "mixed_weekly_mix", created_by: users(:one))
+    issue.newsletter_issue_items.create!(item: event, position: 1)
+
+    mobile = Nokogiri::HTML(Newsletter::Renderer.call(issue).html).at_css(".newsletter-mobile-item-row")
+
+    assert_equal "20.11.26, 20:30 Uhr", mobile.at_css(".newsletter-mobile-date")&.text
+    assert_equal "Artist", mobile.at_css("td[colspan='2'] .newsletter-mobile-title")&.text
+    assert_nil mobile.at_css(".newsletter-mobile-image")
+    assert mobile.at_css(".newsletter-event-button[href]")
+  end
+
   test "renders mixed weekly mix with one heading and genre labels" do
     event = create_published_event(
       slug: "newsletter-mixed-pop",
@@ -259,6 +295,48 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "border:1px solid #111;color:#102223"
     assert_includes rendered.html, "/events/#{event.slug}"
     assert_includes rendered.text, "Zum Event: https://example.com/events/#{event.slug}"
+  end
+
+  test "personal tip links its event image and artist title in every layout" do
+    event = events(:published_one)
+    event.import_event_images.destroy_all
+    event.import_event_images.create!(
+      source: "easyticket", image_type: "image_url",
+      image_url: "https://img.example.test/tip-event.jpg", role: "cover", position: 0
+    )
+    NewsletterIssue::LAYOUT_VARIANTS.each do |layout|
+      issue = NewsletterIssue.new(
+        title: "Newsletter", subject: "Highlights", layout_variant: layout,
+        team_tip_name: "Sarah", team_tip_text: "Mein Tipp.", team_tip_event: event
+      )
+      rendered = Newsletter::Renderer.call(issue)
+      document = Nokogiri::HTML(rendered.html)
+      %w[desktop mobile].each do |surface|
+        tip = document.at_css(".newsletter-team-tip-#{surface}-row")
+        card = tip.at_css(".newsletter-team-tip-event")
+        assert card, "The tip should show the linked event on #{surface}"
+        assert_equal event.artist_name, card.at_css("h3").text
+        assert_equal "https://img.example.test/tip-event.jpg", card.at_css("img")["src"]
+        assert_equal event.artist_name, card.at_css("img")["alt"]
+        assert card.css("a").all? { |link| link["href"].end_with?("/events/#{event.slug}") }
+        assert_includes card.text, "Zum Event"
+      end
+      assert_includes rendered.text, event.artist_name
+    end
+  end
+
+  test "personal tip without an event image keeps its linked title without an empty image" do
+    event = events(:published_one)
+    event.import_event_images.destroy_all
+    issue = NewsletterIssue.new(
+      title: "Newsletter", subject: "Highlights", team_tip_name: "Sarah",
+      team_tip_text: "Mein Tipp.", team_tip_event: event
+    )
+    document = Nokogiri::HTML(Newsletter::Renderer.call(issue).html)
+    card = document.at_css(".newsletter-team-tip-event")
+    assert card
+    assert_equal event.artist_name, card.at_css("h3").text
+    assert_empty card.css("img")
   end
 
   test "event and footer spacing survives clients that discard HTML5 containers" do
@@ -395,9 +473,9 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "<!--[if !mso]><!-->"
     assert_includes rendered.html, "<!--<![endif]-->"
     assert_includes rendered.html, "display: none !important"
-    assert_includes rendered.html, "width: 104px !important"
+    assert_includes rendered.html, "width: 88px !important"
     assert_includes rendered.html, "font-size: 17px !important"
-    assert_includes rendered.html, "font-size: 18px !important"
+    assert_includes rendered.html, "-webkit-text-size-adjust: 100%"
     assert_includes rendered.html, "font-size: 24px !important"
     assert_includes rendered.html, "font-size: 13px !important"
     assert_includes rendered.html, "newsletter-footer-headline"

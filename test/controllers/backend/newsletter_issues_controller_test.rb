@@ -69,6 +69,33 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     assert_equal events(:published_one), issue.team_tip_event
   end
 
+  test "editor can change the prefilled personal tip heading" do
+    sign_in_as(@editor)
+    issue = create_issue(team_tip_name: "Sarah", team_tip_text: "Mein Tipp.")
+
+    get backend_newsletter_url(issue)
+    assert_select "input[name='newsletter_issue[team_tip_title]'][value='Sarahs Wochentipp']"
+
+    patch backend_newsletter_url(issue), params: {
+      newsletter_issue: { team_tip_title: "  Unser Konzerttipp  " }
+    }
+    assert_redirected_to backend_newsletter_url(issue)
+    get backend_newsletter_url(issue)
+    assert_select "input[name='newsletter_issue[team_tip_title]'][value='Unser Konzerttipp']"
+
+    rendered = Newsletter::Renderer.call(issue.reload)
+    assert_includes rendered.html, "Unser Konzerttipp"
+    assert_includes rendered.text, "Unser Konzerttipp"
+    assert_not_includes rendered.html, "Sarahs Wochentipp"
+
+    patch backend_newsletter_url(issue), params: {
+      newsletter_issue: { team_tip_title: "   " }
+    }
+    assert_redirected_to backend_newsletter_url(issue)
+    assert_nil issue.reload.team_tip_title
+    assert_equal "Sarahs Wochentipp", issue.display_team_tip_title
+  end
+
   test "editor can select a linked event for the personal tip" do
     sign_in_as(@editor)
     issue = create_issue

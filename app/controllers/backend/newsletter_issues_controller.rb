@@ -156,6 +156,7 @@ module Backend
         :intro,
         :team_tip_profile_key,
         :team_tip_name,
+        :team_tip_title,
         :team_tip_role,
         :team_tip_image_url,
         :team_tip_text,
