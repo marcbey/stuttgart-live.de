@@ -297,6 +297,48 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.text, "Zum Event: https://example.com/events/#{event.slug}"
   end
 
+  test "personal tip links its event image and artist title in every layout" do
+    event = events(:published_one)
+    event.import_event_images.destroy_all
+    event.import_event_images.create!(
+      source: "easyticket", image_type: "image_url",
+      image_url: "https://img.example.test/tip-event.jpg", role: "cover", position: 0
+    )
+    NewsletterIssue::LAYOUT_VARIANTS.each do |layout|
+      issue = NewsletterIssue.new(
+        title: "Newsletter", subject: "Highlights", layout_variant: layout,
+        team_tip_name: "Sarah", team_tip_text: "Mein Tipp.", team_tip_event: event
+      )
+      rendered = Newsletter::Renderer.call(issue)
+      document = Nokogiri::HTML(rendered.html)
+      %w[desktop mobile].each do |surface|
+        tip = document.at_css(".newsletter-team-tip-#{surface}-row")
+        card = tip.at_css(".newsletter-team-tip-event")
+        assert card, "The tip should show the linked event on #{surface}"
+        assert_equal event.artist_name, card.at_css("h3").text
+        assert_equal "https://img.example.test/tip-event.jpg", card.at_css("img")["src"]
+        assert_equal event.artist_name, card.at_css("img")["alt"]
+        assert card.css("a").all? { |link| link["href"].end_with?("/events/#{event.slug}") }
+        assert_includes card.text, "Zum Event"
+      end
+      assert_includes rendered.text, event.artist_name
+    end
+  end
+
+  test "personal tip without an event image keeps its linked title without an empty image" do
+    event = events(:published_one)
+    event.import_event_images.destroy_all
+    issue = NewsletterIssue.new(
+      title: "Newsletter", subject: "Highlights", team_tip_name: "Sarah",
+      team_tip_text: "Mein Tipp.", team_tip_event: event
+    )
+    document = Nokogiri::HTML(Newsletter::Renderer.call(issue).html)
+    card = document.at_css(".newsletter-team-tip-event")
+    assert card
+    assert_equal event.artist_name, card.at_css("h3").text
+    assert_empty card.css("img")
+  end
+
   test "event and footer spacing survives clients that discard HTML5 containers" do
     issue = newsletter_issue_with_items
     issue.update!(layout_variant: "mixed_weekly_mix")

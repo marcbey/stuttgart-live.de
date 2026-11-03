@@ -18,6 +18,7 @@ class NewsletterIssue < ApplicationRecord
   validates :header_title, length: { maximum: 120 }, allow_blank: true
   validates :jump_menu_title, length: { maximum: 140 }, allow_blank: true
   validates :preheader, length: { maximum: 180 }, allow_blank: true
+  validates :team_tip_title, length: { maximum: 120 }, allow_blank: true
   validates :team_tip_image_url, format: URI::DEFAULT_PARSER.make_regexp(%w[http https]), allow_blank: true
 
   before_validation :normalize_attributes
@@ -43,6 +44,10 @@ class NewsletterIssue < ApplicationRecord
 
   def team_tip?
     team_tip_name.present? && team_tip_text.present?
+  end
+
+  def display_team_tip_title
+    team_tip_title.presence || "#{team_tip_name.presence || 'Sarah'}s Wochentipp"
   end
 
   def team_tip_initials
@@ -166,6 +171,7 @@ class NewsletterIssue < ApplicationRecord
     self.preheader = preheader.to_s.strip.presence
     self.intro = intro.to_s.strip.presence
     self.team_tip_profile_key = team_tip_profile_key.to_s.strip.presence
+    self.team_tip_title = team_tip_title.to_s.strip.presence
     self.team_tip_name = team_tip_name.to_s.strip.presence
     self.team_tip_role = team_tip_role.to_s.strip.presence
     self.team_tip_image_url = team_tip_image_url.to_s.strip.presence

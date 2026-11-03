@@ -55,6 +55,10 @@
         <%= form.url_field :team_tip_image_url, class: "form-input", placeholder: "https://..." %>
       </label>
       <label class="form-field form-field-full">
+        <span>Tipp-Überschrift</span>
+        <%= form.text_field :team_tip_title, value: issue.display_team_tip_title, class: "form-input", maxlength: 120 %>
+      </label>
+      <label class="form-field form-field-full">
         <span>Tipp-Text</span>
         <%= form.text_area :team_tip_text, class: "form-input", rows: 5, placeholder: "Ca. 5 Zeilen Wochentipp" %>
       </label>

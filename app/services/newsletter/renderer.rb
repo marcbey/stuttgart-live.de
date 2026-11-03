@@ -473,8 +473,9 @@ module Newsletter
                         </td>
                         <td width="16" style="width:16px;font-size:1px;line-height:1px;">&nbsp;</td>
                         <td valign="top" style="vertical-align:top;">
-                          <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
+                          <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.display_team_tip_title)}</h2>
                           #{team_tip_quote_html}
+                          #{team_tip_event_html}
                         </td>
                       </tr>
                       <!--[if !mso]><!-->
@@ -484,8 +485,9 @@ module Newsletter
                               #{team_tip_avatar_html}
                             </div>
                             <div class="newsletter-team-tip-mobile-content" style="text-align:left;">
-                              <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.team_tip_name)}s Wochentipp</h2>
+                              <h2 class="newsletter-team-tip-title" style="margin:0 0 8px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(issue.display_team_tip_title)}</h2>
                               #{team_tip_quote_html}
+                              #{team_tip_event_html}
                             </div>
                           </td>
                         </tr>
@@ -917,26 +919,48 @@ module Newsletter
             <td width="26" valign="top" style="width:26px;vertical-align:top;color:#111;font-size:44px;line-height:36px;font-family:Georgia,serif;">&#8220;</td>
             <td valign="top" style="vertical-align:top;">
               <p class="newsletter-team-tip-text" style="margin:0;font-size:14px;line-height:1.42;color:#263334;">#{escape(issue.team_tip_text)}</p>
-              #{team_tip_event_button_html}
             </td>
           </tr>
         </table>
       HTML
     end
 
-    def team_tip_event_button_html
-      return "" if issue.team_tip_event.blank?
+    def team_tip_event_html
+      event = issue.team_tip_event
+      return "" if event.blank?
+
+      url = escape(event_url(event.slug, **route_url_options))
+      title = escape(event.artist_name.presence || event.title)
+      image_url = event_image_url(event)
+      image_cell = if image_url.present?
+        %(<td width="88" valign="top" style="width:88px;padding:0 12px 0 0;vertical-align:top;"><a href="#{url}"><img src="#{escape(image_url)}" width="88" height="88" alt="#{title}" style="display:block;width:88px;height:88px;object-fit:cover;border-radius:8px;border:0;"></a></td>)
+      end
 
       <<~HTML
-        <a class="newsletter-event-button" href="#{escape(event_url(issue.team_tip_event.slug, **route_url_options))}" style="display:inline-block;margin-top:12px;border:1px solid #111;color:#102223;font-size:12px;font-weight:bold;text-decoration:none;border-radius:999px;padding:8px 12px;">Zum Event</a>
+        <table class="newsletter-team-tip-event" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
+          <tr>
+            <td colspan="2" style="padding:16px 0 8px;">
+              <h3 style="margin:0;font-size:17px;line-height:1.25;font-weight:600;"><a href="#{url}" style="color:#102223;text-decoration:none;">#{title}</a></h3>
+            </td>
+          </tr>
+          <tr>
+            #{image_cell}
+            <td colspan="#{image_url.present? ? 1 : 2}" valign="top" style="vertical-align:top;">
+              <a class="newsletter-event-button" href="#{url}" style="display:inline-block;border:1px solid #111;color:#102223;font-size:13px;line-height:20px;font-weight:bold;text-decoration:none;border-radius:999px;padding:11px 12px;">Zum Event</a>
+            </td>
+          </tr>
+        </table>
       HTML
     end
 
     def team_tip_text
       return unless issue.team_tip?
 
-      parts = [ "#{issue.team_tip_name}s Wochentipp", issue.team_tip_text ]
-      parts << "Zum Event: #{event_url(issue.team_tip_event.slug, **route_url_options)}" if issue.team_tip_event.present?
+      parts = [ issue.display_team_tip_title, issue.team_tip_text ]
+      if issue.team_tip_event.present?
+        parts << (issue.team_tip_event.artist_name.presence || issue.team_tip_event.title)
+        parts << "Zum Event: #{event_url(issue.team_tip_event.slug, **route_url_options)}"
+      end
       parts.join("\n")
     end
 
