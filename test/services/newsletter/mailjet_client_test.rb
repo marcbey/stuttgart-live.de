@@ -313,6 +313,10 @@ class Newsletter::MailjetClientTest < ActiveSupport::TestCase
       {
         "Email" => "mail@inorange.org",
         "Name" => "mail@inorange.org"
+      },
+      {
+        "Email" => "chantalerler@russ-live.de",
+        "Name" => "chantalerler@russ-live.de"
       }
     ], captured_attributes.fetch(:recipients)
   end

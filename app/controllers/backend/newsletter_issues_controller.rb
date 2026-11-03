@@ -118,12 +118,11 @@ module Backend
     end
 
     def available_events_for_newsletter
-      highlighted_events = newsletter_event_relation.homepage_highlights.limit(AVAILABLE_EVENTS_LIMIT).to_a
-      remaining_limit = AVAILABLE_EVENTS_LIMIT - highlighted_events.length
-      return highlighted_events unless remaining_limit.positive?
-
-      other_events = newsletter_event_relation.where.not(id: highlighted_events.map(&:id)).limit(remaining_limit).to_a
-      highlighted_events + other_events
+      newsletter_event_relation
+        .homepage_highlights
+        .where("events.start_at >= ?", Time.zone.today.beginning_of_day)
+        .limit(AVAILABLE_EVENTS_LIMIT)
+        .to_a
     end
 
     def newsletter_event_relation

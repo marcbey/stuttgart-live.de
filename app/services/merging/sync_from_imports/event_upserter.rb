@@ -83,7 +83,7 @@ module Merging
 
         event.start_at = first_present_time(records, &:start_at)
         event.doors_at = first_present_time(records, &:doors_at)
-        event.venue = first_present(records, &:venue)
+        event.venue = first_present(records, &:venue) unless event.venue_manually_assigned?
         event.badge_text = first_present_or_nil(records, &:badge_text)
         event.min_price = first_present_decimal(records, &:min_price)
         event.max_price = first_present_decimal(records, &:max_price)

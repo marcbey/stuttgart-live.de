@@ -88,9 +88,7 @@
           <label class="newsletter-add-field">
             <span>Auswahl</span>
             <%= form.select :item_id,
-                            options_for_select(available_events.map { |event|
-                              [ newsletter_event_option_label(event), event.id ]
-                            }),
+                            options_for_select(newsletter_event_options(available_events)),
                             {},
                             class: "form-input newsletter-add-input" %>
           </label>

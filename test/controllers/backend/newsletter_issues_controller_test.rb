@@ -218,24 +218,55 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     assert_equal 2, early_item.reload.position
   end
 
-  test "lists homepage highlight events before other events" do
+  test "event selections show current highlights chronologically with dates and refresh as days pass" do
+    AppSetting.create!(key: AppSetting::SKS_PROMOTER_IDS_KEY, value: [ "10135" ])
+    AppSetting.reset_cache!
     sign_in_as(@editor)
     issue = create_issue
-    highlight_event = events(:published_one)
-    regular_event = events(:published_past_one)
-    highlight_event.update!(highlighted: true)
-    regular_event.update!(highlighted: false, promoter_id: "99999", promoter_name: nil)
+    travel_to Time.zone.local(2026, 11, 3, 12) do
+      today_event = events(:published_one)
+      later_event = events(:published_past_one)
+      today_event.update!(start_at: Time.current.beginning_of_day, highlighted: true)
+      later_event.update!(start_at: 2.days.from_now, highlighted: false, promoter_id: Event.sks_promoter_ids.first)
+      regular_event = events(:needs_review_one)
+      regular_event.update!(status: "published", published_at: 1.day.ago, start_at: 1.day.from_now,
+        highlighted: false, promoter_id: "99999", promoter_name: nil)
+      old_event = events(:needs_review_two)
+      old_event.update!(status: "published", published_at: 2.days.ago, start_at: 1.day.ago, highlighted: true)
+
+      get backend_newsletter_url(issue)
+
+      assert_response :success
+      [ "select[name='newsletter_issue[team_tip_event_id]']", "select[name='item_id']" ].each do |selector|
+        assert_select "#{selector} option[value]:not([value=''])" do |options|
+          assert_equal [ today_event.id, later_event.id ], options.map { |option| option["value"].to_i }
+          assert_equal "03.11.2026 - #{today_event.artist_name} - #{today_event.title}", options.first.text
+          assert_equal "05.11.2026 - #{later_event.artist_name} - #{later_event.title}", options.last.text
+        end
+      end
+    end
+
+    travel_to Time.zone.local(2026, 11, 4, 12) do
+      get backend_newsletter_url(issue)
+      assert_select "select[name='item_id'] option[value='#{events(:published_one).id}']", count: 0
+      assert_select "select[name='item_id'] option[value='#{events(:published_past_one).id}']", count: 1
+    end
+  ensure
+    AppSetting.reset_cache!
+  end
+
+  test "preserves an existing past team tip link without offering it for new items" do
+    sign_in_as(@editor)
+    event = events(:published_past_one)
+    event.update!(start_at: 1.day.ago, highlighted: true)
+    issue = create_issue(team_tip_event: event)
 
     get backend_newsletter_url(issue)
 
     assert_response :success
-    highlight_label = "#{highlight_event.artist_name} - #{highlight_event.title}"
-    regular_label = "#{regular_event.artist_name} - #{regular_event.title}"
-    assert_not_includes response.body, "Highlight - #{highlight_event.title}"
-    assert_includes response.body, highlight_label
-    assert_operator response.body.index(highlight_label),
-                    :<,
-                    response.body.index(regular_label)
+    assert_select "select[name='newsletter_issue[team_tip_event_id]'] option[selected][value='#{event.id}']",
+      text: "#{event.start_at.strftime('%d.%m.%Y')} - #{event.artist_name} - #{event.title}"
+    assert_select "select[name='item_id'] option[value='#{event.id}']", count: 0
   end
 
   test "editor can populate themed newsletter with matching events" do
@@ -352,6 +383,7 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_includes response.body, "katharinaschopper@russ-live.de"
     assert_includes response.body, "mail@inorange.org"
+    assert_includes response.body, "chantalerler@russ-live.de"
   end
 
   test "send test list reports success" do

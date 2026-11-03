@@ -6,7 +6,8 @@ module Newsletter
     class Error < StandardError; end
     TEST_RECIPIENTS = [
       { "Email" => "katharinaschopper@russ-live.de", "Name" => "Katharina Schopper" }.freeze,
-      { "Email" => "mail@inorange.org", "Name" => "mail@inorange.org" }.freeze
+      { "Email" => "mail@inorange.org", "Name" => "mail@inorange.org" }.freeze,
+      { "Email" => "chantalerler@russ-live.de", "Name" => "chantalerler@russ-live.de" }.freeze
     ].freeze
     TEST_EMAILS = TEST_RECIPIENTS.map { |recipient| recipient.fetch("Email") }.freeze
     TEST_EMAIL = TEST_EMAILS.first
