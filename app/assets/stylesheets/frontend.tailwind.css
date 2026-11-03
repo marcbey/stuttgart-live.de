@@ -17141,6 +17141,30 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   stroke: currentColor;
 }
 
+.saved-event-button.design-preview-card-save .saved-event-button-icon--remove,
+.saved-event-button.design-preview-card-save.is-saved .saved-event-button-icon--remove {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.lane-header--saved-events h2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+}
+
+.lane-header--saved-events .saved-events-heading-icon {
+  flex: 0 0 auto;
+  width: 1.1em;
+  height: 1.1em;
+  fill: var(--preview-saved);
+  stroke: none;
+  transform: none;
+}
+
 .design-preview-format-grid .design-preview-card-link {
   min-height: 10.5rem;
 }

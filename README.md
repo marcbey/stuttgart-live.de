@@ -122,6 +122,8 @@ Auch die öffentliche Event-Suche versteht strukturierte Zeitphrasen wie `heute`
 
 Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Location, damit du verschiedene Termine desselben Acts unterscheiden kannst. Ohne Treffer kannst du die Suche direkt ändern oder alle Events öffnen. Deine Merkliste wird in diesem Browser gespeichert; über die Teilenfunktion kannst du sie weitergeben.
 
+In der Lane „Deine Events“ steht das Herz vor der Überschrift. Mit dem X im weißen Kreis entfernst du ein Event aus deiner Merkliste; auf den anderen Eventkarten bleibt das Herz zum Merken erhalten.
+
 Der allgemeine Infotext über STUTTGART LIVE mit dem Newsletter-Hinweis neben der Überschrift erscheint nur auf der Startseite. Auf den Serviceseiten beginnt der Kopfbereich direkt mit dem jeweiligen Seitentitel.
 
 Bei der Eingabe von `Russ Live` erscheint ein direkter Link zur Russ-Live-Übersicht. Beim Absenden dieser Suche öffnet sich die Übersicht direkt. Groß- und Kleinschreibung sowie zusätzliche Leerzeichen spielen dabei keine Rolle; längere Suchanfragen bleiben normale Event-Suchen.
