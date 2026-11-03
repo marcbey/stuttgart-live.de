@@ -352,6 +352,7 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_includes response.body, "katharinaschopper@russ-live.de"
     assert_includes response.body, "mail@inorange.org"
+    assert_includes response.body, "chantalerler@russ-live.de"
   end
 
   test "send test list reports success" do
