@@ -32,6 +32,10 @@ module Public::EventsHelper
     Public::Events::EffectiveSeriesIdsQuery.call(events)
   end
 
+  def public_random_video_event(events, attachment:, random: Random)
+    events.select { |event| event.public_send(attachment).attached? }.sample(random: random)
+  end
+
   def public_events_section_cache_key(section:, browse_state:, events:, context: nil, strict_proxy: false, authenticated: authenticated?)
     [
       "public-events-section-v2",
