@@ -62,7 +62,7 @@
         <span>Verlinktes Event</span>
         <%= form.select :team_tip_event_id,
                         options_for_select(
-                          available_events.map { |event| [ newsletter_event_option_label(event), event.id ] },
+                          newsletter_event_options(available_events, selected_event: issue.team_tip_event),
                           issue.team_tip_event_id
                         ),
                         { include_blank: "Kein Event verlinken" },
