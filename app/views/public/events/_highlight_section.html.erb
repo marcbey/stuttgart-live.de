@@ -13,7 +13,7 @@
 <% list_events = defer_initial_page ? [] : (lazy_lane_id.present? ? events.first(Public::EventsController::HOME_LANE_LIST_LIMIT) : events) %>
 <% section_lazy_next_cursor = defer_initial_page ? nil : lazy_next_cursor %>
 <% section_lazy_list_next_cursor = defer_initial_page ? nil : lazy_list_next_cursor %>
-<% homepage_highlight_video_event = featured ? rendered_events.find { |event| event.highlight_video_file.attached? } : nil %>
+<% homepage_highlight_video_event = featured ? public_random_video_event(rendered_events, attachment: :highlight_video_file) : nil %>
 <% homepage_highlight_video_setting = featured ? AppSetting.homepage_highlight_video_record : nil %>
 <% homepage_highlight_video_cache_key = homepage_highlight_video_setting&.cache_key_with_version %>
 <% if homepage_highlight_video_event&.highlight_video_file&.attached? %>

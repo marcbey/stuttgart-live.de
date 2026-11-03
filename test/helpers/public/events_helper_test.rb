@@ -3,6 +3,28 @@ require "test_helper"
 class Public::EventsHelperTest < ActionView::TestCase
   include Public::EventsHelper
 
+  test "public_random_video_event varies the selected event within the requested format" do
+    attachment_type = Struct.new(:attached?)
+    event_type = Struct.new(:highlight_video_file, :highlight_landscape_video_file)
+    portrait = event_type.new(attachment_type.new(true), attachment_type.new(false))
+    landscape = event_type.new(attachment_type.new(false), attachment_type.new(true))
+    both = event_type.new(attachment_type.new(true), attachment_type.new(true))
+    neither = event_type.new(attachment_type.new(false), attachment_type.new(false))
+    candidates = [ neither, portrait, landscape, both ]
+
+    { highlight_video_file: [ portrait, both ], highlight_landscape_video_file: [ landscape, both ] }.each do |attachment, eligible|
+      random = Random.new(42)
+      selected = Array.new(20) { public_random_video_event(candidates, attachment: attachment, random: random) }
+
+      assert_equal eligible.to_set, selected.to_set
+      assert_nil public_random_video_event([ neither ], attachment: attachment)
+      assert_nil public_random_video_event([], attachment: attachment)
+      assert_equal both, public_random_video_event([ neither, both ], attachment: attachment)
+    end
+
+    assert_equal [ neither, portrait, landscape, both ], candidates
+  end
+
   test "public_design_highlight_tiles reorders and skips tiles to fill the grid" do
     variants = [
       EventImage::GRID_VARIANT_2X1,
