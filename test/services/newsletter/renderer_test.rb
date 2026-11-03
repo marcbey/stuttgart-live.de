@@ -164,6 +164,42 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "Für was interessierst du dich? Spring hinein ins Vergnügen :-)"
   end
 
+  test "mobile event cards put the headline above image and details and omit the tour" do
+    event = create_published_event(slug: "compact-mobile", title: "The Tour 2026", artist_name: "Not Scientists",
+      start_at: Time.zone.local(2026, 11, 20, 20), genre: genres(:rock))
+    event.import_event_images.create!(source: "easyticket", image_type: "image_url",
+      image_url: "https://img.example.test/compact-mobile.jpg", role: "cover", position: 0)
+
+    %w[mixed_weekly_mix genre_weekly_mix].each do |variant|
+      issue = NewsletterIssue.create!(title: "Mobile", subject: "Mobile", layout_variant: variant, created_by: users(:one))
+      issue.newsletter_issue_items.create!(item: event, position: 1, section_key: genres(:rock).slug)
+      document = Nokogiri::HTML(Newsletter::Renderer.call(issue).html)
+      mobile = document.at_css(".newsletter-mobile-item-row")
+      rows = mobile.at_css("table").xpath("./tr | ./tbody/tr")
+
+      assert_equal "Not Scientists", rows.first.at_css("td[colspan='2'] .newsletter-mobile-title")&.text
+      assert rows.last.at_css(".newsletter-mobile-image")
+      assert_equal "20.11.26, 20 Uhr", mobile.at_css(".newsletter-mobile-date")&.text
+      assert_equal event.venue, mobile.at_css(".newsletter-mobile-venue")&.text
+      assert_not_includes mobile.text, "The Tour 2026"
+      assert_includes document.text, "The Tour 2026", "Desktop must keep the tour subtitle"
+    end
+  end
+
+  test "compact mobile dates retain minutes and cards work without an image" do
+    event = create_published_event(slug: "compact-mobile-minutes", title: "Tour", artist_name: "Artist",
+      start_at: Time.zone.local(2026, 11, 20, 20, 30), genre: genres(:rock))
+    issue = NewsletterIssue.create!(title: "Mobile", subject: "Mobile", layout_variant: "mixed_weekly_mix", created_by: users(:one))
+    issue.newsletter_issue_items.create!(item: event, position: 1)
+
+    mobile = Nokogiri::HTML(Newsletter::Renderer.call(issue).html).at_css(".newsletter-mobile-item-row")
+
+    assert_equal "20.11.26, 20:30 Uhr", mobile.at_css(".newsletter-mobile-date")&.text
+    assert_equal "Artist", mobile.at_css("td[colspan='2'] .newsletter-mobile-title")&.text
+    assert_nil mobile.at_css(".newsletter-mobile-image")
+    assert mobile.at_css(".newsletter-event-button[href]")
+  end
+
   test "renders mixed weekly mix with one heading and genre labels" do
     event = create_published_event(
       slug: "newsletter-mixed-pop",
@@ -395,9 +431,9 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "<!--[if !mso]><!-->"
     assert_includes rendered.html, "<!--<![endif]-->"
     assert_includes rendered.html, "display: none !important"
-    assert_includes rendered.html, "width: 104px !important"
+    assert_includes rendered.html, "width: 88px !important"
     assert_includes rendered.html, "font-size: 17px !important"
-    assert_includes rendered.html, "font-size: 18px !important"
+    assert_includes rendered.html, "-webkit-text-size-adjust: 100%"
     assert_includes rendered.html, "font-size: 24px !important"
     assert_includes rendered.html, "font-size: 13px !important"
     assert_includes rendered.html, "newsletter-footer-headline"

@@ -62,6 +62,20 @@ module Newsletter
           <head>
             <meta name="viewport" content="width=device-width, initial-scale=1">
             <style>
+              body, table, td, a {
+                -webkit-text-size-adjust: 100%;
+                -ms-text-size-adjust: 100%;
+              }
+
+              a[x-apple-data-detectors] {
+                color: inherit !important;
+                font-size: inherit !important;
+                font-family: inherit !important;
+                font-weight: inherit !important;
+                line-height: inherit !important;
+                text-decoration: none !important;
+              }
+
               .newsletter-genre-link:hover {
                 background: #303636 !important;
                 border-color: #303636 !important;
@@ -134,18 +148,18 @@ module Newsletter
                 }
 
                 .newsletter-mobile-image-cell {
-                  width: 104px !important;
-                  padding: 12px 12px 12px 0 !important;
+                  width: 88px !important;
+                  padding: 0 12px 12px 0 !important;
                 }
 
                 .newsletter-mobile-image {
-                  width: 104px !important;
-                  max-width: 104px !important;
-                  height: 104px !important;
+                  width: 88px !important;
+                  max-width: 88px !important;
+                  height: 88px !important;
                 }
 
                 .newsletter-mobile-content-cell {
-                  padding: 12px 0 !important;
+                  padding: 0 0 12px !important;
                 }
 
                 .newsletter-mobile-label {
@@ -154,7 +168,7 @@ module Newsletter
                 }
 
                 .newsletter-mobile-title {
-                  font-size: 18px !important;
+                  font-size: 17px !important;
                   line-height: 1.18 !important;
                 }
 
@@ -165,6 +179,12 @@ module Newsletter
 
                 .newsletter-mobile-button-wrap {
                   padding-top: 8px !important;
+                }
+
+                .newsletter-mobile-button-wrap .newsletter-event-button {
+                  font-size: 13px !important;
+                  line-height: 20px !important;
+                  padding: 11px 12px !important;
                 }
 
                 .newsletter-event-button {
@@ -652,14 +672,17 @@ module Newsletter
     end
 
     def genre_item_mobile_row_html(item)
+      image_cell = genre_item_mobile_image_cell_html(item)
+
       <<~HTML
         <!--[if !mso]><!-->
           <tr class="newsletter-mobile-item-row" style="display:none;mso-hide:all;max-height:0;overflow:hidden;">
             <td colspan="#{GENRE_CARD_COLUMNS}" style="padding:0;border-bottom:1px solid #eceeee;">
               <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="width:100%;border-collapse:collapse;">
+                #{mobile_event_headline_row_html(item)}
                 <tr>
-                  #{genre_item_mobile_image_cell_html(item)}
-                  <td class="newsletter-mobile-content-cell" valign="top" style="vertical-align:top;padding:12px 0;">
+                  #{image_cell}
+                  <td class="newsletter-mobile-content-cell" colspan="#{image_cell.blank? ? 2 : 1}" valign="top" style="vertical-align:top;padding:0 0 12px;">
                     #{genre_item_mobile_content_html(item)}
                   </td>
                 </tr>
@@ -697,14 +720,45 @@ module Newsletter
       HTML
     end
 
-    def genre_item_mobile_content_html(item)
+    def mobile_event_headline_row_html(item)
+      return "" unless item.item.is_a?(Event)
+
       <<~HTML
-        <p class="newsletter-mobile-label" style="margin:0 0 4px;font-size:11px;line-height:1.25;color:#667071;">#{item_label_html(item)}</p>
-        <h3 class="newsletter-mobile-title" style="margin:0 0 5px;font-size:16px;line-height:1.18;font-weight:600;">#{escape(item.display_headline)}</h3>
-        <p class="newsletter-mobile-teaser" style="margin:0;font-size:13px;line-height:1.3;color:#263334;">#{escape(item.display_teaser)}</p>
+        <tr>
+          <td colspan="2" style="padding:12px 0 8px;">
+            <h3 class="newsletter-mobile-title" style="margin:0;font-size:17px;line-height:1.18;font-weight:600;">#{escape(item.display_headline)}</h3>
+          </td>
+        </tr>
+      HTML
+    end
+
+    def genre_item_mobile_content_html(item)
+      copy = if item.item.is_a?(Event)
+        %(<p class="newsletter-mobile-label" style="margin:0;font-size:12px;line-height:1.3;color:#667071;">#{mobile_event_label_html(item)}</p>)
+      else
+        <<~HTML
+          <p class="newsletter-mobile-label" style="margin:0 0 4px;font-size:11px;line-height:1.25;color:#667071;">#{item_label_html(item)}</p>
+          <h3 class="newsletter-mobile-title" style="margin:0 0 5px;font-size:16px;line-height:1.18;font-weight:600;">#{escape(item.display_headline)}</h3>
+          <p class="newsletter-mobile-teaser" style="margin:0;font-size:13px;line-height:1.3;color:#263334;">#{escape(item.display_teaser)}</p>
+        HTML
+      end
+
+      <<~HTML
+        #{copy}
         <div class="newsletter-mobile-button-wrap" style="padding-top:8px;">
           #{genre_item_card_button_html(item)}
         </div>
+      HTML
+    end
+
+    def mobile_event_label_html(item)
+      event = item.item
+      time_format = event.start_at.min.zero? ? "%d.%m.%y, %-H Uhr" : "%d.%m.%y, %-H:%M Uhr"
+
+      <<~HTML.squish
+        #{item_genre_badge_html(item)}
+        <span class="newsletter-mobile-date" style="display:block;white-space:nowrap;line-height:1.3;">#{escape(I18n.l(event.start_at, format: time_format))}</span>
+        <span class="newsletter-mobile-venue" style="display:block;margin-top:3px;line-height:1.3;">#{escape(event.venue)}</span>
       HTML
     end
 
@@ -806,13 +860,22 @@ module Newsletter
     def item_label_html(item)
       return escape(item_label(item)) unless issue.mixed_weekly_mix? && item.item.is_a?(Event)
 
-      genre_label = header_group_for(item)&.label
-      return escape(event_label(item.item)) if genre_label.blank?
+      badge = item_genre_badge_html(item)
+      return escape(event_label(item.item)) if badge.blank?
 
       <<~HTML.squish
-        <span class="newsletter-item-genre" style="display:inline-block;margin:0 7px 3px 0;padding:3px 7px;border-radius:999px;background:#d9f5f2;color:#245956;font-size:10px;font-weight:bold;line-height:1.2;">#{escape(genre_label)}</span>
+        #{badge}
         <span class="newsletter-item-date" style="display:inline-block;line-height:1.3;">#{escape(event_label(item.item))}</span>
       HTML
+    end
+
+    def item_genre_badge_html(item)
+      return "" unless issue.mixed_weekly_mix? && item.item.is_a?(Event)
+
+      genre_label = header_group_for(item)&.label
+      return "" if genre_label.blank?
+
+      %(<span class="newsletter-item-genre" style="display:inline-block;margin:0 7px 3px 0;padding:3px 7px;border-radius:999px;background:#d9f5f2;color:#245956;font-size:10px;font-weight:bold;line-height:1.2;">#{escape(genre_label)}</span>)
     end
 
     def escape_with_line_breaks(text)
