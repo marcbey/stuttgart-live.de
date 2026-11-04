@@ -14246,6 +14246,10 @@ body.page-public-startpage.is-design-preview-header-scrolled .design-preview-log
   display: none;
 }
 
+.design-preview-header-all-link {
+  display: none;
+}
+
 .design-preview-header-toolbar {
   display: none;
   position: relative;
@@ -14641,11 +14645,11 @@ body.page-public-startpage.is-design-preview-header-scrolled .design-preview-log
 
 .design-preview-header-toolbar .public-search-filter,
 .design-preview-header-toolbar .public-search-field {
-  width: clamp(20rem, 32vw, 28rem);
+  width: clamp(10rem, calc(26vw - 2rem), 28rem);
 }
 
 .design-preview-header-toolbar .public-search-filter {
-  flex: 0 1 clamp(20rem, 32vw, 28rem);
+  flex: 0 1 clamp(10rem, calc(26vw - 2rem), 28rem);
   height: 2.9rem;
 }
 
@@ -17836,15 +17840,38 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 }
 
 .design-preview-filterbar--months {
+  position: sticky;
+  top: var(--preview-topbar-height);
+  z-index: 40;
   grid-template-columns: minmax(0, 1fr) max-content;
 }
 
+.design-preview-filterbar.design-preview-filterbar--months {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  background: #dff7f8;
+}
+
+.design-preview-filterbar.design-preview-filterbar--homepage {
+  position: fixed;
+  top: calc(var(--preview-topbar-height) + 0.25rem);
+  right: var(--preview-shell-edge);
+  left: var(--preview-shell-edge);
+  width: auto;
+  margin: 0;
+}
+
+.design-preview-filterbar--homepage .design-preview-mobile-filter-group {
+  grid-template-columns: repeat(2, minmax(0, 1fr)) var(--preview-filter-height);
+}
+
 .design-preview-mobile-filter-group {
+  position: relative;
   display: grid;
   grid-column: 1 / -1;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 0.94fr) minmax(0, 0.94fr) var(--preview-filter-height);
-  gap: clamp(0.5rem, 2vw, 0.72rem);
+  grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1.15fr) var(--preview-filter-height);
+  gap: 0.5rem;
 }
 
 .design-preview-mobile-filter-field {
@@ -17856,8 +17883,18 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   display: none;
 }
 
+.design-preview-mobile-filter-group .design-preview-filter-all {
+  width: 100%;
+  text-transform: none;
+}
+
+.design-preview-mobile-filter-group .design-preview-month-dropdown {
+  grid-column: 2 / -1;
+}
+
 .design-preview-mobile-filter-group :is(.design-preview-filter-month, .all-stuttgart-filter-summary) {
   justify-content: space-between;
+  padding-inline: 0.72rem;
   text-transform: none;
 }
 
@@ -17866,7 +17903,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 }
 
 .design-preview-filterbar--months .design-preview-month-dropdown--mobile {
-  display: block;
+  display: none;
 }
 
 .design-preview-filterbar--months .design-preview-filter-month {
@@ -17874,9 +17911,8 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   justify-content: space-between;
 }
 
-.design-preview-mobile-filter-group .all-stuttgart-filter-summary {
+.design-preview-mobile-filter-group .all-stuttgart-filter-dropdown .all-stuttgart-filter-summary {
   width: 100%;
-  padding: 0 0.72rem;
 }
 
 .design-preview-mobile-filter-group .all-stuttgart-filter-menu {
@@ -17884,10 +17920,60 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   left: 0;
 }
 
+.design-preview-mobile-filter-group .all-stuttgart-location-dropdown .all-stuttgart-filter-menu {
+  right: 0;
+  left: auto;
+}
+
 .design-preview-filterbar--months .design-preview-filter-calendar {
   width: var(--preview-filter-height);
   justify-self: end;
   padding: 0;
+  border-color: rgba(8, 9, 9, 0.4);
+  background: #fff;
+}
+
+.design-preview-filterbar--months .design-preview-filter-calendar:hover,
+.design-preview-filterbar--months .design-preview-filter-calendar:focus-visible {
+  border-color: var(--preview-ink);
+  background: var(--preview-turquoise-soft);
+}
+
+.all-stuttgart-calendar-label {
+  display: none;
+}
+
+[data-design-preview-filterbar-calendar="true"] .public-search-calendar-card {
+  background: #fff;
+}
+
+.all-stuttgart-calendar-modes {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.3rem;
+}
+
+.all-stuttgart-calendar-modes button {
+  min-height: 2.75rem;
+  border: 1px solid var(--preview-line, rgba(8, 9, 9, 0.16));
+  border-radius: 0.45rem;
+  background: #fff;
+  color: var(--preview-ink, #080909);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.all-stuttgart-calendar-modes button[aria-pressed="true"] {
+  background: #080909;
+  border-color: #080909;
+  color: #fff;
+}
+
+.all-stuttgart-calendar-controls p {
+  margin: 0.65rem 0;
+  color: rgba(8, 9, 9, 0.65);
+  font-size: 0.85rem;
 }
 
 .design-preview-month-menu--right {
@@ -17992,7 +18078,95 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   font-size: clamp(1.55rem, 6vw, 2.25rem);
   line-height: 1;
   margin: 0;
-  white-space: nowrap;
+  white-space: normal;
+}
+
+.all-stuttgart-event-header .all-stuttgart-period-title {
+  text-transform: none;
+}
+
+.all-stuttgart-view-home {
+  flex: 0 0 auto;
+  width: 5.75rem;
+  min-height: 2.75rem;
+}
+
+.all-stuttgart-view-switch {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.all-stuttgart-view-switch .all-stuttgart-view-button {
+  position: relative;
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: #929695;
+}
+
+.all-stuttgart-view-button::before {
+  content: "";
+  position: absolute;
+  inset: 0.25rem;
+  border: 1px solid var(--preview-line);
+  border-radius: 50%;
+  background: #fff;
+  pointer-events: none;
+}
+
+.all-stuttgart-view-button .public-view-icon {
+  position: relative;
+}
+
+.all-stuttgart-view-button:hover,
+.all-stuttgart-view-button:focus-visible {
+  color: var(--preview-turquoise);
+}
+
+.all-stuttgart-view-button:hover::before,
+.all-stuttgart-view-button:focus-visible::before {
+  border-color: var(--preview-turquoise);
+}
+
+.all-stuttgart-view-button:focus-visible {
+  border-radius: 50%;
+  outline: 2px solid var(--preview-turquoise);
+  outline-offset: -4px;
+}
+
+.all-stuttgart-view-switch .all-stuttgart-view-button[aria-current="page"] {
+  color: #fff;
+}
+
+.all-stuttgart-view-button[aria-current="page"]::before {
+  border-color: var(--preview-ink);
+  background: var(--preview-ink);
+}
+
+.all-stuttgart-view-button .public-view-icon-grid {
+  grid-template-columns: repeat(2, 0.375rem);
+  gap: 0.1875rem;
+}
+
+.all-stuttgart-view-button .public-view-icon-grid span {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 0;
+}
+
+.all-stuttgart-view-button .public-view-icon-list {
+  gap: 0.1875rem;
+}
+
+.all-stuttgart-view-button .public-view-icon-list span {
+  width: 0.875rem;
+  height: 0.125rem;
 }
 
 .all-stuttgart-event-filters {
@@ -18101,6 +18275,40 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.all-stuttgart-filter-search {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 0.2rem 0.2rem 0.6rem;
+  background: #fff;
+}
+
+.all-stuttgart-filter-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 2.75rem;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--preview-line);
+  border-radius: 0.45rem;
+  background: #fff;
+  color: var(--preview-ink);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.all-stuttgart-filter-search input:focus-visible {
+  border-color: var(--preview-turquoise);
+  outline: 2px solid var(--preview-turquoise);
+  outline-offset: 1px;
+}
+
+.all-stuttgart-filter-empty {
+  margin: 0;
+  padding: 0.64rem 0.72rem;
+  color: rgba(8, 9, 9, 0.65);
+  font-size: 0.86rem;
 }
 
 .all-stuttgart-filter-menu a:hover,
@@ -18300,30 +18508,37 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 }
 
 @media (max-width: 47.999rem) {
+  body.page-public-design-preview:has(.design-preview-filterbar--months),
+  body.page-public-design-preview main:has(.design-preview-filterbar--months) {
+    overflow-x: clip;
+  }
+
   .design-preview-filterbar--months {
+    top: calc(var(--preview-topbar-height) + 0.25rem);
     padding-top: 0.22rem;
     padding-bottom: 0.22rem;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(244, 244, 244, 0.9));
     box-shadow: none;
     backdrop-filter: none;
   }
 
-  .design-preview-mobile-filter-group .design-preview-filter-calendar {
-    border-color: transparent;
-    background: transparent;
-    box-shadow: none;
+  .design-preview-mobile-filter-group .design-preview-filter-all {
+    padding-inline: 0.75rem;
   }
 
-  .design-preview-mobile-filter-group .design-preview-filter-calendar:hover,
-  .design-preview-mobile-filter-group .design-preview-filter-calendar:focus-visible {
-    border-color: transparent;
-    background: transparent;
-    box-shadow: none;
+  .design-preview-mobile-filter-group .all-stuttgart-filter-dropdown {
+    position: static;
   }
 
-  .design-preview-mobile-filter-group .all-stuttgart-location-dropdown .all-stuttgart-filter-menu {
+  .design-preview-mobile-filter-group .all-stuttgart-filter-summary {
+    padding-inline: 0.6rem;
+  }
+
+  .design-preview-mobile-filter-group .all-stuttgart-filter-dropdown .all-stuttgart-filter-menu {
     right: 0;
-    left: auto;
+    left: 0;
+    width: auto;
+    min-width: 0;
+    max-width: none;
   }
 
   .all-stuttgart-active-filters {
@@ -19305,6 +19520,36 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     flex: 0 0 auto;
   }
 
+  .design-preview-header-all-link {
+    display: inline-flex;
+    flex: 0 0 auto;
+    min-height: 2.75rem;
+    align-items: center;
+    justify-content: center;
+    padding: 0 0.95rem;
+    border: 1px solid var(--preview-line);
+    border-radius: 999px;
+    background: #fff;
+    color: var(--preview-ink);
+    font-size: 0.95rem;
+    font-weight: 500;
+    line-height: 1;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .design-preview-header-all-link:hover,
+  .design-preview-header-all-link:focus-visible {
+    border-color: var(--preview-turquoise);
+    background: var(--preview-turquoise-soft);
+  }
+
+  .design-preview-header-all-link[aria-current="page"] {
+    border-color: var(--preview-ink);
+    background: var(--preview-ink);
+    color: #fff;
+  }
+
   .design-preview-saved-link {
     width: auto;
     padding: 0 0.95rem;
@@ -19615,17 +19860,34 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     grid-template-columns: 1fr;
   }
 
+  .design-preview-filterbar--months.has-docked-view {
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
+
+  .design-preview-filterbar--months.has-docked-view .design-preview-mobile-filter-group {
+    grid-column: 1;
+  }
+
   .design-preview-mobile-filter-group {
     display: grid;
-    grid-template-columns: max-content repeat(3, 11.2rem) 3rem;
+    grid-template-columns: max-content max-content repeat(3, minmax(0, 11.2rem)) max-content;
     gap: 0.62rem;
     justify-content: start;
     align-items: center;
   }
 
+  .design-preview-filterbar.design-preview-filterbar--homepage {
+    top: 4.5rem;
+  }
+
+  .design-preview-filterbar--homepage .design-preview-mobile-filter-group {
+    grid-template-columns: max-content repeat(3, minmax(0, 11.2rem)) max-content;
+  }
+
   .design-preview-filter-label {
     display: inline-flex;
     align-items: center;
+    margin-right: 0.75rem;
     color: rgba(8, 9, 9, 0.58);
     font-size: 1rem;
     font-weight: 700;
@@ -19637,8 +19899,18 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     display: block;
   }
 
+  .design-preview-mobile-filter-group .design-preview-month-dropdown {
+    grid-column: auto;
+  }
+
   .design-preview-mobile-filter-group :is(.design-preview-filter-month, .all-stuttgart-filter-summary) {
     width: 100%;
+    padding-inline: 1rem;
+  }
+
+  .has-docked-view .design-preview-mobile-filter-group :is(.design-preview-filter-month, .all-stuttgart-filter-summary) {
+    gap: 0.5rem;
+    padding-inline: 0.72rem;
   }
 
   .design-preview-filterbar--months .design-preview-month-dropdown--mobile {
@@ -19649,23 +19921,20 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     display: none;
   }
 
-  .design-preview-filterbar--months .design-preview-filter-calendar {
-    border-color: transparent;
-    background: transparent;
-    box-shadow: none;
-  }
-
   .design-preview-filterbar--months .design-preview-filter-calendar svg {
     width: 1.18rem;
     height: 1.18rem;
     stroke-width: 2.2;
   }
 
-  .design-preview-filterbar--months .design-preview-filter-calendar:hover,
-  .design-preview-filterbar--months .design-preview-filter-calendar:focus-visible {
-    border-color: transparent;
-    background: transparent;
-    box-shadow: none;
+  .design-preview-filterbar--months .design-preview-filter-calendar {
+    width: auto;
+    padding-inline: 1rem;
+    text-transform: none;
+  }
+
+  .all-stuttgart-calendar-label {
+    display: inline;
   }
 
   .design-preview-filterbar--months .design-preview-filter-month-pill {

@@ -1,4 +1,5 @@
 <%
+  grid_view = local_assigns.fetch(:grid_view, false)
   display_title = local_assigns[:title].presence || "Events"
   genres = Array(local_assigns[:genres]).compact
   locations = Array(local_assigns[:locations]).compact
@@ -6,17 +7,20 @@
   selected_location = local_assigns[:selected_location].to_s.presence
   selected_month = local_assigns[:selected_month]
   selected_date = local_assigns[:selected_date]
+  selected_date_end = local_assigns[:selected_date_end]
   lazy_lane_id = local_assigns[:lazy_lane_id]
   lazy_url = local_assigns[:lazy_url]
   lazy_next_cursor = local_assigns[:lazy_next_cursor]
   lazy_per_page = local_assigns.fetch(:lazy_per_page, Public::EventsController::LANE_PAGE_LIMIT)
   selected_month_param = selected_month&.strftime("%Y-%m")
-  show_time_column = selected_date.present?
+  show_time_column = selected_date.present? && selected_date_end.blank?
   genre_label = selected_genre&.name.presence || "Genre"
   location_label = selected_location.presence || "Location"
   base_filter_params = {
+    view: ("grid" if grid_view),
     event_month: selected_month_param,
     event_date: selected_date&.iso8601,
+    event_date_end: selected_date_end&.iso8601,
     event_genre: selected_genre&.slug,
     event_location: selected_location
   }.compact
@@ -26,7 +30,7 @@
   if selected_date.present?
     active_filter_chips << {
       label: display_title,
-      path: all_stuttgart_lane_path(base_filter_params.except(:event_date))
+      path: all_stuttgart_lane_path(base_filter_params.except(:event_date, :event_date_end))
     }
   end
   if selected_genre.present?
@@ -50,7 +54,7 @@
          data-lane-page-lane-value="<%= lazy_lane_id %>"
          data-lane-page-cursor-value="<%= lazy_next_cursor %>"
          data-lane-page-per-page-value="<%= lazy_per_page %>"
-         data-lane-page-card-mode-value="all_stuttgart_rows"
+         data-lane-page-card-mode-value="<%= grid_view ? "design_cards" : "all_stuttgart_rows" %>"
          <% end %>>
   <% if active_filter_chips.any? %>
     <div class="all-stuttgart-active-filters" aria-label="Aktive Filter">
@@ -66,7 +70,27 @@
   <% end %>
 
   <div class="design-preview-section-header all-stuttgart-event-header">
-    <h1><%= display_title %></h1>
+    <h1<% if selected_date_end.present? %> class="all-stuttgart-period-title"<% end %>><%= display_title %></h1>
+    <div class="all-stuttgart-view-home" data-design-preview-filterbar-target="viewHome">
+      <nav class="all-stuttgart-view-switch" aria-label="Darstellung der Veranstaltungen" data-design-preview-filterbar-target="viewSwitch">
+        <%= link_to all_stuttgart_lane_path(base_filter_params.except(:view)),
+                    class: "all-stuttgart-view-button",
+                    title: "Listenansicht",
+                    aria: { label: "Listenansicht", current: ("page" unless grid_view) } do %>
+          <span class="public-view-icon public-view-icon-list" aria-hidden="true">
+            <span></span><span></span><span></span>
+          </span>
+        <% end %>
+        <%= link_to all_stuttgart_lane_path(base_filter_params.merge(view: "grid")),
+                    class: "all-stuttgart-view-button",
+                    title: "Kachelansicht",
+                    aria: { label: "Kachelansicht", current: ("page" if grid_view) } do %>
+          <span class="public-view-icon public-view-icon-grid" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+          </span>
+        <% end %>
+      </nav>
+    </div>
     <% if genres.any? || locations.any? %>
       <div class="all-stuttgart-event-filters" data-controller="all-stuttgart-filters">
         <% if genres.any? %>
@@ -126,23 +150,36 @@
   </div>
 
   <% if events.any? %>
-    <div class="all-stuttgart-event-list" data-controller="genre-labels" role="table" aria-label="<%= display_title %>">
-      <div class="all-stuttgart-event-list-head" role="row">
-        <span role="columnheader"><%= show_time_column ? "Uhrzeit" : "Tag" %></span>
-        <span role="columnheader">Titel</span>
-        <span role="columnheader">Location</span>
-        <span role="columnheader">Preis</span>
-        <span role="columnheader" data-genre-labels-target="heading">Genre</span>
-        <span role="columnheader">Aktion</span>
-      </div>
-
-      <div class="all-stuttgart-event-rows" data-lane-page-target="grid">
-        <%= render "all_stuttgart_event_rows",
+    <% if grid_view %>
+      <div class="design-preview-list-card-grid" data-controller="genre-labels" data-lane-page-target="grid">
+        <%= render "design_preview_event_grid",
                    events: events,
                    browse_state: browse_state,
-                   show_time_column: show_time_column %>
+                   strict_proxy: local_assigns.fetch(:strict_proxy, false),
+                   image_sizes: public_event_list_image_sizes,
+                   prioritize_visible_images: true,
+                   effective_series_ids: local_assigns[:effective_series_ids],
+                   series_counts_by_id: local_assigns[:series_counts_by_id] %>
       </div>
-    </div>
+    <% else %>
+      <div class="all-stuttgart-event-list" data-controller="genre-labels" role="table" aria-label="<%= display_title %>">
+        <div class="all-stuttgart-event-list-head" role="row">
+          <span role="columnheader"><%= show_time_column ? "Uhrzeit" : "Tag" %></span>
+          <span role="columnheader">Titel</span>
+          <span role="columnheader">Location</span>
+          <span role="columnheader">Preis</span>
+          <span role="columnheader" data-genre-labels-target="heading">Genre</span>
+          <span role="columnheader">Aktion</span>
+        </div>
+
+        <div class="all-stuttgart-event-rows" data-lane-page-target="grid">
+          <%= render "all_stuttgart_event_rows",
+                     events: events,
+                     browse_state: browse_state,
+                     show_time_column: show_time_column %>
+        </div>
+      </div>
+    <% end %>
     <% if lazy_lane_id.present? %>
       <div class="pagination-sentinel lane-page-pagination" data-lane-page-target="pagination">
         <button type="button"
@@ -159,8 +196,12 @@
       <h2>
         <% if selected_genre.present? %>
           Aktuell keine Events in diesem Genre
-        <% else %>
+        <% elsif selected_date.present? %>
+          Aktuell keine Events in diesem Zeitraum
+        <% elsif selected_month.present? %>
           Aktuell keine Events in diesem Monat
+        <% else %>
+          Aktuell keine kommenden Events
         <% end %>
       </h2>
       <p>Wir zeigen dir hier die Events, sobald Termine in diesem Zeitraum live sind.</p>

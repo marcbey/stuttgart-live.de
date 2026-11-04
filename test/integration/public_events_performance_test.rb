@@ -18,11 +18,11 @@ class PublicEventsPerformanceTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_includes response.body, @event.artist_name
-    assert_select ".design-preview-header-genres a", minimum: 1
+    assert_select ".design-preview-header-genres", count: 0
     assert_equal 0, queries.count { |sql| sql.include?("events.min_price <=") }, "Unused homepage price queries"
   end
 
-  test "event lists do not query unused homepage price lanes and retain today's tips" do
+  test "event lists start with filters without today's tips or unused homepage price lanes" do
     today = @event.dup
     today.assign_attributes(
       slug: "performance-todays-tip",
@@ -35,7 +35,9 @@ class PublicEventsPerformanceTest < ActionDispatch::IntegrationTest
     queries = capture_queries { get all_stuttgart_lane_url(event_month: "2026-06") }
 
     assert_response :success
-    assert_select ".design-preview-card-title", text: today.artist_name
+    assert_select ".design-preview-list-page > section:first-of-type.design-preview-filterbar", count: 1
+    assert_select ".design-preview-tagestipp-lane", count: 0
+    assert_select ".design-preview-card-title", text: today.artist_name, count: 0
     assert_includes response.body, @event.artist_name
     assert_equal 0, queries.count { |sql| sql.include?("events.min_price <=") }, "Unused homepage price queries"
   end

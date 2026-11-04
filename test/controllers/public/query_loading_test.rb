@@ -121,8 +121,8 @@ class Public::QueryLoadingTest < ActionDispatch::IntegrationTest
     assert_batched_render highlights_lane_path
   end
 
-  test "all Stuttgart lane batches today series counts" do
-    assert_batched_render all_stuttgart_lane_path
+  test "today lane batches image variants and series counts" do
+    assert_batched_render tagestipp_lane_path
   end
 
   test "news detail batches sidebar image variants and series counts" do

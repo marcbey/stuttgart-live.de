@@ -36,15 +36,9 @@
     <% end %>
 
     <% if @lane.key == "all_stuttgart" %>
-      <%= render "design_preview_tagestipp_lane",
-                 events: @home_tagestipp_events,
-                 browse_state: @browse_state,
-                 strict_proxy: strict_proxy,
-                 effective_series_ids: @home_tagestipp_effective_series_ids,
-                 series_counts_by_id: @home_tagestipp_series_counts_by_id,
-                 title_id: "all-stuttgart-tagestipp-title" %>
-
+      <% grid_view = params[:view] == "grid" %>
       <%= render "all_stuttgart_filterbar",
+                 grid_view: grid_view,
                  genre_lanes: genre_lanes,
                  months: @lane_months,
                  selected_month: @lane_selected_month,
@@ -53,9 +47,14 @@
                  locations: @all_stuttgart_locations,
                  selected_genre: @all_stuttgart_selected_genre,
                  selected_location: @all_stuttgart_selected_location,
-                 selected_date: @all_stuttgart_selected_date %>
+                 selected_date: @all_stuttgart_selected_date,
+                 selected_date_end: @all_stuttgart_selected_date_end %>
 
       <%= render "all_stuttgart_event_list",
+                 grid_view: grid_view,
+                 strict_proxy: strict_proxy,
+                 effective_series_ids: @lane_effective_series_ids,
+                 series_counts_by_id: @lane_series_counts_by_id,
                  title: lane_display_title,
                  events: @lane_events,
                  browse_state: @browse_state,
@@ -65,6 +64,7 @@
                  selected_location: @all_stuttgart_selected_location,
                  selected_month: @lane_selected_month,
                  selected_date: @all_stuttgart_selected_date,
+                 selected_date_end: @all_stuttgart_selected_date_end,
                  lazy_lane_id: @lane_lazy_id,
                  lazy_url: @lane_lazy_url,
                  lazy_next_cursor: @lane_next_cursor,

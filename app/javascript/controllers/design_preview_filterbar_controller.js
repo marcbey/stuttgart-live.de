@@ -1,37 +1,39 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["bar", "dateButton", "headerGenres", "headerGenreItem"]
+  static targets = ["bar", "dateButton", "viewDock", "viewHome", "viewSwitch", "homepageBar"]
+  static values = { destination: String }
 
   connect() {
     this.updateChromeState = this.updateChromeState.bind(this)
     this.updateCalendarPosition = this.updateCalendarPosition.bind(this)
-    this.updateHeaderGenres = this.updateHeaderGenres.bind(this)
-    this.handleCalendarDayClick = this.handleCalendarDayClick.bind(this)
+    this.handleCalendarSelection = this.handleCalendarSelection.bind(this)
     this.handleCalendarEscape = this.handleCalendarEscape.bind(this)
     this.resetActiveCalendarIfClosed = this.resetActiveCalendarIfClosed.bind(this)
     this.activeCalendarForm = null
+    this.restoreViewSwitch = () => this.moveViewSwitch(false)
 
     this.updateChromeState()
-    this.updateHeaderGenres()
     window.addEventListener("scroll", this.updateChromeState, { passive: true })
     window.addEventListener("resize", this.updateChromeState)
-    window.addEventListener("resize", this.updateHeaderGenres)
     window.addEventListener("scroll", this.updateCalendarPosition, { passive: true })
     window.addEventListener("resize", this.updateCalendarPosition)
-    document.addEventListener("click", this.handleCalendarDayClick, true)
+    this.element.addEventListener("public-search:calendar-selected", this.handleCalendarSelection)
+    this.element.addEventListener("public-search:calendar-closed", this.resetActiveCalendarIfClosed)
     document.addEventListener("keydown", this.handleCalendarEscape)
-    document.fonts?.ready.then(this.updateHeaderGenres)
+    document.addEventListener("turbo:before-cache", this.restoreViewSwitch)
   }
 
   disconnect() {
     window.removeEventListener("scroll", this.updateChromeState)
     window.removeEventListener("resize", this.updateChromeState)
-    window.removeEventListener("resize", this.updateHeaderGenres)
     window.removeEventListener("scroll", this.updateCalendarPosition)
     window.removeEventListener("resize", this.updateCalendarPosition)
-    document.removeEventListener("click", this.handleCalendarDayClick, true)
+    this.element.removeEventListener("public-search:calendar-selected", this.handleCalendarSelection)
+    this.element.removeEventListener("public-search:calendar-closed", this.resetActiveCalendarIfClosed)
     document.removeEventListener("keydown", this.handleCalendarEscape)
+    document.removeEventListener("turbo:before-cache", this.restoreViewSwitch)
+    this.restoreViewSwitch()
     document.body.classList.remove("is-design-preview-header-scrolled")
     document.body.classList.remove("is-design-preview-header-genres-snapped")
     document.body.style.removeProperty("--design-preview-logo-progress")
@@ -48,27 +50,41 @@ export default class extends Controller {
     if (!(calendarButton instanceof HTMLButtonElement)) return
 
     this.activeCalendarForm = calendarButton.closest("[data-controller~='public-search']")
-    calendarButton.click()
-    this.activeCalendarPanel?.setAttribute("data-design-preview-filterbar-calendar", "true")
+    const calendar = this.activeCalendarController
+    if (!calendar) return
+    if (!this.activeCalendarPanel.hidden) {
+      calendar.closeCalendar()
+      return
+    }
+
+    const params = new URL(window.location.href).searchParams
+    this.activeCalendarPanel.dataset.designPreviewFilterbarCalendar = "true"
+    this.updateCalendarMode(params.has("event_date_end") ? "range" : "day")
+    calendar.openCalendar({ selection: { start: params.get("event_date"), end: params.get("event_date_end") } })
     window.requestAnimationFrame(this.updateCalendarPosition)
   }
 
-  handleCalendarDayClick(event) {
-    window.requestAnimationFrame(this.resetActiveCalendarIfClosed)
-
-    const dayButton = event.target?.closest?.(".public-search-calendar-day")
-    if (!(dayButton instanceof HTMLButtonElement) || dayButton.disabled) return
-
-    const panel = dayButton.closest("[data-public-search-target='calendarPanel']")
-    if (!(panel instanceof HTMLElement) || panel.hidden || panel.dataset.designPreviewFilterbarCalendar !== "true") return
-
-    const dateKey = dayButton.dataset.date
-    if (!dateKey) return
-
+  handleCalendarSelection(event) {
+    if (event.target !== this.activeCalendarForm || this.activeCalendarPanel?.dataset.designPreviewFilterbarCalendar !== "true") return
     event.preventDefault()
-    event.stopPropagation()
-    event.stopImmediatePropagation()
-    this.navigateToDate(dateKey)
+    this.navigateToDate(event.detail.start, event.detail.end)
+  }
+
+  selectCalendarMode(event) {
+    event.preventDefault()
+    this.updateCalendarMode(event.currentTarget.dataset.mode)
+    this.activeCalendarController?.resetCalendarSelection()
+  }
+
+  updateCalendarMode(mode) {
+    const panel = this.activeCalendarPanel
+    panel.dataset.calendarSelectionMode = mode
+    const controls = panel.querySelector("[data-filter-calendar-controls]")
+    controls.hidden = false
+    controls.querySelectorAll("[data-mode]").forEach((button) => {
+      button.setAttribute("aria-pressed", (button.dataset.mode === mode).toString())
+    })
+    controls.querySelector("[data-filter-calendar-hint]").textContent = mode === "range" ? "Start- und Enddatum wählen." : "Einen Tag wählen."
   }
 
   handleCalendarEscape(event) {
@@ -96,20 +112,42 @@ export default class extends Controller {
     document.body.style.setProperty("--design-preview-logo-header-y", `${(1.1 * (1 - logoProgress)).toFixed(3)}rem`)
     document.body.style.setProperty("--design-preview-logo-header-scale", (1 + 0.28 * (1 - logoProgress)).toFixed(3))
     this.updateCalendarPosition()
-    this.updateHeaderGenres()
+    this.updateViewSwitch()
+    this.updateHomepageBar()
   }
 
-  updateHeaderGenres() {
-    if (!this.hasHeaderGenresTarget) return
-    if (window.getComputedStyle(this.headerGenresTarget).display === "none") return
+  updateHomepageBar() {
+    if (!this.hasHomepageBarTarget) return
 
-    const more = this.headerGenresTarget.querySelector(".design-preview-header-genres-more")
-    if (!(more instanceof HTMLElement)) return
+    const hidden = window.scrollY <= 88
+    if (this.homepageBarTarget.hidden === hidden) return
 
-    more.hidden = false
-    this.headerGenreItemTargets.forEach((item) => {
-      item.hidden = false
-    })
+    this.homepageBarTarget.hidden = hidden
+    if (hidden) {
+      this.homepageBarTarget.querySelectorAll("details[open]").forEach((dropdown) => { dropdown.open = false })
+      this.activeCalendarController?.closeCalendar()
+    }
+  }
+
+  updateViewSwitch() {
+    if (!this.hasViewDockTarget) return
+
+    const stickyTop = Number.parseFloat(window.getComputedStyle(this.viewDockTarget).top)
+    const docked = window.matchMedia("(min-width: 48rem)").matches &&
+      this.viewDockTarget.getBoundingClientRect().top <= stickyTop + 1
+    this.moveViewSwitch(docked)
+  }
+
+  moveViewSwitch(docked) {
+    if (!this.hasViewSwitchTarget || !this.hasViewHomeTarget || !this.hasViewDockTarget) return
+
+    const destination = docked ? this.viewDockTarget : this.viewHomeTarget
+    this.viewDockTarget.classList.toggle("has-docked-view", docked)
+    if (this.viewSwitchTarget.parentElement === destination) return
+
+    const focusedElement = this.viewSwitchTarget.contains(document.activeElement) ? document.activeElement : null
+    destination.append(this.viewSwitchTarget)
+    focusedElement?.focus({ preventScroll: true })
   }
 
   get headerGenresShouldSnap() {
@@ -147,11 +185,17 @@ export default class extends Controller {
     panel.style.width = `${width}px`
   }
 
-  navigateToDate(dateKey) {
-    const url = new URL(window.location.href)
+  navigateToDate(dateKey, endDateKey = dateKey) {
+    const url = new URL(this.destinationValue || window.location.href, window.location.origin)
 
     url.searchParams.set("event_date", dateKey)
-    url.searchParams.set("event_month", dateKey.slice(0, 7))
+    if (endDateKey !== dateKey) {
+      url.searchParams.set("event_date_end", endDateKey)
+      url.searchParams.delete("event_month")
+    } else {
+      url.searchParams.delete("event_date_end")
+      url.searchParams.set("event_month", dateKey.slice(0, 7))
+    }
     url.searchParams.delete("page")
     url.searchParams.delete("cursor")
     url.searchParams.delete("q")
@@ -163,6 +207,9 @@ export default class extends Controller {
     this.calendarPanels.forEach((panel) => {
       if (panel.hidden) {
         delete panel.dataset.designPreviewFilterbarCalendar
+        delete panel.dataset.calendarSelectionMode
+        panel.querySelector("[data-filter-calendar-controls]").hidden = true
+        Object.assign(panel.style, { position: "", top: "", left: "", right: "", width: "" })
       }
     })
 
@@ -177,6 +224,11 @@ export default class extends Controller {
     if (activePanel instanceof HTMLElement) return activePanel
 
     return this.element.querySelector("[data-public-search-target='calendarPanel']")
+  }
+
+  get activeCalendarController() {
+    if (!this.activeCalendarForm) return null
+    return this.application.getControllerForElementAndIdentifier(this.activeCalendarForm, "public-search")
   }
 
   get visibleSearchCalendarButton() {

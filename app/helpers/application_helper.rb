@@ -42,7 +42,7 @@ module ApplicationHelper
   def public_design_menu_groups
     [
       [ "Entdecken", [
-        [ "Alle Events", all_stuttgart_lane_path ],
+        [ "Alles aus Stuttgart", all_stuttgart_lane_path ],
         [ "Unsere Highlights", highlights_lane_path ],
         [ "News", news_index_path ],
         [ "Tickets", tickets_path ]

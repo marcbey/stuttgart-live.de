@@ -362,12 +362,21 @@ module Public
 
     def assign_design_homepage
       assign_homepage_sections(defer_lower_lanes: true)
+      assign_homepage_filters
       assign_homepage_promotion_banners
       @homepage_highlight_video_event = random_homepage_video_event(attachment: :highlight_video_file)
       @design_preview_news_posts = BlogPost.published_live.with_attached_cover_image.limit(6).to_a
       @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
       @design_preview_mix_available = lean_homepage_all_relation.joins(:genres).exists?
       @design_preview_series_counts_by_id = Public::Events::SeriesCountsByIdQuery.call(design_preview_series_events)
+    end
+
+    def assign_homepage_filters
+      relation = all_stuttgart_relation
+      @home_filter_months = all_stuttgart_months_for(relation)
+      @home_filter_month_labels = all_stuttgart_month_labels_by_value(@home_filter_months)
+      @home_filter_genres = all_stuttgart_genres_for(relation)
+      @home_filter_locations = all_stuttgart_locations_for(relation)
     end
 
     def render_design_homepage_mix_section
@@ -433,7 +442,6 @@ module Public
     end
 
     def assign_design_chrome(saved_events: [])
-      assign_tagestipp_section if @lane&.key == "all_stuttgart"
       @design_chrome_saved_events = Array(saved_events)
     end
 
@@ -812,7 +820,8 @@ module Public
         show_expired_status: params[:show_expired_status] != "false",
         page: lane_page,
         browse_state: @browse_state,
-        strict_proxy: helpers.homepage_media_strict_proxy?
+        strict_proxy: helpers.homepage_media_strict_proxy?,
+        event_date_end: @all_stuttgart_selected_date_end
       }.merge(homepage_lane_card_options(lane_key))
     end
 
@@ -1066,6 +1075,7 @@ module Public
         @lane_lazy_url = helpers.homepage_lane_events_path(
           event_month: @lane_selected_month&.strftime("%Y-%m"),
           event_date: @browse_state.event_date_param,
+          event_date_end: @all_stuttgart_selected_date_end&.iso8601,
           event_genre: @all_stuttgart_selected_genre&.slug,
           event_location: @all_stuttgart_selected_location,
           filter: @browse_state.filter
@@ -1132,12 +1142,13 @@ module Public
 
     def all_stuttgart_month_relation
       relation = all_stuttgart_relation
+      @all_stuttgart_selected_date = selected_all_stuttgart_date
+      @all_stuttgart_selected_date_end = selected_all_stuttgart_date_end
       @lane_months = all_stuttgart_months_for(relation)
-      @lane_selected_month = selected_all_stuttgart_month(@lane_months)
+      @lane_selected_month = selected_all_stuttgart_month
       @lane_months |= [ @lane_selected_month ] if @lane_selected_month.present?
       @lane_month_labels_by_value = all_stuttgart_month_labels_by_value(@lane_months)
-      @all_stuttgart_selected_date = selected_all_stuttgart_date
-      @lane_title = all_stuttgart_period_title(@lane_selected_month, @all_stuttgart_selected_date)
+      @lane_title = all_stuttgart_period_title(@lane_selected_month, @all_stuttgart_selected_date, @all_stuttgart_selected_date_end)
 
       month_relation = if @lane_selected_month.blank?
         relation
@@ -1150,7 +1161,8 @@ module Public
       period_relation = if @all_stuttgart_selected_date.blank?
         month_relation
       else
-        month_relation.where(start_at: @all_stuttgart_selected_date.beginning_of_day..@all_stuttgart_selected_date.end_of_day)
+        end_date = @all_stuttgart_selected_date_end || @all_stuttgart_selected_date
+        month_relation.where(start_at: @all_stuttgart_selected_date.beginning_of_day..end_date.end_of_day)
       end
 
       @all_stuttgart_selected_genre = selected_all_stuttgart_genre
@@ -1178,6 +1190,7 @@ module Public
         lane: "all_stuttgart",
         event_month: @lane_selected_month&.strftime("%Y-%m"),
         event_date: @browse_state.event_date_param,
+        event_date_end: @all_stuttgart_selected_date_end&.iso8601,
         event_genre: @all_stuttgart_selected_genre&.slug,
         event_location: @all_stuttgart_selected_location
       )
@@ -1216,20 +1229,13 @@ module Public
       end.uniq
     end
 
-    def selected_all_stuttgart_month(months)
+    def selected_all_stuttgart_month
+      return if @all_stuttgart_selected_date_end.present?
+
       selected_date_month = @browse_state.event_date&.beginning_of_month
       return selected_date_month if selected_date_month.present?
 
-      requested_month = parsed_all_stuttgart_month(params[:event_month])
-      return requested_month if requested_month.present?
-
-      next_month = Time.zone.today.next_month.beginning_of_month
-      return next_month if months.include?(next_month)
-
-      current_month = Time.zone.today.beginning_of_month
-      return current_month if months.include?(current_month)
-
-      months.first || current_month
+      parsed_all_stuttgart_month(params[:event_month])
     end
 
     def parsed_all_stuttgart_month(value)
@@ -1244,7 +1250,20 @@ module Public
       @browse_state.event_date
     end
 
-    def all_stuttgart_period_title(month, date = nil)
+    def selected_all_stuttgart_date_end
+      return if @all_stuttgart_selected_date.blank? || params[:event_date_end].blank?
+
+      end_date = Date.iso8601(params[:event_date_end].to_s)
+      end_date if end_date > @all_stuttgart_selected_date
+    rescue ArgumentError
+      nil
+    end
+
+    def all_stuttgart_period_title(month, date = nil, end_date = nil)
+      if end_date.present? && date.beginning_of_month == end_date.beginning_of_month
+        return "#{date.day}.-#{all_stuttgart_date_label(end_date)}"
+      end
+      return "#{all_stuttgart_date_label(date)} – #{all_stuttgart_date_label(end_date)}" if end_date.present?
       return all_stuttgart_date_label(date) if date.present?
       return Public::Events::LaneDirectory.all_stuttgart.title if month.blank?
 

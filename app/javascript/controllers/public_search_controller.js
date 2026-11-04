@@ -323,6 +323,11 @@ export default class extends Controller {
       return
     }
 
+    if (this.calendarPanelTarget.dataset.calendarSelectionMode === "day") {
+      this.commitCalendarSelection(selectedDate, selectedDate)
+      return
+    }
+
     if (!this.pendingRangeStart || this.rangeComplete) {
       this.pendingRangeStart = selectedDate
       this.selectedCalendarDate = selectedDate
@@ -339,6 +344,19 @@ export default class extends Controller {
     this.previewCalendarRangeSelection = null
     this.pendingRangeStart = rangeStart
     this.calendarDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1)
+    this.commitCalendarSelection(rangeStart, rangeEnd)
+  }
+
+  commitCalendarSelection(rangeStart, rangeEnd) {
+    const selectionEvent = this.dispatch("calendar-selected", {
+      detail: { start: this.dateKey(rangeStart), end: this.dateKey(rangeEnd) },
+      cancelable: true
+    })
+    if (selectionEvent.defaultPrevented) {
+      this.closeCalendar()
+      return
+    }
+
     this.inputTarget.value = this.formatCalendarRangeQuery(rangeStart, rangeEnd)
     this.clearEventDateInput()
     this.syncControls()
@@ -714,14 +732,17 @@ export default class extends Controller {
     this.placeholderStartTimeout = null
   }
 
-  openCalendar({ keepSearchPanelOpen = false } = {}) {
+  openCalendar({ keepSearchPanelOpen = false, selection = null } = {}) {
     if (!keepSearchPanelOpen) {
       this.closeSearchPanel()
     }
 
     this.pausePlaceholderForCalendar()
-    this.selectedCalendarRange = this.selectedRangeFromQuery()
-    this.selectedCalendarDate = this.selectedDateFromQuery()
+    this.calendarSelectionOverride = selection !== null
+    const start = this.dateFromKey(selection?.start)
+    const end = this.dateFromKey(selection?.end)
+    this.selectedCalendarRange = this.calendarSelectionOverride ? (start && end ? this.calendarRangeFor(start, end) : null) : this.selectedRangeFromQuery()
+    this.selectedCalendarDate = this.calendarSelectionOverride ? (end ? null : start) : this.selectedDateFromQuery()
     this.previewCalendarRangeSelection = null
     this.pendingRangeStart = this.selectedCalendarRange?.start || this.selectedCalendarDate
     this.calendarDate = this.selectedCalendarRange?.start || this.selectedCalendarDate || this.calendarDate || this.today
@@ -751,6 +772,15 @@ export default class extends Controller {
     if (wasOpen && !this.query.hasValue) {
       this.syncPlaceholderAnimation()
     }
+    if (wasOpen) this.dispatch("calendar-closed")
+  }
+
+  resetCalendarSelection() {
+    this.pendingRangeStart = null
+    this.selectedCalendarDate = null
+    this.selectedCalendarRange = null
+    this.previewCalendarRangeSelection = null
+    this.renderCalendar()
   }
 
   renderCalendar() {
@@ -761,8 +791,8 @@ export default class extends Controller {
     const monthStart = new Date(this.calendarDate.getFullYear(), this.calendarDate.getMonth(), 1)
     const gridStart = this.calendarGridStart(monthStart)
     const todayKey = this.dateKey(this.today)
-    const querySelectedDate = this.selectedDateFromQuery()
-    const committedRange = this.selectedRangeFromQuery() || this.selectedCalendarRange
+    const querySelectedDate = this.calendarSelectionOverride ? null : this.selectedDateFromQuery()
+    const committedRange = (this.calendarSelectionOverride ? null : this.selectedRangeFromQuery()) || this.selectedCalendarRange
     const selectedRange = committedRange || this.previewCalendarRangeSelection
     const selectedDate = querySelectedDate || this.selectedCalendarDate || selectedRange?.start
     const selectedKey = selectedDate ? this.dateKey(selectedDate) : null
