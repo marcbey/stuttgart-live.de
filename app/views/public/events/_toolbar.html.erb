@@ -146,6 +146,13 @@
          aria-label="Datum auswählen"
          hidden>
       <div class="public-search-calendar-card">
+        <div class="all-stuttgart-calendar-controls" data-filter-calendar-controls hidden>
+          <div class="all-stuttgart-calendar-modes" role="group" aria-label="Datumauswahl">
+            <button type="button" data-mode="day" aria-pressed="true" data-action="design-preview-filterbar#selectCalendarMode">Einzelner Tag</button>
+            <button type="button" data-mode="range" aria-pressed="false" data-action="design-preview-filterbar#selectCalendarMode">Zeitraum</button>
+          </div>
+          <p data-filter-calendar-hint aria-live="polite">Einen Tag wählen.</p>
+        </div>
         <div class="public-search-calendar-header">
           <button type="button"
                   class="public-search-calendar-nav"

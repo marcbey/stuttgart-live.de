@@ -2,7 +2,7 @@
   <%= render "all_stuttgart_event_rows",
              events: page.events,
              browse_state: browse_state,
-             show_time_column: browse_state.event_date.present? %>
+             show_time_column: browse_state.event_date.present? && local_assigns[:event_date_end].blank? %>
 <% elsif mode == "rows" %>
   <%= render "event_rows",
              events: page.events,

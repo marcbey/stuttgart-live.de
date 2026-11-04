@@ -111,14 +111,14 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, ActionController::Base.helpers.asset_path("oswald-700.woff2")
     assert_not_includes response.body, "VERANSTALTUNGSHIGHLIGHTS IN STUTTGART"
     assert_select ".lane-header.lane-header--highlights", count: 1
-    assert_select ".design-preview-header-genre-link--all", text: "Alles"
+    assert_select ".design-preview-actions .design-preview-header-all-link[href=?]", all_stuttgart_lane_path, text: "Alles aus Stuttgart"
     assert_select ".app-nav-homepage-center[data-controller='saved-events-nav']", count: 1
     assert_select ".app-nav-saved-events-link[href='#{saved_events_path}'][data-saved-events-nav-target='link']", count: 2
     assert_select ".app-nav-saved-events-link[hidden]", count: 0
     assert_select ".app-nav-saved-events-count", text: "0", count: 2
     assert_select ".app-nav-socials-poster[data-controller='saved-events-nav'] .app-nav-saved-events-link-desktop", count: 1
     assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
-    assert_select ".design-preview-header-genres-more", count: 1
+    assert_select ".design-preview-header-genres", count: 0
     assert_select ".partner-strip-image[width][height]", count: 6
     assert_includes response.body, "Published Artist"
     assert_not_includes response.body, "Past Artist"
@@ -252,7 +252,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert rock_section.present?, "expected configured rock lane to be rendered"
     assert_equal [ "POP", "ROCK", "PUNK & METAL", "HIP-HOP", "ELECTRONIC", "JAZZ", "KLASSIK", "THEATER" ],
                  document.css(".app-nav-hotline-genre").map { |link| link.text.squish }
-    assert_select ".design-preview-header-genres-more", count: 1
+    assert_select ".design-preview-header-genres", count: 0
     assert document.at_css(".genre-lane-section .design-preview-section-header").present?,
            "expected genre section header"
     assert_operator first_genre_index, :>, highlights_index
@@ -296,7 +296,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select ".genre-lane-section", count: 0
     assert_select ".app-nav-hotline-copy[aria-label='Genre-Navigation']", count: 1
-    assert_select ".design-preview-header-genres-more", count: 1
+    assert_select ".design-preview-header-genres", count: 0
   end
 
   test "index renders top homepage lanes in the initial payload" do
@@ -726,7 +726,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".all-stuttgart-event-list .all-stuttgart-event-row[role='row']", minimum: 1
     assert_select ".all-stuttgart-event-list .all-stuttgart-event-title a", text: reservix_event.artist_name
     assert_select ".design-preview-month-dropdown--calendar", count: 0
-    assert_select "button.design-preview-filter-calendar[data-design-preview-filterbar-target='dateButton'][aria-label='Datum wählen'][data-action*='all-stuttgart-filters#closeAll'][data-action*='design-preview-filterbar#openDate']", count: 1
+    assert_select "button.design-preview-filter-calendar[data-design-preview-filterbar-target='dateButton'][aria-label='Tag wählen'][data-action*='all-stuttgart-filters#closeAll'][data-action*='design-preview-filterbar#openDate']", count: 1
 
     get "/tagestipp"
 
@@ -4650,7 +4650,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get event_url(@published_event.slug)
 
     assert_response :success
-    assert_select ".design-preview-header-genre-link--all", text: "Alles"
+    assert_select ".design-preview-actions .design-preview-header-all-link[href=?]", all_stuttgart_lane_path, text: "Alles aus Stuttgart"
     assert_includes response.body, "Published Artist"
     assert_select ".event-detail-time-line", text: /Beginn:\s*\d{2}:\d{2}\s*Uhr/
     assert_select ".event-detail-meta-line", text: /LKA Longhorn/

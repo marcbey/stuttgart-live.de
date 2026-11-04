@@ -21,4 +21,21 @@ export default class extends Controller {
       dropdown.open = false
     })
   }
+
+  filter(event) {
+    const dropdown = event.currentTarget.closest("details")
+    const query = this.normalize(event.currentTarget.value.trim())
+    let matches = 0
+
+    dropdown.querySelectorAll("[data-filter-option]").forEach((option) => {
+      option.hidden = !this.normalize(option.textContent).includes(query)
+      if (!option.hidden) matches += 1
+    })
+
+    dropdown.querySelector("[data-filter-empty]").hidden = matches > 0
+  }
+
+  normalize(value) {
+    return value.toLocaleLowerCase("de").normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ß/g, "ss")
+  }
 }

@@ -19,7 +19,7 @@ class Public::ChromeQueryLoadingTest < ActionDispatch::IntegrationTest
     queries = capture_queries { get faq_path }
 
     assert_response :success
-    assert_select ".design-preview-header-genres a", minimum: 1
+    assert_select ".design-preview-header-genres", count: 0
     assert_select ".design-preview-card-title", text: @event.artist_name
     assert_empty queries.grep(/FROM "genres".*"event_genres"\."event_id" =/m)
     assert_no_hidden_queries queries
