@@ -2131,6 +2131,62 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".promotion-banner-event .promotion-banner-link-light[style='background: var(--promotion-banner-background)']"
   end
 
+  test "homepage videos include uploads outside the displayed event lanes" do
+    @published_event.update!(highlighted: true)
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Pop" ])
+    video_event = Event.create!(
+      slug: "video-outside-homepage-lanes",
+      source_fingerprint: "test::video-outside-homepage-lanes",
+      title: "Later Video Event",
+      artist_name: "Later Video Artist",
+      start_at: 1.year.from_now,
+      venue: "Liederhalle", city: "Stuttgart",
+      status: "published", published_at: 1.day.ago, source_snapshot: {}
+    )
+    %i[highlight_video_file highlight_landscape_video_file].each do |attachment|
+      video_event.public_send(attachment).attach(
+        io: StringIO.new("video content"), filename: "#{attachment}.mp4", content_type: "video/mp4"
+      )
+    end
+
+    get events_url
+
+    assert_response :success
+    assert_select ".design-preview-highlight-grid .design-preview-card-title", text: video_event.artist_name, count: 0
+    assert_select ".homepage-highlight-video[data-video-sound-src-value=?]", rails_storage_proxy_path(video_event.highlight_video_file, only_path: true)
+    assert_select ".homepage-highlight-video-link[href=?]", event_path(video_event.slug)
+
+    get homepage_section_events_url(section: "stuttgart_mix")
+
+    assert_response :success
+    assert_select ".design-preview-card-title", text: video_event.artist_name, count: 0
+    assert_select ".design-preview-card--lane-video video[src=?]", rails_storage_proxy_path(video_event.highlight_landscape_video_file, only_path: true)
+    assert_select ".design-preview-card--lane-video a[href=?]", event_path(video_event.slug)
+  end
+
+  test "homepage videos exclude past unpublished and scheduled events even for editors" do
+    build_homepage_genre_enrichment(event: @published_event, genres: [ "Pop" ])
+    scheduled_event = @published_event.dup
+    scheduled_event.assign_attributes(slug: "scheduled-video", source_fingerprint: "test::scheduled-video", published_at: 1.day.from_now)
+    scheduled_event.save!
+    [ @past_published_event, events(:needs_review_one), scheduled_event ].each do |event|
+      %i[highlight_video_file highlight_landscape_video_file].each do |attachment|
+        event.public_send(attachment).attach(
+          io: StringIO.new("video content"), filename: "#{attachment}.mp4", content_type: "video/mp4"
+        )
+      end
+    end
+    sign_in_as(@user)
+
+    get events_url
+    assert_response :success
+    assert_select ".homepage-highlight-video[data-video-sound-src-value*='lea-portrait']", count: 1
+
+    get homepage_section_events_url(section: "stuttgart_mix")
+    assert_response :success
+    assert_select ".design-preview-card--lane-video video[src*='mamma-mia-highlight']", count: 1
+  end
+
   test "homepage highlight video uses stable storage proxy path" do
     event = Event.create!(
       slug: "homepage-highlight-video-event",

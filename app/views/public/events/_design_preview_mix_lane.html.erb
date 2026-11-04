@@ -1,6 +1,6 @@
 <% events = Array(local_assigns[:events]) %>
 <% if events.any? %>
-  <% video_event = public_random_video_event(events, attachment: :highlight_landscape_video_file) %>
+  <% video_event = local_assigns[:video_event] %>
   <section class="design-preview-section design-preview-lane design-preview-section--summer-party"
            aria-labelledby="design-preview-summer-party-title"
            data-controller="highlights-slider">
