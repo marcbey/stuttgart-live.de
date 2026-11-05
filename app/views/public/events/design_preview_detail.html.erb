@@ -326,8 +326,11 @@ end %>
         <div class="design-detail-preview-ticket-action">
           <% if presenter.show_ticket_link? %>
             <%= link_to "Tickets sichern", presenter.ticket_url, target: "_blank", rel: "noopener", aria: { describedby: "ticket-handoff-note" }, class: "design-detail-preview-action-button design-detail-preview-action-button--primary event-detail-cta-button" %>
-            <p id="ticket-handoff-note" class="sr-only">
-              <%= presenter.ticket_provider_label.present? ? "Bei #{presenter.ticket_provider_label}" : "Beim Ticketanbieter" %> · öffnet neuen Tab
+            <p id="ticket-handoff-note" class="design-detail-preview-ticket-handoff">
+              <svg class="design-detail-preview-ticket-handoff-arrow" viewBox="0 0 20 20" fill="none" aria-hidden="true" focusable="false">
+                <path d="M4 2v7a3 3 0 0 0 3 3h9m-4-4 4 4-4 4" />
+              </svg>
+              <span><%= presenter.ticket_provider_label.present? ? "Weiterleitung zu #{presenter.ticket_provider_label}" : "Weiterleitung zum Ticketanbieter" %><span class="sr-only"> · öffnet neuen Tab</span></span>
             </p>
           <% else %>
             <button type="button" disabled aria-describedby="ticket-status-note" class="design-detail-preview-action-button design-detail-preview-action-button--primary design-detail-preview-action-button--status event-detail-cta-button">Tickets sichern</button>

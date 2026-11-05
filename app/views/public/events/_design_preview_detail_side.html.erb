@@ -13,22 +13,6 @@
                     class: "button button-secondary button-compact event-detail-edit-link public-edit-link design-detail-preview-location-edit",
                     data: { turbo: false } %>
       <% end %>
-      <% if vvs_ticket %>
-        <div class="design-detail-preview-vvs">
-          <a href="https://www.vvs.de/tickets-und-abos/kombiticket"
-             target="_blank"
-             rel="noopener"
-             class="design-detail-preview-vvs-button"
-             aria-label="VVS Kombiticket – Informationen öffnen (neuer Tab)">
-            <%= image_tag "vvs.png", alt: "VVS", class: "design-detail-preview-vvs-logo" %>
-          </a>
-          <div class="design-detail-preview-vvs-popover" role="tooltip">
-            <h3>VVS Kombiticket</h3>
-            <p>Gilt für die An- und Abreise zur Veranstaltung im gesamten VVS-Gebiet.</p>
-            <p>Ob dein Ticket als VVS-Ticket gültig ist, erkennst du am entsprechenden Hinweis auf dem Ticket oder in den Veranstaltungsinformationen.</p>
-          </div>
-        </div>
-      <% end %>
       <div class="design-detail-preview-location-address">
         <p class="design-detail-preview-location-name"><%= venue_info&.name.presence || event.venue %></p>
         <% if venue_info&.address.present? %>
@@ -37,11 +21,29 @@
           <p><%= event.city %></p>
         <% end %>
       </div>
-      <% if venue_info&.logo_source.present? %>
+      <% if venue_info&.logo_source.present? || vvs_ticket %>
         <div class="design-detail-preview-location-brand">
-          <%= image_tag venue_info.logo_source,
-                        alt: venue_info.name.presence || event.venue,
-                        class: "design-detail-preview-location-logo" %>
+          <% if venue_info&.logo_source.present? %>
+            <%= image_tag venue_info.logo_source,
+                          alt: venue_info.name.presence || event.venue,
+                          class: "design-detail-preview-location-logo" %>
+          <% end %>
+          <% if vvs_ticket %>
+            <div class="design-detail-preview-vvs">
+              <a href="https://www.vvs.de/tickets-und-abos/kombiticket"
+                 target="_blank"
+                 rel="noopener"
+                 class="design-detail-preview-vvs-button"
+                 aria-label="VVS Kombiticket – Informationen öffnen (neuer Tab)">
+                <%= image_tag "vvs.png", alt: "VVS", class: "design-detail-preview-vvs-logo" %>
+              </a>
+              <div class="design-detail-preview-vvs-popover" role="tooltip">
+                <h3>VVS Kombiticket</h3>
+                <p>Gilt für die An- und Abreise zur Veranstaltung im gesamten VVS-Gebiet.</p>
+                <p>Ob dein Ticket als VVS-Ticket gültig ist, erkennst du am entsprechenden Hinweis auf dem Ticket oder in den Veranstaltungsinformationen.</p>
+              </div>
+            </div>
+          <% end %>
         </div>
       <% end %>
       <% if venue_info.present? && (venue_info.external_url.present? || venue_info.map_url.present?) %>
