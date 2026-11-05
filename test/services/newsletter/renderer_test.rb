@@ -197,7 +197,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_equal "20.11.26, 20:30 Uhr", mobile.at_css(".newsletter-mobile-date")&.text
     assert_equal "Artist", mobile.at_css("td[colspan='2'] .newsletter-mobile-title")&.text
     assert_nil mobile.at_css(".newsletter-mobile-image")
-    assert mobile.at_css(".newsletter-event-button[href]")
+    assert_equal "→ Zum Event", mobile.at_css(".newsletter-event-link[href]").text
   end
 
   test "renders mixed weekly mix with one heading and genre labels" do
@@ -291,8 +291,8 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "&#8220;"
     assert_not_includes rendered.html, "&#8221;"
     assert_includes rendered.html, "Sarah empfiehlt diese Woche"
-    assert_includes rendered.html, ">Zum Event</a>"
-    assert_includes rendered.html, "border:1px solid #111;color:#102223"
+    assert_includes rendered.html, ">&rarr;&nbsp;Zum Event</a>"
+    assert_not_includes Nokogiri::HTML(rendered.html).at_css(".newsletter-team-tip-event .newsletter-event-link")["style"], "border:"
     assert_includes rendered.html, "/events/#{event.slug}"
     assert_includes rendered.text, "Zum Event: https://example.com/events/#{event.slug}"
   end
@@ -514,7 +514,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "newsletter-section-heading-title"
     assert_includes rendered.html, "newsletter-footer-copy"
     assert_includes rendered.html, "newsletter-card-image"
-    assert_includes rendered.html, 'class="newsletter-event-button"'
+    assert_includes rendered.html, 'class="newsletter-event-link"'
     assert_includes rendered.html, "font-size:9px;letter-spacing:.05em;color:#667071"
     assert_not_includes rendered.html, "font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#667071"
     assert_includes rendered.html, 'width="33.33%"'
