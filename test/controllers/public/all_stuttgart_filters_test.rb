@@ -20,12 +20,13 @@ class Public::AllStuttgartFiltersTest < ActionDispatch::IntegrationTest
 
   teardown { travel_back }
 
-  test "homepage filters open the matching all Stuttgart list without an all button" do
+  test "homepage filters include an unselected all button for mobile" do
     get root_path
 
     assert_response :success
     assert_select ".design-preview-filterbar--homepage[hidden]", count: 1
-    assert_select ".design-preview-filterbar--homepage .design-preview-filter-all", count: 0
+    assert_select ".design-preview-filterbar--homepage .design-preview-filter-all[href=?]", all_stuttgart_lane_path, text: "Alles", count: 1
+    assert_select ".design-preview-filterbar--homepage .design-preview-filter-all[aria-current]", count: 0
     assert_select ".design-preview[data-design-preview-filterbar-destination-value=?]", all_stuttgart_lane_path
     assert_select ".design-preview-filterbar--homepage .all-stuttgart-genre-menu a[href=?]",
                   all_stuttgart_lane_path(event_genre: genres(:rock).slug), text: genres(:rock).name
