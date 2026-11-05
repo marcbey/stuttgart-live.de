@@ -44,7 +44,7 @@ test("range selection waits for the second click and sorts reversed dates across
 })
 
 test("the normal header calendar still submits its date range to search", () => {
-  const picker = calendar(undefined, false)
+  const picker = calendar("range", false)
   picker.select("2030-07-30")
   picker.select("2030-08-02")
   assert.equal(picker.controller.inputTarget.value, "von 30.7.2030 bis 2.8.2030")
@@ -59,4 +59,25 @@ test("switching calendar modes clears an unfinished range", () => {
   assert.deepEqual(picker.events, [])
   picker.select("2030-08-02")
   assert.deepEqual(picker.events[0].detail, { start: "2030-08-02", end: "2030-08-02" })
+})
+
+
+test("the search calendar submits a single day after one click", () => {
+  const picker = calendar("day", false)
+  picker.select("2030-07-30")
+  assert.equal(picker.controller.inputTarget.value, "am 30.7.2030")
+  assert.equal(picker.submissions(), 1)
+})
+
+test("the external calendar trigger is not treated as an outside click", () => {
+  const picker = calendar("day")
+  const triggerIcon = {}
+  let closes = 0
+  picker.controller.element.contains = () => false
+  picker.controller.calendarTrigger = { contains: target => target === triggerIcon }
+  picker.controller.close = () => closes++
+  picker.controller.handlePointerDown({ target: triggerIcon })
+  assert.equal(closes, 0)
+  picker.controller.handlePointerDown({ target: {} })
+  assert.equal(closes, 1)
 })
