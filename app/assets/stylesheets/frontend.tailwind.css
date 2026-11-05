@@ -17939,13 +17939,11 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   width: var(--preview-filter-height);
   justify-self: end;
   padding: 0;
-  border-color: rgba(8, 9, 9, 0.4);
   background: #fff;
 }
 
 .design-preview-filterbar--months .design-preview-filter-calendar:hover,
 .design-preview-filterbar--months .design-preview-filter-calendar:focus-visible {
-  border-color: var(--preview-ink);
   background: var(--preview-turquoise-soft);
 }
 
@@ -18242,6 +18240,10 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   outline: none;
 }
 
+.design-preview-filterbar .design-preview-mobile-filter-group .design-preview-filter-pill {
+  border-color: transparent;
+}
+
 .all-stuttgart-filter-summary svg {
   width: 0.72rem;
   height: 0.72rem;
@@ -18528,10 +18530,17 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 
   .design-preview-filterbar--months {
     top: calc(var(--preview-topbar-height) + 0.25rem - 2px);
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
     padding-top: 0.22rem;
     padding-bottom: 0.22rem;
     box-shadow: none;
     backdrop-filter: none;
+  }
+
+  .design-preview-filterbar.design-preview-filterbar--homepage {
+    right: 0;
+    left: 0;
   }
 
   .design-preview-mobile-filter-group .design-preview-filter-all {
