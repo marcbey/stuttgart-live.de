@@ -23549,20 +23549,8 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
     pointer-events: none;
   }
 
-  .design-detail-preview-actions:has(.design-detail-preview-ticket-handoff) {
-    border-radius: 1.5rem;
-  }
-
-  .design-detail-preview-ticket-action {
-    display: contents;
-  }
-
   .design-detail-preview-ticket-handoff {
-    grid-column: 1 / -1;
-    grid-row: 2;
-    justify-content: flex-start;
-    padding-inline: 0.45rem;
-    white-space: nowrap;
+    display: none;
   }
 
   .design-detail-preview-tags {
