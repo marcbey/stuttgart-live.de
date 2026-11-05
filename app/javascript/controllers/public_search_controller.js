@@ -162,7 +162,7 @@ export default class extends Controller {
   }
 
   handlePointerDown(event) {
-    if (this.element.contains(event.target)) {
+    if (this.element.contains(event.target) || this.calendarTrigger?.contains(event.target)) {
       return
     }
 
@@ -732,18 +732,37 @@ export default class extends Controller {
     this.placeholderStartTimeout = null
   }
 
-  openCalendar({ keepSearchPanelOpen = false, selection = null } = {}) {
+  selectCalendarMode(event) {
+    event.preventDefault()
+    this.updateCalendarMode(event.currentTarget.dataset.mode)
+    this.resetCalendarSelection()
+  }
+
+  updateCalendarMode(mode) {
+    this.calendarPanelTarget.dataset.calendarSelectionMode = mode
+    const controls = this.calendarPanelTarget.querySelector("[data-filter-calendar-controls]")
+    if (!controls) return
+
+    controls.querySelectorAll("[data-mode]").forEach((button) => {
+      button.setAttribute("aria-pressed", (button.dataset.mode === mode).toString())
+    })
+    controls.querySelector("[data-filter-calendar-hint]").textContent = mode === "range" ? "Start- und Enddatum wählen." : "Einen Tag wählen."
+  }
+
+  openCalendar({ keepSearchPanelOpen = false, selection = null, mode = null, trigger = null } = {}) {
     if (!keepSearchPanelOpen) {
       this.closeSearchPanel()
     }
 
     this.pausePlaceholderForCalendar()
+    this.calendarTrigger = trigger
     this.calendarSelectionOverride = selection !== null
     const start = this.dateFromKey(selection?.start)
     const end = this.dateFromKey(selection?.end)
     this.selectedCalendarRange = this.calendarSelectionOverride ? (start && end ? this.calendarRangeFor(start, end) : null) : this.selectedRangeFromQuery()
     this.selectedCalendarDate = this.calendarSelectionOverride ? (end ? null : start) : this.selectedDateFromQuery()
     this.previewCalendarRangeSelection = null
+    this.updateCalendarMode(mode || (this.selectedCalendarRange ? "range" : "day"))
     this.pendingRangeStart = this.selectedCalendarRange?.start || this.selectedCalendarDate
     this.calendarDate = this.selectedCalendarRange?.start || this.selectedCalendarDate || this.calendarDate || this.today
     this.renderCalendar()
@@ -767,6 +786,7 @@ export default class extends Controller {
 
     const wasOpen = !this.calendarPanelTarget.hidden
     this.calendarPanelTarget.hidden = true
+    this.calendarTrigger = null
     this.calendarButtonTarget.setAttribute("aria-expanded", "false")
 
     if (wasOpen && !this.query.hasValue) {

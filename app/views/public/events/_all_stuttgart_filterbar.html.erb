@@ -41,7 +41,10 @@
   <div class="design-preview-mobile-filter-group">
     <span class="design-preview-filter-label" aria-hidden="true">Filter</span>
 
-    <% unless homepage %>
+    <% if homepage %>
+      <%= link_to "Alles", all_stuttgart_lane_path,
+                  class: "design-preview-filter-pill design-preview-filter-all" %>
+    <% else %>
       <%= link_to "Alles", all_stuttgart_lane_path(view: ("grid" if grid_view)),
                 class: "design-preview-filter-pill design-preview-filter-all",
                 aria: { current: ("page" if base_filter_params.except(:view).empty?) } %>

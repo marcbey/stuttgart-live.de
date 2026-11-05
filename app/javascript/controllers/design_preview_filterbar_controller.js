@@ -59,8 +59,11 @@ export default class extends Controller {
 
     const params = new URL(window.location.href).searchParams
     this.activeCalendarPanel.dataset.designPreviewFilterbarCalendar = "true"
-    this.updateCalendarMode(params.has("event_date_end") ? "range" : "day")
-    calendar.openCalendar({ selection: { start: params.get("event_date"), end: params.get("event_date_end") } })
+    calendar.openCalendar({
+      selection: { start: params.get("event_date"), end: params.get("event_date_end") },
+      mode: params.has("event_date_end") ? "range" : "day",
+      trigger: event.currentTarget
+    })
     window.requestAnimationFrame(this.updateCalendarPosition)
   }
 
@@ -68,23 +71,6 @@ export default class extends Controller {
     if (event.target !== this.activeCalendarForm || this.activeCalendarPanel?.dataset.designPreviewFilterbarCalendar !== "true") return
     event.preventDefault()
     this.navigateToDate(event.detail.start, event.detail.end)
-  }
-
-  selectCalendarMode(event) {
-    event.preventDefault()
-    this.updateCalendarMode(event.currentTarget.dataset.mode)
-    this.activeCalendarController?.resetCalendarSelection()
-  }
-
-  updateCalendarMode(mode) {
-    const panel = this.activeCalendarPanel
-    panel.dataset.calendarSelectionMode = mode
-    const controls = panel.querySelector("[data-filter-calendar-controls]")
-    controls.hidden = false
-    controls.querySelectorAll("[data-mode]").forEach((button) => {
-      button.setAttribute("aria-pressed", (button.dataset.mode === mode).toString())
-    })
-    controls.querySelector("[data-filter-calendar-hint]").textContent = mode === "range" ? "Start- und Enddatum wählen." : "Einen Tag wählen."
   }
 
   handleCalendarEscape(event) {
@@ -165,7 +151,7 @@ export default class extends Controller {
     const panel = this.activeCalendarPanel
     if (!(panel instanceof HTMLElement)) return
 
-    if (panel.hidden || !this.hasDateButtonTarget) {
+    if (panel.hidden || panel.dataset.designPreviewFilterbarCalendar !== "true" || !this.hasDateButtonTarget) {
       panel.style.removeProperty("position")
       panel.style.removeProperty("top")
       panel.style.removeProperty("left")
@@ -207,8 +193,6 @@ export default class extends Controller {
     this.calendarPanels.forEach((panel) => {
       if (panel.hidden) {
         delete panel.dataset.designPreviewFilterbarCalendar
-        delete panel.dataset.calendarSelectionMode
-        panel.querySelector("[data-filter-calendar-controls]").hidden = true
         Object.assign(panel.style, { position: "", top: "", left: "", right: "", width: "" })
       }
     })

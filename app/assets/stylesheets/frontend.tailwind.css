@@ -17841,7 +17841,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 
 .design-preview-filterbar--months {
   position: sticky;
-  top: var(--preview-topbar-height);
+  top: calc(var(--preview-topbar-height) - 2px);
   z-index: 40;
   grid-template-columns: minmax(0, 1fr) max-content;
 }
@@ -17854,7 +17854,7 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 
 .design-preview-filterbar.design-preview-filterbar--homepage {
   position: fixed;
-  top: calc(var(--preview-topbar-height) + 0.25rem);
+  top: calc(var(--preview-topbar-height) + 0.25rem - 2px);
   right: var(--preview-shell-edge);
   left: var(--preview-shell-edge);
   width: auto;
@@ -17862,7 +17862,13 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 }
 
 .design-preview-filterbar--homepage .design-preview-mobile-filter-group {
-  grid-template-columns: repeat(2, minmax(0, 1fr)) var(--preview-filter-height);
+  grid-template-columns: max-content minmax(0, 1fr) minmax(0, 1.15fr) var(--preview-filter-height);
+}
+
+.design-preview-filterbar--homepage .design-preview-filter-all {
+  border-color: var(--preview-line);
+  background: #fff;
+  color: var(--preview-ink);
 }
 
 .design-preview-mobile-filter-group {
@@ -17885,6 +17891,10 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
 
 .design-preview-mobile-filter-group .design-preview-filter-all {
   width: 100%;
+  transition: border-color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1;
   text-transform: none;
 }
 
@@ -17929,13 +17939,11 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   width: var(--preview-filter-height);
   justify-self: end;
   padding: 0;
-  border-color: rgba(8, 9, 9, 0.4);
   background: #fff;
 }
 
 .design-preview-filterbar--months .design-preview-filter-calendar:hover,
 .design-preview-filterbar--months .design-preview-filter-calendar:focus-visible {
-  border-color: var(--preview-ink);
   background: var(--preview-turquoise-soft);
 }
 
@@ -18220,13 +18228,20 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   display: none;
 }
 
+.design-preview-mobile-filter-group .design-preview-filter-all:hover,
+.design-preview-mobile-filter-group .design-preview-filter-all:focus-visible,
 .all-stuttgart-filter-summary:hover,
 .all-stuttgart-filter-summary:focus-visible,
 .all-stuttgart-filter-dropdown[open] .all-stuttgart-filter-summary {
+  color: var(--preview-ink);
   border-color: rgba(0, 197, 204, 0.34);
   background: var(--preview-turquoise-soft);
   box-shadow: 0 0.65rem 1.6rem rgba(0, 197, 204, 0.11);
   outline: none;
+}
+
+.design-preview-filterbar .design-preview-mobile-filter-group .design-preview-filter-pill {
+  border-color: transparent;
 }
 
 .all-stuttgart-filter-summary svg {
@@ -18514,11 +18529,18 @@ body.page-public-design-preview :is(.design-preview-mobile-toolbar, .design-prev
   }
 
   .design-preview-filterbar--months {
-    top: calc(var(--preview-topbar-height) + 0.25rem);
+    top: calc(var(--preview-topbar-height) + 0.25rem - 2px);
+    width: 100vw;
+    margin-inline: calc(50% - 50vw);
     padding-top: 0.22rem;
     padding-bottom: 0.22rem;
     box-shadow: none;
     backdrop-filter: none;
+  }
+
+  .design-preview-filterbar.design-preview-filterbar--homepage {
+    right: 0;
+    left: 0;
   }
 
   .design-preview-mobile-filter-group .design-preview-filter-all {
@@ -19793,7 +19815,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 
   .design-preview-filterbar {
     position: sticky;
-    top: 4.5rem;
+    top: calc(var(--preview-topbar-height) - 2px);
     z-index: 40;
     display: grid;
     width: 100%;
@@ -19877,11 +19899,19 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   }
 
   .design-preview-filterbar.design-preview-filterbar--homepage {
-    top: 4.5rem;
+    top: calc(var(--preview-topbar-height) - 2px);
   }
 
   .design-preview-filterbar--homepage .design-preview-mobile-filter-group {
     grid-template-columns: max-content repeat(3, minmax(0, 11.2rem)) max-content;
+  }
+
+  .design-preview-filterbar--homepage .design-preview-filter-all {
+    display: none;
+  }
+
+  .design-preview-mobile-filter-group .design-preview-filter-all {
+    font-size: 0.88rem;
   }
 
   .design-preview-filter-label {
@@ -21998,6 +22028,33 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   min-width: 0;
 }
 
+.design-detail-preview-ticket-handoff {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 0.25rem;
+  margin: 0;
+  padding-inline: 0.25rem;
+  color: #606666;
+  font-size: 0.875rem;
+  font-weight: 300;
+  line-height: 1.3;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.design-detail-preview-ticket-handoff-arrow {
+  flex: 0 0 1rem;
+  width: 1rem;
+  height: 1.25rem;
+  margin-top: -0.2rem;
+  color: var(--preview-turquoise);
+  stroke: currentColor;
+  stroke-width: 1.75;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .design-detail-preview-action-button {
   position: static;
   z-index: auto;
@@ -22548,6 +22605,8 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 .design-detail-preview-location-brand {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
   min-height: 2.45rem;
 }
 
@@ -22560,17 +22619,17 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
 }
 
 .design-detail-preview-vvs {
-  position: absolute;
-  right: 1rem;
-  bottom: 1rem;
+  position: relative;
   display: inline-flex;
+  flex: 0 0 auto;
   align-items: center;
+  margin-left: auto;
   min-height: 2.25rem;
   z-index: 4;
 }
 
-.design-detail-preview-location:has(.design-detail-preview-side-link) .design-detail-preview-vvs {
-  right: 1rem;
+.design-detail-preview-location-brand:has(.design-detail-preview-vvs) .design-detail-preview-location-logo {
+  max-width: min(12rem, calc(100% - 4.3rem));
 }
 
 .design-detail-preview-vvs-button {
@@ -23490,6 +23549,22 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
     pointer-events: none;
   }
 
+  .design-detail-preview-actions:has(.design-detail-preview-ticket-handoff) {
+    border-radius: 1.5rem;
+  }
+
+  .design-detail-preview-ticket-action {
+    display: contents;
+  }
+
+  .design-detail-preview-ticket-handoff {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: flex-start;
+    padding-inline: 0.45rem;
+    white-space: nowrap;
+  }
+
   .design-detail-preview-tags {
     display: flex;
     order: 3;
@@ -23860,12 +23935,6 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
     margin-top: 0;
     padding-top: 0;
     border-top: 0;
-  }
-
-  .design-detail-preview-side--desktop-inline .design-detail-preview-vvs {
-    top: auto;
-    right: 0;
-    bottom: 0;
   }
 
   .design-detail-preview-side--desktop-inline .design-detail-preview-notes {
