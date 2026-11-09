@@ -15633,6 +15633,65 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   display: none;
 }
 
+.homepage-mobile-video-card {
+  display: none;
+}
+
+.homepage-highlight-video-card [hidden] {
+  display: none;
+}
+
+@media (max-width: 47.999rem) {
+  .design-preview-mobile-highlight-row > .homepage-mobile-video-card {
+    display: block;
+    flex: 0 0 auto;
+    width: calc(clamp(12.4rem, 50vw, 14.4rem) * 9 / 16);
+    height: clamp(12.4rem, 50vw, 14.4rem);
+    scroll-snap-align: start;
+  }
+
+  .homepage-mobile-video-card .homepage-highlight-video,
+  .homepage-mobile-video-card .homepage-highlight-video-link:hover .homepage-highlight-video,
+  .homepage-mobile-video-card .homepage-highlight-video-link:focus-visible .homepage-highlight-video {
+    object-fit: contain;
+    transform: none;
+  }
+
+  .homepage-mobile-video-card .homepage-highlight-video-copy {
+    padding: 0.5rem;
+  }
+
+  .homepage-mobile-video-card .homepage-highlight-video-playback-toggle {
+    left: auto;
+    right: 0.4rem;
+  }
+
+  .homepage-mobile-video-card .homepage-highlight-video-sound-toggle {
+    left: 0.4rem;
+  }
+
+  .homepage-mobile-video-card .homepage-highlight-video-sound-toggle,
+  .homepage-mobile-video-card .homepage-highlight-video-playback-toggle {
+    top: 0.4rem;
+    width: 1.75rem;
+    height: 1.75rem;
+  }
+
+  .homepage-mobile-video-card .homepage-highlight-video-sound-toggle::after,
+  .homepage-mobile-video-card .homepage-highlight-video-playback-toggle::after {
+    content: "";
+    position: absolute;
+    inset: -0.5rem;
+  }
+
+  .homepage-mobile-video-card .homepage-highlight-video-sound-icon,
+  .homepage-mobile-video-card .motion-pause-icon,
+  .homepage-mobile-video-card .motion-play-icon {
+    width: 0.9rem;
+    height: 0.9rem;
+  }
+}
+
 .design-preview-highlight-video-link {
   position: relative;
   display: block;
@@ -15688,7 +15747,7 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   transition: opacity 180ms ease;
 }
 
-.homepage-highlight-video-link:has(.homepage-highlight-video-copy)::after {
+.homepage-highlight-video-link:has(.homepage-highlight-video-copy:not([hidden]))::after {
   opacity: 1;
 }
 
@@ -16047,6 +16106,16 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 
 .design-preview-card--lane-video::before {
   display: none;
+}
+
+.design-preview-card--lane-video .homepage-highlight-video-link {
+  height: auto;
+  aspect-ratio: 2 / 1.13;
+}
+
+.design-preview-card--lane-video .homepage-highlight-video {
+  position: absolute;
+  inset: 0;
 }
 
 .design-preview-card--lane-video .design-preview-card-link {
@@ -21065,7 +21134,7 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
     grid-template-rows: repeat(2, minmax(0, 1fr));
   }
 
-  .design-preview-mobile-highlight-row > .design-preview-card:nth-child(n + 5) {
+  .design-preview-mobile-highlight-row > .design-preview-card:nth-child(n + 5 of .design-preview-card) {
     display: none;
   }
 
@@ -22645,6 +22714,10 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   transition: transform 160ms ease;
 }
 
+.design-detail-preview-vvs-button::-webkit-details-marker {
+  display: none;
+}
+
 .design-detail-preview-vvs-logo {
   display: block;
   width: 3.3rem;
@@ -22677,10 +22750,21 @@ body.page-public-design-preview .scroll-top-button:focus-visible {
   transition: opacity 160ms ease, transform 160ms ease;
 }
 
-.design-detail-preview-vvs:hover .design-detail-preview-vvs-popover,
-.design-detail-preview-vvs:focus-within .design-detail-preview-vvs-popover {
+.design-detail-preview-vvs[open] .design-detail-preview-vvs-popover {
   opacity: 1;
+  pointer-events: auto;
   transform: translateY(0);
+}
+
+.design-detail-preview-vvs-link {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 2.75rem;
+  color: var(--preview-ink);
+  font-size: 0.82rem;
+  text-decoration: underline;
+  text-underline-offset: 0.18em;
 }
 
 .design-detail-preview-vvs-popover h3 {
@@ -23719,10 +23803,6 @@ body.page-public-design-preview .design-news-preview-layout--index .news-index-s
     max-width: 13ch;
     font-size: clamp(2.55rem, 11vw, 4.5rem);
     line-height: 0.95;
-  }
-
-  .design-service-preview-hero-side {
-    display: none;
   }
 
   .design-service-preview-layout {

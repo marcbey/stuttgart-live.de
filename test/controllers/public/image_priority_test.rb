@@ -79,8 +79,43 @@ class Public::ImagePriorityTest < ActionDispatch::IntegrationTest
   test "homepage highlight video defers source assignment until eligibility" do
     get root_path
     assert_response :success
-    assert_select ".homepage-highlight-video[data-video-sound-src-value][preload='none']:not([src])", count: 1
+    assert_select ".homepage-highlight-video[data-video-sound-src-value][preload='none']:not([src]):not([loop])", count: 2
     assert_select ".homepage-highlight-video source[src]", count: 0
     assert_select ".homepage-highlight-video-card[data-video-sound-media-value='(min-width: 80rem)']", count: 1
+  end
+
+  test "mobile highlights start with portrait videos and matching links, excluding landscape videos" do
+    event = @events.first
+    %i[highlight_video_file highlight_landscape_video_file].each do |attachment|
+      event.public_send(attachment).attach(io: StringIO.new("video"), filename: "#{attachment}.mp4", content_type: "video/mp4")
+    end
+
+    get root_path
+
+    assert_response :success
+    card = css_select(".design-preview-mobile-highlight-row > :first-child").first
+    assert_includes card["class"], "homepage-mobile-video-card"
+    playlist = JSON.parse(card["data-video-sound-playlist-value"])
+    assert_equal %w[portrait], playlist.map { |entry| entry.fetch("orientation") }.sort
+    assert_equal [ event_path(event.slug) ], playlist.map { |entry| entry.fetch("href") }.uniq
+    assert_equal [ rails_storage_proxy_path(event.highlight_video_file, only_path: true) ],
+                 playlist.map { |entry| entry.fetch("src") }.sort
+    assert_select ".design-preview-mobile-highlight-row video[src]", count: 0
+  end
+
+  test "homepage playlist includes every uploaded portrait instead of choosing one server side" do
+    @events.first(2).each do |event|
+      event.highlight_video_file.attach(io: StringIO.new("video"), filename: "portrait-#{event.id}.mp4", content_type: "video/mp4")
+    end
+
+    get root_path
+
+    assert_response :success
+    expected_sources = @events.first(2).map { |event| rails_storage_proxy_path(event.highlight_video_file, only_path: true) }.sort
+    %w[homepage-mobile-video-card design-preview-highlight-video-card].each do |class_name|
+      card = css_select(".#{class_name}").first
+      playlist = JSON.parse(card["data-video-sound-playlist-value"])
+      assert_equal expected_sources, playlist.map { |entry| entry.fetch("src") }.sort
+    end
   end
 end
