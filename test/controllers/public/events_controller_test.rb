@@ -81,6 +81,20 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     AppSetting.where(key: AppSetting::HOMEPAGE_GENRE_TAG_CLOUD_ENABLED_KEY).delete_all
   end
 
+  test "header color links keep routing keys in the query string" do
+    source = highlights_lane_url
+    query = { "action" => "unrelated_action", "controller" => "unrelated_controller", "protocol" => "https", "header_variant[" => "unchanged" }
+
+    get "#{source}?#{query.to_query}&params%5B%5D&header_variant%5B%5D=gray"
+
+    assert_response :success
+    assert_select ".header-color-switcher-link-black", count: 1 do |links|
+      target = URI.join(source, links.first["href"])
+      assert_equal source, target.to_s.split("?", 2).first
+      assert_equal query.merge("params" => [], "header_variant" => "black"), ActionDispatch::ParamBuilder.from_query_string(target.query)
+    end
+  end
+
   test "index is publicly accessible" do
     get events_url(filter: "all")
 
@@ -3299,9 +3313,12 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
       source_snapshot: {}
     )
 
-    get events_url(filter: "all", event_date: selected_date.iso8601)
+    queries = capture_sql_queries { get events_url(filter: "all", event_date: selected_date.iso8601) }
 
     assert_response :success
+    attachments = queries.grep(/FROM "active_storage_attachments".*"record_id" IN/)
+    assert attachments.any? { |sql| sql.match?(/IN \((?:\$\d+, ){13}\$\d+\)/) }, "The 14 visible cards should batch their attachments"
+    assert_empty attachments.grep(/IN \((?:\$\d+, ){11}\$\d+\)/), "The 12-row cursor should not load attachments a second time"
     document = Nokogiri::HTML.parse(response.body)
     highlights_section = document.at_css("section.home-featured-section")
     initial_cards = highlights_section.at_css(".design-preview-mobile-highlight-row") || highlights_section

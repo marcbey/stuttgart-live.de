@@ -52,6 +52,11 @@ module Public
         )
       end
 
+      def next_cursor
+        _, next_state = paged_events
+        next_cursor_for(next_state)
+      end
+
       private
 
       attr_reader :context, :cursor_payload, :per_page, :relation, :deduplicate_series, :prioritize_search, :preload_associations
