@@ -338,7 +338,7 @@ Standardmäßig ist ein täglicher automatischer Lauf um `05:05` Uhr (`Europe/Be
 Der Ablauf ist:
 
 1. Zuerst wählt der Job geeignete bestehende Events aus. Inkrementelle Läufe nehmen zukünftige Events ohne Enrichment, der manuelle Voll-Lauf nimmt alle zukünftigen Events ab seinem Startzeitpunkt.
-2. Jedes Event wird einzeln über die OpenAI Responses API verarbeitet; pro Event gibt es genau einen OpenAI-Call.
+2. Jedes Event wird einzeln über die OpenAI Responses API verarbeitet. Pro API-Versuch gilt ein Timeout von fünf Minuten. Bei einem Timeout stoppt der Lauf am betroffenen Event. Sammelläufe lassen sich dort im Backend fortsetzen.
 3. Vor diesem Call baut der Importer für `homepage_link`, `instagram_link`, `facebook_link` und `youtube_link` einen Suchkontext über den konfigurierten Web-Search-Provider auf.
 4. Für jedes dieser vier Felder werden bis zu 10 Suchtreffer mit kontextreichen Feldern wie Titel, Snippet, angezeigtem Link, Quelle und zusätzlicher Ergebnisbeschreibung in den Prompt übernommen.
 5. Das LLM liefert `genre`, `event_description`, `venue_description`, `venue_address`, `venue_external_url` sowie die vier Search-Linkfelder als Structured Output zurück. Die Struktur wird technisch per JSON Schema erzwungen; der Prompt bleibt die fachliche Anleitung. Nur die vier Search-Linkfelder dürfen aus den mitgelieferten Suchtreffern gewählt werden; `venue_external_url` kommt direkt aus Prompt und LLM-Response.
@@ -361,7 +361,7 @@ Fachlich ist wichtig:
 - Hat ein Event noch keine zugeordnete `Venue`, darf aus `EventLlmEnrichment.venue` eine passende Venue gesucht oder neu angelegt und dem Event zugeordnet werden.
 - In genau diesem Fallback-Fall dürfen zusätzlich `Venue.description`, `Venue.external_url` und `Venue.address` aus `EventLlmEnrichment.venue_description`, `venue_external_url` und `venue_address` gesetzt werden; auch hier werden bereits vorhandene Werte der gefundenen oder neu angelegten Venue nicht überschrieben.
 - Im Event-Editor kann zusätzlich ein manueller LLM-Enrichment-Lauf für genau ein einzelnes gespeichertes Event gestartet werden. Dieser Lauf überschreibt vorhandene Enrichment-Daten bewusst, umgeht den Web-Search-Cache und reiht sich ebenfalls seriell in die bestehende LLM-Queue ein.
-- Fehlgeschlagene oder abgebrochene manuelle Voll-Läufe können im Backend fortgesetzt werden. Die Fortsetzung erzeugt einen neuen `ImportRun`, übernimmt den ursprünglichen Auswahlzeitpunkt und startet beim zuletzt begonnenen Event erneut; wenn kein aktuelles Event gespeichert wurde, geht es nach dem letzten erfolgreich abgeschlossenen Event weiter.
+- Fehlgeschlagene oder abgebrochene Sammelläufe können im Backend fortgesetzt werden. Die Fortsetzung erzeugt einen neuen `ImportRun`, übernimmt den ursprünglichen Auswahlzeitpunkt und startet beim zuletzt begonnenen Event erneut. Wenn kein aktuelles Event gespeichert wurde, geht es nach dem letzten erfolgreich abgeschlossenen Event weiter.
 - Es dient der redaktionellen Verdichtung, nicht der Dubletten-Erkennung.
 - Modellname und Prompt-Vorlage werden über `app_settings` im Backend konfiguriert.
 - Fehlerhafte Einzelantworten sollen im Laufprotokoll sichtbar sein, ohne zwangsläufig den kompletten Prozess unbrauchbar zu machen.
@@ -595,6 +595,8 @@ Nach einer Newsletter-Layoutänderung eine neue Testmail erzeugen: Bereits zuges
 Newsletter und ihre Bestätigungs-/Einstellungsmails verwenden `STUTTGART LIVE <newsletter@stuttgart-live.de>` als Absender. Bei Bedarf lässt sich dieser gezielt über `newsletter.from` in den Credentials oder `NEWSLETTER_FROM` ändern; `mailer.from` für andere Systemmails bleibt unabhängig. Vor dem Versand muss diese Adresse in Mailjet registriert und bestätigt sein, einschließlich der Domain-Authentifizierung (SPF/DKIM). Bestehende Mailjet-Drafts vor dem Versand erneut synchronisieren.
 
 Die Double-Opt-In-Bestätigungsmails für Newsletter-Anmeldungen werden bei vorhandener Mailjet-Konfiguration direkt über die Mailjet-Send-API verschickt. Dadurch funktionieren lokale Tests auch dann, wenn SMTP vom lokalen Netzwerk blockiert wird.
+
+Wenn Mailjet das Tageslimit für den Versand meldet, versucht die Warteschlange den Versand der Bestätigungsmail nach etwa 24 Stunden erneut. Nach zwei Wiederholungen bleibt ein anhaltender Fehler in Solid Queue sichtbar. Prüfe dann das Tageslimit für den verwendeten API-Schlüssel in Mailjet, bevor du fehlgeschlagene Jobs erneut startest.
 Beim SMTP-Versand muss `mailer.from` oder der ENV-Fallback `MAILER_FROM` auf eine Absenderadresse zeigen, die vom konfigurierten SMTP-Konto akzeptiert wird.
 In der lokalen Entwicklungsumgebung werden echte E-Mails verschickt, sobald `SMTP_*` konfiguriert ist. Ohne SMTP-Konfiguration rendert Rails die Mails nur lokal und es kommt keine Nachricht im Postfach an.
 

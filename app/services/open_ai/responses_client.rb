@@ -12,7 +12,7 @@ module OpenAi
     end
 
     DEFAULT_MODEL = "gpt-5.1".freeze
-    DEFAULT_TIMEOUT_SECONDS = 180.0
+    DEFAULT_TIMEOUT_SECONDS = 300.0
 
     attr_reader :model, :temperature, :timeout
 
