@@ -364,7 +364,7 @@ module Public
       assign_homepage_sections(defer_lower_lanes: true)
       assign_homepage_filters
       assign_homepage_promotion_banners
-      @homepage_highlight_video_event = random_homepage_video_event(attachment: :highlight_video_file)
+      @homepage_highlight_video_events = homepage_video_events(attachment: :highlight_video_file)
       @design_preview_news_posts = BlogPost.published_live.with_attached_cover_image.limit(6).to_a
       @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
       @design_preview_mix_available = lean_homepage_all_relation.joins(:genres).exists?
@@ -383,15 +383,15 @@ module Public
       events = design_preview_mix_events.first(HOME_DESIGN_LANE_LIMIT)
       render partial: "public/events/design_preview_mix_lane",
              locals: design_homepage_deferred_section_locals(events:).merge(
-               video_event: random_homepage_video_event(attachment: :highlight_landscape_video_file)
+               video_events: homepage_video_events(attachment: :highlight_landscape_video_file)
              )
     end
 
-    def random_homepage_video_event(attachment:)
+    def homepage_video_events(attachment:)
       homepage_events_relation
         .joins(:"#{attachment}_attachment")
-        .reorder(Arel.sql("RANDOM()"))
-        .first
+        .reorder(:id)
+        .to_a
     end
 
     def render_design_homepage_under_30_section

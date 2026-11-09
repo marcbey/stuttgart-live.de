@@ -102,4 +102,20 @@ class Public::ImagePriorityTest < ActionDispatch::IntegrationTest
                  playlist.map { |entry| entry.fetch("src") }.sort
     assert_select ".design-preview-mobile-highlight-row video[src]", count: 0
   end
+
+  test "homepage playlist includes every uploaded portrait instead of choosing one server side" do
+    @events.first(2).each do |event|
+      event.highlight_video_file.attach(io: StringIO.new("video"), filename: "portrait-#{event.id}.mp4", content_type: "video/mp4")
+    end
+
+    get root_path
+
+    assert_response :success
+    expected_sources = @events.first(2).map { |event| rails_storage_proxy_path(event.highlight_video_file, only_path: true) }.sort
+    %w[homepage-mobile-video-card design-preview-highlight-video-card].each do |class_name|
+      card = css_select(".#{class_name}").first
+      playlist = JSON.parse(card["data-video-sound-playlist-value"])
+      assert_equal expected_sources, playlist.map { |entry| entry.fetch("src") }.sort
+    end
+  end
 end

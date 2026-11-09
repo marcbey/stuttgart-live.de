@@ -2160,7 +2160,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".design-preview-card-title", text: video_event.artist_name, count: 0
-    assert_select ".design-preview-card--lane-video video[src=?]", rails_storage_proxy_path(video_event.highlight_landscape_video_file, only_path: true)
+    assert_select ".design-preview-card--lane-video video[data-video-sound-src-value=?]", rails_storage_proxy_path(video_event.highlight_landscape_video_file, only_path: true)
     assert_select ".design-preview-card--lane-video a[href=?]", event_path(video_event.slug)
   end
 
@@ -2180,11 +2180,11 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     get events_url
     assert_response :success
-    assert_select ".homepage-highlight-video[data-video-sound-src-value*='lea-portrait']", count: 1
+    assert_select ".design-preview-highlight-video-card .homepage-highlight-video[data-video-sound-src-value*='lea-portrait']", count: 1
 
     get homepage_section_events_url(section: "stuttgart_mix")
     assert_response :success
-    assert_select ".design-preview-card--lane-video video[src*='mamma-mia-highlight']", count: 1
+    assert_select ".design-preview-card--lane-video video[data-video-sound-src-value*='mamma-mia-highlight']", count: 1
   end
 
   test "homepage highlight video uses stable storage proxy path" do

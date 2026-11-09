@@ -26,7 +26,7 @@
 <% feature_promotion_banners = promotion_banners %>
 <% homepage_video_setting = AppSetting.homepage_highlight_video_record %>
 <% homepage_portrait_playlist = public_homepage_highlight_playlist(
-  events: highlight_events, browse_state: @browse_state, strict_proxy: strict_proxy,
+  events: @homepage_highlight_video_events, browse_state: @browse_state, strict_proxy: strict_proxy,
   setting: homepage_video_setting,
   fallback_href: event_path("lea-2027-04-25", **@browse_state.route_params),
   fallback_video: asset_path("design_preview/lea-portrait.mp4"),

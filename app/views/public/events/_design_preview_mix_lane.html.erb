@@ -1,6 +1,6 @@
 <% events = Array(local_assigns[:events]) %>
 <% if events.any? %>
-  <% playlist = public_homepage_landscape_playlist(events: events, browse_state: browse_state, strict_proxy: strict_proxy) %>
+  <% playlist = public_homepage_landscape_playlist(events: Array(local_assigns[:video_events]), browse_state: browse_state, strict_proxy: strict_proxy) %>
   <section class="design-preview-section design-preview-lane design-preview-section--summer-party"
            aria-labelledby="design-preview-summer-party-title"
            data-controller="highlights-slider">

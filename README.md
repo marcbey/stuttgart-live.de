@@ -675,7 +675,6 @@ Genre-Labels auf Eventkarten und in der Veranstaltungstabelle werden nur bei gem
 
 Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo eines kommenden veröffentlichten Events, ansonsten den lokalen Mamma-Mia-Clip (20 Sekunden). Der Standardclip verlinkt auf „MAMMA MIA! – Das Musical“ am 5. Mai 2027. Das Video startet stumm; über die Schalter lassen sich Wiedergabe und Ton getrennt steuern.
 
-
 Sind mehrere passende Event-Videos vorhanden, laufen sie in zufällig gemischten Runden nacheinander: Für Hoch- und Querformat zählen jeweils alle hochgeladenen Videos veröffentlichter Events ab dem heutigen Tag, unabhängig von den gerade angezeigten Event-Reihen. Vergangene, unveröffentlichte und erst später freizugebende Events bleiben ausgeschlossen. Jeder Clip läuft einmal pro Runde; auch am Rundenwechsel wird derselbe Clip nicht direkt wiederholt. Die Reihenfolge wird pro Videokachel für den aktuellen Browser-Tab gespeichert und beim Neuladen fortgesetzt, sofern der Browser Sitzungsspeicher erlaubt. Ein einzelner verfügbarer Clip endet nach einmaligem Abspielen und kann per Play-Taste erneut gestartet werden. Vorschaubild, Beschriftung und Event-Link wechseln passend mit.
 
 Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Der Standardtrailer verlinkt auf LEA am 25. April 2027. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
