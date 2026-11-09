@@ -1,6 +1,6 @@
 <% events = Array(local_assigns[:events]) %>
 <% if events.any? %>
-  <% video_event = local_assigns[:video_event] %>
+  <% playlist = public_homepage_landscape_playlist(events: events, browse_state: browse_state, strict_proxy: strict_proxy) %>
   <section class="design-preview-section design-preview-lane design-preview-section--summer-party"
            aria-labelledby="design-preview-summer-party-title"
            data-controller="highlights-slider">
@@ -16,40 +16,9 @@
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 9 12l6 6"></path></svg>
       </button>
       <div data-controller="genre-labels" class="design-preview-card-row" data-highlights-slider-target="track">
-        <article class="design-preview-card design-preview-card--compact design-preview-card--lane-video"
-                 data-controller="video-sound">
-          <% video_source = video_event&.highlight_landscape_video_file&.attached? ? public_media_path(video_event.highlight_landscape_video_file) : asset_path("design_preview/mamma-mia-highlight.mp4") %>
-          <% video_poster = video_event.present? ? event_image_source(video_event.event_image, strict_proxy: strict_proxy, size: :banner_mobile) : asset_path("design_preview/mamma-mia-highlight-poster.jpg") %>
-          <% video_href = video_event.present? ? public_event_detail_path(video_event, browse_state) : event_path("mamma-mia-das-musical-2027-05-05", **browse_state.route_params) %>
-          <% video_content = capture do %>
-            <span class="design-preview-card-media" aria-hidden="true">
-              <%= video_tag video_source,
-                            poster: video_poster,
-                            muted: true,
-                            loop: true,
-                            playsinline: true,
-                            preload: "metadata",
-                            class: "design-preview-card-video",
-                            data: { video_sound_target: "video" } %>
-            </span>
-          <% end %>
-          <%= link_to video_href,
-                      class: "design-preview-card-link",
-                      aria: { label: "#{video_event&.artist_name || 'MAMMA MIA! – Das Musical'} ansehen" } do %>
-            <%= video_content %>
-          <% end %>
-          <%= render "public/events/video_playback_button" %>
-
-          <button type="button"
-                  class="homepage-highlight-video-sound-toggle"
-                  data-video-sound-target="button"
-                  data-action="click->video-sound#toggle"
-                  aria-label="Ton einschalten"
-                  aria-pressed="false">
-            <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-muted" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path><path d="m16.2 9.2 4.1 4.1m0-4.1-4.1 4.1"></path></svg>
-            <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path><path d="M16 8.4c1 .9 1.6 2.2 1.6 3.6S17 14.7 16 15.6"></path></svg>
-          </button>
-        </article>
+        <%= render "public/events/video_playlist_card", playlist: playlist,
+                   card_class: "design-preview-card design-preview-card--compact design-preview-card--lane-video",
+                   media: "(min-width: 48rem)", storage_key: "homepage-landscape" %>
         <% events.each do |event| %>
           <%= render "design_preview_card",
                      event: event,

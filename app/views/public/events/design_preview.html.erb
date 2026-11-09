@@ -24,7 +24,14 @@
 <% promotion_banners = Array(@all_promotion_banners) %>
 <% content_promotion_banners_by_position = @promotion_banners_by_lane_position || {} %>
 <% feature_promotion_banners = promotion_banners %>
-<% homepage_highlight_video_event = @homepage_highlight_video_event %>
+<% homepage_video_setting = AppSetting.homepage_highlight_video_record %>
+<% homepage_portrait_playlist = public_homepage_highlight_playlist(
+  events: highlight_events, browse_state: @browse_state, strict_proxy: strict_proxy,
+  setting: homepage_video_setting,
+  fallback_href: event_path("lea-2027-04-25", **@browse_state.route_params),
+  fallback_video: asset_path("design_preview/lea-portrait.mp4"),
+  fallback_poster: asset_path("design_preview/lea-portrait-poster.jpg")
+) %>
 <% design_preview_video_slide_enabled = false %>
 <% feature_slide_count = (feature_promotion_banners.presence&.size || [ highlights.size, 6 ].min) + (design_preview_video_slide_enabled ? 1 : 0) %>
 <% highlight_tiles = public_design_highlight_tiles(highlight_events, capacity: 8) %>
@@ -359,11 +366,14 @@
           </div>
         </div>
 
-        <% highlight_cards_context = [ strict_proxy, design_preview_effective_series_ids, design_preview_series_counts_by_id, highlight_tiles.map { |tile| [ tile.event.id, tile.grid_variant, tile.column, tile.row ] }, laptop_highlight_tiles_by_event_id.values.map { |tile| [ tile.event.id, tile.grid_variant, tile.column, tile.row ] } ] %>
+        <% highlight_cards_context = [ "video-playlist-v1", homepage_portrait_playlist, strict_proxy, design_preview_effective_series_ids, design_preview_series_counts_by_id, highlight_tiles.map { |tile| [ tile.event.id, tile.grid_variant, tile.column, tile.row ] }, laptop_highlight_tiles_by_event_id.values.map { |tile| [ tile.event.id, tile.grid_variant, tile.column, tile.row ] } ] %>
         <% highlight_cards_cache_key = public_events_fragment_cache_key(section: "modern-highlight-cards", events: highlight_events, browse_state: @browse_state, context: highlight_cards_context) if controller.perform_caching && !authenticated? %>
         <% cache_if highlight_cards_cache_key.present?, highlight_cards_cache_key, expires_in: 15.minutes do %>
         <% if highlight_events.any? %>
           <div data-controller="genre-labels" class="design-preview-mobile-highlight-row" aria-label="Weitere Highlights">
+            <%= render "public/events/video_playlist_card", playlist: homepage_portrait_playlist,
+                       card_class: "homepage-mobile-video-card", media: "(max-width: 47.999rem)",
+                       storage_key: "homepage-mobile" %>
             <% highlight_events.each do |event| %>
               <%= render "design_preview_card",
                          event: event,
@@ -421,14 +431,8 @@
 
         <% end %>
 
-        <%= render "homepage_highlight_video",
-                   event: homepage_highlight_video_event,
-                   browse_state: @browse_state,
-                   strict_proxy: strict_proxy,
-                   setting: AppSetting.homepage_highlight_video_record,
-                   fallback_href: event_path("lea-2027-04-25", **@browse_state.route_params),
-                   fallback_video: asset_path("design_preview/lea-portrait.mp4"),
-                   fallback_poster: asset_path("design_preview/lea-portrait-poster.jpg") %>
+        <%= render "public/events/video_playlist_card", playlist: homepage_portrait_playlist,
+                   media: "(min-width: 80rem)", storage_key: "homepage-portrait" %>
       </div>
 
       <%= link_to highlights_lane_path, class: "design-preview-section-link design-preview-highlights-all-link" do %>

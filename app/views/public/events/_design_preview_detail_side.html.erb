@@ -29,20 +29,21 @@
                           class: "design-detail-preview-location-logo" %>
           <% end %>
           <% if vvs_ticket %>
-            <div class="design-detail-preview-vvs">
-              <a href="https://www.vvs.de/tickets-und-abos/kombiticket"
-                 target="_blank"
-                 rel="noopener"
-                 class="design-detail-preview-vvs-button"
-                 aria-label="VVS Kombiticket – Informationen öffnen (neuer Tab)">
+            <details class="design-detail-preview-vvs">
+              <summary class="design-detail-preview-vvs-button"
+                       aria-label="Hinweis zum VVS Kombiticket">
                 <%= image_tag "vvs.png", alt: "VVS", class: "design-detail-preview-vvs-logo" %>
-              </a>
-              <div class="design-detail-preview-vvs-popover" role="tooltip">
+              </summary>
+              <div class="design-detail-preview-vvs-popover">
                 <h3>VVS Kombiticket</h3>
                 <p>Gilt für die An- und Abreise zur Veranstaltung im gesamten VVS-Gebiet.</p>
                 <p>Ob dein Ticket als VVS-Ticket gültig ist, erkennst du am entsprechenden Hinweis auf dem Ticket oder in den Veranstaltungsinformationen.</p>
+                <a href="https://www.vvs.de/tickets-und-abos/kombiticket"
+                   target="_blank"
+                   rel="noopener"
+                   class="design-detail-preview-vvs-link">Mehr Infos bei VVS<span class="sr-only"> (öffnet neuen Tab)</span></a>
               </div>
-            </div>
+            </details>
           <% end %>
         </div>
       <% end %>

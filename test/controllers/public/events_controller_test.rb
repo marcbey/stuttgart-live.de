@@ -528,7 +528,7 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h2", text: "Stuttgart im Mix"
-    assert_select ".design-preview-card--lane-video video[src*='mamma-mia-highlight']:not([autoplay])", count: 1
+    assert_select ".design-preview-card--lane-video video[data-video-sound-src-value*='mamma-mia-highlight']:not([autoplay]):not([src])", count: 1
     assert_select ".design-preview-card--lane-video video[muted]", count: 1
     assert_select ".design-preview-card--lane-video button[aria-label='Ton einschalten']", count: 1
     assert_select ".design-preview-card-title", text: @published_event.artist_name
@@ -2204,9 +2204,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url
 
     assert_response :success
-    assert_select ".homepage-highlight-video[data-video-sound-src-value*='lea-portrait'][muted]:not([autoplay])", count: 1
-    assert_select ".homepage-highlight-video[poster*='lea-portrait-poster']", count: 1
-    assert_select ".homepage-highlight-video-card button[aria-label='Ton einschalten']", count: 1
+    assert_select ".design-preview-highlight-video-card .homepage-highlight-video[data-video-sound-src-value*='lea-portrait'][muted]:not([autoplay])", count: 1
+    assert_select ".design-preview-highlight-video-card .homepage-highlight-video[poster*='lea-portrait-poster']", count: 1
+    assert_select ".design-preview-highlight-video-card button[aria-label='Ton einschalten']", count: 1
 
     event.highlight_video_file.attach(
       io: StringIO.new("fake video content"),
@@ -5323,7 +5323,9 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".design-detail-preview-location .design-detail-preview-vvs", count: 2
+    assert_select "details.design-detail-preview-vvs:not([open]) > summary.design-detail-preview-vvs-button", count: 2
     assert_select ".design-detail-preview-vvs-logo[alt='VVS']", count: 2
+    assert_select ".design-detail-preview-vvs-popover a[href='https://www.vvs.de/tickets-und-abos/kombiticket'][target='_blank']", count: 2
     assert_select ".design-detail-preview-vvs-popover h3", text: /VVS Kombiticket/i
     assert_select ".design-detail-preview-vvs-popover", text: /Gilt für die An- und Abreise/
     assert_select ".design-detail-preview-vvs-popover", text: /Ob dein Ticket als VVS-Ticket gültig ist/

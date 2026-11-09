@@ -1,0 +1,48 @@
+<% if playlist.any? %>
+  <% entry = playlist.first %>
+  <% show_overlay = entry[:overlay] && %i[title subtitle date location].any? { |key| entry[key].present? } %>
+  <article class="homepage-highlight-video-card <%= local_assigns.fetch(:card_class, "design-preview-highlight-video-card") %>"
+           data-controller="video-sound"
+           data-video-sound-media-value="<%= local_assigns.fetch(:media, "(min-width: 0px)") %>"
+           data-video-sound-storage-key-value="<%= storage_key %>"
+           data-video-sound-playlist-value="<%= playlist.to_json %>"
+           data-video-orientation="<%= entry[:orientation] %>">
+    <%= tag.a href: entry[:href], class: "homepage-highlight-video-link design-preview-highlight-video-link", aria: { label: entry[:label] }, data: { video_sound_target: "link" } do %>
+      <%= tag.video poster: entry[:poster], muted: true, playsinline: true, preload: "none",
+                    class: "homepage-highlight-video design-preview-highlight-video",
+                    data: { video_sound_target: "video", video_sound_src_value: entry.fetch(:src) } %>
+      <%= tag.span class: "homepage-highlight-video-copy", hidden: !show_overlay, data: { video_sound_target: "copy" } do %>
+        <span class="homepage-highlight-video-meta">
+          <%= tag.strong entry[:date], hidden: entry[:date].blank?, data: { video_sound_target: "date" } %>
+          <%= tag.span entry[:location], hidden: entry[:location].blank?, data: { video_sound_target: "location" } %>
+        </span>
+        <%= tag.strong entry[:title], class: "homepage-highlight-video-title", hidden: entry[:title].blank?, data: { video_sound_target: "title" } %>
+        <%= tag.span entry[:subtitle], class: "homepage-highlight-video-subtitle", hidden: entry[:subtitle].blank?, data: { video_sound_target: "subtitle" } %>
+      <% end %>
+    <% end %>
+    <%= render "public/events/video_playback_button" %>
+
+    <button type="button"
+            class="homepage-highlight-video-sound-toggle"
+            data-video-sound-target="button"
+            data-action="click->video-sound#toggle"
+            aria-label="Ton einschalten"
+            aria-pressed="false">
+      <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-muted" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path>
+        <path d="m16.2 9.2 4.1 4.1m0-4.1-4.1 4.1"></path>
+      </svg>
+      <svg class="homepage-highlight-video-sound-icon homepage-highlight-video-sound-icon-on" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M4 9.5h3.2L12 5.8v12.4L7.2 14.5H4v-5Z"></path>
+        <path d="M16 8.4c1 .9 1.6 2.2 1.6 3.6S17 14.7 16 15.6"></path>
+        <path d="M18.4 6.2A7.7 7.7 0 0 1 21 12a7.7 7.7 0 0 1-2.6 5.8"></path>
+      </svg>
+    </button>
+
+    <% if authenticated? %>
+      <%= tag.a "Edit", href: entry[:adminHref], hidden: entry[:adminHref].blank?,
+                class: "design-preview-card-admin-link homepage-highlight-video-admin-link",
+                data: { turbo: false, video_sound_target: "adminLink" } %>
+    <% end %>
+  </article>
+<% end %>

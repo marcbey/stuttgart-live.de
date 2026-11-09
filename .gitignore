@@ -2,6 +2,7 @@
 /legacy/
 
 # Environment and secrets
+/.stage.rtf
 /.env
 /.env.*
 !/.env.example
