@@ -397,6 +397,10 @@ Beim Nachladen muss derselbe Kartentyp wie in der ersten Reihe verwendet werden 
 
 Promotion Banner für Events und News werden im jeweiligen Backend-Editor im Tab `Einstellungen` gepflegt. Mehrere Banner können gleichzeitig aktiv sein. Die `Lane-Position` ist 1-basiert und bestimmt, vor welcher sichtbaren Startseiten-Lane der Banner erscheint; Positionen hinter der letzten sichtbaren Lane werden vor dem Slot für gespeicherte Events angehängt.
 
+Der Tourtitel (`Titel` im Event-Editor) ist optional und kann auch bei bestehenden Events geleert werden. Der Künstlername bleibt erforderlich.
+
+Abgesagte Events erscheinen nicht im Highlightbereich der Startseite (Slider, Kacheln und Event-Videos). In „Alles aus Stuttgart“ und auf ihrer Detailseite bleiben sie mit dem Hinweis „Abgesagt“ sichtbar. Ausverkaufte Events bleiben weiterhin als Highlights sichtbar. Maßgeblich ist derselbe öffentliche Ticketstatus wie auf der Detailseite, einschließlich manueller Ticket-Übersteuerungen.
+
 Die Startseiten-Highlights passen ihre Auswahl an die Bildschirmbreite an: Zwischen 768 und 1279 Pixeln stehen vier größere Event-Kacheln neben dem Hauptslider. Auf Laptopbreiten von 1280 bis 1535 Pixeln hat das Kachelraster drei Spalten und rechts daneben die hochkantige Video-Kachel. Dafür werden weniger Events gezeigt; breite und hohe Bildformate bleiben erhalten. Slider, Kacheln und Video wachsen dort gemeinsam bis knapp an den unteren Rand des anfangs sichtbaren Browserfensters. Ab 1536 Pixeln erscheint das vollständige Raster mit vier Spalten und Video. Auf dem Handy bleibt die horizontal scrollbar angeordnete Event-Reihe erhalten. Zur vollständigen Übersicht führen die Überschrift `Unsere Highlights` und der Link `Alle Highlights anzeigen`, der mobil unter den Highlight-Kacheln steht.
 
 Mobil bleibt die Seite im Hintergrund stehen, solange Menü, Suche oder Merkliste geöffnet sind. Längere Inhalte lassen sich innerhalb des geöffneten Bereichs scrollen. Nach dem Schließen bleibt die vorherige Seitenposition erhalten.
@@ -675,7 +679,7 @@ Genre-Labels auf Eventkarten und in der Veranstaltungstabelle werden nur bei gem
 
 Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo eines kommenden veröffentlichten Events, ansonsten den lokalen Mamma-Mia-Clip (20 Sekunden). Der Standardclip verlinkt auf „MAMMA MIA! – Das Musical“ am 5. Mai 2027. Das Video startet stumm; über die Schalter lassen sich Wiedergabe und Ton getrennt steuern.
 
-Sind mehrere passende Event-Videos vorhanden, laufen sie in zufällig gemischten Runden nacheinander: Für Hoch- und Querformat zählen jeweils alle hochgeladenen Videos veröffentlichter Events ab dem heutigen Tag, unabhängig von den gerade angezeigten Event-Reihen. Vergangene, unveröffentlichte und erst später freizugebende Events bleiben ausgeschlossen. Jeder Clip läuft einmal pro Runde; auch am Rundenwechsel wird derselbe Clip nicht direkt wiederholt. Die Reihenfolge wird pro Videokachel für den aktuellen Browser-Tab gespeichert und beim Neuladen fortgesetzt, sofern der Browser Sitzungsspeicher erlaubt. Ein einzelner verfügbarer Clip endet nach einmaligem Abspielen und kann per Play-Taste erneut gestartet werden. Vorschaubild, Beschriftung und Event-Link wechseln passend mit.
+Sind mehrere passende Event-Videos vorhanden, laufen sie in zufällig gemischten Runden nacheinander: Für Hoch- und Querformat zählen jeweils alle hochgeladenen Videos veröffentlichter Events ab dem heutigen Tag, unabhängig von den gerade angezeigten Event-Reihen. Vergangene, unveröffentlichte und erst später freizugebende Events bleiben ausgeschlossen. Jeder Clip läuft einmal pro Runde; auch am Rundenwechsel wird derselbe Clip nicht direkt wiederholt. Die Reihenfolge wird pro Videokachel für den aktuellen Browser-Tab gespeichert und beim Neuladen fortgesetzt, sofern der Browser Sitzungsspeicher erlaubt. Ein einzelner verfügbarer Clip endet nach einmaligem Abspielen und kann per Play-Taste erneut gestartet werden. Vorschaubild, Beschriftung und Event-Link wechseln passend mit. Beim Standbild und bei pausierter Wiedergabe zeigen Hoch- und Querformatvideos immer die vorhandenen Veranstaltungsangaben (Datum, Titel, Untertitel und Ort). Erst während der laufenden Wiedergabe gilt die jeweilige Einstellung zur Texteinblendung.
 
 Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Der Standardtrailer verlinkt auf LEA am 25. April 2027. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
 
@@ -760,6 +764,12 @@ mise exec -- bin/ci
 ```
 
 `bin/ci` bündelt Setup, Linting, Security-Checks, die Node-Regressionstests unter `test/javascript/` einschließlich Messparser sowie Rails- und Seed-Tests. Browserharnesses unter `test/browser/` werden gezielt separat ausgeführt, da sie einen vorbereiteten lokalen App-Datenbestand benötigen. Die Rails-Tests laufen dort mit aktiviertem Bullet, damit N+1-Queries den Lauf fehlschlagen lassen. Vor einem Push sollte dieser Lauf grün sein.
+
+Falls der lokale Hetzner-Test auf macOS trotz `mise exec` auf System-Ruby 2.6 zurückfällt, liegt das an seinem temporären Benutzerverzeichnis. Mit dem installierten mise-Datenpfad und der Ruby-Version aus `mise.toml` laufen auch diese Unterprozesse mit dem richtigen Ruby, ohne Tests auszulassen:
+
+```bash
+MISE_DATA_DIR="$HOME/.local/share/mise" MISE_RUBY_VERSION=4.0.2 mise exec -- bundle exec bin/ci
+```
 
 Für reine Designänderungen auf Kathis lokalem Rechner ohne Docker gibt es einen ausdrücklich gewählten Prüfmodus:
 

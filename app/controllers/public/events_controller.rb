@@ -364,7 +364,8 @@ module Public
       assign_homepage_sections(defer_lower_lanes: true)
       assign_homepage_filters
       assign_homepage_promotion_banners
-      @homepage_highlight_video_events = homepage_video_events(attachment: :highlight_video_file)
+      @homepage_highlight_video_events = homepage_video_events(attachment: :highlight_video_file).reject(&:public_canceled?)
+      @homepage_highlight_fallback_canceled = Event.where(id: canceled_homepage_event_ids, slug: "lea-2027-04-25").exists?
       @design_preview_news_posts = BlogPost.published_live.with_attached_cover_image.limit(6).to_a
       @home_genre_tag_cloud_genres = homepage_genre_tag_cloud_genres
       @design_preview_mix_available = lean_homepage_all_relation.joins(:genres).exists?
@@ -626,7 +627,19 @@ module Public
     end
 
     def homepage_highlights_available?
-      lean_homepage_highlights_relation.exists? || lean_homepage_all_relation.exists?
+      lean_homepage_highlights_relation.where.not(id: canceled_homepage_event_ids).exists? ||
+        lean_homepage_all_relation.where.not(id: canceled_homepage_event_ids).exists?
+    end
+
+    def canceled_homepage_event_ids
+      @canceled_homepage_event_ids ||= begin
+        candidates = EventOffer.where("metadata ->> 'availability_status' LIKE ?", "%canceled%").select(:event_id)
+        # The public status respects provider priority and manual ticket overrides.
+        lean_homepage_events_relation.where(id: candidates)
+          .preload(:event_offers)
+          .select(&:public_canceled?)
+          .map(&:id)
+      end
     end
 
     def tagestipp_available?
@@ -711,9 +724,9 @@ module Public
 
     def homepage_highlights_relation_and_context(cursor_payload: nil)
       cursor_variant = cursor_payload&.dig("context", "variant")
-      highlights_relation = scoped_homepage_highlights_relation
+      highlights_relation = scoped_homepage_highlights_relation.where.not(id: canceled_homepage_event_ids)
       variant = cursor_variant.presence || (highlights_relation.exists? ? "primary" : "fallback")
-      relation = variant == "fallback" ? scoped_homepage_all_relation.reorder(:start_at, :id) : highlights_relation
+      relation = variant == "fallback" ? scoped_homepage_all_relation.where.not(id: canceled_homepage_event_ids).reorder(:start_at, :id) : highlights_relation
 
       [
         relation,
@@ -848,10 +861,12 @@ module Public
 
     def assign_homepage_promotion_banners
       event_banners = Event.promotion_banner_live.includes(:event_offers)
+        .where.not(id: canceled_homepage_event_ids)
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .select(&:promotion_banner_display_image_present?)
         .map { |event| { type: :event, record: event } }
       highlight_slider_event_banners = Event.published_live
+        .where.not(id: canceled_homepage_event_ids)
         .where(highlighted: true)
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .includes(

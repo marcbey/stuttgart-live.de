@@ -29,7 +29,7 @@
   events: @homepage_highlight_video_events, browse_state: @browse_state, strict_proxy: strict_proxy,
   setting: homepage_video_setting,
   fallback_href: event_path("lea-2027-04-25", **@browse_state.route_params),
-  fallback_video: asset_path("design_preview/lea-portrait.mp4"),
+  fallback_video: (asset_path("design_preview/lea-portrait.mp4") unless @homepage_highlight_fallback_canceled),
   fallback_poster: asset_path("design_preview/lea-portrait-poster.jpg")
 ) %>
 <% design_preview_video_slide_enabled = false %>

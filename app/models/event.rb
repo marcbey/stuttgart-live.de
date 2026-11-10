@@ -94,7 +94,7 @@ class Event < ApplicationRecord
 
   accepts_nested_attributes_for :llm_enrichment, update_only: true
 
-  validates :slug, :title, :artist_name, :normalized_artist_name, :start_at, :status, presence: true
+  validates :slug, :artist_name, :normalized_artist_name, :start_at, :status, presence: true
   validates :status, inclusion: { in: STATUSES }
   validates :event_series_assignment, inclusion: { in: EVENT_SERIES_ASSIGNMENTS }
   validates :slug, uniqueness: true

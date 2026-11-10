@@ -38,8 +38,10 @@ module Public::VideosHelper
       poster: setting.homepage_highlight_video_poster_image.attached? ? public_media_path(setting.homepage_highlight_video_poster_image) : fallback_poster,
       href: (fallback_href unless uploaded),
       label: "Highlight-Video ansehen",
-      title: config.fetch("title"), subtitle: config.fetch("subtitle"),
-      date: config.fetch("date"), location: config.fetch("location"),
+      title: config.fetch("title").presence || ("LEA" unless uploaded),
+      subtitle: config.fetch("subtitle"),
+      date: config.fetch("date").presence || ("25.04.2027" unless uploaded),
+      location: config.fetch("location"),
       overlay: setting.homepage_highlight_video_overlay_enabled,
       adminHref: (edit_backend_settings_path(section: "homepage_highlight_video") if authenticated?),
       orientation: "portrait"
@@ -55,6 +57,7 @@ module Public::VideosHelper
       poster: asset_path("design_preview/mamma-mia-highlight-poster.jpg"),
       href: event_path("mamma-mia-das-musical-2027-05-05", **browse_state.route_params),
       label: "MAMMA MIA! – Das Musical ansehen",
+      title: "MAMMA MIA!", subtitle: "Das Musical", date: "05.05.2027",
       overlay: false, orientation: "landscape"
     } ]
   end
