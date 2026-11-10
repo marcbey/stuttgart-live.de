@@ -83,13 +83,13 @@ class Merging::SyncImportedEventsJobTest < ActiveJob::TestCase
 
       run = ImportRun.where(source_type: "merge").order(:created_at).last
       assert_equal "failed", run.status
-      assert_includes run.error_message, "Title darf nicht leer sein"
+      assert_includes run.error_message, "Start at darf nicht leer sein"
       assert_includes run.error_message, "Artist name darf nicht leer sein"
 
       error = run.import_run_errors.order(:created_at).last
       assert_equal "ActiveRecord::RecordInvalid", error.error_class
       assert_equal "Event", error.payload["record_class"]
-      assert error.payload["record_errors"].key?("title")
+      assert error.payload["record_errors"].key?("start_at")
       assert error.payload["record_errors"].key?("artist_name")
     ensure
       sync_class.alias_method :new, :__original_new_for_test

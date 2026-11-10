@@ -1069,6 +1069,15 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes response.body, "editor_form_event_#{@next_event.id}"
   end
 
+  test "updates event with an empty tour title" do
+    sign_in_as(@user)
+
+    patch backend_event_url(@event), params: { event: { title: "" } }
+
+    assert_redirected_to backend_events_url(status: "needs_review", event_id: @event.id)
+    assert_equal "", @event.reload.title
+  end
+
   test "updates event" do
     sign_in_as(@user)
     doors_at = Time.zone.parse("2026-07-10 18:30:00")

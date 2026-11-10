@@ -1,6 +1,6 @@
 <% if playlist.any? %>
   <% entry = playlist.first %>
-  <% show_overlay = entry[:overlay] && %i[title subtitle date location].any? { |key| entry[key].present? } %>
+  <% show_overlay = %i[title subtitle date location].any? { |key| entry[key].present? } %>
   <article class="homepage-highlight-video-card <%= local_assigns.fetch(:card_class, "design-preview-highlight-video-card") %>"
            data-controller="video-sound"
            data-video-sound-media-value="<%= local_assigns.fetch(:media, "(min-width: 0px)") %>"

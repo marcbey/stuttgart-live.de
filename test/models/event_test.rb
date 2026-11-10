@@ -10,6 +10,19 @@ class EventTest < ActiveSupport::TestCase
     AppSetting.reset_cache!
   end
 
+  test "creates events without a tour title while keeping the artist required" do
+    [ nil, "", "   " ].each do |title|
+      event = Event.new(artist_name: "Artist Without Tour", title: title, start_at: 1.day.from_now, venue_record: venues(:lka_longhorn), status: "needs_review")
+
+      assert event.save, event.errors.full_messages.join(", ")
+      assert_equal "", event.reload.title
+
+      event.artist_name = ""
+      assert_not event.valid?
+      assert event.errors.added?(:artist_name, :blank)
+    end
+  end
+
   test "splits combined title into artist and tour when artist still equals title" do
     event = Event.new(
       artist_name: "WILHELMINE - magisch Tour 2026",

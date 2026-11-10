@@ -64,7 +64,7 @@ class EditorialVenueImportTest < ActionDispatch::IntegrationTest
   end
 
   test "an invalid editorial change does not protect the venue from provider updates" do
-    patch backend_event_url(@event), params: { event: { venue_name: "Im Wizemann", title: "" } }
+    patch backend_event_url(@event), params: { event: { venue_name: "Im Wizemann", artist_name: "", title: "" } }
     assert_response :unprocessable_entity
     assert_equal venues(:lka_longhorn), @event.reload.venue_record
 

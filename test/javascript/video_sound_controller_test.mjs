@@ -17,7 +17,7 @@ class Video extends Element {
   constructor() { super(); this.paused = true; this.muted = true; this.volume = 1; this.loop = true; this.plays = 0; this.loads = 0; this.ended = false }
   get src() { return this.getAttribute("src") }
   set src(value) { this.setAttribute("src", value); this.ended = false }
-  play() { this.paused = false; this.ended = false; this.plays++; this.dispatchEvent(new Event("play")); return Promise.resolve() }
+  play() { this.paused = false; this.ended = false; this.plays++; this.dispatchEvent(new Event("play")); this.dispatchEvent(new Event("playing")); return Promise.resolve() }
   pause() { this.paused = true; this.dispatchEvent(new Event("pause")) }
   load() { this.loads++; this.ended = false }
   finish() { this.paused = true; this.ended = true; this.dispatchEvent(new Event("ended")) }
@@ -200,5 +200,42 @@ test("an aborted play from an unloaded clip cannot mute the next clip", async ()
   rejectPrevious(new Error("play aborted by source change"))
   await Promise.resolve()
   assert.equal(video.muted, false)
+  controller.disconnect()
+})
+
+for (const orientation of ["portrait", "landscape"]) {
+  test(`${orientation} still images always show details, while playback respects the overlay setting`, () => {
+    const entry = { ...entries[0], orientation, title: "Artist", date: "09.11.2026", overlay: false }
+    const { controller, video, visible } = setup({ playlist: [entry], reduced: true })
+    visible()
+    assert.equal(video.src, null)
+    assert.equal(controller.copyTarget.hidden, false)
+    controller.togglePlayback(event())
+    assert.equal(controller.copyTarget.hidden, true)
+    controller.togglePlayback(event())
+    assert.equal(controller.copyTarget.hidden, false)
+    controller.togglePlayback(event())
+    assert.equal(controller.copyTarget.hidden, true)
+    video.finish()
+    assert.equal(controller.copyTarget.hidden, false)
+    visible(false)
+    assert.equal(controller.copyTarget.hidden, false)
+    controller.disconnect()
+  })
+}
+
+test("details stay visible while playback is pending or blocked", async () => {
+  const { controller, video, visible } = setup({ playlist: [{ ...entries[0], title: "Artist", overlay: false }] })
+  let rejectPlayback
+  video.play = () => {
+    video.paused = false
+    video.dispatchEvent(new Event("play"))
+    return new Promise((_resolve, reject) => { rejectPlayback = reject })
+  }
+  visible()
+  assert.equal(controller.copyTarget.hidden, false)
+  rejectPlayback(new Error("autoplay blocked"))
+  await Promise.resolve()
+  assert.equal(controller.copyTarget.hidden, false)
   controller.disconnect()
 })

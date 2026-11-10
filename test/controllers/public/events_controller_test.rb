@@ -3741,8 +3741,13 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select ".event-listing-status-pill", text: "Ausverkauft", minimum: 1
-    assert_select ".event-listing-status-pill", text: "Abgesagt", minimum: 1
+    assert_select ".event-listing-status-pill", text: "Abgesagt", count: 0
     assert_select ".event-sold-out-ribbon", count: 0
+
+    get homepage_lane_events_url(lane: "all_stuttgart", mode: "rows", filter: "all")
+
+    assert_response :success
+    assert_select ".event-listing-status-pill", text: "Abgesagt", minimum: 1
   end
 
   test "index redirects old search links to the dedicated search page" do

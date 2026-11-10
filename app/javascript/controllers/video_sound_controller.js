@@ -21,6 +21,7 @@ export default class extends Controller {
       return true
     })
     this.currentEntry = null
+    this.isPlaying = false
     this.playlistEnded = false
     this.needsNextClip = false
     this.playlistState = null
@@ -40,7 +41,7 @@ export default class extends Controller {
       this.videoTarget.autoplay = false
       if (this.playlist.length) this.videoTarget.loop = false
       this.videoTarget.addEventListener("ended", this.advancePlaylist)
-      for (const event of ["volumechange", "loadedmetadata", "play", "pause", "ended"]) {
+      for (const event of ["volumechange", "loadedmetadata", "play", "playing", "pause", "ended", "emptied", "error"]) {
         this.videoTarget.addEventListener(event, this.sync)
       }
       this.visibilityObserver = new IntersectionObserver(([entry]) => {
@@ -63,7 +64,7 @@ export default class extends Controller {
     if (!this.hasVideoTarget) return
 
     this.videoTarget.removeEventListener("ended", this.advancePlaylist)
-    for (const event of ["volumechange", "loadedmetadata", "play", "pause", "ended"]) {
+    for (const event of ["volumechange", "loadedmetadata", "play", "playing", "pause", "ended", "emptied", "error"]) {
       this.videoTarget.removeEventListener(event, this.sync)
     }
     this.unloadVideo()
@@ -86,11 +87,13 @@ export default class extends Controller {
   unloadVideo() {
     if (!this.hasVideoTarget) return
     this.playbackAttempt++
+    this.isPlaying = false
     this.videoTarget.pause()
     if (this.videoTarget.dataset.videoSoundSrcValue && this.videoTarget.hasAttribute("src")) {
       this.videoTarget.removeAttribute("src")
       this.videoTarget.load()
     }
+    this.sync()
   }
 
   toggle(event) {
@@ -173,7 +176,7 @@ export default class extends Controller {
       this[`${name}Target`].textContent = entry[name] || ""
       this[`${name}Target`].hidden = !entry[name]
     }
-    if (this.hasCopyTarget) this.copyTarget.hidden = !entry.overlay || ![entry.title, entry.subtitle, entry.date, entry.location].some(Boolean)
+    this.sync()
     if (this.hasLinkTarget) {
       if (entry.href) this.linkTarget.setAttribute("href", entry.href)
       else this.linkTarget.removeAttribute("href")
@@ -203,8 +206,17 @@ export default class extends Controller {
     }
   }
 
-  sync() {
+  sync(event) {
     if (!this.hasVideoTarget) return
+
+    if (event?.type === "playing") this.isPlaying = true
+    if (["pause", "ended", "emptied", "error"].includes(event?.type)) this.isPlaying = false
+
+    const entry = this.currentEntry || this.playlist[0]
+    if (this.hasCopyTarget && entry) {
+      const hasDetails = [entry.title, entry.subtitle, entry.date, entry.location].some(Boolean)
+      this.copyTarget.hidden = !hasDetails || (this.isPlaying && !entry.overlay)
+    }
 
     if (this.hasButtonTarget) {
       this.buttonTarget.disabled = !this.mediaQuery.matches
