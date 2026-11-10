@@ -350,10 +350,14 @@
       </div>
     </nav>
     <% if public_homepage_chrome %>
+      <% header_color_query = ActionDispatch::QueryParser.each_pair(request.query_string).reject do |name, _value|
+           key, suffix = name.split("[", 2)
+           key == "header_variant" && suffix != ""
+         end %>
       <aside class="header-color-switcher" aria-label="Headerfarben testen">
         <% header_color_variants.each do |variant| %>
           <%= link_to variant[:label],
-                      url_for(request.query_parameters.merge(header_variant: variant[:key])),
+                      "?#{URI.encode_www_form(header_color_query + [ [ "header_variant", variant[:key] ] ])}",
                       class: [ "header-color-switcher-link", "header-color-switcher-link-#{variant[:key]}", ("is-active" if header_color_variant == variant[:key]) ].compact.join(" "),
                       title: "Headerfarbe #{variant[:label]}: #{variant[:name]}",
                       aria: { label: "Headerfarbe #{variant[:label]}: #{variant[:name]}", current: ("true" if header_color_variant == variant[:key]) } %>

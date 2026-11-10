@@ -62,7 +62,7 @@ module Public::EventsHelper
     canonical_keys = events.filter_map do |event|
       mappings_by_alias[Venue.match_key(event.venue_record&.name)]&.fetch("canonical_key")
     end.uniq
-    canonical_venues = canonical_keys.map { |key| Venue.venue_match_key_index[key] }
+    canonical_venues = Venue.mapped_venues_by_match_key(canonical_keys).values
 
     media = events.flat_map(&:event_images).map { |image| public_event_image_cache_components(image) }
     media += events.flat_map(&:import_event_images).map { |image| public_event_image_cache_components(image, attachment_name: :prepared_file_attachment) }
