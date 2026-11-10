@@ -88,7 +88,15 @@ module Newsletter
                 color: #ffffff !important;
               }
 
+              .newsletter-event-link:hover {
+                text-decoration: underline !important;
+              }
+
               @media only screen and (max-width: 680px) {
+                .newsletter-event-link {
+                  padding: 12px 0 !important;
+                }
+
                 .newsletter-item-media,
                 .newsletter-item-spacer,
                 .newsletter-item-content,
@@ -791,7 +799,13 @@ module Newsletter
       HTML
     end
 
+    def event_link_html(url, label = "Zum Event")
+      %(<a class="newsletter-event-link" href="#{escape(url)}" style="display:inline-block;color:#315d5b;font-size:13px;line-height:20px;font-weight:400;text-decoration:none;padding:4px 0;">&rarr;&nbsp;#{escape(label)}</a>)
+    end
+
     def genre_item_card_button_html(item)
+      return event_link_html(item_url(item), item.display_cta_label) if item.item.is_a?(Event)
+
       <<~HTML
         <a class="newsletter-event-button" href="#{escape(item_url(item))}" style="display:inline-block;border:1px solid #111;color:#102223;font-size:12px;font-weight:bold;text-decoration:none;border-radius:999px;padding:7px 11px;">#{escape(item.display_cta_label)}</a>
       HTML
@@ -855,7 +869,7 @@ module Newsletter
         <p style="margin:0 0 7px;font-size:11px;color:#667071;">#{item_label_html(item)}</p>
         <h3 style="margin:0 0 6px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(item.display_headline)}</h3>
         <p style="margin:0 0 10px;font-size:14px;line-height:1.4;color:#263334;">#{escape(item.display_teaser)}</p>
-        <a class="newsletter-event-button" href="#{escape(item_url(item))}" style="display:inline-block;border:1px solid #111;color:#102223;font-size:12px;font-weight:bold;text-decoration:none;border-radius:999px;padding:8px 12px;">#{escape(item.display_cta_label)}</a>
+        #{genre_item_card_button_html(item)}
       HTML
     end
 
@@ -946,7 +960,7 @@ module Newsletter
           <tr>
             #{image_cell}
             <td colspan="#{image_url.present? ? 1 : 2}" valign="top" style="vertical-align:top;">
-              <a class="newsletter-event-button" href="#{url}" style="display:inline-block;border:1px solid #111;color:#102223;font-size:13px;line-height:20px;font-weight:bold;text-decoration:none;border-radius:999px;padding:11px 12px;">Zum Event</a>
+              #{event_link_html(event_url(event.slug, **route_url_options))}
             </td>
           </tr>
         </table>
