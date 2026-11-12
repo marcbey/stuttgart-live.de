@@ -59,6 +59,7 @@ module Public
       Event.preload(
         :genres,
         :venue_record,
+        :event_series,
         :event_offers,
         { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
         event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]

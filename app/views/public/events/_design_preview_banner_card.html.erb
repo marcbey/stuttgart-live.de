@@ -110,7 +110,7 @@ end %>
         <% if banner_type == :event %>
           <span class="design-preview-card-meta design-preview-card-meta--banner promotion-banner-kicker-meta">
             <span class="design-preview-card-date-location-row">
-              <span class="design-preview-card-date"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+              <span class="design-preview-card-date"><%= event.card_display_date %></span>
               <% if event.venue.present? %>
                 <span class="design-preview-card-location"><%= event.venue %></span>
               <% end %>

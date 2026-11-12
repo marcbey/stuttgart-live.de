@@ -28,6 +28,23 @@
     </div>
   </div>
   <div>
+    <% card_date_field = event.event_series? ? :series_card_date_override : :card_date_override %>
+    <%= form.label card_date_field, "Datumsanzeige auf der Kachel (optional)", class: "form-label" %>
+    <%= form.text_field card_date_field,
+                        class: "form-input",
+                        maxlength: 100,
+                        placeholder: "z. B. 10.–14.02.27",
+                        aria: { describedby: dom_id(event, :card_date_override_hint) } %>
+    <p id="<%= dom_id(event, :card_date_override_hint) %>" class="form-hint">
+      <% if event.event_series? %>
+        Gilt für alle Termine dieser Event-Reihe, auch wenn der erste schon vorbei ist. Die gemeinsame Kachel öffnet den nächsten anstehenden Termin.
+      <% else %>
+        Ersetzt das Datum auf der Kachel. Beim Anklicken öffnet sich weiterhin dieser Termin.
+      <% end %>
+      Leer lassen für das normale Datum.
+    </p>
+  </div>
+  <div>
     <%= form.label :status, "Status", class: "form-label" %>
     <%= form.select :status,
                     Event::STATUSES.reject { |status| status == "imported" }.map { |status| [ event_status_select_label(status), status ] },

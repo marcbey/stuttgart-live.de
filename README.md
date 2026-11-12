@@ -308,6 +308,8 @@ Für die Badge-Logik im Backend gilt bewusst eine redaktionelle Regel:
 
 ### Wie Event-Reihen im Frontend wirken
 
+Für eine Zeitspanne auf der Kachel kann die Redaktion im Event-Editor das optionale Feld **Datumsanzeige auf der Kachel** ausfüllen, zum Beispiel mit `10.–14.02.27`. Bei einer Event-Reihe gilt der Eintrag gemeinsam für alle Termine und lässt sich bei jedem Termin bearbeiten. Er bleibt auch am 13.02. sichtbar, während die gemeinsame Kachel zum nächsten anstehenden Termin führt. Ohne Event-Reihe gilt der Text nur für das bearbeitete Event. Beginn, Ticketlinks, Kalender und die einzelnen Vorstellungen bleiben unverändert. Ist das Feld leer, erscheint wieder das normale Datum. Der Eintrag bleibt bei erneuten Imports erhalten.
+
 Im öffentlichen Frontend gilt eine strengere, sichtbarkeitsbezogene Regel als im Backend. Für die Termin-Wolke auf Karten und in Listen muss eine Event-Reihe mindestens zwei öffentlich sichtbare Termine ab heute haben. Ist nur noch ein Termin übrig, entfällt die Wolke.
 
 Öffentlich sichtbar bedeutet:

@@ -42,6 +42,20 @@ class Public::EventFragmentsHelperTest < ActionView::TestCase
     end
   end
 
+  test "editing the shared series date invalidates every appointment card" do
+    series = EventSeries.create!(origin: "manual", card_date_override: "10.–14.02.27")
+    @event.update!(event_series: series)
+    key = fragment_key(loaded_event)
+    section_key = public_events_render_fingerprint([ loaded_event ])
+
+    travel 1.second do
+      series.update!(card_date_override: "10.–15.02.27")
+    end
+
+    assert_not_equal key, fragment_key(loaded_event)
+    assert_not_equal section_key, public_events_render_fingerprint([ loaded_event ])
+  end
+
   test "time-sensitive ticket status changes exactly when an event starts" do
     travel_to @event.start_at - 1.second
     key = fragment_key(loaded_event)
@@ -137,7 +151,7 @@ class Public::EventFragmentsHelperTest < ActionView::TestCase
   private
 
   def loaded_event
-    Event.preload(:genres, :venue_record, :event_offers,
+    Event.preload(:genres, :venue_record, :event_series, :event_offers,
       { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
       event_images: { file_attachment: { blob: { variant_records: { image_attachment: :blob } } } }).find(@event.id)
   end

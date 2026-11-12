@@ -258,7 +258,7 @@ module Backend
         return
       end
 
-      events = Event.where(id: event_ids)
+      events = Event.where(id: event_ids).includes(:event_series)
       processed = Backend::Events::BulkUpdater.new(events: events, action: action, user: current_user).call
 
       redirect_to backend_events_path(status: @inbox_state.current_status), notice: "Bulk-Aktion abgeschlossen (#{processed} Events)."
@@ -462,6 +462,8 @@ module Backend
         :title,
         :artist_name,
         :start_at,
+        :card_date_override,
+        :series_card_date_override,
         :doors_at,
         :venue_id,
         :venue_name,
