@@ -62,7 +62,7 @@
            image_height: image_dimensions.fetch(:height),
            credit: event_image_credit,
            kicker_text: (slider ? nil : event.promotion_banner_kicker_text_value),
-           kicker_date: (l(event.start_at.to_date, format: "%d.%m.%Y") if slider),
+           kicker_date: (event.card_display_date if slider),
            kicker_location: (event.venue.to_s.strip.presence if slider),
            meta_after_subheading: slider,
            heading: (slider ? (event.artist_name.presence || event.promotion_banner_title_value) : event.promotion_banner_title_value),

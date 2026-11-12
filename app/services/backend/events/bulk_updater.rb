@@ -36,6 +36,7 @@ module Backend
         return events unless events.respond_to?(:with_attached_promotion_banner_image)
 
         events
+          .includes(:event_series)
           .with_attached_promotion_banner_image
           .with_attached_promotion_banner_landscape_image
           .with_attached_highlight_video_file

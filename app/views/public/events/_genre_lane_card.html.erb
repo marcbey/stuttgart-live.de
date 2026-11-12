@@ -77,7 +77,7 @@
           <% end %>
         </div>
         <p class="event-listing-date">
-          <span class="event-listing-date-value"><%= l(event.start_at.to_date, format: "%d.%m.%Y") %></span>
+          <span class="event-listing-date-value"><%= event.card_display_date %></span>
           <% if event.venue.present? %>
             <span class="event-listing-venue"><%= event.venue %></span>
           <% end %>

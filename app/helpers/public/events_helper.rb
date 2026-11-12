@@ -54,7 +54,7 @@ module Public::EventsHelper
   # once-per-request canonical index that rendering their names requires.
   def public_events_fragment_cache_key(section:, events:, browse_state:, context: {})
     events = Array(events)
-    associations = %i[genres venue_record event_offers event_images import_event_images]
+    associations = %i[genres venue_record event_series event_offers event_images import_event_images]
     return if events.empty? || events.any? { |event| associations.any? { |name| !event.association(name).loaded? } }
 
     mappings = AppSetting.venue_duplicate_mappings
@@ -83,6 +83,7 @@ module Public::EventsHelper
         (Merging::ProviderPriorityMap.call.to_json if uses_provider_priorities),
         events.map do |event|
           [ event.cache_key_with_version, event.past?, cache_key_with_version_for(event.venue_record),
+            cache_key_with_version_for(event.event_series),
             records_cache_components(event.genres), records_cache_components(event.event_offers),
             records_cache_components(event.import_event_images) ]
         end,
@@ -419,6 +420,7 @@ module Public::EventsHelper
   def public_event_render_cache_components(event)
     [
       event.cache_key_with_version,
+      cache_key_with_version_for(event.event_series),
       cache_key_with_version_for(event.venue_record),
       cache_key_with_version_for(event.canonical_venue_record),
       cache_key_with_version_for(venue_duplicate_mappings_cache_record),

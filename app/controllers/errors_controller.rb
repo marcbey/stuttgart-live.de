@@ -45,6 +45,7 @@ class ErrorsController < ActionController::Base
       Event.published_live.homepage_highlights
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .includes(
+          :event_series,
           :venue_record, :event_offers, :genres, :import_event_images,
           event_images: [ file_attachment: { blob: { variant_records: { image_attachment: :blob } } } ]
         ).limit(24).to_a
