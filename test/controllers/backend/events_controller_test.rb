@@ -962,6 +962,7 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select "a.event-editor-back-link[href=?]", origin, text: "Zurück"
     assert_select "input[name=return_to][value=?]", origin
     assert_select "input[name='event[price_override]']"
+    assert_select "input[name='event[card_date_override]'][maxlength='100']"
 
     patch backend_event_url(@event), params: { event: { title: @event.title }, return_to: origin }
 
@@ -994,6 +995,48 @@ class Backend::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_response :redirect
     assert_nil @published_event.reload.price_override
     assert_equal original_price, offer.reload.ticket_price_text
+  end
+
+  test "update saves and clears the card date without changing the actual appointment" do
+    sign_in_as(@user)
+    original_start = @published_event.start_at
+    original_slug = @published_event.slug
+
+    patch backend_event_url(@published_event), params: { event: { card_date_override: "  10.–14.02.27  " } }
+    assert_response :redirect
+    assert_equal "10.–14.02.27", @published_event.reload.card_date_override
+    assert_equal original_start, @published_event.start_at
+    assert_equal original_slug, @published_event.slug
+
+    patch backend_event_url(@published_event), params: { event: { card_date_override: " " } }
+    assert_response :redirect
+    assert_nil @published_event.reload.card_date_override
+    assert_equal original_start, @published_event.start_at
+  end
+
+  test "editing a series card date updates every appointment and validates before saving" do
+    sign_in_as(@user)
+    series = EventSeries.create!(origin: "manual")
+    @published_event.update!(event_series: series)
+    @event.update!(event_series: series)
+
+    get backend_events_url(event_id: @published_event.id, status: @published_event.status)
+    assert_select "input[name='event[series_card_date_override]']"
+    assert_select "input[name='event[card_date_override]']", count: 0
+
+    patch backend_event_url(@published_event), params: { event: { series_card_date_override: "  10.–14.02.27  " } }
+    assert_response :redirect
+    assert_equal "10.–14.02.27", series.reload.card_date_override
+    assert_equal "10.–14.02.27", @event.reload.card_display_date
+
+    patch backend_event_url(@event), params: { event: { series_card_date_override: "x" * 101 } }
+    assert_response :unprocessable_entity
+    assert_equal "10.–14.02.27", series.reload.card_date_override
+
+    patch backend_event_url(@event), params: { event: { series_card_date_override: " " } }
+    assert_response :redirect
+    assert_nil series.reload.card_date_override
+    assert_equal @published_event.display_date, @published_event.reload.card_display_date
   end
 
   test "status filter is persisted in session" do

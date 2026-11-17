@@ -23,6 +23,25 @@ class EventTest < ActiveSupport::TestCase
     end
   end
 
+  test "card date override leaves the actual event date unchanged and can be cleared" do
+    event = events(:published_one)
+    event.start_at = Time.zone.local(2027, 2, 10, 20)
+    event.card_date_override = "  10.–14.02.27  "
+
+    assert event.valid?
+    assert_equal "10.–14.02.27", event.card_display_date
+    assert_equal "10.02.2027", event.display_date
+
+    event.card_date_override = " "
+    assert event.valid?
+    assert_nil event.card_date_override
+    assert_equal "10.02.2027", event.card_display_date
+
+    event.card_date_override = "x" * 101
+    assert_not event.valid?
+    assert event.errors.added?(:card_date_override, :too_long, count: 100)
+  end
+
   test "splits combined title into artist and tour when artist still equals title" do
     event = Event.new(
       artist_name: "WILHELMINE - magisch Tour 2026",

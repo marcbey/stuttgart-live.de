@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_03_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_12_121000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pg_trgm"
@@ -196,6 +196,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_120000) do
   end
 
   create_table "event_series", force: :cascade do |t|
+    t.string "card_date_override"
     t.datetime "created_at", null: false
     t.string "name"
     t.string "origin", null: false
@@ -243,6 +244,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_03_120000) do
     t.string "artist_name", null: false
     t.boolean "auto_published", default: false, null: false
     t.string "badge_text"
+    t.string "card_date_override"
     t.string "city"
     t.jsonb "completeness_flags", default: [], null: false
     t.integer "completeness_score", default: 0, null: false

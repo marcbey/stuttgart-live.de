@@ -3,6 +3,9 @@ class EventSeries < ApplicationRecord
 
   has_many :events, dependent: :nullify
 
+  normalizes :card_date_override, with: ->(value) { value.to_s.strip.presence }
+  validates :card_date_override, length: { maximum: 100 }
+
   validates :origin, presence: true, inclusion: { in: ORIGINS }
   validates :source_type, :source_key, presence: true, if: :imported?
   validates :source_key, uniqueness: { scope: :source_type }, allow_nil: true

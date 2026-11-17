@@ -871,6 +871,7 @@ module Public
         .where("start_at >= ?", Time.zone.today.beginning_of_day)
         .includes(
           :venue_record,
+          :event_series,
           promotion_banner_image_attachment: { blob: { variant_records: { image_attachment: :blob } } },
           promotion_banner_landscape_image_attachment: { blob: { variant_records: { image_attachment: :blob } } },
           highlight_video_file_attachment: :blob,
@@ -1037,6 +1038,7 @@ module Public
 
     def detail_events_relation
       Event.includes(
+        :event_series,
         :llm_enrichment,
         :genres,
         :sub_genres,
@@ -1054,6 +1056,7 @@ module Public
       Event.preload(
         :genres,
         :venue_record,
+        :event_series,
         :event_offers,
         { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
         highlight_video_file_attachment: :blob,

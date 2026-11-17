@@ -55,7 +55,8 @@ class Event < ApplicationRecord
   }.freeze
 
   belongs_to :published_by, class_name: "User", optional: true
-  belongs_to :event_series, optional: true
+  belongs_to :event_series, optional: true, autosave: true
+  delegate :card_date_override, :card_date_override=, to: :event_series, prefix: :series, allow_nil: true
   belongs_to :venue_record, class_name: "Venue", foreign_key: :venue_id, inverse_of: :events, autosave: true, optional: true
 
   has_many :event_offers, dependent: :destroy
@@ -102,6 +103,7 @@ class Event < ApplicationRecord
   validates :completeness_score, numericality: { greater_than_or_equal_to: 0, less_than_or_equal_to: 100, only_integer: true }
   validates :min_price, :max_price, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
   validates :price_override, length: { maximum: 100 }
+  validates :card_date_override, length: { maximum: 100 }
   validates :promotion_banner_kicker_text, length: { maximum: 80 }, allow_blank: true
   validates :promotion_banner_title, length: { maximum: 120 }, allow_blank: true
   validates :promotion_banner_text, length: { maximum: 320 }, allow_blank: true
@@ -161,6 +163,7 @@ class Event < ApplicationRecord
       .reorder(:promotion_banner_lane_position, :start_at, :id)
       .includes(
         :venue_record,
+        :event_series,
         { import_event_images: { prepared_file_attachment: { blob: { variant_records: { image_attachment: :blob } } } } },
         promotion_banner_image_attachment: { blob: { variant_records: { image_attachment: :blob } } },
         promotion_banner_landscape_image_attachment: { blob: { variant_records: { image_attachment: :blob } } },
@@ -465,6 +468,10 @@ class Event < ApplicationRecord
 
   def display_date
     I18n.l(start_at.to_date, format: "%d.%m.%Y")
+  end
+
+  def card_display_date
+    (event_series? ? series_card_date_override : card_date_override).presence || display_date
   end
 
   def sks_promoter?
@@ -803,6 +810,7 @@ class Event < ApplicationRecord
     self.city = normalized_city.casecmp("Unbekannt").zero? ? nil : normalized_city.presence
     self.badge_text = badge_text.to_s.strip.presence
     self.price_override = price_override.to_s.strip.presence
+    self.card_date_override = card_date_override.to_s.strip.presence
     self.promotion_banner_kicker_text = promotion_banner_kicker_text.to_s.strip.presence
     self.promotion_banner_title = promotion_banner_title.to_s.strip.presence
     self.promotion_banner_text = promotion_banner_text.to_s.strip.presence

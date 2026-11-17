@@ -462,6 +462,8 @@ module Backend
         :title,
         :artist_name,
         :start_at,
+        :card_date_override,
+        :series_card_date_override,
         :doors_at,
         :venue_id,
         :venue_name,

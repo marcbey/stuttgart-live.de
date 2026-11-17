@@ -1154,10 +1154,10 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".event-series-badge", count: 0
   end
 
-  test "index keeps the event series badge on deduplicated teaser lane representatives" do
+  test "index keeps the series badge and editorial card date linking to the first appointment" do
     create_homepage_genre_snapshot(lane_slugs: [ "rock-alternative" ])
 
-    series = EventSeries.create!(origin: "manual", name: "Viva la Vida")
+    series = EventSeries.create!(origin: "manual", name: "Viva la Vida", card_date_override: "23.–24.04.26")
     earlier_event = Event.create!(
       slug: "dedup-series-earlier-visible",
       source_fingerprint: "test::public::dedup-series::earlier",
@@ -1194,11 +1194,27 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
 
-    get homepage_lane_events_url(lane: "genre:rock-alternative", filter: "all")
+    get homepage_lane_events_url(lane: "genre:rock-alternative", filter: "all", mode: "design_cards")
 
     assert_response :success
     assert_includes response.body, earlier_event.artist_name
-    assert_select ".event-series-badge", minimum: 1
+    assert_select ".design-preview-card-series-pill", minimum: 1
+    assert_select "a.design-preview-card-link[href*=?]", event_path(earlier_event.slug) do
+      assert_select ".design-preview-card-date", text: "23.–24.04.26"
+    end
+    assert_select "a.design-preview-card-link[href*=?]", event_path(later_event.slug), count: 0
+
+    get event_url(earlier_event.slug)
+    assert_response :success
+    assert_includes response.body, "23.04.2026"
+
+    travel_to later_event.start_at.beginning_of_day + 12.hours
+    get homepage_lane_events_url(lane: "genre:rock-alternative", filter: "all", mode: "design_cards")
+    assert_response :success
+    assert_select "a.design-preview-card-link[href*=?]", event_path(later_event.slug) do
+      assert_select ".design-preview-card-date", text: "23.–24.04.26"
+    end
+    assert_select "a.design-preview-card-link[href*=?]", event_path(earlier_event.slug), count: 0
   end
 
   test "index renders event series pills in list view rows" do
