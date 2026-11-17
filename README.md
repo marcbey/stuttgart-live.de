@@ -8,6 +8,7 @@ Das Repository enthält die komplette Anwendung: öffentliche Website, redaktion
 
 - Ruby 4.0.2
 - Ruby on Rails 8.1 (mindestens Sicherheits-Patch 8.1.4.1)
+- Puma 8.0.4 und msgpack 1.8.7 enthalten die für diesen Stand erforderlichen Sicherheitskorrekturen; die genauen Abhängigkeiten sind in `Gemfile.lock` festgehalten.
 - PostgreSQL
 - Hotwire mit Turbo und Stimulus
 - Tailwind CSS 4 und esbuild
