@@ -335,12 +335,13 @@ module Public
       empty_lane = empty_homepage_lane_shell
       @home_featured_available = homepage_highlights_available?
       home_featured_page = @home_featured_available ? homepage_lane_page_or_empty("highlights", per_page: HOME_HIGHLIGHTS_LANE_LIMIT) : empty_lane
-      home_featured_list_page = @home_featured_available ? homepage_lane_page_or_empty("highlights", per_page: HOME_LANE_LIST_LIMIT) : empty_lane
       @home_featured_events = home_featured_page.events
       @home_featured_effective_series_ids = home_featured_page.effective_series_ids
       @home_featured_series_counts_by_id = home_featured_page.series_counts_by_id
       @home_featured_next_cursor = home_featured_page.next_cursor
-      @home_featured_list_next_cursor = home_featured_list_page.next_cursor
+      if @home_featured_available
+        @home_featured_list_next_cursor = homepage_lane_pager("highlights", per_page: HOME_LANE_LIST_LIMIT)&.next_cursor
+      end
 
       initial_lane_limit = defer_lower_lanes ? HOME_DESIGN_LANE_LIMIT : HOME_LANE_LIMIT
       @home_genre_lanes = homepage_genre_lane_sections(initial_limit: initial_lane_limit)
@@ -667,6 +668,10 @@ module Public
     end
 
     def homepage_lane_page(identifier, cursor: nil, per_page: nil)
+      homepage_lane_pager(identifier, cursor:, per_page:)&.call
+    end
+
+    def homepage_lane_pager(identifier, cursor: nil, per_page: nil)
       cursor_payload = Public::Events::HomepageLanePager.decode_cursor(cursor)
       raise Public::Events::HomepageLanePager::InvalidCursor if cursor.present? && cursor_payload.blank?
 
@@ -680,7 +685,7 @@ module Public
         per_page: normalized_homepage_lane_per_page(per_page),
         deduplicate_series: identifier != "search",
         prioritize_search: identifier == "search"
-      ).call
+      )
     end
 
     def homepage_lane_page_or_empty(identifier, per_page:)

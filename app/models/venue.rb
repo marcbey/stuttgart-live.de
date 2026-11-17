@@ -61,17 +61,24 @@ class Venue < ApplicationRecord
     normalized_key = key.to_s
     return if normalized_key.blank?
 
-    venue_match_key_index[normalized_key]
+    load_venues_by_match_key([ normalized_key ])[normalized_key]
+  end
+
+  def self.mapped_venues_by_match_key(keys)
+    return {} if keys.empty?
+
+    venues_by_key = venue_match_key_index[:venues_by_key]
+    unless keys.all? { |key| venues_by_key.key?(key) }
+      load_venues_by_match_key(AppSetting.venue_duplicate_mappings.pluck("canonical_key"))
+    end
+    venues_by_key.slice(*keys)
   end
 
   def self.canonical_alias_venue_for(value)
-    alias_key = match_key(value)
-    return if alias_key.blank?
+    key = canonical_key_for_alias(value)
+    return if key.blank?
 
-    mapping = AppSetting.venue_duplicate_mapping_for_key(alias_key)
-    return if mapping.blank?
-
-    find_by_match_key(mapping.fetch("canonical_key"))
+    mapped_venues_by_match_key([ key ])[key]
   end
 
   def self.canonical_match_key(value)
@@ -82,22 +89,38 @@ class Venue < ApplicationRecord
     canonical_alias_venue_for(venue.name) || venue
   end
 
-  def self.lookup_sort_key(venue)
-    [
-      stuttgart_suffix?(venue.name) ? 1 : 0,
-      venue.id.to_i
-    ]
+  def self.canonical_key_for_alias(value)
+    alias_key = match_key(value)
+    return if alias_key.blank?
+
+    AppSetting.venue_duplicate_mapping_for_key(alias_key)&.fetch("canonical_key")
   end
 
   def self.venue_match_key_index
-    Current.venue_match_key_index ||= includes(logo_attachment: :blob).each_with_object({}) do |venue, index|
-      key = match_key(venue.name)
-      next if key.blank?
-
-      indexed_venue = index[key]
-      index[key] = venue if indexed_venue.blank? || lookup_sort_key(venue) < lookup_sort_key(indexed_venue)
-    end
+    Current.venue_match_key_index ||= {
+      rows_by_key: pluck(:id, :name).group_by { |_id, name| match_key(name) },
+      venues_by_key: {}
+    }
   end
+
+  def self.preferred_venue_id(key)
+    return if key.blank?
+
+    venue_match_key_index[:rows_by_key].fetch(key, []).min_by do |id, name|
+      [ stuttgart_suffix?(name) ? 1 : 0, id ]
+    end&.first
+  end
+
+  def self.load_venues_by_match_key(keys)
+    venues_by_key = venue_match_key_index[:venues_by_key]
+    missing_keys = keys.uniq.reject { |key| venues_by_key.key?(key) }
+    return venues_by_key if missing_keys.empty?
+
+    ids_by_key = missing_keys.index_with { |key| preferred_venue_id(key) }
+    venues = where(id: ids_by_key.values.compact).includes(logo_attachment: :blob).index_by(&:id)
+    venues_by_key.merge!(ids_by_key.transform_values { |id| venues[id] })
+  end
+  private_class_method :canonical_key_for_alias, :venue_match_key_index, :preferred_venue_id, :load_venues_by_match_key
 
   def self.stuttgart_suffix?(value)
     tokens = match_key_tokens(value)
@@ -129,17 +152,17 @@ class Venue < ApplicationRecord
   end
 
   def self.strict_matching_ids_with_aliases(query)
-    canonical_matches = [
-      canonical_alias_venue_for(query),
-      *strict_matching_query(query).map { |venue| canonical_venue_for(venue) }
-    ].compact.uniq(&:id)
-    canonical_ids = canonical_matches.map(&:id)
+    matched_ids = strict_matching_query(query).pluck(:id, :name).map do |id, name|
+      preferred_venue_id(canonical_key_for_alias(name)) || id
+    end
+    canonical_ids = [ preferred_venue_id(canonical_key_for_alias(query)), *matched_ids ].compact.uniq
     return [] if canonical_ids.empty?
 
-    alias_ids = all.select do |venue|
-      canonical = canonical_alias_venue_for(venue.name)
-      canonical.present? && canonical_ids.include?(canonical.id)
-    end.map(&:id)
+    alias_ids = AppSetting.venue_duplicate_mappings.flat_map do |mapping|
+      next [] unless canonical_ids.include?(preferred_venue_id(mapping.fetch("canonical_key")))
+
+      venue_match_key_index[:rows_by_key].fetch(mapping.fetch("alias_key"), []).map(&:first)
+    end
 
     (canonical_ids + alias_ids).uniq
   end

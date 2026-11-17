@@ -4,6 +4,8 @@ require "mailjet"
 module Newsletter
   class MailjetClient
     class Error < StandardError; end
+    class DailySendingLimitExceeded < Error; end
+
     TEST_RECIPIENTS = [
       { "Email" => "katharinaschopper@russ-live.de", "Name" => "Katharina Schopper" }.freeze,
       { "Email" => "mail@inorange.org", "Name" => "mail@inorange.org" }.freeze,
@@ -133,6 +135,10 @@ module Newsletter
       }, version: "v3.1")
       normalize_response(response)
     rescue *MAILJET_ERRORS => error
+      if error.is_a?(Mailjet::CommunicationError) && error.code == 429 && error.message.match?(/\bdaily sending limit\b/i)
+        raise DailySendingLimitExceeded, "Mailjet daily sending limit exceeded"
+      end
+
       raise Error, error.message
     end
 

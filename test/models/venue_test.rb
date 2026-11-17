@@ -82,6 +82,14 @@ class VenueTest < ActiveSupport::TestCase
     assert_equal "Liederhalle Beethoven-Saal", venue.name
   end
 
+  test "venue lookup prefers a name without the Stuttgart suffix then the lowest ID" do
+    Venue.create!(name: "Bühnen-Lounge´s Stuttgart")
+    canonical = Venue.create!(name: "Bühnen-Lounge’s")
+    Venue.create!(name: "Bühnen Lounge's")
+
+    assert_equal canonical, Venue.find_by_match_name("Bühnen-Lounge's Stuttgart")
+  end
+
   test "allows blank logo but validates uploaded images" do
     venue = Venue.new(name: "Neue Venue")
 
