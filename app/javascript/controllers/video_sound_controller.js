@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus"
 
 export default class extends Controller {
-  static targets = ["video", "button", "playbackButton", "link", "copy", "title", "subtitle", "date", "location", "adminLink"]
+  static targets = ["video", "button", "playbackButton", "link", "copy", "title", "subtitle", "date", "location", "adminLink", "interlude"]
 
   static values = {
     media: { type: String, default: "(min-width: 0px)" },
@@ -26,6 +26,10 @@ export default class extends Controller {
     this.needsNextClip = false
     this.playlistState = null
     this.playbackAttempt = 0
+    this.interludeActive = false
+    this.interludeRemaining = 0
+    this.interludeTimer = null
+    this.interludeSuspended = true
     this.reduceMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)")
     this.mediaQuery = window.matchMedia(this.mediaValue)
     this.userPaused = this.userPaused || false
@@ -68,6 +72,8 @@ export default class extends Controller {
       this.videoTarget.removeEventListener(event, this.sync)
     }
     this.unloadVideo()
+    this.interludeActive = false
+    this.sync()
   }
 
   updatePlayback() {
@@ -78,13 +84,18 @@ export default class extends Controller {
     if (!eligible || (!automaticPlayback && !this.explicitPlayback)) {
       this.unloadVideo()
     } else if (!this.userPaused && !this.playlistEnded) {
-      if (this.playlist.length && (!this.currentEntry || this.needsNextClip)) this.selectNextClip()
-      this.playVideo()
+      if (this.interludeActive && this.interludeRemaining > 0) {
+        this.resumeInterlude()
+      } else {
+        if (this.playlist.length && (!this.currentEntry || this.needsNextClip)) this.selectNextClip()
+        this.playVideo()
+      }
     }
     this.sync()
   }
 
   unloadVideo() {
+    this.pauseInterlude()
     if (!this.hasVideoTarget) return
     this.playbackAttempt++
     this.isPlaying = false
@@ -111,9 +122,10 @@ export default class extends Controller {
     event.stopPropagation()
     if (!this.hasVideoTarget) return
 
-    this.userPaused = !this.videoTarget.paused
+    this.userPaused = this.interludeActive ? !(this.userPaused || this.interludeSuspended) : !this.videoTarget.paused
     this.explicitPlayback = !this.userPaused
     if (this.userPaused) {
+      this.pauseInterlude()
       this.videoTarget.pause()
     } else {
       this.playlistEnded = false
@@ -124,10 +136,37 @@ export default class extends Controller {
 
   advancePlaylist() {
     if (!this.playlist.length) return
+    if (this.interludeActive) return
 
     this.playlistEnded = this.playlist.length === 1
     this.needsNextClip = !this.playlistEnded
+    if (this.needsNextClip && this.hasInterludeTarget) {
+      this.interludeActive = true
+      this.interludeRemaining = 2000
+      this.isPlaying = false
+    }
     this.updatePlayback()
+  }
+
+  resumeInterlude() {
+    if (this.interludeTimer !== null) return
+
+    this.interludeSuspended = false
+    this.interludeStartedAt = Date.now()
+    this.interludeTimer = setTimeout(() => {
+      this.interludeTimer = null
+      this.interludeRemaining = 0
+      this.updatePlayback()
+    }, this.interludeRemaining)
+  }
+
+  pauseInterlude() {
+    this.interludeSuspended = true
+    if (this.interludeTimer == null) return
+
+    clearTimeout(this.interludeTimer)
+    this.interludeTimer = null
+    this.interludeRemaining = Math.max(0, this.interludeRemaining - (Date.now() - this.interludeStartedAt))
   }
 
   selectNextClip() {
@@ -176,7 +215,6 @@ export default class extends Controller {
       this[`${name}Target`].textContent = entry[name] || ""
       this[`${name}Target`].hidden = !entry[name]
     }
-    this.sync()
     if (this.hasLinkTarget) {
       if (entry.href) this.linkTarget.setAttribute("href", entry.href)
       else this.linkTarget.removeAttribute("href")
@@ -188,18 +226,22 @@ export default class extends Controller {
       if (entry.adminHref) this.adminLinkTarget.setAttribute("href", entry.adminHref)
       else this.adminLinkTarget.removeAttribute("href")
     }
+    this.sync()
   }
 
   playVideo() {
+    this.interludeSuspended = false
     const attempt = ++this.playbackAttempt
     const source = this.videoTarget.dataset.videoSoundSrcValue
     if (source && !this.videoTarget.hasAttribute("src")) this.videoTarget.src = source
+    if (this.videoTarget.error) this.videoTarget.load()
     this.videoTarget.volume = this.videoTarget.volume || 1
 
     const playback = this.videoTarget.play()
     if (playback?.catch) {
       playback.catch(() => {
         if (attempt !== this.playbackAttempt) return
+        if (this.interludeActive) this.userPaused = true
         this.videoTarget.muted = true
         this.sync()
       })
@@ -209,13 +251,29 @@ export default class extends Controller {
   sync(event) {
     if (!this.hasVideoTarget) return
 
-    if (event?.type === "playing") this.isPlaying = true
+    if (event?.type === "playing") {
+      this.isPlaying = true
+      if (!this.needsNextClip) this.interludeActive = false
+    }
     if (["pause", "ended", "emptied", "error"].includes(event?.type)) this.isPlaying = false
+    if (event?.type === "error" && this.interludeActive && !this.needsNextClip) {
+      this.userPaused = true
+      this.interludeActive = false
+      this.videoTarget.pause()
+    }
 
     const entry = this.currentEntry || this.playlist[0]
+    const interludePaused = this.userPaused || this.interludeSuspended
+    if (this.hasInterludeTarget) {
+      this.element.dataset.videoInterlude = this.interludeActive ? "active" : ""
+      this.interludeTarget.setAttribute("aria-hidden", (!this.interludeActive).toString())
+      this.interludeTarget.dataset.paused = interludePaused.toString()
+      if (this.hasLinkTarget) this.linkTarget.inert = this.interludeActive
+      if (this.hasAdminLinkTarget && entry) this.adminLinkTarget.hidden = this.interludeActive || !entry.adminHref
+    }
     if (this.hasCopyTarget && entry) {
       const hasDetails = [entry.title, entry.subtitle, entry.date, entry.location].some(Boolean)
-      this.copyTarget.hidden = !hasDetails || (this.isPlaying && !entry.overlay)
+      this.copyTarget.hidden = this.interludeActive || !hasDetails || (this.isPlaying && !entry.overlay)
     }
 
     if (this.hasButtonTarget) {
@@ -228,7 +286,7 @@ export default class extends Controller {
 
     if (this.hasPlaybackButtonTarget) {
       this.playbackButtonTarget.disabled = !this.mediaQuery.matches
-      const paused = this.videoTarget.paused
+      const paused = this.interludeActive ? interludePaused : this.videoTarget.paused
       this.playbackButtonTarget.classList.toggle("is-paused", paused)
       this.playbackButtonTarget.setAttribute("aria-pressed", paused.toString())
       this.playbackButtonTarget.setAttribute("aria-label", paused ? "Video abspielen" : "Video pausieren")

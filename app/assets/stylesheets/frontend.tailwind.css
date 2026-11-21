@@ -15728,6 +15728,75 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
   position: relative;
 }
 
+.homepage-video-interlude {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: inherit;
+  padding: 2.8rem 0.6rem 1rem;
+  background: #101212;
+  color: #fff;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  container-type: inline-size;
+  transition: opacity 250ms ease, visibility 0s linear 250ms;
+}
+
+[data-video-interlude="active"] .homepage-video-interlude {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+
+.homepage-video-interlude-content {
+  display: grid;
+  justify-items: center;
+  gap: clamp(0.7rem, 7cqi, 1.4rem);
+  text-align: center;
+}
+
+.homepage-video-interlude-logo {
+  display: grid;
+  font-family: "Oswald", "Arial Narrow", sans-serif;
+  font-size: clamp(1.15rem, 19cqi, 3.2rem);
+  line-height: 0.95;
+  text-transform: uppercase;
+  letter-spacing: -0.025em;
+}
+
+.homepage-video-interlude-logo span:first-child { font-weight: 500; }
+.homepage-video-interlude-logo span:last-child { font-weight: 300; }
+
+.homepage-video-interlude-caption {
+  font-size: clamp(0.7rem, 7cqi, 1rem);
+  font-weight: 400;
+  line-height: 1.4;
+  color: #e3e8e5;
+}
+
+[data-video-interlude="active"] .homepage-video-interlude-content {
+  animation: homepage-video-brand-arrive 450ms ease-out both;
+}
+
+.homepage-video-interlude[data-paused="true"] .homepage-video-interlude-content {
+  animation-play-state: paused;
+}
+
+@keyframes homepage-video-brand-arrive {
+  from { opacity: 0; transform: translateY(0.65rem); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .homepage-video-interlude { transition: none; }
+  [data-video-interlude="active"] .homepage-video-interlude-content { animation: none; }
+}
+
 .homepage-highlight-video-link--static {
   cursor: default;
 }
