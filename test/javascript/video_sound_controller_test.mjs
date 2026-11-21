@@ -17,15 +17,15 @@ class Video extends Element {
   constructor() { super(); this.paused = true; this.muted = true; this.volume = 1; this.loop = true; this.plays = 0; this.loads = 0; this.ended = false }
   get src() { return this.getAttribute("src") }
   set src(value) { this.setAttribute("src", value); this.ended = false }
-  play() { this.paused = false; this.ended = false; this.plays++; this.dispatchEvent(new Event("play")); this.dispatchEvent(new Event("playing")); return Promise.resolve() }
+  play() { if (this.error) return Promise.reject(this.error); this.paused = false; this.ended = false; this.plays++; this.dispatchEvent(new Event("play")); this.dispatchEvent(new Event("playing")); return Promise.resolve() }
   pause() { this.paused = true; this.dispatchEvent(new Event("pause")) }
-  load() { this.loads++; this.ended = false }
+  load() { this.loads++; this.ended = false; this.error = null }
   finish() { this.paused = true; this.ended = true; this.dispatchEvent(new Event("ended")) }
 }
 const entries = ["a", "b", "c"].map(src => ({ src: `/${src}.mp4`, poster: `/${src}.jpg`, orientation: src === "b" ? "portrait" : "landscape" }))
 const storage = () => { const values = new Map(); return { getItem: key => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) } }
 const event = () => ({ preventDefault() {}, stopPropagation() {} })
-function setup({ playlist = entries, sessionStorage = storage(), reduced = false, saveData = false, matches = true } = {}) {
+function setup({ playlist = entries, sessionStorage = storage(), reduced = false, saveData = false, matches = true, interlude = false } = {}) {
   const media = Object.assign(new EventTarget(), { matches })
   const motion = Object.assign(new EventTarget(), { matches: reduced })
   globalThis.window = { sessionStorage, matchMedia: query => query.includes("reduced-motion") ? motion : media }
@@ -42,6 +42,8 @@ function setup({ playlist = entries, sessionStorage = storage(), reduced = false
     controller[`${name}Target`] = new Element()
     controller[`has${name[0].toUpperCase()}${name.slice(1)}Target`] = true
   }
+  controller.hasInterludeTarget = interlude
+  if (interlude) controller.interludeTarget = new Element()
   controller.connect()
   const visible = (value = true) => controller.visibilityObserver.callback([{ isIntersecting: value, intersectionRect: { width: value ? 500 : 0, height: value ? 300 : 0 } }])
   return { controller, video: controller.videoTarget, media, motion, visible }
@@ -238,4 +240,189 @@ test("details stay visible while playback is pending or blocked", async () => {
   await Promise.resolve()
   assert.equal(controller.copyTarget.hidden, false)
   controller.disconnect()
+})
+
+test("a silent two-second interlude blocks event details before selecting the next clip", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+  const saved = storage()
+  const { controller, video, visible } = setup({ interlude: true, sessionStorage: saved,
+    playlist: entries.map(entry => ({ ...entry, title: "Artist", overlay: true, href: "/event", adminHref: "/admin/event" })) })
+  visible(); controller.toggle(event())
+  const first = video.src, state = saved.getItem("test-playlist")
+  video.finish()
+  assert.equal(controller.element.dataset.videoInterlude, "active")
+  assert.equal(video.paused, true)
+  assert.equal(controller.linkTarget.inert, true)
+  assert.equal(controller.copyTarget.hidden, true)
+  assert.equal(controller.adminLinkTarget.hidden, true)
+  assert.equal(controller.playbackButtonTarget.getAttribute("aria-label"), "Video pausieren")
+  t.mock.timers.tick(1999)
+  assert.equal(saved.getItem("test-playlist"), state)
+  t.mock.timers.tick(1)
+  assert.notEqual(video.src, first)
+  assert.equal(video.muted, false)
+  assert.equal(controller.element.dataset.videoInterlude, "")
+  assert.equal(controller.linkTarget.inert, false)
+  assert.equal(controller.copyTarget.hidden, false)
+  assert.equal(controller.adminLinkTarget.hidden, false)
+  controller.disconnect()
+})
+
+test("the playback button pauses and resumes the remaining interlude duration", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+  const { controller, video, visible } = setup({ interlude: true })
+  visible(); video.finish()
+  const plays = video.plays
+  t.mock.timers.tick(700)
+  controller.togglePlayback(event())
+  assert.equal(controller.interludeTarget.dataset.paused, "true")
+  assert.equal(controller.playbackButtonTarget.getAttribute("aria-label"), "Video abspielen")
+  t.mock.timers.tick(5000)
+  assert.equal(video.plays, plays)
+  controller.togglePlayback(event())
+  assert.equal(controller.interludeTarget.dataset.paused, "false")
+  t.mock.timers.tick(1299)
+  assert.equal(video.plays, plays)
+  t.mock.timers.tick(1)
+  assert.equal(video.plays, plays + 1)
+  controller.disconnect()
+})
+
+for (const reason of ["offscreen", "tab", "viewport", "reduced", "saveData"]) {
+  test(`interlude suspends without consuming a clip when ${reason} makes playback ineligible`, t => {
+    t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+    const saved = storage()
+    const { controller, video, visible, media, motion } = setup({ interlude: true, sessionStorage: saved })
+    const suspend = value => {
+      if (reason === "offscreen") visible(!value)
+      if (reason === "tab") { document.hidden = value; document.dispatchEvent(new Event("visibilitychange")) }
+      if (reason === "viewport") { media.matches = !value; media.dispatchEvent(new Event("change")) }
+      if (reason === "reduced") { motion.matches = value; motion.dispatchEvent(new Event("change")) }
+      if (reason === "saveData") { navigator.connection.saveData = value; navigator.connection.dispatchEvent(new Event("change")) }
+    }
+    visible(); video.finish()
+    const state = saved.getItem("test-playlist"), plays = video.plays
+    t.mock.timers.tick(600); suspend(true)
+    assert.equal(controller.interludeTarget.dataset.paused, "true")
+    assert.equal(video.src, null)
+    t.mock.timers.tick(5000)
+    assert.equal(saved.getItem("test-playlist"), state)
+    assert.equal(video.plays, plays)
+    suspend(false); t.mock.timers.tick(1399)
+    assert.equal(saved.getItem("test-playlist"), state)
+    t.mock.timers.tick(1)
+    assert.equal(video.plays, plays + 1)
+    controller.disconnect()
+  })
+}
+
+test("the interlude covers the next poster until playback really starts and blocked play can resume", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+  const { controller, video, visible } = setup({ interlude: true })
+  visible(); video.finish()
+  const normalPlay = video.play.bind(video)
+  video.play = () => { video.paused = true; return Promise.reject(new Error("autoplay blocked")) }
+  t.mock.timers.tick(2000)
+  await Promise.resolve()
+  assert.equal(controller.element.dataset.videoInterlude, "active")
+  assert.equal(controller.playbackButtonTarget.getAttribute("aria-label"), "Video abspielen")
+  const next = video.src
+  video.play = normalPlay
+  controller.togglePlayback(event())
+  assert.equal(video.src, next)
+  assert.equal(controller.element.dataset.videoInterlude, "")
+  controller.disconnect()
+})
+
+test("explicit play resumes an interlude suspended by reduced motion or save-data", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+  for (const preference of ["reduced", "saveData"]) {
+    const { controller, video, visible, motion } = setup({ interlude: true })
+    visible(); video.finish(); t.mock.timers.tick(500)
+    if (preference === "reduced") { motion.matches = true; motion.dispatchEvent(new Event("change")) }
+    else { navigator.connection.saveData = true; navigator.connection.dispatchEvent(new Event("change")) }
+    const plays = video.plays
+    controller.togglePlayback(event())
+    t.mock.timers.tick(1500)
+    assert.equal(video.plays, plays + 1)
+    assert.equal(controller.element.dataset.videoInterlude, "")
+    controller.disconnect()
+  }
+})
+
+test("the interlude stays visible during loading and freezes when the pending clip goes offscreen", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+  const { controller, video, visible } = setup({ interlude: true })
+  visible(); video.finish()
+  video.play = () => { video.paused = false; video.dispatchEvent(new Event("play")); return Promise.resolve() }
+  t.mock.timers.tick(2000)
+  const next = video.src
+  assert.equal(controller.element.dataset.videoInterlude, "active")
+  visible(false)
+  assert.equal(controller.interludeTarget.dataset.paused, "true")
+  visible()
+  assert.equal(video.src, next)
+  assert.equal(controller.element.dataset.videoInterlude, "active")
+  video.dispatchEvent(new Event("playing"))
+  assert.equal(controller.element.dataset.videoInterlude, "")
+  controller.disconnect()
+})
+
+test("terminal media errors restore the event card and explicit retry reloads the same clip", async t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+  const saved = storage()
+  const { controller, video, visible } = setup({ interlude: true, sessionStorage: saved,
+    playlist: entries.map(entry => ({ ...entry, title: "Artist", href: "/event", adminHref: "/admin/event" })) })
+  visible(); video.finish()
+  const normalPlay = video.play.bind(video)
+  video.play = () => { video.paused = false; return Promise.resolve() }
+  t.mock.timers.tick(2000)
+  const next = video.src, state = saved.getItem("test-playlist")
+  video.error = new Error("media source failed")
+  video.paused = false
+  video.dispatchEvent(new Event("error"))
+  assert.equal(controller.element.dataset.videoInterlude, "")
+  assert.equal(controller.linkTarget.inert, false)
+  assert.equal(controller.copyTarget.hidden, false)
+  assert.equal(controller.adminLinkTarget.hidden, false)
+  assert.equal(controller.playbackButtonTarget.getAttribute("aria-label"), "Video abspielen")
+  video.play = normalPlay
+  controller.togglePlayback(event())
+  await Promise.resolve()
+  assert.equal(video.paused, false)
+  assert.equal(video.error, null)
+  assert.equal(video.src, next)
+  assert.equal(saved.getItem("test-playlist"), state)
+  assert.equal(controller.element.dataset.videoInterlude, "")
+  controller.disconnect()
+})
+
+test("cache unload and disconnect cancel the interlude timer", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+  for (const stop of [controller => document.dispatchEvent(new Event("turbo:before-cache")), controller => controller.disconnect()]) {
+    const saved = storage()
+    const { controller, video, visible } = setup({ interlude: true, sessionStorage: saved })
+    visible(); video.finish()
+    const state = saved.getItem("test-playlist"), plays = video.plays
+    stop(controller); t.mock.timers.tick(5000)
+    assert.equal(video.src, null)
+    assert.equal(video.plays, plays)
+    assert.equal(saved.getItem("test-playlist"), state)
+    controller.disconnect()
+  }
+})
+
+test("an available interlude does not change single-clip or legacy playback", t => {
+  t.mock.timers.enable({ apis: ["setTimeout", "Date"] })
+  for (const playlist of [[entries[0]], []]) {
+    const { controller, video, visible } = setup({ playlist, interlude: true })
+    if (!playlist.length) video.dataset.videoSoundSrcValue = "/legacy.mp4"
+    visible(); video.finish()
+    const plays = video.plays
+    assert.notEqual(controller.element.dataset.videoInterlude, "active")
+    t.mock.timers.tick(5000)
+    assert.equal(video.plays, plays)
+    assert.equal(video.loop, playlist.length === 0)
+    controller.disconnect()
+  }
 })

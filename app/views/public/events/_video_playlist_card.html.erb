@@ -20,6 +20,15 @@
         <%= tag.span entry[:subtitle], class: "homepage-highlight-video-subtitle", hidden: entry[:subtitle].blank?, data: { video_sound_target: "subtitle" } %>
       <% end %>
     <% end %>
+    <div class="homepage-video-interlude" data-video-sound-target="interlude" aria-hidden="true">
+      <div class="homepage-video-interlude-content">
+        <span class="homepage-video-interlude-logo" role="img" aria-label="Stuttgart Live">
+          <span>Stuttgart</span>
+          <span>Live</span>
+        </span>
+        <span class="homepage-video-interlude-caption">Dein nächstes<br>Live-Erlebnis.</span>
+      </div>
+    </div>
     <%= render "public/events/video_playback_button" %>
 
     <button type="button"

@@ -6,7 +6,7 @@ Das Repository enthält die komplette Anwendung: öffentliche Website, redaktion
 
 ## Kurzüberblick
 
-- Ruby 4.0.2
+- Ruby 4.0.10 (Sicherheitskorrekturen für reguläre Ausdrücke und Zeichenumwandlung)
 - Ruby on Rails 8.1 (mindestens Sicherheits-Patch 8.1.4.1)
 - Puma 8.0.4 und msgpack 1.8.7 enthalten die für diesen Stand erforderlichen Sicherheitskorrekturen; die genauen Abhängigkeiten sind in `Gemfile.lock` festgehalten.
 - PostgreSQL
@@ -443,7 +443,7 @@ Wichtig für die Interpretation:
 
 ### Voraussetzungen
 
-- Ruby 4.0.2 in der Projektversion
+- Ruby 4.0.10 in der Projektversion
 - PostgreSQL
 - Node.js und npm
 - ein lokales Bildverarbeitungs-Backend für Active Storage, bevorzugt `libvips`, alternativ ImageMagick
@@ -684,6 +684,8 @@ Die erste Kachel in „Stuttgart im Mix“ zeigt ein gepflegtes Querformatvideo 
 
 Sind mehrere passende Event-Videos vorhanden, laufen sie in zufällig gemischten Runden nacheinander: Für Hoch- und Querformat zählen jeweils alle hochgeladenen Videos veröffentlichter Events ab dem heutigen Tag, unabhängig von den gerade angezeigten Event-Reihen. Vergangene, unveröffentlichte und erst später freizugebende Events bleiben ausgeschlossen. Jeder Clip läuft einmal pro Runde; auch am Rundenwechsel wird derselbe Clip nicht direkt wiederholt. Die Reihenfolge wird pro Videokachel für den aktuellen Browser-Tab gespeichert und beim Neuladen fortgesetzt, sofern der Browser Sitzungsspeicher erlaubt. Ein einzelner verfügbarer Clip endet nach einmaligem Abspielen und kann per Play-Taste erneut gestartet werden. Vorschaubild, Beschriftung und Event-Link wechseln passend mit. Beim Standbild und bei pausierter Wiedergabe zeigen Hoch- und Querformatvideos immer die vorhandenen Veranstaltungsangaben (Datum, Titel, Untertitel und Ort). Erst während der laufenden Wiedergabe gilt die jeweilige Einstellung zur Texteinblendung.
 
+Zwischen zwei Clips erscheint für zwei Sekunden ein stummer, dunkler Trenner mit der Stuttgart-Live-Wortmarke und „Dein nächstes Live-Erlebnis.“. Er gilt für die mobilen und die Desktop-Videokacheln. Pause und Wegscrollen halten auch den Trenner an; bei „Bewegung reduzieren“ bleibt die Wortmarke unbewegt. Bei nur einem verfügbaren Clip erscheint kein Trenner.
+
 Für das Hochformatvideo bei den Highlights dient der LEA-Tourtrailer als Standard, wenn weder ein Eventvideo noch ein Video unter **Homepage Highlight-Video** hinterlegt ist. Der Standardtrailer verlinkt auf LEA am 25. April 2027. Auch dieses Video startet stumm mit zuschaltbarem Ton und eigener Pause-Taste; die Einstellung zum Ein- und Ausblenden bleibt wirksam.
 
 Der Highlight-Slider startet ohne automatische Wechsel; Pfeile und Wischen bleiben direkt bedienbar. Erst „Animation starten“ aktiviert automatische Wechsel. Lane- und Suchseiten laden die ersten vier Kartenbilder bevorzugt, damit beide zunächst sichtbaren mobilen Reihen früh verfügbar sind. Weitere Karten und nachgeladene Ergebnisse bleiben verzögert. Auf Newsseiten und Eventdetails wird weiterhin jeweils das erste Bild bevorzugt geladen. Das Logo auf Unterseiten lädt die Startseite nicht vorsorglich.
@@ -771,7 +773,7 @@ mise exec -- bin/ci
 Falls der lokale Hetzner-Test auf macOS trotz `mise exec` auf System-Ruby 2.6 zurückfällt, liegt das an seinem temporären Benutzerverzeichnis. Mit dem installierten mise-Datenpfad und der Ruby-Version aus `mise.toml` laufen auch diese Unterprozesse mit dem richtigen Ruby, ohne Tests auszulassen:
 
 ```bash
-MISE_DATA_DIR="$HOME/.local/share/mise" MISE_RUBY_VERSION=4.0.2 mise exec -- bundle exec bin/ci
+MISE_DATA_DIR="$HOME/.local/share/mise" MISE_RUBY_VERSION=4.0.10 mise exec -- bundle exec bin/ci
 ```
 
 Für reine Designänderungen auf Kathis lokalem Rechner ohne Docker gibt es einen ausdrücklich gewählten Prüfmodus:
