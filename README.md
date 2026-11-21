@@ -6,7 +6,7 @@ Das Repository enthält die komplette Anwendung: öffentliche Website, redaktion
 
 ## Kurzüberblick
 
-- Ruby 4.0.2
+- Ruby 4.0.10 (Sicherheitskorrekturen für reguläre Ausdrücke und Zeichenumwandlung)
 - Ruby on Rails 8.1 (mindestens Sicherheits-Patch 8.1.4.1)
 - Puma 8.0.4 und msgpack 1.8.7 enthalten die für diesen Stand erforderlichen Sicherheitskorrekturen; die genauen Abhängigkeiten sind in `Gemfile.lock` festgehalten.
 - PostgreSQL
@@ -443,7 +443,7 @@ Wichtig für die Interpretation:
 
 ### Voraussetzungen
 
-- Ruby 4.0.2 in der Projektversion
+- Ruby 4.0.10 in der Projektversion
 - PostgreSQL
 - Node.js und npm
 - ein lokales Bildverarbeitungs-Backend für Active Storage, bevorzugt `libvips`, alternativ ImageMagick
@@ -773,7 +773,7 @@ mise exec -- bin/ci
 Falls der lokale Hetzner-Test auf macOS trotz `mise exec` auf System-Ruby 2.6 zurückfällt, liegt das an seinem temporären Benutzerverzeichnis. Mit dem installierten mise-Datenpfad und der Ruby-Version aus `mise.toml` laufen auch diese Unterprozesse mit dem richtigen Ruby, ohne Tests auszulassen:
 
 ```bash
-MISE_DATA_DIR="$HOME/.local/share/mise" MISE_RUBY_VERSION=4.0.2 mise exec -- bundle exec bin/ci
+MISE_DATA_DIR="$HOME/.local/share/mise" MISE_RUBY_VERSION=4.0.10 mise exec -- bundle exec bin/ci
 ```
 
 Für reine Designänderungen auf Kathis lokalem Rechner ohne Docker gibt es einen ausdrücklich gewählten Prüfmodus:
