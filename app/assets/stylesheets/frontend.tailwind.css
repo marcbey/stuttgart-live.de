@@ -15756,7 +15756,6 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 .homepage-video-interlude-content {
   display: grid;
   justify-items: center;
-  gap: clamp(0.7rem, 7cqi, 1.4rem);
   text-align: center;
 }
 
@@ -15771,13 +15770,6 @@ body.page-public-startpage .design-preview-start-logo-title span:last-child {
 
 .homepage-video-interlude-logo span:first-child { font-weight: 500; }
 .homepage-video-interlude-logo span:last-child { font-weight: 300; }
-
-.homepage-video-interlude-caption {
-  font-size: clamp(0.7rem, 7cqi, 1rem);
-  font-weight: 400;
-  line-height: 1.4;
-  color: #e3e8e5;
-}
 
 [data-video-interlude="active"] .homepage-video-interlude-content {
   animation: homepage-video-brand-arrive 450ms ease-out both;

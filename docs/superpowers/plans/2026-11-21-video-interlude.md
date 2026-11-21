@@ -2,7 +2,7 @@
 
 **Goal:** Add the approved two-second silent brand transition between homepage clips and open localhost:3000.
 
-**Architecture:** Keep playlist selection in video-sound. A cancellable interlude timer runs only while playback is eligible and unpaused. A shared overlay uses the homepage’s existing stacked Oswald wordmark, dark background and the approved copy “Dein nächstes Live-Erlebnis.” CSS fades the panel and gently lifts the logo; reduced motion disables animation.
+**Architecture:** Keep playlist selection in video-sound. A cancellable interlude timer runs only while playback is eligible and unpaused. A shared overlay uses the homepage’s existing stacked Oswald wordmark and dark background, without a caption as requested in the latest design revision. CSS fades the panel and gently lifts the logo; reduced motion disables animation.
 
 **Tech Stack:** Stimulus, ERB, frontend CSS, node:test.
 
