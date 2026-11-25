@@ -56,14 +56,14 @@ test("all twenty events appear as separate numbered blocks without truncation", 
   assert.equal(new URL(shared.url).searchParams.getAll("slugs[]").length, 20)
 })
 
-test("copy link fallback keeps a directly usable selection url", async t => {
+test("clipboard fallback includes the complete formatted list and selection url", async t => {
   let copied
   useNavigator(t, { clipboard: { writeText: async text => { copied = text } } })
   const controller = controllerFor([item("paulk", "Paulk · 05.12.2026 · Im Wizemann")])
 
   await controller.share({ preventDefault() {} })
 
-  assert.deepEqual(new URL(copied).searchParams.getAll("slugs[]"), ["paulk"])
+  assert.equal(copied, `${controller.shareText()}\n${controller.shareUrl()}`)
 })
 
 test("a single event gets a singular count and retains punctuation in its name", async t => {
@@ -74,4 +74,17 @@ test("a single event gets a singular count and retains punctuation in its name",
   await controller.share({ preventDefault() {} })
 
   assert.match(shared.text, /\n1 Event\n\n1\. Act · Friends\nDatum: 05\.12\.2026\nOrt: Testclub\n\n/)
+})
+
+test("explicit copy preserves all twenty numbered event blocks even when native sharing exists", async t => {
+  let copied
+  useNavigator(t, {
+    share: async () => { assert.fail("Copy must not open native sharing") },
+    clipboard: { writeText: async text => { copied = text } }
+  })
+  const controller = controllerFor(Array.from({ length: 20 }, (_, i) => item(`event-${i + 1}`, `Artist ${i + 1}\nDatum: 05.12.2026\nOrt: Testclub`)))
+  await controller.copy({ preventDefault() {} })
+  assert.equal(copied, `${controller.shareText()}\n${controller.shareUrl()}`)
+  assert.equal(copied.match(/^\d+\. Artist /gm).length, 20)
+  assert.match(copied, /20\. Artist 20\nDatum: 05\.12\.2026\nOrt: Testclub\n\n/)
 })
