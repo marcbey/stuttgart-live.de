@@ -13,6 +13,7 @@ import PublicSearchController from "./public_search_controller"
 import SavedEventToggleController from "./saved_event_toggle_controller"
 import SavedEventsNavController from "./saved_events_nav_controller"
 import SavedEventsLaneController from "./saved_events_lane_controller"
+import SavedEventsClearController from "./saved_events_clear_controller"
 import ScrollTopController from "./scroll_top_controller"
 import ShareEventController from "./share_event_controller"
 import DesignPreviewSavedDropdownController from "./design_preview_saved_dropdown_controller"
@@ -39,6 +40,7 @@ registerController("public-search", PublicSearchController)
 registerController("saved-event-toggle", SavedEventToggleController)
 registerController("saved-events-nav", SavedEventsNavController)
 registerController("saved-events-lane", SavedEventsLaneController)
+registerController("saved-events-clear", SavedEventsClearController)
 registerController("scroll-top", ScrollTopController)
 registerController("share-event", ShareEventController)
 registerController("design-preview-saved-dropdown", DesignPreviewSavedDropdownController)

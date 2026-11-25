@@ -141,7 +141,7 @@ export default class extends Controller {
 
     try {
       if (navigator.share) {
-        await navigator.share({ title, url })
+        await navigator.share({ title, text: this.shareText(), url })
         this.showShareStatus("Geteilt")
         return
       }
@@ -179,6 +179,16 @@ export default class extends Controller {
 
     this.visibleSlugs.forEach((slug) => url.searchParams.append("slugs[]", slug))
     return url.toString()
+  }
+
+  shareText() {
+    const events = this.itemTargets.filter((item) => !item.hidden)
+      .map((item) => item.dataset.shareText).filter(Boolean)
+    return [
+      `Meine Eventauswahl bei STUTTGART LIVE\n${events.length} ${events.length === 1 ? "Event" : "Events"}`,
+      ...events.map((text, index) => `${index + 1}. ${text}`),
+      "Die gesamte Auswahl mit Bildern und weiteren Infos:"
+    ].join("\n\n")
   }
 
   showShareStatus(message) {
