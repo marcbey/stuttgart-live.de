@@ -148,22 +148,11 @@ export default class extends Controller {
         return
       }
 
-      await this.copy(event)
+      await navigator.clipboard.writeText(url)
+      this.showShareStatus("Link kopiert")
     } catch (error) {
       if (error.name === "AbortError") return
 
-      this.showShareStatus("Kopieren nicht möglich")
-    }
-  }
-
-  async copy(event) {
-    event.preventDefault()
-    if (this.loadedKey !== savedEventSlugs().join("\n")) return
-
-    try {
-      await navigator.clipboard.writeText(`${this.shareText()}\n${this.shareUrl()}`)
-      this.showShareStatus("Merkliste kopiert")
-    } catch (_error) {
       this.showShareStatus("Kopieren nicht möglich")
     }
   }

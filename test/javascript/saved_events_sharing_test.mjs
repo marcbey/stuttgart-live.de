@@ -21,7 +21,7 @@ const item = (slug, shareText, hidden = false) => ({ hidden, dataset: { slug, sh
 const controllerFor = items => {
   window.testSavedSlugs = items.filter(item => !item.hidden).map(item => item.dataset.slug)
   return Object.assign(new SavedDropdownController(), {
-  loadedKey: window.testSavedSlugs.join("\n"),
+    loadedKey: window.testSavedSlugs.join("\n"),
   itemTargets: items,
   hasShareUrlValue: true,
   shareUrlValue: "/deine-events",
@@ -60,14 +60,14 @@ test("all twenty events appear as separate numbered blocks without truncation", 
   assert.equal(new URL(shared.url).searchParams.getAll("slugs[]").length, 20)
 })
 
-test("clipboard fallback includes the complete formatted list and selection url", async t => {
+test("copy link fallback keeps a directly usable selection url", async t => {
   let copied
   useNavigator(t, { clipboard: { writeText: async text => { copied = text } } })
   const controller = controllerFor([item("paulk", "Paulk · 05.12.2026 · Im Wizemann")])
 
   await controller.share({ preventDefault() {} })
 
-  assert.equal(copied, `${controller.shareText()}\n${controller.shareUrl()}`)
+  assert.deepEqual(new URL(copied).searchParams.getAll("slugs[]"), ["paulk"])
 })
 
 test("a single event gets a singular count and retains punctuation in its name", async t => {
@@ -80,20 +80,7 @@ test("a single event gets a singular count and retains punctuation in its name",
   assert.match(shared.text, /\n1 Event\n\n1\. Act · Friends\nDatum: 05\.12\.2026\nOrt: Testclub\n\n/)
 })
 
-test("explicit copy preserves all twenty numbered event blocks even when native sharing exists", async t => {
-  let copied
-  useNavigator(t, {
-    share: async () => { assert.fail("Copy must not open native sharing") },
-    clipboard: { writeText: async text => { copied = text } }
-  })
-  const controller = controllerFor(Array.from({ length: 20 }, (_, i) => item(`event-${i + 1}`, `Artist ${i + 1}\nDatum: 05.12.2026\nOrt: Testclub`)))
-  await controller.copy({ preventDefault() {} })
-  assert.equal(copied, `${controller.shareText()}\n${controller.shareUrl()}`)
-  assert.equal(copied.match(/^\d+\. Artist /gm).length, 20)
-  assert.match(copied, /20\. Artist 20\nDatum: 05\.12\.2026\nOrt: Testclub\n\n/)
-})
-
-test("copy and share cannot use an empty or stale list while the selection is loading", async t => {
+test("sharing cannot use an empty or stale list while the selection is loading", async t => {
   let operations = 0
   useNavigator(t, {
     share: async () => { operations += 1 },
@@ -101,10 +88,9 @@ test("copy and share cannot use an empty or stale list while the selection is lo
   })
   const controller = controllerFor([item("current", "Current Event")])
   controller.loadedKey = undefined
-  await controller.copy({ preventDefault() {} })
   await controller.share({ preventDefault() {} })
   controller.loadedKey = "old-event"
-  await controller.copy({ preventDefault() {} })
+  await controller.share({ preventDefault() {} })
   assert.equal(operations, 0)
 })
 
@@ -113,7 +99,7 @@ test("render disables sharing while loading and enables it for the loaded select
   Object.assign(controller, {
     element: { classList: { toggle() {} } },
     buttonTarget: { setAttribute() {} },
-    shareButtonTargets: [{ disabled: false }, { disabled: false }]
+    shareButtonTargets: [{ disabled: false }]
   })
   controller.loadedKey = undefined
   controller.render()
