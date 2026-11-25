@@ -28,6 +28,7 @@ export default class extends Controller {
   }
 
   async load() {
+    const requestId = ++this.requestId
     if (!this.hasUrlValue) {
       this.clear()
       return
@@ -39,7 +40,6 @@ export default class extends Controller {
       return
     }
 
-    const requestId = ++this.requestId
     const url = new URL(this.urlValue, window.location.origin)
     const currentUrl = new URL(window.location.href)
 

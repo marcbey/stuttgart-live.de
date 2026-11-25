@@ -1,5 +1,7 @@
 <% events.each do |event| %>
-  <li data-design-preview-saved-dropdown-target="item" data-slug="<%= event.slug %>">
+  <li data-design-preview-saved-dropdown-target="item"
+      data-slug="<%= event.slug %>"
+      data-share-text="<%= saved_event_share_text(event) %>">
     <%= render "design_preview_saved_event",
                event: event,
                browse_state: browse_state,

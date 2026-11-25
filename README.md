@@ -6,7 +6,7 @@ Das Repository enthält die komplette Anwendung: öffentliche Website, redaktion
 
 ## Kurzüberblick
 
-- Ruby 4.0.2
+- Ruby 4.0.10 (Sicherheitskorrekturen für reguläre Ausdrücke und Zeichenumwandlung)
 - Ruby on Rails 8.1 (mindestens Sicherheits-Patch 8.1.4.1)
 - Puma 8.0.4 und msgpack 1.8.7 enthalten die für diesen Stand erforderlichen Sicherheitskorrekturen; die genauen Abhängigkeiten sind in `Gemfile.lock` festgehalten.
 - PostgreSQL
@@ -123,7 +123,13 @@ Auch die öffentliche Event-Suche versteht strukturierte Zeitphrasen wie `heute`
 
 Suchvorschläge und die Vorschau gemerkter Events zeigen Datum, Uhrzeit und Location, damit du verschiedene Termine desselben Acts unterscheiden kannst. Ohne Treffer kannst du die Suche direkt ändern oder alle Events öffnen. Deine Merkliste wird in diesem Browser gespeichert; über die Teilenfunktion kannst du sie weitergeben.
 
+Beim Teilen enthält die Nachricht alle verfügbaren gemerkten Events, auch längere Listen für die interne Arbeit. Unter einer Überschrift mit Eventanzahl stehen nummerierte Einträge; Datum und Location folgen jeweils in eigenen Zeilen, eine Leerzeile trennt die Events. Der Link am Ende öffnet die Auswahl mit Bildern und weiteren Infos. Die Nachricht bleibt einfacher Text und benötigt keinen zusätzlichen HTML-Mailversand. Für die Linkvorschau liefert die Seite die Anzahl der verfügbaren Events, eine kurze Beschreibung und das erste verfügbare Eventfoto; ohne Foto erscheint das türkisfarbene Herz von STUTTGART LIVE. Berücksichtigt werden nur veröffentlichte Termine ab heute. Ob die Vorschau als Bildkarte erscheint und der Begleittext übernommen wird, entscheidet die empfangende App. „Link kopieren“ kopiert weiterhin nur den Link.
+
 In der Lane „Deine Events“ steht das Herz vor der Überschrift. Mit dem X im weißen Kreis entfernst du ein Event aus deiner Merkliste; auf den anderen Eventkarten bleibt das Herz zum Merken erhalten.
+
+„Merkliste leeren“ steht im Herz-Menü, an der Merkliste auf der Startseite und auf der Seite „Deine Events“. Nach einer Bestätigung entfernt der Button alle gemerkten Events dieses Browsers; Zähler und Karten aktualisieren sich sofort. Bei einer geöffneten geteilten Auswahl wird zusätzlich die Auswahl im aktuellen Tab geschlossen. Bereits verschickte Links bleiben gültig. Bei leerer Merkliste wird der Button ausgeblendet.
+
+Auf der eigenen Seite „Deine Events“ stehen alle verfügbaren gemerkten oder geteilten Events in einem Raster untereinander: mobil zwei Spalten, auf größeren Bildschirmen bis zu sechs. Dort entfällt die zusätzliche Lane-Überschrift; die Übersicht braucht kein seitliches Scrollen.
 
 Der allgemeine Infotext über STUTTGART LIVE mit dem Newsletter-Hinweis neben der Überschrift erscheint nur auf der Startseite. Auf den Serviceseiten beginnt der Kopfbereich direkt mit dem jeweiligen Seitentitel.
 
@@ -443,7 +449,7 @@ Wichtig für die Interpretation:
 
 ### Voraussetzungen
 
-- Ruby 4.0.2 in der Projektversion
+- Ruby 4.0.10 in der Projektversion
 - PostgreSQL
 - Node.js und npm
 - ein lokales Bildverarbeitungs-Backend für Active Storage, bevorzugt `libvips`, alternativ ImageMagick
@@ -771,7 +777,7 @@ mise exec -- bin/ci
 Falls der lokale Hetzner-Test auf macOS trotz `mise exec` auf System-Ruby 2.6 zurückfällt, liegt das an seinem temporären Benutzerverzeichnis. Mit dem installierten mise-Datenpfad und der Ruby-Version aus `mise.toml` laufen auch diese Unterprozesse mit dem richtigen Ruby, ohne Tests auszulassen:
 
 ```bash
-MISE_DATA_DIR="$HOME/.local/share/mise" MISE_RUBY_VERSION=4.0.2 mise exec -- bundle exec bin/ci
+MISE_DATA_DIR="$HOME/.local/share/mise" MISE_RUBY_VERSION=4.0.10 mise exec -- bundle exec bin/ci
 ```
 
 Für reine Designänderungen auf Kathis lokalem Rechner ohne Docker gibt es einen ausdrücklich gewählten Prüfmodus:

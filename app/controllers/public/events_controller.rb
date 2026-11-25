@@ -118,6 +118,12 @@ module Public
     end
 
     def saved
+      @saved_share_slugs = normalized_saved_lane_slugs
+      @saved_share_events = if @saved_share_slugs.any?
+        homepage_events_relation.where(slug: @saved_share_slugs).reorder(:start_at, :id).to_a
+      else
+        []
+      end
       assign_design_chrome
     end
 
@@ -975,8 +981,8 @@ module Public
     end
 
     def normalized_saved_lane_slugs
-      Array(params[:slugs]).filter_map do |slug|
-        normalized_slug = slug.to_s.strip
+      Array(params[:slugs]).flat_map { |slug| slug.to_s.split(",") }.filter_map do |slug|
+        normalized_slug = slug.strip
         normalized_slug if normalized_slug.present?
       end.uniq.first(SAVED_LANE_SLUG_LIMIT)
     end

@@ -5,7 +5,7 @@ const OVERLAY_OPENED_EVENT = "design-preview:overlay-opened"
 const OVERLAY_SOURCE = "saved"
 
 export default class extends Controller {
-  static targets = [ "button", "panel", "list", "item", "empty", "footer", "label", "shareStatus" ]
+  static targets = [ "button", "panel", "list", "item", "empty", "footer", "label", "shareStatus", "shareButton" ]
   static values = {
     shareUrl: String,
     url: String
@@ -65,6 +65,7 @@ export default class extends Controller {
     const slugs = savedEventSlugs()
     const savedSlugs = new Set(slugs)
     const currentKey = slugs.join("\n")
+    this.shareButtonTargets.forEach(button => { button.disabled = this.loadedKey !== currentKey })
     let visibleCount = this.loadedKey === currentKey ? 0 : slugs.length
 
     if (this.loadedKey === currentKey) {
@@ -135,13 +136,14 @@ export default class extends Controller {
 
   async share(event) {
     event.preventDefault()
+    if (this.loadedKey !== savedEventSlugs().join("\n")) return
 
     const url = this.shareUrl()
     const title = "Meine Merkliste bei STUTTGART LIVE"
 
     try {
       if (navigator.share) {
-        await navigator.share({ title, url })
+        await navigator.share({ title, text: this.shareText(), url })
         this.showShareStatus("Geteilt")
         return
       }
@@ -181,6 +183,16 @@ export default class extends Controller {
     return url.toString()
   }
 
+  shareText() {
+    const events = this.itemTargets.filter((item) => !item.hidden)
+      .map((item) => item.dataset.shareText).filter(Boolean)
+    return [
+      `Meine Eventauswahl bei STUTTGART LIVE\n${events.length} ${events.length === 1 ? "Event" : "Events"}`,
+      ...events.map((text, index) => `${index + 1}. ${text}`),
+      "Die gesamte Auswahl mit Bildern und weiteren Infos:"
+    ].join("\n\n")
+  }
+
   showShareStatus(message) {
     if (!this.hasShareStatusTarget) return
 
@@ -199,6 +211,7 @@ export default class extends Controller {
   }
 
   async handleSavedEventsChanged() {
+    this.render()
     if (!this.panelTarget.hidden) await this.loadItems()
 
     this.render()
