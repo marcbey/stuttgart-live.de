@@ -4,7 +4,7 @@ import { readFile } from "node:fs/promises"
 
 const source = (await readFile(new URL("../../app/javascript/controllers/design_preview_saved_dropdown_controller.js", import.meta.url), "utf8"))
   .replace('import { Controller } from "@hotwired/stimulus"', "class Controller {}")
-  .replace('import { STORAGE_KEY, removeSavedEvent, savedEventSlugs } from "../lib/saved_events_storage"', "")
+  .replace('import { STORAGE_KEY, removeSavedEvent, savedEventSlugs } from "../lib/saved_events_storage"', 'const savedEventSlugs = () => window.testSavedSlugs || []')
 const { default: SavedDropdownController } = await import(`data:text/javascript;base64,${Buffer.from(source).toString("base64")}`)
 
 globalThis.window = { location: { origin: "https://stuttgart-live.de" } }
@@ -18,12 +18,16 @@ function useNavigator(t, value) {
 }
 
 const item = (slug, shareText, hidden = false) => ({ hidden, dataset: { slug, shareText } })
-const controllerFor = items => Object.assign(new SavedDropdownController(), {
+const controllerFor = items => {
+  window.testSavedSlugs = items.filter(item => !item.hidden).map(item => item.dataset.slug)
+  return Object.assign(new SavedDropdownController(), {
+  loadedKey: window.testSavedSlugs.join("\n"),
   itemTargets: items,
   hasShareUrlValue: true,
   shareUrlValue: "/deine-events",
   hasShareStatusTarget: false
-})
+  })
+}
 
 test("native sharing includes selected event information and excludes removed events", async t => {
   let shared
@@ -87,4 +91,34 @@ test("explicit copy preserves all twenty numbered event blocks even when native 
   assert.equal(copied, `${controller.shareText()}\n${controller.shareUrl()}`)
   assert.equal(copied.match(/^\d+\. Artist /gm).length, 20)
   assert.match(copied, /20\. Artist 20\nDatum: 05\.12\.2026\nOrt: Testclub\n\n/)
+})
+
+test("copy and share cannot use an empty or stale list while the selection is loading", async t => {
+  let operations = 0
+  useNavigator(t, {
+    share: async () => { operations += 1 },
+    clipboard: { writeText: async () => { operations += 1 } }
+  })
+  const controller = controllerFor([item("current", "Current Event")])
+  controller.loadedKey = undefined
+  await controller.copy({ preventDefault() {} })
+  await controller.share({ preventDefault() {} })
+  controller.loadedKey = "old-event"
+  await controller.copy({ preventDefault() {} })
+  assert.equal(operations, 0)
+})
+
+test("render disables sharing while loading and enables it for the loaded selection", () => {
+  const controller = controllerFor([item("current", "Current Event")])
+  Object.assign(controller, {
+    element: { classList: { toggle() {} } },
+    buttonTarget: { setAttribute() {} },
+    shareButtonTargets: [{ disabled: false }, { disabled: false }]
+  })
+  controller.loadedKey = undefined
+  controller.render()
+  assert.ok(controller.shareButtonTargets.every(button => button.disabled))
+  controller.loadedKey = "current"
+  controller.render()
+  assert.ok(controller.shareButtonTargets.every(button => !button.disabled))
 })

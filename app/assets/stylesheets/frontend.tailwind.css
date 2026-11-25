@@ -14621,6 +14621,11 @@ body.page-public-startpage.is-design-preview-header-scrolled .design-preview-log
   cursor: pointer;
 }
 
+.design-preview-saved-share:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
 .design-preview-saved-share svg {
   width: 1rem;
   height: 1rem;

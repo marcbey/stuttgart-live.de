@@ -5,7 +5,7 @@ const OVERLAY_OPENED_EVENT = "design-preview:overlay-opened"
 const OVERLAY_SOURCE = "saved"
 
 export default class extends Controller {
-  static targets = [ "button", "panel", "list", "item", "empty", "footer", "label", "shareStatus" ]
+  static targets = [ "button", "panel", "list", "item", "empty", "footer", "label", "shareStatus", "shareButton" ]
   static values = {
     shareUrl: String,
     url: String
@@ -65,6 +65,7 @@ export default class extends Controller {
     const slugs = savedEventSlugs()
     const savedSlugs = new Set(slugs)
     const currentKey = slugs.join("\n")
+    this.shareButtonTargets.forEach(button => { button.disabled = this.loadedKey !== currentKey })
     let visibleCount = this.loadedKey === currentKey ? 0 : slugs.length
 
     if (this.loadedKey === currentKey) {
@@ -135,6 +136,7 @@ export default class extends Controller {
 
   async share(event) {
     event.preventDefault()
+    if (this.loadedKey !== savedEventSlugs().join("\n")) return
 
     const url = this.shareUrl()
     const title = "Meine Merkliste bei STUTTGART LIVE"
@@ -156,6 +158,7 @@ export default class extends Controller {
 
   async copy(event) {
     event.preventDefault()
+    if (this.loadedKey !== savedEventSlugs().join("\n")) return
 
     try {
       await navigator.clipboard.writeText(`${this.shareText()}\n${this.shareUrl()}`)
@@ -219,6 +222,7 @@ export default class extends Controller {
   }
 
   async handleSavedEventsChanged() {
+    this.render()
     if (!this.panelTarget.hidden) await this.loadItems()
 
     this.render()
