@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
-# config/initializers/sentry.rb
-require "active_support/parameter_filter"
+require_relative "../../app/lib/anonymous_sentry_event"
 
 profile = Rails.configuration.x.deployment_environment
 sentry_environment = profile == "staging" ? "staging" : ENV.fetch("SENTRY_ENVIRONMENT", profile)
@@ -15,21 +14,6 @@ unless disabled_sentry_environments.include?(sentry_environment)
     config.environment = sentry_environment
     config.release = ENV["SENTRY_RELEASE"]
 
-    config.breadcrumbs_logger = %i[active_support_logger http_logger]
-
-    # Am Anfang lieber konservativ
-    config.send_default_pii = false
-    config.rails.structured_logging.enabled = true
-    config.traces_sample_rate = 0.1
-    config.profiles_sample_rate = 0.0
-
-    filter = ActiveSupport::ParameterFilter.new(Rails.application.config.filter_parameters)
-
-    config.before_send = lambda do |event, _hint|
-      event.extra    = filter.filter(event.extra)    if event.extra
-      event.user     = filter.filter(event.user)     if event.user
-      event.contexts = filter.filter(event.contexts) if event.contexts
-      event
-    end
+    AnonymousSentryEvent.configure(config)
   end
 end

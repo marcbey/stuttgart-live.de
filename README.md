@@ -739,7 +739,8 @@ Mit der aktuellen Struktur gibt es vier übliche Betriebsmodi:
 
 Für Sentry gilt zusätzlich:
 
-- die Laufzeit-App liest die `dsn` aus `config/credentials.yml.enc`
+- die Laufzeit-App liest die `dsn` aus `config/credentials.yml.enc` und meldet Produktionsfehler an `stuttgart-live-anonymized`
+- die App erstellt vor dem Versand ein Fehlerereignis aus einer erlaubten Fehlerklasse und gegebenenfalls einer Stelle im Anwendungscode. Request-Daten, ursprüngliche Fehlermeldungen und Benutzerinformationen werden verworfen. Strukturierte Logs und Traces bleiben in Sentry deaktiviert.
 - der Produktions-Container bekommt `SENTRY_ENVIRONMENT=production`
 - der Produktions-Deploy setzt `SENTRY_RELEASE` automatisch auf die deployte Git-SHA
 - nach erfolgreichem GitHub-Deploy meldet der Workflow denselben Release per `sentry-cli` an Sentry und verknüpft automatisch die Commits
@@ -1013,7 +1014,7 @@ Für manuelle Produktions-Kommandos brauchst du lokal:
 Für lokale Sentry-Release-Meldungen zusätzlich:
 
 - `SENTRY_AUTH_TOKEN` in `.env` oder in der Shell
-- optional `SENTRY_ORG` und `SENTRY_PROJECT`; Default im Repo ist aktuell `self-employed-gi` und `stuttgart-live`
+- optional `SENTRY_ORG` und `SENTRY_PROJECT`; Default im Repo ist aktuell `self-employed-gi` und `stuttgart-live-anonymized`
 
 Der aktuell konfigurierte Zielhost ist `46.225.224.194`.
 
