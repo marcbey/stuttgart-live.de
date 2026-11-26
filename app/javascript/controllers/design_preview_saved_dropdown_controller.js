@@ -157,6 +157,18 @@ export default class extends Controller {
     }
   }
 
+  async copyLink(event) {
+    event.preventDefault()
+    if (this.loadedKey !== savedEventSlugs().join("\n") || this.visibleSlugs.length === 0) return
+
+    try {
+      await navigator.clipboard.writeText(this.shareUrl())
+      this.showShareStatus("Link kopiert")
+    } catch (_error) {
+      this.showShareStatus("Kopieren nicht möglich")
+    }
+  }
+
   remove(event) {
     event.preventDefault()
     event.stopPropagation()
@@ -198,9 +210,8 @@ export default class extends Controller {
 
     clearTimeout(this.shareStatusTimeout)
     this.shareStatusTarget.textContent = message
-    this.shareStatusTarget.hidden = false
     this.shareStatusTimeout = window.setTimeout(() => {
-      this.shareStatusTarget.hidden = true
+      this.shareStatusTarget.textContent = ""
     }, 1800)
   }
 

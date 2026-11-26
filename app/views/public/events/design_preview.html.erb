@@ -136,21 +136,7 @@
           <div class="design-preview-saved-panel-footer"
                data-design-preview-saved-dropdown-target="footer"
                hidden>
-            <button type="button"
-                    class="design-preview-saved-share"
-                    data-design-preview-saved-dropdown-target="shareButton"
-                    disabled
-                    data-action="design-preview-saved-dropdown#share">
-              <span>Merkliste teilen</span>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                <path d="M7 12h10"></path>
-                <path d="m13 8 4 4-4 4"></path>
-              </svg>
-            </button>
-            <%= render "public/events/clear_saved_events_button" %>
-            <span class="design-preview-saved-share-status"
-                  data-design-preview-saved-dropdown-target="shareStatus"
-                  hidden></span>
+            <%= render "public/events/saved_events_actions" %>
           </div>
         </div>
       </div>

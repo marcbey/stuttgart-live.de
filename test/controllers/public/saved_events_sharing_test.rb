@@ -16,18 +16,25 @@ class Public::SavedEventsSharingTest < ActionDispatch::IntegrationTest
     get root_path
 
     assert_response :success
-    assert_select ".design-preview-saved-panel-footer button[data-controller='saved-events-clear']", text: "Merkliste leeren"
+    assert_select ".design-preview-saved-panel-footer button[data-controller='saved-events-clear']", text: "Leeren"
+    assert_select ".design-preview-saved-panel-footer button", text: "Kopieren"
 
     get saved_events_path
 
     assert_response :success
-    assert_select ".design-preview-saved-panel-footer button[data-controller='saved-events-clear']", text: "Merkliste leeren"
-    assert_select ".saved-events-page-toolbar button[data-controller='saved-events-clear']", text: "Merkliste leeren"
+    assert_select ".design-preview-saved-panel-footer button[data-controller='saved-events-clear']", text: "Leeren"
+    assert_select ".design-preview-saved-panel-footer button", text: "Kopieren"
 
     get saved_lane_events_path, params: { slugs: [ @event.slug ] }
 
     assert_response :success
-    assert_select ".lane-header--saved-events button[data-controller='saved-events-clear']", text: "Merkliste leeren"
+    assert_select ".lane-header--saved-events button[data-controller='saved-events-clear'] .saved-events-action-label-long", text: "Merkliste leeren"
+    assert_select ".saved-events-actions .saved-events-action-label-long", text: "Merkliste teilen"
+    assert_select ".saved-events-actions .saved-events-action-label-long", text: "Link kopieren"
+    assert_select "[data-share-event-url-value=?]", saved_events_url(slugs: [ @event.slug ])
+    assert_select "[data-share-event-text-value]" do |elements|
+      assert_includes elements.first["data-share-event-text-value"], "1. Published Artist\nDatum: 01.06.2026\nOrt: LKA Longhorn"
+    end
   end
 
   test "shared list exposes its selected events and image without javascript" do

@@ -108,3 +108,22 @@ test("render disables sharing while loading and enables it for the loaded select
   controller.render()
   assert.ok(controller.shareButtonTargets.every(button => !button.disabled))
 })
+
+
+test("copy link bypasses native sharing and copies only the current selection url", async t => {
+  let copied
+  let shares = 0
+  useNavigator(t, {
+    share: async () => { shares += 1 },
+    clipboard: { writeText: async text => { copied = text } }
+  })
+  const controller = controllerFor([item("current", "Current Event"), item("removed", "Removed", true)])
+  await controller.copyLink({ preventDefault() {} })
+  assert.equal(shares, 0)
+  assert.deepEqual(new URL(copied).searchParams.getAll("slugs[]"), ["current"])
+
+  copied = undefined
+  controller.loadedKey = "stale"
+  await controller.copyLink({ preventDefault() {} })
+  assert.equal(copied, undefined)
+})
