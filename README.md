@@ -1243,9 +1243,17 @@ bin/kamal app logs --since 15m -d hetzner -r web
 bin/kamal app logs --since 30m --grep ERROR -d hetzner -r job
 ```
 
-Der Produktions-Logpfad für App und Jobs ist bewusst zentral über Docker/Kamal organisiert. Rails schreibt in Production nach `STDOUT`, daher sind `bin/kamal app logs ...` und auf dem Host `docker logs ...` die primären Werkzeuge auch für Import- und LLM-Läufe.
+Rails protokolliert Fehler in Web- und Job-Containern mit Schweregrad und
+zugelassener Fehlerklasse. Anfrageinhalte, freie Fehlermeldungen und
+Benutzerangaben werden vor der Ausgabe verworfen. Neue Login-Ereignisse
+enthalten nur das Ergebnis. Stündliche Jobs entfernen alte Einträge aus
+`login_attempts` und alte Fehlerdetails aus Solid Queue ab sechs Tagen.
+Fehlgeschlagene Jobs können weiterhin erneut gestartet werden.
 
-Es gibt in Produktion absichtlich keinen separaten persistenten App-Dateilog unter `log/production.log` oder `log/importers.log`. Sentry ergänzt bei konfigurierten Zugangsdaten Fehlererfassung und Alerting; die zentralen Laufzeit-Logs bleiben für die Diagnose erforderlich.
+Die nginx-Zugriffslogs enthalten technische Zeitmessungen und Routenmuster.
+Die Daten der gemeinsamen Proxy-Schicht werden beim separaten Host-Wechsel
+auf das [Websitejournal](infra/ansible/README.md#logaufbewahrung-für-beide-websites)
+umgestellt. Bis zu diesem Wechsel laufen die Containerlogs über Docker.
 
 Anfragen mit widersprüchlichen Client-IP-Headern werden mit der öffentlichen Fehlerseite und HTTP 400 abgewiesen. Die Rails-Prüfung auf IP-Spoofing bleibt dabei aktiv; ungültige Header erreichen weder Anmeldung noch reguläre Seitenverarbeitung.
 

@@ -1,0 +1,6 @@
+---
+- name: Logaufbewahrung für Stuttgart Live und Russ Live einrichten
+  hosts: production
+  become: true
+  roles:
+    - website_log_retention
