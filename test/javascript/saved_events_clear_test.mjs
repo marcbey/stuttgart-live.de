@@ -120,7 +120,7 @@ test("a response already loading cannot restore a lane after the list is cleared
   const body = new Promise(resolve => { finishBody = resolve })
   t.mock.method(globalThis, "fetch", async () => ({ ok: true, text: () => body }))
   const controller = Object.assign(new LaneController(), {
-    requestId: 0, hasUrlValue: true, urlValue: "/events/saved_lane", showEmptyValue: false,
+    requestId: 0, hasUrlValue: true, urlValue: "/events/saved_lane", showEmptyValue: false, shareButtonTargets: [],
     element: { innerHTML: "Old events", hidden: false }
   })
   const pending = controller.load()
@@ -132,4 +132,27 @@ test("a response already loading cannot restore a lane after the list is cleared
 
   assert.equal(controller.element.innerHTML, "")
   assert.equal(controller.element.hidden, true)
+})
+
+
+test("changing a selection disables stale sharing immediately, including after a failed refresh", async t => {
+  const { values } = browserFor(t)
+  let finishResponse
+  const response = new Promise(resolve => { finishResponse = resolve })
+  t.mock.method(globalThis, "fetch", () => response)
+  t.mock.method(console, "error", () => {})
+  const buttons = [{ disabled: false }, { disabled: false }]
+  const controller = Object.assign(new LaneController(), {
+    requestId: 0, hasUrlValue: true, urlValue: "/events/saved_lane", showEmptyValue: false,
+    shareButtonTargets: buttons, element: { innerHTML: "Previous selection", hidden: false }
+  })
+  values.set(storageKey, '["two"]')
+
+  const pending = controller.load()
+  assert.ok(buttons.every(button => button.disabled))
+  finishResponse({ ok: false, status: 503, text: async () => "Unavailable" })
+  await pending
+
+  assert.ok(buttons.every(button => button.disabled))
+  assert.equal(controller.element.innerHTML, "Previous selection")
 })

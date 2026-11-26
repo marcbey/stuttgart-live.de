@@ -24485,7 +24485,11 @@ body.page-public .design-preview .public-search-clear {
 }
 
 .saved-events-actions .design-preview-saved-share-status:empty {
-  display: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
 }
 
 @media (min-width: 48rem) {

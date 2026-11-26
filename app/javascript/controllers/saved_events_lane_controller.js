@@ -2,6 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 import { STORAGE_KEY, savedEventSlugs } from "../lib/saved_events_storage"
 
 export default class extends Controller {
+  static targets = [ "shareButton" ]
   static values = {
     emptyMessage: String,
     emptyTitle: String,
@@ -29,6 +30,7 @@ export default class extends Controller {
 
   async load() {
     const requestId = ++this.requestId
+    this.shareButtonTargets.forEach(button => { button.disabled = true })
     if (!this.hasUrlValue) {
       this.clear()
       return

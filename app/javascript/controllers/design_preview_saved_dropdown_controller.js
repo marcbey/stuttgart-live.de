@@ -210,9 +210,8 @@ export default class extends Controller {
 
     clearTimeout(this.shareStatusTimeout)
     this.shareStatusTarget.textContent = message
-    this.shareStatusTarget.hidden = false
     this.shareStatusTimeout = window.setTimeout(() => {
-      this.shareStatusTarget.hidden = true
+      this.shareStatusTarget.textContent = ""
     }, 1800)
   }
 
