@@ -99,21 +99,18 @@ module Ops
       if commit && (!ReleaseManifest.sha?(commit) || commit != required("SENTRY_RELEASE"))
         raise ReleaseSupport::Error, "Sentry-Commit passt nicht zum deployten Release"
       end
-      reference = commit && "#{repository}@#{commit}"
       unless system("sh", "-c", "command -v sentry-cli >/dev/null 2>&1")
         ReleaseSupport.capture("bash", "-o", "pipefail", "-c", "curl -fsSL https://sentry.io/get-cli/ | bash")
         ENV["PATH"] = "#{File.join(Dir.home, '.local/bin')}:#{ENV.fetch('PATH')}"
       end
       if File.executable?("bin/sentry-release")
-        ReleaseSupport.capture("mise", "exec", "--", "bin/sentry-release", env: { "SENTRY_COMMIT_REFERENCE" => reference })
+        ReleaseSupport.capture("mise", "exec", "--", "bin/sentry-release")
       else
         required("SENTRY_ORG")
         required("SENTRY_PROJECT")
         release = required("SENTRY_RELEASE")
         _, _, status = Open3.capture3("sentry-cli", "releases", "info", release)
         ReleaseSupport.capture("sentry-cli", "releases", "new", release) unless status.success?
-        selection = reference ? [ "--commit", reference ] : [ "--auto" ]
-        ReleaseSupport.capture("sentry-cli", "releases", "set-commits", *selection, release)
         ReleaseSupport.capture("sentry-cli", "releases", "finalize", release)
         ReleaseSupport.capture("sentry-cli", "releases", "deploys", release, "new", "-e", ENV.fetch("SENTRY_ENVIRONMENT"))
       end

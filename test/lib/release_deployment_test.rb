@@ -74,8 +74,8 @@ class ReleaseDeploymentTest < ActiveSupport::TestCase
       RUBY
       out, err, status = Open3.capture3(env, "mise", "exec", "--", "bundle", "exec", "ruby", "-e", code, Rails.root.join("script/ops/deploy_release.rb").to_s, root)
       assert status.success?, out + err
-      assert_includes File.read(log), "releases set-commits --commit marcbey/stuttgart-live.de@#{'a' * 40} #{'a' * 40}"
-      refute_includes File.read(log), "--auto"
+      assert_includes File.read(log), "releases finalize #{'a' * 40}"
+      refute_includes File.read(log), "set-commits"
     end
   end
 
