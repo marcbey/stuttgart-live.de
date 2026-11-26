@@ -592,7 +592,7 @@ Nicht jede Variable wird in jeder Umgebung gebraucht. Für den Alltag sind diese
 - lokale Datei `config/master.key`: Schlüssel für `config/credentials.yml.enc`
 - GitHub-Environment-Secrets für Deployments im Environment `production`: `DB_PASSWORD`, `RAILS_MASTER_KEY`, `KAMAL_REGISTRY_PULL_PASSWORD`, `KAMAL_SSH_PRIVATE_KEY`, `SENTRY_AUTH_TOKEN`
 - GitHub-Repository-Secret für den Codex-Issue-Workflow: `OPENAI_API_KEY`
-- GitHub-Variablen für Sentry-Releases: `SENTRY_ORG`, `SENTRY_PROJECT`
+- GitHub-Variablen für Sentry-Releases im Environment `production`: `SENTRY_ORG=sks-russ` und `SENTRY_PROJECT=stuttgart-live`
 
 Ohne vollständige Mailjet-Konfiguration funktioniert die lokale Speicherung von Newsletter-Anmeldungen weiterhin, nur der externe Sync bleibt aus. Die Mailjet-Kontaktliste wird nicht automatisch angelegt; lege sie in Mailjet an und trage die List-ID als `mailjet.list_id` oder `MAILJET_LIST_ID` ein. Für Kampagnen-Drafts ermittelt die App die aktive Mailjet-Sender-ID zur Newsletter-Absenderadresse (`newsletter.from` oder `NEWSLETTER_FROM`, standardmäßig `newsletter@stuttgart-live.de`). Sie weicht nicht auf eine andere aktive Absenderadresse aus. Alternativ kann die Sender-ID direkt als `mailjet.sender` oder `MAILJET_SENDER` gesetzt werden. Newsletter-Anmeldungen nutzen Double-Opt-In: Erst nach Klick auf den Bestätigungslink wird die Adresse als bestätigt markiert und zu Mailjet synchronisiert. Optional gewählte Newsletter-Interessen werden lokal gespeichert und als Mailjet-Contact-Properties synchronisiert. Vor dem Kontaktabgleich legt die App fehlende boolesche Eigenschaften für Tracking-Einwilligungen und gewählte Interessen automatisch an. Vorhandene Eigenschaften werden über ihren exakten Namen in allen Ergebnisseiten geprüft; der Mailjet-Endpunkt unterstützt keinen Namensfilter.
 
@@ -739,7 +739,7 @@ Mit der aktuellen Struktur gibt es vier übliche Betriebsmodi:
 
 Für Sentry gilt zusätzlich:
 
-- die Laufzeit-App liest die `dsn` aus `config/credentials.yml.enc` und meldet Produktionsfehler an `stuttgart-live-anonymized`
+- die Laufzeit-App liest die DSN aus `config/credentials.yml.enc` und meldet Produktionsfehler an das Sentry-Projekt `sks-russ/stuttgart-live`
 - die App erstellt vor dem Versand ein Fehlerereignis aus einer erlaubten Fehlerklasse und gegebenenfalls einer Stelle im Anwendungscode. Request-Daten, ursprüngliche Fehlermeldungen und Benutzerinformationen werden verworfen. Strukturierte Logs und Traces bleiben in Sentry deaktiviert.
 - der Produktions-Container bekommt `SENTRY_ENVIRONMENT=production`
 - der Produktions-Deploy setzt `SENTRY_RELEASE` automatisch auf die deployte Git-SHA
@@ -1014,7 +1014,7 @@ Für manuelle Produktions-Kommandos brauchst du lokal:
 Für lokale Sentry-Release-Meldungen zusätzlich:
 
 - `SENTRY_AUTH_TOKEN` in `.env` oder in der Shell
-- optional `SENTRY_ORG` und `SENTRY_PROJECT`; Default im Repo ist aktuell `self-employed-gi` und `stuttgart-live-anonymized`
+- optional `SENTRY_ORG` und `SENTRY_PROJECT` zum Überschreiben der Standardwerte `sks-russ` und `stuttgart-live`
 
 Der aktuell konfigurierte Zielhost ist `46.225.224.194`.
 
