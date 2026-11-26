@@ -8,7 +8,7 @@ if [[ "$DEFAULT_ENVIRONMENT" == staging && -z "${SENTRY_ENVIRONMENT:-}" ]]; then
   export SENTRY_ENVIRONMENT=staging
 fi
 DEFAULT_ORG="self-employed-gi"
-DEFAULT_PROJECT="stuttgart-live"
+DEFAULT_PROJECT="stuttgart-live-anonymized"
 
 SENTRY_RELEASE_VALUE="${SENTRY_RELEASE:-}"
 SENTRY_ENVIRONMENT_VALUE="${SENTRY_ENVIRONMENT:-$DEFAULT_ENVIRONMENT}"
@@ -26,7 +26,7 @@ Optionen:
   --release VALUE         Release-ID, Default: aktuelle Git-SHA
   --environment VALUE     Environment, Default: production
   --org VALUE             Sentry-Organisation, Default: self-employed-gi
-  --project VALUE         Sentry-Projekt, Default: stuttgart-live
+  --project VALUE         Sentry-Projekt, Default: stuttgart-live-anonymized
   --dotenv PATH           Pfad zur .env-Datei, Default: .env im Repo
   -h, --help              Diese Hilfe anzeigen
 EOF

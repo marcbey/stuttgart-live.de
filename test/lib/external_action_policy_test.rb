@@ -71,13 +71,14 @@ class ExternalActionPolicyTest < ActiveSupport::TestCase
       end
       assert_equal "staging", config.environment
       assert_includes config.enabled_environments, "staging"
-      assert config.rails.structured_logging.enabled
+      refute config.rails.structured_logging.enabled
+      assert_respond_to config.before_send, :call
     ensure
       previous.nil? ? ENV.delete("SENTRY_ENVIRONMENT") : ENV["SENTRY_ENVIRONMENT"] = previous
     end
   end
 
-  test "Sentry initializes production with structured Rails logs enabled" do
+  test "Sentry initializes production with anonymized errors and structured logs disabled" do
     original = Rails.configuration.x.deployment_environment
     previous = ENV["SENTRY_ENVIRONMENT"]
     Rails.configuration.x.deployment_environment = "production"
@@ -90,7 +91,8 @@ class ExternalActionPolicyTest < ActiveSupport::TestCase
 
     assert_equal "production", config.environment
     assert_includes config.enabled_environments, "production"
-    assert config.rails.structured_logging.enabled
+    refute config.rails.structured_logging.enabled
+    assert_respond_to config.before_send, :call
   ensure
     Rails.configuration.x.deployment_environment = original
     previous.nil? ? ENV.delete("SENTRY_ENVIRONMENT") : ENV["SENTRY_ENVIRONMENT"] = previous
