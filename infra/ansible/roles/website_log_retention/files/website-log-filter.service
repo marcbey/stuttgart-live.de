@@ -1,0 +1,14 @@
+[Unit]
+Description=Anonymize website and Kamal proxy output before journaling
+Requires=website-log-filter.socket
+After=website-log-filter.socket
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/libexec/website-log-filter.py
+DynamicUser=yes
+RestrictAddressFamilies=AF_UNIX
+LimitCORE=0
+StandardOutput=journal
+StandardError=null
+LogNamespace=live-web
+Restart=on-failure

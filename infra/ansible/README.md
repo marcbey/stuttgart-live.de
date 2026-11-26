@@ -17,6 +17,52 @@ cd infra/ansible
 ansible-galaxy collection install -r requirements.yml
 ```
 
+## Logaufbewahrung für beide Websites
+
+Das Journal `live-web` ist für die Web- und Job-Container beider Anwendungen
+sowie den gemeinsamen Kamal-Proxy vorgesehen. Docker sendet die Ausgabe über
+den lokalen Socket `/run/website-log-filter.sock` an einen Filter. Er baut
+neue Einträge ausschließlich aus zugelassenen technischen Feldern auf,
+etwa Routenmuster, HTTP-Status, Laufzeit und Fehlerklasse. Die Ausgabe ohne
+bekanntes Format wird verworfen oder als allgemeines Fehlersignal erfasst.
+Hinweise von Docker zu fehlgeschlagenen Logzustellungen werden bereits vor
+dem Systemjournal abgefangen, da sie den ursprünglichen Logtext enthalten
+können. Für den Abruf als `admin` gilt `sudo journalctl --namespace=live-web`.
+
+Vor dem ersten Staging-Deploy mit dem Syslog-Treiber den Host-Eingriff
+gemäß [Betriebsrunbook](../../docs/operations/domainumzug-und-staging.md)
+koordinieren und den Filter unter der gemeinsamen Host-Sperre einrichten.
+Das Journal liegt auf der Systemplatte und enthält ausschließlich die
+gefilterten Einträge. Der Filtersocket startet beim Booten vor Docker.
+Die Bereinigung rotiert auch aktive Dateien und löscht ältere Archive
+stündlich ab sechs Tagen. Nach dem Systemstart läuft sie erneut.
+
+```bash
+ansible-playbook --syntax-check playbooks/website_log_retention.yml
+ansible-playbook -u admin playbooks/website_log_retention.yml
+```
+
+Vor der Freigabe `website-log-retention.timer` und
+`website-log-filter.socket` auf dem Host prüfen. Beim Staging-Test werden
+synthetische IP-Adressen, E-Mail-Adressen und URL-Parameter über beide Apps
+und den Proxy geschickt. Im Journal sind nur die technischen Angaben
+zulässig. Sie bleiben nach einem Neustart abrufbar. Die Rollen müssen
+den Treiber `syslog`, das Format `rfc5424micro`, den Filtersocket und
+`cache-disabled=true` verwenden.
+
+Beide Repositories konfigurieren denselben Proxy. Nach der Staging-Prüfung
+und im freigegebenen Wartungsfenster muss er einmal unter der gemeinsamen
+Host-Sperre mit der neuen Konfiguration neu erstellt werden. Die App-Releases
+laufen über die jeweiligen GitHub-Freigaben. Danach die Rolle und den
+Logging-Treiber des Proxys sowie beider Apps prüfen. Für Rückfälle nur einen
+geprüften Stand mit diesem Logpfad und der anonymisierten externen Ausgabe
+verwenden.
+
+Nach dem Wechsel die Logkopien aus Übergangscontainern und den davon
+betroffenen Sicherungen erfassen und bereinigen. Für die Freigabe nach dem
+Wiederherstellen älterer Datenbankdumps müssen deren personenbezogene
+Protokoll- und Fehlerdetails zuerst bereinigt sein.
+
 ## Inventory
 
 Das Inventory kann aus Terraform-Outputs erzeugt werden:

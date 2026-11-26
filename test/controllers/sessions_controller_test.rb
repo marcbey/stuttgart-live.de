@@ -4,7 +4,12 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
   setup do
     @editor = users(:one)
     @blogger = users(:blogger)
+    @login_logs = StringIO.new
+    @login_log_sink = ActiveSupport::Logger.new(@login_logs)
+    Rails.logger.broadcast_to(@login_log_sink)
   end
+
+  teardown { Rails.logger.stop_broadcasting_to(@login_log_sink) }
 
   test "new" do
     get new_session_path
@@ -49,7 +54,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_root_path
     assert cookies[:session_id]
-    assert_equal "successful", LoginAttempt.recent_first.first.outcome
+    assert_equal "successful", last_login_log.fetch("outcome")
   end
 
   test "create normalizes the email address before authentication" do
@@ -57,7 +62,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_root_path
     assert cookies[:session_id]
-    assert_equal "successful", LoginAttempt.recent_first.first.outcome
+    assert_equal "successful", last_login_log.fetch("outcome")
   end
 
   test "create with blogger credentials redirects to the blog backend" do
@@ -65,18 +70,18 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to backend_blog_posts_path
     assert cookies[:session_id]
-    assert_equal "successful", LoginAttempt.recent_first.first.outcome
+    assert_equal "successful", last_login_log.fetch("outcome")
   end
 
   test "create with invalid credentials" do
-    post session_path, params: { email_address: @editor.email_address, password: "wrong" }
+    assert_no_difference -> { LoginAttempt.count } do
+      post session_path, params: { email_address: @editor.email_address, password: "wrong" }
+    end
 
     assert_redirected_to new_session_path
     assert_nil cookies[:session_id]
     assert_equal 1, @editor.reload.failed_login_attempts
-    attempt = LoginAttempt.recent_first.first
-    assert_equal "failed", attempt.outcome
-    assert_equal @editor.email_address, attempt.email_address
+    assert_equal({ "event" => "login_attempt", "outcome" => "failed" }, last_login_log)
   end
 
   test "create locks the account after too many failed credentials" do
@@ -88,7 +93,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     @editor.reload
 
     assert @editor.login_locked?
-    assert_equal "failed", LoginAttempt.recent_first.first.outcome
+    assert_equal "failed", last_login_log.fetch("outcome")
   end
 
   test "create rejects locked users even with a correct password" do
@@ -103,7 +108,7 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to new_session_path
     assert_nil cookies[:session_id]
     assert_equal "Zu viele Fehlversuche. Bitte später erneut versuchen.", flash[:alert]
-    assert_equal "locked", LoginAttempt.recent_first.first.outcome
+    assert_equal "locked", last_login_log.fetch("outcome")
   end
 
   test "create resets failed login tracking after a successful login" do
@@ -129,5 +134,13 @@ class SessionsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to new_session_path
     assert_empty cookies[:session_id]
+  end
+
+  private
+
+  def last_login_log
+    line = @login_logs.string.lines.reverse.find { |entry| entry.start_with?('{"event":"login_attempt"') }
+    assert line, "expected a login attempt in the application log"
+    JSON.parse(line)
   end
 end

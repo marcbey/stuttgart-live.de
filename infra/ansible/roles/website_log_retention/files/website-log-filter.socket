@@ -1,0 +1,11 @@
+[Unit]
+Description=Local socket for Stuttgart Live and Russ Live container output
+Before=docker.service
+
+[Socket]
+ListenDatagram=/run/website-log-filter.sock
+SocketMode=0600
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

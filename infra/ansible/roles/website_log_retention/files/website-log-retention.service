@@ -1,0 +1,8 @@
+[Unit]
+Description=Rotate and expire the Stuttgart Live and Russ Live journal
+Requires=systemd-journald@live-web.service
+After=systemd-journald@live-web.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/journalctl --namespace=live-web --rotate --vacuum-time=6d

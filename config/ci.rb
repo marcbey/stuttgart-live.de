@@ -28,6 +28,7 @@ CI.run do
   step "Security: JavaScript vulnerability audit", "bun audit --audit-level=high"
   step "Security: Brakeman code analysis", "bin/brakeman --quiet --no-pager --exit-on-warn --exit-on-error"
   step "Tests: JavaScript and performance parsers", "node --test test/javascript/*_test.mjs"
+  step "Tests: Website log filtering", "env PYTHONDONTWRITEBYTECODE=1 python3 -m unittest discover -s test/ops -p website_log_filter_test.py"
   step "Tests: Rails (Bullet)", rails_test_command
   step "Tests: Seeds", "env RAILS_ENV=test bin/rails db:seed:replant"
 

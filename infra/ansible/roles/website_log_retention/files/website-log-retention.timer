@@ -1,0 +1,11 @@
+[Unit]
+Description=Expire the website journal even when no new logs are written
+
+[Timer]
+OnCalendar=hourly
+OnBootSec=1min
+AccuracySec=1min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

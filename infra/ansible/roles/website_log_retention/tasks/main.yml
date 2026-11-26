@@ -1,0 +1,66 @@
+---
+- name: Verzeichnisse für Filter und Websitejournal anlegen
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - /etc/systemd/journald@live-web.conf.d
+    - /etc/systemd/system/docker.service.d
+    - /usr/local/libexec
+
+- name: Speicherung und Höchstalter für das Websitejournal festlegen
+  ansible.builtin.copy:
+    src: retention.conf
+    dest: /etc/systemd/journald@live-web.conf.d/retention.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Websitejournal neu laden
+
+- name: Logfilter installieren
+  ansible.builtin.copy:
+    src: website_log_filter.py
+    dest: /usr/local/libexec/website-log-filter.py
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Logfilter neu laden
+
+- name: Rohtexte bei Docker-Logtreiberfehlern vor dem Journal abfangen
+  ansible.builtin.copy:
+    src: docker-log-privacy.conf
+    dest: /etc/systemd/system/docker.service.d/website-log-privacy.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Logfilter und zeitgesteuerte Bereinigung einrichten
+  ansible.builtin.copy:
+    src: "{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - website-log-filter.socket
+    - website-log-filter.service
+    - website-log-retention.service
+    - website-log-retention.timer
+
+- name: Logfilter und Bereinigung beim Systemstart aktivieren
+  ansible.builtin.systemd_service:
+    name: "{{ item }}"
+    daemon_reload: true
+    enabled: true
+    state: started
+  loop:
+    - website-log-filter.socket
+    - website-log-retention.timer
+
+- name: Fällige Einträge beim Einrichten bereinigen
+  ansible.builtin.systemd_service:
+    name: website-log-retention.service
+    state: started

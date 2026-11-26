@@ -1,0 +1,10 @@
+---
+- name: Websitejournal neu laden
+  ansible.builtin.systemd_service:
+    name: systemd-journald@live-web.service
+    state: restarted
+
+- name: Logfilter neu laden
+  ansible.builtin.systemd_service:
+    name: website-log-filter.service
+    state: restarted
