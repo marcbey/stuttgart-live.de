@@ -1048,6 +1048,10 @@ das Image aus demselben CI-Lauf und prüft reale nginx-HTTP-Antworten, bevor
 Staging-Secrets bereitgestellt werden. Die reguläre PR-CI veröffentlicht kein
 Image; es gibt keinen `latest`-Tag als Freigabegrundlage.
 
+Der HTTPS-Smoke-Test am laufenden Staging prüft per `HEAD` die erste Medien-URL,
+deren Pfad mit `/media/` beginnt. Diese URL muss auf eine der beiden
+Staging-Domains zeigen.
+
 Für eine Vorschau vor dem Merge öffnest du **Actions → Deploy PR Staging → Run
 workflow**, lässt den Branch auf **main** und gibst die PR-Nummer ohne `#` ein.
 Der PR muss offen sein, aus diesem Repository stammen und nach `main` zeigen.
