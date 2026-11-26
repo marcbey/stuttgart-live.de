@@ -34,6 +34,18 @@ export default class extends Controller {
     }
   }
 
+  async copyLink(event) {
+    event.preventDefault()
+    event.stopPropagation()
+
+    try {
+      await this.copyUrl()
+      this.showStatus(this.copiedLabelValue, "is-confirmed")
+    } catch (_error) {
+      this.showStatus(this.errorLabelValue, "is-error")
+    }
+  }
+
   canUseNativeShare() {
     if (!navigator.share) return false
     if (!navigator.canShare) return true

@@ -1,0 +1,42 @@
+<% events = local_assigns[:events] %>
+<% sharing_controller = events ? "share-event" : "design-preview-saved-dropdown" %>
+<% sharing_data = {} %>
+<% if events %>
+  <% share_text = [
+       "Meine Eventauswahl bei STUTTGART LIVE\n#{events.size} #{events.one? ? 'Event' : 'Events'}",
+       *events.each_with_index.map { |event, index| "#{index + 1}. #{saved_event_share_text(event)}" },
+       "Die gesamte Auswahl mit Bildern und weiteren Infos:"
+     ].join("\n\n") %>
+  <% sharing_data = {
+       controller: sharing_controller,
+       share_event_title_value: "Meine Merkliste bei STUTTGART LIVE",
+       share_event_text_value: share_text,
+       share_event_url_value: saved_events_url(slugs: events.map(&:slug))
+     } %>
+<% end %>
+
+<%= tag.div class: "saved-events-actions", data: sharing_data do %>
+  <div class="saved-events-actions-share">
+    <%= button_tag type: "button", class: "design-preview-saved-share", disabled: events.nil?,
+                   data: { action: "#{sharing_controller}#share",
+                           "#{sharing_controller}-target" => events ? "button" : "shareButton" } do %>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m8 6 4-4 4 4M12 2v13M5 10v10h14V10"></path>
+      </svg>
+      <% if events %><span class="saved-events-action-label-long">Merkliste teilen</span><% end %>
+      <span class="saved-events-action-label-short">Teilen</span>
+    <% end %>
+    <%= button_tag type: "button", class: "design-preview-saved-share", disabled: events.nil?,
+                   data: { action: "#{sharing_controller}#copyLink",
+                           "#{sharing_controller}-target" => events ? "button" : "shareButton" } do %>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="m10 13 4-4M8 16l-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0M16 8l1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(0 0) scale(.95)"></path>
+      </svg>
+      <% if events %><span class="saved-events-action-label-long">Link kopieren</span><% end %>
+      <span class="saved-events-action-label-short">Kopieren</span>
+    <% end %>
+  </div>
+  <%= render "public/events/clear_saved_events_button", label: events ? "Merkliste leeren" : "Leeren", compact_label: events ? "Leeren" : nil %>
+  <%= tag.span class: "design-preview-saved-share-status", role: "status", aria: { live: "polite" },
+               data: { "#{sharing_controller}-target" => events ? "status" : "shareStatus" } %>
+<% end %>
