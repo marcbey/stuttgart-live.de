@@ -11,13 +11,6 @@ deploy_timeout: 90
 boot:
   parallel_roles: false
 
-# Bound combined nginx/Rails stdout per application container.
-logging:
-  driver: json-file
-  options:
-    max-size: 10m
-    max-file: "3"
-
 servers:
   web:
     hosts:

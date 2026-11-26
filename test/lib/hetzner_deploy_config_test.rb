@@ -9,14 +9,33 @@ class HetznerDeployConfigTest < ActiveSupport::TestCase
     raw = render_deploy_config(destination: "hetzner", env: { "PRODUCTION_DOMAIN_MODE" => "live" })
     config = Kamal::Configuration.new(raw.symbolize_keys, destination: "hetzner")
     config.roles.each do |role|
-      assert_includes role.logging_args, 'max-size="10m"'
-      assert_includes role.logging_args, 'max-file="3"'
+      assert_includes role.logging_args, '"syslog"'
+      assert_includes role.logging_args, 'cache-disabled="true"'
+      assert_includes role.logging_args, 'syslog-address="unixgram:///run/website-log-filter.sock"'
+      assert_includes role.logging_args, 'syslog-format="rfc5424micro"'
     end
     assert_equal 3, raw.dig("servers", "web", "env", "clear", "WEB_CONCURRENCY")
     assert_equal 2, raw.dig("servers", "web", "env", "clear", "RAILS_MAX_THREADS")
     assert_equal 3, raw.dig("servers", "web", "env", "clear", "DB_POOL")
     assert_equal "false", raw.dig("env", "clear", "STAGING_NOINDEX")
     assert_includes raw.dig("proxy", "hosts"), "stuttgart-live.de"
+  end
+
+  test "the shared proxy uses the same local journal in staging and production" do
+    %w[hetzner staging].each do |destination|
+      raw = render_deploy_config(destination:)
+      assert_equal "", raw.dig("proxy", "run", "log_max_size")
+      assert_equal "syslog", raw.dig("proxy", "run", "options", "log-driver")
+      config = Kamal::Configuration.new(raw.symbolize_keys, destination:)
+      proxy_command = Kamal::Commands::Proxy.new(config, host: config.primary_host).run.join(" ")
+      assert_includes proxy_command, '--log-driver "syslog"'
+      assert_includes proxy_command, "cache-disabled=true"
+      refute_includes proxy_command, "max-size="
+      assert_includes raw.dig("proxy", "run", "options", "log-opt"),
+        "syslog-address=unixgram:///run/website-log-filter.sock"
+      assert_includes raw.dig("proxy", "run", "options", "log-opt"), "syslog-format=rfc5424micro"
+      assert_includes raw.dig("proxy", "run", "options", "log-opt"), "cache-disabled=true"
+    end
   end
 
   test "reads values from the shared deploy config" do

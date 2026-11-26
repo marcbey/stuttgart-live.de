@@ -1237,10 +1237,6 @@ Status und Logs:
 bin/kamal details -d hetzner
 bin/kamal app containers -d hetzner
 bin/kamal app version -d hetzner
-bin/kamal app logs -f -d hetzner -r web
-bin/kamal app logs -f -d hetzner -r job
-bin/kamal app logs --since 15m -d hetzner -r web
-bin/kamal app logs --since 30m --grep ERROR -d hetzner -r job
 ```
 
 Rails protokolliert Fehler in Web- und Job-Containern mit Schweregrad und
@@ -1251,9 +1247,13 @@ enthalten nur das Ergebnis. Stündliche Jobs entfernen alte Einträge aus
 Fehlgeschlagene Jobs können weiterhin erneut gestartet werden.
 
 Die nginx-Zugriffslogs enthalten technische Zeitmessungen und Routenmuster.
-Die Daten der gemeinsamen Proxy-Schicht werden beim separaten Host-Wechsel
-auf das [Websitejournal](infra/ansible/README.md#logaufbewahrung-für-beide-websites)
-umgestellt. Bis zu diesem Wechsel laufen die Containerlogs über Docker.
+Die gefilterten Containerlogs beider Apps und des gemeinsamen Proxys werden
+über das [Websitejournal](infra/ansible/README.md#logaufbewahrung-für-beide-websites)
+abgerufen. Das Journal bleibt auf der Systemplatte über Neustarts hinweg
+abrufbar. Seine Einträge werden stündlich ab sechs Tagen gelöscht.
+
+Als Host-Administrator liest du die letzten Einträge mit
+`sudo journalctl --namespace=live-web --since '15 min ago'`.
 
 Anfragen mit widersprüchlichen Client-IP-Headern werden mit der öffentlichen Fehlerseite und HTTP 400 abgewiesen. Die Rails-Prüfung auf IP-Spoofing bleibt dabei aktiv; ungültige Header erreichen weder Anmeldung noch reguläre Seitenverarbeitung.
 
@@ -1466,7 +1466,6 @@ Danach die App wieder starten und prüfen:
 ```bash
 bin/hetzner-check
 bin/kamal app start -d hetzner --version <VERSION>
-bin/kamal app logs --since 5m -d hetzner
 curl -I https://stuttgart-live.de
 ```
 
@@ -1519,7 +1518,6 @@ bin/kamal app exec -d hetzner -- bin/rails db:schema:load db:seed
 ```bash
 bin/hetzner-check
 bin/kamal app start -d hetzner --version <VERSION>
-bin/kamal app logs --since 5m -d hetzner
 curl -I https://stuttgart-live.de
 ```
 
@@ -1530,7 +1528,7 @@ curl -I https://stuttgart-live.de
 Für die meisten Störungen reicht diese Reihenfolge:
 
 1. `bin/kamal details -d hetzner` prüfen
-2. `bin/kamal app logs --since 15m -d hetzner` ansehen
+2. Als Host-Administrator `sudo journalctl --namespace=live-web --since '15 min ago'` ansehen
 3. bei App-Fehlern per `bin/kamal app exec --interactive --reuse "bin/rails console" -d hetzner` in die Konsole
 4. bei Host-Problemen per SSH `docker ps` und `systemctl status docker` prüfen
 5. einen weiterhin gültigen, schema-kompatiblen Staging-Nachweis für die gewünschte Version über `Deploy Production` freigeben
