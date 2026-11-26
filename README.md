@@ -743,7 +743,7 @@ Für Sentry gilt zusätzlich:
 - die App erstellt vor dem Versand ein Fehlerereignis aus einer erlaubten Fehlerklasse und gegebenenfalls einer Stelle im Anwendungscode. Request-Daten, ursprüngliche Fehlermeldungen und Benutzerinformationen werden verworfen. Strukturierte Logs und Traces bleiben in Sentry deaktiviert.
 - der Produktions-Container bekommt `SENTRY_ENVIRONMENT=production`
 - der Produktions-Deploy setzt `SENTRY_RELEASE` automatisch auf die deployte Git-SHA
-- nach erfolgreichem GitHub-Deploy meldet der Workflow denselben Release per `sentry-cli` an Sentry und verknüpft automatisch die Commits
+- nach erfolgreichem GitHub-Deploy meldet der Workflow Git-SHA und Deployment-Umgebung per `sentry-cli` an Sentry. Die Commit-Historie und die Daten der Commit-Autoren werden dabei nicht übertragen.
 - der aktive Uptime-Monitor prüft jede Minute `https://stuttgart-live.de/up` in der Umgebung `production`; abgeschaltete Testdomains gehören nicht in diese Verfügbarkeitsprüfung
 
 Wenn du lokal sowohl entwickelst als auch Hetzner-Infrastruktur steuerst und manuell nach Produktion deployen willst, reicht aktuell in `.env` in der Regel:
