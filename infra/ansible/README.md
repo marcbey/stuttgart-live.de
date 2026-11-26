@@ -42,6 +42,13 @@ ansible-playbook --syntax-check playbooks/website_log_retention.yml
 ansible-playbook -u admin playbooks/website_log_retention.yml
 ```
 
+Die Ansible-Rolle legt die Docker-Systemd-Konfiguration ab. Im selben
+Wartungsfenster und unter der gemeinsamen Sperre Docker kontrolliert neu starten,
+damit die Filterregeln für Docker-eigene Logmeldungen wirksam werden. Der Neustart
+betrifft beide Produktions- und Staging-Umgebungen. In dieser Zeit konkurrierende
+Deployments aussetzen und anschließend Zustand und Erreichbarkeit aller Ziele
+prüfen.
+
 Vor der Freigabe `website-log-retention.timer` und
 `website-log-filter.socket` auf dem Host prüfen. Beim Staging-Test werden
 synthetische IP-Adressen, E-Mail-Adressen und URL-Parameter über beide Apps
