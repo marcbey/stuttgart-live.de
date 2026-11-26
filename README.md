@@ -1644,12 +1644,13 @@ HTTP 308 auf den festen HTTPS-Host aus `APP_HOST`; Pfad und Suchparameter bleibe
 erhalten. Fremde Hosts werden abgewiesen. Die bisherige Produktionsdomain und ihre
 Medien-Signierschlüssel bleiben bis zur geplanten Umschaltung erhalten.
 
-Nach jedem Image-Build ist der HTTP-Test verpflichtend:
-`APP_IMAGE=<gebautes-image> mise exec -- ruby test/ops/nginx_runtime_check.rb`.
-Er startet ausschließlich isolierte Testcontainer mit synthetischen Dateien und
+Nach jedem Image-Build muss die Laufzeitprüfung mit
+`APP_IMAGE=<gebautes-image> mise exec -- ruby test/ops/nginx_runtime_check.rb`
+bestehen. Sie startet isolierte Testcontainer mit synthetischen Daten und
 prüft Weiterleitungen, Zugriffsschutz sowie beide Medien-Signaturverfahren.
-Außerdem prüft er das von Kamal benötigte `service`-Label, das der Dockerfile
-auch für direkte Docker- und GitHub-Action-Builds im fertigen Image setzt.
+Sie prüft auch das von Kamal benötigte `service`-Label und ruft `bin/jobs --help`
+sowie `bin/rails server --help` auf, um Fehler beim Laden der Gems vor dem
+Deployment zu erkennen.
 
 Alle Deployments beider Projekte und Umgebungen müssen dieselbe Sperre auf dem
 Hetzner-Host halten. Der Wrapper `mise exec -- script/ops/deploy_with_lock --host

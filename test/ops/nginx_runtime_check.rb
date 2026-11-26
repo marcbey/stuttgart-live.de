@@ -63,6 +63,15 @@ class NginxRuntimeCheck < Minitest::Test
     assert_equal expected, docker!("image", "inspect", "--format", '{{ index .Config.Labels "service" }}', IMAGE).strip
   end
 
+  def test_job_and_server_commands_boot_with_locked_gems
+    [ [ "bin/jobs", "--help" ], [ "bin/rails", "server", "--help" ] ].each do |command|
+      output, status = Open3.capture2e("docker", "run", "--rm", "--network", "none",
+        "--env", "APP_ENVIRONMENT=production", "--env", "SECRET_KEY_BASE=#{SECRET}", IMAGE, *command)
+
+      assert status.success?, "#{command.join(" ")} failed:\n#{output}"
+    end
+  end
+
   def test_canonical_redirects_precede_assets_and_media_and_preserve_encoding
     start_nginx({ "CANONICAL_REDIRECT_ENABLED" => "true" })
     [ "www.app.example.invalid", "legacy.example.invalid" ].each do |host|
