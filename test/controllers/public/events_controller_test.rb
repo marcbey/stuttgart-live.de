@@ -1358,7 +1358,8 @@ class Public::EventsControllerTest < ActionDispatch::IntegrationTest
     get events_url(filter: "all")
 
     assert_response :success
-    assert_select ".app-nav-backend-menu[data-controller='backend-nav-menu']", count: 1
+    assert_select ".design-preview-topbar .public-backend-header .app-nav-backend-menu[data-controller='backend-nav-menu']", count: 1
+    assert_select ".public-backend-float .app-nav-backend-menu", count: 0
     assert_select ".app-nav-backend-toggle[aria-controls='app-nav-backend-menu']", text: /Backend/
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Events"
     assert_select "#app-nav-backend-menu .app-nav-link", text: "Präsentatoren"

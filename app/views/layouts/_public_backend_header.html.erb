@@ -1,0 +1,6 @@
+<% if authenticated? %>
+  <% content_for :public_backend_in_header, "true" %>
+  <div class="public-backend-header" aria-label="Backend-Navigation">
+    <%= render "layouts/public_backend_menu" %>
+  </div>
+<% end %>

@@ -54,6 +54,9 @@ application.register("mobile-nav", MobileNavController)
 import NavOffsetController from "./nav_offset_controller"
 application.register("nav-offset", NavOffsetController)
 
+import NewsletterTeamTipController from "./newsletter_team_tip_controller"
+application.register("newsletter-team-tip", NewsletterTeamTipController)
+
 import EventEditorNavigationController from "./event_editor_navigation_controller"
 application.register("event-editor-navigation", EventEditorNavigationController)
 

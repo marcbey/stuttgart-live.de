@@ -343,7 +343,7 @@ width: max-content;
   gap: 0.5rem;
 }
 
-.public-backend-float .app-nav-backend-panel.app-nav-links-group {
+:is(.public-backend-float, .public-backend-header) .app-nav-backend-panel.app-nav-links-group {
 position: absolute;
   right: 0;
   left: auto;
@@ -361,12 +361,12 @@ position: absolute;
   backdrop-filter: blur(10px);
 }
 
-.public-backend-float .app-nav-backend-panel.app-nav-links-group[hidden] {
+:is(.public-backend-float, .public-backend-header) .app-nav-backend-panel.app-nav-links-group[hidden] {
 display: none;
 }
 
-.public-backend-float .app-nav-backend-panel .app-nav-link,
-.public-backend-float .app-nav-backend-panel .app-nav-link-form .app-nav-link {
+:is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link,
+:is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link-form .app-nav-link {
 display: flex;
   width: 100%;
   justify-content: flex-start;
@@ -384,7 +384,7 @@ body.page-public-events-index .app-nav-backend-menu {
 display: none;
 }
 
-body.page-public-events-index .public-backend-float .app-nav-backend-menu {
+body.page-public-events-index :is(.public-backend-float, .public-backend-header) .app-nav-backend-menu {
 display: block;
 }
 
@@ -411,8 +411,8 @@ opacity: 0;
   pointer-events: none;
 }
 
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link,
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link-form .app-nav-link {
+body.page-public-events-index :is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link,
+body.page-public-events-index :is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link-form .app-nav-link {
 min-height: 2.35rem;
   padding: 0.45rem 0;
   border: 0;
@@ -427,14 +427,14 @@ min-height: 2.35rem;
   box-shadow: none;
 }
 
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link::after,
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link-form .app-nav-link::after {
+body.page-public-events-index :is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link::after,
+body.page-public-events-index :is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link-form .app-nav-link::after {
 display: none;
 }
 
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link:hover,
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link-active,
-body.page-public-events-index .public-backend-float .app-nav-backend-panel .app-nav-link-form .app-nav-link:hover {
+body.page-public-events-index :is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link:hover,
+body.page-public-events-index :is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link-active,
+body.page-public-events-index :is(.public-backend-float, .public-backend-header) .app-nav-backend-panel .app-nav-link-form .app-nav-link:hover {
 color: var(--ink);
   transform: none;
 }
@@ -13805,7 +13805,7 @@ body.page-public-design-preview .public-backend-float-inner {
 }
 
 body.page-public-design-preview .public-backend-shortcut,
-body.page-public-design-preview .public-backend-float .app-nav-backend-toggle {
+body.page-public-design-preview :is(.public-backend-float, .public-backend-header) .app-nav-backend-toggle {
   min-height: 2.35rem;
   padding: 0 0.82rem;
   border: 1px solid rgba(255, 255, 255, 0.72);
@@ -13820,8 +13820,8 @@ body.page-public-design-preview .public-backend-float .app-nav-backend-toggle {
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2), 0 0.65rem 1.35rem rgba(249, 115, 22, 0.2);
 }
 
-body.page-public-design-preview .public-backend-float .app-nav-backend-toggle:hover,
-body.page-public-design-preview .public-backend-float .app-nav-backend-toggle[aria-expanded="true"],
+body.page-public-design-preview :is(.public-backend-float, .public-backend-header) .app-nav-backend-toggle:hover,
+body.page-public-design-preview :is(.public-backend-float, .public-backend-header) .app-nav-backend-toggle[aria-expanded="true"],
 body.page-public-design-preview .public-backend-shortcut:hover,
 body.page-public-design-preview .public-backend-shortcut:focus-visible {
   border-color: rgba(255, 255, 255, 0.9);
@@ -14183,6 +14183,72 @@ body.page-public-design-preview main {
   background: rgba(255, 255, 255, 0.76);
   backdrop-filter: none;
   transition: none;
+}
+
+.design-preview-topbar:has(.public-backend-header) {
+  grid-template-columns: max-content minmax(0, 1fr) max-content max-content;
+}
+
+.public-backend-header {
+  position: relative;
+  z-index: 3;
+  min-width: 0;
+  justify-self: end;
+}
+
+body.page-public-design-preview .public-backend-header .app-nav-backend-toggle {
+  min-height: 2.75rem;
+  padding-inline: 0.5rem;
+  font-size: 0.75rem;
+  box-shadow: none;
+}
+
+.public-backend-header .app-nav-backend-toggle-icon {
+  display: none;
+}
+
+.public-backend-header .app-nav-backend-panel.app-nav-links-group {
+  position: fixed;
+  top: calc(var(--preview-topbar-height) + 0.35rem);
+  right: auto;
+  left: var(--preview-shell-edge);
+  max-height: calc(100dvh - var(--preview-topbar-height) - 1rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 47.999rem) {
+  .design-preview-topbar:has(.public-backend-header),
+  .design-preview-topbar:has(.public-backend-header) .design-preview-actions {
+    gap: 0.25rem;
+  }
+
+  .design-preview-topbar:has(.public-backend-header) .design-preview-logo {
+    font-size: 1rem;
+  }
+
+  .design-preview-topbar:has(.public-backend-header) .design-preview-saved-link {
+    padding-inline: 0.55rem;
+  }
+}
+
+@media (min-width: 48rem) {
+  .public-backend-header {
+    flex: 0 0 auto;
+    margin-left: auto;
+  }
+
+  body.page-public-design-preview .public-backend-header .app-nav-backend-toggle {
+    padding-inline: 0.82rem;
+    font-size: 0.78rem;
+  }
+
+  .public-backend-header .app-nav-backend-panel.app-nav-links-group {
+    position: absolute;
+    top: calc(100% + 0.45rem);
+    right: 0;
+    left: auto;
+  }
 }
 
 body.is-design-preview-header-scrolled .design-preview-topbar {
@@ -24538,4 +24604,12 @@ body.page-public .design-preview .public-search-clear {
 
 .design-preview-saved-panel-footer .design-preview-saved-share-status {
   grid-column: 1 / -1;
+}
+
+@media (min-width: 48rem) and (max-width: 63.999rem) {
+  .design-preview-topbar:has(.public-backend-header) .design-preview-header-toolbar .public-search-filter-open,
+  .design-preview-topbar:has(.public-backend-header) .design-preview-header-toolbar .public-search-filter-open .public-search-field {
+    width: clamp(10rem, 24vw, 15rem);
+    flex-basis: clamp(10rem, 24vw, 15rem);
+  }
 }

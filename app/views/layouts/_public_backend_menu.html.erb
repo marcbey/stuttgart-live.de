@@ -1,0 +1,24 @@
+<div class="app-nav-backend-menu"
+     data-controller="backend-nav-menu">
+  <button type="button"
+          class="app-nav-backend-toggle"
+          data-action="click->backend-nav-menu#toggle"
+          data-backend-nav-menu-target="button"
+          aria-expanded="false"
+          aria-controls="app-nav-backend-menu"
+          aria-label="Backend-Menü öffnen">
+    <span class="app-nav-backend-toggle-label">Backend</span>
+    <span class="app-nav-backend-toggle-icon" aria-hidden="true">
+      <span></span>
+      <span></span>
+      <span></span>
+    </span>
+  </button>
+
+  <div id="app-nav-backend-menu"
+       class="app-nav-backend-panel app-nav-links-group"
+       data-backend-nav-menu-target="panel"
+       hidden>
+    <%= render "layouts/backend_nav_links" %>
+  </div>
+</div>

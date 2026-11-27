@@ -120,39 +120,7 @@
     <% nav_inner_classes << "app-nav-inner-homepage-poster" if public_homepage_chrome %>
     <% nav_browse_state = @browse_state || @header_browse_state %>
     <% public_events_search_visible = nav_browse_state.present? %>
-    <% backend_nav_links = capture do %>
-      <% if authenticated? %>
-        <% if current_user.backend_access? %>
-          <%= link_to "Events", backend_events_path, class: app_nav_link_class(active: backend_nav_active?), aria: { current: ("page" if backend_nav_active?) } %>
-        <% end %>
-        <% if current_user.blog_access? %>
-          <%= link_to "News", backend_blog_posts_path, class: app_nav_link_class(active: blog_nav_active?), aria: { current: ("page" if blog_nav_active?) } %>
-        <% end %>
-        <% if current_user.backend_access? %>
-          <%= link_to "Newsletter", backend_newsletters_path, class: app_nav_link_class(active: newsletter_nav_active?), aria: { current: ("page" if newsletter_nav_active?) } %>
-          <%= link_to "Seiten", backend_pages_path, class: app_nav_link_class(active: pages_nav_active?), aria: { current: ("page" if pages_nav_active?) } %>
-          <%= link_to "Präsentatoren", backend_presenters_path, class: app_nav_link_class(active: presenter_nav_active?), aria: { current: ("page" if presenter_nav_active?) } %>
-          <%= link_to "Locations", backend_venues_path, class: app_nav_link_class(active: venue_nav_active?), aria: { current: ("page" if venue_nav_active?) } %>
-        <% end %>
-        <% if current_user.admin? %>
-          <%= link_to "Weiterleitungen", backend_redirects_path, class: app_nav_link_class(active: controller_path == "backend/redirects"), aria: { current: ("page" if controller_path == "backend/redirects") } %>
-          <%= link_to "Einstellungen", edit_backend_settings_path, class: app_nav_link_class(active: settings_nav_active?), aria: { current: ("page" if settings_nav_active?) } %>
-          <%= link_to "Queue", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?), aria: { current: ("page" if importer_nav_active?) } %>
-          <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users"), aria: { current: ("page" if controller_path == "backend/users") } %>
-        <% elsif current_user.backend_access? %>
-          <%= link_to "Queue", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?), aria: { current: ("page" if importer_nav_active?) } %>
-        <% end %>
-        <%= link_to "Passwort", edit_backend_account_password_path, class: app_nav_link_class(active: controller_path == "backend/account_passwords"), aria: { current: ("page" if controller_path == "backend/account_passwords") } %>
-        <%= button_to "Logout",
-                      session_path,
-                      method: :delete,
-                      class: app_nav_link_class,
-                      form: { class: "app-nav-link-form" } %>
-      <% else %>
-        <% auth_nav_active = controller_path == "sessions" || auth_chrome %>
-        <%= link_to "Login", new_session_path, class: app_nav_link_class(active: auth_nav_active), aria: { current: ("page" if auth_nav_active) } %>
-      <% end %>
-    <% end %>
+    <% backend_nav_links = render "layouts/backend_nav_links" %>
     <a href="#main-content" class="skip-link">Zum Inhalt springen</a>
     <nav class="app-nav"
          data-controller="nav-offset mobile-nav"
@@ -361,34 +329,13 @@
       </aside>
     <% end %>
 
-    <% if public_frontend && authenticated? %>
+    <% if public_frontend && authenticated? && (!content_for?(:public_backend_in_header) || content_for?(:public_backend_actions)) %>
       <aside class="public-backend-float" aria-label="Backend-Navigation">
         <div class="public-backend-float-inner">
           <%= yield :public_backend_actions %>
-          <div class="app-nav-backend-menu"
-               data-controller="backend-nav-menu">
-            <button type="button"
-                    class="app-nav-backend-toggle"
-                    data-action="click->backend-nav-menu#toggle"
-                    data-backend-nav-menu-target="button"
-                    aria-expanded="false"
-                    aria-controls="app-nav-backend-menu"
-                    aria-label="Backend-Menü öffnen">
-              <span class="app-nav-backend-toggle-label">Backend</span>
-              <span class="app-nav-backend-toggle-icon" aria-hidden="true">
-                <span></span>
-                <span></span>
-                <span></span>
-              </span>
-            </button>
-
-            <div id="app-nav-backend-menu"
-                 class="app-nav-backend-panel app-nav-links-group"
-                 data-backend-nav-menu-target="panel"
-                 hidden>
-              <%= backend_nav_links %>
-            </div>
-          </div>
+          <% unless content_for?(:public_backend_in_header) %>
+            <%= render "layouts/public_backend_menu" %>
+          <% end %>
         </div>
       </aside>
     <% end %>

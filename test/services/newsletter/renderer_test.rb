@@ -62,13 +62,21 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.text, "Erste Zeile\nZweite Zeile mit **fett** und <Tag>"
   end
 
-  test "renders intro heart markers in turquoise" do
+  test "renders intro heart markers as an absolute square favicon image" do
     issue = newsletter_issue_with_items
-    issue.update!(intro: "Persönlich für dich ♥")
+    issue.update!(intro: "Persönlich für dich ♥ 🩵 💜 💚")
 
     rendered = Newsletter::Renderer.call(issue)
 
-    assert_includes rendered.html, 'Persönlich für dich <span style="color:#28c7c2;font-size:1.5em;line-height:0;">&#9829;</span>'
+    document = Nokogiri::HTML(rendered.html)
+    hearts = document.css('img[src$="/icon.png"]')
+    assert_equal 4, hearts.length
+    assert hearts.all? { |image| image["alt"] == "♥" }
+    heart = hearts.first
+    assert heart, "Expected the intro heart to use an image"
+    assert_match %r{\Ahttps?://[^/]+/icon\.png\z}, heart["src"]
+    assert_equal "20", heart["width"]
+    assert_equal heart["width"], heart["height"]
     assert_includes rendered.text, "Persönlich für dich ♥"
   end
 
@@ -197,7 +205,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_equal "20.11.26, 20:30 Uhr", mobile.at_css(".newsletter-mobile-date")&.text
     assert_equal "Artist", mobile.at_css("td[colspan='2'] .newsletter-mobile-title")&.text
     assert_nil mobile.at_css(".newsletter-mobile-image")
-    assert_equal "→ Zum Event", mobile.at_css(".newsletter-event-link[href]").text
+    assert mobile.at_css(".newsletter-event-button[href]")
   end
 
   test "renders mixed weekly mix with one heading and genre labels" do
@@ -229,7 +237,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "DEIN WOCHENMIX"
     assert_includes rendered.html, "newsletter-item-genre"
     assert_includes rendered.html, "background:#d9f5f2"
-    assert_match(/newsletter-item-genre[^>]*>Pop<\/span>\s*<span class="newsletter-item-date"/, rendered.html)
+    assert_match(/newsletter-item-genre[^>]*>Pop<\/span><br>\s*<span class="newsletter-item-date"/, rendered.html)
     assert_not_includes rendered.html, "Pop ·"
     assert_equal 1, rendered.html.scan('class="newsletter-mobile-item-row"').length
     assert_includes rendered.html, 'class="newsletter-item-desktop-row newsletter-mixed-item-desktop-row"'
@@ -291,14 +299,16 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "&#8220;"
     assert_not_includes rendered.html, "&#8221;"
     assert_includes rendered.html, "Sarah empfiehlt diese Woche"
-    assert_includes rendered.html, ">&rarr;&nbsp;Zum Event</a>"
-    assert_not_includes Nokogiri::HTML(rendered.html).at_css(".newsletter-team-tip-event .newsletter-event-link")["style"], "border:"
+    assert_includes rendered.html, ">→ Zum Event</a>"
+    assert_includes rendered.html, "border:0;background:transparent;color:#326765"
     assert_includes rendered.html, "/events/#{event.slug}"
     assert_includes rendered.text, "Zum Event: https://example.com/events/#{event.slug}"
   end
 
-  test "personal tip links its event image and artist title in every layout" do
+  test "personal tip shows linked image and complete event details in every layout" do
     event = events(:published_one)
+    event.genres = [ genres(:pop) ]
+    event.assign_attributes(title: "Live Tour 2026", start_at: Time.zone.local(2026, 11, 27, 20))
     event.import_event_images.destroy_all
     event.import_event_images.create!(
       source: "easyticket", image_type: "image_url",
@@ -320,6 +330,13 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
         assert_equal event.artist_name, card.at_css("img")["alt"]
         assert card.css("a").all? { |link| link["href"].end_with?("/events/#{event.slug}") }
         assert_includes card.text, "Zum Event"
+        details = card.at_css(".newsletter-team-tip-event-details")
+        assert details, "Event information should be beside the tip image"
+        assert_equal "Pop", details.at_css(".newsletter-item-genre")&.text
+        assert_includes details.text, "27.11.2026 20:00 Uhr"
+        assert_includes details.text, event.venue
+        assert_includes details.text, "Live Tour 2026"
+        assert_equal event.artist_name, details.at_css("h3 a")&.text
       end
       assert_includes rendered.text, event.artist_name
     end
@@ -514,7 +531,7 @@ class Newsletter::RendererTest < ActiveSupport::TestCase
     assert_includes rendered.html, "newsletter-section-heading-title"
     assert_includes rendered.html, "newsletter-footer-copy"
     assert_includes rendered.html, "newsletter-card-image"
-    assert_includes rendered.html, 'class="newsletter-event-link"'
+    assert_includes rendered.html, 'class="newsletter-event-button"'
     assert_includes rendered.html, "font-size:9px;letter-spacing:.05em;color:#667071"
     assert_not_includes rendered.html, "font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#667071"
     assert_includes rendered.html, 'width="33.33%"'

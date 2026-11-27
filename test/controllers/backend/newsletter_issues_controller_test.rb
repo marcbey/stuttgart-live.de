@@ -96,6 +96,49 @@ class Backend::NewsletterIssuesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Sarahs Wochentipp", issue.display_team_tip_title
   end
 
+  test "personal tip form only offers current team profiles and hides manual profile fields" do
+    sign_in_as(@editor)
+    issue = create_issue(team_tip_profile_key: "sarah-sandner", team_tip_text: "Mein Tipp.")
+
+    get backend_newsletter_url(issue)
+
+    assert_select "select[name='newsletter_issue[team_tip_profile_key]']" do
+      assert_select "option[value='paul-woog']", count: 0
+      assert_select "option[value='johanna-backmund']", count: 0
+      assert_select "option[value='katharina-schopper'][data-tip-title='Kathis Wochentipp']", text: "Kathi"
+    end
+    %w[team_tip_name team_tip_role team_tip_image_url].each do |field|
+      assert_select "input[name='newsletter_issue[#{field}]']", count: 0
+    end
+  end
+
+  test "changing the personal tip profile replaces the previous author and default heading" do
+    sign_in_as(@editor)
+    issue = create_issue(
+      team_tip_profile_key: "sarah-sandner", team_tip_title: "Sarahs Wochentipp",
+      team_tip_text: "Mein Tipp.", team_tip_image_url: "https://example.com/sarah.jpg"
+    )
+
+    patch backend_newsletter_url(issue), params: {
+      newsletter_issue: { team_tip_profile_key: "katharina-schopper", team_tip_title: "Sarahs Wochentipp" }
+    }
+
+    assert_redirected_to backend_newsletter_url(issue)
+    issue.reload
+    assert_equal "Kathi", issue.team_tip_name
+    assert_equal "Grafik/Layout", issue.team_tip_role
+    assert_equal "Kathis Wochentipp", issue.display_team_tip_title
+    assert_nil issue.team_tip_image_url
+    rendered = Newsletter::Renderer.call(issue)
+    assert_includes rendered.text, "Kathis Wochentipp"
+    assert_includes rendered.html, "newsletter/team/kathi"
+
+    patch backend_newsletter_url(issue), params: { newsletter_issue: { team_tip_profile_key: "" } }
+
+    assert_redirected_to backend_newsletter_url(issue)
+    assert_not issue.reload.team_tip?
+  end
+
   test "editor can select a linked event for the personal tip" do
     sign_in_as(@editor)
     issue = create_issue

@@ -29,34 +29,23 @@
     </div>
   </section>
 
-  <section class="editor-form-section newsletter-editor-section">
+  <section class="editor-form-section newsletter-editor-section" data-controller="newsletter-team-tip">
     <h3 class="newsletter-section-title newsletter-section-title-strong">Persönlicher Tipp</h3>
     <div class="form-grid">
       <label class="form-field">
         <span>Team</span>
         <%= form.select :team_tip_profile_key,
                         options_for_select(
-                          Newsletter::TeamTipProfiles.all.map { |profile| [ profile.name, profile.key ] },
+                          Newsletter::TeamTipProfiles.all.map { |profile| [ profile.name, profile.key, { "data-tip-title": "#{profile.name}s Wochentipp" } ] },
                           issue.team_tip_profile_key
                         ),
                         { include_blank: "Kein persönlicher Tipp" },
-                        class: "form-input" %>
-      </label>
-      <label class="form-field">
-        <span>Name</span>
-        <%= form.text_field :team_tip_name, class: "form-input", placeholder: "Sarah" %>
-      </label>
-      <label class="form-field">
-        <span>Rolle</span>
-        <%= form.text_field :team_tip_role, class: "form-input", placeholder: "Marketing" %>
-      </label>
-      <label class="form-field form-field-full">
-        <span>Bild-URL</span>
-        <%= form.url_field :team_tip_image_url, class: "form-input", placeholder: "https://..." %>
+                        class: "form-input",
+                        data: { newsletter_team_tip_target: "profile", action: "change->newsletter-team-tip#updateTitle" } %>
       </label>
       <label class="form-field form-field-full">
         <span>Tipp-Überschrift</span>
-        <%= form.text_field :team_tip_title, value: issue.display_team_tip_title, class: "form-input", maxlength: 120 %>
+        <%= form.text_field :team_tip_title, value: issue.display_team_tip_title, class: "form-input", maxlength: 120, data: { newsletter_team_tip_target: "title" } %>
       </label>
       <label class="form-field form-field-full">
         <span>Tipp-Text</span>

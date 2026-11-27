@@ -180,6 +180,15 @@ class NewsletterIssue < ApplicationRecord
 
   def apply_team_tip_profile
     profile = Newsletter::TeamTipProfiles.find(team_tip_profile_key)
+
+    if team_tip_profile_key_changed?
+      previous_default_title = "#{team_tip_name_in_database.presence || 'Sarah'}s Wochentipp"
+      self.team_tip_title = nil if team_tip_title == previous_default_title
+      self.team_tip_name = profile&.name
+      self.team_tip_role = profile&.role
+      self.team_tip_image_url = nil
+    end
+
     return if profile.blank?
 
     self.team_tip_name = profile.name if team_tip_name.blank?

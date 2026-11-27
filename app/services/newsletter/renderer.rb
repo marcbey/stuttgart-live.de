@@ -36,7 +36,6 @@ module Newsletter
     GENRE_NAV_ANCHOR = "newsletter-genres"
     MAILJET_PERMALINK_PLACEHOLDER = "[[PERMALINK]]"
     HEART_MARKERS = [ "\u{1FA75}", "\u{1F49C}", "\u{1F49A}", "\u{2665}" ].freeze
-    TURQUOISE_HEART_HTML = '<span style="color:#28c7c2;font-size:1.5em;line-height:0;">&#9829;</span>'
     SOCIAL_LINKS = [
       {
         name: "Instagram",
@@ -83,20 +82,11 @@ module Newsletter
               }
 
               .newsletter-event-button:hover {
-                background: #303636 !important;
-                border-color: #303636 !important;
-                color: #ffffff !important;
-              }
-
-              .newsletter-event-link:hover {
+                color: #245956 !important;
                 text-decoration: underline !important;
               }
 
               @media only screen and (max-width: 680px) {
-                .newsletter-event-link {
-                  padding: 12px 0 !important;
-                }
-
                 .newsletter-item-media,
                 .newsletter-item-spacer,
                 .newsletter-item-content,
@@ -189,16 +179,10 @@ module Newsletter
                   padding-top: 8px !important;
                 }
 
-                .newsletter-mobile-button-wrap .newsletter-event-button {
-                  font-size: 13px !important;
-                  line-height: 20px !important;
-                  padding: 11px 12px !important;
-                }
-
                 .newsletter-event-button {
                   font-size: 14px !important;
-                  line-height: 1.2 !important;
-                  padding: 8px 13px !important;
+                  line-height: 22px !important;
+                  padding: 11px 0 !important;
                 }
 
                 .newsletter-intro {
@@ -799,15 +783,13 @@ module Newsletter
       HTML
     end
 
-    def event_link_html(url, label = "Zum Event")
-      %(<a class="newsletter-event-link" href="#{escape(url)}" style="display:inline-block;color:#315d5b;font-size:13px;line-height:20px;font-weight:400;text-decoration:none;padding:4px 0;">&rarr;&nbsp;#{escape(label)}</a>)
+    def genre_item_card_button_html(item)
+      event_link_html(url: item_url(item), label: item.display_cta_label)
     end
 
-    def genre_item_card_button_html(item)
-      return event_link_html(item_url(item), item.display_cta_label) if item.item.is_a?(Event)
-
+    def event_link_html(url:, label:)
       <<~HTML
-        <a class="newsletter-event-button" href="#{escape(item_url(item))}" style="display:inline-block;border:1px solid #111;color:#102223;font-size:12px;font-weight:bold;text-decoration:none;border-radius:999px;padding:7px 11px;">#{escape(item.display_cta_label)}</a>
+        <a class="newsletter-event-button" href="#{escape(url)}" style="display:inline-block;border:0;background:transparent;color:#326765;font-size:14px;line-height:1.3;font-weight:400;text-decoration:none;padding:0;">→ #{escape(label)}</a>
       HTML
     end
 
@@ -865,28 +847,34 @@ module Newsletter
     end
 
     def item_content_html(item)
+      compact = issue.mixed_weekly_mix? && item.item.is_a?(Event)
+      teaser = item.display_teaser
+      teaser_html = if teaser.present?
+        %(<p style="margin:0 0 #{compact ? 5 : 10}px;font-size:14px;line-height:#{compact ? '1.25' : '1.4'};color:#263334;">#{escape(teaser)}</p>)
+      end
+
       <<~HTML
-        <p style="margin:0 0 7px;font-size:11px;color:#667071;">#{item_label_html(item)}</p>
-        <h3 style="margin:0 0 6px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(item.display_headline)}</h3>
-        <p style="margin:0 0 10px;font-size:14px;line-height:1.4;color:#263334;">#{escape(item.display_teaser)}</p>
-        #{genre_item_card_button_html(item)}
+        <p style="margin:0 0 #{compact ? 4 : 7}px;font-size:11px;color:#667071;">#{item_label_html(item)}</p>
+        <h3 style="margin:0 0 #{compact ? 3 : 6}px;font-size:18px;line-height:1.15;font-weight:600;">#{escape(item.display_headline)}</h3>
+        #{teaser_html}
+        #{event_link_html(url: item_url(item), label: item.display_cta_label)}
       HTML
     end
 
-    def item_label_html(item)
-      return escape(item_label(item)) unless issue.mixed_weekly_mix? && item.item.is_a?(Event)
+    def item_label_html(item, show_genre: issue.mixed_weekly_mix?)
+      return escape(item_label(item)) unless show_genre && item.item.is_a?(Event)
 
-      badge = item_genre_badge_html(item)
+      badge = item_genre_badge_html(item, show_genre:)
       return escape(event_label(item.item)) if badge.blank?
 
       <<~HTML.squish
-        #{badge}
+        #{badge}<br>
         <span class="newsletter-item-date" style="display:inline-block;line-height:1.3;">#{escape(event_label(item.item))}</span>
       HTML
     end
 
-    def item_genre_badge_html(item)
-      return "" unless issue.mixed_weekly_mix? && item.item.is_a?(Event)
+    def item_genre_badge_html(item, show_genre: issue.mixed_weekly_mix?)
+      return "" unless show_genre && item.item.is_a?(Event)
 
       genre_label = header_group_for(item)&.label
       return "" if genre_label.blank?
@@ -897,7 +885,8 @@ module Newsletter
     def escape_with_line_breaks(text)
       escaped_text = escape(text).to_s
       escaped_text.gsub!(/\*\*(.+?)\*\*/, '<strong style="font-weight:700;">\1</strong>')
-      HEART_MARKERS.each { |heart| escaped_text.gsub!(heart, TURQUOISE_HEART_HTML) }
+      heart_image = %(<img src="#{escape(absolute_media_url("/icon.png"))}" width="20" height="20" alt="♥" style="display:inline-block;width:20px;height:20px;vertical-align:middle;border:0;">)
+      escaped_text.gsub!(Regexp.union(HEART_MARKERS)) { heart_image }
       escaped_text.gsub(/\r\n?|\n/, "<br>")
     end
 
@@ -943,24 +932,26 @@ module Newsletter
       event = issue.team_tip_event
       return "" if event.blank?
 
+      item = NewsletterIssueItem.new(item: event)
       url = escape(event_url(event.slug, **route_url_options))
       title = escape(event.artist_name.presence || event.title)
       image_url = event_image_url(event)
       image_cell = if image_url.present?
-        %(<td width="88" valign="top" style="width:88px;padding:0 12px 0 0;vertical-align:top;"><a href="#{url}"><img src="#{escape(image_url)}" width="88" height="88" alt="#{title}" style="display:block;width:88px;height:88px;object-fit:cover;border-radius:8px;border:0;"></a></td>)
+        %(<td width="88" valign="top" style="width:88px;padding:16px 12px 0 0;vertical-align:top;"><a href="#{url}"><img src="#{escape(image_url)}" width="88" height="88" alt="#{title}" style="display:block;width:88px;height:88px;object-fit:cover;border-radius:8px;border:0;"></a></td>)
+      end
+      teaser_html = if item.display_teaser.present? && item.display_teaser != item.display_headline
+        %(<p style="margin:0 0 5px;font-size:14px;line-height:1.25;color:#263334;">#{escape(item.display_teaser)}</p>)
       end
 
       <<~HTML
         <table class="newsletter-team-tip-event" role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;">
           <tr>
-            <td colspan="2" style="padding:16px 0 8px;">
-              <h3 style="margin:0;font-size:17px;line-height:1.25;font-weight:600;"><a href="#{url}" style="color:#102223;text-decoration:none;">#{title}</a></h3>
-            </td>
-          </tr>
-          <tr>
             #{image_cell}
-            <td colspan="#{image_url.present? ? 1 : 2}" valign="top" style="vertical-align:top;">
-              #{event_link_html(event_url(event.slug, **route_url_options))}
+            <td class="newsletter-team-tip-event-details" valign="top" style="padding-top:16px;vertical-align:top;">
+              <p style="margin:0 0 4px;font-size:11px;color:#667071;">#{item_label_html(item, show_genre: true)}</p>
+              <h3 style="margin:0 0 3px;font-size:18px;line-height:1.15;font-weight:600;"><a href="#{url}" style="color:#102223;text-decoration:none;">#{title}</a></h3>
+              #{teaser_html}
+              #{event_link_html(url: event_url(event.slug, **route_url_options), label: "Zum Event")}
             </td>
           </tr>
         </table>
@@ -972,7 +963,10 @@ module Newsletter
 
       parts = [ issue.display_team_tip_title, issue.team_tip_text ]
       if issue.team_tip_event.present?
-        parts << (issue.team_tip_event.artist_name.presence || issue.team_tip_event.title)
+        event = issue.team_tip_event
+        parts << event_label(event)
+        parts << (event.artist_name.presence || event.title)
+        parts << event.title if event.title.present? && event.title != event.artist_name
         parts << "Zum Event: #{event_url(issue.team_tip_event.slug, **route_url_options)}"
       end
       parts.join("\n")
