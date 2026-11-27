@@ -1,0 +1,31 @@
+<% if authenticated? %>
+  <% if current_user.backend_access? %>
+    <%= link_to "Events", backend_events_path, class: app_nav_link_class(active: backend_nav_active?), aria: { current: ("page" if backend_nav_active?) } %>
+  <% end %>
+  <% if current_user.blog_access? %>
+    <%= link_to "News", backend_blog_posts_path, class: app_nav_link_class(active: blog_nav_active?), aria: { current: ("page" if blog_nav_active?) } %>
+  <% end %>
+  <% if current_user.backend_access? %>
+    <%= link_to "Newsletter", backend_newsletters_path, class: app_nav_link_class(active: newsletter_nav_active?), aria: { current: ("page" if newsletter_nav_active?) } %>
+    <%= link_to "Seiten", backend_pages_path, class: app_nav_link_class(active: pages_nav_active?), aria: { current: ("page" if pages_nav_active?) } %>
+    <%= link_to "Präsentatoren", backend_presenters_path, class: app_nav_link_class(active: presenter_nav_active?), aria: { current: ("page" if presenter_nav_active?) } %>
+    <%= link_to "Locations", backend_venues_path, class: app_nav_link_class(active: venue_nav_active?), aria: { current: ("page" if venue_nav_active?) } %>
+  <% end %>
+  <% if current_user.admin? %>
+    <%= link_to "Weiterleitungen", backend_redirects_path, class: app_nav_link_class(active: controller_path == "backend/redirects"), aria: { current: ("page" if controller_path == "backend/redirects") } %>
+    <%= link_to "Einstellungen", edit_backend_settings_path, class: app_nav_link_class(active: settings_nav_active?), aria: { current: ("page" if settings_nav_active?) } %>
+    <%= link_to "Queue", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?), aria: { current: ("page" if importer_nav_active?) } %>
+    <%= link_to "Benutzer", backend_users_path, class: app_nav_link_class(active: controller_path == "backend/users"), aria: { current: ("page" if controller_path == "backend/users") } %>
+  <% elsif current_user.backend_access? %>
+    <%= link_to "Queue", backend_import_sources_path, class: app_nav_link_class(active: importer_nav_active?), aria: { current: ("page" if importer_nav_active?) } %>
+  <% end %>
+  <%= link_to "Passwort", edit_backend_account_password_path, class: app_nav_link_class(active: controller_path == "backend/account_passwords"), aria: { current: ("page" if controller_path == "backend/account_passwords") } %>
+  <%= button_to "Logout",
+                session_path,
+                method: :delete,
+                class: app_nav_link_class,
+                form: { class: "app-nav-link-form" } %>
+<% else %>
+  <% auth_nav_active = controller_path.in?(%w[sessions passwords]) %>
+  <%= link_to "Login", new_session_path, class: app_nav_link_class(active: auth_nav_active), aria: { current: ("page" if auth_nav_active) } %>
+<% end %>
