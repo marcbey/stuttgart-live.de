@@ -22,33 +22,39 @@ module OpenAi
       AppSetting.reset_cache!
     end
 
-    test "uses api key from rails credentials" do
-      fake_sdk_client = Object.new
-      captured_api_key = nil
-      captured_timeout = nil
-      fake_credentials = Object.new
-      fake_credentials.define_singleton_method(:dig) do |*keys|
-        keys == [ :openai, :api_key ] ? "test-openai-key" : nil
+    test "uses credentials and allows a responses request that takes four minutes" do
+      authorization = nil
+      timeout = nil
+      transport = Object.new
+      transport.define_singleton_method(:execute) do |request|
+        authorization = request.headers.fetch("authorization")
+        timeout = request.timeout
+        raise OpenAI::Errors::APITimeoutError.new(url: request.url) if request.timeout < 240
+
+        OpenAI::HTTPClient::Response.new(
+          status: 200,
+          headers: { "content-type" => "application/json" },
+          body: { id: "resp_test", object: "response", status: "completed", output: [] }.to_json
+        )
       end
 
-      client_class = OpenAI::Client.singleton_class
-      client_class.alias_method :__original_new_for_test, :new
-      client_class.define_method(:new) do |api_key:, timeout:, **|
-        captured_api_key = api_key
-        captured_timeout = timeout
-        fake_sdk_client
+      transport_class = OpenAI::NetHTTPClient.singleton_class
+      transport_class.alias_method :__original_new_for_test, :new
+      transport_class.define_method(:new) { transport }
+
+      with_stubbed_credentials(fake_credentials_with_api_key) do
+        response = ResponsesClient.new(model: "gpt-5-mini").create!(input: "Prompt", text_format: structured_text_format)
+
+        assert_equal "resp_test", response.id
       end
 
-      with_stubbed_credentials(fake_credentials) do
-        responses_client = ResponsesClient.new(sdk_client: nil, model: "gpt-5-mini")
-        responses_client.send(:client)
-      end
-
-      assert_equal "test-openai-key", captured_api_key
-      assert_equal ResponsesClient::DEFAULT_TIMEOUT_SECONDS, captured_timeout
+      assert_equal "Bearer test-openai-key", authorization
+      assert_equal 300.0, timeout
+    rescue ResponsesClient::Error => error
+      flunk("Expected the slow response to complete, but got #{error.message}")
     ensure
-      client_class.alias_method :new, :__original_new_for_test
-      client_class.remove_method :__original_new_for_test
+      transport_class.alias_method :new, :__original_new_for_test
+      transport_class.remove_method :__original_new_for_test
     end
 
     test "raises when api key is missing in rails credentials" do

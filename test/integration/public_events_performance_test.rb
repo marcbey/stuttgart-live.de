@@ -89,6 +89,42 @@ class PublicEventsPerformanceTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "homepage lanes batch canonical venues for visible alias cards" do
+    mappings = %w[Ost West].map do |side|
+      canonical = Venue.create!(name: "Probe Main Venue #{side}")
+      venue_alias = Venue.create!(name: "Probe Annex #{side}")
+      Event.create!(
+        source_fingerprint: "test::performance::venue-#{side}",
+        title: "Probe Artist #{side}",
+        artist_name: "Probe Artist #{side}",
+        start_at: Time.current.change(hour: 20),
+        venue_record: venue_alias,
+        city: "Stuttgart",
+        status: "published",
+        published_at: 1.day.ago,
+        highlighted: true
+      )
+      "#{venue_alias.name} => #{canonical.name}"
+    end
+    AppSetting.venue_duplicate_mappings_record.update!(venue_duplicate_mappings_text: mappings.join("\n"))
+
+    [
+      homepage_lane_events_url(lane: "highlights", mode: "design_cards"),
+      homepage_lane_events_url(lane: "search", mode: "design_cards", q: "heute im Probe Annex")
+    ].each do |url|
+      Current.reset
+      queries = Venue.uncached { capture_queries { get url } }
+
+      assert_response :success
+      %w[Ost West].each do |side|
+        assert_select ".design-preview-card-title", text: "Probe Artist #{side}"
+        assert_select ".design-preview-card-location", text: "Probe Main Venue #{side}"
+      end
+      assert_empty queries.grep(/\ASELECT "venues"\.\* FROM "venues"(?:\z| WHERE "venues"\."id" =)/)
+      assert_equal 2, queries.grep(/\ASELECT "venues"\.\* FROM "venues" WHERE "venues"\."id" IN/).size
+    end
+  end
+
   test "under 30 cards retain the active offer status when another offer is sold out" do
     @event.event_offers.create!(source: "manual", source_event_id: "performance-sold-out", sold_out: true, priority_rank: 0)
 
